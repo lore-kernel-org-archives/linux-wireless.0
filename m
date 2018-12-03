@@ -2,327 +2,246 @@ Return-Path: <SRS0=6FTc=OM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC309C04EB9
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Dec 2018 17:35:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6884C04EB9
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Dec 2018 17:57:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF3C12087F
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Dec 2018 17:35:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bgQkFkIO";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bgQkFkIO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AF3C12087F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 7986720848
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Dec 2018 17:57:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7986720848
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726693AbeLCRgA (ORCPT
+        id S1726592AbeLCR5T (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Dec 2018 12:36:00 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:35086 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725868AbeLCRgA (ORCPT
+        Mon, 3 Dec 2018 12:57:19 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:40162 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726221AbeLCR5T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Dec 2018 12:36:00 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id DD27C602F4; Mon,  3 Dec 2018 17:35:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543858552;
-        bh=hGerwc4V1jOqWkLQ0Pu91q/8OFMGBcPozdN2GfkqJzw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bgQkFkIOPj0V3m1IhaMZiiK9fap9nuJjtK7ZFeGELdVf3AvfN7Du/2A4bQMcXW3/6
-         W/pgWijgdcIBfVVRIdlNsmvdEDtmtOxjP2iHC6bOsYYS5DX8+y6WvAAuNRyG7bcYCH
-         Qu8zhw2xxE3KVWXW2BOOAHU/kLXUYW8xmjKGyYx0=
-Received: from localhost (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: bperumal@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EBF9B60246;
-        Mon,  3 Dec 2018 17:35:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543858552;
-        bh=hGerwc4V1jOqWkLQ0Pu91q/8OFMGBcPozdN2GfkqJzw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bgQkFkIOPj0V3m1IhaMZiiK9fap9nuJjtK7ZFeGELdVf3AvfN7Du/2A4bQMcXW3/6
-         W/pgWijgdcIBfVVRIdlNsmvdEDtmtOxjP2iHC6bOsYYS5DX8+y6WvAAuNRyG7bcYCH
-         Qu8zhw2xxE3KVWXW2BOOAHU/kLXUYW8xmjKGyYx0=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EBF9B60246
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bperumal@codeaurora.org
-From:   Bhagavathi Perumal S <bperumal@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        Bhagavathi Perumal S <bperumal@codeaurora.org>
-Subject: [PATCH v2 3/3] ath10k: Add support to configure BB timing over wmi
-Date:   Mon,  3 Dec 2018 23:03:35 +0530
-Message-Id: <1543858415-23953-4-git-send-email-bperumal@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1543858415-23953-1-git-send-email-bperumal@codeaurora.org>
-References: <1543858415-23953-1-git-send-email-bperumal@codeaurora.org>
+        Mon, 3 Dec 2018 12:57:19 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gTsSv-0005WH-Jv; Mon, 03 Dec 2018 18:57:05 +0100
+Message-ID: <bb855ffd6043743ef10058c9395d0c6b42a7832a.camel@sipsolutions.net>
+Subject: Re: [RFC 0/5] add XDP support to mt76x2e/mt76x0e drivers
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        =?UTF-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>,
+        lorenzo.bianconi@redhat.com
+Cc:     kvalo@codeaurora.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, brouer@redhat.com
+Date:   Mon, 03 Dec 2018 18:57:04 +0100
+In-Reply-To: <87k1kwq9bo.fsf@toke.dk> (sfid-20181129_145320_748252_63BF551A)
+References: <cover.1543343124.git.lorenzo.bianconi@redhat.com>
+         <8736rla4ow.fsf@purkki.adurom.net>
+         <20181128104436.GA2298@localhost.localdomain> <87bm69v0ol.fsf@toke.dk>
+         <20181128131141.GD2298@localhost.localdomain> <875zwhuvta.fsf@toke.dk>
+         <20181128143533.GE2298@localhost.localdomain> <87zhtttg8p.fsf@toke.dk>
+         <20181128153508.GG2298@localhost.localdomain> <87in0gu78s.fsf@toke.dk>
+         <20181129125929.GB6365@localhost.localdomain>
+         <CABvG-CVpYXpjE9vxsA90qzsGm3n48SBYv-dYWAB8vi9-dvhK4A@mail.gmail.com>
+         <87k1kwq9bo.fsf@toke.dk> (sfid-20181129_145320_748252_63BF551A)
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add wmi configuration cmd to configure base band(BB) power amplifier(PA)
-off timing values in hardware. The default PA off timings were fine tuned
-to make proper DFS radar detection in QCA reference design. If ODM uses
-different PA in their design, then the same default PA off timing values
-cannot be used, it requires different settling time to detect radar pulses
-very sooner and avoid radar detection problems. In that case it provides
-provision to select proper PA off timing values based on the PA hardware used.
-The PA component is part of FEM hardware and new device tree entry
-"ext-fem-name" is used to indentify the FEM hardware. And this wmi configuration
-cmd is enabled via wmi service flag "WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT".
+Hi Toke, all,
 
-Other way is to apply these values through calibration data, but recalibration
-of all boards out there might not be feasible.
+Sorry I wasn't around for the discussion, I've been travelling and sick.
 
-This change tested on firmware ver 10.2.4-1.0-00042 in QCA988X chipset.
+I'm picking this as an arbitrary point in the discussion to reply to,
+hope you don't feel bad about that.
 
-Signed-off-by: Bhagavathi Perumal S <bperumal@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/mac.c     | 47 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 20 +++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c     | 23 +++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     | 26 +++++++++++++++++
- 4 files changed, 116 insertions(+)
+>> [A-MPDU reordering]
+> In principle, all of this could be done. But we need to think carefully
+> about what things it really makes sense to offload to XDP. In the
+> general case, we will end up re-implementing all of mac80211 in eBPF,
+> which is obviously not ideal.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1db2a30..5a1c9b6 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -22,6 +22,7 @@
- #include <net/mac80211.h>
- #include <linux/etherdevice.h>
- #include <linux/acpi.h>
-+#include <linux/of.h>
- 
- #include "hif.h"
- #include "core.h"
-@@ -4637,11 +4638,44 @@ static int ath10k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
- 	return ret;
- }
- 
-+static int __ath10k_fetch_bb_timing_dt(struct ath10k *ar,
-+				       struct wmi_bb_timing_cfg_arg *bb_timing)
-+{
-+	struct device_node *node;
-+	const char *fem_name;
-+	int ret;
-+
-+	node = ar->dev->of_node;
-+	if (!node)
-+		return -ENOENT;
-+
-+	ret = of_property_read_string_index(node, "ext-fem-name", 0, &fem_name);
-+	if (ret)
-+		return -ENOENT;
-+
-+	/*
-+	 * If external Front End module used in hardware, then default base band timing
-+	 * parameter cannot be used since they were fine tuned for reference hardware,
-+	 * so choosing different value suitable for that external FEM.
-+	 */
-+	if (!strcmp("microsemi-lx5586", fem_name)) {
-+		bb_timing->bb_tx_timing = 0x00;
-+		bb_timing->bb_xpa_timing = 0x0101;
-+	} else {
-+		return -ENOENT;
-+	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot bb_tx_timing 0x%x bb_xpa_timing 0x%x\n",
-+		   bb_timing->bb_tx_timing, bb_timing->bb_xpa_timing);
-+	return 0;
-+}
-+
- static int ath10k_start(struct ieee80211_hw *hw)
- {
- 	struct ath10k *ar = hw->priv;
- 	u32 param;
- 	int ret = 0;
-+	struct wmi_bb_timing_cfg_arg bb_timing = {0};
- 
- 	/*
- 	 * This makes sense only when restarting hw. It is harmless to call
-@@ -4796,6 +4830,19 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		clear_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags);
- 	}
- 
-+	if (test_bit(WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT, ar->wmi.svc_map)) {
-+		ret = __ath10k_fetch_bb_timing_dt(ar, &bb_timing);
-+		if (!ret) {
-+			ret = ath10k_wmi_pdev_bb_timing(ar, &bb_timing);
-+			if (ret) {
-+				ath10k_warn(ar,
-+					    "failed to set bb timings: %d\n",
-+					    ret);
-+				goto err_core_stop;
-+			}
-+		}
-+	}
-+
- 	ar->num_started_vdevs = 0;
- 	ath10k_regd_update(ar);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 7978a77..0466307 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -219,6 +219,9 @@ struct wmi_ops {
- 	struct sk_buff *(*gen_echo)(struct ath10k *ar, u32 value);
- 	struct sk_buff *(*gen_pdev_get_tpc_table_cmdid)(struct ath10k *ar,
- 							u32 param);
-+	struct sk_buff *(*gen_bb_timing)
-+			(struct ath10k *ar,
-+			 const struct wmi_bb_timing_cfg_arg *arg);
- 
- };
- 
-@@ -1576,4 +1579,21 @@ struct wmi_ops {
- 				   ar->wmi.cmd->radar_found_cmdid);
- }
- 
-+static inline int
-+ath10k_wmi_pdev_bb_timing(struct ath10k *ar,
-+			  const struct wmi_bb_timing_cfg_arg *arg)
-+{
-+	struct sk_buff *skb;
-+
-+	if (!ar->wmi.ops->gen_bb_timing)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_bb_timing(ar, arg);
-+
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	return ath10k_wmi_cmd_send(ar, skb,
-+				   ar->wmi.cmd->set_bb_timing_cmdid);
-+}
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 659513b..a1e8695 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -539,6 +539,7 @@
- 		WMI_10_2_PDEV_BSS_CHAN_INFO_REQUEST_CMDID,
- 	.pdev_get_tpc_table_cmdid = WMI_CMD_UNSUPPORTED,
- 	.radar_found_cmdid = WMI_CMD_UNSUPPORTED,
-+	.set_bb_timing_cmdid = WMI_10_2_PDEV_SET_BB_TIMING_CONFIG_CMDID,
- };
- 
- /* 10.4 WMI cmd track */
-@@ -8839,6 +8840,27 @@ static u32 ath10k_wmi_prepare_peer_qos(u8 uapsd_queues, u8 sp)
- 	return 0;
- }
- 
-+static struct sk_buff *
-+ath10k_wmi_10_2_4_op_gen_bb_timing(struct ath10k *ar,
-+				   const struct wmi_bb_timing_cfg_arg *arg)
-+{
-+	struct wmi_pdev_bb_timing_cfg_cmd *cmd;
-+	struct sk_buff *skb;
-+
-+	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	cmd = (struct wmi_pdev_bb_timing_cfg_cmd *)skb->data;
-+	cmd->bb_tx_timing = __cpu_to_le32(arg->bb_tx_timing);
-+	cmd->bb_xpa_timing = __cpu_to_le32(arg->bb_xpa_timing);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI,
-+		   "wmi pdev bb_tx_timing 0x%x bb_xpa_timing 0x%x\n",
-+		   arg->bb_tx_timing, arg->bb_xpa_timing);
-+	return skb;
-+}
-+
- static const struct wmi_ops wmi_ops = {
- 	.rx = ath10k_wmi_op_rx,
- 	.map_svc = wmi_main_svc_map,
-@@ -9112,6 +9134,7 @@ static u32 ath10k_wmi_prepare_peer_qos(u8 uapsd_queues, u8 sp)
- 	.gen_pdev_enable_adaptive_cca =
- 		ath10k_wmi_op_gen_pdev_enable_adaptive_cca,
- 	.get_vdev_subtype = ath10k_wmi_10_2_4_op_get_vdev_subtype,
-+	.gen_bb_timing = ath10k_wmi_10_2_4_op_gen_bb_timing,
- 	/* .gen_bcn_tmpl not implemented */
- 	/* .gen_prb_tmpl not implemented */
- 	/* .gen_p2p_go_bcn_ie not implemented */
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 58e33ab..5e18dc0 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -205,6 +205,7 @@ enum wmi_service {
- 	WMI_SERVICE_SPOOF_MAC_SUPPORT,
- 	WMI_SERVICE_TX_DATA_ACK_RSSI,
- 	WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
-+	WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT,
- 
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -244,6 +245,9 @@ enum wmi_10x_service {
- 	WMI_10X_SERVICE_PEER_STATS,
- 	WMI_10X_SERVICE_RESET_CHIP,
- 	WMI_10X_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS,
-+	WMI_10X_SERVICE_VDEV_BCN_RATE_CONTROL,
-+	WMI_10X_SERVICE_PER_PACKET_SW_ENCRYPT,
-+	WMI_10X_SERVICE_BB_TIMING_CONFIG_SUPPORT,
- };
- 
- enum wmi_main_service {
-@@ -568,6 +572,8 @@ static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_RESET_CHIP, len);
- 	SVCMAP(WMI_10X_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS,
- 	       WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS, len);
-+	SVCMAP(WMI_10X_SERVICE_BB_TIMING_CONFIG_SUPPORT,
-+	       WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT, len);
- }
- 
- static inline void wmi_main_svc_map(const __le32 *in, unsigned long *out,
-@@ -986,6 +992,7 @@ struct wmi_cmd_map {
- 	u32 pdev_wds_entry_list_cmdid;
- 	u32 tdls_set_offchan_mode_cmdid;
- 	u32 radar_found_cmdid;
-+	u32 set_bb_timing_cmdid;
- };
- 
- /*
-@@ -1601,6 +1608,8 @@ enum wmi_10_2_cmd_id {
- 	WMI_10_2_SET_LTEU_CONFIG_CMDID,
- 	WMI_10_2_SET_CCA_PARAMS,
- 	WMI_10_2_PDEV_BSS_CHAN_INFO_REQUEST_CMDID,
-+	WMI_10_2_FWTEST_CMDID,
-+	WMI_10_2_PDEV_SET_BB_TIMING_CONFIG_CMDID,
- 	WMI_10_2_PDEV_UTF_CMDID = WMI_10_2_END_CMDID - 1,
- };
- 
-@@ -7153,6 +7162,23 @@ struct wmi_pdev_chan_info_req_cmd {
- 	__le32 reserved;
- } __packed;
- 
-+/* bb timing register configurations */
-+struct wmi_bb_timing_cfg_arg {
-+	/* Tx_end to pa off timing */
-+	u32 bb_tx_timing;
-+
-+	/* Tx_end to external pa off timing */
-+	u32 bb_xpa_timing;
-+};
-+
-+struct wmi_pdev_bb_timing_cfg_cmd {
-+	/* Tx_end to pa off timing */
-+	__le32 bb_tx_timing;
-+
-+	/* Tx_end to external pa off timing */
-+	__le32 bb_xpa_timing;
-+} __packed;
-+
- struct ath10k;
- struct ath10k_vif;
- struct ath10k_fw_stats_pdev;
--- 
-1.9.1
+Agree with this, completely. Mind you, it's not even simple to do that,
+because each kind of hardware behaves differently. See below.
+
+> For crypto in particular, I wonder if there is much of a speedup to be
+> had if the crypto is in software anyway. Wouldn't that dominate the
+> processing time?
+
+Yeah, I'd also think the cost of skb allocation is dwarfed by the cost
+of doing the crypto, but not really sure, maybe you have a fast special
+AES instruction? :)
+
+
+Anyway, here are my thoughts after reading most of the thread and having
+discussed it with Lorenzo a while back and today:
+
+1) I'm going to restrict most of the discussion to mac80211, but there
+   are interesting cases outside of it as well. Much of the same
+   arguments apply, though it means *more* feature combinatorial
+   explosion to be able to handle everything.
+
+2) We don't yet have it (but it's been suggested for years and we might
+   also get it on Intel hardware eventually), but if we have TX and/or
+   RX 802.3/802.11 frame conversion offload then I think we have no
+   argument - XDP applies pure and simple as is in each direction you
+   have offloads for, unless you do something really stupid in HW like
+   still having to do reorder buffer or PN checking based on RX frame
+   metadata. I hope nobody does that, but then I suppose you could do it
+   before the XDP hooks w/o allocating SKBs.
+
+3) TX from XDP (i.e. X -> wifi) could be implemented in mac80211, but is
+   subject to some rather iffy details, for example:
+   a) mac80211 may need more headroom than the input has, do we have to
+      copy the whole data? depending on xdp_mem_type I think we may need
+      that, rather than being able to make an skb with frag pages and
+      extra headroom? We don't know it was just a single page and I
+      guess we can't ref that page anyway, but maybe we could meddle
+      with the SKB frag data somehow to avoid that.
+   b) mac80211 may need to software encrypt - copy the whole data
+   c) lifetime issues - we need to call xdp_return_frame(), which I
+      guess we can tie to the skb we'd create anyway [2]
+   (and IMHO we need to allocate an skb anyway, due to TXQs like Toke
+    mentioned and much other possible software handling)
+
+4) XDP during RX - well, that's _mostly_ what this thread has been
+   about, but really I think it's a can of worms. Consider:
+   a) drivers may or may not do SW decryption
+   b) drivers may or may not do PN checking - so your XDP program might
+      end up having to do that or risk security/replay bugs!
+      (which, btw, you can only do after reordering so see below)
+   c) drivers may or may not do A-MSDU deaggregation, do you[1] really
+      want to handle that in XDP? You could argue outer code should walk
+      over the subframes, but then dropping becomes hard - and this
+      really should only happen after a) and b)
+      Oh, and IIRC there are cases that use A-MSDUs for single frames
+      just to encapsulate different MAC addresses.
+      Speaking of which, you have to validate the inner MAC addresses
+      (but it's not a trivial comparison) or risk security bugs again.
+   d) drivers may or may not do A-MPDU reordering (this was discussed
+      earlier in the thread), which means even if you drop a frame you
+      haven't just affected that connection but potentially stalled
+      everything until the reorder buffer times out (~100ms), or we need
+      a way for mac80211 to insert a fake skb into the reorder buffer at
+      that spot (but then you allocate an skb again and high-speed
+      traffic where you'd care most is always in an A-MPDU session)
+   e) speaking of which, Intel's device has hardware assist things for
+      reordering, but not fully offloaded reordering, so you might end
+      up with hardware-specific ways of doing this in XDP?
+   f) Some data frames are used internally in the stack, e.g. for TDLS.
+   g) data frames may also affect the powersave state of a station, so
+      if you have e.g. ath9k and the station sends a frame to wake up,
+      but you decide you XDP_DROP it, the powersave state will get
+      messed up, unless ... special handling (either mac80211 or the
+      bpf program) again. Also, U-APSD.
+   h) There are also simple things like QoS/non-QoS that add to the
+      combinatorial explosion of things you have to handle
+   i) data frames could be sent by anyone, not just STAs connected to
+      your network, so I guess you'd have to filter that and mac80211
+      would have to expose a station table lookup helper or something?
+      Alternatively shuffle the code around so mac80211 does that first,
+      but then we already have an SKB anyway since we got it from the
+      driver, and you want this stuff to run in the driver.
+   j) in AP mode, if data frames are sent by somebody not belonging to
+      the network, we should send an event to hostapd so it can tell
+      them they're not on the network
+   k) some drivers implement client-side powersave in mac80211 and need
+      the more-data bit even if you were to XDP_DROP a frame. I hate
+      this code with a passion, but it's there for now.
+   m) did somebody mention fragmentation yet? and the special security
+      handling for CCMP/GCMP there?
+   n) I guess checking for port authorized/not would be one of the more
+      trivial things, just adds another helper/bit/state/something.
+   o) not supported yet by anyone (well, mac80211 at least), but the
+      standard is adding provisions to leave out the SNAP/LLC header,
+      which requires more out-of-band data (i.e. data not directly in
+      the frame)
+   p) there's also iwlwifi with it's multiqueue RX, but let's not go
+      there now
+
+[Toke, do you still think it's not sufficiently different? ;-P]
+
+Of course with XDP anyone can shoot themselves in the foot easily, but I
+also think we shouldn't make it too easy to do things like XDP_REDIRECT
+on a frame that hasn't even had its security properties validated. It'd
+work, but an attacker's frame could be accepted as well. We have enough
+security bugs as is, I'm not sure I'd want that extra surface...
+
+
+Now, of course you can pick each one of these points and say "but that's
+not relevant for my ${favourite_hw}", which is true. Each hardware
+(family) will likely make *most* of fixed or not relevant. Restrict
+sufficiently though and you'll end up with *exactly* ${favourite_hw}
+doing it the way you want to assume it is like.
+
+E.g. let's say you require PN checking in hardware - maybe 2 or 3
+drivers (I'm thinking ath10k, maybe mt76, maybe some ralink family)?
+
+Or let's say you want A-MPDU reordering offload to not have to worry
+about that and replays and all - I'm guessing only ath10k now and that
+perhaps even only in 802.3 mode?
+
+Or let's say you have enough filtering to not have to worry about 4j),
+what if you enable monitor mode at the same time? Can you tell the
+difference in the driver before calling the XDP program?
+
+
+As fun as it sounds (on paper) to have XDP available for wifi, I'm not
+sure we really should do that. We'd have to handle many of the issues
+outlined above (which is at minimum a LOT of helper code that each at
+least somewhat secure and portable XDP-wifi program would have to call),
+and it looks like in the future we'll be moving more towards offloaded
+802.11/.3 frame conversion anyway, at which point it all becomes more or
+less useless.
+
+So I see a few ways this might go:
+ A) We basically allow everything, and let the XDP program authors
+    figure it out. They'll eventually learn to handle the whole mac80211
+    datapath (items in 4)), and will add a TON of helper code for it.
+ B) We try to foresee all the needed helper code, and essentially build
+    a parallel mac80211 datapath equivalent to the one today, but
+    without SKBs.
+ C) We rebuild the mac80211 datapath w/o SKBs so we can put XDP behind
+    it. Ugh.
+ D) We restrict it to ~1 driver that does most of the important things
+    anyway in the device, thus hardcoding most of the variables, but
+    then we expand out to A) or B)
+ E) Like D, but then that device learns to do 802.3/.11 conversion.
+    Oops.
+ F) Like D, but then that *driver* learns to do 802.3/.11 conversion.
+   
+Also oops.
+
+Maybe F) kind of has a good direction in it? If the device does enough
+that we don't have to worry about most things, then - provided we
+actually implement the code to allow 802.3/.11 conversion offload in
+mac80211 - the driver can probably easily do that itself rather than
+punting to mac80211's fast-RX/fast-TX, which would likely be used?
+
+Or perhaps that means we should teach mac80211 fast-RX to be skb-less,
+or something like that? But I think that doesn't solve the reorder
+buffer issue either.
+
+
+(Let's also not forget that the original use case was something around
+defective HW filters for BSSIDs - IMHO that should just be *hardcoded*
+into the driver anyway because all other frames are useless to you,
+except perhaps if also monitor mode is active but then you need an SKB!)
+
+
+Ok, this got longer than I wanted...
+
+johannes
+
+[1] generally speaking, no particular "you" intended
+[2] btw, i40e_clean_xdp_tx_buffer() looks kinda weird? it returns first
+and then DMA-unmaps, you'd think it should be done the other way around?
+
 
