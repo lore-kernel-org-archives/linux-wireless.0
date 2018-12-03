@@ -2,98 +2,96 @@ Return-Path: <SRS0=6FTc=OM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 602C9C04EB9
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Dec 2018 16:37:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22255C04EB9
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Dec 2018 17:35:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 206BE20672
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Dec 2018 16:37:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 206BE20672
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id E1FE82081C
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Dec 2018 17:35:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E2lLbkr8";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E2lLbkr8"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E1FE82081C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726715AbeLCQhH (ORCPT
+        id S1726526AbeLCRfW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Dec 2018 11:37:07 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:39364 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726699AbeLCQhG (ORCPT
+        Mon, 3 Dec 2018 12:35:22 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:34424 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725897AbeLCRfW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Dec 2018 11:37:06 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gTrDR-0003nU-Ol; Mon, 03 Dec 2018 17:37:01 +0100
-Message-ID: <d8b6f02510ccd4ac68dc6bb2be75603d6bd1006b.camel@sipsolutions.net>
-Subject: Re: mac80211_hwsim : unsigned int for signal in netlink info frames
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date:   Mon, 03 Dec 2018 17:37:00 +0100
-In-Reply-To: <ba3e97cd-db7c-58dc-8e55-5528a0411338@uni-rostock.de>
-References: <ba3e97cd-db7c-58dc-8e55-5528a0411338@uni-rostock.de>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Mon, 3 Dec 2018 12:35:22 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B39056086B; Mon,  3 Dec 2018 17:35:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1543858514;
+        bh=mH73NYlasKnezC7wiMH61syseIA2bvMLWm1Z7eg47dc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=E2lLbkr8WPrjx2nqTl7ierzbQ8hZLGKQXKo1wSrs/VLudt9g6sqi8i7gBReDntRJx
+         0Os0lRdXbYmgLoGCCSn1yilHYxdW4+i3kkaIRAmu8Muoit3PwswKrPCGbGW/WizOOC
+         prqL+MKtQA96Q+18iAAFN71wwKcf2YBmTBkmSkm8=
+Received: from localhost (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: bperumal@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B4D7860247;
+        Mon,  3 Dec 2018 17:35:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1543858514;
+        bh=mH73NYlasKnezC7wiMH61syseIA2bvMLWm1Z7eg47dc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=E2lLbkr8WPrjx2nqTl7ierzbQ8hZLGKQXKo1wSrs/VLudt9g6sqi8i7gBReDntRJx
+         0Os0lRdXbYmgLoGCCSn1yilHYxdW4+i3kkaIRAmu8Muoit3PwswKrPCGbGW/WizOOC
+         prqL+MKtQA96Q+18iAAFN71wwKcf2YBmTBkmSkm8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B4D7860247
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bperumal@codeaurora.org
+From:   Bhagavathi Perumal S <bperumal@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        Bhagavathi Perumal S <bperumal@codeaurora.org>
+Subject: [PATCH v2 0/3] ath10k: Add support to configure BB timing for external FEM
+Date:   Mon,  3 Dec 2018 23:03:32 +0530
+Message-Id: <1543858415-23953-1-git-send-email-bperumal@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2018-11-26 at 17:07 +0100, Benjamin Beichler wrote:
-> I'm working on my code base and I was surprised by the fact, that the
-> type of the received signal strength for frames received via Netlink is
-> u32, but the actual struct ieee80211_rx_status.signal uses an s8 for signal.
-> 
-> I actually refer to this line:
-> https://elixir.bootlin.com/linux/v4.20-rc4/source/drivers/net/wireless/mac80211_hwsim.c#L3250
+This adds support to choose correct Base Band(BB) timing values based on
+the input Front End Module(FEM) hardware name from Device Tree entry and
+configure it in hardware through WMI interface. Since the BB timing values
+can vary between FEM hardwares and not same as default value used
+in reference hardware.
 
-I guess this should use nla_get_s32 now, but I think that didn't exist
-before and it also doesn't really matter since if you have a negative
-value in a u32 it still works just fine as long as userspace and
-kernelspace agree on the 2's complement representation :-)
+Bhagavathi Perumal S (3):
+  dt-bindings: net: ath10k: fix node name and device type in qcom ath10k
+    example
+  dt-bindings: net: ath10k: add new dt entry to identify external FEM
+  ath10k: Add support to configure BB timing over wmi
 
-> As we use the signal measurement in dBm (see
-> https://elixir.bootlin.com/linux/v4.20-rc4/source/drivers/net/wireless/mac80211_hwsim.c#L2764),
-> negative dBm values are totally reasonable as received signal strength.
-> Moreover, I don't really know, whether mac80211 or respectively minstrel
-> can do reasonable work with positive values.
+v2:
+ Addressed review comments in dt:
+  * Fixed node name and device type with new dt patch "dt-bindings: net: ath10k:
+     fix node name and device type in qcom ath10k example".
+  * Changed the dt patch subject to "dt-bindings: net: ath10k: add new dt entry
+    to identify external FEM".
+  * Added new property in existing example.
+  * Enumarated some valid FEM names.
 
-Indeed. Make it negative.
+ .../bindings/net/wireless/qcom,ath10k.txt          | 11 +++--
+ drivers/net/wireless/ath/ath10k/mac.c              | 47 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-ops.h          | 20 +++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c              | 23 +++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h              | 26 ++++++++++++
+ 5 files changed, 124 insertions(+), 3 deletions(-)
 
-> On the other hand this line
-> https://elixir.bootlin.com/linux/v4.20-rc4/source/drivers/net/wireless/mac80211_hwsim.c#L1276
-> inconsistently uses a negative value in the case of not using
-> netlink/wmediumd, which is a decent value.
-
-Sure, it should be negative.
-
-> I think it is not possible to easily switch to another type (e.g. s32 or
-> even s8) for the netlink attribute without breaking things, but somebody
-> might correct me.
-
-Well, u32 and s32 are really identical in netlink anyway, they're just 4
-bytes long integers. So there's no "switching" if we now write
-"nla_get_s32" in the code.
-
-What we might want to do is use a policy now that says it must be a
-sensible value like -200 to -10 or something, but it doesn't really
-matter.
-
-> Any suggestions?
-
-Just put a negative integer there in your userspace.
-
-(u32)-50 == 0xffffffce
-
-signal = nla_get_u32(...) = 0xffffffce
--> signal will end up with -50
-
-Nothing to see here, move along ;-)
-
-johannes
+-- 
+1.9.1
 
