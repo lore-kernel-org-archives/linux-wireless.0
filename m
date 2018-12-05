@@ -2,122 +2,96 @@ Return-Path: <SRS0=FjVT=OO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C5F0C04EB9
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 14:29:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF5C2C04EB9
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 14:42:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5ADA620878
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 14:29:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5ADA620878
+	by mail.kernel.org (Postfix) with ESMTP id 9D06020878
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 14:42:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9D06020878
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727645AbeLEO3w (ORCPT
+        id S1727240AbeLEOmk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Dec 2018 09:29:52 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:41360 "EHLO
+        Wed, 5 Dec 2018 09:42:40 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:41578 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727606AbeLEO3v (ORCPT
+        with ESMTP id S1727025AbeLEOmk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Dec 2018 09:29:51 -0500
+        Wed, 5 Dec 2018 09:42:40 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gUYBQ-0000Sn-OS; Wed, 05 Dec 2018 15:29:48 +0100
+        id 1gUYNq-0000gN-Jj; Wed, 05 Dec 2018 15:42:38 +0100
+Message-ID: <6102d09bb53a59b2789e31d84ffdda45165a895c.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH v2 0/2] Extended Key ID support for linux
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     David Miller <davem@davemloft.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2018-12-05
-Date:   Wed,  5 Dec 2018 15:29:34 +0100
-Message-Id: <20181205142935.29088-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.17.2
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Wed, 05 Dec 2018 15:42:36 +0100
+In-Reply-To: <20181111110235.14213-1-alexander@wetzel-home.de>
+References: <20181111110235.14213-1-alexander@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
+Hi,
 
-As per the below summary / shortlog, we have a few things
-that should still go into the current release.
+Sorry for the delay.
 
-Please pull and let me know if there's any problem.
+On Sun, 2018-11-11 at 12:02 +0100, Alexander Wetzel wrote:
+> IEEE 802.11-2012 added support for Extended Key ID, allowing pairwise
+> keys to also use keyID 1 and moving group keys to IDs 2 and 3.
 
-Thanks,
+Where do you read this? I've always been under the impression that
+individually and group addressed frames use key IDs from different
+"namespaces", so to speak, where PTK/STK can use 0 (0 or 1 with
+"Extended Key ID" support) and GTK can use 0-3.
+
+In fact, the per-frame pseudocode in 802.11-2016 12.9.2.6 clearly
+states:
+
+if MPDU has individual RA then
+	lookup pairwise key using Key ID from MPDU
+else
+	lookup group key using Key ID from MPDU
+endif
+
+If it weren't different namespaces, you'd not have to differentiate
+here.
+
+> Support for Extended Key ID is basically completed and confirmed working
+> with both hwsim and "on the air" with ath9k/iwldvm using software
+> encryption and those patches here.
+
+:)
+
+> Prior to propose this patch for merging I would like to get Extended
+> Key ID working with HW encryption for at least some devices, but after
+> experimenting with ath9k and to a lesser extend with ath10k it's now
+> clear that this will be an per-driver effort and it may well turn out to
+> be impossible without firmware updates.
+
+Indeed. I think there might be some support with iwlwifi firmware, at
+least newer versions? I can check later.
+
+> So I've decided to continue working on the HW support for now but also
+> ask you for feedback for what I got so far. 
+
+Sounds good.
+
+> Any feedback is welcome and I especially like to learn what you think of
+> the API extensions and what has to be changed to get it merged.
+
+I'll look over the individual patches.
+
 johannes
-
-
-
-The following changes since commit ea53abfab960909d622ca37bcfb8e1c5378d21cc:
-
-  bonding/802.3ad: fix link_failure_count tracking (2018-11-04 16:44:44 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-12-05
-
-for you to fetch changes up to 312ca38ddda64bac6513ec68e0ac3789b4eb44dc:
-
-  cfg80211: Fix busy loop regression in ieee80211_ie_split_ric() (2018-12-05 12:51:29 +0100)
-
-----------------------------------------------------------------
-As it's been a while, we have various fixes for
- * hwsim
- * AP mode (client powersave related)
- * CSA/FTM interaction
- * a busy loop in IE handling
- * and similar
-
-----------------------------------------------------------------
-Alexey Khoroshilov (1):
-      mac80211_hwsim: fix module init error paths for netlink
-
-Ben Greear (1):
-      mac80211: Clear beacon_int in ieee80211_do_stop
-
-Emmanuel Grumbach (1):
-      mac80211: ignore NullFunc frames in the duplicate detection
-
-Felix Fietkau (2):
-      mac80211: ignore tx status for PS stations in ieee80211_tx_status_ext
-      mac80211: fix reordering of buffered broadcast packets
-
-Johannes Berg (2):
-      cfg80211/mac80211: fix FTM settings across CSA
-      mac80211: fix CSA beacon allocation size
-
-Jouni Malinen (1):
-      cfg80211: Fix busy loop regression in ieee80211_ie_split_ric()
-
-Sergey Matyukevich (1):
-      cfg80211: add missing constraint for user-supplied VHT mask
-
-Sriram R (1):
-      cfg80211: Prevent regulatory restore during STA disconnect in concurrent interfaces
-
-Vasyl Vavrychuk (1):
-      mac80211_hwsim: Timer should be initialized before device registered
-
-Wei Yongjun (1):
-      mac80211: fix missing unlock on error in ieee80211_mark_sta_auth()
-
-Yan-Hsuan Chuang (1):
-      mac80211: fix GFP_KERNEL under tasklet context
-
- drivers/net/wireless/mac80211_hwsim.c | 20 +++++++++++---------
- net/mac80211/cfg.c                    |  7 ++++---
- net/mac80211/iface.c                  |  2 ++
- net/mac80211/mlme.c                   | 12 ++++++++----
- net/mac80211/rx.c                     |  5 +++--
- net/mac80211/status.c                 |  2 ++
- net/mac80211/tx.c                     |  4 ++--
- net/wireless/mlme.c                   |  4 ++--
- net/wireless/nl80211.c                |  1 +
- net/wireless/sme.c                    |  8 +++++++-
- net/wireless/util.c                   |  2 ++
- 11 files changed, 44 insertions(+), 23 deletions(-)
 
