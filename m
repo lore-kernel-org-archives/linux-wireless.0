@@ -2,85 +2,62 @@ Return-Path: <SRS0=FjVT=OO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57FF0C04EB9
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 07:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FE5C04EB9
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 08:50:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22B1A206B7
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 07:51:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 22B1A206B7
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id B1F6720850
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 08:50:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="azx8eYf2"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B1F6720850
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=linuxfoundation.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727130AbeLEHuz (ORCPT
+        id S1726944AbeLEIun (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Dec 2018 02:50:55 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:49522 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726102AbeLEHuz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Dec 2018 02:50:55 -0500
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id ED9482EDD9504;
-        Wed,  5 Dec 2018 15:50:50 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.408.0; Wed, 5 Dec 2018 15:50:45 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     Maya Erez <merez@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>
-CC:     YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qti.qualcomm.com>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-Subject: [PATCH] wil6210: remove set but not used variable 'wdev'
-Date:   Wed, 5 Dec 2018 07:59:03 +0000
-Message-ID: <1543996743-137124-1-git-send-email-yuehaibing@huawei.com>
-X-Mailer: git-send-email 1.8.3.1
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+        Wed, 5 Dec 2018 03:50:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40196 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726866AbeLEIun (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Dec 2018 03:50:43 -0500
+Received: from localhost (5356596B.cm-6-7b.dynamic.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 972CD2084C;
+        Wed,  5 Dec 2018 08:50:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1543999843;
+        bh=oVmThZbyGkwhcs6MnLcUJQ+OcavpLjf7yo+9FKQsflo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=azx8eYf2EU+SYMtHcVQdTzlzeDT9qEvdd2TuSOOOgyb49qGOtB2JaRJcWJYtb4jiO
+         cWoErOVPltKBQprQjzU7D1YmaS0PkRUyS0h11prGPWrOyCq07/DnDWLwzTlncMIk06
+         14ju9sSAPBu9LYSGgY3HWNfggVwZExNwJwKrJ4pc=
+Date:   Wed, 5 Dec 2018 09:50:40 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Ajay.Kathat@microchip.com
+Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        johannes@sipsolutions.net, Adham.Abozaeid@microchip.com
+Subject: Re: [PATCH 00/29] staging: wilc1000: avoid deferring of cfg80211
+ operation callback
+Message-ID: <20181205085040.GA23974@kroah.com>
+References: <1543773663-20561-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1543773663-20561-1-git-send-email-ajay.kathat@microchip.com>
+User-Agent: Mutt/1.11.0 (2018-11-25)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+On Sun, Dec 02, 2018 at 06:02:13PM +0000, Ajay.Kathat@microchip.com wrote:
+>  6 files changed, 755 insertions(+), 2012 deletions(-)
 
-drivers/net/wireless/ath/wil6210/main.c: In function '_wil6210_disconnect':
-drivers/net/wireless/ath/wil6210/main.c:407:23: warning:
- variable 'wdev' set but not used [-Wunused-but-set-variable]
+Nice code removal, patch series all now applied.
 
-It never used since commit ("e1b43407c034 wil6210: refactor disconnect flow")
-
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index ba6a2ee..5b7de00 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -404,7 +404,6 @@ static void _wil6210_disconnect(struct wil6210_vif *vif, const u8 *bssid,
- {
- 	struct wil6210_priv *wil;
- 	struct net_device *ndev;
--	struct wireless_dev *wdev;
- 	int cid = -ENOENT;
- 
- 	if (unlikely(!vif))
-@@ -412,7 +411,6 @@ static void _wil6210_disconnect(struct wil6210_vif *vif, const u8 *bssid,
- 
- 	wil = vif_to_wil(vif);
- 	ndev = vif_to_ndev(vif);
--	wdev = vif_to_wdev(vif);
- 
- 	might_sleep();
- 	wil_info(wil, "disconnect bssid=%pM, reason=%d\n", bssid, reason_code);
-
-
-
+greg k-h
