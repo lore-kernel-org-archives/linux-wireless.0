@@ -2,159 +2,112 @@ Return-Path: <SRS0=FjVT=OO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6AA5C04EB9
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 06:17:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9143C04EB9
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 07:18:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 890C02084C
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 06:17:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DKgBW+E2";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DKgBW+E2"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 890C02084C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 93FA320851
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 07:18:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 93FA320851
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726973AbeLEGRM (ORCPT
+        id S1727114AbeLEHSD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Dec 2018 01:17:12 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:39962 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726082AbeLEGRM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Dec 2018 01:17:12 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 7D57960807; Wed,  5 Dec 2018 06:17:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543990631;
-        bh=GHtjp451JuDRUq4LAPwLiKRsyrwrruuU0f6+fVEUcdw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=DKgBW+E2NvJYjJrYHEj8OVyQgn8VzhWIldcsbejZhT4UXsGE5ovyTkmjCymg2lttk
-         FPpRPt6O6yLy4bEnwot71Gjytrt8k72bMkyHA9cVMG6IGimEM082uidqMR8OMa1EUg
-         KMp3OZeSV/mTDxhFhvCnFgEIyF9uaM0KT4Gu39xo=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 0350A60397;
-        Wed,  5 Dec 2018 06:17:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543990631;
-        bh=GHtjp451JuDRUq4LAPwLiKRsyrwrruuU0f6+fVEUcdw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=DKgBW+E2NvJYjJrYHEj8OVyQgn8VzhWIldcsbejZhT4UXsGE5ovyTkmjCymg2lttk
-         FPpRPt6O6yLy4bEnwot71Gjytrt8k72bMkyHA9cVMG6IGimEM082uidqMR8OMa1EUg
-         KMp3OZeSV/mTDxhFhvCnFgEIyF9uaM0KT4Gu39xo=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+        Wed, 5 Dec 2018 02:18:03 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:37343 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726820AbeLEHSA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Dec 2018 02:18:00 -0500
+Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id CC4C8777999D8;
+        Wed,  5 Dec 2018 15:17:57 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS403-HUB.china.huawei.com (10.3.19.203) with Microsoft SMTP Server id
+ 14.3.408.0; Wed, 5 Dec 2018 15:17:53 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Priit Laes <plaes@plaes.org>,
+        Kees Cook <keescook@chromium.org>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+CC:     YueHaibing <yuehaibing@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <b43-dev@lists.infradead.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+Subject: [PATCH] b43: remove set but not used variables 'tx_pwr_state,tmp2'
+Date:   Wed, 5 Dec 2018 07:26:06 +0000
+Message-ID: <1543994766-7057-1-git-send-email-yuehaibing@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Date:   Wed, 05 Dec 2018 11:47:10 +0530
-From:   Bhagavathi Perumal S <bperumal@codeaurora.org>
-To:     Tom Psyborg <pozega.tomislav@gmail.com>
-Cc:     Sebastian Gottschall <s.gottschall@newmedia-net.de>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] dt-bindings: net: ath10k: add new dt entry to
- identify external FEM
-In-Reply-To: <CAKR_QVKFx3oqb7cvyeY_+fKMxKA9PQkSDex-tvxrQcdc7hJ-CQ@mail.gmail.com>
-References: <1543858415-23953-1-git-send-email-bperumal@codeaurora.org>
- <1543858415-23953-3-git-send-email-bperumal@codeaurora.org>
- <d7d53ffb-9778-927c-5030-243c2ae57fcc@newmedia-net.de>
- <CAKR_QVKFx3oqb7cvyeY_+fKMxKA9PQkSDex-tvxrQcdc7hJ-CQ@mail.gmail.com>
-Message-ID: <31adb268bfd29daa95da923d2172e05e@codeaurora.org>
-X-Sender: bperumal@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+MIME-Version: 1.0
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-12-04 16:53, Tom Psyborg wrote:
-> On 04/12/2018, Sebastian Gottschall <s.gottschall@newmedia-net.de> 
-> wrote:
->> Hi
->> 
->> you write that
->> 
->> "microsemi-lx5586", "sky85703-11" and "sky85803" is supported, but you 
->> just
->> check for microsemi-lx5586
->>   in part 3
->> 
->> Am 03.12.2018 um 18:33 schrieb Bhagavathi Perumal S:
->>> This adds new dt entry ext-fem-name, it is used by ath10k driver
->>> to select correct timing parameters and configure it in target wifi
->>> hardware.
->>> The Front End Module(FEM) normally includes tx power amplifier(PA) 
->>> and
->>> rx low noise amplifier(LNA). The default timing parameters like tx 
->>> end to
->>> PA off timing values were fine tuned for internal FEM used in 
->>> reference
->>> design. And these timing values can not be same if ODM modifies 
->>> hardware
->>> design with different external FEM. This DT entry helps to choose 
->>> correct
->>> timing values in driver if different external FEM hardware used.
->>> 
->>> Signed-off-by: Bhagavathi Perumal S<bperumal@codeaurora.org>
->>> ---
->>>   Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 8
->>> +++++++-
->>>   1 file changed, 7 insertions(+), 1 deletion(-)
->>> 
->>> diff --git
->>> a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
->>> b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
->>> index ef60f25..2dd0c52 100644
->>> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
->>> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
->>> @@ -61,8 +61,13 @@ Optional properties:
->>>   	Value type: <phandle>
->>>   	Definition: reference to the reserved-memory for the msa region
->>>   		    used by the wifi firmware running in Q6.
->>> +- ext-fem-name:
->>> +	Usage: Optional
->>> +	Value type: string
->>> +	Definition: Name of external front end module used. Valid FEM names 
->>> are
->>> +		    "microsemi-lx5586", "sky85703-11" and "sky85803" etc.
->>> 
->>> -Example (to supply the calibration data alone):
->>> +Example (to supply PCI based wifi block details):
->>> 
->>>   In this example, the node is defined as child node of the PCI
->>> controller.
->>> 
->>> @@ -77,6 +82,7 @@ pci {
->>>   		wifi@0,0 {
->>>   			reg = <0 0 0 0 0>;
->>>   			qcom,ath10k-calibration-data = [ 01 02 03 ... ];
->>> +			ext-fem-name = "microsemi-lx5586";
->>>   		};
->>>   	};
->>>   };
->>> -- 1.9.1
->> 
-> 
-> Sebastian might be right.
-> 
-> "Valid FEM names are
->>> +		    "microsemi-lx5586", "sky85703-11" and "sky85803" etc."
-> 
-> etc. inidicate you could put whatever here. where does the actual code
-> resides that manages different FEM ?
-These are some valid fem names which I added for example.
-But currently driver support is added only for "microsemi-lx5586",
-since it required different timing settings for proper DFS radar 
-detection.
-Others use default settings from firmware if driver doesn't send any 
-settings
-to firmware. Driver support will be extended in future, if different 
-settings
-applicable for other fems.
-I think, I should mention like
-"Valid FEM names for example: "microsemi-lx5586", "sky85703-11" and 
-"sky85803" etc.".
-I will change it.
+Fixes gcc '-Wunused-but-set-variable' warning:
+
+drivers/net/wireless/broadcom/b43/phy_n.c: In function 'b43_nphy_op_recalc_txpower':
+drivers/net/wireless/broadcom/b43/phy_n.c:5898:7: warning:
+ variable 'tx_pwr_state' set but not used [-Wunused-but-set-variable]
+
+drivers/net/wireless/broadcom/b43/phy_n.c:6047:20: warning:
+ variable 'tmp2' set but not used [-Wunused-but-set-variable]
+
+'tx_pwr_state' never used since introduction in commit
+8615eb2870f1 ("b43: N-PHY: support setting custom TX power")
+
+'tmp2' not used any more since commit c002831a07dd ("b43: N-PHY: use helper
+for checking IPA")
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/net/wireless/broadcom/b43/phy_n.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+index 7d30036..77d7cd5 100644
+--- a/drivers/net/wireless/broadcom/b43/phy_n.c
++++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+@@ -5895,7 +5895,6 @@ static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
+ 	struct ieee80211_channel *channel = dev->wl->hw->conf.chandef.chan;
+ 	struct b43_ppr *ppr = &nphy->tx_pwr_max_ppr;
+ 	u8 max; /* qdBm */
+-	bool tx_pwr_state;
+ 
+ 	if (nphy->tx_pwr_last_recalc_freq == channel->center_freq &&
+ 	    nphy->tx_pwr_last_recalc_limit == phy->desired_txpower)
+@@ -5931,7 +5930,6 @@ static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
+ 	b43_ppr_apply_min(dev, ppr, INT_TO_Q52(8));
+ 
+ 	/* Apply */
+-	tx_pwr_state = nphy->txpwrctrl;
+ 	b43_mac_suspend(dev);
+ 	b43_nphy_tx_power_ctl_setup(dev);
+ 	if (dev->dev->core_rev == 11 || dev->dev->core_rev == 12) {
+@@ -6044,7 +6042,6 @@ static int b43_phy_initn(struct b43_wldev *dev)
+ 	u8 tx_pwr_state;
+ 	struct nphy_txgains target;
+ 	u16 tmp;
+-	enum nl80211_band tmp2;
+ 	bool do_rssi_cal;
+ 
+ 	u16 clip[2];
+@@ -6138,7 +6135,6 @@ static int b43_phy_initn(struct b43_wldev *dev)
+ 		b43_phy_write(dev, B43_NPHY_DUP40_BL, 0x9A4);
+ 	}
+ 
+-	tmp2 = b43_current_band(dev->wl);
+ 	if (b43_nphy_ipa(dev)) {
+ 		b43_phy_set(dev, B43_NPHY_PAPD_EN0, 0x1);
+ 		b43_phy_maskset(dev, B43_NPHY_EPS_TABLE_ADJ0, 0x007F,
+
+
+
