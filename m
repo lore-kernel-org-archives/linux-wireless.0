@@ -2,165 +2,108 @@ Return-Path: <SRS0=FjVT=OO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C986CC04EB9
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 07:33:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1AC4C04EB9
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 07:38:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C5E32084C
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 07:33:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96ED3204FD
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Dec 2018 07:38:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pMSgeT6K";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Hqrf2ERL"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8C5E32084C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="i7UNurSI"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 96ED3204FD
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726768AbeLEHdm (ORCPT
+        id S1727169AbeLEHiQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Dec 2018 02:33:42 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:38272 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726102AbeLEHdm (ORCPT
+        Wed, 5 Dec 2018 02:38:16 -0500
+Received: from mail-wm1-f50.google.com ([209.85.128.50]:40237 "EHLO
+        mail-wm1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726351AbeLEHiQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Dec 2018 02:33:42 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 217C7607B5; Wed,  5 Dec 2018 07:33:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543995221;
-        bh=RukOF3KYe2UJ3iLmwUE7ziSl6VspL9eX8+tw/QHJflo=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=pMSgeT6KH8kpoQly2mxvoynCl7q7huUWy8nwnl3yyhAMJwG1Ge2yemnmb577KtppW
-         LBYrETUOInAktn14I+9bDJIxKRFiv21k6rH5V3FEw1bcVKG2Q1wfTRuRiaCmJgu0Va
-         4O8/l768bRS1h/LKu2rBUEMHutLNq1F92mwfXhlc=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F194E601B4;
-        Wed,  5 Dec 2018 07:33:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543995220;
-        bh=RukOF3KYe2UJ3iLmwUE7ziSl6VspL9eX8+tw/QHJflo=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Hqrf2ERLOjTR5TeQY8to3GrRiOH0Nyu7HVOMFk0zMC8GUOvt0czLNFDX1pTQ4LP9h
-         +4uaZYOdd/xrAcYQ6QE+B58ODDVgQVoqNM8gC/pcULxqnAp8ML4aL2u3OI1kmuWzZS
-         71HsSxp+mYD/V3oKL2FWve5FCo8HjbnuG4/LOXMw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F194E601B4
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: mt76 2018-11-30
-References: <b65d2a36-4cf4-1536-fd0f-f3bcbaf000fc@nbd.name>
-Date:   Wed, 05 Dec 2018 09:33:36 +0200
-In-Reply-To: <b65d2a36-4cf4-1536-fd0f-f3bcbaf000fc@nbd.name> (Felix Fietkau's
-        message of "Fri, 30 Nov 2018 12:34:25 +0100")
-Message-ID: <87sgzc4ecv.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Wed, 5 Dec 2018 02:38:16 -0500
+Received: by mail-wm1-f50.google.com with SMTP id q26so11724172wmf.5
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Dec 2018 23:38:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=CVA/iyTTZkux/GBNFtba3BZauyBeFjyPxFP/pB7ACQ0=;
+        b=i7UNurSIGx9adsEBRzZUM0G08RIIuyw8KaeC/aEyPUxyErdAua9gRzLSdBRDXg7tW6
+         QjvWdZQ95cqWtQelzGHu6ge010WnHRj2EjGHZ9k3JOEIVp7YEdI9wkZ1UYx3yRhVRLob
+         P0XyWDC1oRP4fiQiFWuLH190c/bPcvSed0Xcw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=CVA/iyTTZkux/GBNFtba3BZauyBeFjyPxFP/pB7ACQ0=;
+        b=Dmeq/TLWXEthRXtlB+PpFeuwPx+yKHEJOUPRP65esUGBeltyyaojx53qXKEC4QdCtd
+         7BEqZOuufscsJEed7sSZvIJpAiEMTe0KOuFfK/i1CyM5btSWu6VUXC5KRtWz+afOH5Bw
+         N1A3zh2UAC5ZNyeK4Ki77NhMu5fkqPeI8cERACJAltLUWXZbL/cocIrM9faAMg9LrCNH
+         en9En9A8v35M9QB0pdXdnlyyd32WZuMvZCxwNOW+woncCAxHab7TbuQ2HebdHgzIhk8j
+         OlEgsG1A45STzaneU/HOHuCDXSve8h/VhwgXTXzS34UFsylHCSnFZsEXGcW3QS2tOfFM
+         H9nA==
+X-Gm-Message-State: AA+aEWa+UiZbgZTFjUEN9C+LpdSd6vxlnzpml/j3lSUGYc03cbxD6YaQ
+        f5Jg3YeOoaQdnILd4eNb4hd2yA==
+X-Google-Smtp-Source: AFSGD/WIUlOu30fHYz6vSdwafOb/gqAvGzub1S/Utvi4jFdfQHhB8Qx/gh+AomeEGEgn8lu/XRjBiA==
+X-Received: by 2002:a1c:43:: with SMTP id 64mr15925359wma.72.1543995494338;
+        Tue, 04 Dec 2018 23:38:14 -0800 (PST)
+Received: from [192.168.0.40] (sju31-1-78-210-255-2.fbx.proxad.net. [78.210.255.2])
+        by smtp.googlemail.com with ESMTPSA id k7sm21111692wrl.51.2018.12.04.23.38.13
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 04 Dec 2018 23:38:13 -0800 (PST)
+To:     Samuel Ortiz <sameo@linux.intel.com>
+Cc:     linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        robert.dolca@intel.com, oleg.zhurakivskyy@intel.com,
+        clement.perrochaud@effinnov.com, charles.gorand@effinnov.com
+From:   Daniel Lezcano <daniel.lezcano@linaro.org>
+Subject: NXP NFC version and ACPI
+Message-ID: <c2d0d19f-d814-8f41-4860-77b9cc7f9d26@linaro.org>
+Date:   Wed, 5 Dec 2018 08:38:12 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
 
-> here's my first pull request for 4.21
->
-> - Felix
->
-> The following changes since commit b72c51a58e6d63ef673ac96b8ab5bc98799c5f7b:
->
->   brcmfmac: Fix out of bounds memory access during fw load (2018-11-29 17:33:10 +0200)
->
-> are available in the Git repository at:
->
->   https://github.com/nbd168/wireless tags/mt76-for-kvalo-2018-11-30
->
-> for you to fetch changes up to e28487ea84a9c081c6d8d7da319427f7fcc32ff5:
->
->   mt76: replace sta_add/remove ops with common sta_state function (2018-11-30 12:30:37 +0100)
->
-> ----------------------------------------------------------------
-> first batch of mt76 patches for 4.21
->
-> * use the same firmware for mt76x2e and mt76x2u
-> * mt76x2 fixes
-> * mt76x0 fixes
-> * mt76x0e survey support
-> * more unification between mt76x2 and mt76x0
-> * mt76x0e AP mode support
-> * mt76x0e DFS support
-> * rework and fix tx status handling for mt76x0 and mt76x2
->
-> ----------------------------------------------------------------
+Hi,
 
-I fast forwarded w-d-next to net-next and now there's a conflict. I did
-a test merge in the pending branch, please double check:
+the discussion reference is on github [1].
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?h=pending&id=e69caab09bf98d0d8b559d06887364cc0090097c
+I acquired a Lenovo x280 with a NFC chip. It is unclear what chip is it
+really, it is called NXP NPC300 which could be a PN7xxx chip range.
 
-This was the conflict:
+A hacked version of an old deprecated out-of-tree module made the PN5xxx
+to work with my laptop but I suspect it brought some subtle instability
+on my system.
 
-diff --cc drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-index 3f001bd6806c,b54a32397486..000000000000
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-@@@ -264,21 -173,6 +173,24 @@@ static int mt76x2_get_antenna(struct ie
-  	return 0;
-  }
-  
-++<<<<<<< HEAD
- +static int
- +mt76x2_set_rts_threshold(struct ieee80211_hw *hw, u32 val)
- +{
- +	struct mt76x02_dev *dev = hw->priv;
- +
- +	if (val != ~0 && val > 0xffff)
- +		return -EINVAL;
- +
- +	mutex_lock(&dev->mt76.mutex);
- +	mt76x2_mac_set_tx_protection(dev, val);
- +	mutex_unlock(&dev->mt76.mutex);
- +
- +	return 0;
- +}
- +
-++=======
-++>>>>>>> 1b0adb0ab8649a1ed44f9840724878cffaaa6896
-  const struct ieee80211_ops mt76x2_ops = {
-  	.tx = mt76x02_tx,
-  	.start = mt76x2_start,
+Now it would be nice to have this correctly supported upstream.
 
-I solved it by removing mt76x2_set_rts_threshold(). After there was also
-a compilation error which I fixed like this:
+I dumped the ACPI DSDT table and got the id NXP1001. This one is not
+listed in the match table of the nxp-nci driver.
 
-diff --cc drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-index 3f001bd6806c,b54a32397486..000000000000
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 3a70e5bf7d42..38bd466cff16 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -462,9 +462,9 @@ int mt76x02_set_rts_threshold(struct ieee80211_hw *hw, u32 val)
- 	if (val != ~0 && val > 0xffff)
- 		return -EINVAL;
- 
--	mutex_lock(&dev->mutex);
-+	mutex_lock(&dev->mt76.mutex);
- 	mt76x02_mac_set_tx_protection(dev, val);
--	mutex_unlock(&dev->mutex);
-+	mutex_unlock(&dev->mt76.mutex);
- 
- 	return 0;
- }
+ - is the driver missing for the so called NXP NPC300 ?
+ - should the NXP1001 matching string to be added to nxp-nci?
+ - is my firmware sending me garbage ?
+
+Thanks in advance for any input
+
+  -- Daniel
+
 
 -- 
-Kalle Valo
+ <http://www.linaro.org/> Linaro.org │ Open source software for ARM SoCs
+
+Follow Linaro:  <http://www.facebook.com/pages/Linaro> Facebook |
+<http://twitter.com/#!/linaroorg> Twitter |
+<http://www.linaro.org/linaro-blog/> Blog
+
