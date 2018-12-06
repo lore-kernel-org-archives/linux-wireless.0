@@ -3,88 +3,85 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A798C04EB8
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Dec 2018 11:40:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C3C1C04EB9
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 Dec 2018 11:58:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A108205C9
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Dec 2018 11:40:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2A108205C9
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id D317C20878
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 Dec 2018 11:58:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D317C20878
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728144AbeLFLk3 (ORCPT
+        id S1729132AbeLFL6H (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 6 Dec 2018 06:40:29 -0500
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:38036 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727832AbeLFLk2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Dec 2018 06:40:28 -0500
-Received: by mail-wm1-f66.google.com with SMTP id m22so702042wml.3
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2018 03:40:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=2l507nDU0W1rv82AQB9Zomps5890aAjpOgur9DidWks=;
-        b=sRF/f6EccvpGQJWpDIJ0yzKO5pDi7CNFFhOR3DyLRwexDkneTS5BUazFKkPmtxklfe
-         dnR7TjYfH3eCbN9PSJ3uX3azMy3w8nTMDb64xGLtTsZdIbxCXc7+tYgqEkdskCPN5AQC
-         vXc9btsDmI6mxJGLypqP+t86QNzZksYAK6NjUjNFUrjxPutnF/3qsv3SXZMKqybU8Tgm
-         AiA1hSFfMKfarfOGm7RvCGEK+bkwCX+BroEAGi6KkZtS8j63mRgL/8ZirPdkiobwlugb
-         P2e8kjevKGMlhvWluwul9cHR7Ho2SWcnAsCfCRmQ4FmCTjmK/OWmply+MahaslJgkQwt
-         1OXw==
-X-Gm-Message-State: AA+aEWaot821ltaZ13M11S56Xc4LXdlDBVzutEYNqMKFDF/99s7qsd+W
-        El5BxBJZWZzfLHAgtAXfN2DY4+k27Lw=
-X-Google-Smtp-Source: AFSGD/U+ykEwT4OIsnWx5GlWXBzHnreMJSOI2k+ETgOStcFXBpAQCo8K1r9kGQA5BlJ5kWzqqjaB7w==
-X-Received: by 2002:a1c:864f:: with SMTP id i76mr15243198wmd.83.1544096427082;
-        Thu, 06 Dec 2018 03:40:27 -0800 (PST)
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id h4sm161410wrt.66.2018.12.06.03.40.25
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 06 Dec 2018 03:40:26 -0800 (PST)
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: fix typo in mt76x02_check_mac_err routine
-Date:   Thu,  6 Dec 2018 12:40:23 +0100
-Message-Id: <401ea9d0ae92b372b5d68060b089e5d44a76d53c.1544096101.git.lorenzo.bianconi@redhat.com>
-X-Mailer: git-send-email 2.19.2
-In-Reply-To: <cover.1544096101.git.lorenzo.bianconi@redhat.com>
-References: <cover.1544096101.git.lorenzo.bianconi@redhat.com>
+        Thu, 6 Dec 2018 06:58:07 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:37481 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727832AbeLFL6H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Dec 2018 06:58:07 -0500
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 3100692C5E72A;
+        Thu,  6 Dec 2018 19:58:02 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
+ 14.3.408.0; Thu, 6 Dec 2018 19:57:54 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Tzu-En Huang <tehuang@realtek.com>
+CC:     YueHaibing <yuehaibing@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Subject: [PATCH] rtlwifi: rtl8821ae: remove set but not used variable 'type' in translate_rx_signal_stuff
+Date:   Thu, 6 Dec 2018 12:06:08 +0000
+Message-ID: <1544097968-68563-1-git-send-email-yuehaibing@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Reconfigure properly MT_MAC_SYS_CTRL register after mac sw-reset
-in mt76x02_check_mac_err routine
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Fixes: 73556561ab9f ("mt76x0: use mt76x02_mac_work as stats handler")
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c: In function 'translate_rx_signal_stuff':
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c:309:6: warning:
+ variable 'type' set but not used [-Wunused-but-set-variable]
+
+It never used since commit 21e4b0726dc6 ("rtlwifi: rtl8821ae: Move driver from
+staging to regular tree")
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index c08bf371e527..490368dc9325 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -774,8 +774,8 @@ static void mt76x02_check_mac_err(struct mt76x02_dev *dev)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+index b01c3c5..0f2b7c6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+@@ -306,14 +306,12 @@ static void translate_rx_signal_stuff(struct ieee80211_hw *hw,
+ 	u8 *praddr;
+ 	u8 *psaddr;
+ 	__le16 fc;
+-	u16 type;
+ 	bool packet_matchbssid, packet_toself, packet_beacon;
  
- 	mt76_set(dev, MT_MAC_SYS_CTRL, MT_MAC_SYS_CTRL_RESET_CSR);
- 	udelay(10);
--	mt76_clear(dev, MT_MAC_SYS_CTRL,
--		   MT_MAC_SYS_CTRL_ENABLE_TX | MT_MAC_SYS_CTRL_ENABLE_RX);
-+	mt76_wr(dev, MT_MAC_SYS_CTRL,
-+		MT_MAC_SYS_CTRL_ENABLE_TX | MT_MAC_SYS_CTRL_ENABLE_RX);
- }
+ 	tmp_buf = skb->data + pstatus->rx_drvinfo_size + pstatus->rx_bufshift;
  
- void mt76x02_mac_work(struct work_struct *work)
--- 
-2.19.2
+ 	hdr = (struct ieee80211_hdr *)tmp_buf;
+ 	fc = hdr->frame_control;
+-	type = WLAN_FC_GET_TYPE(hdr->frame_control);
+ 	praddr = hdr->addr1;
+ 	psaddr = ieee80211_get_SA(hdr);
+ 	ether_addr_copy(pstatus->psaddr, psaddr);
+
+
 
