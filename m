@@ -6,674 +6,197 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63CEAC07E85
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D13CDC64EB1
 	for <linux-wireless@archiver.kernel.org>; Fri,  7 Dec 2018 12:11:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0BBB020892
+	by mail.kernel.org (Postfix) with ESMTP id 9623E20892
 	for <linux-wireless@archiver.kernel.org>; Fri,  7 Dec 2018 12:11:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iX4WfnZV";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UoWebkkd"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0BBB020892
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oa1qdtKZ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BkkECF7C"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9623E20892
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726036AbeLGMLA (ORCPT
+        id S1726039AbeLGMLA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 7 Dec 2018 07:11:00 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:37172 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:37228 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725992AbeLGMK7 (ORCPT
+        with ESMTP id S1726013AbeLGMLA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Dec 2018 07:10:59 -0500
+        Fri, 7 Dec 2018 07:11:00 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 681B6612EE; Fri,  7 Dec 2018 12:10:57 +0000 (UTC)
+        id AE15960BFA; Fri,  7 Dec 2018 12:10:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1544184657;
-        bh=aNSQhL+/F9NhOT7MbyeqbVPhfghU53srCTzJuHkINzs=;
-        h=From:To:Cc:Subject:Date:From;
-        b=iX4WfnZVDVmutGf9DwHsMfu2XqTgsgDwclBpel+Zqgm/G1lZ92Ft0HGBYzb7yIxBs
-         6G5paB0xA61eWvdh3GMnq/v83+Z+PGvka3eb75j5eyCC1+VWa7Pb4Qf+hwljQEMbK9
-         PWcy3eMajBCWBagKZ2xWp5z/8peFIDdd0yKLxCTM=
+        s=default; t=1544184658;
+        bh=x2HNulU2o4awK2CfoJtX06lk6By2EzpTOLEUYIznLxw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=oa1qdtKZeXhN9nw64bImUyAZ8breXOgZNXeeKKMil8ftPdwnfFAMCf5agqXKXtD5f
+         5XCXzg3DiEFR3qwxevkT0LU7AAAnJbVnxKi3zspushkOK8ZkHGOSRRLuJavce9JNoe
+         8l/eBnMn26b0DZh0AvnGQdXYzYgadps7frUvFWQw=
 Received: from jouni.codeaurora.org (37-33-76-121.bb.dnainternet.fi [37.33.76.121])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: jouni@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0C890612EE;
-        Fri,  7 Dec 2018 12:10:53 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6541361309;
+        Fri,  7 Dec 2018 12:10:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1544184656;
-        bh=aNSQhL+/F9NhOT7MbyeqbVPhfghU53srCTzJuHkINzs=;
-        h=From:To:Cc:Subject:Date:From;
-        b=UoWebkkduE2nBO9YOKgagNHx7zqIfZV3W8mkTPwCPm2lMkBnFzrFxs5ipuVfyfC64
-         wwWgOYTcn97QLnYlOxqoteBfCWiA02ZIQIQnmo49EqASyEZ9VLaHL9zuy1NgS9ernz
-         njWFIOCTJtP7HNIfUREooYT2ylgP/webplOEW13Q=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0C890612EE
+        s=default; t=1544184657;
+        bh=x2HNulU2o4awK2CfoJtX06lk6By2EzpTOLEUYIznLxw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=BkkECF7C4Fc8ObhZxXBeQdDHHD/Bi9I8xcHqIpzMJjW0t3Iw4cgdxHMBQFvIRYqlX
+         PQJMOLc/rKw1GrRAGOPYHB7Cd/fAiaYYLniyt20OC4SocDN37O2ba/zxFDv3m02uoi
+         7JvxrNFXMNcc0TR2/GB70z08zP1Dftn5TUaTF9m8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6541361309
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=jouni@codeaurora.org
 From:   Jouni Malinen <jouni@codeaurora.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, Peng Xu <pxu@codeaurora.org>,
+Cc:     linux-wireless@vger.kernel.org,
         Sara Sharon <sara.sharon@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH 1/5] cfg80211: Parsing of Multiple BSSID information in scanning
-Date:   Fri,  7 Dec 2018 14:10:46 +0200
-Message-Id: <1544184650-14124-1-git-send-email-jouni@codeaurora.org>
+Subject: [PATCH 2/5] cfg80211: Properly track transmitting and non-transmitting BSS
+Date:   Fri,  7 Dec 2018 14:10:47 +0200
+Message-Id: <1544184650-14124-2-git-send-email-jouni@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1544184650-14124-1-git-send-email-jouni@codeaurora.org>
+References: <1544184650-14124-1-git-send-email-jouni@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Peng Xu <pxu@codeaurora.org>
+From: Sara Sharon <sara.sharon@intel.com>
 
-This extends cfg80211 BSS table processing to be able to parse Multiple
-BSSID element from Beacon and Probe Response frames and to update the
-BSS profiles in internal database for non-transmitted BSSs.
+When holding data of the non-transmitting BSS, we need to keep the
+transmitting BSS data on. Otherwise it will be released, and release
+the non-transmitting BSS with it.
 
-Signed-off-by: Peng Xu <pxu@codeaurora.org>
 Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 ---
- net/wireless/core.h |   1 +
- net/wireless/scan.c | 504 ++++++++++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 466 insertions(+), 39 deletions(-)
+ net/wireless/core.h |  9 +++++++++
+ net/wireless/scan.c | 36 ++++++++++++++++++++++++++++++++++--
+ 2 files changed, 43 insertions(+), 2 deletions(-)
 
 diff --git a/net/wireless/core.h b/net/wireless/core.h
-index c5d6f34..d58c56a 100644
+index d58c56a..b1afc4b 100644
 --- a/net/wireless/core.h
 +++ b/net/wireless/core.h
-@@ -152,6 +152,7 @@ extern int cfg80211_rdev_list_generation;
- struct cfg80211_internal_bss {
+@@ -153,6 +153,7 @@ struct cfg80211_internal_bss {
  	struct list_head list;
  	struct list_head hidden_list;
-+	struct list_head nontrans_list;
+ 	struct list_head nontrans_list;
++	struct cfg80211_bss *transmitted_bss;
  	struct rb_node rbn;
  	u64 ts_boottime;
  	unsigned long ts;
+@@ -183,12 +184,20 @@ static inline struct cfg80211_internal_bss *bss_from_pub(struct cfg80211_bss *pu
+ static inline void cfg80211_hold_bss(struct cfg80211_internal_bss *bss)
+ {
+ 	atomic_inc(&bss->hold);
++	if (bss->transmitted_bss)
++		cfg80211_hold_bss(container_of(bss->transmitted_bss,
++					       struct cfg80211_internal_bss,
++					       pub));
+ }
+ 
+ static inline void cfg80211_unhold_bss(struct cfg80211_internal_bss *bss)
+ {
+ 	int r = atomic_dec_return(&bss->hold);
+ 	WARN_ON(r < 0);
++	if (bss->transmitted_bss)
++		cfg80211_unhold_bss(container_of(bss->transmitted_bss,
++						 struct cfg80211_internal_bss,
++						 pub));
+ }
+ 
+ 
 diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index d0e7472..559f56d 100644
+index 559f56d..6f2fed2 100644
 --- a/net/wireless/scan.c
 +++ b/net/wireless/scan.c
-@@ -4,7 +4,7 @@
-  *
-  * Copyright 2008 Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-- * Copyright 2016	Intel Deutschland GmbH
-+ * Copyright 2016-2017	Intel Deutschland GmbH
-  */
- #include <linux/kernel.h>
- #include <linux/slab.h>
-@@ -150,6 +150,7 @@ static bool __cfg80211_unlink_bss(struct cfg80211_registered_device *rdev,
+@@ -109,6 +109,12 @@ static inline void bss_ref_get(struct cfg80211_registered_device *rdev,
+ 				   pub);
+ 		bss->refcount++;
  	}
- 
- 	list_del_init(&bss->list);
-+	list_del_init(&bss->nontrans_list);
- 	rb_erase(&bss->rbn, &rdev->bss_tree);
- 	rdev->bss_entries--;
- 	WARN_ONCE((rdev->bss_entries == 0) ^ list_empty(&rdev->bss_list),
-@@ -159,6 +160,170 @@ static bool __cfg80211_unlink_bss(struct cfg80211_registered_device *rdev,
- 	return true;
++	if (bss->transmitted_bss) {
++		bss = container_of(bss->transmitted_bss,
++				   struct cfg80211_internal_bss,
++				   pub);
++		bss->refcount++;
++	}
  }
  
-+static void cfg80211_gen_new_bssid(const u8 *bssid, u8 max_bssid,
-+				   u8 mbssid_index, u8 *new_bssid_addr)
-+{
-+	u64 bssid_tmp, new_bssid = 0;
-+	u64 lsb_n;
-+
-+	bssid_tmp = ether_addr_to_u64(bssid);
-+
-+	lsb_n = bssid_tmp & ((1 << max_bssid) - 1);
-+	new_bssid = bssid_tmp;
-+	new_bssid &= ~((1 << max_bssid) - 1);
-+	new_bssid |= (lsb_n + mbssid_index) % (1 << max_bssid);
-+
-+	u64_to_ether_addr(new_bssid, new_bssid_addr);
-+}
-+
-+static size_t cfg80211_gen_new_ie(const u8 *ie, size_t ielen,
-+				  const u8 *subelement, size_t subie_len,
-+				  u8 *new_ie, gfp_t gfp)
-+{
-+	u8 *pos, *tmp;
-+	const u8 *tmp_old, *tmp_new;
-+	u8 *sub_copy;
-+
-+	/* copy subelement as we need to change its content to
-+	 * mark an ie after it is processed.
-+	 */
-+	sub_copy = kmalloc(subie_len, gfp);
-+	if (!sub_copy)
-+		return 0;
-+	memcpy(sub_copy, subelement, subie_len);
-+
-+	pos = &new_ie[0];
-+
-+	/* set new ssid */
-+	tmp_new = cfg80211_find_ie(WLAN_EID_SSID, sub_copy, subie_len);
-+	if (tmp_new) {
-+		memcpy(pos, tmp_new, tmp_new[1] + 2);
-+		pos += (tmp_new[1] + 2);
-+	}
-+
-+	/* go through IEs in ie (skip SSID) and subelement,
-+	 * merge them into new_ie
-+	 */
-+	tmp_old = cfg80211_find_ie(WLAN_EID_SSID, ie, ielen);
-+	tmp_old = (tmp_old) ? tmp_old + tmp_old[1] + 2 : ie;
-+
-+	while (tmp_old + tmp_old[1] + 2 - ie <= ielen) {
-+		if (tmp_old[0] == 0) {
-+			tmp_old++;
-+			continue;
-+		}
-+
-+		tmp = (u8 *)cfg80211_find_ie(tmp_old[0], sub_copy, subie_len);
-+		if (!tmp) {
-+			/* ie in old ie but not in subelement */
-+			if (tmp_old[0] != WLAN_EID_MULTIPLE_BSSID) {
-+				memcpy(pos, tmp_old, tmp_old[1] + 2);
-+				pos += tmp_old[1] + 2;
-+			}
-+		} else {
-+			/* ie in transmitting ie also in subelement,
-+			 * copy from subelement and flag the ie in subelement
-+			 * as copied (by setting eid field to 0xff). For
-+			 * vendor ie, compare OUI + type + subType to
-+			 * determine if they are the same ie.
-+			 */
-+			if (tmp_old[0] == WLAN_EID_VENDOR_SPECIFIC) {
-+				if (!memcmp(tmp_old + 2, tmp + 2, 5)) {
-+					/* same vendor ie, copy from
-+					 * subelement
-+					 */
-+					memcpy(pos, tmp, tmp[1] + 2);
-+					pos += tmp[1] + 2;
-+					tmp[0] = 0xff;
-+				} else {
-+					memcpy(pos, tmp_old, tmp_old[1] + 2);
-+					pos += tmp_old[1] + 2;
-+				}
-+			} else {
-+				/* copy ie from subelement into new ie */
-+				memcpy(pos, tmp, tmp[1] + 2);
-+				pos += tmp[1] + 2;
-+				tmp[0] = 0xff;
-+			}
-+		}
-+
-+		if (tmp_old + tmp_old[1] + 2 - ie == ielen)
-+			break;
-+
-+		tmp_old += tmp_old[1] + 2;
-+	}
-+
-+	/* go through subelement again to check if there is any ie not
-+	 * copied to new ie, skip ssid, capability, bssid-index ie
-+	 */
-+	tmp_new = sub_copy;
-+	while (tmp_new + tmp_new[1] + 2 - sub_copy <= subie_len) {
-+		if (!(tmp_new[0] == WLAN_EID_NON_TX_BSSID_CAP ||
-+		      tmp_new[0] == WLAN_EID_SSID ||
-+		      tmp_new[0] == WLAN_EID_MULTI_BSSID_IDX ||
-+		      tmp_new[0] == 0xff)) {
-+			memcpy(pos, tmp_new, tmp_new[1] + 2);
-+			pos += tmp_new[1] + 2;
-+		}
-+		if (tmp_new + tmp_new[1] + 2 - sub_copy == subie_len)
-+			break;
-+		tmp_new += tmp_new[1] + 2;
-+	}
-+
-+	kfree(sub_copy);
-+	return pos - new_ie;
-+}
-+
-+static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
-+		   const u8 *ssid, size_t ssid_len)
-+{
-+	const struct cfg80211_bss_ies *ies;
-+	const u8 *ssidie;
-+
-+	if (bssid && !ether_addr_equal(a->bssid, bssid))
-+		return false;
-+
-+	if (!ssid)
-+		return true;
-+
-+	ies = rcu_access_pointer(a->ies);
-+	if (!ies)
-+		return false;
-+	ssidie = cfg80211_find_ie(WLAN_EID_SSID, ies->data, ies->len);
-+	if (!ssidie)
-+		return false;
-+	if (ssidie[1] != ssid_len)
-+		return false;
-+	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
-+}
-+
-+static int
-+cfg80211_add_nontrans_list(struct cfg80211_internal_bss *trans_bss,
-+			   struct cfg80211_internal_bss *nontrans_bss)
-+{
-+	const u8 *ssid;
-+	size_t ssid_len;
-+	struct cfg80211_internal_bss *bss = NULL;
-+
-+	rcu_read_lock();
-+	ssid = ieee80211_bss_get_ie(&nontrans_bss->pub, WLAN_EID_SSID);
-+	if (!ssid)
-+		return -EINVAL;
-+	ssid_len = ssid[1];
-+	ssid = ssid + 2;
-+	rcu_read_unlock();
-+
-+	/* check if nontrans_bss is in the list */
-+	list_for_each_entry(bss, &trans_bss->nontrans_list, nontrans_list) {
-+		if (is_bss(&bss->pub, nontrans_bss->pub.bssid, ssid, ssid_len))
-+			return 0;
-+	}
-+
-+	/* add to the list */
-+	list_add_tail(&nontrans_bss->nontrans_list, &trans_bss->nontrans_list);
-+	return 0;
-+}
-+
- static void __cfg80211_bss_expire(struct cfg80211_registered_device *rdev,
- 				  unsigned long expire_time)
- {
-@@ -525,29 +690,6 @@ const u8 *cfg80211_find_vendor_ie(unsigned int oui, int oui_type,
- }
- EXPORT_SYMBOL(cfg80211_find_vendor_ie);
- 
--static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
--		   const u8 *ssid, size_t ssid_len)
--{
--	const struct cfg80211_bss_ies *ies;
--	const u8 *ssidie;
--
--	if (bssid && !ether_addr_equal(a->bssid, bssid))
--		return false;
--
--	if (!ssid)
--		return true;
--
--	ies = rcu_access_pointer(a->ies);
--	if (!ies)
--		return false;
--	ssidie = cfg80211_find_ie(WLAN_EID_SSID, ies->data, ies->len);
--	if (!ssidie)
--		return false;
--	if (ssidie[1] != ssid_len)
--		return false;
--	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
--}
--
- /**
-  * enum bss_compare_mode - BSS compare mode
-  * @BSS_CMP_REGULAR: regular compare mode (for insertion and normal find)
-@@ -1130,17 +1272,19 @@ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
- }
- 
- /* Returned bss is reference counted and must be cleaned up appropriately. */
--struct cfg80211_bss *
--cfg80211_inform_bss_data(struct wiphy *wiphy,
--			 struct cfg80211_inform_bss *data,
--			 enum cfg80211_bss_frame_type ftype,
--			 const u8 *bssid, u64 tsf, u16 capability,
--			 u16 beacon_interval, const u8 *ie, size_t ielen,
--			 gfp_t gfp)
-+static struct cfg80211_bss *
-+cfg80211_inform_single_bss_data(struct wiphy *wiphy,
-+				struct cfg80211_inform_bss *data,
-+				enum cfg80211_bss_frame_type ftype,
-+				const u8 *bssid, u64 tsf, u16 capability,
-+				u16 beacon_interval, const u8 *ie, size_t ielen,
-+				struct cfg80211_bss *trans_bss,
-+				gfp_t gfp)
- {
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 	struct cfg80211_bss_ies *ies;
- 	struct ieee80211_channel *channel;
--	struct cfg80211_internal_bss tmp = {}, *res;
-+	struct cfg80211_internal_bss tmp = {}, *res, *trans_internal;
- 	int bss_type;
- 	bool signal_valid;
- 
-@@ -1209,19 +1353,250 @@ cfg80211_inform_bss_data(struct wiphy *wiphy,
- 			regulatory_hint_found_beacon(wiphy, channel, gfp);
+ static inline void bss_ref_put(struct cfg80211_registered_device *rdev,
+@@ -125,6 +131,18 @@ static inline void bss_ref_put(struct cfg80211_registered_device *rdev,
+ 		if (hbss->refcount == 0)
+ 			bss_free(hbss);
  	}
- 
-+	if (trans_bss) {
-+		/* this is a nontransmitting bss, we need to add it to
-+		 * transmitting bss' list if it is not there
-+		 */
-+		trans_internal = container_of(trans_bss,
-+					      struct cfg80211_internal_bss,
-+					      pub);
-+		if (cfg80211_add_nontrans_list(trans_internal, res)) {
-+			if (__cfg80211_unlink_bss(rdev, res))
-+				rdev->bss_generation++;
-+		}
++
++	if (bss->transmitted_bss) {
++		struct cfg80211_internal_bss *tbss;
++
++		tbss = container_of(bss->transmitted_bss,
++				    struct cfg80211_internal_bss,
++				    pub);
++		tbss->refcount--;
++		if (tbss->refcount == 0)
++			bss_free(tbss);
 +	}
 +
- 	trace_cfg80211_return_bss(&res->pub);
- 	/* cfg80211_bss_update gives us a referenced result */
- 	return &res->pub;
- }
--EXPORT_SYMBOL(cfg80211_inform_bss_data);
- 
--/* cfg80211_inform_bss_width_frame helper */
-+static void cfg80211_parse_mbssid_data(struct wiphy *wiphy,
-+				       struct cfg80211_inform_bss *data,
-+				       enum cfg80211_bss_frame_type ftype,
-+				       const u8 *bssid, u64 tsf,
-+				       u16 beacon_interval, const u8 *ie,
-+				       size_t ielen,
-+				       struct cfg80211_bss *trans_bss,
-+				       gfp_t gfp)
-+{
-+	const u8 *pos, *subelement, *mbssid_end_pos;
-+	const u8 *tmp, *mbssid_index_ie;
-+	size_t subie_len, new_ie_len;
-+	u8 new_bssid[ETH_ALEN];
-+	u8 *new_ie;
-+	u16 capability;
-+	struct cfg80211_bss *bss;
-+
-+	if (!trans_bss)
-+		return;
-+	if (!cfg80211_find_ie(WLAN_EID_MULTIPLE_BSSID, ie, ielen))
-+		return;
-+
-+	pos = ie;
-+
-+	new_ie = kmalloc(IEEE80211_MAX_DATA_LEN, gfp);
-+	if (!new_ie)
-+		return;
-+
-+	while (pos < ie + ielen + 2) {
-+		tmp = cfg80211_find_ie(WLAN_EID_MULTIPLE_BSSID, pos,
-+				       ielen - (pos - ie));
-+		if (!tmp)
-+			break;
-+
-+		mbssid_end_pos = tmp + tmp[1] + 2;
-+		/* Skip Element ID, Len, MaxBSSID Indicator */
-+		if (tmp[1] < 4)
-+			break;
-+		for (subelement = tmp + 3; subelement < mbssid_end_pos - 1;
-+		     subelement += 2 + subelement[1]) {
-+			subie_len = subelement[1];
-+			if (mbssid_end_pos - subelement < 2 + subie_len)
-+				break;
-+			if (subelement[0] != 0 || subelement[1] < 4) {
-+				/* not a valid BSS profile */
-+				continue;
-+			}
-+
-+			if (subelement[2] != WLAN_EID_NON_TX_BSSID_CAP ||
-+			    subelement[3] != 2) {
-+				/* The first element within the Nontransmitted
-+				 * BSSID Profile is not the Nontransmitted
-+				 * BSSID Capability element.
-+				 */
-+				continue;
-+			}
-+
-+			/* found a Nontransmitted BSSID Profile */
-+			mbssid_index_ie = cfg80211_find_ie
-+				(WLAN_EID_MULTI_BSSID_IDX,
-+				 subelement + 2, subie_len);
-+			if (!mbssid_index_ie || mbssid_index_ie[1] < 1 ||
-+			    mbssid_index_ie[2] == 0) {
-+				/* No valid Multiple BSSID-Index element */
-+				continue;
-+			}
-+
-+			cfg80211_gen_new_bssid(bssid, tmp[2],
-+					       mbssid_index_ie[2],
-+					       new_bssid);
-+			memset(new_ie, 0, IEEE80211_MAX_DATA_LEN);
-+			new_ie_len = cfg80211_gen_new_ie(ie, ielen,
-+							 subelement + 2,
-+							 subie_len, new_ie,
-+							 gfp);
-+			if (!new_ie_len)
-+				continue;
-+
-+			capability = le16_to_cpup((const __le16 *)
-+						  &subelement[4]);
-+			bss = cfg80211_inform_single_bss_data(wiphy, data,
-+							      ftype,
-+							      new_bssid, tsf,
-+							      capability,
-+							      beacon_interval,
-+							      new_ie,
-+							      new_ie_len,
-+							      trans_bss, gfp);
-+			if (!bss)
-+				break;
-+			cfg80211_put_bss(wiphy, bss);
-+		}
-+
-+		pos = mbssid_end_pos;
-+	}
-+
-+	kfree(new_ie);
-+}
-+
- struct cfg80211_bss *
--cfg80211_inform_bss_frame_data(struct wiphy *wiphy,
--			       struct cfg80211_inform_bss *data,
--			       struct ieee80211_mgmt *mgmt, size_t len,
--			       gfp_t gfp)
-+cfg80211_inform_bss_data(struct wiphy *wiphy,
-+			 struct cfg80211_inform_bss *data,
-+			 enum cfg80211_bss_frame_type ftype,
-+			 const u8 *bssid, u64 tsf, u16 capability,
-+			 u16 beacon_interval, const u8 *ie, size_t ielen,
-+			 gfp_t gfp)
-+{
-+	struct cfg80211_bss *res;
- 
-+	res = cfg80211_inform_single_bss_data(wiphy, data, ftype, bssid, tsf,
-+					      capability, beacon_interval, ie,
-+					      ielen, NULL, gfp);
-+	cfg80211_parse_mbssid_data(wiphy, data, ftype, bssid, tsf,
-+				   beacon_interval, ie, ielen, res, gfp);
-+	return res;
-+}
-+EXPORT_SYMBOL(cfg80211_inform_bss_data);
-+
-+static void
-+cfg80211_parse_mbssid_frame_data(struct wiphy *wiphy,
-+				 struct cfg80211_inform_bss *data,
-+				 struct ieee80211_mgmt *mgmt, size_t len,
-+				 struct cfg80211_bss *trans_bss,
-+				 gfp_t gfp)
-+{
-+	enum cfg80211_bss_frame_type ftype;
-+	const u8 *ie = mgmt->u.probe_resp.variable;
-+	size_t ielen = len - offsetof(struct ieee80211_mgmt,
-+				      u.probe_resp.variable);
-+
-+	ftype = ieee80211_is_beacon(mgmt->frame_control) ?
-+		CFG80211_BSS_FTYPE_BEACON : CFG80211_BSS_FTYPE_PRESP;
-+
-+	cfg80211_parse_mbssid_data(wiphy, data, ftype, mgmt->bssid,
-+				   le64_to_cpu(mgmt->u.probe_resp.timestamp),
-+				   le16_to_cpu(mgmt->u.probe_resp.beacon_int),
-+				   ie, ielen, trans_bss, gfp);
-+}
-+
-+static void
-+cfg80211_update_notlisted_nontrans(struct wiphy *wiphy,
-+				   struct cfg80211_internal_bss *nontrans_bss,
-+				   struct ieee80211_mgmt *mgmt, size_t len,
-+				   gfp_t gfp)
-+{
-+	u8 *ie, *new_ie, *pos;
-+	const u8 *nontrans_ssid, *trans_ssid, *mbssid;
-+	size_t ielen = len - offsetof(struct ieee80211_mgmt,
-+				      u.probe_resp.variable);
-+	size_t new_ie_len;
-+	struct cfg80211_bss_ies *new_ies;
-+	const struct cfg80211_bss_ies *old;
-+	u8 cpy_len;
-+
-+	ie = mgmt->u.probe_resp.variable;
-+
-+	new_ie_len = ielen;
-+	trans_ssid = cfg80211_find_ie(WLAN_EID_SSID, ie, ielen);
-+	if (!trans_ssid)
-+		return;
-+	new_ie_len -= trans_ssid[1];
-+	mbssid = cfg80211_find_ie(WLAN_EID_MULTIPLE_BSSID, ie, ielen);
-+	if (!mbssid)
-+		return;
-+	new_ie_len -= mbssid[1];
-+	rcu_read_lock();
-+	nontrans_ssid = ieee80211_bss_get_ie(&nontrans_bss->pub, WLAN_EID_SSID);
-+	if (!nontrans_ssid)
-+		return;
-+	new_ie_len += nontrans_ssid[1];
-+	rcu_read_unlock();
-+
-+	/* generate new ie for nontrans BSS
-+	 * 1. replace SSID with nontrans BSS' SSID
-+	 * 2. skip MBSSID IE
-+	 */
-+	new_ie = kzalloc(new_ie_len, gfp);
-+	if (!new_ie)
-+		return;
-+	new_ies = kzalloc(sizeof(*new_ies) + new_ie_len, gfp);
-+	if (!new_ies) {
-+		kfree(new_ie);
-+		return;
-+	}
-+
-+	pos = new_ie;
-+
-+	/* copy the nontransmitted SSID */
-+	cpy_len = nontrans_ssid[1] + 2;
-+	memcpy(pos, nontrans_ssid, cpy_len);
-+	pos += cpy_len;
-+	/* copy the IEs between SSID and MBSSID */
-+	cpy_len = trans_ssid[1] + 2;
-+	memcpy(pos, (trans_ssid + cpy_len), (mbssid - (trans_ssid + cpy_len)));
-+	pos += (mbssid - (trans_ssid + cpy_len));
-+	/* copy the IEs after MBSSID */
-+	cpy_len = mbssid[1] + 2;
-+	memcpy(pos, mbssid + cpy_len, ((ie + ielen) - (mbssid + cpy_len)));
-+
-+	/* update ie */
-+	new_ies->len = new_ie_len;
-+	new_ies->tsf = le64_to_cpu(mgmt->u.probe_resp.timestamp);
-+	new_ies->from_beacon = ieee80211_is_beacon(mgmt->frame_control);
-+	memcpy(new_ies->data, new_ie, new_ie_len);
-+	if (ieee80211_is_probe_resp(mgmt->frame_control)) {
-+		old = rcu_access_pointer(nontrans_bss->pub.proberesp_ies);
-+		rcu_assign_pointer(nontrans_bss->pub.proberesp_ies, new_ies);
-+		rcu_assign_pointer(nontrans_bss->pub.ies, new_ies);
-+		if (old)
-+			kfree_rcu((struct cfg80211_bss_ies *)old, rcu_head);
-+	} else {
-+		old = rcu_access_pointer(nontrans_bss->pub.beacon_ies);
-+		rcu_assign_pointer(nontrans_bss->pub.beacon_ies, new_ies);
-+		rcu_assign_pointer(nontrans_bss->pub.ies, new_ies);
-+		if (old)
-+			kfree_rcu((struct cfg80211_bss_ies *)old, rcu_head);
-+	}
-+}
-+
-+/* cfg80211_inform_bss_width_frame helper */
-+static struct cfg80211_bss *
-+cfg80211_inform_single_bss_frame_data(struct wiphy *wiphy,
-+				      struct cfg80211_inform_bss *data,
-+				      struct ieee80211_mgmt *mgmt, size_t len,
-+				      struct cfg80211_bss *trans_bss,
-+				      gfp_t gfp)
+ 	bss->refcount--;
+ 	if (bss->refcount == 0)
+ 		bss_free(bss);
+@@ -1028,6 +1046,7 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
+ static struct cfg80211_internal_bss *
+ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+ 		    struct cfg80211_internal_bss *tmp,
++		    struct cfg80211_bss *trans_bss,
+ 		    bool signal_valid)
  {
- 	struct cfg80211_internal_bss tmp = {}, *res;
- 	struct cfg80211_bss_ies *ies;
-@@ -1300,6 +1675,50 @@ cfg80211_inform_bss_frame_data(struct wiphy *wiphy,
- 	/* cfg80211_bss_update gives us a referenced result */
- 	return &res->pub;
- }
-+
-+struct cfg80211_bss *
-+cfg80211_inform_bss_frame_data(struct wiphy *wiphy,
-+			       struct cfg80211_inform_bss *data,
-+			       struct ieee80211_mgmt *mgmt, size_t len,
-+			       gfp_t gfp)
-+{
-+	struct cfg80211_bss *res;
-+	struct cfg80211_internal_bss *trans_bss, *tmp_bss;
-+	const u8 *ie = mgmt->u.probe_resp.variable;
-+	const struct cfg80211_bss_ies *ies1, *ies2;
-+	size_t ielen = len - offsetof(struct ieee80211_mgmt,
-+				      u.probe_resp.variable);
-+
-+	res = cfg80211_inform_single_bss_frame_data(wiphy, data, mgmt,
-+						    len, NULL, gfp);
-+	if (!res || !cfg80211_find_ie(WLAN_EID_MULTIPLE_BSSID, ie, ielen))
-+		return res;
-+
-+	/* process each non-transmitting bss */
-+	cfg80211_parse_mbssid_frame_data(wiphy, data, mgmt, len, res, gfp);
-+
-+	/* check if the res has other nontransmitting bss which is not
-+	 * in MBSSID IE
-+	 */
-+	ies1 = rcu_access_pointer(res->ies);
-+	trans_bss = container_of(res, struct cfg80211_internal_bss, pub);
-+	if (!trans_bss)
-+		return res;
-+
-+	/* go through nontrans_list, if the timestamp of the BSS is
-+	 * earlier than the timestamp of the transmitting BSS then
-+	 * update it
-+	 */
-+	list_for_each_entry(tmp_bss, &trans_bss->nontrans_list,
-+			    nontrans_list) {
-+		ies2 = rcu_access_pointer(tmp_bss->pub.ies);
-+		if (ies2->tsf < ies1->tsf)
-+			cfg80211_update_notlisted_nontrans(wiphy, tmp_bss,
-+							   mgmt, len, gfp);
-+	}
-+
-+	return res;
-+}
- EXPORT_SYMBOL(cfg80211_inform_bss_frame_data);
+ 	struct cfg80211_internal_bss *found = NULL;
+@@ -1184,6 +1203,17 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+ 			goto drop;
+ 		}
  
- void cfg80211_ref_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
-@@ -1337,7 +1756,7 @@ EXPORT_SYMBOL(cfg80211_put_bss);
- void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
--	struct cfg80211_internal_bss *bss;
-+	struct cfg80211_internal_bss *bss, *nontrans_bss, *tmp;
- 
- 	if (WARN_ON(!pub))
- 		return;
-@@ -1346,6 +1765,13 @@ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
- 
- 	spin_lock_bh(&rdev->bss_lock);
- 	if (!list_empty(&bss->list)) {
-+		list_for_each_entry_safe(nontrans_bss, tmp,
-+					 &bss->nontrans_list,
-+					 nontrans_list) {
-+			if (__cfg80211_unlink_bss(rdev, nontrans_bss))
-+				rdev->bss_generation++;
++		/* This must be before the call to bss_ref_get */
++		if (trans_bss) {
++			struct cfg80211_internal_bss *pbss =
++				container_of(trans_bss,
++					     struct cfg80211_internal_bss,
++					     pub);
++
++			new->transmitted_bss = trans_bss;
++			bss_ref_get(rdev, pbss);
 +		}
 +
- 		if (__cfg80211_unlink_bss(rdev, bss))
- 			rdev->bss_generation++;
- 	}
+ 		list_add_tail(&new->list, &rdev->bss_list);
+ 		rdev->bss_entries++;
+ 		rb_insert_bss(rdev, new);
+@@ -1339,7 +1369,8 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
+ 
+ 	signal_valid = abs(data->chan->center_freq - channel->center_freq) <=
+ 		wiphy->max_adj_channel_rssi_comp;
+-	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
++	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, trans_bss,
++				  signal_valid);
+ 	if (!res)
+ 		return NULL;
+ 
+@@ -1657,7 +1688,8 @@ cfg80211_inform_single_bss_frame_data(struct wiphy *wiphy,
+ 
+ 	signal_valid = abs(data->chan->center_freq - channel->center_freq) <=
+ 		wiphy->max_adj_channel_rssi_comp;
+-	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
++	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, trans_bss,
++				  signal_valid);
+ 	if (!res)
+ 		return NULL;
+ 
 -- 
 2.7.4
 
