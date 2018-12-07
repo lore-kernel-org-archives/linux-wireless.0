@@ -1,169 +1,188 @@
-Return-Path: <SRS0=7mY+=OP=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=Y8Bh=OQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92A86C04EB8
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Dec 2018 21:16:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C948EC65BAF
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Dec 2018 00:13:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF96D2081C
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Dec 2018 21:16:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B01620868
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Dec 2018 00:13:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="jrVfhXBP"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CF96D2081C
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=wetzel-home.de
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Fsuanyn7"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8B01620868
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725936AbeLFVQt (ORCPT
+        id S1725978AbeLGAN1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 6 Dec 2018 16:16:49 -0500
-Received: from 6.mo1.mail-out.ovh.net ([46.105.43.205]:41775 "EHLO
-        6.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725916AbeLFVQs (ORCPT
+        Thu, 6 Dec 2018 19:13:27 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:37718 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725948AbeLGAN1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Dec 2018 16:16:48 -0500
-Received: from player711.ha.ovh.net (unknown [10.109.160.253])
-        by mo1.mail-out.ovh.net (Postfix) with ESMTP id 4A422145B6C
-        for <linux-wireless@vger.kernel.org>; Thu,  6 Dec 2018 17:27:05 +0100 (CET)
-Received: from awhome.eu (p57B7EDEA.dip0.t-ipconnect.de [87.183.237.234])
-        (Authenticated sender: postmaster@awhome.eu)
-        by player711.ha.ovh.net (Postfix) with ESMTPSA id F2F838730E7;
-        Thu,  6 Dec 2018 16:27:03 +0000 (UTC)
-Subject: Re: [RFC PATCH v2 2/2] mac80211: Add support for Extended Key ID
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1544113623;
-        bh=C6e8wg8ouzV7iYywAEJ0TfossPSVcUncKIhCrKBbzJM=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=jrVfhXBPkXtg93soumeyKGZ6+LnsqrWzMLQws5N7hWqWYwDWRIlRMnXUFV1sTIRRt
-         gkFh1j/XJ5v82/2Ix3Qxk72WQEHNNgSfyZaDsKbGr9+Exf6B6mUFMtkpUY4o+hSKSF
-         JMb1OqVw1CEYWrMG8jJhJiL5wC2Q9PgLzHuk9YKk=
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org
-References: <20181111110235.14213-1-alexander@wetzel-home.de>
- <20181111110235.14213-3-alexander@wetzel-home.de>
- <24665c3e0e7e970eb8cd63dad57e2b0b3097cfcc.camel@sipsolutions.net>
- <d20b43fc-408c-d3fb-75b2-9c2bffd37264@wetzel-home.de>
- <61c9ed7fc16517991cda3c9d930b53c24306234e.camel@sipsolutions.net>
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-Message-ID: <cb55102c-456c-3aea-44c2-cd9d0ebc3c3e@wetzel-home.de>
-Date:   Thu, 6 Dec 2018 17:27:03 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.1
+        Thu, 6 Dec 2018 19:13:27 -0500
+Received: by mail-pg1-f194.google.com with SMTP id 80so878212pge.4
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2018 16:13:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=KnxtaTSUT4ZjS4fAMsNPM8zLcRZ7oBhSPNZwlUEuE60=;
+        b=Fsuanyn7StOHvNQ7bqa87XghNNfi7t8tRG6DPQ29wYdcadcjjhK1WvOw5TwZMm9kT8
+         UusRXE/8NPcsdRAOJshMLKoSLK9+1f1x4FBuxlvZ7j1tisljcSuWkLq5bCUPBWvbDBjL
+         EWgLp5s6t+38kbidPAGui5DECeNodxSAOpE6Q=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=KnxtaTSUT4ZjS4fAMsNPM8zLcRZ7oBhSPNZwlUEuE60=;
+        b=ZMzDmRveEuCcOZ78y3hK3nKSuJPlTNUjG1mI1lRAnJcvzCOgU2VS/x8Pjav//tgpCZ
+         +Hbf5q302JB7FF2cufkCMQ/IRDYgQ98Yp28Viz/rEi2CnEk+joes08DUR4d+Nf48fyrn
+         RhPBYG3iS6Tx7w2rjw502tU6kNr81DKFmbKdC6/RyzavQUNuPGjvyjZFBZreZYBpRo7Z
+         ooDbnWPPPwaTTQqwu038BGCo6yDsAY69wATShWPFfLfwb7KWxB+ZUEHBnL9eu97Zco/x
+         A6jhXCDbJRAGnBXMi0IAMh5k6iYl/zYLnq4DXspztlB9yXwcYuCPzO2rxSbcbUSYXx/R
+         2CGw==
+X-Gm-Message-State: AA+aEWYs7dL7YnfwwOR3+P2IxmFOGOHmLmGrywpeCP3LzSar8FOija2h
+        3TO6Btvg/zIpC1n5vFh3rRS1CQ==
+X-Google-Smtp-Source: AFSGD/VZWz2VDi/kkquokqHoMzDBp+UIdhBOg/qryEpK0PnNYu7HA04acuttCJzs4Q9R7hXz1IMidA==
+X-Received: by 2002:a63:1258:: with SMTP id 24mr56312pgs.114.1544141606581;
+        Thu, 06 Dec 2018 16:13:26 -0800 (PST)
+Received: from smtp.gmail.com ([2620:15c:202:1:534:b7c0:a63c:460c])
+        by smtp.gmail.com with ESMTPSA id o66sm1654437pgo.75.2018.12.06.16.13.13
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 06 Dec 2018 16:13:17 -0800 (PST)
+From:   Brian Norris <briannorris@chromium.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     <linux-kernel@vger.kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [RFC PATCH v2 1/2] mwifiex: refactor mwifiex_parse_htinfo() for reuse
+Date:   Thu,  6 Dec 2018 16:12:48 -0800
+Message-Id: <20181207001249.165477-1-briannorris@chromium.org>
+X-Mailer: git-send-email 2.20.0.rc2.403.gdbc3b29805-goog
 MIME-Version: 1.0
-In-Reply-To: <61c9ed7fc16517991cda3c9d930b53c24306234e.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Ovh-Tracer-Id: 5609514814210448583
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtkedrudefjedgkeekucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> 
->>>> -	/* PTK only using key ID 0 needs special handling on rekey */
->>>> -	if (new_key && sta && ptk0rekey) {
->>>> +	/* PTK rekey without Extended Key ID needs special handling */
->>>> +	if (new_key && pairwise && sta &&
->>>> +	    !test_sta_flag(sta, WLAN_STA_EXT_KEY_ID)) {
->>>>    		local = old_key->local;
->>>>    		sdata = old_key->sdata;
->>>
->>> This seems wrong, even if you have ext key ID support and everything,
->>> but you do 0 -> 0 rekeying, then you still need all the special handling
->>> (in fact also then if you go 1->1!). So it seems you'd instead want to
->>> see if you're going from a TX key to a TX key with the same key ID, and
->>> then you don't need this flag at all.
->>>
->>
->> The intention for Extended Key ID is, to have a comparable short time
->> frame where both key IDs can be used. When replacing e.g. key ID 0 again
->> it should be idle for a long time. I guess if someone starts re-keying
->> in 1s intervals it may become an issue, but then anyone re-keying that
->> often can't be helped...
-> 
-> Sure. But ... not sure how that's related?
-> 
->> With Extended Key IDs it's impossible to directly switch from a TX key
->> with one key ID to another one with the same id.
->>
->> 1) Association
->> 2) key ID 0 installed RX only
->> 3) key Id 0 set_tx
->> 4) rekey timeout passes
->> 5) key ID 1 installed RX only
->> 6) key ID 1 set_tx (also making key ID 0 RX only)
->> 7) rekey timeout passes
->> 8) key ID 0 replaced with new RX only key
->> 9) key ID 0 set_tx
->> 10) rekey timeout passes
->> ...
->>
->> So nobody will use the key being replaced, we don't have to protect
->> against PN poisoning.
-> 
-> Exactly.
-> 
->> And when a driver supports Extended Key ID we
->> don't care about if the driver is able to rekey PTK0 correctly.
-> 
-> Strictly speaking, that's false, since you don't know if wpa_s actually
-> used it, and the peer STA allowed it.
-> 
-> It's also not what you implemented, you implemented checking if
-> NL80211_KEY_RX_ONLY was ever used.
-> 
-> However, what I'm trying to say is that I'm not sure this makes sense?
-> 
-> It seems to me it would be safer, and easier (no station flag), to just
-> check
-> 
->   if ("we're replacing the current TX key")
-> 
-> and trigger the workarounds in that case. No?
-> 
-> Yes, parts of the issue also manifest themselves on the RX side, but if
-> you're not replacing the current key then you were using extended key ID
-> support?
-> 
-Ah, now I get it:-)
-Will try that out also.
+This function converts some firmware-specific parameters into cfg80211
+'rate_info' structures. It currently assumes it's dealing only with TX
+bitrate, but the RX bitrate looks to be the same, so refactor this
+function to be reusable.
 
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+v2:
+ * no change - just split unrelated (debugfs) patch to its own series
+---
+ .../net/wireless/marvell/mwifiex/cfg80211.c   | 36 ++++++++++---------
+ 1 file changed, 19 insertions(+), 17 deletions(-)
 
->>>> +++ b/net/mac80211/sta_info.c
->>>> @@ -350,6 +350,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
->>>>    	sta->sta.max_rx_aggregation_subframes =
->>>>    		local->hw.max_rx_aggregation_subframes;
->>>>    
->>>> +	sta->ptk_idx = NUM_DEFAULT_KEYS - 1;
->>>
->>> That makes no sense? Why should it be 3? That's invalid anyway?
->>
->> Yes, that's the whole reason for that change:-) Setting it to 2 would
->> also be fine, as long as it's not 0 or 1.
-> 
-> Hmm, ok. So that probably wants a big comment saying that it relies on
-> key idx 2/3 being invalid. I'm not sure I like the NUM_DEFAULT_KEYS-1,
-> better perhaps to do something like
-> 
-> 	/* comment saying why */
-> 	BUILD_BUG_ON(ARRAY_SIZE(sta->ptks) > 2);
-> 	sta->ptk_idx = 2;
-> 
-> or so?
-> 
->> ieee80211_tx_h_select_key starts encrypting packets as soon as
->> sta->ptk[tx->sta->ptk_idx] is not null.
-> 
-> Right, so I guess this makes sense.
-> 
-> johannes
->Thank you very much for all the helpful tips and suggestions!
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index adc88433faa8..02b80ea232a7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1275,27 +1275,27 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ }
+ 
+ static void
+-mwifiex_parse_htinfo(struct mwifiex_private *priv, u8 tx_htinfo,
++mwifiex_parse_htinfo(struct mwifiex_private *priv, u8 rateinfo, u8 htinfo,
+ 		     struct rate_info *rate)
+ {
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 
+ 	if (adapter->is_hw_11ac_capable) {
+ 		/* bit[1-0]: 00=LG 01=HT 10=VHT */
+-		if (tx_htinfo & BIT(0)) {
++		if (htinfo & BIT(0)) {
+ 			/* HT */
+-			rate->mcs = priv->tx_rate;
++			rate->mcs = rateinfo;
+ 			rate->flags |= RATE_INFO_FLAGS_MCS;
+ 		}
+-		if (tx_htinfo & BIT(1)) {
++		if (htinfo & BIT(1)) {
+ 			/* VHT */
+-			rate->mcs = priv->tx_rate & 0x0F;
++			rate->mcs = rateinfo & 0x0F;
+ 			rate->flags |= RATE_INFO_FLAGS_VHT_MCS;
+ 		}
+ 
+-		if (tx_htinfo & (BIT(1) | BIT(0))) {
++		if (htinfo & (BIT(1) | BIT(0))) {
+ 			/* HT or VHT */
+-			switch (tx_htinfo & (BIT(3) | BIT(2))) {
++			switch (htinfo & (BIT(3) | BIT(2))) {
+ 			case 0:
+ 				rate->bw = RATE_INFO_BW_20;
+ 				break;
+@@ -1310,26 +1310,26 @@ mwifiex_parse_htinfo(struct mwifiex_private *priv, u8 tx_htinfo,
+ 				break;
+ 			}
+ 
+-			if (tx_htinfo & BIT(4))
++			if (htinfo & BIT(4))
+ 				rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 
+-			if ((priv->tx_rate >> 4) == 1)
++			if ((rateinfo >> 4) == 1)
+ 				rate->nss = 2;
+ 			else
+ 				rate->nss = 1;
+ 		}
+ 	} else {
+ 		/*
+-		 * Bit 0 in tx_htinfo indicates that current Tx rate
+-		 * is 11n rate. Valid MCS index values for us are 0 to 15.
++		 * Bit 0 in htinfo indicates that current rate is 11n. Valid
++		 * MCS index values for us are 0 to 15.
+ 		 */
+-		if ((tx_htinfo & BIT(0)) && (priv->tx_rate < 16)) {
+-			rate->mcs = priv->tx_rate;
++		if ((htinfo & BIT(0)) && (rateinfo < 16)) {
++			rate->mcs = rateinfo;
+ 			rate->flags |= RATE_INFO_FLAGS_MCS;
+ 			rate->bw = RATE_INFO_BW_20;
+-			if (tx_htinfo & BIT(1))
++			if (htinfo & BIT(1))
+ 				rate->bw = RATE_INFO_BW_40;
+-			if (tx_htinfo & BIT(2))
++			if (htinfo & BIT(2))
+ 				rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 		}
+ 	}
+@@ -1375,7 +1375,8 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
+ 		sinfo->tx_packets = node->stats.tx_packets;
+ 		sinfo->tx_failed = node->stats.tx_failed;
+ 
+-		mwifiex_parse_htinfo(priv, node->stats.last_tx_htinfo,
++		mwifiex_parse_htinfo(priv, priv->tx_rate,
++				     node->stats.last_tx_htinfo,
+ 				     &sinfo->txrate);
+ 		sinfo->txrate.legacy = node->stats.last_tx_rate * 5;
+ 
+@@ -1401,7 +1402,8 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
+ 			 HostCmd_ACT_GEN_GET, DTIM_PERIOD_I,
+ 			 &priv->dtim_period, true);
+ 
+-	mwifiex_parse_htinfo(priv, priv->tx_htinfo, &sinfo->txrate);
++	mwifiex_parse_htinfo(priv, priv->tx_rate, priv->tx_htinfo,
++			     &sinfo->txrate);
+ 
+ 	sinfo->signal_avg = priv->bcn_rssi_avg;
+ 	sinfo->rx_bytes = priv->stats.rx_bytes;
+-- 
+2.20.0.rc2.403.gdbc3b29805-goog
 
-Alexander
