@@ -2,102 +2,109 @@ Return-Path: <SRS0=Y8Bh=OQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BD8BC65BAF
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Dec 2018 00:16:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 185C4C04EB8
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Dec 2018 01:16:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E90920868
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Dec 2018 00:16:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7374620850
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Dec 2018 01:16:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="A9Z0AmxQ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0E90920868
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
+	dkim=pass (2048-bit key) header.d=stackinside.com header.i=@stackinside.com header.b="2h49Qaqk";
+	dkim=pass (2048-bit key) header.d=stackinside.com header.i=@stackinside.com header.b="W1JyHdJF"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7374620850
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=stackinside.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725950AbeLGAPy (ORCPT
+        id S1726124AbeLGBQY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 6 Dec 2018 19:15:54 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:34747 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725945AbeLGAPy (ORCPT
+        Thu, 6 Dec 2018 20:16:24 -0500
+Received: from 138.128.218.174.16clouds.com ([138.128.218.174]:33934 "EHLO
+        mail.stackinside.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725945AbeLGBQY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Dec 2018 19:15:54 -0500
-Received: by mail-pf1-f195.google.com with SMTP id h3so999138pfg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2018 16:15:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=LrQCzepF32eSc4nulqWoLfzxYmel15K3WRQ7t0gxsl8=;
-        b=A9Z0AmxQgbQ6/n5gJijTU3OosRY1SSL6itGySkugpgf2i7uanLsmLGF3rXlnGrRcF0
-         MhqpTQ5GiFRHEFAnx02FqitZWiz3uIha+cDZMMt8mI1C3YXHmpamyTw6dI9ZYiLlCeQK
-         ubsMcAoCGK4VayCzEVC18N4zu7ObTMfgBlmYI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=LrQCzepF32eSc4nulqWoLfzxYmel15K3WRQ7t0gxsl8=;
-        b=UNBhhnzBCXazOMxudDMxmh8Uxmr4KWKgmV92vc5deqxQd58p3c5KZNGacodeXZ1EpJ
-         T4q+Ppx9Peexao1Wf0qdeV3kz6mwnQ6UbIGFnbgZOyy8mx1aSRcl+GPBiqery9oPunCx
-         bdQtpaobnAEL23pbZMce4OYXt6yw/C8yT1VSnD6e1V9MK+7dlrdpIZY9Fc5iGjUoB+fJ
-         zZmJO4oGc1kjOAUs4t1y8q75ZN5IAqG2gsXPqJdHe/i8pss3FrNqOHY93exgoWGy7Jz9
-         WNYfAuEc3mApP/9j16CuRV/45DDVt7ZpFFWr/sqhVeVBBdWCyh/UKPV7cB3Rg6Oy7Fuw
-         SWyg==
-X-Gm-Message-State: AA+aEWa8jYxQvqTs8xjyZPRwfDh+oExS3aq31Yg7RvTbnyGjVf/17/Ge
-        m9fj3DCXFj01WgUivczfGqF8Pw==
-X-Google-Smtp-Source: AFSGD/VmNggKG9AdPps+47dVG6ibac4BfZY03f/XpJJt5IQ7hdII7LeIohGHg5q1/1wGkqpB3+PmIA==
-X-Received: by 2002:a65:6491:: with SMTP id e17mr52023pgv.418.1544141753790;
-        Thu, 06 Dec 2018 16:15:53 -0800 (PST)
-Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
-        by smtp.gmail.com with ESMTPSA id y6sm2204682pfd.104.2018.12.06.16.15.43
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 06 Dec 2018 16:15:45 -0800 (PST)
-Date:   Thu, 6 Dec 2018 16:15:42 -0800
-From:   Brian Norris <briannorris@chromium.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mwifiex: debugfs: correct histogram spacing,
- formatting
-Message-ID: <20181207001540.GA165647@google.com>
-References: <20181130225303.143409-1-briannorris@chromium.org>
- <eef7598bb282218d4700986b15cf9f83a5e7edb5.camel@perches.com>
- <20181203222654.GA155572@google.com>
- <87k1kper11.fsf@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87k1kper11.fsf@codeaurora.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Thu, 6 Dec 2018 20:16:24 -0500
+X-Greylist: delayed 361 seconds by postgrey-1.27 at vger.kernel.org; Thu, 06 Dec 2018 20:16:23 EST
+Received: by mail.stackinside.com (Postfix, from userid 112)
+        id 76D3531F2B; Fri,  7 Dec 2018 02:10:20 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stackinside.com;
+        s=mail; t=1544145020;
+        bh=K1pPk9Zo3w4JJYV2QJnpDQbsxxg1gJUlAlCSwes+Nvc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=2h49QaqkOBBBIXxpXGaio3c8JWnzeQuRXaj0bAjzfHxM3dcBxH2q+mT368L/7VW6Z
+         oPpsu4LbBEMRu+hAe7f0+pc9ZI9JftPcGg/afU+odrqJs2d7aORJyqBl2MpvMDQqRM
+         5dEnVOYJVR27lkY1rhKacrdXOeA55S0Pi7+li6HATUlvdLbtRVgL1ZmhCj4Jv3n0gq
+         uTgSZxaEV4UczPvJpFdyvjY3Iycw+awGsjss13nUsMGxKziIglib69S0qD3Gw8vTkK
+         xR4H1K2bJaXjkavrnbuM4Ozaz1Neh0qNHET7sIWbFo5GLnmLCA75+Fzaoi34caeM5k
+         NBhPUK9T3jbQw==
+Received: from vermont (95-54-31-175.dynamic.lenobl.dslavangard.ru [95.54.31.175])
+        by mail.stackinside.com (Postfix) with ESMTPSA id 1853031BD6;
+        Fri,  7 Dec 2018 02:10:18 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stackinside.com;
+        s=mail; t=1544145018;
+        bh=K1pPk9Zo3w4JJYV2QJnpDQbsxxg1gJUlAlCSwes+Nvc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=W1JyHdJFo2nJ7dRqxJ3Jn/jx1v5yWGoLMchCgDc+/EFoZuN2CRWOO7heUTS1LWkY0
+         1yJUEs51OZfHwx8CQyVSIcgf7bHSenCqvhExMBn3TZhIX21VI4nfuSlgEjL8i6fo/U
+         691GZxd32DFShbNOJj1Vdt5TNZOoqiOJNGnQbvNLjnOr2Yj5BLGTzoRng3ENGmiv+1
+         h7acTxMjBFhws02mtYANZ0TJvcooG7NUKGUdhHX2FwmMDaXu6iT/8r8SspR3mgUbgZ
+         o+O3UUu9iiZEc915IOIFweDRKRdUeTAUZw/m9ua2PmrOzFDx7o2DJrzNpA5mzMsHQ+
+         cl+5Nz7XmxlGQ==
+Date:   Fri, 7 Dec 2018 04:10:12 +0300
+From:   Hubert Wiedeke <info@stackinside.com>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Request for brcmfmac4366c-pcie.bin
+Message-Id: <20181207041012.efa325a117416ac0329e51a9@stackinside.com>
+In-Reply-To: <5AC480F8.7060001@broadcom.com>
+References: <20180217111959.9548246f2ee99918857b44f8@stackinside.com>
+        <5A8ABA2B.70500@broadcom.com>
+        <20180404051229.f31c6913c9d4d26ae4fb0c1e@stackinside.com>
+        <5AC480F8.7060001@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Dec 04, 2018 at 08:37:30AM +0200, Kalle Valo wrote:
-> Brian Norris <briannorris@chromium.org> writes:
-> 
-> > Here's a v2 that combines both sets of strings in that way. I'm not
-> > resending the other patches, since they were only related in concept
-> > (since I was referring to debugfs for implementing the nl80211 stuff),
-> > but have no real dependency.
+On Wed, 4 Apr 2018 09:38:32 +0200
+Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+
+> On 4/4/2018 4:12 AM, Hubert Wiedeke wrote:
+> > On Mon, 19 Feb 2018 12:51:07 +0100
+> > Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
 > >
-> > @Kalle: I can resend the others as a new series if that helps.
+> >> On 2/17/2018 9:19 AM, Hubert Wiedeke wrote:
+> >>> Hi,
+> >>>
+> >>> I'd like to ask about the current status of 4366c firmware preparation for linux-firmware.git . Is it close to finish? What about DFS? Nothing critical, just a question.
+> >>
+> >> I have prepared some firmware changes for 4366, but did not manage to
+> >> get any test-cycles for it.
+> >>
+> >> Regards,
+> >> Arend
+> >>
+> >
+> > Could you please estimate any possible dates for the tested FW to be released?
 > 
-> Yeah, it does. Trying to pick patches from different places in patchwork
-> is just too much of a hassle for me. So please do resend the whole
-> series.
+> Not really. Linux open-source work is getting rather low prio when it 
+> comes to claiming test lab resources. Best I can say is somewhere this year.
+> 
+> Regards,
+> Arend
+> 
 
-I've split them up and resent the other 2 unmodified now (as 'RFC PATCH
-v2 X/2'), as this patch is trivial and not related to the others
-directly. They can be applied in any order. Hopefully that's sufficient.
+Hi Arend,
 
-Brian
+It seems like the year is almost over, and I guess it would be nice to reconsider the estimation (no rush, of course).
+If you had a spare minute, could you please review the current status/priority for this FW?
+Linux-powered consumers of 4366c would probably appreciate this information.
+
+-- 
+Best regards,
+Hubert Wiedeke
