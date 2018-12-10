@@ -2,90 +2,103 @@ Return-Path: <SRS0=yVm+=OT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCA6BC65BB3
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Dec 2018 15:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80D04C5CFFE
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Dec 2018 17:31:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8825A20821
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Dec 2018 15:46:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8825A20821
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 48D1D2064D
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Dec 2018 17:31:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HFqHq6b2";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TOeD1S51"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 48D1D2064D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728187AbeLJPqj (ORCPT
+        id S1727921AbeLJRbD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Dec 2018 10:46:39 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:45423 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728050AbeLJPqj (ORCPT
+        Mon, 10 Dec 2018 12:31:03 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:37116 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726687AbeLJRbC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Dec 2018 10:46:39 -0500
-Received: by mail-wr1-f68.google.com with SMTP id b14so10953907wru.12
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2018 07:46:38 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=5OfBkKezWZRwBnVMcdO9OZDKVr6QIl4Kdr/asIz/PpU=;
-        b=WVfyfrSy4PuOdvPsObYucpf/p6WcYwqcM7I56j4J0gIxPJPAnube8pWmPNWP40AUTL
-         6igYCfkKi5jqlcFzWZUdOPdaOP6rik4U4D1Ze7Hb0eEscOXQdYiTDK8vWho1v7ByGl+O
-         Jtyt6t3uue4ajIPxJPCLK0LNqnYHEJRTAX1Bz/2wHJ4BF1bOuAngA2Xoh99l7BIa92c7
-         ZqNSS6uBfp2bbIRGEd9hSOWCXJrSzHM1z8RaUfN2w4QjBv4U36XhYNKaPf1EqXXktF5D
-         7PcbFCeqVzGlmCTvzNebDg/gFIvOfwK9x0i6hA6pkfb3HWGhYg/3PSlDaEKiIlv1m4Rv
-         HMyw==
-X-Gm-Message-State: AA+aEWZOc8PB4/soybFdyzUsPa/MGWle4s3zttxUDolio7t3mj7j0doT
-        hordByaOBcSKDUpWjsIJ9UGqEJ2eTMY=
-X-Google-Smtp-Source: AFSGD/XAo96HLSDuPAtjZ1TU+JZoJtVMWtDijFTlUc+juvOv1LUu487IlCkO1DvIgYfj77Z7q4TvJw==
-X-Received: by 2002:adf:aac6:: with SMTP id i6mr10047958wrc.216.1544456797570;
-        Mon, 10 Dec 2018 07:46:37 -0800 (PST)
-Received: from localhost.localdomain ([151.66.36.11])
-        by smtp.gmail.com with ESMTPSA id i186sm3340331wmd.19.2018.12.10.07.46.36
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 10 Dec 2018 07:46:36 -0800 (PST)
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: add entry in MAINTAINERS file
-Date:   Mon, 10 Dec 2018 16:46:28 +0100
-Message-Id: <47d46d5627fee5691f7faf682d385c2aa3a537d4.1544456498.git.lorenzo.bianconi@redhat.com>
-X-Mailer: git-send-email 2.19.2
-In-Reply-To: <cover.1544456498.git.lorenzo.bianconi@redhat.com>
-References: <cover.1544456498.git.lorenzo.bianconi@redhat.com>
+        Mon, 10 Dec 2018 12:31:02 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 5094360A33; Mon, 10 Dec 2018 17:31:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1544463061;
+        bh=Rm48TMtEqo+i+SNX4708GD3xygjw1+jcuWX8RW+KyRk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=HFqHq6b2Mpv9JQBq3WVRdhAhUjVManZOjbFDBTUEB76K+NKs2psgi/QuS03Umkt4y
+         dBAnEIDeU6/kLNgruh3uICPrAeB+eC7Y/DFQug6BASptLdU8KRgTlZU4yi+BmmhBj6
+         +iyAOB189yeXgCCuy1hwOV8u76QN9/OFhMJ4kpmU=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A375760115;
+        Mon, 10 Dec 2018 17:30:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1544463060;
+        bh=Rm48TMtEqo+i+SNX4708GD3xygjw1+jcuWX8RW+KyRk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=TOeD1S51PEhGa/xCeZbSC2yOMxN21EDj9tzBDF/7P0B0wAP4DryJkYYtkmNSrSRpM
+         Ry0IadzXcXtJHiIzZlFT0kRDJmRgT3CbpiI5BnPp7g8Pz44eHl4v3ETsEElLdpbZh3
+         7YEysib6B8gsmcn5KAOinpcgjB5fxW/2ibpDvBw8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A375760115
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Pavel Machek <pavel@ucw.cz>
+Cc:     jacek.anaszewski@gmail.com, linux-leds@vger.kernel.org,
+        kernel list <linux-kernel@vger.kernel.org>,
+        davem@davemloft.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: trigger named just "tx" in drivers/net/wireless/atmel/at76c50x-usb.c
+References: <20181201143144.GC31631@amd> <87lg57f182.fsf@codeaurora.org>
+        <20181209200844.GA12756@amd>
+Date:   Mon, 10 Dec 2018 19:30:56 +0200
+In-Reply-To: <20181209200844.GA12756@amd> (Pavel Machek's message of "Sun, 9
+        Dec 2018 21:08:44 +0100")
+Message-ID: <87zhtd1e7j.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add entry for mt76 driver in MAINTAINERS file
+Pavel Machek <pavel@ucw.cz> writes:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+> On Mon 2018-12-03 10:45:01, Kalle Valo wrote:
+>> Pavel Machek <pavel@ucw.cz> writes:
+>> 
+>> > While grepping something else, I came across LED trigger that is named
+>> > just "tx".
+>> >
+>> > That's a bit too generic afaict?
+>> >
+>> > +++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+>> > @@ -520,7 +520,7 @@ static int at76_usbdfu_download(struct usb_device
+>> > *udev, u8 *buf, u32 size,
+>> >  static int tx_activity;
+>> >   static void at76_ledtrig_tx_timerfunc(struct timer_list *unused);
+>> >    static DEFINE_TIMER(ledtrig_tx_timer, at76_ledtrig_tx_timerfunc);
+>> >    -DEFINE_LED_TRIGGER(ledtrig_tx);
+>> >    +DEFINE_LED_TRIGGER(ledtrig_tx); /* Hey! "tx" is a bit too generic
+>> >    name for a trigger! */
+>> 
+>> This is an ancient driver, my guess is that nobody uses it anymore. I
+>> should orphan it and maybe even remove it at some point.
+>
+> Are you willing to add a fixme there? I really don't want people to
+> copy that example.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f4855974f325..903b942c0b96 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9353,6 +9353,13 @@ F:	drivers/media/platform/mtk-vpu/
- F:	Documentation/devicetree/bindings/media/mediatek-vcodec.txt
- F:	Documentation/devicetree/bindings/media/mediatek-vpu.txt
- 
-+MEDIATEK MT76 WIRELESS LAN DRIVER
-+M:	Felix Fietkau <nbd@nbd.name>
-+M:	Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-+L:	linux-wireless@vger.kernel.org
-+S:	Maintained
-+F:	drivers/net/wireless/mediatek/mt76/
-+
- MEDIATEK MT7601U WIRELESS LAN DRIVER
- M:	Jakub Kicinski <kubakici@wp.pl>
- L:	linux-wireless@vger.kernel.org
+Sure, patches welcome.
+
 -- 
-2.19.2
-
+Kalle Valo
