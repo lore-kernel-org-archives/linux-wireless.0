@@ -2,100 +2,106 @@ Return-Path: <SRS0=yVm+=OT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD5A1C04EB8
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Dec 2018 20:56:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 918BAC04EB8
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Dec 2018 23:25:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8BA32082F
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Dec 2018 20:56:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A8BA32082F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arndb.de
+	by mail.kernel.org (Postfix) with ESMTP id 55A6B2081F
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Dec 2018 23:25:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1544484326;
+	bh=nFu/8yIHK7LHfug80sxGc0pY+Ew93Q5CFOk0j3niVSo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=EIRVxv7Iht333kBoZ92rpkW4S79qzFcKQ8bOzMtUIeRjGx1MBCp29QxuyfrP5rj4m
+	 xkX/+U0Sj6aGj6Y2Cx+zytsgO1wW0lr+hgI/q//Vv4qtLCs5otnm8m3aU8y6mUCbb6
+	 vpjcP2iobcTTsbWD9MUUTuOaiVzM8EFwBH3AqI98=
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 55A6B2081F
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729781AbeLJU4L (ORCPT
+        id S1729515AbeLJXZZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Dec 2018 15:56:11 -0500
-Received: from mout.kundenserver.de ([212.227.17.10]:36593 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728820AbeLJU4L (ORCPT
+        Mon, 10 Dec 2018 18:25:25 -0500
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:39494 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727330AbeLJXZZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Dec 2018 15:56:11 -0500
-Received: from wuerfel.lan ([109.192.41.194]) by mrelayeu.kundenserver.de
- (mreue106 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1MI4gb-1giIxv4611-00FFce; Mon, 10 Dec 2018 21:55:57 +0100
-From:   Arnd Bergmann <arnd@arndb.de>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Lyude Paul <lyude@redhat.com>, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] brcmfmac: fix false-positive -Wmaybe-unintialized warning
-Date:   Mon, 10 Dec 2018 21:55:37 +0100
-Message-Id: <20181210205555.3000038-1-arnd@arndb.de>
-X-Mailer: git-send-email 2.20.0
+        Mon, 10 Dec 2018 18:25:25 -0500
+Received: by mail-ot1-f66.google.com with SMTP id n8so12220688otl.6;
+        Mon, 10 Dec 2018 15:25:24 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=QHIdQzLf9m7vh0IlQ+gduF2Ec374AEOWiprrSnYbyrA=;
+        b=nmWtP/iKauorpv8MqpR4KG6CCgx41h02+2qbMgYO9x2hQcOnQv/SIsFdYa1jt8nkBe
+         wE8lMjoJrUnLoz+cOQZxC8nBkfiP0jKMaaBo8P5jkDqSvPZvibeVk/yXrCU4aopqNriN
+         6+O7/Py6V1dhx7kzP7aqOY5iCSPtn7VrhzvWjmbHZCXtJu93RoNYIDOgHA0OO5WqX8oV
+         tUsQocRBwFzkwMPA2SYCOelDmG+Jzvk1h9fRPH4+oSIkDC9D3/VgegWBritTbbsKcGId
+         jHynRWsZ5KsNJEOqOQBPYwNoYjLOlV1LODKjjOnkM47Rcdpl/HlYHUlJs3wE22IjpEgO
+         nMVw==
+X-Gm-Message-State: AA+aEWbZbdfxeJmv5lVBhdbSjXr0tAZsuJ73G5WJ1eXUAxFGQTu8uiJT
+        F9T8aLWu4kd6QYx0aPyfdy/NbKE=
+X-Google-Smtp-Source: AFSGD/UVypOvKR7yF4ECQQTl6Txzle0k2n+XaYHD1t+NwM2ovRckuYOHZe960IxX6ea+Kcebd/zhfg==
+X-Received: by 2002:a9d:70d5:: with SMTP id w21mr9130038otj.301.1544484324549;
+        Mon, 10 Dec 2018 15:25:24 -0800 (PST)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id f18sm6281113otl.18.2018.12.10.15.25.23
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 10 Dec 2018 15:25:24 -0800 (PST)
+Date:   Mon, 10 Dec 2018 17:25:23 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Bhagavathi Perumal S <bperumal@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] dt-bindings: net: ath10k: fix node name and
+ device type in qcom ath10k example
+Message-ID: <20181210232523.GA14192@bogus>
+References: <1544466691-11821-1-git-send-email-bperumal@codeaurora.org>
+ <1544466691-11821-2-git-send-email-bperumal@codeaurora.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:c8n9oVnht6yZZdMzFzt2ov1KCDmfjSTO3yfd/Y3Hf0zedJgmk8S
- 8ObgdgUO9jIrpTjvsloM4TwvKT55C02zMsVHvH9ayHgEFIMd1fE6y4ITk0MViFJ1397y5V7
- FZeLvPPAAuZGPTQiIMH6rX1U1PnMd6ys/q7ogqow5e/vqtrXzja+gjhjjjCS8N9g9bK7UOh
- d/anCt5O4kNK29fPw6CZg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:hoUXMykC07g=:s/27cROxD2vRSf6qo/o9zb
- YaWdDBnJ9LZ4DJM4B2fHYXgSidQFp00iGfjxoFeb+ZiddIhx0whGR4ZwJBnBZhrNHMd0fWBP2
- VKs+ugL6hWsrWcmCinbU2v5WsONOF0dydaIWyG1/P0BoXcOCeeVsQMRs5jMaO1rI5faOzvhgP
- TgTmuykYgnN3XXmlhbTr4KFcvEg5BKhltI9NjJ2P4FjmRLT6QT2Lae3sC3TgyJ4MBZqUoB3ya
- q0+z7YLFpwEV/N5+KugTm6BR5OcSaiAcxVRndGmYd4L9YpF3qnMlLSfE1DqgMza4v93x6CxaE
- eP8puk/kr5Rz8P3YAjqnzTKFoKAWQHGMORNjGxKNO7tmgpQSuUQbmzCm5PujItOHygRIMxL2S
- cBwx8d59jstig3d9mfiXMB9q0l16u1T+Ih/QUZ5EE06uic+uJrkENDWF6CDBS/ukQOA2XShIQ
- 94y/DCFaXPdvP0Ty0aPStHjwNwdatJnGGABQaolN281rxT///Y1GPiB1HQecvp4T4ubJ7STRD
- V1KsawqMkv0pRiCVWhTlr0l7NV09H945rhLYk/F3jh/pU+z3PdkdxSp/2GdgMaHc1VAOXeYiy
- rxc+3/B4gaSkdgZrw8HXePsOuXe6iciCKJnSpt3KELNojlzKhKV2JqbSZVHT40acTyqWu8uZP
- s1N5FoFWf3oWNbMh6xPIcEKlmMMlijreJENoLZ3pBjhXFHFyAjGIWZzh/uZI6UxTTiFsB/Tfy
- 2xrIV9rsmurXv7GcjLUyATlINGU+j04ecpUOVQ==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1544466691-11821-2-git-send-email-bperumal@codeaurora.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When CONFIG_NO_AUTO_INLINE is set, we get a false-postive warning
-for the brcmf_fw_request_nvram_done() function, after gcc figures
-out that brcmf_fw_nvram_from_efi() might not set the 'data_len'
-variable, but fails to notice that it always returns NULL:
+On Tue, Dec 11, 2018 at 12:01:29AM +0530, Bhagavathi Perumal S wrote:
+> In qcom,ath10k documentation, ath10k is used as node name in the example of
+> pci based device. Normally, node name shoud be class of device and not the model
 
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c: In function 'brcmf_fw_request_nvram_done':
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:560:11: error: 'data_len' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+s/shoud/should/
 
-Mark it 'inline' to force gcc to understand this.
-
-Fixes: ce2e6db554fa ("brcmfmac: Add support for getting nvram contents from EFI variables")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index dad3c1c79038..14b948917a1a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -512,7 +512,7 @@ static u8 *brcmf_fw_nvram_from_efi(size_t *data_len_ret)
- 	return NULL;
- }
- #else
--static u8 *brcmf_fw_nvram_from_efi(size_t *data_len) { return NULL; }
-+static inline u8 *brcmf_fw_nvram_from_efi(size_t *data_len) { return NULL; }
- #endif
- 
- static void brcmf_fw_free_request(struct brcmf_fw_request *req)
--- 
-2.20.0
-
+> name, so fix it to node name "wifi". And remove the property device_type pci
+> since only pci bridges should have this property.
+> 
+> Signed-off-by: Bhagavathi Perumal S <bperumal@codeaurora.org>
+> ---
+>  Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> index 2196d1a..ef60f25 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> @@ -74,9 +74,8 @@ pci {
+>  		#address-cells = <3>;
+>  		device_type = "pci";
+>  
+> -		ath10k@0,0 {
+> +		wifi@0,0 {
+>  			reg = <0 0 0 0 0>;
+> -			device_type = "pci";
+>  			qcom,ath10k-calibration-data = [ 01 02 03 ... ];
+>  		};
+>  	};
+> -- 
+> 1.9.1
+> 
