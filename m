@@ -2,283 +2,156 @@ Return-Path: <SRS0=n0sb=OU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5221C67839
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Dec 2018 20:24:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05E46C67839
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Dec 2018 20:34:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56FB920851
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Dec 2018 20:24:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDC3020851
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Dec 2018 20:34:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=rsalveti-net.20150623.gappssmtp.com header.i=@rsalveti-net.20150623.gappssmtp.com header.b="DAIl382C"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 56FB920851
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=rsalveti.net
+	dkim=pass (2048-bit key) header.d=intellastar.com header.i=@intellastar.com header.b="QpYCt73V"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BDC3020851
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=intellastar.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726341AbeLKUYZ (ORCPT
+        id S1726211AbeLKUen (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Dec 2018 15:24:25 -0500
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:44948 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726134AbeLKUYZ (ORCPT
+        Tue, 11 Dec 2018 15:34:43 -0500
+Received: from mail-qt1-f194.google.com ([209.85.160.194]:38382 "EHLO
+        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726136AbeLKUem (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Dec 2018 15:24:25 -0500
-Received: by mail-lj1-f195.google.com with SMTP id k19-v6so14175886lji.11
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2018 12:24:22 -0800 (PST)
+        Tue, 11 Dec 2018 15:34:42 -0500
+Received: by mail-qt1-f194.google.com with SMTP id p17so18038449qtl.5
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2018 12:34:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rsalveti-net.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=2Qv4eMo/O6XU2N/Tm1JMx6ZuGAFT63yf2kZxshqHu5o=;
-        b=DAIl382CEdEo8KaT3nrdaRYhIm+Mv9H23QS153GzJKSTno+Qqd0yJGfNxJPBC5e/+B
-         vVLYI8l2SdmRJIGXGxDskahfaXQ/RaaYnHIg8mMkm3HwfdMdn4xWfRdUnCJHcz9l9pP5
-         BXLkhanQTYP+lXf45XFbLdRGv5mYnhZSG2jTdENQBhavNnatX0Qp+Y+3eAjRQ2MezHse
-         H4fcphZfseVTsDtLG26kPlHUXtcBgCyqEz1lAZ09p39GmIkI9LZ10XrU9kw5O0aXi3JC
-         7kZwjfe7YtFYl/28UgxJkQ5wsnBnTmAuTktp7+tsolzT69Tcx31WCAZObSlDTUC8lNYd
-         Omwg==
+        d=intellastar.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=4NqXq8l/FDcN9jts4TkZ9xfLuk0Md/9neQSyGtci6us=;
+        b=QpYCt73VfrCevT9dEvYOxUmkQGRqBziLamAKyH2bhhMUZLe5JlGzVLXigJwHYRUmtY
+         w4g2ibnWF8EHxH0VKHnTt7+ecOCvk6b+355+NHGh4MW2rtXeRxdKwqLu6H6yCxgqoj1U
+         Qf5BddHOIsHPPo5a2CcmNGGLIcQIGmeT4/f6+UU/sYRHr7OkagTrLjfGhMgRMxqebZmX
+         xWtwGfUTs+8F60Z52thzrN8KxAGLce0bWY4HRhmACkx10hmAPE2qmTi86zmrxpDEysbV
+         dt3KwXdhhWHCr4c9jPO8lKtgpGfT1lUCX7ghySEQ6+tUtesHWXcpxZ9zXztzgvSTkFYS
+         53Dw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=2Qv4eMo/O6XU2N/Tm1JMx6ZuGAFT63yf2kZxshqHu5o=;
-        b=arsHrCx0ct31J1A+Dci3BFXIRf/ji2Vd9jBw8GA6+TQidpkjRUDamSty6fSpeEDED7
-         Nhf9y3We1/3L4c80LBCUtzZn3W/oCxYdHpCGvl2AqLqalOC7wvidOnDUy+BLfA5ly0yG
-         56ed9YEcfoNQW1LpZngBHSpS+PrOUHNZ32zKQ6RGGGzq7NUZx+UG/ZP5rzAn4iShU7+L
-         OpRop3lBTFfSr8ip6+AAgKIog2ZHkZmuOq0u22PApO6z1RiRQ5xlsABZwWaIWyEC5rEW
-         AEE3bNEMF7eY9VYHo3liq+rZSYcMOEQJOI70nwmFfiGPyY1Z83WodVnS/CzURgzuowII
-         J/gg==
-X-Gm-Message-State: AA+aEWZhfkH6PGnrGgDw7an2EDIARQmMm1sPM+kDS8FU5Vb1Aie3FM57
-        59+woWySJBK9lHdrPO0YyoPFmj8zULCpg0uSQ6zXF8Nmqco=
-X-Google-Smtp-Source: AFSGD/X977oZQjeh92RX/mZyox1BIrgp9KNp3qkZji0Whix10HunRBElCSBEFWFB544iEb247mXb+hw5w+Hs5HETJOs=
-X-Received: by 2002:a2e:2106:: with SMTP id h6-v6mr10298040ljh.37.1544559861827;
- Tue, 11 Dec 2018 12:24:21 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=4NqXq8l/FDcN9jts4TkZ9xfLuk0Md/9neQSyGtci6us=;
+        b=Z/dIUTpeB4dcGh55u9L3TPgb2PpzqNWiQOFpwJhUSAJ7IOoQaZNUaNYEsaP18t6S7x
+         lh7M0umS3Y2m3BvapcikdvySdKUXpxn5HKqfakC5TPMyZ49JFGJ3TgEC/JlyNVZaCVxv
+         kPrkX56VuR2bPXIc5ewgB+urzD/KUYmCDbKVNkSAOWD+CHLN+ldkTuGoA5zA3q1LZSof
+         HMqNFGX/DBYkCuzQw5QnBJv8IAV7FwRtqLcv2OzFF88ZTl84P00qTPwhys3+maG+qoFT
+         2tQzk9yLBnpD7a5tGzDgKQYrV1rZc/8UbmGhf/SnZomoYFVMXxpRmYvS+MpLdnlShC+H
+         FX9A==
+X-Gm-Message-State: AA+aEWYaizfGcH/OGebbD7mbY8WklH79zqAdV0JA3xCgSD/6qD5JTvYq
+        QcfvCOFSis3jsOKgQeW3eEHMVwfVRoxACLlcjd2m3rtzkO6k51lj7JAzYAeLvDH6JnrTlB3AeMr
+        D6tGrWgQgJG3E1u1AnBhH/ojGY22CZjCDnN0MFPQ4gad3Ig9zlCcM2B+bo39Tr8v6/HoM8CZtfr
+        rQatU=
+X-Google-Smtp-Source: AFSGD/WXpOOa8yJNpRBJE9WhkPxPdyNaPO5QiTiZg2wF/XfcE74sPsIp6vFr27djdETKGl/DkXi5jg==
+X-Received: by 2002:a0c:e789:: with SMTP id x9mr198428qvn.245.1544560481388;
+        Tue, 11 Dec 2018 12:34:41 -0800 (PST)
+Received: from [192.168.110.7] (cpe-67-241-170-88.buffalo.res.rr.com. [67.241.170.88])
+        by smtp.gmail.com with ESMTPSA id c12sm12354164qka.42.2018.12.11.12.34.40
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 11 Dec 2018 12:34:41 -0800 (PST)
+Subject: Re: wlcore update breaks on 4.9 and 4.4 kernel branches
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     stable@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <43ee432a-c6ab-e23c-616c-b626a5fb4637@intellastar.com>
+ <20181202150813.GG221015@sasha-vm>
+From:   Dietmar May <dmay@intellastar.com>
+Message-ID: <82d68b26-3c95-af35-86bb-c17855da00ce@intellastar.com>
+Date:   Tue, 11 Dec 2018 15:34:40 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-References: <CAHYQr0pKurSS=nvLEaLzup1hgx4+RJ0CezA2nFeA=C4XBDQQog@mail.gmail.com>
- <20181211181944.GW39861@atomide.com> <CAHYQr0pk-WKM-aYR7ubM4GHx8PA82XP5ze9TW9WEJLzdO0f88A@mail.gmail.com>
- <20181211190128.GX39861@atomide.com> <CAHYQr0qc_Lav=1sEGcOmOykUftWRzd6+vis97eBpanEXzfUHaA@mail.gmail.com>
- <CALAqxLUVajBw_PkyhA0s=FhQQHWu1FBEMX+4oDTStRXr6L5Txw@mail.gmail.com> <20181211201221.GY39861@atomide.com>
-In-Reply-To: <20181211201221.GY39861@atomide.com>
-From:   Ricardo Salveti <rsalveti@rsalveti.net>
-Date:   Tue, 11 Dec 2018 18:23:44 -0200
-Message-ID: <CAHYQr0qffa_G2ZVnSsDfjqSgxuBBZB+8e6ZODpAWV_TMhqzFYg@mail.gmail.com>
-Subject: Re: wlcore getting stuck on hikey after the runtime PM autosuspend
- support change
-To:     Tony Lindgren <tony@atomide.com>
-Cc:     John Stultz <john.stultz@linaro.org>,
-        linux-wireless@vger.kernel.org, anders.roxell@linaro.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20181202150813.GG221015@sasha-vm>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Dec 11, 2018 at 6:12 PM Tony Lindgren <tony@atomide.com> wrote:
->
-> * John Stultz <john.stultz@linaro.org> [181211 19:51]:
-> > On Tue, Dec 11, 2018 at 11:25 AM Ricardo Salveti <rsalveti@rsalveti.net> wrote:
-> > > Then tried to reproduce with a simple 'while true; do ip link set dev
-> > > wlan0 down; ip link set dev wlan0 up; done;' and it was already enough
-> > > to cause the same hang. Adding a simple sleep 1 after down/up is
-> > > already enough to make it work, so something might be missing during
-> > > the down/up process that only happens when they get called right after
-> > > the other.
->
-> With while true test above, I'm getting:
->
-> wlcore: ERROR timeout waiting for the hardware to complete initialization
->
-> Then after ctrl-c, wlan0 connects to the access point just fine
-> for me.
->
-> Is that what you're seeing or some oops?
+Sasha,
 
-I'm getting the following oops with the while true test:
-[ 1088.565996] INFO: task ifconfig:941 blocked for more than 120 seconds.
-[ 1088.572552]       Not tainted 4.20.0-rc6-lmp-standard #1
-[ 1088.577913] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-disables this message.
-[ 1088.585777] ifconfig        D    0   941    916 0x00000008
-[ 1088.591316] Call trace:
-[ 1088.593772]  __switch_to+0xa0/0xf8
-[ 1088.597200]  __schedule+0x2ac/0x948
-[ 1088.600715]  schedule+0x38/0x98
-[ 1088.603882]  schedule_timeout+0x288/0x458
-[ 1088.607918]  wait_for_common+0x148/0x170
-[ 1088.611866]  wait_for_completion+0x28/0x38
-[ 1088.616013]  mmc_wait_for_req_done+0x38/0x198
-[ 1088.620397]  mmc_wait_for_req+0xb0/0xf0
-[ 1088.624259]  mmc_io_rw_extended+0x1d0/0x2c0
-[ 1088.628469]  sdio_io_rw_ext_helper+0x180/0x1f8
-[ 1088.633112]  sdio_memcpy_toio+0x44/0x58
-[ 1088.636979]  wl12xx_sdio_raw_write+0xe0/0x1b0
-[ 1088.641386]  wlcore_boot_upload_firmware+0x1a8/0x4c0
-[ 1088.646378]  wl18xx_boot+0x7dc/0xbc0
-[ 1088.649986]  wl1271_op_add_interface+0x558/0x910
-[ 1088.654659]  drv_add_interface+0x5c/0x1e8
-[ 1088.658716]  ieee80211_do_open+0x220/0x7f8
-[ 1088.662857]  ieee80211_open+0x4c/0x68
-[ 1088.666591]  __dev_open+0xdc/0x158
-[ 1088.670034]  __dev_change_flags+0x15c/0x1c0
-[ 1088.674246]  dev_change_flags+0x34/0x70
-[ 1088.678131]  devinet_ioctl+0x3fc/0x740
-[ 1088.681908]  inet_ioctl+0x108/0x278
-[ 1088.685425]  sock_do_ioctl+0x5c/0x240
-[ 1088.689133]  sock_ioctl+0x1e8/0x3f0
-[ 1088.692652]  do_vfs_ioctl+0xc4/0x868
-[ 1088.696253]  ksys_ioctl+0x84/0xb8
-[ 1088.699594]  __arm64_sys_ioctl+0x28/0x38
-[ 1088.703545]  el0_svc_common+0x94/0xe8
-[ 1088.707233]  el0_svc_handler+0x74/0x90
-[ 1088.711031]  el0_svc+0x8/0xc
+I've verified that 4.9.143 no longer exhibits this problem.
 
-Added some more debugging, and this is what I'm getting when I add
-some delay between down/up (working behavior):
-
-wlan0 down:
-Dec 11 20:17:06 hikey kernel: wlcore: mac80211 remove interface
-Dec 11 20:17:06 hikey kernel: wlcore: mac80211 configure filter
-changed 0 total 80000000
-Dec 11 20:17:06 hikey kernel: wlcore: down
-Dec 11 20:17:06 hikey kernel: wlcore: waking up chip from elp
-Dec 11 20:17:06 hikey kernel: wlcore: wakeup time: 12 ms
-Dec 11 20:17:06 hikey kernel: wlcore: cmd role disable
-Dec 11 20:17:06 hikey kernel: wlcore: mac80211 stop
-Dec 11 20:17:06 hikey kernel: wlcore: IRQ work
-Dec 11 20:17:06 hikey kernel: wlcore: intr: 0x20 (fw_rx_counter = 172,
-drv_rx_counter = 11, tx_results_counter = 0)
-Dec 11 20:17:06 hikey kernel: wlcore: WL1271_ACX_INTR_HW_AVAILABLE
-
-wlan0 up:
-Dec 11 20:17:11 hikey kernel: wlcore: mac80211 start
-Dec 11 20:17:11 hikey kernel: wlcore: mac80211 add interface type 2
-mac 84:dd:20:92:54:5b
-Dec 11 20:17:11 hikey kernel: wlcore: allocating hw queue base: 0
-Dec 11 20:17:11 hikey kernel: mmc_host mmc2: Bus speed (slot 0) =
-24800000Hz (slot req 300000Hz, actual 295238HZ div = 42)
-Dec 11 20:17:11 hikey kernel: mmc_host mmc2: Bus speed (slot 0) =
-24800000Hz (slot req 25000000Hz, actual 24800000HZ div = 0)
-Dec 11 20:17:12 hikey kernel: wlcore: clock freq 5 (13, 120, 0, 0, spit)
-Dec 11 20:17:12 hikey kernel: wlcore: chip id 0x6030111
-Dec 11 20:17:12 hikey kernel: wlcore: firmware chunks to be uploaded: 15
-Dec 11 20:17:12 hikey kernel: wlcore: chunk 14 addr 0x0 len 120432
-Dec 11 20:17:12 hikey kernel: wlcore: starting firmware upload
-Dec 11 20:17:12 hikey kernel: wlcore: fw_data_len 120432 chunk_size 16384
-Dec 11 20:17:12 hikey kernel: wlcore: uploading fw chunk
-0x000000002d8a6a40 to 0x0
-Dec 11 20:17:12 hikey kernel: wlcore: uploading fw chunk
-0x0000000048dff62f to 0x4000
-Dec 11 20:17:12 hikey kernel: wlcore: uploading fw chunk
-0x00000000f9372750 to 0x8000
-Dec 11 20:17:12 hikey kernel: wlcore: uploading fw chunk
-0x00000000f2685ee4 to 0xc000
-Dec 11 20:17:12 hikey kernel: wlcore: uploading fw chunk
-0x00000000c4fc484d to 0x10000
-Dec 11 20:17:12 hikey kernel: wlcore: uploading fw chunk
-0x00000000a6d3c9bf to 0x14000
-Dec 11 20:17:12 hikey kernel: wlcore: uploading fw chunk
-0x000000007404dc0f to 0x18000
-Dec 11 20:17:12 hikey kernel: wlcore: uploading fw last chunk (5744 B)
-0x00000000d7beb1f6 to 0x1c000
-...
-
-And now with while true:
-Dec 11 20:18:13 hikey kernel: wlcore: mac80211 configure filter
-changed 0 total 80000000
-Dec 11 20:18:13 hikey kernel: wlcore: waking up chip from elp
-Dec 11 20:18:13 hikey kernel: wlcore: wakeup time: 8 ms
-Dec 11 20:18:13 hikey kernel: wlcore: acx group address tbl
-Dec 11 20:18:13 hikey kernel: wlcore: cmd configure (63)
-Dec 11 20:18:13 hikey kernel: wlcore: mac80211 remove interface
-Dec 11 20:18:13 hikey kernel: wlcore: down
-Dec 11 20:18:13 hikey kernel: wlcore: cmd role disable
-Dec 11 20:18:13 hikey kernel: wlcore: IRQ work
-Dec 11 20:18:13 hikey kernel: wlcore: mac80211 stop
-Dec 11 20:18:13 hikey kernel: wlcore: intr: 0x20 (fw_rx_counter = 0,
-drv_rx_counter = 0, tx_results_counter = 0)
-Dec 11 20:18:13 hikey kernel: wlcore: WL1271_ACX_INTR_HW_AVAILABLE
-
-Dec 11 20:18:13 hikey kernel: wlcore: mac80211 start
-Dec 11 20:18:13 hikey kernel: wlcore: mac80211 add interface type 2
-mac 84:dd:20:92:54:5b
-Dec 11 20:18:13 hikey kernel: wlcore: allocating hw queue base: 0
-Dec 11 20:18:13 hikey kernel: wlcore: clock freq 5 (13, 120, 0, 0, spit)
-Dec 11 20:18:13 hikey kernel: wlcore: chip id 0x6030111
-Dec 11 20:18:13 hikey kernel: wlcore: firmware chunks to be uploaded: 15
-Dec 11 20:18:13 hikey kernel: wlcore: chunk 14 addr 0x0 len 120432
-Dec 11 20:18:13 hikey kernel: wlcore: starting firmware upload
-Dec 11 20:18:13 hikey kernel: wlcore: fw_data_len 120432 chunk_size 16384
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x000000002d8a6a40 to 0x0
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x0000000048dff62f to 0x4000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000f9372750 to 0x8000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000f2685ee4 to 0xc000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000c4fc484d to 0x10000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000a6d3c9bf to 0x14000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x000000007404dc0f to 0x18000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw last chunk (5744 B)
-0x00000000d7beb1f6 to 0x1c000
-Dec 11 20:18:13 hikey kernel: wlcore: chunk 13 addr 0x100000 len 131072
-Dec 11 20:18:13 hikey kernel: wlcore: starting firmware upload
-Dec 11 20:18:13 hikey kernel: wlcore: fw_data_len 131072 chunk_size 16384
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000c3cad69f to 0x100000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000a9e4f338 to 0x104000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x000000003169e0a1 to 0x108000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000cc5b7549 to 0x10c000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x000000009c0bb98a to 0x110000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000f4d0b2c2 to 0x114000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x0000000026e1d203 to 0x118000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000a3905e9c to 0x11c000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw last chunk (0 B)
-0x00000000f0c022b6 to 0x120000
-Dec 11 20:18:13 hikey kernel: wlcore: chunk 12 addr 0x20400000 len 52600
-Dec 11 20:18:13 hikey kernel: wlcore: starting firmware upload
-Dec 11 20:18:13 hikey kernel: wlcore: fw_data_len 52600 chunk_size 16384
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x000000004f52801e to 0x20400000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x0000000066503358 to 0x20404000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000433fff1b to 0x20408000
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw last chunk (3448 B)
-0x00000000a38c9bd9 to 0x2040c000
-Dec 11 20:18:13 hikey kernel: wlcore: chunk 11 addr 0xb00000 len 536
-Dec 11 20:18:13 hikey kernel: wlcore: starting firmware upload
-Dec 11 20:18:13 hikey kernel: wlcore: fw_data_len 536 chunk_size 16384
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw last chunk (536 B)
-0x00000000ced82f93 to 0xb00000
-Dec 11 20:18:13 hikey kernel: wlcore: chunk 10 addr 0xb0ae40 len 28120
-Dec 11 20:18:13 hikey kernel: wlcore: starting firmware upload
-Dec 11 20:18:13 hikey kernel: wlcore: fw_data_len 28120 chunk_size 16384
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x00000000d6832925 to 0xb0ae40
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw last chunk (11736
-B) 0x0000000037ae96d5 to 0xb0ee40
-Dec 11 20:18:13 hikey kernel: wlcore: chunk 9 addr 0x80900000 len 61140
-Dec 11 20:18:13 hikey kernel: wlcore: starting firmware upload
-Dec 11 20:18:13 hikey kernel: wlcore: fw_data_len 61140 chunk_size 16384
-Dec 11 20:18:13 hikey kernel: wlcore: uploading fw chunk
-0x0000000096b9ba67 to 0x80900000 -------> hangs
-
-See the missing 'mmc_host mmc2' messages, which probably indicates
-that mmc_host wasn't properly set after the down/up sequence, causing
-the hang when uploading the firmware.
+The revert hasn't shown up in 4.4 yet; but I'll verify once merged there.
 
 Thanks,
--- 
-Ricardo Salveti de Araujo
+Dietmar
+------------------------------------------------------------------------
+On 12/2/18 10:08 AM, Sasha Levin wrote:
+> On Thu, Nov 29, 2018 at 05:56:31PM -0500, Dietmar May wrote:
+>> I've run into some problems which appear due to (a) recent patch(es)=20
+>> on the wlcore wifi driver.
+>>
+>> 4.4.160 - commit 3fdd34643ffc378b5924941fad40352c04610294
+>> 4.9.131 - commit afeeecc764436f31d4447575bb9007732333818c
+>>
+>> Earlier versions (4.9.130 and 4.4.159 - tested back to 4.4.49) do not=20
+>> exhibit this problem. It is still present in 4.9.141.
+>>
+>> master as of 4.20.0-rc4 does not exhibit this problem.
+>>
+>> Basically, during client association when in AP mode (running=20
+>> hostapd), handshake may or may not complete following a noticeable=20
+>> delay. If successful, then the driver fails consistently in=20
+>> warn_slowpath_null during disassociation. If unsuccessful, the wifi=20
+>> client attempts multiple times, sometimes failing repeatedly. I've=20
+>> had clients unable to connect for 3-5 minutes during testing, with=20
+>> the syslog filled with dozens of backtraces. syslog details are below.
+>>
+>> I'm working on an embedded device with a TI 3352 ARM processor and a=20
+>> murata wl1271 module in sdio mode. We're running a fully patched=20
+>> ubuntu 18.04 ARM build, with a kernel built from kernel.org's=20
+>> stable/linux repo=20
+>> <https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit=
+/?h=3Dlinux-4.9.y&id=3Dafeeecc764436f31d4447575bb9007732333818c>.=20
+>> Relevant parts of the kernel config are included below.
+>>
+>> The commit message states:
+>>
+>>> /I've only seen this few times with the runtime PM patches enabled=20
+>>> so this one is probably not needed before that. This seems to work=20
+>>> currently based on the current PM implementation timer. Let's apply=20
+>>> this separately though in case others are hitting this issue./
+>> We're not doing anything explicit with power management. The device=20
+>> is an IoT edge gateway with battery backup, normally running on wall=20
+>> power. The battery is currently used solely to shut down the system=20
+>> cleanly to avoid filesystem corruption.
+>>
+>> The device tree is configured to keep power in suspend; but the=20
+>> device should never suspend, so in our case, there is no need to call=20
+>> wl1271_ps_elp_wakeup() or wl1271_ps_elp_sleep(), as occurs in the patch.
+>
+> Given that this patch went in through AUTOSEL, I've queued up a revert
+> of it (sorry for the trouble!).
+>
+> I'll link this mail in the revert message. If anyone feels that this
+> patch should be in any of the LTS trees then either reply to this thread
+> or start a new one on stable@vger.kernel.org.
+>
+> --=20
+> Thanks,
+> Sasha
+
+--=20
+This email and any information disclosed in connection herewith, whether=20
+written or oral, is the property of Intellastar LLC, and is intended only=
+=20
+for the person or entity to which it is addressed. This email may contain=
+=20
+information that is privileged confidential or otherwise protected from=20
+disclosure. Distributing or copying any information contained in this email=
+=20
+to anyone other than the intended recipient is strictly prohibited.=C2=A0
