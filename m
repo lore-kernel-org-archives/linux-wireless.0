@@ -2,149 +2,91 @@ Return-Path: <SRS0=n0sb=OU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 348BFC5CFFE
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Dec 2018 03:09:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5A4DC67839
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Dec 2018 03:27:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E6C982064D
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Dec 2018 03:09:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gAK6VqBj";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gAK6VqBj"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E6C982064D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 6C99E20672
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Dec 2018 03:27:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1544498833;
+	bh=NimB7XQtKMmr+lDRELD0kHxy8Na7xypmYSSGLBqUgNE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=dBiyluZZBJIZvO4sBfBOMno1lz2rABcAD95zqwvfWNbYSw5+IDvA7SKOECGFD3L2L
+	 E/NVN2aw7WhYeCLEUCFU1HZp6FDxJmYEVbB1vQhapDEUdG3rMEeFD5hsWxgkDVoWBP
+	 q1eyzENb+uHIE/DL7pk5OXl0Vq68rB+EhtOggom8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6C99E20672
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729624AbeLKDJN (ORCPT
+        id S1729910AbeLKD1M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Dec 2018 22:09:13 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:40262 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727711AbeLKDJN (ORCPT
+        Mon, 10 Dec 2018 22:27:12 -0500
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:37075 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728584AbeLKD1L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Dec 2018 22:09:13 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 5339460A33; Tue, 11 Dec 2018 03:09:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1544497752;
-        bh=eLyORNzALLbEzTKVTMmuLaC4Qt61I+ldcWUrlPe4H/c=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gAK6VqBjpGPg154A1IE6UwDqjDv5NWQYtiqpSfmBQrI0V+XKjoaC5sy+vxBqoFPkH
-         vqPdoiu3Oc9AY5UKe2tOfwVmaQ8E+Z9MWgIs3yJieJyJv9srImrSwEdVdDLtPW8oTm
-         VulFau8c/3EHJr6HYwbt4dlgXjVLuD/2ObRsYokw=
-Received: from zhichen.ap.qualcomm.com (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: zhichen@codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DD6AD606DD;
-        Tue, 11 Dec 2018 03:09:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1544497752;
-        bh=eLyORNzALLbEzTKVTMmuLaC4Qt61I+ldcWUrlPe4H/c=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gAK6VqBjpGPg154A1IE6UwDqjDv5NWQYtiqpSfmBQrI0V+XKjoaC5sy+vxBqoFPkH
-         vqPdoiu3Oc9AY5UKe2tOfwVmaQ8E+Z9MWgIs3yJieJyJv9srImrSwEdVdDLtPW8oTm
-         VulFau8c/3EHJr6HYwbt4dlgXjVLuD/2ObRsYokw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DD6AD606DD
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=zhichen@codeaurora.org
-From:   zhichen@codeaurora.org
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org, Zhi Chen <zhichen@codeaurora.org>
-Subject: [PATCH v1 2/2] ath10k: fix tx_stats memory leak
-Date:   Tue, 11 Dec 2018 11:08:25 +0800
-Message-Id: <1544497705-21593-2-git-send-email-zhichen@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1544497705-21593-1-git-send-email-zhichen@codeaurora.org>
-References: <1544497705-21593-1-git-send-email-zhichen@codeaurora.org>
+        Mon, 10 Dec 2018 22:27:11 -0500
+Received: by mail-ot1-f66.google.com with SMTP id 40so12687675oth.4;
+        Mon, 10 Dec 2018 19:27:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=wFSTEXsyMN+M+m75a/jcZRHvPPVV3VWmlNLY7oOS0gQ=;
+        b=R5WxILZmnqJfYkJgwVE4aXntnP2kDf4YoQuG4ZrviWAHfIQbj9Phq8tN7Fw9apkkal
+         rRYwEtZ4w8+2Iv5nSYrH8JAiP82KO8QyJ80qBC2U1Yrgj3pB1l1aleBRBvC6EHIdbPG+
+         JgGnpPj/Si93Z/QQ7hzkL9/GPpI9pQl3bgFkNBa7IzOaleQuAUmNyhn2DJB0mKnuJGgI
+         nHpLroEu7fFCOWt3nzWT4CHqfKDeRNukhWlxISEmNqij18ks25id3bnbWfgZoWKcEqyq
+         mMfubSq89wQ4BX20fHm/AzSc4nYtjkSvKlviBheOD8sWpg+o8aNdsEOroqq44cRJsxzK
+         N4pw==
+X-Gm-Message-State: AA+aEWaW63wR13mBSHFfdboHzHqStHWevAzeLmgh8AvJTuPiAvAc3gSe
+        xbnNqrajcWdJCm2squxBDCJqc1M=
+X-Google-Smtp-Source: AFSGD/VF7PlolazMPspOeE9x1Ou8isDQdhUEMB/4xOj3IoT3wm/Ni5qpx7H5pSH4OMIinRtXPAUkew==
+X-Received: by 2002:a9d:3ba5:: with SMTP id k34mr10660866otc.364.1544498829236;
+        Mon, 10 Dec 2018 19:27:09 -0800 (PST)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id t21sm5952212otq.67.2018.12.10.19.27.08
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 10 Dec 2018 19:27:08 -0800 (PST)
+Date:   Mon, 10 Dec 2018 21:27:08 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Bhagavathi Perumal S <bperumal@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Bhagavathi Perumal S <bperumal@codeaurora.org>
+Subject: Re: [PATCH v3 2/3] dt-bindings: net: ath10k: add new dt entry to
+ identify external FEM
+Message-ID: <20181211032708.GA14508@bogus>
+References: <1544466691-11821-1-git-send-email-bperumal@codeaurora.org>
+ <1544466691-11821-3-git-send-email-bperumal@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1544466691-11821-3-git-send-email-bperumal@codeaurora.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zhi Chen <zhichen@codeaurora.org>
+On Tue, 11 Dec 2018 00:01:30 +0530, Bhagavathi Perumal S wrote:
+> This adds new dt entry ext-fem-name, it is used by ath10k driver
+> to select correct timing parameters and configure it in target wifi hardware.
+> The Front End Module(FEM) normally includes tx power amplifier(PA) and
+> rx low noise amplifier(LNA). The default timing parameters like tx end to
+> PA off timing values were fine tuned for internal FEM used in reference
+> design. And these timing values can not be same if ODM modifies hardware
+> design with different external FEM. This DT entry helps to choose correct
+> timing values in driver if different external FEM hardware used.
+> 
+> Signed-off-by: Bhagavathi Perumal S <bperumal@codeaurora.org>
+> ---
+>  Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
 
-Memory of tx_stats was allocated when a STA was added. But it's not freed
-if the STA failed to be added to driver. This issue could be seen in MDK3
-attack case when STA number reached the limit.
-
-Tested: QCA9984 with firmware ver 10.4-3.9.0.1-00005
-Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/mac.c | 22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1db2a30..001cf31 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6293,15 +6293,6 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			   ar->num_stations + 1, ar->max_num_stations,
- 			   ar->num_peers + 1, ar->max_num_peers);
- 
--		if (ath10k_debug_is_extd_tx_stats_enabled(ar)) {
--			arsta->tx_stats = kzalloc(sizeof(*arsta->tx_stats),
--						  GFP_KERNEL);
--			if (!arsta->tx_stats) {
--				ret = -ENOMEM;
--				goto exit;
--			}
--		}
--
- 		num_tdls_stations = ath10k_mac_tdls_vif_stations_count(hw, vif);
- 		num_tdls_vifs = ath10k_mac_tdls_vifs_count(hw);
- 
-@@ -6323,12 +6314,22 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			goto exit;
- 		}
- 
-+		if (ath10k_debug_is_extd_tx_stats_enabled(ar)) {
-+			arsta->tx_stats = kzalloc(sizeof(*arsta->tx_stats),
-+						  GFP_KERNEL);
-+			if (!arsta->tx_stats) {
-+				ret = -ENOMEM;
-+				goto exit;
-+			}
-+		}
-+
- 		ret = ath10k_peer_create(ar, vif, sta, arvif->vdev_id,
- 					 sta->addr, peer_type);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to add peer %pM for vdev %d when adding a new sta: %i\n",
- 				    sta->addr, arvif->vdev_id, ret);
- 			ath10k_mac_dec_num_stations(arvif, sta);
-+			kfree(arsta->tx_stats);
- 			goto exit;
- 		}
- 
-@@ -6341,6 +6342,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			spin_unlock_bh(&ar->data_lock);
- 			ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
- 			ath10k_mac_dec_num_stations(arvif, sta);
-+			kfree(arsta->tx_stats);
- 			ret = -ENOENT;
- 			goto exit;
- 		}
-@@ -6361,6 +6363,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			ath10k_peer_delete(ar, arvif->vdev_id,
- 					   sta->addr);
- 			ath10k_mac_dec_num_stations(arvif, sta);
-+			kfree(arsta->tx_stats);
- 			goto exit;
- 		}
- 
-@@ -6372,6 +6375,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 				    sta->addr, arvif->vdev_id, ret);
- 			ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
- 			ath10k_mac_dec_num_stations(arvif, sta);
-+			kfree(arsta->tx_stats);
- 
- 			if (num_tdls_stations != 0)
- 				goto exit;
--- 
-2.7.4
-
+Reviewed-by: Rob Herring <robh@kernel.org>
