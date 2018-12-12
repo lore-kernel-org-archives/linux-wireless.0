@@ -2,88 +2,295 @@ Return-Path: <SRS0=wq86=OV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,T_MIXED_ES,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49BA0C65BAF
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 17:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C760C65BAF
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 18:09:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 02DFE20839
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 17:55:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IM0lZFhO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 02DFE20839
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lwfinger.net
+	by mail.kernel.org (Postfix) with ESMTP id 17A8D2084E
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 18:09:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 17A8D2084E
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727912AbeLLRzj (ORCPT
+        id S1727917AbeLLSJg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Dec 2018 12:55:39 -0500
-Received: from mail-oi1-f178.google.com ([209.85.167.178]:36165 "EHLO
-        mail-oi1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727881AbeLLRzj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Dec 2018 12:55:39 -0500
-Received: by mail-oi1-f178.google.com with SMTP id x23so15751229oix.3
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2018 09:55:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=pi+e+ZA4uDMDyBcSjdCnp8I6Gg+K8FFN3owfcey1Jd0=;
-        b=IM0lZFhOovzc2z1HjfPkK0oSa5FsPTr79UuZFFTmq0cgtuSmaB6pKqAjUluYiPw5F/
-         mnqM4J/mKxl5yitqDR0fi5Kg+H/+p3FWkR86ZlaOuLzz+AwGiSq8TSbuNrEA01j2U9ke
-         e1Opa5oQMdUO6ZKifre/AQNBnoLdyPUin3k5vbXhyDklS7tDz+co43wquRVM3AwwL0vW
-         PZRTsqlQ0MYfO/2gTSofGjIo/IfQva0fF7SWkBR+Ih07ht5GtwbuvA7vsILg3mafNc6x
-         qItmzLy7JMwrrnOYYa6DavrivwwzZP24GymsvphQKkJxBRjarm8NINyXW6tYlImrivQc
-         In3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:to:cc:from:subject:message-id:date
-         :user-agent:mime-version:content-language:content-transfer-encoding;
-        bh=pi+e+ZA4uDMDyBcSjdCnp8I6Gg+K8FFN3owfcey1Jd0=;
-        b=ITdygR01OJ2cnOHSFqXg7sPHm/Kz8iMmNipBqL+bQq2RIdM7FZmE0h2q4auEjIu0uB
-         2t/2qeQh7FKI9c4/d31UGta2hgK1RIkfYiZGojeymK+VOFn5dk/OZrlF9dGKDmjOc6ur
-         FCXey2B/wI8NP58zWACWi/o4kXiBJTcqFb29g4GKii7LQm3bAR8MkmDjCTeqj3dF3i5m
-         MKhz+GiqzUHhWN65hk/BNfcTazhPjvc2BMJ9TLtOLjnJ9SiUoh7JGaJnmH6KkYotUgyv
-         P4SLo2d7wDBsT6bFepQUIQbLZ0U3yblya9/nWHvLQpqwfPGJ9ZvZ6zrhHgB97Ko6spEG
-         bS9A==
-X-Gm-Message-State: AA+aEWaveMEfR2pwdTPYkh9XA8vu4cMXs/6GcidRlqNYO5TBYSZm6zK7
-        86KZMlHuzv3j8TtsW+j7RPa4p0ra
-X-Google-Smtp-Source: AFSGD/UXZ1e9ZAZ4YBmPswxQd7RQWKiOot7UE+2TfAXgGkVKJ9IfLRULTqs+ZuKNmZX+f3ApGmzi6g==
-X-Received: by 2002:a05:6808:202:: with SMTP id l2mr1693965oie.63.1544637337747;
-        Wed, 12 Dec 2018 09:55:37 -0800 (PST)
-Received: from [192.168.1.103] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id k13sm18962591otj.19.2018.12.12.09.55.36
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 12 Dec 2018 09:55:36 -0800 (PST)
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Critical fix for rtlwifi
-Message-ID: <e419ff31-d9fe-feed-9f40-4a7d4b82a44e@lwfinger.net>
-Date:   Wed, 12 Dec 2018 11:55:36 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.2
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        Wed, 12 Dec 2018 13:09:36 -0500
+Received: from mga17.intel.com ([192.55.52.151]:60252 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727897AbeLLSJf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Dec 2018 13:09:35 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Dec 2018 10:09:34 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,345,1539673200"; 
+   d="scan'208";a="98242510"
+Received: from inlubt0043.iind.intel.com ([10.223.47.124])
+  by orsmga007.jf.intel.com with ESMTP; 12 Dec 2018 10:09:33 -0800
+From:   Sarada Prasanna Garnayak <sarada.prasanna.garnayak@intel.com>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Sarada Prasanna Garnayak <sarada.prasanna.garnayak@intel.com>
+Subject: [RFC PATCH v1] cfg80211/nl80211: add support for AID assignment by driver
+Date:   Wed, 12 Dec 2018 23:39:28 +0530
+Message-Id: <20181212180928.42117-1-sarada.prasanna.garnayak@intel.com>
+X-Mailer: git-send-email 2.11.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle,
+Add support for getting and free association ID if the station
+association ID management handled by the WLAN driver/firmware.
 
-On November 18th, I submitted a patch entitles "[PATCH 4.20] rtlwifi: Fix leak 
-of skb when processing C2H_BT_INFO" that fixes an skb memory leak.
+Add cfg80211 driver ops and nl80211 API and CMD to request
+the WLAN driver to assign an AID for a station during association
+and release the AID of the station from the WLAN driver/firmware
+station database on disassociation from the AP.
 
-I just checked, and this one-line patch is still sitting in patchwork with a 
-status of "NEW". Why is this the case? The reports and testing of the fix took 
-place in a GitHub issue thread, but that should not keep a critical fix from 
-being handled fairly quickly. Meanwhile users of unpatched kernels are having 
-their systems run out of memory! This problem is present in kernels 4.18+!
+Signed-off-by: Sarada Prasanna Garnayak <sarada.prasanna.garnayak@intel.com>
+---
+ include/net/cfg80211.h       | 11 +++++++
+ include/uapi/linux/nl80211.h | 11 +++++++
+ net/wireless/nl80211.c       | 74 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      | 22 +++++++++++++
+ net/wireless/trace.h         | 36 +++++++++++++++++++++
+ 5 files changed, 154 insertions(+)
 
-Larry
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1fa41b7a1be3..27d7c6605055 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3183,6 +3183,12 @@ struct cfg80211_ftm_responder_stats {
+  *
+  * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
+  *	Statistics should be cumulative, currently no way to reset is provided.
++ * @get_sta_aid: Get an AID for the station from the driver if AID assignment
++ *	is managed by the WLAN driver/hardware/firmware.
++ *
++ * @free_sta_aid: Release the AID of the station from the station database
++ *	on disassociation from the AP if AID assignment is managed by
++ *	the WLAN driver/hardware/firmware.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -3492,6 +3498,11 @@ struct cfg80211_ops {
+ 	int	(*get_ftm_responder_stats)(struct wiphy *wiphy,
+ 				struct net_device *dev,
+ 				struct cfg80211_ftm_responder_stats *ftm_stats);
++
++	int (*get_sta_aid)(struct wiphy *wiphy, struct net_device *dev,
++			   u16 *sta_aid, const u8 *mac_addr);
++	int (*free_sta_aid)(struct wiphy *wiphy, struct net_device *dev,
++			    u16 sta_aid);
+ };
+ 
+ /*
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6d610bae30a9..ea194ccc7888 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1036,6 +1036,14 @@
+  * @NL80211_CMD_GET_FTM_RESPONDER_STATS: Retrieve FTM responder statistics, in
+  *	the %NL80211_ATTR_FTM_RESPONDER_STATS attribute.
+  *
++ * @NL80211_CMD_GET_STA_AID: Request association ID for a station if the station
++ *	association ID management handled by the driver/firmware/hardware
++ *	specified by %NL80211_ATTR_MAC and %NL80211_ATTR_STA_AID.
++ *
++ * @NL80211_CMD_FREE_STA_AID: Free association ID of a station if the station
++ *	association ID management handled by the driver/firmware/hardware
++ *	with specified by %NL80211_ATTR_STA_AID.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -1250,6 +1258,9 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_GET_FTM_RESPONDER_STATS,
+ 
++	NL80211_CMD_GET_STA_AID,
++	NL80211_CMD_FREE_STA_AID,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8d763725498c..662309d2c577 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3391,6 +3391,66 @@ static void get_key_callback(void *c, struct key_params *params)
+ 	cookie->error = 1;
+ }
+ 
++static int nl80211_get_sta_aid(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	int err;
++	struct net_device *dev = info->user_ptr[1];
++	const u8 *mac_addr = NULL;
++	u16 *sta_aid = NULL;
++	void *hdr;
++	struct sk_buff *msg;
++
++	if (info->attrs[NL80211_ATTR_STA_AID])
++		sta_aid = nla_data(info->attrs[NL80211_ATTR_STA_AID]);
++
++	if (info->attrs[NL80211_ATTR_MAC])
++		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
++
++	if (!rdev->ops->get_sta_aid)
++		return -EOPNOTSUPP;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++
++	hdr = nl80211hdr_put(msg, info->snd_portid, info->snd_seq, 0,
++			     NL80211_CMD_GET_STA_AID);
++	if (!hdr)
++		goto get_sta_aid_err;
++
++	err = rdev_get_sta_aid(rdev, dev, sta_aid, mac_addr);
++	if (err)
++		goto get_sta_aid_err;
++
++	if (nla_put(msg, NL80211_ATTR_STA_AID, sizeof(*sta_aid), sta_aid) ||
++	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
++		goto get_sta_aid_err;
++
++	genlmsg_end(msg, hdr);
++	return genlmsg_reply(msg, info);
++
++get_sta_aid_err:
++	err = -ENOBUFS;
++	nlmsg_free(msg);
++	return err;
++}
++
++static int nl80211_free_sta_aid(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	u16 sta_aid = 0;
++
++	if (info->attrs[NL80211_ATTR_STA_AID])
++		sta_aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
++
++	if (!rdev->ops->free_sta_aid)
++		return -EOPNOTSUPP;
++
++	return rdev_free_sta_aid(rdev, dev, sta_aid);
++}
++
+ static int nl80211_get_key(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -13899,6 +13959,20 @@ static const struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_GET_STA_AID,
++		.doit = nl80211_get_sta_aid,
++		.policy = nl80211_policy,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
++		.cmd = NL80211_CMD_FREE_STA_AID,
++		.doit = nl80211_free_sta_aid,
++		.policy = nl80211_policy,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_family nl80211_fam __ro_after_init = {
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 51380b5c32f2..44e9cc489ec3 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -71,6 +71,28 @@ rdev_change_virtual_intf(struct cfg80211_registered_device *rdev,
+ 	return ret;
+ }
+ 
++static inline int
++rdev_get_sta_aid(struct cfg80211_registered_device *rdev,
++		 struct net_device *netdev, u16 *sta_aid, const u8 *mac_addr)
++{
++	int ret;
++	trace_rdev_get_sta_aid(&rdev->wiphy, netdev, sta_aid, mac_addr);
++	ret = rdev->ops->get_sta_aid(&rdev->wiphy, netdev, sta_aid, mac_addr);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
++static inline int
++rdev_free_sta_aid(struct cfg80211_registered_device *rdev,
++		  struct net_device *netdev, u16 sta_aid)
++{
++	int ret;
++	trace_rdev_free_sta_aid(&rdev->wiphy, netdev, sta_aid);
++	ret = rdev->ops->free_sta_aid(&rdev->wiphy, netdev, sta_aid);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
+ static inline int rdev_add_key(struct cfg80211_registered_device *rdev,
+ 			       struct net_device *netdev, u8 key_index,
+ 			       bool pairwise, const u8 *mac_addr,
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index c6a9446b4e6b..646bd937ebea 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -389,6 +389,42 @@ TRACE_EVENT(rdev_change_virtual_intf,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->type)
+ );
+ 
++TRACE_EVENT(rdev_get_sta_aid,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 u16 *sta_aid, const u8 *mac_addr),
++	TP_ARGS(wiphy, netdev, sta_aid, mac_addr),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		MAC_ENTRY(mac_addr)
++	),
++	TP_fast_assign(
++	WIPHY_ASSIGN;
++	NETDEV_ASSIGN;
++	MAC_ASSIGN(mac_addr, mac_addr);
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", mac addr: " MAC_PR_FMT,
++		WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(mac_addr))
++);
++
++TRACE_EVENT(rdev_free_sta_aid,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 u16 sta_aid),
++	TP_ARGS(wiphy, netdev, sta_aid),
++	TP_STRUCT__entry(
++	WIPHY_ENTRY
++	NETDEV_ENTRY
++	__field(u16, sta_aid)
++	),
++	TP_fast_assign(
++	WIPHY_ASSIGN;
++	NETDEV_ASSIGN;
++	__entry->sta_aid = sta_aid;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station aid : %hu",
++		WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->sta_aid)
++);
++
+ DECLARE_EVENT_CLASS(key_handle,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 		 bool pairwise, const u8 *mac_addr),
+-- 
+2.11.0
+
