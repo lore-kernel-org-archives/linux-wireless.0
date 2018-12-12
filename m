@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,T_MIXED_ES,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C760C65BAF
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 18:09:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CE9FC65BAF
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 18:12:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 17A8D2084E
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 18:09:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 17A8D2084E
+	by mail.kernel.org (Postfix) with ESMTP id D0B4F2084E
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 18:12:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D0B4F2084E
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727917AbeLLSJg (ORCPT
+        id S1727897AbeLLSMy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Dec 2018 13:09:36 -0500
-Received: from mga17.intel.com ([192.55.52.151]:60252 "EHLO mga17.intel.com"
+        Wed, 12 Dec 2018 13:12:54 -0500
+Received: from mga11.intel.com ([192.55.52.93]:43853 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727897AbeLLSJf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Dec 2018 13:09:35 -0500
+        id S1727748AbeLLSMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Dec 2018 13:12:53 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Dec 2018 10:09:34 -0800
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Dec 2018 10:12:53 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.56,345,1539673200"; 
-   d="scan'208";a="98242510"
+   d="scan'208";a="129380408"
 Received: from inlubt0043.iind.intel.com ([10.223.47.124])
-  by orsmga007.jf.intel.com with ESMTP; 12 Dec 2018 10:09:33 -0800
+  by fmsmga001.fm.intel.com with ESMTP; 12 Dec 2018 10:12:51 -0800
 From:   Sarada Prasanna Garnayak <sarada.prasanna.garnayak@intel.com>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Sarada Prasanna Garnayak <sarada.prasanna.garnayak@intel.com>
 Subject: [RFC PATCH v1] cfg80211/nl80211: add support for AID assignment by driver
-Date:   Wed, 12 Dec 2018 23:39:28 +0530
-Message-Id: <20181212180928.42117-1-sarada.prasanna.garnayak@intel.com>
+Date:   Wed, 12 Dec 2018 23:42:49 +0530
+Message-Id: <20181212181249.9039-1-sarada.prasanna.garnayak@intel.com>
 X-Mailer: git-send-email 2.11.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -54,21 +54,22 @@ station database on disassociation from the AP.
 
 Signed-off-by: Sarada Prasanna Garnayak <sarada.prasanna.garnayak@intel.com>
 ---
- include/net/cfg80211.h       | 11 +++++++
+ include/net/cfg80211.h       | 12 +++++++
  include/uapi/linux/nl80211.h | 11 +++++++
  net/wireless/nl80211.c       | 74 ++++++++++++++++++++++++++++++++++++++++++++
  net/wireless/rdev-ops.h      | 22 +++++++++++++
  net/wireless/trace.h         | 36 +++++++++++++++++++++
- 5 files changed, 154 insertions(+)
+ 5 files changed, 155 insertions(+)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1fa41b7a1be3..27d7c6605055 100644
+index 1fa41b7a1be3..b80080a32e4a 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -3183,6 +3183,12 @@ struct cfg80211_ftm_responder_stats {
+@@ -3183,6 +3183,13 @@ struct cfg80211_ftm_responder_stats {
   *
   * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
   *	Statistics should be cumulative, currently no way to reset is provided.
++ *
 + * @get_sta_aid: Get an AID for the station from the driver if AID assignment
 + *	is managed by the WLAN driver/hardware/firmware.
 + *
@@ -78,7 +79,7 @@ index 1fa41b7a1be3..27d7c6605055 100644
   */
  struct cfg80211_ops {
  	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3492,6 +3498,11 @@ struct cfg80211_ops {
+@@ -3492,6 +3499,11 @@ struct cfg80211_ops {
  	int	(*get_ftm_responder_stats)(struct wiphy *wiphy,
  				struct net_device *dev,
  				struct cfg80211_ftm_responder_stats *ftm_stats);
