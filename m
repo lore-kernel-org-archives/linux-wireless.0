@@ -2,68 +2,95 @@ Return-Path: <SRS0=wq86=OV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D73CC04EB8
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 09:07:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E667EC04EB8
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 09:19:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40A5420849
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 09:07:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 40A5420849
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id A93BB20849
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Dec 2018 09:19:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="QmGZll6c"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A93BB20849
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726603AbeLLJHq (ORCPT
+        id S1726710AbeLLJTz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Dec 2018 04:07:46 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:40798 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726437AbeLLJHp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Dec 2018 04:07:45 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8EFCDC058CBE;
-        Wed, 12 Dec 2018 09:07:45 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.32])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D6BB8608C5;
-        Wed, 12 Dec 2018 09:07:44 +0000 (UTC)
-Date:   Wed, 12 Dec 2018 10:07:43 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     yhchuang@realtek.com, kvalo@codeaurora.org
-Cc:     Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-        pkshih@realtek.com, tehuang@realtek.com
-Subject: Re: [PATCH v2 00/13] rtw88: mac80211 driver for Realtek 802.11ac
- wireless network chips
-Message-ID: <20181212090743.GA13331@redhat.com>
-References: <1542367879-28880-1-git-send-email-yhchuang@realtek.com>
+        Wed, 12 Dec 2018 04:19:55 -0500
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:34416 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726478AbeLLJTz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Dec 2018 04:19:55 -0500
+Received: by mail-lf1-f66.google.com with SMTP id p6so12985617lfc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2018 01:19:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=HaKdn7hOA8cpqASV6dk6p0jU97H1+EcOjvTQOh2ZQlw=;
+        b=QmGZll6cZcPZxXfXfOaQmC0OJG6LUBp07bZ/9REL/GOeO9JZbuuTIV64ERX9bsY464
+         4jBC3aJogrwulVsiEkiyOruGXkvVg5n7QgQMQ+pQfDOyYYjuznOnGSR4JwlyGalm5PwD
+         ZvnZeGPVcoLKWRLFNuCdjzjw6LMAWYKFHnl/4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=HaKdn7hOA8cpqASV6dk6p0jU97H1+EcOjvTQOh2ZQlw=;
+        b=dXhhqn5b3FAThJXsrtlPG2u6VBp5ogL8lQpbswSc8M3Ie5/DOTn/8YZyvfqduS16LQ
+         0XGWObAs8iWG252wcUbJLTIf0yf9g2pxS+zNNyu/x5hXW7FJFGFmT68kr8WzO/A5c/lw
+         uK6f5fIyDmAGmrBv4pE87vEvjWICjxW0QpWl7sDzMJXFEKyeyL6tAKXCxX6Hfmtb57lQ
+         NqC7KY6VVBG0K4381gEiO8pCk10n9/cxlbiJvTwnUDJGPvRmv5+RIw+OCXjkeRAueszI
+         LFaSIfgcnRpfEs1Glv6fPlKE64F3Ens7uuogp4eQFTuvjInBjN9EFdBOrvQ20rJiU4EN
+         kfJg==
+X-Gm-Message-State: AA+aEWa2mjb/iJjQWt8dRQG/WVavIIomrIvfPti56X8w2hrh7IxYv3Fq
+        sO65my7usGxqafgOBCnCkyylpQ==
+X-Google-Smtp-Source: AFSGD/U8SwDyTGMStPBGfnkMzmJeaop0TJmlmYVRguj6J9v1tstHkz3WucRrf6lUiw5R3KO56kw/BA==
+X-Received: by 2002:a19:4ace:: with SMTP id x197mr10716507lfa.39.1544606393105;
+        Wed, 12 Dec 2018 01:19:53 -0800 (PST)
+Received: from genomnajs.ideon.se ([85.235.10.227])
+        by smtp.gmail.com with ESMTPSA id k14sm3064845lfc.70.2018.12.12.01.19.51
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 12 Dec 2018 01:19:52 -0800 (PST)
+From:   Linus Walleij <linus.walleij@linaro.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [PATCH] net: rfkill: Remove unused include
+Date:   Wed, 12 Dec 2018 10:19:50 +0100
+Message-Id: <20181212091950.8782-1-linus.walleij@linaro.org>
+X-Mailer: git-send-email 2.19.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1542367879-28880-1-git-send-email-yhchuang@realtek.com>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Wed, 12 Dec 2018 09:07:45 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Nov 16, 2018 at 07:31:06PM +0800, yhchuang@realtek.com wrote:
-> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> 
-> This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
-> rtw88 supports 8822BE and 8822CE chips, and will be able to support
-> multi-vif combinations in run-time.
-> 
-> For now, only PCI bus is supported, but rtw88 was originally designed
-> to optionally support three buses includes USB & SDIO. USB & SDIO modules
-> will soon be supported by rtw88, with configurable core module to fit
-> with different bus modules in the same time.
+The legacy <linux/gpio.h> header is no longer in use by the
+rfkill driver, so drop this include.
 
-Kalle, is here anything that stop the driver being merged ?
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ net/rfkill/rfkill-gpio.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks
-Stanislaw
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 0f8465852254..41a5cd4b5c0e 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -16,7 +16,6 @@
+  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+-#include <linux/gpio.h>
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+-- 
+2.19.2
+
