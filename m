@@ -2,85 +2,117 @@ Return-Path: <SRS0=opxv=OW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02DFCC67839
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Dec 2018 00:36:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E9ACC65BAE
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Dec 2018 04:38:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C27E720851
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Dec 2018 00:36:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C27E720851
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
+	by mail.kernel.org (Postfix) with ESMTP id 44C2B20849
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Dec 2018 04:38:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1544675895;
+	bh=ic+QJbmaIqyAFdfYuJINzyeHf5N+45gyInksvKsQMc0=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=VUYRVHEhm2wUTkDfIO0XFTZV6eg6k2vJagCNtkvistbkoLEhR3wYPMJgSUlaIGvZT
+	 n3w4GvjYrQL7mDqOL6axzDZBV8Ytoimmx4nihk9ZpIJ3QyH01ELRA11oSUwhWmFpM8
+	 MZlPx8DWyAdB6XnQVIK2cb2HEdtxqw2/BESkkmMo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 44C2B20849
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728121AbeLMAgB (ORCPT
+        id S1729230AbeLMEiH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Dec 2018 19:36:01 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:41662 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726278AbeLMAgB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Dec 2018 19:36:01 -0500
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID wBD0Zmpp016330, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcas11.realtek.com.tw[172.21.6.12])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id wBD0Zmpp016330
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Thu, 13 Dec 2018 08:35:48 +0800
-Received: from RTITMBSVM02.realtek.com.tw ([fe80::9150:f9a6:a910:df93]) by
- RTITCAS11.realtek.com.tw ([fe80::7c6d:ced5:c4ff:8297%15]) with mapi id
- 14.03.0399.000; Thu, 13 Dec 2018 08:35:48 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     "kai.heng.feng@canonical.com" <kai.heng.feng@canonical.com>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: Fix non-working BSS STA mode
-Thread-Topic: [PATCH] rtlwifi: Fix non-working BSS STA mode
-Thread-Index: AQHUkdl2d+IRD9YiqUGI3cgkd+Pb7aV7TcMA
-Date:   Thu, 13 Dec 2018 00:35:47 +0000
-Message-ID: <1544661346.2548.2.camel@realtek.com>
-References: <20181212051335.22580-1-kai.heng.feng@canonical.com>
-In-Reply-To: <20181212051335.22580-1-kai.heng.feng@canonical.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.146]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <F68BADFFDE478E4984F15FA97748EF5E@realtek.com>
-Content-Transfer-Encoding: base64
+        Wed, 12 Dec 2018 23:38:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45856 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729229AbeLMEdB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Dec 2018 23:33:01 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6B19720672;
+        Thu, 13 Dec 2018 04:33:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1544675581;
+        bh=ic+QJbmaIqyAFdfYuJINzyeHf5N+45gyInksvKsQMc0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=RcCHRBLRY0vsk1SaxZuJMmi7FRYK+lPJELvxGitsL+yT3QFK3pBzfhnt21X+l95+l
+         4NSEuUANIDAg24FSUjpb5n9hraFZ347Q9ltJ4IScW3KeadejEMCc1/6sOD19giK+eL
+         bQDms3KsKY90hRhBCHKpR+UL4sXjh2AEa6Oz3818=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 01/23] mac80211_hwsim: fix module init error paths for netlink
+Date:   Wed, 12 Dec 2018 23:32:37 -0500
+Message-Id: <20181213043259.76643-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gV2VkLCAyMDE4LTEyLTEyIGF0IDEzOjEzICswODAwLCBLYWktSGVuZyBGZW5nIHdyb3RlOg0K
-PiBPbmNlIEJTUyBTVEEgbW9kZSBnZXRzIHN0YXJ0ZWQsIGl0IGNhbiBiZSBzY2FubmVkIGJ5IG90
-aGVyIGNsaWVudHMgYnV0DQo+IGNhbm5vdCBlbnRhYmxpc2ggYSBjb25uZWN0aW9uLg0KwqAgwqAg
-wqAgwqAgwqBeXl4gdHlwbzogZXN0YWJsaXNoDQo+IA0KPiBUdXJucyBvdXQgdGhlIHNldF9iY25f
-cmVnKCkgYW5kIGl0cyAqX3NldF9iZWFjb25fcmVsYXRlZF9yZWdpc3RlcnMoKQ0KPiBjYWxsYmFj
-a3MgbmV2ZXIgZ2V0IGNhbGxlZCBzbyBpdCBoYXMgcHJvYmxlbSBiZWFjb25pbmcuDQo+IA0KPiBF
-bmFibGUgdGhlIGZ1bmN0aW9uIGluIHJ0bF9vcF9ic3NfaW5mb19jaGFuZ2VkKCkgY2FuIG1ha2Ug
-QlNTIFNUQSBtb2RlDQo+IHN0YXJ0IHRvIHdvcmsuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBLYWkt
-SGVuZyBGZW5nIDxrYWkuaGVuZy5mZW5nQGNhbm9uaWNhbC5jb20+DQo+IC0tLQ0KPiDCoGRyaXZl
-cnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9jb3JlLmMgfCAyICstDQo+IMKgMSBmaWxl
-IGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2NvcmUuYw0KPiBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9jb3JlLmMNCj4gaW5kZXggNGJmNzk2NzU5
-MGNhLi4xMWQyN2E1Y2M1NzYgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
-YWx0ZWsvcnRsd2lmaS9jb3JlLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRl
-ay9ydGx3aWZpL2NvcmUuYw0KPiBAQCAtMTA1NCw3ICsxMDU0LDcgQEAgc3RhdGljIHZvaWQgcnRs
-X29wX2Jzc19pbmZvX2NoYW5nZWQoc3RydWN0IGllZWU4MDIxMV9odw0KPiAqaHcsDQo+IMKgCQkJ
-CQnCoCJCU1NfQ0hBTkdFRF9CRUFDT05fRU5BQkxFRFxuIik7DQo+IMKgDQo+IMKgCQkJCS8qc3Rh
-cnQgaHcgYmVhY29uIGludGVycnVwdC4gKi8NCj4gLQkJCQkvKnJ0bHByaXYtPmNmZy0+b3BzLT5z
-ZXRfYmNuX3JlZyhodyk7ICovDQo+ICsJCQkJcnRscHJpdi0+Y2ZnLT5vcHMtPnNldF9iY25fcmVn
-KGh3KTsNCj4gwqAJCQkJbWFjLT5iZWFjb25fZW5hYmxlZCA9IDE7DQo+IMKgCQkJCXJ0bHByaXYt
-PmNmZy0+b3BzLT51cGRhdGVfaW50ZXJydXB0X21hc2soaHcsDQo+IMKgCQkJCQkJcnRscHJpdi0+
-Y2ZnLT5tYXBzDQoNCldoaWNoIHdpZmkgY2hpcCBkbyB5b3UgdXNlPyBBbmQsIHBsZWFzZSBzaGFy
-ZSB5b3VyIHRlc3Qgc2NlbmFyaW8uDQoNClRoYW5rcw0KDQo=
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+
+[ Upstream commit 05cc09de4c017663a217630682041066f2f9a5cd ]
+
+There is no unregister netlink notifier and family on error paths
+in init_mac80211_hwsim(). Also there is an error path where
+hwsim_class is not destroyed.
+
+Found by Linux Driver Verification project (linuxtesting.org).
+
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Fixes: 62759361eb49 ("mac80211-hwsim: Provide multicast event for HWSIM_CMD_NEW_RADIO")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 05413176a5d6..aad5228e3ade 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3195,16 +3195,16 @@ static int __init init_mac80211_hwsim(void)
+ 	if (err)
+ 		return err;
+ 
++	err = hwsim_init_netlink();
++	if (err)
++		goto out_unregister_driver;
++
+ 	hwsim_class = class_create(THIS_MODULE, "mac80211_hwsim");
+ 	if (IS_ERR(hwsim_class)) {
+ 		err = PTR_ERR(hwsim_class);
+-		goto out_unregister_driver;
++		goto out_exit_netlink;
+ 	}
+ 
+-	err = hwsim_init_netlink();
+-	if (err < 0)
+-		goto out_unregister_driver;
+-
+ 	for (i = 0; i < radios; i++) {
+ 		struct hwsim_new_radio_params param = { 0 };
+ 
+@@ -3310,6 +3310,8 @@ static int __init init_mac80211_hwsim(void)
+ 	free_netdev(hwsim_mon);
+ out_free_radios:
+ 	mac80211_hwsim_free();
++out_exit_netlink:
++	hwsim_exit_netlink();
+ out_unregister_driver:
+ 	platform_driver_unregister(&mac80211_hwsim_driver);
+ 	return err;
+-- 
+2.19.1
+
