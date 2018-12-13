@@ -4,94 +4,93 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52DD3C67839
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Dec 2018 15:04:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FE73C67839
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Dec 2018 16:03:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 185962086D
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Dec 2018 15:04:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55B2F20879
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Dec 2018 16:03:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="N/XS4PgN";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ky0zFPJ0"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 185962086D
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ww5x9YFG";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wap0J4HE"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 55B2F20879
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729135AbeLMPEg (ORCPT
+        id S1729455AbeLMQDZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Dec 2018 10:04:36 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:56694 "EHLO
+        Thu, 13 Dec 2018 11:03:25 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:58758 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728584AbeLMPEg (ORCPT
+        with ESMTP id S1729445AbeLMQDZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Dec 2018 10:04:36 -0500
+        Thu, 13 Dec 2018 11:03:25 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 48CC2608CB; Thu, 13 Dec 2018 15:04:35 +0000 (UTC)
+        id 6E35D60795; Thu, 13 Dec 2018 16:03:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1544713475;
-        bh=4EN5Py3pOtDZYQZ6pGLEhbVF/6DBAgFjLfB31KdOpec=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=N/XS4PgNbejIs5upxK0pJcu8Sp0g6MDI3VEi27kfj+7ZyDQasb7p06OzomvqY34Pa
-         r+eemRc+VyNf17pNVCfAT7DDhawp5ybAjhdmvCgPLd4t+HvRGv0l4Qe+09OhCG+Uqh
-         16hp0z7B8anF4LQwb7iR7EPHYM+gpoxO+9WtU9NA=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        s=default; t=1544717004;
+        bh=jMDh11NmuUt7ArxMVeVCv9dtmQAGItLg3t0CTSsIwz0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Ww5x9YFGb6BlZVTfMAh+VC5Gn5csXT7/wcjnSMK4+DcUvZ3HpCfT3younYKlX0R+H
+         Belo0Roq/WWp4vP56awbaXOMRCsxMuDCuHtkzLin+y/78dRpkE5cgAs+v46aKp59OC
+         rNShND7mOIDJZHf+dBTyPj0mQXZlp7vvwV/myGo0=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3026960867;
-        Thu, 13 Dec 2018 15:04:32 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6BBDF602FA;
+        Thu, 13 Dec 2018 16:03:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1544713474;
-        bh=4EN5Py3pOtDZYQZ6pGLEhbVF/6DBAgFjLfB31KdOpec=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=Ky0zFPJ01JVDe8wc0ex0bbAXBuhYNrJuDAO40kXVsUfjtBK9MFE3HouFbbEdAGyQ4
-         WvgCYt4wjNMOUC5AxcWN+sp0/32426J4PAlRCwwNAxkqtn7KbLhm4giJoIChjNly/a
-         s3j4MWlJ+jmJ6ywP3IBO67nioKZflTyYi+CxhbNw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3026960867
+        s=default; t=1544717003;
+        bh=jMDh11NmuUt7ArxMVeVCv9dtmQAGItLg3t0CTSsIwz0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Wap0J4HEW1SSaTMYCqaDywWt96wevW9bLU7r8D73OZ9Fly5SJ8I+oAyZ6xlP7nrK0
+         A+Of8G5FTl9QBk4OXNRmnmvyr+LvRnKEi3hA3hbSgtCgr5SyM71QX3eJHN454AdUV4
+         z9WZADNkm8S2Ov7MswjpSEUj9tf6oZKXOaATbBvM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6BBDF602FA
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] rtlwifi: rtl8821ae: remove set but not used variable
- 'type' in translate_rx_signal_stuff
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1544097968-68563-1-git-send-email-yuehaibing@huawei.com>
-References: <1544097968-68563-1-git-send-email-yuehaibing@huawei.com>
-To:     YueHaibing <yuehaibing@huawei.com>
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        Tzu-En Huang <tehuang@realtek.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181213150435.48CC2608CB@smtp.codeaurora.org>
-Date:   Thu, 13 Dec 2018 15:04:35 +0000 (UTC)
+To:     Stijn Tintel <stijn@linux-ipv6.be>
+Cc:     linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
+        Stable <stable@vger.kernel.org>,
+        Jonas Gorski <jonas.gorski@gmail.com>
+Subject: Re: [PATCH wireless-drivers] brcmfmac: fix roamoff=1 modparam
+References: <20181204182905.32267-1-stijn@linux-ipv6.be>
+        <20181213134605.5F09D60312@smtp.codeaurora.org>
+Date:   Thu, 13 Dec 2018 18:03:20 +0200
+In-Reply-To: <20181213134605.5F09D60312@smtp.codeaurora.org> (Kalle Valo's
+        message of "Thu, 13 Dec 2018 13:46:05 +0000 (UTC)")
+Message-ID: <877egd8ldj.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c: In function 'translate_rx_signal_stuff':
-> drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c:309:6: warning:
->  variable 'type' set but not used [-Wunused-but-set-variable]
-> 
-> It never used since commit 21e4b0726dc6 ("rtlwifi: rtl8821ae: Move driver from
-> staging to regular tree")
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> Stijn Tintel <stijn@linux-ipv6.be> wrote:
+>
+>> When the update_connect_param callback is set, nl80211 expects the flag
+>> WIPHY_FLAG_SUPPORTS_FW_ROAM to be set as well. However, this flag is
+>> only set when modparam roamoff=0, while the callback is set
+>> unconditionally. Since commit 7f9a3e150ec7 this causes a warning in
+>> wiphy_register, which breaks brcmfmac.
+>> 
+>> Disable the update_connect_param callback when roamoff=0 to fix this.
+>> 
+>> Fixes: 7f9a3e150ec7 ("nl80211: Update ERP info using NL80211_CMD_UPDATE_CONNECT_PARAMS")
+>> Cc: Stable <stable@vger.kernel.org> # 4.19+
+>> Signed-off-by: Jonas Gorski <jonas.gorski@gmail.com>
+>> Signed-off-by: Stijn Tintel <stijn@linux-ipv6.be>
+>
+> Should this go to 4.20? Arend?
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-e3e454b7047a rtlwifi: rtl8821ae: remove set but not used variable 'type' in translate_rx_signal_stuff
+I talked with Arend offline and we concluded to push this to -next.
 
 -- 
-https://patchwork.kernel.org/patch/10715629/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Kalle Valo
