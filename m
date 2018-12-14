@@ -2,100 +2,111 @@ Return-Path: <SRS0=OWo+=OX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7751C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 20:30:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 546D3C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 20:42:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A9502080F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 20:30:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F63D206DD
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 20:42:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=rsalveti-net.20150623.gappssmtp.com header.i=@rsalveti-net.20150623.gappssmtp.com header.b="hlMAavCs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730849AbeLNUa4 (ORCPT
+        id S1731031AbeLNUmZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Dec 2018 15:30:56 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:42106 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730787AbeLNUa4 (ORCPT
+        Fri, 14 Dec 2018 15:42:25 -0500
+Received: from mail-lj1-f176.google.com ([209.85.208.176]:42180 "EHLO
+        mail-lj1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730837AbeLNUmZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Dec 2018 15:30:56 -0500
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=localhost.localdomain)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1gXu5v-0002RG-1S; Fri, 14 Dec 2018 22:29:59 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 14 Dec 2018 22:29:38 +0200
-Message-Id: <20181214202945.32375-12-luca@coelho.fi>
-X-Mailer: git-send-email 2.19.2
-In-Reply-To: <20181214202945.32375-1-luca@coelho.fi>
-References: <20181214202945.32375-1-luca@coelho.fi>
+        Fri, 14 Dec 2018 15:42:25 -0500
+Received: by mail-lj1-f176.google.com with SMTP id l15-v6so5996072lja.9
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Dec 2018 12:42:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=rsalveti-net.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=XxAdKgEI/yAbM92b2c2PSLOJXVMOr+Fcm8Ufzy3P7r8=;
+        b=hlMAavCsNbnzzepVkDR+s0hDdxRbTBfHUM3ltF/ihnUoiRQdbrW9bYieQnqf5w97ym
+         vWZc06JNB7kEFo2MB4DWjJeAhFyC+YZSHQWiclWhrVmnBAHJIIpF7C2QBhrE/Ct6q9Yg
+         7XEHMlwvZzGMs77Yf1oixFkOcKn1NSi25J+B7EuL24iRW5IxuVqdyRcMMb96FqTAhdt9
+         pM2mgq7wRNedtghahCQAwSBbSpfIbDbzxDvGV7YI9+6aCHkbOnHzyl38XZCagy8+hY1y
+         Ao6bffTYzG92d+V0abASx906lKBsU0gw1hJtIxYg+7CaLzrli4W0aVctYxbGokcArhuc
+         JRpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=XxAdKgEI/yAbM92b2c2PSLOJXVMOr+Fcm8Ufzy3P7r8=;
+        b=CUPpWKOwXcia+vwkJnGSLZQ9lDnfgyTYcrWRoMnm4QMITw9XVpoKrTYyBeaUxosnm1
+         yTj3ucUVs2LpTHQYlOkOyAonGvTpwbmEIBhpzj4U3zZwrsGHCSffmxFpAKETL07rJ2V0
+         sdrVplnNyZXZPl2TA5OEhbHyRFNuuaTP8Yw0mREy4UMEdjnmSURSQ4RInovU3YTieVKL
+         4C8/R4NCq46VF0b25jr0v+Kc0Z9DkV5vqUeI+2u82qzhxjnnS4yJjsoRj6ZM0fE+ABFn
+         ImvHCjjdbnB2La3d69ZJDMEc8xvIUZ4elm5Phay3gIcCvVUjGbYyc1X67xZhA+PUMjqa
+         MqjQ==
+X-Gm-Message-State: AA+aEWZbYplaWXv+IA491T5sdn7PSsCOFwybr7h0UYtMO75rX7zCNkxH
+        zP7E9NvJ7keCpTAyBTYXaAoF63sU+k6qst1LxD+q5A==
+X-Google-Smtp-Source: AFSGD/UZsWLrEz4g7Vb4XaPClrflC+EaDZm//0k75aVdF2YSTOqSgeNf0mjXYGUKgcu+NVjSNmb8vR3EGQ0KAcDwvTw=
+X-Received: by 2002:a2e:94ce:: with SMTP id r14-v6mr2408163ljh.34.1544820142673;
+ Fri, 14 Dec 2018 12:42:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/18] iwlwifi: mvm: clean up SSN incrementation
+References: <CALAqxLUVajBw_PkyhA0s=FhQQHWu1FBEMX+4oDTStRXr6L5Txw@mail.gmail.com>
+ <20181211201221.GY39861@atomide.com> <CAHYQr0qffa_G2ZVnSsDfjqSgxuBBZB+8e6ZODpAWV_TMhqzFYg@mail.gmail.com>
+ <CAHYQr0qhqce2QcwMLRMWnqhZTL4KzHKJLzt6tfCNLHUcEt9pyQ@mail.gmail.com>
+ <20181212014556.GC39861@atomide.com> <c8625c42f04a4721b7efb7d7b6b3931c@ti.com>
+ <20181212183116.GH39861@atomide.com> <CAHYQr0ojkf3CvFb_zuEK4Vuz1w-rm9Sb=+dk5BkqYkWoxy8+aQ@mail.gmail.com>
+ <9060b4655e064665a1812d9fae00f1ec@ti.com> <CAHYQr0r4eQNSqZEr-vbCiVN6G_O1CXxX9cxemANSRY-jqDMZ=A@mail.gmail.com>
+ <20181213144522.GO39861@atomide.com>
+In-Reply-To: <20181213144522.GO39861@atomide.com>
+From:   Ricardo Salveti <rsalveti@rsalveti.net>
+Date:   Fri, 14 Dec 2018 18:41:45 -0200
+Message-ID: <CAHYQr0qg31hqyzm9uK03qz=DmUkA9idqTrhLaP9A6nuXPEW73w@mail.gmail.com>
+Subject: Re: [EXTERNAL] Re: wlcore getting stuck on hikey after the runtime PM
+ autosuspend support change
+To:     Tony Lindgren <tony@atomide.com>
+Cc:     eyalr@ti.com, John Stultz <john.stultz@linaro.org>,
+        linux-wireless@vger.kernel.org, anders.roxell@linaro.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi,
 
-Sometimes, due to SCD bug, we need to start the queue with an
-higher SSN. The queue allocation function currently increments
-the SSN in the packet itself, but it is pointless, since this
-value is overridden later by iwl_mvm_tx_mpdu with the value
-from mvmsta->tid_data[tid].seq_number. Updating tid data is
-sufficient.
+On Thu, Dec 13, 2018 at 12:45 PM Tony Lindgren <tony@atomide.com> wrote:
+> * Ricardo Salveti <rsalveti@rsalveti.net> [181213 13:53]:
+> > I tried just increasing WL1271_PRE_POWER_ON_SLEEP from 20ms to 50ms
+> > (which gets used before calling wl12xx_sdio_power_on), and that was
+> > already enough to fix my issues on both hikey and beaglebone black
+> > wireless.
+>
+> OK good to hear that helps :)
+>
+> > Should we define another pre power on sleep specifically for the sdio
+> > case (and use directly in wl12xx_sdio_power_on)?
+>
+> I'd probably prefer to just increase WL1271_PRE_POWER_ON_SLEEP,
+> chances are the same delay is needed in all cases.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+Investigating this issue a bit more, I noticed that the hang happens
+when PM decides to not suspend the device when doing an if down/up
+cycle.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index e82194836f03..e28009832da0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1254,6 +1254,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 
- 	spin_lock_bh(&mvmsta->lock);
- 	tfd_queue_mask = mvmsta->tfd_queue_msk;
-+	ssn = IEEE80211_SEQ_TO_SN(mvmsta->tid_data[tid].seq_number);
- 	spin_unlock_bh(&mvmsta->lock);
- 
- 	/*
-@@ -1340,13 +1341,8 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 		}
- 	}
- 
--	ssn = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
- 	inc_ssn = iwl_mvm_enable_txq(mvm, queue, mac_queue,
- 				     ssn, &cfg, wdg_timeout);
--	if (inc_ssn) {
--		ssn = (ssn + 1) & IEEE80211_SCTL_SEQ;
--		le16_add_cpu(&hdr->seq_ctrl, 0x10);
--	}
- 
- 	/*
- 	 * Mark queue as shared in transport if shared
-@@ -1363,8 +1359,10 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	 * this ra/tid in our Tx path since we stop the Qdisc when we
- 	 * need to allocate a new TFD queue.
- 	 */
--	if (inc_ssn)
-+	if (inc_ssn) {
- 		mvmsta->tid_data[tid].seq_number += 0x10;
-+		ssn = (ssn + 1) & IEEE80211_SCTL_SEQ;
-+	}
- 	mvmsta->tid_data[tid].txq_id = queue;
- 	mvmsta->tfd_queue_msk |= BIT(queue);
- 	queue_state = mvmsta->tid_data[tid].state;
+Basically since commit 60f36637bbbd ("wlcore: sdio: allow pm to handle
+sdio power") PM is now handling the sdio power off/on process, and if
+wl12xx_sdio_power_on gets called right after wl12xx_sdio_power_off (if
+down/up), the device will not go to the required power off/on sequence
+(since PM will abort the suspend process), and the firmware loading
+process will fail. I would guess the problem only happens with
+autosuspend because of the extra delay it causes (pm_runtime_put
+always returns -EBUSY on wl12xx_sdio_power_off with autosuspend).
+
+Is there a way to force the suspend on wl12xx_sdio_power_off, or
+should we partially restore the old behavior?
+
+Thanks,
 -- 
-2.19.2
-
+Ricardo Salveti de Araujo
