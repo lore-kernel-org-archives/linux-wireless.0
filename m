@@ -6,76 +6,69 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E01EAC43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 16:30:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44F92C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 20:29:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CA15206C2
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 16:30:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A75B32080F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 20:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730021AbeLNQaa (ORCPT
+        id S1730792AbeLNU3x (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Dec 2018 11:30:30 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:41904 "EHLO
+        Fri, 14 Dec 2018 15:29:53 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:41930 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729623AbeLNQa3 (ORCPT
+        with ESMTP id S1730713AbeLNU3x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Dec 2018 11:30:29 -0500
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
+        Fri, 14 Dec 2018 15:29:53 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=localhost.localdomain)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gXqM6-0002LV-Rg; Fri, 14 Dec 2018 18:30:27 +0200
+        id 1gXu5n-0002RG-9C; Fri, 14 Dec 2018 22:29:51 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 14 Dec 2018 18:30:22 +0200
-Message-Id: <20181214163022.22162-1-luca@coelho.fi>
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Fri, 14 Dec 2018 22:29:28 +0200
+Message-Id: <20181214202945.32375-2-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.2
+In-Reply-To: <20181214202945.32375-1-luca@coelho.fi>
+References: <20181214202945.32375-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v4.20] iwlwifi: mvm: don't send GEO_TX_POWER_LIMIT to old firmwares
+Subject: [PATCH 01/18] iwlwifi: pcie: use iwl_tx_cmd_gen2 and not iwl_tx_cmd
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-Old firmware versions don't support this command. Sending it
-to any firmware before -41.ucode will crash the firmware.
+When building AMSDU for gen2, code uses iwl_tx_cmd. The only
+updated field is len, which is in the same location, so it
+is not a bug. However, it is a bit confusing and error prone,
+so change it.
 
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=201975
-
-Fixes: 66e839030fd6 ("iwlwifi: fix wrong WGDS_WIFI_DATA_SIZE")
-CC: <stable@vger.kernel.org> #4.19+
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 2ba890445c35..1689bead1b4f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -881,6 +881,15 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
- 	int ret, i, j;
- 	u16 cmd_wide_id =  WIDE_ID(PHY_OPS_GROUP, GEO_TX_POWER_LIMIT);
- 
-+	/*
-+	 * This command is not supported on earlier firmware versions.
-+	 * Unfortunately, we don't have a TLV API flag to rely on, so
-+	 * rely on the major version which is in the first byte of
-+	 * ucode_ver.
-+	 */
-+	if (IWL_UCODE_SERIAL(mvm->fw->ucode_ver) < 41)
-+		return 0;
-+
- 	ret = iwl_mvm_sar_get_wgds_table(mvm);
- 	if (ret < 0) {
- 		IWL_DEBUG_RADIO(mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 16e8c3eb09b8..156ca1b1f621 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -238,7 +238,7 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
+ {
+ #ifdef CONFIG_INET
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	struct iwl_tx_cmd *tx_cmd = (void *)dev_cmd->payload;
++	struct iwl_tx_cmd_gen2 *tx_cmd = (void *)dev_cmd->payload;
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	unsigned int snap_ip_tcp_hdrlen, ip_hdrlen, total_len, hdr_room;
+ 	unsigned int mss = skb_shinfo(skb)->gso_size;
 -- 
 2.19.2
 
