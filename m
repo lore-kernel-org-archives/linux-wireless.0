@@ -2,123 +2,176 @@ Return-Path: <SRS0=OWo+=OX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.9 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 917E0C43613
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 14:13:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17CF7C43613
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 14:17:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A8A52070B
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 14:12:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LM0xBlFV"
+	by mail.kernel.org (Postfix) with ESMTP id CFF33208CD
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 13:59:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730067AbeLNOMu (ORCPT
+        id S1729718AbeLNN7i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Dec 2018 09:12:50 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:44062 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729783AbeLNOMu (ORCPT
+        Fri, 14 Dec 2018 08:59:38 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:41878 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728881AbeLNN7i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Dec 2018 09:12:50 -0500
-Received: by mail-pg1-f195.google.com with SMTP id t13so2754578pgr.11;
-        Fri, 14 Dec 2018 06:12:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=6WGX3SSFa6M4AjpRdCU5Zt+PMMVJgC5t6tDMH8M4gJA=;
-        b=LM0xBlFVaB/R/G80qhAL6kvF8SPLTvmUlOeG+nDgYqlMHNbha5PtTwZd3/S5lRTQ/t
-         UBDLilWQm4RKMaFOdIh6GlxdEShiME1bB0uEMCB3n07LpMvhMII/bnIIZTk9JSWYVOFp
-         nYKEIhzAEh/b/A+/P1RL2051QNrRfzYpvXGXhqORQhUPJK2BpMyNOTwBKS4ALmfQXIso
-         oFHWzyNRmSbSR/HWT5ltXT/FDKnh/TwR5PkicoUIm3VBaTzGdDe73z+0lUOzVhdkb91x
-         yyKnvs39xskmqtD9Cw1k92usbVrQ72BdCWL6jQOoyS1mQiW+wPzGkgfVMXFH+BwKeVgY
-         U+6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=6WGX3SSFa6M4AjpRdCU5Zt+PMMVJgC5t6tDMH8M4gJA=;
-        b=WjB8DD8WhZWOp2fYHYbQ36EsZMKK2O/RknXhsdNEeAMUAlKfkk2cXEBetYBvinRZ0S
-         mt587qLFmM/cjTUpacVaF80rPHOwfkGgHVE19UtyfBWUy2hJG100YvA3xPKh8Vs7Ph2d
-         8kM8tMnaK/XdK1EcuRNhLFpUmOVqUCcc0djUfgEaWZHJzAa8QXQMyRQFB76MERs7xl/H
-         1Io1FO771LzKhIXuoVIRFqmjNvAfUv11jZAxf2ne5oa+uPoeSa9yW6LhxnNz4WuxylgV
-         zwqUcAq7n09XAcf9buFGJCKMGDd78HGNAwoF7XAK0Qra48XY0c1NheIlvgJKH2Ag2nbH
-         1i0A==
-X-Gm-Message-State: AA+aEWbZ149mDily7b475ntEWT264iml8rHjyoXfP8doqYFzxsBfNKgr
-        pNeoeefGozmsyeuk2VsVaKo=
-X-Google-Smtp-Source: AFSGD/Wo6aIFcIEnDn8+HFAhLz4yYy7u+Bu5VdHDEMTLb5Rla1GLiRAU6UZVbYirBZ47y9vmbVWEyw==
-X-Received: by 2002:a62:62c5:: with SMTP id w188mr3041897pfb.160.1544796769341;
-        Fri, 14 Dec 2018 06:12:49 -0800 (PST)
-Received: from bars (ip-195-182-157-78.clients.cmk.ru. [195.182.157.78])
-        by smtp.gmail.com with ESMTPSA id w88sm8284593pfk.11.2018.12.14.06.12.46
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 14 Dec 2018 06:12:48 -0800 (PST)
-Date:   Fri, 14 Dec 2018 17:12:44 +0300
-From:   Sergey Matyukevich <geomatsi@gmail.com>
-To:     Eric Dumazet <eric.dumazet@gmail.com>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Jamal Hadi Salim <jhs@mojatatu.com>,
-        Cong Wang <xiyou.wangcong@gmail.com>,
-        Jiri Pirko <jiri@resnulli.us>,
-        sergey.matyukevich.os@quantenna.com
-Subject: Re: question: ip forwarding and fq/mq qdisc
-Message-ID: <20181214141244.7rob5gm245wqbive@bars>
-References: <20181214120210.kmeuwvajuiwlp2n7@bars>
- <c3ac480b-2c6c-689a-a39e-75df601e5261@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c3ac480b-2c6c-689a-a39e-75df601e5261@gmail.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+        Fri, 14 Dec 2018 08:59:38 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gXo07-0002Ip-9n; Fri, 14 Dec 2018 15:59:36 +0200
+Message-ID: <d17183ee2870be4c61b9d8b80c1e0a34496ca327.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Date:   Fri, 14 Dec 2018 15:59:33 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-Pt0n6jTymXmpPJdWbDVU"
+User-Agent: Evolution 3.30.2-1 
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2018-12-14
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> > Hi all,
-> > 
-> > I have been running 4.18-rc8 kernel with enabled IP forwarding between
-> > wired and wireless interfaces, where both interfaces
-> > were configured as fq qdisc.
-> > 
-> > However after moving to 4.20-rc1 kernel the same configuration does not
-> > work anymore: pass-through packets are not forwarded in both directions.
-> > Forwarding starts working again only if I change qdisc of _both_ interfaces
-> > to anything but fq/mq. For instance any combination of pfifo/fq_codel/noqueue
-> > works fine.
-> > 
-> > Does it look like a regression or it is a known change in behavior ?
-> > 
-> > Regards,
-> > Sergey
-> > 
-> 
-> Hi Sergey
-> 
-> I guess EDT model broke this use case.
-> 
-> I was under the impression skb->tstamp was cleared when forwarding packets, maybe I was wrong.
-> 
-> Can you try the following ?
-> 
-> diff --git a/net/ipv4/ip_forward.c b/net/ipv4/ip_forward.c
-> index 06ee4696703c0ce72ea914403b739839e60f1584..00ec819f949b5e76ea96be901a697f4e12d5cf4d 100644
-> --- a/net/ipv4/ip_forward.c
-> +++ b/net/ipv4/ip_forward.c
-> @@ -79,6 +79,7 @@ static int ip_forward_finish(struct net *net, struct sock *sk, struct sk_buff *s
->         if (unlikely(opt->optlen))
->                 ip_forward_options(skb);
->  
-> +       skb->tstamp = 0;
->         return dst_output(net, sk, skb);
->  }
 
-Hi Eric,
+--=-Pt0n6jTymXmpPJdWbDVU
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This patch fixes the issue: ip forwarding works for fq/mq qdisc.
+Hi Kalle,
 
-Thanks,
-Sergey
+This is the third batch of patches intended for v4.21.  This includes
+only the last patchset I sent.  Usual development work, continuing with
+the new debugging infrastructure, some 802.11ax fixes in radiotap and
+other small fixes and cleanups.  More details about the contents in the
+tag description.
+
+I have sent this out before and kbuildbot reported success.
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit e3e454b7047a8bb11c0311ab1708e040481a6044=
+:
+
+  rtlwifi: rtl8821ae: remove set but not used variable 'type' in translate_=
+rx_signal_stuff (2018-12-13 17:04:09 +0200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2018-12-14
+
+for you to fetch changes up to 55ed14cdaec503bfe6a94f0524d0d2c9b7226aed:
+
+  iwlwifi: mvm: don't check if a pointer is set if it can't be unset (2018-=
+12-14 13:04:49 +0200)
+
+----------------------------------------------------------------
+Third batch of iwlwifi patches intended for v4.21
+
+* Some cleanups in the HW configuration structures;
+* More work on the debugging infrastructure;
+* Fixes related to 802.11ax;
+* Other cleanups and small fixes;
+
+----------------------------------------------------------------
+Avraham Stern (1):
+      iwlwifi: mvm: force TCM re-evaluation on TCM resume
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: don't check if a pointer is set if it can't be unset
+
+Luca Coelho (5):
+      iwlwifi: move common 9000 cfg parameters to common macro
+      iwlwifi: don't define OTP_LOW_IMAGE_SIZE per family, but per size
+      iwlwifi: remove useless NVM_HW_SECTION_NUM_FAMILY_* macros
+      iwlwifi: move iwl_nvm_check_version() into dvm
+      iwlwifi: remove all unnecessary occurrences of nvm_calib_ver
+
+Sara Sharon (5):
+      iwlwifi: dbg: dump data according to the new ini TLVs
+      iwlwifi: add support for triggering ini triggers
+      iwlwifi: mvm: activate apply points
+      iwlwifi: pcie: fix erroneous print
+      iwlwifi: pcie: set cmd_len in the correct place
+
+Shaul Triebitz (3):
+      iwlwifi: mvm: change PHY data RX for HE radiotap
+      iwlwifi: mvm: add L-SIG length to radiotap
+      iwlwifi: mvm: radiotap: remove UL_DL bit in HE TRIG_BASED
+
+ drivers/net/wireless/intel/iwlwifi/cfg/1000.c            |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/2000.c            |   4 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c           |  10 +--
+ drivers/net/wireless/intel/iwlwifi/cfg/6000.c            |   6 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/7000.c            |  27 +------
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c            |  11 +--
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c            |  85 ++---------=
+---------
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c            |  17 ++++
+ drivers/net/wireless/intel/iwlwifi/fw/api/rx.h           | 190 +++++++++++=
++++++++++++++++++-----------------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c              | 322 +++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h              |  41 +++++++++-
+ drivers/net/wireless/intel/iwlwifi/fw/error-dump.h       |  17 ++++
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h          |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h          |   8 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c    |  19 -----
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h    |   5 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h            |   6 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c         |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c              |  20 +++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c        |   2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c        |   2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c              |  37 ++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c            | 394 +++++++++++=
++++++++++++++++++++++++++++++++++++++--------------------------------------=
+-------
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c            |   2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c           |  14 ++++
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c |  13 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h       |   5 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c          |  71 +++++++++++=
+------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c        |  24 +++---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c             |  10 +--
+ 31 files changed, 872 insertions(+), 498 deletions(-)
+
+--=-Pt0n6jTymXmpPJdWbDVU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlwTt0UACgkQoUecoho8
+xfraQg/8CNAM7lNynoghEJGqRDdIpgQ4mtkrgfdM/NTxAcQOt3u6i3GBaP/EG0E4
+69iCPaxj3wKVVKMBuPoE0uwh5lGP4RGuByMHr7Lmvm1wlvd+k8iW3VnLCwMAyGnK
++k3UtIeEozyEDPxB52BpQxLvnOyDczjQvRz8AzLlaAGnnJfg9n9l5oFwvzuqJnQb
+WhCF44MSiBuTShDP0DGmJVKw3qMnYi1k8FQlHL/z/8mEHoqLpc0iOzzCyWTaHZAj
+zQrzJNiqabM9K03MpZJ7qbQRQZbDT6GKJsJfzt0xeWKY6xYGBMqqzsWKT4pSI7Vd
+9yrUaKXOOuvQxqPQlJZDXgb068vnPkUj5vgG0bQE+N1BE9+YFg8EWmvD1HfqVVPn
+lyuGnL395RFnb9lpxuObz+wdiFaQJchbA7LzQ4etYyStEwyQc/71bPgBmjVJtuOv
+EtmP8qmGld9K+SuyABiasdASWkVePuPhMrqlwF2OvCIJ7VFJy8vTGESbdsNKjkAM
+2lH+tWNUI+pnMlvMr9qI2eJzX/6PZDPQxv7Gw/QLfZUuiZiyDEC9QhZHaFCJD4rN
+iH3wIbc+oQI9XgSGOVpwNPwK2QLHW1ZqCI7iq+sCX51TAGq8f6LfJt1voaURphAx
+3xA1x5rDfiH90U3a6b33WivnNUaejaOAV7/3VXee+0Cf1rGmw/4=
+=tE2I
+-----END PGP SIGNATURE-----
+
+--=-Pt0n6jTymXmpPJdWbDVU--
+
