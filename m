@@ -2,110 +2,80 @@ Return-Path: <SRS0=OWo+=OX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B83C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 15:06:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E01EAC43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 16:30:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFC8620656
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 15:06:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DXwRbnxs";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DXwRbnxs"
+	by mail.kernel.org (Postfix) with ESMTP id 7CA15206C2
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Dec 2018 16:30:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730206AbeLNPGo (ORCPT
+        id S1730021AbeLNQaa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Dec 2018 10:06:44 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:60042 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729687AbeLNPGo (ORCPT
+        Fri, 14 Dec 2018 11:30:30 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:41904 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729623AbeLNQa3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Dec 2018 10:06:44 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 8C8B560128; Fri, 14 Dec 2018 15:06:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1544800003;
-        bh=1ZLFbepdaW+5uEVSEn44JByBtcD4+mA8c5eDiQxLabQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=DXwRbnxskI3J6AXPMpv+veWl6owwmNXYfJdQr1iGuQy7PFiJwRzS2MhC2lI2eWKMH
-         VcQY3MR049e+pIZH8mVvwrFW69kFcA+5pJDFwCkVOdq2kZqkSVZEX/vJpQG0+BME18
-         8ht7b/0FRuF90I27mZWqmYbB5Ik7NP8nzf8kQO7U=
-Received: from x230.qca.qualcomm.com (37-33-70-195.bb.dnainternet.fi [37.33.70.195])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C05DB60208;
-        Fri, 14 Dec 2018 15:06:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1544800003;
-        bh=1ZLFbepdaW+5uEVSEn44JByBtcD4+mA8c5eDiQxLabQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=DXwRbnxskI3J6AXPMpv+veWl6owwmNXYfJdQr1iGuQy7PFiJwRzS2MhC2lI2eWKMH
-         VcQY3MR049e+pIZH8mVvwrFW69kFcA+5pJDFwCkVOdq2kZqkSVZEX/vJpQG0+BME18
-         8ht7b/0FRuF90I27mZWqmYbB5Ik7NP8nzf8kQO7U=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C05DB60208
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Subject: Re: pull-request: iwlwifi-next 2018-12-14
-References: <d17183ee2870be4c61b9d8b80c1e0a34496ca327.camel@coelho.fi>
-Date:   Fri, 14 Dec 2018 17:06:38 +0200
-In-Reply-To: <d17183ee2870be4c61b9d8b80c1e0a34496ca327.camel@coelho.fi> (Luca
-        Coelho's message of "Fri, 14 Dec 2018 15:59:33 +0200")
-Message-ID: <87o99ocflt.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Fri, 14 Dec 2018 11:30:29 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gXqM6-0002LV-Rg; Fri, 14 Dec 2018 18:30:27 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
+Date:   Fri, 14 Dec 2018 18:30:22 +0200
+Message-Id: <20181214163022.22162-1-luca@coelho.fi>
+X-Mailer: git-send-email 2.19.2
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH v4.20] iwlwifi: mvm: don't send GEO_TX_POWER_LIMIT to old firmwares
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> This is the third batch of patches intended for v4.21.  This includes
-> only the last patchset I sent.  Usual development work, continuing with
-> the new debugging infrastructure, some 802.11ax fixes in radiotap and
-> other small fixes and cleanups.  More details about the contents in the
-> tag description.
->
-> I have sent this out before and kbuildbot reported success.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit e3e454b7047a8bb11c0311ab1708e040481a6044:
->
->   rtlwifi: rtl8821ae: remove set but not used variable 'type' in translate_rx_signal_stuff (2018-12-13 17:04:09 +0200)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2018-12-14
->
-> for you to fetch changes up to 55ed14cdaec503bfe6a94f0524d0d2c9b7226aed:
->
->   iwlwifi: mvm: don't check if a pointer is set if it can't be unset (2018-12-14 13:04:49 +0200)
->
-> ----------------------------------------------------------------
-> Third batch of iwlwifi patches intended for v4.21
->
-> * Some cleanups in the HW configuration structures;
-> * More work on the debugging infrastructure;
-> * Fixes related to 802.11ax;
-> * Other cleanups and small fixes;
->
-> ----------------------------------------------------------------
+Old firmware versions don't support this command. Sending it
+to any firmware before -41.ucode will crash the firmware.
 
-Pulled, thanks.
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=201975
 
+Fixes: 66e839030fd6 ("iwlwifi: fix wrong WGDS_WIFI_DATA_SIZE")
+CC: <stable@vger.kernel.org> #4.19+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 2ba890445c35..1689bead1b4f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -881,6 +881,15 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
+ 	int ret, i, j;
+ 	u16 cmd_wide_id =  WIDE_ID(PHY_OPS_GROUP, GEO_TX_POWER_LIMIT);
+ 
++	/*
++	 * This command is not supported on earlier firmware versions.
++	 * Unfortunately, we don't have a TLV API flag to rely on, so
++	 * rely on the major version which is in the first byte of
++	 * ucode_ver.
++	 */
++	if (IWL_UCODE_SERIAL(mvm->fw->ucode_ver) < 41)
++		return 0;
++
+ 	ret = iwl_mvm_sar_get_wgds_table(mvm);
+ 	if (ret < 0) {
+ 		IWL_DEBUG_RADIO(mvm,
 -- 
-Kalle Valo
+2.19.2
+
