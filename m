@@ -3,178 +3,116 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6FD3C43387
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:03:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF751C43387
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:05:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9250D2084D
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:03:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A0D62084D
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:05:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730074AbeLOJDv (ORCPT
+        id S1729966AbeLOJFc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 15 Dec 2018 04:03:51 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:42304 "EHLO
+        Sat, 15 Dec 2018 04:05:32 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:42310 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730022AbeLOJDv (ORCPT
+        with ESMTP id S1729465AbeLOJFc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Dec 2018 04:03:51 -0500
+        Sat, 15 Dec 2018 04:05:32 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gY5rN-0002oc-HF; Sat, 15 Dec 2018 11:03:46 +0200
+        id 1gY5rK-0002oc-GB; Sat, 15 Dec 2018 11:03:42 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
+Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Sat, 15 Dec 2018 11:03:21 +0200
-Message-Id: <20181215090325.31604-21-luca@coelho.fi>
+Date:   Sat, 15 Dec 2018 11:03:17 +0200
+Message-Id: <20181215090325.31604-17-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.2
 In-Reply-To: <20181215090325.31604-1-luca@coelho.fi>
 References: <20181215090325.31604-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 20/24] cfg80211: add some missing fall through annotations
+Subject: [PATCH 16/24] mac80211: Properly handle SKB with radiotap only
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-There are talks about enabling -Wimplicit-fallthrough warnings in the
-mainline and it is already enabled in linux-next.  Add all the
-missing annotations to prevent warnings when this happens.
+The monitor interface Rx handling of SKBs that contain only
+radiotap information was buggy as it tried to access the
+SKB assuming it contains a frame.
 
-And in one case, remove the extra text from the annotation so that the
-compiler recognizes it.
+To fix this, check the RX_FLAG_NO_PSDU flag in the Rx status
+(indicting that the SKB contains only radiotap information),
+and do not perform data path specific processing when the flag
+is set.
 
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/chan.c    | 3 +++
- net/wireless/nl80211.c | 9 +++++++++
- net/wireless/scan.c    | 2 +-
- 3 files changed, 13 insertions(+), 1 deletion(-)
+ net/mac80211/rx.c | 26 +++++++++++++++++---------
+ 1 file changed, 17 insertions(+), 9 deletions(-)
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 2db713d18f71..7dc1bbd0888f 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -6,6 +6,7 @@
-  *
-  * Copyright 2009	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-+ * Copyright 2018       Intel Corporation
-  */
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 60d179bf2585..85c365fc7a0c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -754,6 +754,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	struct ieee80211_sub_if_data *monitor_sdata =
+ 		rcu_dereference(local->monitor_sdata);
+ 	bool only_monitor = false;
++	unsigned int min_head_len;
  
- #include <linux/export.h>
-@@ -747,6 +748,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 	case NL80211_CHAN_WIDTH_20:
- 		if (!ht_cap->ht_supported)
- 			return false;
-+		/* fall through */
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 		prohibited_flags |= IEEE80211_CHAN_NO_20MHZ;
- 		width = 20;
-@@ -769,6 +771,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
- 		if (cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
- 			return false;
-+		/* fall through */
- 	case NL80211_CHAN_WIDTH_80:
- 		if (!vht_cap->vht_supported)
- 			return false;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 323cd91cf1e4..669cbdb6f849 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1851,6 +1851,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* fall through */
- 	case 1:
- 		if (nla_put(msg, NL80211_ATTR_CIPHER_SUITES,
- 			    sizeof(u32) * rdev->wiphy.n_cipher_suites,
-@@ -1897,6 +1898,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* fall through */
- 	case 2:
- 		if (nl80211_put_iftypes(msg, NL80211_ATTR_SUPPORTED_IFTYPES,
- 					rdev->wiphy.interface_modes))
-@@ -1904,6 +1906,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* fall through */
- 	case 3:
- 		nl_bands = nla_nest_start(msg, NL80211_ATTR_WIPHY_BANDS);
- 		if (!nl_bands)
-@@ -1929,6 +1932,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 				state->chan_start++;
- 				if (state->split)
- 					break;
-+				/* fall through */
- 			default:
- 				/* add frequencies */
- 				nl_freqs = nla_nest_start(
-@@ -1982,6 +1986,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 			state->split_start++;
- 		if (state->split)
- 			break;
-+		/* fall through */
- 	case 4:
- 		nl_cmds = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_COMMANDS);
- 		if (!nl_cmds)
-@@ -2008,6 +2013,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* fall through */
- 	case 5:
- 		if (rdev->ops->remain_on_channel &&
- 		    (rdev->wiphy.flags & WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL) &&
-@@ -2025,6 +2031,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* fall through */
- 	case 6:
- #ifdef CONFIG_PM
- 		if (nl80211_send_wowlan(msg, rdev, state->split))
-@@ -2035,6 +2042,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- #else
- 		state->split_start++;
- #endif
-+		/* fall through */
- 	case 7:
- 		if (nl80211_put_iftypes(msg, NL80211_ATTR_SOFTWARE_IFTYPES,
- 					rdev->wiphy.software_iftypes))
-@@ -2047,6 +2055,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* fall through */
- 	case 8:
- 		if ((rdev->wiphy.flags & WIPHY_FLAG_HAVE_AP_SME) &&
- 		    nla_put_u32(msg, NL80211_ATTR_DEVICE_AP_SME,
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index d0e7472dd9fd..5123667f4569 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1183,7 +1183,7 @@ cfg80211_inform_bss_data(struct wiphy *wiphy,
- 	switch (ftype) {
- 	case CFG80211_BSS_FTYPE_BEACON:
- 		ies->from_beacon = true;
--		/* fall through to assign */
-+		/* fall through */
- 	case CFG80211_BSS_FTYPE_UNKNOWN:
- 		rcu_assign_pointer(tmp.pub.beacon_ies, ies);
- 		break;
+ 	if (status->flag & RX_FLAG_RADIOTAP_HE)
+ 		rtap_space += sizeof(struct ieee80211_radiotap_he);
+@@ -767,6 +768,8 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 		rtap_space += sizeof(*rtap) + rtap->len + rtap->pad;
+ 	}
+ 
++	min_head_len = rtap_space;
++
+ 	/*
+ 	 * First, we may need to make a copy of the skb because
+ 	 *  (1) we need to modify it for radiotap (if not present), and
+@@ -776,18 +779,23 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	 * the SKB because it has a bad FCS/PLCP checksum.
+ 	 */
+ 
+-	if (ieee80211_hw_check(&local->hw, RX_INCLUDES_FCS)) {
+-		if (unlikely(origskb->len <= FCS_LEN)) {
+-			/* driver bug */
+-			WARN_ON(1);
+-			dev_kfree_skb(origskb);
+-			return NULL;
++	if (!(status->flag & RX_FLAG_NO_PSDU)) {
++		if (ieee80211_hw_check(&local->hw, RX_INCLUDES_FCS)) {
++			if (unlikely(origskb->len <= FCS_LEN + rtap_space)) {
++				/* driver bug */
++				WARN_ON(1);
++				dev_kfree_skb(origskb);
++				return NULL;
++			}
++			present_fcs_len = FCS_LEN;
+ 		}
+-		present_fcs_len = FCS_LEN;
++
++		/* also consider the hdr->frame_control */
++		min_head_len += 2;
+ 	}
+ 
+-	/* ensure hdr->frame_control and vendor radiotap data are in skb head */
+-	if (!pskb_may_pull(origskb, 2 + rtap_space)) {
++	/* ensure that the expected data elements are in skb head */
++	if (!pskb_may_pull(origskb, min_head_len)) {
+ 		dev_kfree_skb(origskb);
+ 		return NULL;
+ 	}
 -- 
 2.19.2
 
