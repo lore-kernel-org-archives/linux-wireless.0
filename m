@@ -6,80 +6,83 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4D09C43387
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:19:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED961C43387
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:20:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80604206A2
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:19:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB05C206A2
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:20:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730031AbeLOJS7 (ORCPT
+        id S1729656AbeLOJUk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 15 Dec 2018 04:18:59 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:42378 "EHLO
+        Sat, 15 Dec 2018 04:20:40 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:42384 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726030AbeLOJS7 (ORCPT
+        with ESMTP id S1726030AbeLOJUj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Dec 2018 04:18:59 -0500
+        Sat, 15 Dec 2018 04:20:39 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gY5rH-0002oc-Ju; Sat, 15 Dec 2018 11:03:39 +0200
+        id 1gY5rG-0002oc-RF; Sat, 15 Dec 2018 11:03:39 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
-Date:   Sat, 15 Dec 2018 11:03:13 +0200
-Message-Id: <20181215090325.31604-13-luca@coelho.fi>
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Sat, 15 Dec 2018 11:03:12 +0200
+Message-Id: <20181215090325.31604-12-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.2
 In-Reply-To: <20181215090325.31604-1-luca@coelho.fi>
 References: <20181215090325.31604-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 12/24] mac80211: ignore NullFunc frames in the duplicate detection
+Subject: [PATCH 11/24] mac80211: fix radiotap vendor presence bitmap handling
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-NullFunc packets should never be duplicate just like
-QoS-NullFunc packets.
+Due to the alignment handling, it actually matters where in the code
+we add the 4 bytes for the presence bitmap to the length; the first
+field is the timestamp with 8 byte alignment so we need to add the
+space for the extra vendor namespace presence bitmap *before* we do
+any alignment for the fields.
 
-We saw a client that enters / exits power save with
-NullFunc frames (and not with QoS-NullFunc) despite the
-fact that the association supports HT.
-This specific client also re-uses a non-zero sequence number
-for different NullFunc frames.
-At some point, the client had to send a retransmission of
-the NullFunc frame and we dropped it, leading to a
-misalignment in the power save state.
-Fix this by never consider a NullFunc frame as duplicate,
-just like we do for QoS NullFunc frames.
+Move the presence bitmap length accounting to the right place to fix
+the alignment for the data properly.
 
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=201449
-
-CC: <stable@vger.kernel.org>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/rx.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/rx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 2394008f82b9..60d179bf2585 100644
+index a69ecfb212ed..2394008f82b9 100644
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -1404,6 +1404,7 @@ ieee80211_rx_h_check_dup(struct ieee80211_rx_data *rx)
- 		return RX_CONTINUE;
+@@ -143,6 +143,9 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
+ 	/* allocate extra bitmaps */
+ 	if (status->chains)
+ 		len += 4 * hweight8(status->chains);
++	/* vendor presence bitmap */
++	if (status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA)
++		len += 4;
  
- 	if (ieee80211_is_ctl(hdr->frame_control) ||
-+	    ieee80211_is_nullfunc(hdr->frame_control) ||
- 	    ieee80211_is_qos_nullfunc(hdr->frame_control) ||
- 	    is_multicast_ether_addr(hdr->addr1))
- 		return RX_CONTINUE;
+ 	if (ieee80211_have_rx_timestamp(status)) {
+ 		len = ALIGN(len, 8);
+@@ -207,8 +210,6 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
+ 	if (status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA) {
+ 		struct ieee80211_vendor_radiotap *rtap = (void *)skb->data;
+ 
+-		/* vendor presence bitmap */
+-		len += 4;
+ 		/* alignment for fixed 6-byte vendor data header */
+ 		len = ALIGN(len, 2);
+ 		/* vendor data header */
 -- 
 2.19.2
 
