@@ -2,105 +2,109 @@ Return-Path: <SRS0=s1k3=OY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB1FAC43387
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 03:44:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 228BAC43444
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:03:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BFF12086D
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 03:44:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C2JmcaI8"
+	by mail.kernel.org (Postfix) with ESMTP id 00AAB2086D
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:03:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728962AbeLODoK (ORCPT
+        id S1729959AbeLOJDg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Dec 2018 22:44:10 -0500
-Received: from mail-it1-f181.google.com ([209.85.166.181]:51896 "EHLO
-        mail-it1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728260AbeLODoJ (ORCPT
+        Sat, 15 Dec 2018 04:03:36 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:42200 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729192AbeLOJDf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Dec 2018 22:44:09 -0500
-Received: by mail-it1-f181.google.com with SMTP id x19so11876585itl.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Dec 2018 19:44:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=4bu4mZb2rWCgK+FZ5E3yG79w2CM1UaZbqcg6shooIKk=;
-        b=C2JmcaI8uTqWU39PZ6cOLfglQae2KBMhOCavZNT1Uepq6nvPMlm/KkP+jhwRR5uwld
-         d9CqfT2Ubc6Eboj4bVEDSUhmPZzQJ3wb24dWAkRj2xHQ3WOGxDOTcw0O+u99AIvHUAW3
-         1Kcbv9CnAfw1i9GycbvftKQxy+QwPCcmXlVU9PHalzDPPihyvT8pw6N0WOnKrNGpj05E
-         mr2ZRdaiht+ulxOpWV2BUL056FRd1/ZrVVqqvtZuKMl5Zz3Gd7hZI46Gbw6jeQJSDZs/
-         MNEh4D3JsHuE+i9vCDoQiiIgVHWpm+p6NEtIWv+JKyFQCZeS+6ULbcgirMRhXgCwouNI
-         sFXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=4bu4mZb2rWCgK+FZ5E3yG79w2CM1UaZbqcg6shooIKk=;
-        b=MtBWGeKJGdG3yZ0NIifMC+TY/Z7dfiXESyjS2sFfI6dfqWm60/ruYQi4WV6Z7c4Lx5
-         oRogaVASY0/rIORbrnE82Vjca+ysrGinPgLN04BZ5xHLm2rB1MvVolYGqNk+gddFYQmp
-         z+GZiR0zTJs+PM3EezY9okGiBUDmxX9DaSCr7efq3RFxea8W7VDBONHMTFhS7JepHBUc
-         yQg6/m2uZypudLGv+A2vKY6qxyfX6ULZWADKW1o7O9VqBkvDuSoWOYLOmwM6EMfyO+ly
-         AhuA7F6lO+d2gFxzO6oyHXq46C1NNyyahYzZY79ugDN9nJuKrTFeaIhnvBPLm0+EsVcb
-         WK6A==
-X-Gm-Message-State: AA+aEWYrLc1Oc4oRNBFMVMxJHjxdw6o7+BBs/NEvBPUVD2Bg7zTwA0GB
-        f6U61BcVEAYJAlzqUKjJ29FYqRQSar9tV23O8hQ=
-X-Google-Smtp-Source: AFSGD/VF3yEof1mMS4NcAt1PpP2wmWmFNoklqZwdh+Ka9cx/M5REaR10L2m+xeKKHpMLk0pNQ0wV50k8euLu0n9s5kY=
-X-Received: by 2002:a24:6c12:: with SMTP id w18mr6067429itb.14.1544845448750;
- Fri, 14 Dec 2018 19:44:08 -0800 (PST)
+        Sat, 15 Dec 2018 04:03:35 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gY5rB-0002oc-SR; Sat, 15 Dec 2018 11:03:34 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Sat, 15 Dec 2018 11:03:05 +0200
+Message-Id: <20181215090325.31604-5-luca@coelho.fi>
+X-Mailer: git-send-email 2.19.2
+In-Reply-To: <20181215090325.31604-1-luca@coelho.fi>
+References: <20181215090325.31604-1-luca@coelho.fi>
 MIME-Version: 1.0
-References: <CAM0KTbBUXJsBfO0=hQgeTGVteym6iuObdyNynWumQnnGY0L3wg@mail.gmail.com>
- <20181213143947.GA11947@localhost.localdomain>
-In-Reply-To: <20181213143947.GA11947@localhost.localdomain>
-From:   Sid Hayn <sidhayn@gmail.com>
-Date:   Fri, 14 Dec 2018 22:43:59 -0500
-Message-ID: <CAM0KTbCMrcXNFHUFEmoHg+nseN1GkegqAM0GSuWBDHP=gVgi=w@mail.gmail.com>
-Subject: Re: mt76x[02]u 802.11w support
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        sgruszka@redhat.com, linux-mediatek@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 04/24] mac80211: update HE operation fields to D3.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Dec 13, 2018 at 9:39 AM Lorenzo Bianconi
-<lorenzo.bianconi@redhat.com> wrote:
->
-> > Per a conversation with Lorenzo, it seems that 802.11w for mt76x[02]u
-> > has only been fixed in 4.20.  As 4.19 is a LTS kernel, I'd like to
-> > request that work be backported.  While the improvements in 4.20 and
-> > 4.21 are already fairly obvious, a lot of people will be running 4.19
-> > for years to come.  This is good hardware, with a working driver
-> > (thanks team) but in the next few months excitement is going to turn
-> > toward WPA3 which requires working 802.11w.
-> >
-> > Pretty please backport 802.11w support to 4.19
->
-> IIRC the isse is just on mt76x0u, mt76x2u should work
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-I can confirm that it does work on mt76x2u on 4.19.5; so my request is
-to backport 802.11w (software crypto I believe) support for mt76x0u to
-4.19 LTS.  Pretty please :-)
+HE Operation element has changed in 11ax D3.0.  Update the fields
+accordingly.
 
-Just in case it helps to confirm what is needed, here is the error
-from wpa_supplicant when trying to connect to an 802.11w AP
-wlan0: WPA: Failed to configure IGTK to the driver
-wlan0: RSN: Failed to configure IGTK
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/linux/ieee80211.h | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-thanks,
-Zero
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index a9484b3e898d..3b04e72315e1 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1619,7 +1619,7 @@ struct ieee80211_he_mcs_nss_supp {
+  * struct ieee80211_he_operation - HE capabilities element
+  *
+  * This structure is the "HE operation element" fields as
+- * described in P802.11ax_D2.0 section 9.4.2.238
++ * described in P802.11ax_D3.0 section 9.4.2.238
+  */
+ struct ieee80211_he_operation {
+ 	__le32 he_oper_params;
+@@ -2011,17 +2011,17 @@ ieee80211_he_ppe_size(u8 ppe_thres_hdr, const u8 *phy_cap_info)
+ }
+ 
+ /* HE Operation defines */
+-#define IEEE80211_HE_OPERATION_BSS_COLOR_MASK			0x0000003f
+-#define IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK		0x000001c0
+-#define IEEE80211_HE_OPERATION_DFLT_PE_DURATION_OFFSET		6
+-#define IEEE80211_HE_OPERATION_TWT_REQUIRED			0x00000200
+-#define IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK		0x000ffc00
+-#define IEEE80211_HE_OPERATION_RTS_THRESHOLD_OFFSET		10
+-#define IEEE80211_HE_OPERATION_PARTIAL_BSS_COLOR		0x00100000
+-#define IEEE80211_HE_OPERATION_VHT_OPER_INFO			0x00200000
+-#define IEEE80211_HE_OPERATION_MULTI_BSSID_AP			0x10000000
+-#define IEEE80211_HE_OPERATION_TX_BSSID_INDICATOR		0x20000000
+-#define IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED		0x40000000
++#define IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK		0x00000003
++#define IEEE80211_HE_OPERATION_TWT_REQUIRED			0x00000008
++#define IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK		0x00003ff0
++#define IEEE80211_HE_OPERATION_RTS_THRESHOLD_OFFSET		4
++#define IEEE80211_HE_OPERATION_VHT_OPER_INFO			0x00004000
++#define IEEE80211_HE_OPERATION_CO_LOCATED_BSS			0x00008000
++#define IEEE80211_HE_OPERATION_ER_SU_DISABLE			0x00010000
++#define IEEE80211_HE_OPERATION_BSS_COLOR_MASK			0x3f000000
++#define IEEE80211_HE_OPERATION_BSS_COLOR_OFFSET		24
++#define IEEE80211_HE_OPERATION_PARTIAL_BSS_COLOR		0x40000000
++#define IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED		0x80000000
+ 
+ /*
+  * ieee80211_he_oper_size - calculate 802.11ax HE Operations IE size
+@@ -2046,7 +2046,7 @@ ieee80211_he_oper_size(const u8 *he_oper_ie)
+ 	he_oper_params = le32_to_cpu(he_oper->he_oper_params);
+ 	if (he_oper_params & IEEE80211_HE_OPERATION_VHT_OPER_INFO)
+ 		oper_len += 3;
+-	if (he_oper_params & IEEE80211_HE_OPERATION_MULTI_BSSID_AP)
++	if (he_oper_params & IEEE80211_HE_OPERATION_CO_LOCATED_BSS)
+ 		oper_len++;
+ 
+ 	/* Add the first byte (extension ID) to the total length */
+-- 
+2.19.2
 
->
-> Regards,
-> Lorenzo
->
-> >
-> > Thanks,
-> > Zero
