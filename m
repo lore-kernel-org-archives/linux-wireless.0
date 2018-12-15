@@ -7,122 +7,89 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD324C43387
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 15:52:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4294C43387
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 17:31:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94ABF2086D
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 15:52:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A76562080F
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 17:31:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OviTe/xQ"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lqWzr0zQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730341AbeLOPwu (ORCPT
+        id S1726615AbeLORbx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 15 Dec 2018 10:52:50 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:44455 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730145AbeLOPwu (ORCPT
+        Sat, 15 Dec 2018 12:31:53 -0500
+Received: from mail-io1-f68.google.com ([209.85.166.68]:34766 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726494AbeLORbw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Dec 2018 10:52:50 -0500
-Received: by mail-pg1-f193.google.com with SMTP id t13so4074326pgr.11
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Dec 2018 07:52:48 -0800 (PST)
+        Sat, 15 Dec 2018 12:31:52 -0500
+Received: by mail-io1-f68.google.com with SMTP id w21so7006767ioc.1;
+        Sat, 15 Dec 2018 09:31:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=mQSHFSSt/zHEazV17xb4MzzQOw+OeBa84txzeV5NLm8=;
-        b=OviTe/xQeoFKzuYxVDxZi771Zboi4e27q4KPWUu9r1+m2LT4K/A7WrNMWjVaSKh9pn
-         cRZZqWvqEEJaUtoKylZc3PBddcn79uDYkrMNL3svvFlx7T0wvpDLcox1KQro6VqWkA4k
-         ripyq+XNbAA1wauPhO/Ric6IvTO1yRyS1zS3k6s59yXlPDjL4LkWsPgFIb2+yA4KAgae
-         tUbn/VbjpvK8nfyNjKLtDsoJb44dipEod4rbDqkIE3FhU5Sd0zRKp1UcoU2j5Y+uFmwE
-         +HFA0o3Zp73IGsVOUdZttzn9qFTo7FhxS+iwuC5sW/QsTqqO3zEd30KssnsqvJJUBeL1
-         6JQg==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=UXaIXunpmBaiIW/nBMwnMDJ8CFAQ/G8ZOkw+k5svA7o=;
+        b=lqWzr0zQJgeSzJHQJFuiI5TdLiorMD8yJ0W8+n4seaj3cwPB9yw8EbxRoOANxsf504
+         jMgLSEfaoknYI6I8qIIMjXeg54zwiRQi3sizUA778nPMTYdUT/hRq3WV8buHMtfkKVvi
+         omOAKmriydVkNZizauj1+5eKjAQjuHIqj6h4gHOw1PJO6TaNfSand/C/6P2mHPNx7cOW
+         F3hz3pSTcXFVfZbiRzmFL65X+3gbIetlPq5AIHlKTJFL7BShciSK7yF8fKlZrcYhQZ7m
+         JCYErKMtXYormzyyFjdReLH9mqPdUorJfuPsZkYjNnvPgX9dYYe1bFtNksuJrIL3Gyqc
+         NT3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=mQSHFSSt/zHEazV17xb4MzzQOw+OeBa84txzeV5NLm8=;
-        b=cfD/GapFL8LQoJzNx9E3Dd5i21T72KGVcVc072HFUE9O7M4/5/4J7DD7QJG713xJi3
-         qFA1mnihQl4oC23SRnv4llsySnhZT3iFi/wUTzu1sxrFG8o4D+JRt21joNmF6zadGq6k
-         iuflQB5XD17v5Vt/9kGDZ0c5xzGKfmLiZqlyWaDQMs2T0vC296mGK3gZHUw1cNzKzqBJ
-         CwNTC3VSAyWM20jp4E0ulkvi4qEPUxEI9jE+2gE8aQ0r1r6hh3poGOuwinlCefubYdwz
-         rVHSZvYqlpdkMCfBa6HGcrxkrWY4gSVEi3eY1TnuH8WOjuTmA1AG+YD2P+VeAwfjSGVu
-         98gw==
-X-Gm-Message-State: AA+aEWZFNKVx+ekPSn7gIfQW5rYskf9zpnPwES9zpaO2/84HMAgdV3oX
-        mAMjQfmUQp7SBmEG5dW8NGoRKmH487o1/YlhzTw=
-X-Google-Smtp-Source: AFSGD/UTvrnixs5BQPpjaeB1UgK4PEdVN3JzEDa2oNb+bIV9M9oqjvTSS3K2OmG1nyjBxgoWBiJaUM1a2kVp4Mg8nWw=
-X-Received: by 2002:a63:26c1:: with SMTP id m184mr6025919pgm.367.1544889168641;
- Sat, 15 Dec 2018 07:52:48 -0800 (PST)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=UXaIXunpmBaiIW/nBMwnMDJ8CFAQ/G8ZOkw+k5svA7o=;
+        b=JWxAKb/4Iaxzh89k4KLEB80GIKc6D3iESoZyaPsW6ijEEcSQbbIK8lQnnGjSo48TYC
+         Fgu9wg9okpu5UCGubHVIDgvFpRRTlOyAMTshOQASL1a70VrE5tD5gL6ftzNWDoPbadTv
+         VaKFtQY4azNQ3BwbFQEPKNlajVn9xh73rvMrK+C3BYn2KpX8qI5yJE16C8FLCRp3Zt5a
+         iQK8rK5ELvEN2ljYLvG7CArc+C0vRCkDQvOREN24NeyBvb9au2ssXG6T4GQdW5kZ/dmd
+         NVsKD1tU/17nS9tm+mDlGJCU1hcOR/NvbADOvBIX9HcIDLWH4PcKvNvyozgFISKSdlcN
+         lTvg==
+X-Gm-Message-State: AA+aEWYy8EZSY4wbWdkgc1IooMRfb2XWEOAnjBQJhjhck55deXo5o6bM
+        pvNIcnsLtb1JRUkjua3lQZBHkgmcOnh10oxE5pqzKA==
+X-Google-Smtp-Source: AFSGD/WWPVvZXQPHrVOHtd656CeDBTT4gpPTQ3EHk0D3qt8IRGo8GZ8t+UC1ESg49yJyVefrF3fswzFTa6N+nviOfkg=
+X-Received: by 2002:a5d:9697:: with SMTP id m23mr5965285ion.201.1544895111707;
+ Sat, 15 Dec 2018 09:31:51 -0800 (PST)
 MIME-Version: 1.0
-From:   Cyan Dro <cyandroi@gmail.com>
-Date:   Sat, 15 Dec 2018 16:52:37 +0100
-Message-ID: <CAAKJxXWW9cS=OtjESuFxZA-WiWoMJLX2CR6HfF01SdfuYrZtKg@mail.gmail.com>
-Subject: Firmware regression: BCM43362 WiFi stops working when Bluetooth is connected
-To:     Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+References: <20181215090325.31604-1-luca@coelho.fi> <20181215090325.31604-13-luca@coelho.fi>
+In-Reply-To: <20181215090325.31604-13-luca@coelho.fi>
+From:   Emmanuel Grumbach <egrumbach@gmail.com>
+Date:   Sat, 15 Dec 2018 19:31:39 +0200
+Message-ID: <CANUX_P2En=4v24qpOvxtRSn-V8f851-mW0o4pK+-VKrprwf6_w@mail.gmail.com>
+Subject: Re: [PATCH 12/24] mac80211: ignore NullFunc frames in the duplicate detection
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     "Berg, Johannes" <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        stable@vger.kernel.org,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On Sat, Dec 15, 2018 at 11:20 AM Luca Coelho <luca@coelho.fi> wrote:
+>
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>
+> NullFunc packets should never be duplicate just like
+> QoS-NullFunc packets.
+>
+> We saw a client that enters / exits power save with
+> NullFunc frames (and not with QoS-NullFunc) despite the
+> fact that the association supports HT.
+> This specific client also re-uses a non-zero sequence number
+> for different NullFunc frames.
+> At some point, the client had to send a retransmission of
+> the NullFunc frame and we dropped it, leading to a
+> misalignment in the power save state.
+> Fix this by never consider a NullFunc frame as duplicate,
+> just like we do for QoS NullFunc frames.
+>
+> This fixes https://bugzilla.kernel.org/show_bug.cgi?id=201449
+>
 
-I have a AMPAK AP6476 with BCM43362 (WiFi) and BCM2076 (Bluetooth) in
-an Intel (Bay Trail) tablet. Ever since upgrading linux-firmware a few
-weeks ago, I've been having seemingly random WiFi issues. Sometimes,
-WiFi stops responding while being connected, or fails to authenticate
-to WPA2-PSK networks. Today I realized why it happens seemingly
-random: Once connected to a Bluetooth device, WiFi stops working. As
-soon as I disconnect the Bluetooth device, WiFi starts working again.
-
-Before upgrading, I've been using firmware 5.90.195.89 (2013-04-22)
-added in af2a88b901af ("brcm: add firmware for the BCM43362 WLAN
-device"). With that firmware, everything (except P2P) works fine, even
-when connected to Bluetooth device(s).
-
-The problem occurs with all publicly available newer firmware
-versions. I have tested the following:
-  - 5.90.240.0 (2017-10-23): be1c535efe7e ("brcm: update firmware for
-bcm43362 sdio")
-  - 5.90.244 (2018-05-16): 253a573936ee ("brcm: update firmware for
-bcm43362 sdio")
-  - 5.90.247 (2018-09-19): https://community.cypress.com/docs/DOC-15932
-
-As a reproduction example, I connect to a WiFi network and then start
-pinging some host. Once I connect to a Bluetooth device, pings are
-sent only very sporadically, with long delays. Few seconds after I
-disconnect from the Bluetooth device, they start working correctly
-again.
-
-"Broken" firmware (here 5.90.244):
-  - Ping log: https://paste.ubuntu.com/p/qM6RKNPHV5/ (note the ping
-time and "Destination Host Unreachable" after connecting to a
-Bluetooth device)
-  - Kernel log*: https://paste.ubuntu.com/p/CPYJB9R9Qj/
-
-"Working" firmware (5.90.195.89):
-  - Ping log: https://paste.ubuntu.com/p/v2BCHtGNrP/ (pings are
-transmitted continuously)
-  - Kernel log*: https://paste.ubuntu.com/p/wHZw6hYshZ/
-
-NVRAM: https://paste.ubuntu.com/p/wCkQGFZGTS/ (extracted from the stock system)
-
-It seems like Bluetooth and WiFi are somehow interfering with each
-other. Looking at the kernel logs I can see that brcmfmac seems to
-wake up every second, but doesn't always receive a packet...
-Since it works with the old firmware, something in it must have
-changed that broke this. Any ideas?
-
-Aside from the KRACK fixes, I would like to use the newer firmware
-because it finally has working P2P that has been broken for many years
-now with the old firmware. :(
-
-Thanks in advance!
-Cyan
-
-* Note: For privacy reasons, I have omitted a part of the log that
-contains WiFi scan results. It is from before the problem happens, so
-I hope you don't mind. :)
+This has already been sent, it is in net.git already :)
