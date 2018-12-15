@@ -6,83 +6,93 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED961C43387
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:20:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA80CC43387
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:22:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB05C206A2
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:20:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85B31206A2
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:22:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729656AbeLOJUk (ORCPT
+        id S1729245AbeLOJWU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 15 Dec 2018 04:20:40 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:42384 "EHLO
+        Sat, 15 Dec 2018 04:22:20 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:42392 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726030AbeLOJUj (ORCPT
+        with ESMTP id S1728731AbeLOJWU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Dec 2018 04:20:39 -0500
+        Sat, 15 Dec 2018 04:22:20 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gY5rG-0002oc-RF; Sat, 15 Dec 2018 11:03:39 +0200
+        id 1gY5rM-0002oc-OU; Sat, 15 Dec 2018 11:03:45 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Sat, 15 Dec 2018 11:03:12 +0200
-Message-Id: <20181215090325.31604-12-luca@coelho.fi>
+Date:   Sat, 15 Dec 2018 11:03:20 +0200
+Message-Id: <20181215090325.31604-20-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.2
 In-Reply-To: <20181215090325.31604-1-luca@coelho.fi>
 References: <20181215090325.31604-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/24] mac80211: fix radiotap vendor presence bitmap handling
+Subject: [PATCH 19/24] mac80211: do not advertise HE cap IE if HE disabled
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-Due to the alignment handling, it actually matters where in the code
-we add the 4 bytes for the presence bitmap to the length; the first
-field is the timestamp with 8 byte alignment so we need to add the
-space for the extra vendor namespace presence bitmap *before* we do
-any alignment for the fields.
+When disabling HE due to the lack of HT/VHT, do it
+at an earlier stage to avoid advertising HE capabilities IE.
+Also, at this point, no need to check if AP supports HE, since
+it is already checked earlier (in ieee80211_prep_channel).
 
-Move the presence bitmap length accounting to the right place to fix
-the alignment for the data properly.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/rx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ net/mac80211/mlme.c | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a69ecfb212ed..2394008f82b9 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -143,6 +143,9 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
- 	/* allocate extra bitmaps */
- 	if (status->chains)
- 		len += 4 * hweight8(status->chains);
-+	/* vendor presence bitmap */
-+	if (status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA)
-+		len += 4;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 8c6a4dc017a5..54e511dbbc12 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -916,6 +916,15 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_add_vht_ie(sdata, skb, sband,
+ 				     &assoc_data->ap_vht_cap);
  
- 	if (ieee80211_have_rx_timestamp(status)) {
- 		len = ALIGN(len, 8);
-@@ -207,8 +210,6 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
- 	if (status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA) {
- 		struct ieee80211_vendor_radiotap *rtap = (void *)skb->data;
++	/*
++	 * If AP doesn't support HT, mark HE as disabled.
++	 * If on the 5GHz band, make sure it supports VHT.
++	 */
++	if (ifmgd->flags & IEEE80211_STA_DISABLE_HT ||
++	    (sband->band == NL80211_BAND_5GHZ &&
++	     ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
++		ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
++
+ 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HE))
+ 		ieee80211_add_he_ie(sdata, skb, sband);
  
--		/* vendor presence bitmap */
--		len += 4;
- 		/* alignment for fixed 6-byte vendor data header */
- 		len = ALIGN(len, 2);
- 		/* vendor data header */
+@@ -3231,16 +3240,6 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
+ 	}
+ 
+-	/*
+-	 * If AP doesn't support HT, or it doesn't have HE mandatory IEs, mark
+-	 * HE as disabled. If on the 5GHz band, make sure it supports VHT.
+-	 */
+-	if (ifmgd->flags & IEEE80211_STA_DISABLE_HT ||
+-	    (sband->band == NL80211_BAND_5GHZ &&
+-	     ifmgd->flags & IEEE80211_STA_DISABLE_VHT) ||
+-	    (!elems.he_cap && !elems.he_operation))
+-		ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
+-
+ 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HE) &&
+ 	    (!elems.he_cap || !elems.he_operation)) {
+ 		mutex_unlock(&sdata->local->sta_mtx);
 -- 
 2.19.2
 
