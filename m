@@ -6,68 +6,78 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D864AC43174
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:03:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95956C43612
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:03:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6C7F2084D
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:03:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 693D72084D
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Dec 2018 09:03:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730060AbeLOJDk (ORCPT
+        id S1729687AbeLOJDf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 15 Dec 2018 04:03:40 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:42234 "EHLO
+        Sat, 15 Dec 2018 04:03:35 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:42184 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730022AbeLOJDi (ORCPT
+        with ESMTP id S1726030AbeLOJDf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Dec 2018 04:03:38 -0500
+        Sat, 15 Dec 2018 04:03:35 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gY5rE-0002oc-IQ; Sat, 15 Dec 2018 11:03:36 +0200
+        id 1gY5r9-0002oc-NS; Sat, 15 Dec 2018 11:03:32 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date:   Sat, 15 Dec 2018 11:03:09 +0200
-Message-Id: <20181215090325.31604-9-luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org, Lior Cohen <lior2.cohen@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Sat, 15 Dec 2018 11:03:02 +0200
+Message-Id: <20181215090325.31604-2-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.2
 In-Reply-To: <20181215090325.31604-1-luca@coelho.fi>
 References: <20181215090325.31604-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/24] mac80211: remove superfluous NULL check
+Subject: [PATCH 01/24] mac80211: suspicious RCU usage fix
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Lior Cohen <lior2.cohen@intel.com>
 
-At the place where this code lives now, the skb can never be
-NULL, so we can remove the pointless NULL check.
+Suspicious RCU usage observed while calling the
+cfg80211_sta_opmode_change_notify() during rx_handlers path.
+The issue occurred due to illegal blocking while in RCU read-side
+critical section. The blocking caused by an attempt to alloc skb with the
+GFP_KERNEL flag, which eventually call the might_sleep().
 
-It seems to exist because this code was moved around a few times
-and originally came from a place where it could in fact be NULL.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Lior Cohen <lior2.cohen@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/rx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 565fe7291c7d..4f348b116549 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3586,7 +3586,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 			skb_queue_splice_tail(&tx.skbs, &txqi->frags);
- 	}
- 
--	if (skb && skb_has_frag_list(skb) &&
-+	if (skb_has_frag_list(skb) &&
- 	    !ieee80211_hw_check(&local->hw, TX_FRAG_LIST)) {
- 		if (skb_linearize(skb)) {
- 			ieee80211_free_txskb(&local->hw, skb);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3bd3b5769797..a69ecfb212ed 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3063,7 +3063,7 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			cfg80211_sta_opmode_change_notify(sdata->dev,
+ 							  rx->sta->addr,
+ 							  &sta_opmode,
+-							  GFP_KERNEL);
++							  GFP_ATOMIC);
+ 			goto handled;
+ 		}
+ 		case WLAN_HT_ACTION_NOTIFY_CHANWIDTH: {
+@@ -3100,7 +3100,7 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			cfg80211_sta_opmode_change_notify(sdata->dev,
+ 							  rx->sta->addr,
+ 							  &sta_opmode,
+-							  GFP_KERNEL);
++							  GFP_ATOMIC);
+ 			goto handled;
+ 		}
+ 		default:
 -- 
 2.19.2
 
