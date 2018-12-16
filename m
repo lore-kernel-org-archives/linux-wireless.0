@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C892C43387
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 14:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47F47C43387
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 14:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5237A217FA
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 14:07:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B60F217FA
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 14:07:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730316AbeLPOG7 (ORCPT
+        id S1730407AbeLPOHC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Dec 2018 09:06:59 -0500
+        Sun, 16 Dec 2018 09:07:02 -0500
 Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:24047 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729822AbeLPOG7 (ORCPT
+        by vger.kernel.org with ESMTP id S1729822AbeLPOHC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Dec 2018 09:06:59 -0500
+        Sun, 16 Dec 2018 09:07:02 -0500
 X-IronPort-AV: E=Sophos;i="5.56,361,1539640800"; 
-   d="scan'208";a="1663954"
+   d="scan'208";a="1663952"
 Received: from ironmsg01-ams.qualcomm.com ([10.251.56.2])
-  by alexa-out-ams-02.qualcomm.com with ESMTP; 16 Dec 2018 14:59:53 +0100
-X-IronPort-AV: E=McAfee;i="5900,7806,9107"; a="6611862"
+  by alexa-out-ams-02.qualcomm.com with ESMTP; 16 Dec 2018 14:59:51 +0100
+X-IronPort-AV: E=McAfee;i="5900,7806,9107"; a="6611860"
 Received: from lx-amasri.mea.qualcomm.com ([10.18.172.210])
-  by ironmsg01-ams.qualcomm.com with ESMTP; 16 Dec 2018 14:59:52 +0100
+  by ironmsg01-ams.qualcomm.com with ESMTP; 16 Dec 2018 14:59:50 +0100
 From:   Ahmad Masri <amasri@codeaurora.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     Ahmad Masri <amasri@codeaurora.org>,
         linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
-Subject: [PATCH 2/2] wil6210: add implementation of acs cfg80211_ops
-Date:   Sun, 16 Dec 2018 15:58:11 +0200
-Message-Id: <1544968691-20679-3-git-send-email-amasri@codeaurora.org>
+Subject: [PATCH 1/2] cfg80211: Add Automatic Channel Selection (ACS) offload for AP
+Date:   Sun, 16 Dec 2018 15:58:10 +0200
+Message-Id: <1544968691-20679-2-git-send-email-amasri@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1544968691-20679-1-git-send-email-amasri@codeaurora.org>
 References: <1544968691-20679-1-git-send-email-amasri@codeaurora.org>
@@ -42,567 +42,559 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add ACS to cfg80211 operations that the device handles and performs.
-wil6210 reports NL80211_EXT_FEATURE_ACS_OFFLOAD indicating a support
-for acs operation through cfg80211_ops.
+Add ACS offload to let the device select a channel for AP from
+a list of channels that the user-space provides. ACS can customize
+the method of AP channel selection and add parameters like traffic
+load, number of APs on channel and more.
 
-ACS is performed by the driver and the FW. Once ACS operation is
-called the driver builds a WMI command with the requested channels
-and sends the command to the FW. The FW performs ACS scan on the
-channels and reports for each channel the following:
-1- Number of beacon received on channel
-2- channel busy time
-3- transmit time
-4- receive time
-5- noise level
-The driver uses the above information to select the best channel
-to start the AP, and reports it to the host.
-
-User may use debugfs acs_ch_weight to set a different weights
-for the channels.
-
-Change-Id: I8e13296fad0c9fa8b15788fd37c23d825d41d8e5
+Change-Id: I18cb8460b9418512ac7ac9f76fe8f7f379f2478b
 Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 140 ++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/debugfs.c  | 154 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/main.c     |   5 +
- drivers/net/wireless/ath/wil6210/wil6210.h  |  15 +++
- drivers/net/wireless/ath/wil6210/wmi.c      |  76 ++++++++++++++
- drivers/net/wireless/ath/wil6210/wmi.h      |   3 +-
- 6 files changed, 390 insertions(+), 3 deletions(-)
+ include/net/cfg80211.h       |  33 ++++++++
+ include/uapi/linux/nl80211.h |  65 ++++++++++++++++
+ net/wireless/mlme.c          |  31 ++++++++
+ net/wireless/nl80211.c       | 182 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h       |   6 ++
+ net/wireless/rdev-ops.h      |  12 +++
+ net/wireless/trace.h         |  23 ++++++
+ 7 files changed, 352 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 9b2f9f5..62abfb5 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -35,6 +35,14 @@
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ede7fcd..c3faa48 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -715,6 +715,17 @@ struct survey_info {
+ 	s8 noise;
  };
- #endif
  
-+/* in case of channels' noise values all zero, applying weights will not work.
-+ * to avoid such a case, we will add some small positive value to
-+ * all channels' noise calculation
++/**
++ * struct cfg80211_acs_params - ACS parameters
++ * @n_channels: total number of channels for ACS
++ * @channels: list of chan_def to run ACS on
 + */
-+#define ACS_CH_NOISE_INIT_VAL (100)
-+
-+#define ACS_DEFAULT_BEST_CHANNEL 2
-+
- #define CHAN60G(_channel, _flags) {				\
- 	.band			= NL80211_BAND_60GHZ,		\
- 	.center_freq		= 56160 + (2160 * (_channel)),	\
-@@ -44,7 +52,7 @@
- 	.max_power		= 40,				\
- }
- 
--static struct ieee80211_channel wil_60ghz_channels[] = {
-+static struct ieee80211_channel wil_60ghz_channels[WIL_MAX_CHANNELS] = {
- 	CHAN60G(1, 0),
- 	CHAN60G(2, 0),
- 	CHAN60G(3, 0),
-@@ -64,7 +72,7 @@
- 	}
- }
- 
--static int wil_num_supported_channels(struct wil6210_priv *wil)
-+int wil_num_supported_channels(struct wil6210_priv *wil)
- {
- 	int num_channels = ARRAY_SIZE(wil_60ghz_channels);
- 
-@@ -2358,6 +2366,132 @@ static int wil_cfg80211_resume(struct wiphy *wiphy)
- 	return rc;
- }
- 
-+static u8 wil_acs_calc_channel(struct wil6210_priv *wil)
-+{
-+	int i, best_channel = ACS_DEFAULT_BEST_CHANNEL - 1;
-+	struct scan_acs_info *ch;
-+	u64 dwell_time = le32_to_cpu(wil->survey_reply.evt.dwell_time);
-+	u16 filled = le16_to_cpu(wil->survey_reply.evt.filled);
-+	u8 num_channels = wil->survey_reply.evt.num_scanned_channels;
-+	u64 busy_time, tx_time;
-+	u64 min_i_ch = (u64)-1, cur_i_ch;
-+	u8 p_min = 0, ch_noise;
-+
-+	wil_dbg_misc(wil,
-+		     "acs_calc_channel: filled info: 0x%04X, for %u channels\n",
-+		     filled, num_channels);
-+
-+	if (!num_channels) {
-+		wil_err(wil, "received results with no channel info\n");
-+		return 0;
-+	}
-+
-+	/* find P_min */
-+	if (filled & WMI_ACS_INFO_BITMASK_NOISE) {
-+		p_min = wil->survey_reply.ch_info[0].noise;
-+
-+		for (i = 1; i < num_channels; i++)
-+			p_min = min(p_min, wil->survey_reply.ch_info[i].noise);
-+	}
-+
-+	wil_dbg_misc(wil, "acs_calc_channel: p_min is %u\n", p_min);
-+
-+	/* Choosing channel according to the following formula:
-+	 * 16 bit fixed point math
-+	 * I_ch = { [ (T_busy - T_tx) << 16 ] /
-+	 *        (T_dwell - T_tx) } * 2^(P_rx - P_min)
-+	 */
-+	for (i = 0; i < num_channels; i++) {
-+		ch = &wil->survey_reply.ch_info[i];
-+
-+		busy_time = filled & WMI_ACS_INFO_BITMASK_BUSY_TIME ?
-+				le16_to_cpu(ch->busy_time) : 0;
-+
-+		tx_time = filled & WMI_ACS_INFO_BITMASK_TX_TIME ?
-+				le16_to_cpu(ch->tx_time) : 0;
-+
-+		ch_noise = filled & WMI_ACS_INFO_BITMASK_NOISE ? ch->noise : 0;
-+
-+		wil_dbg_misc(wil,
-+			     "acs_calc_channel: Ch[%d]: busy %llu, tx %llu, noise %u, dwell %llu\n",
-+			     ch->channel + 1, busy_time, tx_time, ch_noise,
-+			     dwell_time);
-+
-+		if (dwell_time == tx_time) {
-+			wil_err(wil,
-+				"Ch[%d] dwell_time == tx_time: %llu\n",
-+				ch->channel + 1, dwell_time);
-+			continue;
-+		}
-+
-+		cur_i_ch = (busy_time - tx_time) << 16;
-+		do_div(cur_i_ch,
-+		       ((dwell_time - tx_time) << (ch_noise - p_min)));
-+
-+		/* Apply channel priority */
-+		cur_i_ch = (cur_i_ch + ACS_CH_NOISE_INIT_VAL) *
-+			   wil->acs_ch_weight[ch->channel];
-+		do_div(cur_i_ch, 100);
-+
-+		wil_dbg_misc(wil, "acs_calc_channel: Ch[%d] w %u, I_ch %llu\n",
-+			     ch->channel + 1, wil->acs_ch_weight[ch->channel],
-+			     cur_i_ch);
-+
-+		if (i == 0 || cur_i_ch < min_i_ch) {
-+			min_i_ch = cur_i_ch;
-+			best_channel = ch->channel;
-+		}
-+	}
-+
-+	wil_dbg_misc(wil,
-+		     "acs_calc_channel: best channel %d with I_ch of %llu\n",
-+		     best_channel + 1, min_i_ch);
-+
-+	return best_channel;
-+}
-+
-+static void wil_acs_notify(struct wiphy *wiphy, struct net_device *dev,
-+			   u32 status)
-+{
-+	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	u8 ch = wil_acs_calc_channel(wil);
-+	u32 freq = ieee80211_channel_to_frequency(ch + 1, NL80211_BAND_60GHZ);
-+	struct ieee80211_channel *channel = ieee80211_get_channel(wiphy, freq);
-+	struct cfg80211_chan_def chandef = {0};
-+
-+	if (channel) {
-+		cfg80211_chandef_create(&chandef, channel, NL80211_CHAN_NO_HT);
-+	} else {
-+		wil_err(wil, "Invalid freq %d\n", freq);
-+		status = NL80211_ACS_FAILED;
-+	}
-+
-+	cfg80211_acs_result(dev, &chandef, status, GFP_KERNEL);
-+}
-+
-+static int
-+wil_cfg80211_acs(struct wiphy *wiphy, struct net_device *dev,
-+		 struct cfg80211_acs_params *params)
-+{
-+	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	enum nl80211_acs_status status = NL80211_ACS_SUCCESS;
-+	int rc;
-+
-+	if (params->n_channels == 0) {
-+		wil_err(wil, "acs: No valid channels for ACS\n");
-+		return -EINVAL;
-+	}
-+
-+	rc = wil_start_acs_survey(wil, WMI_SCAN_DWELL_TIME_MS,
-+				  params->channels, params->n_channels);
-+	if (rc)
-+		status = NL80211_ACS_FAILED;
-+
-+	wil_acs_notify(wiphy, dev, status);
-+
-+	return 0;
-+}
-+
- static const struct cfg80211_ops wil_cfg80211_ops = {
- 	.add_virtual_intf = wil_cfg80211_add_iface,
- 	.del_virtual_intf = wil_cfg80211_del_iface,
-@@ -2394,6 +2528,7 @@ static int wil_cfg80211_resume(struct wiphy *wiphy)
- 	.sched_scan_start = wil_cfg80211_sched_scan_start,
- 	.sched_scan_stop = wil_cfg80211_sched_scan_stop,
- 	.update_ft_ies = wil_cfg80211_update_ft_ies,
-+	.acs = wil_cfg80211_acs,
- };
- 
- static void wil_wiphy_init(struct wiphy *wiphy)
-@@ -2436,6 +2571,7 @@ static void wil_wiphy_init(struct wiphy *wiphy)
- #ifdef CONFIG_PM
- 	wiphy->wowlan = &wil_wowlan_support;
- #endif
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_ACS_OFFLOAD);
- }
- 
- int wil_cfg80211_iface_combinations_from_fw(
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 20dd4d0..a376229 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -26,6 +26,8 @@
- #include "txrx.h"
- #include "pmc.h"
- 
-+#define WIL_DEBUGFS_BUF_SIZE 400
-+
- /* Nasty hack. Better have per device instances */
- static u32 mem_addr;
- static u32 dbg_txdesc_index;
-@@ -2250,6 +2252,98 @@ static ssize_t wil_read_led_blink_time(struct file *file, char __user *user_buf,
- 	.open  = simple_open,
- };
- 
-+/*---------ACS channel weight------------*/
-+static ssize_t wil_write_acs_ch_weight(struct file *file,
-+				       const char __user *buf,
-+				       size_t len, loff_t *ppos)
-+{
-+	struct wil6210_priv *wil = file->private_data;
-+	int i, rc;
-+	char *token, *dupbuf, *kbuf = kmalloc(len + 1, GFP_KERNEL);
-+	unsigned short channel_weights[WIL_MAX_CHANNELS];
-+
-+	if (!kbuf)
-+		return -ENOMEM;
-+
-+	rc = simple_write_to_buffer(kbuf, len, ppos, buf, len);
-+	if (rc != len) {
-+		kfree(kbuf);
-+		return rc >= 0 ? -EIO : rc;
-+	}
-+
-+	kbuf[len] = '\0';
-+	dupbuf = kbuf;
-+
-+	/* Format for writing is num of channels unsigned short separated
-+	 * by spaces:
-+	 * <ch 1 weight> ... <channel max weight>
-+	 */
-+
-+	/* set the channels weights */
-+	for (i = 0; i < WIL_MAX_CHANNELS; ++i) {
-+		token = strsep(&dupbuf, " ");
-+		if (!token)
-+			goto out;
-+		if (kstrtou16(token, 0, &channel_weights[i]))
-+			goto out;
-+	}
-+	memcpy(wil->acs_ch_weight, channel_weights, sizeof(wil->acs_ch_weight));
-+
-+out:
-+	kfree(kbuf);
-+	if (i != WIL_MAX_CHANNELS)
-+		return -EINVAL;
-+
-+	return len;
-+}
-+
-+static ssize_t wil_read_acs_ch_weight(struct file *file, char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct wil6210_priv *wil = file->private_data;
-+	char *buf;
-+	size_t buf_size = WIL_DEBUGFS_BUF_SIZE;
-+	int i, bytes_used, offset, rc = -EINVAL;
-+
-+	buf = kmalloc(buf_size, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	bytes_used = snprintf(buf, buf_size,
-+			      "To set acs channel weights write:\n"
-+			      "<ch 1 weight> <ch 2 weight> ... <ch max weight>\n"
-+			      "The current values are:\n");
-+
-+	if (bytes_used < 0 || bytes_used >= buf_size)
-+		goto out;
-+
-+	buf_size -= bytes_used;
-+	offset = bytes_used;
-+
-+	for (i = 0; i < WIL_MAX_CHANNELS; ++i) {
-+		bytes_used = snprintf(buf + offset, buf_size, "%hu ",
-+				      wil->acs_ch_weight[i]);
-+		if (bytes_used < 0 || bytes_used >= buf_size)
-+			goto out;
-+
-+		buf_size -= bytes_used;
-+		offset += bytes_used;
-+	}
-+	strncat(buf, "\n", WIL_DEBUGFS_BUF_SIZE);
-+	rc = simple_read_from_buffer(user_buf, count, ppos, buf, offset);
-+
-+out:
-+	kfree(buf);
-+
-+	return rc;
-+}
-+
-+static const struct file_operations fops_acs_ch_weight = {
-+	.read = wil_read_acs_ch_weight,
-+	.write = wil_write_acs_ch_weight,
-+	.open  = simple_open,
++struct cfg80211_acs_params {
++	u32 n_channels;
++	/* keep last */
++	struct cfg80211_chan_def channels[0];
 +};
 +
- /*---------FW capabilities------------*/
- static int wil_fw_capabilities_debugfs_show(struct seq_file *s, void *data)
- {
-@@ -2414,6 +2508,65 @@ static ssize_t wil_compressed_rx_status_write(struct file *file,
- 	.llseek	= seq_lseek,
- };
+ #define CFG80211_MAX_WEP_KEYS	4
  
-+/*---------Survey results------------*/
-+static int wil_survey_debugfs_show(struct seq_file *s, void *data)
-+{
-+	struct wil6210_priv *wil = s->private;
-+	int i, n_ch;
-+	u16 filled;
-+
-+	if (!wil->survey_ready) {
-+		seq_puts(s, "Survey not ready\n");
-+		return 0;
-+	}
-+	seq_printf(s, "dwell_time : %d\n",
-+		   le32_to_cpu(wil->survey_reply.evt.dwell_time));
-+	filled = le16_to_cpu(wil->survey_reply.evt.filled);
-+	n_ch = min_t(int, wil->survey_reply.evt.num_scanned_channels,
-+		     ARRAY_SIZE(wil->survey_reply.ch_info));
-+
-+#define ACS_FILLED(x) (filled & WMI_ACS_INFO_BITMASK_ ## x) ? \
-+	" " __stringify(x) : ""
-+	seq_printf(s, "Filled : 0x%04x%s%s%s%s%s\n", filled,
-+		   ACS_FILLED(BEACON_FOUND),
-+		   ACS_FILLED(BUSY_TIME),
-+		   ACS_FILLED(TX_TIME),
-+		   ACS_FILLED(RX_TIME),
-+		   ACS_FILLED(NOISE)
-+		  );
-+#undef ACS_FILLED
-+	seq_printf(s, "Channels [%d] {\n", n_ch);
-+	for (i = 0; i < n_ch; i++) {
-+		struct scan_acs_info *ch = &wil->survey_reply.ch_info[i];
-+
-+		seq_printf(s, "  [%d]", ch->channel);
-+#define ACS_PRINT(x, str, field) do { if (filled & WMI_ACS_INFO_BITMASK_ ## x) \
-+		seq_printf(s, " %s : %d", str, field); \
-+	} while (0)
-+		ACS_PRINT(BEACON_FOUND, "bcon", ch->beacon_found);
-+		ACS_PRINT(BUSY_TIME, "busy", le16_to_cpu(ch->busy_time));
-+		ACS_PRINT(TX_TIME, "tx", le16_to_cpu(ch->tx_time));
-+		ACS_PRINT(RX_TIME, "rx", le16_to_cpu(ch->rx_time));
-+		ACS_PRINT(NOISE, "noise", ch->noise);
-+#undef ACS_PRINT
-+		seq_puts(s, "\n");
-+	}
-+	seq_puts(s, "}\n");
-+	return 0;
-+}
-+
-+static int wil_survey_seq_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wil_survey_debugfs_show, inode->i_private);
-+}
-+
-+static const struct file_operations fops_survey = {
-+	.open		= wil_survey_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+};
-+
- /*----------------*/
- static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
- 				       struct dentry *dbg)
-@@ -2473,6 +2626,7 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
- 	{"tx_latency",	0644,		&fops_tx_latency},
- 	{"link_stats",	0644,		&fops_link_stats},
- 	{"link_stats_global",	0644,	&fops_link_stats_global},
-+	{"acs_ch_weight",	0644,	&fops_acs_ch_weight},
- };
- 
- static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index ba6a2ee..f20ced0 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -750,6 +750,11 @@ int wil_priv_init(struct wil6210_priv *wil)
- 
- 	wil->amsdu_en = 1;
- 
-+	/* ACS related */
-+	wil->acs_ch_weight[0] = 120;
-+	for (i = 1; i < WIL_MAX_CHANNELS; i++)
-+		wil->acs_ch_weight[i] = 100;
-+
- 	return 0;
- 
- out_wmi_wq:
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 0f3be3ff..c286750 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -67,6 +67,8 @@
-  */
- #define WIL_MAX_VIFS 4
- 
-+#define WIL_MAX_CHANNELS 4 /* max supported channels */
-+
  /**
-  * extract bits [@b0:@b1] (inclusive) from the value @x
-  * it should be @b0 <= @b1, or result is incorrect
-@@ -1045,6 +1047,15 @@ struct wil6210_priv {
- 
- 	u32 max_agg_wsize;
- 	u32 max_ampdu_size;
-+
-+	/* ACS related */
-+	unsigned short acs_ch_weight[WIL_MAX_CHANNELS];
-+	bool survey_ready;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_acs_passive_scan_complete_event evt;
-+		struct scan_acs_info ch_info[WIL_MAX_CHANNELS];
-+	} __packed survey_reply;
+@@ -3377,6 +3388,11 @@ struct cfg80211_pmsr_request {
+  *	Statistics should be cumulative, currently no way to reset is provided.
+  * @start_pmsr: start peer measurement (e.g. FTM)
+  * @abort_pmsr: abort peer measurement
++ * @acs: run automatic channel selection offload measurement to find the best
++ *	channel to start the AP on. Userspace provide a list of chan_defs, the
++ *	driver should perform ACS on the provided list and select best channel.
++ *	driver should call cfg80211_acs_result to complete this operation.
++ *	(invoked with the wireless_dev mutex held)
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -3691,6 +3707,8 @@ struct cfg80211_ops {
+ 			      struct cfg80211_pmsr_request *request);
+ 	void	(*abort_pmsr)(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			      struct cfg80211_pmsr_request *request);
++	int	(*acs)(struct wiphy *wiphy, struct net_device *dev,
++		       struct cfg80211_acs_params *params);
  };
  
- #define wil_to_wiphy(i) (i->wiphy)
-@@ -1252,6 +1263,9 @@ int wil_addba_rx_request(struct wil6210_priv *wil, u8 mid,
- 			 u8 cidxtid, u8 dialog_token, __le16 ba_param_set,
- 			 __le16 ba_timeout, __le16 ba_seq_ctrl);
- int wil_addba_tx_request(struct wil6210_priv *wil, u8 ringid, u16 wsize);
-+int wil_start_acs_survey(struct wil6210_priv *wil, uint dwell_time,
-+			 struct cfg80211_chan_def channels[],
-+			 u8 num_channels);
+ /*
+@@ -4662,6 +4680,7 @@ struct wireless_dev {
+ 	unsigned long cac_start_time;
+ 	unsigned int cac_time_ms;
  
- void wil6210_clear_irq(struct wil6210_priv *wil);
- int wil6210_init_irq(struct wil6210_priv *wil, int irq);
-@@ -1402,4 +1416,5 @@ int wmi_addba_rx_resp_edma(struct wil6210_priv *wil, u8 mid, u8 cid,
++	bool acs_started;
+ #ifdef CONFIG_CFG80211_WEXT
+ 	/* wext data */
+ 	struct {
+@@ -6362,6 +6381,20 @@ void cfg80211_cac_event(struct net_device *netdev,
  
- void update_supported_bands(struct wil6210_priv *wil);
  
-+int wil_num_supported_channels(struct wil6210_priv *wil);
- #endif /* __WIL6210_H__ */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 345f059..5ca0d88 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -3811,3 +3811,79 @@ int wmi_link_stats_cfg(struct wil6210_vif *vif, u32 type, u8 cid, u32 interval)
+ /**
++ * cfg80211_acs_result - ACS result notification
++ * @netdev: network device
++ * @chandef: chandef for the selected channel, NULL on unsuccessful operation
++ * @status: ACS status as specified in &enum nl80211_acs_status
++ * @gfp: context flags
++ *
++ * This function is called when ACS measurement is finished or aborted.
++ * This must be called to notify the completion of a ACS process.
++ */
++void cfg80211_acs_result(struct net_device *netdev,
++			 const struct cfg80211_chan_def *chandef,
++			 enum nl80211_acs_status status, gfp_t gfp);
++
++/**
+  * cfg80211_gtk_rekey_notify - notify userspace about driver rekeying
+  * @dev: network device
+  * @bssid: BSSID of AP (to avoid races)
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 2b53c0e..b993b86f 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1032,6 +1032,13 @@
+  *	ht opmode or vht opmode changes using any of %NL80211_ATTR_SMPS_MODE,
+  *	%NL80211_ATTR_CHANNEL_WIDTH,%NL80211_ATTR_NSS attributes with its
+  *	address(specified in %NL80211_ATTR_MAC).
++ * @NL80211_CMD_ACS: For offloaded Automatic Channel Selection (ACS). Userspace
++ *	sends this command before starting an AP, the kernel indicates this
++ *	command after a channel was selected. When sent from userspace has
++ *	attribute NL80211_ATTR_CHAN_DEF for a list of channels (chan_def).
++ *	When sent from kernel has attributes NL80211_ATTR_ACS_STATUS which
++ *	provides the operation status and NL80211_ATTR_WIPHY_FREQ and other
++ *	chan_def attributes which describes the chosen channel.
+  *
+  * @NL80211_CMD_GET_FTM_RESPONDER_STATS: Retrieve FTM responder statistics, in
+  *	the %NL80211_ATTR_FTM_RESPONDER_STATS attribute.
+@@ -1277,6 +1284,7 @@ enum nl80211_commands {
+ 	NL80211_CMD_PEER_MEASUREMENT_START,
+ 	NL80211_CMD_PEER_MEASUREMENT_RESULT,
+ 	NL80211_CMD_PEER_MEASUREMENT_COMPLETE,
++	NL80211_CMD_ACS,
  
+ 	/* add new commands above here */
+ 
+@@ -2273,6 +2281,13 @@ enum nl80211_commands {
+  * @NL80211_ATTR_HE_CAPABILITY: HE Capability information element (from
+  *	association request when used with NL80211_CMD_NEW_STATION). Can be set
+  *	only if %NL80211_STA_FLAG_WME is set.
++ * @NL80211_ATTR_ACS_STATUS: attribute in which kernel indicates ACS status
++ *	as defined in &enum nl80211_acs_status
++ * @NL80211_ATTR_CHAN_DEF: attribute for nesting chan_def parameters
++ *	as defined in &enum nl80211_ch_def_attr. The new attribute allows
++ *	userspace to send a list of struct cfg80211_chan_def. For example, ACS
++ *	command uses this attribute for sending a list of channels, for more
++ *	details see &NL80211_CMD_ACS.
+  *
+  * @NL80211_ATTR_FTM_RESPONDER: nested attribute which user-space can include
+  *	in %NL80211_CMD_START_AP or %NL80211_CMD_SET_BEACON for fine timing
+@@ -2741,6 +2756,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PEER_MEASUREMENTS,
+ 
++	NL80211_ATTR_ACS_STATUS,
++	NL80211_ATTR_CHAN_DEF,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -4548,6 +4566,35 @@ enum nl80211_packet_pattern_attr {
+ };
+ 
+ /**
++ * enum nl80211_ch_def_attr - channel def attribute
++ * @__NL80211_ATTR_CH_DEF_INVALID: invalid number for nested attribute
++ * @NL80211_ATTR_CH_DEF_FREQ: frequency of the selected channel in MHz,
++ *	defines the channel together with the attributes
++ *	%NL80211_ATTR_CH_DEF_WIDTH and if needed %NL80211_ATTR_CH_DEF_FREQ1 and
++ *	%NL80211_ATTR_CH_DEF_FREQ2
++ * @NL80211_ATTR_CH_DEF_WIDTH: u32 attribute containing one of the values
++ *	of &enum nl80211_chan_width, describing the channel width. See the
++ *	documentation of the enum for more information.
++ * @NL80211_ATTR_CH_DEF_FREQ1: Center frequency of the first part of the
++ *	channel, used for anything but 20 MHz bandwidth
++ * @NL80211_ATTR_CH_DEF_FREQ2: Center frequency of the second part of the
++ *	channel, used only for 80+80 MHz bandwidth
++ * @__NL80211_ATTR_CH_DEF_AFTER_LAST: internal
++ * @NL80211_ATTR_CH_DEF_MAX: max attribute number
++ */
++enum nl80211_ch_def_attr {
++	__NL80211_ATTR_CH_DEF_INVALID,
++	NL80211_ATTR_CH_DEF_FREQ,
++	NL80211_ATTR_CH_DEF_WIDTH,
++	NL80211_ATTR_CH_DEF_FREQ1,
++	NL80211_ATTR_CH_DEF_FREQ2,
++
++	/* keep last */
++	__NL80211_ATTR_CH_DEF_AFTER_LAST,
++	NL80211_ATTR_CH_DEF_MAX = __NL80211_ATTR_CH_DEF_AFTER_LAST - 1
++};
++
++/**
+  * struct nl80211_pattern_support - packet pattern support information
+  * @max_patterns: maximum number of patterns supported
+  * @min_pattern_len: minimum length of each pattern
+@@ -5308,6 +5355,8 @@ enum nl80211_feature_flags {
+  *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
+  *      if this flag is not set. Ignoring this can leak clear text packets and/or
+  *      freeze the connection.
++ * @NL80211_EXT_FEATURE_ACS_OFFLOAD: The driver supports offload of ACS from
++ *	a list of channels provided by the userspace.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -5348,6 +5397,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
+ 	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
+ 	NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER,
++	NL80211_EXT_FEATURE_ACS_OFFLOAD,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+@@ -5561,6 +5611,21 @@ enum nl80211_dfs_state {
+ };
+ 
+ /**
++ * enum nl80211_acs_status - ACS status
++ *
++ * status to be used to inform userspace about the result of the ACS offloaded
++ * measurement.
++ *
++ * @NL80211_ACS_SUCCESS: The ACS operation finished successfully
++ * @NL80211_ACS_FAILED: Failed to run the ACS. Userspace should choose a channel
++ *	by itself.
++ */
++enum nl80211_acs_status {
++	NL80211_ACS_SUCCESS,
++	NL80211_ACS_FAILED,
++};
++
++/**
+  * enum enum nl80211_protocol_features - nl80211 protocol features
+  * @NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP: nl80211 supports splitting
+  *	wiphy dumps (if requested by the application with the attribute
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 1615e50..ed36d91 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -903,3 +903,34 @@ void cfg80211_cac_event(struct net_device *netdev,
+ 	nl80211_radar_notify(rdev, chandef, event, netdev, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_cac_event);
++
++void cfg80211_acs_result(struct net_device *netdev,
++			 const struct cfg80211_chan_def *chandef,
++			 enum nl80211_acs_status status, gfp_t gfp)
++{
++	struct wireless_dev *wdev = netdev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++
++	if (WARN_ON(!wdev->acs_started))
++		return;
++
++	switch (status) {
++	case NL80211_ACS_SUCCESS:
++		if (!chandef) {
++			WARN_ON(1);
++			goto out;
++		}
++	case NL80211_ACS_FAILED:
++		break;
++	default:
++		WARN_ON(1);
++		goto out;
++	}
++	nl80211_acs_notify(rdev, chandef, status, netdev, gfp);
++
++out:
++	wdev->acs_started = false;
++	dev_put(netdev);
++}
++EXPORT_SYMBOL(cfg80211_acs_result);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5ec200e..bf25824 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -557,6 +557,8 @@ static int validate_ie_attr(const struct nlattr *attr,
+ 	[NL80211_ATTR_PEER_MEASUREMENTS] =
+ 		NLA_POLICY_NESTED(NL80211_PMSR_FTM_REQ_ATTR_MAX,
+ 				  nl80211_pmsr_attr_policy),
++
++	[NL80211_ATTR_CHAN_DEF] = { .type = NLA_NESTED },
+ };
+ 
+ /* policy for the key attributes */
+@@ -697,6 +699,15 @@ static int validate_ie_attr(const struct nlattr *attr,
+ 	[NL80211_PKTPAT_OFFSET] = { .type = NLA_U32 },
+ };
+ 
++/* policy for channel attributes */
++static const struct nla_policy
++nl80211_ch_def_policy[NL80211_ATTR_CH_DEF_MAX + 1] = {
++	[NL80211_ATTR_CH_DEF_FREQ] = { .type = NLA_U32 },
++	[NL80211_ATTR_CH_DEF_WIDTH] = { .type = NLA_U32 },
++	[NL80211_ATTR_CH_DEF_FREQ1] = { .type = NLA_U32 },
++	[NL80211_ATTR_CH_DEF_FREQ2] = { .type = NLA_U32 },
++};
++
+ int nl80211_prepare_wdev_dump(struct netlink_callback *cb,
+ 			      struct cfg80211_registered_device **rdev,
+ 			      struct wireless_dev **wdev)
+@@ -2561,6 +2572,66 @@ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
  	return 0;
  }
-+
-+int wil_start_acs_survey(struct wil6210_priv *wil, uint dwell_time,
-+			 struct cfg80211_chan_def channels[],
-+			 u8 num_channels)
+ 
++static int
++nl80211_parse_chandef_new(struct cfg80211_registered_device *rdev,
++			  struct genl_info *info, struct nlattr *channel,
++			  struct cfg80211_chan_def *chandef)
 +{
-+	struct wil6210_vif *vif = ndev_to_vif(wil->main_ndev);
-+	int rc, i;
-+	u8 ch;
-+	struct wmi_acs_passive_scan_complete_event *reply;
-+	u8 num_supported_channels = wil_num_supported_channels(wil);
-+	struct {
-+		struct wmi_start_scan_cmd cmd;
-+		struct {
-+			u8 channel;
-+			u8 reserved;
-+		} channel_list[WIL_MAX_CHANNELS];
-+	} __packed scan_cmd = {
-+		.cmd = {
-+			.scan_type = WMI_PASSIVE_SCAN,
-+			.dwell_time = cpu_to_le32(dwell_time),
-+			.num_channels = min_t(u8, num_channels,
-+					      num_supported_channels),
-+		},
-+	};
++	u32 control_freq;
++	struct nlattr *attrs[NL80211_ATTR_CH_DEF_MAX + 1];
++	int err;
 +
-+	wil->survey_ready = false;
-+	memset(&wil->survey_reply, 0, sizeof(wil->survey_reply));
-+	reply = &wil->survey_reply.evt;
-+	reply->status = WMI_SCAN_FAILED;
-+
-+	for (i = 0; i < scan_cmd.cmd.num_channels; i++) {
-+		ch = channels[i].chan->hw_value;
-+
-+		if (ch == 0) {
-+			wil_err(wil, "ACS requested for wrong channel\n");
-+			return -EINVAL;
-+		}
-+		wil_dbg_misc(wil, "ACS channel %d : %d MHz\n",
-+			     ch, channels[i].chan->center_freq);
-+		scan_cmd.channel_list[i].channel = ch - 1;
-+	}
-+
-+	/* send scan command with the requested channel and wait
-+	 * for results
-+	 */
-+	rc = wmi_call(wil, WMI_START_SCAN_CMDID, vif->mid, &scan_cmd,
-+		      sizeof(scan_cmd), WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID,
-+		      &wil->survey_reply, sizeof(wil->survey_reply),
-+		      WMI_SURVEY_TIMEOUT_MS);
-+	if (rc) {
-+		wil_err(wil, "ACS passive Scan failed (0x%08x)\n", rc);
-+		return rc;
-+	}
-+
-+	if (reply->num_scanned_channels > num_supported_channels) {
-+		wil_err(wil,
-+			"Survey num of scanned channels %d exceeds num of supported channels %d\n",
-+			reply->num_scanned_channels,
-+			num_supported_channels);
-+		reply->status = WMI_SCAN_FAILED;
++	if (!channel)
 +		return -EINVAL;
-+	}
 +
-+	if (reply->status != WMI_SCAN_SUCCESS) {
-+		wil_err(wil, "ACS survey failed, status (%d)\n",
-+			wil->survey_reply.evt.status);
++	err = nla_parse_nested(attrs, NL80211_ATTR_CH_DEF_MAX, channel,
++			       nl80211_ch_def_policy, info->extack);
++	if (err)
++		return err;
++
++
++	if (!attrs[NL80211_ATTR_CH_DEF_FREQ])
 +		return -EINVAL;
-+	}
-+	wil->survey_ready = true;
 +
-+	/* The results in survey_reply */
-+	wil_dbg_misc(wil, "ACS scan success, filled mask: 0x%08X\n",
-+		     le16_to_cpu(reply->filled));
++	control_freq = nla_get_u32(attrs[NL80211_ATTR_CH_DEF_FREQ]);
++
++	chandef->chan = ieee80211_get_channel(&rdev->wiphy, control_freq);
++	chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
++	chandef->center_freq1 = control_freq;
++	chandef->center_freq2 = 0;
++
++	/* Primary channel not allowed */
++	if (!chandef->chan || chandef->chan->flags & IEEE80211_CHAN_DISABLED)
++		return -EINVAL;
++
++	if (attrs[NL80211_ATTR_CH_DEF_WIDTH]) {
++		chandef->width =
++			nla_get_u32(attrs[NL80211_ATTR_CH_DEF_WIDTH]);
++		if (attrs[NL80211_ATTR_CH_DEF_FREQ1])
++			chandef->center_freq1 =
++				nla_get_u32(
++					attrs[NL80211_ATTR_CH_DEF_FREQ1]);
++		if (attrs[NL80211_ATTR_CH_DEF_FREQ2])
++			chandef->center_freq2 =
++				nla_get_u32(
++					attrs[NL80211_ATTR_CH_DEF_FREQ2]);
++	}
++
++	if (!cfg80211_chandef_valid(chandef))
++		return -EINVAL;
++
++	if (!cfg80211_chandef_usable(&rdev->wiphy, chandef,
++				     IEEE80211_CHAN_DISABLED))
++		return -EINVAL;
++
++	if ((chandef->width == NL80211_CHAN_WIDTH_5 ||
++	     chandef->width == NL80211_CHAN_WIDTH_10) &&
++	    !(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_5_10_MHZ))
++		return -EINVAL;
 +
 +	return 0;
 +}
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index b668758..5a71e98 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -2444,7 +2444,8 @@ struct wmi_acs_passive_scan_complete_event {
- 	 */
- 	__le16 filled;
- 	u8 num_scanned_channels;
--	u8 reserved;
-+	/* enum scan_status */
-+	u8 status;
- 	struct scan_acs_info scan_info_list[0];
- } __packed;
++
+ static int __nl80211_set_channel(struct cfg80211_registered_device *rdev,
+ 				 struct net_device *dev,
+ 				 struct genl_info *info)
+@@ -13140,6 +13211,71 @@ static int nl80211_get_ftm_responder_stats(struct sk_buff *skb,
+ 	return -ENOBUFS;
+ }
  
++static int nl80211_acs(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_acs_params *request;
++	struct nlattr *attr;
++	struct wiphy *wiphy;
++	int ret, tmp, n_channels = 0, i = 0;
++
++	if (WARN_ON(wdev->acs_started))
++		return -EALREADY;
++
++	if (!rdev->ops->acs)
++		return -EOPNOTSUPP;
++
++	if (wdev->iftype != NL80211_IFTYPE_AP)
++		return -EOPNOTSUPP;
++
++	wiphy = &rdev->wiphy;
++
++	if (!info->attrs[NL80211_ATTR_CHAN_DEF])
++		return -EINVAL;
++
++	nla_for_each_nested(attr,
++			    info->attrs[NL80211_ATTR_CHAN_DEF], tmp)
++		n_channels++;
++
++	if (!n_channels)
++		return -EINVAL;
++
++	request = kzalloc(sizeof(*request) +
++			  sizeof(struct cfg80211_chan_def) * n_channels,
++			  GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	nla_for_each_nested(attr,
++			    info->attrs[NL80211_ATTR_CHAN_DEF], tmp) {
++		struct cfg80211_chan_def chandef;
++
++		ret = nl80211_parse_chandef_new(rdev, info, attr, &chandef);
++		if (ret)
++			goto out_free;
++
++		request->channels[i++] = chandef;
++	}
++	request->n_channels = i;
++
++	wdev->acs_started = true;
++	dev_hold(dev);
++
++	wdev_lock(wdev);
++	ret = rdev_acs(rdev, dev, request);
++	if (ret) {
++		wdev->acs_started = false;
++		dev_put(dev);
++	}
++	wdev_unlock(wdev);
++
++ out_free:
++	kfree(request);
++	return ret;
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -14066,6 +14202,15 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
+ 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_ACS,
++		.doit = nl80211_acs,
++		.policy = nl80211_policy,
++		.flags = GENL_UNS_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++
+ };
+ 
+ static struct genl_family nl80211_fam __ro_after_init = {
+@@ -15656,6 +15801,43 @@ void cfg80211_ch_switch_started_notify(struct net_device *dev,
+ 	nlmsg_free(msg);
+ }
+ 
++void
++nl80211_acs_notify(struct cfg80211_registered_device *rdev,
++		   const struct cfg80211_chan_def *chandef,
++		   enum nl80211_acs_status status,
++		   struct net_device *netdev, gfp_t gfp)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_ACS);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	if (nla_put_u32(msg, NL80211_ATTR_ACS_STATUS, status))
++		goto nla_put_failure;
++
++	if (nl80211_send_chandef(msg, chandef))
++		goto nla_put_failure;
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
++				NL80211_MCGRP_MLME, gfp);
++
++	return;
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
+ void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
+ 				       struct sta_opmode_info *sta_opmode,
+ 				       gfp_t gfp)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 531c82d..e406592 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -119,6 +119,12 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 		     enum nl80211_radar_event event,
+ 		     struct net_device *netdev, gfp_t gfp);
+ 
++void
++nl80211_acs_notify(struct cfg80211_registered_device *rdev,
++		   const struct cfg80211_chan_def *chandef,
++		   enum nl80211_acs_status status,
++		   struct net_device *netdev, gfp_t gfp);
++
+ void nl80211_send_ap_stopped(struct wireless_dev *wdev);
+ 
+ void cfg80211_rdev_free_coalesce(struct cfg80211_registered_device *rdev);
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 5cb48d1..ebd9576 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -1272,4 +1272,16 @@ static inline int rdev_del_pmk(struct cfg80211_registered_device *rdev,
+ 	trace_rdev_return_void(&rdev->wiphy);
+ }
+ 
++static inline int rdev_acs(struct cfg80211_registered_device *rdev,
++			   struct net_device *dev,
++			   struct cfg80211_acs_params *params)
++{
++	int ret;
++
++	trace_rdev_acs(&rdev->wiphy, dev, params);
++	ret = rdev->ops->acs(&rdev->wiphy, dev, params);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
+ #endif /* __CFG80211_RDEV_OPS */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 44b2ce1..c841873 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2530,6 +2530,29 @@
+ 	TP_ARGS(wiphy, wdev, cookie)
+ );
+ 
++TRACE_EVENT(rdev_acs,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 struct cfg80211_acs_params *params),
++
++	TP_ARGS(wiphy, netdev, params),
++
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		__field(u32, n_channels)
++	),
++
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		__entry->n_channels = params->n_channels;
++	),
++
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT
++		  ", num of channels: %u", WIPHY_PR_ARG, NETDEV_PR_ARG,
++		  __entry->n_channels)
++);
++
+ /*************************************************************
+  *	     cfg80211 exported functions traces		     *
+  *************************************************************/
 -- 
 1.9.1
 
