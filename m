@@ -2,89 +2,131 @@ Return-Path: <SRS0=od2B=OZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,T_MIXED_ES autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AE70C43387
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 01:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B40CC43387
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 09:01:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5A4F206C2
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 01:53:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1544925188;
-	bh=X3oqi7XGqDnCKrhOJvOThUel+yEZo3hQSMRh4pDoRUY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=o9/mcmljNlMh6b/fjlvsDp7sL8+iv35HlwklkDsWR4vIGaL4XCez+du+UYL/7SCdy
-	 oe3CblQ9ZE4MSB43s+KOdpgbQt09zG9A/0bQW1fIERprDuFWVI32Yo4QaNbRWNQ8/j
-	 WBk+Ng2MAO6ctZjrxFSY1a4sGrQfaXWXUaw8OZqg=
+	by mail.kernel.org (Postfix) with ESMTP id F04F6217F9
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 09:01:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728565AbeLPBxH (ORCPT
+        id S1729811AbeLPJBR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 15 Dec 2018 20:53:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44740 "EHLO mail.kernel.org"
+        Sun, 16 Dec 2018 04:01:17 -0500
+Received: from mga11.intel.com ([192.55.52.93]:45167 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727227AbeLPBxG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Dec 2018 20:53:06 -0500
-Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com [209.85.222.179])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 08BD1206C2
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Dec 2018 01:53:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1544925186;
-        bh=X3oqi7XGqDnCKrhOJvOThUel+yEZo3hQSMRh4pDoRUY=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=KUzlk55qv/noqe7H0ckk9FaVVpi5it5RSMHfHiJs9ALYeu5jz6bDlNn4XkG7HcHrb
-         q3xEG/OIBRF+BHEQPAZa3UeORz8WyOv2oksgUr861aOWt/Y4tJNbSij2bAKyx/Mw+T
-         OLvoWZU94f4QT0/IKuY3pH5cpJk0q26hHKF55WAU=
-Received: by mail-qk1-f179.google.com with SMTP id r71so5497959qkr.10
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Dec 2018 17:53:05 -0800 (PST)
-X-Gm-Message-State: AA+aEWZUJhdDDmOF90NjxM/IwkI8JJoEGwsHVBhd8hMwMN3Tl9CtuUGq
-        0yAl7HBdNjaFpwVHaRlCGT2zEjZz2N2F8F3fVvo=
-X-Google-Smtp-Source: AFSGD/XMxSqAStw7uSM5dKwCuQNz3ar13zNeHNUbcuzuiPn2AI1/ZqglOm572jrymm+PPL4ryLOlZ2eNs/3XaI4aV+k=
-X-Received: by 2002:a37:bb82:: with SMTP id l124mr7099859qkf.188.1544925185220;
- Sat, 15 Dec 2018 17:53:05 -0800 (PST)
+        id S1729758AbeLPJBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Dec 2018 04:01:17 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Dec 2018 01:01:17 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,360,1539673200"; 
+   d="scan'208";a="107784546"
+Received: from fmsmsx106.amr.corp.intel.com ([10.18.124.204])
+  by fmsmga007.fm.intel.com with ESMTP; 16 Dec 2018 01:01:17 -0800
+Received: from fmsmsx154.amr.corp.intel.com (10.18.116.70) by
+ FMSMSX106.amr.corp.intel.com (10.18.124.204) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Sun, 16 Dec 2018 01:01:16 -0800
+Received: from HASMSX109.ger.corp.intel.com (10.184.198.21) by
+ FMSMSX154.amr.corp.intel.com (10.18.116.70) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Sun, 16 Dec 2018 01:01:16 -0800
+Received: from hasmsx112.ger.corp.intel.com ([169.254.11.88]) by
+ hasmsx109.ger.corp.intel.com ([169.254.3.179]) with mapi id 14.03.0415.000;
+ Sun, 16 Dec 2018 11:01:13 +0200
+From:   "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>,
+        "kyle@infradead.org" <kyle@infradead.org>,
+        "jwboyer@kernel.org" <jwboyer@kernel.org>,
+        "ben@decadent.org.uk" <ben@decadent.org.uk>
+Subject: pull-request: iwlwifi firmware updates 2018-12-16
+Thread-Topic: pull-request: iwlwifi firmware updates 2018-12-16
+Thread-Index: AQHUlR3lvsk4zBcgi0WInUgBaQRQ1Q==
+Date:   Sun, 16 Dec 2018 09:01:13 +0000
+Message-ID: <1544950869.7454.5.camel@intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.12.116.233]
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <BAC9831F8576514CB13311A9B39D30A1@intel.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <1541622996-16181-1-git-send-email-arend.vanspriel@broadcom.com>
- <CA+5PVA4Q4gscG45dfz_Kk0ihuuG9FPuxNFHozNt5eVAU2EChAw@mail.gmail.com> <1151c860-f01b-7689-bae7-3a7869b7f356@broadcom.com>
-In-Reply-To: <1151c860-f01b-7689-bae7-3a7869b7f356@broadcom.com>
-From:   Josh Boyer <jwboyer@kernel.org>
-Date:   Sat, 15 Dec 2018 20:52:54 -0500
-X-Gmail-Original-Message-ID: <CA+5PVA4h3tVm9X_Qh4H1E_8KAVpZiRLL+v7LnfXGHZJqXwyDow@mail.gmail.com>
-Message-ID: <CA+5PVA4h3tVm9X_Qh4H1E_8KAVpZiRLL+v7LnfXGHZJqXwyDow@mail.gmail.com>
-Subject: Re: [PATCH] brcm: provide new firmwares for BCM4366 chipset
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc:     Linux Firmware <linux-firmware@kernel.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Dec 15, 2018 at 6:02 AM Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
->
->
->
-> On 12/14/2018 2:02 PM, Josh Boyer wrote:
-> > On Wed, Nov 7, 2018 at 3:45 PM Arend van Spriel
-> > <arend.vanspriel@broadcom.com> wrote:
-> >>
-> >> These firmwares are for the BCM4366 3x3 802.11 ac chipsets, which also comprise of BCM4366E or BCM43664 devices. Signed-off-by: Arend van Spriel
-> >
-> > This didn't add brcm/brcmfmac4366c-pcie.bin to WHENCE.  I'm assuming
-> > it's under the same license as the rest of the brcmfmac files?  If so,
-> > I can just amend the patch.
->
-> Hi Josh,
->
-> I was not sure this patch ever made it through. It did not appear on
-> linux-wireless list probably due to exceeding a size limit. So I resend
-> it as two patches on December 10th. However, I indeed forgot to update
-> the WHENCE file in that series as well. Indeed there is no license change.
-
-OK.  Amended and pushed out.
-
-josh
+SGksDQoNClF1aXRlIGEgZmV3IHVwZGF0ZXMgaGVyZS4NClBsZWFzZSBwdWxsLg0KDQpUaGFuayB5
+b3UuDQoNClRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQgMjExZGUxNjc5YTY4Yjhh
+YjBmODQxYTgwNThkZjM1ZTEzZTM5NjNmMDoNCg0KICBicmNtOiBwcm92aWRlIG5ldyBmaXJtd2Fy
+ZXMgZm9yIEJDTTQzNjYgY2hpcHNldCAoMjAxOC0xMi0xNSAyMDo1MTozOCAtMDUwMCkNCg0KYXJl
+IGF2YWlsYWJsZSBpbiB0aGUgR2l0IHJlcG9zaXRvcnkgYXQ6DQoNCiAgZ2l0Oi8vZ2l0Lmtlcm5l
+bC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvbGludXgtZmlybXdhcmUuZ2l0
+IA0KDQpmb3IgeW91IHRvIGZldGNoIGNoYW5nZXMgdXAgdG8gODcwN2VmMzMxM2VlMGY2NzM3Njgz
+YzkzYWEyY2IxZGZmNjQ4MzY0MzoNCg0KICBpd2x3aWZpOiB1cGRhdGUgZmlybXdhcmVzIGZvciA4
+MDAwIHNlcmllcyAoMjAxOC0xMi0xNiAxMDo0Njo0MCArMDIwMCkNCg0KLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KRW1tYW51
+ZWwgR3J1bWJhY2ggKDMpOg0KICAgICAgaXdsd2lmaTogdXBkYXRlIC00MS51Y29kZSBmb3IgOTAw
+MCBzZXJpZXMNCiAgICAgIGl3bHdpZmk6IGFkZCAtNDMudWNvZGUgZm9yIDkwMDAgc2VyaWVzDQog
+ICAgICBpd2x3aWZpOiB1cGRhdGUgZmlybXdhcmVzIGZvciA4MDAwIHNlcmllcw0KDQogV0hFTkNF
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDE0ICsrKysrKysrKystLS0tDQogaXdsd2lm
+aS04MDAwQy0zNi51Y29kZSAgICAgICAgICAgIHwgQmluIDI0ODY1NzIgLT4gMjQ4NjU3MiBieXRl
+cw0KIGl3bHdpZmktODI2NS0zNi51Y29kZSAgICAgICAgICAgICB8IEJpbiAyNDk4MDQ0IC0+IDI0
+OTgwNDQgYnl0ZXMNCiBpd2x3aWZpLTkwMDAtcHUtYjAtamYtYjAtNDEudWNvZGUgfCBCaW4gMjk2
+MTg2NCAtPiAyNjIwNDY0IGJ5dGVzDQogaXdsd2lmaS05MDAwLXB1LWIwLWpmLWIwLTQzLnVjb2Rl
+IHwgQmluIDAgLT4gMjU0MzUzMiBieXRlcw0KIGl3bHdpZmktOTI2MC10aC1iMC1qZi1iMC00MS51
+Y29kZSB8IEJpbiAyNjIwMzY4IC0+IDI2MjA2NTYgYnl0ZXMNCiBpd2x3aWZpLTkyNjAtdGgtYjAt
+amYtYjAtNDMudWNvZGUgfCBCaW4gMCAtPiAyNTU4MTcyIGJ5dGVzDQogNyBmaWxlcyBjaGFuZ2Vk
+LCAxMCBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQ0KIGNyZWF0ZSBtb2RlIDEwMDY0NCBp
+d2x3aWZpLTkwMDAtcHUtYjAtamYtYjAtNDMudWNvZGUNCiBjcmVhdGUgbW9kZSAxMDA2NDQgaXds
+d2lmaS05MjYwLXRoLWIwLWpmLWIwLTQzLnVjb2RlDQoNCmRpZmYgLS1naXQgYS9XSEVOQ0UgYi9X
+SEVOQ0UNCmluZGV4IDJkZTM4NDFhYTkyNy4uMzY4OTQ0MzYyMGEyIDEwMDY0NA0KLS0tIGEvV0hF
+TkNFDQorKysgYi9XSEVOQ0UNCkBAIC05ODAsNyArOTgwLDcgQEAgRmlsZTogaXdsd2lmaS04MDAw
+Qy0zNC51Y29kZQ0KIFZlcnNpb246IDM0LjYxMDI4OC4wDQogDQogRmlsZTogaXdsd2lmaS04MDAw
+Qy0zNi51Y29kZQ0KLVZlcnNpb246IDM2Ljc1OTZhZmQ0LjANCitWZXJzaW9uOiAzNi45ZjBhMmQ2
+OC4wDQogDQogRmlsZTogaXdsd2lmaS04MjY1LTIxLnVjb2RlDQogVmVyc2lvbjogMjEuMzAyODAw
+LjANCkBAIC05OTgsNyArOTk4LDcgQEAgRmlsZTogaXdsd2lmaS04MjY1LTM0LnVjb2RlDQogVmVy
+c2lvbjogMzQuNjEwMjg4LjANCiANCiBGaWxlOiBpd2x3aWZpLTgyNjUtMzYudWNvZGUNCi1WZXJz
+aW9uOiAzNi43NTk2YWZkNC4wDQorVmVyc2lvbjogMzYuOWYwYTJkNjguMA0KIA0KIEZpbGU6IGl3
+bHdpZmktOTAwMC1wdS1iMC1qZi1iMC0zMy51Y29kZQ0KIFZlcnNpb246IDMzLjYxMDI5NC4wDQpA
+QCAtMTAxMCw3ICsxMDEwLDEwIEBAIEZpbGU6IGl3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC0zOC51
+Y29kZQ0KIFZlcnNpb246IDM4Ljc1NWNmZGQ4LjANCiANCiBGaWxlOiBpd2x3aWZpLTkwMDAtcHUt
+YjAtamYtYjAtNDEudWNvZGUNCi1WZXJzaW9uOiAzOC4xZjFlOGQ0YS4wDQorVmVyc2lvbjogNDEu
+ZmMxYTdhZWEuMA0KKw0KK0ZpbGU6IGl3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC00My51Y29kZQ0K
+K1ZlcnNpb246IDQzLmM3MzExNGIzLjANCiANCiBGaWxlOiBpd2x3aWZpLTkyNjAtdGgtYjAtamYt
+YjAtMzMudWNvZGUNCiBWZXJzaW9uOiAzMy42MTAyOTQuMA0KQEAgLTEwMjIsNyArMTAyNSwxMCBA
+QCBGaWxlOiBpd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtMzgudWNvZGUNCiBWZXJzaW9uOiAzOC43
+NTVjZmRkOC4wDQogDQogRmlsZTogaXdsd2lmaS05MjYwLXRoLWIwLWpmLWIwLTQxLnVjb2RlDQot
+VmVyc2lvbjogNDEuMWYxZThkNGEuMA0KK1ZlcnNpb246IDQxLmZjMWE3YWVhLjANCisNCitGaWxl
+OiBpd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDMudWNvZGUNCitWZXJzaW9uOiA0My5jNzMxMTRi
+My4wDQogDQogTGljZW5jZTogUmVkaXN0cmlidXRhYmxlLiBTZWUgTElDRU5DRS5pd2x3aWZpX2Zp
+cm13YXJlIGZvciBkZXRhaWxzDQogDQpkaWZmIC0tZ2l0IGEvaXdsd2lmaS04MDAwQy0zNi51Y29k
+ZSBiL2l3bHdpZmktODAwMEMtMzYudWNvZGUNCmluZGV4IGI5MzU3NDViZTdhZi4uZTgzYTAyNGEz
+OTExIDEwMDY0NA0KQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS04MDAwQy0zNi51Y29kZSBhbmQgYi9p
+d2x3aWZpLTgwMDBDLTM2LnVjb2RlIGRpZmZlcg0KZGlmZiAtLWdpdCBhL2l3bHdpZmktODI2NS0z
+Ni51Y29kZSBiL2l3bHdpZmktODI2NS0zNi51Y29kZQ0KaW5kZXggMmJkOWY5NGQ5NDM3Li40MDZl
+MDMzMjVkMzQgMTAwNjQ0DQpCaW5hcnkgZmlsZXMgYS9pd2x3aWZpLTgyNjUtMzYudWNvZGUgYW5k
+IGIvaXdsd2lmaS04MjY1LTM2LnVjb2RlIGRpZmZlcg0KZGlmZiAtLWdpdCBhL2l3bHdpZmktOTAw
+MC1wdS1iMC1qZi1iMC00MS51Y29kZSBiL2l3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC00MS51Y29k
+ZQ0KaW5kZXggNGNjM2EwMTI0ZWM0Li42NWMxYmJiZGJkZjIgMTAwNjQ0DQpCaW5hcnkgZmlsZXMg
+YS9pd2x3aWZpLTkwMDAtcHUtYjAtamYtYjAtNDEudWNvZGUgYW5kIGIvaXdsd2lmaS05MDAwLXB1
+LWIwLWpmLWIwLTQxLnVjb2RlIGRpZmZlcg0KZGlmZiAtLWdpdCBhL2l3bHdpZmktOTAwMC1wdS1i
+MC1qZi1iMC00My51Y29kZSBiL2l3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC00My51Y29kZQ0KbmV3
+IGZpbGUgbW9kZSAxMDA2NDQNCmluZGV4IDAwMDAwMDAwMDAwMC4uZjVjZjVmMzFiOTIwDQpCaW5h
+cnkgZmlsZXMgL2Rldi9udWxsIGFuZCBiL2l3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC00My51Y29k
+ZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDEudWNvZGUg
+Yi9pd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDEudWNvZGUNCmluZGV4IGViYjU2ZjhlMzI2Ny4u
+ZGU0ZTc0ZTc3ODQ0IDEwMDY0NA0KQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS05MjYwLXRoLWIwLWpm
+LWIwLTQxLnVjb2RlIGFuZCBiL2l3bHdpZmktOTI2MC10aC1iMC1qZi1iMC00MS51Y29kZSBkaWZm
+ZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDMudWNvZGUgYi9pd2x3
+aWZpLTkyNjAtdGgtYjAtamYtYjAtNDMudWNvZGUNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRl
+eCAwMDAwMDAwMDAwMDAuLjI5MDkzZDVkNTkyZg0KQmluYXJ5IGZpbGVzIC9kZXYvbnVsbCBhbmQg
+Yi9pd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDMudWNvZGUgZGlmZmVy
