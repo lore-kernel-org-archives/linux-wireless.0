@@ -2,72 +2,67 @@ Return-Path: <SRS0=od2B=OZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52A11C43387
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 12:16:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C584C43387
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 14:06:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2372A2086C
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 12:16:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RQRrp+V4"
+	by mail.kernel.org (Postfix) with ESMTP id F3B12217FA
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 14:06:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730473AbeLPMQl (ORCPT
+        id S1730301AbeLPOGe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Dec 2018 07:16:41 -0500
-Received: from mail-lf1-f53.google.com ([209.85.167.53]:37454 "EHLO
-        mail-lf1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730021AbeLPMQk (ORCPT
+        Sun, 16 Dec 2018 09:06:34 -0500
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:29057 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729822AbeLPOGe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Dec 2018 07:16:40 -0500
-Received: by mail-lf1-f53.google.com with SMTP id y11so7453238lfj.4
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Dec 2018 04:16:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=BHWpN6cryhSeuprntml5bijEFy8n+Qpo72yCcX2jYkQ=;
-        b=RQRrp+V4u+xrUd6DFzZjh98LCrBwB/USckWRNQryBtUCYhb2i/A/GsD0+NHFXn+/rO
-         kj+8Tsm+Gfw5ZhA7j6C6X6i9Mp1XW8x2wj5LrNU89RSTrVz0AIWTvEr1ws5VCk8Q95ZR
-         sd3NTk5yeyGvNSQ0SCEmtSokO7Kzdssp68RDTdLTbMeqXgoZFDy8kN7RFPBTcOoxrXj4
-         GAbTdRzv/K1gd6o4lK/BSEKll8AFLcOAZmgXxbGButADTYK7tBR3GIvyylhePJOULYuL
-         Xs86DXp/jvzXOcGQvew8uefrAxj1oIlUDakK9nhTwhGMMIiFrJPFS710EVBwS0s+UHAg
-         DUNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=BHWpN6cryhSeuprntml5bijEFy8n+Qpo72yCcX2jYkQ=;
-        b=UcPimnWiikqIkDpRwts1ysCR1RqNCbIA5HDe4hEex8XpGXn4Zzq6h34dhgnfVr71WC
-         tPEcMcQNEPRjHfhivtiH2DevqWrhSCvZxdx05htXVoKHvqUBolzTyynjJYiDzc3hpYoO
-         Z89fM90NBTwl/B46hBQE3nzKvHgfCAxOOD1BZzwLCE2GEySfq4hjNGoHvMkmKph+H49n
-         UEqOU6g2x0OIzs9sAZ2hpAcA6Cyo5tid1L/Jaxlw8rCNCEjdzwVpMQL4fsCLYJ3//dmm
-         D+tQDuXEL3C53un5tNsTkANgVGLGCfVyrHxc29DTRcPdymel9msg+2W12AWh6mllJsBR
-         d/0g==
-X-Gm-Message-State: AA+aEWblnnlf7/3rDj/Oq0fDv5al8c8fYfxNLZggaWql7Of5Z2bL7HMh
-        jyFUtw8OmQ3N7DeUX7/m6rdLvRa+EFnYAQ2mh8ELA9oknFU=
-X-Google-Smtp-Source: AFSGD/W5pNp6/DRXROIaAlb8UAObs3hKy6QhIbMxhJhWSz3sg+Lds2KQmUeGtHrA6Ar+dDgdBaUZHd3Y8i9eWrulaPQ=
-X-Received: by 2002:a19:d8d8:: with SMTP id r85mr5258888lfi.92.1544962598530;
- Sun, 16 Dec 2018 04:16:38 -0800 (PST)
-MIME-Version: 1.0
-From:   Marcin Sielski <marcin.sielski@gmail.com>
-Date:   Sun, 16 Dec 2018 13:16:27 +0100
-Message-ID: <CANWiEciGLPxDc5JT0+gVrzEyEC6GOcUJUf8XR4PrYHj4TysHpA@mail.gmail.com>
-Subject: wireless-regdb for automotive
-To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 16 Dec 2018 09:06:34 -0500
+X-Greylist: delayed 431 seconds by postgrey-1.27 at vger.kernel.org; Sun, 16 Dec 2018 09:06:33 EST
+X-IronPort-AV: E=Sophos;i="5.56,361,1539640800"; 
+   d="scan'208";a="1661981"
+Received: from ironmsg01-ams.qualcomm.com ([10.251.56.2])
+  by alexa-out-ams-01.qualcomm.com with ESMTP; 16 Dec 2018 14:58:51 +0100
+X-IronPort-AV: E=McAfee;i="5900,7806,9107"; a="6611859"
+Received: from lx-amasri.mea.qualcomm.com ([10.18.172.210])
+  by ironmsg01-ams.qualcomm.com with ESMTP; 16 Dec 2018 14:58:50 +0100
+From:   Ahmad Masri <amasri@codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Ahmad Masri <amasri@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
+Subject: [PATCH 0/2] Add support for ACS offload for AP
+Date:   Sun, 16 Dec 2018 15:58:09 +0200
+Message-Id: <1544968691-20679-1-git-send-email-amasri@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+The following set of patches add support for Automatic Channel Selection
+(ACS) offload for AP in cfg80211 and an implementation in wil6210 driver.
 
-Do you possibly have ideas how to adjust wireless-regdb package
-to support also automotive use cases as described in:
-https://www.efis.dk/documents/44659
+Ahmad Masri (2):
+  cfg80211: Add Automatic Channel Selection (ACS) offload for AP
+  wil6210: add implementation of acs cfg80211_ops
 
-Best Regards
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 140 ++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/debugfs.c  | 154 +++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/main.c     |   5 +
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  15 +++
+ drivers/net/wireless/ath/wil6210/wmi.c      |  76 ++++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.h      |   3 +-
+ include/net/cfg80211.h                      |  33 +++++
+ include/uapi/linux/nl80211.h                |  65 ++++++++++
+ net/wireless/mlme.c                         |  31 +++++
+ net/wireless/nl80211.c                      | 182 ++++++++++++++++++++++++++++
+ net/wireless/nl80211.h                      |   6 +
+ net/wireless/rdev-ops.h                     |  12 ++
+ net/wireless/trace.h                        |  23 ++++
+ 13 files changed, 742 insertions(+), 3 deletions(-)
 
-Marcin Sielski
+-- 
+1.9.1
+
