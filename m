@@ -2,131 +2,228 @@ Return-Path: <SRS0=od2B=OZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,T_MIXED_ES autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B40CC43387
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 09:01:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51E09C43387
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 10:39:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F04F6217F9
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 09:01:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 055EF217FA
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Dec 2018 10:39:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JUkaFErV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729811AbeLPJBR (ORCPT
+        id S1729821AbeLPKjc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Dec 2018 04:01:17 -0500
-Received: from mga11.intel.com ([192.55.52.93]:45167 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729758AbeLPJBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Dec 2018 04:01:17 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Dec 2018 01:01:17 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,360,1539673200"; 
-   d="scan'208";a="107784546"
-Received: from fmsmsx106.amr.corp.intel.com ([10.18.124.204])
-  by fmsmga007.fm.intel.com with ESMTP; 16 Dec 2018 01:01:17 -0800
-Received: from fmsmsx154.amr.corp.intel.com (10.18.116.70) by
- FMSMSX106.amr.corp.intel.com (10.18.124.204) with Microsoft SMTP Server (TLS)
- id 14.3.408.0; Sun, 16 Dec 2018 01:01:16 -0800
-Received: from HASMSX109.ger.corp.intel.com (10.184.198.21) by
- FMSMSX154.amr.corp.intel.com (10.18.116.70) with Microsoft SMTP Server (TLS)
- id 14.3.408.0; Sun, 16 Dec 2018 01:01:16 -0800
-Received: from hasmsx112.ger.corp.intel.com ([169.254.11.88]) by
- hasmsx109.ger.corp.intel.com ([169.254.3.179]) with mapi id 14.03.0415.000;
- Sun, 16 Dec 2018 11:01:13 +0200
-From:   "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        "kyle@infradead.org" <kyle@infradead.org>,
-        "jwboyer@kernel.org" <jwboyer@kernel.org>,
-        "ben@decadent.org.uk" <ben@decadent.org.uk>
-Subject: pull-request: iwlwifi firmware updates 2018-12-16
-Thread-Topic: pull-request: iwlwifi firmware updates 2018-12-16
-Thread-Index: AQHUlR3lvsk4zBcgi0WInUgBaQRQ1Q==
-Date:   Sun, 16 Dec 2018 09:01:13 +0000
-Message-ID: <1544950869.7454.5.camel@intel.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.12.116.233]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <BAC9831F8576514CB13311A9B39D30A1@intel.com>
-Content-Transfer-Encoding: base64
+        Sun, 16 Dec 2018 05:39:32 -0500
+Received: from mail-wr1-f49.google.com ([209.85.221.49]:46735 "EHLO
+        mail-wr1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726164AbeLPKjb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Dec 2018 05:39:31 -0500
+Received: by mail-wr1-f49.google.com with SMTP id l9so9387684wrt.13
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Dec 2018 02:39:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:openpgp:autocrypt:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=mz+w+9Uca+TLz8a+S9SJ4LEGfN8FebxkBBTjQz3JbAE=;
+        b=JUkaFErVPNHBNRrksAmKqMYZU67mj2iAtN6gsexaYkoVY86BFcsAQieQqRuZGaZCFP
+         xI2znL/myNagR67ABHYiiSneJIP3nMllvv4nek9fb/6i10iSbf9+/2h94ImNlXR3Qc2m
+         Vo7/HNOe41Em3g0mRvhcfNTRKLnNbDNKYzkIoF21WcFZVa3F+2JACmHS19InnBk/gGGZ
+         P505SEdqZIIlaBB1mwR+Zk1Bm0mSE4auHF1WOLuZhaqQS0Ojt0c/dJKIkH3Ev2MklJmb
+         q1pAy9YxOuOOUfNnH6OCPTea6YZl0xh7+UgaYTONMpcI611AywnCZQmHUhilgW/yPzuy
+         IrZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=mz+w+9Uca+TLz8a+S9SJ4LEGfN8FebxkBBTjQz3JbAE=;
+        b=OZ1u4bMfQ75iiCSeVrW8aITl9ly2OtN8IZHFdZFFkc2fH3OKfuYE1edud/FuKw8ToU
+         dSHKOLVqlBzUt/NZP6BygtLQuFfD4sjZYJ9MIULQRNkGd/IY/cteJgb6R2IuCTd0JoGx
+         Ud1C0fseNUkE0YKE4dzxe9pkE1zGrjUHteQWu0o0gDhW+KDoEPAP7lBwtj0WMTiY+P61
+         OKg/dvhAuwB5fQyeU2pBl/ELuJxifrTS/tEWorCY5gA9r5BXr2DqKClyJdnVXkv8v2k0
+         u7vpldWCB7FlWUIZxFdcOZJoyAQQfjZkpS7o1NyNzDN8g8m/z8Sety6EQYlGlkDi68D2
+         yHPA==
+X-Gm-Message-State: AA+aEWZaw/W1ernh6Mln6cSqPh1XEmG6/qozujNSbLsla2rExKYeGAaw
+        EEdDu8VZ5jFPMGEO9TDBaoI=
+X-Google-Smtp-Source: AFSGD/UzQYA91ukkRyCNcJPTLGvfpLXRQMSyU+h7Uv8a35EotOU6lUZgS5FK1LaP2B+0sHRftd4p6w==
+X-Received: by 2002:a5d:64c7:: with SMTP id y7mr7506068wrv.207.1544956769059;
+        Sun, 16 Dec 2018 02:39:29 -0800 (PST)
+Received: from ziggy.stardust ([93.176.153.35])
+        by smtp.gmail.com with ESMTPSA id e19sm18168407wrc.25.2018.12.16.02.39.27
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 16 Dec 2018 02:39:28 -0800 (PST)
+Subject: Re: mt76x[02]u 802.11w support
+To:     Sid Hayn <sidhayn@gmail.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     sgruszka@redhat.com, linux-mediatek@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>
+References: <CAM0KTbBUXJsBfO0=hQgeTGVteym6iuObdyNynWumQnnGY0L3wg@mail.gmail.com>
+ <20181213143947.GA11947@localhost.localdomain>
+ <CAM0KTbCMrcXNFHUFEmoHg+nseN1GkegqAM0GSuWBDHP=gVgi=w@mail.gmail.com>
+From:   Matthias Brugger <matthias.bgg@gmail.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=matthias.bgg@gmail.com; prefer-encrypt=mutual; keydata=
+ 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
+ jrHWeQEI2ucSKsNa8FllDmG/fQ==
+Message-ID: <dd275289-99d0-54a8-9ac5-cb137123950a@gmail.com>
+Date:   Sun, 16 Dec 2018 11:39:26 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
+In-Reply-To: <CAM0KTbCMrcXNFHUFEmoHg+nseN1GkegqAM0GSuWBDHP=gVgi=w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SGksDQoNClF1aXRlIGEgZmV3IHVwZGF0ZXMgaGVyZS4NClBsZWFzZSBwdWxsLg0KDQpUaGFuayB5
-b3UuDQoNClRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQgMjExZGUxNjc5YTY4Yjhh
-YjBmODQxYTgwNThkZjM1ZTEzZTM5NjNmMDoNCg0KICBicmNtOiBwcm92aWRlIG5ldyBmaXJtd2Fy
-ZXMgZm9yIEJDTTQzNjYgY2hpcHNldCAoMjAxOC0xMi0xNSAyMDo1MTozOCAtMDUwMCkNCg0KYXJl
-IGF2YWlsYWJsZSBpbiB0aGUgR2l0IHJlcG9zaXRvcnkgYXQ6DQoNCiAgZ2l0Oi8vZ2l0Lmtlcm5l
-bC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvbGludXgtZmlybXdhcmUuZ2l0
-IA0KDQpmb3IgeW91IHRvIGZldGNoIGNoYW5nZXMgdXAgdG8gODcwN2VmMzMxM2VlMGY2NzM3Njgz
-YzkzYWEyY2IxZGZmNjQ4MzY0MzoNCg0KICBpd2x3aWZpOiB1cGRhdGUgZmlybXdhcmVzIGZvciA4
-MDAwIHNlcmllcyAoMjAxOC0xMi0xNiAxMDo0Njo0MCArMDIwMCkNCg0KLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KRW1tYW51
-ZWwgR3J1bWJhY2ggKDMpOg0KICAgICAgaXdsd2lmaTogdXBkYXRlIC00MS51Y29kZSBmb3IgOTAw
-MCBzZXJpZXMNCiAgICAgIGl3bHdpZmk6IGFkZCAtNDMudWNvZGUgZm9yIDkwMDAgc2VyaWVzDQog
-ICAgICBpd2x3aWZpOiB1cGRhdGUgZmlybXdhcmVzIGZvciA4MDAwIHNlcmllcw0KDQogV0hFTkNF
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDE0ICsrKysrKysrKystLS0tDQogaXdsd2lm
-aS04MDAwQy0zNi51Y29kZSAgICAgICAgICAgIHwgQmluIDI0ODY1NzIgLT4gMjQ4NjU3MiBieXRl
-cw0KIGl3bHdpZmktODI2NS0zNi51Y29kZSAgICAgICAgICAgICB8IEJpbiAyNDk4MDQ0IC0+IDI0
-OTgwNDQgYnl0ZXMNCiBpd2x3aWZpLTkwMDAtcHUtYjAtamYtYjAtNDEudWNvZGUgfCBCaW4gMjk2
-MTg2NCAtPiAyNjIwNDY0IGJ5dGVzDQogaXdsd2lmaS05MDAwLXB1LWIwLWpmLWIwLTQzLnVjb2Rl
-IHwgQmluIDAgLT4gMjU0MzUzMiBieXRlcw0KIGl3bHdpZmktOTI2MC10aC1iMC1qZi1iMC00MS51
-Y29kZSB8IEJpbiAyNjIwMzY4IC0+IDI2MjA2NTYgYnl0ZXMNCiBpd2x3aWZpLTkyNjAtdGgtYjAt
-amYtYjAtNDMudWNvZGUgfCBCaW4gMCAtPiAyNTU4MTcyIGJ5dGVzDQogNyBmaWxlcyBjaGFuZ2Vk
-LCAxMCBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQ0KIGNyZWF0ZSBtb2RlIDEwMDY0NCBp
-d2x3aWZpLTkwMDAtcHUtYjAtamYtYjAtNDMudWNvZGUNCiBjcmVhdGUgbW9kZSAxMDA2NDQgaXds
-d2lmaS05MjYwLXRoLWIwLWpmLWIwLTQzLnVjb2RlDQoNCmRpZmYgLS1naXQgYS9XSEVOQ0UgYi9X
-SEVOQ0UNCmluZGV4IDJkZTM4NDFhYTkyNy4uMzY4OTQ0MzYyMGEyIDEwMDY0NA0KLS0tIGEvV0hF
-TkNFDQorKysgYi9XSEVOQ0UNCkBAIC05ODAsNyArOTgwLDcgQEAgRmlsZTogaXdsd2lmaS04MDAw
-Qy0zNC51Y29kZQ0KIFZlcnNpb246IDM0LjYxMDI4OC4wDQogDQogRmlsZTogaXdsd2lmaS04MDAw
-Qy0zNi51Y29kZQ0KLVZlcnNpb246IDM2Ljc1OTZhZmQ0LjANCitWZXJzaW9uOiAzNi45ZjBhMmQ2
-OC4wDQogDQogRmlsZTogaXdsd2lmaS04MjY1LTIxLnVjb2RlDQogVmVyc2lvbjogMjEuMzAyODAw
-LjANCkBAIC05OTgsNyArOTk4LDcgQEAgRmlsZTogaXdsd2lmaS04MjY1LTM0LnVjb2RlDQogVmVy
-c2lvbjogMzQuNjEwMjg4LjANCiANCiBGaWxlOiBpd2x3aWZpLTgyNjUtMzYudWNvZGUNCi1WZXJz
-aW9uOiAzNi43NTk2YWZkNC4wDQorVmVyc2lvbjogMzYuOWYwYTJkNjguMA0KIA0KIEZpbGU6IGl3
-bHdpZmktOTAwMC1wdS1iMC1qZi1iMC0zMy51Y29kZQ0KIFZlcnNpb246IDMzLjYxMDI5NC4wDQpA
-QCAtMTAxMCw3ICsxMDEwLDEwIEBAIEZpbGU6IGl3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC0zOC51
-Y29kZQ0KIFZlcnNpb246IDM4Ljc1NWNmZGQ4LjANCiANCiBGaWxlOiBpd2x3aWZpLTkwMDAtcHUt
-YjAtamYtYjAtNDEudWNvZGUNCi1WZXJzaW9uOiAzOC4xZjFlOGQ0YS4wDQorVmVyc2lvbjogNDEu
-ZmMxYTdhZWEuMA0KKw0KK0ZpbGU6IGl3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC00My51Y29kZQ0K
-K1ZlcnNpb246IDQzLmM3MzExNGIzLjANCiANCiBGaWxlOiBpd2x3aWZpLTkyNjAtdGgtYjAtamYt
-YjAtMzMudWNvZGUNCiBWZXJzaW9uOiAzMy42MTAyOTQuMA0KQEAgLTEwMjIsNyArMTAyNSwxMCBA
-QCBGaWxlOiBpd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtMzgudWNvZGUNCiBWZXJzaW9uOiAzOC43
-NTVjZmRkOC4wDQogDQogRmlsZTogaXdsd2lmaS05MjYwLXRoLWIwLWpmLWIwLTQxLnVjb2RlDQot
-VmVyc2lvbjogNDEuMWYxZThkNGEuMA0KK1ZlcnNpb246IDQxLmZjMWE3YWVhLjANCisNCitGaWxl
-OiBpd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDMudWNvZGUNCitWZXJzaW9uOiA0My5jNzMxMTRi
-My4wDQogDQogTGljZW5jZTogUmVkaXN0cmlidXRhYmxlLiBTZWUgTElDRU5DRS5pd2x3aWZpX2Zp
-cm13YXJlIGZvciBkZXRhaWxzDQogDQpkaWZmIC0tZ2l0IGEvaXdsd2lmaS04MDAwQy0zNi51Y29k
-ZSBiL2l3bHdpZmktODAwMEMtMzYudWNvZGUNCmluZGV4IGI5MzU3NDViZTdhZi4uZTgzYTAyNGEz
-OTExIDEwMDY0NA0KQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS04MDAwQy0zNi51Y29kZSBhbmQgYi9p
-d2x3aWZpLTgwMDBDLTM2LnVjb2RlIGRpZmZlcg0KZGlmZiAtLWdpdCBhL2l3bHdpZmktODI2NS0z
-Ni51Y29kZSBiL2l3bHdpZmktODI2NS0zNi51Y29kZQ0KaW5kZXggMmJkOWY5NGQ5NDM3Li40MDZl
-MDMzMjVkMzQgMTAwNjQ0DQpCaW5hcnkgZmlsZXMgYS9pd2x3aWZpLTgyNjUtMzYudWNvZGUgYW5k
-IGIvaXdsd2lmaS04MjY1LTM2LnVjb2RlIGRpZmZlcg0KZGlmZiAtLWdpdCBhL2l3bHdpZmktOTAw
-MC1wdS1iMC1qZi1iMC00MS51Y29kZSBiL2l3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC00MS51Y29k
-ZQ0KaW5kZXggNGNjM2EwMTI0ZWM0Li42NWMxYmJiZGJkZjIgMTAwNjQ0DQpCaW5hcnkgZmlsZXMg
-YS9pd2x3aWZpLTkwMDAtcHUtYjAtamYtYjAtNDEudWNvZGUgYW5kIGIvaXdsd2lmaS05MDAwLXB1
-LWIwLWpmLWIwLTQxLnVjb2RlIGRpZmZlcg0KZGlmZiAtLWdpdCBhL2l3bHdpZmktOTAwMC1wdS1i
-MC1qZi1iMC00My51Y29kZSBiL2l3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC00My51Y29kZQ0KbmV3
-IGZpbGUgbW9kZSAxMDA2NDQNCmluZGV4IDAwMDAwMDAwMDAwMC4uZjVjZjVmMzFiOTIwDQpCaW5h
-cnkgZmlsZXMgL2Rldi9udWxsIGFuZCBiL2l3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC00My51Y29k
-ZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDEudWNvZGUg
-Yi9pd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDEudWNvZGUNCmluZGV4IGViYjU2ZjhlMzI2Ny4u
-ZGU0ZTc0ZTc3ODQ0IDEwMDY0NA0KQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS05MjYwLXRoLWIwLWpm
-LWIwLTQxLnVjb2RlIGFuZCBiL2l3bHdpZmktOTI2MC10aC1iMC1qZi1iMC00MS51Y29kZSBkaWZm
-ZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDMudWNvZGUgYi9pd2x3
-aWZpLTkyNjAtdGgtYjAtamYtYjAtNDMudWNvZGUNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRl
-eCAwMDAwMDAwMDAwMDAuLjI5MDkzZDVkNTkyZg0KQmluYXJ5IGZpbGVzIC9kZXYvbnVsbCBhbmQg
-Yi9pd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDMudWNvZGUgZGlmZmVy
+
+
+On 15/12/2018 04:43, Sid Hayn wrote:
+> On Thu, Dec 13, 2018 at 9:39 AM Lorenzo Bianconi
+> <lorenzo.bianconi@redhat.com> wrote:
+>>
+>>> Per a conversation with Lorenzo, it seems that 802.11w for mt76x[02]u
+>>> has only been fixed in 4.20.  As 4.19 is a LTS kernel, I'd like to
+>>> request that work be backported.  While the improvements in 4.20 and
+>>> 4.21 are already fairly obvious, a lot of people will be running 4.19
+>>> for years to come.  This is good hardware, with a working driver
+>>> (thanks team) but in the next few months excitement is going to turn
+>>> toward WPA3 which requires working 802.11w.
+>>>
+>>> Pretty please backport 802.11w support to 4.19
+>>
+>> IIRC the isse is just on mt76x0u, mt76x2u should work
+> 
+> I can confirm that it does work on mt76x2u on 4.19.5; so my request is
+> to backport 802.11w (software crypto I believe) support for mt76x0u to
+> 4.19 LTS.  Pretty please :-)
+> 
+
+Stable kernel are not used to do feature backports but just bug fixes. Please
+reach out to your favorite Linux distribution to backport this driver into their
+kernel. That's the value add a distro has :)
+
+Regards,
+Matthias
+
+> Just in case it helps to confirm what is needed, here is the error
+> from wpa_supplicant when trying to connect to an 802.11w AP
+> wlan0: WPA: Failed to configure IGTK to the driver
+> wlan0: RSN: Failed to configure IGTK
+> 
+> thanks,
+> Zero
+> 
+>>
+>> Regards,
+>> Lorenzo
+>>
+>>>
+>>> Thanks,
+>>> Zero
+> 
+> _______________________________________________
+> Linux-mediatek mailing list
+> Linux-mediatek@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-mediatek
+> 
