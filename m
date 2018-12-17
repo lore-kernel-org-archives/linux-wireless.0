@@ -2,119 +2,112 @@ Return-Path: <SRS0=RnVe=O2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FDC3C43387
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Dec 2018 10:35:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A831DC43387
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Dec 2018 11:03:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EA242133F
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Dec 2018 10:35:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D37A206A2
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Dec 2018 11:03:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BvdQ8JpU"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NVfAv1kL";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NVfAv1kL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731956AbeLQKfN (ORCPT
+        id S1726656AbeLQLDG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Dec 2018 05:35:13 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:40772 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726991AbeLQKfM (ORCPT
+        Mon, 17 Dec 2018 06:03:06 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:40938 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726463AbeLQLDG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Dec 2018 05:35:12 -0500
-Received: by mail-wr1-f65.google.com with SMTP id p4so11691434wrt.7
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Dec 2018 02:35:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=+nymttKAS5sdylnY/Ge9wAt+Ga/f7Dwz3Lvq7qHZRt0=;
-        b=BvdQ8JpU6CmzHLcmpwxRwZmE/UTV89IutnUXknNdXfJ5vRh0xo2aZWObO/NwR7Hfsc
-         P29uqr8XDCUyS7dhO4bfiRCVBEbTWnz1iMLf8EhaIzC2FonwB/Ss8DjBHi79R4d95JHi
-         a5BudFq0RWwOy28lB54k7lSRcekIHwsJ5PFypkeUv7ZHLFY/qyX4QZwZpXZGg68qXVDW
-         cDyVnatjq+ZaT8ibDYYBJqml/LDZOMphz8q+4r8dVgxPoRqg54QGdJByH2cOU+K011h/
-         o04gCPEsWlzhw8Cijs/Do5IOzGARzZh8BlI3YqG0w+OV5AaVmWlu2Pzf/8F72+MK/22/
-         q0JQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=+nymttKAS5sdylnY/Ge9wAt+Ga/f7Dwz3Lvq7qHZRt0=;
-        b=HSgbnHsMJPavfcnD+SMXb+n9RxJvwPMxmwmUmlCVRTo45ImdFQGrn9IsoU/4y/ZiQI
-         s7/UDwRJRIRLYwyrMC4+aDTOdEuT520OD1mTRFO+uVStf49hI/UAX/nD5bAb8x5zWb8N
-         ifO8sL5pUH3+n700EM3lLEZ3AktMUiuOlt64h6t1KrDInzcSfbQnJw2L0kNBMmAlSET/
-         qeQnMQ1ax2Qp50czeUli2cpg7yh/klsbfBrYt/BVG5g9KjV6D9rvVG7oTqZaK27qkKfI
-         R/eooRGbbT5pZG3j8tBJV/zyyw4J2du6QtBOTs+Jfhb0ZkSIjiJ5y6CEcSi6MXm5TDgD
-         HCEA==
-X-Gm-Message-State: AA+aEWYyowxOWuCE2+ETJYDJlCtFfKFVY4uT1To/c3leHJdfcw3T7MsU
-        OtTh+HfZpKQitx5nChbcGYpkrFHDbfoSDkRajac=
-X-Google-Smtp-Source: AFSGD/U2H76LZUt6WHfGI9LL5E4aMZ67bzj+Bzd9Kkw+1p/A025gtu+26GDq/mmJTfR+RRsDAYRntPgHmfcV3Vfsw7M=
-X-Received: by 2002:adf:94e4:: with SMTP id 91mr10755814wrr.322.1545042910985;
- Mon, 17 Dec 2018 02:35:10 -0800 (PST)
+        Mon, 17 Dec 2018 06:03:06 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 9ECA16058E; Mon, 17 Dec 2018 11:03:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1545044585;
+        bh=+h8Xzc1V8UFky2r7DCFL8v4aLwszy7Tiio2kZ6vWqZc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=NVfAv1kL2LUvjkJ3SF8iud/9M+F2zNK11tkmvdmBpMantExOL86OTnBoYmG6ufnq+
+         55wgh3tfL68hLToyZDZVZXiWQ23OVJpfx2TLhT++BjrJcnQIfNWYz3hkBgiB2JVoVj
+         TVi7e7L3Sd0cvV9qpiiEOV8Nnmn/B5Ai/RXe0x2o=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6B98B60585;
+        Mon, 17 Dec 2018 11:03:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1545044585;
+        bh=+h8Xzc1V8UFky2r7DCFL8v4aLwszy7Tiio2kZ6vWqZc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=NVfAv1kL2LUvjkJ3SF8iud/9M+F2zNK11tkmvdmBpMantExOL86OTnBoYmG6ufnq+
+         55wgh3tfL68hLToyZDZVZXiWQ23OVJpfx2TLhT++BjrJcnQIfNWYz3hkBgiB2JVoVj
+         TVi7e7L3Sd0cvV9qpiiEOV8Nnmn/B5Ai/RXe0x2o=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6B98B60585
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Ahmad Masri <amasri@codeaurora.org>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
+Subject: Re: [PATCH 1/2] cfg80211: Add Automatic Channel Selection (ACS) offload for AP
+References: <1544968691-20679-1-git-send-email-amasri@codeaurora.org>
+        <1544968691-20679-2-git-send-email-amasri@codeaurora.org>
+Date:   Mon, 17 Dec 2018 13:03:01 +0200
+In-Reply-To: <1544968691-20679-2-git-send-email-amasri@codeaurora.org> (Ahmad
+        Masri's message of "Sun, 16 Dec 2018 15:58:10 +0200")
+Message-ID: <87zht476vu.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
 MIME-Version: 1.0
-References: <1541622996-16181-1-git-send-email-arend.vanspriel@broadcom.com>
- <CA+5PVA4Q4gscG45dfz_Kk0ihuuG9FPuxNFHozNt5eVAU2EChAw@mail.gmail.com> <1151c860-f01b-7689-bae7-3a7869b7f356@broadcom.com>
-In-Reply-To: <1151c860-f01b-7689-bae7-3a7869b7f356@broadcom.com>
-From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date:   Mon, 17 Dec 2018 11:34:59 +0100
-Message-ID: <CACna6rwh9ri2ZfpTjCjZo3mBv0B3tr3Diesw3HJG+5ZVnAZxCQ@mail.gmail.com>
-Subject: Re: [PATCH] brcm: provide new firmwares for BCM4366 chipset
-To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc:     Josh Boyer <jwboyer@kernel.org>,
-        Linux Firmware <linux-firmware@kernel.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 15 Dec 2018 at 12:03, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 12/14/2018 2:02 PM, Josh Boyer wrote:
-> > On Wed, Nov 7, 2018 at 3:45 PM Arend van Spriel
-> > <arend.vanspriel@broadcom.com> wrote:
-> >>
-> >> These firmwares are for the BCM4366 3x3 802.11 ac chipsets, which also=
- comprise of BCM4366E or BCM43664 devices. Signed-off-by: Arend van Spriel
-> >
-> > This didn't add brcm/brcmfmac4366c-pcie.bin to WHENCE.  I'm assuming
-> > it's under the same license as the rest of the brcmfmac files?  If so,
-> > I can just amend the patch.
+Ahmad Masri <amasri@codeaurora.org> writes:
+
+> Add ACS offload to let the device select a channel for AP from
+> a list of channels that the user-space provides. ACS can customize
+> the method of AP channel selection and add parameters like traffic
+> load, number of APs on channel and more.
 >
-> Hi Josh,
->
-> I was not sure this patch ever made it through. It did not appear on
-> linux-wireless list probably due to exceeding a size limit. So I resend
-> it as two patches on December 10th. However, I indeed forgot to update
-> the WHENCE file in that series as well. Indeed there is no license change=
-.
+> Change-Id: I18cb8460b9418512ac7ac9f76fe8f7f379f2478b
+> Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
 
-Unfortunately I have only 1 device with 4366B1 (D-Link DIR-885L) and
-it seems to have dummy NVRAM restored from the bootloader's copy:
-1:ccode=3DALL
-0:regrev=3D0
-0:ccode=3DALL
-1:regrev=3D0
+No Change-Id, please.
 
-1) Old fw 10.10.69.3309 (r610991) FWID 01-c47a91a4
-2 GHz: very weak signal (about -79 dBm)
-5 GHz: good signal & works stable
-(this also matches vendor firmware behavior)
+> @@ -4662,6 +4680,7 @@ struct wireless_dev {
+>  	unsigned long cac_start_time;
+>  	unsigned int cac_time_ms;
+>  
+> +	bool acs_started;
+>  #ifdef CONFIG_CFG80211_WEXT
 
-2) New fw 10.28.2 (r769115) FWID 01-801fb449
-2 GHz: very weak signal (about -79 dBm)
-5 GHz: good signal but huge packet loss
+Empty line before ifdef? Just like it had before your patch.
 
-So the new firmware introduces 5 GHz regression for me, but I guess I
-should not complain since my device seems to come with a missing NVRAM
-regulatory info.
+> +void cfg80211_acs_result(struct net_device *netdev,
+> +			 const struct cfg80211_chan_def *chandef,
+> +			 enum nl80211_acs_status status, gfp_t gfp)
+> +{
+> +	struct wireless_dev *wdev = netdev->ieee80211_ptr;
+> +	struct wiphy *wiphy = wdev->wiphy;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+> +
+> +	if (WARN_ON(!wdev->acs_started))
+> +		return;
+> +
+> +	switch (status) {
+> +	case NL80211_ACS_SUCCESS:
+> +		if (!chandef) {
+> +			WARN_ON(1);
+> +			goto out;
+> +		}
 
-Is there any chance you know a correct ccode + regrev for D-Link
-DIR-885L for any region?
+if (WARN_ON(!chandef))
+	goto out;
 
---=20
-Rafa=C5=82
+-- 
+Kalle Valo
