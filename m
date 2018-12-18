@@ -2,72 +2,141 @@ Return-Path: <SRS0=MtVb=O3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A54C43387
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 19:19:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83E70C43387
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 22:33:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 753662184C
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 19:19:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C7762184C
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 22:33:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="xZ43BixQ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FpCX8itJ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FpCX8itJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726914AbeLRTTZ (ORCPT
+        id S1727079AbeLRWdG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Dec 2018 14:19:25 -0500
-Received: from mail.toke.dk ([52.28.52.200]:55733 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726600AbeLRTTZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Dec 2018 14:19:25 -0500
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1545160763; bh=GqsMS3ElIA3PSRhZpzxFTUnGgEDmN94KCYxOyKI0zEs=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=xZ43BixQ3aSRf3/h1iJJ7++7IA9js/QkYgMcZsUmB1lEf7GzG2Q2IO5uV5hc/wUxv
-         1Lp4SBlOh1nKFjsK1XH3FHKzK49NPGWZvwaojjfrHKPBq9Cwu++Oc55v8uRx93VxZJ
-         UaGe77p201mHXFFmyy8X9HJfSvh+rBuiibKTtm2PS+QQDkzbShDD1lH8pbrqfuCgrm
-         eiD7GUDHIRTNVIhWqF5uEk9skKRuC3xNsE4YcR8Fy20Me8VWqqDTL6vE8DCY4BIRNh
-         KTjkttdSRyL6OrUFeAB65fKSyPMJNEPWcFNeQppzZDLYYgMrJgC1g/SsaPRKAnop0Y
-         Kj6GKXch10tMw==
-To:     Johannes Berg <johannes@sipsolutions.net>, Louie Lu <me@louie.lu>,
-        rmanohar@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        make-wifi-fast@lists.bufferbloat.net
-Subject: Re: [Make-wifi-fast] [PATCH v3 3/6] mac80211: Add airtime accounting and scheduling to TXQs
-In-Reply-To: <5d46e8942ea151b211651588db3dacb97e6e5a53.camel@sipsolutions.net>
-References: <1542063113-22438-1-git-send-email-rmanohar@codeaurora.org> <1542063113-22438-4-git-send-email-rmanohar@codeaurora.org> <CADMDV=zX4NuyDS+C==c8iq7FagGLFOoQ-Fjf=x-zmehJAz8=zQ@mail.gmail.com> <87va4ytgff.fsf@toke.dk> <5d46e8942ea151b211651588db3dacb97e6e5a53.camel@sipsolutions.net>
-Date:   Tue, 18 Dec 2018 20:19:18 +0100
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87a7l2hccp.fsf@toke.dk>
+        Tue, 18 Dec 2018 17:33:06 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:58804 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726817AbeLRWdG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Dec 2018 17:33:06 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id EF11B6076A; Tue, 18 Dec 2018 22:33:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1545172384;
+        bh=/zFlV/e8eQQHX1462db8VLD4SMGMkF3dR+Dg6YC3ebU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=FpCX8itJRznnZ7v+Ffkp+JUQ53cEAWibpQkKb4FFiozAfe+4DoOrtqSaJqW875cAX
+         /O1q4TjpAnPMBUbrecCQN8Efsu5RGFLdWKcvrhR0oFqOkoWClQ/yajKtbOzqvKdv5S
+         KpBlJphFu6XX2lJg8Q/00JrQK3xeVQu38vDlPUQo=
+Received: from smtp.codeaurora.org (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1 with cipher AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: rmanohar@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 23879605A5;
+        Tue, 18 Dec 2018 22:33:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1545172384;
+        bh=/zFlV/e8eQQHX1462db8VLD4SMGMkF3dR+Dg6YC3ebU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=FpCX8itJRznnZ7v+Ffkp+JUQ53cEAWibpQkKb4FFiozAfe+4DoOrtqSaJqW875cAX
+         /O1q4TjpAnPMBUbrecCQN8Efsu5RGFLdWKcvrhR0oFqOkoWClQ/yajKtbOzqvKdv5S
+         KpBlJphFu6XX2lJg8Q/00JrQK3xeVQu38vDlPUQo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 23879605A5
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
+Received: by smtp.codeaurora.org (sSMTP sendmail emulation); Tue, 18 Dec 2018 14:33:02 -0800
+From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
+To:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc:     make-wifi-fast@lists.bufferbloat.net,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>
+Subject: [PATCH v4 0/6] Move TXQ scheduling and airtime fairness into mac80211
+Date:   Tue, 18 Dec 2018 14:32:48 -0800
+Message-Id: <1545172374-1072-1-git-send-email-rmanohar@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+All,
 
-> On Thu, 2018-11-15 at 09:10 -0800, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Louie Lu <me@louie.lu> writes:
->>=20
->> > Hi Rajkumar, Toke,
->> >=20
->> > I found the series (v3,4/6) remove the debugfs remove reset station's
->> > airtime method, and didn't added at here.
->> >=20
->> > Not sure how to help this kind of situation, do I need a separate
->> > patch to fix this, or posting the patch here is fine?
->>=20
->> This is fine; we can fold it into the next version. Thanks :)
->
-> Just FYI - I'm going to assume, given this comment and the long
-> discussion, that there will be a next version :)
+Sorry for the long delay. Here is the consolidated series of mac80211,
+ath9k and ath10k changes for moving TXQ scheduling and airtime fairness
+into mac80211 and support airtime fairness.
 
-Yes. Got caught up in moving before I managed to get another version
-out. Will get around to it eventually, promise! :)
+Three main APIs are defined for TXQ scheduling.
+  - ieee80211_next_txq
+  - ieee80211_return_txq
+  - ieee80211_txq_may_transmit
 
--Toke
+and two APIs for synchronization when the driver wants to iterate
+through all TXQs.
+  - ieee80211_txq_schedule_start
+  - ieee80211_txq_schedule_end
+
+The earlier discussions:
+https://patchwork.kernel.org/project/linux-wireless/list/?series=&submitter=&state=*&q=TXQ+scheduling&archive=both&delegate=
+
+-Rajkumar
+
+v2:
+ - replaced driver specific airtime default by multiplier
+ - fixed tab intent
+ - fixed author and commit log
+v3:
+ - fixed checkpatch warnings and kbuild bot errors.
+   few of over 80 char warnings are left.
+v4:
+ - Folded Louie's airtime counter reset change
+ - rebased the series on top of mac80211 tree.
+
+Kan Yan (1):
+  ath10k: reporting estimated tx airtime for fairness
+
+Toke Høiland-Jørgensen (5):
+  mac80211: Add TXQ scheduling API
+  cfg80211: Add airtime statistics and settings
+  mac80211: Add airtime accounting and scheduling to TXQs
+  ath9k: Switch to mac80211 TXQ scheduling and airtime APIs
+  ath10k: migrate to mac80211 txq scheduling
+
+ drivers/net/wireless/ath/ath10k/core.c     |   2 -
+ drivers/net/wireless/ath/ath10k/core.h     |   8 +-
+ drivers/net/wireless/ath/ath10k/htc.h      |   1 -
+ drivers/net/wireless/ath/ath10k/htt_rx.c   |   9 ++
+ drivers/net/wireless/ath/ath10k/mac.c      | 155 +++++++++++-------
+ drivers/net/wireless/ath/ath10k/txrx.c     |   4 +
+ drivers/net/wireless/ath/ath9k/ath9k.h     |  14 --
+ drivers/net/wireless/ath/ath9k/debug.c     |   3 -
+ drivers/net/wireless/ath/ath9k/debug.h     |   8 -
+ drivers/net/wireless/ath/ath9k/debug_sta.c |  70 ---------
+ drivers/net/wireless/ath/ath9k/init.c      |   3 +-
+ drivers/net/wireless/ath/ath9k/recv.c      |   9 +-
+ drivers/net/wireless/ath/ath9k/xmit.c      | 244 +++++++++--------------------
+ include/net/cfg80211.h                     |  10 +-
+ include/net/mac80211.h                     | 121 +++++++++++++-
+ include/uapi/linux/nl80211.h               |  15 ++
+ net/mac80211/agg-tx.c                      |   2 +-
+ net/mac80211/cfg.c                         |   3 +
+ net/mac80211/debugfs.c                     |   3 +
+ net/mac80211/debugfs_sta.c                 |  68 +++++++-
+ net/mac80211/driver-ops.h                  |   9 ++
+ net/mac80211/ieee80211_i.h                 |  11 ++
+ net/mac80211/main.c                        |   9 ++
+ net/mac80211/sta_info.c                    |  46 +++++-
+ net/mac80211/sta_info.h                    |  13 ++
+ net/mac80211/status.c                      |   6 +
+ net/mac80211/tx.c                          | 140 ++++++++++++++++-
+ net/wireless/nl80211.c                     |  30 ++++
+ 28 files changed, 662 insertions(+), 354 deletions(-)
+
+-- 
+1.9.1
+
