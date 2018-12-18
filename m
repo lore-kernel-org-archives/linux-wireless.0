@@ -6,62 +6,56 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 049FEC43387
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 12:11:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 243DDC43387
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 12:17:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D1D692184C
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 12:11:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE17421855
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 12:17:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726544AbeLRMLg (ORCPT
+        id S1726715AbeLRMRK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Dec 2018 07:11:36 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:39870 "EHLO
+        Tue, 18 Dec 2018 07:17:10 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:39968 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726370AbeLRMLg (ORCPT
+        with ESMTP id S1726451AbeLRMRK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Dec 2018 07:11:36 -0500
+        Tue, 18 Dec 2018 07:17:10 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gZEDi-0005EP-0t; Tue, 18 Dec 2018 13:11:30 +0100
-Message-ID: <5d46e8942ea151b211651588db3dacb97e6e5a53.camel@sipsolutions.net>
-Subject: Re: [Make-wifi-fast] [PATCH v3 3/6] mac80211: Add airtime
- accounting and scheduling to TXQs
+        id 1gZEJB-0005Mv-D9; Tue, 18 Dec 2018 13:17:09 +0100
+Message-ID: <9a07e9fc236ce6d526dfd67ee9b322953525c426.camel@sipsolutions.net>
+Subject: Re: [PATCH 13/24] cfg80211: pmsr: fix MAC address setting
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        Louie Lu <me@louie.lu>, rmanohar@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        make-wifi-fast@lists.bufferbloat.net
-Date:   Tue, 18 Dec 2018 13:11:27 +0100
-In-Reply-To: <87va4ytgff.fsf@toke.dk> (sfid-20181115_181052_991185_C35CE6B3)
-References: <1542063113-22438-1-git-send-email-rmanohar@codeaurora.org>
-         <1542063113-22438-4-git-send-email-rmanohar@codeaurora.org>
-         <CADMDV=zX4NuyDS+C==c8iq7FagGLFOoQ-Fjf=x-zmehJAz8=zQ@mail.gmail.com>
-         <87va4ytgff.fsf@toke.dk> (sfid-20181115_181052_991185_C35CE6B3)
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Tue, 18 Dec 2018 13:17:07 +0100
+In-Reply-To: <20181215090325.31604-14-luca@coelho.fi>
+References: <20181215090325.31604-1-luca@coelho.fi>
+         <20181215090325.31604-14-luca@coelho.fi>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2018-11-15 at 09:10 -0800, Toke Høiland-Jørgensen wrote:
-> Louie Lu <me@louie.lu> writes:
+On Sat, 2018-12-15 at 11:03 +0200, Luca Coelho wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> > Hi Rajkumar, Toke,
-> > 
-> > I found the series (v3,4/6) remove the debugfs remove reset station's
-> > airtime method, and didn't added at here.
-> > 
-> > Not sure how to help this kind of situation, do I need a separate
-> > patch to fix this, or posting the patch here is fine?
-> 
-> This is fine; we can fold it into the next version. Thanks :)
+> When we *don't* have a MAC address attribute, we shouldn't
+> try to use this - this was intended to copy the local MAC
+> address instead, so fix it.
 
-Just FYI - I'm going to assume, given this comment and the long
-discussion, that there will be a next version :)
+
+This patch
+
+>  
+> +	flush_work(&wdev->pmsr_free_wk);
+
+Erroneously got some other stuff merged into it - dropped.
 
 johannes
 
