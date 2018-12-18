@@ -2,150 +2,173 @@ Return-Path: <SRS0=MtVb=O3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22B2DC43387
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 01:07:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC674C43387
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 01:23:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E2D56214C6
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 01:07:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=rsalveti-net.20150623.gappssmtp.com header.i=@rsalveti-net.20150623.gappssmtp.com header.b="1+F/FVfW"
+	by mail.kernel.org (Postfix) with ESMTP id 9BE292145D
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 01:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726296AbeLRBHc (ORCPT
+        id S1726426AbeLRBXC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Dec 2018 20:07:32 -0500
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:35442 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726285AbeLRBHc (ORCPT
+        Mon, 17 Dec 2018 20:23:02 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:42678 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726276AbeLRBXC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Dec 2018 20:07:32 -0500
-Received: by mail-lj1-f195.google.com with SMTP id x85-v6so12727039ljb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Dec 2018 17:07:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rsalveti-net.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=P/rQBm/rAShZe1MxcSU8xZcE3I3+2vstlrB5Q1e5s/I=;
-        b=1+F/FVfWDcX2aPQQ929d4yp37oLVJD2xBC/0bdSwsknc+h+VvsrBXh33QycQRcr2T/
-         jkesfw1+pK5SIQUTs8t2/KxLKKLZ5H7inSps1O1tqAICxP2t1jSfgbIin9nzPzLLqGKU
-         Sfw15HGtn2dmTfSUVrxJgw2QDxz9AyhT3jdWyS53WIG28FxDRcs502zpmvnpFk528QIa
-         YGYicS3zYHoVPr6kLKwCt+Sl1w5yjPnG/A8wzfQ7JLC/z4i1ozq+0uHRA8fl5LnBQd2G
-         XoeRCxlye+bCPGL9q1X5gWbRTwGCV9xtjPDY2Fuoq764JO9Dfk7ibMs+oVwKoymFbE0e
-         0fyQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=P/rQBm/rAShZe1MxcSU8xZcE3I3+2vstlrB5Q1e5s/I=;
-        b=e6WCedJQT7qB/5lPAWvjbTmUQ50C3AxkoAdbSp1YbDLd+5rs6Lywanxhp65wYcOAMB
-         +GklGFvfwRhjbVhk5JuVuVBMBm0RsHO45c2k49Eh26xZrG04qMrg4c0qSu429O0cxhtY
-         HZQX1woZUq7Gh3nPdqqJjjbW/0eQSoW9n3Dnw4G6hUyQLj73I850wMZWV8dWN6B8Ht+8
-         HjB7Ou3dCPsvKyvQW6wb5NRTBuOcX/lROjYyPQEDk7uP5nf2U0qiSkQZWRRZppyf8ymq
-         Fh/yvQGpgdaAYjgksNDBYpJYNevHoP/GNiNnkgXSigS1zEzEXcgPZ9suzGUN2Wyi4eUy
-         pd8g==
-X-Gm-Message-State: AA+aEWa/rtagu+K2uXCsgDIIigX9cfjBqqFERBdgqqndo1qvpItJChtF
-        nRPDwRKDOOju8NfhHkhej4FGSr4z0+iFq5r+Q9QWlw==
-X-Google-Smtp-Source: AFSGD/Vjk66BGSyBlauWlsIZaxsZ9Zb/ZfqBZtrtNYBIKqKW4LI16Zxz9T7i+IL56dQrKZHFnHgXMbX6m1mUdb09Lis=
-X-Received: by 2002:a2e:9e03:: with SMTP id e3-v6mr3345271ljk.4.1545095249943;
- Mon, 17 Dec 2018 17:07:29 -0800 (PST)
-MIME-Version: 1.0
-References: <20181217164207.20081-1-tony@atomide.com>
-In-Reply-To: <20181217164207.20081-1-tony@atomide.com>
-From:   Ricardo Salveti <rsalveti@rsalveti.net>
-Date:   Mon, 17 Dec 2018 23:06:53 -0200
-Message-ID: <CAHYQr0oXExQeyo1z52hsNeQY78TMH3rt7egMJQ+uDHKS1_pBfw@mail.gmail.com>
-Subject: Re: [PATCH] wlcore: Fix bringing up wlan0 again if powered down briefly
-To:     Tony Lindgren <tony@atomide.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, Eyal Reizer <eyalr@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org,
-        Anders Roxell <anders.roxell@linaro.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 17 Dec 2018 20:23:02 -0500
+Received: from 187-26-151-11.3g.claro.net.br ([187.26.151.11] helo=dubbel)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gZ467-0004I3-T0; Tue, 18 Dec 2018 03:23:01 +0200
+Message-ID: <39a3a7b5a34332c62468771c57c06a2c6e40b7ab.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Date:   Mon, 17 Dec 2018 23:21:24 -0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-at/ZgLHRS4E+GIIKC4kD"
+User-Agent: Evolution 3.30.2-1 
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2018-12-17
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
 
-On Mon, Dec 17, 2018 at 2:42 PM Tony Lindgren <tony@atomide.com> wrote:
->
-> At least HiKey board can fail to bring up wireless interface again
-> if the interface is brought down and up with no delay inbetween.
->
-> This can be done tested with:
->
-> # while true; do ifconfig wlan0 down; ifconfig wlan0 up; done
->
-> According to Ricardo Salveti <rsalveti@rsalveti.net>, we need to
-> wait between 30 - 40 ms on HiKey. This seems to happen when we
-> get -EBUSY returned by pm_runtime_put() basedon the check in
-> rpm_check_suspend_allowed(). But as it still unclear if part of
-> the delay needed is because of capacitance, let's always do a
-> at least 50 ms msleep even if no -EBUSY is returned.
->
-> Cc: Anders Roxell <anders.roxell@linaro.org>
-> Cc: Eyal Reizer <eyalr@ti.com>
-> Cc: John Stultz <john.stultz@linaro.org>
-> Cc: Ricardo Salveti <rsalveti@rsalveti.net>
-> Cc: Ulf Hansson <ulf.hansson@linaro.org>
-> Reported-by: Ricardo Salveti <rsalveti@rsalveti.net>
-> Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
-> Signed-off-by: Tony Lindgren <tony@atomide.com>
-> ---
->
-> Uffe, do you have some better ideas on how to fix this issue?
->
-> ---
->  drivers/net/wireless/ti/wlcore/sdio.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-> --- a/drivers/net/wireless/ti/wlcore/sdio.c
-> +++ b/drivers/net/wireless/ti/wlcore/sdio.c
-> @@ -174,7 +174,7 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
->  {
->         struct sdio_func *func = dev_to_sdio_func(glue->dev);
->         struct mmc_card *card = func->card;
-> -       int error;
-> +       int error, retries = 5;
->
->         sdio_claim_host(func);
->         sdio_disable_func(func);
-> @@ -188,6 +188,17 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
->                 return error;
->         }
->
-> +       /* Wait a bit to ensure the card gets power off. Otherwise
-> +        * bringing interface down and up again may not power off the
-> +        * card inbetween. And then firmware load will fail on trying
-> +        * to bring the card up again. We need to wait between 30 - 40
-> +        * ms for this based on measurements on HiKey board.
-> +        */
-> +       do {
-> +               msleep(50);
-> +       } while (error == -EBUSY && !pm_runtime_suspended(&card->dev) &&
-> +                retries--);
-> +
->         return 0;
->  }
->
-> --
-> 2.19.2
+--=-at/ZgLHRS4E+GIIKC4kD
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Tested with 'while true; do ifconfig wlan0 down; ifconfig wlan0 up;
-done' for 3 hours on HiKey, HiKey960 and BeagleBone Black Wireless, no
-issues.
+Hi Kalle,
 
-Tested-by: Ricardo Salveti <rsalveti@rsalveti.net>
+This is the fourht batch of patches intended for v4.21.  This includes
+only the last patchset I sent.  Usual development work.  More details
+about the contents in the tag description.
 
-Thanks,
--- 
-Ricardo Salveti de Araujo
+I have sent this out before and kbuildbot reported success.
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit 30ed3c6c0922a1f67c3409b9e81087442614db7b=
+:
+
+  Merge tag 'iwlwifi-next-for-kalle-2018-12-14' of git://git.kernel.org/pub=
+/scm/linux/kernel/git/iwlwifi/iwlwifi-next (2018-12-14 16:58:00 +0200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2018-12-17
+
+for you to fetch changes up to 04a70797e208337775c6a1905699e4970ed17f8b:
+
+  iwlwifi: bump the API version to 43 for 9000 and 22000 (2018-12-17 23:07:=
+30 -0200)
+
+----------------------------------------------------------------
+Fourth batch of iwlwifi patches intended for v4.21
+
+* Support for FW version 43 for 9000 and 22000 series;
+* A couple of janitorial fixes from the community;
+* More fixes in the 802.11ax code;
+* Other cleanups and small fixes;
+
+----------------------------------------------------------------
+Colin Ian King (1):
+      iwlwifi: mvm: fix spelling mistake "Recieved" -> "Received"
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: set TWT responder capability bit in 11AX SoftAP mode
+
+Gustavo A. R. Silva (1):
+      iwlwifi: mvm: d3: use struct_size() in kzalloc()
+
+Luca Coelho (3):
+      [BUGFIXiwlwifi: make MVM and DVM depend on MAC80211
+      iwlwifi: remove unused and wrong PHY_CFG_* macros
+      iwlwifi: bump the API version to 43 for 9000 and 22000
+
+Naftali Goldstein (1):
+      iwlwifi: mvm: fix setting HE ppe FW config
+
+Sara Sharon (8):
+      iwlwifi: pcie: use iwl_tx_cmd_gen2 and not iwl_tx_cmd
+      iwlwifi: mvm: remove dead code
+      iwlwifi: mvm: remove pointless NULL assignment
+      iwlwifi: mvm: cleanup iwl_mvm_tx_skb_non_sta
+      iwlwifi: mvm: take station lock later in the code
+      iwlwifi: pcie: lock txq a bit later in reclaim code
+      iwlwifi: mvm: clean up SSN incrementation
+      iwlwifi: dbg: add debug data to warning
+
+Shahar S Matityahu (1):
+      iwlwifi: wrt: add rt status and num of rx/tx fifos to dump
+
+Shaul Triebitz (2):
+      iwlwifi: split HE capabilities between AP and STA
+      iwlwifi: mvm: handle RX no data notification
+
+ drivers/net/wireless/intel/iwlwifi/Kconfig           |   4 ++-
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/config.h   |  13 ++------
+ drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h |   5 +++
+ drivers/net/wireless/intel/iwlwifi/fw/api/mac.h      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/rx.h       |  49 +++++++++++++++=
++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c          |   4 ++-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h          |   1 +
+ drivers/net/wireless/intel/iwlwifi/fw/error-dump.h   |   3 ++
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h      |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c   | 290 +++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
++++++++++++++++++---------------------------------------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c          |   6 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c    |  10 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         |   2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c         |   2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c        | 126 +++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c         |  10 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c          |  56 +++++++++++----=
+-----------------
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c       |   3 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c         |   3 +-
+ 22 files changed, 427 insertions(+), 169 deletions(-)
+
+--=-at/ZgLHRS4E+GIIKC4kD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlwYS5QACgkQoUecoho8
+xfrPnBAAmyStrqEas5ehPU3pBP0OHpW4A+yGLrQkgRazK7xA5W4eikJ0uQRbPMbw
+f8CA4Isx0UEHW4nUUrKkdDYtQdJXdQ3TK6CVu/bbTY7xIBPEGnLksjzEay5AQSFg
+NaQQk9Gi+7tV30HAHQMp9qRFJ7cT8eOZ65vqI4ArNmkLSCwzIgf54SaWmHR2LSMe
+HJXX1u451zlz2xct8gnSwJFhn8KVFRUMP+xOHBV2gflKUb5I4+fI8wkiQDmq0/nH
+lzut9YkjHmMYqS92OlGxUSJF+iFXQxcAF6DtZd2Ks2OwznynSv4gD8x0ddaEyfvg
++5j1Bw0BU0nWGUc85xCYuQI5hwURC1Pl8xUhFaG8U60EmI1wWpa+RRV22yh9Q7r3
+cHau3OSxO95vU9/r/6hyRJp7NO4E1eeLOxdLWLiBkiD8Ytxr8W1SEIhggzYJLIES
+8ricNaobeQYRYGLioyCE9GYvvQ+rib7UcVUwpNhylJIth38khJx8kFEPJg/8tCdq
+G6CBF6LiGDe1AS9zdHGH+dxZ33frLJ7nHxASYRGVOxxQTYtY8ku/wSt4DerCoM9q
+GOdLIB8nGYS9TgV8AkEuXCT/J6kndgIaLMWVswzTkglIMVtbv1DnCYYtJ75eN9ns
+lKHtgXyeQT/0Zk2485ta7SqGCC8jzGE1lKn3vM6u6ZVhB/1CVFg=
+=akp3
+-----END PGP SIGNATURE-----
+
+--=-at/ZgLHRS4E+GIIKC4kD--
+
