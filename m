@@ -3,58 +3,65 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D092DC43387
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 12:08:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 049FEC43387
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 12:11:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAF9F2184C
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 12:08:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1D692184C
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Dec 2018 12:11:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726512AbeLRMIR (ORCPT
+        id S1726544AbeLRMLg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Dec 2018 07:08:17 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:39836 "EHLO
+        Tue, 18 Dec 2018 07:11:36 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:39870 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726370AbeLRMIR (ORCPT
+        with ESMTP id S1726370AbeLRMLg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Dec 2018 07:08:17 -0500
+        Tue, 18 Dec 2018 07:11:36 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gZEAZ-00058e-L0; Tue, 18 Dec 2018 13:08:15 +0100
-Message-ID: <08103d7adc17b89421da04bf6e299940fbf1cc07.camel@sipsolutions.net>
-Subject: Re: [PATCH 00/24] cfg80211/mac80211 patches from our internal tree
- 2018-12-15
+        id 1gZEDi-0005EP-0t; Tue, 18 Dec 2018 13:11:30 +0100
+Message-ID: <5d46e8942ea151b211651588db3dacb97e6e5a53.camel@sipsolutions.net>
+Subject: Re: [Make-wifi-fast] [PATCH v3 3/6] mac80211: Add airtime
+ accounting and scheduling to TXQs
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Tue, 18 Dec 2018 13:08:14 +0100
-In-Reply-To: <e74b72623ab606058849339b2cabdac4bba9304d.camel@sipsolutions.net> (sfid-20181218_130703_592973_6943A5E3)
-References: <20181215090325.31604-1-luca@coelho.fi>
-         (sfid-20181215_100349_604857_77D32DB5) <e74b72623ab606058849339b2cabdac4bba9304d.camel@sipsolutions.net>
-         (sfid-20181218_130703_592973_6943A5E3)
+To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Louie Lu <me@louie.lu>, rmanohar@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        make-wifi-fast@lists.bufferbloat.net
+Date:   Tue, 18 Dec 2018 13:11:27 +0100
+In-Reply-To: <87va4ytgff.fsf@toke.dk> (sfid-20181115_181052_991185_C35CE6B3)
+References: <1542063113-22438-1-git-send-email-rmanohar@codeaurora.org>
+         <1542063113-22438-4-git-send-email-rmanohar@codeaurora.org>
+         <CADMDV=zX4NuyDS+C==c8iq7FagGLFOoQ-Fjf=x-zmehJAz8=zQ@mail.gmail.com>
+         <87va4ytgff.fsf@toke.dk> (sfid-20181115_181052_991185_C35CE6B3)
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2018-12-18 at 13:06 +0100, Johannes Berg wrote:
-> Ok...
+On Thu, 2018-11-15 at 09:10 -0800, Toke Høiland-Jørgensen wrote:
+> Louie Lu <me@louie.lu> writes:
 > 
-> Patch 1 is already in, from somebody else - dropped.
-> Patch 12 was already in from Emmanuel - dropped.
+> > Hi Rajkumar, Toke,
+> > 
+> > I found the series (v3,4/6) remove the debugfs remove reset station's
+> > airtime method, and didn't added at here.
+> > 
+> > Not sure how to help this kind of situation, do I need a separate
+> > patch to fix this, or posting the patch here is fine?
 > 
-> Applied to mac80211: 9, 11, 15, 21, 24
-> 
-> (yes, the others are left for mac80211-next, for later)
+> This is fine; we can fold it into the next version. Thanks :)
 
-No, also took 5 to mac80211 now.
+Just FYI - I'm going to assume, given this comment and the long
+discussion, that there will be a next version :)
 
 johannes
 
