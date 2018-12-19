@@ -2,84 +2,81 @@ Return-Path: <SRS0=qpxp=O4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD35C43387
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Dec 2018 08:49:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8499C43612
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Dec 2018 09:27:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 195C62133F
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Dec 2018 08:49:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A06E820645
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Dec 2018 09:27:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728336AbeLSItv (ORCPT
+        id S1728822AbeLSJ1U convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Dec 2018 03:49:51 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:54554 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725294AbeLSItu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Dec 2018 03:49:50 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gZXY4-0004og-2M; Wed, 19 Dec 2018 09:49:48 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     David Miller <davem@davemloft.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2018-12-19
-Date:   Wed, 19 Dec 2018 09:49:41 +0100
-Message-Id: <20181219084942.8245-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.17.2
+        Wed, 19 Dec 2018 04:27:20 -0500
+Received: from mga09.intel.com ([134.134.136.24]:64088 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728819AbeLSJ1T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Dec 2018 04:27:19 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Dec 2018 01:27:19 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,372,1539673200"; 
+   d="scan'208";a="119620867"
+Received: from fmsmsx106.amr.corp.intel.com ([10.18.124.204])
+  by FMSMGA003.fm.intel.com with ESMTP; 19 Dec 2018 01:27:17 -0800
+Received: from FMSMSX110.amr.corp.intel.com (10.18.116.10) by
+ FMSMSX106.amr.corp.intel.com (10.18.124.204) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Wed, 19 Dec 2018 01:27:18 -0800
+Received: from HASMSX110.ger.corp.intel.com (10.184.198.28) by
+ fmsmsx110.amr.corp.intel.com (10.18.116.10) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Wed, 19 Dec 2018 01:27:18 -0800
+Received: from hasmsx112.ger.corp.intel.com ([169.254.11.88]) by
+ HASMSX110.ger.corp.intel.com ([169.254.6.30]) with mapi id 14.03.0415.000;
+ Wed, 19 Dec 2018 11:27:15 +0200
+From:   "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     "Sharon, Sara" <sara.sharon@intel.com>,
+        "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+Subject: RE: [PATCH] iwlwifi: add missing break / fall-through in switch
+ cases
+Thread-Topic: [PATCH] iwlwifi: add missing break / fall-through in switch
+ cases
+Thread-Index: AQHUl3VEn4jrAIbvaUm/xeH6PO9doKWFywGA
+Date:   Wed, 19 Dec 2018 09:27:15 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3013375FA0A@HASMSX112.ger.corp.intel.com>
+References: <20181219083053.17530-1-emmanuel.grumbach@intel.com>
+In-Reply-To: <20181219083053.17530-1-emmanuel.grumbach@intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-titus-metadata-40: eyJDYXRlZ29yeUxhYmVscyI6IiIsIk1ldGFkYXRhIjp7Im5zIjoiaHR0cDpcL1wvd3d3LnRpdHVzLmNvbVwvbnNcL0ludGVsMyIsImlkIjoiMzMwODZlMmMtYWY1YS00ODVmLWFkYzgtMzg1ZmNkZmZlZDU3IiwicHJvcHMiOlt7Im4iOiJDVFBDbGFzc2lmaWNhdGlvbiIsInZhbHMiOlt7InZhbHVlIjoiQ1RQX05UIn1dfV19LCJTdWJqZWN0TGFiZWxzIjpbXSwiVE1DVmVyc2lvbiI6IjE3LjEwLjE4MDQuNDkiLCJUcnVzdGVkTGFiZWxIYXNoIjoiaGY0aGp6TEdrWU5iMVhNd1lLOUdhNUVkMWFZRjBcL0UyXC9ZWG4yREczbWxpcmJZTkRscWh6XC9XNXVjYXFydnJMVyJ9
+x-ctpclassification: CTP_NT
+dlp-product: dlpe-windows
+dlp-version: 11.0.600.7
+dlp-reaction: no-action
+x-originating-ip: [10.12.85.150]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
 
-It's getting late in the cycle, so I don't know if you still want to
-take these in, but we have three fixes for kernel crashes we've seen
-at least here at Intel.
+> Subject: [PATCH] iwlwifi: add missing break / fall-through in switch cases
+> 
+> Two switch cases that were added recently missed break statement and
+> explicit fall-through. Fix this.
+> 
+> Fixes: f14cda6f3b31 ("iwlwifi: trans: parse and store debug ini TLVs")
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
 
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit a5f3932646a74e690ed532a1f421f75c3b8cf1ec:
-
-  net: dsa: mv88e6xxx: set ethtool regs version (2018-12-17 23:29:00 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-12-19
-
-for you to fetch changes up to 34b1e0e9efe101822e83cc62d22443ed3867ae7a:
-
-  mac80211: free skb fraglist before freeing the skb (2018-12-19 09:40:17 +0100)
-
-----------------------------------------------------------------
-Just three fixes:
- * fix a memory leak in an error path
- * fix TXQs in interface teardown
- * free fraglist if we used it internally
-   before returning SKB
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      nl80211: fix memory leak if validate_pae_over_nl80211() fails
-
-Sara Sharon (2):
-      mac80211: fix a kernel panic when TXing after TXQ teardown
-      mac80211: free skb fraglist before freeing the skb
-
- net/mac80211/iface.c   | 3 +++
- net/mac80211/main.c    | 2 --
- net/mac80211/status.c  | 5 +++++
- net/wireless/nl80211.c | 4 +++-
- 4 files changed, 11 insertions(+), 3 deletions(-)
-
+Please drop this. We have another patch that fixes the problems and adds less noise.
