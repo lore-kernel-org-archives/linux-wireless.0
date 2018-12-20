@@ -2,93 +2,118 @@ Return-Path: <SRS0=pyzf=O5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98354C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 07:45:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69004C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 10:15:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E1FF21720
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 07:45:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AB7620989
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 10:15:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="liyC5MQF";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XQnw67Vp"
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="A03g0ZiT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730577AbeLTHpG (ORCPT
+        id S1730532AbeLTKPc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Dec 2018 02:45:06 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:52468 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727790AbeLTHpG (ORCPT
+        Thu, 20 Dec 2018 05:15:32 -0500
+Received: from mail-vs1-f66.google.com ([209.85.217.66]:34613 "EHLO
+        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730450AbeLTKPc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Dec 2018 02:45:06 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 9A84A609BD; Thu, 20 Dec 2018 07:45:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545291905;
-        bh=Ps+jTx430mNatVK6eXnpdGimwC8ru0CTiKlGF61Uy1M=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=liyC5MQFSQh/+qq7gwj6sIZx2wubtFBYHe7BSje3ruIGRSZFSU9C3e+2j2HGlB36x
-         NdE1ZDH8AK9Z42TOMVkr5a2fcykazI4IkpjIpZL7QKROBYpFNOxkCT6SBsJ/7gHJnG
-         hlIdfzlKBc6IXdBcyjYc/vYyAT0UkDKhSjYmdjpM=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3907D60985;
-        Thu, 20 Dec 2018 07:45:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545291904;
-        bh=Ps+jTx430mNatVK6eXnpdGimwC8ru0CTiKlGF61Uy1M=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=XQnw67VpwluyamBo1RRltflGIXN1/HR/12h3dlLPIIa0GFCpSc7dfS+nioGW9tLrd
-         hfzSIcVyOMjxbG87SN9/maQBnX1ZWqC9GUD8dbN0uxzBIfTKtdFD8aIuq+NwpzQZhb
-         Lagou239G1HcLPdJbicfQuuq/p4e2eeZLbo00F/U=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3907D60985
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Thu, 20 Dec 2018 05:15:32 -0500
+Received: by mail-vs1-f66.google.com with SMTP id y27so724407vsi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2018 02:15:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Egd2MQIO74eEgWCnGB+c9Bv3Y0bvjdimnfcBNFZmX64=;
+        b=A03g0ZiTOoUJx2bt59qiP3LqmXxXqmvnH4SDPdmhadnaYQA+V361Sp4Eno9veJmOnF
+         +zDpjnOO/D30JFNm27d+vueZz7ynTWD3yx7f2r5tovOIe6a7+F+P10BEHcKUmFJBp7Ub
+         Uw5y8ZjnnPrEFv0XlI+XhESIY6DJFfSVxF2ow=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Egd2MQIO74eEgWCnGB+c9Bv3Y0bvjdimnfcBNFZmX64=;
+        b=JZei/DuvPkAB4BHw+OlrQOhq0wgoNHIgqgZHw2FIdlzoZ5MrtVcWfk3vl0ShmCukUG
+         ApMaVOIDgR0Q4uVdIhl0bUuHGBx8mcZRZejScvtuqxKkNV3x+DaSvfBUsJ7VVlROJqCv
+         7Q/D3mByWy5OBZP3q5eS6tCcytwZ9RrOiI7vit3T6HedqjlAfCadLQkG3YF8gVJ2brl5
+         j71ie2qEuFAkdmTNyfnr7NnB8wQE6Op39vGECjO8A8L/9ft99pGqeJQ7lQoSD0J90cfg
+         5Br3Ty9ZHjDIKSQzEEpDIEanmsHtt6vhjAaZ0Tn/TxqtZiewHXNhUM8nYO9wSgySwxQH
+         wHQg==
+X-Gm-Message-State: AA+aEWZ6UGHEFkbUQ/zFlPbn/2++gg1P/dvb1BjMLipdFhxI4k9tXsFO
+        BHr2/q6Q9UFmJtZaMbVu3fZKz8BEAdW8HC4DILWMhA==
+X-Google-Smtp-Source: AFSGD/VZGQPkkrUFM12lTY4kf7zHUfyoE1DV6mucV0hBcFm+7Lx8AyokNfr59IPD6owo1fz0sz07LUi6Ki/bLUz3cdM=
+X-Received: by 2002:a67:7685:: with SMTP id r127mr11747848vsc.35.1545300931521;
+ Thu, 20 Dec 2018 02:15:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wil6210: remove set but not used variable 'wdev'
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1543996743-137124-1-git-send-email-yuehaibing@huawei.com>
-References: <1543996743-137124-1-git-send-email-yuehaibing@huawei.com>
-To:     YueHaibing <yuehaibing@huawei.com>
-Cc:     Maya Erez <merez@codeaurora.org>,
-        YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qti.qualcomm.com>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181220074505.9A84A609BD@smtp.codeaurora.org>
-Date:   Thu, 20 Dec 2018 07:45:05 +0000 (UTC)
+References: <20181217164207.20081-1-tony@atomide.com> <CAPDyKFoLnNWsBfaUwqwL31J=zb0UOQjXUKi7Sj0AUsnNoC6bYg@mail.gmail.com>
+ <20181218155439.GB6707@atomide.com>
+In-Reply-To: <20181218155439.GB6707@atomide.com>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Thu, 20 Dec 2018 11:14:55 +0100
+Message-ID: <CAPDyKFr2xx6fmdgjd10C1jekWg-yZPk32fGWEPO2PyexjofJ1A@mail.gmail.com>
+Subject: Re: [PATCH] wlcore: Fix bringing up wlan0 again if powered down briefly
+To:     Tony Lindgren <tony@atomide.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, Eyal Reizer <eyalr@ti.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap <linux-omap@vger.kernel.org>,
+        Anders Roxell <anders.roxell@linaro.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Ricardo Salveti <rsalveti@rsalveti.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+On Tue, 18 Dec 2018 at 16:54, Tony Lindgren <tony@atomide.com> wrote:
+>
+> Hi,
+>
+> * Ulf Hansson <ulf.hansson@linaro.org> [181218 12:34]:
+> > Instead, it looks like what you need, is a way to keep track of
+> > whether the SDIO card, became power cycled or if it stayed powered on,
+> > when "ifconfig wlan0 up" is done. In case of a power cycle, you need
+> > to re-program the firmware, right?
+>
+> Yeah mostly. But we also need to ensure things do get powered down
+> properly after ifconfig wlan0 down :) IMO after ifconfig wlan0 down
+> returns, there should be no waiting needed.
+>
+> > Would it be possible to re-program the firmware, even if the SDIO card
+> > stayed powered-on?
+>
+> That might help for some cases, but the problem of how to ensure the
+> card is powered down after ifconfig wlan0 down returns still exists.
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/ath/wil6210/main.c: In function '_wil6210_disconnect':
-> drivers/net/wireless/ath/wil6210/main.c:407:23: warning:
->  variable 'wdev' set but not used [-Wunused-but-set-variable]
-> 
-> It never used since commit ("e1b43407c034 wil6210: refactor disconnect flow")
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> Reviewed-by: Maya Erez <merez@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Well, does the SDIO card really have to be powered down before
+"ifconfig wlan0 down" returns? If so, why?
 
-Patch applied to ath-next branch of ath.git, thanks.
+An option would be to call pm_runtime_get_sync() at "ifconfig wlan0
+up" (I assume you already do that) and then re-program the firmware,
+even if the card hasn't been power cycled. Wouldn't that work?
 
-3fe970e76b37 wil6210: remove set but not used variable 'wdev'
+Or perhaps this is the problem you are encountering, that the FW can't
+be reprogrammed, unless the card has been power cycled? You can easily
+test that, by simply bumping the runtime usage count for the card
+device via sysfs, before doing the "ifconfig wlan0 up/down" thingy.
 
--- 
-https://patchwork.kernel.org/patch/10713127/
+>
+> > In regards to delays needed due to a capacitance. If that really is
+> > the case, that shall be the managed by the mmc core, as it's there the
+> > power cycle sequence is being done. As a matter of fact, you should be
+> > able to use drivers/mmc/core/pwrseq_simple.c and extend
+> > "power-off-delay-us" in the DTB for Hikey if that is needed.
+>
+> Hmm I do have a mostly done wlcore pwrseq driver here somewhere that
+> I have not had a chance to finish again. But that's not going to work
+> for a fix and needs updating of the related dts files too.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Right. Let's see what we can figure out.
 
+Kind regards
+Uffe
