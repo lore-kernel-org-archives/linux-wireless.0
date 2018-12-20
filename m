@@ -2,91 +2,94 @@ Return-Path: <SRS0=pyzf=O5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20AF5C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 17:10:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94D2FC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 17:43:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3DC321720
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 17:10:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66FC421720
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 17:43:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="W5m1bO++";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pNfEZbW8"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="mpDBr8g4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387717AbeLTRKv (ORCPT
+        id S2388110AbeLTRnb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Dec 2018 12:10:51 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:40446 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730526AbeLTRKu (ORCPT
+        Thu, 20 Dec 2018 12:43:31 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:35029 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387472AbeLTRna (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Dec 2018 12:10:50 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 27DC0602CB; Thu, 20 Dec 2018 17:10:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545325850;
-        bh=4KHXoovCIWdGhbdb3dczZ/8+4Tc+qf9BFQhfXKgn/uA=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=W5m1bO++5chIHJrteDrXAKUJDRk9d37Qil0XxBHPvBgrftZfkqVHPhKSGyfAyT4wo
-         kd5cKH9uL1es1w47EhLrDX4ZxUTcnAT+71HqkA4ztJKvkXQvqC94TZF/DuhXizPgCH
-         jjw7oylfdcUNx/XW8KfISfYiDlgVEXeymOR6FVmg=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id AD0516014B;
-        Thu, 20 Dec 2018 17:10:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545325849;
-        bh=4KHXoovCIWdGhbdb3dczZ/8+4Tc+qf9BFQhfXKgn/uA=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=pNfEZbW8p5OL9Wt1VXxorHyf11zGiEKAfMd9ZK7kRqOn8+sItsCNR9oLo07dcBe4e
-         SJxmSR3DkLr1BGIyOEBKUjbQVGm5kGXUekKldV1Gz1pv/a5xhgJfCtHjnVLdtHxZvZ
-         qQ7JOrJaMoE+bdmmohp3sH8tEI7qrwnXs8lfdPds=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AD0516014B
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Thu, 20 Dec 2018 12:43:30 -0500
+Received: by mail-pg1-f196.google.com with SMTP id s198so1219853pgs.2
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2018 09:43:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=DeO+gnbz1SAVm4T6/y3xW8+Mgb/T/u9Wag6ydVGEg+E=;
+        b=mpDBr8g4gBpisM/NQjuYFb5wQRXg2oQDcUTzkoSEyTS7HE1UIWZfOkq866xMaJkSpa
+         FFv/DyXZzLFwEEfyLQp1RPcZnZWKBU9F9N4CfBnxqGb7ZRLH/WFRWoaoV96uIy+hoETn
+         zLKBewFYT4KNWWHYpBGlal6le0o5RrgEh5MII=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=DeO+gnbz1SAVm4T6/y3xW8+Mgb/T/u9Wag6ydVGEg+E=;
+        b=c2pMxfFGWGHffkttxTAOptPRi4WffngP7BfQAPQYtMabEK74xQGUh3l7q1yYfipzgD
+         Zs5ymupPzynS51326pWoBxsdPAy8rjtIu5V2zzztvpzqqugOwxlBcK1JfIfW1sSTvwYR
+         M3fKgn4gvEJBOqtEZkp+yv3OZmYNHk/QtL3rP/HqytAiwnEe6YaJsDc0tNopu+MzpiKF
+         saQcaqxXrokfxBbH7xeAxyXWP4g6lA2VpWxU0kpLcZG7+nKJz9GwsRi6qEPHUs833clr
+         hr3v1/YpIqMitNjx+OLmMpGqBjmyUulj6H9dXeQHQP6ltJiXwhmTeIinvpp3ejvuGc/8
+         ipbg==
+X-Gm-Message-State: AA+aEWbZPIzuHIJ24ROq1PAAvKuzz76HcJ39+wWItnTb6hJNuJxIuhTV
+        UvX6st2lU2yljhWZ0TK3nRhv2YCtnAg=
+X-Google-Smtp-Source: AFSGD/Viu3VtRgE2d+F6DwrHDoJhNf0AHCFLJs6V/o3Wc0/yvOR1vq6WkzveqvWbM0fca1k9AERO5w==
+X-Received: by 2002:a62:520b:: with SMTP id g11mr25521677pfb.53.1545327809665;
+        Thu, 20 Dec 2018 09:43:29 -0800 (PST)
+Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
+        by smtp.gmail.com with ESMTPSA id v190sm30529459pfv.26.2018.12.20.09.43.28
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 20 Dec 2018 09:43:28 -0800 (PST)
+Date:   Thu, 20 Dec 2018 09:43:26 -0800
+From:   Brian Norris <briannorris@chromium.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     govinds@codeaurora.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: Move non-fatal warn logs to dbg level
+Message-ID: <20181220174324.GA67805@google.com>
+References: <20181129042522.11767-1-govinds@codeaurora.org>
+ <CA+ASDXMOqzXk9HrX9AS58cUfKOHeXA7zN_ME3+zDZXQcok_0Tg@mail.gmail.com>
+ <87h8f8talw.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v4 1/3] dt-bindings: net: ath10k: fix node name and device
- type in qcom ath10k example
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1544544804-4039-2-git-send-email-bperumal@codeaurora.org>
-References: <1544544804-4039-2-git-send-email-bperumal@codeaurora.org>
-To:     Bhagavathi Perumal S <bperumal@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Bhagavathi Perumal S <bperumal@codeaurora.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181220171050.27DC0602CB@smtp.codeaurora.org>
-Date:   Thu, 20 Dec 2018 17:10:50 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87h8f8talw.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Bhagavathi Perumal S <bperumal@codeaurora.org> wrote:
-
-> In qcom,ath10k documentation, ath10k is used as node name in the example of
-> pci based device. Normally, node name should be class of device and not the
-> model name, so fix it to node name "wifi". And remove the property device_type
-> pci since only pci bridges should have this property.
+On Thu, Dec 20, 2018 at 06:40:43PM +0200, Kalle Valo wrote:
+> Brian Norris <briannorris@chromium.org> writes:
+> > Alternatively, you could add these ignored commands to wmi-tlv.h, and
+> > just ignore them specifically. That's better documentation, in case
+> > new WMI events come along that *are* important to notice when we
+> > ignore them. There are other recent examples of that sort of patch
+> > being merged.
 > 
-> Signed-off-by: Bhagavathi Perumal S <bperumal@codeaurora.org>
-> Reviewed-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> I have actually tried to do that (what Brian describes above) during the
+> last years but the problem is that there are just so many different
+> firmware branches that it's difficult to keep up in ath10k. So in the
+> end these warnings just confused the users and they mistakenly thought
+> this warning message is the cause of their problems. That's why I think
+> it's best to remove this warning.
 
-3 patches applied to ath-next branch of ath.git, thanks.
+Thanks for the background. To be clear, I'm perfectly fine with this
+patch too. I was mostly just volunteering an alternative, in case it
+*was* your intention as maintainer to keep it this way.
 
-e5404969a335 dt-bindings: net: ath10k: fix node name and device type in qcom ath10k example
-f3f587995c5a dt-bindings: net: ath10k: add new dt entry to identify external FEM
-84758d4d43e9 ath10k: add support to configure BB timing over wmi
-
--- 
-https://patchwork.kernel.org/patch/10724123/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Regards,
+Brian
