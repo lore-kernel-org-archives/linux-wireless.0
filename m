@@ -3,97 +3,88 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA0AEC43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 06:50:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3626DC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 06:50:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 795722176F
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 06:50:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 030032176F
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 06:50:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HGCrAO47";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="F824Cwgq"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TbeDesjs";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QA7vuXx2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729587AbeLTGt4 (ORCPT
+        id S1730043AbeLTGue (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Dec 2018 01:49:56 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:60462 "EHLO
+        Thu, 20 Dec 2018 01:50:34 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:60888 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725300AbeLTGt4 (ORCPT
+        with ESMTP id S1725300AbeLTGue (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Dec 2018 01:49:56 -0500
+        Thu, 20 Dec 2018 01:50:34 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 02DAB60736; Thu, 20 Dec 2018 06:49:56 +0000 (UTC)
+        id D514560736; Thu, 20 Dec 2018 06:50:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545288596;
-        bh=nPKsurOyQZEjcmW6/Gl5OoYThzGf17qO9FTbrW0JGEA=;
+        s=default; t=1545288633;
+        bh=lIa8jMKu4+VDq3vfLGD9JvpBP43xhY0tdyahbPRGw2s=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=HGCrAO4727G7gLUtxrUTKjqdGfI7BdR0T4HCGe+NNaF98tpTU/WvBlTlyT1eQ3NR/
-         Wdr9VMeN5o0qUzWoId4MSnj6PtrbBvFRNf1YWt4awxQPMUdd5c/pAxFXBlsU5/fguR
-         q+qRorWxlat8hTMZ+hej54KPOI0lRkqiQYPC3qDc=
+        b=TbeDesjsX23t7nqLPVhfhdJhgO/0jnbbv7GjVnPCWM23uyFId8C+yXunYu5uyxuRK
+         w38H/YOg0QTk3YI5GvF2GOXewO030BxqvYw8xY1oxJbA7pBhO/iaQLmFZe8+ntTidw
+         FLvO2S+TCOKSEaiYa/lFdZUMqQgYTEDPlbs9NAiE=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 421C960591;
-        Thu, 20 Dec 2018 06:49:54 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id EE62160591;
+        Thu, 20 Dec 2018 06:50:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545288595;
-        bh=nPKsurOyQZEjcmW6/Gl5OoYThzGf17qO9FTbrW0JGEA=;
+        s=default; t=1545288633;
+        bh=lIa8jMKu4+VDq3vfLGD9JvpBP43xhY0tdyahbPRGw2s=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=F824CwgqSF+inPnCsRPmnV90RMhDWqiKgyC1JwjYbkwNMrGLHWOkeBBXrBFy7Xr5W
-         9ppguWCpgijh7VgUi1bRiyrKTpssoiCfnuzrseY/lsG4LQoUwLzfd6KqiP3UIsRtgy
-         i/xzoVoIFqWglaBTRfMXiZqW7vN7SoOkSBRZQ6SU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 421C960591
+        b=QA7vuXx2xHtFEoqHsQKrjjob6Q54rO2S72UyyNQ3Kvs41fhGKhVoCUo5/gan4Rc+1
+         ulh0A5cABtfGxGdESF+y8kJRv0NhxuEmo6MB6Hj1axBjjpGjU2qbDNdFzY+6cWg1Tx
+         8cO9ICH7viIshsGK16WxnR6K6/RHl/A4rGDUXsP0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EE62160591
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] cw1200: Fix concurrency use-after-free bugs in
- cw1200_hw_scan()
+Subject: Re: [PATCH] ipw2x00: cleanup dead code
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20181214035521.30388-1-baijiaju1990@gmail.com>
-References: <20181214035521.30388-1-baijiaju1990@gmail.com>
-To:     Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc:     pizza@shaftnet.org, davem@davemloft.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+In-Reply-To: <20181219030013.13736-1-yuehaibing@huawei.com>
+References: <20181219030013.13736-1-yuehaibing@huawei.com>
+To:     YueHaibing <yuehaibing@huawei.com>
+Cc:     <davem@davemloft.net>, <stas.yakovlev@gmail.com>,
+        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181220064956.02DAB60736@smtp.codeaurora.org>
-Date:   Thu, 20 Dec 2018 06:49:56 +0000 (UTC)
+Message-Id: <20181220065033.D514560736@smtp.codeaurora.org>
+Date:   Thu, 20 Dec 2018 06:50:33 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jia-Ju Bai <baijiaju1990@gmail.com> wrote:
+YueHaibing <yuehaibing@huawei.com> wrote:
 
-> The function cw1200_bss_info_changed() and cw1200_hw_scan() can be
-> concurrently executed.
-> The two functions both access a possible shared variable "frame.skb".
+> Fix smatch warning:
 > 
-> This shared variable is freed by dev_kfree_skb() in cw1200_upload_beacon(), 
-> which is called by cw1200_bss_info_changed(). The free operation is 
-> protected by a mutex lock "priv->conf_mutex" in cw1200_bss_info_changed().
+> drivers/net/wireless/intel/ipw2x00/ipw2100.c:5606
+>  shim__set_security() warn: always true condition '(sec->active_key <= 3) => (0-3 <= 3)'
+> drivers/net/wireless/intel/ipw2x00/ipw2200.c:10725
+>  shim__set_security() warn: always true condition '(sec->active_key <= 3) => (0-3 <= 3)'
 > 
-> In cw1200_hw_scan(), this shared variable is accessed without the
-> protection of the mutex lock "priv->conf_mutex". 
-> Thus, concurrency use-after-free bugs may occur.
-> 
-> To fix these bugs, the original calls to mutex_lock(&priv->conf_mutex) and 
-> mutex_unlock(&priv->conf_mutex) are moved to the places, which can 
-> protect the accesses to the shared variable.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-4f68ef64cd7f cw1200: Fix concurrency use-after-free bugs in cw1200_hw_scan()
+90a8c74a8d7b ipw2x00: cleanup dead code
 
 -- 
-https://patchwork.kernel.org/patch/10730469/
+https://patchwork.kernel.org/patch/10736741/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
