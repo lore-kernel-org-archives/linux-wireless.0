@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6033C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 02:44:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2D81C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 02:44:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF15920866
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 02:44:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4CA420866
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 02:44:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729236AbeLTCoF (ORCPT
+        id S1729496AbeLTCoh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Dec 2018 21:44:05 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:16610 "EHLO huawei.com"
+        Wed, 19 Dec 2018 21:44:37 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:47043 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726604AbeLTCoF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Dec 2018 21:44:05 -0500
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 6B0B88C82068A;
-        Thu, 20 Dec 2018 10:44:00 +0800 (CST)
+        id S1726604AbeLTCog (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Dec 2018 21:44:36 -0500
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 0AB31D3632B22;
+        Thu, 20 Dec 2018 10:44:33 +0800 (CST)
 Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
- 14.3.408.0; Thu, 20 Dec 2018 10:43:53 +0800
+ DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
+ 14.3.408.0; Thu, 20 Dec 2018 10:44:26 +0800
 From:   YueHaibing <yuehaibing@huawei.com>
 To:     Kalle Valo <kvalo@codeaurora.org>
 CC:     YueHaibing <yuehaibing@huawei.com>,
         <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         <kernel-janitors@vger.kernel.org>
-Subject: [PATCH] mac80211-next: remove duplicated include from virt_wifi.c
-Date:   Thu, 20 Dec 2018 02:51:25 +0000
-Message-ID: <1545274285-143886-1-git-send-email-yuehaibing@huawei.com>
+Subject: [PATCH] mac80211-next: remove set but not used variable 'w_priv'
+Date:   Thu, 20 Dec 2018 02:51:58 +0000
+Message-ID: <1545274318-144187-1-git-send-email-yuehaibing@huawei.com>
 X-Mailer: git-send-email 1.8.3.1
 Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
@@ -44,29 +44,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove duplicated include.
+Fixes gcc '-Wunused-but-set-variable' warning:
+
+drivers/net/wireless/virt_wifi.c: In function 'virt_wifi_net_device_stop':
+drivers/net/wireless/virt_wifi.c:432:31: warning:
+ variable 'w_priv' set but not used [-Wunused-but-set-variable]
 
 Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/net/wireless/virt_wifi.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/net/wireless/virt_wifi.c | 2 --
+ 1 file changed, 2 deletions(-)
 
 diff --git a/drivers/net/wireless/virt_wifi.c b/drivers/net/wireless/virt_wifi.c
-index 64b2186..245d4d0 100644
+index 64b2186..ea10f58 100644
 --- a/drivers/net/wireless/virt_wifi.c
 +++ b/drivers/net/wireless/virt_wifi.c
-@@ -14,11 +14,6 @@
- #include <linux/etherdevice.h>
- #include <linux/module.h>
+@@ -429,13 +429,11 @@ static int virt_wifi_net_device_open(struct net_device *dev)
+ static int virt_wifi_net_device_stop(struct net_device *dev)
+ {
+ 	struct virt_wifi_netdev_priv *n_priv = netdev_priv(dev);
+-	struct virt_wifi_wiphy_priv *w_priv;
  
--#include <net/cfg80211.h>
--#include <net/rtnetlink.h>
--#include <linux/etherdevice.h>
--#include <linux/module.h>
--
- static struct wiphy *common_wiphy;
+ 	n_priv->is_up = false;
  
- struct virt_wifi_wiphy_priv {
+ 	if (!dev->ieee80211_ptr)
+ 		return 0;
+-	w_priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+ 
+ 	virt_wifi_cancel_scan(dev->ieee80211_ptr->wiphy);
+ 	virt_wifi_cancel_connect(dev);
 
 
 
