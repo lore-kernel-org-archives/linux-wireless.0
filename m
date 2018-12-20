@@ -2,95 +2,127 @@ Return-Path: <SRS0=pyzf=O5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2122C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 13:23:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EF99C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 13:24:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 89BEF217D8
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 13:23:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D3B72186A
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 13:24:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="di/JbkBm";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="di/JbkBm"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CD40v8/0";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CD40v8/0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732523AbeLTNXg (ORCPT
+        id S1732997AbeLTNYn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Dec 2018 08:23:36 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:48624 "EHLO
+        Thu, 20 Dec 2018 08:24:43 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:49170 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732234AbeLTNXg (ORCPT
+        with ESMTP id S1732234AbeLTNYm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Dec 2018 08:23:36 -0500
+        Thu, 20 Dec 2018 08:24:42 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id B596660734; Thu, 20 Dec 2018 13:23:35 +0000 (UTC)
+        id C8FE560734; Thu, 20 Dec 2018 13:24:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545312215;
-        bh=ycxepOkZp84jWYPywPQnf4uuN2onekVaUVMhSxwxil4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=di/JbkBmH6Oq1jk38gK1NYQjXbNOTSqTXhqBv9X4ulKopWMKe98eAV6TEOqEtEQcw
-         oKu3cG4wSEqPEHgRlRWwibmff3UO1Dd1loPuPXHtuKrSXRH4KeEXwaF8UcUmS0NIVN
-         TxWsDcGIuvYKdAxQ6JvSR9DBxTp0JcH3JLrUW/tI=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D6A776034E;
-        Thu, 20 Dec 2018 13:23:33 +0000 (UTC)
+        s=default; t=1545312281;
+        bh=NIXtCQQK/IafPV7TqJymlEnoMphLjq6l33somg+KjZI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=CD40v8/0ZHQnD14G+NYXZ8f12oxTE/L/JcYLUxphyQUJt4S/CwNaJK/lfw89d8x+J
+         FTsVdLldK5s46JvZqKoA2EmQ1zmmD6d1O0wCKGF2OPmGN2R2qf2p/XG5Bz/OvnfTcN
+         CKG4WE8ELHU2MHRKWuX6wdJ+7tDp2eGfHI9ydmQ8=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 3D85260208;
+        Thu, 20 Dec 2018 13:24:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545312215;
-        bh=ycxepOkZp84jWYPywPQnf4uuN2onekVaUVMhSxwxil4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=di/JbkBmH6Oq1jk38gK1NYQjXbNOTSqTXhqBv9X4ulKopWMKe98eAV6TEOqEtEQcw
-         oKu3cG4wSEqPEHgRlRWwibmff3UO1Dd1loPuPXHtuKrSXRH4KeEXwaF8UcUmS0NIVN
-         TxWsDcGIuvYKdAxQ6JvSR9DBxTp0JcH3JLrUW/tI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D6A776034E
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Bhagavathi Perumal S <bperumal@codeaurora.org>,
-        devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v4 2/3] dt-bindings: net: ath10k: add new dt entry to identify external FEM
-References: <1544544804-4039-1-git-send-email-bperumal@codeaurora.org>
-        <1544544804-4039-3-git-send-email-bperumal@codeaurora.org>
-        <20181217203718.GA29320@bogus>
-Date:   Thu, 20 Dec 2018 15:23:31 +0200
-In-Reply-To: <20181217203718.GA29320@bogus> (Rob Herring's message of "Mon, 17
-        Dec 2018 14:37:18 -0600")
-Message-ID: <87lg4ktjqk.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        s=default; t=1545312281;
+        bh=NIXtCQQK/IafPV7TqJymlEnoMphLjq6l33somg+KjZI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=CD40v8/0ZHQnD14G+NYXZ8f12oxTE/L/JcYLUxphyQUJt4S/CwNaJK/lfw89d8x+J
+         FTsVdLldK5s46JvZqKoA2EmQ1zmmD6d1O0wCKGF2OPmGN2R2qf2p/XG5Bz/OvnfTcN
+         CKG4WE8ELHU2MHRKWuX6wdJ+7tDp2eGfHI9ydmQ8=
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 20 Dec 2018 18:54:41 +0530
+From:   Govind Singh <govinds@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     briannorris@chromium.org, andy.gross@linaro.org,
+        ath10k@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
+        linux-wireless@vger.kernel.org, robh+dt@kernel.org,
+        sboyd@kernel.org, dianders@chromium.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 0/3] Enable ath10k wcn3990 wifi driver support on
+ sdm845
+In-Reply-To: <87imzo72w8.fsf@purkki.adurom.net>
+References: <1541423318-19312-1-git-send-email-govinds@codeaurora.org>
+ <87d0r55ews.fsf@codeaurora.org>
+ <6e831363962be4e28d7551e360ed4d46@codeaurora.org>
+ <874lcg55at.fsf@codeaurora.org>
+ <9f8bbfaa232c02bb33594207fa1f8821@codeaurora.org>
+ <87y38ktnnm.fsf@kamboji.qca.qualcomm.com> <87imzo72w8.fsf@purkki.adurom.net>
+Message-ID: <b3117fed581713cc60538705760fdf90@codeaurora.org>
+X-Sender: govinds@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rob Herring <robh@kernel.org> writes:
+Hi Kalle,
 
-> On Tue, Dec 11, 2018 at 09:43:23PM +0530, Bhagavathi Perumal S wrote:
->> This adds new dt entry ext-fem-name, it is used by ath10k driver
->> to select correct timing parameters and configure it in target wifi hardware.
->> The Front End Module(FEM) normally includes tx power amplifier(PA) and
->> rx low noise amplifier(LNA). The default timing parameters like tx end to
->> PA off timing values were fine tuned for internal FEM used in reference
->> design. And these timing values can not be same if ODM modifies hardware
->> design with different external FEM. This DT entry helps to choose correct
->> timing values in driver if different external FEM hardware used.
+On 2018-12-20 18:48, Kalle Valo wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+>> Govind Singh <govinds@codeaurora.org> writes:
 >> 
->> Signed-off-by: Bhagavathi Perumal S <bperumal@codeaurora.org>
->> ---
->>  Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 9 ++++++++-
->>  1 file changed, 8 insertions(+), 1 deletion(-)
->
-> Please add acks/reviewed-bys when posting new versions.
+>>> Hi Kalle,
+>>> 
+>>> On 2018-11-17 16:39, Kalle Valo wrote:
+>>>> Govind Singh <govinds@codeaurora.org> writes:
+>>>> 
+>>>>> On 2018-11-16 18:59, Kalle Valo wrote:
+>>>>>> 
+>>>>>> Via which tree are these patches going? That's not clear for me.
+>>>>> 
+>>>>> I guess sdm845 dtsi change should be going to
+>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/agross/linux.git.
+>>>>> I need to send v5 to address one comment from Brian.
+>>>> 
+>>>> Ok, I'll then drop these from my queue.
+>>> 
+>>> Can you pls apply below changes to ath10k tree, i will send sdm845
+>>> dtsi change as separate patch after rebase.
+>>> 
+>>>>>>>   dt: bindings: add missing dt properties for WCN3990 wifi node
+>>>>>>>   dt: bindings: add bindings for wifi iommu node
+>> 
+>> Ok, these two are back in my queue:
+>> 
+>> https://patchwork.kernel.org/patch/10668237/
+>> 
+>> https://patchwork.kernel.org/patch/10668245/
+>> 
+>> I'll just modify the titles to use ath10k prefix to make it more clear
+>> these are for ath10k:
+>> 
+>>    dt: bindings: ath10k: .....
+> 
+> There were conflicts with this commit:
+> 
+> 2b741a8aaa34 dt: bindings: add bindings for msa memory region
+> 
+> I fixed them in the pending branch, please double check carefully:
+> 
 
-I added your reviewed-by from v3 in the pending branch:
+Changes looks good to me.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=2f4f5a81c87b9be68aa087c238e2f2b9debbfa1b
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=5bb88d4d49783c75ac083e4ea19b7527bc115857
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=a6d53e207670eacd72a74277658bac1ab346fabd
 
--- 
-Kalle Valo
+BR,
+Govind
