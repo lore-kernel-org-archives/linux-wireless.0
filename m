@@ -2,86 +2,106 @@ Return-Path: <SRS0=pyzf=O5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A8CAC43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 12:30:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72A09C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 12:56:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DEB762186A
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 12:30:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545309058;
-	bh=ULqzZuzNaLe34v8f9sY6Yvp7qT1vFQeKYmJvGewT82A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=tLcOtvHUf4ZRwVR+vHutKoQdfwX3yPsY6d3T8ANUq4FkWi2uk86mNLOEKRjk8Q2Am
-	 Jcbczt7y6kY668CCXNvwM/YR0ssJzfMQM4DraM/c2KKF/OJTrd1fXwkGdFWS9ri/wH
-	 uHFiWJG3ZkRYJ8ZXUSpbBrB8shTPe31HfvP0ukBQ=
+	by mail.kernel.org (Postfix) with ESMTP id 410192084A
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 12:56:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731622AbeLTMa6 (ORCPT
+        id S1732040AbeLTM4W convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Dec 2018 07:30:58 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44126 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728172AbeLTMa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Dec 2018 07:30:58 -0500
-Received: from localhost (5356596B.cm-6-7b.dynamic.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E8B9621852;
-        Thu, 20 Dec 2018 12:30:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545309057;
-        bh=ULqzZuzNaLe34v8f9sY6Yvp7qT1vFQeKYmJvGewT82A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EkLu61wuhVbudgl3vPPk7/aYb7mxPXPujQvXPgIX7BUvcNFnr2JpO9F7ZfL2l3kSF
-         tZk42tyCZZds92s2aj4Ubgb3y24s/Gj0EVTua154PiI+7UiIRT0UsDJPVdknkPXx26
-         nJeb5Fiq8DI7kzMeNEJingTnqzgsmRxO/gC0BLSI=
-Date:   Thu, 20 Dec 2018 13:30:55 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     stable@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, Sid Hayn <sidhayn@gmail.com>
-Subject: Re: [PATCH 4.19] mt76x0: mark 802.11w as supported
-Message-ID: <20181220123055.GC17138@kroah.com>
-References: <20181220114701.GA8660@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181220114701.GA8660@redhat.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+        Thu, 20 Dec 2018 07:56:22 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:54867 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729556AbeLTM4W (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Dec 2018 07:56:22 -0500
+Received: from mail-pl1-f197.google.com ([209.85.214.197])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1gZxsC-0002Et-EI
+        for linux-wireless@vger.kernel.org; Thu, 20 Dec 2018 12:56:20 +0000
+Received: by mail-pl1-f197.google.com with SMTP id 12so1260538plb.18
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2018 04:56:20 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=43+pXsJIiz0pw6JXkUdFd/OMoi5qXnd2qQwt4cSXuU4=;
+        b=oW8pVjv2zfeCkCax2kGzT8CtItQAqC2dG3PwHoUR74pkE5LWLhttDnNnHmRB9pAhvg
+         Tsr1pszXOCR0zYagh7dlziY7Y7WoxoX1J3a2tGfO+STQilyutJk6rY8xufjmRRldxCdC
+         XqiKNFC1AioBBZV/0+lwAhMs3gguxwZR2rMLpI0RlFVvmCeanMEvB2jhlbQQSjmUDvkf
+         fm3rBv15zuyB1K28f8jpc5gpAWmFpI7urKZ9+0pM7leFcc2Age5jrSWhgnC4KxIkbd2Q
+         YyciEjv5GolZlXm8pVnNh+p67GRX3o3/xr7nuevYi4ZblOZhiqX/5mlQoHmXR3puixn+
+         rEBg==
+X-Gm-Message-State: AA+aEWZcvTodq4/bb4v3PPm78ejv63EsD+Is4FPzcZ+NgXpiGSTTlX7v
+        nSbegkAinPaIt1+APre1BsVoGMqkeQhY6NsLPO/RYDq+1YofMwayYZcLs+WBfwUR06hkjAugzys
+        cCZ2pkVgAVHg+dp8uVORpD19rgaYVtZ1fMIemhAOheVkb
+X-Received: by 2002:a17:902:6a4:: with SMTP id 33mr23288184plh.99.1545310579140;
+        Thu, 20 Dec 2018 04:56:19 -0800 (PST)
+X-Google-Smtp-Source: AFSGD/X01OityrlBqPtw4fEfYVnBChInD4/Ppbg5l4TPZ/8NUkOkVatqlLUUOXJUz4PLWwerD/m22A==
+X-Received: by 2002:a17:902:6a4:: with SMTP id 33mr23288160plh.99.1545310578721;
+        Thu, 20 Dec 2018 04:56:18 -0800 (PST)
+Received: from 2001-b011-380f-3f3d-b410-59e8-c783-3401.dynamic-ip6.hinet.net (2001-b011-380f-3f3d-b410-59e8-c783-3401.dynamic-ip6.hinet.net. [2001:b011:380f:3f3d:b410:59e8:c783:3401])
+        by smtp.gmail.com with ESMTPSA id z14sm25777391pgv.47.2018.12.20.04.56.16
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 20 Dec 2018 04:56:17 -0800 (PST)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 12.2 \(3445.102.3\))
+Subject: Re: [PATCH] rtlwifi: Fix non-working BSS STA mode
+From:   Kai Heng Feng <kai.heng.feng@canonical.com>
+In-Reply-To: <20181220064209.E5AD9606FC@smtp.codeaurora.org>
+Date:   Thu, 20 Dec 2018 20:56:15 +0800
+Cc:     pkshih@realtek.com, davem@davemloft.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Message-Id: <3AE7BCCE-8202-42B8-95AF-8B32FB9E33AA@canonical.com>
+References: <20181212051335.22580-1-kai.heng.feng@canonical.com>
+ <20181220064209.E5AD9606FC@smtp.codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+X-Mailer: Apple Mail (2.3445.102.3)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Dec 20, 2018 at 12:47:07PM +0100, Stanislaw Gruszka wrote:
-> commit 0ae976a11b4fb5704b597e103b5189237641c1a1 upstream.
-> 
-> This is one line hw feature backport from 0ae976a11b4f ("mt76x0: init
-> hw capabilities"), which add also other different features, however
-> those are not supported in 4.19.
-> 
-> 802.11w is supported by mac80211 and mt76x0u driver in 4.19 correctly
-> fall-back to software encryption when 802.11w ciphers are used.
-> 
-> Without the patch we fail to associate with WPA3 APs, so this is
-> considered as fix.
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> [remove marking non-working features on 4.19, make topic correspond the change]
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 1 +
->  1 file changed, 1 insertion(+)
 
-What bug is this fixing?  This never worked before, so this feels like
-it is adding a new feature.
 
-thanks,
+> On Dec 20, 2018, at 14:42, Kalle Valo <kvalo@codeaurora.org> wrote:
+> 
+> Kai-Heng Feng <kai.heng.feng@canonical.com> wrote:
+> 
+>> Once BSS STA mode gets started, it can be scanned by other clients but
+>> cannot entablish a connection.
+>> 
+>> Turns out the set_bcn_reg() and its *_set_beacon_related_registers()
+>> callbacks never get called so it has problem beaconing.
+>> 
+>> Enable the function in rtl_op_bss_info_changed() can make BSS STA mode
+>> start to work.
+>> 
+>> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> 
+> The commit log is quite misleading. It implies that the client mode is broken
+> for all rtlwifi hardware and that can't be the case, otherwise we would be
+> flooded by bug reports. So please improve the commit log and describe clearly
+> the problem you are solving.
 
-greg k-h
+You are right. I'll wait for PKShih’s test result and update commit log afterwards.
+
+Kai-Heng
+
+> 
+> -- 
+> https://patchwork.kernel.org/patch/10725537/
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> 
+
