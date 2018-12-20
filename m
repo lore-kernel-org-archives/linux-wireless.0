@@ -2,76 +2,97 @@ Return-Path: <SRS0=pyzf=O5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=INCLUDES_PATCH,
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF3E6C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 15:16:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2BB6C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 16:40:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 89AE221852
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 15:16:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF46721773
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 16:40:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="H9QP3Rzc";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EVnX6FV3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731539AbeLTPQR (ORCPT
+        id S1730880AbeLTQks (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Dec 2018 10:16:17 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:33918 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729011AbeLTPQR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Dec 2018 10:16:17 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Thu, 20 Dec 2018 11:40:48 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:60682 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730125AbeLTQks (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Dec 2018 11:40:48 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 29B806053B; Thu, 20 Dec 2018 16:40:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1545324048;
+        bh=wuFZKRnANEPgMpq04gw+6tYix3/ni4xrhcjtCumJkY4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=H9QP3RzcHrDO910IxjRwBrcPDqU3pah8x6PTLrwZpRnfXSHOvWbef90YQ3dMBsGJ3
+         qljIEw427znvOM3HN3kU+qg6lsLtsBXOVy+1DjzDJ+ZoUrxoni/OPZddA9jn7+TZFb
+         C5IoSm1V3yQUjOuz15umuelKLE9rvFQiLEwbwJMM=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 959EE89AC9;
-        Thu, 20 Dec 2018 15:16:17 +0000 (UTC)
-Received: from localhost (ovpn-204-224.brq.redhat.com [10.40.204.224])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6024E100194A;
-        Thu, 20 Dec 2018 15:16:16 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Randy Oostdyk <linux-kernel@oostdyk.com>,
-        =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Subject: [PATCH v2 3/3] rt2x00: do not print error when queue is full
-Date:   Thu, 20 Dec 2018 16:16:11 +0100
-Message-Id: <1545318971-28351-3-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
-References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Thu, 20 Dec 2018 15:16:17 +0000 (UTC)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BC9F960208;
+        Thu, 20 Dec 2018 16:40:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1545324047;
+        bh=wuFZKRnANEPgMpq04gw+6tYix3/ni4xrhcjtCumJkY4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=EVnX6FV3kVfaq2zjUuPa0Gc6ZVDWh6keNdMmbOmBrKRh76ip84VpthFT5fXVnXJIF
+         ykEfN65hqDIs5EK7IoAcrXolMIUHKDC0nEZ2dWvTyfxC8quwwa0vSgKG0Kv2MNNvhm
+         8KsniFxDBpMNug9GP24+VeDi3cox9p+qwtSFBdT8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BC9F960208
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     govinds@codeaurora.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: Move non-fatal warn logs to dbg level
+References: <20181129042522.11767-1-govinds@codeaurora.org>
+        <CA+ASDXMOqzXk9HrX9AS58cUfKOHeXA7zN_ME3+zDZXQcok_0Tg@mail.gmail.com>
+Date:   Thu, 20 Dec 2018 18:40:43 +0200
+In-Reply-To: <CA+ASDXMOqzXk9HrX9AS58cUfKOHeXA7zN_ME3+zDZXQcok_0Tg@mail.gmail.com>
+        (Brian Norris's message of "Fri, 30 Nov 2018 12:59:49 -0800")
+Message-ID: <87h8f8talw.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For unknown reasons printk() on some context can cause CPU hung on
-embedded MT7620 AP/router MIPS platforms. What can result on wifi
-disconnects.
+Brian Norris <briannorris@chromium.org> writes:
 
-This patch move queue full messages to debug level what is consistent
-with other mac80211 drivers which drop packet silently if tx queue is
-full. This make MT7620 OpenWRT routers more stable, what was reported
-by various users.
+> On Wed, Nov 28, 2018 at 8:25 PM Govind Singh <govinds@codeaurora.org> wrote:
+>>
+>> During driver load below warn logs are printed in the console.
+>> Since driver may not implement all wmi events sent by fw and
+>> all of them are non-fatal, move this log to debug level to
+>> remove un-necessary warn message on console.
+>>
+>> [  361.887230] ath10k_snoc a000000.wifi: Unknown eventid: 16393
+>> [  361.907037] ath10k_snoc a000000.wifi: Unknown eventid: 237569
+>>
+>> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+>
+> Alternatively, you could add these ignored commands to wmi-tlv.h, and
+> just ignore them specifically. That's better documentation, in case
+> new WMI events come along that *are* important to notice when we
+> ignore them. There are other recent examples of that sort of patch
+> being merged.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00queue.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I have actually tried to do that (what Brian describes above) during the
+last years but the problem is that there are just so many different
+firmware branches that it's difficult to keep up in ath10k. So in the
+end these warnings just confused the users and they mistakenly thought
+this warning message is the cause of their problems. That's why I think
+it's best to remove this warning.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-index 92ddc19e7bf7..947fc8964e9a 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-@@ -671,7 +671,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 	spin_lock(&queue->tx_lock);
- 
- 	if (unlikely(rt2x00queue_full(queue))) {
--		rt2x00_err(queue->rt2x00dev, "Dropping frame due to full tx queue %d\n",
-+		rt2x00_dbg(queue->rt2x00dev, "Dropping frame due to full tx queue %d\n",
- 			   queue->qid);
- 		ret = -ENOBUFS;
- 		goto out;
 -- 
-2.7.5
-
+Kalle Valo
