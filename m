@@ -3,58 +3,62 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DEC7C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 18:02:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A37BEC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 18:22:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0ECB0217D9
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 18:02:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 769B5217D9
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 18:22:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CY8UaJTe";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="H7lqCRFf"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bT2aoHe8";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="P/c8MxPE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388374AbeLTSC3 (ORCPT
+        id S2388830AbeLTSWW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Dec 2018 13:02:29 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:35070 "EHLO
+        Thu, 20 Dec 2018 13:22:22 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:41560 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725776AbeLTSC2 (ORCPT
+        with ESMTP id S1730855AbeLTSWW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Dec 2018 13:02:28 -0500
+        Thu, 20 Dec 2018 13:22:22 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6755E605A5; Thu, 20 Dec 2018 18:02:26 +0000 (UTC)
+        id 25B8D606FC; Thu, 20 Dec 2018 18:22:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545328946;
-        bh=cmIHmbFtMLWtAq3PTTX6I3nDwOWttg67QUKAD9LyMEY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=CY8UaJTeJhygaImy5LXShVoGfr10Eaa/yyxmcg7JWMZwh2WR36LVWkmf5d5EKwfdO
-         PFf9QKNCcA3MtieKtSTK/mAe6UgLAyWNPKpqMt1UjmGH/d3SzvntERXHuvyamOFZNc
-         /cGXGZwUIYf51WlKFuyNq+SY8rnBZ7TZ1Qdzt3HA=
+        s=default; t=1545330141;
+        bh=0zMRYgSs6M0dlKODqNqUyEyC87inSpEUS8mTP9SfkCc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=bT2aoHe8a7vN1Q8BvO7vl2S5ax/vKz0wPX2p8wkg0L6deq109sn2USBvTJH74SUcy
+         2PAje3OSyI1XcHIKMzGeVXZ3hZh1eaMofedM+HMlE52xttDgFhK2uA3Ye4XktL6d6o
+         ZH49oMgD/2AV+u7yRCAR1fEzugvpuGj97rUZm0QQ=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9ECDB6053B;
-        Thu, 20 Dec 2018 18:02:23 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5B1C06053B;
+        Thu, 20 Dec 2018 18:22:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545328945;
-        bh=cmIHmbFtMLWtAq3PTTX6I3nDwOWttg67QUKAD9LyMEY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=H7lqCRFfH7Pc98K/ZHuOifFraQevCX3fZn7OKWuX2y6JB6GOj+fyXGxwlIa/8bDbI
-         MQjUsJfUCTdDUtC1FeOalcDWi7ZqjyAXMtaghpWYND7JvFE25RmBh2yFVBfpdEaWCj
-         u5B1MuTWdD1cMq5uAAu0EfCfxLqSxrSBPixTTnOk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9ECDB6053B
+        s=default; t=1545330140;
+        bh=0zMRYgSs6M0dlKODqNqUyEyC87inSpEUS8mTP9SfkCc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=P/c8MxPEXmhgOCv6xfo8hRNqGB92PjkL4vWZSzwL+dGLvTXg6vrufChkYz95FQalG
+         UnPDbb5sDrxbdst5g8ANiIzQDqHkvHeoOUBPYT3/DsEIazHfz2NWjDt541EIo8ZaEz
+         hwyyt1JMKIrPaspYyUEyoVKq76FhnmPjZDYbK0yE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5B1C06053B
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     David Miller <davem@davemloft.net>
+To:     David Miller <davem@davemloft.net>,
+        Stephen Rothwell <sfr@canb.auug.org.au>
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers-next 2018-12-20
-Date:   Thu, 20 Dec 2018 20:02:21 +0200
-Message-ID: <878t0kt6tu.fsf@kamboji.qca.qualcomm.com>
+Subject: Re: pull-request: wireless-drivers-next 2018-12-20
+References: <878t0kt6tu.fsf@kamboji.qca.qualcomm.com>
+Date:   Thu, 20 Dec 2018 20:22:17 +0200
+In-Reply-To: <878t0kt6tu.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Thu, 20 Dec 2018 20:02:21 +0200")
+Message-ID: <874lb8t5wm.fsf@kamboji.qca.qualcomm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -63,459 +67,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
-
-here's a pull request to net-next for 4.21. More info in the signed
-below.
-
-As I have been too busy this cycle not all of these have been in
-linux-next, but most of them has been tested by the kbuild bot and the
-last few remaining patches are being tested while I write this. So I'm
-not expecting any major problems, but if you see something do let me
-know.
-
-Happy Holidays and have a great New Year :)
-
-Kalle
-
-The following changes since commit d9bbd6a1a56eccb2b1198b8f2008d622982df0a1:
-
-  net: marvell: convert to DEFINE_SHOW_ATTRIBUTE (2018-12-03 17:33:44 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2018-12-20
-
-for you to fetch changes up to fbbae71d374f24887d78631e50210b7110fffb84:
-
-  Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2018-12-20 19:25:43 +0200)
-
-----------------------------------------------------------------
-wireless-drivers-next patches for 4.21
-
-Last set of patches for 4.21. mt76 is still in very active development
-and having some refactoring as well as new features. But also other
-drivers got few new features and fixes.
-
-Major changes:
-
-ath10k
-
-* add amsdu support for QCA6174 monitor mode
-
-* report tx rate using the new ieee80211_tx_rate_update() API
-
-* wcn3990 support is not experimental anymore
-
-iwlwifi
-
-* support for FW version 43 for 9000 and 22000 series
-
-brcmfmac
-
-* add support for CYW43012 SDIO chipset
-
-* add the raw 4354 PCIe device ID for unprogrammed Cypress boards
-
-mwifiex
-
-* add NL80211_STA_INFO_RX_BITRATE support
-
-mt76
-
-* use the same firmware for mt76x2e and mt76x2u
-
-* mt76x0e survey support
-
-* more unification between mt76x2 and mt76x0
-
-* mt76x0e AP mode support
-
-* mt76x0e DFS support
-
-* rework and fix tx status handling for mt76x0 and mt76x2
-
-----------------------------------------------------------------
-Anilkumar Kolli (1):
-      ath10k: report tx rate using ieee80211_tx_rate_update()
-
-Arnd Bergmann (1):
-      brcmfmac: fix false-positive -Wmaybe-unintialized warning
-
-Avraham Stern (1):
-      iwlwifi: mvm: force TCM re-evaluation on TCM resume
-
-Bhagavathi Perumal S (4):
-      ath10k: fix warning due to msdu limit error
-      dt-bindings: net: ath10k: fix node name and device type in qcom ath10k example
-      dt-bindings: net: ath10k: add new dt entry to identify external FEM
-      ath10k: add support to configure BB timing over wmi
-
-Brian Norris (3):
-      mwifiex: debugfs: correct histogram spacing, formatting
-      mwifiex: refactor mwifiex_parse_htinfo() for reuse
-      mwifiex: add NL80211_STA_INFO_RX_BITRATE support
-
-Chi-Hsien Lin (3):
-      brcmfmac: add support for CYW43012 SDIO chipset
-      brcmfmac: allow GCI core enumuration
-      brcmfmac: 4373 save-restore support
-
-Chung-Hsien Hsu (1):
-      brcmfmac: handle compressed tx status signal
-
-Colin Ian King (1):
-      iwlwifi: mvm: fix spelling mistake "Recieved" -> "Received"
-
-Dan Carpenter (2):
-      ath10k: fix a NULL vs IS_ERR() check
-      ath10k: remove an unnecessary NULL check
-
-Emmanuel Grumbach (2):
-      iwlwifi: mvm: don't check if a pointer is set if it can't be unset
-      iwlwifi: mvm: set TWT responder capability bit in 11AX SoftAP mode
-
-Felix Fietkau (13):
-      mt76: clean up unused leftover EXPORT_SYMBOLs
-      mt76: mt76x0: handle chip specific initval differences
-      mt76: clean up more unused EXPORT_SYMBOLs
-      mt76: mt76x02: skip station tx status for non-sta wcid entries
-      mt76: mt76x02: only override control->sta on sw-encrypted tx
-      mt76: add support for reporting tx status with skb
-      mt76: avoid queue/status spinlocks while passing tx status to mac80211
-      mt76: do not wake tx queues during flush
-      mt76: fix race condition in station removal
-      mt76: add mt76_sta_remove helper
-      mt76: mt76x02: make group_wcid the first member in struct mt76x02_vif
-      mt76: mt76x02: remove mt76x02_txq_init
-      mt76: replace sta_add/remove ops with common sta_state function
-
-Govind Singh (4):
-      ath10k: remove work in progress logs from snoc driver
-      ath10k: move non-fatal warn logs to dbg level
-      dt: bindings: ath10k: add missing dt properties for WCN3990 wifi node
-      dt: bindings: ath10k: add bindings for wifi iommu node
-
-Gustavo A. R. Silva (1):
-      iwlwifi: mvm: d3: use struct_size() in kzalloc()
-
-Jia-Ju Bai (1):
-      cw1200: Fix concurrency use-after-free bugs in cw1200_hw_scan()
-
-Kalle Valo (3):
-      Merge tag 'mt76-for-kvalo-2018-11-30' of https://github.com/nbd168/wireless
-      Merge tag 'iwlwifi-next-for-kalle-2018-12-14' of git://git.kernel.org/.../iwlwifi/iwlwifi-next
-      Merge ath-next from git://git.kernel.org/.../kvalo/ath.git
-
-Karthikeyan Periyasamy (1):
-      ath10k: fix kernel panic due to use after free
-
-Kyle Roeschley (3):
-      ath6kl: Only use match sets when firmware supports it
-      ath6kl: Fix off by one error in scan completion
-      ath6kl: Use debug instead of error message when disabled
-
-Lorenzo Bianconi (49):
-      mt76x2: align mt76x2 and mt76x2u firmware
-      mt76x2u: align channel gain logic to mt76x2 one
-      mt76x0: phy: use proper name convention
-      mt76x0: phy: simplify rf configuration routines
-      mt76x0: phy: improve code readability in initvals_phy.h
-      mt76x0: pci: add get_survey support
-      mt76: move mt76x02_mac_work routine in mt76x02-lib module
-      mt76: move mt76x02_debugfs in mt76x02-lib module
-      mt76x0: use shared debugfs implementation
-      mt76x0: use mt76x02_mac_work as stats handler
-      mt76x2u: introduce mac workqueue support
-      mt76x0: phy: unify calibration between mt76x0u and mt76x0e
-      mt76: usb: fix static tracepoints
-      mt76x0: init: simplify mt76x0_init_mac_registers
-      mt76x0: pci: add missing MODULE_FIRMWARE macro
-      mt76x0: mac: remove mt76x0_mac_set_ampdu_factor
-      mt76x0: align mt76x0u and mt76x0e fw version
-      mt76: move mt76x02_mac_set_short_preamble in mt76x02_mac.c
-      mt76: move mt76x02_init_device in mt76x02-lib module
-      mt76: move mac beacon routines in mt76x02-lib module
-      mt76: move tx beacon routines in mt76x02-lib module
-      mt76x0: pci: add pre_tbtt_tasklet support
-      mt76: move mt76x02_sw_scan and mt76x02_sw_scan_complete in mt76x02-lib module
-      mt76: move mt76x02_get_txpower in mt76x02_util.c
-      mt76: move mt76x02_sta_ps in mt76x02-lib module
-      mt76: introduce mt76x02_init_beacon_config routine
-      mt76x0: pci: enable AP support
-      mt76: move mt76x02_set_tx_ackto in mt76x02-lib module
-      mt76x0: update init vals for MT_TX_PROT registers
-      mt76: move tx protection routines in mt76x02-lib module
-      mt76: move mt76x02_bss_info_changed in mt76x02-lib module
-      mt76: move dfs support in mt76x02-lib module
-      mt76x0: pci: add DFS support
-      mt76x0: phy: use mt76_poll_msec in mt76x0_phy_temp_sensor
-      mt76x0: init: use mt76x02_mac_shared_key_setup in mt76x0_init_hardware
-      mt76x2: move wcid_tx_rate conf at bootstrap
-      mt76x0: init: use mt76x02_mac_wcid_setup for wcid configuration
-      mt76x2u: init: remove not useful configuration
-      mt76x2u: init: use common routines for wcid/key initialization
-      mt76: move mt76x02_eeprom_copy in mt76x02-lib module
-      mt76x0: phy: introduce tssi calibration support
-      mt76x0: phy: use tssi reported value to configure tx power if available
-      mt76x0: dfs: fix IBI_R11 configuration on non-radar channels
-      mt76: introduce mt76x02_config_mac_addr_list routine
-      mt76x0: pci: enable VHT rates in IBSS mode
-      mt76x2u: phy: add TX_SHAPING calibration
-      mt76x2u: phy: run phy_channel_calibrate after channel switch
-      mt76x2u: main: use mt76x02_bss_info_changed utility routine
-      mt76x2u: init: remove mt76x2u_init_beacon_offsets routine
-
-Luca Coelho (8):
-      iwlwifi: move common 9000 cfg parameters to common macro
-      iwlwifi: don't define OTP_LOW_IMAGE_SIZE per family, but per size
-      iwlwifi: remove useless NVM_HW_SECTION_NUM_FAMILY_* macros
-      iwlwifi: move iwl_nvm_check_version() into dvm
-      iwlwifi: remove all unnecessary occurrences of nvm_calib_ver
-      iwlwifi: make MVM and DVM depend on MAC80211
-      iwlwifi: remove unused and wrong PHY_CFG_* macros
-      iwlwifi: bump the API version to 43 for 9000 and 22000
-
-Madhan Mohan R (1):
-      brcmfmac: set SDIO F1 MesBusyCtrl for CYW4373
-
-Naftali Goldstein (1):
-      iwlwifi: mvm: fix setting HE ppe FW config
-
-Naveen Gupta (1):
-      brcmfmac: update 43012 F2 watermark setting to fix DMA Error during UDP RX Traffic
-
-Pan Bian (2):
-      mwifiex: fix potential NULL dereference and use after free
-      rtl818x: fix potential use after free
-
-Sara Sharon (13):
-      iwlwifi: dbg: dump data according to the new ini TLVs
-      iwlwifi: add support for triggering ini triggers
-      iwlwifi: mvm: activate apply points
-      iwlwifi: pcie: fix erroneous print
-      iwlwifi: pcie: set cmd_len in the correct place
-      iwlwifi: pcie: use iwl_tx_cmd_gen2 and not iwl_tx_cmd
-      iwlwifi: mvm: remove dead code
-      iwlwifi: mvm: remove pointless NULL assignment
-      iwlwifi: mvm: cleanup iwl_mvm_tx_skb_non_sta
-      iwlwifi: mvm: take station lock later in the code
-      iwlwifi: pcie: lock txq a bit later in reclaim code
-      iwlwifi: mvm: clean up SSN incrementation
-      iwlwifi: dbg: add debug data to warning
-
-Sathishkumar Muruganandam (1):
-      ath10k: disable 4addr source port learning in 10.4 FW by default
-
-Shahar S Matityahu (2):
-      iwlwifi: wrt: add rt status and num of rx/tx fifos to dump
-      iwlwifi: dbg_ini: fix bad ini tlv parsing
-
-Shaul Triebitz (5):
-      iwlwifi: mvm: change PHY data RX for HE radiotap
-      iwlwifi: mvm: add L-SIG length to radiotap
-      iwlwifi: mvm: radiotap: remove UL_DL bit in HE TRIG_BASED
-      iwlwifi: split HE capabilities between AP and STA
-      iwlwifi: mvm: handle RX no data notification
-
-Stanislaw Gruszka (10):
-      mt76x0: do not perform MCU calibration for MT7630
-      mt76x0: antenna select corrections
-      mt76x0: do not overwrite other MT_BBP(AGC, 8) fields
-      mt76x0: use band parameter for LC calibration
-      mt76: remove mcu_msg_alloc
-      mt76: remove wait argument from mt76x02_mcu_function_select
-      mt76: remove wait argument from mt76x02_mcu_set_radio_state
-      mt76x02: run calibration after scanning
-      mt76x02: assure we update gain after scan
-      mt76: remove wait argument from mt76x02_mcu_calibrate
-
-Stefan Wahren (1):
-      brcmfmac: Fix access point mode
-
-Stijn Tintel (1):
-      brcmfmac: fix roamoff=1 modparam
-
-Winnie Chang (1):
-      brcmfmac: add 4354 raw pcie device id
-
-Wright Feng (4):
-      brcmfmac: add credit numbers updating support
-      brcmfmac: enable frameburst mode in default firmware setting
-      brcmfmac: set F2 watermark to 256 for 4373
-      brcmfmac: disable command decode in sdio_aos
-
-Yangtao Li (2):
-      cw1200: convert to DEFINE_SHOW_ATTRIBUTE
-      wil6210: convert to DEFINE_SHOW_ATTRIBUTE
-
-Yu Wang (1):
-      ath10k: add amsdu support for monitor mode
-
-YueHaibing (5):
-      b43: remove set but not used variables 'tx_pwr_state,tmp2'
-      rtlwifi: rtl8821ae: remove set but not used variable 'type' in translate_rx_signal_stuff
-      ipw2x00: cleanup dead code
-      wil6210: remove set but not used variable 'wdev'
-      ath10k: remove set but not used variable 'num_tdls_vifs'
-
-Zhi Chen (2):
-      ath10k: fix peer stats null pointer dereference
-      ath10k: fix tx_stats memory leak
-
- .../bindings/net/wireless/qcom,ath10k.txt          |   74 +-
- drivers/net/wireless/ath/ath10k/Kconfig            |    3 +-
- drivers/net/wireless/ath/ath10k/core.h             |    1 +
- drivers/net/wireless/ath/ath10k/debugfs_sta.c      |    2 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c           |  300 ++++-
- drivers/net/wireless/ath/ath10k/hw.c               |    7 +
- drivers/net/wireless/ath/ath10k/hw.h               |   10 +
- drivers/net/wireless/ath/ath10k/mac.c              |  116 +-
- drivers/net/wireless/ath/ath10k/qmi.c              |    4 +-
- drivers/net/wireless/ath/ath10k/rx_desc.h          |    7 +
- drivers/net/wireless/ath/ath10k/snoc.c             |    1 -
- drivers/net/wireless/ath/ath10k/wmi-ops.h          |   20 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c          |    2 +-
- drivers/net/wireless/ath/ath10k/wmi.c              |   29 +-
- drivers/net/wireless/ath/ath10k/wmi.h              |   46 +
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |    6 +-
- drivers/net/wireless/ath/wil6210/debugfs.c         |  240 +---
- drivers/net/wireless/ath/wil6210/main.c            |    2 -
- drivers/net/wireless/broadcom/b43/phy_n.c          |    4 -
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |    1 +
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   27 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |    2 +-
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |   33 +-
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |    2 +-
- .../broadcom/brcm80211/brcmfmac/firmware.c         |    2 +-
- .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |    1 +
- .../broadcom/brcm80211/brcmfmac/fwsignal.c         |  144 ++-
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |    1 +
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  119 +-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |    9 +-
- .../broadcom/brcm80211/include/brcm_hw_ids.h       |    2 +
- .../broadcom/brcm80211/include/chipcommon.h        |   19 +
- drivers/net/wireless/intel/ipw2x00/ipw2100.c       |    8 +-
- drivers/net/wireless/intel/ipw2x00/ipw2200.c       |    7 +-
- drivers/net/wireless/intel/iwlwifi/Kconfig         |    4 +-
- drivers/net/wireless/intel/iwlwifi/cfg/1000.c      |    2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/2000.c      |    4 +-
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c     |   12 +-
- drivers/net/wireless/intel/iwlwifi/cfg/6000.c      |    6 +-
- drivers/net/wireless/intel/iwlwifi/cfg/7000.c      |   27 +-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |   11 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |   87 +-
- drivers/net/wireless/intel/iwlwifi/dvm/main.c      |   17 +
- drivers/net/wireless/intel/iwlwifi/fw/api/config.h |   13 +-
- .../net/wireless/intel/iwlwifi/fw/api/datapath.h   |    5 +
- drivers/net/wireless/intel/iwlwifi/fw/api/mac.h    |    2 +-
- drivers/net/wireless/intel/iwlwifi/fw/api/rx.h     |  239 ++--
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c        |  326 ++++-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h        |   42 +-
- drivers/net/wireless/intel/iwlwifi/fw/error-dump.h |   20 +
- drivers/net/wireless/intel/iwlwifi/fw/runtime.h    |    3 +-
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |    8 +-
- drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c   |    1 +
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |    1 +
- .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.c  |   19 -
- .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.h  |    5 +-
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |  290 +++--
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h      |    6 +
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |    6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |    2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |   20 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |    2 +
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   12 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |    2 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |    2 +
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   37 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  520 +++++---
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |    2 +
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |   10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   56 +-
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |   17 +
- .../wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c   |   13 +-
- .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |    2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |    5 +
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |   71 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |   26 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |   13 +-
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    |   62 +-
- drivers/net/wireless/marvell/mwifiex/debugfs.c     |   14 +-
- drivers/net/wireless/marvell/mwifiex/scan.c        |   18 +-
- drivers/net/wireless/marvell/mwifiex/sta_rx.c      |   13 +-
- drivers/net/wireless/mediatek/mt76/Makefile        |    3 +-
- drivers/net/wireless/mediatek/mt76/dma.c           |   14 +-
- drivers/net/wireless/mediatek/mt76/mac80211.c      |   80 ++
- drivers/net/wireless/mediatek/mt76/mt76.h          |   60 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/Makefile |    6 +-
- .../net/wireless/mediatek/mt76/mt76x0/debugfs.c    |   87 --
- drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c |   22 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  137 +-
- .../net/wireless/mediatek/mt76/mt76x0/initvals.h   |   15 +-
- .../wireless/mediatek/mt76/mt76x0/initvals_phy.h   | 1313 +++++++++-----------
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    |  197 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/main.c   |  100 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |   36 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/pci.c    |   35 +-
- .../net/wireless/mediatek/mt76/mt76x0/pci_mcu.c    |    4 -
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c    |  898 ++++++++-----
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.h    |   17 +
- drivers/net/wireless/mediatek/mt76/mt76x0/trace.c  |   21 -
- drivers/net/wireless/mediatek/mt76/mt76x0/trace.h  |  312 -----
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |   18 +-
- .../net/wireless/mediatek/mt76/mt76x0/usb_mcu.c    |   23 +-
- drivers/net/wireless/mediatek/mt76/mt76x02.h       |   43 +-
- .../mt76/{mt76x2/debugfs.c => mt76x02_debugfs.c}   |   22 +-
- .../mt76/{mt76x2/pci_dfs.c => mt76x02_dfs.c}       |  153 ++-
- drivers/net/wireless/mediatek/mt76/mt76x02_dfs.h   |    5 +
- .../net/wireless/mediatek/mt76/mt76x02_eeprom.c    |   12 +
- .../net/wireless/mediatek/mt76/mt76x02_eeprom.h    |   15 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   |  324 ++++-
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   |   38 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c   |   44 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h   |   16 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c  |  128 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_phy.c   |    1 +
- drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c  |   31 +-
- .../net/wireless/mediatek/mt76/mt76x02_usb_core.c  |   42 +-
- .../net/wireless/mediatek/mt76/mt76x02_usb_mcu.c   |   18 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c  |  334 ++++-
- drivers/net/wireless/mediatek/mt76/mt76x2/Makefile |    6 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/dfs.h    |   26 -
- drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c |   15 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/init.c   |   32 -
- drivers/net/wireless/mediatek/mt76/mt76x2/mac.h    |    7 -
- drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c    |   22 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h |   20 +-
- .../net/wireless/mediatek/mt76/mt76x2/mt76x2u.h    |    3 -
- .../net/wireless/mediatek/mt76/mt76x2/pci_init.c   |  134 +-
- .../net/wireless/mediatek/mt76/mt76x2/pci_mac.c    |  203 ---
- .../net/wireless/mediatek/mt76/mt76x2/pci_main.c   |  123 +-
- .../net/wireless/mediatek/mt76/mt76x2/pci_mcu.c    |    3 +-
- .../net/wireless/mediatek/mt76/mt76x2/pci_phy.c    |  114 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/pci_tx.c |  142 ---
- drivers/net/wireless/mediatek/mt76/mt76x2/phy.c    |   95 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/usb.c    |    4 +-
- .../net/wireless/mediatek/mt76/mt76x2/usb_init.c   |   44 +-
- .../net/wireless/mediatek/mt76/mt76x2/usb_main.c   |   55 +-
- .../net/wireless/mediatek/mt76/mt76x2/usb_mcu.c    |   32 +-
- .../net/wireless/mediatek/mt76/mt76x2/usb_phy.c    |   78 +-
- drivers/net/wireless/mediatek/mt76/tx.c            |  153 ++-
- drivers/net/wireless/mediatek/mt76/usb.c           |   12 +-
- drivers/net/wireless/mediatek/mt76/usb_trace.h     |   29 +-
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c |    3 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   |    2 -
- drivers/net/wireless/st/cw1200/debug.c             |   32 +-
- drivers/net/wireless/st/cw1200/scan.c              |   13 +-
- include/linux/mmc/sdio_ids.h                       |    1 +
- 146 files changed, 5028 insertions(+), 4325 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/debugfs.c
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/trace.c
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/trace.h
- rename drivers/net/wireless/mediatek/mt76/{mt76x2/debugfs.c => mt76x02_debugfs.c} (86%)
- rename drivers/net/wireless/mediatek/mt76/{mt76x2/pci_dfs.c => mt76x02_dfs.c} (84%)
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/dfs.h
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/pci_tx.c
++ stephen
+
+Kalle Valo <kvalo@codeaurora.org> writes:
+
+> here's a pull request to net-next for 4.21. More info in the signed
+> below.
+>
+> As I have been too busy this cycle not all of these have been in
+> linux-next, but most of them has been tested by the kbuild bot and the
+> last few remaining patches are being tested while I write this. So I'm
+> not expecting any major problems, but if you see something do let me
+> know.
+>
+> Happy Holidays and have a great New Year :)
+>
+> Kalle
+>
+> The following changes since commit d9bbd6a1a56eccb2b1198b8f2008d622982df0a1:
+>
+>   net: marvell: convert to DEFINE_SHOW_ATTRIBUTE (2018-12-03 17:33:44 -0800)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2018-12-20
+>
+> for you to fetch changes up to fbbae71d374f24887d78631e50210b7110fffb84:
+>
+>   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2018-12-20 19:25:43 +0200)
+
+BTW, when merging wireless-drivers (which is in net tree now) with
+wireless-drivers-next there's one simple conflict:
+
+CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi.h
+
+Please fix it by leaving all three enums in place, so something like
+this:
+
+diff --cc drivers/net/wireless/ath/ath10k/wmi.h
+index 88210ddaedc4,c5a343c93013..000000000000
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@@ -205,8 -205,7 +205,9 @@@ enum wmi_service 
+  	WMI_SERVICE_SPOOF_MAC_SUPPORT,
+  	WMI_SERVICE_TX_DATA_ACK_RSSI,
+  	WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
+ +	WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT,
+ +	WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT,
++ 	WMI_SERVICE_THERM_THROT,
+  
+  	/* keep last */
+  	WMI_SERVICE_MAX,
+
+-- 
+Kalle Valo
