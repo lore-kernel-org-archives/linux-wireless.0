@@ -2,103 +2,82 @@ Return-Path: <SRS0=pyzf=O5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-5.5 required=3.0 tests=MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA56CC43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 13:12:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97724C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 13:17:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 89AF0217D8
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 13:12:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lwTAxOtu";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="W5CWV7LQ"
+	by mail.kernel.org (Postfix) with ESMTP id 7087C20869
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 13:17:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732538AbeLTNMm (ORCPT
+        id S1733005AbeLTNRc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Dec 2018 08:12:42 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:36918 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730884AbeLTNMl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Dec 2018 08:12:41 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1BDBD60867; Thu, 20 Dec 2018 13:12:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545311561;
-        bh=REEJn9AdM/EMIpyj5AGdvfP5/SAXzUzyr5xgpY8LL0s=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=lwTAxOtuIKGLlxDJMtWKIh2zEIMYzODkk9cE81T1SUS2WBvqH27Oldf06ruipmeyu
-         hvHUuIm30oMMrAY+H3FofccTCMq8LJsdvcNmOCDfZZ3mZPqfEmI93j+vtUCIqlOk/a
-         hW0HU+z+3MqD0/5vF24L2zCT6SJI4Vuc8+4WJkhs=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Thu, 20 Dec 2018 08:17:32 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:7640 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730884AbeLTNRc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Dec 2018 08:17:32 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 86E1B60867;
-        Thu, 20 Dec 2018 13:12:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1545311559;
-        bh=REEJn9AdM/EMIpyj5AGdvfP5/SAXzUzyr5xgpY8LL0s=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=W5CWV7LQb53kCdmcWXDBuFjZCyO/BueVVi7o4N/UOYhaoHTSlwpkblmPshLZTp6wP
-         OxYimnVS+anFpgGDMuuBdojDKTWymWwD4Ro9l2AomVk4OXzrodIlgbgGwnonxJDyI4
-         /nNAoixbu+xgyirOJ+aNAgoTr1vXXALyvDJtrtXc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 86E1B60867
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Colin Ian King <colin.king@canonical.com>
-Cc:     "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: out of bounds read in drivers/net/wireless/ray_cs.c
-References: <9a94eeb3-0146-5e64-1e35-54f925fb14d2@canonical.com>
-Date:   Thu, 20 Dec 2018 15:12:35 +0200
-In-Reply-To: <9a94eeb3-0146-5e64-1e35-54f925fb14d2@canonical.com> (Colin Ian
-        King's message of "Thu, 20 Dec 2018 13:06:58 +0000")
-Message-ID: <87pntwtk8s.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mx1.redhat.com (Postfix) with ESMTPS id 04A344E920;
+        Thu, 20 Dec 2018 13:17:32 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.44])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 65F8368D5B;
+        Thu, 20 Dec 2018 13:17:27 +0000 (UTC)
+Date:   Thu, 20 Dec 2018 14:17:26 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Greg KH <gregkh@linuxfoundation.org>
+Cc:     stable@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, Sid Hayn <sidhayn@gmail.com>
+Subject: Re: [PATCH 4.19] mt76x0: mark 802.11w as supported
+Message-ID: <20181220131726.GA7840@redhat.com>
+References: <20181220114701.GA8660@redhat.com>
+ <20181220123055.GC17138@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181220123055.GC17138@kroah.com>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Thu, 20 Dec 2018 13:17:32 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Colin Ian King <colin.king@canonical.com> writes:
+On Thu, Dec 20, 2018 at 01:30:55PM +0100, Greg KH wrote:
+> On Thu, Dec 20, 2018 at 12:47:07PM +0100, Stanislaw Gruszka wrote:
+> > commit 0ae976a11b4fb5704b597e103b5189237641c1a1 upstream.
+> > 
+> > This is one line hw feature backport from 0ae976a11b4f ("mt76x0: init
+> > hw capabilities"), which add also other different features, however
+> > those are not supported in 4.19.
+> > 
+> > 802.11w is supported by mac80211 and mt76x0u driver in 4.19 correctly
+> > fall-back to software encryption when 802.11w ciphers are used.
+> > 
+> > Without the patch we fail to associate with WPA3 APs, so this is
+> > considered as fix.
+> > 
+> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> > Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> > [remove marking non-working features on 4.19, make topic correspond the change]
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> >  drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> 
+> What bug is this fixing?  This never worked before, so this feels like
+> it is adding a new feature.
 
-> Static analysis with CoverityScan picked up an out of bounds read issue
-> that has been in the Raylink wireless LAN card driver since it appeared
-> in the kernel:
->
-> drivers/net/wireless/ray_cs.c:
->
-> accessing org[3] is out of bounds, the array has just 3 elements.
->
->  959                if (proto == htons(ETH_P_AARP) || proto ==
-> htons(ETH_P_IPX)) {
->  960                        /* This is the selective translation table,
-> only 2 entries */
->
->     CID undefined (#1 of 1): Out-of-bounds read
->     overrun-local: Overrunning array of 3 bytes at byte offset 3 by
-> dereferencing pointer &((struct snaphdr_t *)ptx->var)->org[3].
->
->  961                        writeb(0xf8,
->  962                               &((struct snaphdr_t __iomem
-> *)ptx->var)->org[3]);
->  963                }
->
-> I suspect the org[3] is a typo and should be org[2], but I don't have
-> any info on the H/W so I'm speculating that this is the issue. Any ideas
-> anyone?
+It's never worked before, true. It fixes problem with associating
+with WPA3 Access Points. Perhaps Sid (already in CC) who requested
+this, could justify it better.
 
-I have never heard anyone using this driver so I suspect you won't get
-any help with testing. Just send a patch fixing the issue, and if it
-breaks something then at least we know someone is using the driver :)
-
--- 
-Kalle Valo
+Thanks
+Stanislaw
