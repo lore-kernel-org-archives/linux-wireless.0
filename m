@@ -1,82 +1,72 @@
-Return-Path: <SRS0=qpxp=O4=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=pyzf=O5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B54C6C43387
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Dec 2018 20:42:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6033C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 02:44:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A87A20873
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Dec 2018 20:42:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF15920866
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Dec 2018 02:44:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729801AbeLSUmS (ORCPT
+        id S1729236AbeLTCoF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Dec 2018 15:42:18 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:43848 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729480AbeLSUmR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Dec 2018 15:42:17 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gZifX-0005Kd-Qp; Wed, 19 Dec 2018 21:42:16 +0100
-Message-ID: <43f69cb7ddc44d4c1f9a12b729c9319066e981c0.camel@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: Allow drivers to advertise supported AKM
- suites
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     vjakkam@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 19 Dec 2018 21:42:14 +0100
-In-Reply-To: <e9f26148a73c5b10192fd12c61d76f14@codeaurora.org>
-References: <1542368582-3153-1-git-send-email-vjakkam@codeaurora.org>
-         <898d521150250b33b9c1efa42e63efc4bf608e06.camel@sipsolutions.net>
-         <e9f26148a73c5b10192fd12c61d76f14@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
-Mime-Version: 1.0
+        Wed, 19 Dec 2018 21:44:05 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:16610 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726604AbeLTCoF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Dec 2018 21:44:05 -0500
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 6B0B88C82068A;
+        Thu, 20 Dec 2018 10:44:00 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
+ 14.3.408.0; Thu, 20 Dec 2018 10:43:53 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     YueHaibing <yuehaibing@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+Subject: [PATCH] mac80211-next: remove duplicated include from virt_wifi.c
+Date:   Thu, 20 Dec 2018 02:51:25 +0000
+Message-ID: <1545274285-143886-1-git-send-email-yuehaibing@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2018-12-19 at 17:59 +0530, vjakkam@codeaurora.org wrote:
-> On 2018-12-18 18:35, Johannes Berg wrote:
-> > On Fri, 2018-11-16 at 17:13 +0530, Veerendranath Jakkam wrote:
-> > > There was no such capability advertisement from the driver and thus 
-> > > the
-> > > current user space has to assume the driver to support all the AKMs. 
-> > > While
-> > > that may be the case with some drivers (e.g., mac80211-based ones), 
-> > > there
-> > > are cfg80211-based drivers that have constraints on which AKMs can be 
-> > > used.
-> > > Allow such drivers to advertise the exact set of supported AKMs so 
-> > > that
-> > > user space tools can determine what network profile options should be
-> > > allowed to be configured.
-> > 
-> > I think you need to explain here (and probably also in the docs) where
-> > this actually matters. Clearly with drivers that do it all in userspace
-> > it doesn't matter - so I guess it's intended for the offload cases?
-> > 
-> > Also, it'd be good to know which driver needs/implements this.
-> 
-> This is required by the Wi-Fi driver/solution , where the SME is part of
-> the driver and does not define separate commands for authentication and
-> association. The driver we are targeting here is specific to Qualcomm
-> and the design needs update to support new AKM's. (For EX,this driver
-> needs an enhancement to trigger NL80211_CMD_EXTERNAL_AUTH for SAE AKM).
+Remove duplicated include.
 
-This may be a bit repetitive ... but when are we going to see this
-driver upstream? :-)
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/net/wireless/virt_wifi.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-We keep adding APIs like this that you cannot actually use upstream,
-which doesn't make me feel all that good about them.
+diff --git a/drivers/net/wireless/virt_wifi.c b/drivers/net/wireless/virt_wifi.c
+index 64b2186..245d4d0 100644
+--- a/drivers/net/wireless/virt_wifi.c
++++ b/drivers/net/wireless/virt_wifi.c
+@@ -14,11 +14,6 @@
+ #include <linux/etherdevice.h>
+ #include <linux/module.h>
+ 
+-#include <net/cfg80211.h>
+-#include <net/rtnetlink.h>
+-#include <linux/etherdevice.h>
+-#include <linux/module.h>
+-
+ static struct wiphy *common_wiphy;
+ 
+ struct virt_wifi_wiphy_priv {
 
-johannes
+
 
