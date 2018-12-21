@@ -2,109 +2,77 @@ Return-Path: <SRS0=l33s=O6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11A70C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Dec 2018 10:30:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC20C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Dec 2018 11:19:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC59921908
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Dec 2018 10:30:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8446218FD
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Dec 2018 11:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731222AbeLUKaD (ORCPT
+        id S1731691AbeLULTg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Dec 2018 05:30:03 -0500
-Received: from relay-b01.edpnet.be ([212.71.1.221]:47294 "EHLO
-        relay-b01.edpnet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730392AbeLUKaD (ORCPT
+        Fri, 21 Dec 2018 06:19:36 -0500
+Received: from smtprelay0119.hostedemail.com ([216.40.44.119]:53516 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730624AbeLULTg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Dec 2018 05:30:03 -0500
-X-Greylist: delayed 723 seconds by postgrey-1.27 at vger.kernel.org; Fri, 21 Dec 2018 05:30:02 EST
-X-ASG-Debug-ID: 1545387477-0a7ff577af86aaa0001-9xRsGE
-Received: from zotac.vandijck-laurijssen.be (77.109.116.222.adsl.dyn.edpnet.net [77.109.116.222]) by relay-b01.edpnet.be with ESMTP id 6ALe684qJLYAviX7 for <linux-wireless@vger.kernel.org>; Fri, 21 Dec 2018 11:17:57 +0100 (CET)
-X-Barracuda-Envelope-From: dev.kurt@vandijck-laurijssen.be
-X-Barracuda-Effective-Source-IP: 77.109.116.222.adsl.dyn.edpnet.net[77.109.116.222]
-X-Barracuda-Apparent-Source-IP: 77.109.116.222
-Received: from x1.vandijck-laurijssen.be (74.250-240-81.adsl-static.isp.belgacom.be [81.240.250.74])
-        by zotac.vandijck-laurijssen.be (Postfix) with ESMTPSA id 914296B3136
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Dec 2018 11:17:57 +0100 (CET)
-Date:   Fri, 21 Dec 2018 11:17:56 +0100
-From:   Kurt Van Dijck <dev.kurt@vandijck-laurijssen.be>
-To:     linux-wireless@vger.kernel.org
-Subject: question concerning Japan regulation and NO-OUTDOOR
-Message-ID: <20181221101756.GA19960@x1.vandijck-laurijssen.be>
-X-ASG-Orig-Subj: question concerning Japan regulation and NO-OUTDOOR
-Mail-Followup-To: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-User-Agent: Mutt/1.5.22 (2013-10-16)
-X-Barracuda-Connect: 77.109.116.222.adsl.dyn.edpnet.net[77.109.116.222]
-X-Barracuda-Start-Time: 1545387477
-X-Barracuda-URL: https://212.71.1.221:443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at edpnet.be
-X-Barracuda-Scan-Msg-Size: 1893
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.5314 1.0000 0.7500
-X-Barracuda-Spam-Score: 0.75
-X-Barracuda-Spam-Status: No, SCORE=0.75 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=7.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.64207
-        Rule breakdown below
-         pts rule name              description
-        ---- ---------------------- --------------------------------------------------
+        Fri, 21 Dec 2018 06:19:36 -0500
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay03.hostedemail.com (Postfix) with ESMTP id E435D8368F00;
+        Fri, 21 Dec 2018 11:19:34 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: drug08_191996814fd62
+X-Filterd-Recvd-Size: 2002
+Received: from XPS-9350.home (unknown [47.151.153.53])
+        (Authenticated sender: joe@perches.com)
+        by omf05.hostedemail.com (Postfix) with ESMTPA;
+        Fri, 21 Dec 2018 11:19:32 +0000 (UTC)
+Message-ID: <b0b97478f9b2b9b12ad7bc04a1eb0af3bad6c5f3.camel@perches.com>
+Subject: Re: [PATCH v2 1/3] rt2x00: use ratelimited variants dev_warn/dev_err
+From:   Joe Perches <joe@perches.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org
+Cc:     Randy Oostdyk <linux-kernel@oostdyk.com>,
+        Tomislav =?UTF-8?Q?Po=C5=BEega?= <pozega.tomislav@gmail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+Date:   Fri, 21 Dec 2018 03:19:31 -0800
+In-Reply-To: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
+References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.30.1-1build1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hey all,
+On Thu, 2018-12-20 at 16:16 +0100, Stanislaw Gruszka wrote:
+> As reported by Randy we can overwhelm logs on some USB error conditions.
+> To avoid that use dev_warn_ratelimited() and dev_err_ratelimitd().
+> 
+> Reported-and-tested-by: Randy Oostdyk <linux-kernel@oostdyk.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2x00.h | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+[]
+> @@ -65,14 +65,19 @@
+>  /* Utility printing macros
+>   * rt2x00_probe_err is for messages when rt2x00_dev is uninitialized
+>   */
+> +#define wiphy_err_ratelimited(wiphy, format, args...)		\
+> +	dev_err_ratelimited(&(wiphy)->dev, format, ##args)
+> +#define wiphy_warn_ratelimited(wiphy, format, args...)		\
+> +	dev_warn_ratelimited(&(wiphy)->dev, format, ##args)
+> +
 
-I work on a project for an outdoor device equipped with a Ralink wifi
-key. In order to get certified in Japan, we should be able to proof that
-the device is not using the 5.2GHz bands since this band is limited to
-indoor use only in Japan.
-As I understood, 5.4GHz and up are allowed.
+These should probably be generic in include/net/cfg80211.h
 
-My first, rather rough, approach is to specify all 2.4GHz bands in
-wpa_supplicant's global 'freq_list' parameter.
-We found that our device still connect to 5GHz networks, I believe
-because passive scanning allows 5GHz networks to be detected anyway.
 
-2nd attempt, on top of the 1st, is to patch wpa_supplicant with:
-
-diff --git a/wpa_supplicant/events.c b/wpa_supplicant/events.c
-index 37d429d..c32aa1a 100644
---- a/wpa_supplicant/events.c
-+++ b/wpa_supplicant/events.c
-@@ -1223,6 +1223,13 @@ struct wpa_ssid * wpa_scan_res_match(struct wpa_supplicant *wpa_s,
- 			continue;
- 		}
- 
-+		if (!freq_allowed(wpa_s->conf->freq_list, bss->freq)) {
-+			wpa_msg(wpa_s, MSG_INFO,
-+				"frequency %u excluded", bss->freq);
-+			wpa_dbg(wpa_s, MSG_DEBUG,
-+				"   skip - avoid this frequency");
-+			continue;
-+		}
- 		if (!freq_allowed(ssid->freq_list, bss->freq)) {
- 			if (debug_print)
- 				wpa_dbg(wpa_s, MSG_DEBUG,
-
-In short, this enforces wpa_supplicant to honor the global freq_list
-parameter for joining accesspoints, as it does for per-network
-freq_lists.
-
-Is this sufficient to avoid our chip to send on 5GHz band?
-
-I also noticed some NO-OUTDOOR specifiers in the wireless regdb,
-but not on the 5.2GHz bands for Japan.
-I'm in the position to find out those details, and I'm willing to amend
-in the upstream repository.
-I do not yet see however how I can tell the kernel that it should limit
-wifi regulation to outdoor use only. There seems no simple 'iw reg set
-outdoor' or similar command. How is this done?
-
-Thanks for your responses in advance,
-Kurt
