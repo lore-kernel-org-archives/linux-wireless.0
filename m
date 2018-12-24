@@ -2,108 +2,83 @@ Return-Path: <SRS0=QFll=PB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ADF7C43387
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Dec 2018 11:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07915C64E75
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Dec 2018 16:24:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E4EB52176F
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Dec 2018 11:09:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="QbyXG7DK"
+	by mail.kernel.org (Postfix) with ESMTP id CD0D321736
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Dec 2018 16:24:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725763AbeLXLJm (ORCPT
+        id S1725799AbeLXQYw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Dec 2018 06:09:42 -0500
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:50302 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725308AbeLXLJl (ORCPT
+        Mon, 24 Dec 2018 11:24:52 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:46260 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725355AbeLXQYw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Dec 2018 06:09:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2014; h=Sender:Content-Type:MIME-Version:
-        Message-ID:Subject:Cc:To:From:Date:Reply-To:Content-Transfer-Encoding:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=oL63zbLCFSqoFe+976HgG14BtByyjQTTSPhlM+3eyqM=; b=QbyXG7DKVFBTyoiqRuNJzXqwB
-        GarGGaoU38f8CWVWlKWlcv1uINQEMhOLLUIWzsvwpJ5jRL7FHh9ln0nDZPuA6se2SRq3jslHTEzjP
-        vPt2Z2pqIrp/feEciu7xbn+B7TUv58UowOByiJaFipKMmqPXLkrvUHv/LSCPQomZLgvg8=;
-Received: from n2100.armlinux.org.uk ([2002:4e20:1eda:1:214:fdff:fe10:4f86]:56734)
-        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1gbO70-0006wx-Kb; Mon, 24 Dec 2018 11:09:34 +0000
-Received: from linux by n2100.armlinux.org.uk with local (Exim 4.90_1)
-        (envelope-from <linux@n2100.armlinux.org.uk>)
-        id 1gbO6x-0004w1-St; Mon, 24 Dec 2018 11:09:28 +0000
-Date:   Mon, 24 Dec 2018 11:09:25 +0000
-From:   Russell King - ARM Linux <linux@armlinux.org.uk>
-To:     rafal@milecki.pl, arend.vanspriel@broadcom.com,
-        kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com
-Subject: [REGRESSION] hostapd 2.4..2.7 broken with 4.18+
-Message-ID: <20181224110925.GY26090@n2100.armlinux.org.uk>
+        Mon, 24 Dec 2018 11:24:52 -0500
+Received: by mail-wr1-f66.google.com with SMTP id l9so11915773wrt.13
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Dec 2018 08:24:51 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=xYjAo+0v0pomO7Ke0FBR6dMloRI+Aaq72zBVVL4vKVc=;
+        b=kAGvxAtj1+e1GUPp6jc0n5VAh+JG7rmZsewSf3sl9ZbnUEJfR918dLJ/loRBLH1y8o
+         UKFelYC4rtXdYbFoXiq/cOxZgsfgC+h9iuCMw2oQl5QSuRx23LKINVjiSe0ZGqd+SISf
+         ckYpkgaPvG8EvTSrhgjZthbuv9l8h5UNDenCoKYK0a/bCDNpehm2KucFLlxY2tvYtdku
+         tNqUA/vovE9KiR7CYRK7mcQew+CvKYtEesWE1Qko446EX+gEAzP8qXg3wYUYssVsVejw
+         g3mnpJm71KWxZvk57uLHUdfEpp00Z/titnBI6waXhoYz8eZHNNhADVSCWm0GSp1yox74
+         2NwQ==
+X-Gm-Message-State: AJcUukdL5M5TXDFkBskGJM88hLZHm7uCQ72uUjlr0TRYYt9KT35F8oUx
+        t2htMOE0MuwRnRFTZ9h2L+AjmBpbJ9c=
+X-Google-Smtp-Source: ALg8bN4HJrvAZ7N8dVLYxAcgiJzVB5rsru9Ess9h4TTr7mzoXp7idErW8HlfKp6hKKrBeT79x3cBHg==
+X-Received: by 2002:adf:f984:: with SMTP id f4mr12509388wrr.234.1545668690688;
+        Mon, 24 Dec 2018 08:24:50 -0800 (PST)
+Received: from localhost.localdomain.com (host89-60-dynamic.56-79-r.retail.telecomitalia.it. [79.56.60.89])
+        by smtp.gmail.com with ESMTPSA id o82sm21283194wmo.29.2018.12.24.08.24.49
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 24 Dec 2018 08:24:49 -0800 (PST)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH 0/2] introduce mt76 tx hang watchdog
+Date:   Mon, 24 Dec 2018 17:24:40 +0100
+Message-Id: <cover.1545667662.git.lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.5.23 (2014-03-12)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Port mt76x02_check_tx_hang watchdog from vendor driver in order to
+reset the card when tx mac/dma engine is stucked. Tx mac/dma stuck
+occurs when the device is heavily loaded or in a noisy environment.
+In that condition tx queues are not drained since the device does not
+generate tx interrupts.
+This series is based on "add EDCCA support to mt76x{0,2}e drivers"
+https://patchwork.kernel.org/cover/10727149/
 
-Commit 1204aa17f3b4 ("brcmfmac: set WIPHY_FLAG_HAVE_AP_SME flag")
-appears to have broken hostapd 2.4, thereby causing a user visible
-regression when upgrading across the 4.18 boundary (e.g. 4.13 to
-4.19).
+Lorenzo Bianconi (2):
+  mt76: run mac work every 100ms
+  mt76: introduce mt76x02_check_tx_hang watchdog
 
-The presence of this flag causes nl80211 to add an additional
-attribute to the netlink wiphy reply:
-
-                if ((rdev->wiphy.flags & WIPHY_FLAG_HAVE_AP_SME) &&
-                    nla_put_u32(msg, NL80211_ATTR_DEVICE_AP_SME,
-                                rdev->wiphy.ap_sme_capa))
-                        goto nla_put_failure;
-
-which is then parsed by hostapd using a presence/absence test for
-this property (the value of the property is meaningless):
-
-        nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-                  genlmsg_attrlen(gnlh, 0), NULL);
-...
-        if (tb[NL80211_ATTR_DEVICE_AP_SME])
-                info->device_ap_sme = 1;
-
-This causes hostapd to then attempt to subscribe to management
-frames (via nl80211_mgmt_subscribe_ap_dev_sme()):
-
-        if (nl80211_register_frame(bss, bss->nl_mgmt,
-                                   (WLAN_FC_TYPE_MGMT << 2) |
-                                   (WLAN_FC_STYPE_ACTION << 4),
-                                   NULL, 0) < 0)
-
-and brcmfmac does not support passing any management frames in AP
-mode (brcmf_txrx_stypes[NL80211_IFTYPE_AP] is empty).  That causes
-nl80211_register_frame() to fail, and hostapd fails to initialise.
-
-Checking the hostapd versions (including up to 2.7) shows that
-nothing has changed, so this change has broken the ability for
-hostapd to be used with brcmfmac - thereby causing a user-visible
-regression.
-
-Can this commit be reverted to fix this regression please?
-
-Thanks.
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
+ .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x0/usb.c   |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02.h  |  7 ++
+ .../wireless/mediatek/mt76/mt76x02_debugfs.c  |  2 +
+ .../net/wireless/mediatek/mt76/mt76x02_mac.c  | 90 ++++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 23 +++++
+ .../wireless/mediatek/mt76/mt76x2/pci_main.c  |  2 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_main.c  |  2 +-
+ 9 files changed, 125 insertions(+), 6 deletions(-)
 
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 12.1Mbps down 622kbps up
-According to speedtest.net: 11.9Mbps down 500kbps up
+2.20.1
+
