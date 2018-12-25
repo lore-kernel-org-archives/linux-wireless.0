@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A758EC43387
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Dec 2018 22:30:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1318BC43387
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Dec 2018 22:35:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C1012173B
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Dec 2018 22:30:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF2802173B
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Dec 2018 22:35:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i0G9zIVU"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IIRLjBNN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725884AbeLYWan (ORCPT
+        id S1725876AbeLYWfl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Dec 2018 17:30:43 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:36838 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725870AbeLYWan (ORCPT
+        Tue, 25 Dec 2018 17:35:41 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:37714 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725857AbeLYWfk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Dec 2018 17:30:43 -0500
-Received: by mail-wr1-f66.google.com with SMTP id u4so14384845wrp.3;
-        Tue, 25 Dec 2018 14:30:42 -0800 (PST)
+        Tue, 25 Dec 2018 17:35:40 -0500
+Received: by mail-wr1-f65.google.com with SMTP id s12so14385634wrt.4;
+        Tue, 25 Dec 2018 14:35:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id;
         bh=5fOGnKGi1KW1Jz4CcUtu1Z5DWuG3MIq7WLWqYoCdj+0=;
-        b=i0G9zIVULg6wysgzMHHWGPaxxb4UNe82SN18TMCQ6Lc3KO2Zq+eAYoFbrl5T0k1lbL
-         FzEyrzVAf8vA0Xnb4LuAg05b2Pq36eR8M0pcMiuXHAPxrBysJ7+nN/rzvNvPXbmyeynZ
-         8zZD9wVAALKj9KJFeEBD4bWBQme1rO1OFZW/NaNQCjr8RqV+i46mTwJiNUgVsLgU8ird
-         y+hGG7FMXQmCj+pFHW6CqWF2I/kDUkTCMBR50cB97kTmB1H9Ik05GC1gf74NA949rB0k
-         G5ekO0+WzMSfMW60cdJ5ywVZBIEdfH4oUj6N97xGOhgBpbhiBigO3071vV4jxmwNti8B
-         UP+Q==
+        b=IIRLjBNNM0VqVpetxcJmWtHSkd2jP84odMC5rZJaDvJau3JT1UzGVBp1ovNvE+rfFQ
+         QClooqfZZTkfdbZDXSXFVPnHJ5Z3ge+174VIJJ89zPaPSlKjpZAU2KOMv3fpKB7DTLVZ
+         cl3fkCF7mXmhlQ28o/oliNMHGcw6+K6huauV1ZhZHMbFpOQTXQh8OhIy9Skmh9g7OpmY
+         kHpBhZjZKmHU7rUCbfwHtfI28m/MPIbdJGQDdw7DwqAQTtXveTdaiFKzw72tqA/KBM2m
+         DZt4P7v7mS9GQca0Ck6YPdpPHpo4XGn/soV771L6qoMlqwwiYt/ffF2MFrfZIj0McO6P
+         Z30Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
         bh=5fOGnKGi1KW1Jz4CcUtu1Z5DWuG3MIq7WLWqYoCdj+0=;
-        b=ZqWewqxWsZO2CMypSbaqjUKBD5O7PArJ9jOuqQKZJoYnE3hGRGQtcImmYaYQZjIR5F
-         ESgYkkNjtOc9G/VCQ3n/FC0ILehACVMPPXFEfKtdXlvKP0jA6Za5hA/dS+eSgG+KyFbe
-         GJGJg66IW5uJR8k2tv/RZEqaqjD0ixacE56+vabOf8dIH0Xw0aY7EneCtefO8L5YuaEl
-         /yHeqhHwUdFOfAMM/CjQtpjRWBeeWXW7kuQdpUz3rY1vtfjlmksjk0HoEtIrWP+jpXCf
-         W8BG3SN0rVZOGbNtEdk4FAwB5KXYCE7dVa+GyMh7sgBACJMU45r9+P5i9gErduM7YeD7
-         J0fg==
-X-Gm-Message-State: AJcUukfqeuh9Kdc+1DmauoukZ+t8619I9KEYVul2nz9gRHmlQUAOwF47
-        QMYWem7lo8Ramn2FAPbVA9s=
-X-Google-Smtp-Source: ALg8bN7qcloBxVo2png8In1e9y60PRsMVNRz2cpsyjVKaWFS7RWKJ3/fT0IwOC0wQJXtATa523GMmQ==
-X-Received: by 2002:adf:e983:: with SMTP id h3mr15930540wrm.232.1545777041603;
-        Tue, 25 Dec 2018 14:30:41 -0800 (PST)
+        b=YN9SKbuuk0XFppVIen7v8XfXwi2Y3RMCQ/x8mdjmoV/bKZuBTyF1lB3WmnnVo3t+lm
+         PHNe9bMRHhlDpwQ8deTe0k/ajsW2+05a7ABC0diIs+S26ZymY+JDUJtaeilG02HdSLRd
+         grsmDblsf3UQFGAQCGlU8G+FU/dxdrzh9MUU2vRJK4kav8tvlud/qyAbRI9EZq6C6BYU
+         dzwh1G/s0CvRz1m+Mu5MLMZZT4kqkwbEUD3fZISTWDF9X88SDHZXxYLWo5y1r2yJxqWW
+         adHyc+Y76ME7dYggDEOb+Io5i3A3UDaR2F4m39ApGY1YRL1zHC9IBO5uAfCiBYV8F0Ik
+         Irfw==
+X-Gm-Message-State: AJcUukdD25Ynfxuu/E/9AndgnBigVPGAHZldlh42bhGWoEeZCbO1toZ7
+        MicR5opWp0IMzXmz28G49xM=
+X-Google-Smtp-Source: ALg8bN4b7BnzhCijb336+kQBXvdCIEyVVvSTQ3NX5ZUxJe+N1l9lbppa5SbuHry6d5/VoVEZt0DXwQ==
+X-Received: by 2002:a5d:4b01:: with SMTP id v1mr15595534wrq.5.1545777337975;
+        Tue, 25 Dec 2018 14:35:37 -0800 (PST)
 Received: from norris-440-G3 ([5.134.110.166])
-        by smtp.gmail.com with ESMTPSA id y145sm20951699wmd.30.2018.12.25.14.30.40
+        by smtp.gmail.com with ESMTPSA id z14sm17261673wrm.48.2018.12.25.14.35.37
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 25 Dec 2018 14:30:40 -0800 (PST)
+        Tue, 25 Dec 2018 14:35:37 -0800 (PST)
 From:   Marko Stankovic <dartnorris@gmail.com>
 To:     adham.abozaeid@microchip.com, ajay.kathat@microchip.com,
         gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
 Cc:     devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
         Marko Stankovic <dartnorris@gmail.com>
-Subject: [PATCH] staging: wilc100: make function wilc_get_stats_async static
-Date:   Tue, 25 Dec 2018 23:30:15 +0100
-Message-Id: <20181225223015.7352-1-dartnorris@gmail.com>
+Subject: [PATCH] staging: wilc1000: make function wilc_get_stats_async static
+Date:   Tue, 25 Dec 2018 23:35:31 +0100
+Message-Id: <20181225223531.7659-1-dartnorris@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
