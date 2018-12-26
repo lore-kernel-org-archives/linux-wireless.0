@@ -4,111 +4,110 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF22BC43387
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 03:43:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCD66C43444
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 06:44:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D85920989
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 03:43:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB74021720
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 06:44:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="eRdPUW4B"
+	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="Y+7EavdB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726119AbeLZDne (ORCPT
+        id S1726077AbeLZGoC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Dec 2018 22:43:34 -0500
-Received: from mta-p5.oit.umn.edu ([134.84.196.205]:45454 "EHLO
-        mta-p5.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725867AbeLZDne (ORCPT
+        Wed, 26 Dec 2018 01:44:02 -0500
+Received: from mta-p8.oit.umn.edu ([134.84.196.208]:58850 "EHLO
+        mta-p8.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726033AbeLZGoC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Dec 2018 22:43:34 -0500
+        Wed, 26 Dec 2018 01:44:02 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-p5.oit.umn.edu (Postfix) with ESMTP id 8B150B92
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2018 03:43:32 +0000 (UTC)
+        by mta-p8.oit.umn.edu (Postfix) with ESMTP id 9A9F8956
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2018 06:44:00 +0000 (UTC)
 X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p5.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p5.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Zj5m8yMccUgc for <linux-wireless@vger.kernel.org>;
-        Tue, 25 Dec 2018 21:43:32 -0600 (CST)
-Received: from mail-it1-f200.google.com (mail-it1-f200.google.com [209.85.166.200])
+Received: from mta-p8.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p8.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id ss6vqT3hZw5M for <linux-wireless@vger.kernel.org>;
+        Wed, 26 Dec 2018 00:44:00 -0600 (CST)
+Received: from mail-io1-f71.google.com (mail-io1-f71.google.com [209.85.166.71])
         (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mta-p5.oit.umn.edu (Postfix) with ESMTPS id 5B9F5B60
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Dec 2018 21:43:32 -0600 (CST)
-Received: by mail-it1-f200.google.com with SMTP id k133so18688297ite.4
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Dec 2018 19:43:32 -0800 (PST)
+        by mta-p8.oit.umn.edu (Postfix) with ESMTPS id DCE4169F
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2018 00:43:56 -0600 (CST)
+Received: by mail-io1-f71.google.com with SMTP id s25so18589590ioc.14
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Dec 2018 22:43:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=umn.edu; s=google;
         h=from:to:cc:subject:date:message-id;
-        bh=hOl5p+2T+SMz/8AEMgt4InNIGEFzNxBsbhO4HjquBZY=;
-        b=eRdPUW4BpRTZB3BAgOzRsZdxwe8PFkFpACVrEywrIc06V3l4IWc/6FEl3IiaPCuKYJ
-         4FssBkpdtNHFKLqLGcvBTb3mZRGAcj3fI+1YcQDzmJZ9RKSZIo4lRtnao0No14InraGc
-         2EEvvOWOidNZ4mzPSrZTpAAYT+kWe4e6qYjc4V+qGN42OEcmrJcHA8HqnCiCHj05k5O9
-         h0P7cRZ+rf0IQP62hUkL72GPDFEu1BvD2bAGj8iHtF9/brhs41tRKvCI+Y4hAzVhGSfr
-         HPBUDbKxL1DY3Gwy02m1H8vr5tzK6PyOZR3eWU7cytA1auduRBgK5WLp/BXEzlsBQwiq
-         Gn0Q==
+        bh=LEca6Xts+zVHh0AgI4asPdaU8TuXEc059b4qJWAorB4=;
+        b=Y+7EavdBCRELfYQN1c34errcdtuvEj7OXXdKe6cI7C9epiN94sbChz2W43sYLAmzEX
+         Znt5TeBDsKPaWHWBjF2pz77wzo7Y4vwTrjSLjEr/7FDrOQjSzhr5AKIo5Czr7eNy/l+k
+         7WQjItZ0ApUatcqCUbwt2TbGfVp8uxeRea8fKqsJDly0xEYZOGoYjZjc1tGSuloOkMoO
+         BLd8yFHPFotPiOIljKBZGqClburbceSntq1icM9eoq7jYZ2z3FS8GhZlg/DJU+aSXtPo
+         FSMWDmu1DlLTBJQCBba3+D6ZWz6GPzYw3NKFAFwklpYFod1y9nAi0mhhgLtHCm/M8Jh8
+         Ob0A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=hOl5p+2T+SMz/8AEMgt4InNIGEFzNxBsbhO4HjquBZY=;
-        b=GnLB2nvIoclgr3neZa1/ETEbIDuoNxJcjBMUE8zVasTOihxrfVltZAcdSO0KE63h/y
-         UfbtXOJycSviezmumnBP78+kLEO/86F0v4d5+DO52Byv6vNoMxXRaW6wPT8k+Bh7NMpM
-         dVm4315ER8fUp6h1XQQjyD/jdMNm0E816ZG5MgwsoYkIJ1jpOyjOFKtKK2wdlB8vcv8U
-         VFuKtZgBi7XqB9GCWZGPtrKJwDDX7xWqBa5FJYKVtd4BBukkukAUqu0sWgGFHszbl5m1
-         ZUGJNZShYs1d4wV3iqDHgS/8y55FzOmtpGnqAaHJnPiO/eA+968UAHK+uLkCt5tkdPMn
-         6ykg==
-X-Gm-Message-State: AJcUukdmrp5m3eo2eWmcQw0Aj2wFDRwkiSheFV+4PtGzRs9ULNZybzou
-        VTCwNeoS5aC9r2RIshnSNO+ZOUI+1XcIxou3qOfioZJo6E/HhZD+EIkeOfxCWASGweyQvozRbW4
-        6ueB8gaZdzUtbhjKh6O1XB4wZ39zHqUg=
-X-Received: by 2002:a5d:8614:: with SMTP id f20mr143735iol.241.1545795811955;
-        Tue, 25 Dec 2018 19:43:31 -0800 (PST)
-X-Google-Smtp-Source: ALg8bN534rNwU19Ro9JJOu8+7q8bkZNReoaF9cOWN8bsLHV2smqMr9Fn14To3ldsAgFEZRbS5fyEfA==
-X-Received: by 2002:a5d:8614:: with SMTP id f20mr143729iol.241.1545795811732;
-        Tue, 25 Dec 2018 19:43:31 -0800 (PST)
+        bh=LEca6Xts+zVHh0AgI4asPdaU8TuXEc059b4qJWAorB4=;
+        b=ATfbnW9YJ/GplV4G2ELJM955RQnvccvBXX3wVN285DNY+5p0i+isOwur1aeXlkAazB
+         Vo+7zcyYam43atbK3iDGov9fnm4PAMHL9xe+rWJh2hbMX1A8BKjw6swhMgvTwohPDZ7k
+         m3DLcRsr/V1Z3LiLpC4miG4LRyhYTChlHLFkt+Anpt/zGpqZvATzjTihtvZFMJqhBPu2
+         x+cPytQ/G68fdPDtKwd2vRj4EJZDzEeDHCZvR6GZY5gBHbc2T8ZckS6xcm3mScg5ZXSN
+         BU1V00x/McB2JyF7Sk4WNVriQ04fJYm9OKljeWEbo5jzAoNgfbaK7FciXJb05J37kBAs
+         GDFA==
+X-Gm-Message-State: AJcUukfW111lrBinvwZJO5NVAWH0QI4OU8sP/0l07WMtfwbEswESRdE2
+        eG8+InecWTHrMW++uUTtPtKqsqTQIplxLvd6c+bBHSiyoN6fyp/NQ8pJXWKJ38UHn8WC6wJ1Jry
+        oT4XYpEzeJPBqdqFn4GLYiN/2FcbSjpA=
+X-Received: by 2002:a6b:ed05:: with SMTP id n5mr6538835iog.212.1545806636463;
+        Tue, 25 Dec 2018 22:43:56 -0800 (PST)
+X-Google-Smtp-Source: ALg8bN5S/eg+sG2rlpmZfjzmo0Wcv3S9JrKzU1Oj9d8l+u879YVJHVg1CoqHHqLmrDoYdH9u7oKRpA==
+X-Received: by 2002:a6b:ed05:: with SMTP id n5mr6538829iog.212.1545806636226;
+        Tue, 25 Dec 2018 22:43:56 -0800 (PST)
 Received: from localhost.localdomain (host-173-230-104-22.mnmigsc.mn.minneapolis.us.clients.pavlovmedia.net. [173.230.104.22])
-        by smtp.gmail.com with ESMTPSA id 195sm11918724itm.2.2018.12.25.19.43.30
+        by smtp.gmail.com with ESMTPSA id k18sm15704049ioa.39.2018.12.25.22.43.54
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Tue, 25 Dec 2018 19:43:30 -0800 (PST)
+        Tue, 25 Dec 2018 22:43:55 -0800 (PST)
 From:   Kangjie Lu <kjlu@umn.edu>
 To:     kjlu@umn.edu
 Cc:     pakki001@umn.edu, Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] wireless: marvell: add checks for the return value of sysfs_create_group
-Date:   Tue, 25 Dec 2018 21:43:03 -0600
-Message-Id: <20181226034305.73411-1-kjlu@umn.edu>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: ath: return error code upstream
+Date:   Wed, 26 Dec 2018 00:43:28 -0600
+Message-Id: <20181226064328.75897-1-kjlu@umn.edu>
 X-Mailer: git-send-email 2.17.2 (Apple Git-113)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-sysfs_create_group() could fail, so let's check its return values and
-issue error messages if it fails.
+ath6kl_wmi_cmd_send could fail, so let's return its error code upstream.
 
 Signed-off-by: Kangjie Lu <kjlu@umn.edu>
 ---
- drivers/net/wireless/marvell/libertas/mesh.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath6kl/wmi.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
-index b0cb16ef8d1d..90b20618e0af 100644
---- a/drivers/net/wireless/marvell/libertas/mesh.c
-+++ b/drivers/net/wireless/marvell/libertas/mesh.c
-@@ -797,7 +797,11 @@ static void lbs_persist_config_init(struct net_device *dev)
- {
- 	int ret;
- 	ret = sysfs_create_group(&(dev->dev.kobj), &boot_opts_group);
-+	if (ret)
-+		pr_err("failed to create boot_opts_group.\n");
- 	ret = sysfs_create_group(&(dev->dev.kobj), &mesh_ie_group);
-+	if (ret)
-+		pr_err("failed to create mesh_ie_group.\n");
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 777acc564ac9..1f3cead3180b 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -776,10 +776,8 @@ int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi)
+ 	cmd->info.params.roam_rssi_floor = DEF_LRSSI_ROAM_FLOOR;
+ 	cmd->roam_ctrl = WMI_SET_LRSSI_SCAN_PARAMS;
+ 
+-	ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_SET_ROAM_CTRL_CMDID,
++	return ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_SET_ROAM_CTRL_CMDID,
+ 			    NO_SYNC_WMIFLAG);
+-
+-	return 0;
  }
  
- static void lbs_persist_config_remove(struct net_device *dev)
+ int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid)
 -- 
 2.17.2 (Apple Git-113)
 
