@@ -1,104 +1,122 @@
-Return-Path: <SRS0=458R=PC=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=rEuJ=PD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F4AAC43387
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Dec 2018 22:43:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99C38C43387
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 01:23:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DABF821726
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Dec 2018 22:43:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 628E120C01
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 01:23:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g1W/VOsd"
+	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="OzpGiYDx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725922AbeLYWnL (ORCPT
+        id S1725901AbeLZBW5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Dec 2018 17:43:11 -0500
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:41923 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725905AbeLYWnK (ORCPT
+        Tue, 25 Dec 2018 20:22:57 -0500
+Received: from mta-p5.oit.umn.edu ([134.84.196.205]:42676 "EHLO
+        mta-p5.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725863AbeLZBW4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Dec 2018 17:43:10 -0500
-Received: by mail-oi1-f193.google.com with SMTP id j21so11932702oii.8
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Dec 2018 14:43:10 -0800 (PST)
+        Tue, 25 Dec 2018 20:22:56 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-p5.oit.umn.edu (Postfix) with ESMTP id 58F95B92
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2018 01:22:55 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at umn.edu
+Received: from mta-p5.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p5.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id ILEeV0UYo_He for <linux-wireless@vger.kernel.org>;
+        Tue, 25 Dec 2018 19:22:55 -0600 (CST)
+Received: from mail-it1-f197.google.com (mail-it1-f197.google.com [209.85.166.197])
+        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mta-p5.oit.umn.edu (Postfix) with ESMTPS id 27E1BB60
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Dec 2018 19:22:55 -0600 (CST)
+Received: by mail-it1-f197.google.com with SMTP id c128so18482652itc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Dec 2018 17:22:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=zvhNfiO/2ggjIs++dXFc85hX8FhgBUdzj052uL9LvOw=;
-        b=g1W/VOsdvk6AZMfS7BHyh6djIq7JXUvl7Fi1cGdudKhvwO8ooVpJCEvsYAVv8F/mtw
-         lg0te+75nW/OnOR/sbDv7JaMUEUXHxmWZx86qLsjnK1zbHhsdN6LX+IDoWfIPvjNbUj7
-         +1Y25qv6oLCa6Q+ekfHl/Mr6p5Tl1Mppc8NP3EKReLfkC7yZjwYqCKB3h12bXeps0F5G
-         688zMO78U/Mj6yLNqLWEKUw5NP+hZRCS/3dnXjjRpVhFt6mQtlrTB6EWbfHWCHVUtswV
-         rttXTFBRdgGU72pxogaRcCrKV5xGMNDB6/sS3ghDzs0tMfXJGb+QIIYU6AlS8cumBL6p
-         Y9EA==
+        d=umn.edu; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=AAHoTsSyNIe43BLaEwGnXajRWoTfyjipo1H+0l91hMk=;
+        b=OzpGiYDxGTYe05By8QY4VsUBw8YTW87quAQ84CteyHxUP+2gQgPnUsDrwmjHxZ7sK/
+         pKgF4Dtc32YeEUb5kkRdWKBMBrdKsXdiY0CsmopcH0KBI4T8DQjUmKaL6GumR6lc8f2j
+         /l0ABrCcvg65UaB6hkn4OfvmkXtrHFy4lKB89/AgLzz6cxVTj+OChUre68H0oC9CBluP
+         NOHTkYD100YQZZXjZF+XQax3OvTw/jDZLxBd0swXAzzW8bacjKzo5rCV6LlTBqphuPYt
+         z012JGwXGJTMjyOZMrPPeKf/uX6vWarTHCSUV4IwJvUKujlBqXByQ/r6sWR0F73w3K3v
+         hxNw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=zvhNfiO/2ggjIs++dXFc85hX8FhgBUdzj052uL9LvOw=;
-        b=V4w2UNwBjPuRWoep8mMg7pFQwtZfRGezJdjPWHriuVJdNsbX0ViFek56ve+t0AawKa
-         9VUeJIjd21WIgTuGlOZTu646dT3cwwc+y3HgBk/+6SA4AbFLNN3btugS/SaSuv7WWVbB
-         MJPd46xgP1aAGlEh2BnFmlrDbp49QCrKDPv9cbGSWGypZ6U8PtLQ8MIc+L7Y9oqOUepZ
-         0kuaZE7pn2zP6ixDKrDRwPzMfGYUHuT9y+6rWlPcf2ABGBGu8cYba96l9kZyHWlDwZgb
-         3jl0ffErWF06IOIaPRNtdhAKCwKldeT5VBsKbngcDFPrUk8LZvvy87GJ4CB59WLqx/4o
-         LLTQ==
-X-Gm-Message-State: AA+aEWahFL6j1KM2zG8lr1D1id3cAK7BvHTcGqG9034cEGkQ3cFgsFWP
-        f/bQTxfmMzJovvquyokvjtvRV8ZduuGS1mryPco=
-X-Google-Smtp-Source: ALg8bN5FEJOgvoLd99p56Ko9Y36w7i4vy/y+8rVA0g+tpDqdERtx9cPy8Ws/Qc9fvqYZz9P99s5sk5WwL8PzbF0ytdM=
-X-Received: by 2002:aca:915:: with SMTP id 21mr11455919oij.163.1545777789892;
- Tue, 25 Dec 2018 14:43:09 -0800 (PST)
-MIME-Version: 1.0
-Received: by 2002:a9d:6c19:0:0:0:0:0 with HTTP; Tue, 25 Dec 2018 14:43:09
- -0800 (PST)
-In-Reply-To: <CAKR_QVKQMcGGpY_3ur9kFjuYpaKgca=YfUJxjSjLEfP1HELuJw@mail.gmail.com>
-References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
- <1545318971-28351-3-git-send-email-sgruszka@redhat.com> <CAKR_QVJeteexpQX=pJm17WrrarmihYw56hKuTbsNagbcA6U96A@mail.gmail.com>
- <20181221095938.GA29536@redhat.com> <CAKR_QVKQMcGGpY_3ur9kFjuYpaKgca=YfUJxjSjLEfP1HELuJw@mail.gmail.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Tue, 25 Dec 2018 23:43:09 +0100
-Message-ID: <CAKR_QVJhTCPiOSV03z5b=zgzeWkd0BQwbD=VDChQzU2dJJbhhw@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] rt2x00: do not print error when queue is full
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Randy Oostdyk <linux-kernel@oostdyk.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=AAHoTsSyNIe43BLaEwGnXajRWoTfyjipo1H+0l91hMk=;
+        b=AYWk6uOsOSatKNKRvl2xrZw6fLf0alXmhw+aAWcW+XwssxOUVw8j1N1ktIKSuIjy/0
+         10VKCo9880hVKfLPiQsNKE1oyvr9KDmSisRV7jkMcnLZmnwGbgqE6rFN7zVfyxHLw/qy
+         ywPJtU9cNLHp/JZbGRxlhlO8G8Vu0Q6LYo0wkoCMkfJdpjPBbYsi3H/yImMy+ZBa08p1
+         sNgZ8EcKQUU9P/pQhGTOu1YLeWHICuLAl1Ts8LF84NjCuxQBYb/RuoM5+cEScJvxavz7
+         h57y4+UCsod3+PxwDiJew4caiaJ6v0jxhAh8EgqTBXmigMTpt6e9Uxr4fQTl6uml5fy/
+         t4tg==
+X-Gm-Message-State: AA+aEWa/xDZRAKOjEZamyQlmPeStscDt1/iAvnRKveJsYPBvaAQkLc5r
+        6nWQwK0j1RQmX9B/+kAJ/tlhEjQpeHa4fqpCWtNRIkfxG0AAMdQN9Q+ZlUTA4fOUTsStVdF3Fn5
+        bR3y11hug8MDHOGxAd9hLxDgybZ0l4FM=
+X-Received: by 2002:a02:284:: with SMTP id 126mr12114845jau.47.1545787374831;
+        Tue, 25 Dec 2018 17:22:54 -0800 (PST)
+X-Google-Smtp-Source: AFSGD/UEsaqFoxYQKLg11KutOSESE4hYftJeOcyDjv53pju66WJPbHcLwG89Z8BM0dA1e5lj300UkQ==
+X-Received: by 2002:a02:284:: with SMTP id 126mr12114833jau.47.1545787374602;
+        Tue, 25 Dec 2018 17:22:54 -0800 (PST)
+Received: from localhost.localdomain (host-173-230-104-22.mnmigsc.mn.minneapolis.us.clients.pavlovmedia.net. [173.230.104.22])
+        by smtp.gmail.com with ESMTPSA id t7sm14817847iom.27.2018.12.25.17.22.53
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Tue, 25 Dec 2018 17:22:53 -0800 (PST)
+From:   Kangjie Lu <kjlu@umn.edu>
+To:     kjlu@umn.edu
+Cc:     pakki001@umn.edu, Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] net: brcm80211: add a check for the status of usb_register
+Date:   Tue, 25 Dec 2018 19:22:24 -0600
+Message-Id: <20181226012227.70524-1-kjlu@umn.edu>
+X-Mailer: git-send-email 2.17.2 (Apple Git-113)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Even with your patches that are currently being tested i had interface
-frozen yesterday. 2 android pads, 2 android phones and laptop with
-intel card on win10. Wlan frozen about half an hour after bootup, had
-to restart interface that revelaed more queue problems:
+usb_register() may fail, so let's check its status and issue an error
+message if it fails.
 
-[  238.715836] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
-[  238.722681] br-lan: port 2(wlan1) entered blocking state
-[  238.728107] br-lan: port 2(wlan1) entered forwarding state
-[ 2403.051342] device wlan1 left promiscuous mode
-[ 2403.056021] br-lan: port 2(wlan1) entered disabled state
-[ 2403.213039] ieee80211 phy1: rt2800_config_channel: Warning - Using
-incomplete support for external PA
-[ 2403.522622] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-Queue 0 failed to flush
-[ 2403.817143] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-Queue 1 failed to flush
-[ 2404.058047] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-Queue 2 failed to flush
-[ 2404.299509] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-Queue 3 failed to flush
-[ 2404.566195] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-Queue 0 failed to flush
-[ 2404.806880] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-Queue 1 failed to flush
-[ 2405.047624] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-Queue 2 failed to flush
-[ 2405.288195] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-Queue 3 failed to flush
+Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index a4308c6e72d7..76cfaf6999c8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1550,6 +1550,10 @@ void brcmf_usb_exit(void)
+ 
+ void brcmf_usb_register(void)
+ {
++	int ret;
++
+ 	brcmf_dbg(USB, "Enter\n");
+-	usb_register(&brcmf_usbdrvr);
++	ret = usb_register(&brcmf_usbdrvr);
++	if (ret)
++		brcmf_err("usb_register failed %d\n", ret);
+ }
+-- 
+2.17.2 (Apple Git-113)
+
