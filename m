@@ -4,41 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F4B9C43387
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 22:42:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA872C43387
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 22:47:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4657F20879
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 22:42:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84165214D8
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Dec 2018 22:47:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545864136;
-	bh=JhODPtP1aq2gH9t0gZ9/NZiNxH6fHV0Q/CfS1KlKPpQ=;
+	s=default; t=1545864470;
+	bh=/0MO91npWNYvNOFgyDWGtZ0HncdS3CyrScxoEsQMtug=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jGbuha+5RPMRV4rJU5OcOHW1w+phEiZersb53zqmTQD3eCN9L5zBDr4yxNapFtlAI
-	 YS7eg4/dvwRFd1hY/58+B9Gw4GfLxCiJArNlSdJAO8J/Gr9qzbGZwf1Oicfs8tk3HX
-	 OfvcQezEqUtrsIGYSr9EiSqGmUn8yLv+aqVqCv/c=
+	b=PhiHQIspRbJk9WrGYVkLyMjCOCf6KY5qLgoi1JR9iWTFkaiHi/jWKKjh6U+/Vcqe/
+	 YDEi5oEMf0Qq/Ocpjr6ZjjouW9ZKcSy04e9uYUvDI1kBuyJQYXdlAxrDbEXUlP5Ybb
+	 ZUeupBl7cCOzMg5qcg7i+LoIZ1kyCEk0Bc2Bjs7E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729478AbeLZWlb (ORCPT
+        id S1729374AbeLZWro (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Dec 2018 17:41:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41948 "EHLO mail.kernel.org"
+        Wed, 26 Dec 2018 17:47:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38502 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729467AbeLZWla (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Dec 2018 17:41:30 -0500
+        id S1728717AbeLZWiO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Dec 2018 17:38:14 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 851082054F;
-        Wed, 26 Dec 2018 22:41:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1EFA6218E2;
+        Wed, 26 Dec 2018 22:38:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545864089;
-        bh=JhODPtP1aq2gH9t0gZ9/NZiNxH6fHV0Q/CfS1KlKPpQ=;
+        s=default; t=1545863893;
+        bh=/0MO91npWNYvNOFgyDWGtZ0HncdS3CyrScxoEsQMtug=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=x19iulmlHEo7YtWIWZ1RSyNO+lpdiEQIVX7USaVS0LPKdBqglcUEJdIrqrzo/kw19
-         T/P9KwhkpmxglLXsUFq4kusNbX8esKbp12N+U7RNQQHRL4JetxQCAzrs8KtFyyp1V+
-         gxt6Wc5Hp7qwM5+lqeQT3ruqGT1wWftM8nyGMdnI=
+        b=fcVF8bsM8FeID+8gonzC77PfrwMXhdT/LiCOoP/erIvWnXCW5zcxU+xKZLO+AWHdZ
+         jhAexcWw9P2qkQKSC8TFd/ExS0b1onv1VplEXUXu/t4tF1/UkIhCYsMsVMTNZjGX2C
+         DiFAPNLGsukYTuM2MeycblS+BFOUuHRCSAP2GvIQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     stable@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Sara Sharon <sara.sharon@intel.com>,
@@ -46,12 +45,12 @@ Cc:     Sara Sharon <sara.sharon@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 51/59] mac80211: free skb fraglist before freeing the skb
-Date:   Wed, 26 Dec 2018 17:38:31 -0500
-Message-Id: <20181226223839.150262-51-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 81/97] mac80211: free skb fraglist before freeing the skb
+Date:   Wed, 26 Dec 2018 17:35:41 -0500
+Message-Id: <20181226223557.149329-81-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20181226223839.150262-1-sashal@kernel.org>
-References: <20181226223839.150262-1-sashal@kernel.org>
+In-Reply-To: <20181226223557.149329-1-sashal@kernel.org>
+References: <20181226223557.149329-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -83,10 +82,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+)
 
 diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 35912270087c..b18466cf466c 100644
+index 7fa10d06cc51..534a604b75c2 100644
 --- a/net/mac80211/status.c
 +++ b/net/mac80211/status.c
-@@ -545,6 +545,11 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
+@@ -556,6 +556,11 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
  	}
  
  	ieee80211_led_tx(local);
