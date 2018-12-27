@@ -6,119 +6,66 @@ X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05C31C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 10:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79750C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 10:54:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C88C8214AE
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 10:32:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B84F214C6
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 10:54:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730697AbeL0Kcl (ORCPT
+        id S1730416AbeL0KyP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Dec 2018 05:32:41 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:56314 "EHLO mx1.redhat.com"
+        Thu, 27 Dec 2018 05:54:15 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:41474 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728373AbeL0Kcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Dec 2018 05:32:41 -0500
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        id S1728373AbeL0KyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Dec 2018 05:54:15 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id ED92188312;
-        Thu, 27 Dec 2018 10:32:40 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0CF78C04F4D3;
+        Thu, 27 Dec 2018 10:54:15 +0000 (UTC)
 Received: from localhost (ovpn-204-120.brq.redhat.com [10.40.204.120])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4F1521A7E8;
-        Thu, 27 Dec 2018 10:32:40 +0000 (UTC)
-Date:   Thu, 27 Dec 2018 11:32:39 +0100
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8FEF9620D0;
+        Thu, 27 Dec 2018 10:54:11 +0000 (UTC)
+Date:   Thu, 27 Dec 2018 11:54:10 +0100
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Tom Psyborg <pozega.tomislav@gmail.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Randy Oostdyk <linux-kernel@oostdyk.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Subject: Re: [PATCH v2 3/3] rt2x00: do not print error when queue is full
-Message-ID: <20181227103238.GB25885@redhat.com>
-References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
- <1545318971-28351-3-git-send-email-sgruszka@redhat.com>
- <CAKR_QVJeteexpQX=pJm17WrrarmihYw56hKuTbsNagbcA6U96A@mail.gmail.com>
- <20181221095938.GA29536@redhat.com>
- <CAKR_QVKQMcGGpY_3ur9kFjuYpaKgca=YfUJxjSjLEfP1HELuJw@mail.gmail.com>
- <CAKR_QVJhTCPiOSV03z5b=zgzeWkd0BQwbD=VDChQzU2dJJbhhw@mail.gmail.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mt76: run mac work every 100ms
+Message-ID: <20181227105410.GD25885@redhat.com>
+References: <cover.1545667662.git.lorenzo.bianconi@redhat.com>
+ <f28b63441e1a1c1518e28dc70ff7fc854ae60361.1545667662.git.lorenzo.bianconi@redhat.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="PEIAKu/WMn1b1Hv9"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAKR_QVJhTCPiOSV03z5b=zgzeWkd0BQwbD=VDChQzU2dJJbhhw@mail.gmail.com>
+In-Reply-To: <f28b63441e1a1c1518e28dc70ff7fc854ae60361.1545667662.git.lorenzo.bianconi@redhat.com>
 User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Thu, 27 Dec 2018 10:32:41 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Thu, 27 Dec 2018 10:54:15 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Mon, Dec 24, 2018 at 05:24:41PM +0100, Lorenzo Bianconi wrote:
+> Introduce MT_WATCHDOG_TIME macro in order to run mac work every 100ms.
+> This is a preliminary patch to implement a proper tx hang watchdog
+<snip>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
+> index b54a32397486..ec936002a286 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
+> @@ -33,7 +33,7 @@ mt76x2_start(struct ieee80211_hw *hw)
+>  		goto out;
+>  
+>  	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mac_work,
+> -				     MT_CALIBRATE_INTERVAL);
+> +				     MT_WATCHDOG_TIME);
 
---PEIAKu/WMn1b1Hv9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+There are other procedures that are performed on mac_work , which most
+likely don't have to be done so frequently. I think watchdog should
+be placed it it's own work.
 
-On Tue, Dec 25, 2018 at 11:43:09PM +0100, Tom Psyborg wrote:
-> Even with your patches that are currently being tested i had interface
-> frozen yesterday. 2 android pads, 2 android phones and laptop with
-> intel card on win10. Wlan frozen about half an hour after bootup, had
-> to restart interface that revelaed more queue problems:
->
-> [  238.715836] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
-> [  238.722681] br-lan: port 2(wlan1) entered blocking state
-> [  238.728107] br-lan: port 2(wlan1) entered forwarding state
-> [ 2403.051342] device wlan1 left promiscuous mode
-> [ 2403.056021] br-lan: port 2(wlan1) entered disabled state
-> [ 2403.213039] ieee80211 phy1: rt2800_config_channel: Warning - Using
-> incomplete support for external PA
-
-Yes, patches will not help if device is not programed properly,
-i.e. when external PA is not well configured. I already pointed
-this here:
-https://lore.kernel.org/linux-wireless/20180815114029.GA1862@redhat.com/
-
-Register programming should be fixed there and also whould be good
-to implement watchdog to recover from wifi hung it it happens.
-
-> [ 2403.522622] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-> Queue 0 failed to flush
-> [ 2403.817143] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-> Queue 1 failed to flush
-> [ 2404.058047] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-> Queue 2 failed to flush
-> [ 2404.299509] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-> Queue 3 failed to flush
-> [ 2404.566195] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-> Queue 0 failed to flush
-> [ 2404.806880] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-> Queue 1 failed to flush
-> [ 2405.047624] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-> Queue 2 failed to flush
-> [ 2405.288195] ieee80211 phy1: rt2x00queue_flush_queue: Warning -
-> Queue 3 failed to flush
-
-Hmm, this one should be gone. Could you check attached patch?
-
-Thanks
+Regards
 Stanislaw
 
---PEIAKu/WMn1b1Hv9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="rt2800_flush_soc.patch"
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800soc.c b/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-index a502816214ab..05a801774713 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-@@ -203,7 +203,7 @@ static const struct rt2x00lib_ops rt2800soc_rt2x00_ops = {
- 	.start_queue		= rt2800mmio_start_queue,
- 	.kick_queue		= rt2800mmio_kick_queue,
- 	.stop_queue		= rt2800mmio_stop_queue,
--	.flush_queue		= rt2x00mmio_flush_queue,
-+	.flush_queue		= rt2800mmio_flush_queue,
- 	.write_tx_desc		= rt2800mmio_write_tx_desc,
- 	.write_tx_data		= rt2800_write_tx_data,
- 	.write_beacon		= rt2800_write_beacon,
-
---PEIAKu/WMn1b1Hv9--
