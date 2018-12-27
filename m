@@ -2,112 +2,101 @@ Return-Path: <SRS0=u8cq=PE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7AC4C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 13:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EBA5C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 14:05:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 873DD20882
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 13:47:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 374192148D
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 14:05:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pLpLlsu7"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N78BHSW8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729017AbeL0NrN (ORCPT
+        id S1729690AbeL0OFk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Dec 2018 08:47:13 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:43372 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727429AbeL0NrM (ORCPT
+        Thu, 27 Dec 2018 09:05:40 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:40863 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729469AbeL0OFk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Dec 2018 08:47:12 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wBRDd30u050865;
-        Thu, 27 Dec 2018 13:41:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=wWhlKvi6DYO/+w7JYjA/SNhf/XJAF2jtuIRmY0IuZj4=;
- b=pLpLlsu7wAnzIkELBQItlkruOcNnB9iJ3uXpebHwioUiJxQ1DDDMwth+uHf2+MF+A5We
- nj9KTNHdA7E7/qdaioAPmfta88TiY/cWfqhbU+DqbdpuJBW6S0K8hs2NQpBW22TGLNjP
- w+zkwr/gNluxEunFCkDABo/dN0Y4BZy8IYv+8ba3xrIebAAjT1Lnpfa5/d1MoXelqmNG
- xJuOEkpVEa+6ca8MhwaWsPcEHzCb6CFq7Zmsote4JmrENcGPgE0N6dMwO9XLwGU4vAM3
- vAXCHmSqLps+zZ/QWYuOuWOI9e9epAlBxvpHKm+v2eU2o3vS2FuiRBOF5k1+a6dE4ANo Lw== 
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2130.oracle.com with ESMTP id 2phasdwfjk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 Dec 2018 13:41:10 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wBRDfAD1032512
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 Dec 2018 13:41:10 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wBRDf940020543;
-        Thu, 27 Dec 2018 13:41:09 GMT
-Received: from kadam (/197.157.34.167)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 27 Dec 2018 05:41:08 -0800
-Date:   Thu, 27 Dec 2018 16:40:55 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Tom Psyborg <pozega.tomislav@gmail.com>
-Cc:     Julia Lawall <julia.lawall@lip6.fr>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        kernel-janitors@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        xen-devel@lists.xenproject.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/20] drop useless LIST_HEAD
-Message-ID: <20181227134055.GA2272@kadam>
-References: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
- <CAKR_QVJefW1vxYb7-qiU8=0YdbFghYo15SK2eGjOC-dntRfyYA@mail.gmail.com>
- <alpine.DEB.2.21.1812232304130.2940@hadrien>
- <CAKR_QVLeZBL43W4x1mzcfcakSZyyh9L81vgUMxfnSccKawEfdg@mail.gmail.com>
+        Thu, 27 Dec 2018 09:05:40 -0500
+Received: by mail-wr1-f66.google.com with SMTP id p4so18360549wrt.7
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Dec 2018 06:05:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=if95ASzOCk1n4rkrJMt0dbDI3WwTIiBNPf8RvdMIJm8=;
+        b=N78BHSW85OAzpxBdY2OozZyZYjAg6qKOe0l4D2qxSMPfU6K1kgB9f8YZs5Owl9wPyh
+         RC88Px2yQIdVDsFm3Kww1hEalZ+bN2zLqb5+mOWGMXJyEz7VHfWg6+hpYTjHMVohLkg5
+         /+OqTEwl8P17YhXJ0KdEk0aHkt4uSi19pLqD+Jp6SzPPnIY+mx6ODeIAWHi3VH6alfre
+         plMwZa2EAMcOUCDCygy5ShCJWhXhdeL51VIfYowahUv7xowfw7o5b1+ZihX/DoKGuvHC
+         hNQAg9QvDOj6lqHyynD9V0pMgGYSVx2g6MPA8uH3vceV1/vgSkaWTxboyiUylHrlMdIo
+         xZCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=if95ASzOCk1n4rkrJMt0dbDI3WwTIiBNPf8RvdMIJm8=;
+        b=EyuukiKyMQhAsnvAdNATiSxgngxugcTEOlzcC2eOk78pzv8aNJdhWE3+cJLyh1ctj1
+         Z/BoIXM298pOrkekyhEZsOnxwGO1p6mrgCBXdoANHvMk93fKtlYT8zNkMZdk6zdXSqBw
+         bSm8fD5pgGqoLBJH0swL1lrRkHUXSsBsQgCg1YQegfYoWCgdhAnKYmj3OJca5jqfTlJq
+         pL84CtNEgx9GiXNvsaTU8LeFmKU4GVoMmewsR9WRmw9zSoouDXciq0DHtAoBeElHlCjZ
+         /8LJQvSLqhONn5xIcFjUdsq3KcqZkCQedwF8WkwVgcA8uksMyKKH0Fj5txHAkeXIyHX3
+         IhpA==
+X-Gm-Message-State: AJcUukdCD27qMfzN5D3LfBblTlOINVVf3zsHMXqUaYwCxv/GoSStqEqb
+        ha65rhfifdjaR9/NVSakmWv3ZuEByO4=
+X-Google-Smtp-Source: ALg8bN4sgpNxIiBIAhaU8qSDeso9A0BqyR3EIwbO8UwBaShVrZZ2nAmG7p6zo63420r8KRFPizaXQA==
+X-Received: by 2002:a5d:47d1:: with SMTP id l17mr21936207wrs.319.1545919538745;
+        Thu, 27 Dec 2018 06:05:38 -0800 (PST)
+Received: from localhost.localdomain ([31.147.208.18])
+        by smtp.googlemail.com with ESMTPSA id p6sm38219239wrx.50.2018.12.27.06.05.37
+        (version=TLS1 cipher=AES128-SHA bits=128/128);
+        Thu, 27 Dec 2018 06:05:38 -0800 (PST)
+From:   =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     kvalo@codeaurora.org, hauke@hauke-m.de, nbd@nbd.name,
+        john@phrozen.org, sgruszka@redhat.com, daniel@makrotopia.org
+Subject: [PATCH 1/2] rt2x00: reduce tx power to nominal level on RT6352
+Date:   Thu, 27 Dec 2018 15:05:25 +0100
+Message-Id: <1545919526-4074-1-git-send-email-pozega.tomislav@gmail.com>
+X-Mailer: git-send-email 1.7.0.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAKR_QVLeZBL43W4x1mzcfcakSZyyh9L81vgUMxfnSccKawEfdg@mail.gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9118 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=656
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1812270124
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Dec 25, 2018 at 11:12:20PM +0100, Tom Psyborg wrote:
-> there was discussion about this just some days ago. CC 4-5 lists is
-> more than enough
-> 
+Current implementation of RT6352 support provides too high tx power
+at least on iPA/eLNA devices. Reduce amplification of variable gain
+amplifier by 6dB to match board target power of 17dBm.
+Transmited signal strength with this patch is similar to that of
+stock firmware or pandorabox firmware. Throughput measured with iperf
+improves. Device tested: Xiaomi Miwifi Mini.
 
-I don't know who you were discussing this with...
+Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-You should CC the 0th patch to all the mailinglists.  That much is a
-clear rule.
-
-For the rest, Julia's position is the more conservative one.  I was in
-a conversation in RL and they were like, "CC everyone for all the
-patches".  It depends on the context, of course.  If the patches are
-dependent on each other then you *have* to CC everyone for everything.
-
-If we really have other clear rules, then it should be encoded into
-get_maintainer.pl so that it's automatic.
-
-My other question is why do the linux-arm-kernel@lists.infradead.org
-people feel like they need to be CC'd about every driver???  I always
-remove them from the CC list unless it's an arch/arm issue.
-
-regards,
-dan carpenter
-
-PS:  Please, no more top posting.
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 0e95555..7f813f6 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -5477,7 +5477,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
+ 		rt2800_register_write(rt2x00dev, MIMO_PS_CFG, 0x00000002);
+ 		rt2800_register_write(rt2x00dev, TX_PIN_CFG, 0x00150F0F);
+-		rt2800_register_write(rt2x00dev, TX_ALC_VGA3, 0x06060606);
++		rt2800_register_write(rt2x00dev, TX_ALC_VGA3, 0x00000000);
+ 		rt2800_register_write(rt2x00dev, TX0_BB_GAIN_ATTEN, 0x0);
+ 		rt2800_register_write(rt2x00dev, TX1_BB_GAIN_ATTEN, 0x0);
+ 		rt2800_register_write(rt2x00dev, TX0_RF_GAIN_ATTEN, 0x6C6C666C);
+-- 
+1.7.0.4
 
