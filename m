@@ -2,107 +2,91 @@ Return-Path: <SRS0=u8cq=PE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 934D3C43612
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 14:05:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E37BEC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 16:44:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 63D3020873
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 14:05:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RyCdg5/Z"
+	by mail.kernel.org (Postfix) with ESMTP id B0ADA20873
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Dec 2018 16:44:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729711AbeL0OFm (ORCPT
+        id S1729487AbeL0Ql1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Dec 2018 09:05:42 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:51900 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729614AbeL0OFm (ORCPT
+        Thu, 27 Dec 2018 11:41:27 -0500
+Received: from mail-io1-f65.google.com ([209.85.166.65]:36073 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729378AbeL0Ql1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Dec 2018 09:05:42 -0500
-Received: by mail-wm1-f65.google.com with SMTP id b11so16844963wmj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Dec 2018 06:05:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=1/CuDaDQerVriTQHpiRoawlGh8I+EFPee65xuDWWdnI=;
-        b=RyCdg5/Z4tJ9icKRnvzc3yKHS1vTwwsIP8HXDBWVFFRa2InHet0v8HpVufcKGS6NV4
-         g7OPePhZ4Ni6uRS1VkArvDU4b0B9ESMt59av9ConoTvGANGEsdkR80+4ZTM4Q8J8DnZh
-         ZaaFf0Ernx5ypkgrE49Suz2y+n7Gw8Z7JdUmIvP8YBPvZMdyvV+oNrhDkW2mZwBS6/nC
-         6lKOnEbgsaWtz7+d2T9JxDhqhnKaSA/yAY5nrS5q76E8yMWcWXkyuIokitx8aOfKqWn3
-         IvM8oKYmKj55sYV87jqi48QP1AieBW0sZblgvi1/OgUl/YSCW4vpaUhndoO7qBDLFqrM
-         A+7w==
+        Thu, 27 Dec 2018 11:41:27 -0500
+Received: by mail-io1-f65.google.com with SMTP id m19so14950436ioh.3
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Dec 2018 08:41:27 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=1/CuDaDQerVriTQHpiRoawlGh8I+EFPee65xuDWWdnI=;
-        b=qtQUrVyotGpTj/pKB93wUY8WnsNJWhp9f3PMrBT2UgJECYopwjvFdqaBFA3mEs36Bm
-         eJtx8AfGqFNGs49OWcFj+HsqhJCwe/fXeoScDEfZK9qWvR1t/ipcVgTvFGRG/Z5E/tYX
-         JwdR+YqJuXNA80IJ4jIxl8z1tkAEMB9LQlyzZOiJzNdXxGhovPOH70QIeIGS4os+IU9T
-         iyK8/Rhd1okoAMX3uvOQQbzV5qSBDln9CT5V+bVG4RrqMhf51pCGUy/n6S5RmUykfVgm
-         C847eGqfiU/IXyv88gkVQ95pV/R+mIUfKBnu6SCEvCAOKv9lhtJXHkfZE8GL1EirbS20
-         dVzA==
-X-Gm-Message-State: AJcUukepmW1eJkQi3SHQNuwJq2/y6xwnJO7h8SgA7JUSqtY0FF4vJ6it
-        g9NiveZGkqZ1eXivQ4+j9f7C62HVwnA=
-X-Google-Smtp-Source: AFSGD/VFs/N0Ho5URt1OpGhUjOspQxP4oUSzSk58ELd8of4DuMc4XMWY9N0SaS57kOluHQKqnx7jJQ==
-X-Received: by 2002:a1c:990c:: with SMTP id b12mr22552746wme.106.1545919539939;
-        Thu, 27 Dec 2018 06:05:39 -0800 (PST)
-Received: from localhost.localdomain ([31.147.208.18])
-        by smtp.googlemail.com with ESMTPSA id p6sm38219239wrx.50.2018.12.27.06.05.38
-        (version=TLS1 cipher=AES128-SHA bits=128/128);
-        Thu, 27 Dec 2018 06:05:39 -0800 (PST)
-From:   =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     kvalo@codeaurora.org, hauke@hauke-m.de, nbd@nbd.name,
-        john@phrozen.org, sgruszka@redhat.com, daniel@makrotopia.org
-Subject: [PATCH 2/2] rt2x00: define RF5592 in init_eeprom routine
-Date:   Thu, 27 Dec 2018 15:05:26 +0100
-Message-Id: <1545919526-4074-2-git-send-email-pozega.tomislav@gmail.com>
-X-Mailer: git-send-email 1.7.0.4
-In-Reply-To: <1545919526-4074-1-git-send-email-pozega.tomislav@gmail.com>
-References: <1545919526-4074-1-git-send-email-pozega.tomislav@gmail.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=iOzxW1/FDejUJuIML75mAQ0lovB7YVVTS775khyFiwQ=;
+        b=QCmeWvWzdhJzplOHMhiEz3CLAhNn1mg5McMFLdIAlPOyMVSEH35D1gVHhzJnnC+Iat
+         IrckLrdKYl+1PD2lUDlwBwZaFZ4NQ8rD7Jgtp2sfEhbxH3R+atXvrK15THDU1PbB51fW
+         SuTC+t9D7kIh6KrifnB2YZCV1c9mo6KC9eQ0arkMqPKN37e9hnmXpMgJDx34yNKEmsO+
+         jMEFFTTpsPQfNs4f+SdwbYUTMy6EimIDeWv39dOCXCT9oExr/vu2NU6wBHRfAYp8QO3U
+         5NtoBz44/Zhi9QLVBquLg7+6m8XTSh/NnCC0+zh9ec6+lchhveapBP9ECN1MxJPTxiHj
+         PLeQ==
+X-Gm-Message-State: AJcUukcdqOSVgSUxevVpfPjrQ7BJVvKhTeIZzVKLxSzMznPykFe7iMxS
+        Own+gZ2fqlANlvdts2jb4zkyDXJPGU4SjfLM+sb6yA==
+X-Google-Smtp-Source: ALg8bN4VbItOroeSxEvEw8SCc1flb7xE2aKmpBdHh5GGvMssyUM6OhCSRoSSUJLqYmcbd4gHfC+icqMyVYoiWrihe70=
+X-Received: by 2002:a5e:940c:: with SMTP id q12mr14862748ioj.228.1545928886956;
+ Thu, 27 Dec 2018 08:41:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <cover.1545667662.git.lorenzo.bianconi@redhat.com>
+ <cce12fc0b89944f1bea0b8bbddacf81547572c0f.1545667662.git.lorenzo.bianconi@redhat.com>
+ <20181227105909.GE25885@redhat.com>
+In-Reply-To: <20181227105909.GE25885@redhat.com>
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date:   Thu, 27 Dec 2018 17:41:17 +0100
+Message-ID: <CAJ0CqmVJ_+djjWQ6YnUT7k_H1eauJ2hhy_4GB1jORQ-5bbvRAg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] mt76: introduce mt76x02_check_tx_hang watchdog
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch fixes following crash on Linksys EA2750 during 5GHz wifi
-init:
+>
+> On Mon, Dec 24, 2018 at 05:24:42PM +0100, Lorenzo Bianconi wrote:
+> > Port mt76x02_check_tx_hang watchdog from vendor driver in order to
+> > perform a device reset when tx mac/dma logic hangs. Tx mac/dma stuck
+> > has been observed when the device is heavily loaded or in a noisy
+> > environment.
+>
+> On what hardware this happen ? Is this only for AP mode?
 
-[    7.955153] rt2800pci 0000:01:00.0: card - bus=0x1, slot = 0x0 irq=4
-[    7.962259] rt2800pci 0000:01:00.0: loaded eeprom from mtd device "Factory"
-[    7.969435] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 5592, rev 0222 detected
-[    7.977348] ieee80211 phy0: rt2800_init_eeprom: Error - Invalid RF chipset 0x0000 detected
-[    7.985793] ieee80211 phy0: rt2x00lib_probe_dev: Error - Failed to allocate device
-[    7.993569] CPU 0 Unable to handle kernel paging request at virtual address 00000024, epc == 800c8f54, ra == 80249ff8
-[    8.004408] Oops[#1]:
+Hi Stanislaw,
 
-Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+I an able to trigger the issue using a mt7662 AP device till now, not
+running STA or other modes yet.
+I will respin this patch adding tx watchdog just on mt76x2 devices in
+AP mode for the moment.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 7f813f6..86770e8 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -8839,6 +8839,8 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 		rf = RF3322;
- 	else if (rt2x00_rt(rt2x00dev, RT5350))
- 		rf = RF5350;
-+	else if (rt2x00_rt(rt2x00dev, RT5592))
-+		rf = RF5592;
- 	else
- 		rf = rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RF_TYPE);
- 
--- 
-1.7.0.4
+Regards,
+Lorenzo
 
+>
+> > diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+> > index a4ff5a7a219f..402944e81e5e 100644
+> > --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+> > +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+> > @@ -778,6 +778,90 @@ static void mt76x02_check_mac_err(struct mt76x02_dev *dev)
+> >               MT_MAC_SYS_CTRL_ENABLE_TX | MT_MAC_SYS_CTRL_ENABLE_RX);
+> >  }
+> >
+> > +static void mt76x02_mac_watchdog_reset(struct mt76x02_dev *dev)
+>
+> This all is MMIO specific, it should be moved to mt76x02_mmio.c
+>
+> Regards
+> Stanislaw
