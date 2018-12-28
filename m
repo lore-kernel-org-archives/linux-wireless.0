@@ -2,138 +2,83 @@ Return-Path: <SRS0=+yu+=PF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 628B3C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 11:01:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C8F8C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:16:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 329BB20879
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 11:01:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2720E2087F
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:16:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="LnuFCWGa"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="kgPmczCC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729587AbeL1LBj (ORCPT
+        id S1732696AbeL1MQ0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Dec 2018 06:01:39 -0500
-Received: from mail-vk1-f193.google.com ([209.85.221.193]:39980 "EHLO
-        mail-vk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728367AbeL1LBj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Dec 2018 06:01:39 -0500
-Received: by mail-vk1-f193.google.com with SMTP id v70so4485693vkv.7
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Dec 2018 03:01:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=/dVER2SVx/UNhoG7yZEwBp4mYlPy79dQP84QAxPAfV4=;
-        b=LnuFCWGapiWS0W1rOnFAbabMIuKU/eCrP1yG7xC5u1qGYomAOblswa1cPpQDd/ALMu
-         paTd/2OJlqnPcKFRZl5Ff4p4isTXpW2vXR7YVEFx3uwotCEMU6uAYhOhGv7RLjitSXRu
-         tHbdBFBH2RMwaU1A5Mw7LXdOQo8Xa1aaUAK7Q=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=/dVER2SVx/UNhoG7yZEwBp4mYlPy79dQP84QAxPAfV4=;
-        b=kD2uWIPzVMQj/CEolHMRsiNuiGS6Xi0zt44lWoml3zU1Gw42hVuNWFInhtU3ivqjH3
-         Qwjk3gNdoK/gmYi7ur0jMkBk8aJJMpV+Up2k+MAqw3b2VEr1qwuttR2qVXvH7xJNqsCp
-         cxlfAaZ+9CW7FPsMF2CoK1xBS9zQB5iXoiPuhS03LC2+0K22ikpjPYwgVrdUaCHr6Lt7
-         YJBDVhGVG8lJEthIJqV7DPD2k4PTwARZeZxvC9JSvsAHBwO6Gw4kuwGTjpMM3MgRZY5s
-         QTi8bY0L9eOoZfcZ2wUHBSwns7ztkMFz7ZlHfVXD8am59SMePEgpCzMKXJLR+jO1NAVy
-         f45g==
-X-Gm-Message-State: AJcUukcSUGpmj0Sy5CGSZosRt4aWFA867oFKBfGpvcjaNHsRGJh1+jWD
-        694AjvflT2HvoA1ZTbbFvTDHOP4rf2L/Z6LA4XBV1Q==
-X-Google-Smtp-Source: ALg8bN7dx6hcavqbShweJ6R9gayZPg6jtdO+rwUe7QkWm8O8GG2Hpnq1zz8xA70o5Ckm6ly+ziYyhzpphARtseNsp9A=
-X-Received: by 2002:a1f:298e:: with SMTP id p136mr9885262vkp.40.1545994896286;
- Fri, 28 Dec 2018 03:01:36 -0800 (PST)
+        Fri, 28 Dec 2018 07:16:26 -0500
+Received: from nbd.name ([46.4.11.11]:51664 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732681AbeL1MQ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Dec 2018 07:16:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=xu8KW2mu7RKiqMe6esroVyj6c/2RnGnG4Tybykp/lqU=; b=kgPmczCC8XoVOQI4JjzRDyuNbz
+        qCpQlG/CoRwEEMzTo6iekkl/0vkSejuKjCy4W0HXfHohIXKo61OHfm5HCX6ZOLiA+dAFh8RfzhhOw
+        fAprRrY/0lRwyjwDQdIqMTznitwCka3s0bTJ6xYy06ePhE9sNjlZFrkPtFy9+LMDL4NM=;
+Subject: Re: [PATCH] mt76: dma: remove napi from mt76_dma_rx_fill signature
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless@vger.kernel.org
+References: <cover.1543657995.git.lorenzo.bianconi@redhat.com>
+ <289d48757b2dc8f07e8a4e1ca35df8476927935a.1543657995.git.lorenzo.bianconi@redhat.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <e4ad1789-430d-9ae7-c544-4d955c1fba7d@nbd.name>
+Date:   Fri, 28 Dec 2018 13:16:23 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:60.0)
+ Gecko/20100101 Thunderbird/60.4.0
 MIME-Version: 1.0
-References: <20181217164207.20081-1-tony@atomide.com> <CAPDyKFoLnNWsBfaUwqwL31J=zb0UOQjXUKi7Sj0AUsnNoC6bYg@mail.gmail.com>
- <20181218155439.GB6707@atomide.com> <CAPDyKFr2xx6fmdgjd10C1jekWg-yZPk32fGWEPO2PyexjofJ1A@mail.gmail.com>
- <20181220231401.GG6707@atomide.com> <c22e2ab61b494ea0852c0f4654fef92d@ti.com> <20181223160226.GK6707@atomide.com>
-In-Reply-To: <20181223160226.GK6707@atomide.com>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Fri, 28 Dec 2018 12:01:00 +0100
-Message-ID: <CAPDyKFoEOGACs4Wnm7UgKab2b1-7+v8+31DpC+p=8XxcQhSpcQ@mail.gmail.com>
-Subject: Re: [EXTERNAL] Re: [PATCH] wlcore: Fix bringing up wlan0 again if
- powered down briefly
-To:     Tony Lindgren <tony@atomide.com>
-Cc:     "Reizer, Eyal" <eyalr@ti.com>, Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        Anders Roxell <anders.roxell@linaro.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Ricardo Salveti <rsalveti@rsalveti.net>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <289d48757b2dc8f07e8a4e1ca35df8476927935a.1543657995.git.lorenzo.bianconi@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, 23 Dec 2018 at 17:02, Tony Lindgren <tony@atomide.com> wrote:
->
-> Hi,
->
-> * Reizer, Eyal <eyalr@ti.com> [181223 07:38]:
-> > You are ok as long as the wlan_enable pin Does go down for a sufficient amount of time
-> > turning the wl18xx device off.
-> > The firmware can only be downloaded once after power on.
-> > In between down/up you have to make sure the wlan_enable is fully going through on->off->on
-> > and the wl18xx device is fully reset.
-> > On power on the firmware is loaded by the driver and this will fail in case the reset didn't happen
->
-> OK thanks for confirming that it's the enable pin that needs to toggle.
->
-> Sounds like I need to get the wlcore pwrseq changes done and posted as
-> the long term solution.
+On 2018-12-01 10:55, Lorenzo Bianconi wrote:
+> Remove napi from mt76_dma_rx_fill routine signature since
+> it is a leftover of a previous implementation and it is no
+> longer used
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>Applied, thanks.
 
-Just to make sure we are talking about the same things here. The
-pwrseq thingy, is already implemented in the mmc core. When it comes
-to Hikey, there is already a pwrseq node deployed in the DTB. So, we
-should be fine.
-
-Here are the MMC pwrseq bindings:
-Documentation/devicetree/bindings/mmc/mmc-pwrseq-simple.txt
-Documentation/devicetree/bindings/mmc/mmc.txt
-
-Here is the Hikey DTS file:
-arch/arm64/boot/dts/hisilicon/hi6220-hikey.dts
-
->
-> And for a short term fix, we should just add msleep(50) for now with
-> updated patch description.
->
-> Does that that sound OK to everybody?
-
-Unfortunate, that doesn't work. Because, if user space via sysfs has
-prevented runtime suspend, the SDIO card never becomes power off with
-a call to pm_runtime_put*(), not even after waiting 50 ms.
-
-If we need a short term solution, I think there are two options.
-
-1) Call pm_runtime_force_suspend() instead of pm_runtime_put*() at
-"down". This makes sure the card becomes powered off. At "up", call
-pm_runtime_force_resume() instead of pm_runtime_get_sync(). Because
-the runtime PM usage count it > 1, at "up", pm_runtime_force_resume()
-will power up the card, rather than deferring it.
-
-The problem with 1), is if there is an ACPI PM domain attached to the
-SDIO card device. Then this doesn't work. I can't tell if that is ever
-the case here.
-
-2) At "up", after the call to pm_runtime_get_sync(), add a call to
-mmc_hw_reset(). This forces the mmc core to power cycle and re-init
-the SDIO card. This may in some cases be a waste, as the card may
-already have been power cycled, but at least we should now always be
-able to re-program the firmware.
-
-If there is no rush, I think we may consider to move away from using
-runtime PM to control power for SDIO cards. Because, what we seem to
-need, is a simple interface (reference counted) to power-on/off SDIO
-cards.
-
-Kind regards
-Uffe
+- Felix
