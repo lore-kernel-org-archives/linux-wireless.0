@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 634EEC43612
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:16:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B164C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:17:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33D9E2146F
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:16:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B44A2087F
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:17:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="QZICl84f"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="slLDqYy1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732795AbeL1MQw (ORCPT
+        id S1732825AbeL1MQ7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Dec 2018 07:16:52 -0500
-Received: from nbd.name ([46.4.11.11]:51694 "EHLO nbd.name"
+        Fri, 28 Dec 2018 07:16:59 -0500
+Received: from nbd.name ([46.4.11.11]:51708 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732788AbeL1MQv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Dec 2018 07:16:51 -0500
+        id S1732817AbeL1MQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Dec 2018 07:16:58 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=/Ece/meo858PJ6ZNtjh7OrzImQjAIAu3Kt0V/kPOB/I=; b=QZICl84fsZwk7N6BDzkC9CLqIg
-        Yc5PqiMlBM7d2YROgcuGYnR6bLq2X381zlwlzMwm4dSRVC53vYJPrAfoMpYFeC7Bc40GMFgpKK3lk
-        3dgoP40e3JLqzvIg2aBvgsnO+DkUz9ZMWZleUl5j6LBfm5fjAybCJsXrwGpz5iEWShLM=;
-Subject: Re: [PATCH] mt76: fix typo in mt76x02_check_mac_err routine
+        bh=DJjY7484nFPZq/6OPetcZ6TeagMZbs5OjqCnvIwuz9c=; b=slLDqYy1IQ1wdLqF17JgNzG4zZ
+        XLApktMMRXDFFsQUdv8+8+FswUQVMoZAumBsAC2bGzofn+9G9TFm9c8+CrIrYlPgOeJNFhMac+ran
+        kIyo59eMvzanb74m3K+YzDwgtLJlQ/fCYlV7+ITpAGxbEr/0Qquqy54Qp3AR1n2HCYto=;
+Subject: Re: [PATCH] mt76: mac: run mt76x02_mac_work routine atomically
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     linux-wireless@vger.kernel.org
-References: <cover.1544096101.git.lorenzo.bianconi@redhat.com>
- <401ea9d0ae92b372b5d68060b089e5d44a76d53c.1544096101.git.lorenzo.bianconi@redhat.com>
+References: <cover.1544112379.git.lorenzo.bianconi@redhat.com>
+ <247b18445443568012e3620025c22b5ca7b98653.1544112379.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -60,12 +60,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <389cc91d-9394-8bc1-8575-73bb34c02538@nbd.name>
-Date:   Fri, 28 Dec 2018 13:16:49 +0100
+Message-ID: <9d90b8fb-c82a-b9b9-6a77-f1f355e902ee@nbd.name>
+Date:   Fri, 28 Dec 2018 13:16:56 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:60.0)
  Gecko/20100101 Thunderbird/60.4.0
 MIME-Version: 1.0
-In-Reply-To: <401ea9d0ae92b372b5d68060b089e5d44a76d53c.1544096101.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <247b18445443568012e3620025c22b5ca7b98653.1544112379.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -74,11 +74,10 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-12-06 12:40, Lorenzo Bianconi wrote:
-> Reconfigure properly MT_MAC_SYS_CTRL register after mac sw-reset
-> in mt76x02_check_mac_err routine
+On 2018-12-06 17:07, Lorenzo Bianconi wrote:
+> Grab mt76_dev mutex in mt76x02_mac_work handler since it runs
+> concurrently with mt76x{0,2}_set_channel routines
 > 
-> Fixes: 73556561ab9f ("mt76x0: use mt76x02_mac_work as stats handler")
 > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
 Applied, thanks.
