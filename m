@@ -2,39 +2,38 @@ Return-Path: <SRS0=+yu+=PF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B61DFC43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:22:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10CE5C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:24:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 877992070B
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:22:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C959E2070B
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:24:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="STyZpJZA"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="e8OtIVfJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729429AbeL1MW2 (ORCPT
+        id S1726761AbeL1MY4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Dec 2018 07:22:28 -0500
-Received: from nbd.name ([46.4.11.11]:51952 "EHLO nbd.name"
+        Fri, 28 Dec 2018 07:24:56 -0500
+Received: from nbd.name ([46.4.11.11]:52010 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726049AbeL1MW2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Dec 2018 07:22:28 -0500
+        id S1726589AbeL1MYz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Dec 2018 07:24:55 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=GxP9gOf0snczxms1sOe7rQKQ4u4Bw+2ugczXVq00mH0=; b=STyZpJZAnd8DWjyddbkFcjZ/80
-        ytrM23IgElytKf/c5kwP7wJ1YjFO+bFOyBlsXqUCRfhWf4zSZ+Gyafn+2duOfrTfZ4SdblclvRrMs
-        DoMm7YeKqmDWb0w0Teoxa8C6E/aELnzLkhXB11qDWpj5ahp4NdER1SRgxszOC+49Ohsw=;
-Subject: Re: [PATCH] mt76x2: add static qualifier to mt76x2_init_hardware
+        bh=BKx8/hq8sdyLNb/7tNCmeJXXZXVa/Yq7I92NnwWuQgw=; b=e8OtIVfJgpIfizuf/pzD1JP9wY
+        YR/5nOuEfYZJQnQhT/mS/2OsbsqfIpajGNnzYXfhZuXqc5JYZxl31gpOKG8k0a4fmSZbQw5wa5h+1
+        U7b8bSKUPYtYecX94qZoytr8azSGj6XjrUxY8FzfhaZKiVy0l7ono0gzsWc1ADUZPcBY=;
+Subject: Re: [PATCH 0/3] add EDCCA support to mt76x{0,2}e drivers
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     linux-wireless@vger.kernel.org
-References: <cover.1544442714.git.lorenzo.bianconi@redhat.com>
- <9412eb449b559061a73a7a6fd075c9b510bade7a.1544442714.git.lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
+References: <cover.1544568618.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -60,12 +59,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <eda09a69-7dd1-d77c-0574-eb3a35432f32@nbd.name>
-Date:   Fri, 28 Dec 2018 13:22:25 +0100
+Message-ID: <1a6df2e8-d83b-85e8-e152-3128b07a9e5a@nbd.name>
+Date:   Fri, 28 Dec 2018 13:24:53 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:60.0)
  Gecko/20100101 Thunderbird/60.4.0
 MIME-Version: 1.0
-In-Reply-To: <9412eb449b559061a73a7a6fd075c9b510bade7a.1544442714.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <cover.1544568618.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -74,11 +73,11 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-12-10 12:54, Lorenzo Bianconi wrote:
-> Add static qualifier to mt76x2_init_hardware routine since it is
-> used just in pci_init.c
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+On 2018-12-12 22:51, Lorenzo Bianconi wrote:
+> Introduce EDCCA support to mt76 driver in order to prevent transmission
+> if detected energy is above the threshold.
+> This series is based on "mt76x0: pci: fix ACS support"
+> (https://patchwork.kernel.org/patch/10721037/)
 
 Applied, thanks.
 
