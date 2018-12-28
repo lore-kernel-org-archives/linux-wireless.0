@@ -2,96 +2,138 @@ Return-Path: <SRS0=+yu+=PF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CC79C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 10:01:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 628B3C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 11:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5387420879
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 10:01:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 329BB20879
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 11:01:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="LnuFCWGa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730352AbeL1KBP (ORCPT
+        id S1729587AbeL1LBj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Dec 2018 05:01:15 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:55569 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730267AbeL1KBP (ORCPT
+        Fri, 28 Dec 2018 06:01:39 -0500
+Received: from mail-vk1-f193.google.com ([209.85.221.193]:39980 "EHLO
+        mail-vk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728367AbeL1LBj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Dec 2018 05:01:15 -0500
-Received: by mail-wm1-f65.google.com with SMTP id y139so18470036wmc.5
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Dec 2018 02:01:14 -0800 (PST)
+        Fri, 28 Dec 2018 06:01:39 -0500
+Received: by mail-vk1-f193.google.com with SMTP id v70so4485693vkv.7
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Dec 2018 03:01:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=/dVER2SVx/UNhoG7yZEwBp4mYlPy79dQP84QAxPAfV4=;
+        b=LnuFCWGapiWS0W1rOnFAbabMIuKU/eCrP1yG7xC5u1qGYomAOblswa1cPpQDd/ALMu
+         paTd/2OJlqnPcKFRZl5Ff4p4isTXpW2vXR7YVEFx3uwotCEMU6uAYhOhGv7RLjitSXRu
+         tHbdBFBH2RMwaU1A5Mw7LXdOQo8Xa1aaUAK7Q=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=PmNQhhBaePFmDZhiFfyx13k93vg6yBrcosaYfsefZ50=;
-        b=g0HYnwkOcwnqzvqZto1ihaHRwvYxVimm5Qd/+TuT9ZO8G5E1ma7bRGG7hLWt2XH+vW
-         bVtpwJxMaVbmbLwADOucBOvl+4gIdS7bL3U/3dYeGYFeE2kzb6AFo0o1sXWqf/F4o+Qp
-         ihKWmCYbucm3dDbfb/fyNC8E4caO5aqXnGS6cUS1fr61le+W06eQP+NsiK0t3vOXdxb8
-         vu9zX2HBxFkNyptZtG+xLDwWttXBhtGmB5VoU/dVkFq7Vt/zDQx2ST1kV7ggZ8IFYK4T
-         zKj7PhRnoJ+05PPIWEoOimDj8DKzNKGDR/HgA6NBBqT4LGKN1yivPwUsiwI7qaXayUTh
-         3Csg==
-X-Gm-Message-State: AA+aEWZO5COtBSVb/0UPuAQ+RUcZM7tmGrWCvtBOG6POxNnTcpoDcf8x
-        iKNOiCmZp9uq9uRcq3MP0C/vyaRNhWM=
-X-Google-Smtp-Source: ALg8bN7FuITXck3PeBmiuttbbWQLruo05kq7rq9BKEhAdQ/Uz82riQ/QaBji6Pw9CPo5SLHAXZ8I2A==
-X-Received: by 2002:a1c:4346:: with SMTP id q67mr25082596wma.114.1545991273414;
-        Fri, 28 Dec 2018 02:01:13 -0800 (PST)
-Received: from localhost.net (host10-126-dynamic.18-79-r.retail.telecomitalia.it. [79.18.126.10])
-        by smtp.gmail.com with ESMTPSA id o9sm20866727wmh.3.2018.12.28.02.01.11
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 28 Dec 2018 02:01:12 -0800 (PST)
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH] mt76: mac: minor optimizations in mt76x02_mac_tx_rate_val
-Date:   Fri, 28 Dec 2018 11:00:47 +0100
-Message-Id: <7836e3c7ef8d5fc25df968df188fc36ec02ca799.1545990781.git.lorenzo.bianconi@redhat.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1545990781.git.lorenzo.bianconi@redhat.com>
-References: <cover.1545990781.git.lorenzo.bianconi@redhat.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=/dVER2SVx/UNhoG7yZEwBp4mYlPy79dQP84QAxPAfV4=;
+        b=kD2uWIPzVMQj/CEolHMRsiNuiGS6Xi0zt44lWoml3zU1Gw42hVuNWFInhtU3ivqjH3
+         Qwjk3gNdoK/gmYi7ur0jMkBk8aJJMpV+Up2k+MAqw3b2VEr1qwuttR2qVXvH7xJNqsCp
+         cxlfAaZ+9CW7FPsMF2CoK1xBS9zQB5iXoiPuhS03LC2+0K22ikpjPYwgVrdUaCHr6Lt7
+         YJBDVhGVG8lJEthIJqV7DPD2k4PTwARZeZxvC9JSvsAHBwO6Gw4kuwGTjpMM3MgRZY5s
+         QTi8bY0L9eOoZfcZ2wUHBSwns7ztkMFz7ZlHfVXD8am59SMePEgpCzMKXJLR+jO1NAVy
+         f45g==
+X-Gm-Message-State: AJcUukcSUGpmj0Sy5CGSZosRt4aWFA867oFKBfGpvcjaNHsRGJh1+jWD
+        694AjvflT2HvoA1ZTbbFvTDHOP4rf2L/Z6LA4XBV1Q==
+X-Google-Smtp-Source: ALg8bN7dx6hcavqbShweJ6R9gayZPg6jtdO+rwUe7QkWm8O8GG2Hpnq1zz8xA70o5Ckm6ly+ziYyhzpphARtseNsp9A=
+X-Received: by 2002:a1f:298e:: with SMTP id p136mr9885262vkp.40.1545994896286;
+ Fri, 28 Dec 2018 03:01:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20181217164207.20081-1-tony@atomide.com> <CAPDyKFoLnNWsBfaUwqwL31J=zb0UOQjXUKi7Sj0AUsnNoC6bYg@mail.gmail.com>
+ <20181218155439.GB6707@atomide.com> <CAPDyKFr2xx6fmdgjd10C1jekWg-yZPk32fGWEPO2PyexjofJ1A@mail.gmail.com>
+ <20181220231401.GG6707@atomide.com> <c22e2ab61b494ea0852c0f4654fef92d@ti.com> <20181223160226.GK6707@atomide.com>
+In-Reply-To: <20181223160226.GK6707@atomide.com>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Fri, 28 Dec 2018 12:01:00 +0100
+Message-ID: <CAPDyKFoEOGACs4Wnm7UgKab2b1-7+v8+31DpC+p=8XxcQhSpcQ@mail.gmail.com>
+Subject: Re: [EXTERNAL] Re: [PATCH] wlcore: Fix bringing up wlan0 again if
+ powered down briefly
+To:     Tony Lindgren <tony@atomide.com>
+Cc:     "Reizer, Eyal" <eyalr@ti.com>, Kalle Valo <kvalo@codeaurora.org>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        "Mishol, Guy" <guym@ti.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        linux-omap <linux-omap@vger.kernel.org>,
+        Anders Roxell <anders.roxell@linaro.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Ricardo Salveti <rsalveti@rsalveti.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Do not set bw variable to zero for legacy rates since it is already
-initialized to zero. Moreover set nss to 1 just for legacy rates
-since nss will be properly set for VHT/HT rates
+On Sun, 23 Dec 2018 at 17:02, Tony Lindgren <tony@atomide.com> wrote:
+>
+> Hi,
+>
+> * Reizer, Eyal <eyalr@ti.com> [181223 07:38]:
+> > You are ok as long as the wlan_enable pin Does go down for a sufficient amount of time
+> > turning the wl18xx device off.
+> > The firmware can only be downloaded once after power on.
+> > In between down/up you have to make sure the wlan_enable is fully going through on->off->on
+> > and the wl18xx device is fully reset.
+> > On power on the firmware is loaded by the driver and this will fail in case the reset didn't happen
+>
+> OK thanks for confirming that it's the enable pin that needs to toggle.
+>
+> Sounds like I need to get the wlcore pwrseq changes done and posted as
+> the long term solution.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Just to make sure we are talking about the same things here. The
+pwrseq thingy, is already implemented in the mmc core. When it comes
+to Hikey, there is already a pwrseq node deployed in the DTB. So, we
+should be fine.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index c08bf371e527..475eb3d40b4f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -130,10 +130,8 @@ static __le16
- mt76x02_mac_tx_rate_val(struct mt76x02_dev *dev,
- 			const struct ieee80211_tx_rate *rate, u8 *nss_val)
- {
-+	u8 phy, rate_idx, nss, bw = 0;
- 	u16 rateval;
--	u8 phy, rate_idx;
--	u8 nss = 1;
--	u8 bw = 0;
- 
- 	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
- 		rate_idx = rate->idx;
-@@ -164,7 +162,7 @@ mt76x02_mac_tx_rate_val(struct mt76x02_dev *dev,
- 
- 		phy = val >> 8;
- 		rate_idx = val & 0xff;
--		bw = 0;
-+		nss = 1;
- 	}
- 
- 	rateval = FIELD_PREP(MT_RXWI_RATE_INDEX, rate_idx);
--- 
-2.20.1
+Here are the MMC pwrseq bindings:
+Documentation/devicetree/bindings/mmc/mmc-pwrseq-simple.txt
+Documentation/devicetree/bindings/mmc/mmc.txt
 
+Here is the Hikey DTS file:
+arch/arm64/boot/dts/hisilicon/hi6220-hikey.dts
+
+>
+> And for a short term fix, we should just add msleep(50) for now with
+> updated patch description.
+>
+> Does that that sound OK to everybody?
+
+Unfortunate, that doesn't work. Because, if user space via sysfs has
+prevented runtime suspend, the SDIO card never becomes power off with
+a call to pm_runtime_put*(), not even after waiting 50 ms.
+
+If we need a short term solution, I think there are two options.
+
+1) Call pm_runtime_force_suspend() instead of pm_runtime_put*() at
+"down". This makes sure the card becomes powered off. At "up", call
+pm_runtime_force_resume() instead of pm_runtime_get_sync(). Because
+the runtime PM usage count it > 1, at "up", pm_runtime_force_resume()
+will power up the card, rather than deferring it.
+
+The problem with 1), is if there is an ACPI PM domain attached to the
+SDIO card device. Then this doesn't work. I can't tell if that is ever
+the case here.
+
+2) At "up", after the call to pm_runtime_get_sync(), add a call to
+mmc_hw_reset(). This forces the mmc core to power cycle and re-init
+the SDIO card. This may in some cases be a waste, as the card may
+already have been power cycled, but at least we should now always be
+able to re-program the firmware.
+
+If there is no rush, I think we may consider to move away from using
+runtime PM to control power for SDIO cards. Because, what we seem to
+need, is a simple interface (reference counted) to power-on/off SDIO
+cards.
+
+Kind regards
+Uffe
