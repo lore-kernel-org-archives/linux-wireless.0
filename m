@@ -3,38 +3,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E74AAC43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:20:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FBF8C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:20:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B841320675
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:20:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D32CE20675
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 12:20:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="lVcE0f7t"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Py4OpZXZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726872AbeL1MUO (ORCPT
+        id S1727889AbeL1MUX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Dec 2018 07:20:14 -0500
-Received: from nbd.name ([46.4.11.11]:51682 "EHLO nbd.name"
+        Fri, 28 Dec 2018 07:20:23 -0500
+Received: from nbd.name ([46.4.11.11]:51674 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727677AbeL1MQn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Dec 2018 07:16:43 -0500
+        id S1732726AbeL1MQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Dec 2018 07:16:36 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=M10FOWBw1ar3d7Ihqci+cCsaGbWkatx+xGIQw3c9yc4=; b=lVcE0f7tq8OjoMCtBJcprU7m8K
-        Ut8SiM9F8RrvClkZSbOCKxwtL8xW4KiZhbiVUrZkRCccp2oXZm08R1xf6XbArx2W9X09RjIvVVMQ8
-        RtPObYZaObuNL3Rep0IO1mJOZKq5XwsS6+0TqLU5fXBzb5NH0JSwC8VVUT8pMCg6qtzM=;
-Subject: Re: [PATCH] mt76: Add missing include of linux/module.h
-To:     Hauke Mehrtens <hauke@hauke-m.de>
-Cc:     kvalo@codeaurora.org, lorenzo.bianconi@redhat.com,
-        linux-wireless@vger.kernel.org
-References: <20181202120634.4323-1-hauke@hauke-m.de>
+        bh=pfO7CRiGSOalIHhKBXrfyE0+TcTt8dwhG0A5QbI9RQo=; b=Py4OpZXZBpwOVElPidt9aOfOi1
+        x4a59+tK2NTukbCSg3pv9yaHjCjQ2WBlFB9hfctW/x3vE075QdP+RkbaDyG/AvqODaJ7GoyxOfuO6
+        DK9x5cVLNrZJMwsTwhN+oFiqMvbFBMw1Td5J1dDtuwEXLWKu70yVb1xfGpbHwDQB7FsY=;
+Subject: Re: [PATCH] mt76: usb: do not build the skb if reported len does not
+ fit in buf_size
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless@vger.kernel.org
+References: <cover.1543672649.git.lorenzo.bianconi@redhat.com>
+ <da26991b7aef3dfc8a1d29e66158cfb8809309cb.1543672649.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -60,12 +61,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <ee23b6d9-0578-c602-c411-ab4cbe3d984c@nbd.name>
-Date:   Fri, 28 Dec 2018 13:16:40 +0100
+Message-ID: <c0364f26-27b2-72cd-1d8b-44a3175c1b82@nbd.name>
+Date:   Fri, 28 Dec 2018 13:16:33 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:60.0)
  Gecko/20100101 Thunderbird/60.4.0
 MIME-Version: 1.0
-In-Reply-To: <20181202120634.4323-1-hauke@hauke-m.de>
+In-Reply-To: <da26991b7aef3dfc8a1d29e66158cfb8809309cb.1543672649.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -74,14 +75,11 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-12-02 13:06, Hauke Mehrtens wrote:
-> MODULE_FIRMWARE() is used in usb_mcu.c and provided by linux/module.h,
-> but this header file is not directly included. This causes problems in
-> backports with some kernel versions.
+On 2018-12-01 15:01, Lorenzo Bianconi wrote:
+> Precompute data length in order to avoid to allocate the related
+> skb data structure if reported length does not fit in queue buf_size
 > 
-> Add the missing include.
-> 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
 Applied, thanks.
 
