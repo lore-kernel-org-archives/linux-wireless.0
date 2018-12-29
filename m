@@ -1,148 +1,125 @@
-Return-Path: <SRS0=+yu+=PF=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=QZEK=PG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78858C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 19:59:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFADC43387
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Dec 2018 05:25:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A7ED20866
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Dec 2018 19:59:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DDB521019
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Dec 2018 05:25:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RbVYSLV2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732249AbeL1T7I (ORCPT
+        id S1726515AbeL2FZl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Dec 2018 14:59:08 -0500
-Received: from muru.com ([72.249.23.125]:59606 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732233AbeL1T7I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Dec 2018 14:59:08 -0500
-Received: from atomide.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTPS id C89FB80BF;
-        Fri, 28 Dec 2018 19:59:11 +0000 (UTC)
-Date:   Fri, 28 Dec 2018 11:59:03 -0800
-From:   Tony Lindgren <tony@atomide.com>
-To:     Ulf Hansson <ulf.hansson@linaro.org>
-Cc:     "Reizer, Eyal" <eyalr@ti.com>, Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        Anders Roxell <anders.roxell@linaro.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Ricardo Salveti <rsalveti@rsalveti.net>
-Subject: Re: [EXTERNAL] Re: [PATCH] wlcore: Fix bringing up wlan0 again if
- powered down briefly
-Message-ID: <20181228195903.GX6707@atomide.com>
-References: <20181217164207.20081-1-tony@atomide.com>
- <CAPDyKFoLnNWsBfaUwqwL31J=zb0UOQjXUKi7Sj0AUsnNoC6bYg@mail.gmail.com>
- <20181218155439.GB6707@atomide.com>
- <CAPDyKFr2xx6fmdgjd10C1jekWg-yZPk32fGWEPO2PyexjofJ1A@mail.gmail.com>
- <20181220231401.GG6707@atomide.com>
- <c22e2ab61b494ea0852c0f4654fef92d@ti.com>
- <20181223160226.GK6707@atomide.com>
- <CAPDyKFoEOGACs4Wnm7UgKab2b1-7+v8+31DpC+p=8XxcQhSpcQ@mail.gmail.com>
+        Sat, 29 Dec 2018 00:25:41 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:36888 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726134AbeL2FZk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 29 Dec 2018 00:25:40 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wBT5P1wM077495;
+        Sat, 29 Dec 2018 05:25:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2018-07-02;
+ bh=/jOzbgmOwXsm+ImaDFXsdQvBJxXZOL86F6amz7mxEww=;
+ b=RbVYSLV2B1kTaM0yuDQ44gDrE7DUq+zFW/ZJM+cgJl2R2Hye5+1PjIDfriujjY2wzPOO
+ MCDuso5/VMbbaa3pCR98aGSqqaAGuDT6hSeA9j8NtcP579C6ILhTiow6sJeU1+T8LKY4
+ CLDItmHUMgJzu9mWcwbRkn7Dpj3UIL0cwgGzKAYlfUZzCubVuQTY3UyAGkXQ50ALsA3M
+ 0jyZth1BJYbQxHH9pC3KDuhUTXPUlR4QNiwEqUzgZ2uvy2xiseGlp+vSXUhob/uUA2Qp
+ m5i4sINRz8Z42jF1XWOJWynzwhDO0Kdf0XG+L+rDqiWDslEtYNZcaR9zNwHZpZ08qie8 bw== 
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2pnxedr9m1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 29 Dec 2018 05:25:13 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wBT5P7r0015570
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 29 Dec 2018 05:25:08 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wBT5P5B5003002;
+        Sat, 29 Dec 2018 05:25:05 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 28 Dec 2018 21:25:05 -0800
+Date:   Fri, 28 Dec 2018 21:25:04 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Tom Psyborg <pozega.tomislav@gmail.com>,
+        Julia Lawall <julia.lawall@lip6.fr>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        kernel-janitors@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Dan Williams <dan.j.williams@intel.com>,
+        linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        xen-devel@lists.xenproject.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/20] drop useless LIST_HEAD
+Message-ID: <20181229052504.GA16315@magnolia>
+References: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
+ <CAKR_QVJefW1vxYb7-qiU8=0YdbFghYo15SK2eGjOC-dntRfyYA@mail.gmail.com>
+ <alpine.DEB.2.21.1812232304130.2940@hadrien>
+ <CAKR_QVLeZBL43W4x1mzcfcakSZyyh9L81vgUMxfnSccKawEfdg@mail.gmail.com>
+ <20181227134055.GA2272@kadam>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPDyKFoEOGACs4Wnm7UgKab2b1-7+v8+31DpC+p=8XxcQhSpcQ@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20181227134055.GA2272@kadam>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9120 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=623
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1810050000 definitions=main-1812290048
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
-
-* Ulf Hansson <ulf.hansson@linaro.org> [181228 11:01]:
-> On Sun, 23 Dec 2018 at 17:02, Tony Lindgren <tony@atomide.com> wrote:
-> >
-> > Hi,
-> >
-> > * Reizer, Eyal <eyalr@ti.com> [181223 07:38]:
-> > > You are ok as long as the wlan_enable pin Does go down for a sufficient amount of time
-> > > turning the wl18xx device off.
-> > > The firmware can only be downloaded once after power on.
-> > > In between down/up you have to make sure the wlan_enable is fully going through on->off->on
-> > > and the wl18xx device is fully reset.
-> > > On power on the firmware is loaded by the driver and this will fail in case the reset didn't happen
-> >
-> > OK thanks for confirming that it's the enable pin that needs to toggle.
-> >
-> > Sounds like I need to get the wlcore pwrseq changes done and posted as
-> > the long term solution.
+On Thu, Dec 27, 2018 at 04:40:55PM +0300, Dan Carpenter wrote:
+> On Tue, Dec 25, 2018 at 11:12:20PM +0100, Tom Psyborg wrote:
+> > there was discussion about this just some days ago. CC 4-5 lists is
+> > more than enough
+> > 
 > 
-> Just to make sure we are talking about the same things here. The
-> pwrseq thingy, is already implemented in the mmc core. When it comes
-> to Hikey, there is already a pwrseq node deployed in the DTB. So, we
-> should be fine.
+> I don't know who you were discussing this with...
 > 
-> Here are the MMC pwrseq bindings:
-> Documentation/devicetree/bindings/mmc/mmc-pwrseq-simple.txt
-> Documentation/devicetree/bindings/mmc/mmc.txt
+> You should CC the 0th patch to all the mailinglists.  That much is a
+> clear rule.
 > 
-> Here is the Hikey DTS file:
-> arch/arm64/boot/dts/hisilicon/hi6220-hikey.dts
+> For the rest, Julia's position is the more conservative one.  I was in
+> a conversation in RL and they were like, "CC everyone for all the
+> patches".  It depends on the context, of course.  If the patches are
+> dependent on each other then you *have* to CC everyone for everything.
 
-Oh so it seems. And looking at my earlier pwrseq_wlcore.c hacks, I only
-added pinctrl handling to work around a GPIO glitch on some SoCs for
-deeper idle states. So I don't think we need a pwrseq_wlcore.c as
-I've found a better way to deal with the GPIO glitch by implementing
-gpiochip for the pinctrl driver.
+Agreed.  Ms. Lawall, sending "Cover letter + all relevant XFS patches"
+(as you did) was exactly the right thing for us xfs types. :)
 
-> > And for a short term fix, we should just add msleep(50) for now with
-> > updated patch description.
-> >
-> > Does that that sound OK to everybody?
+For that matter, we prefer to receive through linux-xfs more patches
+than necessary (one can send the entire series if one is unsure) than to
+go wanting for more context.
+
+--D
+
+> If we really have other clear rules, then it should be encoded into
+> get_maintainer.pl so that it's automatic.
 > 
-> Unfortunate, that doesn't work. Because, if user space via sysfs has
-> prevented runtime suspend, the SDIO card never becomes power off with
-> a call to pm_runtime_put*(), not even after waiting 50 ms.
-
-Yes you're right.
-
-> If we need a short term solution, I think there are two options.
+> My other question is why do the linux-arm-kernel@lists.infradead.org
+> people feel like they need to be CC'd about every driver???  I always
+> remove them from the CC list unless it's an arch/arm issue.
 > 
-> 1) Call pm_runtime_force_suspend() instead of pm_runtime_put*() at
-> "down". This makes sure the card becomes powered off. At "up", call
-> pm_runtime_force_resume() instead of pm_runtime_get_sync(). Because
-> the runtime PM usage count it > 1, at "up", pm_runtime_force_resume()
-> will power up the card, rather than deferring it.
+> regards,
+> dan carpenter
 > 
-> The problem with 1), is if there is an ACPI PM domain attached to the
-> SDIO card device. Then this doesn't work. I can't tell if that is ever
-> the case here.
-
-Hmm..
-
-> 2) At "up", after the call to pm_runtime_get_sync(), add a call to
-> mmc_hw_reset(). This forces the mmc core to power cycle and re-init
-> the SDIO card. This may in some cases be a waste, as the card may
-> already have been power cycled, but at least we should now always be
-> able to re-program the firmware.
-
-Option 2 sounds more generic to me. Do you have some test patch for
-this?
-
-Sounds like you're thinking about adding this to the MMC framework?
-
-If the only issue is if the card must be powered off when ifconfig
-wlan0 returns, I think that's a cosmetic issue. For example,
-switching to wlcore test mode after ifconfig wlan0 down might need
-the card powered down, but then again the test mode resets things
-anyway. Eyal?
-
-> If there is no rush, I think we may consider to move away from using
-> runtime PM to control power for SDIO cards. Because, what we seem to
-> need, is a simple interface (reference counted) to power-on/off SDIO
-> cards.
-
-Well we should fix the regression in a minimal way first though.
-And to me it sounds like option 2 above should do the trick, not
-sure if we need something beyond that.
-
-Regards,
-
-Tony
+> PS:  Please, no more top posting.
+> 
