@@ -2,89 +2,89 @@ Return-Path: <SRS0=QZEK=PG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0699BC43387
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Dec 2018 06:19:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D3F2C43387
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Dec 2018 18:51:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D38EE2146F
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Dec 2018 06:19:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CF8B20873
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Dec 2018 18:51:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ZoNhCS/o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728770AbeL2GTj (ORCPT
+        id S1728267AbeL2SvD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 29 Dec 2018 01:19:39 -0500
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:57844 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728681AbeL2GTj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Dec 2018 01:19:39 -0500
-X-IronPort-AV: E=Sophos;i="5.56,412,1539640800"; 
-   d="scan'208";a="362048899"
-Received: from abo-91-111-68.mrs.modulonet.fr (HELO hadrien) ([85.68.111.91])
-  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Dec 2018 07:19:35 +0100
-Date:   Sat, 29 Dec 2018 07:19:35 +0100 (CET)
-From:   Julia Lawall <julia.lawall@lip6.fr>
-X-X-Sender: jll@hadrien
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Tom Psyborg <pozega.tomislav@gmail.com>,
-        Julia Lawall <julia.lawall@lip6.fr>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        kernel-janitors@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        xen-devel@lists.xenproject.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/20] drop useless LIST_HEAD
-In-Reply-To: <20181229052504.GA16315@magnolia>
-Message-ID: <alpine.DEB.2.21.1812290717010.2673@hadrien>
-References: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr> <CAKR_QVJefW1vxYb7-qiU8=0YdbFghYo15SK2eGjOC-dntRfyYA@mail.gmail.com> <alpine.DEB.2.21.1812232304130.2940@hadrien> <CAKR_QVLeZBL43W4x1mzcfcakSZyyh9L81vgUMxfnSccKawEfdg@mail.gmail.com>
- <20181227134055.GA2272@kadam> <20181229052504.GA16315@magnolia>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        Sat, 29 Dec 2018 13:51:03 -0500
+Received: from nbd.name ([46.4.11.11]:35744 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727946AbeL2SvC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 29 Dec 2018 13:51:02 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=hgjhkBlbJV5OSgdQa1444uSL+pCBHHf8n6ZZxy28SVM=; b=ZoNhCS/okAI7KTEwmwn6uFLwrH
+        p9iBcMnLKfz/RM9pfDKQ8gyTX3aGLmg3WgUvBQNycjfi7eB/EMMHUOxF+nmWxxzYG9IgY+zhNWtO4
+        H6+8bgn2xUDc1NPbrM4InZjwj65s3N7ZEReNkcV+sc5KwnGQ9sf99oMRfCFiQFe99Lg4=;
+Subject: Re: [PATCH v2] mt76: mmio: introduce mt76x02_check_tx_hang watchdog
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
+References: <cover.1546004654.git.lorenzo.bianconi@redhat.com>
+ <82a9efd24a70b701808d4ecd8ad2c8289463ae35.1546004654.git.lorenzo.bianconi@redhat.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <d51948b1-e8b2-6570-d28f-1fea2564f93a@nbd.name>
+Date:   Sat, 29 Dec 2018 19:50:58 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:60.0)
+ Gecko/20100101 Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <82a9efd24a70b701808d4ecd8ad2c8289463ae35.1546004654.git.lorenzo.bianconi@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On 2018-12-28 15:44, Lorenzo Bianconi wrote:
+> Port mt76x02_check_tx_hang watchdog from vendor driver in order to
+> perform a device reset when tx mac/dma logic hangs. Tx mac/dma stuck
+> has been observed when the device is heavy loaded or in a noisy
+> environment. Moreover introduce wdt delayed work in order to run
+> tx_hang watchdog. For the moment run mt76x02_check_tx_hang watchdog
+> just on mt76x2 devices since the issue has not been observed on mt76x0
+> driver yet
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
+Applied, thanks.
 
-On Fri, 28 Dec 2018, Darrick J. Wong wrote:
-
-> On Thu, Dec 27, 2018 at 04:40:55PM +0300, Dan Carpenter wrote:
-> > On Tue, Dec 25, 2018 at 11:12:20PM +0100, Tom Psyborg wrote:
-> > > there was discussion about this just some days ago. CC 4-5 lists is
-> > > more than enough
-> > >
-> >
-> > I don't know who you were discussing this with...
-> >
-> > You should CC the 0th patch to all the mailinglists.  That much is a
-> > clear rule.
-> >
-> > For the rest, Julia's position is the more conservative one.  I was in
-> > a conversation in RL and they were like, "CC everyone for all the
-> > patches".  It depends on the context, of course.  If the patches are
-> > dependent on each other then you *have* to CC everyone for everything.
->
-> Agreed.  Ms. Lawall, sending "Cover letter + all relevant XFS patches"
-> (as you did) was exactly the right thing for us xfs types. :)
->
-> For that matter, we prefer to receive through linux-xfs more patches
-> than necessary (one can send the entire series if one is unsure) than to
-> go wanting for more context.
-
-Thanks for the confirmation.  I was planning to ignore the 4-5 advice,
-because there is no way in this case to make a meaningful 4-5 list
-suggestion - it's either all or nothing.  But 20 patches at once is
-perhaps a lot as well.  In this case, I just wanted to get rid of the
-whole issue at once.
-
-julia
+- Felix
