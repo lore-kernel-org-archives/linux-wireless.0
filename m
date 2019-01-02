@@ -2,203 +2,209 @@ Return-Path: <SRS0=/oVT=PK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B58B3C43387
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Jan 2019 12:02:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02AD9C43387
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Jan 2019 12:52:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A8E4218D3
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Jan 2019 12:02:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B467C2171F
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Jan 2019 12:52:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="hV1eTRD9"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pc7SSV7U"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729824AbfABMC3 (ORCPT
+        id S1729507AbfABMwS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Jan 2019 07:02:29 -0500
-Received: from mail-vs1-f65.google.com ([209.85.217.65]:40731 "EHLO
-        mail-vs1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729788AbfABMC3 (ORCPT
+        Wed, 2 Jan 2019 07:52:18 -0500
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:38181 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726772AbfABMwS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Jan 2019 07:02:29 -0500
-Received: by mail-vs1-f65.google.com with SMTP id z3so18716203vsf.7
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2019 04:02:27 -0800 (PST)
+        Wed, 2 Jan 2019 07:52:18 -0500
+Received: by mail-lj1-f193.google.com with SMTP id c19-v6so26909827lja.5;
+        Wed, 02 Jan 2019 04:52:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ApOf9iCAd37OWdntDNTpKVlcF4InyKhMWN6Sd8ISTUQ=;
-        b=hV1eTRD9jfVPuPKNascbDyT7OqgHg6dTZAuvDLTJYWrBEy1VEBkfvl9DmGDSDx1APY
-         c1TN6JR/Hn3WRhfchj02Vc86GfWPfgpkVJv1bHP+xj0/06bSWComDxQ+3eoxwaLQb56y
-         iCexEW+onEwvMPcRL6xRpKI66nH7TufhtunEs=
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=i5ZkuLL0YkEz2DgdlKRmCxBUwyCwpZqWs3VUjxD9AU4=;
+        b=pc7SSV7U0+XOIxyIDesBH4G8hiVbMXhZ6tzz0krUP/MHa6Ygrq3aFqb7Dov/IJ73kr
+         dgrykbcAoCHS5SjUMmMwxKBubHaS5DDwH5K5rvYHpIAznPBR9FvsvUhWLu2lF1jOgB5K
+         CberImji/XSdTMcbKrhZ0kJl1R5jxjXlmXXUKBGejVvInGD64PifWDAyGSPymno9hrLe
+         nii5YhgT11vkA+k0VuawtkoK+2LNAB6TVf0JU04o7OQGw9HUM4Gn1a+lBHraCYgGNmbl
+         +O/FmY5qiDTuYkfNvwCOvbOCd5wi9EUNjNY7cy59mB9vE52D10fSp0Jh+5xq0VR1bHOG
+         F9oQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ApOf9iCAd37OWdntDNTpKVlcF4InyKhMWN6Sd8ISTUQ=;
-        b=qcNjHzewcHHgl8FvHbsVf9fb7kE81icNm6jStD1R2cXsuuHm5n/JfzFXA2QNJm/MjB
-         XqxjlBE0XnpoMfyml5mQazO1i7QM7uHyHk5yjm6/dQ5yqRSZ12rWzQi62jM602Q1rcdy
-         tZGV932pTpjzEbZK2A653eXc39+Hp+oPZWSkbiKtphHwKOyO6oF+PdXIGDOkhE4izaI6
-         uaQtPGMLUNTKZ+zPkMIrePTIZj52XvQWC4RnCs6TIQ70cHuOikFnX/FAdLvEN+wDDKxs
-         /BNjYj5KC0dgEEyGIshlUGYwQTuALiS2mpXBDfJ4GK+MHORWVG8wsDoS/WiHabpFimrN
-         PwrA==
-X-Gm-Message-State: AJcUukddFA8yEEpUcy1mFddmk908iAJ23gwm8QA/r9rGhryDF+Vqq+SO
-        ptflhcD8EEFm5DRjHZFfBXmhy9n/HjJspnPzc5c87w==
-X-Google-Smtp-Source: ALg8bN48T5tEzb+Muzlf/v3xJJQ/ymrSl+IObOIT0B2G7tE5WvxDSPTFuyqYoW+D0OYi6Xh4v6Wm5efNCtXeyPbU5BE=
-X-Received: by 2002:a67:1a84:: with SMTP id a126mr3815985vsa.165.1546430546761;
- Wed, 02 Jan 2019 04:02:26 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=i5ZkuLL0YkEz2DgdlKRmCxBUwyCwpZqWs3VUjxD9AU4=;
+        b=B4qSTo83Lmxn+pUDTnEUgN6cHLSgZRtWhdEuH83GqEcNrrcUULXtE30070jxGh/bmG
+         TE7jfAXnYKWWKWfiHZM7DUWNnbaO23wW0YN4u9lSTQ80MDxkSPN6CLzeFtAf7xCmTbxC
+         qOWo0tL+XXbqj2EmbwDFo6nWMCvXy94/a+5wtEZsmYyJ4yHGNZAGGn+3Pi3rjV4wxpxT
+         5Zvxnm7JKZlRDVBfdm6Qmiz0Ny/ZF8aRfcd6bX9sJri4ZnaVatih3woSGwtgnlRsS6Tt
+         TfYmYndgUliBokkVHCOeh5bd2aEKrong8kHxLk/yP80hmCUgmKFi5HFjvvAvGhmw61R8
+         w8tA==
+X-Gm-Message-State: AJcUukf2KXQNr+7M7EadZfCaWk2kkTB2ovnfLkix0dqWlQRgrBmgz/Q7
+        m/9YG98wR1JpQqcLpRtjSzs=
+X-Google-Smtp-Source: ALg8bN6AnXCFckGJI9kfiwRGJQYPzhzLXsmIuYFWGfarEihcYASL3thokEr6gf84u6oaE6ujiW1rXA==
+X-Received: by 2002:a2e:3e04:: with SMTP id l4-v6mr23521946lja.148.1546433534378;
+        Wed, 02 Jan 2019 04:52:14 -0800 (PST)
+Received: from linux-veee.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
+        by smtp.gmail.com with ESMTPSA id g3-v6sm11395432lje.50.2019.01.02.04.52.12
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Wed, 02 Jan 2019 04:52:13 -0800 (PST)
+From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To:     Paul Burton <paul.burton@mips.com>
+Cc:     Ralf Baechle <ralf@linux-mips.org>,
+        James Hogan <jhogan@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Hauke Mehrtens <hauke@hauke-m.de>, linux-mips@linux-mips.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH mips-fixes] MIPS: BCM47XX: Setup struct device for the SoC
+Date:   Wed,  2 Jan 2019 13:51:47 +0100
+Message-Id: <20190102125147.3282-1-zajec5@gmail.com>
+X-Mailer: git-send-email 2.13.7
 MIME-Version: 1.0
-References: <20181217164207.20081-1-tony@atomide.com> <CAPDyKFoLnNWsBfaUwqwL31J=zb0UOQjXUKi7Sj0AUsnNoC6bYg@mail.gmail.com>
- <20181218155439.GB6707@atomide.com> <CAPDyKFr2xx6fmdgjd10C1jekWg-yZPk32fGWEPO2PyexjofJ1A@mail.gmail.com>
- <20181220231401.GG6707@atomide.com> <c22e2ab61b494ea0852c0f4654fef92d@ti.com>
- <20181223160226.GK6707@atomide.com> <CAPDyKFoEOGACs4Wnm7UgKab2b1-7+v8+31DpC+p=8XxcQhSpcQ@mail.gmail.com>
- <20181228195903.GX6707@atomide.com>
-In-Reply-To: <20181228195903.GX6707@atomide.com>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Wed, 2 Jan 2019 13:01:50 +0100
-Message-ID: <CAPDyKFq9XmRueJEFKVb03hqLuoB84TGjrdvEjre46ezYbk_wgw@mail.gmail.com>
-Subject: Re: [EXTERNAL] Re: [PATCH] wlcore: Fix bringing up wlan0 again if
- powered down briefly
-To:     Tony Lindgren <tony@atomide.com>
-Cc:     "Reizer, Eyal" <eyalr@ti.com>, Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        Anders Roxell <anders.roxell@linaro.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Ricardo Salveti <rsalveti@rsalveti.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 28 Dec 2018 at 20:59, Tony Lindgren <tony@atomide.com> wrote:
->
-> Hi,
->
-> * Ulf Hansson <ulf.hansson@linaro.org> [181228 11:01]:
-> > On Sun, 23 Dec 2018 at 17:02, Tony Lindgren <tony@atomide.com> wrote:
-> > >
-> > > Hi,
-> > >
-> > > * Reizer, Eyal <eyalr@ti.com> [181223 07:38]:
-> > > > You are ok as long as the wlan_enable pin Does go down for a sufficient amount of time
-> > > > turning the wl18xx device off.
-> > > > The firmware can only be downloaded once after power on.
-> > > > In between down/up you have to make sure the wlan_enable is fully going through on->off->on
-> > > > and the wl18xx device is fully reset.
-> > > > On power on the firmware is loaded by the driver and this will fail in case the reset didn't happen
-> > >
-> > > OK thanks for confirming that it's the enable pin that needs to toggle.
-> > >
-> > > Sounds like I need to get the wlcore pwrseq changes done and posted as
-> > > the long term solution.
-> >
-> > Just to make sure we are talking about the same things here. The
-> > pwrseq thingy, is already implemented in the mmc core. When it comes
-> > to Hikey, there is already a pwrseq node deployed in the DTB. So, we
-> > should be fine.
-> >
-> > Here are the MMC pwrseq bindings:
-> > Documentation/devicetree/bindings/mmc/mmc-pwrseq-simple.txt
-> > Documentation/devicetree/bindings/mmc/mmc.txt
-> >
-> > Here is the Hikey DTS file:
-> > arch/arm64/boot/dts/hisilicon/hi6220-hikey.dts
->
-> Oh so it seems. And looking at my earlier pwrseq_wlcore.c hacks, I only
-> added pinctrl handling to work around a GPIO glitch on some SoCs for
-> deeper idle states. So I don't think we need a pwrseq_wlcore.c as
-> I've found a better way to deal with the GPIO glitch by implementing
-> gpiochip for the pinctrl driver.
->
+From: Rafał Miłecki <rafal@milecki.pl>
 
-If you have a "default" pinctrl state defined in the mmc-pwrseq node
-that state will be set during probe. That's because we have made each
-pwrseq provider being a standalone driver, thus pinctrl_bind_pins()
-get called by driver core. I realize that we should update the DT
-bindings for mmc pwrseq to reflect that, I will send a patch for that.
+So far we never had any device registered for the SoC. This resulted in
+some small issues that we kept ignoring like:
+1) Not working GPIOLIB_IRQCHIP (gpiochip_irqchip_add_key() failing)
+2) Lack of proper tree in the /sys/devices/
+3) mips_dma_alloc_coherent() silently handling empty coherent_dma_mask
 
-If you need some additional pinctrl states for the mmc pwrseq_simple
-driver, for example, we can easily add that. I assume putting the pins
-in a sleep state once powering off the wifi chip could make sense.
+Kernel 4.19 came with a lot of DMA changes and caused a regression on
+bcm47xx. Starting with the commit f8c55dc6e828 ("MIPS: use generic dma
+noncoherent ops for simple noncoherent platforms") DMA coherent
+allocations just fail. Example:
+[    1.114914] bgmac_bcma bcma0:2: Allocation of TX ring 0x200 failed
+[    1.121215] bgmac_bcma bcma0:2: Unable to alloc memory for DMA
+[    1.127626] bgmac_bcma: probe of bcma0:2 failed with error -12
+[    1.133838] bgmac_bcma: Broadcom 47xx GBit MAC driver loaded
 
-However, if this is about an out-of-band IRQ line, instead of using
-the SDIO IRQs on DAT1, I think management of that, belongs in the wlan
-(or gpiochip) layers.
+The bgmac driver also triggers a WARNING:
+[    0.959486] ------------[ cut here ]------------
+[    0.964387] WARNING: CPU: 0 PID: 1 at ./include/linux/dma-mapping.h:516 bgmac_enet_probe+0x1b4/0x5c4
+[    0.973751] Modules linked in:
+[    0.976913] CPU: 0 PID: 1 Comm: swapper Not tainted 4.19.9 #0
+[    0.982750] Stack : 804a0000 804597c4 00000000 00000000 80458fd8 8381bc2c 838282d4 80481a47
+[    0.991367]         8042e3ec 00000001 804d38f0 00000204 83980000 00000065 8381bbe0 6f55b24f
+[    0.999975]         00000000 00000000 80520000 00002018 00000000 00000075 00000007 00000000
+[    1.008583]         00000000 80480000 000ee811 00000000 00000000 00000000 80432c00 80248db8
+[    1.017196]         00000009 00000204 83980000 803ad7b0 00000000 801feeec 00000000 804d0000
+[    1.025804]         ...
+[    1.028325] Call Trace:
+[    1.030875] [<8000aef8>] show_stack+0x58/0x100
+[    1.035513] [<8001f8b4>] __warn+0xe4/0x118
+[    1.039708] [<8001f9a4>] warn_slowpath_null+0x48/0x64
+[    1.044935] [<80248db8>] bgmac_enet_probe+0x1b4/0x5c4
+[    1.050101] [<802498e0>] bgmac_probe+0x558/0x590
+[    1.054906] [<80252fd0>] bcma_device_probe+0x38/0x70
+[    1.060017] [<8020e1e8>] really_probe+0x170/0x2e8
+[    1.064891] [<8020e714>] __driver_attach+0xa4/0xec
+[    1.069784] [<8020c1e0>] bus_for_each_dev+0x58/0xb0
+[    1.074833] [<8020d590>] bus_add_driver+0xf8/0x218
+[    1.079731] [<8020ef24>] driver_register+0xcc/0x11c
+[    1.084804] [<804b54cc>] bgmac_init+0x1c/0x44
+[    1.089258] [<8000121c>] do_one_initcall+0x7c/0x1a0
+[    1.094343] [<804a1d34>] kernel_init_freeable+0x150/0x218
+[    1.099886] [<803a082c>] kernel_init+0x10/0x104
+[    1.104583] [<80005878>] ret_from_kernel_thread+0x14/0x1c
+[    1.110107] ---[ end trace f441c0d873d1fb5b ]---
 
-> > > And for a short term fix, we should just add msleep(50) for now with
-> > > updated patch description.
-> > >
-> > > Does that that sound OK to everybody?
-> >
-> > Unfortunate, that doesn't work. Because, if user space via sysfs has
-> > prevented runtime suspend, the SDIO card never becomes power off with
-> > a call to pm_runtime_put*(), not even after waiting 50 ms.
->
-> Yes you're right.
->
-> > If we need a short term solution, I think there are two options.
-> >
-> > 1) Call pm_runtime_force_suspend() instead of pm_runtime_put*() at
-> > "down". This makes sure the card becomes powered off. At "up", call
-> > pm_runtime_force_resume() instead of pm_runtime_get_sync(). Because
-> > the runtime PM usage count it > 1, at "up", pm_runtime_force_resume()
-> > will power up the card, rather than deferring it.
-> >
-> > The problem with 1), is if there is an ACPI PM domain attached to the
-> > SDIO card device. Then this doesn't work. I can't tell if that is ever
-> > the case here.
->
-> Hmm..
->
-> > 2) At "up", after the call to pm_runtime_get_sync(), add a call to
-> > mmc_hw_reset(). This forces the mmc core to power cycle and re-init
-> > the SDIO card. This may in some cases be a waste, as the card may
-> > already have been power cycled, but at least we should now always be
-> > able to re-program the firmware.
->
-> Option 2 sounds more generic to me. Do you have some test patch for
-> this?
+This patch setups a "struct device" (and passes it to the bcma) which
+allows fixing all the mentioned problems. It'll also require a tiny bcma
+patch which will follow through the wireless tree & its maintainer.
 
-I can send a formal patch, but not sure which of the option to pick
-yet, (if any).
+Fixes: f8c55dc6e828 ("MIPS: use generic dma noncoherent ops for simple noncoherent platforms")
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org # v4.19+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ arch/mips/bcm47xx/setup.c     | 30 ++++++++++++++++++++++++++++++
+ include/linux/bcma/bcma_soc.h |  1 +
+ 2 files changed, 31 insertions(+)
 
->
-> Sounds like you're thinking about adding this to the MMC framework?
+diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
+index 6054d49e608e..9339a31a0a87 100644
+--- a/arch/mips/bcm47xx/setup.c
++++ b/arch/mips/bcm47xx/setup.c
+@@ -173,6 +173,31 @@ void __init plat_mem_setup(void)
+ 	pm_power_off = bcm47xx_machine_halt;
+ }
+ 
++#ifdef CONFIG_BCM47XX_BCMA
++static struct device * __init bcm47xx_setup_device(void)
++{
++	struct device *dev;
++	int err;
++
++	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
++	if (!dev)
++		return NULL;
++
++	err = dev_set_name(dev, "bcm47xx_soc");
++	if (err) {
++		pr_err("Failed to set SoC device name: %d\n", err);
++		kfree(dev);
++		return NULL;
++	}
++
++	err = dma_coerce_mask_and_coherent(dev, DMA_BIT_MASK(32));
++	if (err)
++		pr_err("Failed to set SoC DMA mask: %d\n", err);
++
++	return dev;
++}
++#endif
++
+ /*
+  * This finishes bus initialization doing things that were not possible without
+  * kmalloc. Make sure to call it late enough (after mm_init).
+@@ -183,6 +208,10 @@ void __init bcm47xx_bus_setup(void)
+ 	if (bcm47xx_bus_type == BCM47XX_BUS_TYPE_BCMA) {
+ 		int err;
+ 
++		bcm47xx_bus.bcma.dev = bcm47xx_setup_device();
++		if (!bcm47xx_bus.bcma.dev)
++			panic("Failed to setup SoC device\n");
++
+ 		err = bcma_host_soc_init(&bcm47xx_bus.bcma);
+ 		if (err)
+ 			panic("Failed to initialize BCMA bus (err %d)", err);
+@@ -235,6 +264,7 @@ static int __init bcm47xx_register_bus_complete(void)
+ #endif
+ #ifdef CONFIG_BCM47XX_BCMA
+ 	case BCM47XX_BUS_TYPE_BCMA:
++		device_register(bcm47xx_bus.bcma.dev);
+ 		bcma_bus_register(&bcm47xx_bus.bcma.bus);
+ 		break;
+ #endif
+diff --git a/include/linux/bcma/bcma_soc.h b/include/linux/bcma/bcma_soc.h
+index 7cca5f859a90..72a9a5cf962b 100644
+--- a/include/linux/bcma/bcma_soc.h
++++ b/include/linux/bcma/bcma_soc.h
+@@ -5,6 +5,7 @@
+ #include <linux/bcma/bcma.h>
+ 
+ struct bcma_soc {
++	struct device *dev;
+ 	struct bcma_bus bus;
+ };
+ 
+-- 
+2.20.1
 
-Both 1) and 2) is doable already, without having to change the MMC framework.
-
->
-> If the only issue is if the card must be powered off when ifconfig
-> wlan0 returns, I think that's a cosmetic issue. For example,
-> switching to wlcore test mode after ifconfig wlan0 down might need
-> the card powered down, but then again the test mode resets things
-> anyway. Eyal?
-
-I am not convinced, sorry.
-
-We have to distinguish if "down" has a strict requirement to power off
-the wlan-chip.
-
-For example, in "flight mode", is it okay to leave the wlan chip
-powered on and thus potentially also having its radio part active?
-
->
-> > If there is no rush, I think we may consider to move away from using
-> > runtime PM to control power for SDIO cards. Because, what we seem to
-> > need, is a simple interface (reference counted) to power-on/off SDIO
-> > cards.
->
-> Well we should fix the regression in a minimal way first though.
-> And to me it sounds like option 2 above should do the trick, not
-> sure if we need something beyond that.
-
-Okay, let's focus on fixing the regression first, then we can look
-into more long term improvements.
-
-Kind regards
-Uffe
