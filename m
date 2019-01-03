@@ -2,120 +2,137 @@ Return-Path: <SRS0=/Gk3=PL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4893C43612
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jan 2019 19:27:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6143AC43387
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jan 2019 21:33:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 82550217F5
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jan 2019 19:27:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C251217F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jan 2019 21:33:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intellastar.com header.i=@intellastar.com header.b="J3RMP1ro"
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="jaXlM75I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727201AbfACT1H (ORCPT
+        id S1727959AbfACVdM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Jan 2019 14:27:07 -0500
-Received: from mail-qt1-f180.google.com ([209.85.160.180]:34552 "EHLO
-        mail-qt1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727197AbfACT1H (ORCPT
+        Thu, 3 Jan 2019 16:33:12 -0500
+Received: from mail-ua1-f66.google.com ([209.85.222.66]:44431 "EHLO
+        mail-ua1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727939AbfACVdM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Jan 2019 14:27:07 -0500
-Received: by mail-qt1-f180.google.com with SMTP id r14so38154961qtp.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jan 2019 11:27:06 -0800 (PST)
+        Thu, 3 Jan 2019 16:33:12 -0500
+Received: by mail-ua1-f66.google.com with SMTP id d19so11395395uaq.11
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jan 2019 13:33:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intellastar.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=N6YqNEQmcX6dri4b8/tWYImJecUL1xKHXfTVswaWjnE=;
-        b=J3RMP1rocwWAkgxjJTh12ZqZZwYMWW3lFrBc8tbYF4MTbQAlOfIEj5w0eloZ7uvtxh
-         JpfJrnjmf0nouSqhSiln6/7iNrG8EtMcULfdToytdxniyOtfo+wOpYvLhQxkHzazvVE6
-         xssruIA6NQiaS0OZFRYPzDWWMLD5o8u6lJ7zytaYIuqGfKcNBsAt1dIt5JpINI9bOcgl
-         bQw1j2TlwCP3m1Vsj/v3oa2pzPnTddnTMEz5WGofZ/SZAHDJRTWae1z1aJpzyWiwZTge
-         yW3nuoOrlesR5ZV2tsCG0p51+v7R8Pp2zSeNk6qL1gK60Jxl6E1HxegsxJSeSNMgu/mH
-         bz5g==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=hRdhXbAsuNg1Aq90NHt2icvWZc4/LaxBRWRFkVibi80=;
+        b=jaXlM75IMQPRGV2NwZfFifOVgF9ct7F3py/oDVehhJx61PzEon4Fcb2QghfpsirQpM
+         xGh1Tym4VdtxMyhPYXjdI/DYc4hSRdFtKpjC6EKYFYQ+8R4Qe+KmUW6J5xcSL48BQf05
+         PzLFKpDnN97VWxgSOO+HUdDMDPiEyq26Rj2+I=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=N6YqNEQmcX6dri4b8/tWYImJecUL1xKHXfTVswaWjnE=;
-        b=hV4mdkQHQZzV7W1NzeWKf1J0nr6q7E+qgHFG14vtCtciy851+kRpxsfcYPveFP0Hbu
-         TCwe4NI7rNc4K1eM2fTRszHUDEFQxiwICcqM0LidzxKMT0ZPhZCmvRJofGLoBeB4qFhY
-         SO0BIRfRf/Xq36/5wlBXTHVqsOmJHJVp9oopUSgT7AwD5duW+jWG1uLTX+/VSGX+wg/c
-         0joESxqKWHRAfpMSTx5WFI2hVe/Ag0IJYxQp9EXD/7e47/aIY0jFQTeHTKSoNrbF49XD
-         6SqHE/xeWPs0g5pve4djus8La2Tx1vCDxR8sl1CKlgM33Hrsi3PY9Qqp1ThU5+TbshsB
-         AH5g==
-X-Gm-Message-State: AJcUukf8U3OX/4qWnYAmkZfvXSJRFpARX8g/yoI5swIoFuZ6cUX2eep9
-        qIxuFWnSaahXPmzdsZnHIyM9eF1D+OJ2r8+97miaH0c8XBt/E7eT7jUAcX0MoruhCwn7n6pu33Y
-        5d0IKm4FDhwGFVb1bd613CgArazaLhA/pmkzcHxgDNXTW/lkQkIlN7Yz7hhwBVJtZSQjWd6ptpd
-        sf/qM=
-X-Google-Smtp-Source: AFSGD/VF+pw7B4/xUPjj92l9ofHoMY0YzvwbeWmGzPcdiY8OejUwGFd4WTDl2jrJAuxfR/ukEFWPsQ==
-X-Received: by 2002:ac8:27c8:: with SMTP id x8mr46321139qtx.352.1546543625992;
-        Thu, 03 Jan 2019 11:27:05 -0800 (PST)
-Received: from [192.168.110.7] (cpe-67-241-170-88.buffalo.res.rr.com. [67.241.170.88])
-        by smtp.gmail.com with ESMTPSA id 126sm22411714qkj.70.2019.01.03.11.27.05
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 03 Jan 2019 11:27:05 -0800 (PST)
-Subject: Re: wlcore update breaks on 4.9 and 4.4 kernel branches
-To:     Sasha Levin <sashal@kernel.org>
-Cc:     stable@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <43ee432a-c6ab-e23c-616c-b626a5fb4637@intellastar.com>
- <20181202150813.GG221015@sasha-vm>
- <72dcddb8-a44a-d50c-bae6-c51180e53cc8@intellastar.com>
- <20181212064051.GA2746@sasha-vm>
-From:   Dietmar May <dmay@intellastar.com>
-Message-ID: <be76fc93-5bbc-9e00-3091-a57d13f2e485@intellastar.com>
-Date:   Thu, 3 Jan 2019 14:27:04 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=hRdhXbAsuNg1Aq90NHt2icvWZc4/LaxBRWRFkVibi80=;
+        b=OgbBHUDvzySpTDZnoquaprHIL3W/V4eLEHJex181n48tSXbIdZBQrb5711iwNzWED6
+         bA4m8sK4o/QGFdJenEG+QBiJ0t4yj5lrtXa8moTABoZHCOvqwJnEH4UT7Bb0BVwaFgfg
+         CMShmL6vFcqLR9rjjAnBpMF0OSF2GSLh4nanl/UT/DfHcoDN7tIVET1Z01/ilApN3/p8
+         AvQGg9vd2Gw0CkyaJb6kC39slu6GOjr6yRAbyqBjh3FMHisYnugnYhQf3igpwF/Hb22E
+         +dDJdeoczsOT2wR3oMYebm9JtkvCib3fQYycX9pd9Y/w4ML3e2np4r46wPAQx0LyPK7j
+         PTRg==
+X-Gm-Message-State: AJcUukcRfr2ZUEQW/WUiMULDKtcWPx0hrUhBx59Hog3IiqugOLGFgj3n
+        74kw9Ssea9cMfHwcr1ycWcLolEiaJi8A0fPrUXADLA==
+X-Google-Smtp-Source: ALg8bN5NkbkO9tYoEuTdpj293GY/U5b40mMrfrC3ezDIED1PONNxYJYygwxA9EDQbVMC4qlpE11fAKkCoid7G6Qffvg=
+X-Received: by 2002:ab0:3484:: with SMTP id c4mr18290931uar.39.1546551190827;
+ Thu, 03 Jan 2019 13:33:10 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20181212064051.GA2746@sasha-vm>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Content-Language: en-US
+References: <6ccac7db-3ab7-e396-90be-8681a8ee336b@web.de> <CALAqxLXz_s6B=NzSp17Lj6xMTYybEsMh4jDR8COXnWQCnFTrsw@mail.gmail.com>
+In-Reply-To: <CALAqxLXz_s6B=NzSp17Lj6xMTYybEsMh4jDR8COXnWQCnFTrsw@mail.gmail.com>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Thu, 3 Jan 2019 22:32:35 +0100
+Message-ID: <CAPDyKFrY58-x3SsUwhfrLvf=hayhdjQZJWqUpmegArmnEsWATg@mail.gmail.com>
+Subject: Re: [PATCH] arm64: dts: hikey: Give wifi some time after power-on
+To:     John Stultz <john.stultz@linaro.org>,
+        Jan Kiszka <jan.kiszka@web.de>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        Wei Xu <xuwei5@hisilicon.com>, Ryan Grachek <ryan@edited.us>,
+        linux-wireless@vger.kernel.org, "Reizer, Eyal" <eyalr@ti.com>,
+        Valentin Schneider <valentin.schneider@arm.com>,
+        Tony Lindgren <tony@atomide.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        "Mishol, Guy" <guym@ti.com>,
+        Anders Roxell <anders.roxell@linaro.org>,
+        Ricardo Salveti <rsalveti@rsalveti.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sasha,
-
-I've just confirmed that this problem is no longer present in 4.4.169=20
-either, as expected.
-
-Sorry for the delay - we're on 4.9, so the 4.4 branch doesn't impact us.
-
-Just wanted to let you know so you have full closure on this issue.
-
-Dietmar
-
-------------------------------------------------------------------------
-On 12/12/18 1:40 AM, Sasha Levin wrote:
-> On Tue, Dec 11, 2018 at 03:29:31PM -0500, Dietmar May wrote:
->> Sasha,
->>
->> I've verified that 4.9.143 no longer exhibits this problem.
+On Wed, 2 Jan 2019 at 23:21, John Stultz <john.stultz@linaro.org> wrote:
 >
-> Thanks for confirming!
+> Adding a few folks to cc from the thread here:
+> https://patchwork.kernel.org/patch/10734021/
 >
->> The revert hasn't shown up in 4.4 yet; but I'll verify once merged=20
->> there.
->
-> There was no 4.4 release yet; it's coming, I promise :)
->
-> --=20
-> Thanks,
-> Sasha
+> As this sounds like a very similar issue.
+> thanks
+> -john
 
---=20
-This email and any information disclosed in connection herewith, whether=20
-written or oral, is the property of Intellastar LLC, and is intended only=
-=20
-for the person or entity to which it is addressed. This email may contain=
-=20
-information that is privileged confidential or otherwise protected from=20
-disclosure. Distributing or copying any information contained in this email=
-=20
-to anyone other than the intended recipient is strictly prohibited.=C2=A0
+John, thanks for looping me in.
+
+>
+> On Sun, Dec 30, 2018 at 3:38 AM Jan Kiszka <jan.kiszka@web.de> wrote:
+> >
+> > From: Jan Kiszka <jan.kiszka@siemens.com>
+> >
+> > Somewhere along recent changes to power control of the wl1835, power-on
+> > became very unreliable on the hikey, failing like this:
+> >
+> > wl1271_sdio: probe of mmc2:0001:1 failed with error -16
+> > wl1271_sdio: probe of mmc2:0001:2 failed with error -16
+> >
+> > After playing with some dt parameters and comparing to other users of
+> > this chip, it turned out we need some power-on delay to make things
+> > stable again. In contrast to those other users which define 200 ms, the
+> > hikey is already very happy with 1 ms.
+
+According to the discussions we had so far, this doesn't sound like
+the correct solution.
+
+I am intending to post patch soon, however, I am not sure exactly what
+solution to pick yet. I will keep you on cc - and of course I
+appreciate if you could help to test.
+
+Kind regards
+Uffe
+
+> >
+> > Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> > ---
+> >
+> > Tested with 4.19 and linus/master.
+> >
+> >   arch/arm64/boot/dts/hisilicon/hi6220-hikey.dts | 1 +
+> >   1 file changed, 1 insertion(+)
+> >
+> > diff --git a/arch/arm64/boot/dts/hisilicon/hi6220-hikey.dts
+> > b/arch/arm64/boot/dts/hisilicon/hi6220-hikey.dts
+> > index f4964bee6a1a..1e771bf201b9 100644
+> > --- a/arch/arm64/boot/dts/hisilicon/hi6220-hikey.dts
+> > +++ b/arch/arm64/boot/dts/hisilicon/hi6220-hikey.dts
+> > @@ -118,6 +118,7 @@
+> >                 reset-gpios = <&gpio0 5 GPIO_ACTIVE_LOW>;
+> >                 clocks = <&pmic>;
+> >                 clock-names = "ext_clock";
+> > +               post-power-on-delay-ms = <1>;
+> >                 power-off-delay-us = <10>;
+> >         };
+> >
+> > --
+> > 2.16.4
