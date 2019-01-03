@@ -2,136 +2,175 @@ Return-Path: <SRS0=/Gk3=PL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-5.0 required=3.0 tests=BIGNUM_EMAILS,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74956C43387
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jan 2019 10:11:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACF4CC43387
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jan 2019 11:13:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DD802073D
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jan 2019 10:11:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7776E20815
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jan 2019 11:13:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="1hpk8p6w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728517AbfACKLn (ORCPT
+        id S1728444AbfACLNs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Jan 2019 05:11:43 -0500
-Received: from 7.mo7.mail-out.ovh.net ([46.105.43.131]:47171 "EHLO
-        7.mo7.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727600AbfACKLn (ORCPT
+        Thu, 3 Jan 2019 06:13:48 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:45128 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726814AbfACLNs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Jan 2019 05:11:43 -0500
-X-Greylist: delayed 7799 seconds by postgrey-1.27 at vger.kernel.org; Thu, 03 Jan 2019 05:11:42 EST
-Received: from player697.ha.ovh.net (unknown [10.109.143.208])
-        by mo7.mail-out.ovh.net (Postfix) with ESMTP id 42DF1F1351
-        for <linux-wireless@vger.kernel.org>; Thu,  3 Jan 2019 08:42:46 +0100 (CET)
-Received: from RCM-web4.webmail.mail.ovh.net (ip-194-187-74-233.konfederacka.maverick.com.pl [194.187.74.233])
-        (Authenticated sender: rafal@milecki.pl)
-        by player697.ha.ovh.net (Postfix) with ESMTPSA id 829CF14C7FCA;
-        Thu,  3 Jan 2019 07:42:36 +0000 (UTC)
+        Thu, 3 Jan 2019 06:13:48 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x03B8dMi074087;
+        Thu, 3 Jan 2019 11:13:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2018-07-02;
+ bh=ksdjxPxNc+N01RgxBPAbBts42hQr+lUbJg45haFykP4=;
+ b=1hpk8p6w4LOgP0igi2DanikKYI1F3oFBWO629C2UkJS5d5C6LSv3DvhyL9v/qYAgIdVT
+ XcX3aKSPjTXhNlJTzsCX1gk6jZDCH08vriJ5s1ptvnrcpWGLZBQzwGpE7ZSeQ3pc5T4k
+ AzsNwFT9ObYaT8KWdmZE6u9X3emYSj7KyUjSrx0e0RsMmK8XoiLpEu8x9b34ackrZoWN
+ SUIiHRw0mHMgniqQUN1t9gPI2YoYLS+d/iIAMOICHfqa0SGEeCgiYexBIg2UgdabTN2N
+ zaLLheAEg5woa7DCzMLlyPp6wBqVm4JjOBXWFgg9jYZVD+4sbTgJGj8BdeAR1+5Gasii 7Q== 
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2pp1jr6ff6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 03 Jan 2019 11:13:46 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x03BDjvA031338
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 3 Jan 2019 11:13:45 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x03BDjRv031321;
+        Thu, 3 Jan 2019 11:13:45 GMT
+Received: from kadam (/41.202.241.12)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 03 Jan 2019 03:13:44 -0800
+Date:   Thu, 3 Jan 2019 14:13:38 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     baijiaju1990@gmail.com
+Cc:     linux-wireless@vger.kernel.org
+Subject: [bug report] cw1200: Fix concurrency use-after-free bugs in
+ cw1200_hw_scan()
+Message-ID: <20190103111338.GA9692@kadam>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Thu, 03 Jan 2019 08:42:36 +0100
-From:   =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To:     Hauke Mehrtens <hauke@hauke-m.de>
-Cc:     =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Paul Burton <paul.burton@mips.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        James Hogan <jhogan@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-mips@linux-mips.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH mips-fixes] MIPS: BCM47XX: Setup struct device for the SoC
-In-Reply-To: <c09303d8-a74b-a472-485e-2b4ed7f97acf@hauke-m.de>
-References: <20190102125147.3282-1-zajec5@gmail.com>
- <c09303d8-a74b-a472-485e-2b4ed7f97acf@hauke-m.de>
-Message-ID: <8437d9abfc02d62b00f1e497d1b57308@milecki.pl>
-X-Sender: rafal@milecki.pl
-User-Agent: Roundcube Webmail/1.3.8
-X-Originating-IP: 194.187.74.233
-X-Webmail-UserID: rafal@milecki.pl
-X-Ovh-Tracer-Id: 13616070525805235789
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrudejgdduudehucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9124 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=4 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=463
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1810050000 definitions=main-1901030100
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-01-02 16:50, Hauke Mehrtens wrote:
-> On 1/2/19 1:51 PM, Rafał Miłecki wrote:
->> From: Rafał Miłecki <rafal@milecki.pl>
->> 
->> So far we never had any device registered for the SoC. This resulted 
->> in
->> some small issues that we kept ignoring like:
->> 1) Not working GPIOLIB_IRQCHIP (gpiochip_irqchip_add_key() failing)
->> 2) Lack of proper tree in the /sys/devices/
->> 3) mips_dma_alloc_coherent() silently handling empty coherent_dma_mask
->> 
->> Kernel 4.19 came with a lot of DMA changes and caused a regression on
->> bcm47xx. Starting with the commit f8c55dc6e828 ("MIPS: use generic dma
->> noncoherent ops for simple noncoherent platforms") DMA coherent
->> allocations just fail. Example:
->> [    1.114914] bgmac_bcma bcma0:2: Allocation of TX ring 0x200 failed
->> [    1.121215] bgmac_bcma bcma0:2: Unable to alloc memory for DMA
->> [    1.127626] bgmac_bcma: probe of bcma0:2 failed with error -12
->> [    1.133838] bgmac_bcma: Broadcom 47xx GBit MAC driver loaded
->> 
->> The bgmac driver also triggers a WARNING:
->> [    0.959486] ------------[ cut here ]------------
->> [    0.964387] WARNING: CPU: 0 PID: 1 at 
->> ./include/linux/dma-mapping.h:516 bgmac_enet_probe+0x1b4/0x5c4
->> [    0.973751] Modules linked in:
->> [    0.976913] CPU: 0 PID: 1 Comm: swapper Not tainted 4.19.9 #0
->> [    0.982750] Stack : 804a0000 804597c4 00000000 00000000 80458fd8 
->> 8381bc2c 838282d4 80481a47
->> [    0.991367]         8042e3ec 00000001 804d38f0 00000204 83980000 
->> 00000065 8381bbe0 6f55b24f
->> [    0.999975]         00000000 00000000 80520000 00002018 00000000 
->> 00000075 00000007 00000000
->> [    1.008583]         00000000 80480000 000ee811 00000000 00000000 
->> 00000000 80432c00 80248db8
->> [    1.017196]         00000009 00000204 83980000 803ad7b0 00000000 
->> 801feeec 00000000 804d0000
->> [    1.025804]         ...
->> [    1.028325] Call Trace:
->> [    1.030875] [<8000aef8>] show_stack+0x58/0x100
->> [    1.035513] [<8001f8b4>] __warn+0xe4/0x118
->> [    1.039708] [<8001f9a4>] warn_slowpath_null+0x48/0x64
->> [    1.044935] [<80248db8>] bgmac_enet_probe+0x1b4/0x5c4
->> [    1.050101] [<802498e0>] bgmac_probe+0x558/0x590
->> [    1.054906] [<80252fd0>] bcma_device_probe+0x38/0x70
->> [    1.060017] [<8020e1e8>] really_probe+0x170/0x2e8
->> [    1.064891] [<8020e714>] __driver_attach+0xa4/0xec
->> [    1.069784] [<8020c1e0>] bus_for_each_dev+0x58/0xb0
->> [    1.074833] [<8020d590>] bus_add_driver+0xf8/0x218
->> [    1.079731] [<8020ef24>] driver_register+0xcc/0x11c
->> [    1.084804] [<804b54cc>] bgmac_init+0x1c/0x44
->> [    1.089258] [<8000121c>] do_one_initcall+0x7c/0x1a0
->> [    1.094343] [<804a1d34>] kernel_init_freeable+0x150/0x218
->> [    1.099886] [<803a082c>] kernel_init+0x10/0x104
->> [    1.104583] [<80005878>] ret_from_kernel_thread+0x14/0x1c
->> [    1.110107] ---[ end trace f441c0d873d1fb5b ]---
->> 
->> This patch setups a "struct device" (and passes it to the bcma) which
->> allows fixing all the mentioned problems. It'll also require a tiny 
->> bcma
->> patch which will follow through the wireless tree & its maintainer.
->> 
->> Fixes: f8c55dc6e828 ("MIPS: use generic dma noncoherent ops for simple 
->> noncoherent platforms")
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: stable@vger.kernel.org # v4.19+
->> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> 
-> Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
-> 
-> I assume that the old ssb based devices also have such problems did
-> you had a look into those?
+Hello Jia-Ju Bai,
 
-I've ordered some device with ssb based SoC & I'm planning to test it
-next week hopefully.
+The patch 4f68ef64cd7f: "cw1200: Fix concurrency use-after-free bugs
+in cw1200_hw_scan()" from Dec 14, 2018, leads to the following static
+checker warning:
+
+drivers/net/wireless/st/cw1200/scan.c:127 cw1200_hw_scan() warn: inconsistent returns 'sem:&priv->scan.lock'.
+  Locked on:   line 88
+               line 127
+  Unlocked on: line 66
+               line 70
+drivers/net/wireless/st/cw1200/scan.c:268 cw1200_scan_work() warn: inconsistent returns 'sem:&priv->scan.lock'.
+  Locked on:   line 262
+               line 268
+  Unlocked on: line 196
+
+
+(I don't really understand the locking in cw1200_scan_work() well enough
+to say what's supposed to happen but the first warning seems like a bug).
+
+drivers/net/wireless/st/cw1200/scan.c
+    54 int cw1200_hw_scan(struct ieee80211_hw *hw,
+    55 		   struct ieee80211_vif *vif,
+    56 		   struct ieee80211_scan_request *hw_req)
+    57 {
+    58 	struct cw1200_common *priv = hw->priv;
+    59 	struct cfg80211_scan_request *req = &hw_req->req;
+    60 	struct wsm_template_frame frame = {
+    61 		.frame_type = WSM_FRAME_TYPE_PROBE_REQUEST,
+    62 	};
+    63 	int i, ret;
+    64 
+    65 	if (!priv->vif)
+    66 		return -EINVAL;
+    67 
+    68 	/* Scan when P2P_GO corrupt firmware MiniAP mode */
+    69 	if (priv->join_status == CW1200_JOIN_STATUS_AP)
+    70 		return -EOPNOTSUPP;
+    71 
+    72 	if (req->n_ssids == 1 && !req->ssids[0].ssid_len)
+    73 		req->n_ssids = 0;
+    74 
+    75 	wiphy_dbg(hw->wiphy, "[SCAN] Scan request for %d SSIDs.\n",
+    76 		  req->n_ssids);
+    77 
+    78 	if (req->n_ssids > WSM_SCAN_MAX_NUM_OF_SSIDS)
+    79 		return -EINVAL;
+    80 
+    81 	/* will be unlocked in cw1200_scan_work() */
+    82 	down(&priv->scan.lock);
+        ^^^^^^^^^^^^^^^^^^^^^^
+    83 	mutex_lock(&priv->conf_mutex);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    84 
+    85 	frame.skb = ieee80211_probereq_get(hw, priv->vif->addr, NULL, 0,
+    86 		req->ie_len);
+    87 	if (!frame.skb)
+    88 		return -ENOMEM;
+                ^^^^^^^^^^^^^^^
+
+Need to drop the locks before returning.
+
+    89 
+    90 	if (req->ie_len)
+    91 		skb_put_data(frame.skb, req->ie, req->ie_len);
+    92 
+    93 	ret = wsm_set_template_frame(priv, &frame);
+    94 	if (!ret) {
+    95 		/* Host want to be the probe responder. */
+    96 		ret = wsm_set_probe_responder(priv, true);
+    97 	}
+    98 	if (ret) {
+    99 		dev_kfree_skb(frame.skb);
+    100 		mutex_unlock(&priv->conf_mutex);
+    101 		up(&priv->scan.lock);
+    102 		return ret;
+    103 	}
+    104 
+    105 	wsm_lock_tx(priv);
+    106 
+    107 	BUG_ON(priv->scan.req);
+    108 	priv->scan.req = req;
+    109 	priv->scan.n_ssids = 0;
+    110 	priv->scan.status = 0;
+    111 	priv->scan.begin = &req->channels[0];
+    112 	priv->scan.curr = priv->scan.begin;
+    113 	priv->scan.end = &req->channels[req->n_channels];
+    114 	priv->scan.output_power = priv->output_power;
+    115 
+    116 	for (i = 0; i < req->n_ssids; ++i) {
+    117 		struct wsm_ssid *dst = &priv->scan.ssids[priv->scan.n_ssids];
+    118 		memcpy(&dst->ssid[0], req->ssids[i].ssid, sizeof(dst->ssid));
+    119 		dst->length = req->ssids[i].ssid_len;
+    120 		++priv->scan.n_ssids;
+    121 	}
+    122 
+    123 	if (frame.skb)
+    124 		dev_kfree_skb(frame.skb);
+    125 	mutex_unlock(&priv->conf_mutex);
+    126 	queue_work(priv->workqueue, &priv->scan.work);
+    127 	return 0;
+    128 }
+
+regards,
+dan carpenter
