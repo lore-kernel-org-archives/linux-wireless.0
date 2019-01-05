@@ -2,114 +2,106 @@ Return-Path: <SRS0=nI2m=PN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED8B4C43387
-	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jan 2019 02:44:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58AC2C43387
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jan 2019 08:23:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BDE9921871
-	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jan 2019 02:44:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 265A5208E3
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jan 2019 08:23:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="em2JgGBf"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KchppJ9P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726252AbfAECom (ORCPT
+        id S1726229AbfAEIX3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Jan 2019 21:44:42 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:40895 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726168AbfAECom (ORCPT
+        Sat, 5 Jan 2019 03:23:29 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:39737 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726126AbfAEIX3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Jan 2019 21:44:42 -0500
-Received: by mail-ot1-f66.google.com with SMTP id s5so33661203oth.7;
-        Fri, 04 Jan 2019 18:44:40 -0800 (PST)
+        Sat, 5 Jan 2019 03:23:29 -0500
+Received: by mail-wm1-f68.google.com with SMTP id f81so3156380wmd.4;
+        Sat, 05 Jan 2019 00:23:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:subject:to:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=XEfAOPwOwvz5aDgsUDXI7JNifWiyNQ7Lj3bB0oGspJ8=;
-        b=em2JgGBfnhDCXdYzW1yUwFduEvuL6gbOw/ux2aQhqytWtHbLXsIwBbVk4SmQqNLK+q
-         VoiMF+gtvuYNAb8VbxGtphxoupmdOEXmyc+h0q+gOh3bqo+BXg7wNR02NqrGxi21PX6z
-         JWb6bwl3bPh7gxybe27VcuC8wxYp0R+f7i5yjvaxuDiAr4238oF9WIFWUNxOv5xlfh7c
-         wmkMwX0X7qq9D1GJwYyFiXEbrP6VIELCJLrirDP8mkg5/KuH/ZI6tJlWw1J/sRNPBnVs
-         zxfgEU6xQDzafbqocgTk4dTtBvZl0dBpKTPbsf2ZJqR2nlGjJxiSDVxBbgcJSrZe5QMc
-         RuQQ==
+        h=from:date:to:cc:subject:message-id:mime-version:content-disposition
+         :content-transfer-encoding:user-agent;
+        bh=+rLfGMG1douxX9tiNwu/aG4jUvk5DpaW4pxLJqerjfY=;
+        b=KchppJ9PHg04635SV9GZ8yG9tU9cI4wjzQ29C6nfa3gGnSFrGg9fETxASeFEUGZOBh
+         QFz9EHsZKVt5aSV/l6oXy5R7ZpwgAewaXlZZvpJcrBscIFGIaiPz7oTOPJMtFCR8Hy5J
+         8WU73gpoMQkid9Oz0EdNOHWHX0V4RLsegrgtOhoAsmbuX4lAk+isskcx7YJAPLuBUBh1
+         4lcbTxbIRE/Y7E4q86wZNUIP/NRF/rIfRXJWCSzPh8Cavy7tAvOSZz5w5D8L3MJmwv0P
+         hKmsn0d76if6wfdATqyu+U/ohP65OGJrxouISWrpw//+fCNVAvzwGuKGiAAeYxmy82e2
+         1tXw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=XEfAOPwOwvz5aDgsUDXI7JNifWiyNQ7Lj3bB0oGspJ8=;
-        b=Etjn7ozXWhLJI/nnds0SGAqVvr5ZVsbf/qDqYldpHttlMd3DTIZb4Ped2tCRdQop+F
-         iWuTwskIJN4BnwxOBRy0zOthb944t2SGsyXykL/elVlpbFjoEiqoOxqhFss7FIOt+t3R
-         W+mAyrVagk2a5b2MEk4WiWMAIp9/YWmvS9t8zPY/tSXYe9L857MVPzPwuVENZ/3ufpPU
-         +U+nEyjycJ+idrlXIZhEA8/5GVn0hfSRC7zABsp1C+mjav/shzCUhY0ZkP6sa3wbzrA0
-         7SWPcsYRbk69OSh9eRow4mkFsYqWY0qlCNuE5oaRAoLhjHiw+BN4MFGNbUYQ5m0GV39C
-         YWxw==
-X-Gm-Message-State: AJcUukc0hTsQLcBV1x3TpZHjWQB8t0i1yb/O9fjW0oA/oND5uZBHWILG
-        96gNW1l850Of4pMtv7AnqB/VCnYx
-X-Google-Smtp-Source: ALg8bN6FFM1b33L0OUKL3fCnq63QFnCWrETcLKlPvK6ubLAKP77ya/X4zxgJMhex3vceBpsOBImN2A==
-X-Received: by 2002:a9d:6c3:: with SMTP id 61mr39519217otx.314.1546656280230;
-        Fri, 04 Jan 2019 18:44:40 -0800 (PST)
-Received: from [192.168.1.102] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id k11sm28974152oib.35.2019.01.04.18.44.39
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Fri, 04 Jan 2019 18:44:39 -0800 (PST)
-Subject: Re: [PATCH 1/4] rtlwifi: rtl8723ae: Take the FW LPS mode handling out
-To:     Bernd Edlinger <bernd.edlinger@hotmail.de>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <DB7PR07MB5353320B147CD781B7993783E48E0@DB7PR07MB5353.eurprd07.prod.outlook.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <f6406c9c-d095-6c9b-55af-0b2fd05c06bb@lwfinger.net>
-Date:   Fri, 4 Jan 2019 20:44:39 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.0
+        h=x-gm-message-state:from:date:to:cc:subject:message-id:mime-version
+         :content-disposition:content-transfer-encoding:user-agent;
+        bh=+rLfGMG1douxX9tiNwu/aG4jUvk5DpaW4pxLJqerjfY=;
+        b=b4pXFeHb8rJwucn4Y0WoMwtBFj5Y/Y1VGHBKB/EriRkhGSERyqDsjpcguoyawCvDwj
+         mcMqj4VvxMWKkPviE1fArVutKPfqp1dLFij4QR2RAYjJ7HsxE1iNTYbdvH+VwxKYyAg/
+         GR981CWI5L1mJeJEcFtykDbDf+J/sIdzritpZW8ueKYXM+8hJd6dSlWoopCYTKtORE8W
+         3bdNIWHgF8JI7kBZLprn7ivZRUE3UoVvKkhEd37Fciv5M+agylw0I+jr3BlBby2kdAKR
+         rYu8R9aKg0Jw3wyYoHsyRMBf0+ei8F/kJNv1H/7mlVPrwtXaYYl3IIcxJkJyeHIudZ+o
+         V/RA==
+X-Gm-Message-State: AJcUukeBzx2NkBbiTL7VhSli0/FyOg6L40G72B21aQ8q17zYUe4JfOzI
+        ZiE4tREjCVn16BtcuwvL2JUuRTg/yzdhzw==
+X-Google-Smtp-Source: ALg8bN4Zn1XzsvgGPjCL/x7Z64kbFLkjr5v1xwOwSVL2nK+yOmhODPIjGjuKcu1mPKxwMGyC9kXQgQ==
+X-Received: by 2002:a1c:410b:: with SMTP id o11mr3525130wma.109.1546676606844;
+        Sat, 05 Jan 2019 00:23:26 -0800 (PST)
+Received: from localhost.localdomain ([185.140.29.250])
+        by smtp.gmail.com with ESMTPSA id b129sm2326732wmd.24.2019.01.05.00.23.25
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sat, 05 Jan 2019 00:23:26 -0800 (PST)
+From:   "=?iso-8859-1?Q?J=FAlius?= Milan" <julikmilan@gmail.com>
+X-Google-Original-From: =?iso-8859-1?Q?J=FAlius?= Milan <jmilan.dev@gmail.com>
+Date:   Sat, 5 Jan 2019 09:23:23 +0100
+To:     linux-kernel@vger.kernel.org
+Cc:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        gregkh@linuxfoundation.org, ajay.kathat@microchip.com,
+        adham.abozaeid@microchip.com
+Subject: [PATCH] staging: wilc1000: fix cast to restricted __le32
+Message-ID: <20190105082323.GA27838@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <DB7PR07MB5353320B147CD781B7993783E48E0@DB7PR07MB5353.eurprd07.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+User-Agent: Mutt/1.9.2 (2017-12-15)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/4/19 6:48 AM, Bernd Edlinger wrote:
-> This appears to trigger a firmware bug and causes severe
-> problems with rtl8723ae PCI devices.
-> 
-> When the power save mode is activated for longer periods
-> of time the firmware stops to receive any packets.
-> 
-> This problem was exposed by commit 873ffe154ae0 ("rtlwifi:
-> Fix logic error in enter/exit power-save mode").
-> 
-> Previously the power save mode was only active rarely and
-> only for a short time so that the problem was not noticeable.
-> 
-> Signed-off-by: Bernd Edlinger <bernd.edlinger@hotmail.de>
-> ---
+Fixes the following sparse warnings:
 
-While the Realtek firmware group has a chance to look for a bug, I would like 
-you to perform a couple of tests on the original code.
+drivers/staging/wilc1000/host_interface.c:2360:30: warning:
+ incorrect type in assignment (different base types)
+    expected restricted __le32 [addressable] [assigned] [usertype] frame_type
+    got restricted __le16 [usertype] <noident>
 
-The driver has three module parameters that affect power save. The 'modinfo 
-rtl8723ae' command lists them as
+Fixes: 147ccfd451024 ("staging: wilc1000: handle mgmt_frame_register ops from cfg82011 context")
+Signed-off-by: Július Milan <jmilan.dev@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-parm:   ips:Set to 0 to not use link power save (default 1) (bool)
-parm:   swlps:Set to 1 to use SW control power save (default 0) (bool)
-parm:   fwlps:Set to 1 to use FW control power save (default 1) (bool)
-
-If you were to load rtl8723ae with 'ips=0', does it still fail?
-If you were to load the driver with 'swlps=1 fwlps=0', does it still fail?
-
-Thanks for debugging this problem.
-
-Larry
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5dae6e7155d3..07c3d6293573 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2357,7 +2357,7 @@ void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
+ 	default:
+ 		break;
+ 	}
+-	reg_frame.frame_type = cpu_to_le16(frame_type);
++	reg_frame.frame_type = cpu_to_le32(frame_type);
+ 	result = wilc_send_config_pkt(vif, WILC_SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-- 
+2.14.5
 
