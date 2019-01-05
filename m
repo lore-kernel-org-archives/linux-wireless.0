@@ -2,134 +2,157 @@ Return-Path: <SRS0=nI2m=PN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBFA1C43387
-	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jan 2019 18:39:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0644C43387
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jan 2019 19:44:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F24722300
-	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jan 2019 18:39:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66EAD222FB
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jan 2019 19:44:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fNm9edF/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726524AbfAESjI (ORCPT
+        id S1726282AbfAEToP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 5 Jan 2019 13:39:08 -0500
-Received: from mail-oln040092072053.outbound.protection.outlook.com ([40.92.72.53]:6315
-        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726252AbfAESjH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Jan 2019 13:39:07 -0500
-Received: from DB5EUR03FT031.eop-EUR03.prod.protection.outlook.com
- (10.152.20.54) by DB5EUR03HT112.eop-EUR03.prod.protection.outlook.com
- (10.152.21.11) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1382.18; Sat, 5 Jan
- 2019 18:39:02 +0000
-Received: from DB7PR07MB5353.eurprd07.prod.outlook.com (10.152.20.60) by
- DB5EUR03FT031.mail.protection.outlook.com (10.152.20.142) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1382.18 via Frontend Transport; Sat, 5 Jan 2019 18:39:02 +0000
-Received: from DB7PR07MB5353.eurprd07.prod.outlook.com
- ([fe80::e1f9:8635:f629:eb8e]) by DB7PR07MB5353.eurprd07.prod.outlook.com
- ([fe80::e1f9:8635:f629:eb8e%4]) with mapi id 15.20.1516.010; Sat, 5 Jan 2019
- 18:39:02 +0000
-From:   Bernd Edlinger <bernd.edlinger@hotmail.de>
-To:     Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 2/4] rtlwifi: rtl8723ae: Don't use dm.undec_sm_pwdb for
- input
-Thread-Topic: [PATCH v2 2/4] rtlwifi: rtl8723ae: Don't use dm.undec_sm_pwdb
- for input
-Thread-Index: AQHUpSXugKolGutiDEibxUg5fF7dbw==
-Date:   Sat, 5 Jan 2019 18:39:02 +0000
-Message-ID: <DB7PR07MB5353A56F7F5BD0EEC355346FE48F0@DB7PR07MB5353.eurprd07.prod.outlook.com>
-Accept-Language: en-US, en-GB, de-DE
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: AM6PR03CA0025.eurprd03.prod.outlook.com (2603:10a6:20b::38)
- To DB7PR07MB5353.eurprd07.prod.outlook.com (2603:10a6:10:6e::26)
-x-incomingtopheadermarker: OriginalChecksum:8DCC18BBB01028A8C8DB887D3815187C8CA74CFE7E7DB92D287B056F2382039F;UpperCasedChecksum:5655DB5B178821A1C2D5AD2527D69720EA654A048E78C7F915ECA2381F5419A5;SizeAsReceived:8750;Count:62
-x-ms-exchange-messagesentrepresentingtype: 1
-x-tmn:  [4ogDYkyruHjgs9cmE5KcQiDbBfq8YlXe]
-x-microsoft-original-message-id: <fe46c710-9843-5107-ba63-810c487d40b4@hotmail.de>
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DB5EUR03HT112;6:/1kvWIH4zhpm2Lg3N8b7k2ZrnJpI3kjKpHloRktgKQ2IOx3zzDZnD1sdDgzuhvBcmVD0lVLZAkvgO3MAjIZxBvbv12vyS1UFryCd8MZgGwRMQfJF+LzJABQ/NT7aB4rQlyapdG0ALJigZJGbbeyNpbrPtADBfPrgs8q3DKXktRgqBU94ug5oS1u/j7km9lY/azhp3/ckzxgx2NybmvmS/iY8NMHJqUuH7gdMiflpi1637anLq1awNBcL/kw/ZKFHTc0D99AN/9OUbN+wqwJJJMk5BHLNSve1ZogEhRiZaWwf9Ip5wn8Y3OsiKvevIMkWgqBJgmBlWmHVGeiVPm3RGX5jnsyqep+9hX60YzwxXhkBLRz1iVIVCHvTSzKIImiKzQnOUtfRlUjpGWebAIXDQ5sN3JhMNySgr84C6nW67pEXc71Bm+YlWxT9CBCMuwJF9PR2T0fO/mlUqrfFy7dp1A==;5:koTx9zvscEWr5NFJ4FX2U5AV5GOfOyXCyNKUnq1CEfpKpZ45tKnN7dVME+c8MHjr6llKwVQRqsAqVV+GBfzs+HCHxQCM3U+WjFBkkIRp7/iFM8jabjiHgzeVnXEVmA4M3Uow/UkJWuXUAcGHQlNqHmww5a2j9xCv7Pei3wyKCYU=;7:Kg/n8TjgQwfselYo+nQXYORegmU96BRE1cb+2pbD0e5+F4ZvHo4yg7R4sVJXKW2GDASbAwOcWaD+S1NcfjYdhdFls3tpRN+UHepPWGJCzQ7nnwT/yBSXoapQrJ6tSXj8FNX3i7xRKSDwVGB+N+nREg==
-x-incomingheadercount: 62
-x-eopattributedmessage: 0
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:DB5EUR03HT112;
-x-ms-traffictypediagnostic: DB5EUR03HT112:
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(4566010)(82015058);SRVR:DB5EUR03HT112;BCL:0;PCL:0;RULEID:;SRVR:DB5EUR03HT112;
-x-microsoft-antispam-message-info: yktzmq+m/mXsGhK7iwaJIx3Lx0P5vGih5JqzKBY172Qrmfe9WA8dqpcQ98AaAl0A
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <4808AEE77A57DF41B9D9766567FE9B1D@eurprd07.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        Sat, 5 Jan 2019 14:44:15 -0500
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:40692 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726262AbfAEToP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 5 Jan 2019 14:44:15 -0500
+Received: by mail-ed1-f67.google.com with SMTP id g22so34500820edr.7
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jan 2019 11:44:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=UKlw6eRib9cLl6qrw+jWUT8Rk/gudPLkz5QMl/ABkCM=;
+        b=fNm9edF/JPlovAnBGJ2Q5idFj7sePJDqap1a4rSm9LGENeLmRBb7BwEJD3oEByTcsB
+         Aj6XIi/4bWMkznnABWm1MGYw/wbbeGX43XOw0T2HL3Xri0x0bzC4+i8dHxXEuuaukFKh
+         b0UGMsKEcfh9aaEI3YRH1cQnGRN79km2Nqrsk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=UKlw6eRib9cLl6qrw+jWUT8Rk/gudPLkz5QMl/ABkCM=;
+        b=h9fbUk5A1Go8m+q6u13eIY09flwStnP5D/9kzQjH4NCW2L0HyNRYki9zb/iGYYZ7iT
+         wcSYUzMxYJdW3oPqpTuyYGqiUhiq8gz1u9sTzsjJNNTQEL57AKQHry9fB0TRRhNJdQta
+         0pp1rbqwPR/sldaaBYrIFheZVmE10KWo+62n1U2iVtDrsjL71mYGbg4dIrgwZ/8KDFqb
+         MSPKUu5SSBtRmTA50tkUbGnGg+ltZpOu0VjrgeIw3/mzFvbhKz95gT3QTg7BKKeCcj7q
+         KoIQxDy3YQHQLy2TLJd0+19eXEuEqOOxF+Bvcqd1ymEnF3Dj+XBuVSjHHd6KlbgLWcGc
+         Q8Qg==
+X-Gm-Message-State: AA+aEWbF2+kHvW1GM778kj+oho+y5KhR5nbCn/6xhaouVX67bg1BDrwt
+        tkEvmPB97QyA21EHiaLLha8sSQ==
+X-Google-Smtp-Source: AFSGD/XBuDDUyqnL5wuvI2UOvJIXBTsG0mO6wI/y5tO5XhigVQp0GoSaINq78+3mRoY9IBpaBXm1zg==
+X-Received: by 2002:a50:ae64:: with SMTP id c91mr50146564edd.222.1546717452755;
+        Sat, 05 Jan 2019 11:44:12 -0800 (PST)
+Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
+        by smtp.gmail.com with ESMTPSA id t9sm27498568edd.25.2019.01.05.11.44.11
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 05 Jan 2019 11:44:12 -0800 (PST)
+Subject: Re: Kernel oops / WiFi connection failure with wpa_supplicant 2.7
+To:     Jouni Malinen <j@w1.fi>, Eric Blau <eblau@eblau.com>
+Cc:     hostap@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Denis Kenzior <denkenz@gmail.com>
+References: <CADU241PtPeiTQWHwb=uF6Ohuua_asOwCarCAKVC8jdVVNAsByA@mail.gmail.com>
+ <20190103154921.GA25015@w1.fi>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <41e7ccaf-c73d-b404-69fe-ad17433add37@broadcom.com>
+Date:   Sat, 5 Jan 2019 20:44:11 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: d4d70346-2c10-4f39-8c00-e767963926d9
-X-MS-Exchange-CrossTenant-Network-Message-Id: cc5d2588-40ac-46c7-9305-08d6733d1073
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: d4d70346-2c10-4f39-8c00-e767963926d9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Jan 2019 18:39:02.0087
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Internet
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB5EUR03HT112
+In-Reply-To: <20190103154921.GA25015@w1.fi>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-IGdhaW4gY29udHJvbCB3aGVuIG5vIGJlYWNvbiB3YXMgcmVjZWl2ZWQgaW4gdGhlIGNvbm5lY3Rl
-ZCBzdGF0ZQ0KDQpXaGVuIG5vIGJlYWNvbiB3YXMgcmVjZWl2ZWQsIHRoZSB2YWx1ZSBpbiBkbS51
-bmRlY19zbV9wd2RiIGlzIG1vc3QNCmxpa2VseSBvdXQgb2YgZGF0ZSBhbmQgc2hvdWxkIG5vdCBi
-ZSB1c2VkIHRvIGFkanVzdCB0aGUgaW5wdXQgcGF0aC4NCkFzc3VtZSBpbnN0ZWFkIHRoYXQgdGhl
-IHNpZ25hbCBsZXZlbCBpcyBsb3cuDQoNCkZpeCB0aGUgc3RhdGUgbWFjaGluZSBpbiBydGw4NzIz
-ZV9kbV9jY2tfcGFja2V0X2RldGVjdGlvbl90aHJlc2gNCndoaWNoIGRpZCBub3QgY2xlYXIgcHJl
-X2Nja19mYV9zdGF0ZSB3aGVuIGNoYW5naW5nIGN1cl9jY2tfcGRfc3RhdGUNCmZyb20gQ0NLX1BE
-X1NUQUdFX0xPV1JTU0kvQ0NLX0ZBX1NUQUdFX0xPVyB0byBDQ0tfUERfU1RBR0VfSElHSFJTU0kN
-CmFuZCBiYWNrIGFnYWluIHRvIENDS19QRF9TVEFHRV9MT1dSU1NJL0NDS19GQV9TVEFHRV9MT1cs
-IHRoZSByZWdpc3Rlcg0KUkNDSzBfQ0NBIG5vdCB3cml0dGVuIHRvIDB4ODMgb24gdGhlIHNlY29u
-ZCBjaGFuZ2UuDQoNCkV4cGxpY2l0bHkgaW5pdGlhbGl6ZSBwcmVfY2NrX2ZhX3N0YXRlL2N1cl9j
-Y2tfZmFfc3RhdGUgaW4NCnJ0bF9kbV9kaWdpbml0Lg0KDQpTaWduZWQtb2ZmLWJ5OiBCZXJuZCBF
-ZGxpbmdlciA8YmVybmQuZWRsaW5nZXJAaG90bWFpbC5kZT4NCi0tLQ0KIGRyaXZlcnMvbmV0L3dp
-cmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9jb3JlLmMgICAgICAgICB8IDIgKysNCiBkcml2ZXJzL25l
-dC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRsODcyM2FlL2RtLmMgfCA4ICsrKysrKysrDQog
-MiBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJz
-L25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvY29yZS5jIGIvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvcmVhbHRlay9ydGx3aWZpL2NvcmUuYw0KaW5kZXggNGJmNzk2Ny4uY2UyMzMzOSAxMDA2NDQN
-Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9jb3JlLmMNCisrKyBi
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9jb3JlLmMNCkBAIC0xOTU3LDUg
-KzE5NTcsNyBAQCB2b2lkIHJ0bF9kbV9kaWdpbml0KHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LCB1
-MzIgY3VyX2lndmFsdWUpDQogCWRtX2RpZ3RhYmxlLT5idDMwX2N1cl9pZ2kgPSAweDMyOw0KIAlk
-bV9kaWd0YWJsZS0+cHJlX2Nja19wZF9zdGF0ZSA9IENDS19QRF9TVEFHRV9NQVg7DQogCWRtX2Rp
-Z3RhYmxlLT5jdXJfY2NrX3BkX3N0YXRlID0gQ0NLX1BEX1NUQUdFX0xPV1JTU0k7DQorCWRtX2Rp
-Z3RhYmxlLT5wcmVfY2NrX2ZhX3N0YXRlID0gMDsNCisJZG1fZGlndGFibGUtPmN1cl9jY2tfZmFf
-c3RhdGUgPSAwOw0KIH0NCiBFWFBPUlRfU1lNQk9MKHJ0bF9kbV9kaWdpbml0KTsNCmRpZmYgLS1n
-aXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRsODcyM2FlL2RtLmMg
-Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRsODcyM2FlL2RtLmMNCmlu
-ZGV4IDQyYTZmYmEuLjkwMmI5NDQgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9y
-ZWFsdGVrL3J0bHdpZmkvcnRsODcyM2FlL2RtLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L3JlYWx0ZWsvcnRsd2lmaS9ydGw4NzIzYWUvZG0uYw0KQEAgLTE1MSw4ICsxNTEsMTQgQEAgc3Rh
-dGljIHU4IHJ0bDg3MjNlX2RtX2luaXRpYWxfZ2Fpbl9taW5fcHdkYihzdHJ1Y3QgaWVlZTgwMjEx
-X2h3ICpodykNCiB7DQogCXN0cnVjdCBydGxfcHJpdiAqcnRscHJpdiA9IHJ0bF9wcml2KGh3KTsN
-CiAJc3RydWN0IGRpZ190ICpkbV9kaWd0YWJsZSA9ICZydGxwcml2LT5kbV9kaWd0YWJsZTsNCisJ
-c3RydWN0IHJ0bF9tYWMgKm1hYyA9IHJ0bF9tYWMocnRscHJpdik7DQogCWxvbmcgcnNzaV92YWxf
-bWluID0gMDsNCiANCisJaWYgKG1hYy0+bGlua19zdGF0ZSA9PSBNQUM4MDIxMV9MSU5LRUQgJiYN
-CisJICAgIG1hYy0+b3Btb2RlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04gJiYNCisJICAgIHJ0
-bHByaXYtPmxpbmtfaW5mby5iY25fcnhfaW5wZXJpb2QgPT0gMCkNCisJCXJldHVybiAwOw0KKw0K
-IAlpZiAoKGRtX2RpZ3RhYmxlLT5jdXJtdWx0aXN0YV9jc3RhdGUgPT0gRElHX01VTFRJU1RBX0NP
-Tk5FQ1QpICYmDQogCSAgICAoZG1fZGlndGFibGUtPmN1cnN0YV9jc3RhdGUgPT0gRElHX1NUQV9D
-T05ORUNUKSkgew0KIAkJaWYgKHJ0bHByaXYtPmRtLmVudHJ5X21pbl91bmRlY19zbV9wd2RiICE9
-IDApDQpAQCAtNDE3LDYgKzQyMyw4IEBAIHN0YXRpYyB2b2lkIHJ0bDg3MjNlX2RtX2Nja19wYWNr
-ZXRfZGV0ZWN0aW9uX3RocmVzaChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodykNCiAJCX0gZWxzZSB7
-DQogCQkJcnRsX3NldF9iYnJlZyhodywgUkNDSzBfQ0NBLCBNQVNLQllURTIsIDB4Y2QpOw0KIAkJ
-CXJ0bF9zZXRfYmJyZWcoaHcsIFJDQ0swX1NZU1RFTSwgTUFTS0JZVEUxLCAweDQ3KTsNCisJCQlk
-bV9kaWd0YWJsZS0+cHJlX2Nja19mYV9zdGF0ZSA9IDA7DQorCQkJZG1fZGlndGFibGUtPmN1cl9j
-Y2tfZmFfc3RhdGUgPSAwOw0KIA0KIAkJfQ0KIAkJZG1fZGlndGFibGUtPnByZV9jY2tfcGRfc3Rh
-dGUgPSBkbV9kaWd0YWJsZS0+Y3VyX2Nja19wZF9zdGF0ZTsNCi0tIA0KMS45LjENCg==
+On 1/3/2019 4:49 PM, Jouni Malinen wrote:
+> On Thu, Jan 03, 2019 at 10:38:32AM -0500, Eric Blau wrote:
+>> Since upgrading to wpa_supplicant 2.7, myself and many others have hit
+>> issues with wpa_supplicant failing to connect due to invalid arguments
+>> being passed to the underlying kernel driver. Reverting to version 2.6
+>> makes these issues go away.
+> 
+>> kernel: WARNING: CPU: 0 PID: 16169 at
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5130
+>> brcmf_cfg80211_set_pmk+0x50/0x70 [brcmfmac]
+> 
+> Which is this WARN_ON in the driver:
+> 
+>      /* expect using firmware supplicant for 1X */
+>      ifp = netdev_priv(dev);
+>      if (WARN_ON(ifp->vif->profile.use_fwsup != BRCMF_PROFILE_FWSUP_1X))
+> 	return -EINVAL;
+
+Yes. It means the firmware is not configured to use the 1x offload so it 
+rejects the PMK setting here.
+
+>> Notice that the oops references wpa_supplicant as the offending
+>> process, although maybe the firmware or driver is at fault for
+>> advertising 4-way handshake offload support.
+> 
+> That's not an oops and wpa_supplicant is not the "offending process", it
+> is just the user space process in which context the driver hits this
+> issue.
+
+Well, I beg to differ but I will get to that.
+
+>> Any ideas what the issue could be here? If there's anything else I can
+>> do to help track down the problem, please let me know.
+> 
+> That should be reported to the maintainers of the kernel driver that has
+> this issue:
+
+So the issue is that the nl80211 api requires wpa_supplicant to provide 
+an attribute in the NL80211_CMD_CONNECT to indicate that driver/firmware 
+should do the 1x offload which is described in the second paragraph below:
+
+/**
+  * DOC: WPA/WPA2 EAPOL handshake offload
+  *
+  * By setting @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK flag drivers
+  * can indicate they support offloading EAPOL handshakes for WPA/WPA2
+  * preshared key authentication. In %NL80211_CMD_CONNECT the preshared
+  * key should be specified using %NL80211_ATTR_PMK. Drivers supporting
+  * this offload may reject the %NL80211_CMD_CONNECT when no preshared
+  * key material is provided, for example when that driver does not
+  * support setting the temporal keys through %CMD_NEW_KEY.
+  *
+  * Similarly @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X flag can be
+  * set by drivers indicating offload support of the PTK/GTK EAPOL
+  * handshakes during 802.1X authentication. In order to use the offload
+  * the %NL80211_CMD_CONNECT should have %NL80211_ATTR_WANT_1X_4WAY_HS
+  * attribute flag. Drivers supporting this offload may reject the
+  * %NL80211_CMD_CONNECT when the attribute flag is not present.
+  *
+  * For 802.1X the PMK or PMK-R0 are set by providing %NL80211_ATTR_PMK
+  * using %NL80211_CMD_SET_PMK. For offloaded FT support also
+  * %NL80211_ATTR_PMKR0_NAME must be provided.
+  */
+
+For testing I had modified the wpa_supplicant to add the required flag 
+in CONNECT command, but it was a bit too hacky to submit. I will rebase 
+those changes and clean it up.
+
+However, there is more to it. When these offloads were introduced, we 
+discussed about having a PORT_AUTHORIZED event or not. It was decided 
+passing an attribute in CONNECT and ROAMED event would suffice and that 
+is what was implemented in brcmfmac. However, it seems time passed and 
+the need for an explicit PORT_AUTHORIZED was there (probably Denis 
+knows), which wpa_supplicant now supports thus ignoring the attribute in 
+the CONNECT and ROAMED events. The brcmfmac driver was not changed 
+accordingly. For this there are patches pending in linux-wireless which 
+are necessary to have a working connection.
+
+Regards,
+Arend
