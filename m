@@ -2,109 +2,87 @@ Return-Path: <SRS0=sX2r=PO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB0B6C43387
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Jan 2019 00:03:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CC6CC43612
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Jan 2019 07:19:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 76560222B1
-	for <linux-wireless@archiver.kernel.org>; Sun,  6 Jan 2019 00:03:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0196A218EA
+	for <linux-wireless@archiver.kernel.org>; Sun,  6 Jan 2019 07:19:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I27b60O5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726488AbfAFACz (ORCPT
+        id S1726394AbfAFHTG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 5 Jan 2019 19:02:55 -0500
-Received: from mail-oln040092066070.outbound.protection.outlook.com ([40.92.66.70]:28958
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726363AbfAFACz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Jan 2019 19:02:55 -0500
-Received: from HE1EUR01FT038.eop-EUR01.prod.protection.outlook.com
- (10.152.0.55) by HE1EUR01HT209.eop-EUR01.prod.protection.outlook.com
- (10.152.1.137) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1471.13; Sun, 6 Jan
- 2019 00:02:51 +0000
-Received: from DB7PR07MB5353.eurprd07.prod.outlook.com (10.152.0.58) by
- HE1EUR01FT038.mail.protection.outlook.com (10.152.1.93) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.1471.13 via Frontend Transport; Sun, 6 Jan 2019 00:02:51 +0000
-Received: from DB7PR07MB5353.eurprd07.prod.outlook.com
- ([fe80::e1f9:8635:f629:eb8e]) by DB7PR07MB5353.eurprd07.prod.outlook.com
- ([fe80::e1f9:8635:f629:eb8e%4]) with mapi id 15.20.1516.010; Sun, 6 Jan 2019
- 00:02:51 +0000
-From:   Bernd Edlinger <bernd.edlinger@hotmail.de>
-To:     Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH v3 4/4] rtlwifi: Don't clear num_rx_inperiod too early
-Thread-Topic: [PATCH v3 4/4] rtlwifi: Don't clear num_rx_inperiod too early
-Thread-Index: AQHUpVMqbKQKwAnOjEmtsNGk5fiqeA==
-Date:   Sun, 6 Jan 2019 00:02:51 +0000
-Message-ID: <DB7PR07MB5353AB02E166DAF49D5E68FCE4880@DB7PR07MB5353.eurprd07.prod.outlook.com>
-Accept-Language: en-US, en-GB, de-DE
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: AM6PR06CA0035.eurprd06.prod.outlook.com
- (2603:10a6:20b:14::48) To DB7PR07MB5353.eurprd07.prod.outlook.com
- (2603:10a6:10:6e::26)
-x-incomingtopheadermarker: OriginalChecksum:2378198F28BAB2A65EE50B50B44EC937AAD9A7F521B3F422C140E596023CDE17;UpperCasedChecksum:ABDB5120F5B50E2EA2483BFFBC0F3E29C95CAD2FE9FA7446C43744BA12E85C9C;SizeAsReceived:8771;Count:62
-x-ms-exchange-messagesentrepresentingtype: 1
-x-tmn:  [+MX+zvCYfG3n1VEtwC1upCCI+G0CSXF3]
-x-microsoft-original-message-id: <4565959f-d15e-500c-6f36-109b2aa29309@hotmail.de>
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;HE1EUR01HT209;6:TTgMRVDapWAFqfaNlyqY+4wpnwRl39rdfdYVqmEhnZsrX/kcLcBxef1tOxD0iKqfNPrR3Y3VPmFkvGgRzxD7cnCh/Bx4EhtUOMaDf9atdXF6FKn2AjUgZn8cAcF7ReAfvCZTOSmB5OTolQMUKR60sPObk3db78BaYSA+WqS2JK2qeYSypSRqafcwaWUv9wZygmlUUq9zyY6sqWnGDpczmsefWL6NZt/fwnrFV4wKAex8n7q2IYj0m1Hgduh67NqUJcjCLvRrfI207Xq/Z6wHfqyg+LxYkuxVxlHce2El7NOBDp5feV8SqxhTcuWZiYzgTL6Ucva1VS34tvgwwkXItjE1jGEk+v3ZdcKySwosawTi4WakoxzaBSJK2jPgSo8yu/bxs+Ps246YbFBzjP0S+DTpKh0CphA6dM08IT8CehD0qHdajipZzFaBr/ZCe3MF3Pf9dovfRZLaTuMrztgy4A==;5:8qRzTjs+i/Nu1qf4x29655rDIQy8/hhzMEMv9g6AljC0XygGl9YNNsP8RgbgVe/hZd7ZAYpC2u/R1q+/q5G2+4cAYB9mzSa7Flugg6Y4q5X8/279TckiYgbDPS/0VqX75q8czGuKFda9R5sAzBoFhuAsK8OwrnTgehmkgcJVbb8=;7:MaAl4mdu18MXJcfbhsL9TZtTRJ7aIEf3xGceR76xD4UgbYFU3n9SQLxSvoUKdGVcKRtz2DxKNLPsGIY7mpavMTSMuLxQi1Ey9BCJ5DLG1oWNZWjUt+/LhD4+RtbnI2gwtlzjxrf7MaWZVl8XKrRU8Q==
-x-incomingheadercount: 62
-x-eopattributedmessage: 0
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:HE1EUR01HT209;
-x-ms-traffictypediagnostic: HE1EUR01HT209:
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(4566010)(82015058);SRVR:HE1EUR01HT209;BCL:0;PCL:0;RULEID:;SRVR:HE1EUR01HT209;
-x-microsoft-antispam-message-info: gflcKgtxwmSv4689tBVnY6xeqHzlc81aYBEKr/8GP6A8S3amfo+m2YSa0aAi8Vev
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <49DADF5C48296D4B979FDD8951861E51@eurprd07.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        Sun, 6 Jan 2019 02:19:06 -0500
+Received: from mail-io1-f67.google.com ([209.85.166.67]:33542 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726199AbfAFHTG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 6 Jan 2019 02:19:06 -0500
+Received: by mail-io1-f67.google.com with SMTP id t24so32614384ioi.0;
+        Sat, 05 Jan 2019 23:19:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qFK9Nsxe2U25Ot+Ax+RUnhMmXMrDnTvrZH+rLSlz5rA=;
+        b=I27b60O5fqvXkyPCYPMVlEr9QZ1p+fSQ0+PPE9XGVQLz2UOHITjG8n6GiuLxCxOHlX
+         kL8XZ6dnB7/D5WGzONn1UeXZIdbgslLSgd3Y/zjLULRrlqGzxA9YN3T+ob4dZQW9bFX7
+         MXXNblXPdAEdvP9sdlPncIE1HlRAyhx7JaF5qqz6f4fiuLrdGNaB4fX7rJvVsEfEXqyi
+         28lmyHBkh0o8bgBNGpIT77yQf9sDGdliKTY4LO1bn08mvXQVOcyV9kgQNxkklauGP1ZL
+         MFsiCx2AEKmiiHI2o5bMOADuakxrAeXCkgOa5tL5ffIddFuiGhdcczw1sMG2iVNcdu88
+         ABuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qFK9Nsxe2U25Ot+Ax+RUnhMmXMrDnTvrZH+rLSlz5rA=;
+        b=R/jocgdgnm+gpN6Z0gvslJpUfPswQWnQPrsrIX9lOLJ5Jbb/LVNjpSaGpARE4T3qqp
+         n+kirQRCAi2WhYgwaQZFdGsGb2jTHxD5zm2AU/t2wovkTSuJa0Uh4uADn4pumLspCb0u
+         tjdJU8HzZEQluX5deN5tO9KwpMtLkbu8hg5szoLIbKu3PkQFd7kX+yDODXkBJpMQdEpH
+         4gpqX5lLP/9SLosYl9jsPbnIX0TI4600INjQXCSjh9CxImchJTq9mhCzp2BGqKVyxT6L
+         +YyMCDIwhgjYZfloZ5jJXyYoJ+bNy49iVsGksBZJ3nhv2oWFOW+GTr00n0rZ4pzJ6dQm
+         QgKw==
+X-Gm-Message-State: AJcUukcwu1u1jqT9t4gqWZ1ke8L/6SHDbEUmzB3JuYCKHJoKY/lHbV9y
+        7+2tbBeahLffwY7qDK+taO8dsFjZwtR7c++uh0A=
+X-Google-Smtp-Source: ALg8bN4gswAu/GKHlXQgnDq8RLK/eGZoX+xJJxGUVoX0K4X+GP6DQRaANu6KzCtWYHdR8KOgflBHAyLIbNI9QE8Eu9Y=
+X-Received: by 2002:a6b:7402:: with SMTP id s2mr37888944iog.219.1546759144668;
+ Sat, 05 Jan 2019 23:19:04 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: d4d70346-2c10-4f39-8c00-e767963926d9
-X-MS-Exchange-CrossTenant-Network-Message-Id: 98b28b9f-0f6b-4489-69f7-08d6736a4ca7
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: d4d70346-2c10-4f39-8c00-e767963926d9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Jan 2019 00:02:50.4896
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Internet
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1EUR01HT209
+References: <20190105091025.GA28917@localhost.localdomain> <61a272a5-3c6f-4e69-2ce9-b7c58b427750@lwfinger.net>
+In-Reply-To: <61a272a5-3c6f-4e69-2ce9-b7c58b427750@lwfinger.net>
+From:   =?UTF-8?Q?J=C3=BAlius_Milan?= <jmilan.dev@gmail.com>
+Date:   Sun, 6 Jan 2019 08:18:53 +0100
+Message-ID: <CAP=P++DRiM8Rb8vg9hBJ-N2uhfL0Rrj+njYwgZW80yQZ4jQH4g@mail.gmail.com>
+Subject: Re: [PATCH v2] staging: wilc1000: fix cast to restricted __le32
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
+        ajay.kathat@microchip.com, adham.abozaeid@microchip.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-VGhpcyBwYXRjaCBtb3ZlcyB0aGUgY2xlYXJpbmcgb2YgcnRscHJpdi0+bGlua19pbmZvLm51bV9y
-eF9pbnBlcmlvZCBpbg0KcnRsX3dhdGNoZG9nX3dxX2NhbGxiYWNrIGEgZmV3IGxpbmVzIGRvd24u
-DQoNClRoaXMgaXMgbmVjZXNzYXJ5IHNpbmNlIGl0IGlzIHN0aWxsIHVzZWQgaW4gdGhlICJBUCBv
-ZmYiIGRldGVjdGlvbg0KY29kZSBibG9jay4gTW92ZWQgY2xlYXJpbmcgb2YgcnRscHJpdi0+bGlu
-a19pbmZvLm51bV9yeF9pbnBlcmlvZA0KYXMgd2VsbCBmb3IgY29uc2lzdGVuY3kuDQoNClNpZ25l
-ZC1vZmYtYnk6IEJlcm5kIEVkbGluZ2VyIDxiZXJuZC5lZGxpbmdlckBob3RtYWlsLmRlPg0KLS0t
-DQp2MjogSW1wcm92ZWQgcGF0Y2ggZGVzY3JpcHRpb24uDQoNCnYzOiBNYWtlIHRoZSB0aXRsZSBm
-aXQgaW4gb25lIGxpbmUuDQotLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdp
-ZmkvYmFzZS5jIHwgNCArKy0tDQogMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBk
-ZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
-cnRsd2lmaS9iYXNlLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYmFz
-ZS5jDQppbmRleCBlZjliNTAyLi43YWE2OGZlIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvcmVhbHRlay9ydGx3aWZpL2Jhc2UuYw0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-cmVhbHRlay9ydGx3aWZpL2Jhc2UuYw0KQEAgLTIxNzIsOCArMjE3Miw2IEBAIHZvaWQgcnRsX3dh
-dGNoZG9nX3dxX2NhbGxiYWNrKHZvaWQgKmRhdGEpDQogCQk7DQogCX0NCiANCi0JcnRscHJpdi0+
-bGlua19pbmZvLm51bV9yeF9pbnBlcmlvZCA9IDA7DQotCXJ0bHByaXYtPmxpbmtfaW5mby5udW1f
-dHhfaW5wZXJpb2QgPSAwOw0KIAlmb3IgKHRpZCA9IDA7IHRpZCA8PSA3OyB0aWQrKykNCiAJCXJ0
-bHByaXYtPmxpbmtfaW5mby50aWR0eF9pbnBlcmlvZFt0aWRdID0gMDsNCiANCkBAIC0yMjM2LDYg
-KzIyMzQsOCBAQCB2b2lkIHJ0bF93YXRjaGRvZ193cV9jYWxsYmFjayh2b2lkICpkYXRhKQ0KIAkJ
-CXJ0bHByaXYtPmJ0Y29leGlzdC5idGNfaW5mby5pbl80d2F5ID0gZmFsc2U7DQogCX0NCiANCisJ
-cnRscHJpdi0+bGlua19pbmZvLm51bV9yeF9pbnBlcmlvZCA9IDA7DQorCXJ0bHByaXYtPmxpbmtf
-aW5mby5udW1fdHhfaW5wZXJpb2QgPSAwOw0KIAlydGxwcml2LT5saW5rX2luZm8uYmNuX3J4X2lu
-cGVyaW9kID0gMDsNCiANCiAJLyogPDY+IHNjYW4gbGlzdCAqLw0KLS0gDQoxLjkuMQ0K
+Thank you for your review Larry
+
+> Before you send V3
+
+Oh, v3 was already sent a few moments before your message.
+
+> Before you send V3, are you sure this is the correct fix? As "frame_type" is
+> input as u16, it seems to me that the frame_type member of struct wilc_reg_frame
+> should be __le16, not __le32.
+
+Yes, I am confident about it.
+The frame_type member of struct wilc_reg_frame contains in some cases
+32 bit value
+as you can see in function wilc_wlan_cfg_set_wid.
+Cast to 32 bits is also safe, due to resultant endianness.
+
+Julius
