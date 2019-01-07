@@ -2,93 +2,142 @@ Return-Path: <SRS0=TVdy=PP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E2F2C43387
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:23:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2D43C43387
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:23:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1FAEF21736
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:23:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0AD621736
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:23:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VBrQTNZD"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SSOkh1iz";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OFrawv4Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730022AbfAGNX2 (ORCPT
+        id S1728213AbfAGNX4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Jan 2019 08:23:28 -0500
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:38590 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729846AbfAGNX1 (ORCPT
+        Mon, 7 Jan 2019 08:23:56 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:52904 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726879AbfAGNXw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Jan 2019 08:23:27 -0500
-Received: by mail-ed1-f67.google.com with SMTP id h50so856243ede.5;
-        Mon, 07 Jan 2019 05:23:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=HIBinLwZ1ghjqd3NQ3ePFix2UVejfaQY7pzz6QW8sPw=;
-        b=VBrQTNZDSe08jcHY20uRb39HyAf++fJ5S7cnJwcg5HcZu/miN7U5lCP9SwgYUbAJ3Y
-         zvVT9LbhADr6gabH3kLE/4/i7Qe3WlCOmGAT16hKUyyAO4zJGuNNl/0XPodFUQBP14zb
-         +3qOLWQ1Zktuci1DeMKB4Ag3BOFZrK18Z9vFEJB+XMPWsX6CV09a5/DzZyCzTpM1U6zl
-         7ghPIhI87XZwU24OdLK7SWAlbKzRbvGXaK/FvNYvw6xEnB7Nj8660a8fgwsiz9ekcmqT
-         onEQwH5kFNaxTn7dO3dshJFW6vDXgnTyZ6EjjlV6bAEJPj1LZ+v6sQMnH1ddoQyAfZoU
-         emvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=HIBinLwZ1ghjqd3NQ3ePFix2UVejfaQY7pzz6QW8sPw=;
-        b=IkqPxGCzs+8fNpoFSu40zsS2Qv1dViahp56RxAFqr5qbHDmG3gE/FbAbTHHkm3TDSs
-         dko5jxIsjQBBRWGhZSX9b02Fb1yEsgTCgZ9pDa1H5ZBhM115ySuZSBSzjIH0V03mZ7Dq
-         ON4g3oRnO0nnb1pqWR7rtrww/Zq1wlZGecY4PSBaKeSsT5SfK/+QyT5MuaiYWSe4/r7C
-         Nkp0OJod5oBsPYte65ej55ofyl9Cjcldy14hQ+3NjA2nxj7fZS0pgfrXptd68F8BEo8k
-         1kKh5rDSYkEmrwWWmhnK0ZXeI8IfeB+q7u5e5YzOTRtOZwYqqS13upSDMD6ktPTgpOtL
-         mnwA==
-X-Gm-Message-State: AA+aEWaiFmMReomlF6vbpmWKcNi01ODhs449JoOpQkJRXunaIGQfTW5y
-        dFkDWwyqhNXEfXG1o3+f6nY=
-X-Google-Smtp-Source: AFSGD/WWePlxSEs4y7Ly3AuLsZtP0XzU1awgYeec9SpOhX32XDJyXyFpL+W3ex9/huXgdS3/wPqDdg==
-X-Received: by 2002:a50:a55c:: with SMTP id z28mr55607764edb.124.1546867405558;
-        Mon, 07 Jan 2019 05:23:25 -0800 (PST)
-Received: from ltop.local ([2a02:a03f:407b:c500:4142:d3d:8d31:6743])
-        by smtp.gmail.com with ESMTPSA id o37sm29790886edc.32.2019.01.07.05.23.23
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 07 Jan 2019 05:23:24 -0800 (PST)
-Date:   Mon, 7 Jan 2019 14:23:23 +0100
-From:   Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     =?utf-8?Q?J=C3=BAlius?= Milan <julikmilan@gmail.com>,
-        kbuild test robot <lkp@intel.com>,
-        linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-        gregkh@linuxfoundation.org, ajay.kathat@microchip.com,
-        linux-wireless@vger.kernel.org, adham.abozaeid@microchip.com
-Subject: Re: [PATCH] staging: wilc1000: fix cast to restricted __le32
-Message-ID: <20190107132322.sk3lcvafg65fdd7b@ltop.local>
-References: <20190105082323.GA27838@localhost.localdomain>
- <20190107125437.GA3200@kadam>
+        Mon, 7 Jan 2019 08:23:52 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 53EF8608D4; Mon,  7 Jan 2019 13:23:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1546867430;
+        bh=F1UHcElavQbPAc7LT23juUziPGpDMn3Soj+i7VU5qVE=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=SSOkh1izz4j2o7p1C06Hq3z0ODXfMnRKTJ5gdYk9paSI6QAEXRR0eVCGFaaoMEKe8
+         fjsvY0SLfn1HC/bSltZdVrBmBSu4Y9mGd0GcMp+2bPaouoblRrz4HqNBJ2O2pkYfFr
+         QSfnXlQ1n610k1r7Lz0F1EuqTDDDcmfgsP/4IXlM=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1A9F9608BA;
+        Mon,  7 Jan 2019 13:23:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1546867427;
+        bh=F1UHcElavQbPAc7LT23juUziPGpDMn3Soj+i7VU5qVE=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=OFrawv4QysoPdrRBO3c7yhBEMU8bMiCALK94XXhYeFK2v1dMkb+uEGys7TBJUruHp
+         WlbowmnXWfXys17IEFiSEbZZZEUGW4quiPktgmqFEADXULNLEw4D11GbWBBo2wMX7/
+         Q4wf7RKD3GGTlLBXCC62Duy9IkUs6IoD3z/kNSCU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1A9F9608BA
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc:     "Daniel F. Dickinson" <cshored@thecshore.com>,
+        ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        chunkeey@gmail.com, Bas Vermeulen <bvermeul@blackstar.nl>
+Subject: Re: [PATCH] ath9k: Avoid OF no-EEPROM quirks without qca,no-eeprom
+References: <20181222060913.28434-1-cshored@thecshore.com>
+        <CAFBinCA3MTO=h9YpB0RkxSNy4ZpeYLOAuKTykAKz+68stAtMsg@mail.gmail.com>
+Date:   Mon, 07 Jan 2019 15:23:43 +0200
+In-Reply-To: <CAFBinCA3MTO=h9YpB0RkxSNy4ZpeYLOAuKTykAKz+68stAtMsg@mail.gmail.com>
+        (Martin Blumenstingl's message of "Sat, 22 Dec 2018 12:08:05 +0100")
+Message-ID: <87a7kc7g9s.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190107125437.GA3200@kadam>
-User-Agent: NeoMutt/20180716
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jan 07, 2019 at 03:54:37PM +0300, Dan Carpenter wrote:
-> I'm sort of surprised that the zero day bot didn't complain about this.
-> It probably should.
-> 
-> The endianness checking is not turned on by default in Sparse.  You have
-> to do "make C=1 CF=-D__CHECK_ENDIAN__" to turn it on.
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
 
-Bitwise (and thus endian) checking is enabled by default in the kernel
-since 05de97003 ("linux/types.h: enable endian checks for all sparse builds")
-included in v4.10-rc1. Since then they make more than half of sparse
-warnings (in a x86-64 allyesconfig).
+> On Sat, Dec 22, 2018 at 7:09 AM Daniel F. Dickinson
+> <cshored@thecshore.com> wrote:
+>>
+>> ath9k_of_init() function[0] was initially written on the assumption that
+>> if someone had an explicit ath9k OF node that "there must be something
+>> wrong, why would someone add an OF node if everything is fine"[1]
+>> (Quoting Martin Blumenstingl <martin.blumenstingl@googlemail.com>)
+>>
+>> "it turns out it's not that simple. with your requirements I'm now aware
+>> of two use-cases where the current code in ath9k_of_init() doesn't work
+>> without modifications"[1]
+>>
+>> The "your requirements" Martin speaks of is the result of the fact that I
+>> have a device (PowerCloud Systems CR5000) has some kind of default - not
+>> unique mac address - set and requires to set the correct MAC address via
+>> mac-address devicetree property, however:
+>>
+>> "some cards come with a physical EEPROM chip [or OTP] so "qca,no-eeprom"
+>> should not be set (your use-case). in this case AH_USE_EEPROM should be
+>> set (which is the default when there is no OF node)"[1]
+>>
+>> The other use case is:
+>>
+>> the firmware on some PowerMac G5 seems to add a OF node for the ath9k
+>> card automatically. depending on the EEPROM on the card AH_NO_EEP_SWAP
+>> should be unset (which is the default when there is no OF node). see [3]
+>>
+>> After this patch to ath9k_of_init() the new behavior will be:
+>>
+>>     if there's no OF node then everything is the same as before
+>>     if there's an empty OF node then ath9k will use the hardware EEPROM
+>>       (before ath9k would fail to initialize because no EEPROM data was
+>>       provided by userspace)
+>>     if there's an OF node with only a MAC address then ath9k will use
+>>       the MAC address and the hardware EEPROM (see the case above)
+>>     with "qca,no-eeprom" EEPROM data from userspace will be requested.
+>>       the behavior here will not change
+>> [1]
+>>
+>> Martin provides additional background on EEPROM swapping[1].
+>>
+>> Thanks to Christian Lamparter <chunkeey@gmail.com> for all his help on
+>> troubleshooting this issue and the basis for this patch.
+>>
+>> Fixes: 138b41253d9c ("ath9k: parse the device configuration from an OF node")
+>>
+>> [0]https://elixir.bootlin.com/linux/v4.20-rc7/source/drivers/net/wireless/ath/ath9k/init.c#L615
+>> [1]https://github.com/openwrt/openwrt/pull/1645#issuecomment-448027058
+>> [2]https://github.com/openwrt/openwrt/pull/1613
+>> [3]https://patchwork.kernel.org/patch/10241731/
+>
+> +Cc Bas Vermeulen: can you please try Daniel's patch on your PowerMac
+> G5? I hope that this replaces your "endian_check" module parameter!
+>
+>> Signed-off-by: Daniel F. Dickinson <cshored@thecshore.com>
+>
+> Reviewed-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> (to me the description makes sense, but that said: I contributed some
+> of the description)
+>
+> as well as:
+> Tested-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> (on my BT HomeHub 5A - which sets qca,no-eeprom - using OpenWrt, which
+> is currently running backports v4.19.7)
 
-Best regards,
--- Luc
+Daniel noticed that patchwork dropped Martin's reply, adding it to
+patchwork now.
+
+-- 
+Kalle Valo
