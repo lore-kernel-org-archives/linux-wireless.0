@@ -2,99 +2,116 @@ Return-Path: <SRS0=TVdy=PP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 180BAC43387
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:33:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAC59C43387
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 14:43:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5A62206B6
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:33:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA3472087F
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 14:43:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BxWxNzpz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727370AbfAGNdb (ORCPT
+        id S1728854AbfAGOnL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Jan 2019 08:33:31 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:44536 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726886AbfAGNdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Jan 2019 08:33:31 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E2BC8A457A;
-        Mon,  7 Jan 2019 13:33:30 +0000 (UTC)
-Received: from shalem.localdomain.com (ovpn-116-151.ams2.redhat.com [10.36.116.151])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 21A5C600C5;
-        Mon,  7 Jan 2019 13:33:28 +0000 (UTC)
-From:   Hans de Goede <hdegoede@redhat.com>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Cc:     Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH v2] brcmfmac: Use firmware_request_nowarn for the clm_blob
-Date:   Mon,  7 Jan 2019 14:33:27 +0100
-Message-Id: <20190107133327.9297-1-hdegoede@redhat.com>
+        Mon, 7 Jan 2019 09:43:11 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:46013 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727643AbfAGOnK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Jan 2019 09:43:10 -0500
+Received: by mail-wr1-f66.google.com with SMTP id t6so630274wrr.12;
+        Mon, 07 Jan 2019 06:43:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :content-transfer-encoding:user-agent;
+        bh=zVDROSnfZqLIC6uZXDp4ZJBmcMkYcpBLNcGKIHLNFsY=;
+        b=BxWxNzpzDYiwDufPtwATgV6wzZ+wgzBpaE3R+Aly2caZ3NmD8/9ayJJwdQZT42bUFi
+         Vl/9LhYT5tG/aF6K9SaU08+yc5yggY5IzJZPb685SXu4Q1aLUYCePCwL5CexJp1dnQco
+         oyXRS3mIMafyWxicm2uXNyiVcWnoFRBe1gQVrMueZAafssD37moPkEigQydgxnYX/Q8k
+         3w5Hf4BZqNgqv1oErNDRgKNanzDjuMOBYIdW+aDUFdI/vkn0f5hGgNOkJGos1FfjLLXu
+         u7OsKMVpOI+SOgY20Nevu1lRDgiGoS4o/8JNBIbuus3PNy8qVEYqPC32wCeTjV9mQln6
+         ODcQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:content-transfer-encoding:user-agent;
+        bh=zVDROSnfZqLIC6uZXDp4ZJBmcMkYcpBLNcGKIHLNFsY=;
+        b=rp9jUdFRp/KGAuOg09HxKpxiJiovtdJD1JQ2eoax7ZQmndbDs0u11/bZstxBlXMCHh
+         Ibv3NnINlxkJyyaf9tbJ1VOAqz6Q2wfAIIdyJFsRQnIidSOzsDIu+LmnMSzKq7gqF8sg
+         AcxPvDryJFkJcQsf0b4o4VDgoWWLhgbBDuMZzy65EGR7WaxZpXD7KW6jvvvrMgMRr+5T
+         BBTxnYSS61x0SVOVGr2InXps/6wrl0B9giVx1lGPFMRnzsODV0weT/nO+9l4W0n5G/0G
+         puAmkGNk+yyytVP+L9wQ91ZqGkV6r4nt2RXwpnpuRW/RBxh1BNfMVapLlX2FIAlQQ3k+
+         U+Zw==
+X-Gm-Message-State: AJcUukfKfvYAPlQNmRqtfNommiC5f0Zi8sZF8UeqJlmlSi9NZpfucpy/
+        dSeu2Zt4h1moKpyYu+hA2W9BgXF7
+X-Google-Smtp-Source: ALg8bN65+B1HZkZASV8Ox/+o+od/RCs/nT5U4WD8pOnpMlF7au7liKPdWeOvbLVv/IINKs7jMmtQlQ==
+X-Received: by 2002:adf:8b83:: with SMTP id o3mr54903739wra.81.1546872187970;
+        Mon, 07 Jan 2019 06:43:07 -0800 (PST)
+Received: from localhost.localdomain ([185.140.29.250])
+        by smtp.gmail.com with ESMTPSA id o17sm16359259wmg.35.2019.01.07.06.43.06
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 07 Jan 2019 06:43:07 -0800 (PST)
+Date:   Mon, 7 Jan 2019 15:43:05 +0100
+From:   =?iso-8859-1?Q?J=FAlius?= Milan <jmilan.dev@gmail.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        gregkh@linuxfoundation.org, Adham.Abozaeid@microchip.com,
+        Ajay.Kathat@microchip.com
+Subject: [PATCH v4] staging: wilc1000: fix registration frame size
+Message-ID: <20190107144305.GA14627@localhost.localdomain>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Mon, 07 Jan 2019 13:33:31 +0000 (UTC)
+User-Agent: Mutt/1.9.2 (2017-12-15)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The linux-firmware brcmfmac firmware files contain an embedded table with
-per country allowed channels and strength info.
+Fixes the following sparse warnings:
 
-For recent hardware these versions of the firmware are specially build for
-linux-firmware, the firmware files directly available from Cypress rely on
-a separate clm_blob file for this info.
+drivers/staging/wilc1000/host_interface.c:2360:30: warning:
+ incorrect type in assignment (different base types)
+    expected restricted __le32 [addressable] [assigned] [usertype] frame_type
+    got restricted __le16 [usertype] <noident>
 
-For some unknown reason Cypress refuses to provide the standard firmware
-files + clm_blob files it uses elsewhere for inclusion into linux-firmware,
-instead relying on these special builds with the clm_blob info embedded.
-This means that the linux-firmware firmware versions often lag behind,
-but I digress.
-
-The brcmfmac driver does support the separate clm_blob file and always
-tries to load this. Currently we use request_firmware for this. This means
-that on any standard install, using the standard combo of linux-kernel +
-linux-firmware, we will get a warning:
-"Direct firmware load for ... failed with error -2"
-
-On top of this, brcmfmac itself prints: "no clm_blob available (err=-2),
-device may have limited channels available".
-
-This commit switches to firmware_request_nowarn, fixing almost any brcmfmac
-device logging the warning (it leaves the brcmfmac info message in place).
-
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Fixes: 147ccfd451024 ("staging: wilc1000: handle mgmt_frame_register ops from cfg82011 context")
+Signed-off-by: Július Milan <jmilan.dev@gmail.com>
 ---
-Changes in v2:
--Use firmware_request_nowarn instead of request_firmware_direct
--Reword commit message a bit to match (and fix a typo)
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+ drivers/staging/wilc1000/host_interface.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 0bb16bf574e3..e29f56888761 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -149,7 +149,7 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
- 		return err;
- 	}
+v3:
+- nothing really changed since v1, v2, I just messed emails and then patch
+  format, sorry for that, it's my first patch :)
+
+v4:
+- changed struct wilc_reg_frame member frame_type type to le16
+- reverted cast of frame_type to le32 in wilc_frame_register
+- changed subject line, previous version has subject:
+  "[PATCH v3] staging: wilc1000: fix cast to restricted __le32"
+  https://www.spinics.net/lists/linux-wireless/msg181166.html
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 70c854d939ce..7acb790d850b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -36,7 +36,7 @@ struct wilc_op_mode {
+ struct wilc_reg_frame {
+ 	bool reg;
+ 	u8 reg_id;
+-	__le32 frame_type;
++	__le16 frame_type;
+ } __packed;
  
--	err = request_firmware(&clm, clm_name, bus->dev);
-+	err = firmware_request_nowarn(&clm, clm_name, bus->dev);
- 	if (err) {
- 		brcmf_info("no clm_blob available (err=%d), device may have limited channels available\n",
- 			   err);
+ struct wilc_drv_handler {
 -- 
-2.20.1
+2.14.5
 
