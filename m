@@ -2,119 +2,190 @@ Return-Path: <SRS0=TVdy=PP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1E94C43387
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 12:55:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67BF7C43387
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:05:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 813C020651
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 12:55:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UCA9puy3"
+	by mail.kernel.org (Postfix) with ESMTP id 38EF02183F
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:05:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728777AbfAGMzo (ORCPT
+        id S1731502AbfAGNFw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Jan 2019 07:55:44 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:60954 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727022AbfAGMzn (ORCPT
+        Mon, 7 Jan 2019 08:05:52 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:36250 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730806AbfAGNFv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Jan 2019 07:55:43 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x07CnSss030048;
-        Mon, 7 Jan 2019 12:55:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2018-07-02;
- bh=uz4LkBO1vBAjKUDA/RMmMBcHEt2I72G1OKaBaDKEfBE=;
- b=UCA9puy3aEQtXmNRB+yUtFbvRRzYIp1qH58yIJlwfb3n3fIMSL45I/oLpeRXOW1qkRNy
- 0yfA4xm8usflhZDbPg3fgRj0vAYsEZnL5lZjUJl25mxuQz3sEUGqywSDLnLn37icl5zc
- zqDnq3e5WXR9IUWoMTwHtgvlqYX9Da7/OvVKbbuA+jOU9pYwv7NxwePE/+d/QBhFEiqi
- ohHx513+3nnOhHS6J+mc346VQw2WuaXUOrOiX8RAYpU1+x1vxYCswFQbNgz72ptSEaUt
- OVmzz/I/AmRJyG6BHHnF5xZ23neHB137urLB6YrLLcW0Lwykm6tiuzr1BwGmWjdvG/3G wA== 
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2ptm0twk7s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 07 Jan 2019 12:55:36 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x07CtZfq013551
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 7 Jan 2019 12:55:35 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x07CtZ3P013565;
-        Mon, 7 Jan 2019 12:55:35 GMT
-Received: from kadam (/197.157.0.45)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 07 Jan 2019 04:55:34 -0800
-Date:   Mon, 7 Jan 2019 15:54:37 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     =?iso-8859-1?Q?J=FAlius?= Milan <julikmilan@gmail.com>,
-        kbuild test robot <lkp@intel.com>
-Cc:     linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-        gregkh@linuxfoundation.org, ajay.kathat@microchip.com,
-        linux-wireless@vger.kernel.org, adham.abozaeid@microchip.com
-Subject: Re: [PATCH] staging: wilc1000: fix cast to restricted __le32
-Message-ID: <20190107125437.GA3200@kadam>
-References: <20190105082323.GA27838@localhost.localdomain>
+        Mon, 7 Jan 2019 08:05:51 -0500
+Received: by mail-wm1-f67.google.com with SMTP id p6so845323wmc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2019 05:05:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=9Tq0Lkb6DfvWYfREZjETjbUpmlozCDJDlvYVzu2LfYA=;
+        b=kzYuMoC/o1CB0nkfDFWnGTfCLoxt6T+FoWaH1QBxS0mFJIFdmpwR/ItajClWda+WOb
+         LchaHIefWTf/3eOi/Uu2LJJdcbTrSSboNmwIfBS90m2MCuUlM387MccFfFGx+6+bRmqp
+         52THrjeJBTHeVb2dFom+WERTgcu3shwgTmyiYDQHcDzp01eDFZmkcnSBbR/NyvBIrKQw
+         ro5HRKxVZx6jOVrWhSL6nVl4+MWQCzIkjmS/gQIUQV01jB3hQJTJ1Ph8yygWOrvkCwQP
+         FVVYhbYS3icNHhqHgUeYT+Y17RsrccioyotryRGhtfxeU7sV5zeAWX0x6I0YNZDSryOa
+         PEIw==
+X-Gm-Message-State: AJcUukc8/JoHJ/xkYfXDuyZmIcbMi8SF7PsAkAgbH9bKkhTVE0jNxgLf
+        Ww9ZZHwU6wk90/VZpavMwSno4iMQJzs=
+X-Google-Smtp-Source: ALg8bN6UULjQ8sCDOzYjG3KqjRKR/7deJWOCpJEfod9pE3/VP4rytRkOmPq9gvlh0jJY5zz5rSPnXw==
+X-Received: by 2002:a1c:85d2:: with SMTP id h201mr8141984wmd.151.1546866349412;
+        Mon, 07 Jan 2019 05:05:49 -0800 (PST)
+Received: from shalem.localdomain (546A5441.cm-12-3b.dynamic.ziggo.nl. [84.106.84.65])
+        by smtp.gmail.com with ESMTPSA id v132sm7658291wme.20.2019.01.07.05.05.48
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 07 Jan 2019 05:05:48 -0800 (PST)
+Subject: Re: [PATCH] brcmfmac: Use request_firmware_direct for the clm_blob
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>
+Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <20190107113401.6824-1-hdegoede@redhat.com>
+ <d6dafb19-4e88-c2c7-9547-2ebd5b4bec2e@broadcom.com>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <5b365baf-99b3-2033-1f8e-6ca38d6daf42@redhat.com>
+Date:   Mon, 7 Jan 2019 14:05:47 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+In-Reply-To: <d6dafb19-4e88-c2c7-9547-2ebd5b4bec2e@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190105082323.GA27838@localhost.localdomain>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9128 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1901070114
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I'm sort of surprised that the zero day bot didn't complain about this.
-It probably should.
+Hi,
 
-The endianness checking is not turned on by default in Sparse.  You have
-to do "make C=1 CF=-D__CHECK_ENDIAN__" to turn it on.
+On 07-01-19 12:58, Arend Van Spriel wrote:
+> On 1/7/2019 12:34 PM, Hans de Goede wrote:
+>> The linux-firmware brcmfmac firmware files contain an embedded table with
+>> per country allowed channels and strength info.
+>>
+>> These versions of the firmware are specially build for linux-firmware,
+>> the firmware files directly available from Broadcom / Cypress rely on
+>> a separate clm_blob file for this info.
+> 
+> Hi Hans,
+> 
+> It is a bit more subtle than how you put it here. It is more of an historical thing.
 
-regards,
-dan carpenter
+I know this started as a historical thing and for some of the older
+firmwares, the info being embedded is indeed simply a legacy thing.
 
-On Sat, Jan 05, 2019 at 09:23:23AM +0100, Július Milan wrote:
-> Fixes the following sparse warnings:
+> The table used to be embedded in firmware only. Much later the clm_blob loading functionality was added so customers could get an updated blob file while using the same firmware. In our router business we still provide firmwares with embedded table. Cypress decided to move to a model in which the firmware contains a null table and needs clm_blob to get things going.
+
+Cypress is actually doing both the old (embedded info) and the new
+(separate clm_blob) model for the firmwares which they are now maintaining,
+they are still providing updates *with the embedded info, see e.g.:
+https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/commit/brcm?id=253a573936ee2078d206527f3ae845b4dc681269
+
+Where as in their own firmware-distribution:
+
+https://community.cypress.com/docs/DOC-15932
+"Cypress Linux WiFi Driver Release (FMAC) [2018-09-28]"
+
+Cypress does the null-table + separate clm_blob file thing and for reasons
+which they have never explained they insist on the linux-firmware files and
+their own files being different.
+
+The zip file from DOC-15932 link contains a "cypress-firmware-v4.14.52-2018_0928.tar.gz"
+which contains LICENCE.cypress from before this commit:
+https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/commit?id=ba51e861f4444f51e7e83f778575a8146dc514d
+
+which means it has a troublesome termination clause and a README which says:
+
+"
+* This LICENCE is different from the LICENCE.Cypress on linux-firmware.git.
+* The files under this licence are not intended for linux-firmware.git upstreaming.
+"
+
+This also means that linux-firmware is always lagging in firmware
+version, missing out on bug and SECURITY fixes, e.g.
+
+Looking at the included brcmfmac4356-pcie.bin file, linux-firmware
+has version 7.35.180.176. Where as cypress-firmware-v4.14.52-2018_0928.tar.gz
+made available from Cypress directly has a newer version, quoting from their
+changelog:
+
+* 4356-pcie
+    * --- 7.35.180.190 ---
+    * Firmware crash fix
+    * MFP bug fix
+
+A "Firmware crash fix" to me sounds like a potential security issue, yet Cypress
+is deliberately blocking us from distributing the new version.
+
+Another example is the firmware for the wifi on the Raspberry Pi 3B+ which
+is *years* older in linux-firmware.
+
+I must say these whole shenanigans with the firmware causing linux-firmware to
+have way too old firmware versions makes me very unhappy. I'm at the point
+where I'm telling friends to not buy any hardware with Cypress wifi in there
+because of this and because of the *complete* lack of bluetooth firmware.
+
+>> For some unknown reason Broadcom / Cypress refuse to provide the standard
+>> firmware files + clm_blob files it uses elsewhere for inclusion into
+>> linux-firmware, instead relying on these special builds with the clm_blob
+>> info embedded. This means that the linux-firmware firmware versions often
+>> lag behind, but I digress.
 > 
-> drivers/staging/wilc1000/host_interface.c:2360:30: warning:
->  incorrect type in assignment (different base types)
->     expected restricted __le32 [addressable] [assigned] [usertype] frame_type
->     got restricted __le16 [usertype] <noident>
+> Most of them are not special builds and provided to AOSP as well.
+
+They are not the same builds as Cypress is distributing in their SDK and
+they are generally anywhere between a bit and a lot older, so to me these
+seem to be special builds and not the preferred form of firmware, otherwise
+Cypress would be distributing the same builds in their SDK.
+
+Anyways except for the legacy cases seems to all be about how Cypress is
+distributing the firmware, so I will drop the Broadcom reference in this
+paragraph for v2 of this patch.
+
+>> The brcmfmac driver does support the separate clm_blob file and always
+>> tries to load this. Currently we use request_firmware for this. This means
+>> that on any standard install, using the standard combo of linux-kernel +
+>> linux-firmware, we will get a warning:
+>> "Direct firmware load for ... failed with error -2"
+>>
+>> On top of this, brcmfmac itself prints: "no clm_blob available (err=-2),
+>> device may have limited channels available" and we will get a slow
+>> fallback to the userspace firmware loading mechanism.
+>>
+>> This commit fixes both almost any brcmfmac device logging the warning
+>> (leaving the brcmfmac info message in pace), as well as the slow and
 > 
-> Fixes: 147ccfd451024 ("staging: wilc1000: handle mgmt_frame_register ops from cfg82011 context")
-> Signed-off-by: Július Milan <jmilan.dev@gmail.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> 'pace' should probably be 'place' here.
+
+Right, will fix.
+
+>> unnecesary fallback by switching to request_firmware_direct for
+>> the clm_blob.
 > 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 5dae6e7155d3..07c3d6293573 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -2357,7 +2357,7 @@ void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
->  	default:
->  		break;
->  	}
-> -	reg_frame.frame_type = cpu_to_le16(frame_type);
-> +	reg_frame.frame_type = cpu_to_le32(frame_type);
->  	result = wilc_send_config_pkt(vif, WILC_SET_CFG, &wid, 1,
->  				      wilc_get_vif_idx(vif));
->  	if (result)
-> -- 
-> 2.14.5
+> As Kalle mentioned it is probably better to use the 'nowarn' api.
+
+Ok will also fix for v2.
+
+Regards,
+
+Hans
+
+
 > 
-> _______________________________________________
-> devel mailing list
-> devel@linuxdriverproject.org
-> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>> Â  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+>> Â  1 file changed, 1 insertion(+), 1 deletion(-)
