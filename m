@@ -2,116 +2,93 @@ Return-Path: <SRS0=TVdy=PP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9491BC43612
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:20:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E2F2C43387
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:23:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B13E2183F
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:20:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FAEF21736
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 13:23:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=airfi-aero.20150623.gappssmtp.com header.i=@airfi-aero.20150623.gappssmtp.com header.b="OCD3WO57"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VBrQTNZD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728680AbfAGMrd (ORCPT
+        id S1730022AbfAGNX2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Jan 2019 07:47:33 -0500
-Received: from mail-io1-f66.google.com ([209.85.166.66]:35952 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728622AbfAGMrb (ORCPT
+        Mon, 7 Jan 2019 08:23:28 -0500
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:38590 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729846AbfAGNX1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Jan 2019 07:47:31 -0500
-Received: by mail-io1-f66.google.com with SMTP id m19so186899ioh.3
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2019 04:47:30 -0800 (PST)
+        Mon, 7 Jan 2019 08:23:27 -0500
+Received: by mail-ed1-f67.google.com with SMTP id h50so856243ede.5;
+        Mon, 07 Jan 2019 05:23:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=airfi-aero.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=EQNYAfMV4OfeP0LNNKBLpT8u32R3hvGyJUwPmKurJjg=;
-        b=OCD3WO575psM6T5ojjhJ/FmChCq8f0Gi+fu207Og8eidhJ0PujtwCJF/Mg0vkUdp4H
-         lkCf+6hN3jhEhn8uU0R9EP0LBkJz+ECU1rxJTgMWqCJD1Gnvgip/VVIj7a2fH2h1J/HL
-         qvYB8Vgr3E9FXuPYa1IXIQTg1VuiRNmBETfRDbQy3uQsQHq3JriLJv+k4PNagTVNF1cg
-         1Uy8PEufMiYTp9YfY0Q+6p3Ydcb3HRD385bd54L99a2MYiunVoiivSxwI/f8WzFdZKpf
-         +jNmwvQeylr/O9DzSfUMlAo0FTfTxSSc/iYGOMv3vmOoPq7R52h+OY5V1SkmC/2ggWJx
-         cG4w==
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=HIBinLwZ1ghjqd3NQ3ePFix2UVejfaQY7pzz6QW8sPw=;
+        b=VBrQTNZDSe08jcHY20uRb39HyAf++fJ5S7cnJwcg5HcZu/miN7U5lCP9SwgYUbAJ3Y
+         zvVT9LbhADr6gabH3kLE/4/i7Qe3WlCOmGAT16hKUyyAO4zJGuNNl/0XPodFUQBP14zb
+         +3qOLWQ1Zktuci1DeMKB4Ag3BOFZrK18Z9vFEJB+XMPWsX6CV09a5/DzZyCzTpM1U6zl
+         7ghPIhI87XZwU24OdLK7SWAlbKzRbvGXaK/FvNYvw6xEnB7Nj8660a8fgwsiz9ekcmqT
+         onEQwH5kFNaxTn7dO3dshJFW6vDXgnTyZ6EjjlV6bAEJPj1LZ+v6sQMnH1ddoQyAfZoU
+         emvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=EQNYAfMV4OfeP0LNNKBLpT8u32R3hvGyJUwPmKurJjg=;
-        b=OjSzH+GRNqjCp41kHRICBo3Mha6gYSPpLTwtB/RbnlaZgo2XrzpjMoyozQLxcdNEE8
-         9pgVBD5PcZQFDEU/tp09SF+ignGvZSzQlHG/b3aXvSssiqwZFXpCaR8dGxTgIThL7V2r
-         4We6IPCJJ2PrJwGwEbSjSq6VPD/gPsW2/kZy5fxYRlAaEe3D/Z/0aJ6OIUaG8oe8HyML
-         A2DAgZfuKhuO37JYaOCcjMKzrbzA/bgqMm7cXF4lDXb9XsWPGdzKeQ6eTCbtbFaK7zsj
-         OlexXtSRLmPwSGFKvwCVmpio5PLo8uxMQcM4oPo5ez30LhXM94NQsQRQBHyylxSMn2up
-         rw5Q==
-X-Gm-Message-State: AJcUukeGGhvtjTP18hWHU2N+z/MhbNofXxuUFNIUf2FJHiuLZjx+N5nh
-        1cJJP4QegU6MAtFnpWFkDmw1KQmr98XgWTyIo1xlOg==
-X-Google-Smtp-Source: ALg8bN4KBt4CtMhYr+LJ2gLXOTahnxHXFK9BMNfvcbPTWAJdT4XozghXINDhK1jdRHu0DDfSnjkfW0/t5aoSloBwO/U=
-X-Received: by 2002:a5d:85c5:: with SMTP id e5mr39942110ios.125.1546865250179;
- Mon, 07 Jan 2019 04:47:30 -0800 (PST)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=HIBinLwZ1ghjqd3NQ3ePFix2UVejfaQY7pzz6QW8sPw=;
+        b=IkqPxGCzs+8fNpoFSu40zsS2Qv1dViahp56RxAFqr5qbHDmG3gE/FbAbTHHkm3TDSs
+         dko5jxIsjQBBRWGhZSX9b02Fb1yEsgTCgZ9pDa1H5ZBhM115ySuZSBSzjIH0V03mZ7Dq
+         ON4g3oRnO0nnb1pqWR7rtrww/Zq1wlZGecY4PSBaKeSsT5SfK/+QyT5MuaiYWSe4/r7C
+         Nkp0OJod5oBsPYte65ej55ofyl9Cjcldy14hQ+3NjA2nxj7fZS0pgfrXptd68F8BEo8k
+         1kKh5rDSYkEmrwWWmhnK0ZXeI8IfeB+q7u5e5YzOTRtOZwYqqS13upSDMD6ktPTgpOtL
+         mnwA==
+X-Gm-Message-State: AA+aEWaiFmMReomlF6vbpmWKcNi01ODhs449JoOpQkJRXunaIGQfTW5y
+        dFkDWwyqhNXEfXG1o3+f6nY=
+X-Google-Smtp-Source: AFSGD/WWePlxSEs4y7Ly3AuLsZtP0XzU1awgYeec9SpOhX32XDJyXyFpL+W3ex9/huXgdS3/wPqDdg==
+X-Received: by 2002:a50:a55c:: with SMTP id z28mr55607764edb.124.1546867405558;
+        Mon, 07 Jan 2019 05:23:25 -0800 (PST)
+Received: from ltop.local ([2a02:a03f:407b:c500:4142:d3d:8d31:6743])
+        by smtp.gmail.com with ESMTPSA id o37sm29790886edc.32.2019.01.07.05.23.23
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 07 Jan 2019 05:23:24 -0800 (PST)
+Date:   Mon, 7 Jan 2019 14:23:23 +0100
+From:   Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     =?utf-8?Q?J=C3=BAlius?= Milan <julikmilan@gmail.com>,
+        kbuild test robot <lkp@intel.com>,
+        linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+        gregkh@linuxfoundation.org, ajay.kathat@microchip.com,
+        linux-wireless@vger.kernel.org, adham.abozaeid@microchip.com
+Subject: Re: [PATCH] staging: wilc1000: fix cast to restricted __le32
+Message-ID: <20190107132322.sk3lcvafg65fdd7b@ltop.local>
+References: <20190105082323.GA27838@localhost.localdomain>
+ <20190107125437.GA3200@kadam>
 MIME-Version: 1.0
-References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com> <1545318971-28351-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1545318971-28351-2-git-send-email-sgruszka@redhat.com>
-From:   Jeroen Roovers <jer@airfi.aero>
-Date:   Mon, 7 Jan 2019 13:47:19 +0100
-Message-ID: <CANCHnQoU-PPTotVD-MmCKCjtoVZEx7Nj4+5YGyfYBEKb2+VNdQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/3] rt2x00: check number of EPROTO errors
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Randy Oostdyk <linux-kernel@oostdyk.com>,
-        =?UTF-8?Q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190107125437.GA3200@kadam>
+User-Agent: NeoMutt/20180716
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 20 Dec 2018 at 16:16, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->
-> Some USB host devices/drivers on some conditions can always return
-> EPROTO error on submitted URBs. That can cause infinity loop in the
-> rt2x00 driver.
->
-> Since we can have single EPROTO errors we can not mark as device as
-> removed to avoid infinity loop. However we can count consecutive
-> EPROTO errors and mark device as removed if get lot of it.
-> I choose number 10 as threshold.
->
-> Reported-and-tested-by: Randy Oostdyk <linux-kernel@oostdyk.com>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On Mon, Jan 07, 2019 at 03:54:37PM +0300, Dan Carpenter wrote:
+> I'm sort of surprised that the zero day bot didn't complain about this.
+> It probably should.
+> 
+> The endianness checking is not turned on by default in Sparse.  You have
+> to do "make C=1 CF=-D__CHECK_ENDIAN__" to turn it on.
 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-> index 086aad22743d..60b8bccab83d 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-> @@ -31,6 +31,22 @@
->  #include "rt2x00.h"
->  #include "rt2x00usb.h"
->
-> +static bool rt2x00usb_check_usb_error(struct rt2x00_dev *rt2x00dev, int status)
-> +{
-> +       if (status == -ENODEV || status == -ENOENT)
+Bitwise (and thus endian) checking is enabled by default in the kernel
+since 05de97003 ("linux/types.h: enable endian checks for all sparse builds")
+included in v4.10-rc1. Since then they make more than half of sparse
+warnings (in a x86-64 allyesconfig).
 
-I am not sure about this, but it looks to me like you would never see
-ENOENT, but ETIMEDOUT:
-
-https://github.com/torvalds/linux/blob/master/drivers/usb/core/message.c#L64
-
-In usb_start_wait_urb ETIMEDOUT is returned instead of ENOENT and
-passed up the chain.
-
-     retval = (ctx.status == -ENOENT ? -ETIMEDOUT : ctx.status);
-
-
-Maybe I am wrong about this, but then again I have neither ever seen
-the driver respond to an ENOENT like this when an RT5592
-"disappeared".
-
-
-Kind regards,
-     jer
+Best regards,
+-- Luc
