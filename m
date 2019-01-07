@@ -2,99 +2,119 @@ Return-Path: <SRS0=TVdy=PP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05956C43387
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 12:44:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1E94C43387
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 12:55:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB0312183E
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 12:44:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 813C020651
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 12:55:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gnH5p2bI";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="niXbA0QM"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UCA9puy3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728772AbfAGMoz (ORCPT
+        id S1728777AbfAGMzo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Jan 2019 07:44:55 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:50686 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728664AbfAGMoy (ORCPT
+        Mon, 7 Jan 2019 07:55:44 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:60954 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727022AbfAGMzn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Jan 2019 07:44:54 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 9DB63608FC; Mon,  7 Jan 2019 12:44:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1546865093;
-        bh=PGyJcowGagMvo26szjiiUyLZB1aRvAXqNiIMcdpcqdI=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=gnH5p2bIHDUzBjPtONbUjMSjGcW8qYeZWi8jnMRf/i2c7PPScU471YGwD+cc+YDx/
-         hTVgouxegiMamZsxueEtkUMNngOGidLF+S7+pp/cl8CceJ7ZmffATaVJnRMuseTiXk
-         Wf+QwkyDjcY9DSdeLcwhmbKHeIPFICT8dyUVaLhI=
-Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C2C91608D4;
-        Mon,  7 Jan 2019 12:44:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1546865092;
-        bh=PGyJcowGagMvo26szjiiUyLZB1aRvAXqNiIMcdpcqdI=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=niXbA0QMDzN3cfEIXoOQJxa05XLySK7ZnYoU0FIDoVZrkOjA1XxzITwGIldMaLW0w
-         pA+co+kwwyszmBijbHmCHqfecqjzvu5D2FNaXjhP1GA0Hsg2Gp2PezaSk7VN8ybXkx
-         ar5V0GctD9ABH82Sm5whmV0si7cgJocHNtnexNDs=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C2C91608D4
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     kbuild test robot <lkp@intel.com>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, kbuild-all@01.org,
-        nbd@nbd.name, linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: Re: [PATCH v2] mt76: mmio: introduce mt76x02_check_tx_hang watchdog
-References: <82a9efd24a70b701808d4ecd8ad2c8289463ae35.1546004654.git.lorenzo.bianconi@redhat.com>
-        <201812290207.LUUmFHNB%fengguang.wu@intel.com>
-Date:   Mon, 07 Jan 2019 14:44:48 +0200
-In-Reply-To: <201812290207.LUUmFHNB%fengguang.wu@intel.com> (kbuild test
-        robot's message of "Sat, 29 Dec 2018 02:50:40 +0800")
-Message-ID: <87ef9o7i2n.fsf@purkki.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+        Mon, 7 Jan 2019 07:55:43 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x07CnSss030048;
+        Mon, 7 Jan 2019 12:55:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2018-07-02;
+ bh=uz4LkBO1vBAjKUDA/RMmMBcHEt2I72G1OKaBaDKEfBE=;
+ b=UCA9puy3aEQtXmNRB+yUtFbvRRzYIp1qH58yIJlwfb3n3fIMSL45I/oLpeRXOW1qkRNy
+ 0yfA4xm8usflhZDbPg3fgRj0vAYsEZnL5lZjUJl25mxuQz3sEUGqywSDLnLn37icl5zc
+ zqDnq3e5WXR9IUWoMTwHtgvlqYX9Da7/OvVKbbuA+jOU9pYwv7NxwePE/+d/QBhFEiqi
+ ohHx513+3nnOhHS6J+mc346VQw2WuaXUOrOiX8RAYpU1+x1vxYCswFQbNgz72ptSEaUt
+ OVmzz/I/AmRJyG6BHHnF5xZ23neHB137urLB6YrLLcW0Lwykm6tiuzr1BwGmWjdvG/3G wA== 
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2ptm0twk7s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 07 Jan 2019 12:55:36 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x07CtZfq013551
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 7 Jan 2019 12:55:35 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x07CtZ3P013565;
+        Mon, 7 Jan 2019 12:55:35 GMT
+Received: from kadam (/197.157.0.45)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 07 Jan 2019 04:55:34 -0800
+Date:   Mon, 7 Jan 2019 15:54:37 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     =?iso-8859-1?Q?J=FAlius?= Milan <julikmilan@gmail.com>,
+        kbuild test robot <lkp@intel.com>
+Cc:     linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+        gregkh@linuxfoundation.org, ajay.kathat@microchip.com,
+        linux-wireless@vger.kernel.org, adham.abozaeid@microchip.com
+Subject: Re: [PATCH] staging: wilc1000: fix cast to restricted __le32
+Message-ID: <20190107125437.GA3200@kadam>
+References: <20190105082323.GA27838@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190105082323.GA27838@localhost.localdomain>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9128 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1810050000 definitions=main-1901070114
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-kbuild test robot <lkp@intel.com> writes:
+I'm sort of surprised that the zero day bot didn't complain about this.
+It probably should.
 
-> Hi Lorenzo,
->
-> I love your patch! Yet something to improve:
->
-> [auto build test ERROR on wireless-drivers-next/master]
-> [also build test ERROR on next-20181224]
-> [cannot apply to v4.20]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Lorenzo-Bianconi/mt76-mmio-introduce-mt76x02_check_tx_hang-watchdog/20181228-224737
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-> config: i386-randconfig-sb0-12290140 (attached as .config)
-> compiler: gcc-4.9 (Debian 4.9.4-2) 4.9.4
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=i386 
->
-> All errors (new ones prefixed by >>):
->
->    In file included from drivers/net/wireless/mediatek/mt76/mt76x02.h:23:0,
->                     from drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c:21:
->    drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c: In function 'mt76x02_watchdog_reset':
->>> drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c:435:36: error: 'MT_TXOP_ED_CCA_EN' undeclared (first use in this function)
+The endianness checking is not turned on by default in Sparse.  You have
+to do "make C=1 CF=-D__CHECK_ENDIAN__" to turn it on.
 
-Didn't check the sources but looks like a valid error to me. Can you fix
-this, please?
+regards,
+dan carpenter
 
--- 
-Kalle Valo
+On Sat, Jan 05, 2019 at 09:23:23AM +0100, Július Milan wrote:
+> Fixes the following sparse warnings:
+> 
+> drivers/staging/wilc1000/host_interface.c:2360:30: warning:
+>  incorrect type in assignment (different base types)
+>     expected restricted __le32 [addressable] [assigned] [usertype] frame_type
+>     got restricted __le16 [usertype] <noident>
+> 
+> Fixes: 147ccfd451024 ("staging: wilc1000: handle mgmt_frame_register ops from cfg82011 context")
+> Signed-off-by: Július Milan <jmilan.dev@gmail.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 5dae6e7155d3..07c3d6293573 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -2357,7 +2357,7 @@ void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
+>  	default:
+>  		break;
+>  	}
+> -	reg_frame.frame_type = cpu_to_le16(frame_type);
+> +	reg_frame.frame_type = cpu_to_le32(frame_type);
+>  	result = wilc_send_config_pkt(vif, WILC_SET_CFG, &wid, 1,
+>  				      wilc_get_vif_idx(vif));
+>  	if (result)
+> -- 
+> 2.14.5
+> 
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
