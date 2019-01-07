@@ -2,175 +2,98 @@ Return-Path: <SRS0=TVdy=PP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1991BC43387
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 09:44:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 774B3C43387
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 11:34:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB1ED20859
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 09:44:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RqDl7y/B"
+	by mail.kernel.org (Postfix) with ESMTP id 4F68C2089F
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jan 2019 11:34:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726555AbfAGJoF (ORCPT
+        id S1726917AbfAGLeF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Jan 2019 04:44:05 -0500
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:41351 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726441AbfAGJoF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Jan 2019 04:44:05 -0500
-Received: by mail-ed1-f68.google.com with SMTP id a20so218534edc.8
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2019 01:44:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=C/fMIEDG6pD0SUouWNXUJzX9jfidGY+Mzw2jZChnCYE=;
-        b=RqDl7y/BpuBSRZ8s0iS5oJcO5hnHd3ODOv7FAYJRVA6+qibNQ+NPvomV7qws/ht0Qn
-         yTOhHGphUlOhtjMRydx1UmCiRp02fp2idp+Ye2H+99fPrSMfEgpdSu0mnl8XKIZmYoob
-         22nteiYD3wsBiFZD7aI+dgAvl+V0Bq/q7sRSM=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=C/fMIEDG6pD0SUouWNXUJzX9jfidGY+Mzw2jZChnCYE=;
-        b=S9u8P70u+sj/FycoL/4o1yQXBPshq7TZddVYRP2rsXJzWABIpNQsujB4lF31+dmIHZ
-         p+z+noKxGCaJOkbSeBsJrVbTvQUcsxk9xzXBuCB2yPtHh0GGC07SC+3/JuvvK8jhpKUT
-         hIgySVnmvmnNl5y9knrWOC38iQMehn863NRhXPYC0aUjLXZ4s71zwR3vhhJf4wXttaLH
-         M9VaXqephryv2z5CMRcvAkx7su2/BtQo1v1dl17AqeotBHReyxYS4f9Yt84mYOvJ3NmG
-         YNbpj6i5nEuz3/bsyWNIKwi2hU71rg/zOQW5LGbhpE+YpI0HKM+9RmsGrwWjOp32EXCD
-         G6Ww==
-X-Gm-Message-State: AA+aEWasf/ySxSwAnBnUBpesFY5Zm/qk2sPD1ojk5Is1WEQ4jD6iskhJ
-        +sFJxC5UtzWaIcuvYt5ubYvNgw==
-X-Google-Smtp-Source: AFSGD/XepbjWxmqcPektUrewT4sBWZAg6vkMbAk9E1KTZdYWPevarL5El7nLQfenNsI98m4mEdqkSw==
-X-Received: by 2002:a50:e3cb:: with SMTP id c11mr56203357edm.80.1546854243117;
-        Mon, 07 Jan 2019 01:44:03 -0800 (PST)
-Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id k26-v6sm18415818ejv.59.2019.01.07.01.44.01
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 07 Jan 2019 01:44:02 -0800 (PST)
-Subject: Re: [PATCH 2/6] brcmfmac: send port authorized event for 802.1X 4-way
- handshake offload
-To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        Mon, 7 Jan 2019 06:34:05 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:57710 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726798AbfAGLeF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Jan 2019 06:34:05 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 23BC9C056796;
+        Mon,  7 Jan 2019 11:34:05 +0000 (UTC)
+Received: from shalem.localdomain.com (ovpn-116-151.ams2.redhat.com [10.36.116.151])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 520C3608C3;
+        Mon,  7 Jan 2019 11:34:03 +0000 (UTC)
+From:   Hans de Goede <hdegoede@redhat.com>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Stanley Hsu <Stanley.Hsu@cypress.com>
-References: <1546582221-143220-1-git-send-email-chi-hsien.lin@cypress.com>
- <1546582221-143220-2-git-send-email-chi-hsien.lin@cypress.com>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <d89b1304-471d-f064-02f1-6a9fab0ca25d@broadcom.com>
-Date:   Mon, 7 Jan 2019 10:44:01 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>
+Cc:     Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH] brcmfmac: Use request_firmware_direct for the clm_blob
+Date:   Mon,  7 Jan 2019 12:34:01 +0100
+Message-Id: <20190107113401.6824-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1546582221-143220-2-git-send-email-chi-hsien.lin@cypress.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Mon, 07 Jan 2019 11:34:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/4/2019 7:11 AM, Chi-Hsien Lin wrote:
-> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-> 
-> With 4-way handshake offload for 802.1X authentication, a port
-> authorized event should be sent to user space after the completion of
-> 4-way handshake. It is used to indicate that a connection is authorized
-> and 802.1X authentication is no longer required.
+The linux-firmware brcmfmac firmware files contain an embedded table with
+per country allowed channels and strength info.
 
-It had been a while since I had looked at our offload code (basically 
-since the initial implementation for the nl80211 work) so I was unsure 
-why this would be needed.
+These versions of the firmware are specially build for linux-firmware,
+the firmware files directly available from Broadcom / Cypress rely on
+a separate clm_blob file for this info.
 
-So initially we added a PORT_AUTHORIZED *attribute* in the nl80211 api 
-and later on the PORT_AUTHORIZED *event* was introduced and 4-way hs 
-offload support in wpa_supplicant is ignoring the *attribute* and only 
-handling the *event*. I think this information is important enough to 
-add to this commit message with a reference to commit 503c1fb98ba3 
-("cfg80211/nl80211: add a port authorized event") which "broke" the 
-functionality in brcmfmac.
+For some unknown reason Broadcom / Cypress refuse to provide the standard
+firmware files + clm_blob files it uses elsewhere for inclusion into
+linux-firmware, instead relying on these special builds with the clm_blob
+info embedded. This means that the linux-firmware firmware versions often
+lag behind, but I digress.
 
-Some specific comments below...
+The brcmfmac driver does support the separate clm_blob file and always
+tries to load this. Currently we use request_firmware for this. This means
+that on any standard install, using the standard combo of linux-kernel +
+linux-firmware, we will get a warning:
+"Direct firmware load for ... failed with error -2"
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-> ---
->   .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 23 +++++++++++++++-------
->   1 file changed, 16 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index 35301237d435..ad0d775a1244 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -5266,10 +5266,13 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
->   	u32 event = e->event_code;
->   	u32 status = e->status;
->   
-> -	if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_PSK &&
-> -	    event == BRCMF_E_PSK_SUP &&
-> -	    status == BRCMF_E_STATUS_FWSUP_COMPLETED)
-> +	if (event == BRCMF_E_PSK_SUP &&
-> +	    status == BRCMF_E_STATUS_FWSUP_COMPLETED) {
->   		set_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
-> +		if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_1X)
-> +			return true;
-> +	}
-> +
+On top of this, brcmfmac itself prints: "no clm_blob available (err=-2),
+device may have limited channels available" and we will get a slow
+fallback to the userspace firmware loading mechanism.
 
-Here things get a bit tricky I think. The old behaviour was to wait for 
-both PSK_SUP and SET_SSID events before calling cfg80211_connect_done(). 
-If I recall correctly I did that because they can arrive in different 
-order depending on the type of offload (1x or psk) but also depends on 
-firmware build, so ....
+This commit fixes both almost any brcmfmac device logging the warning
+(leaving the brcmfmac info message in pace), as well as the slow and
+unnecesary fallback by switching to request_firmware_direct for
+the clm_blob.
 
->   	if (event == BRCMF_E_SET_SSID && status == BRCMF_E_STATUS_SUCCESS) {
->   		brcmf_dbg(CONN, "Processing set ssid\n");
->   		memcpy(vif->profile.bssid, e->addr, ETH_ALEN);
-> @@ -5280,11 +5283,10 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
->   	}
->   
->   	if (test_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state) &&
-> -	    test_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state)) {
-> -		clear_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
-> -		clear_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state);
-> +	    test_and_clear_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS,
-> +			       &vif->sme_state))
->   		return true;
-> -	}
-> +
->   	return false;
->   }
->   
-> @@ -5501,6 +5503,13 @@ brcmf_bss_connect_done(struct brcmf_cfg80211_info *cfg,
->   		brcmf_dbg(CONN, "Report connect result - connection %s\n",
->   			  completed ? "succeeded" : "failed");
->   	}
-> +
-> +	if (test_and_clear_bit(BRCMF_VIF_STATUS_EAP_SUCCESS,
-> +			       &ifp->vif->sme_state) &&
-> +	    profile->use_fwsup == BRCMF_PROFILE_FWSUP_1X) {
-> +		cfg80211_port_authorized(ndev, profile->bssid, GFP_KERNEL);
-> +		brcmf_dbg(CONN, "Report port authorized\n");
-> +	}
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I would leave the code in brcmf_is_linkup() as before and only check 
-profile->use_fwsup here to determine whether cfg80211_port_authorized() 
-should be called here.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 0bb16bf574e3..e0a5e78ee437 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -149,7 +149,7 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
+ 		return err;
+ 	}
+ 
+-	err = request_firmware(&clm, clm_name, bus->dev);
++	err = request_firmware_direct(&clm, clm_name, bus->dev);
+ 	if (err) {
+ 		brcmf_info("no clm_blob available (err=%d), device may have limited channels available\n",
+ 			   err);
+-- 
+2.20.1
 
->   	brcmf_dbg(TRACE, "Exit\n");
->   	return 0;
->   }
-> 
