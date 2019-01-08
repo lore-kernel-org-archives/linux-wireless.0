@@ -4,35 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
 	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3A95C43444
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 22:49:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5379C43444
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 22:49:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E8472146F
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 22:49:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB4032146F
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 22:49:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730079AbfAHWt2 convert rfc822-to-8bit (ORCPT
+        id S1730152AbfAHWtq convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Jan 2019 17:49:28 -0500
-Received: from mail-oln040092072048.outbound.protection.outlook.com ([40.92.72.48]:16480
-        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
+        Tue, 8 Jan 2019 17:49:46 -0500
+Received: from mail-oln040092070052.outbound.protection.outlook.com ([40.92.70.52]:24064
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729328AbfAHWt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Jan 2019 17:49:28 -0500
+        id S1729328AbfAHWtp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Jan 2019 17:49:45 -0500
 Received: from AM5EUR03FT023.eop-EUR03.prod.protection.outlook.com
- (10.152.16.56) by AM5EUR03HT054.eop-EUR03.prod.protection.outlook.com
- (10.152.17.144) with Microsoft SMTP Server (version=TLS1_2,
+ (10.152.16.51) by AM5EUR03HT198.eop-EUR03.prod.protection.outlook.com
+ (10.152.17.133) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1382.18; Tue, 8 Jan
- 2019 22:49:24 +0000
+ 2019 22:49:42 +0000
 Received: from AM6PR07MB5608.eurprd07.prod.outlook.com (10.152.16.52) by
  AM5EUR03FT023.mail.protection.outlook.com (10.152.16.169) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1382.18 via Frontend Transport; Tue, 8 Jan 2019 22:49:24 +0000
+ 15.20.1382.18 via Frontend Transport; Tue, 8 Jan 2019 22:49:41 +0000
 Received: from AM6PR07MB5608.eurprd07.prod.outlook.com
  ([fe80::68b1:73c3:455d:de2a]) by AM6PR07MB5608.eurprd07.prod.outlook.com
  ([fe80::68b1:73c3:455d:de2a%2]) with mapi id 15.20.1516.010; Tue, 8 Jan 2019
- 22:49:23 +0000
+ 22:49:40 +0000
 From:   Bernd Edlinger <bernd.edlinger@hotmail.de>
 To:     Ping-Ke Shih <pkshih@realtek.com>,
         Larry Finger <Larry.Finger@lwfinger.net>,
@@ -42,99 +43,113 @@ To:     Ping-Ke Shih <pkshih@realtek.com>,
         "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH v4 1/4] rtl8723ae: Take the FW LPS mode handling out
-Thread-Topic: [PATCH v4 1/4] rtl8723ae: Take the FW LPS mode handling out
-Thread-Index: AQHUp6RmDijYI8GSZ0Oks0cNbTl2qw==
-Date:   Tue, 8 Jan 2019 22:49:23 +0000
-Message-ID: <AM6PR07MB5608D3B84CFB7EB8A84C2030E48A0@AM6PR07MB5608.eurprd07.prod.outlook.com>
+Subject: [PATCH v4 2/4] rtl8723ae: Dont use old data for input gain control
+Thread-Topic: [PATCH v4 2/4] rtl8723ae: Dont use old data for input gain
+ control
+Thread-Index: AQHUp6RwBjS7FcN11Uyxbem1jV10Cg==
+Date:   Tue, 8 Jan 2019 22:49:40 +0000
+Message-ID: <AM6PR07MB560811DC708B66768CF754A1E48A0@AM6PR07MB5608.eurprd07.prod.outlook.com>
 Accept-Language: en-US, en-GB, de-DE
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-clientproxiedby: AM6PR0202CA0064.eurprd02.prod.outlook.com
- (2603:10a6:20b:3a::41) To AM6PR07MB5608.eurprd07.prod.outlook.com
+x-clientproxiedby: AM6PR0202CA0062.eurprd02.prod.outlook.com
+ (2603:10a6:20b:3a::39) To AM6PR07MB5608.eurprd07.prod.outlook.com
  (2603:10a6:20b:6f::21)
-x-incomingtopheadermarker: OriginalChecksum:F67BFE7AEFB5CC74BDFB262E29E6E8F2C2C3B75122C22919837D603BDF07F59D;UpperCasedChecksum:535BE324B378FD6DC25A0BBA81C0E3FF4C22054CF32F5CB5781F8B62F146B469;SizeAsReceived:8778;Count:62
+x-incomingtopheadermarker: OriginalChecksum:7664C94729DFAE6804AEA1EE688F3F4DF90BBBB221617C73812CC23EA15D5FFF;UpperCasedChecksum:2CA964F87CC7B55747C33EF93495F77CC68361A9D079869CDC28EE9EC6A6BBD3;SizeAsReceived:8797;Count:62
 x-ms-exchange-messagesentrepresentingtype: 1
-x-tmn:  [zuLHMHZlQpP/+x4ZPW57g99Qfdsn9ohz]
-x-microsoft-original-message-id: <b58c84d9-67f5-f990-dfbb-82dae7f9bd2f@hotmail.de>
+x-tmn:  [A6faOYTlYMoRLurXZoxlc/80yvo++FH9]
+x-microsoft-original-message-id: <133010c2-768e-4285-1d59-21a0690596a1@hotmail.de>
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM5EUR03HT054;6:lhYrEg4+zKIMnSDWaoaa6hz6PZCI2bLQUnyofGcyg2WuxwEyGCAuBFTYj88z1+HdEnHhrasULLPGmyWsmAtyIVMXsFhvoS/xKGaayYyUyUg/6K049YAkPJutBYI7Zd+84IygDUTUesAA5CHG0xn8w3tlEDBI/I0qA0mRlZ8JbgdEvwiNVB6UF7g7cfh97EJLcO1wETi19dKU0U+la6/PAQl3qQPn58wbDZEXAzIkB57FAoSX0gqLZVO03iLCVlSlFAv7mXw7zlRwqXknkpq2x8LqyDb7qLil3/leYLB9OXc124XalaH6XaxP/omeLDRvDruLaImFvl695GO5nkc/YZPY8LC/7y7F8OxNNvai5gzle7tlcvmOKmPo0RFJHLFKkzgVRaqnRl5Js1uE/MRB4U8BvQjp9i9ZsKuEzw4ANcss3lzctQ9uf0Gf1EFtasH4DifiqwY3jZK3Bu16B4QOYQ==;5:+jttb/sdstd1EH2eSCQJsO8qE9QERp7L8NDnBB+D84wjw8yjLxfqYKVRiORBCvFneUhEEAd0Sr0bw6sVRV/g9UpF7+uNMai/RcHM3P8Qv1K8dTY3hB0wWH9rT0YJv7CYonU+ikhOopavI6uLgtk/0oOBwRFhBi+bjEw0oZCYaic=;7:htZOK6Wm38LnvkawIzELfVynqpH/kliVBJ1l/kvD6Fz+fRu+KpCzBa2U/F0IrsHoAJJUEhegAv7dVtwGHaushE1yLvKW7r1x8pDnF6ep4IjGNb945lp8LczQ+elfGzA9kGrcI0qpYULfDuy4XieROA==
+x-microsoft-exchange-diagnostics: 1;AM5EUR03HT198;6:Yu7uWedzVQ3OnEb5o0kdNDzDyHtlR+O1RLaUrBTmtDZg7WNHF2IXYUwWmsoma/nLNXjb6KTkJHY+a5uZnZ7jJ3l0oxHAT+MHbSOwCfxQuy5NNUVVok7Pacb2kpWLGJfSCgVATtGoZJP4YPVrpLTA022FhAm5i4ojabTjLPzMdWbu1j/K9aDYREgl0SZzWjjuKrSH2FWx8AVLu5zolYnhKCg47cuxHmDWXnzZ2GUHbzOMZW3pgx1+1s6vExuPzR5pi9u8kqpnloymJTQhDBnzR+7+JKi9XRcqwFGqqWP5OCE33jwU17FdQK6fqk1esHZ1roGCKrPA5dimiBUGtOHm3zvrPw6tLGuihTkbLFRygSkV3EanDXQJ4PZpHiFJvU5NOBbAVg2GdNKuo9azRVRFetYryN3kG4+d7zl7uQ6DoOwdeDthGZh3aRvLKUZD86vUthJtY3S1AudlzLZo/VUu+Q==;5:Qi0ResKwjVwVRP9GO6AoIxEfZeBN/xJVApjJ6wi9HitxMhEwflF9FeQWhaFww0/gozvC8mCbc3STKMcnSHwE1zR73sELO04h/fl6gXYAX7ki248dU7hmvtAIQAi5EkPQDGfDDQ3gk8uWzDEGGEWWA/pndrpweGDHtFewei7kjhQ=;7:GaByRj6U1M0FQ/FTiHZDYgtiNhQ6eVQ6p9IBoDLnVepCRBjGPzw/b25eMstZRlUzzjqU5bELiAPwWCCm0/0spyEHrxKmX9Ro3xhyrKzwTscgW1iu2X4+WYn0vQmr1icf+Z4AwucdDy1OJhjTgxf1eQ==
 x-incomingheadercount: 62
 x-eopattributedmessage: 0
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:AM5EUR03HT054;
-x-ms-traffictypediagnostic: AM5EUR03HT054:
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(4566010)(82015058);SRVR:AM5EUR03HT054;BCL:0;PCL:0;RULEID:;SRVR:AM5EUR03HT054;
-x-microsoft-antispam-message-info: qGgv7u71Tk8ay/H1hM3Ycc8ml2B1UTdYjx/+7bv9vm9UHSdJtym9sfDaJULtplBo
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(20181119063)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:AM5EUR03HT198;
+x-ms-traffictypediagnostic: AM5EUR03HT198:
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(4566010)(82015058);SRVR:AM5EUR03HT198;BCL:0;PCL:0;RULEID:;SRVR:AM5EUR03HT198;
+x-microsoft-antispam-message-info: rHKh+BePZhIC3IbhBA+b2pMTBMlzAJ1xY0wAO5TkEujJSZIZiYHTIeqXJ0cDPvMx
 Content-Type: text/plain; charset="Windows-1252"
-Content-ID: <5C60488ADFDF104693C168DE625A0E9B@eurprd07.prod.outlook.com>
+Content-ID: <18C2F3CD9A12314C94152D4937AB6BAA@eurprd07.prod.outlook.com>
 Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
 X-OriginatorOrg: outlook.com
 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: d4d70346-2c10-4f39-8c00-e767963926d9
-X-MS-Exchange-CrossTenant-Network-Message-Id: d0a313bb-3526-41e6-8648-08d675bb88a5
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3d13f912-1279-4133-2202-08d675bb929a
 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: d4d70346-2c10-4f39-8c00-e767963926d9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jan 2019 22:49:22.8475
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jan 2019 22:49:39.5520
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Internet
 X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5EUR03HT054
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5EUR03HT198
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This appears to trigger a firmware bug and causes severe
-problems with rtl8723ae PCI devices.
+When no beacon was received, the value in dm.undec_sm_pwdb is most
+likely out of date and should not be used to adjust the input path.
+Assume instead that the signal level is low.
 
-When the power save mode is activated for longer periods
-of time the firmware stops to receive any packets.
+Fix the state machine in rtl8723e_dm_cck_packet_detection_thresh
+which did not clear pre_cck_fa_state when changing cur_cck_pd_state
+from CCK_PD_STAGE_LOWRSSI/CCK_FA_STAGE_LOW to CCK_PD_STAGE_HIGHRSSI
+and back again to CCK_PD_STAGE_LOWRSSI/CCK_FA_STAGE_LOW, the register
+RCCK0_CCA not written to 0x83 on the second change.
 
-This problem was exposed by commit 873ffe154ae0 ("rtlwifi:
-Fix logic error in enter/exit power-save mode").
-
-Previously the power save mode was only active rarely and
-only for a short time so that the problem was not noticeable.
+Explicitly initialize pre_cck_fa_state/cur_cck_fa_state in
+rtl_dm_diginit.
 
 Signed-off-by: Bernd Edlinger <bernd.edlinger@hotmail.de>
 ---
-v2: Adjust the defaults of swlps and fwlps module
-parameters to match the firmware capabilities instead of removing
-the whole code, so it can be easily re-activated once a firmware
-update is available.
+v2: Improved patch description.
 
 v3: Make the title fit in one line.
 
 v4: Try to fix the line endings the message body.
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/core.c         | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c | 8 ++++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-index 07b82700d1..3103151 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-@@ -266,8 +266,8 @@ static bool is_fw_header(struct rtlwifi_firmware_header *hdr)
- static struct rtl_mod_params rtl8723e_mod_params = {
- 	.sw_crypto = false,
- 	.inactiveps = true,
--	.swctrl_lps = false,
--	.fwctrl_lps = true,
-+	.swctrl_lps = true,
-+	.fwctrl_lps = false,
- 	.aspm_support = 1,
- 	.debug_level = 0,
- 	.debug_mask = 0,
-@@ -395,8 +395,8 @@ static bool is_fw_header(struct rtlwifi_firmware_header *hdr)
- 		   bool, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
--MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
--MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
-+MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 1)\n");
-+MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 0)\n");
- MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
- MODULE_PARM_DESC(aspm, "Set to 1 to enable ASPM (default 1)\n");
- MODULE_PARM_DESC(debug_level, "Set debug level (0-5) (default 0)");
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 4bf7967..ce23339 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1957,5 +1957,7 @@ void rtl_dm_diginit(struct ieee80211_hw *hw, u32 cur_igvalue)
+ 	dm_digtable->bt30_cur_igi = 0x32;
+ 	dm_digtable->pre_cck_pd_state = CCK_PD_STAGE_MAX;
+ 	dm_digtable->cur_cck_pd_state = CCK_PD_STAGE_LOWRSSI;
++	dm_digtable->pre_cck_fa_state = 0;
++	dm_digtable->cur_cck_fa_state = 0;
+ }
+ EXPORT_SYMBOL(rtl_dm_diginit);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
+index 42a6fba..902b944 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
+@@ -151,8 +151,14 @@ static u8 rtl8723e_dm_initial_gain_min_pwdb(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
++	struct rtl_mac *mac = rtl_mac(rtlpriv);
+ 	long rssi_val_min = 0;
+ 
++	if (mac->link_state == MAC80211_LINKED &&
++	    mac->opmode == NL80211_IFTYPE_STATION &&
++	    rtlpriv->link_info.bcn_rx_inperiod == 0)
++		return 0;
++
+ 	if ((dm_digtable->curmultista_cstate == DIG_MULTISTA_CONNECT) &&
+ 	    (dm_digtable->cursta_cstate == DIG_STA_CONNECT)) {
+ 		if (rtlpriv->dm.entry_min_undec_sm_pwdb != 0)
+@@ -417,6 +423,8 @@ static void rtl8723e_dm_cck_packet_detection_thresh(struct ieee80211_hw *hw)
+ 		} else {
+ 			rtl_set_bbreg(hw, RCCK0_CCA, MASKBYTE2, 0xcd);
+ 			rtl_set_bbreg(hw, RCCK0_SYSTEM, MASKBYTE1, 0x47);
++			dm_digtable->pre_cck_fa_state = 0;
++			dm_digtable->cur_cck_fa_state = 0;
+ 
+ 		}
+ 		dm_digtable->pre_cck_pd_state = dm_digtable->cur_cck_pd_state;
 -- 
 1.9.1
