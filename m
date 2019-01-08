@@ -2,158 +2,141 @@ Return-Path: <SRS0=f1+T=PQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFBE3C43387
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 20:21:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0B5AC43387
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 20:31:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 92F3F20675
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 20:21:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 665E220827
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 20:31:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Q7F7mrj7"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tGA7volR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728632AbfAHUVH (ORCPT
+        id S1728723AbfAHUbq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Jan 2019 15:21:07 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:55082 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728015AbfAHUVH (ORCPT
+        Tue, 8 Jan 2019 15:31:46 -0500
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:33811 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728138AbfAHUbq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Jan 2019 15:21:07 -0500
-Received: from [192.168.100.195] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 4A9A140B24A;
-        Tue,  8 Jan 2019 12:21:04 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail2.candelatech.com 4A9A140B24A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1546978864;
-        bh=pI9mZhOMxYElyXrdZbE7CxdJl7Pcd1Hvwkrm32x1gLI=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=Q7F7mrj77fnNeNTyTZBdUoMuCnolqSL4fAVnwGE+GdJ+5qMXBoJydrFjqEjSkHkKO
-         mLx2Ke9YtQP63Ih00gOJeHfOvnW7r/rpTyneXbHMsthQInDhabVvkBsFyafyRr/yW7
-         C2Ympa0Vd0fTwwAgXQ/ExOni973AANMQy/1gUIiQ=
-Subject: Re: [PATCH] nl80211/cfg80211: Add support to send tx frames at
- specified rate
-To:     vamsin@codeaurora.org
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, jouni@codeaurora.org
-References: <1543838646-3574-1-git-send-email-vamsin@codeaurora.org>
- <89e6532daf4011de2ad0df3dcb8accc42334f31e.camel@sipsolutions.net>
- <899698ca-d8b5-45b1-5689-58096e2f0291@candelatech.com>
- <63224d0fc1e978624de9887cb7349c02@codeaurora.org>
-From:   Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-Message-ID: <441f9a6c-b08e-c115-b11c-f1b3f0d020cd@candelatech.com>
-Date:   Tue, 8 Jan 2019 12:21:03 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.1
+        Tue, 8 Jan 2019 15:31:46 -0500
+Received: by mail-lj1-f193.google.com with SMTP id u89-v6so4580016lje.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2019 12:31:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=62c/abkv8pQsWmXqEQIZxagDNLv4EUWrDeEM66FCP3I=;
+        b=tGA7volRNOP4jkRLdnqgwdZtl5mNbPLsmY32mSMNvDWPws9v3kMfoJ0ALqrqv/QhhP
+         2cvj50Z5Xj3IJcyRG0AP5FLwJ/JRt+LJv9c32ia2V5ecrgRINn3WLVZ+Ony57u/tnkxD
+         vFF2gpjOp/tDLxM9Dp9FOGY1M+ahlBeuopxDARCewTVRf0UiEpYjKp4NvuJEkZDk5BQn
+         W3xE6ItFUUNBnlj970EcyvP5VWLCVpSy/dYlm4aklsEKiPkclw+la8hGO/RwOgO5tWN7
+         59J7w6ysdeb36Sj6WTM6PGE/WN62k5rOgIqLgSNjGk7t1g+LILBL3mFtJL7AKJnyy+x6
+         E/JA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=62c/abkv8pQsWmXqEQIZxagDNLv4EUWrDeEM66FCP3I=;
+        b=Gukqy+c13213utatZcPCeTR6fsyxLxnxh+UhRs7kqBNVV1SmCR2zoN22TgHqz+vR14
+         9G3eCRDnlDSZlZYDnJicAd1cq9HQD9QI+yDCdrxonuW/4rU0rK9sdpgauaz+Vmyf1Qvh
+         d8T4JMN8JFuMM1OugQW+ub4RwGDPh2HS7MFIkdaV028+hZYsXRR/l9oFlrqdpNJdQx7B
+         q/ZRcjoPe5wMuObpuXKQD8c7XhrNujTsb8Nq/kcSuAm5uV0OxLU/aN2bmWh6YbBOHB/9
+         edAaienE8AExJH4Uq5b3cfKiO9vaMeOZZD7syJ+uZ9qJYnX0I/5E6bUxsixtejd+ICzf
+         C/2Q==
+X-Gm-Message-State: AJcUukfuMPSBXZlFwp6Np3lRyUfZ0NVYeTidxlzpaB9+/Rsmsnkslm6l
+        0n62jkh75pbaJq5SSB7fK7ZjVAdb
+X-Google-Smtp-Source: ALg8bN6HHZPO+B5h2dkpCKIiWrLgDC/SwMOzyBlwd4VkGq2RbZpeG2crHpunaIfW5z0LlZr0kRHApQ==
+X-Received: by 2002:a2e:7615:: with SMTP id r21-v6mr1812644ljc.131.1546979503084;
+        Tue, 08 Jan 2019 12:31:43 -0800 (PST)
+Received: from localhost.localdomain (ppp92-100-66-191.pppoe.avangarddsl.ru. [92.100.66.191])
+        by smtp.googlemail.com with ESMTPSA id s3-v6sm14627164lje.73.2019.01.08.12.31.41
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 08 Jan 2019 12:31:42 -0800 (PST)
+From:   Sergey Matyukevich <geomatsi@gmail.com>
+To:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc:     Jouni Malinen <jouni@codeaurora.org>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH] mac80211: allow overriding HT STBC capabilities
+Date:   Tue,  8 Jan 2019 23:31:49 +0300
+Message-Id: <20190108203149.9017-1-geomatsi@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-In-Reply-To: <63224d0fc1e978624de9887cb7349c02@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/8/19 9:49 AM, vamsin@codeaurora.org wrote:
-> On 2018-12-18 19:15, Ben Greear wrote:
->> On 12/18/2018 05:12 AM, Johannes Berg wrote:
->>> On Mon, 2018-12-03 at 17:34 +0530, vamsi krishna wrote:
->>>> NL80211_CMD_FRAME is used to send frames from userspace. Add support to
->>>> transmit the frames at a rate specified by userspace when needed.
->>>> The drivers shall indicate the support to send frames at rate specified
->>>> by userspace by setting %NL80211_EXT_FEATURE_CMD_FRAME_TXRATE flag in
->>>> wiphy capabilities. The userspace can specify the rate within
->>>> %NL80211_ATTR_RATE_INFO attribute while sending %NL80211_CMD_FRAME.
->>>>
->>>> NL80211_ATTR_RATE_INFO is a nested attribute and encapsulates the
->>>> attributes defined in &enum nl80211_rate_info.
->>>
->>> It'd be good if you were to repost this with a driver that uses it.
-> Unfortunately, the driver that I am working now is not upstreamed. I would like to check with Ben if he likes to propose a patch ath10k driver that he is 
-> working on as I see he is also interested in this feature. Please let me know if it is mandatory or good to have driver implementation.
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-Kalle will not accept any of my patches that enable my firmware, though my ath10k-ct
-driver/firmware is in OpenWRT if that is upstream enough.
+Allow user to override STBC configuration for Rx and Tx spatial streams.
+In practice RX/TX STBC settings can be modified using appropriate
+options in wpa_supplicant configuration file:
+  tx_stbc=-1..1
+  rx_stbc=-1..3
 
->>> Also, please explain why you think userspace needs this? It's not like
->>> it can make better rate decisions than the rate control algorithm,
->>> right?
-> Yes, you are correct. Rate control algorithm will continue to be in the lower layers only. This is mostly for testing and experimenting purposes.
-> 
->>>
->>>>      [NL80211_ATTR_SCHED_SCAN_MIN_RSSI] = { .type = NLA_NESTED },
->>>> +    [NL80211_ATTR_RATE_INFO] = { .type = NLA_NESTED },
->>>
->>> This should use NLA_POLICY_NESTED(nl80211_rate_info_policy)
-> Thanks for pointing out this MACRO, I used it in my new version of the patch.
-> 
->>
->> I missed the first posting of this patch.  Here are some of my own
->> suggestions.
->>
->> The wave-2 ath10k firmware has an option to specify tx-power, preamble
->> (CCK, OFDM, HT, VHT), bandwidth, mcs, nss and retry-count on a per-packet
->> basis.  This is not enabled in the ath10k driver, and I am not certain QCA
->> firmware compiles in this option, but I have both ath10k-ct driver and firmware
->> able to do this currently.
->>
->> For HT and VHT, the mcs is fairly obvious I think.  For CCK and OFDM, the
->> mcs is treated as an index into the CCK and OFDM rate tables.
->>
->> So, maybe the patch could use these basic constructs instead of the
->> different flags/rates for MCS vs VHT_MCS vs HE_MCS?
-> I am not sure if I understand your comment correctly. If you are proposing to remove the different attribute ids for MCS, VHT_MCS and HE_MCS, I think that will 
-> lead to unnecessary confusion especially as we have duplicate indices between different modes(for example between HT and VHT). I believe it is better to keep 
-> this similar to reporting tx and rx rates in NL80211_CMD_GET_STATION in order to avoid problems with future technologies like EHT.
+This functionality has been added to wpa_supplicant in commit cdeea70f59d0.
 
-Here is the API that I have in my modified ath10k-ct driver (and the ath10k-ct wave-2 firmware handles it accordingly):
+In FullMAC case these STBC options are passed to drivers by cfg80211
+connect callback in fields of cfg80211_connect_params structure.
+However for mac80211 drivers, e.g. for mac80211_hwsim,
+overrides for STBC settings are ignored.
 
-/* Create a rate-info object that (some) 10.4 CT firmware
-  * can understand.
-  */
-u32 ath10k_convert_hw_rate_to_rate_info(u8 tpc, u8 mcs, u8 sgi, u8 nss, u8 pream_type,
-					u8 num_retries, u8 bw, u8 dyn_bw)
+The reason why RX/TX STBC capabilities are not modified for mac80211
+drivers is as follows. All drivers need to specify supported HT/VHT
+overrides explicitly: see ht_capa_mod_mask and vht_capa_mod_mask fields
+of wiphy structure. Only supported overrides will be passed to drivers by
+cfg80211_connect and cfg80211_mlme_assoc operations: see bitwise 'AND'
+performed by cfg80211_oper_and_ht_capa and cfg80211_oper_and_vht_capa.
 
-	/* Re-use logic from 10.4 firmware */
-	struct __ath10k_rate_info {
-		u32     power              : 6,   /* units of the power field is dbm */
-			unused             : 1,   /* Room for growth */
-			sgi                : 1,   /* Enable SGI or not, checked when valid_rate is enabled. */
-			mcs                : 4,    /* mcs = 0 ~ 9 */
-			nss                : 2,    /* 0 = 1 nss, 1 = 2 nss, 2 = 3 nss, 3 = 4 nss */
-			pream_type         : 2,    /* 0 = WIFI_RATECODE_PREAM_OFDM,
-						      1 = WIFI_RATECODE_PREAM_CCK,
-						      2 = WIFI_RATECODE_PREAM_HT ,
-						      3 = WIFI_RATECODE_PREAM_VHT */
-			num_retries        : 4,    /* 0 ~ 15:  0 means no-ack */
-			dyn_bw             : 1,    /* 0 = static bw, 1 = dynamic bw */
-			bw                 : 3,    /* valid only if dyn_bw == 0 (static bw).
-						      (0 = 20 mhz, 1 = 40 mhz, 2 = 80 mhz, 3 = 160 mhz , 4 = 80+80mhz) */
-			valid_power        : 1,   /*  power info field has valid power. */
-			valid_rate         : 1,    /*  mcs,nss,pream_type fields have valid rates. */
-			valid_num_retries  : 1,    /*  num_retries field has valid value */
-			valid_dyn_bw       : 1,    /*  dyn_bw field has valid value */
-			valid_bw           : 1,    /*   bw field has valid value */
+This commit adds RX/TX STBC HT capabilities to mac80211_ht_capa_mod_mask,
+allowing their modifications, as well as applies requested STBC
+modifications in function ieee80211_apply_htcap_overrides.
 
-			any_valid          : 1,    /* 1 : htt_tx_msdu_desc_t contains valid tx meta data */
-			key_id             : 2;    /* key index 0 to 3 for per packet key rotation */
-	};
-...
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ net/mac80211/ht.c   | 8 ++++++++
+ net/mac80211/main.c | 2 ++
+ 2 files changed, 10 insertions(+)
 
-So, the best API for me would allow me to specify all of this from user-space.  pream-type could have a new 'HE'
-in the upper stacks, ath10k would just ignore it.
-
-Thanks,
-Ben
-
-
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index f849ea814993..e03c46ac8e4d 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -107,6 +107,14 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+ 	__check_htcap_enable(ht_capa, ht_capa_mask, ht_cap,
+ 			     IEEE80211_HT_CAP_40MHZ_INTOLERANT);
+ 
++	/* Allow user to enable TX STBC bit  */
++	__check_htcap_enable(ht_capa, ht_capa_mask, ht_cap,
++			     IEEE80211_HT_CAP_TX_STBC);
++
++	/* Allow user to configure RX STBC bits */
++	if (ht_capa_mask->cap_info & IEEE80211_HT_CAP_RX_STBC)
++		ht_cap->cap |= ht_capa->cap_info & IEEE80211_HT_CAP_RX_STBC;
++
+ 	/* Allow user to decrease AMPDU factor */
+ 	if (ht_capa_mask->ampdu_params_info &
+ 	    IEEE80211_HT_AMPDU_PARM_FACTOR) {
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 87a729926734..1114ee217bd6 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -478,6 +478,8 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
+ 				IEEE80211_HT_CAP_MAX_AMSDU |
+ 				IEEE80211_HT_CAP_SGI_20 |
+ 				IEEE80211_HT_CAP_SGI_40 |
++				IEEE80211_HT_CAP_TX_STBC |
++				IEEE80211_HT_CAP_RX_STBC |
+ 				IEEE80211_HT_CAP_LDPC_CODING |
+ 				IEEE80211_HT_CAP_40MHZ_INTOLERANT),
+ 	.mcs = {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.20.1
 
