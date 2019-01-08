@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC36C43387
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 19:59:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E092AC43387
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 20:10:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A9DB20660
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 19:59:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6C3520660
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 20:10:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1546977555;
-	bh=ut/ZKF3iyuvn9FFdCEt+kJWQ6RFeWjzeCWezC/N+LNo=;
+	s=default; t=1546978248;
+	bh=c/aR64mQpq70LLqGgOeZ/0UuSCwlmMQg4rFdK9J855E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mLuRmZhOM9CjllsAyTz18Iprgomf3HvlU/1bGh+6cKt0Am2yVyxVAm44O9Pbfwqa5
-	 ff2rUR5TtVbbl/5fNy1GZiOA2DeTaZB1Sw0WNMFgFAX71zhPOSEb23p/vccUIRHno/
-	 CmRAIkkLZCLOTX89ZqnjAsdlkYi0otbhguoMuek0=
+	b=Bpjplw6BV6M0DU960nXkOFoA7jVFSt98lxHxzMw/rpl17IbTordQFgWqNV2nsnoDE
+	 kPX+JW3XYGPi630yWDTuj9w2CBEsLWtT1az7zAQdDQH8WOWm6TpgHV4qZtEiDW3vXE
+	 Vwe4lbV0J3nGxPs2LII1SeJU4OR5OMyh13zKdPps=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731135AbfAHT7I (ORCPT
+        id S1729101AbfAHT0p (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Jan 2019 14:59:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36790 "EHLO mail.kernel.org"
+        Tue, 8 Jan 2019 14:26:45 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60706 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730372AbfAHT3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Jan 2019 14:29:24 -0500
+        id S1728984AbfAHT0n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Jan 2019 14:26:43 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 97D5020883;
-        Tue,  8 Jan 2019 19:29:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3C88820827;
+        Tue,  8 Jan 2019 19:26:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1546975763;
-        bh=ut/ZKF3iyuvn9FFdCEt+kJWQ6RFeWjzeCWezC/N+LNo=;
+        s=default; t=1546975603;
+        bh=c/aR64mQpq70LLqGgOeZ/0UuSCwlmMQg4rFdK9J855E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Cg5GwEIkgXyEZGPOlJHQ308OTV/zveprMIyVQiCJLufwWlzE6va6p+yT8+h1El6wf
-         GPJosHQy+doDOMfkn8oTFuHoD0mvYVnZazxyD5XGp04tGk3zAzwf971nnjgeQC9EzV
-         Z9w0r9/l/gLPUVEERixRZLEl5Ah4uUzfZsrWkf1E=
+        b=GAefuSXI3mzkK+RJxRFcFxgdAA+rZbpNn8mBNQoOmfPNzYPBvLnNy+RdWNtWm8ow3
+         n7ZzlDIYO8LymPpxjPwup0FnRnRWLpyNgoEbCEz3LQBIfMx5kAMaGI3vRJNDuETL0B
+         ZMflOoZDnkSBj3ZOZgaxVJGysYFWAy5m5pX7tmsE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zhi Chen <zhichen@codeaurora.org>,
+Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.20 105/117] ath10k: fix peer stats null pointer dereference
-Date:   Tue,  8 Jan 2019 14:26:13 -0500
-Message-Id: <20190108192628.121270-105-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 006/117] qtnfmac: fix error handling in control path
+Date:   Tue,  8 Jan 2019 14:24:34 -0500
+Message-Id: <20190108192628.121270-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190108192628.121270-1-sashal@kernel.org>
 References: <20190108192628.121270-1-sashal@kernel.org>
@@ -59,85 +59,119 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zhi Chen <zhichen@codeaurora.org>
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-[ Upstream commit 2d3b55853b123c177037cf534c5aaa2650310094 ]
+[ Upstream commit 1066bd193d681bda0fbacda9df351241a5ee04d9 ]
 
-There was a race condition in SMP that an ath10k_peer was created but its
-member sta was null. Following are procedures of ath10k_peer creation and
-member sta access in peer statistics path.
+This patch fixes the following warnings:
 
-    1. Peer creation:
-        ath10k_peer_create()
-            =>ath10k_wmi_peer_create()
-                =>ath10k_wait_for_peer_created()
-                ...
+- smatch
+drivers/net/wireless/quantenna/qtnfmac/commands.c:132 qtnf_cmd_send_with_reply() warn: variable dereferenced before check 'resp' (see line 117)
+drivers/net/wireless/quantenna/qtnfmac/commands.c:716  qtnf_cmd_get_sta_info() error: uninitialized symbol 'var_resp_len'.
+drivers/net/wireless/quantenna/qtnfmac/commands.c:1668 qtnf_cmd_get_mac_info() error: uninitialized symbol 'var_data_len'.
+drivers/net/wireless/quantenna/qtnfmac/commands.c:1697 qtnf_cmd_get_hw_info() error: uninitialized symbol 'info_len'.
+drivers/net/wireless/quantenna/qtnfmac/commands.c:1753 qtnf_cmd_band_info_get() error: uninitialized symbol 'info_len'.
+drivers/net/wireless/quantenna/qtnfmac/commands.c:1782 qtnf_cmd_send_get_phy_params() error: uninitialized symbol 'response_size'.
+drivers/net/wireless/quantenna/qtnfmac/commands.c:2438 qtnf_cmd_get_chan_stats() error: uninitialized symbol 'var_data_len'.
 
-        # another kernel path, RX from firmware
-        ath10k_htt_t2h_msg_handler()
-        =>ath10k_peer_map_event()
-                =>wake_up()
-                # ar->peer_map[id] = peer //add peer to map
+- gcc-8.2.1
+drivers/net/wireless/quantenna/qtnfmac/commands.c: In function 'qtnf_cmd_send_with_reply':
+drivers/net/wireless/quantenna/qtnfmac/commands.c:133:54: error: 'resp' may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-        #wake up original path from waiting
-                ...
-                # peer->sta = sta //sta assignment
-
-    2.  RX path of statistics
-        ath10k_htt_t2h_msg_handler()
-            =>ath10k_update_per_peer_tx_stats()
-                =>ath10k_htt_fetch_peer_stats()
-                # peer->sta //sta accessing
-
-Any access of peer->sta after peer was added to peer_map but before sta was
-assigned could cause a null pointer issue. And because these two steps are
-asynchronous, no proper lock can protect them. So both peer and sta need to
-be checked before access.
-
-Tested: QCA9984 with firmware ver 10.4-3.9.0.1-00005
-Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reported-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 2 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c      | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ .../net/wireless/quantenna/qtnfmac/commands.c | 21 ++++++++++++-------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index b09cdc699c69..38afbbd9fb44 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -71,7 +71,7 @@ void ath10k_sta_update_rx_tid_stats_ampdu(struct ath10k *ar, u16 peer_id, u8 tid
- 	spin_lock_bh(&ar->data_lock);
- 
- 	peer = ath10k_peer_find_by_id(ar, peer_id);
--	if (!peer)
-+	if (!peer || !peer->sta)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index bfdc1ad30c13..659e7649fe22 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -84,7 +84,7 @@ static int qtnf_cmd_send_with_reply(struct qtnf_bus *bus,
+ 				    size_t *var_resp_size)
+ {
+ 	struct qlink_cmd *cmd;
+-	const struct qlink_resp *resp;
++	struct qlink_resp *resp = NULL;
+ 	struct sk_buff *resp_skb = NULL;
+ 	u16 cmd_id;
+ 	u8 mac_id;
+@@ -113,7 +113,12 @@ static int qtnf_cmd_send_with_reply(struct qtnf_bus *bus,
+ 	if (ret)
  		goto out;
  
- 	arsta = (struct ath10k_sta *)peer->sta->drv_priv;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index ffec98f7be50..2c2761d04d01 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2832,7 +2832,7 @@ static void ath10k_htt_fetch_peer_stats(struct ath10k *ar,
- 	rcu_read_lock();
- 	spin_lock_bh(&ar->data_lock);
- 	peer = ath10k_peer_find_by_id(ar, peer_id);
--	if (!peer) {
-+	if (!peer || !peer->sta) {
- 		ath10k_warn(ar, "Invalid peer id %d peer stats buffer\n",
- 			    peer_id);
- 		goto out;
-@@ -2885,7 +2885,7 @@ static void ath10k_fetch_10_2_tx_stats(struct ath10k *ar, u8 *data)
- 	rcu_read_lock();
- 	spin_lock_bh(&ar->data_lock);
- 	peer = ath10k_peer_find_by_id(ar, peer_id);
--	if (!peer) {
-+	if (!peer || !peer->sta) {
- 		ath10k_warn(ar, "Invalid peer id %d in peer stats buffer\n",
- 			    peer_id);
- 		goto out;
+-	resp = (const struct qlink_resp *)resp_skb->data;
++	if (WARN_ON(!resp_skb || !resp_skb->data)) {
++		ret = -EFAULT;
++		goto out;
++	}
++
++	resp = (struct qlink_resp *)resp_skb->data;
+ 	ret = qtnf_cmd_check_reply_header(resp, cmd_id, mac_id, vif_id,
+ 					  const_resp_size);
+ 	if (ret)
+@@ -686,7 +691,7 @@ int qtnf_cmd_get_sta_info(struct qtnf_vif *vif, const u8 *sta_mac,
+ 	struct sk_buff *cmd_skb, *resp_skb = NULL;
+ 	struct qlink_cmd_get_sta_info *cmd;
+ 	const struct qlink_resp_get_sta_info *resp;
+-	size_t var_resp_len;
++	size_t var_resp_len = 0;
+ 	int ret = 0;
+ 
+ 	cmd_skb = qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
+@@ -1650,7 +1655,7 @@ int qtnf_cmd_get_mac_info(struct qtnf_wmac *mac)
+ {
+ 	struct sk_buff *cmd_skb, *resp_skb = NULL;
+ 	const struct qlink_resp_get_mac_info *resp;
+-	size_t var_data_len;
++	size_t var_data_len = 0;
+ 	int ret = 0;
+ 
+ 	cmd_skb = qtnf_cmd_alloc_new_cmdskb(mac->macid, QLINK_VIFID_RSVD,
+@@ -1680,8 +1685,8 @@ int qtnf_cmd_get_hw_info(struct qtnf_bus *bus)
+ {
+ 	struct sk_buff *cmd_skb, *resp_skb = NULL;
+ 	const struct qlink_resp_get_hw_info *resp;
++	size_t info_len = 0;
+ 	int ret = 0;
+-	size_t info_len;
+ 
+ 	cmd_skb = qtnf_cmd_alloc_new_cmdskb(QLINK_MACID_RSVD, QLINK_VIFID_RSVD,
+ 					    QLINK_CMD_GET_HW_INFO,
+@@ -1709,9 +1714,9 @@ int qtnf_cmd_band_info_get(struct qtnf_wmac *mac,
+ 			   struct ieee80211_supported_band *band)
+ {
+ 	struct sk_buff *cmd_skb, *resp_skb = NULL;
+-	size_t info_len;
+ 	struct qlink_cmd_band_info_get *cmd;
+ 	struct qlink_resp_band_info_get *resp;
++	size_t info_len = 0;
+ 	int ret = 0;
+ 	u8 qband;
+ 
+@@ -1764,8 +1769,8 @@ int qtnf_cmd_band_info_get(struct qtnf_wmac *mac,
+ int qtnf_cmd_send_get_phy_params(struct qtnf_wmac *mac)
+ {
+ 	struct sk_buff *cmd_skb, *resp_skb = NULL;
+-	size_t response_size;
+ 	struct qlink_resp_phy_params *resp;
++	size_t response_size = 0;
+ 	int ret = 0;
+ 
+ 	cmd_skb = qtnf_cmd_alloc_new_cmdskb(mac->macid, 0,
+@@ -2431,7 +2436,7 @@ int qtnf_cmd_get_chan_stats(struct qtnf_wmac *mac, u16 channel,
+ 	struct sk_buff *cmd_skb, *resp_skb = NULL;
+ 	struct qlink_cmd_get_chan_stats *cmd;
+ 	struct qlink_resp_get_chan_stats *resp;
+-	size_t var_data_len;
++	size_t var_data_len = 0;
+ 	int ret = 0;
+ 
+ 	cmd_skb = qtnf_cmd_alloc_new_cmdskb(mac->macid, QLINK_VIFID_RSVD,
 -- 
 2.19.1
 
