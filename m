@@ -4,52 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B9FBC43387
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 19:49:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC36C43387
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 19:59:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A19D206BB
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 19:49:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A9DB20660
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 19:59:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1546976960;
-	bh=s80+TM7Zp05Thqqk2scP3D5sUnOctuZ8xcKcy+3+2bI=;
+	s=default; t=1546977555;
+	bh=ut/ZKF3iyuvn9FFdCEt+kJWQ6RFeWjzeCWezC/N+LNo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=uG/V4GNR0ibXJAMik2Hki45uc6EciUdkDD6dkDt/s81FZw0G5FBljwf+HjSbKbzG6
-	 El12+1GQTkajyu1rekBZ9uhklJmRQ6tuZ2VKF2Ml34CY62Sh7XS3ILsa6yst9OSyJU
-	 LMxdkS6GclO+HcH/gaoxWRqsO0xaF0eMAXomrWQM=
+	b=mLuRmZhOM9CjllsAyTz18Iprgomf3HvlU/1bGh+6cKt0Am2yVyxVAm44O9Pbfwqa5
+	 ff2rUR5TtVbbl/5fNy1GZiOA2DeTaZB1Sw0WNMFgFAX71zhPOSEb23p/vccUIRHno/
+	 CmRAIkkLZCLOTX89ZqnjAsdlkYi0otbhguoMuek0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732792AbfAHTtM (ORCPT
+        id S1731135AbfAHT7I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Jan 2019 14:49:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40470 "EHLO mail.kernel.org"
+        Tue, 8 Jan 2019 14:59:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36790 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731277AbfAHTcH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Jan 2019 14:32:07 -0500
+        id S1730372AbfAHT3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Jan 2019 14:29:24 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C3A9320665;
-        Tue,  8 Jan 2019 19:32:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 97D5020883;
+        Tue,  8 Jan 2019 19:29:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1546975926;
-        bh=s80+TM7Zp05Thqqk2scP3D5sUnOctuZ8xcKcy+3+2bI=;
+        s=default; t=1546975763;
+        bh=ut/ZKF3iyuvn9FFdCEt+kJWQ6RFeWjzeCWezC/N+LNo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RKvVHGyF8TrlzaMHFOknGfYKLi/WqSxhmRRv6PJ7YOMJep3iIOg3fbIiClrYnVnkf
-         2q8C5zCDTMEtEgaY0obZZVNXvBbUshBWRw+0Mkta2s+nPr3hUggE9PhdXORZJjnVLo
-         IbCsxeoJAHFCAQBn/tG13jIoQJLtR2F/bo6kKuaM=
+        b=Cg5GwEIkgXyEZGPOlJHQ308OTV/zveprMIyVQiCJLufwWlzE6va6p+yT8+h1El6wf
+         GPJosHQy+doDOMfkn8oTFuHoD0mvYVnZazxyD5XGp04tGk3zAzwf971nnjgeQC9EzV
+         Z9w0r9/l/gLPUVEERixRZLEl5Ah4uUzfZsrWkf1E=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Zhi Chen <zhichen@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 89/97] ath10k: fix peer stats null pointer dereference
-Date:   Tue,  8 Jan 2019 14:29:38 -0500
-Message-Id: <20190108192949.122407-89-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 105/117] ath10k: fix peer stats null pointer dereference
+Date:   Tue,  8 Jan 2019 14:26:13 -0500
+Message-Id: <20190108192628.121270-105-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190108192949.122407-1-sashal@kernel.org>
-References: <20190108192949.122407-1-sashal@kernel.org>
+In-Reply-To: <20190108192628.121270-1-sashal@kernel.org>
+References: <20190108192628.121270-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -103,7 +104,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index a63c97e2c50c..6f10331e986b 100644
+index b09cdc699c69..38afbbd9fb44 100644
 --- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
 +++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
 @@ -71,7 +71,7 @@ void ath10k_sta_update_rx_tid_stats_ampdu(struct ath10k *ar, u16 peer_id, u8 tid
@@ -116,10 +117,10 @@ index a63c97e2c50c..6f10331e986b 100644
  
  	arsta = (struct ath10k_sta *)peer->sta->drv_priv;
 diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 4d1cd90d6d27..03d4cc6f35bc 100644
+index ffec98f7be50..2c2761d04d01 100644
 --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
 +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2589,7 +2589,7 @@ static void ath10k_htt_fetch_peer_stats(struct ath10k *ar,
+@@ -2832,7 +2832,7 @@ static void ath10k_htt_fetch_peer_stats(struct ath10k *ar,
  	rcu_read_lock();
  	spin_lock_bh(&ar->data_lock);
  	peer = ath10k_peer_find_by_id(ar, peer_id);
@@ -128,7 +129,7 @@ index 4d1cd90d6d27..03d4cc6f35bc 100644
  		ath10k_warn(ar, "Invalid peer id %d peer stats buffer\n",
  			    peer_id);
  		goto out;
-@@ -2642,7 +2642,7 @@ static void ath10k_fetch_10_2_tx_stats(struct ath10k *ar, u8 *data)
+@@ -2885,7 +2885,7 @@ static void ath10k_fetch_10_2_tx_stats(struct ath10k *ar, u8 *data)
  	rcu_read_lock();
  	spin_lock_bh(&ar->data_lock);
  	peer = ath10k_peer_find_by_id(ar, peer_id);
