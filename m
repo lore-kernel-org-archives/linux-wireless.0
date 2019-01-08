@@ -2,128 +2,179 @@ Return-Path: <SRS0=f1+T=PQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03296C43387
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 22:50:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F52C43387
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 23:27:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD33E214C6
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 22:50:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F36C120665
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jan 2019 23:27:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="deFxIWJN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730281AbfAHWuO convert rfc822-to-8bit (ORCPT
+        id S1728913AbfAHX1B (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Jan 2019 17:50:14 -0500
-Received: from mail-oln040092072090.outbound.protection.outlook.com ([40.92.72.90]:6338
-        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729328AbfAHWuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Jan 2019 17:50:14 -0500
-Received: from AM5EUR03FT023.eop-EUR03.prod.protection.outlook.com
- (10.152.16.57) by AM5EUR03HT201.eop-EUR03.prod.protection.outlook.com
- (10.152.17.252) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1382.18; Tue, 8 Jan
- 2019 22:50:11 +0000
-Received: from AM6PR07MB5608.eurprd07.prod.outlook.com (10.152.16.52) by
- AM5EUR03FT023.mail.protection.outlook.com (10.152.16.169) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1382.18 via Frontend Transport; Tue, 8 Jan 2019 22:50:11 +0000
-Received: from AM6PR07MB5608.eurprd07.prod.outlook.com
- ([fe80::68b1:73c3:455d:de2a]) by AM6PR07MB5608.eurprd07.prod.outlook.com
- ([fe80::68b1:73c3:455d:de2a%2]) with mapi id 15.20.1516.010; Tue, 8 Jan 2019
- 22:50:10 +0000
-From:   Bernd Edlinger <bernd.edlinger@hotmail.de>
-To:     Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH v4 4/4] rtlwifi: Don't clear num_rx_inperiod too early
-Thread-Topic: [PATCH v4 4/4] rtlwifi: Don't clear num_rx_inperiod too early
-Thread-Index: AQHUp6SC8r1w83ZuyUSZa/fZVTIQLw==
-Date:   Tue, 8 Jan 2019 22:50:09 +0000
-Message-ID: <AM6PR07MB56088926A38CC1188EBCB56EE48A0@AM6PR07MB5608.eurprd07.prod.outlook.com>
-Accept-Language: en-US, en-GB, de-DE
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: AM6PR0202CA0044.eurprd02.prod.outlook.com
- (2603:10a6:20b:3a::21) To AM6PR07MB5608.eurprd07.prod.outlook.com
- (2603:10a6:20b:6f::21)
-x-incomingtopheadermarker: OriginalChecksum:F87B65D8440940669ABD98019F1F40C3C9AA84B70A8C575266543B5B9B8D58AD;UpperCasedChecksum:7BF64386373019B204CA359039A02BCAA850BAC3FE8A0156804CB61DBF796372;SizeAsReceived:8799;Count:62
-x-ms-exchange-messagesentrepresentingtype: 1
-x-tmn:  [YdZb3YgA7+wtqWGa8Ch/4KNZo50jDcQR]
-x-microsoft-original-message-id: <1e89861e-c921-9100-7d5a-224ed33207ca@hotmail.de>
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM5EUR03HT201;6:3Gn7zrFaNX5gCfLYDHPyzA9zDENvf8GPTHOfbBpDyx7wvt/zXXpSuHVIIBlPdpkC+9WQpYQWuJTfIR+ohUfage3pCh5rCvJqr21/GlAd8XXYBEzxEjz0Y/z/xuzkl4YKItgbCSUrXi1uB1RN91X3JRUg+xB6RA5S2xh2n4eN5cYuQ0nmCL3OpLKeRlghOV8R1fb0B6X2q0jFAz9Hx+3fq9F7DTS6JxowkqnVL1iI861KINrPYDJN9T+fJIAtXdpdQCbNhFbu586ZHWeT1pgE088qDa//gTDq1cdK0f/7Cs4ongyFa1OfRG3O7RWPCVxF4iOgefnBWSZgXrSYQ7J79WG3JG1p3acrpi3WnrsOg6ypF6jF6eoq9tALkyzpRGTULx2OZMy6N5yj7I/+MbJSjOhjTkWRx68HUGyfhXKU0b8NlekXfnYrN1t6nUaY5mwtoK2LMtQu5/HjQTKUKxWEpg==;5:mvQcGi4t70sojHyiF5Kl+Oze4IJQtZbbx5E0ns+Ejuti32TJiMz2snsMytB8E0G0Wi3+8BXT7gfHJlvMTrB8QaPKBIpoyFp3ktA26Bb7O2oergqoiELad63JijGtIi6r0feJyyh1I/6FavlJGDCIYOSLYUTUKNlrwyDPUcL07BQ=;7:p6/Y6SAECtam19WXbFdXzyKf5aYGAbUU6QIUcRT6pxzb2Soz0PqROzyB4UuJMojhYBspc37g6OctdmKXdmRsx5r99mTY4ETSBcwhvcLJbraPvQvXQ3FPl8K6slFJsRF+cPnMw+hB9efbQoTxG8do/A==
-x-incomingheadercount: 62
-x-eopattributedmessage: 0
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(20181119063)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:AM5EUR03HT201;
-x-ms-traffictypediagnostic: AM5EUR03HT201:
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(4566010)(82015058);SRVR:AM5EUR03HT201;BCL:0;PCL:0;RULEID:;SRVR:AM5EUR03HT201;
-x-microsoft-antispam-message-info: U3ITlpjxp2S+yx7sBu4VgJ6Zf0V4e96entPbPZIQObvVXKKgCKvRcF3kayxfnAkC
-Content-Type: text/plain; charset="Windows-1252"
-Content-ID: <710DD038E4CCE24DB9CC5DE021EDF983@eurprd07.prod.outlook.com>
-Content-Transfer-Encoding: 8BIT
+        Tue, 8 Jan 2019 18:27:01 -0500
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:43582 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728402AbfAHX1B (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Jan 2019 18:27:01 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=armlinux.org.uk; s=pandora-2014; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=lCtvijgqmKarjbhdMkyDfpv4695DkH1SbLrgnUjJoTM=; b=deFxIWJNK/GuUMkHBg7W/lw53
+        mko/a8Ql+lb1FB1akThIWMmd/+q/j9twsx2xu8zoSW5+eGKHlYUq7Z1Telot8V65Uv3gpd1s+x+jI
+        UUpZCEV5a/yPNTYqQRmwLqB/VIEqjQlpKkCSd9xCHbIhuAl+v7x2wL15NHrsItOyiT4K4=;
+Received: from n2100.armlinux.org.uk ([fd8f:7570:feb6:1:214:fdff:fe10:4f86]:38742)
+        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <linux@armlinux.org.uk>)
+        id 1gh0ln-0004vW-0E; Tue, 08 Jan 2019 23:26:51 +0000
+Received: from linux by n2100.armlinux.org.uk with local (Exim 4.90_1)
+        (envelope-from <linux@n2100.armlinux.org.uk>)
+        id 1gh0lk-0007XP-8A; Tue, 08 Jan 2019 23:26:48 +0000
+Date:   Tue, 8 Jan 2019 23:26:46 +0000
+From:   Russell King - ARM Linux <linux@armlinux.org.uk>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com
+Subject: Re: [REGRESSION] hostapd 2.4..2.7 broken with 4.18+
+Message-ID: <20190108232646.GV11171@n2100.armlinux.org.uk>
+References: <20181224110925.GY26090@n2100.armlinux.org.uk>
+ <CAF7Mx6r_q7H4ioFLoF1eKHrvmtE0xViG__uDNByaNjrGGJWx+Q@mail.gmail.com>
+ <874lajrtkh.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: d4d70346-2c10-4f39-8c00-e767963926d9
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9aedd9d2-d39e-4f44-498f-08d675bba465
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: d4d70346-2c10-4f39-8c00-e767963926d9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jan 2019 22:50:09.3777
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Internet
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5EUR03HT201
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <874lajrtkh.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch moves the clearing of rtlpriv->link_info.num_rx_inperiod in
-rtl_watchdog_wq_callback a few lines down.
+On Tue, Jan 08, 2019 at 06:40:46PM +0200, Kalle Valo wrote:
+> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+> 
+> > Response using Gmail on phone
+> 
+> Unfortunately it had HTML and not sure if it made it to the list, so
+> copying your response in full below just in case. Russell, does the
+> commit below fix your problem?
+> 
+> 861cb5eb467f brcmfmac: Fix access point mode
 
-This is necessary since it is still used in the "AP off" detection
-code block. Moved clearing of rtlpriv->link_info.num_rx_inperiod
-as well for consistency.
+From a quick test this evening, it does seem to allow brcmfmac to work
+with hostapd again, which is good news.
 
-Signed-off-by: Bernd Edlinger <bernd.edlinger@hotmail.de>
----
-v2: Improved patch description.
+However, I've been seeing other issues with the brcmfmac over the course
+of the last week, which needs the brcmfmac module to be removed and
+re-loaded to rescue the situation - ultimately, it means that running
+brcmfmac in host AP mode is unreliable.  This is with 4.19 and my
+patch - we will see how 4.20 with the above mentioned patch behaves over
+the coming week.
 
-v3: Make the title fit in one line.
+[1036107.225569] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1036108.217519] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1043906.813243] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1043907.809184] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1044220.587626] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg failed w/status -110
+[1045006.357728] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+[1049743.889412] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+[1061305.953430] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1061308.641378] brcmfmac: send_key_to_dongle: wsec_key error (-110)
+[1061309.665234] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1061312.993053] brcmfmac: brcmf_cfg80211_change_station: Setting SCB (de-)authorize failed, -110
 
-v4: Try to fix the line endings the message body.
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Then I'd reload the module and reconfigure the networking:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index ef9b502..7aa68fe 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -2172,8 +2172,6 @@ void rtl_watchdog_wq_callback(void *data)
- 		;
- 	}
- 
--	rtlpriv->link_info.num_rx_inperiod = 0;
--	rtlpriv->link_info.num_tx_inperiod = 0;
- 	for (tid = 0; tid <= 7; tid++)
- 		rtlpriv->link_info.tidtx_inperiod[tid] = 0;
- 
-@@ -2236,6 +2234,8 @@ void rtl_watchdog_wq_callback(void *data)
- 			rtlpriv->btcoexist.btc_info.in_4way = false;
- 	}
- 
-+	rtlpriv->link_info.num_rx_inperiod = 0;
-+	rtlpriv->link_info.num_tx_inperiod = 0;
- 	rtlpriv->link_info.bcn_rx_inperiod = 0;
- 
- 	/* <6> scan list */
+[1078473.212335] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[1078473.222473] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[1078473.230066] brcmfmac: brcmf_cfg80211_get_channel: chanspec failed (-5)
+[1078473.423466] brcmfmac: F1 signature read @0x18000000=0x16044330
+[1078473.448873] brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4330-sdio
+for chip BCM4330/4
+[1078473.794979] brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4330-sdio
+for chip BCM4330/4
+[1078473.804750] brcmfmac mmc0:0001:1: Direct firmware load for brcm/brcmfmac4330-sdio.clm_blob failed with error -2
+[1078473.817127] brcmfmac: brcmf_c_process_clm_blob: no clm_blob available (err=-2), device may have limited channels available
+[1078473.831682] brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4330/4 wl0: Oct 25 2011 19:34:12 version 5.90.125.104
+[1078474.107922] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1078474.229331] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1078474.782310] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1078476.471994] brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
+[1078476.478270] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlan0 type 10 failed: err=-5
+[1078476.512507] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1078478.091188] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1078478.139786] netlink: 'wpa_supplicant': attribute type 213 has an invalid length.
+[1078478.349878] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[1078478.837386] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set error : -52
+[1078478.848627] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set error : -52
+[1078478.906905] netlink: 'wpa_supplicant': attribute type 213 has an invalid length.
+[1078484.468666] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set error : -52
+[1078484.479804] brcmfmac: brcmf_vif_set_mgmt_ie: vndr ie set error : -52
+[1078485.038287] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1078485.398249] br0: port 2(wlan0) entered blocking state
+[1078485.403675] br0: port 2(wlan0) entered forwarding state
+[1127330.284075] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+[1133420.775451] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+[1148684.418698] brcmfmac: send_key_to_dongle: wsec_key error (-110)
+
+... reloading again ...
+
+[1163361.156133] br0: port 2(wlan0) entered disabled state
+[1163361.245369] device wlan0 left promiscuous mode
+[1163361.250437] br0: port 2(wlan0) entered disabled state
+[1163361.285328] brcmfmac: brcmf_cfg80211_change_iface: WLC_SET_INFRA error (-5)[1163361.293839] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[1163361.301738] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[1163361.309439] brcmfmac: brcmf_cfg80211_get_channel: chanspec failed (-5)
+[1163361.317291] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[1163361.324788] brcmfmac: brcmf_cfg80211_get_channel: chanspec failed (-5)
+[1163361.333679] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[1163361.341189] brcmfmac: brcmf_cfg80211_get_channel: chanspec failed (-5)
+[1163361.529825] brcmfmac: F1 signature read @0x18000000=0x16044330
+[1163361.547495] brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4330-sdio for chip BCM4330/4
+[1163361.894540] brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4330-sdio for chip BCM4330/4
+[1163361.903540] brcmfmac mmc0:0001:1: Direct firmware load for brcm/brcmfmac4330-sdio.clm_blob failed with error -2
+[1163361.914067] brcmfmac: brcmf_c_process_clm_blob: no clm_blob available (err=-2), device may have limited channels available
+[1163361.930371] brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4330/4 wl0: Oct 25 2011 19:34:12 version 5.90.125.104
+[1163362.173752] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1163362.295305] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1163362.862063] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1163364.576933] brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
+[1163364.583207] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlan0 type 10 failed: err=-5
+[1163365.139274] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[1163365.170973] br0: port 2(wlan0) entered blocking state
+[1163365.176371] br0: port 2(wlan0) entered disabled state
+[1163365.184962] device wlan0 entered promiscuous mode
+[1163365.469716] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[1163365.480003] br0: port 2(wlan0) entered blocking state
+[1163365.485371] br0: port 2(wlan0) entered forwarding state
+[1242693.543254] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg failed w/status -110
+[1242696.102911] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg failed w/status -110
+[1242696.111775] brcmfmac: brcmf_cfg80211_get_station: GET STA INFO failed, -110
+[1331361.789147] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1331362.779876] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1331958.234110] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1332559.191969] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1333160.149868] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1333761.111701] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1334362.065533] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[1334963.023362] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+
+Any thoughts on what would cause this?
+
 -- 
-1.9.1
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 12.1Mbps down 622kbps up
+According to speedtest.net: 11.9Mbps down 500kbps up
