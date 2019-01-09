@@ -2,109 +2,104 @@ Return-Path: <SRS0=9BuQ=PR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02634C43387
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 06:15:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D8C2C43387
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 06:18:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CAB1920821
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 06:15:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B49120821
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 06:18:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=airfi-aero.20150623.gappssmtp.com header.i=@airfi-aero.20150623.gappssmtp.com header.b="YZk3dadt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729673AbfAIGPj (ORCPT
+        id S1729645AbfAIGSM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Jan 2019 01:15:39 -0500
-Received: from mga09.intel.com ([134.134.136.24]:51375 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728469AbfAIGPi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Jan 2019 01:15:38 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 08 Jan 2019 22:15:38 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,456,1539673200"; 
-   d="scan'208";a="124550719"
-Received: from fmsmsx106.amr.corp.intel.com ([10.18.124.204])
-  by orsmga002.jf.intel.com with ESMTP; 08 Jan 2019 22:15:37 -0800
-Received: from bgsmsx151.gar.corp.intel.com (10.224.48.42) by
- FMSMSX106.amr.corp.intel.com (10.18.124.204) with Microsoft SMTP Server (TLS)
- id 14.3.408.0; Tue, 8 Jan 2019 22:15:37 -0800
-Received: from bgsmsx106.gar.corp.intel.com ([169.254.1.41]) by
- BGSMSX151.gar.corp.intel.com ([169.254.3.74]) with mapi id 14.03.0415.000;
- Wed, 9 Jan 2019 11:45:34 +0530
-From:   "Garnayak, Sarada Prasanna" <sarada.prasanna.garnayak@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "Berg, Johannes" <johannes.berg@intel.com>,
-        Jouni Malinen <j@w1.fi>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC PATCH v1] cfg80211/nl80211: add support for AID assignment
- by driver : https://patchwork.kernel.org/patch/10726899/
-Thread-Topic: [RFC PATCH v1] cfg80211/nl80211: add support for AID
- assignment by driver : https://patchwork.kernel.org/patch/10726899/
-Thread-Index: AQHUp3Zo9Qbv3hcn4E20UENUpg1TcqWmdkcQ
-Date:   Wed, 9 Jan 2019 06:15:33 +0000
-Message-ID: <751CDD2CADF63344AAEAE35AACE235DCCD3488@BGSMSX106.gar.corp.intel.com>
-References: <751CDD2CADF63344AAEAE35AACE235DCCC3BCD@BGSMSX106.gar.corp.intel.com>
- <87a7kbqd6s.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87a7kbqd6s.fsf@kamboji.qca.qualcomm.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-titus-metadata-40: eyJDYXRlZ29yeUxhYmVscyI6IiIsIk1ldGFkYXRhIjp7Im5zIjoiaHR0cDpcL1wvd3d3LnRpdHVzLmNvbVwvbnNcL0ludGVsMyIsImlkIjoiMzk3MTI5MDMtN2E0Yi00MDM4LWIxYzktMmUyMmQ5MDlkNDIwIiwicHJvcHMiOlt7Im4iOiJDVFBDbGFzc2lmaWNhdGlvbiIsInZhbHMiOlt7InZhbHVlIjoiQ1RQX05UIn1dfV19LCJTdWJqZWN0TGFiZWxzIjpbXSwiVE1DVmVyc2lvbiI6IjE3LjEwLjE4MDQuNDkiLCJUcnVzdGVkTGFiZWxIYXNoIjoiQW5mVVBTM28zaStpeXY1MlBiUVwvdnE2ZlNEV3NuRlBJbXdac1J0UkhyMkh2Uk15aXprXC9Lb3plVmRneUZET1BMIn0=
-x-ctpclassification: CTP_NT
-dlp-product: dlpe-windows
-dlp-version: 11.0.400.15
-dlp-reaction: no-action
-x-originating-ip: [10.223.10.10]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Wed, 9 Jan 2019 01:18:12 -0500
+Received: from mail-it1-f193.google.com ([209.85.166.193]:54030 "EHLO
+        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729435AbfAIGSM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Jan 2019 01:18:12 -0500
+Received: by mail-it1-f193.google.com with SMTP id g85so10060034ita.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2019 22:18:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=airfi-aero.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EfRUJW/sQQZeWxCGtkwLlqsxFW6XFwgkiKWAWu80dlU=;
+        b=YZk3dadth+FWbtmz02HC5GIdPBvmUTzFGMKCbRbp9tyLTCJCq7QixqMtPv4bM7VEVa
+         JDCTWQIZ2HIsAiFKFkYwfiIAygca0W3dCwaLZAfJGbmVtTBUzOmOC3U+XqkbGYDLn7+n
+         sVnrTAo0AV7QTE72uHXycA2ns5boNfrJ2SxNSVve4yWd1StppvWN95o0UTxV1bEb8JEp
+         IbEZNtCkt7zMQivZZDhpMjItmlDtZnFjz2AqRqg5aJIAnjmEVflbl3F34LM7WeGrTJuB
+         PhXxpXId3fZjfvTR5ojL45o2lhixdfuQlEPF/jkphWJNeaVPeij/9URoMWRIlyMTNh71
+         vkCg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EfRUJW/sQQZeWxCGtkwLlqsxFW6XFwgkiKWAWu80dlU=;
+        b=DwxdTf7SqaOUqJHfQVqwtoZmb8hpaAfQHv+flwhxrmopGQkNLnnCy/+WSOQ65OlCgA
+         8B/HVyEbP0+B+ykhJpbUS5NMkHbNcavbIyMOCNo4i7nS/jxXYbJBs88BnWSOhut9859D
+         B78RX466ZY8Yhkh8vIlCO1BZ6TvdBXbA5Lwd7gXqQIcyevaZEfxxsGSYxeJZKNH756va
+         4FyWTNPL5dq26VjoAxskgCVInlOOwsjWrgrySq23i0P70mzKM+8E0+4T0gh+VDt6nDcY
+         7a2IleGFRKFiwKliepIyI5KFbN9fsob73b25KUh/aWRhIw8LjWonnfG9D9ojRVMsIONq
+         B1NQ==
+X-Gm-Message-State: AJcUukf2UPcJvf8/m38zcc8jgNo7eIEPfS8Ut9OUEE5U+lei/t/AT1dy
+        hs7tHkUlkIf3geKJ4xGlRDtJR9F+5GTap5UMD4AHgA==
+X-Google-Smtp-Source: ALg8bN4xfp3MKVhv8v8KYpVPTKuouC+u0e90NwLT8By/LIwANCaEXuJwZtOx6VQnJcqnsV/5yNp2p9BIKFYNK7lrUio=
+X-Received: by 2002:a24:7094:: with SMTP id f142mr3254494itc.90.1547014690851;
+ Tue, 08 Jan 2019 22:18:10 -0800 (PST)
 MIME-Version: 1.0
+References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
+ <1545318971-28351-2-git-send-email-sgruszka@redhat.com> <CANCHnQoU-PPTotVD-MmCKCjtoVZEx7Nj4+5YGyfYBEKb2+VNdQ@mail.gmail.com>
+ <20190107150912.GA9516@redhat.com> <CANCHnQrkB7U2KHd7v6psFaD3cbR+cWj0PaBhRZ8Nk5B6ne7ECw@mail.gmail.com>
+ <CAKR_QVLY9ryxUebZD_WWw01Wub9Ue=S3u5YGe2CVk+R8uNgjVw@mail.gmail.com>
+In-Reply-To: <CAKR_QVLY9ryxUebZD_WWw01Wub9Ue=S3u5YGe2CVk+R8uNgjVw@mail.gmail.com>
+From:   Jeroen Roovers <jer@airfi.aero>
+Date:   Wed, 9 Jan 2019 07:17:59 +0100
+Message-ID: <CANCHnQqe7Y1=h0An0qNQGPONnN-tZ5vMon=-Uoif0GGY5NmPTg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] rt2x00: check number of EPROTO errors
+To:     Tom Psyborg <pozega.tomislav@gmail.com>
+Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        Randy Oostdyk <linux-kernel@oostdyk.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-TXkgQmFkLCBPbndhcmRzIEkgd2lsbCBzdWJtaXQgYSBuZXcgdmVyc2lvbiBvZiB0aGUgUkZDIHBh
-dGNoIHRvIGFkZHJlc3MgdGhlIHJldmlld2VyIGNvbW1lbnRzIG9uIHByZXZpb3VzIFJGQyBwYXRj
-aCBhbmQgZm9yIHF1ZXJ5IG9yIHN1Z2dlc3Rpb25zLCBJIHdpbGwgZGVmaW5pdGVseSBjYyBMaW51
-eC13aXJlbGVzcyBpbiBteSBtYWlsIHdpdGhvdXQgYW55IGV4dGVybmFsIGxpbmsgb3IgYXR0YWNo
-bWVudC4NCg0KVGhhbmtzLA0KUHJhc2FubmENCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0N
-CkZyb206IEthbGxlIFZhbG8gW21haWx0bzprdmFsb0Bjb2RlYXVyb3JhLm9yZ10gDQpTZW50OiBU
-dWVzZGF5LCBKYW51YXJ5IDgsIDIwMTkgMTA6NTAgUE0NClRvOiBHYXJuYXlhaywgU2FyYWRhIFBy
-YXNhbm5hIDxzYXJhZGEucHJhc2FubmEuZ2FybmF5YWtAaW50ZWwuY29tPg0KQ2M6IEJlcmcsIEpv
-aGFubmVzIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT47IEpvdW5pIE1hbGluZW4gPGpAdzEuZmk+
-OyBTZXJnZXkgTWF0eXVrZXZpY2ggPHNlcmdleS5tYXR5dWtldmljaC5vc0BxdWFudGVubmEuY29t
-PjsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
-ZWwub3JnDQpTdWJqZWN0OiBSZTogW1JGQyBQQVRDSCB2MV0gY2ZnODAyMTEvbmw4MDIxMTogYWRk
-IHN1cHBvcnQgZm9yIEFJRCBhc3NpZ25tZW50IGJ5IGRyaXZlciA6IGh0dHBzOi8vcGF0Y2h3b3Jr
-Lmtlcm5lbC5vcmcvcGF0Y2gvMTA3MjY4OTkvDQoNCisgbGludXgtd2lyZWxlc3MNCg0KIkdhcm5h
-eWFrLCBTYXJhZGEgUHJhc2FubmEiIDxzYXJhZGEucHJhc2FubmEuZ2FybmF5YWtAaW50ZWwuY29t
-PiB3cml0ZXM6DQoNCj4gVGhhbmsgeW91IHNvIG11Y2ggZm9yIHJldmlld2luZyBteSBSRkMgcGF0
-Y2ggYW5kIGhlcmUgSSB3b3VsZCBsaWtlIHRvIA0KPiBhZGRyZXNzIHRoZSBiaWcgY29uY2VybnMv
-Y29tbWVudHMgYWJvdXQgdGhpcyBSRkMgcGF0Y2ggbGlrZQ0KPg0KPiDDmCBXaGF0IGFyZSB0aGUg
-ZXhhY3QgdXNlIGNhc2UgYW5kIHBvdGVudGlhbCB1c2VyIG9mIHRoaXMgcGF0Y2guDQo+DQo+IMOY
-IEhvdyB0aGUgSG9zdGFwZCB3aWxsIGhhbmRsZSB0aGlzIGdldCBhaWQgYW5kIGZyZWUgYWlkLg0K
-Pg0KPiDDmCBldGMuDQo+DQo+IEluIHRoZSBjdXJyZW50IGltcGxlbWVudGF0aW9uIGluIFdMQU4g
-U3RhY2ssIHRoZSBob3N0YXBkIGlzIGFzc2lnbmluZyANCj4gdGhlIEFJRCBmb3IgYSBzdGF0aW9u
-IGR1cmluZyBhc3NvY2lhdGlvbi4NCj4NCj4gQnV0IHdlIGhhdmUgYSBmZXcgV0xBTiBoYXJkd2Fy
-ZSB3aGljaCBpcyBtYWludGFpbmluZyB0aGUgQUlEIGluIHRoZSANCj4gV0xBTiBoYXJkd2FyZSBs
-ZXZlbCBpdHNlbGYgYW5kIHRoZSBmaXJtd2FyZSBjaGVja2luZyB0aGlzIEFJRCBpbiB0aGUgDQo+
-IGhhcmR3YXJlIGxldmVsIGFjY29yZGluZyB0byB0aGF0IHRoZSBmaXJtd2FyZSBpcyB0YWtpbmcg
-YWN0aW9uIG9uIA0KPiBzdGF0aW9uIG1hbmFnZW1lbnQNCj4NCj4gbGlrZSAoU3RhdGlvbiBEQiBt
-YW5hZ2VtZW50LCBCQSBhZ3JlZW1lbnQsIFNNUFMgYW5kIFRNIG1hbmFnZW1lbnQgDQo+IGZyYW1l
-IGV0Yy4uLi4pLiBGb3IgdGhpcyByZWFzb24sIHdlIG5lZWQgdGhlc2UgZ2V0X2FpZC9mcmVlX2Fp
-ZC4NCj4NCj4gQWxzbyBoZXJlIEkgYW0gYXR0YWNoaW5nIHRoZSBIb3N0YXBkIFJGQyBQYXRjaCBm
-b3IgdGhlIHNhbWUuIFBGQSANCj4gKGhvc3RhcGQgcGF0Y2gsIGNhbGwgZmxvdyBkaWFncmFtIGFu
-ZCBjb21tZW50cyBvbiB0aGlzIGtlcm5lbCBwYXRjaCkNCj4NCj4gUGxlYXNlIHJldmlldyB0aGUg
-Y2FsbCBmbG93IGJlbG93Og0KDQpZb3UgbWFkZSBmZXcgY3J1Y2lhbCBtaXN0YWtlczoNCg0KMS4g
-WW91IGRpZCBub3QgQ0MgbGludXgtd2lyZWxlc3MuDQoNCjIuIFlvdSBzdWJtaXR0ZWQgdGhlIG1l
-c3NhZ2UgYXMgSFRNTCBhbmQgb3VyIGxpc3RzIGF1dG9tYXRpY2FsbHkgZmlsdGVyDQogICB0aG9z
-ZS4NCg0KMy4gWW91IGF0dGFjaGVkIGEgcG93ZXJwb2ludCBmaWxlIGFuZCBJIHdvdWxkIGhvcGUg
-dGhhdCBvdXIgbGlzdHMNCiAgIGF1dG9tYXRpY2FsbHkgZmlsdGVyIHRob3NlIGFzIHdlbGwuIEF0
-IGxlYXN0IEknbSBub3QgZ29pbmcgdG8gb3Blbg0KICAgYW55IHJhbmRvbSBwb3dlcnBvaW50L3dv
-cmQgZmlsZXMgSSByZWNlaXZlIHZpYSBlbWFpbC4NCg0KLS0NCkthbGxlIFZhbG8NCg==
+     Hi Tom,
+
+On Tue, 8 Jan 2019 at 12:04, Tom Psyborg <pozega.tomislav@gmail.com> wrote:
+> > rt2x00usb_vendor_request: Error - Vendor Request X failed for offset X
+> > with error -110
+> > [many of these, system is slowly locking up]
+> >
+> > So the only clue that I had was that perhaps rt2x00usb_vendor_request
+> > wasn't catching the correct return value.
+>
+> Hi
+>
+> error message vendor request failed - do you get it on a real hardware
+> or in virtualized environment?
+
+I only run these on bare metal. What I assume so far is that when
+rt2x00usb_vendor_request starts failing like this, the MCU has failed.
+Power cycling the system helps but is undesirable, and sometimes so
+does a forced removal of rt2800usb, a short recovery period (cooling
+down, reloading the firmware?) and then loading the module again.
+
+But the problem I am looking to solve is not a hardware problem, it is
+recovering gracefully from a failure in the RT5592, so I have been
+looking intently at rt2x00usb_vendor_request because that's the
+function that complains loudly and kills the entire kernel when the
+RT5592 sees this failure.
+
+
+Kind regards,
+     jer
