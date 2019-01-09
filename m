@@ -2,106 +2,134 @@ Return-Path: <SRS0=9BuQ=PR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8FC0C43387
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 02:46:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A0FCC43387
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 06:01:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF2F5206BB
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 02:46:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DE4D20883
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 06:01:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E1keLfNq"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="oenJmHPC";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="AOWn7/zI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729467AbfAICqG (ORCPT
+        id S1729435AbfAIGB0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Jan 2019 21:46:06 -0500
-Received: from mail-ua1-f65.google.com ([209.85.222.65]:37070 "EHLO
-        mail-ua1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728835AbfAICqG (ORCPT
+        Wed, 9 Jan 2019 01:01:26 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39682 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728469AbfAIGBZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Jan 2019 21:46:06 -0500
-Received: by mail-ua1-f65.google.com with SMTP id u19so1954098uae.4
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2019 18:46:05 -0800 (PST)
+        Wed, 9 Jan 2019 01:01:25 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x095tJfd029641;
+        Tue, 8 Jan 2019 22:01:23 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : content-type : content-transfer-encoding :
+ mime-version; s=pfpt0818; bh=hnjY9TI7DhHn6Ml8aNQh2j3FZ5ADwdLrIhRkycJFaNY=;
+ b=oenJmHPCDno6h6c9VjrAqpxRtAyMXsTefB8I3Mx/sf3NrFbs8o/s3mP2jEN2G4T+VX3E
+ LlZrPavNC5/2QYCZE2c30hdXWM/u945zprTFqyqZ+uCz0Df8XhbH+SJh1VwcPYUtbldK
+ x1ZFDHl98lq8/DSSbRmQw4bO/kkMvfkXwA7l1GnJWfL8G2OzBQ78i2rRLue724Bwh8Bk
+ TCIbd1c72j6qrgln7gr/PU52y1fCERqnRf5P7fWpeFB0lKSIIJRTctuh8/efF9GNWdZ2
+ 81pz/WIbBcTjnMDVroiSwE0nzL9K0vfp/YJlon7AEtppi8KYF2mOM6tTMQ4RydbaNXFk RQ== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2pw18faaq3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Tue, 08 Jan 2019 22:01:23 -0800
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Tue, 8 Jan
+ 2019 22:01:21 -0800
+Received: from NAM02-CY1-obe.outbound.protection.outlook.com (104.47.37.54) by
+ SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Tue, 8 Jan 2019 22:01:21 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Xy5tEKEZ3q3F7p+qYGG9RFs3LWVdZr0zuNxD/LsVKbQ=;
-        b=E1keLfNqCAf6UKANgJckZiKcm73TqxOJoDv+Ogino8JFRrIMv4GASl7uxLH5YUKqOj
-         wt2qlo1kMinLCkApPENj9Z1FvLXSH0NfpI3N5Q5iXlozgRYWoLbDvcUfF6n+ce1+UTBc
-         dMjQKk9o179vEUwTVtQucrcy2UMg50AObq66gfvsRiNB7F3B9nUNagk3Gc63FIhE2OkY
-         Twtokaz8nS6azzgPNIx4Daj+hxYQBQ0Zx5WxkzQwxPFlF2E5OYkyMFaewJiBukYDlcB/
-         bHd3P+ZLBKHMXkzZDUn+lRe/NiZiv131imXoFI85T0+SZa6yjBlnp78rSsTrYMeZ6BnD
-         wcCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Xy5tEKEZ3q3F7p+qYGG9RFs3LWVdZr0zuNxD/LsVKbQ=;
-        b=RImJcIw8kqbEwvi2DkpZbi4sLO3YShlLSYzEKpXXLl09wxlWeeFuF/SciVsQmTnsJa
-         FqNphr+hBofsgLUisLFXao8RTs3b15y7aQSBvDvUL+yiwH2XyNgeT30/ZQM9CgsDsKGH
-         vYy+Ry7icvCSItjer1jHI/IHtq0OJHDysSHfvWBPcyQ18ozKFhGKOJk2IKD7GKCyC/ea
-         0uNtExBsx+/kNBLoCX8cCa62+0Hx0ZXoif8w0+SIOdVIJXVyDu7zkhjJxNMq4YaikTV5
-         15V+QagujSwee5oe9x+3VceDXc10j7DWdkNLCxHD+BO3ZVJNFUE/+NSPn2rxSw57mSa6
-         i95g==
-X-Gm-Message-State: AJcUukcfvxnm6WEl3Re+le2QmWtzmmFni/PJsRvZCq+aSHsIsqszKsBK
-        dnSNh5T2/Jj8t/ET/gTuO0AjvAezJBjySuuVf84=
-X-Google-Smtp-Source: ALg8bN4QJDEO5oHF3cNrz38YVyATln3ULktQ1+zgK6KFgeaIBwF7E4Y6bT25H10FudV1eoQjMmPPriz0Uc54RYKVgyQ=
-X-Received: by 2002:ab0:4a16:: with SMTP id q22mr1485665uae.1.1547001965153;
- Tue, 08 Jan 2019 18:46:05 -0800 (PST)
+ d=marvell.onmicrosoft.com; s=selector1-marvell-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hnjY9TI7DhHn6Ml8aNQh2j3FZ5ADwdLrIhRkycJFaNY=;
+ b=AOWn7/zIAmu6SQdHVVYLQDWtM/gszAhrmU8NcfVJEtmoMGOtivy8UpIOn1L/0grSGb4wDaG1l6Kjd+8uPXMyNAcoOR7RlmBjrLQVF0YXVbmtLEZ9HpgYITkngCbh9dPQ878HWpbChG+r9hao4QWv5xSPHk7Br0wAjTZbFVJu4mU=
+Received: from CY4PR18MB1237.namprd18.prod.outlook.com (10.172.176.7) by
+ CY4PR18MB1079.namprd18.prod.outlook.com (10.173.183.146) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1495.6; Wed, 9 Jan 2019 06:01:19 +0000
+Received: from CY4PR18MB1237.namprd18.prod.outlook.com
+ ([fe80::95d4:8a68:81d7:87c5]) by CY4PR18MB1237.namprd18.prod.outlook.com
+ ([fe80::95d4:8a68:81d7:87c5%8]) with mapi id 15.20.1495.011; Wed, 9 Jan 2019
+ 06:01:19 +0000
+From:   Ganapathi Bhat <gbhat@marvell.com>
+To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Rakesh Parmar <rakeshp@marvell.com>,
+        "Prashanth Ranganathan" <rprashk@marvell.com>
+Subject: pull-request mwifiex-firmware 2019-01-09
+Thread-Topic: pull-request mwifiex-firmware 2019-01-09
+Thread-Index: AQHUp+CHiD53/295pky40UO21SCJRQ==
+Date:   Wed, 9 Jan 2019 06:01:18 +0000
+Message-ID: <CY4PR18MB1237DC08CFA9B2B0A0368AEAA08B0@CY4PR18MB1237.namprd18.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [182.72.17.59]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;CY4PR18MB1079;20:wNWxUFxKt7aUsUXvJWGIYz0wxKyhOyLKMFTWZYmG0Q52caA3YtZF6zq3qho4sDV2ZqqkiIfID6HhgqU7Gcj5H33YEI7MfTtkSJzl/2Z8krAnmZeHNxwo+egXskkkAlB+S5Hoor8gQ6Z4sgwkC/BLQVTHs8UL49Xb7y2ww45d0BE=
+x-ms-exchange-antispam-srfa-diagnostics: SOS;SOR;
+x-forefront-antispam-report: SFV:SKI;SCL:-1;SFV:NSPM;SFS:(10009020)(396003)(39850400004)(346002)(136003)(376002)(366004)(199004)(189003)(14444005)(256004)(68736007)(106356001)(66066001)(478600001)(86362001)(33656002)(486006)(25786009)(3846002)(4326008)(14454004)(6116002)(105586002)(78486014)(71190400001)(71200400001)(107886003)(53936002)(7696005)(6916009)(5660300001)(305945005)(7736002)(99286004)(102836004)(81166006)(8936002)(81156014)(6506007)(8676002)(55236004)(316002)(26005)(2501003)(54906003)(5640700003)(2351001)(186003)(6436002)(476003)(74316002)(2906002)(55016002)(9686003)(97736004);DIR:OUT;SFP:1101;SCL:1;SRVR:CY4PR18MB1079;H:CY4PR18MB1237.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-office365-filtering-correlation-id: c8efb040-8792-4074-c681-08d675f7dfb4
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(2017052603328)(7153060)(7193020);SRVR:CY4PR18MB1079;
+x-ms-traffictypediagnostic: CY4PR18MB1079:
+x-microsoft-antispam-prvs: <CY4PR18MB1079C0361853E5DBBA2AB6AEA08B0@CY4PR18MB1079.namprd18.prod.outlook.com>
+x-forefront-prvs: 0912297777
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: AC/YJ+js08o6e+A4+KkQd8urEgnSb0o4Tjr/MUrEa1jDVFEMhDqHFHoXKcqYaaCU0xEJGaMU7XVtKQKIcQ1m+3ma172e9LMlKw8srnUaVkUrLd/GnGSlb+7xwQmXkzAEWBgAwH6Y5ndLykshD2h8K1kvqri9bBvbI3DDW4Qs2ju70iAK9RbQ6TCEJzzYYxtsvI41/Rz7GDSYA4KPAK6cSUW7vJXCGyRP6ZbXpY0oZqzFLYXshmumGLuTpjUWM5Yc28PqckYzw8AL1lOZtZn3YwYiCkUCz1MhEiNuoKGnYIDpaULW1hoUIgwcnnCNqN5U
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <1545902778-20205-1-git-send-email-siva8118@gmail.com> <87muobqeco.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87muobqeco.fsf@kamboji.qca.qualcomm.com>
-From:   Siva Rebbagondla <siva8118@gmail.com>
-Date:   Wed, 9 Jan 2019 08:15:47 +0530
-Message-ID: <CANGSkXTuHK8uzOOjOTHo_Gkvk8f2ndD=1hEQw4ZUGD0kVSs81g@mail.gmail.com>
-Subject: Re: [v4] rsi: add support for hardware scan offload
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Linux Wireless <linux-wireless@vger.kernel.org>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        rishikesh.basu@redpinesignals.com,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+X-MS-Exchange-CrossTenant-Network-Message-Id: c8efb040-8792-4074-c681-08d675f7dfb4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2019 06:01:18.9461
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR18MB1079
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-01-09_03:,,
+ signatures=0
+X-Proofpoint-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=740 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1901090050
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Jan 8, 2019 at 10:24 PM Kalle Valo <kvalo@codeaurora.org> wrote:
->
-> Siva Rebbagondla <siva8118@gmail.com> writes:
->
-> > From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> >
-> > With the current approach of scanning, roaming delays are observed.
-> > Firmware has support for back ground scanning. To get this advantage,
-> > mac80211 hardware scan is implemented, which decides type of scan to
-> > do based on connected state.
-> >
-> > When station is in not connected, driver returns with special value 1
-> > to trigger software scan in mac80211. In case of connected state,
-> > background scan will be triggered.
-> >
-> > Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> > Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> > ---
-> > changes in v4: renamed return value in hw_scan from "-EPERM" -> "1" [Jberg]
-> > changes in v3: replaced rsi_prepare_probe_request() with ieee80211_probereq_get() [Kvalo]
-> > changes in v2: none
->
-> This depends on:
->
-> e9da68ddea60 mac80211: allow hardware scan to fall back to software
->
-> But that's in w-d-next now so this is safe to be apply.
->
-> --
-> Kalle Valo
+The following changes since commit 52b23a9326fd8bb468b1b9e4c1816bf08bc2bc3c=
+:
 
-Yes Kvalo, you can apply this patch to w-d-next.
+=A0 linux-firmware: add Marvell SD8997 firmware image (2018-09-26 21:25:40 =
++0530)
 
-Brgds,
-Siva Rebbagondla
+are available in the git repository at:
+
+=A0 git://git.marvell.com/mwifiex-firmware.git
+
+for you to fetch changes up to 63ca64a73c05fa5bcceb687422cbc28185bb6355:
+
+=A0 linux-firmware: update Marvell USB8801 B0 firmware image (2019-01-09 11=
+:24:42 +0530)
+
+----------------------------------------------------------------
+Ganapathi Bhat (1):
+=A0=A0=A0=A0=A0 linux-firmware: update Marvell USB8801 B0 firmware image
+
+=A0WHENCE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 |=A0=A0 2 +-
+=A0mrvl/usb8801_uapsta.bin | Bin 250940 -> 252260 bytes
+=A02 files changed, 1 insertion(+), 1 deletion(-)=
