@@ -2,110 +2,106 @@ Return-Path: <SRS0=9BuQ=PR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C447C43387
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 11:17:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41F32C43387
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 11:33:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EFF1F21783
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 11:17:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="C+WwaQSZ";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Dn0NNZfG"
+	by mail.kernel.org (Postfix) with ESMTP id 1BCB021738
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 11:33:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730818AbfAILRk (ORCPT
+        id S1730798AbfAILdX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Jan 2019 06:17:40 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:40904 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730111AbfAILRk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Jan 2019 06:17:40 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 9D3D3608CF; Wed,  9 Jan 2019 11:17:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547032659;
-        bh=JU0ssnZNWz4auGPtPCG85Rk1lG4OaE62ftTmLt6Qjbc=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=C+WwaQSZt3qcoQwkQyKnOHO0tdbiEui4/WWwU05Vl5WAx4BpA6fidEnCSS+sw6Meb
-         IWg1ou2h670gp1Z2rgIe20M3fdG+5yQBoiYWLF8GPpQJomQ2d55lRkDzWk3jklZiy0
-         M2CS9I8JECLoQmZiWFvguasGvratFD2JE2K1USwU=
-Received: from x230.qca.qualcomm.com (unknown [83.145.195.18])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Wed, 9 Jan 2019 06:33:23 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:39760 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730111AbfAILdX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Jan 2019 06:33:23 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 730196095E;
-        Wed,  9 Jan 2019 11:17:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547032656;
-        bh=JU0ssnZNWz4auGPtPCG85Rk1lG4OaE62ftTmLt6Qjbc=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Dn0NNZfG74Mt8ZSstkyZTDhvaqo5uI4FIz240+VLNypJqZwd4fPBYX0AxMd4m2ITa
-         ddVrULCejXQWOikWIb+XFP+dsu2Pqao/7CCSeN9TYzrXhD8yhOWVAbZSiMY6RH7Tzj
-         pxWLIz9/Z5gwwsjZVKiYoSSMHFqHkFFQMbXRKGII=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 730196095E
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc:     Kangjie Lu <kjlu@umn.edu>, pakki001@umn.edu,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        by mx1.redhat.com (Postfix) with ESMTPS id 92B7B356E7;
+        Wed,  9 Jan 2019 11:33:22 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.162])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B6D03600C4;
+        Wed,  9 Jan 2019 11:33:21 +0000 (UTC)
+Date:   Wed, 9 Jan 2019 12:33:20 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Jeroen Roovers <jer@airfi.aero>
+Cc:     Tom Psyborg <pozega.tomislav@gmail.com>,
         linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: brcm80211: add a check for the status of usb_register
-References: <20181226012227.70524-1-kjlu@umn.edu>
-        <87zhsbqeuu.fsf@kamboji.qca.qualcomm.com>
-        <7ddb04d4-f45f-2b41-12da-d17e8f8c1173@broadcom.com>
-Date:   Wed, 09 Jan 2019 13:17:28 +0200
-In-Reply-To: <7ddb04d4-f45f-2b41-12da-d17e8f8c1173@broadcom.com> (Arend Van
-        Spriel's message of "Wed, 9 Jan 2019 09:28:19 +0100")
-Message-ID: <87r2dmcc6v.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Randy Oostdyk <linux-kernel@oostdyk.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+Subject: Re: [PATCH v2 2/3] rt2x00: check number of EPROTO errors
+Message-ID: <20190109113320.GA15658@redhat.com>
+References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
+ <1545318971-28351-2-git-send-email-sgruszka@redhat.com>
+ <CANCHnQoU-PPTotVD-MmCKCjtoVZEx7Nj4+5YGyfYBEKb2+VNdQ@mail.gmail.com>
+ <20190107150912.GA9516@redhat.com>
+ <CANCHnQrkB7U2KHd7v6psFaD3cbR+cWj0PaBhRZ8Nk5B6ne7ECw@mail.gmail.com>
+ <CAKR_QVLY9ryxUebZD_WWw01Wub9Ue=S3u5YGe2CVk+R8uNgjVw@mail.gmail.com>
+ <CANCHnQqe7Y1=h0An0qNQGPONnN-tZ5vMon=-Uoif0GGY5NmPTg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CANCHnQqe7Y1=h0An0qNQGPONnN-tZ5vMon=-Uoif0GGY5NmPTg@mail.gmail.com>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Wed, 09 Jan 2019 11:33:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+On Wed, Jan 09, 2019 at 07:17:59AM +0100, Jeroen Roovers wrote:
+>      Hi Tom,
+> 
+> On Tue, 8 Jan 2019 at 12:04, Tom Psyborg <pozega.tomislav@gmail.com> wrote:
+> > > rt2x00usb_vendor_request: Error - Vendor Request X failed for offset X
+> > > with error -110
+> > > [many of these, system is slowly locking up]
+> > >
+> > > So the only clue that I had was that perhaps rt2x00usb_vendor_request
+> > > wasn't catching the correct return value.
+> >
+> > Hi
+> >
+> > error message vendor request failed - do you get it on a real hardware
+> > or in virtualized environment?
+> 
+> I only run these on bare metal. What I assume so far is that when
+> rt2x00usb_vendor_request starts failing like this, the MCU has failed.
+> Power cycling the system helps but is undesirable, and sometimes so
+> does a forced removal of rt2800usb, a short recovery period (cooling
+> down, reloading the firmware?) and then loading the module again.
+> 
+> But the problem I am looking to solve is not a hardware problem, it is
+> recovering gracefully from a failure in the RT5592, so I have been
+> looking intently at rt2x00usb_vendor_request because that's the
+> function that complains loudly and kills the entire kernel when the
+> RT5592 sees this failure.
 
-> On 1/8/2019 5:43 PM, Kalle Valo wrote:
->> Kangjie Lu <kjlu@umn.edu> writes:
->>
->>> usb_register() may fail, so let's check its status and issue an error
->>> message if it fails.
->>>
->>> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
->>> ---
->>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 6 +++++-
->>
->> The title prefix should be "brcmfmac: " but I can fix that.
->
-> Hi Kalle,
->
-> I wanted to ack this patch, but can not locate it in my email not in
-> linux-wireless patchwork. Was it posted to the networking list only?
+So would be below patch (on top of this set) be a solution for at 
+least to not kill the kernel. Or we looking for something better
+i.e. watchdog ?
 
-I do see it on linux-wireless patchwork:
+Regards
+Stanislaw
 
-https://patchwork.kernel.org/patch/10742769/
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+index 60b8bccab83d..ee5bd0efd2c7 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+@@ -36,7 +36,7 @@ static bool rt2x00usb_check_usb_error(struct rt2x00_dev *rt2x00dev, int status)
+ 	if (status == -ENODEV || status == -ENOENT)
+ 		return true;
+ 	
+-	if (status == -EPROTO)
++	if (status == -EPROTO || status == -ETIMEDOUT)
+ 		rt2x00dev->num_proto_errs++;
+ 	else
+ 		rt2x00dev->num_proto_errs = 0;
 
-> Using scripts/get_maintainer.pl with the patch would reveal the lists
-> to post to in order of preference. For wireless driver changes I
-> refrain to linux-wireless only, but that is a personal choice I guess.
-
-Yeah, I guess in general wireless patches are just noise for netdev
-people.
-
--- 
-Kalle Valo
