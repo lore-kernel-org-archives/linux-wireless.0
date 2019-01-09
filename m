@@ -4,55 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B6C3C43387
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 16:19:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D18D0C43387
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 16:21:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24A99206BB
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 16:19:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83BE9206BB
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 16:21:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="OP0nw9HB"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="f/5I9Ohp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732683AbfAIQTi (ORCPT
+        id S1732590AbfAIQVP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Jan 2019 11:19:38 -0500
-Received: from mail-eopbgr710078.outbound.protection.outlook.com ([40.107.71.78]:18263
-        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
+        Wed, 9 Jan 2019 11:21:15 -0500
+Received: from mail-eopbgr780071.outbound.protection.outlook.com ([40.107.78.71]:35136
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732590AbfAIQTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Jan 2019 11:19:38 -0500
+        id S1731100AbfAIQVP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Jan 2019 11:21:15 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qvyt8Ieq5DDpLx6cdET0V1X4zG8rap9WCdwvQa5Iq4w=;
- b=OP0nw9HBDZQ0ASOv1zxz4NRjS1eiV4LcJY/jlhh8u5rLQmCkly4uBq5N9R0hJbtO7R8ELS63Va4ZEvvBPLuhdBWhnlWNbsZlUSu8B/00WrPzyFqf673Ij11X70YCH8meSxLjWBvB+S6qfJfrds9drNHM+h4SNkkFLi23x1tk5rs=
-Received: from MWHPR05MB3406.namprd05.prod.outlook.com (10.174.175.155) by
- MWHPR05MB3455.namprd05.prod.outlook.com (10.174.248.30) with Microsoft SMTP
+ bh=ibrdH3Wb03akSIyfyMarEpEJn9iSs6l9EvYRZDtHYzU=;
+ b=f/5I9OhpuSI/l3sBKbcjjcNJBmI6DBwmclyyaTYpZxx53BeDbzlNy94eY3MQ2dozz5mIHvYHc8MFKwAxkp2Lk2uhUAX/NyVqUX/F3P0G3jHyPd3BJ42Gthd2UGIIXRhj4Xu//q/z49BHL1FM8Pb5qhu7WL64rwcc2KVM9mzud5Y=
+Received: from BN6PR05MB3282.namprd05.prod.outlook.com (10.174.95.29) by
+ BN6PR05MB3364.namprd05.prod.outlook.com (10.174.95.150) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1516.9; Wed, 9 Jan 2019 16:19:26 +0000
-Received: from MWHPR05MB3406.namprd05.prod.outlook.com
- ([fe80::91e8:d95f:3a8b:6461]) by MWHPR05MB3406.namprd05.prod.outlook.com
- ([fe80::91e8:d95f:3a8b:6461%2]) with mapi id 15.20.1516.010; Wed, 9 Jan 2019
- 16:19:26 +0000
+ 15.20.1516.6; Wed, 9 Jan 2019 16:18:25 +0000
+Received: from BN6PR05MB3282.namprd05.prod.outlook.com
+ ([fe80::93c:653a:fcac:74fe]) by BN6PR05MB3282.namprd05.prod.outlook.com
+ ([fe80::93c:653a:fcac:74fe%3]) with mapi id 15.20.1516.010; Wed, 9 Jan 2019
+ 16:18:25 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
  SN6PR05MB5264.namprd05.prod.outlook.com (20.177.252.30) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1516.6; Wed, 9 Jan 2019 16:09:04 +0000
+ 15.20.1516.6; Wed, 9 Jan 2019 16:08:58 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::6d1c:886b:bd14:71c5]) by SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::6d1c:886b:bd14:71c5%6]) with mapi id 15.20.1516.010; Wed, 9 Jan 2019
- 16:09:04 +0000
+ 16:08:58 +0000
 From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
         Andrey Shevchenko <ashevchenko@quantenna.com>,
         Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 6/7] qtnfmac: convert to SPDX license identifiers
-Thread-Topic: [PATCH 6/7] qtnfmac: convert to SPDX license identifiers
-Thread-Index: AQHUqDWkiZBF5evYTEWKrejtV7PYJw==
-Date:   Wed, 9 Jan 2019 16:09:04 +0000
-Message-ID: <20190109160843.14832-7-sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 3/7] qtnfmac: add support for 4addr mode
+Thread-Topic: [PATCH 3/7] qtnfmac: add support for 4addr mode
+Thread-Index: AQHUqDWg3er6X1GCYEuBkwCp6ITIQQ==
+Date:   Wed, 9 Jan 2019 16:08:58 +0000
+Message-ID: <20190109160843.14832-4-sergey.matyukevich.os@quantenna.com>
 References: <20190109160843.14832-1-sergey.matyukevich.os@quantenna.com>
 In-Reply-To: <20190109160843.14832-1-sergey.matyukevich.os@quantenna.com>
 Accept-Language: en-US
@@ -65,680 +66,206 @@ x-clientproxiedby: BYAPR07CA0087.namprd07.prod.outlook.com
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [195.182.157.78]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHPR05MB3455;6:JzTeEz/78kLxoa3Q4GbUlJgRQYcUENlMPI9gYlNi/eUfFnKFrcpcMqktJPIPi65nfSiGpgih4laXAPQKVU/YbXA0dfwyHI8f0bXy8Q5pcAqmpIqTULuN+vuVjZrKJSZ77mxsH8LaEensd6Sgcjh/x9phHwU5IG4KA0HxT3V3O/Oed+OnF9PI32VbGrzwbBiQxFAvi7e1QILYk7cCHuN0+GC9TabKPg0YN8Ca2TYgJ5nPMjqwsZ+u687tjLP/OyRSwXBn5QrzBqjQa1jOcAyrq9jUsxfy2uw1fjzb9+0J9RqtYVJEgYqJx9O7+2I2MWXdJS1QaGctrKxqnwzzf/m784r4Y+d8Jsfgtt/bR05ViU+LqtszsiBm1ik2kt35mOTqF/Em5etIr+Bj/MG5sRrkVYeqjJOyOhyTOe/rBnKP9bJpuo4KEfPbp6Q2dfTXXxGdt3lcMXTT0cEzb/b2sNvbww==;5:G4XI61elX+wQG9ikMFyNxiVp/9fKfVsi0vGUm0lfOHO2D7idxgrcYzuEpS5nKEmzEORAgwrF2dlN5sEy4oS1cPMbZxp+RobG3hPeY/EKmHAPS+5wOmgTGzrxkpD5fmJpBm1hnruj10s8p1EUYbgsBLyG855DevlRCAyLB0ItE7CkvrFThAw74juCbuL0NqVRVm8veSaMXca6Wuk+p3f4RQ==;7:rq8J/Ri6JKLQ89Gl9LQvQpEOD9wqGhHE7YifGE1l6cvh4TmlYv/mvvDpr/KJ5u93o2W/YeY1SWpRVtflW7fvb/DIqRrDEWtzieM06GmVGLkAySfTN0hDKyRecICndsJ2rH/KG07vrGPMjh4LT9N+6g==
-x-ms-office365-filtering-correlation-id: dbcce310-61fe-432c-f802-08d6764cc678
+x-microsoft-exchange-diagnostics: 1;BN6PR05MB3364;6:VxkXWgfrvGe0s/lIhYjrxcBYCjokcJlyIeESNj0ZWAXF3j2MET9EKzRoSXnrEts8IBwcQAuQ9n71a/eBSc0RcI94FN4vFOLO/0W3qfTrJlYX/5tNuqnYHNPyfo3vV/DC3ms0PZIXMUBIqATypKmxBoABLoJWUuoL6jtCKMZa0jxi3gonUr+2b2dm2w+42yX+uKigWSFV7EuMd7GysP5Xjy4zSzDGPE4o9uelo6ZIvX6j+6G7rYV0rsucSwW66dueRnV1VzQt1QFROOuPQbD3pmQXdygC3G9oRuSTclG/qdS8VuK1qtsJf4Xy543iLZgtzq0saYoovxe5Tb74/VW1ygV80Mm0naKblaFPrggQRun4PBFDI0ioEWh0CTmUIF94GhfipQqJc1tJ3u6UsVfr3OSphV9tkMaKZScqHfKskvzIlkY+r1sOzAJ4ihSLXpXsgJ9T/0cKWvX5F3F/wO7sYA==;5:jpHiHdZb+5RYM2VZgvST8ATwH4adhdIBVcJcxxV7kn91WMDQ4ZIipAxasCyKCfCCRsTxebBA+7592PjAG6zQXTvIZjNo60nwYVaAMeR+s3b7t/lZGfWv1+LdtBlxCZwumBvYc5A7Yd96S4hchHm7U7/HDWsmBqOVHWaQVm15d7WfI7tBFXWqZxgqLA4HXn/3ta4Ci1cp0xXubHKngvZHuw==;7:OJ9bqTfBCZE674TDJcxv/+qIG+pZSDz6tUvp4pc9jUzT8cafTUTLwIbSq8C7JR2qQ6szWSJrZI9jv+jZ6k0CWCxXX+baENyQZuRxqBIX1WBDnU8wffk/I+s0N7nZggYtKvObbK+ggcDiEooVjI/xSg==
+x-ms-office365-filtering-correlation-id: f792521d-1d60-4a86-81e5-08d6764cc2f6
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB5264;
-x-ms-traffictypediagnostic: SN6PR05MB5264:|MWHPR05MB3455:
-x-moderation-data: 1/9/2019 4:19:23 PM
-x-microsoft-antispam-prvs: <MWHPR05MB345575ED92B9E38DF4AB199EA38B0@MWHPR05MB3455.namprd05.prod.outlook.com>
+x-ms-traffictypediagnostic: SN6PR05MB5264:|BN6PR05MB3364:
+x-moderation-data: 1/9/2019 4:18:15 PM
+x-microsoft-antispam-prvs: <BN6PR05MB336411F367B2E47FD0EC6CE9A38B0@BN6PR05MB3364.namprd05.prod.outlook.com>
 x-forefront-prvs: 0912297777
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39850400004)(346002)(396003)(376002)(366004)(136003)(189003)(199004)(476003)(86362001)(575784001)(6916009)(446003)(106356001)(6116002)(11346002)(6512007)(486006)(105586002)(6346003)(7736002)(26005)(2616005)(305945005)(5660300001)(386003)(6506007)(8936002)(6436002)(102836004)(107886003)(54906003)(5640700003)(316002)(8676002)(4326008)(81156014)(186003)(81166006)(3846002)(52116002)(71200400001)(103116003)(2351001)(99286004)(53946003)(6486002)(68736007)(53936002)(66066001)(97736004)(256004)(14444005)(25786009)(478600001)(71190400001)(4744004)(436003)(76176011)(1076003)(2906002)(14454004)(36756003)(2501003)(2004002)(579004)(559001);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR05MB3455;H:MWHPR05MB3406.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(396003)(346002)(39850400004)(136003)(376002)(199004)(189003)(6346003)(68736007)(186003)(26005)(5024004)(14444005)(2906002)(102836004)(256004)(103116003)(436003)(71200400001)(71190400001)(6916009)(5660300001)(25786009)(11346002)(2616005)(446003)(476003)(3846002)(53936002)(36756003)(6116002)(6512007)(1076003)(478600001)(2501003)(14454004)(54906003)(2351001)(99286004)(6486002)(4326008)(5640700003)(486006)(66066001)(97736004)(6436002)(386003)(6506007)(316002)(105586002)(7736002)(305945005)(107886003)(86362001)(575784001)(52116002)(76176011)(8936002)(81166006)(81156014)(106356001)(8676002);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR05MB3364;H:BN6PR05MB3282.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: quantenna.com does not designate
  permitted sender hosts)
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: chE5V58d07HPFtjgz0z5L78lAex8AQwDrlRQ9xjma1C9jgOU2QOCNo0IU5djZMbpzjQEFjl9XsBrhX6wqowrxCc/NWq7E9ZJatU3RoGY5sPeJygA3vr0SujT0JoxcGUXcDamzHJX838NwxGwiyccKajkTyGOKaWBYKNzH6qZNeRUe6/OqItImnmZxwLw5Ftu9G6FOixavuu8Zyjtgrw/oodAIgB7efRRdgwt4lc2ytWf/XH7RXdLl8ybWcSda9Ob1ma1zwfOnFhVl8d3/VTVABsv+roYOXovA7IkPlXl+dmjeqM8xrT3f7NGMAG2E6BT
+x-microsoft-antispam-message-info: l2yxatsjsgKXyMQ/wz2+kGwGtzzj7hbV/qY0uJfw+Ks9zJGmHJUPZci8yZ/VnqCswvQQDVTLUfXBaf095WsVFwEurV6jBjiVpvcjPdCrZkLxlfvsstDBZZnFQD+oxrt1lReiGU0+5d+fvo8QTv7mShgBg0Qj4RiQtLSH+ku+0jM5kfZGdxbGSbAccuE+sAfH/9x4ZzC6xH8p40l2/nqviTdqW7RT1YJx1S5c3r4rnJG55CWg/XK3jPARIhhp5ruenrpTE/21wG7UWe8M1f8cYOCShzlNQa4EFmdiquwsH69lWshlmyCPifyVIqQqYguK
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dbcce310-61fe-432c-f802-08d6764cc678
+X-MS-Exchange-CrossTenant-Network-Message-Id: f792521d-1d60-4a86-81e5-08d6764cc2f6
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2019 16:19:26.0722
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2019 16:18:25.0785
  (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR05MB3455
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR05MB3364
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Replace textual license with SPDX-License-Identifier.
-Add an SPDX-License-Identifier for the Makefile.
+Advertise WIPHY_FLAG_4ADDR_STATION capability to wireless core. Send
+use4addr interface change flag to firmware in change_virtual_intf
+cfg80211 callback.
+
+In order to enable adding wireless station interface to bridge
+one should turn on 4addr mode using the following command:
+$ iw dev wlan0 set 4addr on
+$ brctl addif br0 wlan0
+
+If this commands succeeds, then interface can be added to bridge.
+Note that when wireless interface is added to bridge, wpa_supplicant
+should be started with appropriate -b <brname> parameter, e.g:
+$ wpa_supplicant -Dnl80211 -iwlan0 -c/path/to/wpa_s.conf -b br0
 
 Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- drivers/net/wireless/quantenna/Makefile               |  1 +
- drivers/net/wireless/quantenna/qtnfmac/bus.h          | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c     | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.h     |  3 +++
- drivers/net/wireless/quantenna/qtnfmac/commands.c     | 16 ++-------------=
--
- drivers/net/wireless/quantenna/qtnfmac/commands.h     | 16 ++-------------=
--
- drivers/net/wireless/quantenna/qtnfmac/core.c         | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/core.h         | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/debug.c        | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/debug.h        | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/event.c        | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/event.h        | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/qlink.h        | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/qlink_util.c   | 16 ++-------------=
--
- drivers/net/wireless/quantenna/qtnfmac/qlink_util.h   | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h   | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/shm_ipc.c      | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/shm_ipc.h      | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/shm_ipc_defs.h | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/trans.c        | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/trans.h        | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/util.c         | 17 ++-------------=
---
- drivers/net/wireless/quantenna/qtnfmac/util.h         | 17 ++-------------=
---
- 23 files changed, 46 insertions(+), 312 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |  8 +++++---
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 14 +++++++++-----
+ drivers/net/wireless/quantenna/qtnfmac/commands.h |  6 ++++--
+ drivers/net/wireless/quantenna/qtnfmac/core.c     |  4 +++-
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  3 ++-
+ 5 files changed, 23 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/Makefile b/drivers/net/wireless=
-/quantenna/Makefile
-index baebfbde119e..cea83d178d2e 100644
---- a/drivers/net/wireless/quantenna/Makefile
-+++ b/drivers/net/wireless/quantenna/Makefile
-@@ -1,3 +1,4 @@
-+# SPDX-License-Identifier: GPL-2.0
- #
- # Copyright (c) 2015-2016 Quantenna Communications, Inc.
- # All rights reserved.
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/bus.h b/drivers/net/wir=
-eless/quantenna/qtnfmac/bus.h
-index 528ca7f5e070..7bd906cc7023 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/bus.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/bus.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015 Quantenna Communications
-- *
-- * Permission to use, copy, modify, and/or distribute this software for an=
-y
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIE=
-S
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR=
- ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN A=
-CTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015 Quantenna Communications. All rights reserved. */
-=20
- #ifndef QTNFMAC_BUS_H
- #define QTNFMAC_BUS_H
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/ne=
 t/wireless/quantenna/qtnfmac/cfg80211.c
-index 422b79a5b98d..e9bef621a7d6 100644
+index 51b33ec78fac..9e0ac1744be7 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
 +++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2012-2012 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+// SPDX-License-Identifier: GPL-2.0+
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
+@@ -139,7 +139,8 @@ qtnf_change_virtual_intf(struct wiphy *wiphy,
 =20
- #include <linux/kernel.h>
- #include <linux/etherdevice.h>
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h b/drivers/ne=
-t/wireless/quantenna/qtnfmac/cfg80211.h
-index b73425122a10..7f223d0fbbd3 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-@@ -1,3 +1,6 @@
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-+
- /*
-  * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-  * All rights reserved.
+ 	qtnf_scan_done(vif->mac, true);
+=20
+-	ret =3D qtnf_cmd_send_change_intf_type(vif, type, mac_addr);
++	ret =3D qtnf_cmd_send_change_intf_type(vif, type, params->use_4addr,
++					     mac_addr);
+ 	if (ret) {
+ 		pr_err("VIF%u.%u: failed to change type to %d\n",
+ 		       vif->mac->macid, vif->vifid, type);
+@@ -228,7 +229,7 @@ static struct wireless_dev *qtnf_add_virtual_intf(struc=
+t wiphy *wiphy,
+ 	if (params)
+ 		mac_addr =3D params->macaddr;
+=20
+-	ret =3D qtnf_cmd_send_add_intf(vif, type, mac_addr);
++	ret =3D qtnf_cmd_send_add_intf(vif, type, params->use_4addr, mac_addr);
+ 	if (ret) {
+ 		pr_err("VIF%u.%u: failed to add VIF %pM\n",
+ 		       mac->macid, vif->vifid, mac_addr);
+@@ -1107,7 +1108,8 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info,=
+ struct qtnf_wmac *mac)
+ 	wiphy->flags |=3D WIPHY_FLAG_HAVE_AP_SME |
+ 			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
+ 			WIPHY_FLAG_AP_UAPSD |
+-			WIPHY_FLAG_HAS_CHANNEL_SWITCH;
++			WIPHY_FLAG_HAS_CHANNEL_SWITCH |
++			WIPHY_FLAG_4ADDR_STATION;
+ 	wiphy->flags &=3D ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+=20
+ 	if (hw_info->hw_capab & QLINK_HW_CAPAB_DFS_OFFLOAD)
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/ne=
 t/wireless/quantenna/qtnfmac/commands.c
-index 3f0a0b6abf01..009a4e4f4c7a 100644
+index c2f085589f54..0748a756cc1c 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
 +++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -1,17 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+// SPDX-License-Identifier: GPL-2.0+
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
+@@ -734,6 +734,7 @@ int qtnf_cmd_get_sta_info(struct qtnf_vif *vif, const u=
+8 *sta_mac,
 =20
- #include <linux/types.h>
- #include <linux/skbuff.h>
+ static int qtnf_cmd_send_add_change_intf(struct qtnf_vif *vif,
+ 					 enum nl80211_iftype iftype,
++					 int use4addr,
+ 					 u8 *mac_addr,
+ 					 enum qlink_cmd_type cmd_type)
+ {
+@@ -751,6 +752,7 @@ static int qtnf_cmd_send_add_change_intf(struct qtnf_vi=
+f *vif,
+ 	qtnf_bus_lock(vif->mac->bus);
+=20
+ 	cmd =3D (struct qlink_cmd_manage_intf *)cmd_skb->data;
++	cmd->intf_info.use4addr =3D use4addr;
+=20
+ 	switch (iftype) {
+ 	case NL80211_IFTYPE_AP:
+@@ -786,17 +788,19 @@ static int qtnf_cmd_send_add_change_intf(struct qtnf_=
+vif *vif,
+ 	return ret;
+ }
+=20
+-int qtnf_cmd_send_add_intf(struct qtnf_vif *vif,
+-			   enum nl80211_iftype iftype, u8 *mac_addr)
++int qtnf_cmd_send_add_intf(struct qtnf_vif *vif, enum nl80211_iftype iftyp=
+e,
++			   int use4addr, u8 *mac_addr)
+ {
+-	return qtnf_cmd_send_add_change_intf(vif, iftype, mac_addr,
++	return qtnf_cmd_send_add_change_intf(vif, iftype, use4addr, mac_addr,
+ 			QLINK_CMD_ADD_INTF);
+ }
+=20
+ int qtnf_cmd_send_change_intf_type(struct qtnf_vif *vif,
+-				   enum nl80211_iftype iftype, u8 *mac_addr)
++				   enum nl80211_iftype iftype,
++				   int use4addr,
++				   u8 *mac_addr)
+ {
+-	return qtnf_cmd_send_add_change_intf(vif, iftype, mac_addr,
++	return qtnf_cmd_send_add_change_intf(vif, iftype, use4addr, mac_addr,
+ 					     QLINK_CMD_CHANGE_INTF);
+ }
+=20
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/ne=
 t/wireless/quantenna/qtnfmac/commands.h
-index 1c25e7905e9a..96dff643bbc4 100644
+index 1ac41156c192..1c25e7905e9a 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
 +++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -1,17 +1,5 @@
--/*
-- * Copyright (c) 2016 Quantenna Communications, Inc.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2016 Quantenna Communications. All rights reserved. */
-=20
- #ifndef QLINK_COMMANDS_H_
- #define QLINK_COMMANDS_H_
+@@ -26,9 +26,11 @@ void qtnf_cmd_send_deinit_fw(struct qtnf_bus *bus);
+ int qtnf_cmd_get_hw_info(struct qtnf_bus *bus);
+ int qtnf_cmd_get_mac_info(struct qtnf_wmac *mac);
+ int qtnf_cmd_send_add_intf(struct qtnf_vif *vif, enum nl80211_iftype iftyp=
+e,
+-			   u8 *mac_addr);
++			   int use4addr, u8 *mac_addr);
+ int qtnf_cmd_send_change_intf_type(struct qtnf_vif *vif,
+-				   enum nl80211_iftype iftype, u8 *mac_addr);
++				   enum nl80211_iftype iftype,
++				   int use4addr,
++				   u8 *mac_addr);
+ int qtnf_cmd_send_del_intf(struct qtnf_vif *vif);
+ int qtnf_cmd_band_info_get(struct qtnf_wmac *mac,
+ 			   struct ieee80211_supported_band *band);
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wi=
 reless/quantenna/qtnfmac/core.c
-index 29258acfa8dc..ee1b75fda1dd 100644
+index 5d18a4a917c9..29258acfa8dc 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/core.c
 +++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+// SPDX-License-Identifier: GPL-2.0+
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
+@@ -195,6 +195,7 @@ static int qtnf_netdev_set_mac_address(struct net_devic=
+e *ndev, void *addr)
+ 	qtnf_scan_done(vif->mac, true);
 =20
- #include <linux/kernel.h>
- #include <linux/module.h>
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wi=
-reless/quantenna/qtnfmac/core.h
-index 293055049caa..a31cff46e964 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
+ 	ret =3D qtnf_cmd_send_change_intf_type(vif, vif->wdev.iftype,
++					     vif->wdev.use_4addr,
+ 					     sa->sa_data);
 =20
- #ifndef _QTN_FMAC_CORE_H_
- #define _QTN_FMAC_CORE_H_
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/debug.c b/drivers/net/w=
-ireless/quantenna/qtnfmac/debug.c
-index 9f826b9ef5d9..ad70cdb80060 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/debug.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/debug.c
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+// SPDX-License-Identifier: GPL-2.0+
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
+ 	if (ret)
+@@ -545,7 +546,8 @@ static int qtnf_core_mac_attach(struct qtnf_bus *bus, u=
+nsigned int macid)
+ 		goto error;
+ 	}
 =20
- #include "debug.h"
-=20
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/debug.h b/drivers/net/w=
-ireless/quantenna/qtnfmac/debug.h
-index d6dd12b5d434..61b45536b83a 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/debug.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/debug.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #ifndef _QTN_FMAC_DEBUG_H_
- #define _QTN_FMAC_DEBUG_H_
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/w=
-ireless/quantenna/qtnfmac/event.c
-index 8b542b431b75..3038a000c287 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+// SPDX-License-Identifier: GPL-2.0+
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #include <linux/kernel.h>
- #include <linux/module.h>
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.h b/drivers/net/w=
-ireless/quantenna/qtnfmac/event.h
-index ae759b602c2a..533ad99d045d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #ifndef _QTN_FMAC_EVENT_H_
- #define _QTN_FMAC_EVENT_H_
+-	ret =3D qtnf_cmd_send_add_intf(vif, vif->wdev.iftype, vif->mac_addr);
++	ret =3D qtnf_cmd_send_add_intf(vif, vif->wdev.iftype,
++				     vif->wdev.use_4addr, vif->mac_addr);
+ 	if (ret) {
+ 		pr_err("MAC%u: failed to add VIF\n", macid);
+ 		goto error;
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/w=
 ireless/quantenna/qtnfmac/qlink.h
-index ace52e9d421d..d958b268de02 100644
+index f9c7f87afaf8..a78cb9e05068 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
 +++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
+@@ -105,7 +105,8 @@ struct qlink_intf_info {
+ 	__le16 if_type;
+ 	__le16 vlanid;
+ 	u8 mac_addr[ETH_ALEN];
+-	u8 rsvd[2];
++	u8 use4addr;
++	u8 rsvd[1];
+ } __packed;
 =20
- #ifndef _QTN_QLINK_H_
- #define _QTN_QLINK_H_
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c b/drivers/=
-net/wireless/quantenna/qtnfmac/qlink_util.c
-index aeeda81b09ea..72bfd17cb687 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-@@ -1,17 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+// SPDX-License-Identifier: GPL-2.0+
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #include <linux/nl80211.h>
-=20
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h b/drivers/=
-net/wireless/quantenna/qtnfmac/qlink_util.h
-index fc87827cb49c..781ea7fe79f2 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #ifndef _QTN_FMAC_QLINK_UTIL_H_
- #define _QTN_FMAC_QLINK_UTIL_H_
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h b/drivers/=
-net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
-index 40295a511224..82d879950b62 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #ifndef	_QTN_HW_IDS_H_
- #define	_QTN_HW_IDS_H_
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.c b/drivers/net=
-/wireless/quantenna/qtnfmac/shm_ipc.c
-index 2ec334199c2b..ff678951d3b2 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.c
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+// SPDX-License-Identifier: GPL-2.0+
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #include <linux/types.h>
- #include <linux/io.h>
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.h b/drivers/net=
-/wireless/quantenna/qtnfmac/shm_ipc.h
-index c2a3702a9ee7..52cac5439b03 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #ifndef _QTN_FMAC_SHM_IPC_H_
- #define _QTN_FMAC_SHM_IPC_H_
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc_defs.h b/driver=
-s/net/wireless/quantenna/qtnfmac/shm_ipc_defs.h
-index 95a5f89a8b1a..78be70df1218 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc_defs.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/shm_ipc_defs.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #ifndef _QTN_FMAC_SHM_IPC_DEFS_H_
- #define _QTN_FMAC_SHM_IPC_DEFS_H_
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/trans.c b/drivers/net/w=
-ireless/quantenna/qtnfmac/trans.c
-index 345f34ec9750..95356e280e23 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/trans.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/trans.c
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+// SPDX-License-Identifier: GPL-2.0+
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #include <linux/types.h>
- #include <linux/export.h>
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/trans.h b/drivers/net/w=
-ireless/quantenna/qtnfmac/trans.h
-index 9a473e07af0f..c0b76f871b31 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/trans.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/trans.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #ifndef _QTN_FMAC_TRANS_H_
- #define _QTN_FMAC_TRANS_H_
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.c b/drivers/net/wi=
-reless/quantenna/qtnfmac/util.c
-index 3bc96b264769..cda6f5f3f38a 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/util.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/util.c
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- */
-+// SPDX-License-Identifier: GPL-2.0+
-+/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserved. =
-*/
-=20
- #include "util.h"
- #include "qtn_hw_ids.h"
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.h b/drivers/net/wi=
-reless/quantenna/qtnfmac/util.h
-index b8744baac332..a14b7078a9c7 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/util.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/util.h
-@@ -1,18 +1,5 @@
--/*
-- * Copyright (c) 2015 Quantenna Communications
-- *
-- * Permission to use, copy, modify, and/or distribute this software for an=
-y
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIE=
-S
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR=
- ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN A=
-CTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright (c) 2015 Quantenna Communications. All rights reserved. */
-=20
- #ifndef QTNFMAC_UTIL_H
- #define QTNFMAC_UTIL_H
+ enum qlink_sta_flags {
 --=20
 2.11.0
 
