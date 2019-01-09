@@ -7,52 +7,53 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 192AAC43387
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 16:18:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF26AC43387
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 16:18:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA073206BB
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 16:18:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0093206BB
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 16:18:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="OcLQqGGj"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="sIeim4uz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732662AbfAIQSN (ORCPT
+        id S1732703AbfAIQST (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Jan 2019 11:18:13 -0500
-Received: from mail-eopbgr730062.outbound.protection.outlook.com ([40.107.73.62]:16105
-        "EHLO NAM05-DM3-obe.outbound.protection.outlook.com"
+        Wed, 9 Jan 2019 11:18:19 -0500
+Received: from mail-eopbgr750042.outbound.protection.outlook.com ([40.107.75.42]:34736
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731100AbfAIQSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Jan 2019 11:18:13 -0500
+        id S1732683AbfAIQSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Jan 2019 11:18:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jTFsucJB0eEaua9mqU1n9S2aN5yM0k8/UZ5dbfKQ+lo=;
- b=OcLQqGGj2R4WrgtL9WncH2WVEhZLMz7wENZ6sywBPDAMSt+dglkcR94vxC4YHbrejersETLRcs9hOmFac+HTHF9DiAQ2A78W/MJvAixqshqpoOeHkbUvByZbXNBB4mTIZaNaRUEjVAmMfxu1Sr3DOMCdE1e7SENkOYFXYOrVVrg=
-Received: from MWHPR05MB3567.namprd05.prod.outlook.com (10.174.250.158) by
- MWHPR05MB3229.namprd05.prod.outlook.com (10.173.229.148) with Microsoft SMTP
+ bh=YAlhlCgS0POEW2tI3EHE7ZUr4rcC8zREazI/E0ILplc=;
+ b=sIeim4uzzkfXcwg61JgdDAZ/YtzpI3Q4ORTIWWmio6+1eJFcB/mM/aKW8FpuRePxclRyv5d9VxxtVyvlK2wi0GdSLZvtpDyKGYNZT5z/QOb4DEMdcNd8ZmeCeL8Rm1GjvWxRo/4DjBKAu7exM/BRAEbE+DzdaZ35GNRcKKKEBJE=
+Received: from SN6PR05MB5326.namprd05.prod.outlook.com (52.135.111.214) by
+ SN6PR05MB5149.namprd05.prod.outlook.com (20.177.252.32) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1537.10; Wed, 9 Jan 2019 16:17:59 +0000
-Received: from MWHPR05MB3567.namprd05.prod.outlook.com
- ([fe80::edd7:b7bf:920:e463]) by MWHPR05MB3567.namprd05.prod.outlook.com
- ([fe80::edd7:b7bf:920:e463%2]) with mapi id 15.20.1516.010; Wed, 9 Jan 2019
- 16:17:58 +0000
+ 15.20.1516.10; Wed, 9 Jan 2019 16:18:14 +0000
+Received: from SN6PR05MB5326.namprd05.prod.outlook.com
+ ([fe80::2d1b:782b:7272:fdcf]) by SN6PR05MB5326.namprd05.prod.outlook.com
+ ([fe80::2d1b:782b:7272:fdcf%5]) with mapi id 15.20.1516.015; Wed, 9 Jan 2019
+ 16:18:14 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
  SN6PR05MB5264.namprd05.prod.outlook.com (20.177.252.30) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1516.6; Wed, 9 Jan 2019 16:08:54 +0000
+ 15.20.1516.6; Wed, 9 Jan 2019 16:08:56 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::6d1c:886b:bd14:71c5]) by SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::6d1c:886b:bd14:71c5%6]) with mapi id 15.20.1516.010; Wed, 9 Jan 2019
- 16:08:54 +0000
+ 16:08:56 +0000
 From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>
-Subject: [PATCH 1/7] qtnfmac: support EBUSY errcode for QLINK protocol
-Thread-Topic: [PATCH 1/7] qtnfmac: support EBUSY errcode for QLINK protocol
-Thread-Index: AQHUqDWe8TkZgrsN6kmLNUszhkMh7g==
-Date:   Wed, 9 Jan 2019 16:08:54 +0000
-Message-ID: <20190109160843.14832-2-sergey.matyukevich.os@quantenna.com>
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 2/7] qtnfmac: fix legacy PCIe interrupt handling
+Thread-Topic: [PATCH 2/7] qtnfmac: fix legacy PCIe interrupt handling
+Thread-Index: AQHUqDWfiDp1OdNqK0+HLaH82JeJ1Q==
+Date:   Wed, 9 Jan 2019 16:08:56 +0000
+Message-ID: <20190109160843.14832-3-sergey.matyukevich.os@quantenna.com>
 References: <20190109160843.14832-1-sergey.matyukevich.os@quantenna.com>
 In-Reply-To: <20190109160843.14832-1-sergey.matyukevich.os@quantenna.com>
 Accept-Language: en-US
@@ -65,75 +66,75 @@ x-clientproxiedby: BYAPR07CA0087.namprd07.prod.outlook.com
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [195.182.157.78]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHPR05MB3229;6:1QioEcHtTG7BW4QTRJzrw6GXsso911BHCzUfC/+vYvNRFgNbPFJc3nePXzXwJreNYNdTtdlreZC1UuHsLTeMaanBhsaP6Fi0Xw+DiTUzofKemoHU59ocTrY6GqpUE4JHb8/YBUST76IYG6T45IAMfMH07pGq/ZJWpm0rvnEFkqi8yY2Jy8siEOH/caidbgtQWP6MSbk0juGsNtsSEuJyZ722cZB9Mjlu37hxHbzmFzMV6WBpma+Pmk029Ov7wfqvtu+u9xlh0f2YKNSF4AkoG1XOnaUfFRudvUvOAep9BoqQ7gHy25Tuim5VxE5wY//U+A6wZFw3Hpl0Hh/VTyPtQoBtDLPCO0SjCjp0Ao8DxNSg5TixWmNONhQyqToOGcTYfBesrsBeIrC4dJqVgxKF7vjS0/Z+SBMunVOP7qxFS5kogP7DCr66kgacVFByN1Z6qqnUy57EVlgUv12xs+FTfQ==;5:lQRX8EbHUnVe2qYMLsBdwpKELu0sjYSOCY/1oapot2wfXLi4zsfHO0LcS63LcRJKuxafyU4MkNiDDVdaJK1JQieXZ0ZIsZ7ZJ8nwnDg9PJf2fG9HetS02PDBlUm06KhQv9LA5zJ78QdeTTszSpw6Du9GfTvuykKQEkttyoFYPb0EhFPdxD8QQKvIJfcjeNKpfFtUQeboacJIXSFkLcH78A==;7:hutcZKZ4W3l4Qu33eMT47IP1veOcpKm3Sa8wWz53KJTvkZTWZgLuZxCiBww1rE694A/Nb5UFh1tLOZJzg9Vi2jsAzRjrSsuTZucViMN+4gz36GSBclSAqlf8TAdvtY8TGX91GRS0SltdZCgssn+0Sg==
-x-ms-office365-filtering-correlation-id: e6b22f87-2d3d-4c6a-2d45-08d6764cc09f
+x-microsoft-exchange-diagnostics: 1;SN6PR05MB5149;6:5nmzEwvyqGsl9MfqiqumwYyCNrFb2anKN3jgf+yWgzSGIpc+yKRIVy1ajFlqRdcOiiWVRRus+ewidk0EAwVsA524+tqxa6VD285v7ky3tASyfpFBxaAn8K5U6BvkxVBGZYkzulBNnqCO5RDrQIkzyfm1yw7N3dJQrHUCszi/fRMCpa96rxEnzAU3cSjk59WDxpE8cy373uvQIDgILwl8ejXiF6ycaESpj6o5HCAqJ2I8irMZDGJhJG8zzrVBee3IwPedFxWDpA54JtZr/yzOvOWELOGSkoLaHbGWbNcQFQllCitPe1RYxWWyr7JPsH4a+tjWRT+FJPWY0DgAcgJyUER+qbU8sxgq/bQM7TBncuFPR2v/VJWbGPuLGElB2ZBQVrWdJkhYVy7vGUNlcdFmkeeHnZfbJ3cIc29X7tnDv3CUjpCfWFVimJPkSDxLmkCvSlKo6HuiYcm96qJXMW0/4Q==;5:vuN0avvvyJcDhtrSCschHqzD4yaCKWLf6cY86CqCzoVCkNxQDqonaAY1kh84CofZuiiHla7SVYDDOc1pJ/bYBhUxNUdzey61rDWU15TbZLQenHTnRevNqpX1mYrZVzEgi1sutdY71js04D3xFWdwLv2qFfVBxyW83eONruuGfsppnB/ViU1Usw+SVc5d2KQBM7Je/JRj12hGrTwqc4Agwg==;7:0Foyd7Ir5IBxRkN8BSWrvqJRWX5rzYPsFU8LYpUjx17U33CXF0aUEEkmNlhkyuFriJ27hMA5y1Km9dS/2Ll3pX55keZ3zkPFUOOogcTK+WFoipEPL8WPICSLn5iXWXQkhsOdkDA5tWXC6mnrDyIUCw==
+x-ms-office365-filtering-correlation-id: 23f63de0-3487-4167-6e32-08d6764cc1ce
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB5264;
-x-ms-traffictypediagnostic: SN6PR05MB5264:|MWHPR05MB3229:
-x-moderation-data: 1/9/2019 4:17:55 PM
-x-microsoft-antispam-prvs: <MWHPR05MB32291E38B520A6BE8AD8B81BA38B0@MWHPR05MB3229.namprd05.prod.outlook.com>
+x-ms-traffictypediagnostic: SN6PR05MB5264:|SN6PR05MB5149:
+x-moderation-data: 1/9/2019 4:18:12 PM
+x-microsoft-antispam-prvs: <SN6PR05MB5149700F014C7E69D2237C2FA38B0@SN6PR05MB5149.namprd05.prod.outlook.com>
 x-forefront-prvs: 0912297777
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39850400004)(396003)(366004)(376002)(346002)(136003)(199004)(189003)(25786009)(68736007)(478600001)(14454004)(316002)(7736002)(54906003)(4326008)(11346002)(446003)(99286004)(107886003)(6512007)(186003)(76176011)(52116002)(26005)(106356001)(6346003)(305945005)(6506007)(105586002)(386003)(71190400001)(2351001)(71200400001)(102836004)(53936002)(103116003)(36756003)(486006)(2616005)(476003)(1076003)(81156014)(8936002)(3846002)(6116002)(8676002)(81166006)(2501003)(5660300001)(66066001)(256004)(6436002)(6486002)(97736004)(436003)(86362001)(2906002)(6916009)(5640700003);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR05MB3229;H:MWHPR05MB3567.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(376002)(396003)(39850400004)(366004)(136003)(189003)(199004)(6436002)(6916009)(11346002)(6512007)(2906002)(106356001)(105586002)(81156014)(81166006)(8676002)(54906003)(86362001)(4326008)(256004)(102836004)(99286004)(68736007)(6486002)(8936002)(7736002)(3846002)(2351001)(107886003)(316002)(6116002)(446003)(36756003)(5640700003)(53936002)(476003)(103116003)(25786009)(486006)(97736004)(14454004)(1076003)(52116002)(66066001)(478600001)(386003)(2501003)(26005)(436003)(6506007)(76176011)(6346003)(2616005)(71190400001)(305945005)(5660300001)(186003)(71200400001);DIR:OUT;SFP:1101;SCL:1;SRVR:SN6PR05MB5149;H:SN6PR05MB5326.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: quantenna.com does not designate
  permitted sender hosts)
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 5dX5KGM4tTTIGcyHl8sg+Yys7fvA5FdzQCUvX2QAX1qT3XZ5SyReF9Me/9pRvQoV1//J4/lCVCHLKiIHlrR/Cbsb9vnYDHpDqstCD83VJTBXmtT99VLRJ/N4/z3H5oBJxXJXaG4Zb5C/8KU7kpJtlC44NvdQbssRx/bdGSGQjhHthE0/IbHY6zTyU49s91c+FKu2fvr31dwhzvupKu0Esx0HFcXhZRV3uNU6oYOQemwIVK5N65P1vIM+j3FSNxjSEohQhh3Q16hAT3Pr6KLEUVW8ZC9FYQl3QtmOvSB9X+gdXyPdCrtaxbVqcaLg7RIR
+x-microsoft-antispam-message-info: RHiBG8u9ooApZXPCwLwSjTIA02xLpTST1rRFC/cXzynxK7MYr0lby63w+8TtbYZmGnu6HIsB0plyG/pRNxkwzD8pu8CrtooBf/v/25a1cdVMAf3ac7B3oyC4i0ZtCaReOwtXWFKbYUlfm3bpmg7VPfQC8LEH9XSUHt2OBJRTW1Qv7v6kIyGuvZgYEs6HBvA5NnJnwLGBPLqNbL1qpUqkLtb+357Em3lXg+hMpZCt/CBXzKSVedC9+qm5OmnWaW3MsljPXzotG2PLOACXcO2z3oTuLqF5xHDOXIbyngbn73/KhY9KTMAhJ66MAXkQAaEk
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e6b22f87-2d3d-4c6a-2d45-08d6764cc09f
+X-MS-Exchange-CrossTenant-Network-Message-Id: 23f63de0-3487-4167-6e32-08d6764cc1ce
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2019 16:17:58.9653
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2019 16:18:14.1638
  (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR05MB3229
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR05MB5149
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Andrey Shevchenko <ashevchenko@quantenna.com>
+In the current implementation INTx interrupt is deasserted after the
+control path processing. However this leads to missed interrupts
+from the wireless card. For instance, this may happen as a result
+of control path activity, when another interrupt arrives before
+INTx is deasserted.
 
-Add support of EBUSY error code for remote procedures over QLINK protocol.
-
-Signed-off-by: Andrey Shevchenko <ashevchenko@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 2 ++
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 1 +
- 2 files changed, 3 insertions(+)
+ drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/ne=
-t/wireless/quantenna/qtnfmac/commands.c
-index 659e7649fe22..c2f085589f54 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -72,6 +72,8 @@ static int qtnf_cmd_resp_result_decode(enum qlink_cmd_res=
-ult qcode)
- 		return -EADDRINUSE;
- 	case QLINK_CMD_RESULT_EADDRNOTAVAIL:
- 		return -EADDRNOTAVAIL;
-+	case QLINK_CMD_RESULT_EBUSY:
-+		return -EBUSY;
- 	default:
- 		return -EFAULT;
- 	}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/w=
-ireless/quantenna/qtnfmac/qlink.h
-index 8d62addea895..f9c7f87afaf8 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -733,6 +733,7 @@ enum qlink_cmd_result {
- 	QLINK_CMD_RESULT_EALREADY,
- 	QLINK_CMD_RESULT_EADDRINUSE,
- 	QLINK_CMD_RESULT_EADDRNOTAVAIL,
-+	QLINK_CMD_RESULT_EBUSY,
- };
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c b/dri=
+vers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
+index 598edb814421..cbcda57105f3 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
+@@ -559,6 +559,9 @@ static irqreturn_t qtnf_pcie_topaz_interrupt(int irq, v=
+oid *data)
+ 	if (!priv->msi_enabled && !qtnf_topaz_intx_asserted(ts))
+ 		return IRQ_NONE;
 =20
- /**
++	if (!priv->msi_enabled)
++		qtnf_deassert_intx(ts);
++
+ 	priv->pcie_irq_count++;
+=20
+ 	qtnf_shm_ipc_irq_handler(&priv->shm_ipc_ep_in);
+@@ -571,9 +574,6 @@ static irqreturn_t qtnf_pcie_topaz_interrupt(int irq, v=
+oid *data)
+=20
+ 	tasklet_hi_schedule(&priv->reclaim_tq);
+=20
+-	if (!priv->msi_enabled)
+-		qtnf_deassert_intx(ts);
+-
+ 	return IRQ_HANDLED;
+ }
+=20
 --=20
 2.11.0
 
