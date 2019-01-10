@@ -2,143 +2,158 @@ Return-Path: <SRS0=ogP8=PS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB103C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:46:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC8BC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:50:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ABF4420879
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:46:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="zG3ZmNmS";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="reNlh8OO"
+	by mail.kernel.org (Postfix) with ESMTP id 9C62A20879
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:50:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727551AbfAJIqX (ORCPT
+        id S1727651AbfAJIuS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Jan 2019 03:46:23 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34582 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727262AbfAJIqW (ORCPT
+        Thu, 10 Jan 2019 03:50:18 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:33847 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727582AbfAJIuS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Jan 2019 03:46:22 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x0A8ixmn006579;
-        Thu, 10 Jan 2019 00:46:20 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0818;
- bh=XHrVWt86TFUkwnbX/p1HZeK2P+T+v+Yy7uscX2OZeaU=;
- b=zG3ZmNmSArYGUVThTMGoua/2JhaLYASMe6EYw0bwzZDb2CeOlK1ovnL262HsrL7Apuy7
- j/dKn8HloNcNGl8MPAwdGGC5kfq1UQ3Nsaz8DCHKNH0s6EPIO5A+PzlIEBG/0w3I2Pwg
- yoDiXM6VIhlnYmYFZMkhx82EKzDDQ/7H9tWyeG8gTICi41o9HcgMUDUcbLOrc6DxmM01
- oqb/7UMYVhbvLK4XphTw7jxeWMpEm7wT1toXRWqPCaL2iMxrzBWSOcGWRnuijicCD15J
- CnglvO8hjbgTH3kzjRhHKVtkfU8S0ajF6tNzHyccc2yAacc4vog8MRu8OxsOG200/Wst kg== 
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2pwrc5ttr9-6
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 10 Jan 2019 00:46:20 -0800
-Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 10 Jan
- 2019 00:46:19 -0800
-Received: from NAM01-BN3-obe.outbound.protection.outlook.com (104.47.33.56) by
- SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Thu, 10 Jan 2019 00:46:19 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XHrVWt86TFUkwnbX/p1HZeK2P+T+v+Yy7uscX2OZeaU=;
- b=reNlh8OOJXb5m/tzauBgHMEXCGKtLrRtbfM9Hco8DerZAUTcCYK1Mu5Kp+r6vGa7HVTlIsVbDfYtFGIAd4OBQV/MH3eesXHQQnxuziuAMuyUf3ktULwvkZ9nEWJLR0fCv2C5J/ObzWKrQEsYTCW/uWxLK4hoKvhvJ1M5e7wqaaI=
-Received: from CY4PR18MB1237.namprd18.prod.outlook.com (10.172.176.7) by
- CY4PR18MB1541.namprd18.prod.outlook.com (10.173.62.145) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1495.9; Thu, 10 Jan 2019 08:46:18 +0000
-Received: from CY4PR18MB1237.namprd18.prod.outlook.com
- ([fe80::95d4:8a68:81d7:87c5]) by CY4PR18MB1237.namprd18.prod.outlook.com
- ([fe80::95d4:8a68:81d7:87c5%8]) with mapi id 15.20.1495.011; Thu, 10 Jan 2019
- 08:46:17 +0000
-From:   Ganapathi Bhat <gbhat@marvell.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>, Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Rakesh Parmar <rakeshp@marvell.com>,
-        Hemantkumar Suthar <shemant@marvell.com>
-Subject: RE: [PATCH v2] mwifiex: add support for sd8977 chipset
-Thread-Topic: [PATCH v2] mwifiex: add support for sd8977 chipset
-Thread-Index: AdSoKeBMXl0ndSmBTC+txF8evGoR5gAjeUOdAAID8UA=
-Date:   Thu, 10 Jan 2019 08:46:17 +0000
-Message-ID: <CY4PR18MB12377DAC56F16A71636460E4A0840@CY4PR18MB1237.namprd18.prod.outlook.com>
-References: <CY4PR18MB1237AEF3375B348254E0298FA08B0@CY4PR18MB1237.namprd18.prod.outlook.com>
- <871s5l6jvf.fsf@purkki.adurom.net>
-In-Reply-To: <871s5l6jvf.fsf@purkki.adurom.net>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [182.72.17.59]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;CY4PR18MB1541;20:bEceaV7RRSjUhYA4Gce6SdOH+jkCMyI1TdtezFvG7b+dz6dyAohzcycI3FOoTkhke4bJwLmTZFqw1sOL0Vx5Q79s0pv1J73DPAkxVX5lgFrsfnFTstkGuFHsANTpdtTxfmdmGOELhhBNk7Tlqrapw58AtNnj5jdGab5i2zucHD0=
-x-ms-exchange-antispam-srfa-diagnostics: SOS;SOR;
-x-forefront-antispam-report: SFV:SKI;SCL:-1;SFV:NSPM;SFS:(10009020)(366004)(346002)(136003)(39860400002)(376002)(396003)(199004)(189003)(105586002)(6436002)(66066001)(8676002)(256004)(4326008)(99286004)(316002)(74316002)(575784001)(86362001)(486006)(55016002)(11346002)(229853002)(446003)(78486014)(81166006)(305945005)(81156014)(7736002)(476003)(8936002)(6916009)(186003)(33656002)(71190400001)(7696005)(68736007)(76176011)(478600001)(3846002)(5660300001)(9686003)(6246003)(25786009)(107886003)(97736004)(6116002)(71200400001)(53936002)(54906003)(14454004)(2906002)(55236004)(6506007)(26005)(106356001)(102836004)(4744005);DIR:OUT;SFP:1101;SCL:1;SRVR:CY4PR18MB1541;H:CY4PR18MB1237.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-office365-filtering-correlation-id: 0fb76abf-d4b1-4497-f5a9-08d676d8163c
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(2017052603328)(7153060)(7193020);SRVR:CY4PR18MB1541;
-x-ms-traffictypediagnostic: CY4PR18MB1541:
-x-microsoft-antispam-prvs: <CY4PR18MB15418F87E389623BCA65C3D5A0840@CY4PR18MB1541.namprd18.prod.outlook.com>
-x-forefront-prvs: 0913EA1D60
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: ahRLmLHul8g/MECm+R205hWcjNpHJTfqp3B0FCI4u412zONJYKqd2xHl51UXbxvXykQ0oFf5WmjX9jeS5Xf9YR9ThIr88kH43wCqOhTCBRnn1YCJ7baH/lcAeLKvsGQpfOaliQSAwHXylMTya2OzYhN2hMMnlE6SbHAqS2ba3Suuw+e3h77bXcZ+RZ8a4Qg9xBkRREip1ekIZfUhRurjNiRWmvDCAocRUo50GdSmBlzaGO30KdIpyaklIOFF2lyisU0dSjtBR5yapZ9D6hw3Ufp0lBSVEy5PGDraJeU7U5viODVcpn4gu5PSyltY77L0
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Thu, 10 Jan 2019 03:50:18 -0500
+Received: by mail-wr1-f67.google.com with SMTP id j2so10417420wrw.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2019 00:50:17 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=y5Bx9+ZXvD37+st+1diejdevGl7hKaknbqFKL/O2d3o=;
+        b=QkRdM9+kriOEQWPmIWsBwXdK9a42x1hOPARfd7bBBwmQ87SFQxrhxlaeT1U3ipkmpc
+         XBaqNCcAjAdZOaXVgukEJs4i887SqHJQjD6S/+P2tdbuNZHbqcnwGoWatAp6WVaC7uRH
+         q7Pc4yTfFWASSUt7/YYK2kVbKavYtdjrY2AB4Nq3DeocpmDnLeHyXywhKbsIUOAvB53d
+         Xdu0JeRCZgfF7i9QihOyA4U4zYTzHyl/CwUAcfiKeUHyhzH2Bce1HBnH6jv4RPQ0r9wf
+         pc5+TCiIj4Kdo1gwUBZhMJKim6/AVVqvia0spA9l7cvm4U7o9/Ryd1VT0fhCgwBg1k1m
+         sfxQ==
+X-Gm-Message-State: AJcUukc8OHxxmy2Q7JoI8BHwKcNrrAg0v1LH6K2f1xiyY0P0XM3gNgh0
+        snW5YRqKsuADaBjfTYev94EC2g==
+X-Google-Smtp-Source: ALg8bN7G+xIc14T8xRZrGSqpLfVdWteyKwfXD+YUePKXi4R0mVBuCma3levsWkCmA8DUzzCCAIe2cg==
+X-Received: by 2002:a5d:65ce:: with SMTP id e14mr7906475wrw.150.1547110216296;
+        Thu, 10 Jan 2019 00:50:16 -0800 (PST)
+Received: from shalem.localdomain (546A5441.cm-12-3b.dynamic.ziggo.nl. [84.106.84.65])
+        by smtp.gmail.com with ESMTPSA id o15sm51711321wrp.12.2019.01.10.00.50.15
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 10 Jan 2019 00:50:15 -0800 (PST)
+Subject: Re: [PATCH] brcmfmac: Use request_firmware_direct for the clm_blob
+To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Wright Feng <Wright.Feng@cypress.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        John Van Boxtel <John.VanBoxtel@cypress.com>
+References: <20190107113401.6824-1-hdegoede@redhat.com>
+ <d6dafb19-4e88-c2c7-9547-2ebd5b4bec2e@broadcom.com>
+ <5b365baf-99b3-2033-1f8e-6ca38d6daf42@redhat.com>
+ <55db0ecb-5386-7a10-f26a-fa1e50af9b57@cypress.com>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <d0bdf1d9-afa1-2eb7-b308-a6ea5278d0f6@redhat.com>
+Date:   Thu, 10 Jan 2019 09:50:14 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.1
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0fb76abf-d4b1-4497-f5a9-08d676d8163c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Jan 2019 08:46:17.7142
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR18MB1541
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-01-10_04:,,
- signatures=0
-X-Proofpoint-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=735 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1901100073
+In-Reply-To: <55db0ecb-5386-7a10-f26a-fa1e50af9b57@cypress.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle,
+Hi,
 
-> Subject: Re: [PATCH v2] mwifiex: add support for sd8977 chipset
->=20
-> Ganapathi Bhat <gbhat@marvell.com> writes:
->=20
-> >>From a0f96e630eb5b74b047149e23c161a9f06fb2cc5 Mon Sep 17 00:00:00
-> 2001
-> > From: Hemantkumar Suthar <shemant@marvell.com>
-> >
-> > This patch adds support for 8977 chipset to mwifiex with SDIO
-> > interface. Register offsets and supported feature flags are updated.
-> > Firmware image used will be mrvl/sd8977_uapsta.bin.
-> >
-> > Signed-off-by: Hemantkumar Suthar <shemant@marvell.com>
-> > Signed-off-by: Rakesh Parmar <rakeshp@marvell.com>
-> > Signed-off-by: Cathy Luo <cluo@marvell.com>
-> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
->=20
-> I'm not sure if git automatically removes '>From ' (never seen it
-> before) so I'll remove it manually if needed.
+On 10-01-19 09:16, Chi-Hsien Lin wrote:
+>> A "Firmware crash fix" to me sounds like a potential security issue, yet
+> 
+> It is a functional bug that causes wifi to stop working correctly. Not a
+> security hole. We did upstream firmware for security issues.
 
-I have sent v3, removing 'From a0f9...'
+Even if this is just a functional bug it would be still nice to also
+have bugfixes like this available to the millions of users who get
+their firmware through linux-firmware.
+
+Also if this bug us remotely triggerable it allows a denial-of-service
+attack and thus still is a security issue.
+
+>> Another example is the firmware for the wifi on the Raspberry Pi 3B+ which
+>> is *years* older in linux-firmware.
+> 
+> Could you please specify the source (link) of the firmware you're
+> referring to?
+
+linux-firmware has:
+
+[hans@shalem ~]$ strings /lib/firmware/brcm/brcmfmac43455-sdio.bin | tail -n1
+43455c0-roml/sdio-ag-p2p-pno-aoe-pktfilter-keepalive-mchan-pktctx-proptxstatus-ampduhostreorder-lpc-pwropt-txbf-wnm-okc-ccx-ltecx-wfds-wl11u-mfp-tdls-ve
+Version: 7.45.18.0 CRC: d7226371 Date: Sun 2015-03-01 07:31:57 PST Ucode Ver: 1026.2 FWID: 01-6a2c8ad4
+
+Where as: https://community.cypress.com/docs/DOC-15932 has:
+
+[hans@shalem Download]$ strings firmware/brcmfmac43455-sdio.bin | tail -n2
+43455c0-roml/43455_sdio-pno-aoe-pktfilter-pktctx-wfds-mfp-dfsradar-wowlpf-idsup-idauth-noclminc-clm_min-obss-obssdump-swdiv-gtkoe-roamprof-txbf-ve-sae-sr Version:
+7.45.173 (r707987 CY) CRC: 7beaf14c Date: Fri 2018-09-21 04:12:04 PDT Ucode Ver: 1043.2116 FWID 01-d2799ea2
+
+So the linux firmware version is *three and a half* years out of date!
+
+>> I must say these whole shenanigans with the firmware causing
+>> linux-firmware to
+>> have way too old firmware versions makes me very unhappy. I'm at the point
+>> where I'm telling friends to not buy any hardware with Cypress wifi in
+>> there
+>> because of this and because of the *complete* lack of bluetooth firmware.
+> 
+> We did work with HTC to upstream their bluetooth firmware to
+> linux-firmware, although I admit that most of the bluetooth firmware are
+> only available through hardware vendors.
+> 
+> Bluetooth firmware files are specific to vendor board designs. When
+> there is an update, the hardware (device/board) vendor qualifies the
+> firmware and release through their preferred channel (in HTC's case they
+> chose to upstream it).
+
+I'm aware that the bluetooth patchram files may have board specific
+elements too them (most are generic but some contain board specific
+workarounds), this is also why for USB bluetooth adapters the kernel
+includes the vendorid-productid in the filename, as can be seen with
+for example the HTC vive bluetooth firmware.
+
+A community member has made bluetooth patchram files from the Windows
+drivers with the filenames expected by Linux available for Linux users here:
+https://github.com/winterheart/broadcom-bt-firmware/tree/master/
+
+These files come with/under the following license:
+https://github.com/winterheart/broadcom-bt-firmware/blob/master/LICENSE.broadcom_bcm20702
+
+Which indicates that even though these files are distributed through vendor
+channels for Windows, Broadcom and now Cypress holds the rights on these files.
+
+So it is within Cypress power to give permission to distribute these files under the
+https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/LICENCE.cypress
+license. That is all we are asking for.
+
+We are not asking you to do special Linux builds, Linux can use the per
+board Windows files just fine, all we need is permission to distribute this
+and then Linux users will run their boards with the same qualified firmware
+files as are being used under Windows.
+
+Actually by not allowing us to provide these files you run the risk of users
+grabbing a random file from somewhere and renaming it, potentially having it
+not match the board the user is using.
 
 Regards,
-Ganapathi
+
+Hans
+
