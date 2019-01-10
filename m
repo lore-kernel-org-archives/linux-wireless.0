@@ -2,113 +2,90 @@ Return-Path: <SRS0=ogP8=PS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD352C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 10:12:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D237C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 11:14:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B743E214DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 10:12:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CDBB214C6
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 11:14:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727534AbfAJKMY (ORCPT
+        id S1727918AbfAJLOX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Jan 2019 05:12:24 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:52186 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727257AbfAJKMX (ORCPT
+        Thu, 10 Jan 2019 06:14:23 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:41673 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727697AbfAJLOX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Jan 2019 05:12:23 -0500
-Received: by mail-wm1-f68.google.com with SMTP id b11so10646162wmj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2019 02:12:22 -0800 (PST)
+        Thu, 10 Jan 2019 06:14:23 -0500
+Received: by mail-wr1-f65.google.com with SMTP id x10so10874341wrs.8
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2019 03:14:21 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=WXTOyxjzADYowIWSq3bLC8CQS530FCdkVP1s5gqZ8Jg=;
-        b=gVQ0U68NVnXvjHqhHLudg/x51HQutcTeoj1t55fWGU/VeTLlaKset73qLeMDjawcU3
-         mcaWNiYZ157FKybpIoobktN+jABY8sYv7wqlVaHk62uiTJ0Qr6Ea+AC4AO2KCCxdaGGm
-         rKWfhUj8AKXdpllpwwoFoRd1mHJHwxbBESzYVpt90yxtla58PShAw9xL0+uqsQ7PNUkG
-         TrzvmKUj6I1NhOlA4qTO15rreTqRnVhCH7AKKvqWXOj0eDqzaHCwHQresTuo+IZn+iJq
-         QTfj9GuVUL9GM/hb7sswTICmqf02gEA67ehkfxxkxfJb8qIuGrIcfl5DEVPPjyL/SrUi
-         +kYg==
-X-Gm-Message-State: AJcUukfCFM0Xh6L79O5vQi5fgk+rmvsbZSmPQP8ZDc3BIyrjb0WKp/bS
-        2P4MRIgPd5xkNSBWcCTgGOPqCQ==
-X-Google-Smtp-Source: ALg8bN7DlArSeeJd8bcCQu1nZDsZBFMx1RffgML9LZ0qZguxWB6pn8/iRpB4a61PZvkaMxv1/j3nFw==
-X-Received: by 2002:a1c:9d57:: with SMTP id g84mr9332439wme.16.1547115141535;
-        Thu, 10 Jan 2019 02:12:21 -0800 (PST)
-Received: from shalem.localdomain (546A5441.cm-12-3b.dynamic.ziggo.nl. [84.106.84.65])
-        by smtp.gmail.com with ESMTPSA id v1sm78655237wrw.90.2019.01.10.02.12.20
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 10 Jan 2019 02:12:20 -0800 (PST)
-Subject: Re: [PATCH] brcmfmac: Use request_firmware_direct for the clm_blob
-To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Wright Feng <Wright.Feng@cypress.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        John Van Boxtel <John.VanBoxtel@cypress.com>
-References: <20190107113401.6824-1-hdegoede@redhat.com>
- <d6dafb19-4e88-c2c7-9547-2ebd5b4bec2e@broadcom.com>
- <5b365baf-99b3-2033-1f8e-6ca38d6daf42@redhat.com>
- <55db0ecb-5386-7a10-f26a-fa1e50af9b57@cypress.com>
- <d0bdf1d9-afa1-2eb7-b308-a6ea5278d0f6@redhat.com>
- <2c8efe58-0c13-8dfd-6d5a-17965f65a71d@cypress.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <662d8d61-3727-e32f-6bb5-2d0578061878@redhat.com>
-Date:   Thu, 10 Jan 2019 11:12:20 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.1
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=0j41QadWa4w/LZUeVPoc0FviFxjhCpPGcAq3o3u/5bo=;
+        b=OhSEV2xBD2wYRM21EEQnJa51yOWMp1FVncWOt9+xxl8zUaORc42nAAtTlm7NuwkTQa
+         7nLazbU3d1ISYmHBOYszPAJqWsRa4K/mGoDmhdLdImEYmFVUnGkTEZjHLCV0WVm5RSw5
+         AXSHF+VH4fKr4j4u+5ASWn8qNXaFJt1J682FwnMz4dq0y56AkMeCbH3xSv4XpkZOO32k
+         nvlRXUwkVKuBENnu8pC94eCVX/nbb9orkJ/AB5HhznkdaLqwGAWLlWG0LXoKoiPH14F9
+         eYbmYdFvgGqb17FeFjbmHvId9Q8rghFAuJ76AaCAUI+cllXe5N3tcpNr0+5RiVEF4yP8
+         QG7w==
+X-Gm-Message-State: AJcUukcT9dhxZ4+dQi9f+ZON+gxBWyCYpOjbjbubUzXq+N0u6x2Fc4c+
+        oWF9J2Qz74KV7O2naTEK4CZWuQ==
+X-Google-Smtp-Source: ALg8bN6KBnV3n1o5ppsl2ojdDEwtyJr1lOgRbHrko/p8Q9DeB44tolc2B0eaCxQlXVs708zk8PTyiA==
+X-Received: by 2002:adf:9382:: with SMTP id 2mr8575238wrp.269.1547118861219;
+        Thu, 10 Jan 2019 03:14:21 -0800 (PST)
+Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id p5sm10911336wmh.16.2019.01.10.03.14.20
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 10 Jan 2019 03:14:20 -0800 (PST)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH] mt76: use proper name for __MT76x02_H macro
+Date:   Thu, 10 Jan 2019 12:14:04 +0100
+Message-Id: <500bfffcf550ed5835ccb93ad702d0ecafdaa0e3.1547118586.git.lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <cover.1547118586.git.lorenzo.bianconi@redhat.com>
+References: <cover.1547118586.git.lorenzo.bianconi@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <2c8efe58-0c13-8dfd-6d5a-17965f65a71d@cypress.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Use proper name for __MT76x02_H macro in mt76x02.h
 
-On 10-01-19 10:45, Chi-Hsien Lin wrote:
-> 
-> 
-> On 01/10/2019 4:50, Hans de Goede wrote:
->> Hi,
->>
->> On 10-01-19 09:16, Chi-Hsien Lin wrote:
->> So the linux firmware version is *three and a half* years out of date!
-> 
-> Thanks a lot for the reference. This discussion could be moved to the V2
-> thread.
-> 
-> 
->> We are not asking you to do special Linux builds, Linux can use the per
->> board Windows files just fine, all we need is permission to distribute this
->> and then Linux users will run their boards with the same qualified firmware
->> files as are being used under Windows.
-> 
-> I remember that this has been brought up a while back and I did check
-> with the Cypress bluetooth team about it. The answer I got is that the
-> files were committed before the Cypress acquisition and our bluetooth
-> team couldn't even locate these files in our server. So, unfortunately
-> we cannot modify the license for firmware files that are not released by us.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x02.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-AFAICT Cypress owns the copyright on these files, IANAL but it is not
-necessary for Cypress to (re)distribute these files under the new license.
-As copyright holder Cypress can simply give permission to distribute
-these files under the:
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/LICENCE.cypress
-license.
-
-Regards,
-
-Hans
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
+index f594e8c82500..d8bd0509a790 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
+@@ -15,8 +15,8 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-#ifndef __MT76X02_UTIL_H
+-#define __MT76X02_UTIL_H
++#ifndef __MT76x02_H
++#define __MT76x02_H
+ 
+ #include <linux/kfifo.h>
+ 
+@@ -238,4 +238,4 @@ mt76x02_rx_get_sta_wcid(struct mt76x02_sta *sta, bool unicast)
+ 		return &sta->vif->group_wcid;
+ }
+ 
+-#endif
++#endif /* __MT76x02_H */
+-- 
+2.20.1
 
