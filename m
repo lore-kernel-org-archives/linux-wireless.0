@@ -1,161 +1,215 @@
-Return-Path: <SRS0=9BuQ=PR=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=ogP8=PS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C7A5C43387
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 22:19:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3B7FC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 01:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E66A420859
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jan 2019 22:19:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F15C214DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 01:29:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wavesemi.onmicrosoft.com header.i=@wavesemi.onmicrosoft.com header.b="TE/ytqf9"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B8sDaeKK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726924AbfAIWTS (ORCPT
+        id S1726950AbfAJB3s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Jan 2019 17:19:18 -0500
-Received: from mail-eopbgr760101.outbound.protection.outlook.com ([40.107.76.101]:48974
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726831AbfAIWTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Jan 2019 17:19:17 -0500
+        Wed, 9 Jan 2019 20:29:48 -0500
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:44116 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726590AbfAJB3s (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Jan 2019 20:29:48 -0500
+Received: by mail-oi1-f194.google.com with SMTP id m6so7972863oig.11;
+        Wed, 09 Jan 2019 17:29:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=wavesemi.onmicrosoft.com; s=selector1-wavecomp-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oPezSIEBus3c+GXaL0b0ixVd1P7wz/O0cFIJdFNKQkM=;
- b=TE/ytqf9SlYPiRecp3Ouqn0JmDpkZ9eOWgQkQI0hXK0I/8psGBQiH2YPauHwQnf8SMW3+E1OAXBdBtWv6OvvvoZJ7FHfy5CKzohkVpnhXDQZSklyQmRB+jWXMlEiuSzEGNbhgNn0oE81zy4UmaMexsaD7W/GZryD5BJmknmM/1E=
-Received: from MWHPR2201MB1277.namprd22.prod.outlook.com (10.174.162.17) by
- MWHSPR00MB2400.namprd22.prod.outlook.com (10.171.151.23) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1516.13; Wed, 9 Jan 2019 22:19:13 +0000
-Received: from MWHPR2201MB1277.namprd22.prod.outlook.com
- ([fe80::595e:ffcc:435b:9110]) by MWHPR2201MB1277.namprd22.prod.outlook.com
- ([fe80::595e:ffcc:435b:9110%4]) with mapi id 15.20.1516.010; Wed, 9 Jan 2019
- 22:19:13 +0000
-From:   Paul Burton <paul.burton@mips.com>
-To:     =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC:     Paul Burton <pburton@wavecomp.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        James Hogan <jhogan@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>
-Subject: Re: [PATCH V2 mips-fixes] MIPS: BCM47XX: Setup struct device for the
- SoC
-Thread-Topic: [PATCH V2 mips-fixes] MIPS: BCM47XX: Setup struct device for the
- SoC
-Thread-Index: AQHUozbEHjvX8vfLkEO5krYUFUmf+qWnjEOA
-Date:   Wed, 9 Jan 2019 22:19:12 +0000
-Message-ID: <MWHPR2201MB1277BD8E73762956F2D100C4C18B0@MWHPR2201MB1277.namprd22.prod.outlook.com>
-References: <20190103073417.24135-1-zajec5@gmail.com>
-In-Reply-To: <20190103073417.24135-1-zajec5@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: BYAPR05CA0081.namprd05.prod.outlook.com
- (2603:10b6:a03:e0::22) To MWHPR2201MB1277.namprd22.prod.outlook.com
- (2603:10b6:301:24::17)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=pburton@wavecomp.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [67.207.99.198]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHSPR00MB2400;6:/aYlYvAiYC1xfb8RB61+4DAEjyrFF0aBBM4d6exSFfpfqVEmohbcwCm/Cz7FdoaSJl5pqxYcmIxdpUPY0mY0FZlqoPRlZpL1SI9n0QdtMc5GjLKjbySVOc9niN6oKFlYOHTIJXfNRBjex0JmqAiekoIpW5GFHktyP9rpSaTuHTySLskVKU91dU0bKGRB0J2niwdzvdon/dODyThFksJkD3tj/XQW8q7BhxXoLA8r5kQ9cq6lCaBmhgLvJ0AYd127rXBkANlR8T4wgTt9uMIgqVra8Tp1cVzo0LbpjxskV0RDVBCrjeEZTFrfvyx5TEaDMQG5IsB5tGpf1UrlSlkaKIxnxXPi0SjlhuY+xXyH/+CarY643/galzFNW0oTithgflV8BAzctLSZcNljKIk8mvw3FnNCFkBOGn4kwObSzXTm420FUEfvh5L7T8ZCBeP5vTd8aSDEAPGkz8PBtLUmSg==;5:dNDC2lzEYMeKbwVB6X3xKNwYuZXmZGK6rVODJqrWd/r/37gcjnNtwY4QqyzyDgLR+n5E/ijtCHElco9VT3PtKpPYfpodsXbl2o5ur3c89b97wCxaAaLiHq0acST0D45GpYgmTaKEs6xFnkqWHMd6BShMPUA7KPi1MxkSgLX4BcB+bq6qDqptrdcL1Y8oI7OCMNwS9+oQQhXveg6Ooyy/BQ==;7:D7SJFg/rF3vUMazqf9Bd70Jj5xDkC2xsW81GhI7p36/tH4QyPlzmlmPLVmL4zzGfqifeNDFwYrEyUy6Fp+YuzLhFn8ZJWDYBxT5OnZSTiqi6++VLj6Bba/N3KO/xgi8aa5eYmurGkhxFnvQip+RURw==
-x-ms-office365-filtering-correlation-id: 294a3c48-5777-421e-7c4f-08d676807be9
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(2017052603328)(7153060)(7193020);SRVR:MWHSPR00MB2400;
-x-ms-traffictypediagnostic: MWHSPR00MB2400:
-x-microsoft-antispam-prvs: <MWHSPR00MB24007B0E489F8E1469B2494DC18B0@MWHSPR00MB2400.namprd22.prod.outlook.com>
-x-forefront-prvs: 0912297777
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(366004)(136003)(39840400004)(376002)(346002)(396003)(189003)(199004)(76176011)(54906003)(8936002)(7696005)(106356001)(3846002)(6116002)(97736004)(74316002)(14454004)(7416002)(52116002)(105586002)(316002)(26005)(6506007)(386003)(42882007)(186003)(476003)(102836004)(11346002)(446003)(99286004)(256004)(5024004)(14444005)(44832011)(25786009)(66066001)(486006)(478600001)(1411001)(4326008)(39060400002)(71200400001)(71190400001)(6436002)(6246003)(55016002)(305945005)(45080400002)(229853002)(7736002)(8676002)(6916009)(81166006)(81156014)(5660300001)(2906002)(66574012)(53936002)(9686003)(68736007)(33656002)(575784001);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHSPR00MB2400;H:MWHPR2201MB1277.namprd22.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: wavecomp.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: Pv4pw5SHzRIbXgEhk7VEPVVsDebQuhab0NKbfXTFAgdLNSegTOrQmXqIz5zl61VedOFwnRiwWKSCnbpD7pd2mSYiNMi3ApQ6H5GyjwsCaempD8IPqxZzygmonK1ZS0mMbBMVsaxUJ+S7wLfk5vGqVm3pwh1imqQltooyHMxbqtzK/QfB3wkzZItWroC0cYvDxd4FGJnWt+4EL/Bdd7Xmlwr4pzcAEen42OARWzLcgpFFOgnvE22GWoPUe1ZChIK2JkBfVsILE00KRB8xgiE+7QHTOixPv+EAJymzKOwI+njNBE/16DNV4RRDDJhxQtDo
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=XwHAkJ9fISo/ig1npHSkgm+SYvr8cIIkKan1oY0IZZk=;
+        b=B8sDaeKKSJHzmLwzyl2Cc6//+Vwfw0Kf8yjszSuzeM96L/Al7o7VJFAZBQkghIX1jP
+         gZQrP2/i/ORcXWV3Op1LS9sEejxroVqc6IcxrQa7OdOfwQ8UiQF973xsMru2SuccNdOQ
+         HhJm3e/O1FDbGQdPRju58/gps2b+0CpasuQoDvuYBVHQhmBDFLPx7LmLE4Yu6emv8v+A
+         IhuhnIfVHCwo7/wQ4MA6iJItoxd85iYHPhqVhgZZjIkgPDHHRNExLVV04PPfsVg28BZw
+         ffnFT20KE8K9SMeeKAPTTxu24xcPOOgobPdIRGeRH6oabXzLHCMNBBgUhinBQORBGml4
+         vrpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=XwHAkJ9fISo/ig1npHSkgm+SYvr8cIIkKan1oY0IZZk=;
+        b=iz9rmVKNoaGGTNWabYHr0FPocjSSVwp2Yi74hYu1kzgRTh27PsNI9Yzb74usrb+ZM0
+         mjbb8n9ITbVuEdOUK+Yj4AyhQRz2yHkB2KkdnBH+hc+fyBkIuAiryd+Q9xDyf6tH0WdJ
+         Qt50FLhUZ/pRqnI07iROl9/AyjOq2/LnA/YTMYRIE9+2ykSEzbh7KqmAWRD3ZQZ679va
+         w4Lch8EJ+do4lFvntcPkkae51juNxQhrZ3MUcBOyk0gQDJStjQm/w9DpY1+vBRRUS9oK
+         vRm1Xh5UZ8TieAcqVCCKsYTbCzl2WsQyPdQOEFFz/sFAxQeDHYcJi1yyOjeSXL1rCNgz
+         ioaQ==
+X-Gm-Message-State: AJcUukeM9e0XjsVXOpewI5a/gpPdrC7ueUoLMl58gj9aG5ESjG+5q8kO
+        2q7MEjl7yYKe8kWcCi7Dya439/TvJdJFEu7cezg=
+X-Google-Smtp-Source: ALg8bN4XTyYbBWXJjy1g+hE59QJ78sNMG3Qlkrht3KS42cgdCuiHnO3xkp6vWn65bHTSjbgVkDGT8+tYdf6JsQwGUUo=
+X-Received: by 2002:aca:38c2:: with SMTP id f185mr5598507oia.26.1547083786537;
+ Wed, 09 Jan 2019 17:29:46 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: mips.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 294a3c48-5777-421e-7c4f-08d676807be9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2019 22:19:13.0347
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 463607d3-1db3-40a0-8a29-970c56230104
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHSPR00MB2400
+References: <20181109000800.15431-1-jprvita@gmail.com> <83CA40B2-1AF3-49FA-9F94-C84A3C916583@holtmann.org>
+ <CA+A7VXXfdyLWMpNaEzUzDe6PiktOKb5oJrufYrGeTyXyXChQfw@mail.gmail.com>
+ <CA+A7VXX2fA5gC1_-nwFDswvB+we3R69ZTNiGDmrO+sftRdxxpg@mail.gmail.com>
+ <CA+A7VXXarPAb+vFNTqZDhpng_niLjSCxqEQdLLV9eGAn+PPUXQ@mail.gmail.com> <CANUX_P27VP_Vy+omnO2CAGvntZNF6vowrFEHrAfeSgPrFJFdsg@mail.gmail.com>
+In-Reply-To: <CANUX_P27VP_Vy+omnO2CAGvntZNF6vowrFEHrAfeSgPrFJFdsg@mail.gmail.com>
+From:   =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date:   Wed, 9 Jan 2019 17:29:10 -0800
+Message-ID: <CA+A7VXU6kwrjezwdgZnOMZi58i80nja553ZZ3VL5n_hqSeSwKA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] iwlwifi: Load firmware exclusively for Intel WiFi
+To:     Emmanuel Grumbach <egrumbach@gmail.com>
+Cc:     Marcel Holtmann <marcel@holtmann.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SGVsbG8sDQoNClJhZmHFgiBNacWCZWNraSB3cm90ZToNCj4gRnJvbTogUmFmYcWCIE1pxYJlY2tp
-IDxyYWZhbEBtaWxlY2tpLnBsPg0KPiANCj4gU28gZmFyIHdlIG5ldmVyIGhhZCBhbnkgZGV2aWNl
-IHJlZ2lzdGVyZWQgZm9yIHRoZSBTb0MuIFRoaXMgcmVzdWx0ZWQgaW4NCj4gc29tZSBzbWFsbCBp
-c3N1ZXMgdGhhdCB3ZSBrZXB0IGlnbm9yaW5nIGxpa2U6DQo+IDEpIE5vdCB3b3JraW5nIEdQSU9M
-SUJfSVJRQ0hJUCAoZ3Bpb2NoaXBfaXJxY2hpcF9hZGRfa2V5KCkgZmFpbGluZykNCj4gMikgTGFj
-ayBvZiBwcm9wZXIgdHJlZSBpbiB0aGUgL3N5cy9kZXZpY2VzLw0KPiAzKSBtaXBzX2RtYV9hbGxv
-Y19jb2hlcmVudCgpIHNpbGVudGx5IGhhbmRsaW5nIGVtcHR5IGNvaGVyZW50X2RtYV9tYXNrDQo+
-IA0KPiBLZXJuZWwgNC4xOSBjYW1lIHdpdGggYSBsb3Qgb2YgRE1BIGNoYW5nZXMgYW5kIGNhdXNl
-ZCBhIHJlZ3Jlc3Npb24gb24NCj4gYmNtNDd4eC4gU3RhcnRpbmcgd2l0aCB0aGUgY29tbWl0IGY4
-YzU1ZGM2ZTgyOCAoIk1JUFM6IHVzZSBnZW5lcmljIGRtYQ0KPiBub25jb2hlcmVudCBvcHMgZm9y
-IHNpbXBsZSBub25jb2hlcmVudCBwbGF0Zm9ybXMiKSBETUEgY29oZXJlbnQNCj4gYWxsb2NhdGlv
-bnMganVzdCBmYWlsLiBFeGFtcGxlOg0KPiBbICAgIDEuMTE0OTE0XSBiZ21hY19iY21hIGJjbWEw
-OjI6IEFsbG9jYXRpb24gb2YgVFggcmluZyAweDIwMCBmYWlsZWQNCj4gWyAgICAxLjEyMTIxNV0g
-YmdtYWNfYmNtYSBiY21hMDoyOiBVbmFibGUgdG8gYWxsb2MgbWVtb3J5IGZvciBETUENCj4gWyAg
-ICAxLjEyNzYyNl0gYmdtYWNfYmNtYTogcHJvYmUgb2YgYmNtYTA6MiBmYWlsZWQgd2l0aCBlcnJv
-ciAtMTINCj4gWyAgICAxLjEzMzgzOF0gYmdtYWNfYmNtYTogQnJvYWRjb20gNDd4eCBHQml0IE1B
-QyBkcml2ZXIgbG9hZGVkDQo+IA0KPiBUaGUgYmdtYWMgZHJpdmVyIGFsc28gdHJpZ2dlcnMgYSBX
-QVJOSU5HOg0KPiBbICAgIDAuOTU5NDg2XSAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0t
-LS0tLS0NCj4gWyAgICAwLjk2NDM4N10gV0FSTklORzogQ1BVOiAwIFBJRDogMSBhdCAuL2luY2x1
-ZGUvbGludXgvZG1hLW1hcHBpbmcuaDo1MTYgYmdtYWNfZW5ldF9wcm9iZSsweDFiNC8weDVjNA0K
-PiBbICAgIDAuOTczNzUxXSBNb2R1bGVzIGxpbmtlZCBpbjoNCj4gWyAgICAwLjk3NjkxM10gQ1BV
-OiAwIFBJRDogMSBDb21tOiBzd2FwcGVyIE5vdCB0YWludGVkIDQuMTkuOSAjMA0KPiBbICAgIDAu
-OTgyNzUwXSBTdGFjayA6IDgwNGEwMDAwIDgwNDU5N2M0IDAwMDAwMDAwIDAwMDAwMDAwIDgwNDU4
-ZmQ4IDgzODFiYzJjIDgzODI4MmQ0IDgwNDgxYTQ3DQo+IFsgICAgMC45OTEzNjddICAgICAgICAg
-ODA0MmUzZWMgMDAwMDAwMDEgODA0ZDM4ZjAgMDAwMDAyMDQgODM5ODAwMDAgMDAwMDAwNjUgODM4
-MWJiZTAgNmY1NWIyNGYNCj4gWyAgICAwLjk5OTk3NV0gICAgICAgICAwMDAwMDAwMCAwMDAwMDAw
-MCA4MDUyMDAwMCAwMDAwMjAxOCAwMDAwMDAwMCAwMDAwMDA3NSAwMDAwMDAwNyAwMDAwMDAwMA0K
-PiBbICAgIDEuMDA4NTgzXSAgICAgICAgIDAwMDAwMDAwIDgwNDgwMDAwIDAwMGVlODExIDAwMDAw
-MDAwIDAwMDAwMDAwIDAwMDAwMDAwIDgwNDMyYzAwIDgwMjQ4ZGI4DQo+IFsgICAgMS4wMTcxOTZd
-ICAgICAgICAgMDAwMDAwMDkgMDAwMDAyMDQgODM5ODAwMDAgODAzYWQ3YjAgMDAwMDAwMDAgODAx
-ZmVlZWMgMDAwMDAwMDAgODA0ZDAwMDANCj4gWyAgICAxLjAyNTgwNF0gICAgICAgICAuLi4NCj4g
-WyAgICAxLjAyODMyNV0gQ2FsbCBUcmFjZToNCj4gWyAgICAxLjAzMDg3NV0gWzw4MDAwYWVmOD5d
-IHNob3dfc3RhY2srMHg1OC8weDEwMA0KPiBbICAgIDEuMDM1NTEzXSBbPDgwMDFmOGI0Pl0gX193
-YXJuKzB4ZTQvMHgxMTgNCj4gWyAgICAxLjAzOTcwOF0gWzw4MDAxZjlhND5dIHdhcm5fc2xvd3Bh
-dGhfbnVsbCsweDQ4LzB4NjQNCj4gWyAgICAxLjA0NDkzNV0gWzw4MDI0OGRiOD5dIGJnbWFjX2Vu
-ZXRfcHJvYmUrMHgxYjQvMHg1YzQNCj4gWyAgICAxLjA1MDEwMV0gWzw4MDI0OThlMD5dIGJnbWFj
-X3Byb2JlKzB4NTU4LzB4NTkwDQo+IFsgICAgMS4wNTQ5MDZdIFs8ODAyNTJmZDA+XSBiY21hX2Rl
-dmljZV9wcm9iZSsweDM4LzB4NzANCj4gWyAgICAxLjA2MDAxN10gWzw4MDIwZTFlOD5dIHJlYWxs
-eV9wcm9iZSsweDE3MC8weDJlOA0KPiBbICAgIDEuMDY0ODkxXSBbPDgwMjBlNzE0Pl0gX19kcml2
-ZXJfYXR0YWNoKzB4YTQvMHhlYw0KPiBbICAgIDEuMDY5Nzg0XSBbPDgwMjBjMWUwPl0gYnVzX2Zv
-cl9lYWNoX2RldisweDU4LzB4YjANCj4gWyAgICAxLjA3NDgzM10gWzw4MDIwZDU5MD5dIGJ1c19h
-ZGRfZHJpdmVyKzB4ZjgvMHgyMTgNCj4gWyAgICAxLjA3OTczMV0gWzw4MDIwZWYyND5dIGRyaXZl
-cl9yZWdpc3RlcisweGNjLzB4MTFjDQo+IFsgICAgMS4wODQ4MDRdIFs8ODA0YjU0Y2M+XSBiZ21h
-Y19pbml0KzB4MWMvMHg0NA0KPiBbICAgIDEuMDg5MjU4XSBbPDgwMDAxMjFjPl0gZG9fb25lX2lu
-aXRjYWxsKzB4N2MvMHgxYTANCj4gWyAgICAxLjA5NDM0M10gWzw4MDRhMWQzND5dIGtlcm5lbF9p
-bml0X2ZyZWVhYmxlKzB4MTUwLzB4MjE4DQo+IFsgICAgMS4wOTk4ODZdIFs8ODAzYTA4MmM+XSBr
-ZXJuZWxfaW5pdCsweDEwLzB4MTA0DQo+IFsgICAgMS4xMDQ1ODNdIFs8ODAwMDU4Nzg+XSByZXRf
-ZnJvbV9rZXJuZWxfdGhyZWFkKzB4MTQvMHgxYw0KPiBbICAgIDEuMTEwMTA3XSAtLS1bIGVuZCB0
-cmFjZSBmNDQxYzBkODczZDFmYjViIF0tLS0NCj4gDQo+IFRoaXMgcGF0Y2ggc2V0dXBzIGEgInN0
-cnVjdCBkZXZpY2UiIChhbmQgcGFzc2VzIGl0IHRvIHRoZSBiY21hKSB3aGljaA0KPiBhbGxvd3Mg
-Zml4aW5nIGFsbCB0aGUgbWVudGlvbmVkIHByb2JsZW1zLiBJdCdsbCBhbHNvIHJlcXVpcmUgYSB0
-aW55IGJjbWENCj4gcGF0Y2ggd2hpY2ggd2lsbCBmb2xsb3cgdGhyb3VnaCB0aGUgd2lyZWxlc3Mg
-dHJlZSAmIGl0cyBtYWludGFpbmVyLg0KPiANCj4gRml4ZXM6IGY4YzU1ZGM2ZTgyOCAoIk1JUFM6
-IHVzZSBnZW5lcmljIGRtYSBub25jb2hlcmVudCBvcHMgZm9yIHNpbXBsZSBub25jb2hlcmVudCBw
-bGF0Zm9ybXMiKQ0KPiBDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+IENjOiBM
-aW51cyBXYWxsZWlqIDxsaW51cy53YWxsZWlqQGxpbmFyby5vcmc+DQo+IENjOiBsaW51eC13aXJl
-bGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcgIyB2NC4x
-OSsNCj4gU2lnbmVkLW9mZi1ieTogUmFmYcWCIE1pxYJlY2tpIDxyYWZhbEBtaWxlY2tpLnBsPg0K
-PiBBY2tlZC1ieTogSGF1a2UgTWVocnRlbnMgPGhhdWtlQGhhdWtlLW0uZGU+DQoNCkFwcGxpZWQg
-dG8gbWlwcy1maXhlcy4NCg0KVGhhbmtzLA0KICAgIFBhdWwNCg0KWyBUaGlzIG1lc3NhZ2Ugd2Fz
-IGF1dG8tZ2VuZXJhdGVkOyBpZiB5b3UgYmVsaWV2ZSBhbnl0aGluZyBpcyBpbmNvcnJlY3QNCiAg
-dGhlbiBwbGVhc2UgZW1haWwgcGF1bC5idXJ0b25AbWlwcy5jb20gdG8gcmVwb3J0IGl0LiBdDQo=
+On Wed, Jan 9, 2019 at 10:39 AM Emmanuel Grumbach <egrumbach@gmail.com> wro=
+te:
+>
+> Hello,
+>
+> > > > >
+> > > > > our hardware teams from the Bluetooth and WiFi side really need t=
+o look at this.
+> > >
+> > > Were you able to get attention from the hardware teams with the logs
+> > > I've provided? Are there any news or an idea of when / if we can
+> > > expect this to be fixed in firmware? If not, do you have suggestions
+> > > for an alternative solution?
+> > >
+> >
+> > Sorry to bother you again with this, but I'd really like to figure out
+> > some way forward here. Did you get any feedback from the hardware
+> > teams? Otherwise, I understand having an inter-dependency between the
+> > wifi and bt kernel modules is not desirable, so do you have any
+> > suggestion on how to solve this without adding this dependency?
+> >
+>
+> Have you tried the update the BT firmware with what is now available in
+> mainline linux-firmware.git?
+> I heard that this problem has now been resolved. After you update the
+> BT firmware, you need a full power cycle.
+
+Thanks for the reply. The latest firmware files I see upstream are
+from commit c34a52ab7d, which are the same I had tested with
+previously. I'm still able to hit the problem, but after the firmware
+failed to load the Bluetooth adapter got disconnected from the USB bus
+and then re-connected. Since the iwlwifi firmware loading routine had
+already finished at this point, the Bluetooth firmware loaded
+successfully. I had seen this behavior a few times in my previous
+test, but not always (for example that behavior did not trigger on the
+test I had previously shared logs for). So, maybe that is the fix that
+has been implemented in the firmware? And perhaps some other changes
+in the kernel where preventing that behavior from triggering all the
+time? I'm pasting logs bellow where both modules where blacklisted and
+manually loaded with "modprobe iwlwifi & modprobe btusb":
+
+Jan 09 16:54:24 endless kernel: Bluetooth: Core ver 2.22
+Jan 09 16:54:24 endless kernel: NET: Registered protocol family 31
+Jan 09 16:54:24 endless kernel: Bluetooth: HCI device and connection
+manager initialized
+Jan 09 16:54:24 endless kernel: Bluetooth: HCI socket layer initialized
+Jan 09 16:54:24 endless kernel: Bluetooth: L2CAP socket layer initialized
+Jan 09 16:54:24 endless kernel: Bluetooth: SCO socket layer initialized
+Jan 09 16:54:24 endless kernel: cfg80211: Loading compiled-in X.509
+certificates for regulatory database
+Jan 09 16:54:24 endless kernel: cfg80211: Loaded X.509 cert 'sforshee:
+00b28ddf47aef9cea7'
+Jan 09 16:54:24 endless kernel: platform regulatory.0: Direct firmware
+load for regulatory.db failed with error -2
+Jan 09 16:54:24 endless kernel: cfg80211: failed to load regulatory.db
+Jan 09 16:54:24 endless kernel: usbcore: registered new interface driver bt=
+usb
+Jan 09 16:54:24 endless kernel: Bluetooth: hci0: Bootloader revision
+0.0 build 2 week 52 2014
+Jan 09 16:54:24 endless kernel: Bluetooth: hci0: Device revision is 5
+Jan 09 16:54:24 endless kernel: Bluetooth: hci0: Secure boot is enabled
+Jan 09 16:54:24 endless kernel: Bluetooth: hci0: OTP lock is enabled
+Jan 09 16:54:24 endless kernel: Bluetooth: hci0: API lock is enabled
+Jan 09 16:54:24 endless kernel: Bluetooth: hci0: Debug lock is disabled
+Jan 09 16:54:24 endless kernel: Bluetooth: hci0: Minimum firmware
+build 1 week 10 2014
+Jan 09 16:54:24 endless kernel: Intel(R) Wireless WiFi driver for Linux
+Jan 09 16:54:24 endless kernel: Copyright(c) 2003- 2015 Intel Corporation
+Jan 09 16:54:24 endless kernel: Bluetooth: hci0: Found device
+firmware: intel/ibt-11-5.sfi
+Jan 09 16:54:25 endless kernel: iwlwifi 0000:01:00.0: loaded firmware
+version 36.7596afd4.0 op_mode iwlmvm
+Jan 09 16:54:25 endless kernel: iwlwifi 0000:01:00.0: Detected
+Intel(R) Dual Band Wireless AC 8260, REV=3D0x208
+Jan 09 16:54:25 endless kernel: Bluetooth: BNEP (Ethernet Emulation) ver 1.=
+3
+Jan 09 16:54:25 endless kernel: Bluetooth: BNEP filters: protocol multicast
+Jan 09 16:54:25 endless kernel: Bluetooth: BNEP socket layer initialized
+Jan 09 16:54:25 endless kernel: Bluetooth: hci0: Failed to send
+firmware data (-38)
+Jan 09 16:54:25 endless kernel: iwlwifi 0000:01:00.0: base HW address:
+a4:34:d9:81:bf:a5
+Jan 09 16:54:25 endless kernel: ieee80211 phy0: Selected rate control
+algorithm 'iwl-mvm-rs'
+Jan 09 16:54:25 endless kernel: thermal thermal_zone6: failed to read
+out thermal zone (-61)
+Jan 09 16:54:25 endless kernel: iwlwifi 0000:01:00.0 wlp1s0: renamed from w=
+lan0
+Jan 09 16:54:25 endless kernel: IPv6: ADDRCONF(NETDEV_UP): wlp1s0:
+link is not ready
+Jan 09 16:54:25 endless kernel: IPv6: ADDRCONF(NETDEV_UP): wlp1s0:
+link is not ready
+Jan 09 16:54:25 endless kernel: IPv6: ADDRCONF(NETDEV_UP): wlp1s0:
+link is not ready
+Jan 09 16:54:31 endless kernel: usb 1-7: USB disconnect, device number 3
+Jan 09 16:54:32 endless kernel: usb 1-7: new full-speed USB device
+number 7 using xhci_hcd
+Jan 09 16:54:32 endless kernel: usb 1-7: New USB device found,
+idVendor=3D8087, idProduct=3D0a2b, bcdDevice=3D 0.01
+Jan 09 16:54:32 endless kernel: usb 1-7: New USB device strings:
+Mfr=3D0, Product=3D0, SerialNumber=3D0
+Jan 09 16:54:32 endless kernel: Bluetooth: hci0: Bootloader revision
+0.0 build 2 week 52 2014
+Jan 09 16:54:32 endless kernel: Bluetooth: hci0: Device revision is 5
+Jan 09 16:54:32 endless kernel: Bluetooth: hci0: Secure boot is enabled
+Jan 09 16:54:32 endless kernel: Bluetooth: hci0: OTP lock is enabled
+Jan 09 16:54:32 endless kernel: Bluetooth: hci0: API lock is enabled
+Jan 09 16:54:32 endless kernel: Bluetooth: hci0: Debug lock is disabled
+Jan 09 16:54:32 endless kernel: Bluetooth: hci0: Minimum firmware
+build 1 week 10 2014
+Jan 09 16:54:32 endless kernel: Bluetooth: hci0: Found device
+firmware: intel/ibt-11-5.sfi
+Jan 09 16:54:34 endless kernel: Bluetooth: hci0: Waiting for firmware
+download to complete
+Jan 09 16:54:34 endless kernel: Bluetooth: hci0: Firmware loaded in
+1820173 usecs
+Jan 09 16:54:34 endless kernel: Bluetooth: hci0: Waiting for device to boot
+Jan 09 16:54:34 endless kernel: Bluetooth: hci0: Device booted in 11761 use=
+cs
+Jan 09 16:54:34 endless kernel: Bluetooth: hci0: Found Intel DDC
+parameters: intel/ibt-11-5.ddc
+Jan 09 16:54:34 endless kernel: Bluetooth: hci0: Applying Intel DDC
+parameters completed
+Jan 09 16:54:34 endless kernel: Bluetooth: RFCOMM TTY layer initialized
+Jan 09 16:54:34 endless kernel: Bluetooth: RFCOMM socket layer initialized
+Jan 09 16:54:34 endless kernel: Bluetooth: RFCOMM ver 1.11
+
+--
+Jo=C3=A3o Paulo Rechi Vita
+http://about.me/jprvita
