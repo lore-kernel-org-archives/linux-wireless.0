@@ -2,136 +2,109 @@ Return-Path: <SRS0=ogP8=PS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 881BFC43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 14:29:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F32CC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 18:02:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 44828214C6
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 14:29:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=airfi-aero.20150623.gappssmtp.com header.i=@airfi-aero.20150623.gappssmtp.com header.b="bEnmA+Ct"
+	by mail.kernel.org (Postfix) with ESMTP id 7D3862064C
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 18:02:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729007AbfAJO34 (ORCPT
+        id S1730471AbfAJSCF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Jan 2019 09:29:56 -0500
-Received: from mail-it1-f195.google.com ([209.85.166.195]:38419 "EHLO
-        mail-it1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728843AbfAJO34 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Jan 2019 09:29:56 -0500
-Received: by mail-it1-f195.google.com with SMTP id h65so16465665ith.3
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2019 06:29:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=airfi-aero.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=iKLL5qRT36e5ew/0P8ooUYo4Nvcv72F8pRAT3WLhdR4=;
-        b=bEnmA+CtYi3LePNk/cctmO7z03jf5uxNRP/MV6CQ21GAjaZtuVZ7AaDLpCW/2BO+I2
-         Gn2F5OTU5jFskgsASFUyRFh02E4i40ieLtggHNYiohyX8fKryIC9pLfBAWlsvcgrYzyc
-         OVjf0iN20/WnFBYe/4I0FWGw2xmQqIFTMPoQXP7GTHEr5eb5mO8KLtVPN1+k0alIWmt/
-         gCLcYd6DbqpTMGqgEDre0bpzSUohOyatIaT5IbGzCG6Wi6wujnvFWPn0RZUj/Cl83fTx
-         DrE9nlP5qN66+N083O0eMbk+G7qaDzaCLFkgSyJxP2ZHl7HhU/WOhQ1lmV9zqwCtpqAM
-         bx+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=iKLL5qRT36e5ew/0P8ooUYo4Nvcv72F8pRAT3WLhdR4=;
-        b=lcod8OAljGJfhxmLufDq7Xwqy0gMOrUcq0FOqa7ePXy8R8OjHUSxJVU6xtn/3u3IHS
-         UWERnXFVimal4sLBJ3Mc6yqxLamudJ3+IUasbT9sY0Wq4qO9gUXQa6EwTdOtrFTPW3j2
-         2rklW5Api/qbD844p42FljjInxF/zWsqYxvUIKjJij0pCf53HvM6/y/lE96jhdzPI5/d
-         ic9YXgGCh/P7f8xFAaq1mwLI+X/zktmyKpWgfSs7+sT09nKFK3A+RiQ6NlsEy6spMnyV
-         1W1sjxVQRuuH0nCIlce2ayuaJVSyAWPC8C1CU2UcLbj6PlncfOLrmfNvQxXDDOh5PPOx
-         VZyQ==
-X-Gm-Message-State: AJcUukeWI4YJlyrxS9Wmc9Nrbq63fEtrWRDNvgs42BqUxASSCT3IqUIQ
-        GaWKpixyM8oGiz076BT95SMpmF2dEemOkMs6S8hfxQ==
-X-Google-Smtp-Source: ALg8bN5bC3W25nLloMkgAbYmB23/wggiJdrRTxdf7rtp7R12SJbg69iY6JTcqA7PC3fmM3unwQ+9sIwv6F5J600VFEo=
-X-Received: by 2002:a02:a906:: with SMTP id n6mr6842631jam.123.1547130594943;
- Thu, 10 Jan 2019 06:29:54 -0800 (PST)
+        Thu, 10 Jan 2019 13:02:05 -0500
+Received: from mga05.intel.com ([192.55.52.43]:27754 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729480AbfAJSCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Jan 2019 13:02:05 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jan 2019 10:02:04 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,462,1539673200"; 
+   d="scan'208";a="115802164"
+Received: from fmsmsx103.amr.corp.intel.com ([10.18.124.201])
+  by fmsmga008.fm.intel.com with ESMTP; 10 Jan 2019 10:02:04 -0800
+Received: from fmsmsx123.amr.corp.intel.com (10.18.125.38) by
+ FMSMSX103.amr.corp.intel.com (10.18.124.201) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Thu, 10 Jan 2019 10:02:04 -0800
+Received: from hasmsx107.ger.corp.intel.com (10.184.198.27) by
+ fmsmsx123.amr.corp.intel.com (10.18.125.38) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Thu, 10 Jan 2019 10:02:04 -0800
+Received: from hasmsx112.ger.corp.intel.com ([169.254.11.151]) by
+ hasmsx107.ger.corp.intel.com ([169.254.2.13]) with mapi id 14.03.0415.000;
+ Thu, 10 Jan 2019 20:02:00 +0200
+From:   "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>,
+        "kyle@infradead.org" <kyle@infradead.org>,
+        "jwboyer@kernel.org" <jwboyer@kernel.org>,
+        "ben@decadent.org.uk" <ben@decadent.org.uk>
+Subject: Re: pull request: iwlwifi firmware updates 2018-12-30
+Thread-Topic: pull request: iwlwifi firmware updates 2018-12-30
+Thread-Index: AQHUoBa3x++UKjxcNkWdkej42N9fkaWou3KA
+Date:   Thu, 10 Jan 2019 18:01:59 +0000
+Message-ID: <35b2d5c1f660bff613f77ec7405db284587c62d3.camel@intel.com>
+References: <1546157106.3213.3.camel@intel.com>
+In-Reply-To: <1546157106.3213.3.camel@intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.252.8.136]
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <AFCDA839A695104DA30F6D366E10BA85@intel.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
- <1545318971-28351-2-git-send-email-sgruszka@redhat.com> <CANCHnQoU-PPTotVD-MmCKCjtoVZEx7Nj4+5YGyfYBEKb2+VNdQ@mail.gmail.com>
- <20190107150912.GA9516@redhat.com> <CANCHnQrkB7U2KHd7v6psFaD3cbR+cWj0PaBhRZ8Nk5B6ne7ECw@mail.gmail.com>
- <CAKR_QVLY9ryxUebZD_WWw01Wub9Ue=S3u5YGe2CVk+R8uNgjVw@mail.gmail.com>
- <CANCHnQqe7Y1=h0An0qNQGPONnN-tZ5vMon=-Uoif0GGY5NmPTg@mail.gmail.com>
- <20190109113320.GA15658@redhat.com> <CANCHnQp+J56S=PbMTBkAWfrAi_GoTCOk3Wbao=wRm4A8=bbGKQ@mail.gmail.com>
-In-Reply-To: <CANCHnQp+J56S=PbMTBkAWfrAi_GoTCOk3Wbao=wRm4A8=bbGKQ@mail.gmail.com>
-From:   Jeroen Roovers <jer@airfi.aero>
-Date:   Thu, 10 Jan 2019 15:29:44 +0100
-Message-ID: <CANCHnQrF1u9sxPw3Dx+ZyDLRnZ0Qtn5C3d5Pr4=7tL0YnwtwWw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/3] rt2x00: check number of EPROTO errors
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Randy Oostdyk <linux-kernel@oostdyk.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Aaaaaaand the results are in.
-
-On Thu, 10 Jan 2019 at 08:49, Jeroen Roovers <jer@airfi.aero> wrote:
->
->      Hi Stanislaw,
->
-> On Wed, 9 Jan 2019 at 12:33, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->
-> > So would be below patch (on top of this set) be a solution for at
-> > least to not kill the kernel. Or we looking for something better
-> > i.e. watchdog ?
->
-> I'll give it a spin. Thanks!
-
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
-to inactivity
-kernel: [  500.782266] ieee80211 phy0: rt2x00usb_vendor_request: Error
-- Vendor Request 0x07 failed for offset 0x6888 with error -110
-kernel: [  500.912237] ieee80211 phy0: rt2x00usb_vendor_request: Error
-- Vendor Request 0x06 failed for offset 0x6888 with error -110
-kernel: [  501.042235] ieee80211 phy0: rt2x00usb_vendor_request: Error
-- Vendor Request 0x06 failed for offset 0x6110 with error -110
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
-to inactivity (timer DEAUTH/REMOVE)
-kernel: [  501.772201] ieee80211 phy0: rt2x00usb_vendor_request: Error
-- Vendor Request 0x07 failed for offset 0x1018 with error -110
-kernel: [  501.902177] ieee80211 phy0: rt2x00usb_vendor_request: Error
-- Vendor Request 0x06 failed for offset 0x1018 with error -110
-kernel: [  501.972186] ieee80211 phy0: rt2x00usb_vendor_request: Error
-- Vendor Request 0x06 failed for offset 0x1910 with error -110
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
-to inactivity
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
-to inactivity (timer DEAUTH/REMOVE)
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
-to inactivity
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
-to inactivity (timer DEAUTH/REMOVE)
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
-to inactivity
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
-to inactivity (timer DEAUTH/REMOVE)
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
-to inactivity
-hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
-to inactivity (timer DEAUTH/REMOVE)
-
-rt2x00usb_check_usb_error in your patch is set to
-clearDEVICE_STATE_PRESENT after ten errors, but in this case only 6
-errors were seen. Maybe I should set it to 1 as I have never seen an
-RT5592 recover from this.
-
-The system remained relatively stable until after I tried forcibly
-removing and then loading the rt2800usb module. A simple `ifconfig`
-then triggered a kernel panic. Sadly I couldn't capture it in time but
-I did spot that more phyN (up to phy4) devices had been added.
-
-
-Kind regards,
-      jer
+T24gU3VuLCAyMDE4LTEyLTMwIGF0IDEwOjA1ICswMjAwLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90
+ZToNCj4gSGksDQo+IA0KPiBUaGlzIGNvbnRhaW5zIGEgZml4IGZvcjoNCj4gaHR0cHM6Ly9idWd6
+aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD0yMDIwODUNCj4gDQo+IFBsZWFzZSBwdWxs
+Lg0KPiANCg0KDQpLaW5kIHJlbWluZGVyIDopDQoNCj4gDQo+IFRoYW5rcyENCj4gDQo+IFRoZSBm
+b2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQNCj4gMGYyMmM4NTI3NDM5ZWFhZjVjM2ZjZjg3
+YjMxYzg5NDQ1YjZmYTg0ZDoNCj4gDQo+ICAgUmV2ZXJ0ICJhbWRncHU6IHVwZGF0ZSB2ZWdhMTAg
+ZncgZm9yIDE4LjUwIHJlbGVhc2UiICgyMDE4LTEyLTE4DQo+IDE1OjM4OjUzIC0wNTAwKQ0KPiAN
+Cj4gYXJlIGF2YWlsYWJsZSBpbiB0aGUgR2l0IHJlcG9zaXRvcnkgYXQ6DQo+IA0KPiAgIGdpdDov
+L2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2xpbnV4LQ0K
+PiBmaXJtd2FyZS5naXQgdGFncy9pd2x3aWZpLWZ3LTIwMTgtMTItMzANCj4gDQo+IGZvciB5b3Ug
+dG8gZmV0Y2ggY2hhbmdlcyB1cCB0bw0KPiBiNzI3NzM5MTg3ZjA1ZTE2ZTBiODRkYTI5NjE1ZjE2
+NWUxMDJhMmY2Og0KPiANCj4gICBpd2x3aWZpOiB1cGRhdGUgZmlybXdhcmVzIGZvciA5MDAwIHNl
+cmllcyAoMjAxOC0xMi0zMCAwODozODowMQ0KPiArMDIwMCkNCj4gDQo+IC0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gdXBk
+YXRlcyBmb3IgLTQzLnVjb2RlIGZvciA5MjYwIGFuZCA5MDAwDQo+IA0KPiAtLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IEVt
+bWFudWVsIEdydW1iYWNoICgxKToNCj4gICAgICAgaXdsd2lmaTogdXBkYXRlIGZpcm13YXJlcyBm
+b3IgOTAwMCBzZXJpZXMNCj4gDQo+ICBXSEVOQ0UgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+fCAgIDQgKystLQ0KPiAgaXdsd2lmaS05MDAwLXB1LWIwLWpmLWIwLTQzLnVjb2RlIHwgQmluIDI1
+NDM1MzIgLT4gMjU0MzUzNiBieXRlcw0KPiAgaXdsd2lmaS05MjYwLXRoLWIwLWpmLWIwLTQzLnVj
+b2RlIHwgQmluIDI1NTgxNzIgLT4gMjU1ODE3NiBieXRlcw0KPiAgMyBmaWxlcyBjaGFuZ2VkLCAy
+IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvV0hFTkNF
+IGIvV0hFTkNFDQo+IGluZGV4IGFjZDkzY2JjNjgwOC4uOTVkZmQwMGNjOTU1IDEwMDY0NA0KPiAt
+LS0gYS9XSEVOQ0UNCj4gKysrIGIvV0hFTkNFDQo+IEBAIC0xMDEzLDcgKzEwMTMsNyBAQCBGaWxl
+OiBpd2x3aWZpLTkwMDAtcHUtYjAtamYtYjAtNDEudWNvZGUNCj4gIFZlcnNpb246IDQxLmZjMWE3
+YWVhLjANCj4gIA0KPiAgRmlsZTogaXdsd2lmaS05MDAwLXB1LWIwLWpmLWIwLTQzLnVjb2RlDQo+
+IC1WZXJzaW9uOiA0My5jNzMxMTRiMy4wDQo+ICtWZXJzaW9uOiA0My45NWViNGU5Ny4wDQo+ICAN
+Cj4gIEZpbGU6IGl3bHdpZmktOTI2MC10aC1iMC1qZi1iMC0zMy51Y29kZQ0KPiAgVmVyc2lvbjog
+MzMuNjEwMjk0LjANCj4gQEAgLTEwMjgsNyArMTAyOCw3IEBAIEZpbGU6IGl3bHdpZmktOTI2MC10
+aC1iMC1qZi1iMC00MS51Y29kZQ0KPiAgVmVyc2lvbjogNDEuZmMxYTdhZWEuMA0KPiAgDQo+ICBG
+aWxlOiBpd2x3aWZpLTkyNjAtdGgtYjAtamYtYjAtNDMudWNvZGUNCj4gLVZlcnNpb246IDQzLmM3
+MzExNGIzLjANCj4gK1ZlcnNpb246IDQzLjk1ZWI0ZTk3LjANCj4gIA0KPiAgTGljZW5jZTogUmVk
+aXN0cmlidXRhYmxlLiBTZWUgTElDRU5DRS5pd2x3aWZpX2Zpcm13YXJlIGZvciBkZXRhaWxzDQo+
+ICANCj4gZGlmZiAtLWdpdCBhL2l3bHdpZmktOTAwMC1wdS1iMC1qZi1iMC00My51Y29kZSBiL2l3
+bHdpZmktOTAwMC1wdS1iMC0NCj4gamYtYjAtNDMudWNvZGUNCj4gaW5kZXggZjVjZjVmMzFiOTIw
+Li5hZTYxMDI2M2VhNTYgMTAwNjQ0DQo+IEJpbmFyeSBmaWxlcyBhL2l3bHdpZmktOTAwMC1wdS1i
+MC1qZi1iMC00My51Y29kZSBhbmQgYi9pd2x3aWZpLTkwMDAtDQo+IHB1LWIwLWpmLWIwLTQzLnVj
+b2RlIGRpZmZlcg0KPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS05MjYwLXRoLWIwLWpmLWIwLTQzLnVj
+b2RlIGIvaXdsd2lmaS05MjYwLXRoLWIwLQ0KPiBqZi1iMC00My51Y29kZQ0KPiBpbmRleCAyOTA5
+M2Q1ZDU5MmYuLjNkNWNjZDYzMjM0MSAxMDA2NDQNCj4gQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS05
+MjYwLXRoLWIwLWpmLWIwLTQzLnVjb2RlIGFuZCBiL2l3bHdpZmktOTI2MC0NCj4gdGgtYjAtamYt
+YjAtNDMudWNvZGUgZGlmZmVyDQo=
