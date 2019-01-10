@@ -2,85 +2,136 @@ Return-Path: <SRS0=ogP8=PS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C2EFC43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 13:29:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 881BFC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 14:29:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 12BA1214C6
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 13:29:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44828214C6
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 14:29:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UZLj0cNZ";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lgal3F/0"
+	dkim=pass (2048-bit key) header.d=airfi-aero.20150623.gappssmtp.com header.i=@airfi-aero.20150623.gappssmtp.com header.b="bEnmA+Ct"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728949AbfAJN3v (ORCPT
+        id S1729007AbfAJO34 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Jan 2019 08:29:51 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:56100 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728888AbfAJN3u (ORCPT
+        Thu, 10 Jan 2019 09:29:56 -0500
+Received: from mail-it1-f195.google.com ([209.85.166.195]:38419 "EHLO
+        mail-it1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728843AbfAJO34 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Jan 2019 08:29:50 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1AAB96038E; Thu, 10 Jan 2019 13:29:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547126990;
-        bh=iuk39SxciM8KqGRl45x4b28ujBRhmHv4iwfNBoUqMlY=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=UZLj0cNZtOLJhEtscY9Epwes3yKPu+hVDE6DHJnFsYFRLnmWgTe+QFsy0Vj9fMjz1
-         uiO6xZ7YUPYmwmXrGI3NRgfPa7QABztc7JzLgQV9zhEtawIEb2k3LUV3raP4heaslG
-         Rr7s20YMRgYaqk69jnme1U8kixD54dXrWjcNSYkc=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 408D860300;
-        Thu, 10 Jan 2019 13:29:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547126989;
-        bh=iuk39SxciM8KqGRl45x4b28ujBRhmHv4iwfNBoUqMlY=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=lgal3F/0DaXjRA/sVPBcC4gip2ovnbiTl2urvGGcFM6R8phQvXojyt5WWpr6LlHYw
-         OnVtfiMN44HnAe633OZIwDQfilGcURS0n/WvRUKOSYn2/dKZQWenlugjSielMyRah6
-         rHsy0eUqNdlQTmDUD+4YCtoU4vWCY3zCnM0mxBng=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 408D860300
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Thu, 10 Jan 2019 09:29:56 -0500
+Received: by mail-it1-f195.google.com with SMTP id h65so16465665ith.3
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2019 06:29:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=airfi-aero.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=iKLL5qRT36e5ew/0P8ooUYo4Nvcv72F8pRAT3WLhdR4=;
+        b=bEnmA+CtYi3LePNk/cctmO7z03jf5uxNRP/MV6CQ21GAjaZtuVZ7AaDLpCW/2BO+I2
+         Gn2F5OTU5jFskgsASFUyRFh02E4i40ieLtggHNYiohyX8fKryIC9pLfBAWlsvcgrYzyc
+         OVjf0iN20/WnFBYe/4I0FWGw2xmQqIFTMPoQXP7GTHEr5eb5mO8KLtVPN1+k0alIWmt/
+         gCLcYd6DbqpTMGqgEDre0bpzSUohOyatIaT5IbGzCG6Wi6wujnvFWPn0RZUj/Cl83fTx
+         DrE9nlP5qN66+N083O0eMbk+G7qaDzaCLFkgSyJxP2ZHl7HhU/WOhQ1lmV9zqwCtpqAM
+         bx+Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=iKLL5qRT36e5ew/0P8ooUYo4Nvcv72F8pRAT3WLhdR4=;
+        b=lcod8OAljGJfhxmLufDq7Xwqy0gMOrUcq0FOqa7ePXy8R8OjHUSxJVU6xtn/3u3IHS
+         UWERnXFVimal4sLBJ3Mc6yqxLamudJ3+IUasbT9sY0Wq4qO9gUXQa6EwTdOtrFTPW3j2
+         2rklW5Api/qbD844p42FljjInxF/zWsqYxvUIKjJij0pCf53HvM6/y/lE96jhdzPI5/d
+         ic9YXgGCh/P7f8xFAaq1mwLI+X/zktmyKpWgfSs7+sT09nKFK3A+RiQ6NlsEy6spMnyV
+         1W1sjxVQRuuH0nCIlce2ayuaJVSyAWPC8C1CU2UcLbj6PlncfOLrmfNvQxXDDOh5PPOx
+         VZyQ==
+X-Gm-Message-State: AJcUukeWI4YJlyrxS9Wmc9Nrbq63fEtrWRDNvgs42BqUxASSCT3IqUIQ
+        GaWKpixyM8oGiz076BT95SMpmF2dEemOkMs6S8hfxQ==
+X-Google-Smtp-Source: ALg8bN5bC3W25nLloMkgAbYmB23/wggiJdrRTxdf7rtp7R12SJbg69iY6JTcqA7PC3fmM3unwQ+9sIwv6F5J600VFEo=
+X-Received: by 2002:a02:a906:: with SMTP id n6mr6842631jam.123.1547130594943;
+ Thu, 10 Jan 2019 06:29:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wireless: ath: return error code upstream
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20181226064328.75897-1-kjlu@umn.edu>
-References: <20181226064328.75897-1-kjlu@umn.edu>
-To:     Kangjie Lu <kjlu@umn.edu>
-Cc:     kjlu@umn.edu, pakki001@umn.edu,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190110132950.1AAB96038E@smtp.codeaurora.org>
-Date:   Thu, 10 Jan 2019 13:29:50 +0000 (UTC)
+References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
+ <1545318971-28351-2-git-send-email-sgruszka@redhat.com> <CANCHnQoU-PPTotVD-MmCKCjtoVZEx7Nj4+5YGyfYBEKb2+VNdQ@mail.gmail.com>
+ <20190107150912.GA9516@redhat.com> <CANCHnQrkB7U2KHd7v6psFaD3cbR+cWj0PaBhRZ8Nk5B6ne7ECw@mail.gmail.com>
+ <CAKR_QVLY9ryxUebZD_WWw01Wub9Ue=S3u5YGe2CVk+R8uNgjVw@mail.gmail.com>
+ <CANCHnQqe7Y1=h0An0qNQGPONnN-tZ5vMon=-Uoif0GGY5NmPTg@mail.gmail.com>
+ <20190109113320.GA15658@redhat.com> <CANCHnQp+J56S=PbMTBkAWfrAi_GoTCOk3Wbao=wRm4A8=bbGKQ@mail.gmail.com>
+In-Reply-To: <CANCHnQp+J56S=PbMTBkAWfrAi_GoTCOk3Wbao=wRm4A8=bbGKQ@mail.gmail.com>
+From:   Jeroen Roovers <jer@airfi.aero>
+Date:   Thu, 10 Jan 2019 15:29:44 +0100
+Message-ID: <CANCHnQrF1u9sxPw3Dx+ZyDLRnZ0Qtn5C3d5Pr4=7tL0YnwtwWw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] rt2x00: check number of EPROTO errors
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Randy Oostdyk <linux-kernel@oostdyk.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kangjie Lu <kjlu@umn.edu> wrote:
+Aaaaaaand the results are in.
 
-> ath6kl_wmi_cmd_send could fail, so let's return its error code upstream.
-> 
-> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+On Thu, 10 Jan 2019 at 08:49, Jeroen Roovers <jer@airfi.aero> wrote:
+>
+>      Hi Stanislaw,
+>
+> On Wed, 9 Jan 2019 at 12:33, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>
+> > So would be below patch (on top of this set) be a solution for at
+> > least to not kill the kernel. Or we looking for something better
+> > i.e. watchdog ?
+>
+> I'll give it a spin. Thanks!
 
-Patch applied to ath-next branch of ath.git, thanks.
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
+to inactivity
+kernel: [  500.782266] ieee80211 phy0: rt2x00usb_vendor_request: Error
+- Vendor Request 0x07 failed for offset 0x6888 with error -110
+kernel: [  500.912237] ieee80211 phy0: rt2x00usb_vendor_request: Error
+- Vendor Request 0x06 failed for offset 0x6888 with error -110
+kernel: [  501.042235] ieee80211 phy0: rt2x00usb_vendor_request: Error
+- Vendor Request 0x06 failed for offset 0x6110 with error -110
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
+to inactivity (timer DEAUTH/REMOVE)
+kernel: [  501.772201] ieee80211 phy0: rt2x00usb_vendor_request: Error
+- Vendor Request 0x07 failed for offset 0x1018 with error -110
+kernel: [  501.902177] ieee80211 phy0: rt2x00usb_vendor_request: Error
+- Vendor Request 0x06 failed for offset 0x1018 with error -110
+kernel: [  501.972186] ieee80211 phy0: rt2x00usb_vendor_request: Error
+- Vendor Request 0x06 failed for offset 0x1910 with error -110
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
+to inactivity
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
+to inactivity (timer DEAUTH/REMOVE)
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
+to inactivity
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
+to inactivity (timer DEAUTH/REMOVE)
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
+to inactivity
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
+to inactivity (timer DEAUTH/REMOVE)
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due
+to inactivity
+hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due
+to inactivity (timer DEAUTH/REMOVE)
 
-fc6a6521556c ath6kl: return error code in ath6kl_wmi_set_roam_lrssi_cmd()
+rt2x00usb_check_usb_error in your patch is set to
+clearDEVICE_STATE_PRESENT after ten errors, but in this case only 6
+errors were seen. Maybe I should set it to 1 as I have never seen an
+RT5592 recover from this.
 
--- 
-https://patchwork.kernel.org/patch/10742845/
+The system remained relatively stable until after I tried forcibly
+removing and then loading the rt2800usb module. A simple `ifconfig`
+then triggered a kernel panic. Sadly I couldn't capture it in time but
+I did spot that more phyN (up to phy4) devices had been added.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
+Kind regards,
+      jer
