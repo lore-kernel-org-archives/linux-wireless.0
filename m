@@ -2,130 +2,146 @@ Return-Path: <SRS0=ogP8=PS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91814C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 527A3C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:16:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 61067214DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:16:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEB63214DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:16:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="UApJ1RhT"
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="e9EAVyl6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727612AbfAJIQM (ORCPT
+        id S1727601AbfAJIQn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Jan 2019 03:16:12 -0500
-Received: from mail-eopbgr690085.outbound.protection.outlook.com ([40.107.69.85]:35860
-        "EHLO NAM04-CO1-obe.outbound.protection.outlook.com"
+        Thu, 10 Jan 2019 03:16:43 -0500
+Received: from mail-eopbgr710109.outbound.protection.outlook.com ([40.107.71.109]:6162
+        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727488AbfAJIQM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Jan 2019 03:16:12 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
- s=selector2;
+        id S1726137AbfAJIQn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Jan 2019 03:16:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zKp7fC92Ewm7KY+syxtLnU3YpyrcGbqqqSmIj5anUqQ=;
- b=UApJ1RhT9om/rvRNffNnonIbjM3nlAL2H4GB2/kDnG41a0OHRO6aIUCDGP/GVw8E4LHHdu9t4WMeHzH7J8dalGgwZT58zCKeFJF5CPvtFBU63uNXzmjLbOM4Sjfi1W2wGjUapvgKI/TerFly3QQOjqlhrBTdF/qdooQT/gs7HM4=
-Received: from DM6PR05MB4714.namprd05.prod.outlook.com (20.176.109.215) by
- DM6PR05MB5644.namprd05.prod.outlook.com (20.176.123.89) with Microsoft SMTP
+ bh=paxY251Oo1jLZsf0l3TWbRl+1WiFc/46HdehwIwyi5A=;
+ b=e9EAVyl6T9si3h5gZ8VbXiypEOn6AW6CZwcM3ZzS9tvBHSOEH0ikOiC4/vYC7CUZc/civ89H9GMh2mTkqlqDqX4wIn38Y8f6Wc0UWOxm++eesdd0t7xgMQIPWxkyxCorGNImOCIwnL5PQz+p2bg+a0bbu/04B32iCwDh/jdeWas=
+Received: from DM6PR06MB5804.namprd06.prod.outlook.com (20.179.161.141) by
+ DM6PR06MB5068.namprd06.prod.outlook.com (20.176.123.23) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1516.6; Thu, 10 Jan 2019 08:16:01 +0000
-Received: from DM6PR05MB4714.namprd05.prod.outlook.com
- ([fe80::d479:121:55ed:92c7]) by DM6PR05MB4714.namprd05.prod.outlook.com
- ([fe80::d479:121:55ed:92c7%3]) with mapi id 15.20.1516.015; Thu, 10 Jan 2019
+ 15.20.1495.7; Thu, 10 Jan 2019 08:16:01 +0000
+Received: from DM6PR06MB5804.namprd06.prod.outlook.com
+ ([fe80::14e6:e072:bc55:7bea]) by DM6PR06MB5804.namprd06.prod.outlook.com
+ ([fe80::14e6:e072:bc55:7bea%5]) with mapi id 15.20.1516.015; Thu, 10 Jan 2019
  08:16:01 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
- SN6PR05MB4303.namprd05.prod.outlook.com (52.135.73.30) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1516.3; Thu, 10 Jan 2019 08:15:46 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::6d1c:886b:bd14:71c5]) by SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::6d1c:886b:bd14:71c5%6]) with mapi id 15.20.1516.015; Thu, 10 Jan 2019
- 08:15:46 +0000
-From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
+From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+To:     Hans de Goede <hdegoede@redhat.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Wright Feng <Wright.Feng@cypress.com>
 CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>
-Subject: Re: [PATCH 6/7] qtnfmac: convert to SPDX license identifiers
-Thread-Topic: [PATCH 6/7] qtnfmac: convert to SPDX license identifiers
-Thread-Index: AQHUqDWkiZBF5evYTEWKrejtV7PYJ6WoHlM8gAAKm4A=
-Date:   Thu, 10 Jan 2019 08:15:45 +0000
-Message-ID: <20190110081540.6zfr47nxbknofzta@bars>
-References: <20190109160843.14832-1-sergey.matyukevich.os@quantenna.com>
- <20190109160843.14832-7-sergey.matyukevich.os@quantenna.com>
- <875zux6jzy.fsf@purkki.adurom.net>
-In-Reply-To: <875zux6jzy.fsf@purkki.adurom.net>
-Accept-Language: en-US
+        "brcm80211-dev-list.pdl@broadcom.com" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        John Van Boxtel <John.VanBoxtel@cypress.com>
+Subject: Re: [PATCH] brcmfmac: Use request_firmware_direct for the clm_blob
+Thread-Topic: [PATCH] brcmfmac: Use request_firmware_direct for the clm_blob
+Thread-Index: AQHUpnznZEN0dsuyZUO0UUnIQZWTX6Wjs8KAgAASrYCABGX7AA==
+Date:   Thu, 10 Jan 2019 08:16:01 +0000
+Message-ID: <55db0ecb-5386-7a10-f26a-fa1e50af9b57@cypress.com>
+References: <20190107113401.6824-1-hdegoede@redhat.com>
+ <d6dafb19-4e88-c2c7-9547-2ebd5b4bec2e@broadcom.com>
+ <5b365baf-99b3-2033-1f8e-6ca38d6daf42@redhat.com>
+In-Reply-To: <5b365baf-99b3-2033-1f8e-6ca38d6daf42@redhat.com>
+Reply-To: Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+Accept-Language: en-US, zh-TW
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-clientproxiedby: BYAPR02CA0018.namprd02.prod.outlook.com
- (2603:10b6:a02:ee::31) To SN6PR05MB4928.namprd05.prod.outlook.com
- (2603:10b6:805:9d::10)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [195.182.157.78]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DM6PR05MB5644;6:0utJbqoElXtEiPnBj8XmIF1PagSoGYgQAewxloGXHa0+2Xq1wkIzwdmYklUhxCrihWdN7I+VU0VMzq9NXwBiJ4mWh+uJsxM4W3PPqnfvxN5q3l2CnzP8oNy56cDl+wMQKz7dHF2T7jTHvyY7edzSKNLmGksFTfwTVf2/p3ln1DxlJf8ogYbGS62JcdLDmrvkEtp9kz/og1elFf+cmfcpSdzLWnzyvWYdQezWXF2bVV6tz/pipqpWMtfMS0yiNBXrj5CulIrH14Vgc+KV12Cx1xeGX19A/MT1yC4s2nN53eT3kZx4AtduB545cYlZs/dfgXlrNsiVbqt2oYrLB0snxJb4Ywa/h9xpZp/a7q+ifv1jOizhP1l5tnDpvBUXrQ3+ePjA6w/WRLrXzww6oze9aJk5Nhog/ZlVerdaX5mbhy9zZApXiCXDgA+BBVIbc/fgheQLVXosXdJqb3ouImjldg==;5:crgbJrkVbgbo/6IjzAI/4qRRXlnxD/z54g5md4JdJM5C3RxrmmI3u/VD89J3QRE6Kj5jcYNlcBZtleSUWY15akrJHxRqdFgBgklmqgtr/59JD7KJuqZNqrJH9W5/R47nYFmV1BORvPZurkv0nQelyIBjCiyMSEq+HPZkjCTqFKHPLB0L/Lai84DO0qlPN71eeoMsBZYHXE8ibyHPeIOyfQ==;7:SYaYktGb+sL0p1toU68mWC0rh91ZknKIxP7GuAMzUoXMlLuqUWcy/Lz74K7HVZ5JA6iEGxMl5g2S84Cxt+nLNaAWEwi0lkiWRfyHuQvGDpDqREDkfi+QEaNcVYW+vWzdpW95QD80HhGwR7QoT+443A==
-x-ms-office365-filtering-correlation-id: e9fed3cf-513f-434f-c2fd-08d676d3d22b
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB4303;
-x-ms-traffictypediagnostic: SN6PR05MB4303:|DM6PR05MB5644:
-x-moderation-data: 1/10/2019 8:15:58 AM
-x-microsoft-antispam-prvs: <DM6PR05MB5644272DDFACA38930B62BF4A3840@DM6PR05MB5644.namprd05.prod.outlook.com>
-x-forefront-prvs: 0913EA1D60
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(39850400004)(136003)(376002)(346002)(366004)(396003)(199004)(189003)(6512007)(9686003)(6246003)(1076003)(107886003)(71190400001)(81166006)(81156014)(105586002)(71200400001)(2906002)(106356001)(66066001)(6436002)(8676002)(3846002)(6116002)(6486002)(99286004)(256004)(97736004)(446003)(33716001)(436003)(86362001)(11346002)(7736002)(54906003)(316002)(5660300001)(68736007)(478600001)(6346003)(102836004)(305945005)(26005)(14454004)(53936002)(6916009)(25786009)(4326008)(486006)(386003)(8936002)(6506007)(229853002)(186003)(33896004)(476003)(52116002)(76176011);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6PR05MB5644;H:DM6PR05MB4714.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: quantenna.com does not designate
- permitted sender hosts)
+x-originating-ip: [61.222.14.99]
+user-agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
+x-clientproxiedby: HK0PR03CA0086.apcprd03.prod.outlook.com
+ (2603:1096:203:72::26) To DM6PR06MB5804.namprd06.prod.outlook.com
+ (2603:10b6:5:1a6::13)
 authentication-results: spf=none (sender IP is )
- smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+ smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;DM6PR06MB5068;6:UVsTiEloCxLquG4tS1x0gG8Z6DfAFvxUBI0RL868dCidfvKpcztvgZGEXTmItGqDtPf+liZn7QqmzYxd+298DzYHBouu4bgU4ygJuIXORHwT40wISsqNCVx0tYHg/0LB2X2FGb0QJvvzNs5D0ZQI+xGs+F3hI05HUu8rqzrxzvB6/xbbBA4/pz67mMoRJ85JfdT/x/m0umU7XowY64LMGPdtoakZd6GKgJTg5xRHUDEimg9fD1gZ64pjjJqxSSNhidQp6o4VxfoGBcMbVqd9tTIvE5RQjbXNbhQnE7wbVPFMjjzg23ax5ZmfG0Km7zb3qNTraAfzIr4HW7R/HszGo7WbEAKfgNUNfGvTXCAVYEb7Dhplqqwrv59i88JUVC3fAshsFoMECqofTnL+aIHnVRrntg3HGGExjas+3Wys324y/cwMABbwA0/X+K759LVDTFUSl6lZn4zXvAUn7au/lA==;5:5FK1KDmWizXyBJBx1Kv5kYrA3pjKKO/U+nSutnc5p/QLsqHJulWRDgfJXZiK9sD/Iwed8SAHU5QetcOkJOOx8dhB8cuuF538s456OAQ7dqzN30oIQpp8aukXORpW18R0qzn7jaGiYHkyQDj4o6OZa/73/VqCZXIWg+xyJSkFMeslHkbeOuIlk66bzvC5SMxkaNn8EsoS+UqIRoaWCADqDA==;7:Nd0c8QSDM7rLsy3wRPLuM5yNqXbjgUrQBdh4rPXxBvwrfcLdTv3FOkw9p040uqGVwTghbkkMN9xKB43kHpwuu6cNw2DdPRXmNITY6rBHUS3aol3lK/1Je2mF1n2rYp8jRcTk/ijH/7+/HmxZquCmMw==
+x-ms-office365-filtering-correlation-id: b44cfc85-bc91-4583-dce6-08d676d3db27
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:DM6PR06MB5068;
+x-ms-traffictypediagnostic: DM6PR06MB5068:
+x-microsoft-antispam-prvs: <DM6PR06MB50681542B76D80FF95342EB5BB840@DM6PR06MB5068.namprd06.prod.outlook.com>
+x-forefront-prvs: 0913EA1D60
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(979002)(39860400002)(366004)(376002)(136003)(346002)(396003)(199004)(189003)(25786009)(68736007)(6636002)(65806001)(71190400001)(107886003)(66066001)(6246003)(65826007)(4326008)(43066004)(5660300001)(54906003)(305945005)(7736002)(58126008)(316002)(64126003)(65956001)(76176011)(8936002)(81156014)(8676002)(256004)(6512007)(186003)(6306002)(31686004)(53936002)(81166006)(966005)(99286004)(486006)(102836004)(105586002)(53546011)(106356001)(386003)(6506007)(110136005)(31696002)(229853002)(72206003)(476003)(2616005)(478600001)(6116002)(3846002)(446003)(6436002)(52116002)(2906002)(11346002)(26005)(6486002)(3450700001)(97736004)(36756003)(71200400001)(14444005)(14454004)(86362001)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1102;SCL:1;SRVR:DM6PR06MB5068;H:DM6PR06MB5804.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: cypress.com does not designate
+ permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: FhufSlW2wjV6swMdNljnyfgiQNQzhSgDBpK6DS2o0t1ysyFg7neUDw+xA1734z3ieiaXCLrIp3KXMmCwYjG/ZB9DN+nFOAFtdhxZ+6jI20IcawW6Y7yp2jz8o8XM04aMFHgOzNf9fwmujWwkz8cgOoB3wHPy4TvsLO9WzbAeKt+kzf/OseCzY0PQHugdlqw86Ihhlgjs8s2MsaidBgwiF69F+XnGatc0Gpn9EluEuRdu3N3CYsMXDjqJq/nFve3Kc9Tfogetz+zbouz7c05A+/2AU5XlB/g2zg/pjKfZj0832+hCnJ7cFG4StBZMQZjxlvqkOIwItqYX8wom1LbuvZSIEpZIcRYmnXDv7WPKJK3XFOauqscZ0sXPoQ1RRNDkBPCMgzXmABKtMRVVz7u3Q1rDe+7S13veUDpazjI5aA86177bI8SGtieXpmclQVI7OqfM6Zi+YB1ZehjTxExKhg==
+x-microsoft-antispam-message-info: JdUCy9PBJdqLjihZQO2qLgz4lh3L9AIJPghQhXesz4GCES4eHmh2JxkN+DfNOumIC8k6kLEwYcrKKXbpi95IiMj4J6hnEIB0IZBYFfAgq3HMOtatPL1WkbDYmbDYCTVlYgQ4gGJvgnygUanZe96mp1QXVD1HPNWbNs+32aFaQiBOU/iWt9UnsYCSI09Hcq2ZyvhJBBk9mW8pPlWzpP4st6yM7UQDRQNWo0YN/qX18KIm/JX09lA9MnGLa4KGgIlz05cIUomPoohIs8MWUSjoffyVk+ulfao/zUMjvT8ukTSo+i9HkGSXDgn+CThwHM5v
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <2A8652403FA7FB498D801A4E3E100B5C@namprd05.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <41F895B2B523754D85861F9314956A39@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e9fed3cf-513f-434f-c2fd-08d676d3d22b
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Jan 2019 08:16:01.0385
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b44cfc85-bc91-4583-dce6-08d676d3db27
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Jan 2019 08:16:01.1887
  (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR05MB5644
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR06MB5068
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Kalle,
-
-> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
->=20
-> > Replace textual license with SPDX-License-Identifier.
-> > Add an SPDX-License-Identifier for the Makefile.
-> >
-> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
->=20
-> [...]
->=20
-> > --- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-> > +++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-> > @@ -1,3 +1,6 @@
-> > +/* SPDX-License-Identifier: GPL-2.0+ */
-> > +/* Copyright (c) 2015-2016 Quantenna Communications. All rights reserv=
-ed. */
-> > +
-> >  /*
-> >   * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-> >   * All rights reserved.
->=20
-> This doesn't look correct, please check.
-
-Oh, I missed that one. Thanks for catching. All the other SPDX changes
-looks ok. This issue is fixed and will be queued into v2 of this patch set.
-
-
-Regards,
-Sergey
+KCtKb2huKQ0KDQpPbiAwMS8wNy8yMDE5IDk6MDUsIEhhbnMgZGUgR29lZGUgd3JvdGU6DQo+IEhp
+LA0KPiANCj4gT24gMDctMDEtMTkgMTI6NTgsIEFyZW5kIFZhbiBTcHJpZWwgd3JvdGU6DQo+PiBP
+biAxLzcvMjAxOSAxMjozNCBQTSwgSGFucyBkZSBHb2VkZSB3cm90ZToNCg0KPiANCj4gQ3lwcmVz
+cyBpcyBhY3R1YWxseSBkb2luZyBib3RoIHRoZSBvbGQgKGVtYmVkZGVkIGluZm8pIGFuZCB0aGUg
+bmV3DQo+IChzZXBhcmF0ZSBjbG1fYmxvYikgbW9kZWwgZm9yIHRoZSBmaXJtd2FyZXMgd2hpY2gg
+dGhleSBhcmUgbm93IG1haW50YWluaW5nLA0KPiB0aGV5IGFyZSBzdGlsbCBwcm92aWRpbmcgdXBk
+YXRlcyAqd2l0aCB0aGUgZW1iZWRkZWQgaW5mbywgc2VlIGUuZy46DQo+IGh0dHBzOi8vZ2l0Lmtl
+cm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2Zpcm13YXJlL2xpbnV4LWZpcm13YXJl
+LmdpdC9jb21taXQvYnJjbT9pZD0yNTNhNTczOTM2ZWUyMDc4ZDIwNjUyN2YzYWU4NDViNGRjNjgx
+MjY5IA0KDQpIaSBIYW5zLA0KDQo0MzM2MiBpcyBhIHZlcnkgb2xkIGNoaXAgdGhhdCBpdCBkb2Vz
+bid0IHN1cHBvcnQgdGhlIGNsbV9ibG9iIG1vZGVsLiBGb3IgDQpuZXdlciBjaGlwcyAoc29tZSBp
+biBuZXdlciBidWlsZHMpIHdlIHVzZSBjbG1fYmxvYiBieSBkZWZhdWx0Lg0KDQpUaGUgY2xtX2Js
+b2Igc2hvdWxkIGJlIGFuIG9wdGlvbmFsIGZpbGUgYW5kIHRoZSBkZXNpcmVkIGJlaGF2aW9yIGlz
+IHRvIA0KZmFsbCB0aHJvdWdoIGV2ZW4gd2hlbiB0aGUgZmlsZSBpcyBub3QgdGhlcmUuIEFzIEth
+bGxlIGFuZCBBcmVuZCANCm1lbnRpb25lZCwgdXNpbmcgcmVxdWVzdF9maXJtd2FyZV9ub3dhcm4o
+KSBpcyBtb3JlIGFwcHJvcHJpYXRlLiBUaGFua3MgDQpmb3IgcG9zdGluZyB0aGlzIGVuaGFuY2Vt
+ZW50Lg0KDQoNCj4gQ3lwcmVzcyBkb2VzIHRoZSBudWxsLXRhYmxlICsgc2VwYXJhdGUgY2xtX2Js
+b2IgZmlsZSB0aGluZyBhbmQgZm9yIHJlYXNvbnMNCj4gd2hpY2ggdGhleSBoYXZlIG5ldmVyIGV4
+cGxhaW5lZCB0aGV5IGluc2lzdCBvbiB0aGUgbGludXgtZmlybXdhcmUgZmlsZXMgYW5kDQo+IHRo
+ZWlyIG93biBmaWxlcyBiZWluZyBkaWZmZXJlbnQuDQoNClRoZSBiaW5hcnkgZmlsZXMgaW4gbGlu
+dXgtZmlybXdhcmUgYXJlIHRha2VuIGZyb20gdGhlIHJlbGVhc2UgcGFja2FnZXMuIA0KVGhlIGxh
+dGVzdCBiaW5hcnkgd2l0aCBlbWJlZGRlZCBjbG0gKGhpc3RvcmljYWwgbW9kZSkgd2VyZSB1cHN0
+cmVhbWVkLiANCldpbGwgZXhwbGFpbiBtb3JlIGFib3V0IHRoZSBjbG1fYmxvYnMgaW4gdGhlIFYy
+IGNvbW1lbnQuDQoNCg0KPiBBICJGaXJtd2FyZSBjcmFzaCBmaXgiIHRvIG1lIHNvdW5kcyBsaWtl
+IGEgcG90ZW50aWFsIHNlY3VyaXR5IGlzc3VlLCB5ZXQgDQoNCkl0IGlzIGEgZnVuY3Rpb25hbCBi
+dWcgdGhhdCBjYXVzZXMgd2lmaSB0byBzdG9wIHdvcmtpbmcgY29ycmVjdGx5LiBOb3QgYSANCnNl
+Y3VyaXR5IGhvbGUuIFdlIGRpZCB1cHN0cmVhbSBmaXJtd2FyZSBmb3Igc2VjdXJpdHkgaXNzdWVz
+Lg0KDQoNCj4gQW5vdGhlciBleGFtcGxlIGlzIHRoZSBmaXJtd2FyZSBmb3IgdGhlIHdpZmkgb24g
+dGhlIFJhc3BiZXJyeSBQaSAzQisgd2hpY2gNCj4gaXMgKnllYXJzKiBvbGRlciBpbiBsaW51eC1m
+aXJtd2FyZS4NCg0KQ291bGQgeW91IHBsZWFzZSBzcGVjaWZ5IHRoZSBzb3VyY2UgKGxpbmspIG9m
+IHRoZSBmaXJtd2FyZSB5b3UncmUgDQpyZWZlcnJpbmcgdG8/DQoNCg0KPiANCj4gSSBtdXN0IHNh
+eSB0aGVzZSB3aG9sZSBzaGVuYW5pZ2FucyB3aXRoIHRoZSBmaXJtd2FyZSBjYXVzaW5nIA0KPiBs
+aW51eC1maXJtd2FyZSB0bw0KPiBoYXZlIHdheSB0b28gb2xkIGZpcm13YXJlIHZlcnNpb25zIG1h
+a2VzIG1lIHZlcnkgdW5oYXBweS4gSSdtIGF0IHRoZSBwb2ludA0KPiB3aGVyZSBJJ20gdGVsbGlu
+ZyBmcmllbmRzIHRvIG5vdCBidXkgYW55IGhhcmR3YXJlIHdpdGggQ3lwcmVzcyB3aWZpIGluIA0K
+PiB0aGVyZQ0KPiBiZWNhdXNlIG9mIHRoaXMgYW5kIGJlY2F1c2Ugb2YgdGhlICpjb21wbGV0ZSog
+bGFjayBvZiBibHVldG9vdGggZmlybXdhcmUuDQoNCldlIGRpZCB3b3JrIHdpdGggSFRDIHRvIHVw
+c3RyZWFtIHRoZWlyIGJsdWV0b290aCBmaXJtd2FyZSB0byANCmxpbnV4LWZpcm13YXJlLCBhbHRo
+b3VnaCBJIGFkbWl0IHRoYXQgbW9zdCBvZiB0aGUgYmx1ZXRvb3RoIGZpcm13YXJlIGFyZSANCm9u
+bHkgYXZhaWxhYmxlIHRocm91Z2ggaGFyZHdhcmUgdmVuZG9ycy4NCg0KQmx1ZXRvb3RoIGZpcm13
+YXJlIGZpbGVzIGFyZSBzcGVjaWZpYyB0byB2ZW5kb3IgYm9hcmQgZGVzaWducy4gV2hlbiANCnRo
+ZXJlIGlzIGFuIHVwZGF0ZSwgdGhlIGhhcmR3YXJlIChkZXZpY2UvYm9hcmQpIHZlbmRvciBxdWFs
+aWZpZXMgdGhlIA0KZmlybXdhcmUgYW5kIHJlbGVhc2UgdGhyb3VnaCB0aGVpciBwcmVmZXJyZWQg
+Y2hhbm5lbCAoaW4gSFRDJ3MgY2FzZSB0aGV5IA0KY2hvc2UgdG8gdXBzdHJlYW0gaXQpLg0KDQoN
+ClJlZ2FyZHMsDQpDaGktaHNpZW4gTGluDQo=
