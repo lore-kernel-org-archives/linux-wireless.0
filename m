@@ -6,46 +6,46 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69A99C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 11:34:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A4AC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 11:35:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 332EB206B6
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 11:34:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D0DE206B6
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 11:35:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LIvJb7WA";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="W3xjCpiY"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BBQt1hSj";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hB1XCMXh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728433AbfAJLer (ORCPT
+        id S1728417AbfAJLfX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Jan 2019 06:34:47 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:49110 "EHLO
+        Thu, 10 Jan 2019 06:35:23 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:49350 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728323AbfAJLer (ORCPT
+        with ESMTP id S1727938AbfAJLfX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Jan 2019 06:34:47 -0500
+        Thu, 10 Jan 2019 06:35:23 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 99CA960386; Thu, 10 Jan 2019 11:34:46 +0000 (UTC)
+        id D437D608A5; Thu, 10 Jan 2019 11:35:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547120086;
-        bh=NwESBXpjPF5hX/poVqMEyfh55kqsCcI/2qw6urO4+TA=;
+        s=default; t=1547120122;
+        bh=J121eeVTMUuBifPpsiqVfRvif4ymjfAEQn2ImmpedyY=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=LIvJb7WANH29VGI8Z/41JE0Cb2YKTwt9pdjS+LNcWI+wugEm69Q1bxkXestDDNMQn
-         Tg/ymIfsO5T+mkMeVmQce8xoC+dPcDByvLJXAd3hlVo31qWiVARjlY3DRn/wv22+7K
-         oRoMbn1LUarsGE5dUi+RkEiU982fc5l/450uZYPs=
+        b=BBQt1hSjZoYmvhcnrgPdmkQJH4dt2Lws+XsC3ZoEqpF3ReE3iSHcYSnlObvq4VoeD
+         JRB7dTdboA2XKcNOLpnuAgY6qObn0k/Kmajb04+t5DbhXCtRJIhpN9aDzdINDTZ3tG
+         RH33kbt3S0YuzZ5AvRnnNQiDHikuIyAs5N4QuBCE=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BF2DB601D1;
-        Thu, 10 Jan 2019 11:34:44 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 088D7601D1;
+        Thu, 10 Jan 2019 11:35:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547120086;
-        bh=NwESBXpjPF5hX/poVqMEyfh55kqsCcI/2qw6urO4+TA=;
+        s=default; t=1547120122;
+        bh=J121eeVTMUuBifPpsiqVfRvif4ymjfAEQn2ImmpedyY=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=W3xjCpiYxVhbG9wIl963XklFwgkywBzkzqUwnsk09qxhZayXD86tU6Tub7ZQDCtRS
-         dKuIoqyeGP5EAns12d9lnEDnKcnETy6liTARPXyWMWbADf/MwChJNyJnJNndJR/TSK
-         5mjJGrP1IoD6r2B2do6kFfv0ovcp9zV0XJqKucIM=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BF2DB601D1
+        b=hB1XCMXhVDTQjtodf03Sww7yG6GdU87YPeH/oCoLUKA9FRUtPa26MPEt/1bMtpUWF
+         4+unTTK8wVttP3WbPwnQbVA9dd6w5LTxqyUhl7kbI4ZmmDa+LBpiGVP16vzMxB/9IW
+         md895WZ8vJvniDt6MVQVZGWHN+KGC1k3Rldlmh6Y=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 088D7601D1
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
@@ -62,8 +62,8 @@ Cc:     Solomon Peachy <pizza@shaftnet.org>,
         Wei Yongjun <weiyongjun1@huawei.com>,
         <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190110113446.99CA960386@smtp.codeaurora.org>
-Date:   Thu, 10 Jan 2019 11:34:46 +0000 (UTC)
+Message-Id: <20190110113522.D437D608A5@smtp.codeaurora.org>
+Date:   Thu, 10 Jan 2019 11:35:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -78,8 +78,9 @@ Wei Yongjun <weiyongjun1@huawei.com> wrote:
 > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 > Acked-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 
-cw1200 patches go to wireless-drivers-next, not net-next. In the future please
-don't mark them for net-next to avoid any confusion.
+Patch applied to wireless-drivers-next.git, thanks.
+
+51c8d24101c7 cw1200: fix missing unlock on error in cw1200_hw_scan()
 
 -- 
 https://patchwork.kernel.org/patch/10741431/
