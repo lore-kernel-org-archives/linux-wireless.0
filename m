@@ -2,159 +2,124 @@ Return-Path: <SRS0=ogP8=PS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.2 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3FA5C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:18:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACEB2C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:38:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69E5620657
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:18:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A285206B6
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Jan 2019 08:38:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="kYdc03Ls"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="uQJ2VFvU";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="YENR35KD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727601AbfAJISi (ORCPT
+        id S1727492AbfAJIiK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Jan 2019 03:18:38 -0500
-Received: from mail-eopbgr710128.outbound.protection.outlook.com ([40.107.71.128]:61816
-        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727472AbfAJISi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Jan 2019 03:18:38 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
- s=selector1;
+        Thu, 10 Jan 2019 03:38:10 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59180 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727342AbfAJIiK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Jan 2019 03:38:10 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x0A8TuuD022944;
+        Thu, 10 Jan 2019 00:38:07 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=bQ54W37ZizkWh4ysSnLprzV85arxnoIzs6DcKFsrxRU=;
+ b=uQJ2VFvUKb7QrNMHa4yX82qbsr6Zxtc9R3C/1rDLddfObjU1g/Im/elsWJ1oQ/tdaWIE
+ ungo8CvZVM9U1EjXbqCTuZyOTkmuz/hREDte65cuwdCbafhp86qXamyB0OCe1Hwc8gEm
+ UzNXIt6Loygl/Jvuu8Q6kfu49pke5RENf+RKSzad03RX762yBlOtJledgcB7LDrM0c2x
+ Odx39US1RuICb/p0Zo/EmOUvCKQjHZyVMKrUhd8nwTUfX+KxEz3qz4NyJ833+beO58Nl
+ 0fIXpN2NO3Jjbp4G7pEygsvVXP5U0asYjBxUBvCRcTrFOZDbIVdD5rnVv8odfEWzGScQ +w== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2pwrc5tsfq-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 10 Jan 2019 00:38:07 -0800
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 10 Jan
+ 2019 00:38:05 -0800
+Received: from NAM03-DM3-obe.outbound.protection.outlook.com (104.47.41.50) by
+ SC-EXCH01.marvell.com (10.93.176.81) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Thu, 10 Jan 2019 00:38:05 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ABEHyEmcQM94N/2ud4Sqm3qwi1WfFsfJew1JnScIIQ4=;
- b=kYdc03LsrG71ANsreAOgCLppLfUZJOHMKJH84UOLpMoIu8SjBs2Jwb+TWayFY101Kz5jL6XwKGsBWX3CUccUIkwR85Cd9MZ0m5bhN/xMsQHe2prg5Vfj5jdJWYIseTz5HFNLJMI1hwAAnCERGu3gJ8WU9W/N7XoeHXB6x4AcS50=
-Received: from DM6PR06MB5804.namprd06.prod.outlook.com (20.179.161.141) by
- DM6PR06MB5068.namprd06.prod.outlook.com (20.176.123.23) with Microsoft SMTP
+ bh=bQ54W37ZizkWh4ysSnLprzV85arxnoIzs6DcKFsrxRU=;
+ b=YENR35KDHEljAsZXsEI/WxLjQvNzQOYLZqrw2zObPb0JliSrmnnwsL7RK8XmqJ9eS+TeHuu4RiXW/jZsyUOLOTuFHBynUSwTLhxd5xhRVFEo1XDrGXOJ6fuDqIEjtQhW8SdW+67zu1vS91CHaOzgwfjZel153POdvJzaWxLGn+c=
+Received: from CY4PR18MB1237.namprd18.prod.outlook.com (10.172.176.7) by
+ CY4PR18MB1255.namprd18.prod.outlook.com (10.172.176.13) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1495.7; Thu, 10 Jan 2019 08:18:34 +0000
-Received: from DM6PR06MB5804.namprd06.prod.outlook.com
- ([fe80::14e6:e072:bc55:7bea]) by DM6PR06MB5804.namprd06.prod.outlook.com
- ([fe80::14e6:e072:bc55:7bea%5]) with mapi id 15.20.1516.015; Thu, 10 Jan 2019
- 08:18:34 +0000
-From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-To:     Hans de Goede <hdegoede@redhat.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Wright Feng <Wright.Feng@cypress.com>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        John Van Boxtel <John.VanBoxtel@cypress.com>
-Subject: Re: [PATCH v2] brcmfmac: Use firmware_request_nowarn for the clm_blob
-Thread-Topic: [PATCH v2] brcmfmac: Use firmware_request_nowarn for the
- clm_blob
-Thread-Index: AQHUpo2W08ZPFaMdE0SvdPw5g+skGaWoLQMA
-Date:   Thu, 10 Jan 2019 08:18:34 +0000
-Message-ID: <f2d8d0fc-a42a-b760-6361-5fd390f8eda5@cypress.com>
-References: <20190107133327.9297-1-hdegoede@redhat.com>
-In-Reply-To: <20190107133327.9297-1-hdegoede@redhat.com>
-Reply-To: Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-Accept-Language: en-US, zh-TW
+ 15.20.1495.11; Thu, 10 Jan 2019 08:38:01 +0000
+Received: from CY4PR18MB1237.namprd18.prod.outlook.com
+ ([fe80::95d4:8a68:81d7:87c5]) by CY4PR18MB1237.namprd18.prod.outlook.com
+ ([fe80::95d4:8a68:81d7:87c5%8]) with mapi id 15.20.1495.011; Thu, 10 Jan 2019
+ 08:38:01 +0000
+From:   Ganapathi Bhat <gbhat@marvell.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     Rakesh Parmar <rakeshp@marvell.com>, James Cao <jcao@marvell.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Not able to see patches in patchwork
+Thread-Topic: Not able to see patches in patchwork
+Thread-Index: AQHUpzb9XornoqOgnkaUNaBcO8DKuKWlnR2pgAFoyXCAAA2wh4ABHQpw
+Date:   Thu, 10 Jan 2019 08:38:01 +0000
+Message-ID: <CY4PR18MB1237C3F9DEF490F1904FFE5AA0840@CY4PR18MB1237.namprd18.prod.outlook.com>
+References: <CY4PR18MB12372AF071013F01A0DE6A32A08A0@CY4PR18MB1237.namprd18.prod.outlook.com>
+        <87ef9nqdea.fsf@kamboji.qca.qualcomm.com>
+        <CY4PR18MB1237311E8A5B1D719BB48EB5A08B0@CY4PR18MB1237.namprd18.prod.outlook.com>
+ <87imyxdesw.fsf@codeaurora.org>
+In-Reply-To: <87imyxdesw.fsf@codeaurora.org>
+Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-originating-ip: [61.222.14.99]
-user-agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
-x-clientproxiedby: HK2PR04CA0065.apcprd04.prod.outlook.com
- (2603:1096:202:14::33) To DM6PR06MB5804.namprd06.prod.outlook.com
- (2603:10b6:5:1a6::13)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [182.72.17.59]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DM6PR06MB5068;6:ySUt9DC9m7EMrESKexdHXxjWBBD1ljpnSXQ4P2tAvs1H/jT8xAcmD4SYz/eWyVvnRqwJkGAv072kbTCCMcQpfacTm7cn0duhXNsACp/2LVwMPS73pDeGyHFj6MCOEje0j3zGEadjYJDflV9QuzpLKFXwuYlqaMjf/a90+KM5LVmW9ixayYiyWY4oe1PTww5rV1DkLnf7uqsx26DDtz8Qig7f5fw7bYMft1KBy9ks/drg56buik9jPzvttHfsCa7RmgYrczKWBHw0BCDtbbAluu6tnNWWXLs73lS5h/iWM0hxp7t+AHsbJ3uKRSOEFFIyKeBu23i8lmABv40yoaWROM8nCGrZH6MeTcKo4gzE2j2Qy4kSQElUnxN4ouIE9BSlCZelztKWO5XCIN7iutQsyOfTt7IHYKjLJwQlKqDgrq9yFIRiufSbGmAkCdsSziVa4m4Z81GHQlrBfaAt0bSDWg==;5:KY9gZDFGns2XhV+g/Gx8mDDRj3BtI3TFM6H2xTIiaR7TIZsZiHN6CBblzo7p9OwOogNyxFpViiTGg22QFLDWg+kJES7Fl//L2kVxY1IpaXGB+DBtGAKGcOD5C6pvW0WTXe7HR/osjWw2YYmPb3PmIVrKS9PnYOB7yzj0oIfsiTCgvOpKd982s4cQrbxnYTGzSCr3pshVDXahkJDOTJYJPw==;7:UXpNxg6SZyP/U2j20b32eb8x0IC78yqFqAXt8+VWIMVKiu3bTzgx9Mqd/CCA+0DesaURlIfyco6gOUb9QuqrRn5yxdsGt8F8Wx1h230yURftOUZ1uL1B0fHkMK780dckowxCIIaSfb6/ezkrg9Vrzw==
-x-ms-office365-filtering-correlation-id: a5f11feb-8515-4a05-6bb6-08d676d436a8
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:DM6PR06MB5068;
-x-ms-traffictypediagnostic: DM6PR06MB5068:
-x-microsoft-antispam-prvs: <DM6PR06MB5068689573AA785F51493D9CBB840@DM6PR06MB5068.namprd06.prod.outlook.com>
+x-microsoft-exchange-diagnostics: 1;CY4PR18MB1255;20:GAa/pbHjTLQWfZixMfGoOiWuNZCFuYzhM06Vftbcngr/vUuyeZTkOSv47aPohaL+O7A/JLkw527bbPqE8c152jQn7bKgGeujnP5NuYH6RPBLHCCAMSEYgWgwwU2uRwy+RdB2JiXiyZl+vofB/YrOdQ/7dIsnI13B3Wy//wdwly8=
+x-ms-exchange-antispam-srfa-diagnostics: SOS;SOR;
+x-forefront-antispam-report: SFV:SKI;SCL:-1;SFV:NSPM;SFS:(10009020)(979002)(136003)(376002)(396003)(366004)(346002)(39860400002)(199004)(189003)(71190400001)(55016002)(71200400001)(93886005)(5660300001)(478600001)(66066001)(9686003)(6306002)(25786009)(53936002)(6246003)(966005)(4326008)(97736004)(6436002)(486006)(558084003)(256004)(14444005)(105586002)(3846002)(6116002)(14454004)(55236004)(102836004)(106356001)(6506007)(7696005)(76176011)(186003)(74316002)(86362001)(305945005)(7736002)(476003)(2906002)(68736007)(8936002)(26005)(11346002)(446003)(229853002)(8676002)(81156014)(6916009)(81166006)(78486014)(54906003)(33656002)(316002)(99286004)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1101;SCL:1;SRVR:CY4PR18MB1255;H:CY4PR18MB1237.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-office365-filtering-correlation-id: b4364961-b4f4-4e9d-235d-08d676d6ee65
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(2017052603328)(7153060)(7193020);SRVR:CY4PR18MB1255;
+x-ms-traffictypediagnostic: CY4PR18MB1255:
+x-microsoft-antispam-prvs: <CY4PR18MB1255C765F10217EF7C679169A0840@CY4PR18MB1255.namprd18.prod.outlook.com>
 x-forefront-prvs: 0913EA1D60
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(39860400002)(366004)(376002)(136003)(346002)(396003)(199004)(189003)(25786009)(68736007)(6636002)(65806001)(71190400001)(107886003)(66066001)(6246003)(65826007)(4326008)(43066004)(5660300001)(54906003)(305945005)(7736002)(58126008)(316002)(64126003)(65956001)(76176011)(8936002)(81156014)(8676002)(256004)(6512007)(186003)(31686004)(53936002)(81166006)(99286004)(486006)(102836004)(105586002)(53546011)(106356001)(386003)(6506007)(110136005)(31696002)(229853002)(72206003)(476003)(2616005)(478600001)(6116002)(3846002)(446003)(6436002)(52116002)(2906002)(11346002)(26005)(6486002)(3450700001)(97736004)(36756003)(71200400001)(14444005)(14454004)(86362001);DIR:OUT;SFP:1102;SCL:1;SRVR:DM6PR06MB5068;H:DM6PR06MB5804.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: cypress.com does not designate
+received-spf: None (protection.outlook.com: marvell.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: QzLYdyJ4fA4qilxuO2fep6F6YGEqGoO6Vrvpz7oUOUWSJMxsvXP7EhBdkhuG6BCYUICI8rBKx8HwiNtU+wpU++9YWjdNHmn2CXLoAs2iQclpRgT6DCTqEGCmF24g7CQe13r12L0dTowk2pyMnjGqlRMfrfkkVU/4UakuJrXz6fAXrycl0X2dCcHCYbxoNhxviCF+VFmFJ64DgqStxO6NyzMiId4LKhgpP/WKCgllY8ei5Zu+VWg2nDb/2hhoOVheXASZWRmOY6EDKF7X9LUX4bK++et2V7s2uoLglw6XbES2qdubyTWsuNKc6UhCT9rO
+x-microsoft-antispam-message-info: KZRUUOHm4W3oQ7B4kbtKE3scIwchXBWpW7OWRUmzrdfs7Xp3t67j+QKxSAFpIMDgitJSppDPjt+Y5idlryy+okRfe2htq/2QrHJz+wOKw0WoAF+Wb8ZydJyFte7r8H9d57PT43+FDTdPCMVQKxXu2Zr/pi01Et57e0IDahkJYZ23IPCWsyUjdTRF/FQiOrFbulBY3UE/n/3NU3WgySSnMprLk2ZA/BIUWvnXgeIT7XVhmXzuACiNH2x1ZKhdwkYkPr9wGwLNxb5nBIcxH5DJja1ZGhISIn4a2w02ivOUUVxa5Ky9IGYmPMt9KdqFXyC9
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <66A1DE1B3993B942A17D2E0A2E81E1D2@namprd06.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a5f11feb-8515-4a05-6bb6-08d676d436a8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Jan 2019 08:18:34.5858
+X-MS-Exchange-CrossTenant-Network-Message-Id: b4364961-b4f4-4e9d-235d-08d676d6ee65
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Jan 2019 08:38:01.3563
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR06MB5068
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR18MB1255
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-01-10_04:,,
+ signatures=0
+X-Proofpoint-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=558 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1901100071
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-DQoNCk9uIDAxLzA3LzIwMTkgOTozMywgSGFucyBkZSBHb2VkZSB3cm90ZToNCj4gVGhlIGxpbnV4
-LWZpcm13YXJlIGJyY21mbWFjIGZpcm13YXJlIGZpbGVzIGNvbnRhaW4gYW4gZW1iZWRkZWQgdGFi
-bGUgd2l0aA0KPiBwZXIgY291bnRyeSBhbGxvd2VkIGNoYW5uZWxzIGFuZCBzdHJlbmd0aCBpbmZv
-Lg0KPiANCj4gRm9yIHJlY2VudCBoYXJkd2FyZSB0aGVzZSB2ZXJzaW9ucyBvZiB0aGUgZmlybXdh
-cmUgYXJlIHNwZWNpYWxseSBidWlsZCBmb3INCj4gbGludXgtZmlybXdhcmUsIHRoZSBmaXJtd2Fy
-ZSBmaWxlcyBkaXJlY3RseSBhdmFpbGFibGUgZnJvbSBDeXByZXNzIHJlbHkgb24NCj4gYSBzZXBh
-cmF0ZSBjbG1fYmxvYiBmaWxlIGZvciB0aGlzIGluZm8uDQo+IA0KPiBGb3Igc29tZSB1bmtub3du
-IHJlYXNvbiBDeXByZXNzIHJlZnVzZXMgdG8gcHJvdmlkZSB0aGUgc3RhbmRhcmQgZmlybXdhcmUN
-Cj4gZmlsZXMgKyBjbG1fYmxvYiBmaWxlcyBpdCB1c2VzIGVsc2V3aGVyZSBmb3IgaW5jbHVzaW9u
-IGludG8gbGludXgtZmlybXdhcmUsDQo+IGluc3RlYWQgcmVseWluZyBvbiB0aGVzZSBzcGVjaWFs
-IGJ1aWxkcyB3aXRoIHRoZSBjbG1fYmxvYiBpbmZvIGVtYmVkZGVkLg0KPiBUaGlzIG1lYW5zIHRo
-YXQgdGhlIGxpbnV4LWZpcm13YXJlIGZpcm13YXJlIHZlcnNpb25zIG9mdGVuIGxhZyBiZWhpbmQs
-DQo+IGJ1dCBJIGRpZ3Jlc3MuDQoNCkhhbnMsDQoNCkhpc3RvcmljYWxseSB0aGUgd2lmaSBmaXJt
-d2FyZSBiaW4gd291bGQgY29udGFpbiBhbGwgaW5kaXZpZHVhbCBjdXN0b21lciANCmJvYXJkIHJl
-Z3VsYXRvcnkgZGF0YSB3aGljaCB3YXMgc2VsZWN0ZWQgdmlhIE9UUCAob3IgbnZyYW0pIGF0IGZp
-cm13YXJlIA0KYm9vdC4gVGhpcyBldmVudHVhbGx5IGJlY2FtZSB1bnNjYWxhYmxlIGJlY2F1c2Ug
-dGhlIEZXIHdvdWxkIG5lZWQgdG8gYmUgDQp1cGRhdGVkIGZvciBhbnkgbmV3IGN1c3RvbWVyIHBy
-b2R1Y3QgYW5kL29yIGNoYW5nZS4gIEFsc28gdGhlIHRhYmxlIHVzZWQgDQptb3JlIGFuZCBtb3Jl
-IGNyaXRpY2FsIG1lbW9yeSByZXNvdXJjZXMuIFRoZXJlZm9yZSwgdGhlIHJlZ3VsYXRvcnkgZGF0
-YSANCndhcyBzZXBhcmF0ZWQgaW50byBhIGRvd25sb2FkYWJsZSB1bml0IHdoaWNoIGFsbG93ZWQg
-dGhlIEZXIHRvIHJlbWFpbiANCmluZGVwZW5kZW50IGFuZCBzYXZlIG9uIGNyaXRpY2FsIChGVykg
-bWVtb3J5IHJlc291cmNlcy4NCg0KVGhlIHRyaWNreSB0aGluZyBpcyB0aGF0IGNsbV9ibG9iIGNv
-bnRhaW5zIHJlZ3VsYXRvcnkgZGF0YSB0aGF0IGlzIA0Kc3BlY2lmaWMgdG8gYSBib2FyZCwgbm90
-IGp1c3QgdGhlIGNoaXAuIEFsc28gdGhlIHJlZ3VsYXRvcnkgcnVsZXMgb2Z0ZW4gDQpyZXF1aXJl
-IHRoYXQgYSBwcm9kdWN0IG5vdCBiZSBhYmxlIHRvIGJlIG1pc2NvbmZpZ3VyZWQgKGludGVudGlv
-bmFsbHkgb3IgDQphY2NpZGVudGFsbHkpLiBUbyBhdm9pZCByZWd1bGF0b3J5IHZpb2xhdGlvbnMg
-Zm9yIG91ciBjdXN0b21lcnMgYW5kIA0KZ2VuZXJhbCBjb25mdXNpb24sIGNsbV9ibG9iIGZpbGVz
-IHRoZSBtYXRjaGVzIHRoZSBoYXJkd2FyZSBzaG91bGQgYmUgDQpkZWxpdmVyZWQgYnkgaGFyZHdh
-cmUgKGJvYXJkKSB2ZW5kb3JzLg0KDQpBcyB5b3UgbWVudGlvbmVkLCB0aGlzIHBhcmFncmFwaCBo
-YXMgZGlzZ3Jlc3NlZC4gUGxlYXNlIHJlbW92ZSBpdCBmcm9tIA0KdGhlIGNvbW1pdCBtZXNzYWdl
-Lg0KDQo+IA0KPiBUaGUgYnJjbWZtYWMgZHJpdmVyIGRvZXMgc3VwcG9ydCB0aGUgc2VwYXJhdGUg
-Y2xtX2Jsb2IgZmlsZSBhbmQgYWx3YXlzDQo+IHRyaWVzIHRvIGxvYWQgdGhpcy4gQ3VycmVudGx5
-IHdlIHVzZSByZXF1ZXN0X2Zpcm13YXJlIGZvciB0aGlzLiBUaGlzIG1lYW5zDQo+IHRoYXQgb24g
-YW55IHN0YW5kYXJkIGluc3RhbGwsIHVzaW5nIHRoZSBzdGFuZGFyZCBjb21ibyBvZiBsaW51eC1r
-ZXJuZWwgKw0KPiBsaW51eC1maXJtd2FyZSwgd2Ugd2lsbCBnZXQgYSB3YXJuaW5nOg0KPiAiRGly
-ZWN0IGZpcm13YXJlIGxvYWQgZm9yIC4uLiBmYWlsZWQgd2l0aCBlcnJvciAtMiINCj4gDQo+IE9u
-IHRvcCBvZiB0aGlzLCBicmNtZm1hYyBpdHNlbGYgcHJpbnRzOiAibm8gY2xtX2Jsb2IgYXZhaWxh
-YmxlIChlcnI9LTIpLA0KPiBkZXZpY2UgbWF5IGhhdmUgbGltaXRlZCBjaGFubmVscyBhdmFpbGFi
-bGUiLg0KPiANCj4gVGhpcyBjb21taXQgc3dpdGNoZXMgdG8gZmlybXdhcmVfcmVxdWVzdF9ub3dh
-cm4sIGZpeGluZyBhbG1vc3QgYW55IGJyY21mbWFjDQo+IGRldmljZSBsb2dnaW5nIHRoZSB3YXJu
-aW5nIChpdCBsZWF2ZXMgdGhlIGJyY21mbWFjIGluZm8gbWVzc2FnZSBpbiBwbGFjZSkuDQo+IA0K
-PiBTaWduZWQtb2ZmLWJ5OiBIYW5zIGRlIEdvZWRlIDxoZGVnb2VkZUByZWRoYXQuY29tPg0KPiAt
-LS0NCj4gQ2hhbmdlcyBpbiB2MjoNCj4gLVVzZSBmaXJtd2FyZV9yZXF1ZXN0X25vd2FybiBpbnN0
-ZWFkIG9mIHJlcXVlc3RfZmlybXdhcmVfZGlyZWN0DQo+IC1SZXdvcmQgY29tbWl0IG1lc3NhZ2Ug
-YSBiaXQgdG8gbWF0Y2ggKGFuZCBmaXggYSB0eXBvKQ0KPiAtLS0NCj4gICBkcml2ZXJzL25ldC93
-aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvY29tbW9uLmMgfCAyICstDQo+ICAg
-MSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFj
-L2NvbW1vbi5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21m
-bWFjL2NvbW1vbi5jDQo+IGluZGV4IDBiYjE2YmY1NzRlMy4uZTI5ZjU2ODg4NzYxIDEwMDY0NA0K
-PiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMv
-Y29tbW9uLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjEx
-L2JyY21mbWFjL2NvbW1vbi5jDQo+IEBAIC0xNDksNyArMTQ5LDcgQEAgc3RhdGljIGludCBicmNt
-Zl9jX3Byb2Nlc3NfY2xtX2Jsb2Ioc3RydWN0IGJyY21mX2lmICppZnApDQo+ICAgCQlyZXR1cm4g
-ZXJyOw0KPiAgIAl9DQo+ICAgDQo+IC0JZXJyID0gcmVxdWVzdF9maXJtd2FyZSgmY2xtLCBjbG1f
-bmFtZSwgYnVzLT5kZXYpOw0KPiArCWVyciA9IGZpcm13YXJlX3JlcXVlc3Rfbm93YXJuKCZjbG0s
-IGNsbV9uYW1lLCBidXMtPmRldik7DQo+ICAgCWlmIChlcnIpIHsNCj4gICAJCWJyY21mX2luZm8o
-Im5vIGNsbV9ibG9iIGF2YWlsYWJsZSAoZXJyPSVkKSwgZGV2aWNlIG1heSBoYXZlIGxpbWl0ZWQg
-Y2hhbm5lbHMgYXZhaWxhYmxlXG4iLA0KPiAgIAkJCSAgIGVycik7DQo+IA0K
+Hi Kalle,
+>=20
+> I can confirm, I also see the patch now:
+>=20
+> https://patchwork.kernel.org/patch/10754283/
+Thank you
+>=20
+Regards,
+Ganapathi
