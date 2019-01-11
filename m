@@ -2,44 +2,43 @@ Return-Path: <SRS0=8fZi=PT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A873C43444
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:12:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9398C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:13:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE93920870
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:12:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7127F2177B
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:13:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392023AbfAKPMi (ORCPT
+        id S2392056AbfAKPNA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Jan 2019 10:12:38 -0500
-Received: from smtp3.goneo.de ([85.220.129.37]:49268 "EHLO smtp3.goneo.de"
+        Fri, 11 Jan 2019 10:13:00 -0500
+Received: from smtp3.goneo.de ([85.220.129.37]:49330 "EHLO smtp3.goneo.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392014AbfAKPMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Jan 2019 10:12:37 -0500
+        id S2388326AbfAKPM7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 Jan 2019 10:12:59 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp3.goneo.de (Postfix) with ESMTP id 6A34223FFE5;
-        Fri, 11 Jan 2019 16:12:33 +0100 (CET)
+        by smtp3.goneo.de (Postfix) with ESMTP id 3A79E24002C;
+        Fri, 11 Jan 2019 16:12:56 +0100 (CET)
 X-Virus-Scanned: by goneo
 Received: from smtp3.goneo.de ([127.0.0.1])
         by localhost (smtp3.goneo.de [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id WApagUEdLxdf; Fri, 11 Jan 2019 16:12:27 +0100 (CET)
+        with ESMTP id wyqHAU6GjzwM; Fri, 11 Jan 2019 16:12:54 +0100 (CET)
 Received: from lem-wkst-02.lemonage.de. (hq.lemonage.de [87.138.178.34])
-        by smtp3.goneo.de (Postfix) with ESMTPA id 26CBA23FB7C;
-        Fri, 11 Jan 2019 16:12:27 +0100 (CET)
+        by smtp3.goneo.de (Postfix) with ESMTPA id 8351823FB7C;
+        Fri, 11 Jan 2019 16:12:54 +0100 (CET)
 From:   Lars Poeschel <poeschel@lemonage.de>
 To:     devicetree@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
         "GitAuthor: Lars Poeschel" <poeschel@lemonage.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Johan Hovold <johan@kernel.org>,
-        Hans de Goede <hdegoede@redhat.com>,
         linux-wireless@vger.kernel.org (open list:NFC SUBSYSTEM),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v5 4/7] nfc: pn533: Split pn533 init & nfc_register
-Date:   Fri, 11 Jan 2019 17:18:07 +0100
-Message-Id: <20190111161812.26325-4-poeschel@lemonage.de>
+Cc:     Johan Hovold <johan@kernel.org>
+Subject: [PATCH v5 6/7] nfc: pn533: Add autopoll capability
+Date:   Fri, 11 Jan 2019 17:18:09 +0100
+Message-Id: <20190111161812.26325-6-poeschel@lemonage.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190111161812.26325-1-poeschel@lemonage.de>
 References: <20190111161812.26325-1-poeschel@lemonage.de>
@@ -50,250 +49,295 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is a problem in the initialisation and setup of the pn533: It
-registers with nfc too early. It could happen, that it finished
-registering with nfc and someone starts using it. But setup of the pn533
-is not yet finished. Bad or at least unintended things could happen.
-So I split out nfc registering (and unregistering) to seperate functions
-that have to be called late in probe then.
+pn532 devices support an autopoll command, that lets the chip
+automatically poll for selected nfc technologies instead of manually
+looping through every single nfc technology the user is interested in.
+This is faster and less cpu and bus intensive than manually polling.
+This adds this autopoll capability to the pn533 driver.
 
 Cc: Johan Hovold <johan@kernel.org>
 Signed-off-by: Lars Poeschel <poeschel@lemonage.de>
 ---
-Changes in v5:
-- This patch is new in v5
+ drivers/nfc/pn533/pn533.c | 193 +++++++++++++++++++++++++++++++++++++-
+ drivers/nfc/pn533/pn533.h |  10 +-
+ 2 files changed, 197 insertions(+), 6 deletions(-)
 
- drivers/nfc/pn533/i2c.c   | 17 +++++-----
- drivers/nfc/pn533/pn533.c | 66 ++++++++++++++++++++-------------------
- drivers/nfc/pn533/pn533.h | 11 ++++---
- drivers/nfc/pn533/usb.c   | 12 +++++--
- 4 files changed, 59 insertions(+), 47 deletions(-)
-
-diff --git a/drivers/nfc/pn533/i2c.c b/drivers/nfc/pn533/i2c.c
-index f4eae9dd5305..9907fc3525f2 100644
---- a/drivers/nfc/pn533/i2c.c
-+++ b/drivers/nfc/pn533/i2c.c
-@@ -206,12 +206,10 @@ static int pn533_i2c_probe(struct i2c_client *client,
- 	phy->i2c_dev = client;
- 	i2c_set_clientdata(client, phy);
- 
--	priv = pn533_register_device(PN533_DEVICE_PN532,
--				     PN533_NO_TYPE_B_PROTOCOLS,
-+	priv = pn53x_common_init(PN533_DEVICE_PN532,
- 				     PN533_PROTO_REQ_ACK_RESP,
- 				     phy, &i2c_phy_ops, NULL,
--				     &phy->i2c_dev->dev,
--				     &client->dev);
-+				     &phy->i2c_dev->dev);
- 
- 	if (IS_ERR(priv)) {
- 		r = PTR_ERR(priv);
-@@ -233,13 +231,17 @@ static int pn533_i2c_probe(struct i2c_client *client,
- 	if (r)
- 		goto fn_setup_err;
- 
--	return 0;
-+	r = pn53x_register_nfc(priv, PN533_NO_TYPE_B_PROTOCOLS, &client->dev);
-+	if (r)
-+		goto fn_setup_err;
-+
-+	return r;
- 
- fn_setup_err:
- 	free_irq(client->irq, phy);
- 
- irq_rqst_err:
--	pn533_unregister_device(phy->priv);
-+	pn53x_common_clean(phy->priv);
- 
- 	return r;
- }
-@@ -252,7 +254,8 @@ static int pn533_i2c_remove(struct i2c_client *client)
- 
- 	free_irq(client->irq, phy);
- 
--	pn533_unregister_device(phy->priv);
-+	pn53x_unregister_nfc(phy->priv);
-+	pn53x_common_clean(phy->priv);
- 
- 	return 0;
- }
 diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
-index 1bc097d03789..3689f0502f6a 100644
+index 3689f0502f6a..a8e127487ada 100644
 --- a/drivers/nfc/pn533/pn533.c
 +++ b/drivers/nfc/pn533/pn533.c
-@@ -2600,14 +2600,12 @@ int pn533_finalize_setup(struct pn533 *dev)
- }
- EXPORT_SYMBOL_GPL(pn533_finalize_setup);
+@@ -197,6 +197,32 @@ struct pn533_cmd_jump_dep_response {
+ 	u8 gt[];
+ } __packed;
  
--struct pn533 *pn533_register_device(u32 device_type,
--				u32 protocols,
-+struct pn533 *pn53x_common_init(u32 device_type,
- 				enum pn533_protocol_type protocol_type,
- 				void *phy,
- 				struct pn533_phy_ops *phy_ops,
- 				struct pn533_frame_ops *fops,
--				struct device *dev,
--				struct device *parent)
-+				struct device *dev)
- {
- 	struct pn533 *priv;
- 	int rc = -ENOMEM;
-@@ -2648,43 +2646,18 @@ struct pn533 *pn533_register_device(u32 device_type,
- 	skb_queue_head_init(&priv->fragment_skb);
- 
- 	INIT_LIST_HEAD(&priv->cmd_queue);
--
--	priv->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols,
--					   priv->ops->tx_header_len +
--					   PN533_CMD_DATAEXCH_HEAD_LEN,
--					   priv->ops->tx_tail_len);
--	if (!priv->nfc_dev) {
--		rc = -ENOMEM;
--		goto destroy_wq;
--	}
--
--	nfc_set_parent_dev(priv->nfc_dev, parent);
--	nfc_set_drvdata(priv->nfc_dev, priv);
--
--	rc = nfc_register_device(priv->nfc_dev);
--	if (rc)
--		goto free_nfc_dev;
--
- 	return priv;
- 
--free_nfc_dev:
--	nfc_free_device(priv->nfc_dev);
--
--destroy_wq:
--	destroy_workqueue(priv->wq);
- error:
- 	kfree(priv);
- 	return ERR_PTR(rc);
- }
--EXPORT_SYMBOL_GPL(pn533_register_device);
-+EXPORT_SYMBOL_GPL(pn53x_common_init);
- 
--void pn533_unregister_device(struct pn533 *priv)
-+void pn53x_common_clean(struct pn533 *priv)
- {
- 	struct pn533_cmd *cmd, *n;
- 
--	nfc_unregister_device(priv->nfc_dev);
--	nfc_free_device(priv->nfc_dev);
--
- 	flush_delayed_work(&priv->poll_work);
- 	destroy_workqueue(priv->wq);
- 
-@@ -2699,8 +2672,37 @@ void pn533_unregister_device(struct pn533 *priv)
- 
- 	kfree(priv);
- }
--EXPORT_SYMBOL_GPL(pn533_unregister_device);
-+EXPORT_SYMBOL_GPL(pn53x_common_clean);
++struct pn532_autopoll_resp {
++	u8 type;
++	u8 ln;
++	u8 tg;
++	u8 tgdata[];
++} __packed;
 +
-+int pn53x_register_nfc(struct pn533 *priv, u32 protocols,
-+			struct device *parent)
++/* PN532_CMD_IN_AUTOPOLL */
++#define PN532_AUTOPOLL_POLLNR_INFINITE	0xff
++#define PN532_AUTOPOLL_PERIOD		0x03 /* in units of 150 ms */
++
++#define PN532_AUTOPOLL_TYPE_GENERIC_106		0x00
++#define PN532_AUTOPOLL_TYPE_GENERIC_212		0x01
++#define PN532_AUTOPOLL_TYPE_GENERIC_424		0x02
++#define PN532_AUTOPOLL_TYPE_JEWEL		0x04
++#define PN532_AUTOPOLL_TYPE_MIFARE		0x10
++#define PN532_AUTOPOLL_TYPE_FELICA212		0x11
++#define PN532_AUTOPOLL_TYPE_FELICA424		0x12
++#define PN532_AUTOPOLL_TYPE_ISOA		0x20
++#define PN532_AUTOPOLL_TYPE_ISOB		0x23
++#define PN532_AUTOPOLL_TYPE_DEP_PASSIVE_106	0x40
++#define PN532_AUTOPOLL_TYPE_DEP_PASSIVE_212	0x41
++#define PN532_AUTOPOLL_TYPE_DEP_PASSIVE_424	0x42
++#define PN532_AUTOPOLL_TYPE_DEP_ACTIVE_106	0x80
++#define PN532_AUTOPOLL_TYPE_DEP_ACTIVE_212	0x81
++#define PN532_AUTOPOLL_TYPE_DEP_ACTIVE_424	0x82
+ 
+ /* PN533_TG_INIT_AS_TARGET */
+ #define PN533_INIT_TARGET_PASSIVE 0x1
+@@ -1401,6 +1427,101 @@ static int pn533_poll_dep(struct nfc_dev *nfc_dev)
+ 	return rc;
+ }
+ 
++static int pn533_autopoll_complete(struct pn533 *dev, void *arg,
++			       struct sk_buff *resp)
 +{
-+	int rc = -ENOMEM;
++	u8 nbtg;
++	int rc;
++	struct pn532_autopoll_resp *apr;
++	struct nfc_target nfc_tgt;
 +
-+	priv->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols,
-+					   priv->ops->tx_header_len +
-+					   PN533_CMD_DATAEXCH_HEAD_LEN,
-+					   priv->ops->tx_tail_len);
-+	if (!priv->nfc_dev)
-+		return -ENOMEM;
++	if (IS_ERR(resp)) {
++		rc = PTR_ERR(resp);
 +
-+	nfc_set_parent_dev(priv->nfc_dev, parent);
-+	nfc_set_drvdata(priv->nfc_dev, priv);
++		nfc_err(dev->dev, "%s  autopoll complete error %d\n",
++			__func__, rc);
 +
-+	rc = nfc_register_device(priv->nfc_dev);
-+	if (rc)
-+		nfc_free_device(priv->nfc_dev);
++		if (rc == -ENOENT) {
++			if (dev->poll_mod_count != 0)
++				return rc;
++			goto stop_poll;
++		} else if (rc < 0) {
++			nfc_err(dev->dev,
++				"Error %d when running autopoll\n", rc);
++			goto stop_poll;
++		}
++	}
 +
++	nbtg = resp->data[0];
++	if ((nbtg > 2) || (nbtg <= 0))
++		return -EAGAIN;
++
++	apr = (struct pn532_autopoll_resp *)&resp->data[1];
++	while (nbtg--) {
++		memset(&nfc_tgt, 0, sizeof(struct nfc_target));
++		switch (apr->type) {
++		case PN532_AUTOPOLL_TYPE_ISOA:
++			dev_dbg(dev->dev, "ISOA");
++			rc = pn533_target_found_type_a(&nfc_tgt, apr->tgdata,
++						       apr->ln - 1);
++			break;
++		case PN532_AUTOPOLL_TYPE_FELICA212:
++		case PN532_AUTOPOLL_TYPE_FELICA424:
++			dev_dbg(dev->dev, "FELICA");
++			rc = pn533_target_found_felica(&nfc_tgt, apr->tgdata,
++						       apr->ln - 1);
++			break;
++		case PN532_AUTOPOLL_TYPE_JEWEL:
++			dev_dbg(dev->dev, "JEWEL");
++			rc = pn533_target_found_jewel(&nfc_tgt, apr->tgdata,
++						      apr->ln - 1);
++			break;
++		case PN532_AUTOPOLL_TYPE_ISOB:
++			dev_dbg(dev->dev, "ISOB");
++			rc = pn533_target_found_type_b(&nfc_tgt, apr->tgdata,
++						       apr->ln - 1);
++			break;
++		case PN532_AUTOPOLL_TYPE_MIFARE:
++			dev_dbg(dev->dev, "Mifare");
++			rc = pn533_target_found_type_a(&nfc_tgt, apr->tgdata,
++						       apr->ln - 1);
++			break;
++		default:
++			nfc_err(dev->dev,
++				    "Unknown current poll modulation");
++			rc = -EPROTO;
++		}
++
++		if (rc)
++			goto done;
++
++		if (!(nfc_tgt.supported_protocols & dev->poll_protocols)) {
++			nfc_err(dev->dev,
++				    "The Tg found doesn't have the desired protocol");
++			rc = -EAGAIN;
++			goto done;
++		}
++
++		dev->tgt_available_prots = nfc_tgt.supported_protocols;
++		apr = (struct pn532_autopoll_resp *)
++			(apr->tgdata + (apr->ln - 1));
++	}
++
++	pn533_poll_reset_mod_list(dev);
++	nfc_targets_found(dev->nfc_dev, &nfc_tgt, 1);
++
++done:
++	dev_kfree_skb(resp);
++	return rc;
++
++stop_poll:
++	nfc_err(dev->dev, "autopoll operation has been stopped\n");
++
++	pn533_poll_reset_mod_list(dev);
++	dev->poll_protocols = 0;
 +	return rc;
 +}
-+EXPORT_SYMBOL_GPL(pn53x_register_nfc);
++
+ static int pn533_poll_complete(struct pn533 *dev, void *arg,
+ 			       struct sk_buff *resp)
+ {
+@@ -1546,6 +1667,7 @@ static int pn533_start_poll(struct nfc_dev *nfc_dev,
+ 	struct pn533_poll_modulations *cur_mod;
+ 	u8 rand_mod;
+ 	int rc;
++	struct sk_buff *skb;
  
-+void pn53x_unregister_nfc(struct pn533 *priv)
-+{
-+	nfc_unregister_device(priv->nfc_dev);
-+	nfc_free_device(priv->nfc_dev);
-+}
-+EXPORT_SYMBOL_GPL(pn53x_unregister_nfc);
- 
- MODULE_AUTHOR("Lauro Ramos Venancio <lauro.venancio@openbossa.org>");
- MODULE_AUTHOR("Aloisio Almeida Jr <aloisio.almeida@openbossa.org>");
-diff --git a/drivers/nfc/pn533/pn533.h b/drivers/nfc/pn533/pn533.h
-index eb5ccefc32e5..39909d099309 100644
---- a/drivers/nfc/pn533/pn533.h
-+++ b/drivers/nfc/pn533/pn533.h
-@@ -231,18 +231,19 @@ struct pn533_phy_ops {
- };
- 
- 
--struct pn533 *pn533_register_device(u32 device_type,
--				u32 protocols,
-+struct pn533 *pn53x_common_init(u32 device_type,
- 				enum pn533_protocol_type protocol_type,
- 				void *phy,
- 				struct pn533_phy_ops *phy_ops,
- 				struct pn533_frame_ops *fops,
--				struct device *dev,
--				struct device *parent);
-+				struct device *dev);
- 
- int pn533_finalize_setup(struct pn533 *dev);
--void pn533_unregister_device(struct pn533 *priv);
-+void pn53x_common_clean(struct pn533 *priv);
- void pn533_recv_frame(struct pn533 *dev, struct sk_buff *skb, int status);
-+int pn53x_register_nfc(struct pn533 *priv, u32 protocols,
-+			struct device *parent);
-+void pn53x_unregister_nfc(struct pn533 *priv);
- 
- bool pn533_rx_frame_is_cmd_response(struct pn533 *dev, void *frame);
- bool pn533_rx_frame_is_ack(void *_frame);
-diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
-index 5d823e965883..0f8e1dc3fbf1 100644
---- a/drivers/nfc/pn533/usb.c
-+++ b/drivers/nfc/pn533/usb.c
-@@ -546,9 +546,9 @@ static int pn533_usb_probe(struct usb_interface *interface,
- 		goto error;
+ 	dev_dbg(dev->dev,
+ 		"%s: im protocols 0x%x tm protocols 0x%x\n",
+@@ -1569,9 +1691,73 @@ static int pn533_start_poll(struct nfc_dev *nfc_dev,
+ 			tm_protocols = 0;
  	}
  
--	priv = pn533_register_device(id->driver_info, protocols, protocol_type,
-+	priv = pn53x_common_init(id->driver_info, protocol_type,
- 					phy, &usb_phy_ops, fops,
--					&phy->udev->dev, &interface->dev);
-+					&phy->udev->dev);
+-	pn533_poll_create_mod_list(dev, im_protocols, tm_protocols);
+ 	dev->poll_protocols = im_protocols;
+ 	dev->listen_protocols = tm_protocols;
++	if (dev->device_type == PN533_DEVICE_PN532_AUTOPOLL) {
++		skb = pn533_alloc_skb(dev, 4 + 6);
++		if (!skb)
++			return -ENOMEM;
++
++		*((u8 *)skb_put(skb, sizeof(u8))) =
++			PN532_AUTOPOLL_POLLNR_INFINITE;
++		*((u8 *)skb_put(skb, sizeof(u8))) = PN532_AUTOPOLL_PERIOD;
++
++		if ((im_protocols & NFC_PROTO_MIFARE_MASK) &&
++				(im_protocols & NFC_PROTO_ISO14443_MASK) &&
++				(im_protocols & NFC_PROTO_NFC_DEP_MASK))
++			*((u8 *)skb_put(skb, sizeof(u8))) =
++				PN532_AUTOPOLL_TYPE_GENERIC_106;
++		else {
++			if (im_protocols & NFC_PROTO_MIFARE_MASK)
++				*((u8 *)skb_put(skb, sizeof(u8))) =
++					PN532_AUTOPOLL_TYPE_MIFARE;
++
++			if (im_protocols & NFC_PROTO_ISO14443_MASK)
++				*((u8 *)skb_put(skb, sizeof(u8))) =
++					PN532_AUTOPOLL_TYPE_ISOA;
++
++			if (im_protocols & NFC_PROTO_NFC_DEP_MASK) {
++				*((u8 *)skb_put(skb, sizeof(u8))) =
++					PN532_AUTOPOLL_TYPE_DEP_PASSIVE_106;
++				*((u8 *)skb_put(skb, sizeof(u8))) =
++					PN532_AUTOPOLL_TYPE_DEP_PASSIVE_212;
++				*((u8 *)skb_put(skb, sizeof(u8))) =
++					PN532_AUTOPOLL_TYPE_DEP_PASSIVE_424;
++			}
++		}
++
++		if (im_protocols & NFC_PROTO_FELICA_MASK ||
++				im_protocols & NFC_PROTO_NFC_DEP_MASK) {
++			*((u8 *)skb_put(skb, sizeof(u8))) =
++				PN532_AUTOPOLL_TYPE_FELICA212;
++			*((u8 *)skb_put(skb, sizeof(u8))) =
++				PN532_AUTOPOLL_TYPE_FELICA424;
++		}
++
++		if (im_protocols & NFC_PROTO_JEWEL_MASK)
++			*((u8 *)skb_put(skb, sizeof(u8))) =
++				PN532_AUTOPOLL_TYPE_JEWEL;
++
++		if (im_protocols & NFC_PROTO_ISO14443_B_MASK)
++			*((u8 *)skb_put(skb, sizeof(u8))) =
++				PN532_AUTOPOLL_TYPE_ISOB;
++
++		if (tm_protocols)
++			*((u8 *)skb_put(skb, sizeof(u8))) =
++				PN532_AUTOPOLL_TYPE_DEP_ACTIVE_106;
++
++		rc = pn533_send_cmd_async(dev, PN533_CMD_IN_AUTOPOLL, skb,
++				pn533_autopoll_complete, NULL);
++
++		if (rc < 0)
++			dev_kfree_skb(skb);
++		else
++			dev->poll_mod_count++;
++
++		return rc;
++	}
++
++	pn533_poll_create_mod_list(dev, im_protocols, tm_protocols);
  
- 	if (IS_ERR(priv)) {
- 		rc = PTR_ERR(priv);
-@@ -562,9 +562,14 @@ static int pn533_usb_probe(struct usb_interface *interface,
- 		goto error;
+ 	/* Do not always start polling from the same modulation */
+ 	get_random_bytes(&rand_mod, sizeof(rand_mod));
+@@ -2471,7 +2657,8 @@ static int pn533_dev_up(struct nfc_dev *nfc_dev)
+ 	if (dev->phy_ops->dev_up)
+ 		dev->phy_ops->dev_up(dev);
  
- 	usb_set_intfdata(interface, phy);
-+	rc = pn53x_register_nfc(priv, protocols, &interface->dev);
-+	if (rc)
-+		goto err_clean;
+-	if (dev->device_type == PN533_DEVICE_PN532) {
++	if ((dev->device_type == PN533_DEVICE_PN532) ||
++		(dev->device_type == PN533_DEVICE_PN532_AUTOPOLL)) {
+ 		int rc = pn532_sam_configuration(nfc_dev);
  
- 	return 0;
+ 		if (rc)
+@@ -2518,6 +2705,7 @@ static int pn533_setup(struct pn533 *dev)
+ 	case PN533_DEVICE_PASORI:
+ 	case PN533_DEVICE_ACR122U:
+ 	case PN533_DEVICE_PN532:
++	case PN533_DEVICE_PN532_AUTOPOLL:
+ 		max_retries.mx_rty_atr = 0x2;
+ 		max_retries.mx_rty_psl = 0x1;
+ 		max_retries.mx_rty_passive_act =
+@@ -2554,6 +2742,7 @@ static int pn533_setup(struct pn533 *dev)
+ 	switch (dev->device_type) {
+ 	case PN533_DEVICE_STD:
+ 	case PN533_DEVICE_PN532:
++	case PN533_DEVICE_PN532_AUTOPOLL:
+ 		break;
  
-+err_clean:
-+	pn53x_common_clean(priv);
- error:
- 	usb_free_urb(phy->in_urb);
- 	usb_free_urb(phy->out_urb);
-@@ -582,7 +587,8 @@ static void pn533_usb_disconnect(struct usb_interface *interface)
- 	if (!phy)
- 		return;
+ 	case PN533_DEVICE_PASORI:
+diff --git a/drivers/nfc/pn533/pn533.h b/drivers/nfc/pn533/pn533.h
+index 1e54fc6c524f..27398966a95d 100644
+--- a/drivers/nfc/pn533/pn533.h
++++ b/drivers/nfc/pn533/pn533.h
+@@ -18,10 +18,11 @@
+  * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
--	pn533_unregister_device(phy->priv);
-+	pn53x_unregister_nfc(phy->priv);
-+	pn53x_common_clean(phy->priv);
+-#define PN533_DEVICE_STD     0x1
+-#define PN533_DEVICE_PASORI  0x2
+-#define PN533_DEVICE_ACR122U 0x3
+-#define PN533_DEVICE_PN532   0x4
++#define PN533_DEVICE_STD		0x1
++#define PN533_DEVICE_PASORI		0x2
++#define PN533_DEVICE_ACR122U		0x3
++#define PN533_DEVICE_PN532		0x4
++#define PN533_DEVICE_PN532_AUTOPOLL	0x5
  
- 	usb_set_intfdata(interface, NULL);
+ #define PN533_ALL_PROTOCOLS (NFC_PROTO_JEWEL_MASK | NFC_PROTO_MIFARE_MASK |\
+ 			     NFC_PROTO_FELICA_MASK | NFC_PROTO_ISO14443_MASK |\
+@@ -87,6 +88,7 @@
+ #define PN533_CMD_IN_ATR 0x50
+ #define PN533_CMD_IN_RELEASE 0x52
+ #define PN533_CMD_IN_JUMP_FOR_DEP 0x56
++#define PN533_CMD_IN_AUTOPOLL 0x60
  
+ #define PN533_CMD_TG_INIT_AS_TARGET 0x8c
+ #define PN533_CMD_TG_GET_DATA 0x86
 -- 
 2.20.1
 
