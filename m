@@ -2,80 +2,88 @@ Return-Path: <SRS0=8fZi=PT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AEE0C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D045C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:10:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EAAC320874
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:09:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EADE20874
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:10:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="jkBNA7mf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391744AbfAKPJs (ORCPT
+        id S2387707AbfAKOQn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Jan 2019 10:09:48 -0500
-Received: from smtp3.goneo.de ([85.220.129.37]:48902 "EHLO smtp3.goneo.de"
+        Fri, 11 Jan 2019 09:16:43 -0500
+Received: from nbd.name ([46.4.11.11]:53674 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388480AbfAKPJq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Jan 2019 10:09:46 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp3.goneo.de (Postfix) with ESMTP id 289F023F344;
-        Fri, 11 Jan 2019 16:09:44 +0100 (CET)
-X-Virus-Scanned: by goneo
-Received: from smtp3.goneo.de ([127.0.0.1])
-        by localhost (smtp3.goneo.de [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id aUiF7gTa5tj9; Fri, 11 Jan 2019 16:09:43 +0100 (CET)
-Received: from lem-wkst-02.lemonage.de. (hq.lemonage.de [87.138.178.34])
-        by smtp3.goneo.de (Postfix) with ESMTPA id 0623523FA89;
-        Fri, 11 Jan 2019 16:09:42 +0100 (CET)
-From:   Lars Poeschel <poeschel@lemonage.de>
-To:     devicetree@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
-        "GitAuthor: Lars Poeschel" <poeschel@lemonage.de>,
-        linux-wireless@vger.kernel.org (open list:NFC SUBSYSTEM),
-        linux-kernel@vger.kernel.org (open list)
-Cc:     Johan Hovold <johan@kernel.org>
-Subject: [PATCH v5 1/7] nfc: pn533: i2c: "pn532" as dt compatible string
-Date:   Fri, 11 Jan 2019 17:18:04 +0100
-Message-Id: <20190111161812.26325-1-poeschel@lemonage.de>
-X-Mailer: git-send-email 2.20.1
+        id S2387688AbfAKOQm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 Jan 2019 09:16:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=cxyJd99nfEHuAHbfs1NjVtJ1UTtnnHBADFelmTlHP+I=; b=jkBNA7mfOI/DqainloaXGRhjiG
+        uZ4gwnifPTyLdRSiUO//pcu/RDYTXL4h13SHilvi6O/GL0NZPeW4cjXaONcCEhL9hP3rO70ifWH3C
+        vHRx3P0lgj5BWGlidUZ8mHfFtSJ4bSnHnivEa1tWmVOmj27+AQTmAukPVBZJb+J2YQTQ=;
+Subject: Re: [PATCH] mt76: convert to DEFINE_SHOW_ATTRIBUTE
+To:     Yangtao Li <tiny.windzz@gmail.com>, davem@davemloft.net,
+        kubakici@wp.pl, matthias.bgg@gmail.com,
+        lorenzo.bianconi@redhat.com, joe@perches.com, sgruszka@redhat.com,
+        kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+References: <20181203134028.12645-1-tiny.windzz@gmail.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <d54d40ec-787f-1423-fc9f-b0675e160edc@nbd.name>
+Date:   Fri, 11 Jan 2019 15:16:37 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.4.0
 MIME-Version: 1.0
+In-Reply-To: <20181203134028.12645-1-tiny.windzz@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It is favourable to have one unified compatible string for devices that
-have multiple interfaces. So this adds simply "pn532" as the devicetree
-binding compatible string and makes a note that the old ones are
-deprecated.
+On 2018-12-03 14:40, Yangtao Li wrote:
+> Use DEFINE_SHOW_ATTRIBUTE macro to simplify the code.
+> 
+> Signed-off-by: Yangtao Li <tiny.windzz@gmail.com>Please rebase this patch onto the mt76 branch of
+https://github.com/nbd168/wireless
 
-Cc: Johan Hovold <johan@kernel.org>
-Signed-off-by: Lars Poeschel <poeschel@lemonage.de>
----
-Changes in v3:
-- This patch is new in v3
+Thanks,
 
- drivers/nfc/pn533/i2c.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/nfc/pn533/i2c.c b/drivers/nfc/pn533/i2c.c
-index 4389eb4c8d0b..f4eae9dd5305 100644
---- a/drivers/nfc/pn533/i2c.c
-+++ b/drivers/nfc/pn533/i2c.c
-@@ -258,6 +258,11 @@ static int pn533_i2c_remove(struct i2c_client *client)
- }
- 
- static const struct of_device_id of_pn533_i2c_match[] = {
-+	{ .compatible = "nxp,pn532", },
-+	/*
-+	 * NOTE: The use of the compatibles with the trailing "...-i2c" is
-+	 * deprecated and will be removed.
-+	 */
- 	{ .compatible = "nxp,pn533-i2c", },
- 	{ .compatible = "nxp,pn532-i2c", },
- 	{},
--- 
-2.20.1
-
+- Felix
