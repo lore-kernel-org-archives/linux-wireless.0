@@ -2,88 +2,176 @@ Return-Path: <SRS0=8fZi=PT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D045C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:10:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E1DBC43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:11:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EADE20874
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:10:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F0E520874
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:11:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="jkBNA7mf"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="gGamytnt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387707AbfAKOQn (ORCPT
+        id S2387533AbfAKOQB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Jan 2019 09:16:43 -0500
-Received: from nbd.name ([46.4.11.11]:53674 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387688AbfAKOQm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Jan 2019 09:16:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=cxyJd99nfEHuAHbfs1NjVtJ1UTtnnHBADFelmTlHP+I=; b=jkBNA7mfOI/DqainloaXGRhjiG
-        uZ4gwnifPTyLdRSiUO//pcu/RDYTXL4h13SHilvi6O/GL0NZPeW4cjXaONcCEhL9hP3rO70ifWH3C
-        vHRx3P0lgj5BWGlidUZ8mHfFtSJ4bSnHnivEa1tWmVOmj27+AQTmAukPVBZJb+J2YQTQ=;
-Subject: Re: [PATCH] mt76: convert to DEFINE_SHOW_ATTRIBUTE
-To:     Yangtao Li <tiny.windzz@gmail.com>, davem@davemloft.net,
-        kubakici@wp.pl, matthias.bgg@gmail.com,
-        lorenzo.bianconi@redhat.com, joe@perches.com, sgruszka@redhat.com,
-        kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-References: <20181203134028.12645-1-tiny.windzz@gmail.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <d54d40ec-787f-1423-fc9f-b0675e160edc@nbd.name>
-Date:   Fri, 11 Jan 2019 15:16:37 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.4.0
+        Fri, 11 Jan 2019 09:16:01 -0500
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:58248 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387495AbfAKOQB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 Jan 2019 09:16:01 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=armlinux.org.uk; s=pandora-2014; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=uqpdpQIYU+DTMR4wxxZnSfqJrO83OylqpYQgb4JjonA=; b=gGamytntk4LLwyMPIIs1LI0Je
+        bx7nzemGsweH+4dclL+ucWX2ZjbtxsvQ6xZclxfeAP+RmWAO67AhOvgYTauZN8EmNSM3dNB/+Dj0t
+        pNLdK4klPLAzVry7pHivdTOQUyyY+LXHjsxwvHx0Q8SkXhY1JlcmqzZtP8xGfUGEUsh2o=;
+Received: from n2100.armlinux.org.uk ([2001:4d48:ad52:3201:214:fdff:fe10:4f86]:50458)
+        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <linux@armlinux.org.uk>)
+        id 1ghxbD-0005RE-Ll; Fri, 11 Jan 2019 14:15:51 +0000
+Received: from linux by n2100.armlinux.org.uk with local (Exim 4.90_1)
+        (envelope-from <linux@n2100.armlinux.org.uk>)
+        id 1ghxbB-0002la-5h; Fri, 11 Jan 2019 14:15:49 +0000
+Date:   Fri, 11 Jan 2019 14:15:47 +0000
+From:   Russell King - ARM Linux <linux@armlinux.org.uk>
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com
+Subject: Re: [REGRESSION] hostapd 2.4..2.7 broken with 4.18+
+Message-ID: <20190111141543.GA2392@n2100.armlinux.org.uk>
+References: <20181224110925.GY26090@n2100.armlinux.org.uk>
+ <CAF7Mx6r_q7H4ioFLoF1eKHrvmtE0xViG__uDNByaNjrGGJWx+Q@mail.gmail.com>
+ <874lajrtkh.fsf@kamboji.qca.qualcomm.com>
+ <20190108232646.GV11171@n2100.armlinux.org.uk>
+ <30039f89-6adb-c08e-1796-553e578b250f@broadcom.com>
+ <20190109105622.GY11171@n2100.armlinux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <20181203134028.12645-1-tiny.windzz@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190109105622.GY11171@n2100.armlinux.org.uk>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-12-03 14:40, Yangtao Li wrote:
-> Use DEFINE_SHOW_ATTRIBUTE macro to simplify the code.
+On Wed, Jan 09, 2019 at 10:56:22AM +0000, Russell King - ARM Linux wrote:
+> On Wed, Jan 09, 2019 at 11:27:31AM +0100, Arend Van Spriel wrote:
+> > On 1/9/2019 12:26 AM, Russell King - ARM Linux wrote:
+> > >On Tue, Jan 08, 2019 at 06:40:46PM +0200, Kalle Valo wrote:
+> > >>Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+> > >>
+> > >>>Response using Gmail on phone
+> > >>
+> > >>Unfortunately it had HTML and not sure if it made it to the list, so
+> > >>copying your response in full below just in case. Russell, does the
+> > >>commit below fix your problem?
+> > >>
+> > >>861cb5eb467f brcmfmac: Fix access point mode
+> > >
+> > > From a quick test this evening, it does seem to allow brcmfmac to work
+> > >with hostapd again, which is good news.
+> > >
+> > >However, I've been seeing other issues with the brcmfmac over the course
+> > >of the last week, which needs the brcmfmac module to be removed and
+> > >re-loaded to rescue the situation - ultimately, it means that running
+> > >brcmfmac in host AP mode is unreliable.  This is with 4.19 and my
+> > >patch - we will see how 4.20 with the above mentioned patch behaves over
+> > >the coming week.
+> > >
+> > >[1036107.225569] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+> > >[1036108.217519] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+> > >[1043906.813243] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+> > >[1043907.809184] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+> > >[1044220.587626] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg failed w/status -110
+> > >[1045006.357728] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+> > >[1049743.889412] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+> > >[1061305.953430] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+> > >[1061308.641378] brcmfmac: send_key_to_dongle: wsec_key error (-110)
+> > >[1061309.665234] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+> > >[1061312.993053] brcmfmac: brcmf_cfg80211_change_station: Setting SCB (de-)authorize failed, -110
+> > 
+> > Is this with hostapd? If so, this br0 message suggest you let hostapd create
+> > a bridge, is that correct? Just trying to get a good picture in case I want
+> > to replicate things over here although I am pretty sure I do not have the
+> > same platform lying around here. Although, what platform do you have?
 > 
-> Signed-off-by: Yangtao Li <tiny.windzz@gmail.com>Please rebase this patch onto the mt76 branch of
-https://github.com/nbd168/wireless
+> Yes, it's with hostapd.  With the nl80211 driver, hostapd will only add
+> the device to a bridge, rather than creating the bridge itself.
+> 
+> I'm using Debian Stretch, and my /etc/network/interfaces contains:
+> 
+> iface br0 inet manual
+>         bridge-ports eth0.nnn
+>         bridge-maxwait 0
+> 
+> iface eth0.224 inet manual
+> 
+> iface wlan0 inet manual
+>         pre-up nmcli d set wlan0 managed no
+>         hostapd /etc/hostapd/rmk-home.conf
+> 
+> and these are scripted to be brought up in the order: eth0.224, then
+> br0, then wlan0.
+> 
+> These are iMX6 Hummingboards - one is a Hummingboard2, the other is
+> a Hummingboard.  Both have the 4330 device on, and both are running
+> the same firmware.
+> 
+> > The timeout (-110) error can mean either firmware crashed or the sdio host
+> > controller went in limbo. If this happens again on 4.20 (or 5.0-rc1), you
+> > could build the driver with CONFIG_BRCMDBG and load the driver with
+> > debug=0x100010. If it is a firmware crash it should show up in the log.
+> 
+> Interestingly, I've just checked another Hummingboard2 running in
+> hostapd mode (with a 4.13 kernel) which had been up for over a year
+> until I recently did some maintenance on it.  It has a later firmware
+> and hasn't shown a problem.
+> 
+> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jan 23 2013 17:47:32 version 5.90.195.114 FWID 01-f9e7e464
+> 
+> so I wonder if it's just that the firmware in the Debian package
+> (firmware-brcm80211) is outdated.  Any ideas why distros don't
+> carry the 2013 firmware?
 
-Thanks,
+Okay, it's happened again - leading up to the event:
 
-- Felix
+[52429.342374] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg failed w/status -110
+[52431.902035] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg failed w/status -110
+[52431.910749] brcmfmac: brcmf_cfg80211_get_station: GET STA INFO failed, -110
+[64477.184237] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+[72565.439122] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+
+and I guess this is where things went pear shaped:
+
+[77842.523962] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[77843.515863] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[78439.934016] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[78440.921980] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[81442.351749] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[81443.343667] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[157822.092920] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+[209836.023622] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[209838.651573] brcmfmac: send_key_to_dongle: wsec_key error (-110)
+[209843.515226] brcmfmac: brcmf_cfg80211_del_station: SCB_DEAUTHENTICATE_FOR_REASON failed -110
+[219678.790941] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+
+I'm now going to try with the later firmware:
+
+brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4330/4 wl0: Jan 23 2013 17:47:32 version 5.90.195.114 FWID 01-f9e7e464
+
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 12.1Mbps down 622kbps up
+According to speedtest.net: 11.9Mbps down 500kbps up
