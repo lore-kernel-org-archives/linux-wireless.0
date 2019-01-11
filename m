@@ -5,75 +5,84 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39B19C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:18:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1163CC43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 17:29:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0BD6120675
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:18:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D189220836
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 17:29:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731728AbfAKPSe (ORCPT
+        id S1729859AbfAKR3P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Jan 2019 10:18:34 -0500
-Received: from mail-ed1-f52.google.com ([209.85.208.52]:43805 "EHLO
-        mail-ed1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730170AbfAKPSd (ORCPT
+        Fri, 11 Jan 2019 12:29:15 -0500
+Received: from mail-io1-f45.google.com ([209.85.166.45]:34469 "EHLO
+        mail-io1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729727AbfAKR3O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Jan 2019 10:18:33 -0500
-Received: by mail-ed1-f52.google.com with SMTP id f9so13340469eds.10
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2019 07:18:32 -0800 (PST)
+        Fri, 11 Jan 2019 12:29:14 -0500
+Received: by mail-io1-f45.google.com with SMTP id b16so12784397ior.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2019 09:29:14 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=AbcYWFRrSZdGTd6eb6nkRC4/uj87F0h/Q1d7JPdsd4c=;
-        b=lcZpbm9iHLHh23m68Fxpws94uJRtdXLaZG4PHJTuYkTciXudB2s5YFONB7yCbkJC6w
-         +feXYTMlvgDJQZK8L7yv932PcaCWwin/v7Xgta3jv1jVaT6+64CyWDsWtxdNONCr/OtX
-         Dk+UhvlJe1yLg2pQ49GzfJrJQVxSpwYNJuZqT25bHY9FYQ2KlTqkYwij7QNe1Q7ExuPn
-         VFUqO8KY2d8kd2XnC+XBhvSBG2mgr+3jYPZ/eptHGSM45vBOYhPAvfmOtNZbeGE5Ztba
-         9HtDDrnF5FSvgMImmzhIE49qRyMFihKBJwl85aZCbvRvCS7M2EvLRvF1c2ZS4mlXlZob
-         xVdw==
-X-Gm-Message-State: AJcUukfaFgDuuTuEkbcEPtelvkZlDFL1tx+YXw2v82+/iUlTAN0PIkWA
-        lD2Fafi7BkNP/aki8sTGB+bseQ==
-X-Google-Smtp-Source: ALg8bN4FFzjUkc8F60odPYF4GjSDwaMWTjznOOtK+Kbw6xyc31pwBfuJaqjg21K1wFLwQgg/wCO5ag==
-X-Received: by 2002:a17:906:12d3:: with SMTP id l19-v6mr12029089ejb.74.1547219912011;
-        Fri, 11 Jan 2019 07:18:32 -0800 (PST)
-Received: from dhcp-44-202.space.revspace.nl ([2a01:4f8:1c0c:6c86:46e0:a7ad:5246:f04d])
-        by smtp.gmail.com with ESMTPSA id c23-v6sm1520449ejb.62.2019.01.11.07.18.30
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 11 Jan 2019 07:18:31 -0800 (PST)
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        "Franky Lin <franky.lin@broadcom.com>Franky Lin" 
-        <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com
-From:   Hans de Goede <hdegoede@redhat.com>
-Subject: brcmfmac regression in 4.19 ?
-Message-ID: <08b120bb-484f-4c08-30ae-bb023f484a56@redhat.com>
-Date:   Fri, 11 Jan 2019 16:18:29 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=AJuvHd8wS2rf/as08VgJ333vpo55mbqeGyD2/FlDgLM=;
+        b=iYz9ENhZfa+Sea24x+ZlziGuKEh5ZPIhTR9j91NeFsMJRFHmvSyka84sUp97gnhCNe
+         ldaMPbbaURQW6uMZxdNE5gkhVZoGYBSnq4jUCBTO0sIMGfUTldCKfHM9S14W0i2CuJDY
+         HPIYaYT6Hlubb3+L1eQoM8D0MqeGZUmzxnUt9476LAMrNtuUBWrGIAFxXModEWpKVdZa
+         e34DF48bSmMx7mmPEykUccf/B3tk5ekiRYoXbTTb8GL002/TMS6m1EJ5zAcxL+7TX3R2
+         iJqKCZKTTCSLjoihptBSg+6b1C0pi/hhw7S+o62b7te4q9HYkk1ncvPumI9pCr9yaWUM
+         Fucw==
+X-Gm-Message-State: AJcUukfIEiTHtQ5IRkmfoyxQrIcCSplodaLoE5A5FaO5s02RGRi7WOsh
+        7IXMlOPeqG7UB/IV2oHeAs+u8Z81pj6xT4f22UqY4Q==
+X-Google-Smtp-Source: ALg8bN4o7OQNpbPXjwLgCqCrEnhFv8lb8YE8NACIjVY+9CBugdCd0IQ2jHzLgd29iWaOn7hya5a7LhNHOS+KuWNXdMA=
+X-Received: by 2002:a6b:ea09:: with SMTP id m9mr7436502ioc.297.1547227753787;
+ Fri, 11 Jan 2019 09:29:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <CAKxU2N9o5WeUwFMUwwXKHaPj7R+oiSKV1c2n8RtXwGNZRtw5Sw@mail.gmail.com>
+In-Reply-To: <CAKxU2N9o5WeUwFMUwwXKHaPj7R+oiSKV1c2n8RtXwGNZRtw5Sw@mail.gmail.com>
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date:   Fri, 11 Jan 2019 18:29:02 +0100
+Message-ID: <CAJ0CqmVNF83bWgc+LSQ3_i=zfp-sXC5Nf=nKfqB3SWa8r7sKdQ@mail.gmail.com>
+Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
+To:     Rosen Penev <rosenp@gmail.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+>
+> I have an ALFA AWUS036ACM and whenever I plug it in, the XHCI driver
+> dies. This is on an ASRock X370 motherboard. Kernel 4.20 Arch Linux.
+>
+> After plugging in the adapter, the integrated wireless chip (Intel
+> 3168) also dies. Disabling the motherboard wireless does not help.
+> Here are two fairly similar logs. First with Intel 3168 and the second
+> with it disabled in UEFI.
+>
 
-We (Fedora) have been getting bugreports that brcmfmac wifi drops out and needs a rmmod + modprobe
-to restore functionality starting with kernel 4.19:
+[...]
 
-https://bugzilla.redhat.com/show_bug.cgi?id=1658178
+> Without iwlwifi:
+>
+> kernel: usb 1-14: new high-speed USB device number 3 using xhci_hcd
+> kernel: usb 1-14: New USB device found, idVendor=0e8d, idProduct=7612,
+> bcdDevice= 1.00
+> kernel: usb 1-14: New USB device strings: Mfr=2, Product=3, SerialNumber=4
+> usb 1-14: Product: Wireless
+> kernel: usb 1-14: Manufacturer: MediaTek Inc.
+> kernel: usb 1-14: SerialNumber: 000000000
+> mtp-probe[1400]: checking bus 1, device 3:
+> "/sys/devices/pci0000:00/0000:00:01.3/0000:03:00.0/usb1/1-14"
+> mtp-probe[1400]: bus: 1, device: 3 was not an MTP device
+> kernel: usb 1-14: reset high-speed USB device number 3 using xhci_hcd
+> kernel: mt76x2u 1-14:1.0: ASIC revision: 76120044
+> kernel: mt76x2u 1-14:1.0: ROM patch build: 20140408060640a
+> kernel: xhci_hcd 0000:03:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT
 
-Disabling powersaving reportedly helps, but leads to an oops (which might be a hint?) :
+Are you using the driver in a VM or directly in the host? This is an
+error reported by AMD iommu driver
 
-https://bugzilla.redhat.com/show_bug.cgi?id=1661768
-
-Regards
-
-Hans
+Regards,
+Lorenzo
