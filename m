@@ -6,30 +6,29 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFF0BC43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:09:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AEE0C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:09:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8BF6E20874
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:09:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAAC320874
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:09:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391627AbfAKPJ3 (ORCPT
+        id S2391744AbfAKPJs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Jan 2019 10:09:29 -0500
-Received: from smtp3.goneo.de ([85.220.129.37]:48792 "EHLO smtp3.goneo.de"
+        Fri, 11 Jan 2019 10:09:48 -0500
+Received: from smtp3.goneo.de ([85.220.129.37]:48902 "EHLO smtp3.goneo.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391528AbfAKPJ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Jan 2019 10:09:28 -0500
-X-Greylist: delayed 366 seconds by postgrey-1.27 at vger.kernel.org; Fri, 11 Jan 2019 10:09:28 EST
+        id S2388480AbfAKPJq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 Jan 2019 10:09:46 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp3.goneo.de (Postfix) with ESMTP id 78B0B23F344;
-        Fri, 11 Jan 2019 16:03:20 +0100 (CET)
+        by smtp3.goneo.de (Postfix) with ESMTP id 289F023F344;
+        Fri, 11 Jan 2019 16:09:44 +0100 (CET)
 X-Virus-Scanned: by goneo
 Received: from smtp3.goneo.de ([127.0.0.1])
         by localhost (smtp3.goneo.de [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 9vjFHF6IwAcU; Fri, 11 Jan 2019 16:03:19 +0100 (CET)
+        with ESMTP id aUiF7gTa5tj9; Fri, 11 Jan 2019 16:09:43 +0100 (CET)
 Received: from lem-wkst-02.lemonage.de. (hq.lemonage.de [87.138.178.34])
-        by smtp3.goneo.de (Postfix) with ESMTPA id 2E1BA23F121;
-        Fri, 11 Jan 2019 16:03:19 +0100 (CET)
+        by smtp3.goneo.de (Postfix) with ESMTPA id 0623523FA89;
+        Fri, 11 Jan 2019 16:09:42 +0100 (CET)
 From:   Lars Poeschel <poeschel@lemonage.de>
 To:     devicetree@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
         "GitAuthor: Lars Poeschel" <poeschel@lemonage.de>,
@@ -37,8 +36,8 @@ To:     devicetree@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
         linux-kernel@vger.kernel.org (open list)
 Cc:     Johan Hovold <johan@kernel.org>
 Subject: [PATCH v5 1/7] nfc: pn533: i2c: "pn532" as dt compatible string
-Date:   Fri, 11 Jan 2019 17:11:13 +0100
-Message-Id: <20190111161124.24036-1-poeschel@lemonage.de>
+Date:   Fri, 11 Jan 2019 17:18:04 +0100
+Message-Id: <20190111161812.26325-1-poeschel@lemonage.de>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
