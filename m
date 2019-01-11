@@ -2,470 +2,78 @@ Return-Path: <SRS0=8fZi=PT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB72CC43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:13:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39B19C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:18:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 935DA2177B
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:13:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BD6120675
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Jan 2019 15:18:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388153AbfAKPM5 (ORCPT
+        id S1731728AbfAKPSe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Jan 2019 10:12:57 -0500
-Received: from smtp3.goneo.de ([85.220.129.37]:49292 "EHLO smtp3.goneo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387647AbfAKPMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Jan 2019 10:12:53 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp3.goneo.de (Postfix) with ESMTP id B44E623F344;
-        Fri, 11 Jan 2019 16:12:49 +0100 (CET)
-X-Virus-Scanned: by goneo
-Received: from smtp3.goneo.de ([127.0.0.1])
-        by localhost (smtp3.goneo.de [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id erDvaQ40I-42; Fri, 11 Jan 2019 16:12:48 +0100 (CET)
-Received: from lem-wkst-02.lemonage.de. (hq.lemonage.de [87.138.178.34])
-        by smtp3.goneo.de (Postfix) with ESMTPA id 05071240282;
-        Fri, 11 Jan 2019 16:12:47 +0100 (CET)
-From:   Lars Poeschel <poeschel@lemonage.de>
-To:     devicetree@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
-        "GitAuthor: Lars Poeschel" <poeschel@lemonage.de>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-wireless@vger.kernel.org (open list:NFC SUBSYSTEM)
-Cc:     Johan Hovold <johan@kernel.org>
-Subject: [PATCH v5 5/7] nfc: pn533: add UART phy driver
-Date:   Fri, 11 Jan 2019 17:18:08 +0100
-Message-Id: <20190111161812.26325-5-poeschel@lemonage.de>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190111161812.26325-1-poeschel@lemonage.de>
-References: <20190111161812.26325-1-poeschel@lemonage.de>
+        Fri, 11 Jan 2019 10:18:34 -0500
+Received: from mail-ed1-f52.google.com ([209.85.208.52]:43805 "EHLO
+        mail-ed1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730170AbfAKPSd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 Jan 2019 10:18:33 -0500
+Received: by mail-ed1-f52.google.com with SMTP id f9so13340469eds.10
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2019 07:18:32 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=AbcYWFRrSZdGTd6eb6nkRC4/uj87F0h/Q1d7JPdsd4c=;
+        b=lcZpbm9iHLHh23m68Fxpws94uJRtdXLaZG4PHJTuYkTciXudB2s5YFONB7yCbkJC6w
+         +feXYTMlvgDJQZK8L7yv932PcaCWwin/v7Xgta3jv1jVaT6+64CyWDsWtxdNONCr/OtX
+         Dk+UhvlJe1yLg2pQ49GzfJrJQVxSpwYNJuZqT25bHY9FYQ2KlTqkYwij7QNe1Q7ExuPn
+         VFUqO8KY2d8kd2XnC+XBhvSBG2mgr+3jYPZ/eptHGSM45vBOYhPAvfmOtNZbeGE5Ztba
+         9HtDDrnF5FSvgMImmzhIE49qRyMFihKBJwl85aZCbvRvCS7M2EvLRvF1c2ZS4mlXlZob
+         xVdw==
+X-Gm-Message-State: AJcUukfaFgDuuTuEkbcEPtelvkZlDFL1tx+YXw2v82+/iUlTAN0PIkWA
+        lD2Fafi7BkNP/aki8sTGB+bseQ==
+X-Google-Smtp-Source: ALg8bN4FFzjUkc8F60odPYF4GjSDwaMWTjznOOtK+Kbw6xyc31pwBfuJaqjg21K1wFLwQgg/wCO5ag==
+X-Received: by 2002:a17:906:12d3:: with SMTP id l19-v6mr12029089ejb.74.1547219912011;
+        Fri, 11 Jan 2019 07:18:32 -0800 (PST)
+Received: from dhcp-44-202.space.revspace.nl ([2a01:4f8:1c0c:6c86:46e0:a7ad:5246:f04d])
+        by smtp.gmail.com with ESMTPSA id c23-v6sm1520449ejb.62.2019.01.11.07.18.30
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 11 Jan 2019 07:18:31 -0800 (PST)
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        "Franky Lin <franky.lin@broadcom.com>Franky Lin" 
+        <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com
+From:   Hans de Goede <hdegoede@redhat.com>
+Subject: brcmfmac regression in 4.19 ?
+Message-ID: <08b120bb-484f-4c08-30ae-bb023f484a56@redhat.com>
+Date:   Fri, 11 Jan 2019 16:18:29 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This adds the UART phy interface for the pn533 driver.
-The pn533 driver can be used through UART interface this way.
-It is implemented as a serdev device.
+Hi,
 
-Cc: Johan Hovold <johan@kernel.org>
-Signed-off-by: Lars Poeschel <poeschel@lemonage.de>
----
-Changes in v5:
-- Use the splitted pn53x_common_init and pn53x_register_nfc
-  and pn53x_common_clean and pn53x_unregister_nfc alike
+We (Fedora) have been getting bugreports that brcmfmac wifi drops out and needs a rmmod + modprobe
+to restore functionality starting with kernel 4.19:
 
-Changes in v4:
-- SPDX-License-Identifier: GPL-2.0+
-- Source code comments above refering items
-- Error check for serdev_device_write's
-- Change if (xxx == NULL) to if (!xxx)
-- Remove device name from a dev_err
-- move pn533_register in _probe a bit towards the end of _probe
-- make use of newly added dev_up / dev_down phy_ops
-- control send_wakeup variable from dev_up / dev_down
+https://bugzilla.redhat.com/show_bug.cgi?id=1658178
 
-Changes in v3:
-- depend on SERIAL_DEV_BUS in Kconfig
+Disabling powersaving reportedly helps, but leads to an oops (which might be a hint?) :
 
-Changes in v2:
-- switched from tty line discipline to serdev, resulting in many
-  simplifications
-- SPDX License Identifier
+https://bugzilla.redhat.com/show_bug.cgi?id=1661768
 
- drivers/nfc/pn533/Kconfig  |  11 ++
- drivers/nfc/pn533/Makefile |   2 +
- drivers/nfc/pn533/pn533.h  |   8 +
- drivers/nfc/pn533/uart.c   | 316 +++++++++++++++++++++++++++++++++++++
- 4 files changed, 337 insertions(+)
- create mode 100644 drivers/nfc/pn533/uart.c
+Regards
 
-diff --git a/drivers/nfc/pn533/Kconfig b/drivers/nfc/pn533/Kconfig
-index d94122dd30e4..29df7d97d209 100644
---- a/drivers/nfc/pn533/Kconfig
-+++ b/drivers/nfc/pn533/Kconfig
-@@ -25,3 +25,14 @@ config NFC_PN533_I2C
- 
- 	  If you choose to build a module, it'll be called pn533_i2c.
- 	  Say N if unsure.
-+
-+config NFC_PN532_UART
-+	tristate "NFC PN532 device support (UART)"
-+	depends on SERIAL_DEV_BUS
-+	select NFC_PN533
-+	---help---
-+	  This module adds support for the NXP pn532 UART interface.
-+	  Select this if your platform is using the UART bus.
-+
-+	  If you choose to build a module, it'll be called pn532_uart.
-+	  Say N if unsure.
-diff --git a/drivers/nfc/pn533/Makefile b/drivers/nfc/pn533/Makefile
-index 51d24c622fcb..bdfd6860d5e4 100644
---- a/drivers/nfc/pn533/Makefile
-+++ b/drivers/nfc/pn533/Makefile
-@@ -3,7 +3,9 @@
- #
- pn533_usb-objs  = usb.o
- pn533_i2c-objs  = i2c.o
-+pn532_uart-objs  = uart.o
- 
- obj-$(CONFIG_NFC_PN533)     += pn533.o
- obj-$(CONFIG_NFC_PN533_USB) += pn533_usb.o
- obj-$(CONFIG_NFC_PN533_I2C) += pn533_i2c.o
-+obj-$(CONFIG_NFC_PN532_UART) += pn532_uart.o
-diff --git a/drivers/nfc/pn533/pn533.h b/drivers/nfc/pn533/pn533.h
-index 39909d099309..1e54fc6c524f 100644
---- a/drivers/nfc/pn533/pn533.h
-+++ b/drivers/nfc/pn533/pn533.h
-@@ -55,6 +55,11 @@
- 
- /* Preamble (1), SoPC (2), ACK Code (2), Postamble (1) */
- #define PN533_STD_FRAME_ACK_SIZE 6
-+/*
-+ * Preamble (1), SoPC (2), Packet Length (1), Packet Length Checksum (1),
-+ * Specific Application Level Error Code (1) , Postamble (1)
-+ */
-+#define PN533_STD_ERROR_FRAME_SIZE 8
- #define PN533_STD_FRAME_CHECKSUM(f) (f->data[f->datalen])
- #define PN533_STD_FRAME_POSTAMBLE(f) (f->data[f->datalen + 1])
- /* Half start code (3), LEN (4) should be 0xffff for extended frame */
-@@ -96,6 +101,9 @@
- #define PN533_CMD_MI_MASK 0x40
- #define PN533_CMD_RET_SUCCESS 0x00
- 
-+#define PN533_FRAME_DATALEN_ACK 0x00
-+#define PN533_FRAME_DATALEN_ERROR 0x01
-+#define PN533_FRAME_DATALEN_EXTENDED 0xFF
- 
- enum  pn533_protocol_type {
- 	PN533_PROTO_REQ_ACK_RESP = 0,
-diff --git a/drivers/nfc/pn533/uart.c b/drivers/nfc/pn533/uart.c
-new file mode 100644
-index 000000000000..78ef464bfa7b
---- /dev/null
-+++ b/drivers/nfc/pn533/uart.c
-@@ -0,0 +1,316 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Driver for NXP PN532 NFC Chip - UART transport layer
-+ *
-+ * Copyright (C) 2018 Lemonage Software GmbH
-+ * Author: Lars Pöschel <poeschel@lemonage.de>
-+ * All rights reserved.
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/nfc.h>
-+#include <linux/netdevice.h>
-+#include <linux/of.h>
-+#include <linux/serdev.h>
-+#include "pn533.h"
-+
-+#define PN532_UART_SKB_BUFF_LEN	(PN533_CMD_DATAEXCH_DATA_MAXLEN * 2)
-+
-+enum send_wakeup {
-+	PN532_SEND_NO_WAKEUP = 0,
-+	PN532_SEND_WAKEUP,
-+	PN532_SEND_LAST_WAKEUP,
-+};
-+
-+
-+struct pn532_uart_phy {
-+	struct serdev_device *serdev;
-+	struct sk_buff *recv_skb;
-+	struct pn533 *priv;
-+	enum send_wakeup send_wakeup;
-+	struct timer_list cmd_timeout;
-+	struct sk_buff *cur_out_buf;
-+};
-+
-+static int pn532_uart_send_frame(struct pn533 *dev,
-+				struct sk_buff *out)
-+{
-+	/* wakeup sequence and dummy bytes for waiting time */
-+	static const u8 wakeup[] = {
-+		0x55, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-+	struct pn532_uart_phy *pn532 = dev->phy;
-+	int err;
-+
-+	print_hex_dump_debug("PN532_uart TX: ", DUMP_PREFIX_NONE, 16, 1,
-+			     out->data, out->len, false);
-+
-+	pn532->cur_out_buf = out;
-+	if (pn532->send_wakeup) {
-+		err= serdev_device_write(pn532->serdev,
-+				wakeup, sizeof(wakeup),
-+				MAX_SCHEDULE_TIMEOUT);
-+		if (err < 0)
-+			return err;
-+	}
-+
-+	if (pn532->send_wakeup == PN532_SEND_LAST_WAKEUP) {
-+		pn532->send_wakeup = PN532_SEND_NO_WAKEUP;
-+	}
-+
-+	err = serdev_device_write(pn532->serdev, out->data, out->len,
-+			MAX_SCHEDULE_TIMEOUT);
-+	if (err < 0)
-+		return err;
-+
-+	mod_timer(&pn532->cmd_timeout, HZ / 40 + jiffies);
-+	return 0;
-+}
-+
-+static int pn532_uart_send_ack(struct pn533 *dev, gfp_t flags)
-+{
-+	struct pn532_uart_phy *pn532 = dev->phy;
-+	/* spec 7.1.1.3:  Preamble, SoPC (2), ACK Code (2), Postamble */
-+	static const u8 ack[PN533_STD_FRAME_ACK_SIZE] = {
-+			0x00, 0x00, 0xff, 0x00, 0xff, 0x00};
-+	int err;
-+
-+	err = serdev_device_write(pn532->serdev, ack, sizeof(ack),
-+			MAX_SCHEDULE_TIMEOUT);
-+	if (err < 0)
-+		return err;
-+
-+	return 0;
-+}
-+
-+static void pn532_uart_abort_cmd(struct pn533 *dev, gfp_t flags)
-+{
-+	/* An ack will cancel the last issued command */
-+	pn532_uart_send_ack(dev, flags);
-+	/* schedule cmd_complete_work to finish current command execution */
-+	pn533_recv_frame(dev, NULL, -ENOENT);
-+}
-+
-+static void pn532_dev_up(struct pn533 *dev)
-+{
-+	struct pn532_uart_phy *pn532 = dev->phy;
-+
-+	serdev_device_open(pn532->serdev);
-+	pn532->send_wakeup = PN532_SEND_LAST_WAKEUP;
-+}
-+
-+static void pn532_dev_down(struct pn533 *dev)
-+{
-+	struct pn532_uart_phy *pn532 = dev->phy;
-+
-+	serdev_device_close(pn532->serdev);
-+	pn532->send_wakeup = PN532_SEND_WAKEUP;
-+}
-+
-+static struct pn533_phy_ops uart_phy_ops = {
-+	.send_frame = pn532_uart_send_frame,
-+	.send_ack = pn532_uart_send_ack,
-+	.abort_cmd = pn532_uart_abort_cmd,
-+	.dev_up = pn532_dev_up,
-+	.dev_down = pn532_dev_down,
-+};
-+
-+static void pn532_cmd_timeout(struct timer_list *t)
-+{
-+	struct pn532_uart_phy *dev = from_timer(dev, t, cmd_timeout);
-+
-+	pn532_uart_send_frame(dev->priv, dev->cur_out_buf);
-+}
-+
-+/*
-+ * scans the buffer if it contains a pn532 frame. It is not checked if the
-+ * frame is really valid. This is later done with pn533_rx_frame_is_valid.
-+ * This is useful for malformed or errornous transmitted frames. Adjusts the
-+ * bufferposition where the frame starts, since pn533_recv_frame expects a
-+ * well formed frame.
-+ */
-+static int pn532_uart_rx_is_frame(struct sk_buff *skb)
-+{
-+	int i;
-+	u16 frame_len;
-+	struct pn533_std_frame *std;
-+	struct pn533_ext_frame *ext;
-+
-+	for (i = 0; i + PN533_STD_FRAME_ACK_SIZE <= skb->len; i++) {
-+		std = (struct pn533_std_frame *)&skb->data[i];
-+		/* search start code */
-+		if (std->start_frame != cpu_to_be16(PN533_STD_FRAME_SOF))
-+			continue;
-+
-+		/* frame type */
-+		switch (std->datalen) {
-+		case PN533_FRAME_DATALEN_ACK:
-+			if (std->datalen_checksum == 0xff) {
-+				skb_pull(skb, i);
-+				return 1;
-+			}
-+
-+			break;
-+		case PN533_FRAME_DATALEN_ERROR:
-+			if ((std->datalen_checksum == 0xff) &&
-+					(skb->len >=
-+					 PN533_STD_ERROR_FRAME_SIZE)) {
-+				skb_pull(skb, i);
-+				return 1;
-+			}
-+
-+			break;
-+		case PN533_FRAME_DATALEN_EXTENDED:
-+			ext = (struct pn533_ext_frame *)&skb->data[i];
-+			frame_len = ext->datalen;
-+			if (skb->len >= frame_len +
-+					sizeof(struct pn533_ext_frame) +
-+					2 /* CKS + Postamble */) {
-+				skb_pull(skb, i);
-+				return 1;
-+			}
-+
-+			break;
-+		default: /* normal information frame */
-+			frame_len = std->datalen;
-+			if (skb->len >= frame_len +
-+					sizeof(struct pn533_std_frame) +
-+					2 /* CKS + Postamble */) {
-+				skb_pull(skb, i);
-+				return 1;
-+			}
-+
-+			break;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int pn532_receive_buf(struct serdev_device *serdev,
-+		const unsigned char *data, size_t count)
-+{
-+	struct pn532_uart_phy *dev = serdev_device_get_drvdata(serdev);
-+	size_t i;
-+
-+	del_timer(&dev->cmd_timeout);
-+	for (i = 0; i < count; i++) {
-+		skb_put_u8(dev->recv_skb, *data++);
-+		if (!pn532_uart_rx_is_frame(dev->recv_skb))
-+			continue;
-+
-+		pn533_recv_frame(dev->priv, dev->recv_skb, 0);
-+		dev->recv_skb = alloc_skb(PN532_UART_SKB_BUFF_LEN, GFP_KERNEL);
-+		if (!dev->recv_skb)
-+			return 0;
-+	}
-+
-+	return i;
-+}
-+
-+static struct serdev_device_ops pn532_serdev_ops = {
-+	.receive_buf = pn532_receive_buf,
-+	.write_wakeup = serdev_device_write_wakeup,
-+};
-+
-+static const struct of_device_id pn532_uart_of_match[] = {
-+	{ .compatible = "nxp,pn532", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, pn532_uart_of_match);
-+
-+static int pn532_uart_probe(struct serdev_device *serdev)
-+{
-+	struct pn532_uart_phy *pn532;
-+	struct pn533 *priv;
-+	int err;
-+
-+	err = -ENOMEM;
-+	pn532 = kzalloc(sizeof(*pn532), GFP_KERNEL);
-+	if (!pn532)
-+		goto err_exit;
-+
-+	pn532->recv_skb = alloc_skb(PN532_UART_SKB_BUFF_LEN, GFP_KERNEL);
-+	if (!pn532->recv_skb)
-+		goto err_free;
-+
-+	pn532->serdev = serdev;
-+	serdev_device_set_drvdata(serdev, pn532);
-+	serdev_device_set_client_ops(serdev, &pn532_serdev_ops);
-+	err = serdev_device_open(serdev);
-+	if (err) {
-+		dev_err(&serdev->dev, "Unable to open device\n");
-+		goto err_skb;
-+	}
-+
-+	err = serdev_device_set_baudrate(serdev, 115200);
-+	if (err != 115200) {
-+		err = -EINVAL;
-+		goto err_serdev;
-+	}
-+
-+	serdev_device_set_flow_control(serdev, false);
-+	pn532->send_wakeup = PN532_SEND_WAKEUP;
-+	timer_setup(&pn532->cmd_timeout, pn532_cmd_timeout, 0);
-+	priv = pn53x_common_init(PN533_DEVICE_PN532,
-+				     PN533_PROTO_REQ_ACK_RESP,
-+				     pn532, &uart_phy_ops, NULL,
-+				     &pn532->serdev->dev);
-+	if (IS_ERR(priv)) {
-+		err = PTR_ERR(priv);
-+		goto err_serdev;
-+	}
-+
-+	pn532->priv = priv;
-+	err = pn533_finalize_setup(pn532->priv);
-+	if (err)
-+		goto err_clean;
-+
-+	serdev_device_close(serdev);
-+	err = pn53x_register_nfc(priv, PN533_NO_TYPE_B_PROTOCOLS, &serdev->dev);
-+	if (err) {
-+		pn53x_common_clean(pn532->priv);
-+		goto err_skb;
-+	}
-+
-+	return err;
-+
-+err_clean:
-+	pn53x_common_clean(pn532->priv);
-+err_serdev:
-+	serdev_device_close(serdev);
-+err_skb:
-+	kfree_skb(pn532->recv_skb);
-+err_free:
-+	kfree(pn532);
-+err_exit:
-+	return err;
-+}
-+
-+static void pn532_uart_remove(struct serdev_device *serdev)
-+{
-+	struct pn532_uart_phy *pn532 = serdev_device_get_drvdata(serdev);
-+
-+	pn53x_unregister_nfc(pn532->priv);
-+	serdev_device_close(serdev);
-+	pn53x_common_clean(pn532->priv);
-+	kfree_skb(pn532->recv_skb);
-+	kfree(pn532);
-+}
-+
-+static struct serdev_device_driver pn532_uart_driver = {
-+	.probe = pn532_uart_probe,
-+	.remove = pn532_uart_remove,
-+	.driver = {
-+		.name = "pn532_uart",
-+		.of_match_table = of_match_ptr(pn532_uart_of_match),
-+	},
-+};
-+
-+module_serdev_device_driver(pn532_uart_driver);
-+
-+MODULE_AUTHOR("Lars Pöschel <poeschel@lemonage.de>");
-+MODULE_DESCRIPTION("PN532 UART driver");
-+MODULE_LICENSE("GPL");
--- 
-2.20.1
-
+Hans
