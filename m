@@ -2,112 +2,90 @@ Return-Path: <SRS0=z9X+=PU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0205FC43387
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Jan 2019 13:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3ECC43387
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Jan 2019 21:35:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C616920854
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Jan 2019 13:29:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2DAE2084C
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Jan 2019 21:35:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cpFUmk+3"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JlUi00hc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725843AbfALN3o (ORCPT
+        id S1726472AbfALVf0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Jan 2019 08:29:44 -0500
-Received: from mail-ed1-f42.google.com ([209.85.208.42]:37958 "EHLO
-        mail-ed1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725827AbfALN3o (ORCPT
+        Sat, 12 Jan 2019 16:35:26 -0500
+Received: from mail-ua1-f46.google.com ([209.85.222.46]:40602 "EHLO
+        mail-ua1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726387AbfALVf0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Jan 2019 08:29:44 -0500
-Received: by mail-ed1-f42.google.com with SMTP id h50so15260098ede.5
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jan 2019 05:29:42 -0800 (PST)
+        Sat, 12 Jan 2019 16:35:26 -0500
+Received: by mail-ua1-f46.google.com with SMTP id n7so5882640uao.7
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Jan 2019 13:35:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:from:to:references:cc:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=0PSjKc+1AioAuPfQYWIy37TxDdsFzjR8HUcQ5bE0KdY=;
-        b=cpFUmk+3qEw5iNd1LyQ5u8xX/9lsxYxfBs1AGePD3f9iuUOpvw2W/1VLRdEBLDfxe+
-         gcqu/+6HwlTtM5xKFLBLzWOXv1IKy5Fo+q28pW9dN4j+2Ce6d6RBude6jYo6L19xX0rY
-         LZgwWpAxNdb2FSlZddDNy4pNFJKr/AX0eFiTg=
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=tdhERbH3og20xP0v9oZ0pywLlp4gYQ4rQv7i+MamdGU=;
+        b=JlUi00hcuqRpYUP3u4vBU7WPr9kQVUpKHBHnC7sEbqb4A4yHz7sDnOUXT7jq+mapXH
+         C/rdeC80LJ8lEddiDaAlsAR/YnSBViesqmldYmSWmg3hoSIy5cGf05dEIPlxPBcvjA++
+         Q2TltIV2e/oaPf0RdMljpBWqCQ2K6tOV8k2kuj+GSx1pc0SBvf23twwI9DND1tWqyh9h
+         bUxL4Rhqj4XlcsPvwIzKmK2RyrfFSrV2ODn9Oy5FlHzO/qoQLdjOlTb+OvXuyXPogGfj
+         VcrqemzNM15sgj54E9/BGrB+ZCIJxHbNi3/GRfdoh9AEMzsEq1e90yfPM163SXeBChVK
+         KSsw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:references:cc:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=0PSjKc+1AioAuPfQYWIy37TxDdsFzjR8HUcQ5bE0KdY=;
-        b=MUaBnAZKrsD1PRe7cj+JIfpYhoiXeoVAI1XGxf03XFM2i4pBUHnaK+XxxqHwna+oqN
-         7GYmdnItOi1OSNwggkT6+8vJZtfAdj3Fzkzl18KlqpzBpxFvuzNCoXoCzt1bMTLxNiM/
-         TCYl3WHhyJ93dkn9Oga5QvoPxKuYNAkUhqGtGSJ43mim/mjSloMWiL30SHJGnw2A11Cf
-         K2cPypRfM7b6JNApZvHKgPtU/KKWjp3esxOVz5o65TvAWEmPMD+MSDiSM+aTteo/TFfz
-         btT7Uk7i2ohqlPoroeajfgADelKIG+yEm/dINGWd1psFVQbBXUscY0PWfEj9ufFJ2DUY
-         3sfw==
-X-Gm-Message-State: AJcUukfWSdE0DX/ac8D2mwwBjtS+yplyCr7nap+5Oj8jAjFl0NJIKpU0
-        ddzKrCz2QQeM2bRPyL9xSJKhv5tNpKE+5yxvv7aF1jjWHJzDVIeZNjpYZOlmRpwnizD87bvCenm
-        qFp+CsRwLO1bObbIzFN8SdsCRFKYpIzIbnTPKhm8EohZmo8YtlTO4WHm1eFJqsGc1/vdreyimUl
-        MoGhVwGEZEUFkqnQ==
-X-Google-Smtp-Source: ALg8bN5hlkIVJYttKMu9kFG42Lc0oBvDBzgS/xGtR8d3x4fD/+WiY3Fc9waIXM/DZGd0+MlFzf82TQ==
-X-Received: by 2002:a17:906:753:: with SMTP id z19-v6mr14978542ejb.175.1547299781358;
-        Sat, 12 Jan 2019 05:29:41 -0800 (PST)
-Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
-        by smtp.gmail.com with ESMTPSA id r1sm2908931eds.1.2019.01.12.05.29.40
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 12 Jan 2019 05:29:40 -0800 (PST)
-Subject: Re: brcmfmac regression in 4.19 ?
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-To:     Hans de Goede <hdegoede@redhat.com>
-References: <08b120bb-484f-4c08-30ae-bb023f484a56@redhat.com>
- <CAF7Mx6qrbZr-hVFKPH3kMzTczBWTZmPqZbviKmMCb_uo6O+s+w@mail.gmail.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <d21a57e6-3cf3-efb4-6fe3-3448a1b89b5c@broadcom.com>
-Date:   Sat, 12 Jan 2019 14:29:39 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=tdhERbH3og20xP0v9oZ0pywLlp4gYQ4rQv7i+MamdGU=;
+        b=AePblaHwWMEk1rJu6ngvsdXV/ae90X724XCKPVLBrz2mjDcJSmZGWrgkZkHLSxF2iE
+         2ZF7TVKiSzxtM4OjSLru9FyvDdY3GJgiBsfmK/PYB0Ibh4BwioufW5TH3N1Lk/rLBdOf
+         ReWXHQ2ukTxSjw3eTiyDjxefwQkPMhyJwaXdC2TPHNdkgd6oTN0aMGohLgUBCF8MgWKO
+         84Gc0FgVRw8DSVeEMJ2hOXOIUgRkz2TWagpbxa3cxNB2+UVgj3US/4Pn1Jj2ZK/oC1ao
+         WeDAEqb55prSH9iBHtAuIp+WPslUOo0e3cg94xaWcDmUvFqZWj2IoTRrrsIEGDPFd8Tp
+         pxOA==
+X-Gm-Message-State: AJcUukf6Gliw/C2utlfJFr1l6ANMyStcGL6zLBCMP14WkI3rGpYNpI02
+        5upVCQ0+E1idjktLFubCslJXocXlr3hxb3B7Pw==
+X-Google-Smtp-Source: ALg8bN51N78BFIHovCBrHtGibmMcplvXwvUrvPvSyufJ8ogpS+ETz7sVCng6M4xMbuI/ATq8NqXBwBJCXG9pomvWecw=
+X-Received: by 2002:ab0:6190:: with SMTP id h16mr7467670uan.94.1547328924954;
+ Sat, 12 Jan 2019 13:35:24 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAF7Mx6qrbZr-hVFKPH3kMzTczBWTZmPqZbviKmMCb_uo6O+s+w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From:   Rui Salvaterra <rsalvaterra@gmail.com>
+Date:   Sat, 12 Jan 2019 21:35:11 +0000
+Message-ID: <CALjTZvZ6gAVH17fZwzM=PeO6CjtQCGoep=bqi6yYb6TJ6u5nfg@mail.gmail.com>
+Subject: [PATCH] wireless-regdb: Add 5725-5875 MHz rule for Portugal (PT)
+To:     seth.forshee@canonical.com
+Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/11/2019 4:34 PM, Arend Van Spriel wrote:
-> - list (HTML filtering)
-> 
-> Op vr 11 jan. 2019 16:18 schreef Hans de Goede <hdegoede@redhat.com 
-> <mailto:hdegoede@redhat.com>:
-> 
->     Hi,
-> 
->     We (Fedora) have been getting bugreports that brcmfmac wifi drops
->     out and needs a rmmod + modprobe
->     to restore functionality starting with kernel 4.19:
-> 
->     https://bugzilla.redhat.com/show_bug.cgi?id=1658178
-> 
-> 
-> Will look into this. Maybe it is similar to what Russell King reported.
+According to [1], SRD devices in this range are allowed in Portugal, as
+specified in this document (page 56), and in compliance with ETSI EN 300 440-1.
 
-Probably not. The bug report above is with PCIe device. The dmesg 
-attached to the bug report shows user is doing system suspend/resume 
-over and over until the following occurs:
+[1] https://www.anacom.pt/streaming/25.5_10.000mhz.pdf?contentId=271706&field=ATTACHED_FILE
 
-[28151.874963] brcmfmac: brcmf_psm_watchdog_notify: PSM's watchdog has 
-fired!
-[29354.351337] brcmfmac: brcmf_psm_watchdog_notify: PSM's watchdog has 
-fired!
+Signed-off-by: Rui Salvaterra <rsalvaterra@gmail.com>
 
-PSM is the hardware block which processes the 802.11 packets received 
-from firmware and passes them to the phy layer. When this watchdog barks 
-the firmware will end up in a trap. We do collect a devcoredump upon the 
-watchdog, but unfortunately that will not tell much about the failure in 
-the hardware block. On monday I will try to come up with a patch to 
-obtain more information from the device regarding this watchdog.
+---
+ db.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Regards,
-Arend
+diff --git a/db.txt b/db.txt
+index fa5c0e0..66751f0 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1044,6 +1044,8 @@ country PT: DFS-ETSI
+  (5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
+  (5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
+  (5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
++ # short range devices (ETSI EN 300 440-1)
++ (5725 - 5875 @ 80), (25 mW)
+  # 60 GHz band channels 1-4, ref: Etsi En 302 567
+  (57000 - 66000 @ 2160), (40)
+
+-- 
+2.20.1
