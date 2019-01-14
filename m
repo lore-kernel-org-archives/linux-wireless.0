@@ -2,107 +2,128 @@ Return-Path: <SRS0=xBvi=PW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47670C43387
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 20:06:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CDBFC43387
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 20:12:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 187DC206B7
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 20:06:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE7522064C
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 20:12:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fs+pfVHL"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OMyujEts"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726821AbfANUGZ (ORCPT
+        id S1726911AbfANUMo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Jan 2019 15:06:25 -0500
-Received: from mail-oi1-f180.google.com ([209.85.167.180]:36228 "EHLO
-        mail-oi1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726757AbfANUGZ (ORCPT
+        Mon, 14 Jan 2019 15:12:44 -0500
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:41349 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726755AbfANUMn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Jan 2019 15:06:25 -0500
-Received: by mail-oi1-f180.google.com with SMTP id x23so275362oix.3
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2019 12:06:24 -0800 (PST)
+        Mon, 14 Jan 2019 15:12:43 -0500
+Received: by mail-ed1-f65.google.com with SMTP id a20so672826edc.8
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2019 12:12:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hlbIZMfo5DeaZXSLUOwywE2pmYYF/mV5cWFuUA8bfIg=;
-        b=Fs+pfVHLkDhcw2eaiC73xDLclV4jl5Eb5nNldxpZ0qxLHISZLdZE6/8iPf7YJqA2+6
-         6+UJHtVbFpSRgu2qEkKc7BmuQW7iokP2IBUqKmhyjd98/X4UeG1mnoqKz0+mUuB/VlAh
-         ul8qysFwQ388CMkPm6qq5+kXGT+zQ0NrRNj+PC6Ki61sLl92c34BELU36euQcbWIlEfU
-         OKXRLbtgtyDNqAEoFZSav9thg8Bm6fjN5WbU69Xc9zYFAmfJG1sR1r+JsmOp3L5+3XvU
-         T3C4u5icuSwfdVSjl1It16TPBXK2q8zJxAQ5fEIYMJi5uawiVQwUYWXvYUhTr8coKmdY
-         C5Bw==
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=tJpZplM/Ub0TF6D/mVPcja1QURe/TVe3hotHw9Aop/M=;
+        b=OMyujEtsX7ImoRS7qIufzt3gc5mi9NkDVrwPvkdyM/7S4h6RGvJLKAOU7T3ScGoDvD
+         6TEQRlQ6R4hx6VeE7tkAmSZKbZMJyP+zvG7iPNL9VI6vIQmPX0kM3wc1rPosWvfW2z65
+         u9sH9ILatPdNU2sPN5O4GUnNrPisniCCPsHX0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=hlbIZMfo5DeaZXSLUOwywE2pmYYF/mV5cWFuUA8bfIg=;
-        b=Qn7RIgEE3iQxlO9kZIWo2PuVxT5zb7U8gv9NnnzBolnmrajFUzc1UzQ64FiUBKvXkr
-         POmQk5as0AIXXJBn87OdWCDVnsZQ3xVg51QL+XHZ/CxJ/fo8qnJLPUwOI8o14PobgoRl
-         T0Hi+tGljcOVLlC/UgsUdGXx07uWpEsIoRYRfFPfvVLpom3mt2oT0RVmtr/PCOy7dC2a
-         YSV4wUdL7zerxs+7dFBZPhcavW8RsNF/bdYmOjDk1311eInwDmW9RFc/on4GLxA2gHxr
-         6othUaBY8u4ooQmc7qSToFMW1MYjbXf3rLbFPgL7s9jBj4lz4bg7lztuMo4ulWV+hx08
-         Nriw==
-X-Gm-Message-State: AJcUukczzEC6fQABzW6asYNMOP4zPhIjJsmwJA8C96dN2some9Z9ByXi
-        Q/LJf8KY3LdJ7NhdYx7xIoBfMQO7kPqYh1wAU6arsQeO
-X-Google-Smtp-Source: ALg8bN5sIABzrIut2hngIgdeHcrZmC26BLfb3ATl+C2mhf6mCU2VccPlWbpzOSxAiioPoqF0HP3Wl1Qco634laX5o7Y=
-X-Received: by 2002:aca:c4d8:: with SMTP id u207mr99691oif.30.1547496383721;
- Mon, 14 Jan 2019 12:06:23 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=tJpZplM/Ub0TF6D/mVPcja1QURe/TVe3hotHw9Aop/M=;
+        b=aKbmneR98t0bjAHqxGlBWYySP60vWYFhA07a6N4S+hMFDo9M8ImD0lyvE5d2eXozcZ
+         wpqsLw2dBDGdJhzE/uXH1xtp4Ny8IuDONvdO886/QQEPtPSpw+pkp4vuM1X+rkmrJKJu
+         qpcgPkW3YPfRnOgzSjZtx63TcS/jDyUw/eyzGErHjMaZvS458rtKpFSOWAh15cLKDzO0
+         zyLtZOsR73T4iC+FZvlf9CrddArlFmfZ8CMLrun1gmc7mbRDhAaVvdMU8GWdILbcPcRR
+         qw8mOWw263VIlJXp8ygY35f5fNTsymm9/pYtwt7CmQxcLCc/6Yu4QYLZwqQohKfHwX0Q
+         +8uA==
+X-Gm-Message-State: AJcUuke6gZ+1Vr1OT/imP5h0r3NUKkXaJ9gkKyUYwB242N+NKytlJE8r
+        wAAg3QgB7bk3zeCvTtwCFGXzUw==
+X-Google-Smtp-Source: ALg8bN5yHXY/yD4KYQTAQsFG1Rn4WUbUSLCQOwbsKtRLgfgt+aWLjl+rtAE5a/Fb0UBqkifkrSBahg==
+X-Received: by 2002:a50:f5af:: with SMTP id u44mr697302edm.172.1547496761915;
+        Mon, 14 Jan 2019 12:12:41 -0800 (PST)
+Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
+        by smtp.gmail.com with ESMTPSA id a13-v6sm2447541ejt.69.2019.01.14.12.12.40
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 14 Jan 2019 12:12:41 -0800 (PST)
+Subject: Re: Kernel oops / WiFi connection failure with wpa_supplicant 2.7
+To:     Denis Kenzior <denkenz@gmail.com>, Jouni Malinen <j@w1.fi>,
+        Eric Blau <eblau@eblau.com>
+Cc:     hostap@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <CADU241PtPeiTQWHwb=uF6Ohuua_asOwCarCAKVC8jdVVNAsByA@mail.gmail.com>
+ <20190103154921.GA25015@w1.fi>
+ <41e7ccaf-c73d-b404-69fe-ad17433add37@broadcom.com>
+ <1cefde13-3fcf-47b7-1c3a-e44a2901ddea@gmail.com>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0490b8fa-bf8c-c76c-1367-70d0f4e3845f@broadcom.com>
+Date:   Mon, 14 Jan 2019 21:12:40 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-References: <CAKxU2N9o5WeUwFMUwwXKHaPj7R+oiSKV1c2n8RtXwGNZRtw5Sw@mail.gmail.com>
- <CAJ0CqmVNF83bWgc+LSQ3_i=zfp-sXC5Nf=nKfqB3SWa8r7sKdQ@mail.gmail.com>
- <83A1D243-9073-48D1-9F26-5A2581DCB829@gmail.com> <CAJ0CqmUgPWNJtCW4Q__sOtB8w-YtwW+uZy7crxMNrmSgQ6OFyA@mail.gmail.com>
- <1547404075.1582.0@smtp.gmail.com> <CAJ0CqmU7k5i26g7dGPxNdts7Gm67W6qNsr4vYuW05ugsEF1ohw@mail.gmail.com>
- <CAKxU2N-+CTaRdJMFVRdozJ5TTpN+_4thiDRBJBFq8gGtuRVYvA@mail.gmail.com> <20190114091841.GA23045@localhost.localdomain>
-In-Reply-To: <20190114091841.GA23045@localhost.localdomain>
-From:   Rosen Penev <rosenp@gmail.com>
-Date:   Mon, 14 Jan 2019 12:06:12 -0800
-Message-ID: <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
-Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1cefde13-3fcf-47b7-1c3a-e44a2901ddea@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jan 14, 2019 at 1:18 AM Lorenzo Bianconi
-<lorenzo.bianconi@redhat.com> wrote:
->
-> > On Sun, Jan 13, 2019 at 11:00 AM Lorenzo Bianconi
-> > <lorenzo.bianconi@redhat.com> wrote:
-> > >
-> > > >
-> > > >
-> > > > On Sun, Jan 13, 2019 at 5:33 AM, Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
-> > > >
-> > > > Direct. No VM used. This is the only peripheral causing this issue.
-> > > >
-> > > > Is the device connected to a usb3.0 port? If so, could you please try to connect the dongle to a 2.0 one?
-> > > >
-> > > > I tried through a USB 2.0 port. Shouldn't make a difference as they both use the xhci driver.
-> > > >
-> > >
-> > > mt76x2u supports scatter-gather on usb 3.0 (not on 2.0)
-> > Tried a USB 3 port. Same result.
-> > >
-> > > > Could you please double check if IOMMU is enabled?
-> > > >
-> > >
-> > > Have you tried to disable it? Does it make any difference?
-> > No idea how. UEFI doesn't seem to show anything similar.
-> >
-> > Similar bug report: https://bugzilla.kernel.org/show_bug.cgi?id=202241
->
-> You should be able to disable iommu using GRUB_CMDLINE_LINUX in
-> /etc/default/grub (I guess setting iommu=off and reinstalling grub)
-> https://wiki.gentoo.org/wiki/IOMMU_SWIOTLB
-Yep. Working great now. I wonder what mt76 is doing to cause the crash though...
->
-> Regards,
-> Lorenzo
+On 1/8/2019 6:44 PM, Denis Kenzior wrote:
+> Hi Arend,
+> 
+>> However, there is more to it. When these offloads were introduced, we 
+>> discussed about having a PORT_AUTHORIZED event or not. It was decided 
+>> passing an attribute in CONNECT and ROAMED event would suffice and 
+>> that is what was implemented in brcmfmac. However, it seems time 
+>> passed and the need for an explicit PORT_AUTHORIZED was there 
+>> (probably Denis knows), which wpa_supplicant now supports thus 
+>> ignoring the attribute in the CONNECT and ROAMED events. The brcmfmac 
+>> driver was not changed accordingly. For this there are patches pending 
+>> in linux-wireless which are necessary to have a working connection.
+>>
+> 
+> Coming in a bit late to this discussion, but it does raise a few points 
+> I wouldn't mind some clarification on:
+> 
+> - With commit 503c1fb98ba3, the kernel effectively changed the userspace 
+> API.  So I take it that breaking userspace APIs are OK sometimes? If so, 
+> I have lots of suggestions to make ;)
+
+I bet you do :-p I think the rule of thumb is that there are no drivers 
+providing the functionality behind the user-space API and/or no 
+user-space applications are using that API.
+
+> - Is RTNL LINK_MODE / OPER_STATE status being (supposed to be?) affected 
+> by the driver during a roam?  E.g. if we're in a 802.1X network with 
+> userspace authentication, and driver roamed requiring a new 802.1X auth, 
+> then in theory the RTNL mode needs to be brought back out of UP state...
+
+So do you expect the driver/cfg80211 to take care of that or the 
+supplicant? I assumed wpa_supplicant would be doing that.
+
+> - The new API leaves a lot to be desired in terms of race conditions. 
+> For example, how long should userspace wait for EAPoL-EAP packets to 
+> arrive (before triggering its own EAPoL-Start for example) if a 
+> CMD_ROAMED event comes?
+
+I think that question applies to CMD_CONNECT as well, right? Not sure if 
+the specs provide any guidance for that. I can dive into that, but maybe 
+someone like Jouni or Johannes know. If so, let me know ;-)
+
+> - What happens if userspace does send an EAPoL-Start in the middle of an 
+> offloaded 4-way handshake?
+
+Probably those would be dropped.
+
+Regards,
+Arend
