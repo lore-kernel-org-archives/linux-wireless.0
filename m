@@ -2,204 +2,107 @@ Return-Path: <SRS0=xBvi=PW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 066DCC43387
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 17:54:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47670C43387
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 20:06:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C91E620659
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 17:54:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 187DC206B7
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 20:06:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fs+pfVHL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726729AbfANRyf (ORCPT
+        id S1726821AbfANUGZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Jan 2019 12:54:35 -0500
-Received: from smtp.nue.novell.com ([195.135.221.5]:47519 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726559AbfANRye (ORCPT
-        <rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-        Mon, 14 Jan 2019 12:54:34 -0500
-Received: from ziggy.stardust (static.masmovil.com [93.176.153.193])
-        by smtp.nue.novell.com with ESMTP (TLS encrypted); Mon, 14 Jan 2019 18:54:31 +0100
-Subject: Re: [GIT PULL] Add NVRAM files for bcm43455 and bcm43430
-To:     Josh Boyer <jwboyer@kernel.org>
-Cc:     Linux Firmware <linux-firmware@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        serge@raspberrypi.org, Phil Elwell <phil@raspberrypi.org>,
-        Arend van Spriel <arend@broadcom.com>
-References: <52ec533a-bd4e-71b4-7bcd-8f2791dec564@suse.com>
- <CA+5PVA56=0x8r67SP1Z6x4QnSjm=Qz9GXjSXuCv+At9-C4kQWA@mail.gmail.com>
- <CA+5PVA6T=YLF_5Dk-zm03_SaTwk+1DZVWURzgtJwjCdn0uSgHg@mail.gmail.com>
-From:   Matthias Brugger <mbrugger@suse.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=mbrugger@suse.com; prefer-encrypt=mutual; keydata=
- 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
-Message-ID: <71fb2876-53d8-1fad-a0cc-df2268c705c2@suse.com>
-Date:   Mon, 14 Jan 2019 18:54:29 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.3
+        Mon, 14 Jan 2019 15:06:25 -0500
+Received: from mail-oi1-f180.google.com ([209.85.167.180]:36228 "EHLO
+        mail-oi1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726757AbfANUGZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Jan 2019 15:06:25 -0500
+Received: by mail-oi1-f180.google.com with SMTP id x23so275362oix.3
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2019 12:06:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=hlbIZMfo5DeaZXSLUOwywE2pmYYF/mV5cWFuUA8bfIg=;
+        b=Fs+pfVHLkDhcw2eaiC73xDLclV4jl5Eb5nNldxpZ0qxLHISZLdZE6/8iPf7YJqA2+6
+         6+UJHtVbFpSRgu2qEkKc7BmuQW7iokP2IBUqKmhyjd98/X4UeG1mnoqKz0+mUuB/VlAh
+         ul8qysFwQ388CMkPm6qq5+kXGT+zQ0NrRNj+PC6Ki61sLl92c34BELU36euQcbWIlEfU
+         OKXRLbtgtyDNqAEoFZSav9thg8Bm6fjN5WbU69Xc9zYFAmfJG1sR1r+JsmOp3L5+3XvU
+         T3C4u5icuSwfdVSjl1It16TPBXK2q8zJxAQ5fEIYMJi5uawiVQwUYWXvYUhTr8coKmdY
+         C5Bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=hlbIZMfo5DeaZXSLUOwywE2pmYYF/mV5cWFuUA8bfIg=;
+        b=Qn7RIgEE3iQxlO9kZIWo2PuVxT5zb7U8gv9NnnzBolnmrajFUzc1UzQ64FiUBKvXkr
+         POmQk5as0AIXXJBn87OdWCDVnsZQ3xVg51QL+XHZ/CxJ/fo8qnJLPUwOI8o14PobgoRl
+         T0Hi+tGljcOVLlC/UgsUdGXx07uWpEsIoRYRfFPfvVLpom3mt2oT0RVmtr/PCOy7dC2a
+         YSV4wUdL7zerxs+7dFBZPhcavW8RsNF/bdYmOjDk1311eInwDmW9RFc/on4GLxA2gHxr
+         6othUaBY8u4ooQmc7qSToFMW1MYjbXf3rLbFPgL7s9jBj4lz4bg7lztuMo4ulWV+hx08
+         Nriw==
+X-Gm-Message-State: AJcUukczzEC6fQABzW6asYNMOP4zPhIjJsmwJA8C96dN2some9Z9ByXi
+        Q/LJf8KY3LdJ7NhdYx7xIoBfMQO7kPqYh1wAU6arsQeO
+X-Google-Smtp-Source: ALg8bN5sIABzrIut2hngIgdeHcrZmC26BLfb3ATl+C2mhf6mCU2VccPlWbpzOSxAiioPoqF0HP3Wl1Qco634laX5o7Y=
+X-Received: by 2002:aca:c4d8:: with SMTP id u207mr99691oif.30.1547496383721;
+ Mon, 14 Jan 2019 12:06:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CA+5PVA6T=YLF_5Dk-zm03_SaTwk+1DZVWURzgtJwjCdn0uSgHg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <CAKxU2N9o5WeUwFMUwwXKHaPj7R+oiSKV1c2n8RtXwGNZRtw5Sw@mail.gmail.com>
+ <CAJ0CqmVNF83bWgc+LSQ3_i=zfp-sXC5Nf=nKfqB3SWa8r7sKdQ@mail.gmail.com>
+ <83A1D243-9073-48D1-9F26-5A2581DCB829@gmail.com> <CAJ0CqmUgPWNJtCW4Q__sOtB8w-YtwW+uZy7crxMNrmSgQ6OFyA@mail.gmail.com>
+ <1547404075.1582.0@smtp.gmail.com> <CAJ0CqmU7k5i26g7dGPxNdts7Gm67W6qNsr4vYuW05ugsEF1ohw@mail.gmail.com>
+ <CAKxU2N-+CTaRdJMFVRdozJ5TTpN+_4thiDRBJBFq8gGtuRVYvA@mail.gmail.com> <20190114091841.GA23045@localhost.localdomain>
+In-Reply-To: <20190114091841.GA23045@localhost.localdomain>
+From:   Rosen Penev <rosenp@gmail.com>
+Date:   Mon, 14 Jan 2019 12:06:12 -0800
+Message-ID: <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
+Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Josh,
-
-On 14/01/2019 18:32, Josh Boyer wrote:
-> On Mon, Jan 14, 2019 at 10:33 AM Josh Boyer <jwboyer@kernel.org> wrote:
->>
->> On Fri, Jan 11, 2019 at 7:11 AM Matthias Brugger <mbrugger@suse.com> wrote:
->>>
->>> Hi Josh,
->>> Hi all,
->>>
->>> This pull request add firmware files neede by bcm43430 for Raspberry Pi 3 Model
->>> B and bcm43455 for Raspberry Pi 3 Model B+.
->>>
->>> Please have a look and, if convenient, pull :)
->>>
->>> Best regards,
->>> Matthias
->>>
->>> ---
->>> The following changes since commit 0f22c8527439eaaf5c3fcf87b31c89445b6fa84d:
->>>
->>>   Revert "amdgpu: update vega10 fw for 18.50 release" (2018-12-18 15:38:53 -0500)
->>>
->>> are available in the Git repository at:
->>>
->>>
->>> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/matthias.bgg/linux-firmware.git/
->>> tags/add-rpi-fw
->>>
->>> for you to fetch changes up to 930f276f8f1f2d83e44da6a32f4e0b2513db21a2:
->>>
->>>   brcm: Add BCM43430 NVRAM for the Raspberry Pi 3 Model B (2019-01-11 13:04:43
->>> +0100)
->>>
->>> ----------------------------------------------------------------
->>> - Add NVRAM for BCM43455 used by Raspberry Pi 3 Model B+
->>> - Add NVRAM for BCM43430 used by Raspberry Pi 3 Model B
->>>
->>> ----------------------------------------------------------------
->>> Matthias Brugger (2):
->>>       brcm: Add BCM43455 NVRAM for Raspberry Pi 3 B+
->>>       brcm: Add BCM43430 NVRAM for the Raspberry Pi 3 Model B
->>>
->>>  WHENCE                                      |   3 +
->>>  brcm/brcmfmac43430-sdio.raspberrypi-rpi.txt |  47 ++++++++++++++++
->>>  brcm/brcmfmac43455-sdio.clm_blob            | Bin 0 -> 14036 bytes
->>>  brcm/brcmfmac43455-sdio.raspberrypi-rpi.txt |  82 ++++++++++++++++++++++++++++
->>>  4 files changed, 132 insertions(+)
->>>  create mode 100644 brcm/brcmfmac43430-sdio.raspberrypi-rpi.txt
->>>  create mode 100644 brcm/brcmfmac43455-sdio.clm_blob
->>>  create mode 100644 brcm/brcmfmac43455-sdio.raspberrypi-rpi.txt
->>
->> Pulled and pushed out.
-> 
-> I reverted commit fca5958287a3e5e0bd1676af0ca4fc2fb9704b42 as there is
-> some question around the clm_blob file an license applicability.  If
-> that gets resolved, please submit a new patch to add those files.
-> 
-
-Thanks, actually I realized that there are some more problems with this pull
-request, so thank you for reverting. I'll send a new one soon.
-
-Regards,
-Matthias
+On Mon, Jan 14, 2019 at 1:18 AM Lorenzo Bianconi
+<lorenzo.bianconi@redhat.com> wrote:
+>
+> > On Sun, Jan 13, 2019 at 11:00 AM Lorenzo Bianconi
+> > <lorenzo.bianconi@redhat.com> wrote:
+> > >
+> > > >
+> > > >
+> > > > On Sun, Jan 13, 2019 at 5:33 AM, Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+> > > >
+> > > > Direct. No VM used. This is the only peripheral causing this issue.
+> > > >
+> > > > Is the device connected to a usb3.0 port? If so, could you please try to connect the dongle to a 2.0 one?
+> > > >
+> > > > I tried through a USB 2.0 port. Shouldn't make a difference as they both use the xhci driver.
+> > > >
+> > >
+> > > mt76x2u supports scatter-gather on usb 3.0 (not on 2.0)
+> > Tried a USB 3 port. Same result.
+> > >
+> > > > Could you please double check if IOMMU is enabled?
+> > > >
+> > >
+> > > Have you tried to disable it? Does it make any difference?
+> > No idea how. UEFI doesn't seem to show anything similar.
+> >
+> > Similar bug report: https://bugzilla.kernel.org/show_bug.cgi?id=202241
+>
+> You should be able to disable iommu using GRUB_CMDLINE_LINUX in
+> /etc/default/grub (I guess setting iommu=off and reinstalling grub)
+> https://wiki.gentoo.org/wiki/IOMMU_SWIOTLB
+Yep. Working great now. I wonder what mt76 is doing to cause the crash though...
+>
+> Regards,
+> Lorenzo
