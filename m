@@ -2,120 +2,176 @@ Return-Path: <SRS0=xBvi=PW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97FE2C43387
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 22:57:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A52BEC43444
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 23:04:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5CD4720657
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 22:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72A7C20659
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 23:04:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bEP6EN0r"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="iGAV4IVn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726769AbfANW5w (ORCPT
+        id S1727261AbfANXE2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Jan 2019 17:57:52 -0500
-Received: from mail-wm1-f51.google.com ([209.85.128.51]:35585 "EHLO
-        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726745AbfANW5w (ORCPT
+        Mon, 14 Jan 2019 18:04:28 -0500
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:33818 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727068AbfANXE2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Jan 2019 17:57:52 -0500
-Received: by mail-wm1-f51.google.com with SMTP id t200so1351549wmt.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2019 14:57:50 -0800 (PST)
+        Mon, 14 Jan 2019 18:04:28 -0500
+Received: by mail-ed1-f66.google.com with SMTP id b3so1076206ede.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2019 15:04:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:subject:to:cc:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=fPk72At9mv6VZZaId+SWoodoIdFQDrNoQpH/JvdT6s8=;
-        b=bEP6EN0rfcQrBtrw4NBRyWe0sCThJs5kfu/n6+pHoJEZZUzA6c+jSKmyEQBbmzB/zV
-         LdXozvmyfS6+ZmrDpixIllwCUy5i6TZWjcyNtq0mRWXqGwOJpNm7tizIfKcQyorz+IMi
-         wBLo5HLIoXnVSpmt/ilD7Al6iRQ1qFuxXZZGbk8MKfSTfKJwdqmPF/pkkkMgZgiP+tLy
-         xoY8CD1BcXxz59ivx72IPyNKDi90arnuEeFxzA36AQsz2DiA+Om+1SET0nLAaYBO6Uc1
-         bfaertPNy1Zcv7rs9Yjbh5uVJTeZE/1sWKiSNmhiRMuRUxHHZITUaWAJ3IwvOZwMeq9p
-         zJkg==
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=BNmodteYvLkrGWZgDlklg7A84Gv8ScHw/8FcsugVUkY=;
+        b=iGAV4IVnWrv7uh4pUu5ck8V7AczKGX7QLwX2Q5p5UHQ02D1UW257p3njxdN8ak9V2A
+         VejyRN3BZEJRG/YcG1BO8dXLdi5djlvVKstGGDMtQtQ2xsKK1CjFfA1IXCArlg74sDpX
+         g7TZXe9ObS+rxRq025gCZIITdB0AJe389A9/Y=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=fPk72At9mv6VZZaId+SWoodoIdFQDrNoQpH/JvdT6s8=;
-        b=Ku7akIq0pkAl73HtMoqxQDvKJnNVR2VcKmlV5LbbVv2clUU7Idqs5gp+x/ZH/0vv6p
-         wFEZQOmdYnJVLbbuob5z6kiDhDlB1Ep0WmbAXmREUj2vFwUE0LoAqeYtCGqFJXJFoRCk
-         FGKqH8olAy6s6eBw4O/RTuHjJX95hZRQ4eOCIQT9RYvbHGPD/F7RWB7MPiCZy+a1l+U0
-         Nkdtwr5OuIsEz0gNP0DVt2eV84HHQKekVCUPmKsjNAnaD+3zrW41vIYw6NxHJtjPEgKG
-         rnYWd2FC8bL2wZY2Uyv+iodzNxpD81cJyIM7lu5vUJiqVG8qDn1iJX0/ZBxeRpZMKkkR
-         JEZA==
-X-Gm-Message-State: AJcUukcv9vsZslfx/PIz/fZ/3VuqCpFemwJGS2jJuEqr+zeYSV8kPS8l
-        YZ35iwrIHzxL1MQjp1d7Fes=
-X-Google-Smtp-Source: ALg8bN76MIkmXeYR1mjON23cuoC9m7vX9gMPkgNxC7/jcdsUI2weU9RjS02taBVoNOxvGQKaSbb0Xw==
-X-Received: by 2002:a7b:c181:: with SMTP id y1mr1031796wmi.10.1547506669782;
-        Mon, 14 Jan 2019 14:57:49 -0800 (PST)
-Received: from [10.0.0.91] (194-96-77-95.hdsl.highway.telekom.at. [194.96.77.95])
-        by smtp.gmail.com with ESMTPSA id j33sm113731937wre.91.2019.01.14.14.57.48
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=BNmodteYvLkrGWZgDlklg7A84Gv8ScHw/8FcsugVUkY=;
+        b=iWKj7LnCA5ZkkhdZJkG+9S8UjLnhzJQcI3tyfvzoWivuv8mJTXkdZGI1h3Xy5ymMpZ
+         ySrdxOfY88Rhs3iq3zC4iJ5Mzr1NVX+ezgq7xFvKY56GWbK4bf9iUj8ng1cK9TWjW5Hw
+         6gFfSysieSiQPe5Yn0pezJS5DlhCvjPEZ/s1MNQJKT78mdgDFKnFgP4khma4N94MJFRV
+         rn0TxeHDO5ZFZU5RCDxrha9+8Cc+06WRSODOu1TNbMzYwAFKMgqAZfntIvXhvFvCsieZ
+         yILARvKzS9u2g0RgpcK/7cmxu4gi+115POzs+0EbfQ0qFM5gbOo63w8Ucb+GEVejXmf7
+         wOkw==
+X-Gm-Message-State: AJcUukf+9QBfXsBee5YUBUPEUys5ymUQ9Iz/DszPjmukdlhabmqjgzby
+        INYGFphtn+lgkn3NUixmOlOc2g==
+X-Google-Smtp-Source: ALg8bN4zaE1PsIbEceGwYUiUvAa5xFFimfrZb7okAiZX5UNVbt0AIju3abc53ZpdBXhtihBQQsAvNw==
+X-Received: by 2002:a50:b667:: with SMTP id c36mr1115818ede.190.1547507065687;
+        Mon, 14 Jan 2019 15:04:25 -0800 (PST)
+Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
+        by smtp.gmail.com with ESMTPSA id ec19-v6sm2581564ejb.11.2019.01.14.15.04.24
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 14 Jan 2019 14:57:49 -0800 (PST)
-From:   Till Kamppeter <till.kamppeter@gmail.com>
-Subject: Google Summer of Code 2019 - Project ideas page for the Linux
- Foundation online
-To:     Alexey Khoroshilov <khoroshilov@ispras.ru>,
-        "Luis R. Rodriguez" <mcgrof@gmail.com>,
-        Jeff Licquia <jeff@licquia.org>,
+        Mon, 14 Jan 2019 15:04:25 -0800 (PST)
+Subject: Re: Kernel oops / WiFi connection failure with wpa_supplicant 2.7
+To:     Denis Kenzior <denkenz@gmail.com>, Jouni Malinen <j@w1.fi>,
+        Eric Blau <eblau@eblau.com>
+Cc:     hostap@lists.infradead.org,
         linux-wireless <linux-wireless@vger.kernel.org>,
-        Open Printing <printing-architecture@lists.linux-foundation.org>,
-        dl9pf@gmx.de, Mats Wichmann <mats@wichmann.us>,
-        Denis Silakov <silakov@ispras.ru>,
-        =?UTF-8?Q?Jan-Simon_M=c3=b6ller?= <jsmoeller@linuxfoundation.org>,
-        Daniel Baluta <daniel.baluta@gmail.com>,
-        Vadim Mutilin <mutilin@ispras.ru>,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        Ira McDonald <blueroofmusic@gmail.com>,
-        Michael Sweet <msweet@apple.com>,
-        Tobias Hoffmann <smilingthax@googlemail.com>,
-        Jay Berkenbilt <ejb@ql.org>,
-        Nicholas Mc Guire <der.herr@hofr.at>,
-        Matt Germonprez <germonprez@gmail.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Gary O'Neall <garysourceauditor@gmail.com>
-Cc:     Aveek Basu <aveek.basu@lexmark.com>
-Message-ID: <6c4b4cf5-748e-7f7a-8f90-b34084ed4c2b@gmail.com>
-Date:   Mon, 14 Jan 2019 23:57:47 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        Johannes Berg <johannes@sipsolutions.net>
+References: <CADU241PtPeiTQWHwb=uF6Ohuua_asOwCarCAKVC8jdVVNAsByA@mail.gmail.com>
+ <20190103154921.GA25015@w1.fi>
+ <41e7ccaf-c73d-b404-69fe-ad17433add37@broadcom.com>
+ <1cefde13-3fcf-47b7-1c3a-e44a2901ddea@gmail.com>
+ <0490b8fa-bf8c-c76c-1367-70d0f4e3845f@broadcom.com>
+ <206b5ae1-7fcf-9078-8399-2a8f9ff6c211@gmail.com>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d5599cf9-5fb4-a68d-dfd9-0d10a6758ae2@broadcom.com>
+Date:   Tue, 15 Jan 2019 00:04:24 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
+In-Reply-To: <206b5ae1-7fcf-9078-8399-2a8f9ff6c211@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On 1/14/2019 10:18 PM, Denis Kenzior wrote:
+> Hi Arend,
+> 
+> On 01/14/2019 02:12 PM, Arend Van Spriel wrote:
+>> On 1/8/2019 6:44 PM, Denis Kenzior wrote:
+>>> Hi Arend,
+>>>
+>>>> However, there is more to it. When these offloads were introduced, 
+>>>> we discussed about having a PORT_AUTHORIZED event or not. It was 
+>>>> decided passing an attribute in CONNECT and ROAMED event would 
+>>>> suffice and that is what was implemented in brcmfmac. However, it 
+>>>> seems time passed and the need for an explicit PORT_AUTHORIZED was 
+>>>> there (probably Denis knows), which wpa_supplicant now supports thus 
+>>>> ignoring the attribute in the CONNECT and ROAMED events. The 
+>>>> brcmfmac driver was not changed accordingly. For this there are 
+>>>> patches pending in linux-wireless which are necessary to have a 
+>>>> working connection.
+>>>>
+>>>
+>>> Coming in a bit late to this discussion, but it does raise a few 
+>>> points I wouldn't mind some clarification on:
+>>>
+>>> - With commit 503c1fb98ba3, the kernel effectively changed the 
+>>> userspace API.  So I take it that breaking userspace APIs are OK 
+>>> sometimes? If so, I have lots of suggestions to make ;)
+>>
+>> I bet you do :-p I think the rule of thumb is that there are no 
+>> drivers providing the functionality behind the user-space API and/or 
+>> no user-space applications are using that API.
+> 
+> Maybe this is a question for Johannes as well, but define 'user-space 
+> applications'?  If that includes wpa_s, wasn't the rule of thumb broken 
+> with that commit?
 
-I have set up a page for project ideas for the Linux Foundation's
-participation in the Google Summer of Code 2019:
+In my previous reply I wanted to add that it would be hard to proof that 
+no user-space applications are using the API. Not sure exactly when 
+things were added in wpa_s, but I suspect it was 
+post-commit-503c1fb98ba3 so it did not have support for the user-space 
+API before the commit.
 
-https://wiki.linuxfoundation.org/gsoc/google-summer-code-2019
+>>
+>>> - Is RTNL LINK_MODE / OPER_STATE status being (supposed to be?) 
+>>> affected by the driver during a roam?  E.g. if we're in a 802.1X 
+>>> network with userspace authentication, and driver roamed requiring a 
+>>> new 802.1X auth, then in theory the RTNL mode needs to be brought 
+>>> back out of UP state...
+>>
+>> So do you expect the driver/cfg80211 to take care of that or the 
+>> supplicant? I assumed wpa_supplicant would be doing that.
+>>
+> 
+> With regular roaming where we trigger a Deassociate/Deathenticate 
+> (either explicitly or implicitly) first, the interface goes into dormant 
+> mode by virtue of the carrier going down.
+> 
+> With this it isn't really clear whether the same is happening and who 
+> (kernel/userspace) should be doing what.  I would actually assume the 
+> kernel is/should be turning carrier off for the duration of the roam 
+> operation?
 
-Please add your ideas to the sub-page of your work group. Also remove 
-project ideas which are already done in one of the previous years or not 
-needed any more and make sure that all contact info is up-to-date and 
-all links are working.
+On what layer do we know 802.1X re-auth is required?
 
-If you have problems mail me with your project ideas and other editing 
-wishes.
+>>> - The new API leaves a lot to be desired in terms of race conditions. 
+>>> For example, how long should userspace wait for EAPoL-EAP packets to 
+>>> arrive (before triggering its own EAPoL-Start for example) if a 
+>>> CMD_ROAMED event comes?
+>>
+>> I think that question applies to CMD_CONNECT as well, right? Not sure 
+>> if the specs provide any guidance for that. I can dive into that, but 
+>> maybe someone like Jouni or Johannes know. If so, let me know ;-)
+> 
+> With CMD_CONNECT it is a bit more clear because you're most likely not 
+> specifying a PMKID for the first time, so you expect the authentication 
+> to happen in all cases.  If the AP doesn't respond after some small 
+> timeout, the supplicant can send its own EAPoL-Start.
+> 
+> With CMD_ROAMED it is less clear.
+> 
+>>
+>>> - What happens if userspace does send an EAPoL-Start in the middle of 
+>>> an offloaded 4-way handshake?
+>>
+>> Probably those would be dropped.
+>>
+> 
+> I would love to have something more definitive than 'Probably', and it 
+> might be worth mentioning this hint in the documentation somewhere.
 
-The ideas list is in the Linux Foundation Wiki. If you want to edit and 
-did not have the edit rights already from previous years, please tell me 
-and I give you edit rights. I need your Linux Foundation user name for 
-that and the e-mail address associated with this account for this.
+I was hesitant to use that word, but decided to do so simply because I 
+can not speak for every driver and even for the brcmfmac driver that I 
+maintain I will need to look into the firmware to be sure. I agree that 
+a remark of that possibility is worth adding.
 
-Please also take into account that the deadline for our application as 
-mentoring organization is Feb 6 and after that Google will evaluate the 
-applications. So have your ideas (at least most of them, ideas can be 
-posted up to the student application deadline) in by then to raise our 
-chances to get accepted.
-
-    Till
+Regards,
+Arend
