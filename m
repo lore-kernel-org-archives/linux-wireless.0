@@ -1,177 +1,188 @@
-Return-Path: <SRS0=xBvi=PW=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=v11p=PX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A52BEC43444
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 23:04:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6676FC43387
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 06:22:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72A7C20659
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Jan 2019 23:04:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C72C20651
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 06:22:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="iGAV4IVn"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qXG/YhRg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727261AbfANXE2 (ORCPT
+        id S1728345AbfAOGUH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Jan 2019 18:04:28 -0500
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:33818 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727068AbfANXE2 (ORCPT
+        Tue, 15 Jan 2019 01:20:07 -0500
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:46296 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727369AbfAOGUH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Jan 2019 18:04:28 -0500
-Received: by mail-ed1-f66.google.com with SMTP id b3so1076206ede.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2019 15:04:26 -0800 (PST)
+        Tue, 15 Jan 2019 01:20:07 -0500
+Received: by mail-lj1-f195.google.com with SMTP id v15-v6so1251807ljh.13
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2019 22:20:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=BNmodteYvLkrGWZgDlklg7A84Gv8ScHw/8FcsugVUkY=;
-        b=iGAV4IVnWrv7uh4pUu5ck8V7AczKGX7QLwX2Q5p5UHQ02D1UW257p3njxdN8ak9V2A
-         VejyRN3BZEJRG/YcG1BO8dXLdi5djlvVKstGGDMtQtQ2xsKK1CjFfA1IXCArlg74sDpX
-         g7TZXe9ObS+rxRq025gCZIITdB0AJe389A9/Y=
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=t+3E6P08s2LRMSTKSXqb4kokFW9RoadZlEZaN/puleA=;
+        b=qXG/YhRgL21jxUb2At9kBF7HLF/g0VO08bicsWuWCeL/PeWNzLzh2e1LYNSLPeGKsS
+         aJi8vSFuvOlctKaOq9dgtJjU1WTHdGLQuOnhZ8jYC7hhulZDbYb/YM/VLsUSg/Wv82jt
+         BvnzWxsInGC49y5YxshBZ/bV0BODYBK2MzaU3NDyYZITbiY8d8LkgQ05fZ/mawrH93IG
+         /OSdXaaHY8g0Ez4O0iclPPAgK06RmtyqNFnkWq8aEx3OHiTbPw+yKN2eFQZzJpa75OqS
+         fZz0O7mOk/pD7N5gQGmwMEEO6ZoUWKHgsAtRywo/788zNEnFDNP5dSb04j1eW11tHZix
+         sk0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=BNmodteYvLkrGWZgDlklg7A84Gv8ScHw/8FcsugVUkY=;
-        b=iWKj7LnCA5ZkkhdZJkG+9S8UjLnhzJQcI3tyfvzoWivuv8mJTXkdZGI1h3Xy5ymMpZ
-         ySrdxOfY88Rhs3iq3zC4iJ5Mzr1NVX+ezgq7xFvKY56GWbK4bf9iUj8ng1cK9TWjW5Hw
-         6gFfSysieSiQPe5Yn0pezJS5DlhCvjPEZ/s1MNQJKT78mdgDFKnFgP4khma4N94MJFRV
-         rn0TxeHDO5ZFZU5RCDxrha9+8Cc+06WRSODOu1TNbMzYwAFKMgqAZfntIvXhvFvCsieZ
-         yILARvKzS9u2g0RgpcK/7cmxu4gi+115POzs+0EbfQ0qFM5gbOo63w8Ucb+GEVejXmf7
-         wOkw==
-X-Gm-Message-State: AJcUukf+9QBfXsBee5YUBUPEUys5ymUQ9Iz/DszPjmukdlhabmqjgzby
-        INYGFphtn+lgkn3NUixmOlOc2g==
-X-Google-Smtp-Source: ALg8bN4zaE1PsIbEceGwYUiUvAa5xFFimfrZb7okAiZX5UNVbt0AIju3abc53ZpdBXhtihBQQsAvNw==
-X-Received: by 2002:a50:b667:: with SMTP id c36mr1115818ede.190.1547507065687;
-        Mon, 14 Jan 2019 15:04:25 -0800 (PST)
-Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
-        by smtp.gmail.com with ESMTPSA id ec19-v6sm2581564ejb.11.2019.01.14.15.04.24
+        bh=t+3E6P08s2LRMSTKSXqb4kokFW9RoadZlEZaN/puleA=;
+        b=n2ClpmQgyygcXGliHCV2zLjr8MSoMEf6POBTS2sHPlrEZQYg9lmS7KMV0NgjuYoSdz
+         2rC3e9znH+3+lmV0OEHLCaRGPar/adsbzMKix9ZF3bzD3fZbA+EuQoL5Uf8hP+RzUEXH
+         dwsG7uILTpHVWLvzzydJ/3jL03a5lZ+E4Yz7orQ4/ZJHRU1UBpaIctEoWXjd8jT69Uyt
+         HB3I5RKrYBkFVPJ8hJK8O4vh8MrZU7GGNMBCLJEYCYnsMAz98Ts6EyxgRy2IqJKPiTlW
+         r0r05sHaPimpP7COuAWhNhB0aw6OBzVIf1RJ24leTdIOE3FzhWbSK5G1SBI0beuhRylm
+         M0RQ==
+X-Gm-Message-State: AJcUukdCCKnnZoFmKxW9pMXYRXyyaxL8TXTwLtbVC/8g7k4WoJ0+kcMY
+        KNJmFDyUi0w09VtOTtS9z22WmfLt
+X-Google-Smtp-Source: ALg8bN6j6XQyzm0h4bH3jY0FBVCUhxtVNKXafQly7m7V4+Si7RYETmrD22HZs5mbRDPZRrgrrcghZw==
+X-Received: by 2002:a2e:5854:: with SMTP id x20-v6mr1496625ljd.31.1547533204665;
+        Mon, 14 Jan 2019 22:20:04 -0800 (PST)
+Received: from elitebook.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
+        by smtp.gmail.com with ESMTPSA id y9sm443351lfe.75.2019.01.14.22.20.02
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 14 Jan 2019 15:04:25 -0800 (PST)
-Subject: Re: Kernel oops / WiFi connection failure with wpa_supplicant 2.7
-To:     Denis Kenzior <denkenz@gmail.com>, Jouni Malinen <j@w1.fi>,
-        Eric Blau <eblau@eblau.com>
-Cc:     hostap@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-References: <CADU241PtPeiTQWHwb=uF6Ohuua_asOwCarCAKVC8jdVVNAsByA@mail.gmail.com>
- <20190103154921.GA25015@w1.fi>
- <41e7ccaf-c73d-b404-69fe-ad17433add37@broadcom.com>
- <1cefde13-3fcf-47b7-1c3a-e44a2901ddea@gmail.com>
- <0490b8fa-bf8c-c76c-1367-70d0f4e3845f@broadcom.com>
- <206b5ae1-7fcf-9078-8399-2a8f9ff6c211@gmail.com>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <d5599cf9-5fb4-a68d-dfd9-0d10a6758ae2@broadcom.com>
-Date:   Tue, 15 Jan 2019 00:04:24 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        Mon, 14 Jan 2019 22:20:03 -0800 (PST)
+From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 1/2] brcmfmac: modify __brcmf_err() to take bus as a parameter
+Date:   Tue, 15 Jan 2019 07:19:48 +0100
+Message-Id: <20190115061949.27260-1-zajec5@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-In-Reply-To: <206b5ae1-7fcf-9078-8399-2a8f9ff6c211@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/14/2019 10:18 PM, Denis Kenzior wrote:
-> Hi Arend,
-> 
-> On 01/14/2019 02:12 PM, Arend Van Spriel wrote:
->> On 1/8/2019 6:44 PM, Denis Kenzior wrote:
->>> Hi Arend,
->>>
->>>> However, there is more to it. When these offloads were introduced, 
->>>> we discussed about having a PORT_AUTHORIZED event or not. It was 
->>>> decided passing an attribute in CONNECT and ROAMED event would 
->>>> suffice and that is what was implemented in brcmfmac. However, it 
->>>> seems time passed and the need for an explicit PORT_AUTHORIZED was 
->>>> there (probably Denis knows), which wpa_supplicant now supports thus 
->>>> ignoring the attribute in the CONNECT and ROAMED events. The 
->>>> brcmfmac driver was not changed accordingly. For this there are 
->>>> patches pending in linux-wireless which are necessary to have a 
->>>> working connection.
->>>>
->>>
->>> Coming in a bit late to this discussion, but it does raise a few 
->>> points I wouldn't mind some clarification on:
->>>
->>> - With commit 503c1fb98ba3, the kernel effectively changed the 
->>> userspace API.  So I take it that breaking userspace APIs are OK 
->>> sometimes? If so, I have lots of suggestions to make ;)
->>
->> I bet you do :-p I think the rule of thumb is that there are no 
->> drivers providing the functionality behind the user-space API and/or 
->> no user-space applications are using that API.
-> 
-> Maybe this is a question for Johannes as well, but define 'user-space 
-> applications'?  If that includes wpa_s, wasn't the rule of thumb broken 
-> with that commit?
+From: Rafał Miłecki <rafal@milecki.pl>
 
-In my previous reply I wanted to add that it would be hard to proof that 
-no user-space applications are using the API. Not sure exactly when 
-things were added in wpa_s, but I suspect it was 
-post-commit-503c1fb98ba3 so it did not have support for the user-space 
-API before the commit.
+So far __brcmf_err() was using pr_err() which didn't allow identifying
+device that was affected by an error. It's crucial for systems with more
+than 1 device supported by brcmfmac (a common case for home routers).
 
->>
->>> - Is RTNL LINK_MODE / OPER_STATE status being (supposed to be?) 
->>> affected by the driver during a roam?  E.g. if we're in a 802.1X 
->>> network with userspace authentication, and driver roamed requiring a 
->>> new 802.1X auth, then in theory the RTNL mode needs to be brought 
->>> back out of UP state...
->>
->> So do you expect the driver/cfg80211 to take care of that or the 
->> supplicant? I assumed wpa_supplicant would be doing that.
->>
-> 
-> With regular roaming where we trigger a Deassociate/Deathenticate 
-> (either explicitly or implicitly) first, the interface goes into dormant 
-> mode by virtue of the carrier going down.
-> 
-> With this it isn't really clear whether the same is happening and who 
-> (kernel/userspace) should be doing what.  I would actually assume the 
-> kernel is/should be turning carrier off for the duration of the roam 
-> operation?
+This change allows passing struct brcmf_bus to the __brcmf_err(). That
+struct has been agreed to be the most common one. It allows accessing
+struct device easily & using dev_err() printing helper.
 
-On what layer do we know 802.1X re-auth is required?
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+This is my another try on improving brcmf_err after the failure from 2
+years ago:
+[PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the __brcmf_err
+https://patchwork.kernel.org/patch/9553255/
 
->>> - The new API leaves a lot to be desired in terms of race conditions. 
->>> For example, how long should userspace wait for EAPoL-EAP packets to 
->>> arrive (before triggering its own EAPoL-Start for example) if a 
->>> CMD_ROAMED event comes?
->>
->> I think that question applies to CMD_CONNECT as well, right? Not sure 
->> if the specs provide any guidance for that. I can dive into that, but 
->> maybe someone like Jouni or Johannes know. If so, let me know ;-)
-> 
-> With CMD_CONNECT it is a bit more clear because you're most likely not 
-> specifying a PMKID for the first time, so you expect the authentication 
-> to happen in all cases.  If the AP doesn't respond after some small 
-> timeout, the supplicant can send its own EAPoL-Start.
-> 
-> With CMD_ROAMED it is less clear.
-> 
->>
->>> - What happens if userspace does send an EAPoL-Start in the middle of 
->>> an offloaded 4-way handshake?
->>
->> Probably those would be dropped.
->>
-> 
-> I would love to have something more definitive than 'Probably', and it 
-> might be worth mentioning this hint in the documentation somewhere.
+Back then my change has been rejected due to miscommunication and late
+realisation that struct brcmf_pub (a previous choice instead of struct
+brcmf_bus) was a bad idea. Back then Arend wrote:
+> So I would think using struct brcmf_bus in brcmf_err() would be best
+> fit.
 
-I was hesitant to use that word, but decided to do so simply because I 
-can not speak for every driver and even for the brcmfmac driver that I 
-maintain I will need to look into the firmware to be sure. I agree that 
-a remark of that possibility is worth adding.
+So this patch follows that suggestion & updates __brcmf_err()
+accordingly.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 7 +++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 8 +++++---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 7 +++++--
+ 3 files changed, 15 insertions(+), 7 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 0ce1d8174e6d..c62009a06617 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -350,7 +350,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ }
+ 
+ #ifndef CONFIG_BRCM_TRACING
+-void __brcmf_err(const char *func, const char *fmt, ...)
++void __brcmf_err(struct brcmf_bus *bus, const char *func, const char *fmt, ...)
+ {
+ 	struct va_format vaf;
+ 	va_list args;
+@@ -359,7 +359,10 @@ void __brcmf_err(const char *func, const char *fmt, ...)
+ 
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+-	pr_err("%s: %pV", func, &vaf);
++	if (bus)
++		dev_err(bus->dev, "%s: %pV", func, &vaf);
++	else
++		pr_err("%s: %pV", func, &vaf);
+ 
+ 	va_end(args);
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index cfed0626bf5a..b499f90d94f6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -45,8 +45,10 @@
+ #undef pr_fmt
+ #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+ 
+-__printf(2, 3)
+-void __brcmf_err(const char *func, const char *fmt, ...);
++struct brcmf_bus;
++
++__printf(3, 4)
++void __brcmf_err(struct brcmf_bus *bus, const char *func, const char *fmt, ...);
+ /* Macro for error messages. When debugging / tracing the driver all error
+  * messages are important to us.
+  */
+@@ -55,7 +57,7 @@ void __brcmf_err(const char *func, const char *fmt, ...);
+ 		if (IS_ENABLED(CONFIG_BRCMDBG) ||			\
+ 		    IS_ENABLED(CONFIG_BRCM_TRACING) ||			\
+ 		    net_ratelimit())					\
+-			__brcmf_err(__func__, fmt, ##__VA_ARGS__);	\
++			__brcmf_err(NULL, __func__, fmt, ##__VA_ARGS__);\
+ 	} while (0)
+ 
+ #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+index fe6755944b7b..f9359ea9cb13 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+@@ -21,7 +21,7 @@
+ #include "tracepoint.h"
+ #include "debug.h"
+ 
+-void __brcmf_err(const char *func, const char *fmt, ...)
++void __brcmf_err(struct brcmf_bus *bus, const char *func, const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+@@ -30,7 +30,10 @@ void __brcmf_err(const char *func, const char *fmt, ...)
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	pr_err("%s: %pV", func, &vaf);
++	if (bus)
++		dev_err(bus->dev, "%s: %pV", func, &vaf);
++	else
++		pr_err("%s: %pV", func, &vaf);
+ 	trace_brcmf_err(func, &vaf);
+ 	va_end(args);
+ }
+-- 
+2.20.1
+
