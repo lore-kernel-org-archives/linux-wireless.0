@@ -2,197 +2,225 @@ Return-Path: <SRS0=v11p=PX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-7.0 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2F7CC43444
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 13:47:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D64DC43387
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 14:02:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B4C8C20651
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 13:47:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4089820657
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 14:02:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730055AbfAONrz (ORCPT
+        id S1729298AbfAOOCN convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jan 2019 08:47:55 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:57278 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729451AbfAONry (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jan 2019 08:47:54 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92-RC4)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gjP4J-0008Fj-JI; Tue, 15 Jan 2019 14:47:51 +0100
-Message-ID: <aa88411f96a96a8d7ec576b9ab4bdf4d6847bfeb.camel@sipsolutions.net>
-Subject: Re: Can't connect to WPA(2)-EAP network (eduroam / TTLS) with
- iwlwifi (9260 - and some others) ~90% of the time with 4.17.16 through
- 4.19.7 at least
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Ferry <freaky@bananateam.nl>, linux-wireless@vger.kernel.org
-Date:   Tue, 15 Jan 2019 14:47:49 +0100
-In-Reply-To: <d6628e5f-f71c-7fb7-d127-334bbea66953@bananatem.nl> (sfid-20181207_133537_505579_E96A63E6)
-References: <d6628e5f-f71c-7fb7-d127-334bbea66953@bananatem.nl>
-         (sfid-20181207_133537_505579_E96A63E6)
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Tue, 15 Jan 2019 09:02:13 -0500
+Received: from mail-oln040092069071.outbound.protection.outlook.com ([40.92.69.71]:6311
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728812AbfAOOCN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Jan 2019 09:02:13 -0500
+Received: from VE1EUR02FT036.eop-EUR02.prod.protection.outlook.com
+ (10.152.12.51) by VE1EUR02HT122.eop-EUR02.prod.protection.outlook.com
+ (10.152.13.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1537.18; Tue, 15 Jan
+ 2019 14:01:29 +0000
+Received: from AM0PR07MB3874.eurprd07.prod.outlook.com (10.152.12.52) by
+ VE1EUR02FT036.mail.protection.outlook.com (10.152.13.197) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.1471.13 via Frontend Transport; Tue, 15 Jan 2019 14:01:29 +0000
+Received: from AM0PR07MB3874.eurprd07.prod.outlook.com
+ ([fe80::890e:c9ab:41b6:5f70]) by AM0PR07MB3874.eurprd07.prod.outlook.com
+ ([fe80::890e:c9ab:41b6:5f70%2]) with mapi id 15.20.1537.018; Tue, 15 Jan 2019
+ 14:01:29 +0000
+From:   Bernd Edlinger <bernd.edlinger@hotmail.de>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] rt61pci: Work around a firmware bug with shared keys
+Thread-Topic: [PATCH] rt61pci: Work around a firmware bug with shared keys
+Thread-Index: AQHUrNrQpXGNfGU1T0qAvtjOCh7FvQ==
+Date:   Tue, 15 Jan 2019 14:01:29 +0000
+Message-ID: <AM0PR07MB3874E8F6ADD41C4E1BCBE43EE4810@AM0PR07MB3874.eurprd07.prod.outlook.com>
+Accept-Language: en-US, en-GB, de-DE
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: AM5PR0701CA0006.eurprd07.prod.outlook.com
+ (2603:10a6:203:51::16) To AM0PR07MB3874.eurprd07.prod.outlook.com
+ (2603:10a6:208:45::26)
+x-incomingtopheadermarker: OriginalChecksum:36F56E63DAB9D81A219F58AE846C90EF6AB5715B9B16CDE0D422DBC8698EECE9;UpperCasedChecksum:E9352D3B9AAB1A3BE3D9476744027AE383D029078F6ACDE748020C4BFC967EF5;SizeAsReceived:8774;Count:62
+x-ms-exchange-messagesentrepresentingtype: 1
+x-tmn:  [fcJlskq3geKxWOml27fZ4gKDVwXaSf1x]
+x-microsoft-original-message-id: <9bebc5fb-57fb-964f-4780-f4d43a6e114b@hotmail.de>
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;VE1EUR02HT122;6:upbIDOM/Xi9Yeu+Fjv+I1ix5IF6Y6jquasZTFP1uJDSd5nFH59S2ryz51cO8shL1RZByMrOUA6+vKROVlSr3Gs61Zj8c0EH69oyuxqsf2s3504YVlVFQlF3cBlh8dNwPJtpDOOAvp/kIa0E5eG/lLhVZ4c0hQmu9CiA7NGJBhAzGGkBAWuweWqSo+doZXpPAEILAFFzsKvc9u5Ty14QWFcZyPKtCxr5XAsqwWW7vk6U0Ib2vwQjgow5DW+X9d96PhetP0WiMbU3RpTsE5q0i8a8Krjm13RZZlGPzR6DXIyI7L8tyPvIVx04H35TBN74rQyq/LIlkdSFUHp5xSMkDE/+5WH0iWbcOXD3S3UuWyMOp7crkhwryBdxS+r/1mF1ahInx81Y+3xRrIrBpnqtcS/XkCXc3ZM3toHz4WjS/IMfTwPrj6RwE65Oi/XmBweC4MwBRx2aCoQtfZLWr66o81w==;5:f3qDMP5lzmEZHVBHG8/7LITLzThkKY7gVVmf7kIEqoPMalCl+PNasO3Azhk99+PR1vTZEZN4KBcS/t4W/FOkjcmhElioiMrpbmDctezMhi6/XN1W9twAoBJ0WBsX5h+VeftaN9EkthN7ivM/alzIgYBl8CPkuBO38yDczL8OdO7QILzwKpMKT9NzxGU4+l05ZAkxjiUA+YEg6S9GniIkoQ==;7:umIn5ScH/zOOSkgfmdkuS8fW9TWYQk+2elLSsQf5Hfvrl0Nh7U0/+zXoYiMShWG0OOmqSqpH50ZkaH0WX3XYaPNMCf3Ej5PNiLjxOjlurR6Kx9je1fvLa7To0oqJbuxpMba1GnvaYNUbIjsyjcNOHQ==
+x-incomingheadercount: 62
+x-eopattributedmessage: 0
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:VE1EUR02HT122;
+x-ms-traffictypediagnostic: VE1EUR02HT122:
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(4566010)(82015058);SRVR:VE1EUR02HT122;BCL:0;PCL:0;RULEID:;SRVR:VE1EUR02HT122;
+x-microsoft-antispam-message-info: x3kP0B39GvU1iMxulV+IyYP1HPlcmLNuFM6f4aj2gNjExaUFgCi/ND2NNq6a7uO/
+Content-Type: text/plain; charset="Windows-1252"
+Content-ID: <05F44D69B5EAF440AD117FD2C90D2487@eurprd07.prod.outlook.com>
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: d4d70346-2c10-4f39-8c00-e767963926d9
+X-MS-Exchange-CrossTenant-Network-Message-Id: 197b0f74-6c87-48e1-2e9b-08d67af1f27a
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: d4d70346-2c10-4f39-8c00-e767963926d9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Jan 2019 14:01:28.9710
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Internet
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1EUR02HT122
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Apparently the rt2x61 firmware fails temporarily to decode
+broadcast packets if the shared keys are not assigned
+in the "correct" sequence. At the same time unicast
+packets work fine, since they are encrypted with the
+pairwise key.
 
-Sorry for the top-post, wanted to push this to the top but also:
+At least with WPA2 CCMP mode the shared keys are
+set in the following sequence: keyidx=1, 2, 1, 2.
+After a while only keyidx 2 gets decrypted, and
+keyidx 1 is ignored, probably because there is never
+a keyidx 3.
 
-If you haven't already, please file a bug on bugzilla.kernel.org and
-assign to/CC linuxwifi@intel.com
+Symptoms are arping -b works for 10 minutes, since
+keyidx=2 is used for broadcast, and then it stops
+working for 10 minutes, because keyidx=1 is used.
+That failure mode repeats forever.
 
-johannes
+Note, the firmware does not even know which keyidx
+corresponds to which hw_key_idx so the firmware is
+trying to be smarter than the driver, which is bound
+to fail.
 
-On Fri, 2018-12-07 at 13:29 +0100, Ferry wrote:
-> Hi,
-> 
-> I have a Dell XPS 15 9550 in which I replaced the wireless Broadcom
-> adapter with an Intel 9260.
-> 
-> So far I have not encountered any issues whatsoever with WPA(2)-PSK
-> networks, but I do have issues connecting to WPA(2)-EAP networks (at
-> least eduroam here, which uses TTLS / MSCHAPv2), which I did not have
-> with the Broadcom 43602 originally in the system).
-> 
-> On this machine I run gentoo linux (~amd64) with KDE/plasma. That said,
-> we've seen similar issues (they appear identical even though other model
-> Intel AC adapters) with several other machines containing Intel AC
-> adapters on Fedora 28 with various kernel releases as well when trying
-> to connect to the same network / with same credentials. Unfortunately I
-> don't have the modelnumbers at hand. The issues seem to have been around
-> for a while. On one of the other machines the issues did not occur with
-> a 4.16 kernel (think I tested with 4.16.16 then).
-> 
-> The issue is not consistent. That is, every 1 or 2 out of 10 boots,
-> it'll will just work. This does seem to be somewhat hardware related, on
-> my machine it mostly does not work, on some others we see different
-> numbers, some mostly work but show the same behavious on occasion. The
-> messages below don't appear in the logs when it does work.
-> 
-> In both cases (gentoo / fedora) NetworkManager is used to connect to the
-> network.
-> 
-> Hope someone can help resolve this. I can build kernels / apply patches
-> / aid with debugging, but I'm not a developer.
-> 
-> Attached is dmesg from clean boot after several connection attempts.
-> Basically repeats the following quite a few times:
-> 
-> [   82.169103] BUG: scheduling while atomic: irq/124-iwlwifi/266/0x00000400
-> [   82.169106] Modules linked in: dm_crypt algif_skcipher
-> x86_pkg_temp_thermal uvcvideo kvm_intel videobuf2_vmalloc
-> videobuf2_memops iwlmvm videobuf2_v4l2 kvm irqbypass crc32_pclmul
-> dell_smbios ghash_clmulni_intel intel_wmi_thunderbolt
-> dell_wmi_descriptor videodev hid_multitouch btusb btrtl iwlwifi
-> snd_hda_codec_hdmi videobuf2_common snd_hda_codec_realtek btbcm btintel
-> bluetooth intel_hid
-> [   82.169120] CPU: 2 PID: 266 Comm: irq/124-iwlwifi Tainted: G       
-> W         4.19.7-gentoo #1
-> [   82.169121] Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 1.9.0
-> 10/11/2018
-> [   82.169123] Call Trace:
-> [   82.169144]  dump_stack+0x46/0x60
-> [   82.169147]  __schedule_bug.cold.97+0x5/0x1d
-> [   82.169149]  __schedule+0x4f6/0x730
-> [   82.169151]  schedule+0x23/0x70
-> [   82.169153]  schedule_timeout+0x179/0x370
-> [   82.169156]  ? __next_timer_interrupt+0xc0/0xc0
-> [   82.169161]  iwl_trans_pcie_send_hcmd+0x316/0x550 [iwlwifi]
-> [   82.169163]  ? wait_woken+0x80/0x80
-> [   82.169166]  iwl_trans_send_cmd+0x59/0xc0 [iwlwifi]
-> [   82.169171]  iwl_mvm_send_cmd+0x1e/0x70 [iwlmvm]
-> [   82.169174]  ? rs_fill_lq_cmd+0x24b/0x3d0 [iwlmvm]
-> [   82.169177]  iwl_mvm_send_lq_cmd+0x6e/0x90 [iwlmvm]
-> [   82.169181]  iwl_mvm_rs_rate_init+0x913/0xcb0 [iwlmvm]
-> [   82.169184]  iwl_mvm_rs_tx_status+0x39d/0x1f80 [iwlmvm]
-> [   82.169186]  ? enqueue_task_fair+0x3fa/0xfb0
-> [   82.169188]  ? enqueue_task_fair+0x3fa/0xfb0
-> [   82.169190]  rate_control_tx_status+0x99/0xa0
-> [   82.169193]  __ieee80211_tx_status+0x3b5/0x7b0
-> [   82.169196]  ? iwl_trans_pcie_set_pmi+0x20/0x20 [iwlwifi]
-> [   82.169198]  ? sta_info_hash_lookup+0xe1/0x120
-> [   82.169200]  ieee80211_tx_status+0x7c/0xb0
-> [   82.169203]  iwl_mvm_rx_tx_cmd+0x2da/0x710 [iwlmvm]
-> [   82.169206]  ? iwl_pcie_gen2_tx_init+0x130/0x130 [iwlwifi]
-> [   82.169209]  iwl_pcie_rx_handle+0x276/0x9f0 [iwlwifi]
-> [   82.169211]  ? irq_forced_thread_fn+0x70/0x70
-> [   82.169213]  iwl_pcie_irq_rx_msix_handler+0x52/0xf0 [iwlwifi]
-> [   82.169215]  ? irq_forced_thread_fn+0x70/0x70
-> [   82.169216]  irq_thread_fn+0x1c/0x60
-> [   82.169218]  irq_thread+0xe2/0x160
-> [   82.169219]  ? wake_threads_waitq+0x30/0x30
-> [   82.169221]  ? irq_thread_dtor+0x80/0x80
-> [   82.169223]  kthread+0x10e/0x130
-> [   82.169225]  ? kthread_create_worker_on_cpu+0x60/0x60
-> [   82.169226]  ret_from_fork+0x35/0x40
-> [   84.175959] iwlwifi 0000:02:00.0: Error sending LQ_CMD: time out
-> after 2000ms.
-> [   84.175963] iwlwifi 0000:02:00.0: Current CMD queue read_ptr 146
-> write_ptr 147
-> [   84.176074] iwlwifi 0000:02:00.0: Microcode SW error detected.
-> Restarting 0x1.
-> [   84.176102] iwlwifi 0000:02:00.0: Loaded firmware version: 38.755cfdd8.0
-> [   84.176103] iwlwifi 0000:02:00.0: 0x00000000 |
-> ADVANCED_SYSASSERT         
-> [   84.176105] iwlwifi 0000:02:00.0: 0x00000000 | trm_hw_status0
-> [   84.176106] iwlwifi 0000:02:00.0: 0x00000000 | trm_hw_status1
-> [   84.176120] iwlwifi 0000:02:00.0: 0x00000000 | branchlink2
-> [   84.176121] iwlwifi 0000:02:00.0: 0x0045E90E | interruptlink1
-> [   84.176123] iwlwifi 0000:02:00.0: 0x00000A42 | interruptlink2
-> [   84.176124] iwlwifi 0000:02:00.0: 0x00000000 | data1
-> [   84.176125] iwlwifi 0000:02:00.0: 0xFF000000 | data2
-> [   84.176126] iwlwifi 0000:02:00.0: 0xF0000008 | data3
-> [   84.176127] iwlwifi 0000:02:00.0: 0x2241419C | beacon time
-> [   84.176128] iwlwifi 0000:02:00.0: 0xB2A1AA66 | tsf low
-> [   84.176130] iwlwifi 0000:02:00.0: 0x0000047D | tsf hi
-> [   84.176131] iwlwifi 0000:02:00.0: 0x00000000 | time gp1
-> [   84.176132] iwlwifi 0000:02:00.0: 0x018424AE | time gp2
-> [   84.176133] iwlwifi 0000:02:00.0: 0x00000001 | uCode revision type
-> [   84.176134] iwlwifi 0000:02:00.0: 0x00000026 | uCode version major
-> [   84.176136] iwlwifi 0000:02:00.0: 0x755CFDD8 | uCode version minor
-> [   84.176137] iwlwifi 0000:02:00.0: 0x00000321 | hw version
-> [   84.176138] iwlwifi 0000:02:00.0: 0x00C89004 | board version
-> [   84.176139] iwlwifi 0000:02:00.0: 0x0092014E | hcmd
-> [   84.176140] iwlwifi 0000:02:00.0: 0x24022000 | isr0
-> [   84.176141] iwlwifi 0000:02:00.0: 0x11800000 | isr1
-> [   84.176142] iwlwifi 0000:02:00.0: 0x08001802 | isr2
-> [   84.176144] iwlwifi 0000:02:00.0: 0x00417CC0 | isr3
-> [   84.176145] iwlwifi 0000:02:00.0: 0x00000000 | isr4
-> [   84.176146] iwlwifi 0000:02:00.0: 0x0092014E | last cmd Id
-> [   84.176147] iwlwifi 0000:02:00.0: 0x00000000 | wait_event
-> [   84.176148] iwlwifi 0000:02:00.0: 0x00000080 | l2p_control
-> [   84.176149] iwlwifi 0000:02:00.0: 0x00010034 | l2p_duration
-> [   84.176151] iwlwifi 0000:02:00.0: 0x0000003F | l2p_mhvalid
-> [   84.176152] iwlwifi 0000:02:00.0: 0x000000CE | l2p_addr_match
-> [   84.176153] iwlwifi 0000:02:00.0: 0x0000000D | lmpm_pmg_sel
-> [   84.176154] iwlwifi 0000:02:00.0: 0x04071046 | timestamp
-> [   84.176155] iwlwifi 0000:02:00.0: 0x00340038 | flow_handler
-> [   84.176194] iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-> [   84.176195] iwlwifi 0000:02:00.0: Status: 0x00000100, count: 7
-> [   84.176197] iwlwifi 0000:02:00.0: 0x00000066 | NMI_INTERRUPT_HOST
-> [   84.176198] iwlwifi 0000:02:00.0: 0x00000000 | umac branchlink1
-> [   84.176199] iwlwifi 0000:02:00.0: 0xC0087CB8 | umac branchlink2
-> [   84.176200] iwlwifi 0000:02:00.0: 0xC0083A20 | umac interruptlink1
-> [   84.176202] iwlwifi 0000:02:00.0: 0xC0083A20 | umac interruptlink2
-> [   84.176203] iwlwifi 0000:02:00.0: 0x01000000 | umac data1
-> [   84.176204] iwlwifi 0000:02:00.0: 0xC0083A20 | umac data2
-> [   84.176205] iwlwifi 0000:02:00.0: 0xDEADBEEF | umac data3
-> [   84.176206] iwlwifi 0000:02:00.0: 0x00000026 | umac major
-> [   84.176207] iwlwifi 0000:02:00.0: 0x755CFDD8 | umac minor
-> [   84.176209] iwlwifi 0000:02:00.0: 0xC0886298 | frame pointer
-> [   84.176210] iwlwifi 0000:02:00.0: 0xC0886298 | stack pointer
-> [   84.176211] iwlwifi 0000:02:00.0: 0x0092014E | last host cmd
-> [   84.176212] iwlwifi 0000:02:00.0: 0x00000000 | isr status reg
-> [   84.176214] ieee80211 phy0: Hardware restart was requested
-> 
-> 
+As workaround the function rt61pci_config_shared_key
+requests software decryption of the shared keys,
+by returning EOPNOTSUPP. However, pairwise keys are
+still handled by hardware which works just fine.
 
+Signed-off-by: Bernd Edlinger <bernd.edlinger@hotmail.de>
+---
+ drivers/net/wireless/ralink/rt2x00/rt61pci.c | 93 ++--------------------------
+ 1 file changed, 4 insertions(+), 89 deletions(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+index 4c5de8f..52b9fc4 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+@@ -321,97 +321,12 @@ static int rt61pci_config_shared_key(struct rt2x00_dev *rt2x00dev,
+ 				     struct rt2x00lib_crypto *crypto,
+ 				     struct ieee80211_key_conf *key)
+ {
+-	struct hw_key_entry key_entry;
+-	struct rt2x00_field32 field;
+-	u32 mask;
+-	u32 reg;
+-
+-	if (crypto->cmd == SET_KEY) {
+-		/*
+-		 * rt2x00lib can't determine the correct free
+-		 * key_idx for shared keys. We have 1 register
+-		 * with key valid bits. The goal is simple, read
+-		 * the register, if that is full we have no slots
+-		 * left.
+-		 * Note that each BSS is allowed to have up to 4
+-		 * shared keys, so put a mask over the allowed
+-		 * entries.
+-		 */
+-		mask = (0xf << crypto->bssidx);
+-
+-		reg = rt2x00mmio_register_read(rt2x00dev, SEC_CSR0);
+-		reg &= mask;
+-
+-		if (reg && reg == mask)
+-			return -ENOSPC;
+-
+-		key->hw_key_idx += reg ? ffz(reg) : 0;
+-
+-		/*
+-		 * Upload key to hardware
+-		 */
+-		memcpy(key_entry.key, crypto->key,
+-		       sizeof(key_entry.key));
+-		memcpy(key_entry.tx_mic, crypto->tx_mic,
+-		       sizeof(key_entry.tx_mic));
+-		memcpy(key_entry.rx_mic, crypto->rx_mic,
+-		       sizeof(key_entry.rx_mic));
+-
+-		reg = SHARED_KEY_ENTRY(key->hw_key_idx);
+-		rt2x00mmio_register_multiwrite(rt2x00dev, reg,
+-					       &key_entry, sizeof(key_entry));
+-
+-		/*
+-		 * The cipher types are stored over 2 registers.
+-		 * bssidx 0 and 1 keys are stored in SEC_CSR1 and
+-		 * bssidx 1 and 2 keys are stored in SEC_CSR5.
+-		 * Using the correct defines correctly will cause overhead,
+-		 * so just calculate the correct offset.
+-		 */
+-		if (key->hw_key_idx < 8) {
+-			field.bit_offset = (3 * key->hw_key_idx);
+-			field.bit_mask = 0x7 << field.bit_offset;
+-
+-			reg = rt2x00mmio_register_read(rt2x00dev, SEC_CSR1);
+-			rt2x00_set_field32(&reg, field, crypto->cipher);
+-			rt2x00mmio_register_write(rt2x00dev, SEC_CSR1, reg);
+-		} else {
+-			field.bit_offset = (3 * (key->hw_key_idx - 8));
+-			field.bit_mask = 0x7 << field.bit_offset;
+-
+-			reg = rt2x00mmio_register_read(rt2x00dev, SEC_CSR5);
+-			rt2x00_set_field32(&reg, field, crypto->cipher);
+-			rt2x00mmio_register_write(rt2x00dev, SEC_CSR5, reg);
+-		}
+-
+-		/*
+-		 * The driver does not support the IV/EIV generation
+-		 * in hardware. However it doesn't support the IV/EIV
+-		 * inside the ieee80211 frame either, but requires it
+-		 * to be provided separately for the descriptor.
+-		 * rt2x00lib will cut the IV/EIV data out of all frames
+-		 * given to us by mac80211, but we must tell mac80211
+-		 * to generate the IV/EIV data.
+-		 */
+-		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+-	}
+-
+ 	/*
+-	 * SEC_CSR0 contains only single-bit fields to indicate
+-	 * a particular key is valid. Because using the FIELD32()
+-	 * defines directly will cause a lot of overhead, we use
+-	 * a calculation to determine the correct bit directly.
++	 * Let the software handle the shared keys,
++	 * since the hardware decryption does not work reliably,
++	 * because the firmware does not know the key's keyidx.
+ 	 */
+-	mask = 1 << key->hw_key_idx;
+-
+-	reg = rt2x00mmio_register_read(rt2x00dev, SEC_CSR0);
+-	if (crypto->cmd == SET_KEY)
+-		reg |= mask;
+-	else if (crypto->cmd == DISABLE_KEY)
+-		reg &= ~mask;
+-	rt2x00mmio_register_write(rt2x00dev, SEC_CSR0, reg);
+-
+-	return 0;
++	return -EOPNOTSUPP;
+ }
+ 
+ static int rt61pci_config_pairwise_key(struct rt2x00_dev *rt2x00dev,
+-- 
+1.9.1
