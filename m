@@ -3,38 +3,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A172FC43387
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 13:29:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6754FC43612
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 13:42:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A1DA20656
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 13:29:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4397220651
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 13:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728971AbfAON3L (ORCPT
+        id S1729814AbfAONmw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jan 2019 08:29:11 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:56806 "EHLO
+        Tue, 15 Jan 2019 08:42:52 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:57116 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726886AbfAON3L (ORCPT
+        with ESMTP id S1729245AbfAONmw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jan 2019 08:29:11 -0500
+        Tue, 15 Jan 2019 08:42:52 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC4)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gjOmD-0007ph-Tr; Tue, 15 Jan 2019 14:29:10 +0100
-Message-ID: <d9181baa0f9d6f33a3323f6663eefb97141c9ebc.camel@sipsolutions.net>
-Subject: Re: wireless-regdb for automotive
+        id 1gjOzS-00088I-Bd; Tue, 15 Jan 2019 14:42:50 +0100
+Message-ID: <768d3a89182465f69b66316423a5c90137cb06b4.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/6] nl80211: add NL80211_ATTR_IFINDEX to port
+ authorized event
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Marcin Sielski <marcin.sielski@gmail.com>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Tue, 15 Jan 2019 14:29:08 +0100
-In-Reply-To: <CANWiEci5fFFr0n4Eu7N=ox7djf9KSXnma77+N=vRNc1=U997FQ@mail.gmail.com> (sfid-20181217_191421_830793_5C380D7B)
-References: <CANWiEciGLPxDc5JT0+gVrzEyEC6GOcUJUf8XR4PrYHj4TysHpA@mail.gmail.com>
-         <112ca7a8933b6113edf29e874d95207a22ccb790.camel@sipsolutions.net>
-         <CANWiEci5fFFr0n4Eu7N=ox7djf9KSXnma77+N=vRNc1=U997FQ@mail.gmail.com>
-         (sfid-20181217_191421_830793_5C380D7B)
+To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Stanley Hsu <Stanley.Hsu@cypress.com>
+Date:   Tue, 15 Jan 2019 14:42:47 +0100
+In-Reply-To: <1546582221-143220-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20190104_071128_821889_2D283E11)
+References: <1546582221-143220-1-git-send-email-chi-hsien.lin@cypress.com>
+         (sfid-20190104_071128_821889_2D283E11)
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -44,43 +50,7 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2018-12-17 at 19:14 +0100, Marcin Sielski wrote:
-> Hi,
-> 
-> > > Do you possibly have ideas how to adjust wireless-regdb package
-> > > to support also automotive use cases as described in:
-> > > https://www.efis.dk/documents/44659
-> > 
-> > You might want to explain what changes this requires ...
-> 
-> Let's take 5150 - 5250 MHz as an example. It is ok to use it in in the
-> Cars if EIRP is limited to 25mW,
-> These regulations applies to EU countries as well as all the countries
-> which recognize EU rules.
-> Currently the only solution is to update db.txt to reflect these
-> regulations by OEM/Tier 1. There is no
-> generic solution that would cover various applications (e.g. in
-> automotive) where Linux kernel is used.
-
-Yes, ok, hmm. No good ideas here.
-
-But DE for example specifies
-
-        (5150 - 5250 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW
-
-now?
-
-Perhaps it might make sense to have the db.txt processed by the (C)
-preprocessor, and add something like
-
-#ifdef COMPILE_FOR_CAR
-...
-#else
-...
-#endif
-
-and then you can build your own binary for the in-car environment, yet
-share the sources with the community?
+Please resend this entire set addressing the comments you already got.
 
 johannes
 
