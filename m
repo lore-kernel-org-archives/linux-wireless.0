@@ -2,198 +2,111 @@ Return-Path: <SRS0=v11p=PX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13458C43387
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 08:48:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10C41C43387
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 09:04:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA5AC20656
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 08:48:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MDPxvHu2"
+	by mail.kernel.org (Postfix) with ESMTP id D75FB20657
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 09:04:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727641AbfAOIs1 (ORCPT
+        id S1728217AbfAOJEH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jan 2019 03:48:27 -0500
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:45163 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726769AbfAOIs1 (ORCPT
+        Tue, 15 Jan 2019 04:04:07 -0500
+Received: from mail-wm1-f49.google.com ([209.85.128.49]:53595 "EHLO
+        mail-wm1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728093AbfAOJEG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jan 2019 03:48:27 -0500
-Received: by mail-ed1-f65.google.com with SMTP id d39so1842130edb.12
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jan 2019 00:48:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=fjtfi1qokU+uqW2N+VEnhzHIBpz5L73fvCixq7pAOp4=;
-        b=MDPxvHu2QriTgPJ4AQ7nX4E/KQTm/tbUrylzBXvEJdeHvGv+LfjrWSLvcilYZTas0z
-         FwH8N0+RY2inv6OY3/4ocetPmT7FOmH76uuYDuaSg0XReIMI/jcRb183KD9CpfNGm0mw
-         LnCOpiQwXiAcBirWURvVcw5L273X6iBVzvQgk=
+        Tue, 15 Jan 2019 04:04:06 -0500
+Received: by mail-wm1-f49.google.com with SMTP id d15so2431220wmb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jan 2019 01:04:04 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=fjtfi1qokU+uqW2N+VEnhzHIBpz5L73fvCixq7pAOp4=;
-        b=IvtKd63SkUBjvAamzTidHLX7TzKRqeeQP2G8IhGR5bbqMswZJOLX9iSE+DKw7vNnd9
-         Q+BxJ595dlX8z6T9z17lWTb7vi4zjlUOBkj5Sh+s/4ar+CkGlCkvx5hKyNDoDIeDv8pj
-         oUumM6cd0730S3kAxbocYWToQHxrZwhnrX7iJ6QIX97dAUfQsJlkHTOJ07rIvBMnz6MI
-         yBziRx1ZQqMQM8Dk6aHKGcidIOFRymcF94K/MwHT9C7lHL5SBi+/4vRecRK4nwiHFNeo
-         dQIhNZuEk6yQcy5C88T2WUK06SHUhfvHHEP/GK2aQr4sqfSxxRXx1V/BNQzi/qgUAN+g
-         7h5Q==
-X-Gm-Message-State: AJcUuke9HJ8K5slJnxxGt6g960vM4Ig5jYmCSnlsRPATc2VzhBl30u5k
-        Dr8Yl0pr3TGoDH3qJlW8nMKXfg==
-X-Google-Smtp-Source: ALg8bN6IBLdW1sy7LYZfqi6MzRMZVWy6oRN/+eFDWT82lhIiAAm/74pq3SUAedK9UEf+AOI9hXeshw==
-X-Received: by 2002:a17:906:4ad7:: with SMTP id u23-v6mr2290235ejt.202.1547542104486;
-        Tue, 15 Jan 2019 00:48:24 -0800 (PST)
-Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id y53sm4832592edd.84.2019.01.15.00.48.23
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 15 Jan 2019 00:48:23 -0800 (PST)
-Subject: Re: [PATCH 1/2] brcmfmac: modify __brcmf_err() to take bus as a
- parameter
-To:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-References: <20190115061949.27260-1-zajec5@gmail.com>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <daa97557-03fb-c266-239e-f5f1723bcef7@broadcom.com>
-Date:   Tue, 15 Jan 2019 09:48:22 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=g4GwKd1vqJ9FT0jY4PlKlJBpExf9ogISQDEr6omsm7w=;
+        b=t9w0CXkS0dEhd5ctfSEApKoyYOro922b2R3z+5OFPMS+xDC1LCJpty6m/vAqTj4z+2
+         xTb7IId5pbWYZcBPQfgivSjRio8N4UJ+cGWMrMpG9f165m48GXBWkDS6aqdIuW48OPHk
+         RESbtePbrT3Ey2zREgD+5xEWu1l9Qhu32SooST9XAzxmzOzOlbk7MzVuGu+QgFpWsOpG
+         MH9skjrnAxT3shTriLxdTf5+wojCFFsQ8pS7Kwb7HqtQWqTZ8OAure5W+tTmBPMcQT5I
+         iXIBIYWR9a9letDm2AG7Mui9KHoZE9RrqmvEqce4GM1uNv5RzTuicNVvEg6SXkNSV+cZ
+         AKcg==
+X-Gm-Message-State: AJcUuke5y5WDfL6HrP0bodBo2WZZIu7fX1WGbkTwhinnYHUwyxVObaLa
+        MIxIrVOmM+dV4k2COAMe6LO7Uw==
+X-Google-Smtp-Source: ALg8bN4q3NnanrAN4bMRZ/dDYh/Hshu6fz072oYP9Nhi697TVvtJVQCLW11/mhhzDpqeqPsk8/3ymA==
+X-Received: by 2002:a1c:b189:: with SMTP id a131mr2551192wmf.38.1547543044111;
+        Tue, 15 Jan 2019 01:04:04 -0800 (PST)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id o64sm28233662wmo.47.2019.01.15.01.04.03
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 15 Jan 2019 01:04:03 -0800 (PST)
+Date:   Tue, 15 Jan 2019 10:04:01 +0100
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Rosen Penev <rosenp@gmail.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
+Message-ID: <20190115090400.GA2267@localhost.localdomain>
+References: <CAKxU2N9o5WeUwFMUwwXKHaPj7R+oiSKV1c2n8RtXwGNZRtw5Sw@mail.gmail.com>
+ <CAJ0CqmVNF83bWgc+LSQ3_i=zfp-sXC5Nf=nKfqB3SWa8r7sKdQ@mail.gmail.com>
+ <83A1D243-9073-48D1-9F26-5A2581DCB829@gmail.com>
+ <CAJ0CqmUgPWNJtCW4Q__sOtB8w-YtwW+uZy7crxMNrmSgQ6OFyA@mail.gmail.com>
+ <1547404075.1582.0@smtp.gmail.com>
+ <CAJ0CqmU7k5i26g7dGPxNdts7Gm67W6qNsr4vYuW05ugsEF1ohw@mail.gmail.com>
+ <CAKxU2N-+CTaRdJMFVRdozJ5TTpN+_4thiDRBJBFq8gGtuRVYvA@mail.gmail.com>
+ <20190114091841.GA23045@localhost.localdomain>
+ <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190115061949.27260-1-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/15/2019 7:19 AM, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> So far __brcmf_err() was using pr_err() which didn't allow identifying
-> device that was affected by an error. It's crucial for systems with more
-> than 1 device supported by brcmfmac (a common case for home routers).
-> 
-> This change allows passing struct brcmf_bus to the __brcmf_err(). That
-> struct has been agreed to be the most common one. It allows accessing
-> struct device easily & using dev_err() printing helper.
+> On Mon, Jan 14, 2019 at 1:18 AM Lorenzo Bianconi
+> <lorenzo.bianconi@redhat.com> wrote:
+> >
+> > > On Sun, Jan 13, 2019 at 11:00 AM Lorenzo Bianconi
+> > > <lorenzo.bianconi@redhat.com> wrote:
+> > > >
+> > > > >
+> > > > >
+> > > > > On Sun, Jan 13, 2019 at 5:33 AM, Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+> > > > >
+> > > > > Direct. No VM used. This is the only peripheral causing this issue.
+> > > > >
+> > > > > Is the device connected to a usb3.0 port? If so, could you please try to connect the dongle to a 2.0 one?
+> > > > >
+> > > > > I tried through a USB 2.0 port. Shouldn't make a difference as they both use the xhci driver.
+> > > > >
+> > > >
+> > > > mt76x2u supports scatter-gather on usb 3.0 (not on 2.0)
+> > > Tried a USB 3 port. Same result.
+> > > >
+> > > > > Could you please double check if IOMMU is enabled?
+> > > > >
+> > > >
+> > > > Have you tried to disable it? Does it make any difference?
+> > > No idea how. UEFI doesn't seem to show anything similar.
+> > >
+> > > Similar bug report: https://bugzilla.kernel.org/show_bug.cgi?id=202241
+> >
+> > You should be able to disable iommu using GRUB_CMDLINE_LINUX in
+> > /etc/default/grub (I guess setting iommu=off and reinstalling grub)
+> > https://wiki.gentoo.org/wiki/IOMMU_SWIOTLB
+> Yep. Working great now. I wonder what mt76 is doing to cause the crash though...
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
-> This is my another try on improving brcmf_err after the failure from 2
-> years ago:
-> [PATCH V3 4/9] brcmfmac: add struct brcmf_pub parameter to the __brcmf_err
-> https://patchwork.kernel.org/patch/9553255/
-> 
-> Back then my change has been rejected due to miscommunication and late
-> realisation that struct brcmf_pub (a previous choice instead of struct
-> brcmf_bus) was a bad idea. Back then Arend wrote:
->> So I would think using struct brcmf_bus in brcmf_err() would be best
->> fit.
-> 
-> So this patch follows that suggestion & updates __brcmf_err()
-> accordingly.
-
-Thanks, Rafał
-
-Little less than two years ago I played with your idea and using GCC 
-builtin __builtin_types_compatible_p(t1,t2). Anyway, it looks good. So 
-you want to limit it to brcmf_err() or brcmf_dbg() as well?
+Thanks for bisecting the issue. I think amd iommu does not support well usb scatter-gather
+(used by default in mt76u). I am working on a series in order to add the possibility to
+disable it.
 
 Regards,
-Arend
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 7 +++++--
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 8 +++++---
->   .../net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 7 +++++--
->   3 files changed, 15 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-> index 0ce1d8174e6d..c62009a06617 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-> @@ -350,7 +350,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
->   }
->   
->   #ifndef CONFIG_BRCM_TRACING
-> -void __brcmf_err(const char *func, const char *fmt, ...)
-> +void __brcmf_err(struct brcmf_bus *bus, const char *func, const char *fmt, ...)
->   {
->   	struct va_format vaf;
->   	va_list args;
-> @@ -359,7 +359,10 @@ void __brcmf_err(const char *func, const char *fmt, ...)
->   
->   	vaf.fmt = fmt;
->   	vaf.va = &args;
-> -	pr_err("%s: %pV", func, &vaf);
-> +	if (bus)
-> +		dev_err(bus->dev, "%s: %pV", func, &vaf);
-> +	else
-> +		pr_err("%s: %pV", func, &vaf);
->   
->   	va_end(args);
->   }
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> index cfed0626bf5a..b499f90d94f6 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-> @@ -45,8 +45,10 @@
->   #undef pr_fmt
->   #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
->   
-> -__printf(2, 3)
-> -void __brcmf_err(const char *func, const char *fmt, ...);
-> +struct brcmf_bus;
-> +
-> +__printf(3, 4)
-> +void __brcmf_err(struct brcmf_bus *bus, const char *func, const char *fmt, ...);
->   /* Macro for error messages. When debugging / tracing the driver all error
->    * messages are important to us.
->    */
-> @@ -55,7 +57,7 @@ void __brcmf_err(const char *func, const char *fmt, ...);
->   		if (IS_ENABLED(CONFIG_BRCMDBG) ||			\
->   		    IS_ENABLED(CONFIG_BRCM_TRACING) ||			\
->   		    net_ratelimit())					\
-> -			__brcmf_err(__func__, fmt, ##__VA_ARGS__);	\
-> +			__brcmf_err(NULL, __func__, fmt, ##__VA_ARGS__);\
->   	} while (0)
->   
->   #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-> index fe6755944b7b..f9359ea9cb13 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-> @@ -21,7 +21,7 @@
->   #include "tracepoint.h"
->   #include "debug.h"
->   
-> -void __brcmf_err(const char *func, const char *fmt, ...)
-> +void __brcmf_err(struct brcmf_bus *bus, const char *func, const char *fmt, ...)
->   {
->   	struct va_format vaf = {
->   		.fmt = fmt,
-> @@ -30,7 +30,10 @@ void __brcmf_err(const char *func, const char *fmt, ...)
->   
->   	va_start(args, fmt);
->   	vaf.va = &args;
-> -	pr_err("%s: %pV", func, &vaf);
-> +	if (bus)
-> +		dev_err(bus->dev, "%s: %pV", func, &vaf);
-> +	else
-> +		pr_err("%s: %pV", func, &vaf);
->   	trace_brcmf_err(func, &vaf);
->   	va_end(args);
->   }
-> 
+Lorenzo
+
+> >
+> > Regards,
+> > Lorenzo
