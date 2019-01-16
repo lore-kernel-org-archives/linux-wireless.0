@@ -2,85 +2,86 @@ Return-Path: <SRS0=vb4L=PY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 116F5C43387
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 12:21:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98229C43387
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 12:24:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D4A7520657
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 12:21:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60CD420657
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 12:24:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391914AbfAPMVv (ORCPT
+        id S2392108AbfAPMY3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Jan 2019 07:21:51 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:45462 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732856AbfAPMVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Jan 2019 07:21:50 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8D25D89AD1;
-        Wed, 16 Jan 2019 12:21:50 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.207])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 222AD60923;
-        Wed, 16 Jan 2019 12:21:46 +0000 (UTC)
-Date:   Wed, 16 Jan 2019 13:21:46 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org, rosenp@gmail.com
-Subject: Re: [RFC 0/4] do not use sg if not properly supported by usb
- controller
-Message-ID: <20190116122145.GA7472@redhat.com>
-References: <cover.1547549771.git.lorenzo.bianconi@redhat.com>
- <20190115153546.GA8387@redhat.com>
- <20190115154746.GA30564@localhost.localdomain>
- <20190116111946.GB5234@redhat.com>
- <20190116114432.GA2454@localhost.localdomain>
+        Wed, 16 Jan 2019 07:24:29 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:54892 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732749AbfAPMY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Jan 2019 07:24:29 -0500
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id F3E7BFB5A198C49DAC29;
+        Wed, 16 Jan 2019 20:24:24 +0800 (CST)
+Received: from [127.0.0.1] (10.177.31.96) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.408.0; Wed, 16 Jan 2019
+ 20:24:24 +0800
+Subject: Re: [PATCH] mac80211-next: remove set but not used variable 'w_priv'
+To:     Kalle Valo <kvalo@codeaurora.org>
+References: <1545274318-144187-1-git-send-email-yuehaibing@huawei.com>
+CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+From:   YueHaibing <yuehaibing@huawei.com>
+Message-ID: <65a8caf2-98c0-cf43-f63b-d89ed556111f@huawei.com>
+Date:   Wed, 16 Jan 2019 20:24:23 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190116114432.GA2454@localhost.localdomain>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Wed, 16 Jan 2019 12:21:50 +0000 (UTC)
+In-Reply-To: <1545274318-144187-1-git-send-email-yuehaibing@huawei.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.177.31.96]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jan 16, 2019 at 12:44:33PM +0100, Lorenzo Bianconi wrote:
-> > On Tue, Jan 15, 2019 at 04:47:47PM +0100, Lorenzo Bianconi wrote:
-> > > Hi Stanislaw,
-> > 
-> > Hi :-)
-> > 
-> > > > Not sure what is the problem , but this patch set look like a workaround
-> > > > not fix. If this an issue with IOMMU and sg, seems there is something wrong
-> > > > in sg page mappings eigher on mt76 dirver or IOMMU driver.
-> > > 
-> > > The main point here I guess is we do not need sg if fragment number is one (e.g
-> > > usb2.0). Moreover this can fix IOMMU reported issues.
-> > 
-> > So there if diffrence for USB host driver when we have one usb->sg
-> > sengment and if we just pass the buffer via urb->transfer_buf . I think
-> > most USB host drivers behave the same in such cases. For what USB
-> > hardware/driver this is needed ? Perhaps simpler fix could be done
-> > in USB host driver?
+ping...
+
+On 2018/12/20 10:51, YueHaibing wrote:
+> Fixes gcc '-Wunused-but-set-variable' warning:
 > 
-> According to https://github.com/torvalds/linux/blob/master/drivers/usb/core/hcd.c#L1557
-> single sg urb and urb with a configured transfer_buf are managed in a different way.
+> drivers/net/wireless/virt_wifi.c: In function 'virt_wifi_net_device_stop':
+> drivers/net/wireless/virt_wifi.c:432:31: warning:
+>  variable 'w_priv' set but not used [-Wunused-but-set-variable]
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+>  drivers/net/wireless/virt_wifi.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/virt_wifi.c b/drivers/net/wireless/virt_wifi.c
+> index 64b2186..ea10f58 100644
+> --- a/drivers/net/wireless/virt_wifi.c
+> +++ b/drivers/net/wireless/virt_wifi.c
+> @@ -429,13 +429,11 @@ static int virt_wifi_net_device_open(struct net_device *dev)
+>  static int virt_wifi_net_device_stop(struct net_device *dev)
+>  {
+>  	struct virt_wifi_netdev_priv *n_priv = netdev_priv(dev);
+> -	struct virt_wifi_wiphy_priv *w_priv;
+>  
+>  	n_priv->is_up = false;
+>  
+>  	if (!dev->ieee80211_ptr)
+>  		return 0;
+> -	w_priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+>  
+>  	virt_wifi_cancel_scan(dev->ieee80211_ptr->wiphy);
+>  	virt_wifi_cancel_connect(dev);
+> 
+> 
+> 
+> 
+> .
+> 
 
-But this should not make any difference for underlying low level USB
-host driver, since we map 1 buffer of the same size, just by using
-different routines for that.
-
-> Please not I have not received any confirm that this series fixes the reported issue
-> yet :)
-
-What is reported issue ?
-
-Thanks
-Stanislaw
