@@ -2,76 +2,90 @@ Return-Path: <SRS0=vb4L=PY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02E0FC43387
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 17:53:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA616C43387
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 18:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB3DC20859
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 17:53:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91D9320840
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 18:09:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aD4OeGVZ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wi15Vwb2";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TZAycgs6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727278AbfAPRxf (ORCPT
+        id S1728043AbfAPSJo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Jan 2019 12:53:35 -0500
-Received: from mail-ot1-f52.google.com ([209.85.210.52]:38991 "EHLO
-        mail-ot1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726754AbfAPRxe (ORCPT
+        Wed, 16 Jan 2019 13:09:44 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:46344 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725882AbfAPSJo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Jan 2019 12:53:34 -0500
-Received: by mail-ot1-f52.google.com with SMTP id n8so8517616otl.6
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jan 2019 09:53:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=+85w8dlR7AaHmcAY1sD09s9x1UxAayiTwWdlKnVYJAM=;
-        b=aD4OeGVZ2Je1HEtQpTPySJsxGl35YcWl9H9mlez9Zi0gemAA888v8uMCf/NwNb+/ym
-         cVfWC8qJ+wmrHiDIdRsRMOIvVTmtGLR1xxVo4GG2ce6wLIz0IHXSliF7OByxYJyo08NV
-         yq05aRV31Yp8mOlS1WkWocLqq2wnpp84LeVyqPUX3EpZ4LvppC1duuROkgka0BkhW0I+
-         CrGIJOcihbI3p1hClehP/IsIoLqSNCFrwb6hRVaIC0Ed9peGgoYjc4dQmwCrIF5OTDGx
-         of2wGJR7i1hA0rwh8grypU9eQJp9cSbHFl7753/TDDY2N68q/AMv8BW2QZFTNO8njLT4
-         uiTA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=+85w8dlR7AaHmcAY1sD09s9x1UxAayiTwWdlKnVYJAM=;
-        b=a2Aj7fqJTAtrzwljKP0kqYWdrC5BuH0t0GlYaPf+eMt/IsDpi6xxEIqMXuGcXmPpBT
-         b2tZvXgqxTJSuO4uttKDbasSjEuF6VVbJAHSqoQV2ghhMFkCC+lBek7wkAjQ9DfzS05F
-         mQHDKTYvwIs1948RpcflS4cGMnyZ0Eu+bPoioZhR1tI/8bFrVhgpmd2Ib4QWcP72oBIX
-         KDI0fLWFT/VksmdUlZoYpfjV55DDTjZ2QV8AYIHpLFJMFimS2sYxpsn0ie2KmJB47oF5
-         5OQuis+EJjb9GKgmTOVjT2673DwndWWvg/UJ0ed/uXZWmlFFGzIryRN1EaWWNvN72z0e
-         Lt9A==
-X-Gm-Message-State: AJcUukeBs+PoamEpL8KhuY38CuEIP4cG+j42BIpVHGsY+6A+xtVDLVK0
-        Jm851uGS0/fm35crSVYElqDB8IQsik8tfzYf7SUCHMCk
-X-Google-Smtp-Source: ALg8bN5XxyHqSOOmB9eBxvuvt8l26euIXXxixztwIRwormhfa5oxVvs3i2oUMbeTFKvyybNiJNYwCHrZVdg0sklw8VM=
-X-Received: by 2002:a9d:620f:: with SMTP id g15mr6017093otj.296.1547661214042;
- Wed, 16 Jan 2019 09:53:34 -0800 (PST)
+        Wed, 16 Jan 2019 13:09:44 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 30CF4607F4; Wed, 16 Jan 2019 18:09:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1547662184;
+        bh=F9xvf8nnamQ/B9mrY8XFsIOzWcW4jbIkjgmxwq48sj8=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=Wi15Vwb2xHA9+4Sk55ylgQpueA2ui1Wl0P48rTzAILKKwMrp1Q93wW2aKK8VP14T+
+         2kh1wLsWe9ZPYm1p7286DfSz55q3wsHm8S1b98lzYDicKh57WlJntV69zow3eoMzBR
+         U+5Q/uKHTSMrNFRzbOoSOZOhcHa1eqtJJFr9Nbp0=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C332960208;
+        Wed, 16 Jan 2019 18:09:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1547662183;
+        bh=F9xvf8nnamQ/B9mrY8XFsIOzWcW4jbIkjgmxwq48sj8=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=TZAycgs6mgtJXwsbQVrOAnpx+7Ge/XygM/R1EnHABhxX/pbq1Ah/vppuu9S0sODKN
+         muP1HowtHpdN02xSuLlGxLKn3gzPUcTbU37SqB2DAO1gvSEDcpeFd5OXTL2X1jRBII
+         F6hbTInDbdlhkdc+STBEB/WLL/vyiVu7ndLM+9o8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C332960208
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Received: by 2002:a9d:6c19:0:0:0:0:0 with HTTP; Wed, 16 Jan 2019 09:53:33
- -0800 (PST)
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Wed, 16 Jan 2019 18:53:33 +0100
-Message-ID: <CAKR_QVLUcK2uNEAMXQszw7PPNt6=GHNfowQ9pXyJf13xvfU7sg@mail.gmail.com>
-Subject: mailing list delivery failures
-To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH for v5.0] iwlwifi: make IWLWIFI depend on CFG80211
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190114110023.23172-1-luca@coelho.fi>
+References: <20190114110023.23172-1-luca@coelho.fi>
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190116180944.30CF4607F4@smtp.codeaurora.org>
+Date:   Wed, 16 Jan 2019 18:09:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-hi
+Luca Coelho <luca@coelho.fi> wrote:
 
-checking archive of messages today at marc.info i noticed some missing
-messages in my inbox, e.g this message from kees cook:
-https://marc.info/?l=linux-wireless&m=154759697403620&w=2 was sent
-2019-01-16 0:02:23, it shows up in my inbox at 18:11
+> From: Luca Coelho <luciano.coelho@intel.com>
+> 
+> Since IWLWIFI doesn't depend on MAC80211 anymore, it needs to depend
+> on CFG80211, because it uses a few symbols from it.  Add the
+> dependency on CFG80211 accordingly.
+> 
+> Additionally, make IWLWIFI_LEDS depend on IWLMVM or IWLDVM, since it
+> doesn't need mac80211 but must be used for these.
+> 
+> Fixes: aca432f06b8a ("iwlwifi: make MVM and DVM depend on MAC80211")
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-and some messages did not even arrive, e.g
-https://marc.info/?l=linux-wireless&m=154763819315242&w=2
+Patch applied to wireless-drivers.git, thanks.
 
-is that some mailing list problems or what?
+ec5aecc0b227 iwlwifi: make IWLWIFI depend on CFG80211
+
+-- 
+https://patchwork.kernel.org/patch/10762079/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
