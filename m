@@ -2,148 +2,139 @@ Return-Path: <SRS0=vb4L=PY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9443FC43387
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 00:02:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C9FC43387
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 00:12:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 647872082F
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 00:02:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 623A1206C2
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 00:12:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="gAGB4sY5"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="o8kXGzH0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729226AbfAPAC1 (ORCPT
+        id S1728919AbfAPAMP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jan 2019 19:02:27 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:43904 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728728AbfAPAC1 (ORCPT
+        Tue, 15 Jan 2019 19:12:15 -0500
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:44256 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727060AbfAPAMP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jan 2019 19:02:27 -0500
-Received: by mail-pf1-f193.google.com with SMTP id w73so2079189pfk.10
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jan 2019 16:02:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
-        bh=Wpx9C3gke45794DvIebWUi/xcVR5MPYC13bd7BIljjQ=;
-        b=gAGB4sY557ITsqI5hdDXSpBYVjXoZb+umGduj3ir4bigHTcRVES0RQY5wJQykgvyt6
-         ztwuFAgTzmNqSu/h3lsv22jE1Yevl1qJGOn0/M17/aX+CSLrz+8xPyJwlmi8Y/wG9prE
-         5uy9yJvA5xe3kWcAdYLuPqGdXHtZBcVFTUjlY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=Wpx9C3gke45794DvIebWUi/xcVR5MPYC13bd7BIljjQ=;
-        b=XfoZ6t3JNtrqJEx+MSsawSlM4ZbsMlahcPtsCwGnYS3yzjnLDOtrWqlRlsaiXHimYh
-         7Y8v8SjtghDBJd+q7wzEDn36t5dAB6dAir+ocgWz/uyLVBJ7dgUTTK8ubz+TY5NYLoOT
-         IXWFPfyF6J46qkBFWlKVOc03yeb0wE2zgQpX/+7BY8K6hQiuK3qW218QmvGjpTu69Ew9
-         4O+Da/Lx/lFXpwvfRsHEqS//7nHCR2KZKyHRCwc7z0Q+KkJA7QbOqWVGyqJ2zQA/zxt/
-         qE0KCXofbV4lo7H4c6r66VHAK8fVrv+zKIgEfTaNplQHWbRmSAekW4G0SjNw6/3Vhr+J
-         pDWw==
-X-Gm-Message-State: AJcUukepZqm3yytuTq1aQcDgdS7WApDq90sCQ6vcym85/ezq5UNlDJ74
-        9DoZ1Lo8Z/KTQuGwZJ2Qkzl3sQNs+jI=
-X-Google-Smtp-Source: ALg8bN4SNztm9LZ9b68UE8lDQrOuELR2eroVNKed5aV6Sm5OoMSl1m0HDJrlgJ2R/Nuqb8PmrTaWcw==
-X-Received: by 2002:a62:d2c1:: with SMTP id c184mr6764582pfg.248.1547596946273;
-        Tue, 15 Jan 2019 16:02:26 -0800 (PST)
-Received: from www.outflux.net (173-164-112-133-Oregon.hfc.comcastbusiness.net. [173.164.112.133])
-        by smtp.gmail.com with ESMTPSA id z62sm8536957pfi.4.2019.01.15.16.02.24
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 15 Jan 2019 16:02:25 -0800 (PST)
-Date:   Tue, 15 Jan 2019 16:02:23 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Willy Tarreau <w@1wt.eu>, Silvio Cesare <silvio.cesare@gmail.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath9k/eeprom: Use scnprintf instead of snprintf
-Message-ID: <20190116000223.GA29196@beast>
+        Tue, 15 Jan 2019 19:12:15 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=armlinux.org.uk; s=pandora-2014; h=Sender:In-Reply-To:
+        Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
+        Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=BdnIbbfprvOAkWGhLZKB0CEtqTc/RS3IKGLQSxy/YvA=; b=o8kXGzH0CFj+kIFyUi6/A/3EA
+        /NPhDEHiEC2eQKWvg1HNUFMjXKKIkUC5/5cFjB/VfBGy0syBPviTNKvFizjrvU7SAECqoPnxOjgRV
+        SpY9WhpbExVWTKwTBY8Kc6eCBkxnkZ0saXLDhWmkNse/8HtPUNR8rPBOINKnojunlzGQE=;
+Received: from e5254000004ec.dyn.armlinux.org.uk ([2002:4e20:1eda:1:5054:ff:fe00:4ec]:35782 helo=shell.armlinux.org.uk)
+        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
+        (Exim 4.90_1)
+        (envelope-from <linux@armlinux.org.uk>)
+        id 1gjYoP-00007q-3T; Wed, 16 Jan 2019 00:12:05 +0000
+Received: from linux by shell.armlinux.org.uk with local (Exim 4.89)
+        (envelope-from <linux@shell.armlinux.org.uk>)
+        id 1gjYoO-0005a8-ER; Wed, 16 Jan 2019 00:12:04 +0000
+Date:   Wed, 16 Jan 2019 00:12:04 +0000
+From:   Russell King - ARM Linux admin <linux@armlinux.org.uk>
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com
+Subject: Re: [REGRESSION] hostapd 2.4..2.7 broken with 4.18+
+Message-ID: <20190116001204.cjpvbr3okha4fhz7@e5254000004ec.dyn.armlinux.org.uk>
+References: <20181224110925.GY26090@n2100.armlinux.org.uk>
+ <CAF7Mx6r_q7H4ioFLoF1eKHrvmtE0xViG__uDNByaNjrGGJWx+Q@mail.gmail.com>
+ <874lajrtkh.fsf@kamboji.qca.qualcomm.com>
+ <20190108232646.GV11171@n2100.armlinux.org.uk>
+ <30039f89-6adb-c08e-1796-553e578b250f@broadcom.com>
+ <20190109105622.GY11171@n2100.armlinux.org.uk>
+ <20190111141543.GA2392@n2100.armlinux.org.uk>
+ <9486d79d-ad48-1112-7100-65f9f9e5fc06@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9486d79d-ad48-1112-7100-65f9f9e5fc06@broadcom.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Change snprintf to scnprintf. There are generally two cases where using
-snprintf causes problems.
+On Mon, Jan 14, 2019 at 12:49:09PM +0100, Arend Van Spriel wrote:
+> Could you try the compile and load test I suggested earlier. I will try to
+> replicate things over here as well.
 
-1) Uses of size += snprintf(buf, SIZE - size, fmt, ...)  In this case,
-if snprintf would have written more characters than what the buffer
-size (SIZE) is, then size will end up larger than SIZE. In later uses
-of snprintf, SIZE - size will result in a negative number, leading to
-problems. Note that size might already be too large by using size =
-snprintf before the code reaches a case of size += snprintf.
+I'm not sure that helps:
 
-2) If size is ultimately used as a length parameter for a copy back to
-user space, then it will potentially allow for a buffer overflow and
-information disclosure when size is greater than SIZE. When the size is
-used to index the buffer directly, we can have memory corruption. This
-also means when size = snprintf... is used, it may also cause problems
-since size may become large. Copying to userspace is mitigated by the
-HARDENED_USERCOPY kernel configuration.
+[588980.874745] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 286 expected 286
+[588980.875776] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 281 expected 281
+[588980.876925] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 2064 expected 2064
+[589095.542690] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[589098.262719] brcmfmac: send_key_to_dongle: wsec_key error (-110)
+[589100.822465] brcmfmac: brcmf_cfg80211_del_station: SCB_DEAUTHENTICATE_FOR_REASON failed -110
+[589101.814313] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
+[589104.410194] brcmfmac: send_key_to_dongle: wsec_key error (-110)
+[589106.970045] brcmfmac: brcmf_cfg80211_change_station: Setting SCB (de-)authorize failed, -110
+[589109.530191] brcmfmac: brcmf_cfg80211_del_station: SCB_DEAUTHENTICATE_FOR_REASON failed -110
+[589110.322685] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 28 expected 28
+[601235.163954] br0: received packet on wlan0 with own address as source address (addr:6c:ad:f8:05:0d:81, vlan:0)
+[601245.240024] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 28 expected 28
+[601264.207886] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 28 expected 28
+...
+[605377.238304] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 28 expected 28
+[605395.118751] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 28 expected 28
+[605412.976951] brcmfmac: brcmf_sdio_bus_rxctl resumed on rxctl frame, got 28 expected 28
 
-The solution to these issues is to use scnprintf which returns the number
-of characters actually written to the buffer, so the size variable will
-never exceed SIZE.
+Looking at the time the messages (at 589095.542690) are produced, what
+seems to cause this is when I head out with my LineageOS (TI WiLink
+based) phone to the car and drive off.  I've suspected that's the case
+with all the previous iterations of this problem too.
 
-Cc: Willy Tarreau <w@1wt.eu>
-Cc: Silvio Cesare <silvio.cesare@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+At this point, the LineageOS phone is completely unable to reassociate
+with the AP, but it can see the AP with varying amounts of signal - it
+shows medium signal, which drops to nothing when it tries to associate.
+As soon as it stops, the indicated signal seems to come back... not
+sure if that's a LineageOS thing or something that is really happening
+on the Broadcom side.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index f019a20e5a1f..2b29bf4730f6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3457,9 +3457,9 @@ static u32 ar9003_dump_cal_data(struct ath_hw *ah, char *buf, u32 len, u32 size,
- 		if (!((pBase->txrxMask >> i) & 1))
- 			continue;
- 
--		len += snprintf(buf + len, size - len, "Chain %d\n", i);
-+		len += scnprintf(buf + len, size - len, "Chain %d\n", i);
- 
--		len += snprintf(buf + len, size - len,
-+		len += scnprintf(buf + len, size - len,
- 			"Freq\t ref\tvolt\ttemp\tnf_cal\tnf_pow\trx_temp\n");
- 
- 		for (j = 0; j < cal_pier_nr; j++) {
-@@ -3471,10 +3471,10 @@ static u32 ar9003_dump_cal_data(struct ath_hw *ah, char *buf, u32 len, u32 size,
- 				freq = 4800 + eep->calFreqPier5G[j] * 5;
- 			}
- 
--			len += snprintf(buf + len, size - len,
-+			len += scnprintf(buf + len, size - len,
- 				"%d\t", freq);
- 
--			len += snprintf(buf + len, size - len,
-+			len += scnprintf(buf + len, size - len,
- 				"%d\t%d\t%d\t%d\t%d\t%d\n",
- 				cal_pier->refPower,
- 				cal_pier->voltMeas,
-@@ -3505,12 +3505,12 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 		len += scnprintf(buf + len, size - len, "Calibration data\n");
- 		len = ar9003_dump_cal_data(ah, buf, len, size, true);
- 
--		len +=  snprintf(buf + len, size - len,
-+		len += scnprintf(buf + len, size - len,
- 				 "%20s :\n", "5GHz modal Header");
- 		len = ar9003_dump_modal_eeprom(buf, len, size,
- 						&eep->modalHeader5G);
- 
--		len += snprintf(buf + len, size - len, "Calibration data\n");
-+		len += scnprintf(buf + len, size - len, "Calibration data\n");
- 		len = ar9003_dump_cal_data(ah, buf, len, size, false);
- 
- 		goto out;
--- 
-2.17.1
+It looks to me like the older firmware is not happy about a station
+disappearing off into the distance... surely I can't be the only one
+who takes an associated station out of range of a BRCM4330 in hostap
+mode?
 
+I don't seem to have any messages from the firmware, and I can't find
+anything useful under /sys/kernel/debug for the driver - the only
+thing I have is:
+
+# tree /sys/kernel/debug/ieee80211/phy5
+/sys/kernel/debug/ieee80211/phy5
+├── features
+├── fragmentation_threshold
+├── fwcap
+├── fws_stats
+├── ht40allow_map
+├── long_retry_limit
+├── revinfo
+├── rts_threshold
+└── short_retry_limit
+
+0 directories, 9 files
+
+Also no devcoredumps appear to have been produced, although the
+facility is enabled.
+
+I'm going back to the 2013 firmware now, which seems to behave itself.
 
 -- 
-Kees Cook
+RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 12.1Mbps down 622kbps up
+According to speedtest.net: 11.9Mbps down 500kbps up
