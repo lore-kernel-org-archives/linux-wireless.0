@@ -1,109 +1,149 @@
-Return-Path: <SRS0=v11p=PX=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=vb4L=PY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F1FC43387
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 23:33:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9443FC43387
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 00:02:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A2A020883
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jan 2019 23:33:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 647872082F
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 00:02:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WC769HJy"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="gAGB4sY5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391447AbfAOXdJ (ORCPT
+        id S1729226AbfAPAC1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jan 2019 18:33:09 -0500
-Received: from mail-qt1-f201.google.com ([209.85.160.201]:35151 "EHLO
-        mail-qt1-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728841AbfAOXdI (ORCPT
+        Tue, 15 Jan 2019 19:02:27 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:43904 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728728AbfAPAC1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jan 2019 18:33:08 -0500
-Received: by mail-qt1-f201.google.com with SMTP id p24so4061220qtl.2
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jan 2019 15:33:08 -0800 (PST)
+        Tue, 15 Jan 2019 19:02:27 -0500
+Received: by mail-pf1-f193.google.com with SMTP id w73so2079189pfk.10
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jan 2019 16:02:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=xDZucaWf638JH/a6TLBLLXD9xduch2eacsa8aHLD1I8=;
-        b=WC769HJyZSoneJyc4JYUS/shRXIESiUGIOSqjsTZbHalaSgxMDGLqErWtwgvc43aKq
-         oiJHNjkmV4v3nEyo0+8cCrJDIxeWtpyi50H4WkLxjalEBEKMRIt9wUk6Xq/H5DXtQuQZ
-         amRX8T4bEQtJvMNIrWFibvTQdJWuvsnwfoSdyuGS+hzisRfkX+61b0a26ifkSepviBmw
-         p8jgpzjluWvO2EIMOVahoIvHNV1npYyt2lrs0nUbhbwrSC9RgJaNlbcsJEoLF1m8CnOT
-         J/AK0+KcLhTvtzVGtj8n8+bQCTg3Ec4LmcF2YWrU2NUkJwspQCw0qafSqkR4z2n5y5O+
-         Njrw==
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
+        bh=Wpx9C3gke45794DvIebWUi/xcVR5MPYC13bd7BIljjQ=;
+        b=gAGB4sY557ITsqI5hdDXSpBYVjXoZb+umGduj3ir4bigHTcRVES0RQY5wJQykgvyt6
+         ztwuFAgTzmNqSu/h3lsv22jE1Yevl1qJGOn0/M17/aX+CSLrz+8xPyJwlmi8Y/wG9prE
+         5uy9yJvA5xe3kWcAdYLuPqGdXHtZBcVFTUjlY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=xDZucaWf638JH/a6TLBLLXD9xduch2eacsa8aHLD1I8=;
-        b=efpOklHkg/bLBPYHRZtnvUjEq36T5quGWAp8VSKDYGJ3txpCRVo5aJZqvbYyHrigCF
-         TjQnImTzHQdwU/th8Rq19G0atWk0MrpOPythJEnlGcYUyFEe6C/7lsoRtNQ2MTy0QTIt
-         YX4lq8Z4xxET2sHdNqVVFoqkFrSMrmNq3PbXimODS+llSi1lJfBi91pgYHqzRCZCII7A
-         zYITr6jhe1KDZaNDM1AV93QpoyK9nTMnSp69HOUqsLM03dkHil68lQz9fg2cbfz/evKg
-         m5nI8Dmjhdk1dG7XjyJ3SNOiFbd+zIb29+3nFr8LX1nRT05PxdjvXneJNtxwlR2niKe8
-         Qu+g==
-X-Gm-Message-State: AJcUukcniSY7Vtw60A0ffcTTnwaz76eKZBgdi2J8Y/3QyOXl0AYk+qgd
-        8CS0jEiBTW4x0M+zVMrBAFQ7e+bfgDdakA==
-X-Google-Smtp-Source: ALg8bN55sWOm+0RHyri8jhbiXVJsAVXXin+X2xqfb6HpN5J3oPcRGiyknjg5ZGyEiaWEr2Z6g9Yf1ABVYUZVYg==
-X-Received: by 2002:a0c:94b8:: with SMTP id j53mr3568599qvj.56.1547595187737;
- Tue, 15 Jan 2019 15:33:07 -0800 (PST)
-Date:   Tue, 15 Jan 2019 15:33:03 -0800
-Message-Id: <20190115233303.226908-1-julanhsu@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.20.1.97.g81188d93c3-goog
-Subject: [PATCH] mac80211: mesh: only switch path when new metric is at least
- 10% better
-From:   julanhsu@google.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Julan Hsu <julanhsu@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=Wpx9C3gke45794DvIebWUi/xcVR5MPYC13bd7BIljjQ=;
+        b=XfoZ6t3JNtrqJEx+MSsawSlM4ZbsMlahcPtsCwGnYS3yzjnLDOtrWqlRlsaiXHimYh
+         7Y8v8SjtghDBJd+q7wzEDn36t5dAB6dAir+ocgWz/uyLVBJ7dgUTTK8ubz+TY5NYLoOT
+         IXWFPfyF6J46qkBFWlKVOc03yeb0wE2zgQpX/+7BY8K6hQiuK3qW218QmvGjpTu69Ew9
+         4O+Da/Lx/lFXpwvfRsHEqS//7nHCR2KZKyHRCwc7z0Q+KkJA7QbOqWVGyqJ2zQA/zxt/
+         qE0KCXofbV4lo7H4c6r66VHAK8fVrv+zKIgEfTaNplQHWbRmSAekW4G0SjNw6/3Vhr+J
+         pDWw==
+X-Gm-Message-State: AJcUukepZqm3yytuTq1aQcDgdS7WApDq90sCQ6vcym85/ezq5UNlDJ74
+        9DoZ1Lo8Z/KTQuGwZJ2Qkzl3sQNs+jI=
+X-Google-Smtp-Source: ALg8bN4SNztm9LZ9b68UE8lDQrOuELR2eroVNKed5aV6Sm5OoMSl1m0HDJrlgJ2R/Nuqb8PmrTaWcw==
+X-Received: by 2002:a62:d2c1:: with SMTP id c184mr6764582pfg.248.1547596946273;
+        Tue, 15 Jan 2019 16:02:26 -0800 (PST)
+Received: from www.outflux.net (173-164-112-133-Oregon.hfc.comcastbusiness.net. [173.164.112.133])
+        by smtp.gmail.com with ESMTPSA id z62sm8536957pfi.4.2019.01.15.16.02.24
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 15 Jan 2019 16:02:25 -0800 (PST)
+Date:   Tue, 15 Jan 2019 16:02:23 -0800
+From:   Kees Cook <keescook@chromium.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Willy Tarreau <w@1wt.eu>, Silvio Cesare <silvio.cesare@gmail.com>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath9k/eeprom: Use scnprintf instead of snprintf
+Message-ID: <20190116000223.GA29196@beast>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Julan Hsu <julanhsu@google.com>
+Change snprintf to scnprintf. There are generally two cases where using
+snprintf causes problems.
 
-This helps to reduce frequent path switches when multiple path
-candidates have the same or very similar path metrics.
+1) Uses of size += snprintf(buf, SIZE - size, fmt, ...)  In this case,
+if snprintf would have written more characters than what the buffer
+size (SIZE) is, then size will end up larger than SIZE. In later uses
+of snprintf, SIZE - size will result in a negative number, leading to
+problems. Note that size might already be too large by using size =
+snprintf before the code reaches a case of size += snprintf.
 
-Signed-off-by: Julan Hsu <julanhsu@google.com>
+2) If size is ultimately used as a length parameter for a copy back to
+user space, then it will potentially allow for a buffer overflow and
+information disclosure when size is greater than SIZE. When the size is
+used to index the buffer directly, we can have memory corruption. This
+also means when size = snprintf... is used, it may also cause problems
+since size may become large. Copying to userspace is mitigated by the
+HARDENED_USERCOPY kernel configuration.
+
+The solution to these issues is to use scnprintf which returns the number
+of characters actually written to the buffer, so the size variable will
+never exceed SIZE.
+
+Cc: Willy Tarreau <w@1wt.eu>
+Cc: Silvio Cesare <silvio.cesare@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- net/mac80211/mesh_hwmp.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 6950cd0bf594..9ce75ef3e249 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -441,7 +441,10 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 			    (mpath->flags & MESH_PATH_SN_VALID)) {
- 				if (SN_GT(mpath->sn, orig_sn) ||
- 				    (mpath->sn == orig_sn &&
--				     new_metric >= mpath->metric)) {
-+				     (rcu_access_pointer(mpath->next_hop) !=
-+						      sta ?
-+					      mult_frac(new_metric, 10, 9) :
-+					      new_metric) >= mpath->metric)) {
- 					process = false;
- 					fresh_info = false;
- 				}
-@@ -506,8 +509,10 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 		if (mpath) {
- 			spin_lock_bh(&mpath->state_lock);
- 			if ((mpath->flags & MESH_PATH_FIXED) ||
--				((mpath->flags & MESH_PATH_ACTIVE) &&
--					(last_hop_metric > mpath->metric)))
-+			    ((mpath->flags & MESH_PATH_ACTIVE) &&
-+			     ((rcu_access_pointer(mpath->next_hop) != sta ?
-+				       mult_frac(last_hop_metric, 10, 9) :
-+				       last_hop_metric) > mpath->metric)))
- 				fresh_info = false;
- 		} else {
- 			mpath = mesh_path_add(sdata, ta);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index f019a20e5a1f..2b29bf4730f6 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3457,9 +3457,9 @@ static u32 ar9003_dump_cal_data(struct ath_hw *ah, char *buf, u32 len, u32 size,
+ 		if (!((pBase->txrxMask >> i) & 1))
+ 			continue;
+ 
+-		len += snprintf(buf + len, size - len, "Chain %d\n", i);
++		len += scnprintf(buf + len, size - len, "Chain %d\n", i);
+ 
+-		len += snprintf(buf + len, size - len,
++		len += scnprintf(buf + len, size - len,
+ 			"Freq\t ref\tvolt\ttemp\tnf_cal\tnf_pow\trx_temp\n");
+ 
+ 		for (j = 0; j < cal_pier_nr; j++) {
+@@ -3471,10 +3471,10 @@ static u32 ar9003_dump_cal_data(struct ath_hw *ah, char *buf, u32 len, u32 size,
+ 				freq = 4800 + eep->calFreqPier5G[j] * 5;
+ 			}
+ 
+-			len += snprintf(buf + len, size - len,
++			len += scnprintf(buf + len, size - len,
+ 				"%d\t", freq);
+ 
+-			len += snprintf(buf + len, size - len,
++			len += scnprintf(buf + len, size - len,
+ 				"%d\t%d\t%d\t%d\t%d\t%d\n",
+ 				cal_pier->refPower,
+ 				cal_pier->voltMeas,
+@@ -3505,12 +3505,12 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 		len += scnprintf(buf + len, size - len, "Calibration data\n");
+ 		len = ar9003_dump_cal_data(ah, buf, len, size, true);
+ 
+-		len +=  snprintf(buf + len, size - len,
++		len += scnprintf(buf + len, size - len,
+ 				 "%20s :\n", "5GHz modal Header");
+ 		len = ar9003_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader5G);
+ 
+-		len += snprintf(buf + len, size - len, "Calibration data\n");
++		len += scnprintf(buf + len, size - len, "Calibration data\n");
+ 		len = ar9003_dump_cal_data(ah, buf, len, size, false);
+ 
+ 		goto out;
 -- 
-2.20.1.97.g81188d93c3-goog
+2.17.1
 
+
+-- 
+Kees Cook
