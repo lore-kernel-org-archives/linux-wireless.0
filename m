@@ -2,104 +2,130 @@ Return-Path: <SRS0=vb4L=PY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADDE9C43387
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 14:39:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C711EC43387
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 15:16:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 890C320675
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 14:39:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0B4A205C9
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jan 2019 15:16:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393680AbfAPOjK (ORCPT
+        id S2391183AbfAPPQu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Jan 2019 09:39:10 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:39470 "EHLO mx1.redhat.com"
+        Wed, 16 Jan 2019 10:16:50 -0500
+Received: from shell.v3.sk ([90.176.6.54]:57057 "EHLO shell.v3.sk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2393563AbfAPOjK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Jan 2019 09:39:10 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C06E47AE81;
-        Wed, 16 Jan 2019 14:39:09 +0000 (UTC)
-Received: from localhost (unknown [10.40.206.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5D34F611A2;
-        Wed, 16 Jan 2019 14:39:06 +0000 (UTC)
-Date:   Wed, 16 Jan 2019 15:39:06 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org, rosenp@gmail.com
-Subject: Re: [RFC 0/4] do not use sg if not properly supported by usb
- controller
-Message-ID: <20190116143905.GA18221@redhat.com>
-References: <cover.1547549771.git.lorenzo.bianconi@redhat.com>
- <20190115153546.GA8387@redhat.com>
- <20190115154746.GA30564@localhost.localdomain>
- <20190116111946.GB5234@redhat.com>
- <20190116114432.GA2454@localhost.localdomain>
- <20190116122145.GA7472@redhat.com>
- <20190116134045.GB2454@localhost.localdomain>
+        id S2387431AbfAPPQt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Jan 2019 10:16:49 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by zimbra.v3.sk (Postfix) with ESMTP id 3216753FF1;
+        Wed, 16 Jan 2019 16:16:47 +0100 (CET)
+Received: from shell.v3.sk ([127.0.0.1])
+        by localhost (zimbra.v3.sk [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id YEISScXpwlOm; Wed, 16 Jan 2019 16:16:39 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+        by zimbra.v3.sk (Postfix) with ESMTP id A9DAD54068;
+        Wed, 16 Jan 2019 16:16:39 +0100 (CET)
+X-Virus-Scanned: amavisd-new at zimbra.v3.sk
+Received: from shell.v3.sk ([127.0.0.1])
+        by localhost (zimbra.v3.sk [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 8f-VP_OfzLES; Wed, 16 Jan 2019 16:16:39 +0100 (CET)
+Received: from belphegor.brq.redhat.com (nat-pool-brq-t.redhat.com [213.175.37.10])
+        by zimbra.v3.sk (Postfix) with ESMTPSA id 1968953FF1;
+        Wed, 16 Jan 2019 16:16:39 +0100 (CET)
+From:   Lubomir Rintel <lkundrak@v3.sk>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Lubomir Rintel <lkundrak@v3.sk>
+Subject: [PATCH] libertas: remove ifdef OLPC noise
+Date:   Wed, 16 Jan 2019 16:16:19 +0100
+Message-Id: <20190116151618.1972197-1-lkundrak@v3.sk>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190116134045.GB2454@localhost.localdomain>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Wed, 16 Jan 2019 14:39:09 +0000 (UTC)
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jan 16, 2019 at 02:40:46PM +0100, Lorenzo Bianconi wrote:
-> On Jan 16, Stanislaw Gruszka wrote:
-> > On Wed, Jan 16, 2019 at 12:44:33PM +0100, Lorenzo Bianconi wrote:
-> > > > On Tue, Jan 15, 2019 at 04:47:47PM +0100, Lorenzo Bianconi wrote:
-> > > > > Hi Stanislaw,
-> > > > 
-> > > > Hi :-)
-> > > > 
-> > > > > > Not sure what is the problem , but this patch set look like a workaround
-> > > > > > not fix. If this an issue with IOMMU and sg, seems there is something wrong
-> > > > > > in sg page mappings eigher on mt76 dirver or IOMMU driver.
-> > > > > 
-> > > > > The main point here I guess is we do not need sg if fragment number is one (e.g
-> > > > > usb2.0). Moreover this can fix IOMMU reported issues.
-> > > > 
-> > > > So there if diffrence for USB host driver when we have one usb->sg
-> > > > sengment and if we just pass the buffer via urb->transfer_buf . I think
-> > > > most USB host drivers behave the same in such cases. For what USB
-> > > > hardware/driver this is needed ? Perhaps simpler fix could be done
-> > > > in USB host driver?
-> > > 
-> > > According to https://github.com/torvalds/linux/blob/master/drivers/usb/core/hcd.c#L1557
-> > > single sg urb and urb with a configured transfer_buf are managed in a different way.
-> > 
-> > But this should not make any difference for underlying low level USB
-> > host driver, since we map 1 buffer of the same size, just by using
-> > different routines for that.
-> 
-> probably amd iommu has some constraints on sg buffer layout respect to intel
-> one, not sure
-> 
-> > 
-> > > Please not I have not received any confirm that this series fixes the reported issue
-> > > yet :)
-> > 
-> > What is reported issue ?
-> 
-> https://marc.info/?l=linux-wireless&m=154716096506037&w=2
+<asm/olpc.h> provides machine_is_olpc() stub for CONFIG_OLPC=3Dn,
+compiler should just optimize the unneeded bits away.
 
-So, this if for AMD IOMMU issue as I thought initally. For the moment I
-thought you are trying to fix some diffrent problem with some 
-non-standart usb host controler.
+Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
+---
+ drivers/net/wireless/marvell/libertas/if_usb.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-I still think not using sg is just workaround for the problem not worth
-to do, since we have already workaround in form of disabling IOMMU.
-Right fix will be fixing AMD IOMMU driver or fix sg usage in mt76-usb
-if it does something wrong.
+diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net=
+/wireless/marvell/libertas/if_usb.c
+index 220dcdee8d2b..7b61c599948e 100644
+--- a/drivers/net/wireless/marvell/libertas/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+@@ -12,9 +12,7 @@
+ #include <linux/usb.h>
+ #include <linux/olpc-ec.h>
+=20
+-#ifdef CONFIG_OLPC
+ #include <asm/olpc.h>
+-#endif
+=20
+ #define DRV_NAME "usb8xxx"
+=20
+@@ -174,13 +172,11 @@ static void if_usb_fw_timeo(struct timer_list *t)
+ 	wake_up(&cardp->fw_wq);
+ }
+=20
+-#ifdef CONFIG_OLPC
+ static void if_usb_reset_olpc_card(struct lbs_private *priv)
+ {
+ 	printk(KERN_CRIT "Resetting OLPC wireless via EC...\n");
+ 	olpc_ec_cmd(0x25, NULL, 0, NULL, 0);
+ }
+-#endif
+=20
+ /**
+  * if_usb_probe - sets the configuration values
+@@ -267,10 +263,8 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	priv->exit_deep_sleep =3D NULL;
+ 	priv->reset_deep_sleep_wakeup =3D NULL;
+ 	priv->is_polling =3D false;
+-#ifdef CONFIG_OLPC
+ 	if (machine_is_olpc())
+ 		priv->reset_card =3D if_usb_reset_olpc_card;
+-#endif
+=20
+ 	cardp->boot2_version =3D udev->descriptor.bcdDevice;
+=20
+@@ -395,10 +389,8 @@ static int if_usb_reset_device(struct if_usb_card *c=
+ardp)
+ 	ret =3D usb_reset_device(cardp->udev);
+ 	msleep(100);
+=20
+-#ifdef CONFIG_OLPC
+ 	if (ret && machine_is_olpc())
+ 		if_usb_reset_olpc_card(NULL);
+-#endif
+=20
+ 	return ret;
+ }
+@@ -939,14 +931,12 @@ static int if_usb_suspend(struct usb_interface *int=
+f, pm_message_t message)
+ 		goto out;
+ 	}
+=20
+-#ifdef CONFIG_OLPC
+ 	if (machine_is_olpc()) {
+ 		if (priv->wol_criteria =3D=3D EHS_REMOVE_WAKEUP)
+ 			olpc_ec_wakeup_clear(EC_SCI_SRC_WLAN);
+ 		else
+ 			olpc_ec_wakeup_set(EC_SCI_SRC_WLAN);
+ 	}
+-#endif
+=20
+ 	ret =3D lbs_suspend(priv);
+ 	if (ret)
+--=20
+2.20.1
 
-Regards
-Stanislaw 
