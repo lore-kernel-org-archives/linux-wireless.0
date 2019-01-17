@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABAAC43444
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF4CAC43387
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 13:21:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 221D720652
+	by mail.kernel.org (Postfix) with ESMTP id 850E320652
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 13:21:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="F+7Kc13i"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="WKH2PJWM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727704AbfAQNVl (ORCPT
+        id S1727458AbfAQNVh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jan 2019 08:21:41 -0500
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:64005 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727641AbfAQNVi (ORCPT
+        Thu, 17 Jan 2019 08:21:37 -0500
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:61724 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727467AbfAQNVg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jan 2019 08:21:38 -0500
+        Thu, 17 Jan 2019 08:21:36 -0500
 X-IronPort-AV: E=Sophos;i="5.56,489,1539673200"; 
-   d="scan'208";a="26544598"
+   d="scan'208";a="25443320"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 17 Jan 2019 06:21:37 -0700
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.76.107) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Thu, 17 Jan 2019 06:21:37 -0700
+  by esa2.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 17 Jan 2019 06:21:32 -0700
+Received: from NAM01-BN3-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.76.105) with Microsoft SMTP Server (TLS) id
+ 14.3.352.0; Thu, 17 Jan 2019 06:21:31 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector1-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JTGd8FYlBaqipgb2NOhtwCQF4WnOwT63rlEiuGFx+MA=;
- b=F+7Kc13iND3HaN4TTXSqhEo16VzZNKmWlQvlmuZYuXmZgisH/4Nt0hr8h2EOsj/nBDrPs6zE+GJgo2y/QtIMqhuXkjD+H3WuB2rTeSP9FQt+ITDZJmyXp246yWDFyOEkAc5nM2TtDq7HWwmYO645hKmJ1bZLy0edb4dD9ns+pKo=
+ bh=YS4Hw0H2lmGPr8UbLQq7DcDQZP2O5tZ2KbLf+ZXYitk=;
+ b=WKH2PJWMcZXH4E5jqDXU3mNUolMR9QY44mTzdWsTA6+lVKBi3gk1HUa6QvXt5mDPxjU7sbXdJmPnYyK+b8xr2GR232DYQMjvK/BUqG8sTo5jSP+o/MAk/jHR3nBc81NR1b252TASCmA/lSuZi9JY10T+nm6DSkEYS9rP526W4HU=
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com (52.135.226.160) by
  BYAPR11MB3464.namprd11.prod.outlook.com (20.177.187.17) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1537.26; Thu, 17 Jan 2019 13:21:35 +0000
+ 15.20.1537.26; Thu, 17 Jan 2019 13:21:30 +0000
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::c110:8559:a438:491d]) by BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::c110:8559:a438:491d%3]) with mapi id 15.20.1516.019; Thu, 17 Jan 2019
- 13:21:35 +0000
+ 13:21:30 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 10/13] staging: wilc1000: refactor information message parsing
- logic
-Thread-Topic: [PATCH 10/13] staging: wilc1000: refactor information message
- parsing logic
-Thread-Index: AQHUrmeSy0ebO3UF8Uuul/wVUyXpZA==
-Date:   Thu, 17 Jan 2019 13:21:35 +0000
-Message-ID: <1547731250-18518-11-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 08/13] staging: wilc1000: rename hidden_network related data
+ structure
+Thread-Topic: [PATCH 08/13] staging: wilc1000: rename hidden_network related
+ data structure
+Thread-Index: AQHUrmeOKU+uZ9ste0Gw9gNehpdB+A==
+Date:   Thu, 17 Jan 2019 13:21:30 +0000
+Message-ID: <1547731250-18518-9-git-send-email-ajay.kathat@microchip.com>
 References: <1547731250-18518-1-git-send-email-ajay.kathat@microchip.com>
 In-Reply-To: <1547731250-18518-1-git-send-email-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -71,24 +71,24 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.7.4
 x-originating-ip: [49.205.218.18]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR11MB3464;6:o4H+/+hG5+ZPk9FBAhdxaXJPV0XMgPMylv/f227QhLsm7OZsHnZpZrisx7J116u4dK3UdlaCZmRRolw+MZorGJ3tcfi5ecpaq45sWXkFVpJj4SRWeLK6sRJSOnTNd8EIHEKWq99iu+pc0GEdqhHu6FnTTNswTkdfF5if9FVdnaLbxcwy4YnufNqO1Oe7j1dv7sAuNYNXIES/Xd4m/qOnghY84YBefgOIrGItpp+u8NG5LFRbhC0X60a0Fa7K0w/hkr3BVcmlahk/kMmNbbWgHWvc7oTrFnBxI07VK6TguHPAyl2SPTR9XrXE2KdSG5z8i94P+D4umf4aTc0q9rmXSf+EZH1aYj0dni+V/1Lumv0rEPLpBUgwz57Ski2X9b6gOY7BeHQ4HpxaLa1kSLRPRLcV/ACq4UAXIxZJXFWYdLdJ1vKdjvduJ/NXj/WanxSUzL4rvgdzP+aIqtrjWW6xkg==;5:8049sefcWrSYe/AOVJ9kFySM7NZKduQNDrW+nsI9qiSJn+T/GGsdgjv8apjk5GYE55MahisoF4Zxd65QEsnwTZNxjSpJM/ALy4EO0ehshMwjCTVSSishCnJycpe+aT2fUdcwvtuIbcLGrl2fi34dZta3+fnZBPe6NBtR2cjBvLez3AMjg4IfUX0jKsjaT4iva2jefsY0df+rowAUt0UY7A==;7:TE6/74nBl8F1DmGW59k5UzfpVHgzMI0rnogoi+RkdWQ//Ni8COOKh/82IblnV5KOcaD/LfDMEZi+FCd/+QY0Cs5CuEbtWHuS+zfO7zVPh3BgNyQDwh95kk/YPSHhKo24TQKu6VqLuP/tEMcC7Cfurg==
-x-ms-office365-filtering-correlation-id: a84f9ec1-1cda-47dc-f05d-08d67c7eb44a
+x-microsoft-exchange-diagnostics: 1;BYAPR11MB3464;6:tcVdCKKgBFk0SHxz4MZgz/AyVja5KpcyXouaRvKgKmgMexvtn3fKk2zUc5UbiQ0vd7/hrePggqrz1LOJOme8tlzKhJR3Jgfkb/9TD6CuBMl0A35Qc3u0WWTNrM17JgFmNZMtN9uunO2fKz7+wcTsDv9GomJxzH1WepBJ/Exc+22UcBUiSisvX+b0Pk1fgLeClHmGpBWPMQjO81ytyiT54jk/45xoOcWcRWMLNfPD4LhVsObtmHP+E2qE8uZlSP7yeAAbG9XA2Kgu9F3dsLVK/ahLzPnlHo/cNiHSyQsXk/zTO6HXOK1nkdvveySOVHJrlF4EprNtlEc96mSYXgwCav1DPkKgtPPKOC37mC8G1W/Fy6Ivz7oTe7VaA4FVJPyVHYK+WRXXqPQDTHxtJq2A+llNvYy8UnPmZGWBjOVCDWWg2qG/euuqcGvq7gUKeBY3aFk4k2GP5SSWzkLY2W6nwQ==;5:tyjw39Yc/3PybtTDWYYh/kcVeXS6DImqCSWXuSTI+B0Zivzip4klpgc5a3kPMnR5K60i45lGqukY3ulCdNbFTIW5jjNbpJcNfKLNHHyE/T8H7KVLe7O5G+VPUL3IKQDQW/5pu5oq46mqOsLex9pnAOzngy/Tk2zbm659GeID9eEHcK9tQHMlRb7mnNtyNZKaq9msq92NQ+Jhumum3p0DvQ==;7:jGTZV8YLfTtQfS8HZ6kvM434O+VLZprRt3Xb4jEZOp2d7zVib1lavVuWNZCrR1sArYT8NyGONy8qjeoCeogsKSxEDqp0c//xxy80KgYUnsBOMFnQyJ7yAUkZBHl3yZPsIdPpost1tg7xpyNyiur0mg==
+x-ms-office365-filtering-correlation-id: eaaeb94a-3b85-49b8-87af-08d67c7eb11d
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(2017052603328)(7153060)(7193020);SRVR:BYAPR11MB3464;
 x-ms-traffictypediagnostic: BYAPR11MB3464:
-x-microsoft-antispam-prvs: <BYAPR11MB3464431CEFD4B92DBB80DF0DE3830@BYAPR11MB3464.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR11MB3464FEA1E13FC60B67457E91E3830@BYAPR11MB3464.namprd11.prod.outlook.com>
 x-forefront-prvs: 0920602B08
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(366004)(136003)(39860400002)(376002)(396003)(199004)(189003)(14454004)(68736007)(81166006)(81156014)(5660300001)(8936002)(2906002)(106356001)(8676002)(26005)(305945005)(7736002)(6486002)(6436002)(5640700003)(36756003)(86362001)(99286004)(478600001)(6916009)(15650500001)(50226002)(72206003)(78486014)(76176011)(2501003)(66066001)(4326008)(97736004)(486006)(25786009)(6506007)(476003)(102836004)(14444005)(256004)(386003)(53936002)(2616005)(54906003)(6512007)(71190400001)(71200400001)(105586002)(107886003)(3846002)(52116002)(186003)(2351001)(6116002)(316002)(11346002)(446003);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB3464;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(366004)(136003)(39860400002)(376002)(396003)(199004)(189003)(14454004)(68736007)(81166006)(81156014)(5660300001)(8936002)(2906002)(106356001)(8676002)(26005)(305945005)(7736002)(6486002)(6436002)(5640700003)(36756003)(86362001)(99286004)(478600001)(6916009)(50226002)(72206003)(78486014)(76176011)(2501003)(66066001)(4326008)(97736004)(486006)(25786009)(6506007)(476003)(102836004)(14444005)(256004)(386003)(53936002)(2616005)(54906003)(6512007)(71190400001)(71200400001)(105586002)(107886003)(3846002)(52116002)(186003)(2351001)(6116002)(316002)(11346002)(446003);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB3464;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: tS4NfGFPbcZS0LYNpOTMEUkySajlZVSbFx607wzD1XN6qrrd/HgofrLXxcILruFVf6n9yLduhvKScBo3Slz4uKijMxhMEts0/4BU4qEMinJXnVp5xpavIrfidJnuyxbfpJnT9nU8en1hDi0oiwZSWRAVE6jcYHTxe75EnO5VnTxPQl0Giy3WBru7/8JJktgwPESuWve70ZHQ/goMrfmcbA7xAg+ZHgSgnNj6KMWDMxET5yaxOkbkmx751oqNowoA509Szffo+QtoOqlF+CR3N/Uz5O6/d/XUXxHrqCSRPjD89y2V9dRuMmnucvfaQgVB6ehiQ6ufCE+253euXElyR+aD+YlE83xKWAohysAXAB1xUNaN4ADnus+y0GlL3hOFNl0OP4d4uCKElG8Rg9HNGBjI/8PwktUJdov12FcOtAk=
+x-microsoft-antispam-message-info: 93PQhFRiNDWrvTVCtv9Ab9qo/IU9Bd+9VvPWtG3aIu0TscKAoW04BRlJ3jwRSCCExySYZSrQ4lKlSoe9NArMTMVc4funfTWsYn7Kh/9QqZdLYu7fONgFJiIljnYfYdp9pvyDUynmq8bplhIEmmY2QGM10g2E54LfLlHX3QyfEzdEnrAslQzuIi+3dBPfH6F5nZIn4oxP+ToI8lfSeGudbFKEERPiKCOM6L6qbLxbt3Q8euqHiZWI93blaz8CPDwOTfMEpe3Nb4DlaPjFW5LXR0SQCkNmHrLMMolFm+jjBFRTYvmPcaXrHS0xGmLP0pAnyGlFYQ2C8W+2CTNH0cnnIM7tvD1xPviqQxk7Uxj44kmOTrSBQ0nqHT0mknHt531x0o3pg8sqk//oh68Uk846Q/MhZs9/rgprMbVZxnGeCkk=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: a84f9ec1-1cda-47dc-f05d-08d67c7eb44a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2019 13:21:33.2463
+X-MS-Exchange-CrossTenant-Network-Message-Id: eaaeb94a-3b85-49b8-87af-08d67c7eb11d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2019 13:21:27.9065
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
@@ -101,131 +101,222 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Refactor code to avoid maintaining an unnecessary buffer to keep the
-information type message ('I' msg type).
+Rename hidden_network related data structure to have more appropriate
+names, as it's used to keep search network SSID details.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 66 ++++++++-------------------=
+ drivers/staging/wilc1000/host_interface.c         | 40 +++++++++++--------=
 ----
- 1 file changed, 16 insertions(+), 50 deletions(-)
+ drivers/staging/wilc1000/host_interface.h         | 11 ++++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 25 +++++++-------
+ 3 files changed, 38 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wi=
 lc1000/host_interface.c
-index e37d8ab..a146b78 100644
+index 46fd448..6c2be43 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -11,9 +11,8 @@
-=20
- #define FALSE_FRMWR_CHANNEL			100
-=20
--struct rcvd_async_info {
--	u8 *buffer;
--	u32 len;
-+struct wilc_rcvd_mac_info {
-+	u8 status;
- };
-=20
- struct set_multicast {
-@@ -71,7 +70,7 @@ struct wilc_gtk_key {
-=20
- union message_body {
- 	struct wilc_rcvd_net_info net_info;
--	struct rcvd_async_info async_info;
-+	struct wilc_rcvd_mac_info mac_info;
- 	struct set_multicast multicast_info;
- 	struct remain_ch remain_on_ch;
- 	char *data;
-@@ -755,55 +754,30 @@ static void handle_rcvd_gnrl_async_info(struct work_s=
-truct *work)
+@@ -234,7 +234,7 @@ static int handle_scan_done(struct wilc_vif *vif, enum =
+scan_event evt)
+ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 	      u8 *ch_freq_list, u8 ch_list_len, const u8 *ies,
+ 	      size_t ies_len, wilc_scan_result scan_result, void *user_arg,
+-	      struct hidden_network *hidden_net)
++	      struct wilc_probe_ssid *search)
  {
- 	struct host_if_msg *msg =3D container_of(work, struct host_if_msg, work);
- 	struct wilc_vif *vif =3D msg->vif;
--	struct rcvd_async_info *rcvd_info =3D &msg->body.async_info;
--	u8 msg_type;
--	u8 mac_status;
-+	struct wilc_rcvd_mac_info *mac_info =3D &msg->body.mac_info;
+ 	int result =3D 0;
+ 	struct wid wid_list[5];
+@@ -242,7 +242,7 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 =
+scan_type,
+ 	u32 i;
+ 	u8 *buffer;
+ 	u8 valuesize =3D 0;
+-	u8 *hdn_ntwk_wid_val =3D NULL;
++	u8 *search_ssid_vals =3D NULL;
  	struct host_if_drv *hif_drv =3D vif->hif_drv;
 =20
--	if (!rcvd_info->buffer) {
--		netdev_err(vif->ndev, "%s: buffer is NULL\n", __func__);
--		goto free_msg;
--	}
+ 	if (hif_drv->hif_state >=3D HOST_IF_SCANNING &&
+@@ -260,26 +260,24 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u=
+8 scan_type,
+=20
+ 	hif_drv->usr_scan_req.ch_cnt =3D 0;
+=20
+-	if (hidden_net) {
+-		wid_list[index].id =3D WID_SSID_PROBE_REQ;
+-		wid_list[index].type =3D WID_STR;
 -
- 	if (!hif_drv) {
- 		netdev_err(vif->ndev, "%s: hif driver is NULL\n", __func__);
--		goto free_rcvd_info;
-+		goto free_msg;
+-		for (i =3D 0; i < hidden_net->n_ssids; i++)
+-			valuesize +=3D ((hidden_net->net_info[i].ssid_len) + 1);
+-		hdn_ntwk_wid_val =3D kmalloc(valuesize + 1, GFP_KERNEL);
+-		wid_list[index].val =3D hdn_ntwk_wid_val;
+-		if (wid_list[index].val) {
++	if (search) {
++		for (i =3D 0; i < search->n_ssids; i++)
++			valuesize +=3D ((search->ssid_info[i].ssid_len) + 1);
++		search_ssid_vals =3D kmalloc(valuesize + 1, GFP_KERNEL);
++		if (search_ssid_vals) {
++			wid_list[index].id =3D WID_SSID_PROBE_REQ;
++			wid_list[index].type =3D WID_STR;
++			wid_list[index].val =3D search_ssid_vals;
+ 			buffer =3D wid_list[index].val;
+=20
+-			*buffer++ =3D hidden_net->n_ssids;
++			*buffer++ =3D search->n_ssids;
+=20
+-			for (i =3D 0; i < hidden_net->n_ssids; i++) {
+-				*buffer++ =3D hidden_net->net_info[i].ssid_len;
+-				memcpy(buffer, hidden_net->net_info[i].ssid,
+-				       hidden_net->net_info[i].ssid_len);
+-				buffer +=3D hidden_net->net_info[i].ssid_len;
++			for (i =3D 0; i < search->n_ssids; i++) {
++				*buffer++ =3D search->ssid_info[i].ssid_len;
++				memcpy(buffer, search->ssid_info[i].ssid,
++				       search->ssid_info[i].ssid_len);
++				buffer +=3D search->ssid_info[i].ssid_len;
+ 			}
+-
+ 			wid_list[index].size =3D (s32)(valuesize + 1);
+ 			index++;
+ 		}
+@@ -332,9 +330,9 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 =
+scan_type,
+ 		  jiffies + msecs_to_jiffies(HOST_IF_SCAN_TIMEOUT));
+=20
+ error:
+-	if (hidden_net) {
+-		kfree(hidden_net->net_info);
+-		kfree(hdn_ntwk_wid_val);
++	if (search) {
++		kfree(search->ssid_info);
++		kfree(search_ssid_vals);
  	}
 =20
--	if (hif_drv->hif_state =3D=3D HOST_IF_WAITING_CONN_RESP ||
--	    hif_drv->hif_state =3D=3D HOST_IF_CONNECTED ||
--	    hif_drv->usr_scan_req.scan_result) {
--		if (!hif_drv->conn_info.conn_result) {
--			netdev_err(vif->ndev, "%s: conn_result is NULL\n",
--				   __func__);
--			goto free_rcvd_info;
--		}
--
--		msg_type =3D rcvd_info->buffer[0];
--
--		if ('I' !=3D msg_type) {
--			netdev_err(vif->ndev, "Received Message incorrect.\n");
--			goto free_rcvd_info;
--		}
-+	if (!hif_drv->conn_info.conn_result) {
-+		netdev_err(vif->ndev, "%s: conn_result is NULL\n", __func__);
-+		goto free_msg;
-+	}
+ 	return result;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wi=
+lc1000/host_interface.h
+index 659e8cc..e702404 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -131,14 +131,15 @@ typedef void (*wilc_connect_result)(enum conn_event,
+ typedef void (*wilc_remain_on_chan_expired)(void *, u32);
+ typedef void (*wilc_remain_on_chan_ready)(void *);
 =20
--		mac_status  =3D rcvd_info->buffer[7];
--		if (hif_drv->hif_state =3D=3D HOST_IF_WAITING_CONN_RESP) {
--			host_int_parse_assoc_resp_info(vif, mac_status);
--		} else if ((mac_status =3D=3D WILC_MAC_STATUS_DISCONNECTED) &&
--			   (hif_drv->hif_state =3D=3D HOST_IF_CONNECTED)) {
-+	if (hif_drv->hif_state =3D=3D HOST_IF_WAITING_CONN_RESP) {
-+		host_int_parse_assoc_resp_info(vif, mac_info->status);
-+	} else if (mac_info->status =3D=3D WILC_MAC_STATUS_DISCONNECTED) {
-+		if (hif_drv->hif_state =3D=3D HOST_IF_CONNECTED) {
- 			host_int_handle_disconnect(vif);
--		} else if ((mac_status =3D=3D WILC_MAC_STATUS_DISCONNECTED) &&
--			   (hif_drv->usr_scan_req.scan_result)) {
-+		} else if (hif_drv->usr_scan_req.scan_result) {
- 			del_timer(&hif_drv->scan_timer);
--			if (hif_drv->usr_scan_req.scan_result)
--				handle_scan_done(vif, SCAN_EVENT_ABORTED);
-+			handle_scan_done(vif, SCAN_EVENT_ABORTED);
+-struct hidden_net_info {
+-	u8  *ssid;
++struct wilc_probe_ssid_info {
+ 	u8 ssid_len;
++	u8 *ssid;
+ };
+=20
+-struct hidden_network {
+-	struct hidden_net_info *net_info;
++struct wilc_probe_ssid {
++	struct wilc_probe_ssid_info *ssid_info;
+ 	u8 n_ssids;
++	u32 size;
+ };
+=20
+ struct user_scan_req {
+@@ -238,7 +239,7 @@ int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level)=
+;
+ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 	      u8 *ch_freq_list, u8 ch_list_len, const u8 *ies,
+ 	      size_t ies_len, wilc_scan_result scan_result, void *user_arg,
+-	      struct hidden_network *hidden_network);
++	      struct wilc_probe_ssid *search);
+ int wilc_hif_set_cfg(struct wilc_vif *vif,
+ 		     struct cfg_param_attr *cfg_param);
+ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler=
+);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/st=
+aging/wilc1000/wilc_wfi_cfgoperations.c
+index 5070cad..1762c60 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -221,22 +221,23 @@ static int set_channel(struct wiphy *wiphy,
+=20
+ static inline int
+ wilc_wfi_cfg_alloc_fill_ssid(struct cfg80211_scan_request *request,
+-			     struct hidden_network *ntwk)
++			     struct wilc_probe_ssid *search)
+ {
+ 	int i;
+ 	int slot_id =3D 0;
+=20
+-	ntwk->net_info =3D kcalloc(request->n_ssids, sizeof(*ntwk->net_info),
+-				 GFP_KERNEL);
+-	if (!ntwk->net_info)
++	search->ssid_info =3D kcalloc(request->n_ssids,
++				    sizeof(*search->ssid_info), GFP_KERNEL);
++	if (!search->ssid_info)
+ 		goto out;
+=20
+-	ntwk->n_ssids =3D request->n_ssids;
++	search->n_ssids =3D request->n_ssids;
+=20
+ 	for (i =3D 0; i < request->n_ssids; i++) {
+ 		if (request->ssids[i].ssid_len > 0) {
+-			struct hidden_net_info *info =3D &ntwk->net_info[slot_id];
++			struct wilc_probe_ssid_info *info;
+=20
++			info =3D &search->ssid_info[slot_id];
+ 			info->ssid =3D kmemdup(request->ssids[i].ssid,
+ 					     request->ssids[i].ssid_len,
+ 					     GFP_KERNEL);
+@@ -246,7 +247,7 @@ wilc_wfi_cfg_alloc_fill_ssid(struct cfg80211_scan_reque=
+st *request,
+ 			info->ssid_len =3D request->ssids[i].ssid_len;
+ 			slot_id++;
+ 		} else {
+-			ntwk->n_ssids -=3D 1;
++			search->n_ssids -=3D 1;
  		}
  	}
+ 	return 0;
+@@ -254,9 +255,9 @@ wilc_wfi_cfg_alloc_fill_ssid(struct cfg80211_scan_reque=
+st *request,
+ out_free:
 =20
--free_rcvd_info:
--	kfree(rcvd_info->buffer);
--	rcvd_info->buffer =3D NULL;
--
- free_msg:
- 	kfree(msg);
- }
-@@ -1864,18 +1838,10 @@ void wilc_gnrl_async_info_received(struct wilc *wil=
-c, u8 *buffer, u32 length)
- 		return;
- 	}
+ 	for (i =3D 0; i < slot_id; i++)
+-		kfree(ntwk->net_info[i].ssid);
++		kfree(search->ssid_info[i].ssid);
 =20
--	msg->body.async_info.len =3D length;
--	msg->body.async_info.buffer =3D kmemdup(buffer, length, GFP_KERNEL);
--	if (!msg->body.async_info.buffer) {
--		kfree(msg);
--		mutex_unlock(&hif_deinit_lock);
--		return;
--	}
--
-+	msg->body.mac_info.status =3D buffer[7];
- 	result =3D wilc_enqueue_work(msg);
- 	if (result) {
- 		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
--		kfree(msg->body.async_info.buffer);
- 		kfree(msg);
- 	}
+-	kfree(ntwk->net_info);
++	kfree(search->ssid_info);
+ out:
 =20
+ 	return -ENOMEM;
+@@ -269,7 +270,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_sc=
+an_request *request)
+ 	u32 i;
+ 	int ret =3D 0;
+ 	u8 scan_ch_list[MAX_NUM_SCANNED_NETWORKS];
+-	struct hidden_network hidden_ntwk;
++	struct wilc_probe_ssid probe_ssid;
+=20
+ 	priv->scan_req =3D request;
+=20
+@@ -283,7 +284,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_sc=
+an_request *request)
+=20
+ 		if (request->n_ssids >=3D 1) {
+ 			if (wilc_wfi_cfg_alloc_fill_ssid(request,
+-							 &hidden_ntwk)) {
++							 &probe_ssid)) {
+ 				ret =3D -ENOMEM;
+ 				goto out;
+ 			}
+@@ -293,7 +294,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_sc=
+an_request *request)
+ 					request->n_channels,
+ 					(const u8 *)request->ie,
+ 					request->ie_len, cfg_scan_result,
+-					(void *)priv, &hidden_ntwk);
++					(void *)priv, &probe_ssid);
+ 		} else {
+ 			ret =3D wilc_scan(vif, WILC_FW_USER_SCAN,
+ 					WILC_FW_ACTIVE_SCAN, scan_ch_list,
 --=20
 2.7.4
 
