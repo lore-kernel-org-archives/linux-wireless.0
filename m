@@ -2,229 +2,88 @@ Return-Path: <SRS0=z7UY=PZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FFF8C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 11:30:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F6AC43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 12:29:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FE482054F
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 11:30:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 096D020657
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 12:29:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Zb1s1PNu";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jGxziGI4"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EROl5b4O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726158AbfAQLaG (ORCPT
+        id S1727415AbfAQM3W (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jan 2019 06:30:06 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:55068 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725868AbfAQLaF (ORCPT
+        Thu, 17 Jan 2019 07:29:22 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:46066 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725928AbfAQM3W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jan 2019 06:30:05 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1967E6084F; Thu, 17 Jan 2019 11:30:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547724605;
-        bh=klBJGSkacXRlfrcnAT3/uwvKK7TrHdnMtRU6XixNqlk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Zb1s1PNueICLABhep7SDwTgfAnDVB2ST2VaWjhDtBvDdshm3FracKaRo0R75qpFCX
-         bfgVdfKvU6K7xeW8VE88kwjo+494bt+biEKtiDiX6k6gZc05sCZxSy/tUov8LXXfut
-         OmxtT7UEJWxPYPgnxnRpps0UKs4E+lk61zm938C4=
-Received: from checstex0244823-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: bpothuno@codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6CD27606E1;
-        Thu, 17 Jan 2019 11:30:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547724603;
-        bh=klBJGSkacXRlfrcnAT3/uwvKK7TrHdnMtRU6XixNqlk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=jGxziGI48infUQuMqhpRhENCbhXGbZcDX4hdzZoYhlan+WdDhkfAYX4VcD6UWbB6c
-         yd9dcQolJ3giGvecRfUJqBpAjWdAA4fV4ziwt3hInvZwdwO9rlyzYvGmt7GlOteOMA
-         VxcOEnIA+vQ+7VCVmi1JqOfKeGzJj1PIFMZinYgI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6CD27606E1
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bpothuno@codeaurora.org
-From:   Balaji Pothunoori <bpothuno@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Ashok Raj Nagarajan <arnagara@codeaurora.org>,
-        Balaji Pothunoori <bpothuno@codeaurora.org>
-Subject: [PATCH 3/3] ath10k: add support for controlling tx power to a station
-Date:   Thu, 17 Jan 2019 16:59:35 +0530
-Message-Id: <1547724575-11666-1-git-send-email-bpothuno@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Thu, 17 Jan 2019 07:29:22 -0500
+Received: by mail-wr1-f68.google.com with SMTP id t6so10749997wrr.12
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2019 04:29:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=5rAbVo16b9QfTtSA6qwmRWiDKFta03xdZjOoD2bJw4M=;
+        b=EROl5b4OmT9Ib+86IS5hA4hVZUg0HVTDvryZzVrKWZmbbWc0hVuZEAZTLGpqglx12Z
+         S4MAophHcE6N3/tbHfaMPSB+3DsvA+4vSWYvATmJ4FZ8LjxaBQB/noDt3z1V+YaH4rr8
+         nJn+iHeRUUltOFoCvLnRmVSuAMpCxa9dY+ruWTDg/AFqd5X5jh8TTSOEEIXlZv4ASwTK
+         3CuMl+GEawKlKkvQ6YZazUOlaTPH4LB8oW6LXAUHLf8n0Ls6fBHGMO1MgGcIPmLcOnQD
+         SMjylaLoqteQR6fQKb8YILUVPZXK0YJI89sizPHGNDAq7BSutahXpPnzLMNZitqJjJJw
+         +02Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5rAbVo16b9QfTtSA6qwmRWiDKFta03xdZjOoD2bJw4M=;
+        b=dtGYp010QMbLcgnDUP9mkSfhaoTPeNflB7gaiD/oSc3O8DXyKibdl1dU0EBcnNHS1M
+         1WRS+WROCWChBE6xKMGSIOddMYmIgYycLUSIR3HvxvsgWOJ4/CC9mH4H1LsSukEeZxhy
+         //cy/2MRI9yjw32I/ph+GQnxvcPwlg23AZhm2ti72tE5oR+V3aexSN+Y88pPPtHrjjTb
+         P/Kw7mqmtVeozepdtsFRW5dVWQa8rUpzYfJlm22L0+8Or10SQOAUTTF9kAC59partkF7
+         dq547XLXP0uep+R5mpqoS5bgnDB0+1sZX6j/EOi1GUakcewkGbHgcDtDlfOqoUzV5Wlq
+         /UAQ==
+X-Gm-Message-State: AJcUukdGTLqVA7R/8xrUD+X+VmzMwKShArz+EboS5CvyQC+2Tf6iQbxB
+        VE1JLanNc4ePJIqoZkqcwT0Eso9qfwM6lHCxfboffA==
+X-Google-Smtp-Source: ALg8bN5HY5ovGi3NMUEXs1kbe43ssYcoObBTxKJFZy4TOZQPpfRjsKQiKc8nePfrLA3X1pWXCtRxS3A9iYBz+Alqt9c=
+X-Received: by 2002:a05:6000:1251:: with SMTP id j17mr11516772wrx.315.1547728160169;
+ Thu, 17 Jan 2019 04:29:20 -0800 (PST)
+MIME-Version: 1.0
+References: <20190115233303.226908-1-julanhsu@google.com>
+In-Reply-To: <20190115233303.226908-1-julanhsu@google.com>
+From:   Julian Calaby <julian.calaby@gmail.com>
+Date:   Thu, 17 Jan 2019 23:29:08 +1100
+Message-ID: <CAGRGNgVR3+5AjYc6qWAY09-UwDA-3Zv8kCT3=pGTqEqKPu57eg@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: mesh: only switch path when new metric is at
+ least 10% better
+To:     julanhsu@google.com
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+Hi Julan,
 
-This patch will add the support to control the transmit power for traffic
-to a station associated with the AP. Userspace provide the transmit power
-value in mBm units. ath10k firmware expects the value to be in dBm and
-hence will convert the value from to dBm before passing down to firmware.
+On Thu, Jan 17, 2019 at 4:06 AM <julanhsu@google.com> wrote:
+>
+> From: Julan Hsu <julanhsu@google.com>
+>
+> This helps to reduce frequent path switches when multiple path
+> candidates have the same or very similar path metrics.
 
-Underlying firmware will enforce that the maximum tx power will be based
-on the regulatory requirements. If the user given transmit power is greater
-than the allowed tx power in the given channel, then the firmware will use
-the maximum tx power in the same channel.
+Should this be configurable?
 
-When 0 is sent to the firmware as tx power, it will revert to the default
-tx power for the station.
+Thanks,
 
-Tested Hardware : QCA9984
-Tested Firmware : 10.4-3.9.0.1-00013
-
-Co-developed-by: Balaji Pothunoori <bpothuno@codeaurora.org>
-Signed-off-by: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/debug.h |  3 +++
- drivers/net/wireless/ath/ath10k/mac.c   | 40 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h   | 18 +++++++++++++++
- 3 files changed, 61 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 5cf16d6..1a01093 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -82,6 +82,9 @@ struct ath10k_pktlog_hdr {
- /* FIXME: How to calculate the buffer size sanely? */
- #define ATH10K_FW_STATS_BUF_SIZE (1024 * 1024)
- 
-+#define ATH10K_TX_POWER_MAX_VAL 70
-+#define ATH10K_TX_POWER_MIN_VAL 0
-+
- extern unsigned int ath10k_debug_mask;
- 
- __printf(2, 3) void ath10k_info(struct ath10k *ar, const char *fmt, ...);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e49b367..abf3805 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6281,6 +6281,41 @@ static void ath10k_mac_dec_num_stations(struct ath10k_vif *arvif,
- 	ar->num_stations--;
- }
- 
-+static int ath10k_sta_set_txpwr(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta)
-+{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_vif *arvif = (void *)vif->drv_priv;
-+	int ret = 0;
-+	s16 txpwr;
-+
-+	if (sta->type == NL80211_TX_POWER_AUTOMATIC) {
-+		txpwr = 0;
-+	} else {
-+		txpwr = MBM_TO_DBM(sta->txpwr);
-+		if (!txpwr)
-+			return -EINVAL;
-+	}
-+
-+	if (txpwr > ATH10K_TX_POWER_MAX_VAL || txpwr < ATH10K_TX_POWER_MIN_VAL)
-+		return -EINVAL;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ret = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
-+					WMI_PEER_USE_FIXED_PWR, txpwr);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set tx power for station ret: %d\n",
-+			    ret);
-+		goto out;
-+	}
-+
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
- static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta,
-@@ -7938,6 +7973,7 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.set_key			= ath10k_set_key,
- 	.set_default_unicast_key        = ath10k_set_default_unicast_key,
- 	.sta_state			= ath10k_sta_state,
-+	.sta_set_txpwr			= ath10k_sta_set_txpwr,
- 	.conf_tx			= ath10k_conf_tx,
- 	.remain_on_channel		= ath10k_remain_on_channel,
- 	.cancel_remain_on_channel	= ath10k_cancel_remain_on_channel,
-@@ -8617,6 +8653,10 @@ int ath10k_mac_register(struct ath10k *ar)
- 		wiphy_ext_feature_set(ar->hw->wiphy,
- 				      NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT);
- 
-+	if (test_bit(WMI_SERVICE_TX_PWR_PER_PEER, ar->wmi.svc_map))
-+		wiphy_ext_feature_set(ar->hw->wiphy,
-+				      NL80211_EXT_FEATURE_STA_TX_PWR);
-+
- 	/*
- 	 * on LL hardware queues are managed entirely by the FW
- 	 * so we only advertise to mac we can do the queues thing
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 2034ccc..2c5509a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -208,6 +208,14 @@ enum wmi_service {
- 	WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT,
- 	WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT,
- 	WMI_SERVICE_THERM_THROT,
-+	WMI_SERVICE_HTT_ASSERT_TRIGGER_SUPPORT,
-+	WMI_SERVICE_VDEV_FILTER_NEIGHBOR_RX_PACKETS,
-+	WMI_SERVICE_PEER_CHWIDTH_CHANGE,
-+	WMI_SERVICE_RX_FILTER_OUT_COUNT,
-+	WMI_SERVICE_RTT_RESPONDER_ROLE,
-+	WMI_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT,
-+	WMI_SERVICE_REPORT_AIRTIME,
-+	WMI_SERVICE_TX_PWR_PER_PEER,
- 
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -368,6 +376,12 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_HTT_ASSERT_TRIGGER_SUPPORT,
- 	WMI_10_4_SERVICE_VDEV_FILTER_NEIGHBOR_RX_PACKETS,
- 	WMI_10_4_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT,
-+	WMI_10_4_SERVICE_PEER_CHWIDTH_CHANGE,
-+	WMI_10_4_SERVICE_RX_FILTER_OUT_COUNT,
-+	WMI_10_4_SERVICE_RTT_RESPONDER_ROLE,
-+	WMI_10_4_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT,
-+	WMI_10_4_SERVICE_REPORT_AIRTIME,
-+	WMI_10_4_SERVICE_TX_PWR_PER_PEER,
- };
- 
- static inline char *wmi_service_name(int service_id)
-@@ -483,6 +497,7 @@ static inline char *wmi_service_name(int service_id)
- 	SVCSTR(WMI_SERVICE_RESET_CHIP);
- 	SVCSTR(WMI_SERVICE_TX_DATA_ACK_RSSI);
- 	SVCSTR(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT);
-+	SVCSTR(WMI_SERVICE_TX_PWR_PER_PEER);
- 	default:
- 		return NULL;
- 	}
-@@ -799,6 +814,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT, len);
- 	SVCMAP(WMI_10_4_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT,
- 	       WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT, len);
-+	SVCMAP(WMI_10_4_SERVICE_TX_PWR_PER_PEER,
-+	       WMI_SERVICE_TX_PWR_PER_PEER, len);
- }
- 
- #undef SVCMAP
-@@ -6210,6 +6227,7 @@ enum wmi_peer_param {
- 	WMI_PEER_USE_4ADDR  = 0x6,
- 	WMI_PEER_DEBUG      = 0xa,
- 	WMI_PEER_PHYMODE    = 0xd,
-+	WMI_PEER_USE_FIXED_PWR = 0x8,
- 	WMI_PEER_DUMMY_VAR  = 0xff, /* dummy parameter for STA PS workaround */
- };
- 
 -- 
-2.7.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
