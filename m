@@ -4,179 +4,85 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1E54C43387
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 13:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E03A9C43387
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 13:51:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1204205C9
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 13:29:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76D8720851
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jan 2019 13:51:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VTmabjU6";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VTmabjU6"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="CPQQxvCF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727148AbfAQN3e (ORCPT
+        id S1727458AbfAQNvh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jan 2019 08:29:34 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:42948 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725868AbfAQN3e (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jan 2019 08:29:34 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 78D7C607CA; Thu, 17 Jan 2019 13:29:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547731773;
-        bh=rwNT1Y5pOyjJZ0RQCm0d8sbrf3Hs2dlntDLQM/YpJS4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=VTmabjU6BX5Dm/FkSiOxIf0o5gZRxSdtzIgQ8XEhXp1s/gDsq0JhVhOgm7pidrnYY
-         /lSO4DNoRWHKe1wYp8CNgYczT1ytvK7nyNoQT3M6pQrRbtddxGBexNFQbN9/nwIbgX
-         7rL5No2rGAGII9Fz/RkTTQpCZ+jcZstcUIpTCMJw=
-Received: from checstex0244823-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: bpothuno@codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 64344605A0;
-        Thu, 17 Jan 2019 13:29:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547731773;
-        bh=rwNT1Y5pOyjJZ0RQCm0d8sbrf3Hs2dlntDLQM/YpJS4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=VTmabjU6BX5Dm/FkSiOxIf0o5gZRxSdtzIgQ8XEhXp1s/gDsq0JhVhOgm7pidrnYY
-         /lSO4DNoRWHKe1wYp8CNgYczT1ytvK7nyNoQT3M6pQrRbtddxGBexNFQbN9/nwIbgX
-         7rL5No2rGAGII9Fz/RkTTQpCZ+jcZstcUIpTCMJw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 64344605A0
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bpothuno@codeaurora.org
-From:   Balaji Pothunoori <bpothuno@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Ashok Raj Nagarajan <arnagara@codeaurora.org>,
-        Balaji Pothunoori <bpothuno@codeaurora.org>
-Subject: [PATCH] iw: Add support for controlling tx power for per station
-Date:   Thu, 17 Jan 2019 18:59:24 +0530
-Message-Id: <1547731764-14037-1-git-send-email-bpothuno@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Thu, 17 Jan 2019 08:51:37 -0500
+Received: from nbd.name ([46.4.11.11]:56446 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726876AbfAQNvg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jan 2019 08:51:36 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
+        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=TU+BFjCd46emK2RL4GXc5qDlMU+nmEa5Po7lUxzs2q0=; b=CPQQxvCFJIstxg2Kfb1H0sCHjt
+        vsieMurQC9VJuFJfF2pRRiW9/J7Vy8xBO9IMuYHN9ntjhtIw7FsU1HpGav4pqqEuKcWMBTRQoUeXD
+        cOzzzt8tPRDj8HOMyYuY/uXfDJGMNUCLHBSe9q/bAdN4yxFIVN/o1Ie3cKO7QGCfTl7E=;
+Received: by maeck.lan (Postfix, from userid 501)
+        id 30DE34C6F04C; Thu, 17 Jan 2019 14:51:33 +0100 (CET)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 5/7] mt76: fix rssi ewma tracking
+Date:   Thu, 17 Jan 2019 14:51:31 +0100
+Message-Id: <20190117135133.2753-5-nbd@nbd.name>
+X-Mailer: git-send-email 2.17.0
+In-Reply-To: <20190117135133.2753-1-nbd@nbd.name>
+References: <20190117135133.2753-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+The generic EWMA code cannot deal with negative numbers, so convert signal
+to a positive number before adding it
+Fixes mt76x2 AGC tuning
 
-This patch allows userspace to set transmit power,
-in mBm units, to a station associated to the AP.
-
-To set a limit tx power of 2000 mBm:
-iw wlan0 station set <mac-addr> txpwr limit 2000
-
-To revert the user defined tx power for a station:
-iw wlan0 station set <mac-addr> txpwr auto
-
-iCo-developed-by: Balaji Pothunoori <bpothuno@codeaurora.org>
-Signed-off-by: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- station.c | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 71 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 4 +++-
+ drivers/net/wireless/mediatek/mt76/util.c     | 2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/station.c b/station.c
-index e1477ef..3cce617 100644
---- a/station.c
-+++ b/station.c
-@@ -651,6 +651,7 @@ COMMAND(station, del, "<MAC address> [subtype <subtype>] [reason-code <code>]",
- static const struct cmd *station_set_plink;
- static const struct cmd *station_set_vlan;
- static const struct cmd *station_set_mesh_power_mode;
-+static const struct cmd *station_set_txpwr;
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 226f98fff6ef..3b09d4560ae2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -567,7 +567,9 @@ mt76_check_sta(struct mt76_dev *dev, struct sk_buff *skb)
  
- static const struct cmd *select_station_cmd(int argc, char **argv)
- {
-@@ -662,6 +663,8 @@ static const struct cmd *select_station_cmd(int argc, char **argv)
- 		return station_set_vlan;
- 	if (strcmp(argv[1], "mesh_power_mode") == 0)
- 		return station_set_mesh_power_mode;
-+	if (strcmp(argv[1], "txpwr") == 0)
-+		return station_set_txpwr;
- 	return NULL;
- }
+ 	sta = container_of((void *) wcid, struct ieee80211_sta, drv_priv);
  
-@@ -813,6 +816,74 @@ COMMAND_ALIAS(station, set, "<MAC address> mesh_power_mode "
- 	"Set link-specific mesh power mode for this station",
- 	select_station_cmd, station_set_mesh_power_mode);
+-	ewma_signal_add(&wcid->rssi, status->signal);
++	if (status->signal <= 0)
++		ewma_signal_add(&wcid->rssi, -status->signal);
++
+ 	wcid->inactive_count = 0;
  
-+static int handle_station_set_txpwr(struct nl80211_state *state,
-+				    struct nl_msg *msg,
-+				    int argc, char **argv,
-+				    enum id_input id)
-+{
-+	enum nl80211_tx_power_setting type;
-+	unsigned char mac_addr[ETH_ALEN];
-+	unsigned int sta_txpwr = 0;
-+	char *err = NULL;
-+
-+	if (argc != 3 && argc != 4)
-+		return 1;
-+
-+	if (mac_addr_a2n(mac_addr, argv[0])) {
-+		fprintf(stderr, "invalid mac address\n");
-+		return 2;
-+	}
-+
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-+	argc--;
-+	argv++;
-+
-+	if (strcmp("txpwr", argv[0]) != 0)
-+		return 1;
-+	argc--;
-+	argv++;
-+
-+	if (!strcmp(argv[0], "auto"))
-+		type = NL80211_TX_POWER_AUTOMATIC;
-+	else if (!strcmp(argv[0], "limit"))
-+		type = NL80211_TX_POWER_LIMITED;
-+	else {
-+		printf("Invalid parameter: %s\n", argv[0]);
-+		return 2;
-+	}
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_STA_TX_POWER_SETTING, type);
-+
-+	if (type != NL80211_TX_POWER_AUTOMATIC) {
-+		if (argc != 2) {
-+			printf("Missing TX power level argument.\n");
-+			return 2;
-+		}
-+
-+		argc--;
-+		argv++;
-+
-+		sta_txpwr = strtoul(argv[0], &err, 0);
-+
-+		if (sta_txpwr)
-+		NLA_PUT_U32(msg, NL80211_ATTR_STA_TX_POWER, sta_txpwr);
-+	}
-+
-+	argc--;
-+	argv++;
-+
-+	if (argc)
-+		return 1;
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND_ALIAS(station, set, "<MAC address> txpwr <auto|limit> [<tx power mBm>]",
-+	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_txpwr,
-+	"Set Tx power for this station.",
-+	select_station_cmd, station_set_txpwr);
-+
- static int handle_station_dump(struct nl80211_state *state,
- 			       struct nl_msg *msg,
- 			       int argc, char **argv,
+ 	if (!test_bit(MT_WCID_FLAG_CHECK_PS, &wcid->flags))
+diff --git a/drivers/net/wireless/mediatek/mt76/util.c b/drivers/net/wireless/mediatek/mt76/util.c
+index 6242421c6011..69270c1a9091 100644
+--- a/drivers/net/wireless/mediatek/mt76/util.c
++++ b/drivers/net/wireless/mediatek/mt76/util.c
+@@ -100,7 +100,7 @@ int mt76_get_min_avg_rssi(struct mt76_dev *dev)
+ 
+ 			spin_lock(&dev->rx_lock);
+ 			if (wcid->inactive_count++ < 5)
+-				cur_rssi = ewma_signal_read(&wcid->rssi);
++				cur_rssi = -ewma_signal_read(&wcid->rssi);
+ 			else
+ 				cur_rssi = 0;
+ 			spin_unlock(&dev->rx_lock);
 -- 
-2.7.4
+2.17.0
 
