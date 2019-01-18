@@ -2,79 +2,101 @@ Return-Path: <SRS0=80NG=P2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E424C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:30:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE1DC43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:41:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EA7220823
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:30:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bigrsgjK";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UMUTLm0k"
+	by mail.kernel.org (Postfix) with ESMTP id 38C4D20855
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:41:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1547804512;
+	bh=b527gET5VjHPb1jyhLBHwQDsNRAn17WvRPMLwTl3omk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Zz5F2BUClomp6OGE2VFgk5PW1hUtfV5lBaCnTHcH73z8CdnXJWk7wFEwP4WwGWKRe
+	 Ev1plMBG8a+Q+V0rY+D0zbi8zhA53992SKC19tJwociy4rTRZLTxKcpjXGva3woHAI
+	 1cyL41lpEUZDc3O4OPUzJIX/1b7JJQCCM2U/+wMk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727100AbfARJaY (ORCPT
+        id S1726461AbfARJlv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jan 2019 04:30:24 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:39032 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726722AbfARJaX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jan 2019 04:30:23 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1015260734; Fri, 18 Jan 2019 09:30:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547803823;
-        bh=/KyCPpz9Gl+7Xkl0PM4pUW7tQKVoFNbNyiqjSLFjBIo=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=bigrsgjKGhkvm4LiV6hLixBld1QMCprv6Sd820PslhhElYWGlgFL1pRKp1FLK3yQb
-         yO4HQnVRzzmnNbHVnmyv9sHtinVfcs4U3MeW7RQYRYnGAcmTwtGK3zqK/ywApJqrF0
-         RZteZw9R1b2yJirDdaUw7olw1B8FqzcVZ+iNYcug=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Fri, 18 Jan 2019 04:41:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39622 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725898AbfARJlv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Jan 2019 04:41:51 -0500
+Received: from localhost (5356596B.cm-6-7b.dynamic.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5E878605A0;
-        Fri, 18 Jan 2019 09:30:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1547803822;
-        bh=/KyCPpz9Gl+7Xkl0PM4pUW7tQKVoFNbNyiqjSLFjBIo=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=UMUTLm0kqTzZpRzL3p1u2GvWjBYdC++kX6PHKnVCOPKakQgmLo0DQaKF6jGT2J/PY
-         BvL8Mm3cx8N8ZZcPYS7gtU4GqRFhIZB/S7Fs+XM8ybJZ7eUmJ+8GCvipQq6vsmoT8b
-         wfAs0yUjzZ31dQGu0qkoqxVgS1ZQlUe4Pn4wO4xo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5E878605A0
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Wei Yongjun <weiyongjun1@huawei.com>
-Cc:     Cody Schuffelen <schuffelen@google.com>,
-        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH net-next] virt_wifi: fix error return code in virt_wifi_newlink()
-References: <1547796592-99034-1-git-send-email-weiyongjun1@huawei.com>
-Date:   Fri, 18 Jan 2019 11:30:18 +0200
-In-Reply-To: <1547796592-99034-1-git-send-email-weiyongjun1@huawei.com> (Wei
-        Yongjun's message of "Fri, 18 Jan 2019 07:29:52 +0000")
-Message-ID: <87fttqpb2t.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mail.kernel.org (Postfix) with ESMTPSA id AA4D920823;
+        Fri, 18 Jan 2019 09:41:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1547804510;
+        bh=b527gET5VjHPb1jyhLBHwQDsNRAn17WvRPMLwTl3omk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=xmXAAM05k08+IITLQYqxUpK398z45t4M7Kg+LA0AQP0ZkIO53zFLIA6Pxo1lDKeFL
+         Ll+tKBUGfkbpT0MuPAy6So10k0TZnmzxj1CfAgw1+Tj1GXwTQ0QwQrSqvLLptNd3Wd
+         a9Gz3fkMS4WqQD8u8GBmluKYqvINSoxyS1Oucav8=
+Date:   Fri, 18 Jan 2019 10:41:27 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Ajay.Kathat@microchip.com
+Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        johannes@sipsolutions.net, Adham.Abozaeid@microchip.com
+Subject: Re: [PATCH 00/13] staging: wilc1000: address few mainline review
+Message-ID: <20190118094127.GA31389@kroah.com>
+References: <1547731250-18518-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1547731250-18518-1-git-send-email-ajay.kathat@microchip.com>
+User-Agent: Mutt/1.11.2 (2019-01-07)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wei Yongjun <weiyongjun1@huawei.com> writes:
+On Thu, Jan 17, 2019 at 01:21:06PM +0000, Ajay.Kathat@microchip.com wrote:
+> From: Ajay Singh <ajay.kathat@microchip.com>
+> 
+> This series contains changes to address few of the review comments[1].
+> It mainly has the modification to remove the use of scan shadow
+> buffer, make use of kernel provided API, avoid typedef's and few
+> changes to simplify the logic.
+> 
+> [1]. https://www.spinics.net/lists/linux-wireless/msg178735.html
+>      https://www.spinics.net/lists/linux-wireless/msg179533.html
+>      https://www.spinics.net/lists/linux-wireless/msg178760.html
+> 
+> Ajay Singh (13):
+>   staging: wilc1000: make use of get_unaligned_le16/le32 to pack data
+>   staging: wilc1000: refactor wilc_wlan_set_bssid()
+>   staging: wilc1000: use 'struct' to pack cfg header frame in
+>     wilc_wlan_cfg_commit()
+>   staging: wilc1000: remove the use of scan shadow buffer
+>   staging: wilc1000: make use of cfg80211_inform_bss_frame()
+>   staging: wilc1000: corrected order to pack join param buffer
+>   staging: wilc1000: use struct to pack join parameters for FW
+>   staging: wilc1000: rename hidden_network related data structure
+>   staging: wilc1000: use single struct for 'connect' related parameters
+>   staging: wilc1000: refactor information message parsing logic
+>   staging: wilc1000: remove 'disconnect_info' structure
+>   staging: wilc1000: refactor handle_set_mcast_filter()
+>   staging: wilc1000: avoid the use of typedef for function pointers
+> 
+>  drivers/staging/wilc1000/host_interface.c         | 979 +++++++---------------
+>  drivers/staging/wilc1000/host_interface.h         | 127 +--
+>  drivers/staging/wilc1000/linux_wlan.c             |  12 +-
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 450 ++--------
+>  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   5 +-
+>  drivers/staging/wilc1000/wilc_wlan.c              |  35 +-
+>  drivers/staging/wilc1000/wilc_wlan.h              |  19 +-
+>  drivers/staging/wilc1000/wilc_wlan_cfg.c          |  27 +-
+>  drivers/staging/wilc1000/wilc_wlan_if.h           |   3 -
+>  9 files changed, 456 insertions(+), 1201 deletions(-)
 
-> Fix to return a negative error code from the error handling
-> case instead of 0, as done elsewhere in this function.
->
-> Fixes: c7cdba31ed8b ("mac80211-next: rtnetlink wifi simulation device")
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Nice set of cleanups!
 
-BTW, virt_wifi patches go through mac80211-next, not via net-next.
+all applied, thanks.
 
--- 
-Kalle Valo
+greg k-h
