@@ -2,101 +2,85 @@ Return-Path: <SRS0=80NG=P2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE1DC43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:41:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3DA9C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:46:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38C4D20855
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:41:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1547804512;
-	bh=b527gET5VjHPb1jyhLBHwQDsNRAn17WvRPMLwTl3omk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Zz5F2BUClomp6OGE2VFgk5PW1hUtfV5lBaCnTHcH73z8CdnXJWk7wFEwP4WwGWKRe
-	 Ev1plMBG8a+Q+V0rY+D0zbi8zhA53992SKC19tJwociy4rTRZLTxKcpjXGva3woHAI
-	 1cyL41lpEUZDc3O4OPUzJIX/1b7JJQCCM2U/+wMk=
+	by mail.kernel.org (Postfix) with ESMTP id 8BA2A2086D
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:46:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="J0zvbVmc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726461AbfARJlv (ORCPT
+        id S1727393AbfARJp6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jan 2019 04:41:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39622 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725898AbfARJlv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jan 2019 04:41:51 -0500
-Received: from localhost (5356596B.cm-6-7b.dynamic.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AA4D920823;
-        Fri, 18 Jan 2019 09:41:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1547804510;
-        bh=b527gET5VjHPb1jyhLBHwQDsNRAn17WvRPMLwTl3omk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=xmXAAM05k08+IITLQYqxUpK398z45t4M7Kg+LA0AQP0ZkIO53zFLIA6Pxo1lDKeFL
-         Ll+tKBUGfkbpT0MuPAy6So10k0TZnmzxj1CfAgw1+Tj1GXwTQ0QwQrSqvLLptNd3Wd
-         a9Gz3fkMS4WqQD8u8GBmluKYqvINSoxyS1Oucav8=
-Date:   Fri, 18 Jan 2019 10:41:27 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Ajay.Kathat@microchip.com
-Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        johannes@sipsolutions.net, Adham.Abozaeid@microchip.com
-Subject: Re: [PATCH 00/13] staging: wilc1000: address few mainline review
-Message-ID: <20190118094127.GA31389@kroah.com>
-References: <1547731250-18518-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 18 Jan 2019 04:45:58 -0500
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:33173 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727377AbfARJp5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Jan 2019 04:45:57 -0500
+Received: by mail-yw1-f68.google.com with SMTP id p65so5020358ywe.0
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2019 01:45:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=9x1m8LrQ/uaJc1e20IjN4qpu27XdRlDaxrcIM5MXSNw=;
+        b=J0zvbVmcFH6OVjrxh2ax/T7/hmzWWrzDB+7VAmObP/81Oz3Z4SPbYsPbCzdsYon8xT
+         QOBhhVg4sxNG0Molx/08oMB6C6s3iSwXOwDZaMnYFLHPHr4VhWl5nh0xkqATxNDdS3kY
+         WcjWUiS9NhvWrwFQ+IP98UmOA6HQL71E4gEtU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=9x1m8LrQ/uaJc1e20IjN4qpu27XdRlDaxrcIM5MXSNw=;
+        b=Ccce8QijSeKd7CtfL4VWUQwV664GdO9m/iKQlickRnE/vP0NOB9C4sdIXpAuE05edj
+         SOCr2SaomcvOSOa5LGe5G+7Y/jYXFd//N+41Tsi4lT8AJh0kcf/FbaRyfCGMkt5CpfL4
+         1MMNbYjbWWxUgL7ht1W1qZxcwOoKL59PJ6XVaQiZ+LRjvHUe2cOYEy5uJElyL65vZ803
+         m6Bj5DgNF9nkVqAlJq0VLGCEUNoy4m4Fy7LIzPMd/nn6VDjjFRjGC5zggVwDNBdPha9p
+         luaDrPsiV+4FUfsZ0kSZqw+bynmcwmI6kTgQeqUp29CaI1FQ6YrcRv4eT7Z5q798Jvx6
+         3Dxw==
+X-Gm-Message-State: AJcUukcswb+ZGnKJ7dThx9c313AvtdB2A/KfnZwLcii4H32JqzvnxX5Z
+        fm8FCZFKB5Kv7RGgzJjwZZBxpg==
+X-Google-Smtp-Source: ALg8bN5Mivn6t/6+Qqlj7OAgfK7GKS+YO4T/VuUyIdYqIvgc0tiKFWZZdV+O5hClqXudLJ6OTXSCIw==
+X-Received: by 2002:a0d:db97:: with SMTP id d145mr16776018ywe.487.1547804757105;
+        Fri, 18 Jan 2019 01:45:57 -0800 (PST)
+Received: from [10.176.68.125] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id j134sm1964113ywb.91.2019.01.18.01.45.54
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 18 Jan 2019 01:45:56 -0800 (PST)
+Subject: Re: [PATCH] wireless: remove unneeded semicolon
+To:     YueHaibing <yuehaibing@huawei.com>, davem@davemloft.net,
+        kvalo@codeaurora.org, franky.lin@broadcom.com,
+        chi-hsien.lin@cypress.com, pkshih@realtek.com
+Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+References: <20190118033215.5904-1-yuehaibing@huawei.com>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <e90c544b-3830-70d9-b793-ffa296c94320@broadcom.com>
+Date:   Fri, 18 Jan 2019 10:45:53 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1547731250-18518-1-git-send-email-ajay.kathat@microchip.com>
-User-Agent: Mutt/1.11.2 (2019-01-07)
+In-Reply-To: <20190118033215.5904-1-yuehaibing@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jan 17, 2019 at 01:21:06PM +0000, Ajay.Kathat@microchip.com wrote:
-> From: Ajay Singh <ajay.kathat@microchip.com>
-> 
-> This series contains changes to address few of the review comments[1].
-> It mainly has the modification to remove the use of scan shadow
-> buffer, make use of kernel provided API, avoid typedef's and few
-> changes to simplify the logic.
-> 
-> [1]. https://www.spinics.net/lists/linux-wireless/msg178735.html
->      https://www.spinics.net/lists/linux-wireless/msg179533.html
->      https://www.spinics.net/lists/linux-wireless/msg178760.html
-> 
-> Ajay Singh (13):
->   staging: wilc1000: make use of get_unaligned_le16/le32 to pack data
->   staging: wilc1000: refactor wilc_wlan_set_bssid()
->   staging: wilc1000: use 'struct' to pack cfg header frame in
->     wilc_wlan_cfg_commit()
->   staging: wilc1000: remove the use of scan shadow buffer
->   staging: wilc1000: make use of cfg80211_inform_bss_frame()
->   staging: wilc1000: corrected order to pack join param buffer
->   staging: wilc1000: use struct to pack join parameters for FW
->   staging: wilc1000: rename hidden_network related data structure
->   staging: wilc1000: use single struct for 'connect' related parameters
->   staging: wilc1000: refactor information message parsing logic
->   staging: wilc1000: remove 'disconnect_info' structure
->   staging: wilc1000: refactor handle_set_mcast_filter()
->   staging: wilc1000: avoid the use of typedef for function pointers
-> 
->  drivers/staging/wilc1000/host_interface.c         | 979 +++++++---------------
->  drivers/staging/wilc1000/host_interface.h         | 127 +--
->  drivers/staging/wilc1000/linux_wlan.c             |  12 +-
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 450 ++--------
->  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   5 +-
->  drivers/staging/wilc1000/wilc_wlan.c              |  35 +-
->  drivers/staging/wilc1000/wilc_wlan.h              |  19 +-
->  drivers/staging/wilc1000/wilc_wlan_cfg.c          |  27 +-
->  drivers/staging/wilc1000/wilc_wlan_if.h           |   3 -
->  9 files changed, 456 insertions(+), 1201 deletions(-)
+On 1/18/2019 4:32 AM, YueHaibing wrote:
+> remove unneeded semicolon
 
-Nice set of cleanups!
-
-all applied, thanks.
-
-greg k-h
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 2 +-
