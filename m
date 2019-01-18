@@ -2,85 +2,140 @@ Return-Path: <SRS0=80NG=P2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3DA9C43387
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:46:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75510C43387
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 11:27:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8BA2A2086D
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 09:46:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DFB0204EC
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 11:27:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="J0zvbVmc"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KvODTVwY";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bMK/Sbbw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727393AbfARJp6 (ORCPT
+        id S1727377AbfARL1X (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jan 2019 04:45:58 -0500
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:33173 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727377AbfARJp5 (ORCPT
+        Fri, 18 Jan 2019 06:27:23 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:57424 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727343AbfARL1X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jan 2019 04:45:57 -0500
-Received: by mail-yw1-f68.google.com with SMTP id p65so5020358ywe.0
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2019 01:45:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=9x1m8LrQ/uaJc1e20IjN4qpu27XdRlDaxrcIM5MXSNw=;
-        b=J0zvbVmcFH6OVjrxh2ax/T7/hmzWWrzDB+7VAmObP/81Oz3Z4SPbYsPbCzdsYon8xT
-         QOBhhVg4sxNG0Molx/08oMB6C6s3iSwXOwDZaMnYFLHPHr4VhWl5nh0xkqATxNDdS3kY
-         WcjWUiS9NhvWrwFQ+IP98UmOA6HQL71E4gEtU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=9x1m8LrQ/uaJc1e20IjN4qpu27XdRlDaxrcIM5MXSNw=;
-        b=Ccce8QijSeKd7CtfL4VWUQwV664GdO9m/iKQlickRnE/vP0NOB9C4sdIXpAuE05edj
-         SOCr2SaomcvOSOa5LGe5G+7Y/jYXFd//N+41Tsi4lT8AJh0kcf/FbaRyfCGMkt5CpfL4
-         1MMNbYjbWWxUgL7ht1W1qZxcwOoKL59PJ6XVaQiZ+LRjvHUe2cOYEy5uJElyL65vZ803
-         m6Bj5DgNF9nkVqAlJq0VLGCEUNoy4m4Fy7LIzPMd/nn6VDjjFRjGC5zggVwDNBdPha9p
-         luaDrPsiV+4FUfsZ0kSZqw+bynmcwmI6kTgQeqUp29CaI1FQ6YrcRv4eT7Z5q798Jvx6
-         3Dxw==
-X-Gm-Message-State: AJcUukcswb+ZGnKJ7dThx9c313AvtdB2A/KfnZwLcii4H32JqzvnxX5Z
-        fm8FCZFKB5Kv7RGgzJjwZZBxpg==
-X-Google-Smtp-Source: ALg8bN5Mivn6t/6+Qqlj7OAgfK7GKS+YO4T/VuUyIdYqIvgc0tiKFWZZdV+O5hClqXudLJ6OTXSCIw==
-X-Received: by 2002:a0d:db97:: with SMTP id d145mr16776018ywe.487.1547804757105;
-        Fri, 18 Jan 2019 01:45:57 -0800 (PST)
-Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id j134sm1964113ywb.91.2019.01.18.01.45.54
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 18 Jan 2019 01:45:56 -0800 (PST)
-Subject: Re: [PATCH] wireless: remove unneeded semicolon
-To:     YueHaibing <yuehaibing@huawei.com>, davem@davemloft.net,
-        kvalo@codeaurora.org, franky.lin@broadcom.com,
-        chi-hsien.lin@cypress.com, pkshih@realtek.com
-Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-References: <20190118033215.5904-1-yuehaibing@huawei.com>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <e90c544b-3830-70d9-b793-ffa296c94320@broadcom.com>
-Date:   Fri, 18 Jan 2019 10:45:53 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
-In-Reply-To: <20190118033215.5904-1-yuehaibing@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        Fri, 18 Jan 2019 06:27:23 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 5A8B660851; Fri, 18 Jan 2019 11:27:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1547810842;
+        bh=sQAjgbuJrWUCX77WnQjI7an7kk0Qyx3vZbZiCirmb00=;
+        h=From:To:Cc:Subject:Date:From;
+        b=KvODTVwYXKqOBQ6jI6MzxT8XKQzF76uPD1KK11QJdSGNsBux4jsIRfu0I6mr2EAm6
+         JZ++5MMk0UXscEnicYmTFuXCL0bGS8mXe2h7C5jYtp4yvbmcC6Z0VCzX9bJ3xSxfuy
+         ot7jL9Q0DRyEKAHbanjJpbO96zC8d7x8CuWDzKi0=
+Received: from dasaris-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dasaris@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D1D0D602FC;
+        Fri, 18 Jan 2019 11:27:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1547810841;
+        bh=sQAjgbuJrWUCX77WnQjI7an7kk0Qyx3vZbZiCirmb00=;
+        h=From:To:Cc:Subject:Date:From;
+        b=bMK/SbbwvmHn03KN+RjQm8aGMvhMr5Ywwd4DUjSUwFE2jans/dr508oG+0J+Gn12A
+         UNgviX/6kQ3yqSk8PM+sNMwLlu57IlIaP1bbvJWIqYmDYJzy0bzjNIqtIjmNPXQHc0
+         LaraqdlkHJ0fqsOYYmCV3b9EAa8+6NnYJnYIwLCk=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D1D0D602FC
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=dasaris@codeaurora.org
+From:   Srinivas Dasari <dasaris@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Liangwei Dong <liangwei@codeaurora.org>,
+        Srinivas Dasari <dasaris@codeaurora.org>
+Subject: [PATCH] nl80211: Allow set/del pmksa operations for AP
+Date:   Fri, 18 Jan 2019 16:54:38 +0530
+Message-Id: <1547810678-30664-1-git-send-email-dasaris@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/18/2019 4:32 AM, YueHaibing wrote:
-> remove unneeded semicolon
+From: Liangwei Dong <liangwei@codeaurora.org>
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 2 +-
+Host drivers may offload authentication to the user space
+through the commit ("cfg80211: Authentication offload to
+user space in AP mode").
+
+This interface can be used to implement SAE by having the
+userspace do authentication/PMKID key derivation and driver
+handle the association.
+
+A step ahead, this interface can get further optimized if the
+PMKID is passed to the host driver and also have it respond to
+the association request by the STA on a valid PMKID.
+
+This commit enables the userspace to pass the PMKID to the host
+drivers through the set/del pmksa operations in AP mode.
+
+Set/Del pmksa is now restricted to STA/P2P client mode only and
+thus the drivers might not expect them in any other(AP) mode.
+
+This commit also introduces a feature flag
+NL80211_EXT_FEATURE_SET_DEL_PMKSA_AP to maintain the backward
+compatibility of such an expectation by the host drivers.
+These operations are allowed in AP mode only when the drivers
+advertize the capability through this flag.
+
+Signed-off-by: Liangwei Dong <liangwei@codeaurora.org>
+Signed-off-by: Srinivas Dasari <dasaris@codeaurora.org>
+---
+ include/uapi/linux/nl80211.h | 6 ++++++
+ net/wireless/nl80211.c       | 5 ++++-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 30e1bb6..5553ae6 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -5318,6 +5318,11 @@ enum nl80211_feature_flags {
+  *      if this flag is not set. Ignoring this can leak clear text packets and/or
+  *      freeze the connection.
+  *
++ * @NL80211_EXT_FEATURE_SET_DEL_PMKSA_AP: Driver/device support set/del pmksa in
++ *	AP mode. Initial implementation of nl80211_setdel_pmksa does not allow
++ *	pmksa configuration in AP mode. This flag allows the set/del pmksa to
++ *	the drivers only when set, thus ensuring the backward compatibility.
++ *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -5357,6 +5362,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
+ 	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
+ 	NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER,
++	NL80211_EXT_FEATURE_SET_DEL_PMKSA_AP,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 0af5db3..686da9f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9858,7 +9858,10 @@ static int nl80211_setdel_pmksa(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION &&
+-	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_CLIENT)
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_CLIENT &&
++	    !(dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP &&
++	      wiphy_ext_feature_isset(&rdev->wiphy,
++				      NL80211_EXT_FEATURE_SET_DEL_PMKSA_AP)))
+ 		return -EOPNOTSUPP;
+ 
+ 	switch (info->genlhdr->cmd) {
+-- 
+1.9.1
+
