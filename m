@@ -2,134 +2,115 @@ Return-Path: <SRS0=80NG=P2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BBBCC5AC81
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 19:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FA98C5AC81
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 19:00:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 644832086D
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 19:00:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CA7120883
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jan 2019 19:00:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729158AbfARTAR (ORCPT
+        id S1729187AbfARTAT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jan 2019 14:00:17 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:48302 "EHLO
+        Fri, 18 Jan 2019 14:00:19 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:48318 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728989AbfARTAQ (ORCPT
+        with ESMTP id S1726524AbfARTAR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jan 2019 14:00:16 -0500
+        Fri, 18 Jan 2019 14:00:17 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gkZNE-0004cj-Sn; Fri, 18 Jan 2019 21:00:13 +0200
+        id 1gkZNH-0004cj-Iw; Fri, 18 Jan 2019 21:00:15 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 18 Jan 2019 20:59:48 +0200
-Message-Id: <20190118190004.22270-1-luca@coelho.fi>
+Date:   Fri, 18 Jan 2019 20:59:51 +0200
+Message-Id: <20190118190004.22270-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190118190004.22270-1-luca@coelho.fi>
+References: <20190118190004.22270-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/16] iwlwifi: updates intended for v4.21 2019-01-18
+Subject: [PATCH 03/16] iwlwifi: mvm: advertise support for TWT in the Extended Capability IE
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Hi,
+We want to advertise support for TWT in the Extended
+Capability IE. Since we don't want to set the bits for all
+the interface types, define an interface specific
+configuration.
 
-Here's the first set of patches intended for v5.1.  It's the usual
-development, new features, cleanups and bugfixes.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  3 +--
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 22 +++++++++++++++++++
+ 2 files changed, 23 insertions(+), 2 deletions(-)
 
-The changes are:
-
-* Preparations for improvements in the device selection code;
-* Some new PCI IDs;
-* Support for TWT;
-* Debugging infrastructure work;
-* Other cleanups and small fixes;
-
-I'm using some new scripts I wrote that automate the removal of tags,
-cherry-picking, squashing etc.  Please let me know if you see anything
-weird, since I'm automating more and doing less manual checks, and the
-scripts may have let something go through.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Colin Ian King (1):
-  iwlwifi: pcie: make array 'prop' static, shrinks object size
-
-Emmanuel Grumbach (3):
-  iwlwifi: mvm: advertise support for TWT in the Extended Capability IE
-  iwlwifi: mvm: rely on mac80211 to configure TWT support
-  iwlwifi: mvm: fix firmware statistics usage
-
-Ihab Zhaika (2):
-  iwlwifi: correct one of the PCI struct names
-  iwlwifi: add new cards for 22560, 9260 and killer series
-
-Johannes Berg (1):
-  iwlwifi: mvm: make NVM access actually fail on failures
-
-Luca Coelho (5):
-  iwlwifi: add PCI IDs for the 22260 device series
-  iwlwifi: pcie: recognize NICs with hw_rev 0x364 correctly
-  iwlwifi: remove support for 9000 A-step devices
-  iwlwifi: pcie: remove unnecessary iwl_pcie_enable_rx_wake() function
-  iwlwifi: pcie: remove suspend/resume workaround for 9000A devices
-
-Sara Sharon (1):
-  iwlwifi: mvm: support mac80211 TXQs model
-
-Shahar S Matityahu (2):
-  iwlwifi: wrt: add to dump number of lmacs, lmac1 and umac error id
-  iwlwifi: wrt: add 22000 device familiy prph dump support
-
-Shaul Triebitz (1):
-  iwlwifi: mvm: fix wrong DCM TLC config
-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  68 +++-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c | 110 ++----
- .../net/wireless/intel/iwlwifi/fw/api/stats.h |  15 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 176 +++++++--
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |   5 +-
- .../wireless/intel/iwlwifi/fw/error-dump.h    |  11 +-
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |   3 +-
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  12 +-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  27 +-
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |   3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |   8 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |   5 +-
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  94 +----
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 135 +++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  54 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c  |  10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  87 +++--
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    |   7 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   |  10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 360 +++++++-----------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h  |   4 -
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |  71 +---
- .../net/wireless/intel/iwlwifi/mvm/utils.c    |  13 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  86 ++++-
- .../wireless/intel/iwlwifi/pcie/internal.h    |   2 -
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  26 --
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  25 +-
- 27 files changed, 727 insertions(+), 700 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index d9afedc3d1d9..173ade96f119 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -569,8 +569,7 @@ static struct ieee80211_sband_iftype_data iwl_he_capa[] = {
+ 			.has_he = true,
+ 			.he_cap_elem = {
+ 				.mac_cap_info[0] =
+-					IEEE80211_HE_MAC_CAP0_HTC_HE |
+-					IEEE80211_HE_MAC_CAP0_TWT_RES,
++					IEEE80211_HE_MAC_CAP0_HTC_HE,
+ 				.mac_cap_info[1] =
+ 					IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US |
+ 					IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_RX_QOS_8,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 97dc464379d2..310a36dd33cf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -395,6 +395,21 @@ int iwl_mvm_init_fw_regd(struct iwl_mvm *mvm)
+ 	return ret;
+ }
+ 
++const static u8 he_if_types_ext_capa_sta[] = {
++	 [0] = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
++	 [7] = WLAN_EXT_CAPA8_OPMODE_NOTIF,
++	 [9] = WLAN_EXT_CAPA10_TWT_REQUESTER_SUPPORT,
++};
++
++const static struct wiphy_iftype_ext_capab he_iftypes_ext_capa[] = {
++	{
++		.iftype = NL80211_IFTYPE_STATION,
++		.extended_capabilities = he_if_types_ext_capa_sta,
++		.extended_capabilities_mask = he_if_types_ext_capa_sta,
++		.extended_capabilities_len = sizeof(he_if_types_ext_capa_sta),
++	},
++};
++
+ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ {
+ 	struct ieee80211_hw *hw = mvm->hw;
+@@ -673,6 +688,13 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 			NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE);
+ 	}
+ 
++	if (mvm->nvm_data->sku_cap_11ax_enable &&
++	    !iwlwifi_mod_params.disable_11ax) {
++		hw->wiphy->iftype_ext_capab = he_iftypes_ext_capa;
++		hw->wiphy->num_iftype_ext_capab =
++			ARRAY_SIZE(he_iftypes_ext_capa);
++	}
++
+ 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
+ 
+ #ifdef CONFIG_PM_SLEEP
 -- 
 2.20.1
 
