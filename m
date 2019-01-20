@@ -4,100 +4,141 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0C7AC282E6
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 07:51:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03ECDC282DB
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 08:24:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98DD92084A
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 07:51:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D18362084A
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 08:24:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728906AbfAUHvL (ORCPT
+        id S1728554AbfAUIYW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jan 2019 02:51:11 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:49188 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726240AbfAUHvL (ORCPT
+        Mon, 21 Jan 2019 03:24:22 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:40523 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728490AbfAUIYW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jan 2019 02:51:11 -0500
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1glULy-0006cr-4X; Mon, 21 Jan 2019 09:50:42 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Mon, 21 Jan 2019 09:50:23 +0200
-Message-Id: <20190121075026.25059-14-luca@coelho.fi>
+        Mon, 21 Jan 2019 03:24:22 -0500
+Received: by mail-wm1-f65.google.com with SMTP id f188so9767759wmf.5
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2019 00:24:20 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=COeqjF9qpQt7nbfGA3Bfy/K/eZP9T8sE7OKtS47vC+w=;
+        b=ghLt55SpN9rlaQY2IsqVuo8T8Hoo5OHhLpO1o1ZnJzQSr/RiwwF6mSWQIYiJKrZhIN
+         /DohSMNMDPyb9ITAcnfMfAEVul1vO6bK3OO6AC1DBvqU5+OEcNQoHvHcQH38SWGApQq7
+         VavvVWfKMbBG6rGLKCM+6fu96h/pWalLN3knKv1Zc0Td+mzJO6WF3W/wpNow5XU3OAwf
+         OMEBPrpPvrfqLFVtz6942f4WS9IKxDDW7z0EgIPd05kdUQL8ktsY8LCAqyIxbO38gSOP
+         +I+HTWsqWpQSS4zV6Ar63TSwrdgWJrzInNxnwAWqzDCeCYkwZX4URgjQg0CqJjFqngPZ
+         qGjg==
+X-Gm-Message-State: AJcUukepsyMKHIU+k5dehEwZx+NvprGIGK6uNYcc5cAbPKVYSzJbXSP1
+        yfSnOQHuKVSNHzuyEoEqMTIY3Yghxag=
+X-Google-Smtp-Source: ALg8bN7eAXeB5Ei9OzbgytFcsymA4iI3U6EzyeoCbFWWQbqwLImjq5VdYtVEJN4nX+YBZffZlERKuQ==
+X-Received: by 2002:a1c:868a:: with SMTP id i132mr21969447wmd.49.1548026407650;
+        Sun, 20 Jan 2019 15:20:07 -0800 (PST)
+Received: from raver.teknoraver.net (net-5-95-156-25.cust.vodafonedsl.it. [5.95.156.25])
+        by smtp.gmail.com with ESMTPSA id 143sm101025612wml.14.2019.01.20.15.20.06
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sun, 20 Jan 2019 15:20:06 -0800 (PST)
+From:   Matteo Croce <mcroce@redhat.com>
+To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH net-next] wireless: fix typos
+Date:   Mon, 21 Jan 2019 00:20:00 +0100
+Message-Id: <20190120232000.4940-1-mcroce@redhat.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190121075026.25059-1-luca@coelho.fi>
-References: <20190121075026.25059-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 13/16] iwlwifi: mvm: avoid possible access out of array.
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Fix spelling mistakes in brcm80211 and cfg80211: "lenght" -> "length".
+The typos are also in the special comment blocks which
+translates to documentation.
 
-The value in txq_id can be out of array scope,
-validate it before accessing the array.
-
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-Fixes: cf961e16620f ("iwlwifi: mvm: support dqa-mode agg on non-shared queue")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Matteo Croce <mcroce@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h     | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h     | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c      | 2 +-
+ include/net/cfg80211.h                                      | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 09f294c466da..5f42897dcd55 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2702,7 +2702,7 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	struct iwl_mvm_tid_data *tid_data;
- 	u16 normalized_ssn;
--	int txq_id;
-+	u16 txq_id;
- 	int ret;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index dcf6e27cc16f..d8085ce579f4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -36,7 +36,7 @@
+ #define BRCMF_DCMD_MEDLEN	1536
+ #define BRCMF_DCMD_MAXLEN	8192
  
- 	if (WARN_ON_ONCE(tid >= IWL_MAX_TID_COUNT))
-@@ -2744,17 +2744,24 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	 */
- 	txq_id = mvmsta->tid_data[tid].txq_id;
- 	if (txq_id == IWL_MVM_INVALID_QUEUE) {
--		txq_id = iwl_mvm_find_free_queue(mvm, mvmsta->sta_id,
--						 IWL_MVM_DQA_MIN_DATA_QUEUE,
--						 IWL_MVM_DQA_MAX_DATA_QUEUE);
--		if (txq_id < 0) {
--			ret = txq_id;
-+		ret = iwl_mvm_find_free_queue(mvm, mvmsta->sta_id,
-+					      IWL_MVM_DQA_MIN_DATA_QUEUE,
-+					      IWL_MVM_DQA_MAX_DATA_QUEUE);
-+		if (ret < 0) {
- 			IWL_ERR(mvm, "Failed to allocate agg queue\n");
- 			goto out;
- 		}
+-/* IOCTL from host to device are limited in lenght. A device can only handle
++/* IOCTL from host to device are limited in length. A device can only handle
+  * ethernet frame size. This limitation is to be applied by protocol layer.
+  */
+ #define BRCMF_TX_IOCTL_MAX_MSG_SIZE	(ETH_FRAME_LEN+ETH_FCS_LEN)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 14b948917a1a..cf1ddf988476 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -47,7 +47,7 @@ enum nvram_parser_state {
+  * @state: current parser state.
+  * @data: input buffer being parsed.
+  * @nvram: output buffer with parse result.
+- * @nvram_len: lenght of parse result.
++ * @nvram_len: length of parse result.
+  * @line: current line.
+  * @column: current column in line.
+  * @pos: byte offset in input buffer.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
+index 816f80ea925b..31f3e8e83a21 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
+@@ -266,7 +266,7 @@ struct brcmf_event {
+  * @status: status information.
+  * @reason: reason code.
+  * @auth_type: authentication type.
+- * @datalen: lenght of event data buffer.
++ * @datalen: length of event data buffer.
+  * @addr: ether address.
+  * @ifname: interface name.
+  * @ifidx: interface index.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index a4308c6e72d7..0b7d977510c8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -508,7 +508,7 @@ static void brcmf_usb_rx_complete(struct urb *urb)
+ 	skb = req->skb;
+ 	req->skb = NULL;
  
-+		txq_id = ret;
-+
- 		/* TXQ hasn't yet been enabled, so mark it only as reserved */
- 		mvm->queue_info[txq_id].status = IWL_MVM_QUEUE_RESERVED;
-+	} else if (WARN_ON(txq_id >= IWL_MAX_HW_QUEUES)) {
-+		ret = -ENXIO;
-+		IWL_ERR(mvm, "tid_id %d out of range (0, %d)!\n",
-+			tid, IWL_MAX_HW_QUEUES - 1);
-+		goto out;
-+
- 	} else if (unlikely(mvm->queue_info[txq_id].status ==
- 			    IWL_MVM_QUEUE_SHARED)) {
- 		ret = -ENXIO;
+-	/* zero lenght packets indicate usb "failure". Do not refill */
++	/* zero length packets indicate usb "failure". Do not refill */
+ 	if (urb->status != 0 || !urb->actual_length) {
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		brcmf_usb_enq(devinfo, &devinfo->rx_freeq, req, NULL);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e0c41eb1c860..237839210a36 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5568,7 +5568,7 @@ void cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid,
+  * @dev: network device
+  * @macaddr: the MAC address of the new candidate
+  * @ie: information elements advertised by the peer candidate
+- * @ie_len: lenght of the information elements buffer
++ * @ie_len: length of the information elements buffer
+  * @gfp: allocation flags
+  *
+  * This function notifies cfg80211 that the mesh peer candidate has been
 -- 
 2.20.1
 
