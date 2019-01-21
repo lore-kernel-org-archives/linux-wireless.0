@@ -2,175 +2,105 @@ Return-Path: <SRS0=xI28=P5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BEA8C282DB
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 10:11:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BA5C2F3A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 13:14:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0FF52085A
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 10:11:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6FE52084C
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 13:14:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TCbCrKoC"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Sqlg/3Rk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727770AbfAUKLj (ORCPT
+        id S1728689AbfAUNOc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jan 2019 05:11:39 -0500
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:40227 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726003AbfAUKLj (ORCPT
+        Mon, 21 Jan 2019 08:14:32 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:57372 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725970AbfAUNOb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jan 2019 05:11:39 -0500
-Received: by mail-lj1-f196.google.com with SMTP id n18-v6so16996874lji.7
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2019 02:11:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=7bsaY3TzQjf47B9lLjDRCKxEkIvRvluc34tmMZCk4TY=;
-        b=TCbCrKoCE/GGKsKmLU4OoCgswVn7eUxD/fZTgLpZm/4z5FEgVjGvf2Fh8UWmxwYVNG
-         2WWlSGyGZz3ICJgccocKFbqaiSuyzcngkvdvzrqI20SvLwVmxzumcOU5Qn0b5tzU0VIk
-         bO8hzjjQtvBt67MiS38QHD2OjX2LMd/OMr0hv51hSX5Gzw/vVrGM6t0GWM23Tx8T0eSI
-         Do5pv1VoBsv0mXl4q73XXl1OvPqV0aC8yMgmfhddq+VZsMg+EejYheHOHCMJ3AuXVAHl
-         Y7AfR58sGMl4By+smyiziZBq8BB+QNv1KuUGt2fympNZ8ZQmGQ/mUI5uKKbIaOdvkWF6
-         i8Ag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=7bsaY3TzQjf47B9lLjDRCKxEkIvRvluc34tmMZCk4TY=;
-        b=rX+JwwzQmW3bdNkfJSVwD90mkVPGurSWi5iXC9NrDhosnGSwtdM/RlvEhiyo06BHgN
-         qrLzLBoc3eVzzX0e4YEhLIMvf4QvQ/J6Ch1Ba+7/fHGB/Gn5BxwL8xBBLhss55TeFXtI
-         ZgUK7ZEeEmxuO+pJ+fy60TA2pMYTudpPOmz+zLPDUcbDzGTmDGud45Kqb41l+dpLyADP
-         tbahgX4ZB3DSyNdO/X4NNoFrT/4uysbkTSvE3Kj5I6BmwzK/yzsuL1pIDuS5m4ZCHBsu
-         krQG9BPjnZuGwimAFXvVfGXAQiAlVxr0YtsOHtCc3l4HMryMDghDG+6k6ANbtAEtQ3P1
-         uXGA==
-X-Gm-Message-State: AJcUukff/Fi9wxHXCOn+/z1D6pGj0p1ztW6a+IH7dCVKzTYYzFj+8OAc
-        KKLxQXcmJ7jkvgrZUjZ+4kQ=
-X-Google-Smtp-Source: ALg8bN4a77u6vkXc6aip1et0ydstjIynoanE34z3b6UyXvnuZU92yEn9HYhSMorXRKC6x5NDwhpzug==
-X-Received: by 2002:a2e:9783:: with SMTP id y3-v6mr17128317lji.167.1548065496273;
-        Mon, 21 Jan 2019 02:11:36 -0800 (PST)
-Received: from elitebook.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
-        by smtp.gmail.com with ESMTPSA id k20sm2208164lfe.3.2019.01.21.02.11.35
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 21 Jan 2019 02:11:35 -0800 (PST)
-From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc:     Hauke Mehrtens <hauke@hauke-m.de>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        linux-mips@linux-mips.org, Christoph Hellwig <hch@lst.de>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH wireless-drivers-next] bcma: get SoC device struct & copy its DMA params to the subdevices
-Date:   Mon, 21 Jan 2019 11:11:21 +0100
-Message-Id: <20190121101121.24555-1-zajec5@gmail.com>
-X-Mailer: git-send-email 2.20.1
+        Mon, 21 Jan 2019 08:14:31 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0LDEMbh012054;
+        Mon, 21 Jan 2019 13:14:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2018-07-02;
+ bh=DB2FZuzd+5+NV8reuHBixiK2cQYeuwlt4eJJ/GqrztI=;
+ b=Sqlg/3Rkwjsd6Gr6kKObpFQgRW3FEbhrmPfEqpXaku4CEwAM4yAWpy45Aq3geejmQDj0
+ IOq3IVWFGWo6BmwRsyRGTRWEAluwygN54DROtSAnHC2RoCYg2oNDqeH17HO70vRtP9aR
+ vYz7/eKUxJ2IZoZI8lrh3x+xUhUThY/Y+pQOw5GqPGKcH485dSR/UrJedLn0Z36zDi8J
+ AszrY5EnjdCiypiJiBQxvugbBQnLg07OGYNy6TmrS7xEPGaxLcVHe9OWobl4IpuptRXd
+ 3w6e5PSsIUCw+E7uKJccy1iWPr8I1pkwHJa5OWAp/09gICPKNc2glgL4MYeCJeMZo4Mu BQ== 
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2q3vhrek5c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 21 Jan 2019 13:14:24 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x0LDEOQJ003190
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 21 Jan 2019 13:14:24 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x0LDENms019227;
+        Mon, 21 Jan 2019 13:14:23 GMT
+Received: from kadam (/197.157.0.41)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 21 Jan 2019 05:14:22 -0800
+Date:   Mon, 21 Jan 2019 16:14:01 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Ajay.Kathat@microchip.com
+Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        gregkh@linuxfoundation.org, johannes@sipsolutions.net,
+        Adham.Abozaeid@microchip.com
+Subject: Re: [PATCH 01/13] staging: wilc1000: make use of
+ get_unaligned_le16/le32 to pack data
+Message-ID: <20190121131401.GG4482@kadam>
+References: <1547731250-18518-1-git-send-email-ajay.kathat@microchip.com>
+ <1547731250-18518-2-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1547731250-18518-2-git-send-email-ajay.kathat@microchip.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9142 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=881
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1810050000 definitions=main-1901210104
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On Thu, Jan 17, 2019 at 01:21:10PM +0000, Ajay.Kathat@microchip.com wrote:
+> From: Ajay Singh <ajay.kathat@microchip.com>
+> 
+> Make use of get_unaligned_le16/le32 framework api's to pack data.
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 15 +++------------
+>  drivers/staging/wilc1000/wilc_wlan_cfg.c  | 27 +++++++++++++--------------
+>  2 files changed, 16 insertions(+), 26 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index c05c120..a718842 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -2154,10 +2154,7 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
+>  	struct host_if_drv *hif_drv;
+>  	struct wilc_vif *vif;
+>  
+> -	id = buffer[length - 4];
 
-For bus devices to be fully usable it's required to set their DMA
-parameters.
+Not related to this patch, but so far as I can see, length can't be zero
+but there is nothing preventing if from being less than four so this
+could be reading from buffer[-3].
 
-For years it has been missing and remained unnoticed because of
-mips_dma_alloc_coherent() silently handling the empty coherent_dma_mask.
-Kernel 4.19 came with a lot of DMA changes and caused a regression on
-the bcm47xx. Starting with the commit f8c55dc6e828 ("MIPS: use generic
-dma noncoherent ops for simple noncoherent platforms") DMA coherent
-allocations just fail. Example:
-[    1.114914] bgmac_bcma bcma0:2: Allocation of TX ring 0x200 failed
-[    1.121215] bgmac_bcma bcma0:2: Unable to alloc memory for DMA
-[    1.127626] bgmac_bcma: probe of bcma0:2 failed with error -12
-[    1.133838] bgmac_bcma: Broadcom 47xx GBit MAC driver loaded
+regards,
+dan carpenter
 
-This change fixes above regression in addition to the MIPS bcm47xx
-commit 321c46b91550 ("MIPS: BCM47XX: Setup struct device for the SoC").
-
-It also fixes another *old* GPIO regression caused by a parent pointing
-to the NULL:
-[    0.157054] missing gpiochip .dev parent pointer
-[    0.157287] bcma: bus0: Error registering GPIO driver: -22
-introduced by the commit 74f4e0cc6108 ("bcma: switch GPIO portions to
-use GPIOLIB_IRQCHIP").
-
-Fixes: f8c55dc6e828 ("MIPS: use generic dma noncoherent ops for simple noncoherent platforms")
-Fixes: 74f4e0cc6108 ("bcma: switch GPIO portions to use GPIOLIB_IRQCHIP")
-Cc: linux-mips@linux-mips.org
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-While this patch is a regression fix, it depends on a change present in
-the wireless-drivers-next.git:
-bcma: keep a direct pointer to the struct device
-
-That's why I suggest pushing it into the wireless-drivers-next.git and I
-can take care of picking it for the stable@kernel.org later.
-
-Another option would be cherry-picking commit 5a1c18b761dd ("bcma: keep
-a direct pointer to the struct device") to the wireless-drivers.git but
-I don't think it's a common practice.
----
- drivers/bcma/host_soc.c       | 2 ++
- drivers/bcma/main.c           | 6 +++++-
- include/linux/bcma/bcma_soc.h | 1 +
- 3 files changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
-index c8073b509a2b..1fdfb704f22d 100644
---- a/drivers/bcma/host_soc.c
-+++ b/drivers/bcma/host_soc.c
-@@ -191,6 +191,8 @@ int __init bcma_host_soc_init(struct bcma_soc *soc)
- 	struct bcma_bus *bus = &soc->bus;
- 	int err;
- 
-+	bus->dev = soc->dev;
-+
- 	/* Scan bus and initialize it */
- 	err = bcma_bus_early_register(bus);
- 	if (err)
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 6535614a7dc1..433ca5e2ed2c 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -236,12 +236,16 @@ EXPORT_SYMBOL(bcma_core_irq);
- 
- void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
- {
-+	struct device *dev = &core->dev;
-+
- 	core->dev.release = bcma_release_core_dev;
- 	core->dev.bus = &bcma_bus_type;
- 	dev_set_name(&core->dev, "bcma%d:%d", bus->num, core->core_index);
- 	core->dev.parent = bus->dev;
--	if (bus->dev)
-+	if (bus->dev) {
- 		bcma_of_fill_device(bus->dev, core);
-+		dma_coerce_mask_and_coherent(dev, bus->dev->coherent_dma_mask);
-+	}
- 
- 	switch (bus->hosttype) {
- 	case BCMA_HOSTTYPE_PCI:
-diff --git a/include/linux/bcma/bcma_soc.h b/include/linux/bcma/bcma_soc.h
-index 7cca5f859a90..f3c43519baa7 100644
---- a/include/linux/bcma/bcma_soc.h
-+++ b/include/linux/bcma/bcma_soc.h
-@@ -6,6 +6,7 @@
- 
- struct bcma_soc {
- 	struct bcma_bus bus;
-+	struct device *dev;
- };
- 
- int __init bcma_host_soc_register(struct bcma_soc *soc);
--- 
-2.20.1
 
