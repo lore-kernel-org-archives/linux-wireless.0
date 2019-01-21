@@ -2,105 +2,209 @@ Return-Path: <SRS0=xI28=P5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BA5C2F3A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 13:14:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71DADC2F3BE
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 14:02:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E6FE52084C
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 13:14:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Sqlg/3Rk"
+	by mail.kernel.org (Postfix) with ESMTP id 405BB21734
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 14:02:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548079323;
+	bh=XJTTZWTyd+Ksh0BByInpURKeZdZKY6sBZMxR+a7bYKc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=ZiEYc8FCqpTrFrrxZfXzo16bEARH5kCVlESQB4jxFBsn5QbI2naeEtjDFNO8VDoVY
+	 BeubTi/xglpy90iS5WpzxkojDoRBoFPXb1HLMwuZm3LGiYGgT+qeffF2o9vQS7kylA
+	 FfXjAVcEXMvO6ez/9mhrqxhW7OMa3xX3J9Kht80Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728689AbfAUNOc (ORCPT
+        id S1732733AbfAUOCC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jan 2019 08:14:32 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:57372 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725970AbfAUNOb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jan 2019 08:14:31 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0LDEMbh012054;
-        Mon, 21 Jan 2019 13:14:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=DB2FZuzd+5+NV8reuHBixiK2cQYeuwlt4eJJ/GqrztI=;
- b=Sqlg/3Rkwjsd6Gr6kKObpFQgRW3FEbhrmPfEqpXaku4CEwAM4yAWpy45Aq3geejmQDj0
- IOq3IVWFGWo6BmwRsyRGTRWEAluwygN54DROtSAnHC2RoCYg2oNDqeH17HO70vRtP9aR
- vYz7/eKUxJ2IZoZI8lrh3x+xUhUThY/Y+pQOw5GqPGKcH485dSR/UrJedLn0Z36zDi8J
- AszrY5EnjdCiypiJiBQxvugbBQnLg07OGYNy6TmrS7xEPGaxLcVHe9OWobl4IpuptRXd
- 3w6e5PSsIUCw+E7uKJccy1iWPr8I1pkwHJa5OWAp/09gICPKNc2glgL4MYeCJeMZo4Mu BQ== 
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2q3vhrek5c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 21 Jan 2019 13:14:24 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x0LDEOQJ003190
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 21 Jan 2019 13:14:24 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x0LDENms019227;
-        Mon, 21 Jan 2019 13:14:23 GMT
-Received: from kadam (/197.157.0.41)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 21 Jan 2019 05:14:22 -0800
-Date:   Mon, 21 Jan 2019 16:14:01 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Ajay.Kathat@microchip.com
-Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        gregkh@linuxfoundation.org, johannes@sipsolutions.net,
-        Adham.Abozaeid@microchip.com
-Subject: Re: [PATCH 01/13] staging: wilc1000: make use of
- get_unaligned_le16/le32 to pack data
-Message-ID: <20190121131401.GG4482@kadam>
-References: <1547731250-18518-1-git-send-email-ajay.kathat@microchip.com>
- <1547731250-18518-2-git-send-email-ajay.kathat@microchip.com>
+        Mon, 21 Jan 2019 09:02:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49286 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732731AbfAUOCB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Jan 2019 09:02:01 -0500
+Received: from localhost (5356596B.cm-6-7b.dynamic.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1FACE21726;
+        Mon, 21 Jan 2019 14:01:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548079319;
+        bh=XJTTZWTyd+Ksh0BByInpURKeZdZKY6sBZMxR+a7bYKc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=e+dT0vkBOUQSGITdS0qcm7SzS48IkvamGWiJs12DokmczlB5V2xuRi04n6DQ68RVb
+         hsvaEE8bDEwjvc11TFaZF5IgCc78Tn+Nk9WmEWcZjxCSPMzB4I7H9zv6zKB1KYPdFK
+         Dud90z3xSo+1s2sD4BikG2IXUA6U+RpoXOKt5hUw=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        Paul Burton <paul.burton@mips.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        Christoph Hellwig <hch@lst.de>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-wireless@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+        James Hogan <jhogan@kernel.org>, linux-mips@linux-mips.org
+Subject: [PATCH 4.19 46/99] MIPS: BCM47XX: Setup struct device for the SoC
+Date:   Mon, 21 Jan 2019 14:48:38 +0100
+Message-Id: <20190121134915.722080029@linuxfoundation.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190121134913.924726465@linuxfoundation.org>
+References: <20190121134913.924726465@linuxfoundation.org>
+User-Agent: quilt/0.65
+X-stable: review
+X-Patchwork-Hint: ignore
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1547731250-18518-2-git-send-email-ajay.kathat@microchip.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9142 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=881
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1901210104
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jan 17, 2019 at 01:21:10PM +0000, Ajay.Kathat@microchip.com wrote:
-> From: Ajay Singh <ajay.kathat@microchip.com>
-> 
-> Make use of get_unaligned_le16/le32 framework api's to pack data.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 15 +++------------
->  drivers/staging/wilc1000/wilc_wlan_cfg.c  | 27 +++++++++++++--------------
->  2 files changed, 16 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index c05c120..a718842 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -2154,10 +2154,7 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
->  	struct host_if_drv *hif_drv;
->  	struct wilc_vif *vif;
->  
-> -	id = buffer[length - 4];
+4.19-stable review patch.  If anyone has any objections, please let me know.
 
-Not related to this patch, but so far as I can see, length can't be zero
-but there is nothing preventing if from being less than four so this
-could be reading from buffer[-3].
+------------------
 
-regards,
-dan carpenter
+From: Rafał Miłecki <rafal@milecki.pl>
+
+commit 321c46b91550adc03054125fa7a1639390608e1a upstream.
+
+So far we never had any device registered for the SoC. This resulted in
+some small issues that we kept ignoring like:
+1) Not working GPIOLIB_IRQCHIP (gpiochip_irqchip_add_key() failing)
+2) Lack of proper tree in the /sys/devices/
+3) mips_dma_alloc_coherent() silently handling empty coherent_dma_mask
+
+Kernel 4.19 came with a lot of DMA changes and caused a regression on
+bcm47xx. Starting with the commit f8c55dc6e828 ("MIPS: use generic dma
+noncoherent ops for simple noncoherent platforms") DMA coherent
+allocations just fail. Example:
+[    1.114914] bgmac_bcma bcma0:2: Allocation of TX ring 0x200 failed
+[    1.121215] bgmac_bcma bcma0:2: Unable to alloc memory for DMA
+[    1.127626] bgmac_bcma: probe of bcma0:2 failed with error -12
+[    1.133838] bgmac_bcma: Broadcom 47xx GBit MAC driver loaded
+
+The bgmac driver also triggers a WARNING:
+[    0.959486] ------------[ cut here ]------------
+[    0.964387] WARNING: CPU: 0 PID: 1 at ./include/linux/dma-mapping.h:516 bgmac_enet_probe+0x1b4/0x5c4
+[    0.973751] Modules linked in:
+[    0.976913] CPU: 0 PID: 1 Comm: swapper Not tainted 4.19.9 #0
+[    0.982750] Stack : 804a0000 804597c4 00000000 00000000 80458fd8 8381bc2c 838282d4 80481a47
+[    0.991367]         8042e3ec 00000001 804d38f0 00000204 83980000 00000065 8381bbe0 6f55b24f
+[    0.999975]         00000000 00000000 80520000 00002018 00000000 00000075 00000007 00000000
+[    1.008583]         00000000 80480000 000ee811 00000000 00000000 00000000 80432c00 80248db8
+[    1.017196]         00000009 00000204 83980000 803ad7b0 00000000 801feeec 00000000 804d0000
+[    1.025804]         ...
+[    1.028325] Call Trace:
+[    1.030875] [<8000aef8>] show_stack+0x58/0x100
+[    1.035513] [<8001f8b4>] __warn+0xe4/0x118
+[    1.039708] [<8001f9a4>] warn_slowpath_null+0x48/0x64
+[    1.044935] [<80248db8>] bgmac_enet_probe+0x1b4/0x5c4
+[    1.050101] [<802498e0>] bgmac_probe+0x558/0x590
+[    1.054906] [<80252fd0>] bcma_device_probe+0x38/0x70
+[    1.060017] [<8020e1e8>] really_probe+0x170/0x2e8
+[    1.064891] [<8020e714>] __driver_attach+0xa4/0xec
+[    1.069784] [<8020c1e0>] bus_for_each_dev+0x58/0xb0
+[    1.074833] [<8020d590>] bus_add_driver+0xf8/0x218
+[    1.079731] [<8020ef24>] driver_register+0xcc/0x11c
+[    1.084804] [<804b54cc>] bgmac_init+0x1c/0x44
+[    1.089258] [<8000121c>] do_one_initcall+0x7c/0x1a0
+[    1.094343] [<804a1d34>] kernel_init_freeable+0x150/0x218
+[    1.099886] [<803a082c>] kernel_init+0x10/0x104
+[    1.104583] [<80005878>] ret_from_kernel_thread+0x14/0x1c
+[    1.110107] ---[ end trace f441c0d873d1fb5b ]---
+
+This patch setups a "struct device" (and passes it to the bcma) which
+allows fixing all the mentioned problems. It'll also require a tiny bcma
+patch which will follow through the wireless tree & its maintainer.
+
+Fixes: f8c55dc6e828 ("MIPS: use generic dma noncoherent ops for simple noncoherent platforms")
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Signed-off-by: Paul Burton <paul.burton@mips.com>
+Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: James Hogan <jhogan@kernel.org>
+Cc: linux-mips@linux-mips.org
+Cc: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org # v4.19+
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ arch/mips/bcm47xx/setup.c     |   31 +++++++++++++++++++++++++++++++
+ include/linux/bcma/bcma_soc.h |    1 +
+ 2 files changed, 32 insertions(+)
+
+--- a/arch/mips/bcm47xx/setup.c
++++ b/arch/mips/bcm47xx/setup.c
+@@ -173,6 +173,31 @@ void __init plat_mem_setup(void)
+ 	pm_power_off = bcm47xx_machine_halt;
+ }
+ 
++#ifdef CONFIG_BCM47XX_BCMA
++static struct device * __init bcm47xx_setup_device(void)
++{
++	struct device *dev;
++	int err;
++
++	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
++	if (!dev)
++		return NULL;
++
++	err = dev_set_name(dev, "bcm47xx_soc");
++	if (err) {
++		pr_err("Failed to set SoC device name: %d\n", err);
++		kfree(dev);
++		return NULL;
++	}
++
++	err = dma_coerce_mask_and_coherent(dev, DMA_BIT_MASK(32));
++	if (err)
++		pr_err("Failed to set SoC DMA mask: %d\n", err);
++
++	return dev;
++}
++#endif
++
+ /*
+  * This finishes bus initialization doing things that were not possible without
+  * kmalloc. Make sure to call it late enough (after mm_init).
+@@ -183,6 +208,10 @@ void __init bcm47xx_bus_setup(void)
+ 	if (bcm47xx_bus_type == BCM47XX_BUS_TYPE_BCMA) {
+ 		int err;
+ 
++		bcm47xx_bus.bcma.dev = bcm47xx_setup_device();
++		if (!bcm47xx_bus.bcma.dev)
++			panic("Failed to setup SoC device\n");
++
+ 		err = bcma_host_soc_init(&bcm47xx_bus.bcma);
+ 		if (err)
+ 			panic("Failed to initialize BCMA bus (err %d)", err);
+@@ -235,6 +264,8 @@ static int __init bcm47xx_register_bus_c
+ #endif
+ #ifdef CONFIG_BCM47XX_BCMA
+ 	case BCM47XX_BUS_TYPE_BCMA:
++		if (device_register(bcm47xx_bus.bcma.dev))
++			pr_err("Failed to register SoC device\n");
+ 		bcma_bus_register(&bcm47xx_bus.bcma.bus);
+ 		break;
+ #endif
+--- a/include/linux/bcma/bcma_soc.h
++++ b/include/linux/bcma/bcma_soc.h
+@@ -6,6 +6,7 @@
+ 
+ struct bcma_soc {
+ 	struct bcma_bus bus;
++	struct device *dev;
+ };
+ 
+ int __init bcma_host_soc_register(struct bcma_soc *soc);
 
 
