@@ -4,40 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71DADC2F3BE
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 14:02:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 381C7C2F3A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 14:18:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 405BB21734
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 14:02:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07DB120861
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 14:18:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548079323;
-	bh=XJTTZWTyd+Ksh0BByInpURKeZdZKY6sBZMxR+a7bYKc=;
+	s=default; t=1548080325;
+	bh=qJXL7sJxZPhAnZRB4U+qRwKgUuEW7UP68hZuMgxb+KQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ZiEYc8FCqpTrFrrxZfXzo16bEARH5kCVlESQB4jxFBsn5QbI2naeEtjDFNO8VDoVY
-	 BeubTi/xglpy90iS5WpzxkojDoRBoFPXb1HLMwuZm3LGiYGgT+qeffF2o9vQS7kylA
-	 FfXjAVcEXMvO6ez/9mhrqxhW7OMa3xX3J9Kht80Y=
+	b=LAj9o+N8FdZMR0/ZeTXy5WsZSWYBJZW9IRVlETfOGf4n8xAW+McM3Dm3wFc3kEIOa
+	 MJoH5cq3fA6Zkmv/5MPx19E85fqCwA4zNvpRhHV1YMNfK41Uv9J4N9bDiBTa+B8JT0
+	 jFEDIuRj3mEg0tNivbP7vtXk9nKCyMyx8JcbylY8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732733AbfAUOCC (ORCPT
+        id S1730232AbfAUNt0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jan 2019 09:02:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49286 "EHLO mail.kernel.org"
+        Mon, 21 Jan 2019 08:49:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59972 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732731AbfAUOCB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jan 2019 09:02:01 -0500
+        id S1730209AbfAUNtZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Jan 2019 08:49:25 -0500
 Received: from localhost (5356596B.cm-6-7b.dynamic.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1FACE21726;
-        Mon, 21 Jan 2019 14:01:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8473920861;
+        Mon, 21 Jan 2019 13:49:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548079319;
-        bh=XJTTZWTyd+Ksh0BByInpURKeZdZKY6sBZMxR+a7bYKc=;
+        s=default; t=1548078564;
+        bh=qJXL7sJxZPhAnZRB4U+qRwKgUuEW7UP68hZuMgxb+KQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e+dT0vkBOUQSGITdS0qcm7SzS48IkvamGWiJs12DokmczlB5V2xuRi04n6DQ68RVb
-         hsvaEE8bDEwjvc11TFaZF5IgCc78Tn+Nk9WmEWcZjxCSPMzB4I7H9zv6zKB1KYPdFK
-         Dud90z3xSo+1s2sD4BikG2IXUA6U+RpoXOKt5hUw=
+        b=TK+SI6CYAqtJMA7NxVUxocKZbKAMB7EmrETUKPxqeCUb+aWDe8A/Hs9fPKpIrLc6g
+         255CtIlNK6zxEWgWv7MtmMfvIesveUJLJlrUc1DpOU+xRv1IuGzV771yXs1O5BwTk8
+         zJLVI+rFXMzkQRRZqI83znO5D0EED19q2OoFEc+c=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -49,12 +50,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Linus Walleij <linus.walleij@linaro.org>,
         linux-wireless@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
         James Hogan <jhogan@kernel.org>, linux-mips@linux-mips.org
-Subject: [PATCH 4.19 46/99] MIPS: BCM47XX: Setup struct device for the SoC
-Date:   Mon, 21 Jan 2019 14:48:38 +0100
-Message-Id: <20190121134915.722080029@linuxfoundation.org>
+Subject: [PATCH 4.20 049/111] MIPS: BCM47XX: Setup struct device for the SoC
+Date:   Mon, 21 Jan 2019 14:42:43 +0100
+Message-Id: <20190121122501.362663107@linuxfoundation.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190121134913.924726465@linuxfoundation.org>
-References: <20190121134913.924726465@linuxfoundation.org>
+In-Reply-To: <20190121122455.819406896@linuxfoundation.org>
+References: <20190121122455.819406896@linuxfoundation.org>
 User-Agent: quilt/0.65
 X-stable: review
 X-Patchwork-Hint: ignore
@@ -66,7 +67,7 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-4.19-stable review patch.  If anyone has any objections, please let me know.
+4.20-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
