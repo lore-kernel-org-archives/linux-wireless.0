@@ -2,85 +2,98 @@ Return-Path: <SRS0=xI28=P5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A55D2C37120
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 20:49:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3658C37121
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 23:31:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 259B12089F
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 20:49:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="iVOr4qZj"
+	by mail.kernel.org (Postfix) with ESMTP id 6ACFF2089F
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 23:31:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548113475;
+	bh=GPRUJnIB0OyzBbUFz04hJUGu7UnzF9PTVC/GUpLYalo=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=RHToRBKp7QXsHNbU8bzRYQBD8royH8dR70JhNd49C7uuq+43uQ2kokhR10MQtEma6
+	 5p9DqgOsVNjRIJBEsm90YpmlY5eyfYwXRJo3jX1ft2RxpRTiy57kOibXfTosxQeRMr
+	 cdyj9qPj1PRDGi5wKCvMGTNjOkvAU0/lC1aqKoM0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727977AbfAUUtZ (ORCPT
+        id S1727885AbfAUXbJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jan 2019 15:49:25 -0500
-Received: from nbd.name ([46.4.11.11]:40772 "EHLO nbd.name"
+        Mon, 21 Jan 2019 18:31:09 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38952 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726265AbfAUUtZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jan 2019 15:49:25 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=LdBQ2W/WEBTAdnNEBg9IwTX2Ez+1R2eK9yHNaSDODI4=; b=iVOr4qZjVk07eH8xqQRQRzTqy2
-        OTPt4wjRh0T68J2U0XMx5MMZMCqmxgZbM3ErC0XCtqVduB9JsAnJoDwNIvCMujtA8J4s+f/79gj63
-        vgxX0JW1Llii5sRcFY1/RZfxUyLqIw8R0jZWqbajO+L6o9+CiJnSqNOarc1GCbGYiD9s=;
-Subject: Re: [PATCH] mt76: do not report out-of-range rx nss
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-References: <cover.1547909691.git.lorenzo.bianconi@redhat.com>
- <611062117f1037517e22c589e100abb767328cc7.1547909691.git.lorenzo.bianconi@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <17c61f6c-3d84-8141-616b-429b7263f2db@nbd.name>
-Date:   Mon, 21 Jan 2019 21:49:22 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.4.0
+        id S1726027AbfAUXbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Jan 2019 18:31:09 -0500
+Received: from sinanubuntu1604.mkjiurmyylmellclgttazegk5f.bx.internal.cloudapp.net (unknown [40.117.83.110])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 94B822089F;
+        Mon, 21 Jan 2019 23:31:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548113468;
+        bh=GPRUJnIB0OyzBbUFz04hJUGu7UnzF9PTVC/GUpLYalo=;
+        h=From:To:Cc:Subject:Date:From;
+        b=kH6gkEjOx5XHSJAFKsUCqv/+utj3yIBDtj7Hqv0VaoeTJ7nDZYgZDbFTR3gtAJRfr
+         tMqvCg0ZmRRhZKqEGOx+XeM+fyvZ2IXsz6PEbvmer9lOdN9ah23+9y0wt72rNoouii
+         Gzm5mkynCeekxRsggGNog1cj5rFGY7YGH+AMiE6E=
+From:   Sinan Kaya <okaya@kernel.org>
+To:     linux-next@vger.kernel.org
+Cc:     Sinan Kaya <okaya@kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org (open list:INTEL WIRELESS WIFI LINK
+        (iwlwifi)), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [for next][PATCH] iwlwifi: Fix unmet dependency error for IWLWIFI_LEDS
+Date:   Mon, 21 Jan 2019 23:31:02 +0000
+Message-Id: <20190121233102.13705-1-okaya@kernel.org>
+X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
-In-Reply-To: <611062117f1037517e22c589e100abb767328cc7.1547909691.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-01-19 16:00, Lorenzo Bianconi wrote:
-> Take into account device rx stream in mt76x02_mac_process_rate
-> in order to not report wrong number of rx spatial stream to mac80211.
-> The issue has been reported on mt76x0 device which is 1x1:1 however
-> the hw sometimes reports rx nss equal to 2
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Applied, thanks.
+There is an unresolved dependency as follows:
 
-- Felix
+IWLWIFI_LEDS selects MAC80211_LEDS.
+MAC80211_LEDS depends on MAC80211.
+
+It is possible to choose MAC80211_LEDS (y) but not choose MAC80211 (n)
+
+WARNING: unmet direct dependencies detected for MAC80211_LEDS
+  Depends on [n]: NET [=y] && WIRELESS [=y] && MAC80211 [=n] && LEDS_CLASS [=y]
+  Selected by [y]:
+  - IWLWIFI_LEDS [=y] && NETDEVICES [=y] && WLAN [=y] && WLAN_VENDOR_INTEL [=y] && IWLWIFI [=y] && (LEDS_CLASS [=y]=y || LEDS_CLASS [=y]=IWLWIFI [=y])
+
+Move the MAC80211 dependency into IWLWIFI_LEDS so that we avoid this
+configuration.
+
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/net/wireless/intel/iwlwifi/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
+index 491ca3c8b43c..74f0d0bbed34 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Kconfig
++++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
+@@ -46,7 +46,7 @@ if IWLWIFI
+ 
+ config IWLWIFI_LEDS
+ 	bool
+-	depends on LEDS_CLASS=y || LEDS_CLASS=IWLWIFI
++	depends on MAC80211 && (LEDS_CLASS=y || LEDS_CLASS=IWLWIFI)
+ 	select LEDS_TRIGGERS
+ 	select MAC80211_LEDS
+ 	default y
+-- 
+2.19.0
+
