@@ -1,99 +1,89 @@
-Return-Path: <SRS0=xI28=P5=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=0pM2=P6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3658C37121
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 23:31:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47F11C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 10:16:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6ACFF2089F
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jan 2019 23:31:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548113475;
-	bh=GPRUJnIB0OyzBbUFz04hJUGu7UnzF9PTVC/GUpLYalo=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=RHToRBKp7QXsHNbU8bzRYQBD8royH8dR70JhNd49C7uuq+43uQ2kokhR10MQtEma6
-	 5p9DqgOsVNjRIJBEsm90YpmlY5eyfYwXRJo3jX1ft2RxpRTiy57kOibXfTosxQeRMr
-	 cdyj9qPj1PRDGi5wKCvMGTNjOkvAU0/lC1aqKoM0=
+	by mail.kernel.org (Postfix) with ESMTP id 15FAA2085A
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 10:16:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727885AbfAUXbJ (ORCPT
+        id S1727539AbfAVKP5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jan 2019 18:31:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38952 "EHLO mail.kernel.org"
+        Tue, 22 Jan 2019 05:15:57 -0500
+Received: from mga17.intel.com ([192.55.52.151]:62344 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726027AbfAUXbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jan 2019 18:31:09 -0500
-Received: from sinanubuntu1604.mkjiurmyylmellclgttazegk5f.bx.internal.cloudapp.net (unknown [40.117.83.110])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 94B822089F;
-        Mon, 21 Jan 2019 23:31:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548113468;
-        bh=GPRUJnIB0OyzBbUFz04hJUGu7UnzF9PTVC/GUpLYalo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=kH6gkEjOx5XHSJAFKsUCqv/+utj3yIBDtj7Hqv0VaoeTJ7nDZYgZDbFTR3gtAJRfr
-         tMqvCg0ZmRRhZKqEGOx+XeM+fyvZ2IXsz6PEbvmer9lOdN9ah23+9y0wt72rNoouii
-         Gzm5mkynCeekxRsggGNog1cj5rFGY7YGH+AMiE6E=
-From:   Sinan Kaya <okaya@kernel.org>
-To:     linux-next@vger.kernel.org
-Cc:     Sinan Kaya <okaya@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
+        id S1726231AbfAVKP5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Jan 2019 05:15:57 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 22 Jan 2019 02:15:07 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,505,1539673200"; 
+   d="scan'208";a="110060785"
+Received: from cmicsa-mobl1.ti.intel.com ([10.252.18.12])
+  by orsmga006.jf.intel.com with ESMTP; 22 Jan 2019 02:15:04 -0800
+Message-ID: <ef50896ee3ecc895c72a9fbdedca65ac6433fef2.camel@intel.com>
+Subject: Re: [for next][PATCH] iwlwifi: Fix unmet dependency error for
+ IWLWIFI_LEDS
+From:   Luciano Coelho <luciano.coelho@intel.com>
+To:     Sinan Kaya <okaya@kernel.org>, linux-next@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
         Intel Linux Wireless <linuxwifi@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org (open list:INTEL WIRELESS WIFI LINK
-        (iwlwifi)), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [for next][PATCH] iwlwifi: Fix unmet dependency error for IWLWIFI_LEDS
-Date:   Mon, 21 Jan 2019 23:31:02 +0000
-Message-Id: <20190121233102.13705-1-okaya@kernel.org>
-X-Mailer: git-send-email 2.19.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        "open list:INTEL WIRELESS WIFI LINK (iwlwifi)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Tue, 22 Jan 2019 12:15:03 +0200
+In-Reply-To: <20190121233102.13705-1-okaya@kernel.org>
+References: <20190121233102.13705-1-okaya@kernel.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.3-1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is an unresolved dependency as follows:
+On Mon, 2019-01-21 at 23:31 +0000, Sinan Kaya wrote:
+> There is an unresolved dependency as follows:
+> 
+> IWLWIFI_LEDS selects MAC80211_LEDS.
+> MAC80211_LEDS depends on MAC80211.
+> 
+> It is possible to choose MAC80211_LEDS (y) but not choose MAC80211
+> (n)
+> 
+> WARNING: unmet direct dependencies detected for MAC80211_LEDS
+>   Depends on [n]: NET [=y] && WIRELESS [=y] && MAC80211 [=n] &&
+> LEDS_CLASS [=y]
+>   Selected by [y]:
+>   - IWLWIFI_LEDS [=y] && NETDEVICES [=y] && WLAN [=y] &&
+> WLAN_VENDOR_INTEL [=y] && IWLWIFI [=y] && (LEDS_CLASS [=y]=y ||
+> LEDS_CLASS [=y]=IWLWIFI [=y])
+> 
+> Move the MAC80211 dependency into IWLWIFI_LEDS so that we avoid this
+> configuration.
+> 
+> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+> ---
 
-IWLWIFI_LEDS selects MAC80211_LEDS.
-MAC80211_LEDS depends on MAC80211.
+Thanks for your patch! But we already have another patch to fix this
+issued queued for 5.0-rc4 (it's currently in wireless-drivers.git):
 
-It is possible to choose MAC80211_LEDS (y) but not choose MAC80211 (n)
+https://patchwork.kernel.org/patch/10762079/
 
-WARNING: unmet direct dependencies detected for MAC80211_LEDS
-  Depends on [n]: NET [=y] && WIRELESS [=y] && MAC80211 [=n] && LEDS_CLASS [=y]
-  Selected by [y]:
-  - IWLWIFI_LEDS [=y] && NETDEVICES [=y] && WLAN [=y] && WLAN_VENDOR_INTEL [=y] && IWLWIFI [=y] && (LEDS_CLASS [=y]=y || LEDS_CLASS [=y]=IWLWIFI [=y])
-
-Move the MAC80211 dependency into IWLWIFI_LEDS so that we avoid this
-configuration.
-
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/net/wireless/intel/iwlwifi/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
-index 491ca3c8b43c..74f0d0bbed34 100644
---- a/drivers/net/wireless/intel/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
-@@ -46,7 +46,7 @@ if IWLWIFI
- 
- config IWLWIFI_LEDS
- 	bool
--	depends on LEDS_CLASS=y || LEDS_CLASS=IWLWIFI
-+	depends on MAC80211 && (LEDS_CLASS=y || LEDS_CLASS=IWLWIFI)
- 	select LEDS_TRIGGERS
- 	select MAC80211_LEDS
- 	default y
--- 
-2.19.0
+--
+Cheers,
+Luca.
 
