@@ -3,78 +3,97 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C176CC282C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F8BC282C3
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E36E20870
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5636020870
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728391AbfAVMil (ORCPT
+        id S1728440AbfAVMin (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Jan 2019 07:38:41 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:2515 "EHLO mx1.redhat.com"
+        Tue, 22 Jan 2019 07:38:43 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:43416 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728209AbfAVMil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Jan 2019 07:38:41 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        id S1728209AbfAVMim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Jan 2019 07:38:42 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6EEFDA85F;
-        Tue, 22 Jan 2019 12:38:41 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id C6C0C88319;
+        Tue, 22 Jan 2019 12:38:42 +0000 (UTC)
 Received: from localhost (unknown [10.43.2.219])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0D2F05C219;
-        Tue, 22 Jan 2019 12:38:40 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 65D831C923;
+        Tue, 22 Jan 2019 12:38:42 +0000 (UTC)
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     stable@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH 4.20.x 1/7] mt76x0: do not overwrite other MT_BBP(AGC, 8) fields
-Date:   Tue, 22 Jan 2019 13:38:31 +0100
-Message-Id: <1548160717-4059-2-git-send-email-sgruszka@redhat.com>
+Subject: [PATCH 4.20.x 2/7] mt76x0: use band parameter for LC calibration
+Date:   Tue, 22 Jan 2019 13:38:32 +0100
+Message-Id: <1548160717-4059-3-git-send-email-sgruszka@redhat.com>
 In-Reply-To: <1548160717-4059-1-git-send-email-sgruszka@redhat.com>
 References: <1548160717-4059-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Tue, 22 Jan 2019 12:38:41 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Tue, 22 Jan 2019 12:38:42 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-commit b983a5b900627faa49cf37e101d65b56e941c740 upstream.
+commit ad3f993a0857ad3b792e7463828eb0d90cdd6f4d upstream.
 
-MT_BBP(AGC, 8) register has values depend on band in
-mt76x0_bbp_switch_tab, so we should not overwrite other fields
-than MT_BBP_AGC_GAIN when setting gain.
+We use always 1 as band parameter for MCU_CAL_LC, this break 2GHz,
+we should use 0 for this band instead.
 
-This can fix performance issues when connecting to 2.4GHz AP.
+Patch fixes problems happened sometimes when try to associate with 2GHz
+AP and manifest by errors like below:
 
-Fixes: 4636a2544c3b ("mt76x0: phy: align channel gain logic to mt76x2 one")
-Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+[14680.920823] wlan0: authenticate with 18:31:bf:c0:51:b0
+[14681.109506] wlan0: send auth to 18:31:bf:c0:51:b0 (try 1/3)
+[14681.310454] wlan0: send auth to 18:31:bf:c0:51:b0 (try 2/3)
+[14681.518469] wlan0: send auth to 18:31:bf:c0:51:b0 (try 3/3)
+[14681.726499] wlan0: authentication with 18:31:bf:c0:51:b0 timed out
+
+Fixes: 9aec146d0f6b ("mt76x0: pci: introduce mt76x0_phy_calirate routine")
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index cf024950e0ed..1af2a1227924 100644
+index 1af2a1227924..b1314c0f74c8 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -817,10 +817,8 @@ static void mt76x0_temp_sensor(struct mt76x02_dev *dev)
- static void mt76x0_phy_set_gain_val(struct mt76x02_dev *dev)
+@@ -585,6 +585,7 @@ void mt76x0_phy_set_txpower(struct mt76x02_dev *dev)
+ void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on)
  {
- 	u8 gain = dev->cal.agc_gain_cur[0] - dev->cal.agc_gain_adjust;
--	u32 val = 0x122c << 16 | 0xf2;
+ 	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
++	int is_5ghz = (chan->band == NL80211_BAND_5GHZ) ? 1 : 0;
+ 	u32 val, tx_alc, reg_val;
  
--	mt76_wr(dev, MT_BBP(AGC, 8),
--		val | FIELD_PREP(MT_BBP_AGC_GAIN, gain));
-+	mt76_rmw_field(dev, MT_BBP(AGC, 8), MT_BBP_AGC_GAIN, gain);
- }
+ 	if (power_on) {
+@@ -602,7 +603,7 @@ void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on)
+ 	reg_val = mt76_rr(dev, MT_BBP(IBI, 9));
+ 	mt76_wr(dev, MT_BBP(IBI, 9), 0xffffff7e);
  
- static void
+-	if (chan->band == NL80211_BAND_5GHZ) {
++	if (is_5ghz) {
+ 		if (chan->hw_value < 100)
+ 			val = 0x701;
+ 		else if (chan->hw_value < 140)
+@@ -615,7 +616,7 @@ void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on)
+ 
+ 	mt76x02_mcu_calibrate(dev, MCU_CAL_FULL, val, false);
+ 	msleep(350);
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_LC, 1, false);
++	mt76x02_mcu_calibrate(dev, MCU_CAL_LC, is_5ghz, false);
+ 	usleep_range(15000, 20000);
+ 
+ 	mt76_wr(dev, MT_BBP(IBI, 9), reg_val);
 -- 
 1.9.3
 
