@@ -6,86 +6,178 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5554BC282C5
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE679C41518
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29F3621019
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97CED20870
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728451AbfAVMix (ORCPT
+        id S1728454AbfAVMiz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Jan 2019 07:38:53 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:46112 "EHLO mx1.redhat.com"
+        Tue, 22 Jan 2019 07:38:55 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:1581 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728446AbfAVMix (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Jan 2019 07:38:53 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        id S1728446AbfAVMiy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Jan 2019 07:38:54 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id AC0C790919;
-        Tue, 22 Jan 2019 12:38:52 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 23F2C2F30CB;
+        Tue, 22 Jan 2019 12:38:54 +0000 (UTC)
 Received: from localhost (unknown [10.43.2.219])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4CBE060920;
-        Tue, 22 Jan 2019 12:38:52 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A97AA5F701;
+        Tue, 22 Jan 2019 12:38:53 +0000 (UTC)
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     stable@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH 4.20.x 5/7] mt76x0: do not perform MCU calibration for MT7630
-Date:   Tue, 22 Jan 2019 13:38:35 +0100
-Message-Id: <1548160717-4059-6-git-send-email-sgruszka@redhat.com>
+Subject: [PATCH 4.20.x 6/7] mt76x0: antenna select corrections
+Date:   Tue, 22 Jan 2019 13:38:36 +0100
+Message-Id: <1548160717-4059-7-git-send-email-sgruszka@redhat.com>
 In-Reply-To: <1548160717-4059-1-git-send-email-sgruszka@redhat.com>
 References: <1548160717-4059-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Tue, 22 Jan 2019 12:38:52 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Tue, 22 Jan 2019 12:38:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-commit a83150eaad42769e4d08b6e07956a489e40214ae upstream.
+commit ef442b73b6bc36b5499e1983611abb46e6337975 upstream.
 
-Driver works better for MT7630 without MCU calibration, which
-looks like it can hangs the firmware. Vendor driver do not
-perform it for MT7630 as well.
+Update mt76x0_phy_ant_select() to conform vendor driver, most notably
+add dual antenna mode support, read configuration from EEPROM and
+move ant select out of channel config to init phase. Plus small MT7630E
+quirk for MT_CMB_CTRL register which vendor driver dedicated to this
+chip do.
 
+This make MT7630E workable with mt76x0e driver and do not cause any
+problems on MT7610U for me.
+
+Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h | 5 +++++
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c    | 3 +++
- 2 files changed, 8 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c    | 52 ++++++++++++++++------
+ .../net/wireless/mediatek/mt76/mt76x02_eeprom.h    | 10 ++---
+ 2 files changed, 44 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-index 2187bafaf2e9..0057f69d0c36 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-@@ -41,6 +41,11 @@ static inline bool is_mt7610e(struct mt76x02_dev *dev)
- 
- void mt76x0_init_debugfs(struct mt76x02_dev *dev);
- 
-+static inline bool is_mt7630(struct mt76x02_dev *dev)
-+{
-+	return mt76_chip(&dev->mt76) == 0x7630;
-+}
-+
- /* Init */
- struct mt76x02_dev *
- mt76x0_alloc_device(struct device *pdev,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index f99097e265aa..d598ddc632cc 100644
+index d598ddc632cc..8d654aa63e93 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -588,6 +588,9 @@ void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on)
- 	int is_5ghz = (chan->band == NL80211_BAND_5GHZ) ? 1 : 0;
- 	u32 val, tx_alc, reg_val;
+@@ -518,21 +518,47 @@ static void mt76x0_vco_cal(struct mt76x02_dev *dev, u8 channel)
  
-+	if (is_mt7630(dev))
-+		return;
+ static void mt76x0_ant_select(struct mt76x02_dev *dev)
+ {
+-	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
+-
+-	/* single antenna mode */
+-	if (chan->band == NL80211_BAND_2GHZ) {
+-		mt76_rmw(dev, MT_COEXCFG3,
+-			 BIT(5) | BIT(4) | BIT(3) | BIT(2), BIT(1));
+-		mt76_rmw(dev, MT_WLAN_FUN_CTRL, BIT(5), BIT(6));
++	u16 ee_ant = mt76x02_eeprom_get(dev, MT_EE_ANTENNA);
++	u16 nic_conf2 = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_2);
++	u32 wlan, coex3, cmb;
++	bool ant_div;
 +
- 	if (power_on) {
- 		mt76x02_mcu_calibrate(dev, MCU_CAL_R, 0, false);
- 		mt76x02_mcu_calibrate(dev, MCU_CAL_VCO, chan->hw_value,
++	wlan = mt76_rr(dev, MT_WLAN_FUN_CTRL);
++	cmb = mt76_rr(dev, MT_CMB_CTRL);
++	coex3 = mt76_rr(dev, MT_COEXCFG3);
++
++	cmb   &= ~(BIT(14) | BIT(12));
++	wlan  &= ~(BIT(6) | BIT(5));
++	coex3 &= ~GENMASK(5, 2);
++
++	if (ee_ant & MT_EE_ANTENNA_DUAL) {
++		/* dual antenna mode */
++		ant_div = !(nic_conf2 & MT_EE_NIC_CONF_2_ANT_OPT) &&
++			  (nic_conf2 & MT_EE_NIC_CONF_2_ANT_DIV);
++		if (ant_div)
++			cmb |= BIT(12);
++		else
++			coex3 |= BIT(4);
++		coex3 |= BIT(3);
++		if (dev->mt76.cap.has_2ghz)
++			wlan |= BIT(6);
+ 	} else {
+-		mt76_rmw(dev, MT_COEXCFG3, BIT(5) | BIT(2),
+-			 BIT(4) | BIT(3));
+-		mt76_clear(dev, MT_WLAN_FUN_CTRL,
+-			   BIT(6) | BIT(5));
++		/* sigle antenna mode */
++		if (dev->mt76.cap.has_5ghz) {
++			coex3 |= BIT(3) | BIT(4);
++		} else {
++			wlan |= BIT(6);
++			coex3 |= BIT(1);
++		}
+ 	}
+-	mt76_clear(dev, MT_CMB_CTRL, BIT(14) | BIT(12));
++
++	if (is_mt7630(dev))
++		cmb |= BIT(14) | BIT(11);
++
++	mt76_wr(dev, MT_WLAN_FUN_CTRL, wlan);
++	mt76_wr(dev, MT_CMB_CTRL, cmb);
+ 	mt76_clear(dev, MT_COEXCFG0, BIT(2));
++	mt76_wr(dev, MT_COEXCFG3, coex3);
+ }
+ 
+ static void
+@@ -700,7 +726,6 @@ int mt76x0_phy_set_channel(struct mt76x02_dev *dev,
+ 	mt76x02_phy_set_bw(dev, chandef->width, ch_group_index);
+ 	mt76x02_phy_set_band(dev, chandef->chan->band,
+ 			     ch_group_index & 1);
+-	mt76x0_ant_select(dev);
+ 
+ 	mt76_rmw(dev, MT_EXT_CCA_CFG,
+ 		 (MT_EXT_CCA_CFG_CCA0 |
+@@ -927,6 +952,7 @@ void mt76x0_phy_init(struct mt76x02_dev *dev)
+ {
+ 	INIT_DELAYED_WORK(&dev->cal_work, mt76x0_phy_calibration_work);
+ 
++	mt76x0_ant_select(dev);
+ 	mt76x0_rf_init(dev);
+ 	mt76x02_phy_set_rxpath(dev);
+ 	mt76x02_phy_set_txdac(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
+index b3ec74835d10..1de041590050 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
+@@ -25,6 +25,7 @@ enum mt76x02_eeprom_field {
+ 	MT_EE_VERSION =				0x002,
+ 	MT_EE_MAC_ADDR =			0x004,
+ 	MT_EE_PCI_ID =				0x00A,
++	MT_EE_ANTENNA =				0x022,
+ 	MT_EE_NIC_CONF_0 =			0x034,
+ 	MT_EE_NIC_CONF_1 =			0x036,
+ 	MT_EE_COUNTRY_REGION_5GHZ =		0x038,
+@@ -104,6 +105,8 @@ enum mt76x02_eeprom_field {
+ 	__MT_EE_MAX
+ };
+ 
++#define MT_EE_ANTENNA_DUAL			BIT(15)
++
+ #define MT_EE_NIC_CONF_0_RX_PATH		GENMASK(3, 0)
+ #define MT_EE_NIC_CONF_0_TX_PATH		GENMASK(7, 4)
+ #define MT_EE_NIC_CONF_0_PA_TYPE		GENMASK(9, 8)
+@@ -118,12 +121,9 @@ enum mt76x02_eeprom_field {
+ #define MT_EE_NIC_CONF_1_LNA_EXT_5G		BIT(3)
+ #define MT_EE_NIC_CONF_1_TX_ALC_EN		BIT(13)
+ 
+-#define MT_EE_NIC_CONF_2_RX_STREAM		GENMASK(3, 0)
+-#define MT_EE_NIC_CONF_2_TX_STREAM		GENMASK(7, 4)
+-#define MT_EE_NIC_CONF_2_HW_ANTDIV		BIT(8)
++#define MT_EE_NIC_CONF_2_ANT_OPT		BIT(3)
++#define MT_EE_NIC_CONF_2_ANT_DIV		BIT(4)
+ #define MT_EE_NIC_CONF_2_XTAL_OPTION		GENMASK(10, 9)
+-#define MT_EE_NIC_CONF_2_TEMP_DISABLE		BIT(11)
+-#define MT_EE_NIC_CONF_2_COEX_METHOD		GENMASK(15, 13)
+ 
+ #define MT_EFUSE_USAGE_MAP_SIZE			(MT_EE_USAGE_MAP_END - \
+ 						 MT_EE_USAGE_MAP_START + 1)
 -- 
 1.9.3
 
