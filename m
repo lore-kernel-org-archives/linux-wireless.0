@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FB12C282C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 15:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B41C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 15:27:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 552F621019
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 15:27:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B96321019
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 15:27:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548170839;
-	bh=4t21YB1g2/PDm6iWXX9iM2C0d6tNcceYgtR7rP0G9RA=;
+	s=default; t=1548170841;
+	bh=urRGes8OWVXQNU55psX7X+TVwJjeaCJAm4+Qrs4zg5g=;
 	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=hH6oQiYusrDfDMxUAy/4bWSWyV4URfjG4ZcEtced4ncNGMYI4aCc1PNdI4psVZfkK
-	 8MW90grVPh3LwCv/RqEltA0ANNgDPW4mLfU0ZIzcXhpdj34nk07799x/QxsPEXqe/Y
-	 ITUz3zE2WI7Nd6fkBd/6UQkOi9yuTiqzm0yukS0k=
+	b=VvSf4y1Tgvz8XyOg12bH/504+wAZz7iTYUXv7QLoPISvYI4UzxOLXMnrdD8zIVnmS
+	 LZYGNsb9KVeqHYFrkBnjt3VKmx4O2QbunCogXNszmTA/adwg3oW5l5YZTEj8pEpVSh
+	 W2yaYsRmE8UfyW33boUGowC/F/SR8brpQ9EHAOfM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729616AbfAVP1N (ORCPT
+        id S1729740AbfAVPW4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Jan 2019 10:27:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35374 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728958AbfAVPW4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 22 Jan 2019 10:22:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35282 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729732AbfAVPWy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Jan 2019 10:22:54 -0500
 Received: from localhost (5356596B.cm-6-7b.dynamic.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3642B217D4;
-        Tue, 22 Jan 2019 15:22:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 31203217D6;
+        Tue, 22 Jan 2019 15:22:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548170575;
-        bh=4t21YB1g2/PDm6iWXX9iM2C0d6tNcceYgtR7rP0G9RA=;
+        s=default; t=1548170572;
+        bh=urRGes8OWVXQNU55psX7X+TVwJjeaCJAm4+Qrs4zg5g=;
         h=From:To:Cc:Subject:Date:From;
-        b=bpnd4OvbWz0wtBeFwrPnvpHJp36MWtT7omLzo494FTBNCGCPkKF2flHnSKpb39jwK
-         24ydNdSLTru3QrLYLKYNjhGXSQC9mbx7xv6SSpztReKL521gfUIQEizS3GXsKfuFAP
-         /MaTG8iVddm75aLyOua5j5Izzs6+Um/uLkKZiSUw=
+        b=fgHV5vwzwre/UXaZHDDOh7WrGpFsxbuS4A9t32Kj6FIqjFTkQnlJv3PkqJQHs54Dt
+         C/lKxiwvgZUqaamycfP3CN44v0vBXsN+XwkZvZGoPMD8C7BWSwkQ5EvbawuhzMg9kq
+         Jh0M8GMuhSZ/dcAWr34zVqWgzdYpjZtX+gzaUs98=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Tony Lindgren <tony@atomide.com>,
         linux-wireless@vger.kernel.org
-Subject: [PATCH] ti: wl18xx: no need to check return value of debugfs_create functions
-Date:   Tue, 22 Jan 2019 16:21:27 +0100
-Message-Id: <20190122152151.16139-28-gregkh@linuxfoundation.org>
+Subject: [PATCH] ti: wl12xx: no need to check return value of debugfs_create functions
+Date:   Tue, 22 Jan 2019 16:21:26 +0100
+Message-Id: <20190122152151.16139-27-gregkh@linuxfoundation.org>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -65,15 +65,15 @@ Cc: Tony Lindgren <tony@atomide.com>
 Cc: linux-wireless@vger.kernel.org
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/net/wireless/ti/wl18xx/debugfs.c | 20 +-------------------
+ drivers/net/wireless/ti/wl12xx/debugfs.c | 20 +-------------------
  1 file changed, 1 insertion(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
-index 597e934c4630..5f4ec997ca59 100644
---- a/drivers/net/wireless/ti/wl18xx/debugfs.c
-+++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
-@@ -422,20 +422,10 @@ static const struct file_operations radar_debug_mode_ops = {
- int wl18xx_debugfs_add_files(struct wl1271 *wl,
+diff --git a/drivers/net/wireless/ti/wl12xx/debugfs.c b/drivers/net/wireless/ti/wl12xx/debugfs.c
+index 0521cbf858cf..6c3c04eca8fd 100644
+--- a/drivers/net/wireless/ti/wl12xx/debugfs.c
++++ b/drivers/net/wireless/ti/wl12xx/debugfs.c
+@@ -125,20 +125,10 @@ WL12XX_DEBUGFS_FWSTATS_FILE(rxpipe, tx_xfr_host_int_trig_rx_data, "%u");
+ int wl12xx_debugfs_add_files(struct wl1271 *wl,
  			     struct dentry *rootdir)
  {
 -	int ret = 0;
@@ -92,10 +92,10 @@ index 597e934c4630..5f4ec997ca59 100644
 -		goto err;
 -	}
  
- 	DEBUGFS_ADD(clear_fw_stats, stats);
+ 	DEBUGFS_FWSTATS_ADD(tx, internal_desc_overflow);
  
-@@ -590,12 +580,4 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(dynamic_fw_traces, moddir);
+@@ -232,12 +222,4 @@ int wl12xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(rxpipe, tx_xfr_host_int_trig_rx_data);
  
  	return 0;
 -
