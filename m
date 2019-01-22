@@ -6,178 +6,226 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE679C41518
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE646C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97CED20870
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C977C21019
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 12:38:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728454AbfAVMiz (ORCPT
+        id S1728460AbfAVMi4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Jan 2019 07:38:55 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:1581 "EHLO mx1.redhat.com"
+        Tue, 22 Jan 2019 07:38:56 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:43576 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728446AbfAVMiy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Jan 2019 07:38:54 -0500
+        id S1728446AbfAVMi4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Jan 2019 07:38:56 -0500
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 23F2C2F30CB;
-        Tue, 22 Jan 2019 12:38:54 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id A799D8831F;
+        Tue, 22 Jan 2019 12:38:55 +0000 (UTC)
 Received: from localhost (unknown [10.43.2.219])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A97AA5F701;
-        Tue, 22 Jan 2019 12:38:53 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 358526147D;
+        Tue, 22 Jan 2019 12:38:54 +0000 (UTC)
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     stable@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH 4.20.x 6/7] mt76x0: antenna select corrections
-Date:   Tue, 22 Jan 2019 13:38:36 +0100
-Message-Id: <1548160717-4059-7-git-send-email-sgruszka@redhat.com>
+Subject: [PATCH 4.20.x 7/7] mt76x0: phy: unify calibration between mt76x0u and mt76x0e
+Date:   Tue, 22 Jan 2019 13:38:37 +0100
+Message-Id: <1548160717-4059-8-git-send-email-sgruszka@redhat.com>
 In-Reply-To: <1548160717-4059-1-git-send-email-sgruszka@redhat.com>
 References: <1548160717-4059-1-git-send-email-sgruszka@redhat.com>
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Tue, 22 Jan 2019 12:38:54 +0000 (UTC)
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Tue, 22 Jan 2019 12:38:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-commit ef442b73b6bc36b5499e1983611abb46e6337975 upstream.
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Update mt76x0_phy_ant_select() to conform vendor driver, most notably
-add dual antenna mode support, read configuration from EEPROM and
-move ant select out of channel config to init phase. Plus small MT7630E
-quirk for MT_CMB_CTRL register which vendor driver dedicated to this
-chip do.
+commit 1163bdb636a118b9d7c3c03b9e67e7e799425a9c upstream.
 
-This make MT7630E workable with mt76x0e driver and do not cause any
-problems on MT7610U for me.
+Align phy calibration logic between mt76x0u and mt76x0e drivers
+This patch improves connection stability with low SNR
 
-Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c    | 52 ++++++++++++++++------
- .../net/wireless/mediatek/mt76/mt76x02_eeprom.h    | 10 ++---
- 2 files changed, 44 insertions(+), 18 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h        |   1 +
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c |   3 -
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c  | 101 +----------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c  |   1 +
+ 4 files changed, 6 insertions(+), 100 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 3bfa7f5e3513..2e5bcb3fdff7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1,3 +1,4 @@
++
+ /*
+  * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
+  *
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+index 4126ac5d9a8a..732f4b87fdcb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+@@ -116,9 +116,6 @@ void mt76x0_bss_info_changed(struct ieee80211_hw *hw,
+ 			       MT_BKOFF_SLOT_CFG_SLOTTIME, slottime);
+ 	}
+ 
+-	if (changed & BSS_CHANGED_ASSOC)
+-		mt76x0_phy_recalibrate_after_assoc(dev);
+-
+ 	mutex_unlock(&dev->mt76.mutex);
+ }
+ EXPORT_SYMBOL_GPL(mt76x0_bss_info_changed);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index d598ddc632cc..8d654aa63e93 100644
+index 8d654aa63e93..c34abd1c6030 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -518,21 +518,47 @@ static void mt76x0_vco_cal(struct mt76x02_dev *dev, u8 channel)
- 
- static void mt76x0_ant_select(struct mt76x02_dev *dev)
- {
--	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
--
--	/* single antenna mode */
--	if (chan->band == NL80211_BAND_2GHZ) {
--		mt76_rmw(dev, MT_COEXCFG3,
--			 BIT(5) | BIT(4) | BIT(3) | BIT(2), BIT(1));
--		mt76_rmw(dev, MT_WLAN_FUN_CTRL, BIT(5), BIT(6));
-+	u16 ee_ant = mt76x02_eeprom_get(dev, MT_EE_ANTENNA);
-+	u16 nic_conf2 = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_2);
-+	u32 wlan, coex3, cmb;
-+	bool ant_div;
-+
-+	wlan = mt76_rr(dev, MT_WLAN_FUN_CTRL);
-+	cmb = mt76_rr(dev, MT_CMB_CTRL);
-+	coex3 = mt76_rr(dev, MT_COEXCFG3);
-+
-+	cmb   &= ~(BIT(14) | BIT(12));
-+	wlan  &= ~(BIT(6) | BIT(5));
-+	coex3 &= ~GENMASK(5, 2);
-+
-+	if (ee_ant & MT_EE_ANTENNA_DUAL) {
-+		/* dual antenna mode */
-+		ant_div = !(nic_conf2 & MT_EE_NIC_CONF_2_ANT_OPT) &&
-+			  (nic_conf2 & MT_EE_NIC_CONF_2_ANT_DIV);
-+		if (ant_div)
-+			cmb |= BIT(12);
-+		else
-+			coex3 |= BIT(4);
-+		coex3 |= BIT(3);
-+		if (dev->mt76.cap.has_2ghz)
-+			wlan |= BIT(6);
- 	} else {
--		mt76_rmw(dev, MT_COEXCFG3, BIT(5) | BIT(2),
--			 BIT(4) | BIT(3));
--		mt76_clear(dev, MT_WLAN_FUN_CTRL,
--			   BIT(6) | BIT(5));
-+		/* sigle antenna mode */
-+		if (dev->mt76.cap.has_5ghz) {
-+			coex3 |= BIT(3) | BIT(4);
-+		} else {
-+			wlan |= BIT(6);
-+			coex3 |= BIT(1);
-+		}
- 	}
--	mt76_clear(dev, MT_CMB_CTRL, BIT(14) | BIT(12));
-+
-+	if (is_mt7630(dev))
-+		cmb |= BIT(14) | BIT(11);
-+
-+	mt76_wr(dev, MT_WLAN_FUN_CTRL, wlan);
-+	mt76_wr(dev, MT_CMB_CTRL, cmb);
- 	mt76_clear(dev, MT_COEXCFG0, BIT(2));
-+	mt76_wr(dev, MT_COEXCFG3, coex3);
+@@ -215,62 +215,6 @@ int mt76x0_wait_bbp_ready(struct mt76x02_dev *dev)
+ 	return 0;
  }
  
+-static void mt76x0_vco_cal(struct mt76x02_dev *dev, u8 channel)
+-{
+-	u8 val;
+-
+-	val = rf_rr(dev, MT_RF(0, 4));
+-	if ((val & 0x70) != 0x30)
+-		return;
+-
+-	/*
+-	 * Calibration Mode - Open loop, closed loop, and amplitude:
+-	 * B0.R06.[0]: 1
+-	 * B0.R06.[3:1] bp_close_code: 100
+-	 * B0.R05.[7:0] bp_open_code: 0x0
+-	 * B0.R04.[2:0] cal_bits: 000
+-	 * B0.R03.[2:0] startup_time: 011
+-	 * B0.R03.[6:4] settle_time:
+-	 *  80MHz channel: 110
+-	 *  40MHz channel: 101
+-	 *  20MHz channel: 100
+-	 */
+-	val = rf_rr(dev, MT_RF(0, 6));
+-	val &= ~0xf;
+-	val |= 0x09;
+-	rf_wr(dev, MT_RF(0, 6), val);
+-
+-	val = rf_rr(dev, MT_RF(0, 5));
+-	if (val != 0)
+-		rf_wr(dev, MT_RF(0, 5), 0x0);
+-
+-	val = rf_rr(dev, MT_RF(0, 4));
+-	val &= ~0x07;
+-	rf_wr(dev, MT_RF(0, 4), val);
+-
+-	val = rf_rr(dev, MT_RF(0, 3));
+-	val &= ~0x77;
+-	if (channel == 1 || channel == 7 || channel == 9 || channel >= 13) {
+-		val |= 0x63;
+-	} else if (channel == 3 || channel == 4 || channel == 10) {
+-		val |= 0x53;
+-	} else if (channel == 2 || channel == 5 || channel == 6 ||
+-		   channel == 8 || channel == 11 || channel == 12) {
+-		val |= 0x43;
+-	} else {
+-		WARN(1, "Unknown channel %u\n", channel);
+-		return;
+-	}
+-	rf_wr(dev, MT_RF(0, 3), val);
+-
+-	/* TODO replace by mt76x0_rf_set(dev, MT_RF(0, 4), BIT(7)); */
+-	val = rf_rr(dev, MT_RF(0, 4));
+-	val = ((val & ~(0x80)) | 0x80);
+-	rf_wr(dev, MT_RF(0, 4), val);
+-
+-	msleep(2);
+-}
+-
  static void
-@@ -700,7 +726,6 @@ int mt76x0_phy_set_channel(struct mt76x02_dev *dev,
- 	mt76x02_phy_set_bw(dev, chandef->width, ch_group_index);
- 	mt76x02_phy_set_band(dev, chandef->chan->band,
- 			     ch_group_index & 1);
--	mt76x0_ant_select(dev);
- 
- 	mt76_rmw(dev, MT_EXT_CCA_CFG,
- 		 (MT_EXT_CCA_CFG_CCA0 |
-@@ -927,6 +952,7 @@ void mt76x0_phy_init(struct mt76x02_dev *dev)
+ mt76x0_phy_set_band(struct mt76x02_dev *dev, enum nl80211_band band)
  {
- 	INIT_DELAYED_WORK(&dev->cal_work, mt76x0_phy_calibration_work);
+@@ -749,19 +693,15 @@ int mt76x0_phy_set_channel(struct mt76x02_dev *dev,
+ 	mt76x0_read_rx_gain(dev);
+ 	mt76x0_phy_set_chan_bbp_params(dev, rf_bw_band);
  
-+	mt76x0_ant_select(dev);
- 	mt76x0_rf_init(dev);
- 	mt76x02_phy_set_rxpath(dev);
- 	mt76x02_phy_set_txdac(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-index b3ec74835d10..1de041590050 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-@@ -25,6 +25,7 @@ enum mt76x02_eeprom_field {
- 	MT_EE_VERSION =				0x002,
- 	MT_EE_MAC_ADDR =			0x004,
- 	MT_EE_PCI_ID =				0x00A,
-+	MT_EE_ANTENNA =				0x022,
- 	MT_EE_NIC_CONF_0 =			0x034,
- 	MT_EE_NIC_CONF_1 =			0x036,
- 	MT_EE_COUNTRY_REGION_5GHZ =		0x038,
-@@ -104,6 +105,8 @@ enum mt76x02_eeprom_field {
- 	__MT_EE_MAX
- };
+-	if (mt76_is_usb(dev)) {
+-		mt76x0_vco_cal(dev, channel);
+-	} else {
+-		/* enable vco */
+-		rf_set(dev, MT_RF(0, 4), BIT(7));
+-	}
++	/* enable vco */
++	rf_set(dev, MT_RF(0, 4), BIT(7));
  
-+#define MT_EE_ANTENNA_DUAL			BIT(15)
+ 	if (scan)
+ 		return 0;
+ 
++	mt76x0_phy_calibrate(dev, false);
+ 	mt76x02_init_agc_gain(dev);
+-	if (mt76_is_mmio(dev))
+-		mt76x0_phy_calibrate(dev, false);
 +
- #define MT_EE_NIC_CONF_0_RX_PATH		GENMASK(3, 0)
- #define MT_EE_NIC_CONF_0_TX_PATH		GENMASK(7, 4)
- #define MT_EE_NIC_CONF_0_PA_TYPE		GENMASK(9, 8)
-@@ -118,12 +121,9 @@ enum mt76x02_eeprom_field {
- #define MT_EE_NIC_CONF_1_LNA_EXT_5G		BIT(3)
- #define MT_EE_NIC_CONF_1_TX_ALC_EN		BIT(13)
+ 	mt76x0_phy_set_txpower(dev);
  
--#define MT_EE_NIC_CONF_2_RX_STREAM		GENMASK(3, 0)
--#define MT_EE_NIC_CONF_2_TX_STREAM		GENMASK(7, 4)
--#define MT_EE_NIC_CONF_2_HW_ANTDIV		BIT(8)
-+#define MT_EE_NIC_CONF_2_ANT_OPT		BIT(3)
-+#define MT_EE_NIC_CONF_2_ANT_DIV		BIT(4)
- #define MT_EE_NIC_CONF_2_XTAL_OPTION		GENMASK(10, 9)
--#define MT_EE_NIC_CONF_2_TEMP_DISABLE		BIT(11)
--#define MT_EE_NIC_CONF_2_COEX_METHOD		GENMASK(15, 13)
+ 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
+@@ -770,39 +710,6 @@ int mt76x0_phy_set_channel(struct mt76x02_dev *dev,
+ 	return 0;
+ }
  
- #define MT_EFUSE_USAGE_MAP_SIZE			(MT_EE_USAGE_MAP_END - \
- 						 MT_EE_USAGE_MAP_START + 1)
+-void mt76x0_phy_recalibrate_after_assoc(struct mt76x02_dev *dev)
+-{
+-	u32 tx_alc, reg_val;
+-	u8 channel = dev->mt76.chandef.chan->hw_value;
+-	int is_5ghz = (dev->mt76.chandef.chan->band == NL80211_BAND_5GHZ) ? 1 : 0;
+-
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_R, 0, false);
+-
+-	mt76x0_vco_cal(dev, channel);
+-
+-	tx_alc = mt76_rr(dev, MT_TX_ALC_CFG_0);
+-	mt76_wr(dev, MT_TX_ALC_CFG_0, 0);
+-	usleep_range(500, 700);
+-
+-	reg_val = mt76_rr(dev, MT_BBP(IBI, 9));
+-	mt76_wr(dev, MT_BBP(IBI, 9), 0xffffff7e);
+-
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_RXDCOC, 0, false);
+-
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_LC, is_5ghz, false);
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_LOFT, is_5ghz, false);
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_TXIQ, is_5ghz, false);
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_TX_GROUP_DELAY, is_5ghz, false);
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_RXIQ, is_5ghz, false);
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_RX_GROUP_DELAY, is_5ghz, false);
+-
+-	mt76_wr(dev, MT_BBP(IBI, 9), reg_val);
+-	mt76_wr(dev, MT_TX_ALC_CFG_0, tx_alc);
+-	msleep(100);
+-
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1, false);
+-}
+-
+ static void mt76x0_temp_sensor(struct mt76x02_dev *dev)
+ {
+ 	u8 rf_b7_73, rf_b0_66, rf_b0_67;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+index a7fd36c2f633..ea517864186b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+@@ -117,6 +117,7 @@ static int mt76x0u_start(struct ieee80211_hw *hw)
+ 	if (ret)
+ 		goto out;
+ 
++	mt76x0_phy_calibrate(dev, true);
+ 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mac_work,
+ 				     MT_CALIBRATE_INTERVAL);
+ 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
 -- 
 1.9.3
 
