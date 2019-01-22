@@ -2,104 +2,121 @@ Return-Path: <SRS0=0pM2=P6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CBB2C282C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 21:13:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8019CC282C3
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 21:34:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 14C9420870
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 21:13:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45FA921726
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 21:34:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="fzy8TEQu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726678AbfAVVN4 (ORCPT
+        id S1726317AbfAVVei (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Jan 2019 16:13:56 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:37280 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726604AbfAVVNz (ORCPT
+        Tue, 22 Jan 2019 16:34:38 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:37557 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725913AbfAVVeh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Jan 2019 16:13:55 -0500
-Received: from mail-yb1-f198.google.com ([209.85.219.198])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1gm3Mo-00043z-9A
-        for linux-wireless@vger.kernel.org; Tue, 22 Jan 2019 21:13:54 +0000
-Received: by mail-yb1-f198.google.com with SMTP id 124so12875122ybb.9
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2019 13:13:54 -0800 (PST)
+        Tue, 22 Jan 2019 16:34:37 -0500
+Received: by mail-pg1-f194.google.com with SMTP id c25so18315pgb.4
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2019 13:34:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=0UEYFk0G9Y/+uJFIlHMIMqeMFmsdf+KgCHUR8jOoESs=;
+        b=fzy8TEQut+ZY0sw7OPKcjYr0gfjBA4Nce+DzxjkH+mivI6M/yNCauDSQGxQ20OcFF+
+         Dt/fMQaKIlHUvMyPte3+WNUTp5WxUDW4FDrl8uakDH35YKJDXWrxUGPDnixfIMcga2em
+         StP4G4ihRlEPRb254ctK3Q2+LFkbH/svupAxE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=uaD2LBSHc6hfCyUyACA7iugHV5Ci/pV6nsns0jLr8Og=;
-        b=mOGYr84TxLVHLG3nRfdui1mYhS0v+OnmvHeZwiZeW6UOsdcyXBa8vZ50Kt8KFS7yle
-         zUohDeFPAe53LayHMI4pvE+x6G6d3WlSQCzscyzoGwwqs6ghK90FAH2OxJzFnOgCcXht
-         OsjJrOnceznZB1uDPNzQ2O//8bZwjQWzOiFBNKmaSC3y/OPsUwjcGtTJfaWSwUlv6OKV
-         uWqUjZCe1m9mJWnuI3wfCMin5P/erV1ZA4GGqe4EXarOYI58E0x7mzaG8fNtmdb/JzlO
-         vjbZlqz44C/zvycc0bsqJLDuZL1dxL+JiuZJXlviL1pB3Y16LS4Kwtks/LRVv/MZ3ZqE
-         jFjw==
-X-Gm-Message-State: AJcUukeONrJmCUr62oTK68NjVsdksj3Bx4/vmB1GbIfPq+qIw08ZAZpw
-        KQuz88G7wm5WZeYamPfiQw986jjdBil1yatbZOSqckcPrCAVqLiYuN+cfjmtLJbbGDJAYVhfhkG
-        BPqVor6TeumJSuwXhXmg+ftfst9MG7dGYUXJnovu23fxT
-X-Received: by 2002:a0d:ca11:: with SMTP id m17mr2680315ywd.319.1548191633295;
-        Tue, 22 Jan 2019 13:13:53 -0800 (PST)
-X-Google-Smtp-Source: ALg8bN4GTdWFkQdQ6P9VVGgoeX/TvWhlbwg19o7hntS+yDsjWlGmRMiqkKT5oJ6S3mC1L7rHSA6K5w==
-X-Received: by 2002:a0d:ca11:: with SMTP id m17mr2680298ywd.319.1548191632982;
-        Tue, 22 Jan 2019 13:13:52 -0800 (PST)
-Received: from localhost ([2605:a601:ac2:fb20:b0c3:23ce:f04b:2786])
-        by smtp.gmail.com with ESMTPSA id a72sm10246426ywh.42.2019.01.22.13.13.52
+        bh=0UEYFk0G9Y/+uJFIlHMIMqeMFmsdf+KgCHUR8jOoESs=;
+        b=Cqh+pZeXZbPNLJlvJY9BWUN/lv6LmylcOQ3Fzt9aDfehz19wuB8gZVmECCx5629124
+         rSwOVOdPQXo+cVJ7NDEHodzb7ISvRpsbcEDv2jrH4LJwGzrvALvgsLjFvoAjIuxImejL
+         zGsGMrKWLgiblANp6yqTlZoyXJefEl3nMlQN2v85n0g+rw7Qu87CWckHOKm+r8gttX/c
+         hMkQT8O1NwN2UFbiNLDipvb9CBMWMDDRF2JD21Hyb2qc3Rhp1TcWxUZqcGX0P8m95w3F
+         d7kQdTssBeB/I40o86yePVMHCwP8KghvU0nJuJQZlZwTKqTmSzXb/YLsR/Lp7+wrGjcC
+         UnBQ==
+X-Gm-Message-State: AJcUukfP9HjKx3kQY8+xCKytgVg71T7aG05J618orcXb2A7Unmak1tWM
+        HFrUTWRc1YC+zJjR1G3RmLFqbg==
+X-Google-Smtp-Source: ALg8bN4g93U7gxJuPJ95+NuHJiQjV290VsEszcDRz8M+g48a21UpPabJzKmikiOmkfdYcwUFnpIGyA==
+X-Received: by 2002:a63:5664:: with SMTP id g36mr33208597pgm.313.1548192876947;
+        Tue, 22 Jan 2019 13:34:36 -0800 (PST)
+Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
+        by smtp.gmail.com with ESMTPSA id s130sm35959524pgc.60.2019.01.22.13.34.35
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 22 Jan 2019 13:13:52 -0800 (PST)
-Date:   Tue, 22 Jan 2019 15:13:51 -0600
-From:   Seth Forshee <seth.forshee@canonical.com>
-To:     chaitanya.mgit@gmail.com
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless-regdb: update 60ghz band rules for us
-Message-ID: <20190122211351.GW7206@ubuntu-xps13>
-References: <20181218080815.19395-1-chaitanya.mgit@gmail.com>
+        Tue, 22 Jan 2019 13:34:35 -0800 (PST)
+Date:   Tue, 22 Jan 2019 13:34:32 -0800
+From:   Brian Norris <briannorris@chromium.org>
+To:     yhchuang@realtek.com
+Cc:     kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        tehuang@realtek.com
+Subject: Re: [PATCH v2 13/13] rtw88: add support for Realtek 802.11ac
+ wireless chips
+Message-ID: <20190122213423.GA52826@google.com>
+References: <1542367879-28880-1-git-send-email-yhchuang@realtek.com>
+ <1542367879-28880-14-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181218080815.19395-1-chaitanya.mgit@gmail.com>
+In-Reply-To: <1542367879-28880-14-git-send-email-yhchuang@realtek.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Dec 18, 2018 at 01:38:15PM +0530, chaitanya.mgit@gmail.com wrote:
-> From: Chaitanya Tata <Chaitanya.Mgit@gmail.com>
+Hi Yan-Hsuan,
+
+On Fri, Nov 16, 2018 at 07:31:19PM +0800, yhchuang@realtek.com wrote:
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 > 
-> Include channels 4, 5 & 6 for US in 60GHz band. FCC extended the
-> 57-64GHz band till 71GHz with almost same rules.
-
-This looks right to me based on my research. You're missing one thing
-though. You need to provide a Signed-off-by tag, please see the
-CONTRIBUTING file for more information. If you reply with your tag I
-will add it when I apply the patch. Thanks!
-
+> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 > ---
->  db.txt | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  MAINTAINERS | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> diff --git a/db.txt b/db.txt
-> index fa5c0e0..ae650dd 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -1280,9 +1280,9 @@ country US: DFS-FCC
->  	(5490 - 5730 @ 160), (23), DFS
->  	(5735 - 5835 @ 80), (30)
->  	# 60g band
-> -	# reference: http://cfr.regstoday.com/47cfr15.aspx#47_CFR_15p255
-> -	# channels 1,2,3, EIRP=40dBm(43dBm peak)
-> -	(57240 - 63720 @ 2160), (40)
-> +	# reference: section IV-D https://docs.fcc.gov/public/attachments/FCC-16-89A1.pdf
-> +	# channels 1-6 EIRP=40dBm(43dBm peak)
-> +	(57240 - 71000 @ 2160), (40)
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 9ad052a..138515b 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -12546,6 +12546,14 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.g
+>  S:	Maintained
+>  F:	drivers/net/wireless/realtek/rtlwifi/
 >  
->  country UY: DFS-FCC
->  	(2402 - 2482 @ 40), (20)
-> -- 
-> 2.17.1
-> 
+> +REALTEK WIRELESS DRIVER (rtw88)
+> +M:	Yan-Hsuan Chuang <yhchuang@realtek.com>
+> +L:	linux-wireless@vger.kernel.org
+> +W:	http://wireless.kernel.org/
+> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+
+That tree hasn't been updated in years. I expect that's not relevant, so
+perhaps you should remove it? I think these days, unless you have a
+large amount of patches that deserves its own tree / pull-request,
+you're probably just going to be covered by the wireless-drivers /
+wireless-drivers-next trees:
+
+NETWORKING DRIVERS (WIRELESS)
+M:      Kalle Valo <kvalo@codeaurora.org>
+L:      linux-wireless@vger.kernel.org
+Q:      http://patchwork.kernel.org/project/linux-wireless/list/
+T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git
+T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git
+
+Regards,
+Brian
+
+> +S:	Maintained
+> +F:	drivers/net/wireless/realtek/rtw88/
+> +
+>  RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
+>  M:	Jes Sorensen <Jes.Sorensen@gmail.com>
+>  L:	linux-wireless@vger.kernel.org
