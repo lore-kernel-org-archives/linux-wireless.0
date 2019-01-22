@@ -6,91 +6,85 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25252C282C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 15:46:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B87C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 15:49:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9A3F20844
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 15:46:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 868D8217D4
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jan 2019 15:49:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uXWj6cPo"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DTudGlb2";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lAl/vyo/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729233AbfAVPqY (ORCPT
+        id S1728855AbfAVPs5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Jan 2019 10:46:24 -0500
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:35546 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728664AbfAVPqY (ORCPT
+        Tue, 22 Jan 2019 10:48:57 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:58194 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728664AbfAVPs5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Jan 2019 10:46:24 -0500
-Received: by mail-oi1-f196.google.com with SMTP id v6so17769472oif.2;
-        Tue, 22 Jan 2019 07:46:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=cLccPGY/Ci26NxYg4k35YsBSS0Px+Hs6AZRkSeDGRCE=;
-        b=uXWj6cPodKICiXar8mLcSOlDIzc1bhWAKPghdgh7+UDjsmGt9MBBdXItVKA8rXZPAU
-         jF1sDqKlOnBfhpiZOANXBu0+FRHAb1M5L6epiiPUhUua6DPFuBrNVIJAQc9Ch7suG6dU
-         o5CRNei8WE1KD2yj7ElUj7VrRyK2oc9an1dfuZEghl9md9brC8rh60KNqtReWBkUl4BU
-         WZqKEzXTjsVuD4t/ETllsWqtLRNV2qcTTNXosn341vU0tarej2tkMmR+wKQHdOOLFL/a
-         bwImr2WQXJR2ut9j/3kO1VQ2DwPUEhjoENASBBMB15vNVDP6dA5L560rvxtqzaeHBYeH
-         8Sqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=cLccPGY/Ci26NxYg4k35YsBSS0Px+Hs6AZRkSeDGRCE=;
-        b=M9noeKDntm8dAq/b76gRcleySTL2uF2GeuYa4qiMma9PtLolqHPvYzAQjojv0KCy0j
-         HwSxsJs5T6QtXpxBTYvkkwmnlC7ZxoZvC/jDjvNYgA90jXVi2RF+Ar4qY3xk7kVDCZMC
-         3DK9uIx9NbJb8nf0fBbGfpCirwaxf/b4lhPi13ZG9B4mjeRylZDFlIz8oLgIv0Zficj6
-         eMB+2BMH7R18IyA9fGnprva07WOKhm1Ff1GrOBwY+DGwmvuzuOTqC6PADSDelDNQ9yEs
-         H6vJOrp0J9GCqOZ4GT9TzBioEg3vVA/c5gNEa7uu19/Rr6agkicFp91QY4oPjGGhP4uK
-         lFmQ==
-X-Gm-Message-State: AJcUukcaadqY3Ym6/l33rRK39JWPSQXpqjOpVpEZjCbEh7Lct67QWX7W
-        ks2GDe8beCrQDmRoE5Pk0Wc=
-X-Google-Smtp-Source: ALg8bN6vaU4T5gLcDfWPr41gSXX39CBbzQqyRAgA7zWzVHvHqpxeC+ByV6MlV3NL+KKHqofuNT35vQ==
-X-Received: by 2002:aca:cd87:: with SMTP id d129mr8859844oig.120.1548171983524;
-        Tue, 22 Jan 2019 07:46:23 -0800 (PST)
-Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id q13sm6921570ota.14.2019.01.22.07.46.22
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Tue, 22 Jan 2019 07:46:23 -0800 (PST)
-Subject: Re: [PATCH] b43: no need to check return value of debugfs_create
- functions
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20190122152151.16139-30-gregkh@linuxfoundation.org>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <6dd3973e-4dcc-cdc1-bb55-e17faa213f2d@lwfinger.net>
-Date:   Tue, 22 Jan 2019 09:46:22 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        Tue, 22 Jan 2019 10:48:57 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B441B60712; Tue, 22 Jan 2019 15:48:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548172136;
+        bh=c3bqGCblV9YH62iQvi4K1pj3MExdGL1OvCIKkQ896Tk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=DTudGlb2NQDVL7zVHuUnUoQ2f7qn/83KBhZl09V8SL19zhPRq2GZufgrVLLlGroAd
+         xFL235DGQE7cOgjqRAHwv8xzB0azTTTadeCW5ckAk5rKnV8L4mNZFEHOlKUGG817P0
+         HvQZqJxm4TPKjySurlS+XHjSDdkiX4TuoguxenKQ=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0F286601B4;
+        Tue, 22 Jan 2019 15:48:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548172135;
+        bh=c3bqGCblV9YH62iQvi4K1pj3MExdGL1OvCIKkQ896Tk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=lAl/vyo/NXM3q8BE3dFZLatijjUCQzVyYBzExLtEJudNjoNfzpJaM+BPIF0WO1DlK
+         PM4ALgDtMwWyTJufAm4UrKd0VKATJZbhkXKYWlsGQPGxxCpmDUnNsGxMuiAqatawEa
+         lRib/F4v7vVUJJYrItqxYKZZjbvcsEwY9NGmDt+s=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0F286601B4
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] realtek: no need to check return value of debugfs_create functions
+References: <20190122152151.16139-34-gregkh@linuxfoundation.org>
+        <c09a1fb9-45e4-c21e-3c19-09ba94ebd859@lwfinger.net>
+Date:   Tue, 22 Jan 2019 17:48:51 +0200
+In-Reply-To: <c09a1fb9-45e4-c21e-3c19-09ba94ebd859@lwfinger.net> (Larry
+        Finger's message of "Tue, 22 Jan 2019 09:44:37 -0600")
+Message-ID: <87r2d4n15o.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20190122152151.16139-30-gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/22/19 9:21 AM, Greg Kroah-Hartman wrote:
-> When calling debugfs functions, there is no need to ever check the
-> return value.  The function can work or not, but the code logic should
-> never do something different based on this.
-> 
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: b43-dev@lists.infradead.org
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> On 1/22/19 9:21 AM, Greg Kroah-Hartman wrote:
+>> When calling debugfs functions, there is no need to ever check the
+>> return value.  The function can work or not, but the code logic should
+>> never do something different based on this.
+>>
+>> Cc: Ping-Ke Shih <pkshih@realtek.com>
+>> Cc: Kalle Valo <kvalo@codeaurora.org>
+>> Cc: linux-wireless@vger.kernel.org
+>> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>
+> Greg,
+>
+> Please change the subject to read "rtlwifi: ...". Otherwise the patch is correct.
 
-Thanks,
+I can fix that during commit.
 
-Larry
-
+-- 
+Kalle Valo
