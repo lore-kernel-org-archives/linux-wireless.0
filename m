@@ -6,151 +6,112 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 536D6C282C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 15:44:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 425F4C282C3
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 15:44:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 30FB121872
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 15:44:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A02321872
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 15:44:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728431AbfAXPoU (ORCPT
+        id S1728408AbfAXPoZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Jan 2019 10:44:20 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:35298 "EHLO mx1.redhat.com"
+        Thu, 24 Jan 2019 10:44:25 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:35408 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727649AbfAXPoU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Jan 2019 10:44:20 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        id S1727649AbfAXPoZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Jan 2019 10:44:25 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6EC42C074129;
-        Thu, 24 Jan 2019 15:44:19 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id B0770C04AC54;
+        Thu, 24 Jan 2019 15:44:24 +0000 (UTC)
 Received: from localhost (unknown [10.43.2.219])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 10F971000049;
-        Thu, 24 Jan 2019 15:44:18 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6A0EC7B523;
+        Thu, 24 Jan 2019 15:44:20 +0000 (UTC)
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     Felix Fietkau <nbd@nbd.name>
 Cc:     linux-wireless@vger.kernel.org,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH 3/7] mt76x02: initialize mutli bss mode when set up address
-Date:   Thu, 24 Jan 2019 16:44:05 +0100
-Message-Id: <1548344649-10404-4-git-send-email-sgruszka@redhat.com>
+Subject: [PATCH 4/7] mt76x02: minor beaconing init changes
+Date:   Thu, 24 Jan 2019 16:44:06 +0100
+Message-Id: <1548344649-10404-5-git-send-email-sgruszka@redhat.com>
 In-Reply-To: <1548344649-10404-1-git-send-email-sgruszka@redhat.com>
 References: <1548344649-10404-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Thu, 24 Jan 2019 15:44:19 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Thu, 24 Jan 2019 15:44:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-BSSID is not strtirct related with beaconing (for example we can have
-2 STA vifs) and more related with MAC address, so initaize BSSID when
-setting MAC address.
+Disable BEACON timer during init and remove interrupt registers
+initialization form generic code since they are PCIe specific.
 
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c     | 15 ++++++++++++++-
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h     |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c    | 13 ++-----------
- drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c |  4 +---
- 4 files changed, 18 insertions(+), 16 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/pci.c      |  7 +++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c    | 11 ++++-------
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c |  8 ++++++++
+ 3 files changed, 19 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 63fa27d2c404..ae1727e433f3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -548,8 +548,11 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+index 1472c8699b29..cb68af5b7478 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+@@ -128,6 +128,13 @@ static int mt76x0e_register_device(struct mt76x02_dev *dev)
+ 	if (err < 0)
+ 		return err;
  
--void mt76x02_mac_setaddr(struct mt76x02_dev *dev, u8 *addr)
-+void mt76x02_mac_setaddr(struct mt76x02_dev *dev, const u8 *addr)
- {
-+	static const u8 null_addr[ETH_ALEN] = {};
-+	int i;
++	/* Beaconing: fire a pre-TBTT interrupt 8 ms before TBTT */
++	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_PRE_TBTT,
++		       8 << 4);
++	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_GP_TIMER,
++		       MT_DFS_GP_INTERVAL);
++	mt76_wr(dev, MT_INT_TIMER_EN, 0);
 +
- 	ether_addr_copy(dev->mt76.macaddr, addr);
+ 	if (mt76_chip(&dev->mt76) == 0x7610) {
+ 		u16 val;
  
- 	if (!is_valid_ether_addr(dev->mt76.macaddr)) {
-@@ -563,6 +566,16 @@ void mt76x02_mac_setaddr(struct mt76x02_dev *dev, u8 *addr)
- 	mt76_wr(dev, MT_MAC_ADDR_DW1,
- 		get_unaligned_le16(dev->mt76.macaddr + 4) |
- 		FIELD_PREP(MT_MAC_ADDR_DW1_U2ME_MASK, 0xff));
-+
-+	mt76_wr(dev, MT_MAC_BSSID_DW0,
-+		get_unaligned_le32(dev->mt76.macaddr));
-+	mt76_wr(dev, MT_MAC_BSSID_DW1,
-+		get_unaligned_le16(dev->mt76.macaddr + 4) |
-+		FIELD_PREP(MT_MAC_BSSID_DW1_MBSS_MODE, 3) | /* 8 APs + 8 STAs */
-+		MT_MAC_BSSID_DW1_MBSS_LOCAL_BIT);
-+
-+	for (i = 0; i < 16; i++)
-+		mt76x02_mac_set_bssid(dev, i, null_addr);
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_setaddr);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-index 940c07f665cd..76e564b8f5da 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-@@ -191,7 +191,7 @@ int mt76x02_mac_process_rx(struct mt76x02_dev *dev, struct sk_buff *skb,
- void mt76x02_mac_set_tx_protection(struct mt76x02_dev *dev, bool legacy_prot,
- 				   int ht_mode);
- void mt76x02_mac_set_rts_thresh(struct mt76x02_dev *dev, u32 val);
--void mt76x02_mac_setaddr(struct mt76x02_dev *dev, u8 *addr);
-+void mt76x02_mac_setaddr(struct mt76x02_dev *dev, const u8 *addr);
- void mt76x02_mac_write_txwi(struct mt76x02_dev *dev, struct mt76x02_txwi *txwi,
- 			    struct sk_buff *skb, struct mt76_wcid *wcid,
- 			    struct ieee80211_sta *sta, int len);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 3f326cb70434..02139dce4800 100644
+index 02139dce4800..741ecd723b8e 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -665,16 +665,8 @@ static void mt76x02_set_beacon_offsets(struct mt76x02_dev *dev)
- 
- void mt76x02_init_beacon_config(struct mt76x02_dev *dev)
+@@ -667,13 +667,10 @@ void mt76x02_init_beacon_config(struct mt76x02_dev *dev)
  {
--	static const u8 null_addr[ETH_ALEN] = {};
  	int i;
  
--	mt76_wr(dev, MT_MAC_BSSID_DW0,
--		get_unaligned_le32(dev->mt76.macaddr));
--	mt76_wr(dev, MT_MAC_BSSID_DW1,
--		get_unaligned_le16(dev->mt76.macaddr + 4) |
--		FIELD_PREP(MT_MAC_BSSID_DW1_MBSS_MODE, 3) | /* 8 beacons */
--		MT_MAC_BSSID_DW1_MBSS_LOCAL_BIT);
+-	/* Fire a pre-TBTT interrupt 8 ms before TBTT */
+-	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_PRE_TBTT,
+-		       8 << 4);
+-	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_GP_TIMER,
+-		       MT_DFS_GP_INTERVAL);
+-	mt76_wr(dev, MT_INT_TIMER_EN, 0);
 -
- 	/* Fire a pre-TBTT interrupt 8 ms before TBTT */
- 	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_PRE_TBTT,
- 		       8 << 4);
-@@ -684,10 +676,9 @@ void mt76x02_init_beacon_config(struct mt76x02_dev *dev)
- 
++	mt76_clear(dev, MT_BEACON_TIME_CFG, (MT_BEACON_TIME_CFG_TIMER_EN |
++					     MT_BEACON_TIME_CFG_SYNC_MODE |
++					     MT_BEACON_TIME_CFG_TBTT_EN |
++					     MT_BEACON_TIME_CFG_BEACON_TX));
  	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xffff);
  
--	for (i = 0; i < 8; i++) {
--		mt76x02_mac_set_bssid(dev, i, null_addr);
-+	for (i = 0; i < 8; i++)
- 		mt76x02_mac_set_beacon(dev, i, NULL);
--	}
-+
- 	mt76x02_set_beacon_offsets(dev);
- }
- EXPORT_SYMBOL_GPL(mt76x02_init_beacon_config);
+ 	for (i = 0; i < 8; i++)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-index 4347d5e7a915..0ccaa64d97ec 100644
+index 0ccaa64d97ec..f86ff035fa7f 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-@@ -119,9 +119,7 @@ static int mt76x2_mac_reset(struct mt76x02_dev *dev, bool hard)
- 	mt76_wr(dev, MT_MCU_CLOCK_CTL, 0x1401);
- 	mt76_clear(dev, MT_FCE_L2_STUFF, MT_FCE_L2_STUFF_WR_MPDU_LEN_EN);
+@@ -121,6 +121,14 @@ static int mt76x2_mac_reset(struct mt76x02_dev *dev, bool hard)
  
--	mt76_wr(dev, MT_MAC_ADDR_DW0, get_unaligned_le32(macaddr));
--	mt76_wr(dev, MT_MAC_ADDR_DW1, get_unaligned_le16(macaddr + 4));
--
-+	mt76x02_mac_setaddr(dev, macaddr);
+ 	mt76x02_mac_setaddr(dev, macaddr);
  	mt76x02_init_beacon_config(dev);
++
++	/* Fire a pre-TBTT interrupt 8 ms before TBTT */
++	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_PRE_TBTT,
++		       8 << 4);
++	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_GP_TIMER,
++		       MT_DFS_GP_INTERVAL);
++	mt76_wr(dev, MT_INT_TIMER_EN, 0);
++
  	if (!hard)
  		return 0;
+ 
 -- 
 1.9.3
 
