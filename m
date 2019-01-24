@@ -2,106 +2,82 @@ Return-Path: <SRS0=rH0W=QA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 354FBC282C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 10:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 767F2C282C3
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 14:21:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E779621855
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 10:43:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 396BA21872
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 14:21:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="McknD4Eq"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gz6ivUcG";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Yzp6CSZf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727153AbfAXKnP (ORCPT
+        id S1727903AbfAXOVt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Jan 2019 05:43:15 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:36346 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726881AbfAXKnP (ORCPT
+        Thu, 24 Jan 2019 09:21:49 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:37528 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727694AbfAXOVt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Jan 2019 05:43:15 -0500
-Received: by mail-pg1-f193.google.com with SMTP id n2so2493979pgm.3
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2019 02:43:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=8X9BD9qvrb8sMgcXPa7Y/Ie3jPaxIo5DK8ptg9NeE8Y=;
-        b=McknD4EqCXU0Ol7RQDl8aHJcfFy0OQ82t5ZPDVE7B885jBTffpHMJGeC+mU+tMnm3A
-         O9pH+PnKQnnHTBu9Cek7qXhzlZ0zF0ndcDw2GvBw9jisvuD7XYhoHEr9DHJbkUx3hPIH
-         ehrEIJbduPZ760+TJxY1Q0Awp5tF10YC62gLGSZYcJJfJR37Qg036L8ZlpzzG5oCcnBa
-         YtSBrwuVkV8hmYiPexyM+dvrw2/vScO6Hyz90BTQ7J7TbI+2lbxeGqBFXoJpTamhohef
-         41H4zikq9mlxq/rFJckK58k2GkBC0PRmLmZW1cZ3dwz70dLcyubrgOixnF9T3VycFmoU
-         47KQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=8X9BD9qvrb8sMgcXPa7Y/Ie3jPaxIo5DK8ptg9NeE8Y=;
-        b=sKXZExvVi+Txbt2/QWRZcKB09aYM5ygkagpkAvk18rwdt4D/5m1rMSU/9ovC5RRZMC
-         IOZXN5Jw4sWT2r9JKHYCciZrex6RnKnd05QMfHmOdLz64Fzumwq2wiuvwpLssoXJL7ZY
-         ixSGN9uUIvmAXynWXiMhAdvi2LYN6ya17slfacbOoAbPnGPmUGyPPBg5x8mUxjzhN064
-         qLulWhmmfhqAQLMrM5b1CSX9+TgxjCLAF4R4otO8M234N1fCGNv9Oh/DttdLQV3mJlC5
-         jeTrATIL0vx8Z38zpzfNratxWWeYGEaGCqPyYC1R6VXuB6MypMRJ+k0wrss2GxYpeqPH
-         hQwQ==
-X-Gm-Message-State: AJcUukevFzWGtP6mEHkB58O5vYLBa5Jj29JasAF0RqwK4fXbrEreowr9
-        s7tX/kLU4mSPlmlu1I06Btjcy4pxr90=
-X-Google-Smtp-Source: ALg8bN6FbPiyTaxzwxH38N80b8mX9Kit1yfvcgYioHX0EA0eLn3QR15GYjQd5qR5m9dr6QS3OU84dw==
-X-Received: by 2002:a62:26c7:: with SMTP id m190mr6044979pfm.79.1548326593889;
-        Thu, 24 Jan 2019 02:43:13 -0800 (PST)
-Received: from BWT-FWA-0475.bluwirelesstechnology.com ([103.248.210.66])
-        by smtp.gmail.com with ESMTPSA id c13sm26471125pfo.121.2019.01.24.02.43.11
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 24 Jan 2019 02:43:12 -0800 (PST)
-From:   chaitanya.mgit@gmail.com
-To:     linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc:     Chaitanya Tata <chaitanya.tata@bluwireless.co.uk>
-Subject: [PATCH] cfg80211: reg: remove warn_on for a normal case
-Date:   Thu, 24 Jan 2019 16:13:02 +0530
-Message-Id: <20190124104302.26051-1-chaitanya.mgit@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        Thu, 24 Jan 2019 09:21:49 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id E6F57607DD; Thu, 24 Jan 2019 14:21:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548339708;
+        bh=lHCLseRg06IP8EXc04vWqzRWDozSv1IKhCCDdMSOlj8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=gz6ivUcGqkgtHXyyS2zhM+c1gWNQ/n2cZrNPuoK+y2sWEQi2jPsqWd43xgyjjHTez
+         ddfmz9lKwi+PfolnJwykefDBEg7+26orTDPFP61/n4tpKPEDppHjmn41oge5tDm3R6
+         9KP4ULuQMRvIkq+5hmPLBXjGyjGYIokP6x0N9b/Q=
+Received: from aambure-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: aambure@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2B988607DD;
+        Thu, 24 Jan 2019 14:21:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548339706;
+        bh=lHCLseRg06IP8EXc04vWqzRWDozSv1IKhCCDdMSOlj8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Yzp6CSZfUdtJlLy6ARZImiRKOsFTVCNpgHM5uwoGEiBBXNDqCu8xpiFUlRTzR/Zy/
+         pl+sFasR670/ejONfU2pBbwnP7SncFdf5fTHffuRI0dqSFfGLofsT0XBLV4IqU4HFh
+         I7z6R4tDpx4TaleMooOo/ewX87uJ2Z9eKFu+yYxk=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2B988607DD
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=aambure@codeaurora.org
+From:   Abhishek Ambure <aambure@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Abhishek Ambure <aambure@codeaurora.org>
+Subject: [PATCH 0/2] Enable WPA3 cipher suites in WCN3990 firmware
+Date:   Thu, 24 Jan 2019 19:51:35 +0530
+Message-Id: <1548339697-17766-1-git-send-email-aambure@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chaitanya Tata <chaitanya.tata@bluwireless.co.uk>
+This patchset brings changes to enable CCMP, GCMP & GCMP-256 cipher suites to run WPA3 security protocol in WCN3990. TLV based firmwares ex. QCA6174,
+WCN3990 and non-TLV based firmwares have differnet mapping for GCMP &
+GCMP-256 cipher suites.
+Cipher suites mapping in host driver is done according to wmi tlv and non-tlv versions of firmware.
 
-If there are simulatenous queries of regdb, then there might be a case
-where multiple queries can trigger request_firmware_no_wait and can have
-parallel callbacks being executed asynchronously. In this scenario we
-might hit the WARN_ON.
+Abhishek Ambure (2):
+  ath10k: Assign 'n_cipher_suites = 11' for WCN3990 to enable WPA3
+  ath10k: Update GCMP & GCMP-256 cipher suite number for WCN3990
 
-So remove the warn_on, as the code already handles multiple callbacks
-gracefully.
+ drivers/net/wireless/ath/ath10k/core.c    |  1 +
+ drivers/net/wireless/ath/ath10k/core.h    |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c     | 12 +++++------
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  6 ++++--
+ drivers/net/wireless/ath/ath10k/wmi.c     | 30 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     | 33 ++++++++++++++++++++++---------
+ 6 files changed, 66 insertions(+), 17 deletions(-)
 
-Signed-off-by: Chaitanya Tata <chaitanya.tata@bluwireless.co.uk>
----
- net/wireless/reg.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index cce4c16eaaa0..dd58b9909ac9 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1024,8 +1024,13 @@ static void regdb_fw_cb(const struct firmware *fw, void *context)
- 	}
- 
- 	rtnl_lock();
--	if (WARN_ON(regdb && !IS_ERR(regdb))) {
--		/* just restore and free new db */
-+	if (regdb && !IS_ERR(regdb)) {
-+		/* negative case - a bug
-+		 * positive case - can happen due to race in case of multiple cb's in
-+		 * queue, due to usage of asynchronous callback
-+		 *
-+		 * Either case, just restore and free new db.
-+		 */
- 	} else if (set_error) {
- 		regdb = ERR_PTR(set_error);
- 	} else if (fw) {
 -- 
-2.17.1
+1.9.1
 
