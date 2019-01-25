@@ -6,90 +6,67 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 175ACC282C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 20:22:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78DA0C282C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 20:22:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5CB2218B0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 20:22:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49DF1218B0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 20:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729108AbfAYUWG (ORCPT
+        id S1729134AbfAYUWJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Jan 2019 15:22:06 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:50928 "EHLO
+        Fri, 25 Jan 2019 15:22:09 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:50936 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725778AbfAYUWF (ORCPT
+        with ESMTP id S1726044AbfAYUWJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Jan 2019 15:22:05 -0500
+        Fri, 25 Jan 2019 15:22:09 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gn7qt-00010a-Hu; Fri, 25 Jan 2019 22:13:23 +0200
+        id 1gn7qq-00010a-VS; Fri, 25 Jan 2019 22:13:21 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 25 Jan 2019 22:13:04 +0200
-Message-Id: <20190125201305.5616-17-luca@coelho.fi>
+Date:   Fri, 25 Jan 2019 22:13:00 +0200
+Message-Id: <20190125201305.5616-13-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190125201305.5616-1-luca@coelho.fi>
 References: <20190125201305.5616-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 16/17] iwlwifi: monitor dumping flow cleanup
+Subject: [PATCH 12/17] iwlwifi: mvm: pre-initialize alive_data in wait_alive()
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Since we use a dumping mask, checking if only monitor was requested
-is redundant. Remove the unneeded code.
+The function we pass to the wait alive notification procedure may may
+not even get called if the timeout occurs before the function is
+called.  To prevent accessing unitialized data in alive_data, pre-set
+it to zero in the declaration.  Found by static analyzers.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/pcie/trans.c    | 18 +++---------------
- 1 file changed, 3 insertions(+), 15 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index e72bd9796b5b..472a85d9a358 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3169,8 +3169,7 @@ static struct iwl_trans_dump_data
- 	struct iwl_txq *cmdq = trans_pcie->txq[trans_pcie->cmd_queue];
- 	struct iwl_fw_error_dump_txcmd *txcmd;
- 	struct iwl_trans_dump_data *dump_data;
--	u32 len, num_rbs = 0;
--	u32 monitor_len;
-+	u32 len, num_rbs = 0, monitor_len = 0;
- 	int i, ptr;
- 	bool dump_rbs = test_bit(STATUS_FW_ERROR, &trans->status) &&
- 			!trans->cfg->mq_rx_supported &&
-@@ -3187,19 +3186,8 @@ static struct iwl_trans_dump_data
- 		cmdq->n_window * (sizeof(*txcmd) + TFD_MAX_PAYLOAD_SIZE);
- 
- 	/* FW monitor */
--	monitor_len = iwl_trans_get_fw_monitor_len(trans, &len);
--
--	if (dump_mask == BIT(IWL_FW_ERROR_DUMP_FW_MONITOR)) {
--		dump_data = vzalloc(len);
--		if (!dump_data)
--			return NULL;
--
--		data = (void *)dump_data->data;
--		len = iwl_trans_pcie_dump_monitor(trans, &data, monitor_len);
--		dump_data->len = len;
--
--		return dump_data;
--	}
-+	if (dump_mask & BIT(IWL_FW_ERROR_DUMP_FW_MONITOR))
-+		monitor_len = iwl_trans_get_fw_monitor_len(trans, &len);
- 
- 	/* CSR registers */
- 	if (dump_mask & BIT(IWL_FW_ERROR_DUMP_CSR))
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 27582d70d45a..d3dc9d276e0f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -293,7 +293,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 					 enum iwl_ucode_type ucode_type)
+ {
+ 	struct iwl_notification_wait alive_wait;
+-	struct iwl_mvm_alive_data alive_data;
++	struct iwl_mvm_alive_data alive_data = {};
+ 	const struct fw_img *fw;
+ 	int ret;
+ 	enum iwl_ucode_type old_type = mvm->fwrt.cur_fw_img;
 -- 
 2.20.1
 
