@@ -3,33 +3,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77BA2C282C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 11:48:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D4EC282C6
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 11:48:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4FC69218CD
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 11:48:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2D28218CD
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 11:48:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726344AbfAYLsb (ORCPT
+        id S1727959AbfAYLsd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Jan 2019 06:48:31 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:55790 "EHLO
+        Fri, 25 Jan 2019 06:48:33 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:55798 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726108AbfAYLsb (ORCPT
+        with ESMTP id S1726216AbfAYLsc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Jan 2019 06:48:31 -0500
+        Fri, 25 Jan 2019 06:48:32 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC4)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gmzyH-0007S0-7x; Fri, 25 Jan 2019 12:48:29 +0100
+        id 1gmzyH-0007S0-Vq; Fri, 25 Jan 2019 12:48:30 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Sara Sharon <sara.sharon@intel.com>
-Subject: [PATCH 02/12] mac80211: move the bss update from elements to an helper
-Date:   Fri, 25 Jan 2019 12:48:15 +0100
-Message-Id: <20190125114825.5872-2-johannes@sipsolutions.net>
+Subject: [PATCH 04/12] cfg80211: Properly track transmitting and non-transmitting BSS
+Date:   Fri, 25 Jan 2019 12:48:17 +0100
+Message-Id: <20190125114825.5872-4-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.17.2
 In-Reply-To: <20190125114825.5872-1-johannes@sipsolutions.net>
 References: <20190125114825.5872-1-johannes@sipsolutions.net>
@@ -40,190 +40,135 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sara Sharon <sara.sharon@intel.com>
 
-This will allow iterating over multiple BSSs inside
-cfg80211_bss, in case of multiple BSSID.
+When holding data of the non-transmitting BSS, we need to keep the
+transmitting BSS data on. Otherwise it will be released, and release
+the non-transmitting BSS with it.
 
 Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/scan.c | 150 +++++++++++++++++++++++---------------------
- 1 file changed, 80 insertions(+), 70 deletions(-)
+ net/wireless/core.h | 12 ++++++++++++
+ net/wireless/scan.c | 36 ++++++++++++++++++++++++++++++++++--
+ 2 files changed, 46 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index b58f75da9c84..20211cbc63f4 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -58,6 +58,85 @@ static bool is_uapsd_supported(struct ieee802_11_elems *elems)
- 	return qos_info & IEEE80211_WMM_IE_AP_QOSINFO_UAPSD;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index a50b92ac77a1..c20c75df60f5 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -153,6 +153,7 @@ struct cfg80211_internal_bss {
+ 	struct list_head list;
+ 	struct list_head hidden_list;
+ 	struct list_head nontrans_list;
++	struct cfg80211_bss *transmitted_bss;
+ 	struct rb_node rbn;
+ 	u64 ts_boottime;
+ 	unsigned long ts;
+@@ -183,12 +184,23 @@ static inline struct cfg80211_internal_bss *bss_from_pub(struct cfg80211_bss *pu
+ static inline void cfg80211_hold_bss(struct cfg80211_internal_bss *bss)
+ {
+ 	atomic_inc(&bss->hold);
++	if (bss->transmitted_bss) {
++		bss = container_of(bss->transmitted_bss,
++				   struct cfg80211_internal_bss, pub);
++		atomic_inc(&bss->hold);
++	}
  }
  
-+static void
-+ieee80211_update_bss_from_elems(struct ieee80211_local *local,
-+				struct ieee80211_bss *bss,
-+				struct ieee802_11_elems *elems,
-+				struct ieee80211_rx_status *rx_status,
-+				bool beacon)
-+{
-+	int clen, srlen;
-+
-+	if (beacon)
-+		bss->device_ts_beacon = rx_status->device_timestamp;
-+	else
-+		bss->device_ts_presp = rx_status->device_timestamp;
-+
-+	if (elems->parse_error) {
-+		if (beacon)
-+			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_BEACON;
-+		else
-+			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_PROBE_RESP;
-+	} else {
-+		if (beacon)
-+			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_BEACON;
-+		else
-+			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_PROBE_RESP;
+ static inline void cfg80211_unhold_bss(struct cfg80211_internal_bss *bss)
+ {
+ 	int r = atomic_dec_return(&bss->hold);
+ 	WARN_ON(r < 0);
++	if (bss->transmitted_bss) {
++		bss = container_of(bss->transmitted_bss,
++				   struct cfg80211_internal_bss, pub);
++		r = atomic_dec_return(&bss->hold);
++		WARN_ON(r < 0);
 +	}
-+
-+	/* save the ERP value so that it is available at association time */
-+	if (elems->erp_info && (!elems->parse_error ||
-+				!(bss->valid_data & IEEE80211_BSS_VALID_ERP))) {
-+		bss->erp_value = elems->erp_info[0];
-+		bss->has_erp_value = true;
-+		if (!elems->parse_error)
-+			bss->valid_data |= IEEE80211_BSS_VALID_ERP;
-+	}
-+
-+	/* replace old supported rates if we get new values */
-+	if (!elems->parse_error ||
-+	    !(bss->valid_data & IEEE80211_BSS_VALID_RATES)) {
-+		srlen = 0;
-+		if (elems->supp_rates) {
-+			clen = IEEE80211_MAX_SUPP_RATES;
-+			if (clen > elems->supp_rates_len)
-+				clen = elems->supp_rates_len;
-+			memcpy(bss->supp_rates, elems->supp_rates, clen);
-+			srlen += clen;
-+		}
-+		if (elems->ext_supp_rates) {
-+			clen = IEEE80211_MAX_SUPP_RATES - srlen;
-+			if (clen > elems->ext_supp_rates_len)
-+				clen = elems->ext_supp_rates_len;
-+			memcpy(bss->supp_rates + srlen, elems->ext_supp_rates,
-+			       clen);
-+			srlen += clen;
-+		}
-+		if (srlen) {
-+			bss->supp_rates_len = srlen;
-+			if (!elems->parse_error)
-+				bss->valid_data |= IEEE80211_BSS_VALID_RATES;
-+		}
-+	}
-+
-+	if (!elems->parse_error ||
-+	    !(bss->valid_data & IEEE80211_BSS_VALID_WMM)) {
-+		bss->wmm_used = elems->wmm_param || elems->wmm_info;
-+		bss->uapsd_supported = is_uapsd_supported(elems);
-+		if (!elems->parse_error)
-+			bss->valid_data |= IEEE80211_BSS_VALID_WMM;
-+	}
-+
-+	if (beacon) {
-+		struct ieee80211_supported_band *sband =
-+			local->hw.wiphy->bands[rx_status->band];
-+		if (!(rx_status->encoding == RX_ENC_HT) &&
-+		    !(rx_status->encoding == RX_ENC_VHT))
-+			bss->beacon_rate =
-+				&sband->bitrates[rx_status->rate_idx];
-+	}
-+}
-+
- struct ieee80211_bss *
- ieee80211_bss_info_update(struct ieee80211_local *local,
- 			  struct ieee80211_rx_status *rx_status,
-@@ -67,7 +146,6 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 	bool beacon = ieee80211_is_beacon(mgmt->frame_control);
- 	struct cfg80211_bss *cbss;
- 	struct ieee80211_bss *bss;
--	int clen, srlen;
- 	struct cfg80211_inform_bss bss_meta = {
- 		.boottime_ns = rx_status->boottime_ns,
- 	};
-@@ -132,75 +210,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
- 	bss = (void *)cbss->priv;
--
--	if (beacon)
--		bss->device_ts_beacon = rx_status->device_timestamp;
--	else
--		bss->device_ts_presp = rx_status->device_timestamp;
--
--	if (elems.parse_error) {
--		if (beacon)
--			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_BEACON;
--		else
--			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_PROBE_RESP;
--	} else {
--		if (beacon)
--			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_BEACON;
--		else
--			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_PROBE_RESP;
--	}
--
--	/* save the ERP value so that it is available at association time */
--	if (elems.erp_info && (!elems.parse_error ||
--			       !(bss->valid_data & IEEE80211_BSS_VALID_ERP))) {
--		bss->erp_value = elems.erp_info[0];
--		bss->has_erp_value = true;
--		if (!elems.parse_error)
--			bss->valid_data |= IEEE80211_BSS_VALID_ERP;
--	}
--
--	/* replace old supported rates if we get new values */
--	if (!elems.parse_error ||
--	    !(bss->valid_data & IEEE80211_BSS_VALID_RATES)) {
--		srlen = 0;
--		if (elems.supp_rates) {
--			clen = IEEE80211_MAX_SUPP_RATES;
--			if (clen > elems.supp_rates_len)
--				clen = elems.supp_rates_len;
--			memcpy(bss->supp_rates, elems.supp_rates, clen);
--			srlen += clen;
--		}
--		if (elems.ext_supp_rates) {
--			clen = IEEE80211_MAX_SUPP_RATES - srlen;
--			if (clen > elems.ext_supp_rates_len)
--				clen = elems.ext_supp_rates_len;
--			memcpy(bss->supp_rates + srlen, elems.ext_supp_rates,
--			       clen);
--			srlen += clen;
--		}
--		if (srlen) {
--			bss->supp_rates_len = srlen;
--			if (!elems.parse_error)
--				bss->valid_data |= IEEE80211_BSS_VALID_RATES;
--		}
--	}
--
--	if (!elems.parse_error ||
--	    !(bss->valid_data & IEEE80211_BSS_VALID_WMM)) {
--		bss->wmm_used = elems.wmm_param || elems.wmm_info;
--		bss->uapsd_supported = is_uapsd_supported(&elems);
--		if (!elems.parse_error)
--			bss->valid_data |= IEEE80211_BSS_VALID_WMM;
--	}
--
--	if (beacon) {
--		struct ieee80211_supported_band *sband =
--			local->hw.wiphy->bands[rx_status->band];
--		if (!(rx_status->encoding == RX_ENC_HT) &&
--		    !(rx_status->encoding == RX_ENC_VHT))
--			bss->beacon_rate =
--				&sband->bitrates[rx_status->rate_idx];
--	}
-+	ieee80211_update_bss_from_elems(local, bss, &elems, rx_status, beacon);
- 
- 	return bss;
  }
+ 
+ 
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index d50fee7da88b..1584505c6809 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -110,6 +110,12 @@ static inline void bss_ref_get(struct cfg80211_registered_device *rdev,
+ 				   pub);
+ 		bss->refcount++;
+ 	}
++	if (bss->transmitted_bss) {
++		bss = container_of(bss->transmitted_bss,
++				   struct cfg80211_internal_bss,
++				   pub);
++		bss->refcount++;
++	}
+ }
+ 
+ static inline void bss_ref_put(struct cfg80211_registered_device *rdev,
+@@ -126,6 +132,18 @@ static inline void bss_ref_put(struct cfg80211_registered_device *rdev,
+ 		if (hbss->refcount == 0)
+ 			bss_free(hbss);
+ 	}
++
++	if (bss->transmitted_bss) {
++		struct cfg80211_internal_bss *tbss;
++
++		tbss = container_of(bss->transmitted_bss,
++				    struct cfg80211_internal_bss,
++				    pub);
++		tbss->refcount--;
++		if (tbss->refcount == 0)
++			bss_free(tbss);
++	}
++
+ 	bss->refcount--;
+ 	if (bss->refcount == 0)
+ 		bss_free(bss);
+@@ -1031,6 +1049,7 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
+ static struct cfg80211_internal_bss *
+ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+ 		    struct cfg80211_internal_bss *tmp,
++		    struct cfg80211_bss *trans_bss,
+ 		    bool signal_valid)
+ {
+ 	struct cfg80211_internal_bss *found = NULL;
+@@ -1188,6 +1207,17 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+ 			goto drop;
+ 		}
+ 
++		/* This must be before the call to bss_ref_get */
++		if (trans_bss) {
++			struct cfg80211_internal_bss *pbss =
++				container_of(trans_bss,
++					     struct cfg80211_internal_bss,
++					     pub);
++
++			new->transmitted_bss = trans_bss;
++			bss_ref_get(rdev, pbss);
++		}
++
+ 		list_add_tail(&new->list, &rdev->bss_list);
+ 		rdev->bss_entries++;
+ 		rb_insert_bss(rdev, new);
+@@ -1343,7 +1373,8 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
+ 
+ 	signal_valid = abs(data->chan->center_freq - channel->center_freq) <=
+ 		wiphy->max_adj_channel_rssi_comp;
+-	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
++	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, trans_bss,
++				  signal_valid);
+ 	if (!res)
+ 		return NULL;
+ 
+@@ -1663,7 +1694,8 @@ cfg80211_inform_single_bss_frame_data(struct wiphy *wiphy,
+ 
+ 	signal_valid = abs(data->chan->center_freq - channel->center_freq) <=
+ 		wiphy->max_adj_channel_rssi_comp;
+-	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
++	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, trans_bss,
++				  signal_valid);
+ 	if (!res)
+ 		return NULL;
+ 
 -- 
 2.17.2
 
