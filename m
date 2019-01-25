@@ -1,139 +1,95 @@
-Return-Path: <SRS0=rH0W=QA=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=MEvv=QB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D08C282C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 22:50:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E65F1C282C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 04:10:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 622902082C
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jan 2019 22:50:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0DBF21872
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 04:10:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YGOMJKFr";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YGOMJKFr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727605AbfAXWuy (ORCPT
+        id S1728365AbfAYEKT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Jan 2019 17:50:54 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:33505 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726028AbfAXWuy (ORCPT
+        Thu, 24 Jan 2019 23:10:19 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:42926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727967AbfAYEKT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Jan 2019 17:50:54 -0500
-Received: by mail-wr1-f66.google.com with SMTP id p7so8329628wru.0
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2019 14:50:53 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=/AxALnwu37BigLrqM4cnA+iFydrEDzaue9LezJZ60C4=;
-        b=pBaW9mv/WAk9cd+svLirQGG4xc2nSDLwW4wD9eYJlvLwMRdN6Oh/el2xgQirX1WWSI
-         mzmc2rfA1HuykXAuhi5oe8s5z3opZocadNP8O4K5Lp1YSKtDeW5nQYjE+bMdU+FXIGQf
-         xYtAsi78kgXEs+IFsomXQtwklU3FMDih+7WhV4C45pcBqsknrur5913mTgZASFYiQ9+u
-         flVzWcg+dHWNqEFfjEjITOUgaqcV4ihTuvQULGtvmESWInVbdtIJskAVV3iKTFsZje4Z
-         M+V+QYCRTLU+bc6XK+WBb3I+PqzKE1Rka4Xul7sr1l8kmpz+E5C9SMBrlLUoaVHUvDnD
-         R+2g==
-X-Gm-Message-State: AJcUukdcJOc/eQshLs3qbnQxF0mrFoyUFfiZ1kfwjjZXPdkH7jk4mite
-        7AF7dOo8R/P2Y7hXiHOCth9ZFg==
-X-Google-Smtp-Source: ALg8bN6SIOfCSaP7rNBZqMmkdNbDIDYekX/pcD7CcueZYOjjrIx2iT76KOsj7BN+ztS9qolzCKiVUw==
-X-Received: by 2002:a5d:4586:: with SMTP id p6mr8697375wrq.69.1548370252521;
-        Thu, 24 Jan 2019 14:50:52 -0800 (PST)
-Received: from localhost.localdomain ([85.93.125.228])
-        by smtp.gmail.com with ESMTPSA id u204sm101271489wmu.30.2019.01.24.14.50.51
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 24 Jan 2019 14:50:51 -0800 (PST)
-Date:   Thu, 24 Jan 2019 23:50:49 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/7] mt76: beaconing fixes for USB
-Message-ID: <20190124225048.GD2873@localhost.localdomain>
-References: <1548344649-10404-1-git-send-email-sgruszka@redhat.com>
- <1548344649-10404-7-git-send-email-sgruszka@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1548344649-10404-7-git-send-email-sgruszka@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Thu, 24 Jan 2019 23:10:19 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id CF3D76084F; Fri, 25 Jan 2019 04:10:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548389418;
+        bh=daUkAC032A3XO6NPds7/ZhaeJ1/aTNGf6XA/l6plsSE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=YGOMJKFrulpL9Sa6XDVRKqx5Pso9Yi9K/oLAl28UdKfoflKLYxyG7Yn0GEV8sw0HN
+         vCfIXuPEx69pzssNYv/MadCBwE4pAk+bIft7VqghofG0KBinaGZFh0jBGyw1cPp3ZM
+         HN6sW03rOuLZKCojUDKEDEVnvOUz9R6MtRWnolsg=
+Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: pillair@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 17CC86049C;
+        Fri, 25 Jan 2019 04:10:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548389418;
+        bh=daUkAC032A3XO6NPds7/ZhaeJ1/aTNGf6XA/l6plsSE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=YGOMJKFrulpL9Sa6XDVRKqx5Pso9Yi9K/oLAl28UdKfoflKLYxyG7Yn0GEV8sw0HN
+         vCfIXuPEx69pzssNYv/MadCBwE4pAk+bIft7VqghofG0KBinaGZFh0jBGyw1cPp3ZM
+         HN6sW03rOuLZKCojUDKEDEVnvOUz9R6MtRWnolsg=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 17CC86049C
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
+From:   Rakesh Pillai <pillair@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH v2 0/2] ath10k: Handle bundle tx completion for management pkts
+Date:   Fri, 25 Jan 2019 09:40:00 +0530
+Message-Id: <1548389402-10083-1-git-send-email-pillair@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Jan 24, Stanislaw Gruszka wrote:
-> Configure beaconing on USB devices without PS buffering support.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/mac80211.c     |  3 ++-
->  drivers/net/wireless/mediatek/mt76/mt76x02_mac.c  | 24 ++++++++++++++++++++---
->  drivers/net/wireless/mediatek/mt76/mt76x02_mac.h  |  2 +-
->  drivers/net/wireless/mediatek/mt76/mt76x02_util.c |  8 +++++---
->  4 files changed, 29 insertions(+), 8 deletions(-)
-> 
+WCN3990 sends the tx completion for management frames via wmi.
+The tx completion for the multiple management frames can also
+be bundled in a single wmi event and sent to the host driver.
+This reduces the number of WMI events sent to the host driver
+by the target.
 
-[...]
+Enable the support in firmware to send tx completion for
+management frames, bundled in a single event, by setting the
+proper flag in wmi init command.
+Handle the bundled management tx completion event in host driver.
 
-> +
-> +void mt76x02_mac_set_beacon_enable(struct mt76x02_dev *dev, u8 vif_idx,
-> +			           bool val, struct sk_buff *skb)
-> +{
-> +	if (mt76_is_mmio(dev))
-> +		tasklet_disable(&dev->pre_tbtt_tasklet);
-> +
-> +	__mt76x02_mac_set_beacon_enable(dev, vif_idx, val, skb);
-> +
-> +	if (mt76_is_mmio(dev))
-> +		tasklet_enable(&dev->pre_tbtt_tasklet);
-> +}
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-> index 76e564b8f5da..a15fc71e3d55 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-> @@ -205,7 +205,7 @@ void mt76x02_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue *q,
->  int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 vif_idx,
->  			   struct sk_buff *skb);
->  void mt76x02_mac_set_beacon_enable(struct mt76x02_dev *dev, u8 vif_idx,
-> -				   bool val);
-> +				   bool val, struct sk_buff *skb);
->  
->  void mt76x02_edcca_init(struct mt76x02_dev *dev);
->  #endif
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> index 741ecd723b8e..8732e07c01ad 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> @@ -687,6 +687,7 @@ void mt76x02_bss_info_changed(struct ieee80211_hw *hw,
->  {
->  	struct mt76x02_vif *mvif = (struct mt76x02_vif *)vif->drv_priv;
->  	struct mt76x02_dev *dev = hw->priv;
-> +	struct sk_buff *skb;
->  
->  	mutex_lock(&dev->mt76.mutex);
->  
-> @@ -694,10 +695,11 @@ void mt76x02_bss_info_changed(struct ieee80211_hw *hw,
->  		mt76x02_mac_set_bssid(dev, mvif->idx, info->bssid);
->  
->  	if (changed & BSS_CHANGED_BEACON_ENABLED) {
-> -		tasklet_disable(&dev->pre_tbtt_tasklet);
-> +		skb = NULL;
-> +		if (info->enable_beacon && mt76_is_usb(dev))
-> +			skb = ieee80211_beacon_get(hw, vif);
+Tested HW: WCN3990
+Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
 
-What about moving this in mt76x02_mac_set_beacon_enable(), I guess the code
-will be more readable. Moreover you can move skb pointer declaration in
-if (changed & BSS_CHANGED_BEACON_ENABLED) block
+Changes from v1:
+ - Addressed comments to remove tricky typecasting.
+ - Fixed compilation warnings.
 
-Regards,
-Lorenzo
+Rakesh Pillai (2):
+  ath10k: Handle bundled tx completion for management frames
+  ath10k: Enable bundle tx compl for management frames in WCN3990
 
->  		mt76x02_mac_set_beacon_enable(dev, mvif->idx,
-> -					      info->enable_beacon);
-> -		tasklet_enable(&dev->pre_tbtt_tasklet);
-> +					      info->enable_beacon, skb);
->  	}
->  
->  	if (changed & BSS_CHANGED_HT || changed & BSS_CHANGED_ERP_CTS_PROT)
-> -- 
-> 1.9.3
-> 
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 13 +++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 65 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  3 ++
+ drivers/net/wireless/ath/ath10k/wmi.c     | 23 +++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |  7 ++++
+ 5 files changed, 110 insertions(+), 1 deletion(-)
+
+-- 
+2.7.4
+
