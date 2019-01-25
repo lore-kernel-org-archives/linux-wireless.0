@@ -2,74 +2,104 @@ Return-Path: <SRS0=MEvv=QB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D583C282C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 08:31:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80092C282C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 08:52:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 63BB321915
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 08:31:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FD3321872
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 08:52:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="apHfDTdO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726888AbfAYIbp (ORCPT
+        id S1727996AbfAYIv7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Jan 2019 03:31:45 -0500
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:33826 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726441AbfAYIbp (ORCPT
+        Fri, 25 Jan 2019 03:51:59 -0500
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:46020 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726200AbfAYIv7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Jan 2019 03:31:45 -0500
-Received: by mail-lj1-f194.google.com with SMTP id u89-v6so7691601lje.1
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2019 00:31:44 -0800 (PST)
+        Fri, 25 Jan 2019 03:51:59 -0500
+Received: by mail-ed1-f65.google.com with SMTP id d39so6734795edb.12
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2019 00:51:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Li4WzCt04m+YGz7RrLSrAgxZw1QAnE08VZM7cfNIWyE=;
+        b=apHfDTdOH1SFS9zU2fo77MxRlUFF0NkU7Z4+4TBqAg6r7SKi3jo1FDOGHAFD4VW0RW
+         86/rUBJQR+vSUcqPyRXELS41lsP6UGmD79ev7KjDGREq7hzPQloehgJsE/rIUsaA7/8j
+         6FFaUQKQxalBX2/swXectPToYROf/h5ZcQLo8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version;
-        bh=A64WQCkSWaPnPTpt9zsqeA8eRLl3wXPFTijWzG9Nahk=;
-        b=t60OIicZ9Uw8xn0VW6As0cpCd/ak3mZCwABXmOap9IHbCy9Ki1itUPOtubpLAsTVL4
-         +azr1J7wjnZe32pdsuCg2ruqcL7iSpquqbsdhwU/EMOlUbfltKqOAFi4du7cENQ8k34i
-         YSKTsn8ffBSBksX5QNIqWZEbirAM2LerBSiJE+c4wBYSGiufItcG9/ymnPTRnDSk3sQN
-         X7QQ3P36XU+YSV1jsoFGhboJoxJbygCvFD5rRr2hg41hVC9XtUx7JZFNS87aLMJo6wMj
-         MPTzHN1Qi07m+DLOvA1sgQvzhnh6RuHl0MrmvciJw2RTOb70yM9xB1yJT4adqhdBgJ8u
-         r/3A==
-X-Gm-Message-State: AJcUukcekDy1nWGoXF/7/lemhS1riNg4xeBqDcGvFKmod5BJYLzxritJ
-        cUMtKXK6pQI79WeGJkGRh9U7uQ==
-X-Google-Smtp-Source: ALg8bN4p7XbYfAW2QCQNP9uzbXWLOxYB9WUUM5P488VTvIwHtiyq8Bc/nFWJhHySv1nUeO+MPBSV0A==
-X-Received: by 2002:a2e:8256:: with SMTP id j22-v6mr8197500ljh.40.1548405103201;
-        Fri, 25 Jan 2019 00:31:43 -0800 (PST)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id b25-v6sm1418293lji.94.2019.01.25.00.31.42
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 25 Jan 2019 00:31:42 -0800 (PST)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 3D68E180323; Fri, 25 Jan 2019 09:31:41 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Kan Yan <kyan@google.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Li4WzCt04m+YGz7RrLSrAgxZw1QAnE08VZM7cfNIWyE=;
+        b=nq6eOzTDeiN+UB+ggneCbBjed8ycv/z5AQSVKIabUorUmpFMympOlRVWuuww2zz7Eh
+         bOixCqenBQFdVttR6/pPBFIqKlr+16PhVJYCXUEb0mr10dz12y0gZbzUYsIu8UDsmWgu
+         4WNc1Z1bBYrb/GkBOjXyrh5AbqjpyygvD/2XlsVgt7O7C6r7RdTF8N8DEXwjgNzwVrtj
+         mk1hOxXSIWFMFa2+htw1kJl5MCRTOQ9QhpM7MBuwkF0xEzZW9DlURg4Sj6y9RAxuHQFa
+         l8vVx8qVY90+oJKdOId1nm2l++1IWgB9I+qyEgKVZaM2oGrJvoo9ScSfW7Mr052WouZB
+         eKZw==
+X-Gm-Message-State: AJcUukeAqd4+0WJkOoBfE84g6cXFETjqrPwKkyE2oGm4LkGFFYFYM1Z+
+        qBMf0NzwjxPJGdTnXgep/RXESg==
+X-Google-Smtp-Source: ALg8bN5FiK3NwmY03NwyQhePLpR2qw4qF7kwZfZzSu2ryJcxAKxe+uHMNmE7XtsCi41Gbqd4adaa0Q==
+X-Received: by 2002:a17:906:e282:: with SMTP id gg2mr1093721ejb.84.1548406316573;
+        Fri, 25 Jan 2019 00:51:56 -0800 (PST)
+Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
+        by smtp.gmail.com with ESMTPSA id h8sm11297498edb.95.2019.01.25.00.51.55
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 25 Jan 2019 00:51:55 -0800 (PST)
+Subject: Re: [PATCH] brcmfmac: support monitor frames with hardware/ucode
+ header
+To:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        ath10k@lists.infradead.org, make-wifi-fast@lists.bufferbloat.net
-Subject: Re: [PATCH v6 4/4] ath10k: reporting estimated tx airtime for fairness
-In-Reply-To: <CA+iem5vnADN5YSvsts8sBO=_4yNE62E3roySHz5hU6OqNke-6A@mail.gmail.com>
-References: <20190122142019.21417-1-toke@redhat.com> <20190122142019.21417-5-toke@redhat.com> <CA+iem5vnADN5YSvsts8sBO=_4yNE62E3roySHz5hU6OqNke-6A@mail.gmail.com>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Fri, 25 Jan 2019 09:31:41 +0100
-Message-ID: <874l9xcf4i.fsf@toke.dk>
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+References: <20190122110858.12993-1-zajec5@gmail.com>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <66fcd804-73f7-ae58-53f5-537ec8cb2802@broadcom.com>
+Date:   Fri, 25 Jan 2019 09:51:55 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20190122110858.12993-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kan Yan <kyan@google.com> writes:
+On 1/22/2019 12:08 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> The new FullMAC firmwares for 4366b1/4366c0 were supposed to provide
+> monitor frames with radiotap header but it doesn't seem to be the case.
 
-> Hi Toke,
->
-> This patch looks good to me. Great job on getting the airtime fairness
-> scheduling framework done!
+I was not aware that this was supposed to. I did not build a radiotap 
+variant to keep it feature-wise similar to 4366b0 firmware.
 
-Great, thanks for checking! Have another patch to test on top of this
-series, then we should look into getting the airtime queue limit patch
-into mac80211 as well :)
+> Testing the latest release resulted in discovering a new format being
+> used. It seems (almost?) identical to the one known from ucode used in
+> SoftMAC devices which is most likely the same codebase anyway.
 
--Toke
+I am a bit confused. How many formats are there? It is either ucode 
+format or radiotap, right?
+
+> While radiotap support was meant to be announced with the "rtap" fw
+> capability string it seems no alternative was added for the hw/ucode
+> format. It means each firmware requires a feature mapping quirk.
+
+I thought we only needed a quirk for the firmware that provide radiotap 
+but do not announce it. For the others we can assume ucode format if 
+monitor mode is supported. Probably missing something.
+
+Regards,
+Arend
