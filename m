@@ -3,33 +3,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D4EC282C6
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 11:48:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 462C6C282C2
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 11:48:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C2D28218CD
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 11:48:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EE6D218CD
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 11:48:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727959AbfAYLsd (ORCPT
+        id S1728007AbfAYLsd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 25 Jan 2019 06:48:33 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:55798 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.62]:55806 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726216AbfAYLsc (ORCPT
+        with ESMTP id S1726256AbfAYLsc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 25 Jan 2019 06:48:32 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC4)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gmzyH-0007S0-Vq; Fri, 25 Jan 2019 12:48:30 +0100
+        id 1gmzyI-0007S0-Mm; Fri, 25 Jan 2019 12:48:30 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Sara Sharon <sara.sharon@intel.com>
-Subject: [PATCH 04/12] cfg80211: Properly track transmitting and non-transmitting BSS
-Date:   Fri, 25 Jan 2019 12:48:17 +0100
-Message-Id: <20190125114825.5872-4-johannes@sipsolutions.net>
+Subject: [PATCH 06/12] cfg80211: properly free nontransmitted list on all paths
+Date:   Fri, 25 Jan 2019 12:48:19 +0100
+Message-Id: <20190125114825.5872-6-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.17.2
 In-Reply-To: <20190125114825.5872-1-johannes@sipsolutions.net>
 References: <20190125114825.5872-1-johannes@sipsolutions.net>
@@ -40,135 +40,91 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sara Sharon <sara.sharon@intel.com>
 
-When holding data of the non-transmitting BSS, we need to keep the
-transmitting BSS data on. Otherwise it will be released, and release
-the non-transmitting BSS with it.
+Free the list inside __cfg80211_unlink_bss and not in
+cfg80211_unlink_bss, since not all paths call the later.
 
 Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/core.h | 12 ++++++++++++
- net/wireless/scan.c | 36 ++++++++++++++++++++++++++++++++++--
- 2 files changed, 46 insertions(+), 2 deletions(-)
+ net/wireless/scan.c | 40 +++++++++++++++++++++++++---------------
+ 1 file changed, 25 insertions(+), 15 deletions(-)
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index a50b92ac77a1..c20c75df60f5 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -153,6 +153,7 @@ struct cfg80211_internal_bss {
- 	struct list_head list;
- 	struct list_head hidden_list;
- 	struct list_head nontrans_list;
-+	struct cfg80211_bss *transmitted_bss;
- 	struct rb_node rbn;
- 	u64 ts_boottime;
- 	unsigned long ts;
-@@ -183,12 +184,23 @@ static inline struct cfg80211_internal_bss *bss_from_pub(struct cfg80211_bss *pu
- static inline void cfg80211_hold_bss(struct cfg80211_internal_bss *bss)
- {
- 	atomic_inc(&bss->hold);
-+	if (bss->transmitted_bss) {
-+		bss = container_of(bss->transmitted_bss,
-+				   struct cfg80211_internal_bss, pub);
-+		atomic_inc(&bss->hold);
-+	}
- }
- 
- static inline void cfg80211_unhold_bss(struct cfg80211_internal_bss *bss)
- {
- 	int r = atomic_dec_return(&bss->hold);
- 	WARN_ON(r < 0);
-+	if (bss->transmitted_bss) {
-+		bss = container_of(bss->transmitted_bss,
-+				   struct cfg80211_internal_bss, pub);
-+		r = atomic_dec_return(&bss->hold);
-+		WARN_ON(r < 0);
-+	}
- }
- 
- 
 diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index d50fee7da88b..1584505c6809 100644
+index 1e95b46e84e2..1f5535ec4b01 100644
 --- a/net/wireless/scan.c
 +++ b/net/wireless/scan.c
-@@ -110,6 +110,12 @@ static inline void bss_ref_get(struct cfg80211_registered_device *rdev,
- 				   pub);
- 		bss->refcount++;
- 	}
-+	if (bss->transmitted_bss) {
-+		bss = container_of(bss->transmitted_bss,
-+				   struct cfg80211_internal_bss,
-+				   pub);
-+		bss->refcount++;
-+	}
- }
- 
- static inline void bss_ref_put(struct cfg80211_registered_device *rdev,
-@@ -126,6 +132,18 @@ static inline void bss_ref_put(struct cfg80211_registered_device *rdev,
- 		if (hbss->refcount == 0)
- 			bss_free(hbss);
- 	}
-+
-+	if (bss->transmitted_bss) {
-+		struct cfg80211_internal_bss *tbss;
-+
-+		tbss = container_of(bss->transmitted_bss,
-+				    struct cfg80211_internal_bss,
-+				    pub);
-+		tbss->refcount--;
-+		if (tbss->refcount == 0)
-+			bss_free(tbss);
-+	}
-+
- 	bss->refcount--;
- 	if (bss->refcount == 0)
- 		bss_free(bss);
-@@ -1031,6 +1049,7 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
- static struct cfg80211_internal_bss *
- cfg80211_bss_update(struct cfg80211_registered_device *rdev,
- 		    struct cfg80211_internal_bss *tmp,
-+		    struct cfg80211_bss *trans_bss,
- 		    bool signal_valid)
+@@ -152,6 +152,9 @@ static inline void bss_ref_put(struct cfg80211_registered_device *rdev,
+ static bool __cfg80211_unlink_bss(struct cfg80211_registered_device *rdev,
+ 				  struct cfg80211_internal_bss *bss)
  {
- 	struct cfg80211_internal_bss *found = NULL;
-@@ -1188,6 +1207,17 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
- 			goto drop;
- 		}
- 
-+		/* This must be before the call to bss_ref_get */
-+		if (trans_bss) {
-+			struct cfg80211_internal_bss *pbss =
-+				container_of(trans_bss,
-+					     struct cfg80211_internal_bss,
-+					     pub);
++	struct cfg80211_bss *nontrans_bss, *tmp;
++	struct cfg80211_internal_bss *tmp1;
 +
-+			new->transmitted_bss = trans_bss;
-+			bss_ref_get(rdev, pbss);
+ 	lockdep_assert_held(&rdev->bss_lock);
+ 
+ 	if (!list_empty(&bss->hidden_list)) {
+@@ -168,8 +171,26 @@ static bool __cfg80211_unlink_bss(struct cfg80211_registered_device *rdev,
+ 		list_del_init(&bss->hidden_list);
+ 	}
+ 
+-	list_del_init(&bss->list);
++	/*
++	 * If the deleted entry is a non-transmitting BSS, just remove it
++	 * from the list.
++	 * if it is the transmitting BSS - free the entire list.
++	 */
++	if (!bss->pub.transmitted_bss &&
++	    !list_empty(&bss->pub.nontrans_list)) {
++		list_for_each_entry_safe(nontrans_bss, tmp,
++					 &bss->pub.nontrans_list,
++					 nontrans_list) {
++			tmp1 = container_of(nontrans_bss,
++					    struct cfg80211_internal_bss, pub);
++			if (__cfg80211_unlink_bss(rdev, tmp1))
++				rdev->bss_generation++;
 +		}
++	}
+ 	list_del_init(&bss->pub.nontrans_list);
 +
- 		list_add_tail(&new->list, &rdev->bss_list);
- 		rdev->bss_entries++;
- 		rb_insert_bss(rdev, new);
-@@ -1343,7 +1373,8 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
++	list_del_init(&bss->list);
++
+ 	rb_erase(&bss->rbn, &rdev->bss_tree);
+ 	rdev->bss_entries--;
+ 	WARN_ONCE((rdev->bss_entries == 0) ^ list_empty(&rdev->bss_list),
+@@ -1787,8 +1808,7 @@ EXPORT_SYMBOL(cfg80211_put_bss);
+ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+-	struct cfg80211_internal_bss *bss, *tmp1;
+-	struct cfg80211_bss *nontrans_bss, *tmp;
++	struct cfg80211_internal_bss *bss;
  
- 	signal_valid = abs(data->chan->center_freq - channel->center_freq) <=
- 		wiphy->max_adj_channel_rssi_comp;
--	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
-+	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, trans_bss,
-+				  signal_valid);
- 	if (!res)
- 		return NULL;
+ 	if (WARN_ON(!pub))
+ 		return;
+@@ -1796,21 +1816,11 @@ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
+ 	bss = container_of(pub, struct cfg80211_internal_bss, pub);
  
-@@ -1663,7 +1694,8 @@ cfg80211_inform_single_bss_frame_data(struct wiphy *wiphy,
+ 	spin_lock_bh(&rdev->bss_lock);
+-	if (list_empty(&bss->list))
+-		goto out;
  
- 	signal_valid = abs(data->chan->center_freq - channel->center_freq) <=
- 		wiphy->max_adj_channel_rssi_comp;
--	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
-+	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, trans_bss,
-+				  signal_valid);
- 	if (!res)
- 		return NULL;
+-	list_for_each_entry_safe(nontrans_bss, tmp,
+-				 &pub->nontrans_list,
+-				 nontrans_list) {
+-		tmp1 = container_of(nontrans_bss,
+-				    struct cfg80211_internal_bss, pub);
+-		if (__cfg80211_unlink_bss(rdev, tmp1))
++	if (!list_empty(&bss->list))
++		if (__cfg80211_unlink_bss(rdev, bss))
+ 			rdev->bss_generation++;
+-	}
  
+-	if (__cfg80211_unlink_bss(rdev, bss))
+-		rdev->bss_generation++;
+-out:
+ 	spin_unlock_bh(&rdev->bss_lock);
+ }
+ EXPORT_SYMBOL(cfg80211_unlink_bss);
 -- 
 2.17.2
 
