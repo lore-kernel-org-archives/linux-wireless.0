@@ -2,69 +2,95 @@ Return-Path: <SRS0=MEvv=QB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48252C282C6
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 19:36:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F500C282C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 20:13:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19B4E218A6
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 19:36:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D26D218B0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 20:13:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726347AbfAYTgb (ORCPT
+        id S1726335AbfAYUNO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Jan 2019 14:36:31 -0500
-Received: from shards.monkeyblade.net ([23.128.96.9]:45976 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725778AbfAYTga (ORCPT
+        Fri, 25 Jan 2019 15:13:14 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:50766 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726179AbfAYUNO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Jan 2019 14:36:30 -0500
-Received: from localhost (unknown [IPv6:2601:601:9f80:35cd::bf5])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 456A4145A92E0;
-        Fri, 25 Jan 2019 11:36:30 -0800 (PST)
-Date:   Fri, 25 Jan 2019 11:36:27 -0800 (PST)
-Message-Id: <20190125.113627.2203898610397855035.davem@davemloft.net>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH net-next] netlink: reduce NLA_POLICY_NESTED{,_ARRAY}
- arguments
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <c3b87e72436aaae24facd2d329982ef09b9a60df.camel@sipsolutions.net>
-References: <20190125090828.26361-1-johannes@sipsolutions.net>
-        <20190125.110403.1859522316620338548.davem@davemloft.net>
-        <c3b87e72436aaae24facd2d329982ef09b9a60df.camel@sipsolutions.net>
-X-Mailer: Mew version 6.8 on Emacs 26.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Fri, 25 Jan 2019 11:36:30 -0800 (PST)
+        Fri, 25 Jan 2019 15:13:14 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gn7qi-00010a-T8; Fri, 25 Jan 2019 22:13:13 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Fri, 25 Jan 2019 22:12:50 +0200
+Message-Id: <20190125201305.5616-3-luca@coelho.fi>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190125201305.5616-1-luca@coelho.fi>
+References: <20190125201305.5616-1-luca@coelho.fi>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 02/17] iwlwifi: iwlmvm: ignore HE PPDU type regarding EOF
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 25 Jan 2019 20:34:57 +0100
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-> On Fri, 2019-01-25 at 11:04 -0800, David Miller wrote:
->> 
->> > Dave, it looks like we're the only users of this right now,
->> > so let me know if you'd prefer I take it through my tree.
->> > Also, this conflicts with the fix I just made to the place
->> > where I got it wrong, but obviously the resolution is to
->> > just take the version without the maxattr argument.
->> 
->> Please take it through your tree in that case.  It'll probably
->> be the more painless way to merge this.
-> 
-> Will do. The most painless would be if you'd merge net into net-next,
-> then I could pull net-next into mac80211-next and resolve the conflict
-> before I even apply the patch. In fact, I think either way I'll just
-> wait until you do that, I suppose you will eventually anyway?
+When setting the EOF bit in Rx flags (propagated
+to radiotap) do not depend it on the PPDU type (SU/MU/TB)
+since it doesn't.
 
-Yeah I will probably send Linus a pull request today which means the
-net --> net-next merge should occur in the next 24 hours.
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 7bd8676508f5..786e93f6b502 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1158,14 +1158,12 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	/* temporarily hide the radiotap data */
+ 	__skb_pull(skb, radiotap_len);
+ 
+-	if (phy_data->info_type == IWL_RX_PHY_INFO_TYPE_HE_SU) {
+-		/* report the AMPDU-EOF bit on single frames */
+-		if (!queue && !(phy_info & IWL_RX_MPDU_PHY_AMPDU)) {
+-			rx_status->flag |= RX_FLAG_AMPDU_DETAILS;
+-			rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
+-			if (phy_data->d0 & cpu_to_le32(IWL_RX_PHY_DATA0_HE_DELIM_EOF))
+-				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT;
+-		}
++	/* report the AMPDU-EOF bit on single frames */
++	if (!queue && !(phy_info & IWL_RX_MPDU_PHY_AMPDU)) {
++		rx_status->flag |= RX_FLAG_AMPDU_DETAILS;
++		rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
++		if (phy_data->d0 & cpu_to_le32(IWL_RX_PHY_DATA0_HE_DELIM_EOF))
++			rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT;
+ 	}
+ 
+ 	if (phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD)
+@@ -1178,9 +1176,7 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		bool toggle_bit = phy_info & IWL_RX_MPDU_PHY_AMPDU_TOGGLE;
+ 
+ 		/* toggle is switched whenever new aggregation starts */
+-		if (toggle_bit != mvm->ampdu_toggle &&
+-		    (he_type == RATE_MCS_HE_TYPE_MU ||
+-		     he_type == RATE_MCS_HE_TYPE_SU)) {
++		if (toggle_bit != mvm->ampdu_toggle) {
+ 			rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
+ 			if (phy_data->d0 & cpu_to_le32(IWL_RX_PHY_DATA0_HE_DELIM_EOF))
+ 				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT;
+-- 
+2.20.1
+
