@@ -2,136 +2,89 @@ Return-Path: <SRS0=MEvv=QB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23D77C282C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 12:46:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02C84C282C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 12:48:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F34B6217D7
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 12:46:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD404217D7
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 12:48:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726252AbfAYMqF (ORCPT
+        id S1726344AbfAYMs6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Jan 2019 07:46:05 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:35018 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725909AbfAYMqF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Jan 2019 07:46:05 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A1B9DA12F8;
-        Fri, 25 Jan 2019 12:46:04 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.219])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 377E9604A4;
-        Fri, 25 Jan 2019 12:46:02 +0000 (UTC)
-Date:   Fri, 25 Jan 2019 13:41:49 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/7] mt76x02: use mask for vifs
-Message-ID: <20190125124148.GB4079@redhat.com>
-References: <1548344649-10404-1-git-send-email-sgruszka@redhat.com>
- <1548344649-10404-2-git-send-email-sgruszka@redhat.com>
- <20190124161235.GA10806@localhost.localdomain>
- <20190124162040.GA5136@redhat.com>
- <20190124163541.GB10806@localhost.localdomain>
- <20190124222040.GA2873@localhost.localdomain>
- <20190125082556.GA2180@redhat.com>
- <20190125090236.GA2761@p1372.fit.wifi.vutbr.cz>
- <20190125094757.GA11700@redhat.com>
- <20190125102545.GA27731@p1372.fit.wifi.vutbr.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190125102545.GA27731@p1372.fit.wifi.vutbr.cz>
-User-Agent: Mutt/1.5.20 (2009-12-10)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Fri, 25 Jan 2019 12:46:04 +0000 (UTC)
+        Fri, 25 Jan 2019 07:48:58 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:56778 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725909AbfAYMs5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Jan 2019 07:48:57 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC4)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gn0um-0000q3-1Q; Fri, 25 Jan 2019 13:48:56 +0100
+Message-ID: <5d479aabc632550097f67ded37a32a9d61685098.camel@sipsolutions.net>
+Subject: Re: [PATCH v2] nl80211/cfg80211: Add support to send tx packet
+ specific params
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     vamsi krishna <vamsin@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, jouni@codeaurora.org
+Date:   Fri, 25 Jan 2019 13:48:54 +0100
+In-Reply-To: <1546968122-4204-1-git-send-email-vamsin@codeaurora.org>
+References: <899698ca-d8b5-45b1-5689-58096e2f0291@candelatech.com>
+         <1546968122-4204-1-git-send-email-vamsin@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Jan 25, 2019 at 11:25:46AM +0100, Lorenzo Bianconi wrote:
-> > On Fri, Jan 25, 2019 at 10:02:38AM +0100, Lorenzo Bianconi wrote:
-> > > > On Thu, Jan 24, 2019 at 11:20:42PM +0100, Lorenzo Bianconi wrote:
-> > > > > > > > 
-> > > > > > > > I guess this does not work if you add 2 vifs and then you remove the first one
-> > > > > > > > (you will end up with a wrong configuration in MT_MAC_ADDR_DW{0,1}). I guess
-> > > > > > > > the hw will not work well if MT_MAC_ADDR_DW{0,1} is not properly configured
-> > > > > > 
-> > > > > > Maybe I am missing something, but let's assume you add the interface vif0 with address
-> > > > > > 00:11:22:33:44:55 (MT_MAC_ADDR_DW{0,1} will be set to 00:11:22:33:44:55) and
-> > > > > > then you add vif1 with address 00:aa:bb:cc:dd:ee. If at some point you remove
-> > > > > > vif0 MT_MAC_ADDR_DW{0,1} will not be properly reconfigured. The problem will
-> > > > > > be more complex if you have more interfaces
-> > > > 
-> > > > Ok, so in remove_interface extra code can be added to implement that.
-> > 
-> > Something like this should address the issue you raised:
-> > 
-> > diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> > index 3880caa0c64a..44b4af928a4e 100644
-> > --- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> > +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> > @@ -320,6 +320,15 @@ void mt76x02_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-> >  }
-> >  EXPORT_SYMBOL_GPL(mt76x02_add_interface);
-> >  
-> > +static void mt76x02_setaddr_iterator(void *data, u8 *mac,
-> > +                                     struct ieee80211_vif *vif)
-> > +{
-> > +	struct mt76x02_dev *dev = data;
-> > +
-> > +	if (!ether_addr_equal(dev->mt76.macaddr, vif->addr))
-> > +                mt76x02_mac_setaddr(dev, vif->addr);
+On Tue, 2019-01-08 at 22:52 +0530, vamsi krishna wrote:
+> Add support to transmit the frames at a rate specified by userspace
+> when needed in NL80211_CMD_FRAME command. This commit adds support to
+> specify tx rate, number of retries and tx power.
 > 
-> This will end-up with multiple configurations if we have more than two
-> interfaces, right?
-
-No. It is called only when number of vifs change from 2 to 1 . But there
-should be additional check 'dev->vif_mask & BIT(mvif->idx)' since we can
-have removing interface still present in mac80211.
-
-> >  void mt76x02_remove_interface(struct ieee80211_hw *hw,
-> >  			      struct ieee80211_vif *vif)
-> >  {
-> > @@ -328,6 +337,10 @@ void mt76x02_remove_interface(struct ieee80211_hw *hw,
-> >  
-> >  	mt76_txq_remove(&dev->mt76, vif->txq);
-> >  	dev->vif_mask &= ~BIT(mvif->idx);
-> > +
-> > +	if (hweight16(dev->vif_mask) == 1)
-> > +		ieee80211_iterate_interfaces(hw, 0, mt76x02_setaddr_iterator,
-> > +					     dev);
+> Tx rate at which packet shall be transmitted can be specified in
+> %NL80211_ATTR_RATE_INFO, number of retries can be specified in
+> %NL80211_ATTR_WIPHY_RETRY_SHORT and %NL80211_ATTR_WIPHY_RETRY_LONG,
+> tx power can be specified in %NL80211_ATTR_WIPHY_TX_POWER_LEVEL.
 > 
-> I guess we have the same issue if we have more than two interfaces and we
-> remove the first one that has been configured.
+> The drivers shall indicate the support to send frames at rate specified
+> by userspace by setting %NL80211_EXT_FEATURE_CMD_FRAME_TXRATE flag in
+> wiphy capabilities. The userspace can specify the rate within
+> %NL80211_ATTR_RATE_INFO attribute while sending %NL80211_CMD_FRAME.
+> NL80211_ATTR_RATE_INFO is a nested attribute and encapsulates the
+> attributes defined in &enum nl80211_rate_info.
 
-We can not configure more than one MAC address without using MT_MAC_ADDR_EXT
-registers. If there are more than one vif, there is no point to set MT_MAC_ADDR.
+I don't usually strongly enforce that we'd like to see upstream users
+for upstream cfg80211 functionality, but in this case I feel that we
+don't even have the *ability* to implement this in most/any upstream
+driver(s), so there's no point.
 
-> Moreover I am a little worried about tpt regressions with this patch.
-> Are you sure that if you use complete different mac addresses on a multivif scenario
-> you can get the same tpt on all the interfaces? Could you please provide some
-> tpt results?
+Perhaps also a mac80211 implementation would make sense to some extent.
 
-How exactly posted patch can cause tpt regression ?
+I also feel that to some extent this overlaps with the per-station TX
+power control?
 
-Posted patch just add possibility to configure HW MAC address
-by this:
+I'd like you to come back with this when there's more upstream support
+in general, and when you've fleshed out the exact use cases and whether
+or not this fine-grained control is actually needed/desired, or if
+something like what Ben had suggested earlier would make sense (IIRC he
+suggested limiting to a certain preamble type and similar - i.e. classes
+of rates rather than a single very precisely defined rate).
 
-iw dev wlan0 del
-iw phy phy0 interface add wlan0 type managed addr 00:11:22:33:44:55
 
-what is feature of mt76x2u. Patch just extend that possibly to other
-mt76x02 devices and allow to remove custom mt76x2u add_interfacea
-callback.
+Also, some nitpicks since I'm looking anyway:
+ * don't support RATE_INFO_BITRATE - RATE_INFO_BITRATE32 is for new
+   applications and by definition there can be no old application for a
+   new feature
+ * NL80211_ATTR_WIPHY_TX_POWER_LEVEL has a small indentation problem in
+   the docs
+ * would make sense to capitalize "TX" throughout, rather than writing
+   "tx power"
 
-Thanks
-Stanislaw
-
+johannes
 
