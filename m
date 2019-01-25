@@ -5,35 +5,34 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 844FDC282C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 12:32:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7492C282C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 12:34:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 595AE2146E
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 12:32:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF47F2146E
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 12:34:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726689AbfAYMcL (ORCPT
+        id S1728770AbfAYMed (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Jan 2019 07:32:11 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:56596 "EHLO
+        Fri, 25 Jan 2019 07:34:33 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:56616 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726141AbfAYMcL (ORCPT
+        with ESMTP id S1728648AbfAYMeZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Jan 2019 07:32:11 -0500
+        Fri, 25 Jan 2019 07:34:25 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC4)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gn0eX-0000EI-Qd; Fri, 25 Jan 2019 13:32:09 +0100
-Message-ID: <5b2d0128ff33cdeb268a3954c4aab3ab7b1145c6.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/3] cfg80211: Add support to set tx power for a station
- associated
+        id 1gn0gh-0000P6-Mr; Fri, 25 Jan 2019 13:34:23 +0100
+Message-ID: <ecef4536f2b9f08195e0da2d00f67f33ee66bdbd.camel@sipsolutions.net>
+Subject: Re: [PATCH 2/3] mac80211: store tx power value from user to station
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     Balaji Pothunoori <bpothuno@codeaurora.org>,
         ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Ashok Raj Nagarajan <arnagara@codeaurora.org>
-Date:   Fri, 25 Jan 2019 13:32:08 +0100
-In-Reply-To: <1547724167-11420-1-git-send-email-bpothuno@codeaurora.org>
-References: <1547724167-11420-1-git-send-email-bpothuno@codeaurora.org>
+Date:   Fri, 25 Jan 2019 13:34:21 +0100
+In-Reply-To: <1547724247-11481-1-git-send-email-bpothuno@codeaurora.org>
+References: <1547724247-11481-1-git-send-email-bpothuno@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -43,34 +42,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-01-17 at 16:52 +0530, Balaji Pothunoori wrote:
+On Thu, 2019-01-17 at 16:54 +0530, Balaji Pothunoori wrote:
 > 
-> +	s16 txpwr;
-> +	enum nl80211_tx_power_setting type;
+> + * @txpwr: indicates the tx power, in mBm, to be used when sending data frames
+> + *	to the STA.
+> + * @type: In particular if TPC %type is NL80211_TX_POWER_LIMITED then txpwr will
+> + *	be less than or equal to specified from userspace, whereas if TPC %type
+> + *	is NL80211_TX_POWER_AUTOMATIC then it indicates default txpwr.
+> + *	NL80211_TX_POWER_FIXED is not a valid configuration option for
+> + *	per peer TPC.
 
-you should probably call this txpwr_type, or do something like
+Same comment here wrt. txpower_type or so.
 
-struct {
-	s16 power;
-	enum ... type;
-} txpwr;
-
-
-> +	[NL80211_ATTR_STA_TX_POWER_SETTING] = { .type = NLA_U8 },
-
-That should use NLA_POLICY_RANGE()
-
-> +	[NL80211_ATTR_STA_TX_POWER] = { .type = NLA_S16 },
- 
-
-> +		params->type = nla_get_u32(info->attrs[idx]);
+> +TRACE_EVENT(drv_sta_set_txpwr,
+> +	TP_PROTO(struct ieee80211_local *local,
+> +		 struct ieee80211_sub_if_data *sdata,
+> +		 struct ieee80211_sta *sta),
 > +
-> +		if (params->type == NL80211_TX_POWER_LIMITED) {
-> +			idx = NL80211_ATTR_STA_TX_POWER;
-> +			params->txpwr = nla_get_u32(info->attrs[idx]);
+> +	TP_ARGS(local, sdata, sta),
+> +
+> +	TP_STRUCT__entry(
+> +		LOCAL_ENTRY
+> +		VIF_ENTRY
+> +		STA_ENTRY
+> +		__field(s16, txpwr)
+> +	),
+> +
+> +	TP_fast_assign(
+> +		LOCAL_ASSIGN;
+> +		VIF_ASSIGN;
+> +		STA_ASSIGN;
+> +		__entry->txpwr = sta->txpwr;
+> +	),
 
-You cannot use nla_get_u32 with U8/S16 attributes, use the correct
-corresponding helper.
+Include the type as well?
+
+OTOH, is this whole business with the type even needed everywhere?
 
 johannes
 
