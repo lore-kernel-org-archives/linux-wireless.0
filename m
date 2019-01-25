@@ -5,56 +5,57 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7168CC282C2
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 06:30:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B06BCC282C2
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 06:30:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3FD6C218D2
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 06:30:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80493218D2
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 06:30:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XpsEIOaf"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EDTJrFoN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726897AbfAYGa2 (ORCPT
+        id S1727264AbfAYGaa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Jan 2019 01:30:28 -0500
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:42219 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726021AbfAYGa2 (ORCPT
+        Fri, 25 Jan 2019 01:30:30 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:41975 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726021AbfAYGaa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Jan 2019 01:30:28 -0500
-Received: by mail-pl1-f195.google.com with SMTP id y1so4083867plp.9
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2019 22:30:27 -0800 (PST)
+        Fri, 25 Jan 2019 01:30:30 -0500
+Received: by mail-pl1-f196.google.com with SMTP id u6so4089417plm.8
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2019 22:30:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=qtkqNqaY/uO0ZZbknk5RaMtB52FCJSZoJtJOxtJ569c=;
-        b=XpsEIOafjMBUwqHm6ErHDZkqMC/oXBtCc/roQSRUnAyEsV0AS1E2CvT0fBZ0BpNELN
-         NyffFMSBWZXHuxX6bWGQtfbsmmsYy6wVA2hYasZbg7An0MqXeGhSneNAL6yOAYG9v4se
-         YTzKsCLWEEVAZMRYvnDtBoLUlUwps3wEjdxLNCeLC5Eb/RyEb0Jn5svw/C8lc5sK69ez
-         f1qGzav7u6uR60iPb4QRYhRARuT2VVweXbkVK60ldfSvCHEoZtzab8InzqCbDEGPX+im
-         O4Dw4ierU9z7i7z5908jFhQBKg3pTJq8cQ/Slao9uohdZ/ODWVKxgZcMGwfOWp7CZMHl
-         vLng==
+        bh=9c5Qv3xKOnSbwK7hxSyqCi1So4hNP+y66JHHTtRgqGg=;
+        b=EDTJrFoN0TQ7y0URn+ovhKr/gDoqaXiE0bkjCYOTsKhPuF2DyMhG+/x0SaWEiiqdmq
+         h8RdHoj3NHJglWjWXn5o77D0vvdPkRIATsL2UOMX2OLQdRAcDhPiW4tBQkUKknrAT+7p
+         vJJhyxvRohvSS/6595Wgq2rofXsNPtc+SoaCHHF8DKqLhAoNRv4KT++HPQJWLH1lNyJi
+         D6Lret2d9qb6hRHg+7qV/AbBjpABhgNzqA1cvShGM8+8wHwOPbwqArMzvmv5fhUogyYB
+         kJGs4fHbTjLWLQKEoTViG+PYuwt3YumMNg6JXF8Q+OJ87jhjeDO4Hs7AG6FHCsq6/Esg
+         vlIw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=qtkqNqaY/uO0ZZbknk5RaMtB52FCJSZoJtJOxtJ569c=;
-        b=GkE4voKgSjQ7lYiUKIFbQserXudSi1EFfIgmMzysmFaE+KhhOEaHw26/dEEg76P0lB
-         qxymPJoWzxWyuYgk1uJ52SvsHymF0JDRR9nQbI/GobCXtAfDar7DhRdOLj3PM9cNGsgb
-         kK8DkR1hA4PMWQQAnWCqClpTn24pxv28TMNVTshP3X/JHMnRI+t4jBVGQ1hoJHUQMxnU
-         +PdoB6jCUozvF1aUxeXKSmJYMvr1gt1kdbAwn64WvNVz0/5ZryuP1eYFDaYVgfS0sPWs
-         F8KsxHtpK4oMZgiNGMMBSIqvKXgQ7Oo5FhZnSZtPi1ICQ07gs0acdLZLs23CivMI4uKG
-         Kx3g==
-X-Gm-Message-State: AJcUukf+uumROevHj7yb87LE3sWAJQRKTbYs0c745yPW4xDEI1LRED4y
-        xKEfZA9qALSEqp3bxJu9IvM=
-X-Google-Smtp-Source: ALg8bN5oY4zwZUZD2Lo7SDGIfPmRrkBtBh329iZOMjrTd8j52J4Mypk1p5P6Vo9sSUcYLIOdMthWqA==
-X-Received: by 2002:a17:902:bb98:: with SMTP id m24mr9421310pls.71.1548397827289;
-        Thu, 24 Jan 2019 22:30:27 -0800 (PST)
+        bh=9c5Qv3xKOnSbwK7hxSyqCi1So4hNP+y66JHHTtRgqGg=;
+        b=aj1HPK2zFtmIkHh0mZhlASR21U/m0w/MTpUzH+Nrwhcz+7aM+J2agiQn9+dK7M4Aop
+         OOYoYKAf+0gVQsLbKrLeBFTMt+Rkbg9bQnk3+UyiyV7F0KQpWHrZxn/1MVoNi8hsje5t
+         iCD67HyVqTg7Lzvo51H7XYslTE+renhbqk7tQ07G5FUsihovgY/Pq19l7J90s4DBTHIJ
+         TfI/LuwYCIPwAMjXfw5gurh2+/IjJTCCeYFZbjQqKcf++Tt5TVWThilHAnqnWzDyWlR4
+         A0rHUDYAH56OWjQkDqj0Keo6MQv0jVdJ5Hm2Rvq6rJOdR3PQyHvjppwz6yeq1QuIe/YT
+         4+KA==
+X-Gm-Message-State: AJcUukeDgdgB/t0Q6t3oG1VSwq84F3bWic0VpDKDqP2MzT48auTRTqFH
+        19ewlpe8BQmQZ3C6/3cYA4I=
+X-Google-Smtp-Source: ALg8bN5Bmj8wNXWk3QY/xJcxXypspPXpMI7kZakIV4un0IXwR/lQ/ZZkdVgW7oGyLRXXn99Ea7M2iw==
+X-Received: by 2002:a17:902:e18c:: with SMTP id cd12mr9162761plb.279.1548397829963;
+        Thu, 24 Jan 2019 22:30:29 -0800 (PST)
 Received: from cpu459.localdomain ([203.196.161.90])
-        by smtp.gmail.com with ESMTPSA id x19sm37384793pfk.14.2019.01.24.22.30.24
+        by smtp.gmail.com with ESMTPSA id x19sm37384793pfk.14.2019.01.24.22.30.27
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 24 Jan 2019 22:30:26 -0800 (PST)
+        Thu, 24 Jan 2019 22:30:29 -0800 (PST)
 From:   Siva Rebbagondla <siva8118@gmail.com>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org,
@@ -62,9 +63,9 @@ Cc:     linux-wireless@vger.kernel.org,
         Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
         Ganapathiraju Kondraju <ganapathi.kondraju@redpinesignals.com>,
         krishna.pedda@redpinesignals.com
-Subject: [PATCH 4/5] rsi: resolve power save issue after S4 resume
-Date:   Fri, 25 Jan 2019 12:00:01 +0530
-Message-Id: <1548397802-12180-5-git-send-email-siva8118@gmail.com>
+Subject: [PATCH 5/5] rsi: fix for wowlan wakeup failure
+Date:   Fri, 25 Jan 2019 12:00:02 +0530
+Message-Id: <1548397802-12180-6-git-send-email-siva8118@gmail.com>
 X-Mailer: git-send-email 2.5.5
 In-Reply-To: <1548397802-12180-1-git-send-email-siva8118@gmail.com>
 References: <1548397802-12180-1-git-send-email-siva8118@gmail.com>
@@ -75,84 +76,31 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-We are redownloading the firmware after S4 restore and observed in
-stress test that mac80211 sometimes gives power save request after
-resume which causes the firmware in bad state. mac_ops_resumed flag
-is added to skip that request until initialisation is done and Keeping
-power save state is NONE.
+During wowlan regression tests, sometimes radio is not waking up for wowlan
+packet in coex mode. This is because of power save is enabled by default
+in case of coex mode greater than one. Hence, disable power save in coex
+mode to avoid radio loss.
 
 Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 9 ++++++++-
- drivers/net/wireless/rsi/rsi_91x_sdio.c     | 1 +
- drivers/net/wireless/rsi/rsi_main.h         | 1 +
- 3 files changed, 10 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 8d1282f..7bc8da6 100644
+index 7bc8da6..3fd2571 100644
 --- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
 +++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -239,6 +239,7 @@ static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
- 	struct ieee80211_bss_conf *bss = &vif->bss_conf;
- 
- 	rsi_dbg(INFO_ZONE, "***** Hardware scan start *****\n");
-+	common->mac_ops_resumed = false;
- 
- 	if (common->fsm_state != FSM_MAC_INIT_DONE)
- 		return -ENODEV;
-@@ -370,6 +371,10 @@ static void rsi_mac80211_tx(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	struct ieee80211_hdr *wlh = (struct ieee80211_hdr *)skb->data;
-+
-+	if (ieee80211_is_auth(wlh->frame_control))
-+		common->mac_ops_resumed = false;
- 
- 	rsi_core_xmit(common, skb);
- }
-@@ -677,7 +682,8 @@ static int rsi_mac80211_config(struct ieee80211_hw *hw,
+@@ -1901,6 +1901,10 @@ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan)
+ 		return 0;
  	}
+ 	rsi_dbg(INFO_ZONE, "TRIGGERS %x\n", triggers);
++
++	if (common->coex_mode > 1)
++		rsi_disable_ps(adapter, adapter->vifs[0]);
++
+ 	rsi_send_wowlan_request(common, triggers, 1);
  
- 	/* Power save parameters */
--	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+	if ((changed & IEEE80211_CONF_CHANGE_PS) &&
-+	    !common->mac_ops_resumed) {
- 		struct ieee80211_vif *vif, *sta_vif = NULL;
- 		unsigned long flags;
- 		int i, set_ps = 1;
-@@ -1939,6 +1945,7 @@ static int rsi_mac80211_resume(struct ieee80211_hw *hw)
- 	rsi_dbg(INFO_ZONE, "%s: mac80211 resume\n", __func__);
- 
- 	if (common->hibernate_resume) {
-+		common->mac_ops_resumed = true;
- 		/* Device need a complete restart of all MAC operations.
- 		 * returning 1 will serve this purpose.
- 		 */
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index 3375d64..7e0edc7 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -1395,6 +1395,7 @@ static int rsi_restore(struct device *dev)
- 	common->iface_down = true;
- 
- 	adapter->sc_nvifs = 0;
-+	adapter->ps_state = PS_NONE;
- 
- 	common->wow_flags = 0;
- 	common->iface_down = false;
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 4dc0c01..35d13f3 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -311,6 +311,7 @@ struct rsi_common {
- 	struct cfg80211_scan_request *hwscan;
- 	struct rsi_bgscan_params bgscan;
- 	u8 bgscan_en;
-+	u8 mac_ops_resumed;
- };
- 
- struct eepromrw_info {
+ 	/**
 -- 
 2.5.5
 
