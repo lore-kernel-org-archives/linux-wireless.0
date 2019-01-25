@@ -2,105 +2,77 @@ Return-Path: <SRS0=MEvv=QB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B06BCC282C2
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 06:30:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0DABC282C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 08:26:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80493218D2
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 06:30:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EDTJrFoN"
+	by mail.kernel.org (Postfix) with ESMTP id 9D21521919
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jan 2019 08:26:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727264AbfAYGaa (ORCPT
+        id S1726735AbfAYI0B (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Jan 2019 01:30:30 -0500
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:41975 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726021AbfAYGaa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Jan 2019 01:30:30 -0500
-Received: by mail-pl1-f196.google.com with SMTP id u6so4089417plm.8
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2019 22:30:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=9c5Qv3xKOnSbwK7hxSyqCi1So4hNP+y66JHHTtRgqGg=;
-        b=EDTJrFoN0TQ7y0URn+ovhKr/gDoqaXiE0bkjCYOTsKhPuF2DyMhG+/x0SaWEiiqdmq
-         h8RdHoj3NHJglWjWXn5o77D0vvdPkRIATsL2UOMX2OLQdRAcDhPiW4tBQkUKknrAT+7p
-         vJJhyxvRohvSS/6595Wgq2rofXsNPtc+SoaCHHF8DKqLhAoNRv4KT++HPQJWLH1lNyJi
-         D6Lret2d9qb6hRHg+7qV/AbBjpABhgNzqA1cvShGM8+8wHwOPbwqArMzvmv5fhUogyYB
-         kJGs4fHbTjLWLQKEoTViG+PYuwt3YumMNg6JXF8Q+OJ87jhjeDO4Hs7AG6FHCsq6/Esg
-         vlIw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=9c5Qv3xKOnSbwK7hxSyqCi1So4hNP+y66JHHTtRgqGg=;
-        b=aj1HPK2zFtmIkHh0mZhlASR21U/m0w/MTpUzH+Nrwhcz+7aM+J2agiQn9+dK7M4Aop
-         OOYoYKAf+0gVQsLbKrLeBFTMt+Rkbg9bQnk3+UyiyV7F0KQpWHrZxn/1MVoNi8hsje5t
-         iCD67HyVqTg7Lzvo51H7XYslTE+renhbqk7tQ07G5FUsihovgY/Pq19l7J90s4DBTHIJ
-         TfI/LuwYCIPwAMjXfw5gurh2+/IjJTCCeYFZbjQqKcf++Tt5TVWThilHAnqnWzDyWlR4
-         A0rHUDYAH56OWjQkDqj0Keo6MQv0jVdJ5Hm2Rvq6rJOdR3PQyHvjppwz6yeq1QuIe/YT
-         4+KA==
-X-Gm-Message-State: AJcUukeDgdgB/t0Q6t3oG1VSwq84F3bWic0VpDKDqP2MzT48auTRTqFH
-        19ewlpe8BQmQZ3C6/3cYA4I=
-X-Google-Smtp-Source: ALg8bN5Bmj8wNXWk3QY/xJcxXypspPXpMI7kZakIV4un0IXwR/lQ/ZZkdVgW7oGyLRXXn99Ea7M2iw==
-X-Received: by 2002:a17:902:e18c:: with SMTP id cd12mr9162761plb.279.1548397829963;
-        Thu, 24 Jan 2019 22:30:29 -0800 (PST)
-Received: from cpu459.localdomain ([203.196.161.90])
-        by smtp.gmail.com with ESMTPSA id x19sm37384793pfk.14.2019.01.24.22.30.27
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 24 Jan 2019 22:30:29 -0800 (PST)
-From:   Siva Rebbagondla <siva8118@gmail.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org,
-        Rishikesh Basu <rishikesh.basu@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Ganapathiraju Kondraju <ganapathi.kondraju@redpinesignals.com>,
-        krishna.pedda@redpinesignals.com
-Subject: [PATCH 5/5] rsi: fix for wowlan wakeup failure
-Date:   Fri, 25 Jan 2019 12:00:02 +0530
-Message-Id: <1548397802-12180-6-git-send-email-siva8118@gmail.com>
-X-Mailer: git-send-email 2.5.5
-In-Reply-To: <1548397802-12180-1-git-send-email-siva8118@gmail.com>
-References: <1548397802-12180-1-git-send-email-siva8118@gmail.com>
+        Fri, 25 Jan 2019 03:26:01 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:48442 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726219AbfAYI0B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Jan 2019 03:26:01 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4E9E5325B9;
+        Fri, 25 Jan 2019 08:26:01 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.219])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D1050BAA7;
+        Fri, 25 Jan 2019 08:25:58 +0000 (UTC)
+Date:   Fri, 25 Jan 2019 09:25:56 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/7] mt76x02: use mask for vifs
+Message-ID: <20190125082556.GA2180@redhat.com>
+References: <1548344649-10404-1-git-send-email-sgruszka@redhat.com>
+ <1548344649-10404-2-git-send-email-sgruszka@redhat.com>
+ <20190124161235.GA10806@localhost.localdomain>
+ <20190124162040.GA5136@redhat.com>
+ <20190124163541.GB10806@localhost.localdomain>
+ <20190124222040.GA2873@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190124222040.GA2873@localhost.localdomain>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Fri, 25 Jan 2019 08:26:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+On Thu, Jan 24, 2019 at 11:20:42PM +0100, Lorenzo Bianconi wrote:
+> > > > 
+> > > > I guess this does not work if you add 2 vifs and then you remove the first one
+> > > > (you will end up with a wrong configuration in MT_MAC_ADDR_DW{0,1}). I guess
+> > > > the hw will not work well if MT_MAC_ADDR_DW{0,1} is not properly configured
+> > 
+> > Maybe I am missing something, but let's assume you add the interface vif0 with address
+> > 00:11:22:33:44:55 (MT_MAC_ADDR_DW{0,1} will be set to 00:11:22:33:44:55) and
+> > then you add vif1 with address 00:aa:bb:cc:dd:ee. If at some point you remove
+> > vif0 MT_MAC_ADDR_DW{0,1} will not be properly reconfigured. The problem will
+> > be more complex if you have more interfaces
 
-During wowlan regression tests, sometimes radio is not waking up for wowlan
-packet in coex mode. This is because of power save is enabled by default
-in case of coex mode greater than one. Hence, disable power save in coex
-mode to avoid radio loss.
+Ok, so in remove_interface extra code can be added to implement that.
 
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> Moreover if you add 2 vif, vif0 with address 00:11:22:33:44:55 and vif1 with
+> address 00:aa:bb:cc:dd:ee, have you double-checked you are able to get the same
+> tpt on both interfaces? In the past IIRC there were issues if we use multibss
+> with completely different mac addresses
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 7bc8da6..3fd2571 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -1901,6 +1901,10 @@ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan)
- 		return 0;
- 	}
- 	rsi_dbg(INFO_ZONE, "TRIGGERS %x\n", triggers);
-+
-+	if (common->coex_mode > 1)
-+		rsi_disable_ps(adapter, adapter->vifs[0]);
-+
- 	rsi_send_wowlan_request(common, triggers, 1);
- 
- 	/**
--- 
-2.5.5
+I haven't check that. But what I can tell multi vif STA does not work, if
+we do not enable PROMISC on rx filter. But this is not diffrent from MMIO
+version, which mark multi vif support.
 
+Regards
+Stanislaw
