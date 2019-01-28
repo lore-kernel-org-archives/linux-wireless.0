@@ -2,80 +2,82 @@ Return-Path: <SRS0=aQ0V=QE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 058D0C282C8
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 20:08:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26C38C282C8
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 20:15:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BED2B214DA
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 20:08:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6AA02171F
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 20:15:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UuNqWS70";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="nHlhN1E9"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tCoQzfUN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726997AbfA1UIA (ORCPT
+        id S1727274AbfA1UPC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 15:08:00 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:47252 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726661AbfA1UH7 (ORCPT
+        Mon, 28 Jan 2019 15:15:02 -0500
+Received: from mail-ot1-f46.google.com ([209.85.210.46]:41021 "EHLO
+        mail-ot1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727165AbfA1UPB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 15:07:59 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 85AE96098C; Mon, 28 Jan 2019 20:07:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548706078;
-        bh=Nt6zQEE3DaCHpr0gzJJK2WlEGB3KeHtTR+2jiAikqc0=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=UuNqWS70rdqE8tW44DOCYwbPPqLTXDLV9jaBhcid+pwFPVklmi49rNqJt/Zi/mupD
-         gNzcFOsZhhBSSvUi0E2w4PnCEcmMzpaOnMEDs8lEYlNlLSou5CWjokTRA6m5vP1gEB
-         WVW3usuCoYKK/5Rjk0mohpyZOVy6Wws8h186ZVQw=
-Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 10FC6601CF;
-        Mon, 28 Jan 2019 20:07:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548706077;
-        bh=Nt6zQEE3DaCHpr0gzJJK2WlEGB3KeHtTR+2jiAikqc0=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=nHlhN1E9vRYyBzMQ+Uii8i0/JGB8weo7tj3YR9mTEX9Ri+ZGPM71YiBdAtEsePtrc
-         qdpZyuaUPKs7orVdUgBBFQzH78SptOwl/MhAwRG1VBP2TEfWqQJV99iCBjN+VL5NSC
-         eVwsBUUOC+fFKjkTDajNHOzjWxPubu0BhliB/olY=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 10FC6601CF
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name, sgruszka@redhat.com
-Subject: Re: [PATCH wireless-drivers] mt76x0: eeprom: fix chan_vs_power map in mt76x0_get_power_info
-References: <cover.1548587542.git.lorenzo.bianconi@redhat.com>
-        <44789d3d0dee6e2e0bb7d75f755927d415aa56d4.1548587542.git.lorenzo.bianconi@redhat.com>
-Date:   Mon, 28 Jan 2019 22:07:52 +0200
-In-Reply-To: <44789d3d0dee6e2e0bb7d75f755927d415aa56d4.1548587542.git.lorenzo.bianconi@redhat.com>
-        (Lorenzo Bianconi's message of "Sun, 27 Jan 2019 12:15:49 +0100")
-Message-ID: <87tvhstujr.fsf@purkki.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+        Mon, 28 Jan 2019 15:15:01 -0500
+Received: by mail-ot1-f46.google.com with SMTP id u16so15828481otk.8
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2019 12:15:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=nYXEcDzMBzLbs3WcvawOOsJRAUau9/4MmBfADwiVzy8=;
+        b=tCoQzfUNoT4SmDJ594nQS+VIUDOCSWMDLx3p+V7vbenWendH3HRsROYASxsOuSwhVu
+         mZZXtX7TBkuhNkI1SOuKmKm0trky/AE6KMyC8xtXr376oq6ZDubPiGgUSzZpXykARuBm
+         LmlFJY5PLae92yzXZjH60v/TvwAU6Bu8y1MBTVWkVXKiAh/VMMHfJsQ8r7FdO3SJuhVl
+         7GKaZDBbpoau6oVDwyCdJaXiQnwhcM77HAEp+eMwLoPyxqtGwZE76HsLdjXwPtRXDR2G
+         w4774fZHiyFm/gdmj+Mbj8EPV55AlyXsnugOlbHvitplls7hehFJPzMQyNSv5FYkNb6g
+         DjjQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=nYXEcDzMBzLbs3WcvawOOsJRAUau9/4MmBfADwiVzy8=;
+        b=aEcfdiTHzI6Wk9xGABFCu5pA2Tu6ETzT2aGjHG8UKMgYMJPdznsnPIag/ntWUptvRv
+         YV7Gx7tpiRQAkV+WhhUMQ4OddGQiTGWhoIHicWsJq6tddWs8yXbhe2kKSppC1NSm/pP2
+         7dfRWssJ7o26JyL/soWta9QYLLu5jchOmDu36wy8pTCSPf5z4tfYLRQJRfwqKyaWEz8d
+         YT8QTSz8VioPGAB2kvDUQaPaFlgqoGfuCuPARNnPgcE91V3WN+C4wY6xZ+rP67W3tutp
+         Kdq2PPYIni0UxzjD8KevRhlk7J0QY0fyVxcRhbsgJFFZwqTDhVuOOtki013om1rLcFpl
+         4jEg==
+X-Gm-Message-State: AJcUukdT4vkmizw3BM/jxxQ/yoeuJ1fbfv7L6d3Yxc5Bwwdr1qvC5gqW
+        S987oTAlb1xIaKw+rH8js65hc5a8uydFCEM61Ldt6SYtWP8=
+X-Google-Smtp-Source: ALg8bN4D9pbNQCmuKIn/o+SJ8S4bzjyHKz1Pdr7HJE0HggcXjvXfiAR9DsAmjrIw9Iajij9NtKzXrowwnB8EbToBeP4=
+X-Received: by 2002:a9d:751a:: with SMTP id r26mr17689760otk.273.1548706500557;
+ Mon, 28 Jan 2019 12:15:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From:   Rosen Penev <rosenp@gmail.com>
+Date:   Mon, 28 Jan 2019 12:14:49 -0800
+Message-ID: <CAKxU2N9choD2mdQd+Qwf5047VNWdwKOPB_YRXvw4i6BtLn6vxQ@mail.gmail.com>
+Subject: [mt76x2e] minipcie card is not working
+To:     linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+I have a full height production sample mt7612e card that does not work
+in either Access Point or Client mode. Monitor mode does not work
+either (no packets received/transmitted).
 
-> Report correct eeprom per channel power value.
-> Fix chan_vs_power map in mt76x0_get_power_info routine
->
-> Fixes: f2a2e819d672 ("mt76x0: remove eeprom dependency from mt76x0_get_power_info")
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+dmesg shows everything to be fine:
 
-So what's the actual bug this fixes? The commit log is not really clear
-on that. Wondering because you marked this for wireless-drivers.
+[    5.801993] mt76x2e 0000:2b:00.0: enabling device (0000 -> 0002)
+[    5.802122] mt76x2e 0000:2b:00.0: ASIC revision: 76120044
+[    6.466527] mt76x2e 0000:2b:00.0: ROM patch build: 20141115060606a
+[    6.468999] mt76x2e 0000:2b:00.0: Firmware Version: 0.0.00
+[    6.469000] mt76x2e 0000:2b:00.0: Build: 1
+[    6.469001] mt76x2e 0000:2b:00.0: Build Time: 201507311614____
+[    6.496042] mt76x2e 0000:2b:00.0: Firmware running!
+[    6.497999] mt76x2e 0000:2b:00.0 wlp43s0: renamed from wlan0
 
--- 
-Kalle Valo
+This is on 5.0-rc3.
+
+Tested with a desktop running Ubuntu 18.04 (custom kernel) and an
+mvebu device (Turris Omnia) running OpenWrt on kernel 4.14.
