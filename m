@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0778FC282C8
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 10:55:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44021C282CD
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 10:55:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7BF52148E
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 10:55:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 226E12148E
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 10:55:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726805AbfA1Ky5 (ORCPT
+        id S1726843AbfA1KzI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 05:54:57 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:35340 "EHLO
+        Mon, 28 Jan 2019 05:55:08 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:35356 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726714AbfA1Ky5 (ORCPT
+        with ESMTP id S1726792AbfA1Ky6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 05:54:57 -0500
+        Mon, 28 Jan 2019 05:54:58 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC4)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1go4Z5-0007bD-DX; Mon, 28 Jan 2019 11:54:55 +0100
+        id 1go4Z7-0007bD-4g; Mon, 28 Jan 2019 11:54:57 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Sara Sharon <sara.sharon@intel.com>
-Subject: [PATCH v7 02/11] mac80211: move the bss update from elements to an helper
-Date:   Mon, 28 Jan 2019 11:54:37 +0100
-Message-Id: <20190128105446.17256-2-johannes@sipsolutions.net>
+Subject: [PATCH v7 06/11] cfg80211: parse mbssid only if HW supports it
+Date:   Mon, 28 Jan 2019 11:54:41 +0100
+Message-Id: <20190128105446.17256-6-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.17.2
 In-Reply-To: <20190128105446.17256-1-johannes@sipsolutions.net>
 References: <20190128105446.17256-1-johannes@sipsolutions.net>
@@ -40,190 +40,76 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sara Sharon <sara.sharon@intel.com>
 
-This will allow iterating over multiple BSSs inside
-cfg80211_bss, in case of multiple BSSID.
+Parsing and exposing nontransmitted APs is problematic
+when underlying HW doesn't support it. Do it only if
+driver indicated support. Allow HE restriction as well,
+since the HE spec defined the exact manner that Multiple
+BSSID set should behave. APs that not support the HE
+spec will have less predictable Multiple BSSID set
+support/behavior
 
 Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/scan.c | 150 +++++++++++++++++++++++---------------------
- 1 file changed, 80 insertions(+), 70 deletions(-)
+ include/net/cfg80211.h |  8 ++++++++
+ net/wireless/scan.c    | 11 ++++++++++-
+ 2 files changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index b58f75da9c84..20211cbc63f4 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -58,6 +58,85 @@ static bool is_uapsd_supported(struct ieee802_11_elems *elems)
- 	return qos_info & IEEE80211_WMM_IE_AP_QOSINFO_UAPSD;
- }
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ac2961b74c9b..5a8b1b5c3ac8 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4300,6 +4300,11 @@ struct cfg80211_pmsr_capabilities {
+  * @txq_memory_limit: configuration internal TX queue memory limit
+  * @txq_quantum: configuration of internal TX queue scheduler quantum
+  *
++ * @support_mbssid: can HW support association with nontransmitted AP
++ * @support_only_he_mbssid: don't parse MBSSID elements if it is not
++ *	HE AP, in order to avoid compatibility issues.
++ *	@support_mbssid must be set for this to have any effect.
++ *
+  * @pmsr_capa: peer measurement capabilities
+  */
+ struct wiphy {
+@@ -4440,6 +4445,9 @@ struct wiphy {
+ 	u32 txq_memory_limit;
+ 	u32 txq_quantum;
  
-+static void
-+ieee80211_update_bss_from_elems(struct ieee80211_local *local,
-+				struct ieee80211_bss *bss,
-+				struct ieee802_11_elems *elems,
-+				struct ieee80211_rx_status *rx_status,
-+				bool beacon)
-+{
-+	int clen, srlen;
++	u8 support_mbssid:1,
++	   support_only_he_mbssid:1;
 +
-+	if (beacon)
-+		bss->device_ts_beacon = rx_status->device_timestamp;
-+	else
-+		bss->device_ts_presp = rx_status->device_timestamp;
-+
-+	if (elems->parse_error) {
-+		if (beacon)
-+			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_BEACON;
-+		else
-+			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_PROBE_RESP;
-+	} else {
-+		if (beacon)
-+			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_BEACON;
-+		else
-+			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_PROBE_RESP;
-+	}
-+
-+	/* save the ERP value so that it is available at association time */
-+	if (elems->erp_info && (!elems->parse_error ||
-+				!(bss->valid_data & IEEE80211_BSS_VALID_ERP))) {
-+		bss->erp_value = elems->erp_info[0];
-+		bss->has_erp_value = true;
-+		if (!elems->parse_error)
-+			bss->valid_data |= IEEE80211_BSS_VALID_ERP;
-+	}
-+
-+	/* replace old supported rates if we get new values */
-+	if (!elems->parse_error ||
-+	    !(bss->valid_data & IEEE80211_BSS_VALID_RATES)) {
-+		srlen = 0;
-+		if (elems->supp_rates) {
-+			clen = IEEE80211_MAX_SUPP_RATES;
-+			if (clen > elems->supp_rates_len)
-+				clen = elems->supp_rates_len;
-+			memcpy(bss->supp_rates, elems->supp_rates, clen);
-+			srlen += clen;
-+		}
-+		if (elems->ext_supp_rates) {
-+			clen = IEEE80211_MAX_SUPP_RATES - srlen;
-+			if (clen > elems->ext_supp_rates_len)
-+				clen = elems->ext_supp_rates_len;
-+			memcpy(bss->supp_rates + srlen, elems->ext_supp_rates,
-+			       clen);
-+			srlen += clen;
-+		}
-+		if (srlen) {
-+			bss->supp_rates_len = srlen;
-+			if (!elems->parse_error)
-+				bss->valid_data |= IEEE80211_BSS_VALID_RATES;
-+		}
-+	}
-+
-+	if (!elems->parse_error ||
-+	    !(bss->valid_data & IEEE80211_BSS_VALID_WMM)) {
-+		bss->wmm_used = elems->wmm_param || elems->wmm_info;
-+		bss->uapsd_supported = is_uapsd_supported(elems);
-+		if (!elems->parse_error)
-+			bss->valid_data |= IEEE80211_BSS_VALID_WMM;
-+	}
-+
-+	if (beacon) {
-+		struct ieee80211_supported_band *sband =
-+			local->hw.wiphy->bands[rx_status->band];
-+		if (!(rx_status->encoding == RX_ENC_HT) &&
-+		    !(rx_status->encoding == RX_ENC_VHT))
-+			bss->beacon_rate =
-+				&sband->bitrates[rx_status->rate_idx];
-+	}
-+}
-+
- struct ieee80211_bss *
- ieee80211_bss_info_update(struct ieee80211_local *local,
- 			  struct ieee80211_rx_status *rx_status,
-@@ -67,7 +146,6 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 	bool beacon = ieee80211_is_beacon(mgmt->frame_control);
- 	struct cfg80211_bss *cbss;
- 	struct ieee80211_bss *bss;
--	int clen, srlen;
- 	struct cfg80211_inform_bss bss_meta = {
- 		.boottime_ns = rx_status->boottime_ns,
- 	};
-@@ -132,75 +210,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+ 	const struct cfg80211_pmsr_capabilities *pmsr_capa;
  
- 	bss = (void *)cbss->priv;
--
--	if (beacon)
--		bss->device_ts_beacon = rx_status->device_timestamp;
--	else
--		bss->device_ts_presp = rx_status->device_timestamp;
--
--	if (elems.parse_error) {
--		if (beacon)
--			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_BEACON;
--		else
--			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_PROBE_RESP;
--	} else {
--		if (beacon)
--			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_BEACON;
--		else
--			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_PROBE_RESP;
--	}
--
--	/* save the ERP value so that it is available at association time */
--	if (elems.erp_info && (!elems.parse_error ||
--			       !(bss->valid_data & IEEE80211_BSS_VALID_ERP))) {
--		bss->erp_value = elems.erp_info[0];
--		bss->has_erp_value = true;
--		if (!elems.parse_error)
--			bss->valid_data |= IEEE80211_BSS_VALID_ERP;
--	}
--
--	/* replace old supported rates if we get new values */
--	if (!elems.parse_error ||
--	    !(bss->valid_data & IEEE80211_BSS_VALID_RATES)) {
--		srlen = 0;
--		if (elems.supp_rates) {
--			clen = IEEE80211_MAX_SUPP_RATES;
--			if (clen > elems.supp_rates_len)
--				clen = elems.supp_rates_len;
--			memcpy(bss->supp_rates, elems.supp_rates, clen);
--			srlen += clen;
--		}
--		if (elems.ext_supp_rates) {
--			clen = IEEE80211_MAX_SUPP_RATES - srlen;
--			if (clen > elems.ext_supp_rates_len)
--				clen = elems.ext_supp_rates_len;
--			memcpy(bss->supp_rates + srlen, elems.ext_supp_rates,
--			       clen);
--			srlen += clen;
--		}
--		if (srlen) {
--			bss->supp_rates_len = srlen;
--			if (!elems.parse_error)
--				bss->valid_data |= IEEE80211_BSS_VALID_RATES;
--		}
--	}
--
--	if (!elems.parse_error ||
--	    !(bss->valid_data & IEEE80211_BSS_VALID_WMM)) {
--		bss->wmm_used = elems.wmm_param || elems.wmm_info;
--		bss->uapsd_supported = is_uapsd_supported(&elems);
--		if (!elems.parse_error)
--			bss->valid_data |= IEEE80211_BSS_VALID_WMM;
--	}
--
--	if (beacon) {
--		struct ieee80211_supported_band *sband =
--			local->hw.wiphy->bands[rx_status->band];
--		if (!(rx_status->encoding == RX_ENC_HT) &&
--		    !(rx_status->encoding == RX_ENC_VHT))
--			bss->beacon_rate =
--				&sband->bitrates[rx_status->rate_idx];
--	}
-+	ieee80211_update_bss_from_elems(local, bss, &elems, rx_status, beacon);
+ 	char priv[0] __aligned(NETDEV_ALIGN);
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 1e95b46e84e2..77b0e1d08b13 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1424,6 +1424,11 @@ static void cfg80211_parse_mbssid_data(struct wiphy *wiphy,
+ 		return;
+ 	if (!cfg80211_find_ie(WLAN_EID_MULTIPLE_BSSID, ie, ielen))
+ 		return;
++	if (!wiphy->support_mbssid)
++		return;
++	if (wiphy->support_only_he_mbssid &&
++	    !cfg80211_find_ext_ie(WLAN_EID_EXT_HE_CAPABILITY, ie, ielen))
++		return;
  
- 	return bss;
- }
+ 	pos = ie;
+ 
+@@ -1725,7 +1730,11 @@ cfg80211_inform_bss_frame_data(struct wiphy *wiphy,
+ 
+ 	res = cfg80211_inform_single_bss_frame_data(wiphy, data, mgmt,
+ 						    len, NULL, gfp);
+-	if (!res || !cfg80211_find_ie(WLAN_EID_MULTIPLE_BSSID, ie, ielen))
++	if (!res || !wiphy->support_mbssid ||
++	    !cfg80211_find_ie(WLAN_EID_MULTIPLE_BSSID, ie, ielen))
++		return res;
++	if (wiphy->support_only_he_mbssid &&
++	    !cfg80211_find_ext_ie(WLAN_EID_EXT_HE_CAPABILITY, ie, ielen))
+ 		return res;
+ 
+ 	/* process each non-transmitting bss */
 -- 
 2.17.2
 
