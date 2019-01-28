@@ -2,66 +2,125 @@ Return-Path: <SRS0=aQ0V=QE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72AD6C282C8
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 08:35:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8973CC282C8
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 08:36:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4D22E20881
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 08:35:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5834220881
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 08:36:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DhcEUUD7";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bvMJd9Qu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726980AbfA1IfE (ORCPT
+        id S1726864AbfA1Igj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 03:35:04 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:56302 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726772AbfA1IfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 03:35:04 -0500
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Mon, 28 Jan 2019 03:36:39 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:57772 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726681AbfA1Igj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Jan 2019 03:36:39 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 0BDCB6086A; Mon, 28 Jan 2019 08:36:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548664598;
+        bh=sN+njMVV1/6/6XvScW8m/cNT3hDDESAdC3Sxs4AUawU=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=DhcEUUD7CT+TCrTk0QBqO8f2Aau0UywYLr3uVfhEAVN2CxYRwf/Y+d1jPrdyAw+Lx
+         Qgzuw+Uw0TH9MWsYkPN2tmsfixXGV03wFKtUZH1937avQ25GYyVpsb1E0Dw1ju8Ptm
+         Kbpw9FVUr7evNqvONtu0EIkad9A3ifvOVuoKQs/M=
+Received: from x230.qca.qualcomm.com (87-93-85-88.bb.dnainternet.fi [87.93.85.88])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C6FF8C0D0863;
-        Mon, 28 Jan 2019 08:35:03 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.219])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 68DE26EE46;
-        Mon, 28 Jan 2019 08:35:02 +0000 (UTC)
-Date:   Mon, 28 Jan 2019 09:30:43 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/7] mt76: beaconing fixes for USB
-Message-ID: <20190128083041.GA4132@redhat.com>
-References: <1548344649-10404-1-git-send-email-sgruszka@redhat.com>
- <1548344649-10404-7-git-send-email-sgruszka@redhat.com>
- <20190124225048.GD2873@localhost.localdomain>
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C849660740;
+        Mon, 28 Jan 2019 08:36:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548664597;
+        bh=sN+njMVV1/6/6XvScW8m/cNT3hDDESAdC3Sxs4AUawU=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=bvMJd9QuClRx6cXEaWOSAaSxBKXg75Fg6lzEFXcCig5rBgyO0vF3snEXxszrUGnYT
+         u9mH3ksdGBCtHtg0gQ83+igRwkuDY2FeF9PXiXD9O5ZTpz7OQ05aARuXySL1px8eul
+         XS9effw+HiPX7B1pcYtDT1yDg7wwEJPutlWwdsVc=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C849660740
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     <yhchuang@realtek.com>
+Cc:     <johannes@sipsolutions.net>, <Larry.Finger@lwfinger.net>,
+        <pkshih@realtek.com>, <tehuang@realtek.com>,
+        <briannorris@chromium.org>, <sgruszka@redhat.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 00/13] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
+References: <1548654407-28469-1-git-send-email-yhchuang@realtek.com>
+Date:   Mon, 28 Jan 2019 10:36:32 +0200
+In-Reply-To: <1548654407-28469-1-git-send-email-yhchuang@realtek.com>
+        (yhchuang@realtek.com's message of "Mon, 28 Jan 2019 13:46:34 +0800")
+Message-ID: <87tvht18mn.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190124225048.GD2873@localhost.localdomain>
-User-Agent: Mutt/1.5.20 (2009-12-10)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Mon, 28 Jan 2019 08:35:03 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jan 24, 2019 at 11:50:49PM +0100, Lorenzo Bianconi wrote:
-> >  	if (changed & BSS_CHANGED_BEACON_ENABLED) {
-> > -		tasklet_disable(&dev->pre_tbtt_tasklet);
-> > +		skb = NULL;
-> > +		if (info->enable_beacon && mt76_is_usb(dev))
-> > +			skb = ieee80211_beacon_get(hw, vif);
-> 
-> What about moving this in mt76x02_mac_set_beacon_enable(), I guess the code
-> will be more readable. Moreover you can move skb pointer declaration in
-> if (changed & BSS_CHANGED_BEACON_ENABLED) block
+<yhchuang@realtek.com> writes:
 
-Ok, make sense.
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+>
+> This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
+> rtw88 supports 8822BE and 8822CE chips, and will be able to support
+> multi-vif combinations in run-time.
+>
+> For now, only PCI bus is supported, but rtw88 was originally designed
+> to optionally support three buses includes USB & SDIO. USB & SDIO modules
+> will soon be supported by rtw88, with configurable core module to fit
+> with different bus modules in the same time.
+>
+> For example, if we choose 8822BE and 8822CU, only PCI & USB modules will
+> be selected, built, loaded into kernel. This is one of the major
+> difference from rtlwifi, which can only support specific combinations.
+>
+> Another difference from rtlwifi is that rtw88 is designed to support
+> the latest Realtek 802.11ac wireless network chips like 8822B and
+> 8822C series. Compared to the earlier chips supported by rtlwifi like
+> the 802.11n 8192EE chipset or 802.11ac 8821AE/8812AE chips, newer ICs
+> have different MAC & PHY settings, such as new multi-port feature for the
+> MAC layer design and Jaguar2/Jaguar3 PHY layer IPs.
+>
+> Multi-Port feature is also supported under rtw88's software architecture.
+> rtlwifi can only support one vif in the same time, most because of the
+> hardware limitations for early chips, hence the original design of it
+> also restricts the usage of multi-vif support, so latest chipset seems not
+> take advantages from its new MAC engine.
+>
+> However, rtw88 can run multiple vifs concurrently by holding them on
+> hardware ports provided by MAC engine, hence can easily start different
+> roles on a single device.
+>
+> Based on the reasons mentioned before, we implemented rtw88. It had many
+> authors, they are listed here alphabetically:
+>
+> Ping-Ke Shih <pkshih@realtek.com>
+> Tzu-En Huang <tehuang@realtek.com>
+> Yan-Hsuan Chuang <yhchuang@realtek.com>
+>
+>
+> v2
+>
+>  - add comment for watch dog
+>
+>
+> v3
+>
+>  - change tree location to wireless-next
 
-Regarding your other remarks, I do not see utility to address them.
+What does this mean? wireless-next has not been used for years, do you
+mean wireless-drivers-next instead?
 
-Thanks
-Stanislaw
+-- 
+Kalle Valo
