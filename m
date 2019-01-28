@@ -4,49 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD3BC282C8
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:34:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAD4CC282CF
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:35:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A1412147A
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:34:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 778092147A
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:35:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548696889;
-	bh=2U1Jmyvg5esE/OB0zNbOG5RLUk4Tvyt9Ul0P74IyvK0=;
+	s=default; t=1548696954;
+	bh=rp143R/6ocT74mEir/w3Ruv0tkQPdjUsWD+7LHUVTrA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=j2JpPZFNvG0MJZkeazLcBLIGxPk9pczZdIzgkRGuxyOnx1cMSAb25KV9GB7tFSJwa
-	 8LKwPg5sLmd47NLRO+UJSO8TcaUFUQ7zbIOhEJnQfk9x+/VZ7MN7nimgqxs+05CIwB
-	 yyWFYlgII4Yb1vxmPW1MCxzSDymzSZNeYhRm/dEs=
+	b=2C3z/hSSE3nB6cMCqV8+PoV4wnK7w5Qo+JiZSIdMbtUVyLbT/KZBNjKgKn/44+l82
+	 tis9Wo4GX3wXUOVJ747SoMLJDw8Q1y3RWyykTsQ6/NkxG9ZK105K+9SGsfTu3+q+RZ
+	 8phV1L7QpeiVxPrwdVfvtLqm8hmxWFsDnN1CR9TY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729038AbfA1Pzm (ORCPT
+        id S1730442AbfA1Rfm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 10:55:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41566 "EHLO mail.kernel.org"
+        Mon, 28 Jan 2019 12:35:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41240 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729958AbfA1Pzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 10:55:41 -0500
+        id S1729868AbfA1PzS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Jan 2019 10:55:18 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A333621741;
-        Mon, 28 Jan 2019 15:55:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 50FD920855;
+        Mon, 28 Jan 2019 15:55:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548690940;
-        bh=2U1Jmyvg5esE/OB0zNbOG5RLUk4Tvyt9Ul0P74IyvK0=;
+        s=default; t=1548690918;
+        bh=rp143R/6ocT74mEir/w3Ruv0tkQPdjUsWD+7LHUVTrA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uHqEMGxzhdRquSsdD/vv/gJXp+Y9mTucvTC12O9BxbnX0S+wDg1tBfYkmL8Diz0Bh
-         x8zFnvyJeDDrdFJPc/ZHECuxOP3BcXT8lEjmpPp3hZGhH7MN3YM8hPdbwWusdbRDJS
-         3koVNGjsVsJlZAwmPsdJyyjZbvtKcOJRenV+E1Gw=
+        b=XhVs9S+pRzwRe6/aGLurCpgzjzDZWgVMmb+wbuAUcHh7YJtwozLn8f4gGPhVURufi
+         fhVG168l1GX9NUPUgMbImNgVgMYeQI8xU+my+MsxUxYMdgQB687Xjh/YeZtHwhe2v6
+         DU4mVZ8nzJX/WhJYU92zBLE3KLu2iQziVtpU4jP4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Karthikeyan Periyasamy <periyasa@codeaurora.org>,
+Cc:     Naftali Goldstein <naftali.goldstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.20 241/304] ath10k: fix kernel panic due to use after free
-Date:   Mon, 28 Jan 2019 10:42:38 -0500
-Message-Id: <20190128154341.47195-241-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 234/304] iwlwifi: mvm: fix setting HE ppe FW config
+Date:   Mon, 28 Jan 2019 10:42:31 -0500
+Message-Id: <20190128154341.47195-234-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
 References: <20190128154341.47195-1-sashal@kernel.org>
@@ -58,105 +60,60 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-[ Upstream commit 553a7cca769d551f1317186760631487c47e23bf ]
+[ Upstream commit 189b8d441b0f7825f0b4278851c52afaa0515ed2 ]
 
-This issue arise in a race condition between ath10k_sta_state() and
-ath10k_htt_fetch_peer_stats(), explained in below scenario
+The FW expects to get the ppe value for each NSS-BW pair in the same
+format as in the he phy capabilities IE, which means that a value of 0
+implies ppe should be used for BPSK (mcs 0). If there are no PPE
+thresholds in the IE, or if for some NSS-RU pair there's no threshold
+set for it (this could happen because it's a variable-sized field), it
+means no PPE should not be used for that pair, so the value sent to FW
+should be 7 which corresponds to "none".
 
-Steps:
-1. In ath10k_sta_state(), arsta->tx_stats get deallocated before peer deletion
-   when the station moves from IEEE80211_STA_NONE to IEEE80211_STA_NOTEXIST
-   state.
-2. Meanwhile ath10k receive HTT_T2H_MSG_TYPE_PEER_STATS message.
-   In ath10k_htt_fetch_peer_stats(), arsta->tx_stats get accessed after
-   the peer validation check.
-
-Since arsta->tx_stats get freed before the peer deletion [1].
-ath10k_htt_fetch_peer_stats() ended up in "use after free" situation.
-
-Fixed this issue by moving the arsta->tx_stats free handling after the
-peer deletion. so that ath10k_htt_fetch_peer_stats() will not end up in
-"use after free" situation.
-
-Kernel Panic:
-
-Unable to handle kernel NULL pointer dereference at virtual address 00000286
-pgd = d8754000
-[00000286] *pgd=00000000
-Internal error: Oops: 5 [#1] PREEMPT SMP ARM
-...
-CPU: 0 PID: 6245 Comm: hostapd Not tainted
-task: dc44cac0 ti: d4a38000 task.ti: d4a38000
-PC is at kmem_cache_alloc+0x7c/0x114
-LR is at ath10k_sta_state+0x190/0xd58 [ath10k_core]
-pc : [<c02bdc50>]    lr : [<bf916b78>]    psr: 20000013
-sp : d4a39b88  ip : 00000000  fp : 00000001
-r10: 00000000  r9 : 1d3bc000  r8 : 00000dc0
-r7 : 000080d0  r6 : d4a38000  r5 : dd401b00  r4 : 00000286
-r3 : 00000000  r2 : d4a39ba0  r1 : 000080d0  r0 : dd401b00
-Flags: nzCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
-Control: 10c5787d  Table: 5a75406a  DAC: 00000015
-Process hostapd (pid: 6245, stack limit = 0xd4a38238)
-Stack: (0xd4a39b88 to 0xd4a3a000)
-...
-[<c02bdc50>] (kmem_cache_alloc) from [<bf916b78>] (ath10k_sta_state+0x190/0xd58 [ath10k_core])
-[<bf916b78>] (ath10k_sta_state [ath10k_core]) from [<bf870d4c>] (sta_info_insert_rcu+0x418/0x61c [mac80211])
-[<bf870d4c>] (sta_info_insert_rcu [mac80211]) from [<bf88634c>] (ieee80211_add_station+0xf0/0x134 [mac80211])
-[<bf88634c>] (ieee80211_add_station [mac80211]) from [<bf83f3c4>] (nl80211_new_station+0x330/0x36c [cfg80211])
-[<bf83f3c4>] (nl80211_new_station [cfg80211]) from [<bf6c4040>] (extack_doit+0x2c/0x74 [compat])
-[<bf6c4040>] (extack_doit [compat]) from [<c05c285c>] (genl_rcv_msg+0x274/0x30c)
-[<c05c285c>] (genl_rcv_msg) from [<c05c1d98>] (netlink_rcv_skb+0x58/0xac)
-[<c05c1d98>] (netlink_rcv_skb) from [<c05c25d4>] (genl_rcv+0x20/0x34)
-[<c05c25d4>] (genl_rcv) from [<c05c1750>] (netlink_unicast+0x11c/0x204)
-[<c05c1750>] (netlink_unicast) from [<c05c1be0>] (netlink_sendmsg+0x30c/0x370)
-[<c05c1be0>] (netlink_sendmsg) from [<c0587e90>] (sock_sendmsg+0x70/0x84)
-[<c0587e90>] (sock_sendmsg) from [<c058970c>] (___sys_sendmsg.part.3+0x188/0x228)
-[<c058970c>] (___sys_sendmsg.part.3) from [<c058a594>] (__sys_sendmsg+0x4c/0x70)
-[<c058a594>] (__sys_sendmsg) from [<c0208c80>] (ret_fast_syscall+0x0/0x44)
-Code: ebfffec1 e1a04000 ea00001b e5953014 (e7940003)
-ath10k_pci 0000:01:00.0: SWBA overrun on vdev 0, skipped old beacon
-
-Hardware tested: QCA9984
-Firmware tested: 10.4-3.6.0.1-00004
-
-Fixes: a904417fc ("ath10k: add extended per sta tx statistics support")
-Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Fixes: 514c30696fbc ("iwlwifi: add support for IEEE802.11ax")
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/mac.h   | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 +++++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b4764fee4751..6436dc229be5 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6387,11 +6387,6 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			   "mac vdev %d peer delete %pM sta %pK (sta gone)\n",
- 			   arvif->vdev_id, sta->addr, sta);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/mac.h b/drivers/net/wireless/intel/iwlwifi/fw/api/mac.h
+index 1dd23f846fb9..f3ccd7948340 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/mac.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/mac.h
+@@ -442,7 +442,7 @@ struct iwl_he_backoff_conf {
+  * Support for Nss x BW (or RU) matrix:
+  *	(0=SISO, 1=MIMO2) x (0-20MHz, 1-40MHz, 2-80MHz, 3-160MHz)
+  * Each entry contains 2 QAM thresholds for 8us and 16us:
+- *	0=BPSK, 1=QPSK, 2=16QAM, 3=64QAM, 4=256QAM, 5=1024QAM, 6/7=RES
++ *	0=BPSK, 1=QPSK, 2=16QAM, 3=64QAM, 4=256QAM, 5=1024QAM, 6=RES, 7=NONE
+  * i.e. QAM_th1 < QAM_th2 such if TX uses QAM_tx:
+  *	QAM_tx < QAM_th1            --> PPE=0us
+  *	QAM_th1 <= QAM_tx < QAM_th2 --> PPE=8us
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 00f831d88366..5a42c617c54c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2005,7 +2005,13 @@ static void iwl_mvm_cfg_he_sta(struct iwl_mvm *mvm,
+ 	if (sta->he_cap.he_cap_elem.mac_cap_info[4] & IEEE80211_HE_MAC_CAP4_BQR)
+ 		sta_ctxt_cmd.htc_flags |= cpu_to_le32(IWL_HE_HTC_BQR_SUPP);
  
--		if (ath10k_debug_is_extd_tx_stats_enabled(ar)) {
--			kfree(arsta->tx_stats);
--			arsta->tx_stats = NULL;
--		}
--
- 		if (sta->tdls) {
- 			ret = ath10k_mac_tdls_peer_update(ar, arvif->vdev_id,
- 							  sta,
-@@ -6431,6 +6426,11 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 		}
- 		spin_unlock_bh(&ar->data_lock);
- 
-+		if (ath10k_debug_is_extd_tx_stats_enabled(ar)) {
-+			kfree(arsta->tx_stats);
-+			arsta->tx_stats = NULL;
-+		}
+-	/* If PPE Thresholds exist, parse them into a FW-familiar format */
++	/*
++	 * Initialize the PPE thresholds to "None" (7), as described in Table
++	 * 9-262ac of 80211.ax/D3.0.
++	 */
++	memset(&sta_ctxt_cmd.pkt_ext, 7, sizeof(sta_ctxt_cmd.pkt_ext));
 +
- 		for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
- 			ath10k_mac_txq_unref(ar, sta->txq[i]);
- 
++	/* If PPE Thresholds exist, parse them into a FW-familiar format. */
+ 	if (sta->he_cap.he_cap_elem.phy_cap_info[6] &
+ 	    IEEE80211_HE_PHY_CAP6_PPE_THRESHOLD_PRESENT) {
+ 		u8 nss = (sta->he_cap.ppe_thres[0] &
 -- 
 2.19.1
 
