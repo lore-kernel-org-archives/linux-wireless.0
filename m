@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BE07C282C8
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A644C282C8
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:51:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C56C20881
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:49:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4020B20881
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:51:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548697790;
-	bh=0/gpLcvHJQ8V+pyrrRAGiZpx9lw+C0mM6osjCQv969I=;
+	s=default; t=1548697891;
+	bh=h4bYPE8tgq+3qOo8AIQCvjIJi5Lm5fppydrzclmr9eo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vwxezUQeK4/tgWvELuaCsrjlSvylzN7vWIiksXQzW8A3m6jxNMXwJXVqBmyqyoKRj
-	 UAOuVcivtPKP2swmt9jd1PuJjIUG4PfHy55PnlaIojomnM6ueEMxjP5SxYjF6eFtix
-	 TvABoflL922lMvlvXnGWDOGP4B59jx/1b8wlXMdg=
+	b=I4w1dcIjynvs/xwl1IZ22H9MXasSnj3dojJ01E8EDJskSN+F8sxjK8hFvb9zXV9Um
+	 IBss+GDche+OZDPsMd+m3H2V+Q9S7KTugvv/5T03YhcMPO6ClJoxrfQ6tfPLtxtHkc
+	 j57+Wp+qFel8Rm+o9W1qJ40Dw9nEZ/f4InDzCgew=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727644AbfA1PpG (ORCPT
+        id S1727266AbfA1PoO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 10:45:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58454 "EHLO mail.kernel.org"
+        Mon, 28 Jan 2019 10:44:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57508 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727630AbfA1PpF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 10:45:05 -0500
+        id S1726852AbfA1PoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Jan 2019 10:44:13 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DE36D20880;
-        Mon, 28 Jan 2019 15:45:01 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E86C320880;
+        Mon, 28 Jan 2019 15:44:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548690303;
-        bh=0/gpLcvHJQ8V+pyrrRAGiZpx9lw+C0mM6osjCQv969I=;
+        s=default; t=1548690253;
+        bh=h4bYPE8tgq+3qOo8AIQCvjIJi5Lm5fppydrzclmr9eo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gY2UboW2EmNKtSGvGA3NDnGMvNYn9xW2LW9G/KTL8uhDlbhcwpsZQcQO5TYEK9ffv
-         LNyiFXZ/Ko6nY87fl8NnOVouINFbN8UpJMrA501TGn9076qJlqDxC8zYztTvgDdcuN
-         PVGDLWQgqnGIz7hl0njgt332moxwoqSFlWzyPDYk=
+        b=i415dDWBX/g01bly0i3YHBK6RbXf042CRUfUa6ygA+x+S24Dj1+RPElJ9qTGYsw/0
+         0M8d5RrWF4+0yUy0QWKLQQRgSF1Gf6loD+PjgVTaDc6RoQzSwmcxXVgirJzK1qtAHt
+         Q1Ip85FDcv7UXTOyKidRmTAt1/icaKB3VRZdXdhI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Naftali Goldstein <naftali.goldstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.20 041/304] iwlwifi: fw: do not set sgi bits for HE connection
-Date:   Mon, 28 Jan 2019 10:39:18 -0500
-Message-Id: <20190128154341.47195-41-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 018/304] ath9k: dynack: use authentication messages for 'late' ack
+Date:   Mon, 28 Jan 2019 10:38:55 -0500
+Message-Id: <20190128154341.47195-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
 References: <20190128154341.47195-1-sashal@kernel.org>
@@ -59,39 +59,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Naftali Goldstein <naftali.goldstein@intel.com>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-[ Upstream commit 5c2dbebb446539eb9640bf59a02756d6e7f1fc53 ]
+[ Upstream commit 3831a2a0010c72e3956020cbf1057a1701a2e469 ]
 
-If the association supports HE, HT/VHT rates will never be used for Tx
-and therefore there's no need to set the sgi-per-channel-width-support
-bits, so don't set them in this case.
+In order to properly support dynack in ad-hoc mode running
+wpa_supplicant, take into account authentication frames for
+'late ack' detection. This patch has been tested on devices
+mounted on offshore high-voltage stations connected through
+~24Km link
 
-Fixes: 110b32f065f3 ("iwlwifi: mvm: rs: add basic implementation of the new RS API handlers")
-Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Reported-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Tested-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath9k/dynack.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-index 7a98e1a1dc40..dabbc04853ac 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-@@ -98,8 +98,12 @@ static u8 rs_fw_sgi_cw_support(struct ieee80211_sta *sta)
- {
- 	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
- 	struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
-+	struct ieee80211_sta_he_cap *he_cap = &sta->he_cap;
- 	u8 supp = 0;
- 
-+	if (he_cap && he_cap->has_he)
-+		return 0;
-+
- 	if (ht_cap->cap & IEEE80211_HT_CAP_SGI_20)
- 		supp |= BIT(IWL_TLC_MNG_CH_WIDTH_20MHZ);
- 	if (ht_cap->cap & IEEE80211_HT_CAP_SGI_40)
+diff --git a/drivers/net/wireless/ath/ath9k/dynack.c b/drivers/net/wireless/ath/ath9k/dynack.c
+index 7334c9b09e82..cc0dc966c512 100644
+--- a/drivers/net/wireless/ath/ath9k/dynack.c
++++ b/drivers/net/wireless/ath/ath9k/dynack.c
+@@ -187,7 +187,8 @@ void ath_dynack_sample_tx_ts(struct ath_hw *ah, struct sk_buff *skb,
+ 	/* late ACK */
+ 	if (ts->ts_status & ATH9K_TXERR_XRETRY) {
+ 		if (ieee80211_is_assoc_req(hdr->frame_control) ||
+-		    ieee80211_is_assoc_resp(hdr->frame_control)) {
++		    ieee80211_is_assoc_resp(hdr->frame_control) ||
++		    ieee80211_is_auth(hdr->frame_control)) {
+ 			ath_dbg(common, DYNACK, "late ack\n");
+ 			ath9k_hw_setslottime(ah, (LATEACK_TO - 3) / 2);
+ 			ath9k_hw_set_ack_timeout(ah, LATEACK_TO);
 -- 
 2.19.1
 
