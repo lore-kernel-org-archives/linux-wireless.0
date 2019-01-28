@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21D7BC4151A
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:33:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C74EC282CF
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:35:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE01020663
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:33:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 615A420844
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:35:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548693209;
-	bh=b2NK0nrHoQddXLFy+NtuX9y1qsBWtjGKb/nAkTVzlQ8=;
+	s=default; t=1548693355;
+	bh=WeqnWYluWHU3Pa76Igqui7ZFu58Ji6SdNfGL43fY/I0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=PJ+k8CMzbTR8N1z/SNpwo2aZ9fuwP+JPDo87wifX2I9juFuawzdP/2KCVq4mfMLel
-	 6/F3uScZ6xuhRqdIUSSVytHmnsQGARcbOEYbdkjICXk9RhTGd2ZH8xNcpzxY5oIbmF
-	 7o2a2lIlxpzZgNFxG58w9owLKu2/0CO3jtSAOnXo=
+	b=KpwPnKkjvvk87QkURFNBxh0Vt4X8Q0NqwoCTdjjOVVGZB29dx6qh0JDR0JpnFPYHv
+	 9H/fj9Z5y6kYqFniSxK8iTDvqMDhbYaX9QLka9lcT6MVazO5Du4/LZg2ql/keRtC2E
+	 ym/99jc1Z1mC7L2Sk8py6764ejoLogb5Vm5lbUug=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390197AbfA1Q02 (ORCPT
+        id S2389387AbfA1Qfy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 11:26:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35750 "EHLO mail.kernel.org"
+        Mon, 28 Jan 2019 11:35:54 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34378 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389746AbfA1Q01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 11:26:27 -0500
+        id S1731582AbfA1QZc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Jan 2019 11:25:32 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CB8222171F;
-        Mon, 28 Jan 2019 16:26:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 72A7D20879;
+        Mon, 28 Jan 2019 16:25:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548692786;
-        bh=b2NK0nrHoQddXLFy+NtuX9y1qsBWtjGKb/nAkTVzlQ8=;
+        s=default; t=1548692731;
+        bh=WeqnWYluWHU3Pa76Igqui7ZFu58Ji6SdNfGL43fY/I0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uDdLHaIR1B9Yzvwj8bOc2EHdDFoXZRgh/T9EblZCeeZiGHgD1vs7t+OmSHGjVBEr3
-         QzkQ1NyvK+O5LqseViB/KF2Okns8xwPUeHuNkekulxtPb0n81u1CWtgWCw27A1a4hc
-         j6EDXwQTFf4i24tcBx3MBZzr1izaj3lB9MPlIrnM=
+        b=pwK8sdvvf8KkTRllospRTkvajsfi+mdyGOR7Ag8K3U92+tsryYCZUQYUgTeKU7MTT
+         8gQavVXo9qHlA17y7hAQL46D8jR02uRPAHeoXy9anTqSQLniNniEzjpD1ciNm2X5sN
+         oU/eWCMKF+vp+2kuCbPmqelA1Ib7YYIS4knn4WgY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+Cc:     Jia-Ju Bai <baijiaju1990@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 3.18 02/61] ath9k: dynack: use authentication messages for 'late' ack
-Date:   Mon, 28 Jan 2019 11:25:24 -0500
-Message-Id: <20190128162623.59854-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 52/80] cw1200: Fix concurrency use-after-free bugs in cw1200_hw_scan()
+Date:   Mon, 28 Jan 2019 11:23:33 -0500
+Message-Id: <20190128162401.58841-52-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190128162623.59854-1-sashal@kernel.org>
-References: <20190128162623.59854-1-sashal@kernel.org>
+In-Reply-To: <20190128162401.58841-1-sashal@kernel.org>
+References: <20190128162401.58841-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -59,39 +59,81 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
 
-[ Upstream commit 3831a2a0010c72e3956020cbf1057a1701a2e469 ]
+[ Upstream commit 4f68ef64cd7feb1220232bd8f501d8aad340a099 ]
 
-In order to properly support dynack in ad-hoc mode running
-wpa_supplicant, take into account authentication frames for
-'late ack' detection. This patch has been tested on devices
-mounted on offshore high-voltage stations connected through
-~24Km link
+The function cw1200_bss_info_changed() and cw1200_hw_scan() can be
+concurrently executed.
+The two functions both access a possible shared variable "frame.skb".
 
-Reported-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
-Tested-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+This shared variable is freed by dev_kfree_skb() in cw1200_upload_beacon(),
+which is called by cw1200_bss_info_changed(). The free operation is
+protected by a mutex lock "priv->conf_mutex" in cw1200_bss_info_changed().
+
+In cw1200_hw_scan(), this shared variable is accessed without the
+protection of the mutex lock "priv->conf_mutex".
+Thus, concurrency use-after-free bugs may occur.
+
+To fix these bugs, the original calls to mutex_lock(&priv->conf_mutex) and
+mutex_unlock(&priv->conf_mutex) are moved to the places, which can
+protect the accesses to the shared variable.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/dynack.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/cw1200/scan.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/dynack.c b/drivers/net/wireless/ath/ath9k/dynack.c
-index 22b3cc4c27cd..64965bf9034d 100644
---- a/drivers/net/wireless/ath/ath9k/dynack.c
-+++ b/drivers/net/wireless/ath/ath9k/dynack.c
-@@ -187,7 +187,8 @@ void ath_dynack_sample_tx_ts(struct ath_hw *ah, struct sk_buff *skb,
- 	/* late ACK */
- 	if (ts->ts_status & ATH9K_TXERR_XRETRY) {
- 		if (ieee80211_is_assoc_req(hdr->frame_control) ||
--		    ieee80211_is_assoc_resp(hdr->frame_control)) {
-+		    ieee80211_is_assoc_resp(hdr->frame_control) ||
-+		    ieee80211_is_auth(hdr->frame_control)) {
- 			ath_dbg(common, DYNACK, "late ack\n");
- 			ath9k_hw_setslottime(ah, (LATEACK_TO - 3) / 2);
- 			ath9k_hw_set_ack_timeout(ah, LATEACK_TO);
+diff --git a/drivers/net/wireless/cw1200/scan.c b/drivers/net/wireless/cw1200/scan.c
+index bff81b8d4164..9f1037e7e55c 100644
+--- a/drivers/net/wireless/cw1200/scan.c
++++ b/drivers/net/wireless/cw1200/scan.c
+@@ -78,6 +78,10 @@ int cw1200_hw_scan(struct ieee80211_hw *hw,
+ 	if (req->n_ssids > WSM_SCAN_MAX_NUM_OF_SSIDS)
+ 		return -EINVAL;
+ 
++	/* will be unlocked in cw1200_scan_work() */
++	down(&priv->scan.lock);
++	mutex_lock(&priv->conf_mutex);
++
+ 	frame.skb = ieee80211_probereq_get(hw, priv->vif->addr, NULL, 0,
+ 		req->ie_len);
+ 	if (!frame.skb)
+@@ -86,19 +90,15 @@ int cw1200_hw_scan(struct ieee80211_hw *hw,
+ 	if (req->ie_len)
+ 		memcpy(skb_put(frame.skb, req->ie_len), req->ie, req->ie_len);
+ 
+-	/* will be unlocked in cw1200_scan_work() */
+-	down(&priv->scan.lock);
+-	mutex_lock(&priv->conf_mutex);
+-
+ 	ret = wsm_set_template_frame(priv, &frame);
+ 	if (!ret) {
+ 		/* Host want to be the probe responder. */
+ 		ret = wsm_set_probe_responder(priv, true);
+ 	}
+ 	if (ret) {
++		dev_kfree_skb(frame.skb);
+ 		mutex_unlock(&priv->conf_mutex);
+ 		up(&priv->scan.lock);
+-		dev_kfree_skb(frame.skb);
+ 		return ret;
+ 	}
+ 
+@@ -120,10 +120,9 @@ int cw1200_hw_scan(struct ieee80211_hw *hw,
+ 		++priv->scan.n_ssids;
+ 	}
+ 
+-	mutex_unlock(&priv->conf_mutex);
+-
+ 	if (frame.skb)
+ 		dev_kfree_skb(frame.skb);
++	mutex_unlock(&priv->conf_mutex);
+ 	queue_work(priv->workqueue, &priv->scan.work);
+ 	return 0;
+ }
 -- 
 2.19.1
 
