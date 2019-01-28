@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA194C282C8
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 15:48:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0483C282CD
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 15:48:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B278020880
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 15:48:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF97D2147A
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 15:48:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548690497;
-	bh=eE4c5dOgS9MNmyAwIcEd3190nYdxetfOVKxOC1YEm8M=;
+	s=default; t=1548690498;
+	bh=g/oYbflqXAgepNg1BLIjmsTLfnzwdT7UhliIQde4gtI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=dY+5qhOhXB1X1/W6oU7xi1mCMg1x4VKsSIXiZLwh/5yApEf1TgoP9swFSNc3NrqvB
-	 2EgxEbMPd6Y375mkCV+FL0oLYA5zyYw2avBP+Qkv2TUb/vgf809Wgt+w5NgyqBR3p0
-	 7hijZG1+UMpBOGGxbaANG9TKD/rD+iychfAoBaIo=
+	b=V2fBJEAXefS4YQbSbdh5XtFx0zpOSUNXEIwitqr7VpgkTpgS4zgINSEXIeRj1gPBg
+	 4oAIS08v5+gZkq9wfNNc3AEm4gAOMeUHQrjYS21OLSEuHLKPaGmEXFP2Q1ulcTw9K6
+	 Ap3My2YYA4/Q6kwmslrndACCoQClm15jTcIQ/Ru8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728468AbfA1PsL (ORCPT
+        id S1728483AbfA1PsR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 10:48:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33574 "EHLO mail.kernel.org"
+        Mon, 28 Jan 2019 10:48:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33676 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726661AbfA1PsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 10:48:11 -0500
+        id S1727668AbfA1PsR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Jan 2019 10:48:17 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F032E2147A;
-        Mon, 28 Jan 2019 15:48:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 066172147A;
+        Mon, 28 Jan 2019 15:48:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548690490;
-        bh=eE4c5dOgS9MNmyAwIcEd3190nYdxetfOVKxOC1YEm8M=;
+        s=default; t=1548690496;
+        bh=g/oYbflqXAgepNg1BLIjmsTLfnzwdT7UhliIQde4gtI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=F/MZk0bV4252DazKwyNuq4e7eIJXLVgPg8IdQ6z2rq+iSj8dSvyp5a0Wi12I6aZ6x
-         KYWVxLlp7nnESAGQDzeVE8FEhQbjRnPGIFuefaJL7+6UnqYs1xwQtUY3tTy7L752DW
-         9NEM0jk8JLhg2oBm6VXzbZQEoLXF6Dngc6oZzELA=
+        b=2u/Ogc9B2pd2mrq5Z7ZIq5foujsSAh6AzJI8Q0ApJJXX9QkszSERflEWdRWpocEwQ
+         Y68aBy0fJyBFYvh8ZVH/7S2EyGcyN03wgNPSmfa5AGjOgypv7ejj5NRKuyBpwck8wS
+         WSJASq2RGdVpPV8XZPCjJAvZE/dGrQlpvkGJsuLc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
         Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.20 104/304] mt76x0: dfs: fix IBI_R11 configuration on non-radar channels
-Date:   Mon, 28 Jan 2019 10:40:21 -0500
-Message-Id: <20190128154341.47195-104-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 105/304] mt76x0: use band parameter for LC calibration
+Date:   Mon, 28 Jan 2019 10:40:22 -0500
+Message-Id: <20190128154341.47195-105-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
 References: <20190128154341.47195-1-sashal@kernel.org>
@@ -58,49 +58,60 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-[ Upstream commit 6bf4a8e902aad7df55d7f2b10b850cfa3f880996 ]
+[ Upstream commit ad3f993a0857ad3b792e7463828eb0d90cdd6f4d ]
 
-Fix IBI_R11 configuration on non-radar channels for mt76x0e
-driver. This patch improve system stability under heavy load.
-Moreover use IBI_R11 name and remove magic numbers for
-0x212c register
+We use always 1 as band parameter for MCU_CAL_LC, this break 2GHz,
+we should use 0 for this band instead.
 
-Fixes: 0c3b3abc9251 ("mt76x0: pci: add DFS support")
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Patch fixes problems happened sometimes when try to associate with 2GHz
+AP and manifest by errors like below:
+
+[14680.920823] wlan0: authenticate with 18:31:bf:c0:51:b0
+[14681.109506] wlan0: send auth to 18:31:bf:c0:51:b0 (try 1/3)
+[14681.310454] wlan0: send auth to 18:31:bf:c0:51:b0 (try 2/3)
+[14681.518469] wlan0: send auth to 18:31:bf:c0:51:b0 (try 3/3)
+[14681.726499] wlan0: authentication with 18:31:bf:c0:51:b0 timed out
+
+Fixes: 9aec146d0f6b ("mt76x0: pci: introduce mt76x0_phy_calirate routine")
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c
-index b56febae8945..764528c9f48a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c
-@@ -800,7 +800,7 @@ static void mt76x2_dfs_set_bbp_params(struct mt76x02_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+index cf024950e0ed..9c0a042c28b0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+@@ -585,6 +585,7 @@ void mt76x0_phy_set_txpower(struct mt76x02_dev *dev)
+ void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on)
+ {
+ 	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
++	int is_5ghz = (chan->band == NL80211_BAND_5GHZ) ? 1 : 0;
+ 	u32 val, tx_alc, reg_val;
  
- 	/* enable detection*/
- 	mt76_wr(dev, MT_BBP(DFS, 0), MT_DFS_CH_EN << 16);
--	mt76_wr(dev, 0x212c, 0x0c350001);
-+	mt76_wr(dev, MT_BBP(IBI, 11), 0x0c350001);
- }
+ 	if (power_on) {
+@@ -602,7 +603,7 @@ void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on)
+ 	reg_val = mt76_rr(dev, MT_BBP(IBI, 9));
+ 	mt76_wr(dev, MT_BBP(IBI, 9), 0xffffff7e);
  
- void mt76x2_dfs_adjust_agc(struct mt76x02_dev *dev)
-@@ -843,7 +843,11 @@ void mt76x2_dfs_init_params(struct mt76x02_dev *dev)
- 		mt76_wr(dev, MT_BBP(DFS, 0), 0);
- 		/* clear detector status */
- 		mt76_wr(dev, MT_BBP(DFS, 1), 0xf);
--		mt76_wr(dev, 0x212c, 0);
-+		if (mt76_chip(&dev->mt76) == 0x7610 ||
-+		    mt76_chip(&dev->mt76) == 0x7630)
-+			mt76_wr(dev, MT_BBP(IBI, 11), 0xfde8081);
-+		else
-+			mt76_wr(dev, MT_BBP(IBI, 11), 0);
+-	if (chan->band == NL80211_BAND_5GHZ) {
++	if (is_5ghz) {
+ 		if (chan->hw_value < 100)
+ 			val = 0x701;
+ 		else if (chan->hw_value < 140)
+@@ -615,7 +616,7 @@ void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on)
  
- 		mt76x02_irq_disable(dev, MT_INT_GPTIMER);
- 		mt76_rmw_field(dev, MT_INT_TIMER_EN,
+ 	mt76x02_mcu_calibrate(dev, MCU_CAL_FULL, val, false);
+ 	msleep(350);
+-	mt76x02_mcu_calibrate(dev, MCU_CAL_LC, 1, false);
++	mt76x02_mcu_calibrate(dev, MCU_CAL_LC, is_5ghz, false);
+ 	usleep_range(15000, 20000);
+ 
+ 	mt76_wr(dev, MT_BBP(IBI, 9), reg_val);
 -- 
 2.19.1
 
