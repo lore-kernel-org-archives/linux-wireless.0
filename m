@@ -2,120 +2,96 @@ Return-Path: <SRS0=aQ0V=QE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFE38C282C8
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3778EC282C8
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:50:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96CC62084C
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:47:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=uni-rostock.de header.i=@uni-rostock.de header.b="T44rCy1s"
+	by mail.kernel.org (Postfix) with ESMTP id F380D2173C
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:50:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548694241;
+	bh=h4bYPE8tgq+3qOo8AIQCvjIJi5Lm5fppydrzclmr9eo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=hPDIQd/V6FHZ63KjYYO69PSXfE98r5BB+ZNk5cd0pUwueV1iLL1LwHgL8k7d5wC4l
+	 a7aLZJDJED13n593O6zAqvucpBH4Hgoe2kzXUs2pGg9K4Fqadfle53NbDbjJbQn/F0
+	 bChzeOtIPBqXJmeG1oG1MU41n47FN7J1n2bzL9JA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388902AbfA1Qrh (ORCPT
+        id S2389141AbfA1Quf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 11:47:37 -0500
-Received: from mx2.uni-rostock.de ([139.30.22.72]:56594 "EHLO
-        mx2.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388260AbfA1Qrf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 11:47:35 -0500
-DKIM-Signature: v=1; c=relaxed/relaxed; d=uni-rostock.de; s=itmz; 
- t=1548694053; bh=ZXGqU0e872fNKoOvR8k5EftnYfk/Mw6yg9aYqgOlbl4=; h=
- "Subject:Subject:From:From:Date:Date:ReplyTo:ReplyTo:Cc:Cc:Message-Id:Message-Id"; 
- a=rsa-sha256; b=
- T44rCy1sQyAyYl7XMQS2XTjU6zSVMvvYl+IITzzLn2ZEBjoghZ4vh2Bfa7MlzXf2T9uKFqDpw3Zmg/iN76LEb6EeKJGf2y3F2ixeX/RJga4luRyi1RpnB2knBMg15NJhaPkOc1dSKryITs7YYcMoAmP2KVkiBaGOrA8k0fejIBE=
-Received: from [139.30.201.202] (139.30.201.202) by email1.uni-rostock.de
- (139.30.22.81) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.1591.10; Mon, 28 Jan
- 2019 17:47:33 +0100
-Subject: Re: [PATCH] mac80211: mesh: use average bitrate for link metric
- calculation
-To:     <julanhsu@google.com>, <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20190115233156.225963-1-julanhsu@google.com>
-From:   Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=Benjamin.Beichler@uni-rostock.de; prefer-encrypt=mutual;
- keydata=
- mDMEW08D4RYJKwYBBAHaRw8BAQdARRw5LUE0LoG/3A8AuH6shJZQcVbm0p/m5fCc3FkaJ6u0
- KkJlbmphbWluIEJlaWNobGVyIDxoYWRyaWFuMjAwMkBmcmVlbmV0LmRlPoiWBBMWCAA+FiEE
- 6qkQGP12r5eYfxTHFWm7+QrDkYoFAltPBEYCGyMFCQeUq78FCwkIBwIGFQoJCAsCBBYCAwEC
- HgECF4AACgkQFWm7+QrDkYpc8AD/cU/HV+2AwzxLsV5fZb1joWyPKdMDm4fmr44wkwgc8A8B
- AJj0Ag1GzdME82xKawGRfEjh9GnNMDf1O0WqvtWAXqcKtDVCZW5qYW1pbiBCZWljaGxlciA8
- YmVuamFtaW4uYmVpY2hsZXIyQHVuaS1yb3N0b2NrLmRlPoiWBBMWCAA+FiEE6qkQGP12r5eY
- fxTHFWm7+QrDkYoFAltPBDkCGyMFCQeUq78FCwkIBwIGFQoJCAsCBBYCAwECHgECF4AACgkQ
- FWm7+QrDkYomSQD6A7fSNUcKFQovKZH86oWjYhyL3MdigVM3KVDXnVGpVT4BAJufMPMrYUVu
- //nx7z+I0wSPmVvghFON+RmpznH4FhsJtC5CZW5qYW1pbiBCZWljaGxlciA8aGFkcmlhbjIw
- MDJAZ29vZ2xlbWFpbC5jb20+iJYEExYIAD4WIQTqqRAY/Xavl5h/FMcVabv5CsORigUCW08E
- JwIbIwUJB5SrvwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgAAKCRAVabv5CsORipBkAQCVnovp
- i3Xczuc6kKr1iuC4ZK4jrvvxIeRINUXacZgQRwD/fS+EhjHwX9kUGKkK3Vy7KUroVP3jG2iF
- yHBC1U4btAu0NEJlbmphbWluIEJlaWNobGVyIDxCZW5qYW1pbi5CZWljaGxlckB1bmktcm9z
- dG9jay5kZT6IlgQTFggAPhYhBOqpEBj9dq+XmH8UxxVpu/kKw5GKBQJbTwQUAhsjBQkHlKu/
- BQsJCAcCBhUKCQgLAgQWAgMBAh4BAheAAAoJEBVpu/kKw5GKqn8A/i0TJx6GRcqPML+1FITD
- EnCp+Z1+U7Agl+cUimKt7ZpNAQDI4VB9qDpxlKWzFbuJ+LwP2I5sttRBazMuzpYxcrfjA7Ql
- QmVuamFtaW4gQmVpY2hsZXIgPEIuQmVpY2hsZXJAZ214LmRlPoiWBBMWCAA+FiEE6qkQGP12
- r5eYfxTHFWm7+QrDkYoFAltPA+ECGyMFCQeUq78FCwkIBwIGFQoJCAsCBBYCAwECHgECF4AA
- CgkQFWm7+QrDkYpLpwEAwT72SEd2XnuNsDaUiZUHPTG3lp16QfjCRnb0BZyT+nEA/jbWrKLf
- waBXqKjvzO64683KUxYfwH9v13Cbsdmj89IDuDgEW08D4RIKKwYBBAGXVQEFAQEHQFymZUsu
- klAk9wLtjyIgU6myERH4uqIBCIlJLqRlzthQAwEIB4h+BBgWCAAmFiEE6qkQGP12r5eYfxTH
- FWm7+QrDkYoFAltPA+ECGwwFCQeUq78ACgkQFWm7+QrDkYrf/gD/VoS3ydXVpNOyHIE9fvnx
- m9aAEt3gdYUcuCiPz/6l6ooBAKd0yxYSxUvD3SRX6Q2RkKFIDrvV7wZ/UVlch/dLzv4A
-Organization: =?UTF-8?Q?Universit=c3=a4t_Rostock?=
-Message-ID: <8cf1d077-9976-7312-b811-9f862022162c@uni-rostock.de>
-Date:   Mon, 28 Jan 2019 17:47:41 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        Mon, 28 Jan 2019 11:50:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55184 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388181AbfA1QUA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Jan 2019 11:20:00 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 517A220663;
+        Mon, 28 Jan 2019 16:19:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548692399;
+        bh=h4bYPE8tgq+3qOo8AIQCvjIJi5Lm5fppydrzclmr9eo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=KX7sGPdE2ZxVetKFma/Z3AUXhgI1jiR2EkTJ4BJWvo4CUQ5vFvhrmU1mfMHE9sFGr
+         4OhTRBtKJgmCccz8G3sCsVBhgE2W6eEW5FPnFBhYu7VMneghMdV4X1hdGELNp3aYW0
+         uCB9SYlvYaE+UcNjOp/IGPtpIhGTCbxR+nuC6bHk=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 005/107] ath9k: dynack: use authentication messages for 'late' ack
+Date:   Mon, 28 Jan 2019 11:18:05 -0500
+Message-Id: <20190128161947.57405-5-sashal@kernel.org>
+X-Mailer: git-send-email 2.19.1
+In-Reply-To: <20190128161947.57405-1-sashal@kernel.org>
+References: <20190128161947.57405-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20190115233156.225963-1-julanhsu@google.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-X-Originating-IP: [139.30.201.202]
-X-ClientProxiedBy: email1.uni-rostock.de (139.30.22.81) To
- email1.uni-rostock.de (139.30.22.81)
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Altough the patch is already accepted, I have a question regarding the
-current semantics of the whole function airtime=5Flink=5Fmetric=5Fget:
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-My Impression was, that
+[ Upstream commit 3831a2a0010c72e3956020cbf1057a1701a2e469 ]
 
-rate =3D DIV=5FROUND=5FUP(sta=5Fget=5Fexpected=5Fthroughput(sta), 100);
+In order to properly support dynack in ad-hoc mode running
+wpa_supplicant, take into account authentication frames for
+'late ack' detection. This patch has been tested on devices
+mounted on offshore high-voltage stations connected through
+~24Km link
 
-will get the expected throughput from the rate control, so e.g. for
-ath9k it will receive the already averaged rate from minstrel(=5Fht).
-I don't know which hardware you use, but we have only mesh hardware in
-our lab, which use minstrel, so this code wouldn't be triggered.
+Reported-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Tested-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/ath/ath9k/dynack.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Unfortunately, we are on a quite old kernel in the lab, where this code
-is not present, so I'm not able to proof my assumption.
-
-Nevertheless, my former comment is still valid, as the averaged rate
-could be calculated over several kinds of frames (management/multicast)
-which have a inherently lower rate.
-This could have the inverse effect to slowly change the path metric,
-while this patch should stabilize it, isn't it =3F
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/dynack.c b/drivers/net/wireless/ath/ath9k/dynack.c
+index 7334c9b09e82..cc0dc966c512 100644
+--- a/drivers/net/wireless/ath/ath9k/dynack.c
++++ b/drivers/net/wireless/ath/ath9k/dynack.c
+@@ -187,7 +187,8 @@ void ath_dynack_sample_tx_ts(struct ath_hw *ah, struct sk_buff *skb,
+ 	/* late ACK */
+ 	if (ts->ts_status & ATH9K_TXERR_XRETRY) {
+ 		if (ieee80211_is_assoc_req(hdr->frame_control) ||
+-		    ieee80211_is_assoc_resp(hdr->frame_control)) {
++		    ieee80211_is_assoc_resp(hdr->frame_control) ||
++		    ieee80211_is_auth(hdr->frame_control)) {
+ 			ath_dbg(common, DYNACK, "late ack\n");
+ 			ath9k_hw_setslottime(ah, (LATEACK_TO - 3) / 2);
+ 			ath9k_hw_set_ack_timeout(ah, LATEACK_TO);
 -- 
-M.Sc. Benjamin Beichler
+2.19.1
 
-Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrotechnik
-Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
-
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Stra=C3=9Fe 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
