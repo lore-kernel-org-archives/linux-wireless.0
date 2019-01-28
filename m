@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 879E9C282C8
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:45:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08E79C4151A
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:46:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 58A822084C
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:45:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5A702084C
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 16:46:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548693955;
-	bh=dl0Hkh+OOsyXw4u45jUUr7o9bMJs4jNgPgeXYpVFA2E=;
+	s=default; t=1548693985;
+	bh=N+r4siA4z2SNbtwwNRPacTPF4iA6QzGYt0LT/jCEt3A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=eWkJbayqPg6tnpvdCmyftE6YRYePVG889jUSLLSdrVIFgDOfD2hoLtf6c+Rse0CRE
-	 89AmSyVu1rj4zqC7XVCelg2Kvo7sfIgK1ZEArEMINe/wK4seCLz1mBWBFLBD2+Wwf4
-	 racHQxvRXKhg63txZZkdWqO2Xu/gFpvSuakTfG08=
+	b=n1x/lpea7gejMmYuGG4Ry2FMeLKPuNTZg0FMJIeZj2Vpa8BZiTdHKbuBDN/0Fs6qB
+	 uyuUScMD6O69UhWSs12MuHbofyxJ8BWQ+yIdJ2AGnTtB4n4N8MA1y/26oNJGFOGZh9
+	 Rqg2rPwzGgxOePQdNKdR9W7esy6QerYw1NOV7xF8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389800AbfA1Qpr (ORCPT
+        id S2389244AbfA1QWp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 11:45:47 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58908 "EHLO mail.kernel.org"
+        Mon, 28 Jan 2019 11:22:45 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58738 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388853AbfA1QWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 11:22:50 -0500
+        id S1728400AbfA1QWn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Jan 2019 11:22:43 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4B0E02171F;
-        Mon, 28 Jan 2019 16:22:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E69E62171F;
+        Mon, 28 Jan 2019 16:22:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548692569;
-        bh=dl0Hkh+OOsyXw4u45jUUr7o9bMJs4jNgPgeXYpVFA2E=;
+        s=default; t=1548692562;
+        bh=N+r4siA4z2SNbtwwNRPacTPF4iA6QzGYt0LT/jCEt3A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=sa+b8x6k5HidH3M3Bi4hEj6sYH5LpBp5imRsdS4mpz6y2p4+t8TyED3odmOKGBAfg
-         F0aGPNtxApoTVyCnG4dpAeu3LrNN/+LTs2p6fjhzvvJ0IeDqwj3n9kPI31pk7mrdbL
-         PB7Kv+36QC1A3hV24FQWwMNxi2ImSoxiBF0+z+K0=
+        b=tHCBTwmmeeMeUFYB1Rg0EwC9C4wR8JQxFimO+L2DdksQTUKQXcEbJq7eAtRRIdw1g
+         fd66o49eFPx8pyX4V3ZQYGty9ophGJbgUZ2LsHoGze9D6tniW+DsfPjLhMkakHtAXr
+         mItMuu6gApZ+28oBPgDfgkac0DPQORzGmFX6HDsQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 070/107] cw1200: Fix concurrency use-after-free bugs in cw1200_hw_scan()
-Date:   Mon, 28 Jan 2019 11:19:10 -0500
-Message-Id: <20190128161947.57405-70-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 065/107] mac80211: fix radiotap vendor presence bitmap handling
+Date:   Mon, 28 Jan 2019 11:19:05 -0500
+Message-Id: <20190128161947.57405-65-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190128161947.57405-1-sashal@kernel.org>
 References: <20190128161947.57405-1-sashal@kernel.org>
@@ -58,81 +59,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 4f68ef64cd7feb1220232bd8f501d8aad340a099 ]
+[ Upstream commit efc38dd7d5fa5c8cdd0c917c5d00947aa0539443 ]
 
-The function cw1200_bss_info_changed() and cw1200_hw_scan() can be
-concurrently executed.
-The two functions both access a possible shared variable "frame.skb".
+Due to the alignment handling, it actually matters where in the code
+we add the 4 bytes for the presence bitmap to the length; the first
+field is the timestamp with 8 byte alignment so we need to add the
+space for the extra vendor namespace presence bitmap *before* we do
+any alignment for the fields.
 
-This shared variable is freed by dev_kfree_skb() in cw1200_upload_beacon(),
-which is called by cw1200_bss_info_changed(). The free operation is
-protected by a mutex lock "priv->conf_mutex" in cw1200_bss_info_changed().
+Move the presence bitmap length accounting to the right place to fix
+the alignment for the data properly.
 
-In cw1200_hw_scan(), this shared variable is accessed without the
-protection of the mutex lock "priv->conf_mutex".
-Thus, concurrency use-after-free bugs may occur.
-
-To fix these bugs, the original calls to mutex_lock(&priv->conf_mutex) and
-mutex_unlock(&priv->conf_mutex) are moved to the places, which can
-protect the accesses to the shared variable.
-
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/st/cw1200/scan.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ net/mac80211/rx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/scan.c b/drivers/net/wireless/st/cw1200/scan.c
-index 0a0ff7e31f5b..c5492d792f43 100644
---- a/drivers/net/wireless/st/cw1200/scan.c
-+++ b/drivers/net/wireless/st/cw1200/scan.c
-@@ -78,6 +78,10 @@ int cw1200_hw_scan(struct ieee80211_hw *hw,
- 	if (req->n_ssids > WSM_SCAN_MAX_NUM_OF_SSIDS)
- 		return -EINVAL;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 93c332737e86..af02d2136a06 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -152,6 +152,9 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
+ 	/* allocate extra bitmaps */
+ 	if (status->chains)
+ 		len += 4 * hweight8(status->chains);
++	/* vendor presence bitmap */
++	if (status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA)
++		len += 4;
  
-+	/* will be unlocked in cw1200_scan_work() */
-+	down(&priv->scan.lock);
-+	mutex_lock(&priv->conf_mutex);
-+
- 	frame.skb = ieee80211_probereq_get(hw, priv->vif->addr, NULL, 0,
- 		req->ie_len);
- 	if (!frame.skb)
-@@ -86,19 +90,15 @@ int cw1200_hw_scan(struct ieee80211_hw *hw,
- 	if (req->ie_len)
- 		memcpy(skb_put(frame.skb, req->ie_len), req->ie, req->ie_len);
+ 	if (ieee80211_have_rx_timestamp(status)) {
+ 		len = ALIGN(len, 8);
+@@ -193,8 +196,6 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
+ 	if (status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA) {
+ 		struct ieee80211_vendor_radiotap *rtap = (void *)skb->data;
  
--	/* will be unlocked in cw1200_scan_work() */
--	down(&priv->scan.lock);
--	mutex_lock(&priv->conf_mutex);
--
- 	ret = wsm_set_template_frame(priv, &frame);
- 	if (!ret) {
- 		/* Host want to be the probe responder. */
- 		ret = wsm_set_probe_responder(priv, true);
- 	}
- 	if (ret) {
-+		dev_kfree_skb(frame.skb);
- 		mutex_unlock(&priv->conf_mutex);
- 		up(&priv->scan.lock);
--		dev_kfree_skb(frame.skb);
- 		return ret;
- 	}
- 
-@@ -120,10 +120,9 @@ int cw1200_hw_scan(struct ieee80211_hw *hw,
- 		++priv->scan.n_ssids;
- 	}
- 
--	mutex_unlock(&priv->conf_mutex);
--
- 	if (frame.skb)
- 		dev_kfree_skb(frame.skb);
-+	mutex_unlock(&priv->conf_mutex);
- 	queue_work(priv->workqueue, &priv->scan.work);
- 	return 0;
- }
+-		/* vendor presence bitmap */
+-		len += 4;
+ 		/* alignment for fixed 6-byte vendor data header */
+ 		len = ALIGN(len, 2);
+ 		/* vendor data header */
 -- 
 2.19.1
 
