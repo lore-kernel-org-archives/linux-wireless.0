@@ -4,54 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFB48C282CF
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:28:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20131C282C8
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:34:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 70DDE20857
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:28:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E26C12147A
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jan 2019 17:34:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548696494;
-	bh=sGPrnnt4LNGpIXsfQSBa+4zvfJ8mFUE7DDbc95Ih33w=;
+	s=default; t=1548696884;
+	bh=0FTEbij3vlI0Ld9tkenZ15MJIMaEAGc6+uJqvwYFO+A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=1Yj5kIU0TbMCcE/CgyuK8aafvCRsLXP8fX8eGo4QozwsmOjzJ3q8/DNICYsahKC6y
-	 35cAAHstT6dz+rNCtAFkoQApvHsFNzHyJ0ulUSvhBthzSw+GIDUDBzGbCUHzHy1YRF
-	 eCn6QkK35ZWtO/TrgwWSzUMVsAg6Y9XVm1w4drKA=
+	b=1VXQlqiAhnmP1rBj1wL20me0IaL9u3uADaSO490FjzFMEpGEt0tKSDFwkLtZNPbVh
+	 93SQZwmuwYEO5i76c3ox0176MP+jf4wGwXk6Ygbgwy0dozjDtvG7tB/9VoKibr+QqA
+	 kkoLaLLxqoBkjsSpjerQ35H8Cgtp3ekxe9Fz0k7k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730461AbfA1R2H (ORCPT
+        id S1730510AbfA1Reh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 12:28:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45278 "EHLO mail.kernel.org"
+        Mon, 28 Jan 2019 12:34:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41604 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730404AbfA1QAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 11:00:00 -0500
+        id S1729975AbfA1Pzo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Jan 2019 10:55:44 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BB1BA2175B;
-        Mon, 28 Jan 2019 15:59:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 442A72175B;
+        Mon, 28 Jan 2019 15:55:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548691199;
-        bh=sGPrnnt4LNGpIXsfQSBa+4zvfJ8mFUE7DDbc95Ih33w=;
+        s=default; t=1548690943;
+        bh=0FTEbij3vlI0Ld9tkenZ15MJIMaEAGc6+uJqvwYFO+A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LocSPK7++5ywdNSRIoxwOswNcTrXx6wcod8xPKqtN0+U/OktXnRMPzbI8FQ+6S6ge
-         6Y48e3ewUxLm00rjL0uqWvyDloU7lnES4H+CfGylLoBH5vbXOxbHihE2HmfE+rLVAf
-         rrYYsGlsV09KTUqmK7c57Nr9NNiEGJM4d78JDFxg=
+        b=PwMXcwPwte5+xycvJELgcngZHflCN1Qw1hjc/3j+r2zB8pr0M+H4JI2Pg+zj4cx0N
+         aw2i2XmJBfADjPOtoRj5yu/n6IezT0HUpEN5jE2uYlAvTrDes23ksBrVAOjuRpjEvE
+         o9sQY1dJlpO1nRh1AKJQbRYfQ9JQiH891b+bzTHs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lior David <liord@codeaurora.org>,
-        Maya Erez <merez@codeaurora.org>,
+Cc:     Zhi Chen <zhichen@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 012/258] wil6210: fix memory leak in wil_find_tx_bcast_2
-Date:   Mon, 28 Jan 2019 10:55:18 -0500
-Message-Id: <20190128155924.51521-12-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.20 242/304] ath10k: fix tx_stats memory leak
+Date:   Mon, 28 Jan 2019 10:42:39 -0500
+Message-Id: <20190128154341.47195-242-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
-References: <20190128155924.51521-1-sashal@kernel.org>
+In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
+References: <20190128154341.47195-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -60,35 +59,89 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lior David <liord@codeaurora.org>
+From: Zhi Chen <zhichen@codeaurora.org>
 
-[ Upstream commit 664497400c89a4d40aee51bcf48bbd2e4dc71104 ]
+[ Upstream commit 386f97e3b201d18578abb0e7037b85a1ae50c0a3 ]
 
-A successful call to wil_tx_ring takes skb reference so
-it will only be freed in wil_tx_complete. Consume the skb
-in wil_find_tx_bcast_2 to prevent memory leak.
+Memory of tx_stats was allocated when a STA was added. But it's not freed
+if the STA failed to be added to driver. This issue could be seen in MDK3
+attack case when STA number reached the limit.
 
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Tested: QCA9984 with firmware ver 10.4-3.9.0.1-00005
+Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 6a7943e487fb..75c8aa297107 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -1313,6 +1313,8 @@ static struct wil_ring *wil_find_tx_bcast_2(struct wil6210_priv *wil,
- 			wil_dbg_txrx(wil, "BCAST DUP -> ring %d\n", i);
- 			wil_set_da_for_vring(wil, skb2, i);
- 			wil_tx_ring(wil, vif, v2, skb2);
-+			/* successful call to wil_tx_ring takes skb2 ref */
-+			dev_kfree_skb_any(skb2);
- 		} else {
- 			wil_err(wil, "skb_copy failed\n");
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 6436dc229be5..400495858e4e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6293,15 +6293,6 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			   ar->num_stations + 1, ar->max_num_stations,
+ 			   ar->num_peers + 1, ar->max_num_peers);
+ 
+-		if (ath10k_debug_is_extd_tx_stats_enabled(ar)) {
+-			arsta->tx_stats = kzalloc(sizeof(*arsta->tx_stats),
+-						  GFP_KERNEL);
+-			if (!arsta->tx_stats) {
+-				ret = -ENOMEM;
+-				goto exit;
+-			}
+-		}
+-
+ 		num_tdls_stations = ath10k_mac_tdls_vif_stations_count(hw, vif);
+ 		num_tdls_vifs = ath10k_mac_tdls_vifs_count(hw);
+ 
+@@ -6323,12 +6314,22 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			goto exit;
  		}
+ 
++		if (ath10k_debug_is_extd_tx_stats_enabled(ar)) {
++			arsta->tx_stats = kzalloc(sizeof(*arsta->tx_stats),
++						  GFP_KERNEL);
++			if (!arsta->tx_stats) {
++				ret = -ENOMEM;
++				goto exit;
++			}
++		}
++
+ 		ret = ath10k_peer_create(ar, vif, sta, arvif->vdev_id,
+ 					 sta->addr, peer_type);
+ 		if (ret) {
+ 			ath10k_warn(ar, "failed to add peer %pM for vdev %d when adding a new sta: %i\n",
+ 				    sta->addr, arvif->vdev_id, ret);
+ 			ath10k_mac_dec_num_stations(arvif, sta);
++			kfree(arsta->tx_stats);
+ 			goto exit;
+ 		}
+ 
+@@ -6341,6 +6342,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			spin_unlock_bh(&ar->data_lock);
+ 			ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
+ 			ath10k_mac_dec_num_stations(arvif, sta);
++			kfree(arsta->tx_stats);
+ 			ret = -ENOENT;
+ 			goto exit;
+ 		}
+@@ -6361,6 +6363,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			ath10k_peer_delete(ar, arvif->vdev_id,
+ 					   sta->addr);
+ 			ath10k_mac_dec_num_stations(arvif, sta);
++			kfree(arsta->tx_stats);
+ 			goto exit;
+ 		}
+ 
+@@ -6372,6 +6375,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 				    sta->addr, arvif->vdev_id, ret);
+ 			ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
+ 			ath10k_mac_dec_num_stations(arvif, sta);
++			kfree(arsta->tx_stats);
+ 
+ 			if (num_tdls_stations != 0)
+ 				goto exit;
 -- 
 2.19.1
 
