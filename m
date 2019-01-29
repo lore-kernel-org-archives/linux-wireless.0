@@ -2,106 +2,98 @@ Return-Path: <SRS0=Fojl=QF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 749E6C169C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 12:41:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 248D3C282D0
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 12:50:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4FE6A2083B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 12:41:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E953E2087E
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 12:50:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="f6nGzjEz";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gpa4aOw5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727964AbfA2MlC (ORCPT
+        id S1728595AbfA2MuF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Jan 2019 07:41:02 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:36047 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727033AbfA2MlC (ORCPT
+        Tue, 29 Jan 2019 07:50:05 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:37010 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726790AbfA2MuE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Jan 2019 07:41:02 -0500
-Received: by mail-wr1-f65.google.com with SMTP id u4so21890609wrp.3
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jan 2019 04:41:01 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=lkNhQ2BBOGOWkitn7PXcWt8ps41CvM+FFdqdxDrKXaM=;
-        b=TUeUqRAFvqFT3YWrOBpKjkhg3PeRKRPPbIMFeoLbDsessGTDgI1No7Zqct2arFrIJy
-         58ORjN9evMHr7JW2Fj8bxHHA2czrjb4zIvK/reY3YlAzGkkS7stWGzeLMvx92VXgAx0c
-         7pBjMRtkXKAcp7JaqiwrgAAEQaSC6qQ9wcwKQ2dceX5/FI1cJsPSfwQOY0KPYDcPslyl
-         3SuUSGgZnIie38JNmvN7uyk3ZUzYVmXrqz5fGY//PCusQM128tQTvkAFDmLsBnLQOo2H
-         6ngEZZC7O33ZMsxwkfRzTSApFph3QecRcQMMLRQsxULorte4XxNsTFAmSpRiNZSWnK06
-         WB4w==
-X-Gm-Message-State: AJcUuketx/0bodQ5UBKe8dijso6HsyaltfQbgsYDzVotwOwIup7PJ1M7
-        k70VG3CUDBVUL4vxehmSCBqpPQ==
-X-Google-Smtp-Source: ALg8bN7uMutyPbyNu57Oz3B9/fuzqubx+5k4NZqXQ37jHv1HWJZiglheR+dsIb+4Pi/zHFnpYhb+fg==
-X-Received: by 2002:a5d:4f10:: with SMTP id c16mr26518975wru.177.1548765660236;
-        Tue, 29 Jan 2019 04:41:00 -0800 (PST)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id s16sm99417775wrt.77.2019.01.29.04.40.59
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 29 Jan 2019 04:40:59 -0800 (PST)
-Date:   Tue, 29 Jan 2019 13:40:57 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 0/7] mt76x02: Beacon support for USB
-Message-ID: <20190129124056.GB2460@localhost.localdomain>
-References: <1548678108-9526-1-git-send-email-sgruszka@redhat.com>
- <87a7jju1mv.fsf@purkki.adurom.net>
- <8ec3b133-49eb-3c5f-4c3c-bc2bb4e84cde@nbd.name>
- <87k1inwtu5.fsf@codeaurora.org>
- <b6fb4aec-5e65-53aa-e14b-c1230e797786@nbd.name>
- <87fttbwtav.fsf@codeaurora.org>
+        Tue, 29 Jan 2019 07:50:04 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id F3339601D1; Tue, 29 Jan 2019 12:50:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548766204;
+        bh=n+2dctMZw0L6GZMd6CIdAEa0Ua9KWHz7R0lzN0rAk0I=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=f6nGzjEzyE+k867+TLmHUD/nWkJ0/H2VUJIw6Ec9mhzClIPSx4QccvLUoWslq6JUO
+         1JqGNmZc1MUuuIj0Hd+E5yu/gspYm4SSnI5D983417WaYDXa3uj5A4bar96p64Fq5O
+         S64b/FhYcfiAOvC7i4VwFCU7tqEp77z2L1U0JR60=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0F20460159;
+        Tue, 29 Jan 2019 12:50:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548766203;
+        bh=n+2dctMZw0L6GZMd6CIdAEa0Ua9KWHz7R0lzN0rAk0I=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=gpa4aOw5CCV35dL+L4rux4TCgPjkZU1YSvJvisNvL6lTfJ7XV1dBf9rl34+hwHOvv
+         X84KivKk7ghA+snMHDdsuKj0fbvaj73Ag4Pu9pHNYindTJdVTEdlX8t+wLv+sLJvod
+         oqYqMwUJpmhxzK+AL5969OT40CI3ERiCJHxX1q1A=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0F20460159
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Matteo Croce <mcroce@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH net-next] wireless: fix typos
+References: <20190120232000.4940-1-mcroce@redhat.com>
+        <87va2ioaee.fsf@kamboji.qca.qualcomm.com>
+Date:   Tue, 29 Jan 2019 14:49:59 +0200
+In-Reply-To: <87va2ioaee.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Mon, 21 Jan 2019 07:19:21 +0200")
+Message-ID: <87zhrjsk5k.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87fttbwtav.fsf@codeaurora.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Felix Fietkau <nbd@nbd.name> writes:
-> 
-> > On 2019-01-29 13:07, Kalle Valo wrote:
-> >> Felix Fietkau <nbd@nbd.name> writes:
-> >> 
-> >>> On 2019-01-29 12:47, Kalle Valo wrote:
-> >>>> Stanislaw Gruszka <sgruszka@redhat.com> writes:
-> >>>> 
-> >>>>> We can configure beaconing, but without TBTT interrupt we
-> >>>>> can not support PS buffering. This can be added later using
-> >>>>> kernel hrtimer, if we can keep it in sycn with device timer.
-> >>>>>
-> >>>>> I tested AP and IBSS modes.
-> >>>> 
-> >>>> So how does this work reliably so that there's no packet loss with
-> >>>> clients using power save?
-> >>>
-> >>> There will be multicast packet loss for clients using power save.
-> >> 
-> >> Isn't that a problem? At least as a normal user I would very frustrated
-> >> if sometimes my connection work and sometimes not, for example if I'm
-> >> trying discover devices from my network. Hopefully nobody won't use USB
-> >> devices for any real AP stuff, but still enabling something which we
-> >> know doesn't work realiably is concerning.
-> >
-> > I agree. Maybe we should leave out the flag for AP mode in this patch
-> > until we have PS buffering and leave the rest of the code intact.
-> 
-> At least for me that sounds good.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-We can support ps buffering in AP as well using a hrtimer. In this way we
-can reuse most of the existing code
+> Matteo Croce <mcroce@redhat.com> writes:
+>
+>> Fix spelling mistakes in brcm80211 and cfg80211: "lenght" -> "length".
+>> The typos are also in the special comment blocks which
+>> translates to documentation.
+>>
+>> Signed-off-by: Matteo Croce <mcroce@redhat.com>
+>> ---
+>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h     | 2 +-
+>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 2 +-
+>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h     | 2 +-
+>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c      | 2 +-
+>>  include/net/cfg80211.h                                      | 2 +-
+>
+> cfg80211 changes go through mac80211-next. Can you please split these in
+> two patches, cfg80211 and brcmfmac?
 
-Regards,
-Lorenzo
+Strange, my previous comment didn't make it to patchwork. Let's try
+again :)
 
-> 
-> -- 
-> Kalle Valo
+https://patchwork.kernel.org/patch/10773337/
+
+-- 
+Kalle Valo
