@@ -2,89 +2,104 @@ Return-Path: <SRS0=Fojl=QF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF09C282CD
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 02:27:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 083A6C282CD
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 02:41:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B1BB21738
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 02:27:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0FDE21738
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 02:41:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="mlVDL5f8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727111AbfA2C1p (ORCPT
+        id S1727051AbfA2ClW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 21:27:45 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:41826 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727009AbfA2C1p (ORCPT
+        Mon, 28 Jan 2019 21:41:22 -0500
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:38127 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726895AbfA2ClW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 21:27:45 -0500
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0T2RIDo027446, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0T2RIDo027446
-        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Tue, 29 Jan 2019 10:27:18 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCASV01.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Tue, 29 Jan
- 2019 10:27:17 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Brian Norris <briannorris@chromium.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-CC:     Kalle Valo <kvalo@codeaurora.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v3 00/13] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
-Thread-Topic: [PATCH v3 00/13] rtw88: mac80211 driver for Realtek 802.11ac
- wireless network chips
-Thread-Index: AQHUtsz0oGWsIdSZ5km8koIDZ4UJzKXEW5SlgAAMGcD//4h9AIAA0IYAgADC+dA=
-Date:   Tue, 29 Jan 2019 02:27:16 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D1794B00@RTITMBSVM04.realtek.com.tw>
-References: <1548654407-28469-1-git-send-email-yhchuang@realtek.com>
- <87tvht18mn.fsf@codeaurora.org>
- <F7CD281DE3E379468C6D07993EA72F84D1793BB2@RTITMBSVM04.realtek.com.tw>
- <20190128101214.GC4132@redhat.com>
- <CA+ASDXNW9v_abS+nX2+H2XymwOL9aVNwdPn-QhfZo71aeQahWQ@mail.gmail.com>
-In-Reply-To: <CA+ASDXNW9v_abS+nX2+H2XymwOL9aVNwdPn-QhfZo71aeQahWQ@mail.gmail.com>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.123]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Mon, 28 Jan 2019 21:41:22 -0500
+Received: by mail-ed1-f66.google.com with SMTP id h50so14758958ede.5
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2019 18:41:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=npbPi6NRCsGR1JrtNhGcxLfAUcnSVhalsnxt1P8YDII=;
+        b=mlVDL5f8wpczlou0MKsyLdTj/ST/31DY/j4/X/GN6fypsSlAZ2NDpSJQioDnPpPvIg
+         qSlmFi5dpQOn3tt2ARp3+g407jomqXHLg+Wk1gkApsNuBl3/WIkSP2dODEQ5IrZAMWY/
+         BQzBzhB7xGHxM9L/CSnifwE+Utd3UP8C0HCgo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=npbPi6NRCsGR1JrtNhGcxLfAUcnSVhalsnxt1P8YDII=;
+        b=WMjk1Fs7uvD1ggaHfIsEzmioxHQQmk8jADENxZeowkxIOwoFUL864rWtBu8a9faI27
+         8huq5yEMs7Yvq5TvrXSR9EkZadcCWfvoBFSS2xP74RNXKPg/lq4zsh7HA5ea7LAre2ub
+         sXqOdvsUUt6qCRwWzx8oSbk8X4INbR8QGpmS/GguDBIoXyZbpUilRTDa9GqtxaBLTQur
+         C1oBVLNp0lJ3N2LDdoQdxuPmJMknQMBa3zHLVw8o9Ig4uZn17Qk29OJwv0HwdgbH00h1
+         F7miUnAgvjGiTlGYwtcCHC9ruE0W4EN77a0oQqoO3mcj83CBiGUWhDZs5O0wzaO5YIKC
+         MIJQ==
+X-Gm-Message-State: AJcUukce60SCTaHt5T0GobxkBtGONoBJuWqRCZXNZFDtYo/u/8yx/KwU
+        cEV6GaNulIu5c8Hr5fr6BW2rqjphAoY=
+X-Google-Smtp-Source: ALg8bN7l1UDLWERHYbDQcspBshcD6E8Fc42/VacXGoI1BOgVPfEoUHiD6NgoJsEBqvhejWqasxyrkQ==
+X-Received: by 2002:a50:c017:: with SMTP id r23mr24336459edb.278.1548729680493;
+        Mon, 28 Jan 2019 18:41:20 -0800 (PST)
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com. [209.85.208.49])
+        by smtp.gmail.com with ESMTPSA id w31sm14175479edw.82.2019.01.28.18.41.18
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 28 Jan 2019 18:41:19 -0800 (PST)
+Received: by mail-ed1-f49.google.com with SMTP id g22so14758619edr.7
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2019 18:41:18 -0800 (PST)
+X-Received: by 2002:a50:b487:: with SMTP id w7mr24043399edd.72.1548729678597;
+ Mon, 28 Jan 2019 18:41:18 -0800 (PST)
 MIME-Version: 1.0
+References: <1548654407-28469-1-git-send-email-yhchuang@realtek.com>
+ <043aedf4-0ed4-e128-3cd2-242aaef128f6@lwfinger.net> <F7CD281DE3E379468C6D07993EA72F84D1794AAB@RTITMBSVM04.realtek.com.tw>
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D1794AAB@RTITMBSVM04.realtek.com.tw>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Mon, 28 Jan 2019 18:41:06 -0800
+X-Gmail-Original-Message-ID: <CA+ASDXM=+_U+SrXhm3pq4Zd7gkvHwkRAZw+OGmzg=6+0+=iZGg@mail.gmail.com>
+Message-ID: <CA+ASDXM=+_U+SrXhm3pq4Zd7gkvHwkRAZw+OGmzg=6+0+=iZGg@mail.gmail.com>
+Subject: Re: [PATCH v3 00/13] rtw88: mac80211 driver for Realtek 802.11ac
+ wireless network chips
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4gTm9ycmlzIFtt
-YWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiBUdWVzZGF5LCBKYW51YXJ5
-IDI5LCAyMDE5IDY6MzkgQU0NCj4gVG86IFN0YW5pc2xhdyBHcnVzemthDQo+IENjOiBUb255IENo
-dWFuZzsgS2FsbGUgVmFsbzsgam9oYW5uZXNAc2lwc29sdXRpb25zLm5ldDsNCj4gTGFycnkuRmlu
-Z2VyQGx3ZmluZ2VyLm5ldDsgUGtzaGloOyBBbmR5IEh1YW5nOyBsaW51eC13aXJlbGVzc0B2Z2Vy
-Lmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2MyAwMC8xM10gcnR3ODg6IG1hYzgw
-MjExIGRyaXZlciBmb3IgUmVhbHRlayA4MDIuMTFhYw0KPiB3aXJlbGVzcyBuZXR3b3JrIGNoaXBz
-DQo+IA0KPiBPbiBNb24sIEphbiAyOCwgMjAxOSBhdCAyOjE2IEFNIFN0YW5pc2xhdyBHcnVzemth
-IDxzZ3J1c3prYUByZWRoYXQuY29tPg0KPiB3cm90ZToNCj4gPiBPbiBNb24sIEphbiAyOCwgMjAx
-OSBhdCAwOToyNTozMkFNICswMDAwLCBUb255IENodWFuZyB3cm90ZToNCj4gPiA+IFNvcnJ5IGZv
-ciB0aGUgdHlwbyBoZXJlLiBZZXMsIEkgbWVhbiAiIHdpcmVsZXNzLWRyaXZlcnMtbmV4dCAiLg0K
-PiA+ID4gSW4gTUFJTlRBSU5FUlMgZmlsZSwgSSBkbyBjaGFuZ2UgdG8gIndpcmVsZXNzLWRyaXZl
-cnMtbmV4dCIgaW5zdGVhZCBvZg0KPiAid2lyZWxlc3MtbmV4dCIuDQo+ID4NCj4gPiBUaGUgZ2l0
-IGVudHJ5IGluIE1BSU5UQUlORVIgZmlsZSBpcyBub3QgbmVjZXNzYXJ5IGFuZCBzaG91bGQgcG9p
-bnQNCj4gPiB0aGUgZHJpdmVyIHNwZWNpZmljIHRyZWUsIHdoaWNoIHJ0dzg4IGRvIG5vdCBoYXZl
-LiBKdXN0IHJlbW92ZSB0aGlzDQo+ID4gZW50cnkuDQo+IA0KPiBZZXMsIGl0IHNlZW1zIFRvbnkg
-bWlzLWludGVycHJldGVkIG15IHN1Z2dlc3Rpb24gd2hlbiBJIHNhaWQgaGUgd2FzDQo+IHVzaW5n
-IHRoZSB3cm9uZyB0cmVlLiBJIGFncmVlIHRoaXMgZHJpdmVyIGRvZXMgbm90IG5lZWQgYSBnaXQg
-ZW50cnkgYXQNCj4gYWxsLg0KDQpTb3JyeSBmb3IgdGhhdCwgbm93IHJ0dzg4IGluZGVlZCBkb2Vz
-IG5vdCBoYXZlIGFuIG93biB0cmVlIG90aGVyIHRoYW4gd2lyZWxlc3MtZHJpdmVycy4NCkFuZCBL
-YWxsZSBjYW4ganVzdCByZW1vdmUgaXQuDQoNCj4gDQo+IFJlZ2FyZHMsDQo+IEJyaWFuDQo+IA0K
-PiBQLlMuIEkgZG8gcGxhbiB0byBnaXZlIHRoaXMgZHJpdmVyIGEgc3BpbiB0aGlzIHdlZWsgYW5k
-IGhvcGVmdWxseSBnaXZlDQo+IGl0IGEgbGl0dGxlIGNsb3NlciByZXZpZXcuIE5vIGd1YXJhbnRl
-ZXMgSSBhY3R1YWxseSBnZXQgdGhlIHRpbWUgZm9yDQo+IHRoYXQsIGJ1dCBJIGhvcGUgdG8uLi4N
-Cg0KDQpUaGFua3MgZm9yIHlvdXIgcmV2aWV3Lg0KSnVzdCBwb2ludCBpdCBvdXQgaWYgSSBoYXZl
-IGRvbmUgYW55dGhpbmcgd3Jvbmcgb3IgaW5hcHByb3ByaWF0ZS4NCg0KDQpZYW4tSHN1YW4NCg==
+On Mon, Jan 28, 2019 at 6:15 PM Tony Chuang <yhchuang@realtek.com> wrote:
+> This NULL pointer was found months ago and has been fixed already.
+> Thanks for your test :).
+> I am holding the patch to fix it for the next patchsets.
+>
+> BTW, since rtw88 has not been accepted, could I send next patch set based on
+> this patch set as long as I explicitly mark that the next patch is based on the previous one?
+
+I'd normally expect that if you find major bugs in your initial driver
+submission that still isn't reviewed/merged, you might as well just
+roll the fix into latest version and describe it in the
+cover-letter/changelog. This particular change is so trivial it
+doesn't really seem to deserve a separate patch.
+
+(It would also help people like me, who may very well run into the
+same bug when they get around to testing/reviewing the driver.)
+
+I also don't know what the contents of the "next patch set" is -- if
+it's a lot of new features, maybe they don't deserve to clutter the
+initial submission, but if they're bugfixes like this, it seems like
+you could just fix the original patch set.
+
+But that's just my opinion.
+
+Brian
