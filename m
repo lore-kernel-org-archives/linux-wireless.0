@@ -2,94 +2,82 @@ Return-Path: <SRS0=Fojl=QF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF378C169C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 12:59:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E7CC169C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 13:02:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 71FE520869
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 12:59:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="osXNARLa";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="osXNARLa"
+	by mail.kernel.org (Postfix) with ESMTP id 3F03A20870
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 13:02:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727580AbfA2M7B (ORCPT
+        id S1727425AbfA2NCG convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Jan 2019 07:59:01 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:42102 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725795AbfA2M7B (ORCPT
+        Tue, 29 Jan 2019 08:02:06 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:59433 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725786AbfA2NCG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Jan 2019 07:59:01 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id B1187601D1; Tue, 29 Jan 2019 12:59:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548766740;
-        bh=t3YhgDGT6Dt6p9LvnpE9d0EMyHhppieKMVDn+o9lL/4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=osXNARLamGZQfnaK1v42PNhJAv07vZ8cz/KjVxJE/QQM3bI9g9HPCMTqrwDkgAjqr
-         VggzNiYQsLQlv9rjcyeCpPZwOUrBe+tsvBptApCWeSLVL48qESoIliUgpUsLPrYNyO
-         GQi88+uLe+G89Amq6ExZZw2TJ73VBppqi/exX88c=
-Received: from x230.qca.qualcomm.com (unknown [83.145.195.18])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5C47E602F8;
-        Tue, 29 Jan 2019 12:58:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548766740;
-        bh=t3YhgDGT6Dt6p9LvnpE9d0EMyHhppieKMVDn+o9lL/4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=osXNARLamGZQfnaK1v42PNhJAv07vZ8cz/KjVxJE/QQM3bI9g9HPCMTqrwDkgAjqr
-         VggzNiYQsLQlv9rjcyeCpPZwOUrBe+tsvBptApCWeSLVL48qESoIliUgpUsLPrYNyO
-         GQi88+uLe+G89Amq6ExZZw2TJ73VBppqi/exX88c=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5C47E602F8
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Subject: Re: pull-request: iwlwifi-next 2019-01-25
-References: <77072ceb9ce4171311f67edb51aa5713b8e4cee9.camel@coelho.fi>
-Date:   Tue, 29 Jan 2019 14:58:55 +0200
-In-Reply-To: <77072ceb9ce4171311f67edb51aa5713b8e4cee9.camel@coelho.fi> (Luca
-        Coelho's message of "Fri, 25 Jan 2019 21:09:43 +0200")
-Message-ID: <878sz3wrg0.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Tue, 29 Jan 2019 08:02:06 -0500
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0TD1kkI003472, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0TD1kkI003472
+        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
+        Tue, 29 Jan 2019 21:01:46 +0800
+Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
+ RTITCASV01.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Tue, 29 Jan
+ 2019 21:01:46 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        "briannorris@chromium.org" <briannorris@chromium.org>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v3 00/13] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
+Thread-Topic: [PATCH v3 00/13] rtw88: mac80211 driver for Realtek 802.11ac
+ wireless network chips
+Thread-Index: AQHUt6iEoGWsIdSZ5km8koIDZ4UJzKXGNIKQ
+Date:   Tue, 29 Jan 2019 13:01:44 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D1798ACF@RTITMBSVM04.realtek.com.tw>
+References: <1548654407-28469-1-git-send-email-yhchuang@realtek.com>
+        <043aedf4-0ed4-e128-3cd2-242aaef128f6@lwfinger.net>
+        <F7CD281DE3E379468C6D07993EA72F84D1794AAB@RTITMBSVM04.realtek.com.tw>
+        <8d92c20f-a72f-6ea8-d4c8-61c3c8c9adc9@lwfinger.net>
+        <F7CD281DE3E379468C6D07993EA72F84D17981EA@RTITMBSVM04.realtek.com.tw>
+ <87lg33uc6o.fsf@purkki.adurom.net>
+In-Reply-To: <87lg33uc6o.fsf@purkki.adurom.net>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.123]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> writes:
+> I suggest to look at criticality of the bug and size of the patch. For
+> example, if the bug is a minor and the patch is large you should
+> definitely drop that. And smaller fixes to severe bugs you should
+> definitely again include them.
+> 
+> Just remember to list in the changelog every change you made since
+> previous version.
+> 
 
-> This is the first batch of patches intended for v5.1.  This includes
-> the last two patchsets I sent.  Usual development work.  More details
-> about the contents in the tag description.
->
-> I have sent this out before and kbuildbot reported success.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 4ad0be160544ffbdafb7cec39bb8e6dd0a97317a:
->
->   brcmfmac: Use firmware_request_nowarn for the clm_blob (2019-01-10 13:41:03 +0200)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2019-01-25
+Hi Kalle,
 
-Pulled, thanks.
+One more question, should I merge the trivial patches into the original
+patch set and resend them like [PATCH v4 00/13].
 
--- 
-Kalle Valo
+Or should I add them after the 13 patches for people to review easily.
+Such as [PATCH v4 00/21]. Which do you prefer?
+Thanks.
+
+Yan-Hsuan
+
