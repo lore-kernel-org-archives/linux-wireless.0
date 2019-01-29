@@ -2,99 +2,100 @@ Return-Path: <SRS0=Fojl=QF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C7DAC282CD
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 02:54:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EC02C282CD
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 03:14:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53B632085B
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 02:54:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C96421738
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 03:14:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727111AbfA2CyB (ORCPT
+        id S1727477AbfA2DN5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jan 2019 21:54:01 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:44488 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726958AbfA2CyB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jan 2019 21:54:01 -0500
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0T2riF6001947, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0T2riF6001947
-        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Tue, 29 Jan 2019 10:53:45 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCASV01.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Tue, 29 Jan
- 2019 10:53:44 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Brian Norris <briannorris@chromium.org>
-CC:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v3 00/13] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
-Thread-Topic: [PATCH v3 00/13] rtw88: mac80211 driver for Realtek 802.11ac
- wireless network chips
-Thread-Index: AQHUtsz0oGWsIdSZ5km8koIDZ4UJzKXEpEWAgADdk7D//4KcAIAAhthg
-Date:   Tue, 29 Jan 2019 02:53:43 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D179808E@RTITMBSVM04.realtek.com.tw>
-References: <1548654407-28469-1-git-send-email-yhchuang@realtek.com>
- <043aedf4-0ed4-e128-3cd2-242aaef128f6@lwfinger.net>
- <F7CD281DE3E379468C6D07993EA72F84D1794AAB@RTITMBSVM04.realtek.com.tw>
- <CA+ASDXM=+_U+SrXhm3pq4Zd7gkvHwkRAZw+OGmzg=6+0+=iZGg@mail.gmail.com>
-In-Reply-To: <CA+ASDXM=+_U+SrXhm3pq4Zd7gkvHwkRAZw+OGmzg=6+0+=iZGg@mail.gmail.com>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.123]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Mon, 28 Jan 2019 22:13:57 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:3226 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727096AbfA2DN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Jan 2019 22:13:56 -0500
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 8661B7956AB434B4356A;
+        Tue, 29 Jan 2019 11:13:54 +0800 (CST)
+Received: from [127.0.0.1] (10.177.31.96) by DGGEMS402-HUB.china.huawei.com
+ (10.3.19.202) with Microsoft SMTP Server id 14.3.408.0; Tue, 29 Jan 2019
+ 11:13:52 +0800
+Subject: Re: [PATCH 2/2] iwlwifi: Use struct_size() in kzalloc
+To:     Joe Perches <joe@perches.com>, <johannes.berg@intel.com>,
+        <emmanuel.grumbach@intel.com>, <luciano.coelho@intel.com>,
+        <linuxwifi@intel.com>, <kvalo@codeaurora.org>
+References: <20190128064432.17576-1-yuehaibing@huawei.com>
+ <20190128064432.17576-3-yuehaibing@huawei.com>
+ <9a66aa07870c729ad0e65ac26a2404fac879f290.camel@perches.com>
+CC:     <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>
+From:   YueHaibing <yuehaibing@huawei.com>
+Message-ID: <9206ae04-1649-fd7a-58f3-da88df729875@huawei.com>
+Date:   Tue, 29 Jan 2019 11:13:51 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 MIME-Version: 1.0
+In-Reply-To: <9a66aa07870c729ad0e65ac26a2404fac879f290.camel@perches.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.177.31.96]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCcmlhbiBOb3JyaXMgW21haWx0
-bzpicmlhbm5vcnJpc0BjaHJvbWl1bS5vcmddDQo+IFNlbnQ6IFR1ZXNkYXksIEphbnVhcnkgMjks
-IDIwMTkgMTA6NDEgQU0NCj4gVG86IFRvbnkgQ2h1YW5nDQo+IENjOiBMYXJyeSBGaW5nZXI7IFBr
-c2hpaDsgQW5keSBIdWFuZzsgc2dydXN6a2FAcmVkaGF0LmNvbTsNCj4gbGludXgtd2lyZWxlc3NA
-dmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMgMDAvMTNdIHJ0dzg4OiBt
-YWM4MDIxMSBkcml2ZXIgZm9yIFJlYWx0ZWsgODAyLjExYWMNCj4gd2lyZWxlc3MgbmV0d29yayBj
-aGlwcw0KPiANCj4gT24gTW9uLCBKYW4gMjgsIDIwMTkgYXQgNjoxNSBQTSBUb255IENodWFuZyA8
-eWhjaHVhbmdAcmVhbHRlay5jb20+DQo+IHdyb3RlOg0KPiA+IFRoaXMgTlVMTCBwb2ludGVyIHdh
-cyBmb3VuZCBtb250aHMgYWdvIGFuZCBoYXMgYmVlbiBmaXhlZCBhbHJlYWR5Lg0KPiA+IFRoYW5r
-cyBmb3IgeW91ciB0ZXN0IDopLg0KPiA+IEkgYW0gaG9sZGluZyB0aGUgcGF0Y2ggdG8gZml4IGl0
-IGZvciB0aGUgbmV4dCBwYXRjaHNldHMuDQo+ID4NCj4gPiBCVFcsIHNpbmNlIHJ0dzg4IGhhcyBu
-b3QgYmVlbiBhY2NlcHRlZCwgY291bGQgSSBzZW5kIG5leHQgcGF0Y2ggc2V0IGJhc2VkIG9uDQo+
-ID4gdGhpcyBwYXRjaCBzZXQgYXMgbG9uZyBhcyBJIGV4cGxpY2l0bHkgbWFyayB0aGF0IHRoZSBu
-ZXh0IHBhdGNoIGlzIGJhc2VkIG9uIHRoZQ0KPiBwcmV2aW91cyBvbmU/DQo+IA0KPiBJJ2Qgbm9y
-bWFsbHkgZXhwZWN0IHRoYXQgaWYgeW91IGZpbmQgbWFqb3IgYnVncyBpbiB5b3VyIGluaXRpYWwg
-ZHJpdmVyDQo+IHN1Ym1pc3Npb24gdGhhdCBzdGlsbCBpc24ndCByZXZpZXdlZC9tZXJnZWQsIHlv
-dSBtaWdodCBhcyB3ZWxsIGp1c3QNCj4gcm9sbCB0aGUgZml4IGludG8gbGF0ZXN0IHZlcnNpb24g
-YW5kIGRlc2NyaWJlIGl0IGluIHRoZQ0KPiBjb3Zlci1sZXR0ZXIvY2hhbmdlbG9nLiBUaGlzIHBh
-cnRpY3VsYXIgY2hhbmdlIGlzIHNvIHRyaXZpYWwgaXQNCj4gZG9lc24ndCByZWFsbHkgc2VlbSB0
-byBkZXNlcnZlIGEgc2VwYXJhdGUgcGF0Y2guDQo+IA0KPiAoSXQgd291bGQgYWxzbyBoZWxwIHBl
-b3BsZSBsaWtlIG1lLCB3aG8gbWF5IHZlcnkgd2VsbCBydW4gaW50byB0aGUNCj4gc2FtZSBidWcg
-d2hlbiB0aGV5IGdldCBhcm91bmQgdG8gdGVzdGluZy9yZXZpZXdpbmcgdGhlIGRyaXZlci4pDQo+
-IA0KPiBJIGFsc28gZG9uJ3Qga25vdyB3aGF0IHRoZSBjb250ZW50cyBvZiB0aGUgIm5leHQgcGF0
-Y2ggc2V0IiBpcyAtLSBpZg0KPiBpdCdzIGEgbG90IG9mIG5ldyBmZWF0dXJlcywgbWF5YmUgdGhl
-eSBkb24ndCBkZXNlcnZlIHRvIGNsdXR0ZXIgdGhlDQo+IGluaXRpYWwgc3VibWlzc2lvbiwgYnV0
-IGlmIHRoZXkncmUgYnVnZml4ZXMgbGlrZSB0aGlzLCBpdCBzZWVtcyBsaWtlDQo+IHlvdSBjb3Vs
-ZCBqdXN0IGZpeCB0aGUgb3JpZ2luYWwgcGF0Y2ggc2V0Lg0KDQoNCkl0IGlzIGJlY2F1c2UgdGhh
-dCB0aGUgbmV4dCBwYXRjaCBzZXQgY29udGFpbnMgc2V2ZXJhbCBtYWpvciBmaXhlcy4NCkFuZCBJ
-IGRvbid0IGtub3cgaWYgaXQgd2lsbCBib3RoZXIgdGhlIHJldmlld2VycyBpZiBJIGFwcGx5IHRo
-ZW0gaW50bw0KdGhlIG9yaWdpbmFsIHBhdGNoIHNldC4NCg0KQW5kIEkgZG9uJ3Qga25vdyBpZiBJ
-IGNhbiBzZW5kIHRoZSBuZXh0IHBhdGNoIHNldCB0aGF0IGlzIGJhc2VkIG9uIHRoZQ0KcGF0Y2gg
-c2V0IGhhdmUgbm90IGJlZW4gYWNjZXB0ZWQuIEp1c3Qgd29uZGVyIHdoaWNoIHdheSBpcyBiZXR0
-ZXIuDQoNClNvLCBpZiBpdCBpcyBob3cgdGhpbmdzIHdvcmsgSSBjYW4gZG8gdGhpcyBhbmQgcmVz
-ZW5kIHdpdGggdGhvc2UgZml4ZXMuDQpJdCBpcyBhY3R1YWxseSBiZXR0ZXIgZm9yIG1lIHRvIGZp
-eCB0aGVtIGluIHRoZSBvcmlnaW5hbCBwYXRjaCBzZXQuDQpPciBzZW5kIHRoZSBuZXh0IHBhdGNo
-IHNldCBub3cgYW5kIG1hcmsgaXQgaXMgYmFzZWQgb24gdGhlIG9yaWdpbmFsDQpwYXRjaCBzZXQg
-dW5kZXIgcmV2aWV3aW5nLg0KDQoNCj4gDQo+IEJ1dCB0aGF0J3MganVzdCBteSBvcGluaW9uLg0K
-DQpZb3VyIG9waW5pb24gaXMgaGVscGZ1bC4NClRoYW5rcyBmb3IgeW91ciBzdWdnZXN0aW9uLg0K
-DQo+IA0KPiBCcmlhbg0KPiANCg0KWWFuLUhzdWFuDQo=
+
+On 2019/1/29 5:57, Joe Perches wrote:
+> On Mon, 2019-01-28 at 14:44 +0800, YueHaibing wrote:
+>> Use struct_size() in kzalloc instead of the 'regd_to_copy'
+> 
+> There is also the use above that in the same function
+> that could also be converted.
+> 
+> 	/* build a regdomain rule for every valid channel */
+> 	size_of_regd =
+> 		sizeof(struct ieee80211_regdomain) +
+> 		num_of_ch * sizeof(struct ieee80211_reg_rule);
+> 
+> 	regd = kzalloc(size_of_regd, GFP_KERNEL);
+> 	if (!regd)
+> 		return ERR_PTR(-ENOMEM);
+
+Thank you, will post v2.
+
+> 
+>> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> []
+>> @@ -1093,7 +1093,7 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+>>  	const u8 *nvm_chan = cfg->nvm_type == IWL_NVM_EXT ?
+>>  			     iwl_ext_nvm_channels : iwl_nvm_channels;
+>>  	struct ieee80211_regdomain *regd, *copy_rd;
+>> -	int size_of_regd, regd_to_copy;
+>> +	int size_of_regd;
+>>  	struct ieee80211_reg_rule *rule;
+>>  	struct regdb_ptrs *regdb_ptrs;
+>>  	enum nl80211_band band;
+>> @@ -1193,10 +1193,8 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+>>  	 * Narrow down regdom for unused regulatory rules to prevent hole
+>>  	 * between reg rules to wmm rules.
+>>  	 */
+>> -	regd_to_copy = sizeof(struct ieee80211_regdomain) +
+>> -		valid_rules * sizeof(struct ieee80211_reg_rule);
+>> -
+>> -	copy_rd = kmemdup(regd, regd_to_copy, GFP_KERNEL);
+>> +	copy_rd = kmemdup(regd, struct_size(regd, reg_rules, valid_rules),
+>> +			  GFP_KERNEL);
+>>  	if (!copy_rd)
+>>  		copy_rd = ERR_PTR(-ENOMEM);
+>>  
+> 
+> 
+> .
+> 
+
