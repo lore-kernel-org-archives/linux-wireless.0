@@ -2,162 +2,110 @@ Return-Path: <SRS0=Fojl=QF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64A12C169C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 09:54:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9401DC169C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 09:56:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3362620663
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 09:54:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63A4A20869
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 09:56:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PG8p0W2F";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZXb8LFjn"
+	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="2PWTVC/O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726925AbfA2JyQ (ORCPT
+        id S1726997AbfA2J4d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Jan 2019 04:54:16 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:57614 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725799AbfA2JyQ (ORCPT
+        Tue, 29 Jan 2019 04:56:33 -0500
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:39264 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725536AbfA2J4d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Jan 2019 04:54:16 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id F32C960712; Tue, 29 Jan 2019 09:54:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548755655;
-        bh=sTZA/5WN/ib3zZC8/+PByx2zj+Ns2TsHtmiSpC1T5Yg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=PG8p0W2FdhfYWbpXCZDPxiUfh60qjGyEGoIgT/u6JGxdHjKbw9gxFW5i+EJH+dUd0
-         btuqRXSyW7Gex2wERLJ1TUWQf5/9zevI/x9DRQrmbOEz/gqialmuwf54gQDi5F6AqB
-         2UFeYCgQzEbpXCU711v1Snh6AVHk/rsocVKY1Lw8=
-Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: pillair@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0B77560314;
-        Tue, 29 Jan 2019 09:54:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548755654;
-        bh=sTZA/5WN/ib3zZC8/+PByx2zj+Ns2TsHtmiSpC1T5Yg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ZXb8LFjnuNSM1ORldQ/bRpZQ/xT5xDQI7GNnGKkbs463Dc/rcRjvzVc6uQ01oqJze
-         ZikQN3s/CUrHNAOACMjXsk6LGpEk5u+o5x0jBK/VnNRQ/DXlzq1wWkbt2eWpzCtMkz
-         vZwSsyT73QtBx7r8RmBQ2x3LPMI0l+8yF1DtQ8fU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0B77560314
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
-From:   Rakesh Pillai <pillair@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH] ath10k: Fix shadow register implementation for WCN3990
-Date:   Tue, 29 Jan 2019 15:24:07 +0530
-Message-Id: <1548755647-23356-1-git-send-email-pillair@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Tue, 29 Jan 2019 04:56:33 -0500
+Received: by mail-ed1-f65.google.com with SMTP id b14so15462415edt.6
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jan 2019 01:56:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=PxYCS0vbXS2rAPwfuknM+cRMaSaBS70amtnuRyFlOoA=;
+        b=2PWTVC/OP3+ccvhBKv8jcBnsfgEwWR093DhBrQXZV27af8cXvdoGpee0tqjrDfTP50
+         e1ucR547pLBbrjnppdct69rARQRnA69dVD24XBrxfTM6iafcFNzimzmNVxMuq8z3gNho
+         r5ZfeIi0O+PmF+6YwM9dMLru5mrK8157mBpGUo0iP3ulaRzW3l8AdKwSV6r5NCuX3vJu
+         enszaWqzsWUf0VL/kjf0jPykdnuasmflKy/0hHdqn5uOxu2cjvo4jmHjaVaxTCjBV5gE
+         UZy2QsnoXGkkD52QpTwDLHpldDs6BAan4rS0qaxRLJE7oAD7eRu9U6Ybh6tcVMJB1yJz
+         YIUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=PxYCS0vbXS2rAPwfuknM+cRMaSaBS70amtnuRyFlOoA=;
+        b=Gm3ymjxor4QpsEF4bFl8QpripxK+W7mE8+EJDAs504e+4mbHRIREtLo3lyVNinBMSp
+         xlqJoBXjZsRO+TRMeJvoIsSM9zzCnIzmJFXKnWHy2cJDTmSN/fwcleZCRzCUJ1NMzb4d
+         88KECwhFRUr0Unw7HgG3WCMBVtUj5bXb3cfOr4IL6qzDWWgL2lxVVRqv7tatLELsyL9y
+         csu8AoA/OAQN6mlsTHs7T1FIE7mirgel6CoWXPw5Xwm0jBAnp9FrRDzavPUDtNlfsE+5
+         IjtBGOTb3NMrRpMeFXoVqEU1M81yLddvISElfFJH07JSI1K7JKmh4QoEcqaMJ7xXQC6X
+         vMvg==
+X-Gm-Message-State: AJcUukdIqxOWY7p641dsFFFU4XUAJfKquCvoS5NW8X5d5jwYayNvLav9
+        A7fV3/srgDDAnq8x152Pzp99W7UAWLPdEa8iYe7+7Q==
+X-Google-Smtp-Source: ALg8bN7osAI8iFw62zcCIeHJ+7h6CFAeUMuuyKiy5G3efld7pJDp7dvys2jOQmcfTjRZO8Yd0R9n4Zw96TbkGyIFSzE=
+X-Received: by 2002:aa7:d29a:: with SMTP id w26mr25149614edq.30.1548755791525;
+ Tue, 29 Jan 2019 01:56:31 -0800 (PST)
+MIME-Version: 1.0
+References: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com>
+ <20180111103006.GA17574@thinktank.home.org> <14c5f7f4-0d5b-cecd-b45b-3672b67da07a@gmail.com>
+ <CAL9uMOG77it=kqkbjryPVpY2eVJqqjedVeAhdxqpZM6Z8JWuiA@mail.gmail.com>
+In-Reply-To: <CAL9uMOG77it=kqkbjryPVpY2eVJqqjedVeAhdxqpZM6Z8JWuiA@mail.gmail.com>
+From:   Chris Chiu <chiu@endlessm.com>
+Date:   Tue, 29 Jan 2019 17:56:20 +0800
+Message-ID: <CAB4CAwd2WtWwf9p=kZZQ-SzE6DhsLu1OpGaVyS1Mq8wx8eT6ww@mail.gmail.com>
+Subject: Re: RTL8723bu: poor signal and connection troubles
+To:     Carlo Caione <carlo@endlessm.com>
+Cc:     Jes Sorensen <jes.sorensen@gmail.com>,
+        Barry Day <briselec@gmail.com>, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org,
+        mylene.josserand@free-electrons.com,
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-WCN3990 supports shadow registers write operation support
-for copy engine for regular operation in powersave mode.
+On Mon, Jan 22, 2018 at 6:56 AM Carlo Caione <carlo@endlessm.com> wrote:
+>
+> On Sun, Jan 21, 2018 at 9:46 PM, Jes Sorensen <jes.sorensen@gmail.com> wrote:
+> > On 01/11/2018 05:30 AM, Barry Day wrote:
+>
+> > One issue with rtl8723bu is that it needs to coexist with the bluetooth
+> > driver. When I wrote the rtl8723bu support that was no BT support for
+> > the chip in the kernel and it worked fine, at least for me. However if
+> > you load the BT driver for the dongle which someone pushed into the
+> > kernel since then, it is likely to hijack the antennas causing the weak
+> > signal you describe.
+>
+> Yeah, that's why when testing the dongle I carefully disabled BT and
+> made sure no BT driver was probed at all. Still I can see the issue.
+> I honestly doubt that the problem is caused by BT coexistence. Any
+> other idea or suggestion to debug this problem?
+>
+> Thanks,
+>
+> --
+> Carlo Caione  |  +44.7384.69.16.04  |  Endless
 
-Since WCN3990 is a 64-bit target, the shadow register
-implementation needs to be done in the copy engine handlers
-for 64-bit target. Currently the shadow register implementation
-is present in the 32-bit target handlers of copy engine.
+This problem has been reported for 1 year, but it still persists now.
 
-Fix the shadow register copy engine write operation
-implementation for 64-bit target(WCN3990).
+I found that the problem disappeared after I resume from suspend. Before
+suspend, the rssi observed from AP side for this dongle is quite poor. But
+it comes back to normal after resume. The signal strength differs almost
+30dBm. So I compared/checked the RF/BB related register values
+(in .init_phy_bb/.init_phy_rf/.set_tx_power) but they are identical with the
+same routines in the driver from https://github.com/lwfinger/rtl8723bu
 
-Tested HW: WCN3990
-Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+The registers also remain the same across suspend/resume. Don't really
+know why a simple suspend/resume could cause such difference. Can
+anyone suggest which part I should look into to get more information?
 
-Fixes: b7ba83f7c414 ("ath10k: add support for shadow register for WNC3990")
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/ce.c | 26 +++++++++++++-------------
- drivers/net/wireless/ath/ath10k/ce.h |  2 +-
- 2 files changed, 14 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index f6d3ecb..31b9e46 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -500,14 +500,8 @@ static int _ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
- 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
- 
- 	/* WORKAROUND */
--	if (!(flags & CE_SEND_FLAG_GATHER)) {
--		if (ar->hw_params.shadow_reg_support)
--			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
--								  write_index);
--		else
--			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
--							   write_index);
--	}
-+	if (!(flags & CE_SEND_FLAG_GATHER))
-+		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
- 
- 	src_ring->write_index = write_index;
- exit:
-@@ -581,8 +575,14 @@ static int _ath10k_ce_send_nolock_64(struct ath10k_ce_pipe *ce_state,
- 	/* Update Source Ring Write Index */
- 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
- 
--	if (!(flags & CE_SEND_FLAG_GATHER))
--		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
-+	if (!(flags & CE_SEND_FLAG_GATHER)) {
-+		if (ar->hw_params.shadow_reg_support)
-+			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
-+								  write_index);
-+		else
-+			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
-+							   write_index);
-+	}
- 
- 	src_ring->write_index = write_index;
- exit:
-@@ -1404,12 +1404,12 @@ static int ath10k_ce_alloc_shadow_base(struct ath10k *ar,
- 				       u32 nentries)
- {
- 	src_ring->shadow_base_unaligned = kcalloc(nentries,
--						  sizeof(struct ce_desc),
-+						  sizeof(struct ce_desc_64),
- 						  GFP_KERNEL);
- 	if (!src_ring->shadow_base_unaligned)
- 		return -ENOMEM;
- 
--	src_ring->shadow_base = (struct ce_desc *)
-+	src_ring->shadow_base = (struct ce_desc_64 *)
- 			PTR_ALIGN(src_ring->shadow_base_unaligned,
- 				  CE_DESC_RING_ALIGN);
- 	return 0;
-@@ -1461,7 +1461,7 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 		ret = ath10k_ce_alloc_shadow_base(ar, src_ring, nentries);
- 		if (ret) {
- 			dma_free_coherent(ar->dev,
--					  (nentries * sizeof(struct ce_desc) +
-+					  (nentries * sizeof(struct ce_desc_64) +
- 					   CE_DESC_RING_ALIGN),
- 					  src_ring->base_addr_owner_space_unaligned,
- 					  base_addr);
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index ead9987..463e2fc 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -118,7 +118,7 @@ struct ath10k_ce_ring {
- 	u32 base_addr_ce_space;
- 
- 	char *shadow_base_unaligned;
--	struct ce_desc *shadow_base;
-+	struct ce_desc_64 *shadow_base;
- 
- 	/* keep last */
- 	void *per_transfer_context[0];
--- 
-2.7.4
-
+Chris
