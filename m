@@ -7,63 +7,61 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF56FC169C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 23:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 967B1C282D0
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 23:18:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9F6820882
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 23:12:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 620C42184D
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 23:18:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="YQUUiUBS"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Tv91WTP1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728344AbfA2XMM (ORCPT
+        id S1729902AbfA2XSI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Jan 2019 18:12:12 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:33530 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727064AbfA2XMM (ORCPT
+        Tue, 29 Jan 2019 18:18:08 -0500
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:42137 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729649AbfA2XSI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Jan 2019 18:12:12 -0500
-Received: by mail-pg1-f195.google.com with SMTP id z11so9456349pgu.0
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jan 2019 15:12:11 -0800 (PST)
+        Tue, 29 Jan 2019 18:18:08 -0500
+Received: by mail-pl1-f194.google.com with SMTP id y1so10093008plp.9
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jan 2019 15:18:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=n5QI9SCQIVH2sd+cRwUOWax4a5NWTgXxRP/Hc68OVrQ=;
-        b=YQUUiUBSHwmDWfSh6N7OjxAVwrzbdWTyxu4juK6HCDi9FZecOTFP7xBtOkWg+Eu35O
-         XNyJlPQDbqeqDOXAIJBHC7Dncvf8H+ral7ymA/xDRd/9F8kQvv8rTeB/asLgmQzsxtbw
-         V8pIIGDF2Vls4cRH/U1QWu+uBwGUeMMuWWehQ=
+        bh=MZ/DdbeQn7CAyCekKMFuF2UcpgJJmHxGBqfuC9XeHKI=;
+        b=Tv91WTP1jaB97yFmEnSDpjYezcdLkLhE2dy82hyp+RrGtE23FnP5F1B96H5HtcJCwD
+         IqL0g3gM8rzJuARtywfzWCe1CFpuJ6CxjeLD9EJZn+4L3pmIpms5z/lMQQH/q8klh+P1
+         U8dnzJ8Wg3lbSk/9byGVzqX+R1TuOEkfLEYRw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=n5QI9SCQIVH2sd+cRwUOWax4a5NWTgXxRP/Hc68OVrQ=;
-        b=Ff+pCURei3AeZrXdCpXpmpqWVg68dc1oKOumm/uCgkeiEhIAEHvaPTy0Gb9Yb5Wyry
-         fTELCSaa6Sq6j0jP/A/k2M5UVgHujnJY9kUYeM3N9FNUxThLCMf4q3rTnELhNxE/38Jg
-         GJeuL/4/zoaLz25/mcOrg8sEe2mFSQ/AT/SfZIAQa+C3TTyKqz8LuyaGsZbDdsXnonaU
-         xfZmANJRkUwrp/nuUYQbUaaP5DcINC6/39EggN2nz4QJu6ubpFAO9B1rXhQ/ON5V2rux
-         aYgLTqGI7w7hvBPY/MUyDWOMtNcxBTnh0R96wijXlXWJvsy3y/3EtzAqbZG1hRjheUY7
-         6vDA==
-X-Gm-Message-State: AJcUukfI7cbVeWEfwwZ/1jvtRu1YTVPHcziIg3OQslb9OeiTlaayy3g7
-        jxRuO79oJgszc7julh99SqbxyA==
-X-Google-Smtp-Source: ALg8bN5hcrgKnk1iWV5DfqWkGd+kA9rqOlnjRdi2FYjS7j2cC25d1TdNfqqU7RcYCEIu7zzwe3W2CA==
-X-Received: by 2002:a63:2315:: with SMTP id j21mr25714008pgj.297.1548803531180;
-        Tue, 29 Jan 2019 15:12:11 -0800 (PST)
+        bh=MZ/DdbeQn7CAyCekKMFuF2UcpgJJmHxGBqfuC9XeHKI=;
+        b=i7cl51n4yu57P2HiBI3FFpzgSYr/Z9Go31bOqFjFuMFf7hGWFcFT72c1GsOp7jxtKO
+         iyUP50vKIBA4cN7ulYN6RAM7ymcho0AB8IFuCCjWLCtAkinPIROMbfRC/VOOSF8QyOjs
+         YiHkEe2YhO4gir8Gyxyg28DBVcUp9XHBd5siLGHPEiMaJSIk0BKOtuJGkvV927CeWR2P
+         dkYHbwro+0J02hdIe9/WOHVk98xRZElIpshpz/E+yXhn2vQ95msmtOFwNp4/0hdddtFS
+         TpaIMbqUr7s6ZK8RiB4OwaEYM3N3OYegV8eIlJBoTWTsRymQ9cilR1OILToHgovUGn2Y
+         xSQQ==
+X-Gm-Message-State: AJcUukcyrXJvdugo4XZozDhsUm9hBz1mgv+J75McfLVf+zWUz+88GHtw
+        jFT+4FgqtEp70P+yw6RObCELvg==
+X-Google-Smtp-Source: ALg8bN7VBCDE0/zoF+Opol1KpqEnJkhDMFX3iQ3NtIYykELf8XA2yufVCHxgS3tEs883H9M0s4J6lA==
+X-Received: by 2002:a17:902:8bc6:: with SMTP id r6mr27842288plo.67.1548803887519;
+        Tue, 29 Jan 2019 15:18:07 -0800 (PST)
 Received: from smtp.gmail.com ([2620:15c:202:1:534:b7c0:a63c:460c])
-        by smtp.gmail.com with ESMTPSA id m67sm64681055pfb.25.2019.01.29.15.12.09
+        by smtp.gmail.com with ESMTPSA id r8sm46949632pgr.48.2019.01.29.15.18.05
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 29 Jan 2019 15:12:09 -0800 (PST)
+        Tue, 29 Jan 2019 15:18:06 -0800 (PST)
 From:   Brian Norris <briannorris@chromium.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>,
-        Erik Stromdahl <erik.stromdahl@gmail.com>,
         Wen Gong <wgong@codeaurora.org>,
         <linux-kernel@vger.kernel.org>,
         Brian Norris <briannorris@chromium.org>
-Subject: [PATCH for-5.0] ath10k: correct bus type for WCN3990
-Date:   Tue, 29 Jan 2019 15:12:01 -0800
-Message-Id: <20190129231201.42230-1-briannorris@chromium.org>
+Subject: [PATCH] ath10k: sdio: add .owner field
+Date:   Tue, 29 Jan 2019 15:14:48 -0800
+Message-Id: <20190129231448.83305-1-briannorris@chromium.org>
 X-Mailer: git-send-email 2.20.1.495.gaa96b0ce6b-goog
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -72,29 +70,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-WCN3990 is SNOC, not PCI. This prevents probing WCN3990.
+sdio_register_driver() doesn't do this for us, unlike (for example)
+platform_driver_register(). This is important for helping track
+module-to-device relationships.
 
-Fixes: 367c899f622c ("ath10k: add bus type check in ath10k_init_hw_params")
 Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
-This was a regression in 4.20.
+ drivers/net/wireless/ath/ath10k/sdio.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/ath/ath10k/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 399b501f3c3c..e8891f5fc83a 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -548,7 +548,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 	{
- 		.id = WCN3990_HW_1_0_DEV_VERSION,
- 		.dev_id = 0,
--		.bus = ATH10K_BUS_PCI,
-+		.bus = ATH10K_BUS_SNOC,
- 		.name = "wcn3990 hw1.0",
- 		.continuous_frag_desc = true,
- 		.tx_chain_mask = 0x7,
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index 983ecfef1d28..2fc0c17c9672 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -2088,7 +2088,10 @@ static struct sdio_driver ath10k_sdio_driver = {
+ 	.id_table = ath10k_sdio_devices,
+ 	.probe = ath10k_sdio_probe,
+ 	.remove = ath10k_sdio_remove,
+-	.drv.pm = ATH10K_SDIO_PM_OPS,
++	.drv = {
++		.owner = THIS_MODULE,
++		.pm = ATH10K_SDIO_PM_OPS,
++	},
+ };
+ 
+ static int __init ath10k_sdio_init(void)
 -- 
 2.20.1.495.gaa96b0ce6b-goog
 
