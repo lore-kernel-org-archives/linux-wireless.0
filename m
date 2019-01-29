@@ -2,124 +2,213 @@ Return-Path: <SRS0=Fojl=QF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0EB4C169C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 08:59:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C116FC169C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 09:12:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6418321473
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 08:59:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kaOL3xJA";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZO8fLUIz"
+	by mail.kernel.org (Postfix) with ESMTP id 8A45820857
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Jan 2019 09:12:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726190AbfA2I72 (ORCPT
+        id S1727724AbfA2JMc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Jan 2019 03:59:28 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:60824 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726135AbfA2I72 (ORCPT
+        Tue, 29 Jan 2019 04:12:32 -0500
+Received: from mout.kundenserver.de ([212.227.126.134]:60489 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725298AbfA2JMc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Jan 2019 03:59:28 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 4D18260881; Tue, 29 Jan 2019 08:59:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548752367;
-        bh=wlwB7aPEtGVotepRpf2RrtMcOmdzqdBC+QrXA+vu8Mk=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=kaOL3xJAi2AFNsO1t2n0UgDbRj1IO6ihoH0/yVGkf+TloJSEFZfYMcORg52U06Qb7
-         5bdlwrJLDzeCcerarNDbmZDofKwowmVfrcOD3OZBjRkcoYy3wJdWiCthk27FR+SmwP
-         OXTYhacX9Qbp1laYDrm8THQ+qsnoX3vdC861pB2k=
-Received: from x230.qca.qualcomm.com (87-93-85-88.bb.dnainternet.fi [87.93.85.88])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 81A076047C;
-        Tue, 29 Jan 2019 08:59:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548752366;
-        bh=wlwB7aPEtGVotepRpf2RrtMcOmdzqdBC+QrXA+vu8Mk=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=ZO8fLUIz9BIkYODudILCy5CQtiwSnKKjyZDwciy+y/B6uDBvWOv+zCh4STsyKpG7q
-         f5QBcWJVbZl0Kr4dBu3vjVbEaH5qIHkBDA/GNS9CkDjEu7RxquhNy9Niu0vi3fQfC3
-         954WaQR7BtNFVoettNOpIoJd8ADcrfwbZYR4SSmI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 81A076047C
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     Tony Chuang <yhchuang@realtek.com>,
-        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>
-Subject: Re: [PATCH v2 13/13] rtw88: add support for Realtek 802.11ac wireless chips
-References: <1542367879-28880-1-git-send-email-yhchuang@realtek.com>
-        <1542367879-28880-14-git-send-email-yhchuang@realtek.com>
-        <20190122213423.GA52826@google.com>
-        <F7CD281DE3E379468C6D07993EA72F84D1793553@RTITMBSVM04.realtek.com.tw>
-        <CA+ASDXOWfFqZRyWbsb=WqORDvsVD+HjNmbGON9R1kOL88=aKew@mail.gmail.com>
-Date:   Tue, 29 Jan 2019 10:59:22 +0200
-In-Reply-To: <CA+ASDXOWfFqZRyWbsb=WqORDvsVD+HjNmbGON9R1kOL88=aKew@mail.gmail.com>
-        (Brian Norris's message of "Mon, 28 Jan 2019 13:01:29 -0800")
-Message-ID: <875zu7zvo5.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Tue, 29 Jan 2019 04:12:32 -0500
+Received: from [192.168.178.52] ([109.104.39.36]) by mrelayeu.kundenserver.de
+ (mreue011 [212.227.15.167]) with ESMTPSA (Nemesis) id
+ 1M2w4S-1grhlL3RJU-003Nqv; Tue, 29 Jan 2019 10:12:23 +0100
+From:   Stefan Wahren <stefan.wahren@i2se.com>
+Subject: mt76x0: probing issues on Raspberry Pi
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+Message-ID: <ee482b50-e20f-df8c-3e87-4f7796210f73@i2se.com>
+Date:   Tue, 29 Jan 2019 10:12:23 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Provags-ID: V03:K1:azYi6qDu5qeyJ2zSlDXTR+SvVFOmKTKlz8LFdyswrOqdeSr7eOR
+ 1lQDnrnS33fJOLOStb1qqSSiHbkKIpubJhs9or3WS/HK57HYs7EyUiyGM9d8XrVBK6Ue7Gq
+ MKNz+c9uEdwGdgApC5G6ygeEtVd+oO3Vb+6+wwKUIv0PCfVIwcwAW8ixqJE0Jr5diKv2czG
+ 82hXnPjHzFhK5u3lPoVyA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:lV+PrADk2dk=:YOeWWDAsv7VyvLbvRfcBMi
+ jzclmHICE0WI9p6SYm23i3cGqRYN77DWl9yEfEue3WS2cUx0bVqKTdak7IOnbLQUcvDHvOZ3s
+ 7VFYpQ36D9YCL1Ytxh6+2RpuAV4WddQ46GZofgm77dD3tRfNjz1yy3lSpZWdep8Nb9ZRsNV3v
+ CQJUpB9Kdm1YtP7IfxiYyNQYm7d5xw9CnnExvyIcxMFDwi9VhYtTP3owtgDLdVME7dU5msNLz
+ PKaLOJRq6VfipYJmYBBU0ISP6M8Dsb8SCr6PhfQrMDy0Dvn3G4l3f8Y3aAO1zZwc3PpzI3CNc
+ PjplM7QDhfJbvQVIkza5PrSZ0WaXQZNsjIVTPaPDBhC/7FuWMdBFB3J7VKOX6cGlRrx6MhxJg
+ RSizPKE4baZ7qKHMuixmhdk0Ne7cpSiFsG+oms66vbHFFt5If1oMsyMxHYDq10v8Wep4sv8FW
+ Nju6Qnr7Pa8Vind52QrJ0PjYOPNIKwsCfYPk2QxHQrZOTUyNt95/1++aj6oEKdp+Kxu4CSNgh
+ dFPZ/fAA8DKNbGGzsDHahBy8wmXGgI8CH0G0YRWKGSd6OKSTic4ex3HL/NaCKiIeeJ54cbcC8
+ 6DfjKlKsl5n3q9dVxugCwt7VaLKYCaiH7Kjp725m/A4NSGqidx1LvL0514mhbnNpRZnX27u//
+ enEtE60nILn/w37vk+XMoRh/FTWX1zgrRYstGzdjcBEWarGiyqHJrEuU4pBhSGifkkkntn6ct
+ F3Twu08deiPf5gPEKvyonytoD++RRgj0uJ1WK9Kd9PCPPlkuU3hEdjFEals=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Brian Norris <briannorris@chromium.org> writes:
+Hi,
 
-> Hi,
->
-> On Sun, Jan 27, 2019 at 7:36 PM Tony Chuang <yhchuang@realtek.com> wrote:
->> > -----Original Message-----
->> > From: Brian Norris [mailto:briannorris@chromium.org]
->> >
->> > On Fri, Nov 16, 2018 at 07:31:19PM +0800, yhchuang@realtek.com wrote:
->> > > diff --git a/MAINTAINERS b/MAINTAINERS
->> > > index 9ad052a..138515b 100644
->> > > --- a/MAINTAINERS
->> > > +++ b/MAINTAINERS
->> > > @@ -12546,6 +12546,14 @@ T: git
->> > git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.g
->> > >  S: Maintained
->> > >  F: drivers/net/wireless/realtek/rtlwifi/
->> > >
->> > > +REALTEK WIRELESS DRIVER (rtw88)
->> > > +M: Yan-Hsuan Chuang <yhchuang@realtek.com>
->> > > +L: linux-wireless@vger.kernel.org
->> > > +W: http://wireless.kernel.org/
->> > > +T: git
->> > git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->> >
->> > That tree hasn't been updated in years. I expect that's not relevant, so
->> > perhaps you should remove it? I think these days, unless you have a
->> > large amount of patches that deserves its own tree / pull-request,
->> > you're probably just going to be covered by the wireless-drivers /
->> > wireless-drivers-next trees:
->> >
->> > NETWORKING DRIVERS (WIRELESS)
->> > M:      Kalle Valo <kvalo@codeaurora.org>
->> > L:      linux-wireless@vger.kernel.org
->> > Q:      http://patchwork.kernel.org/project/linux-wireless/list/
->> > T:      git
->> > git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git
->> > T:      git
->> > git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git
->>
->> OK, I can change to wireless-drivers tree and send PATCHv3.
->
-> I wouldn't list wireless-drivers directly -- you don't need to list
-> any tree at all, and the "NETWORKING DRIVERS (WIRELESS)" entry will
-> cover you anyway.
+recently i discovered a bug report about probing issues of the mt76x0
+driver using T2U Archer on the Raspberry Pi 3 B (Linux 4.19.14, Aarch64)
+[1].
 
-I agree, no need to duplicate the git tree entry for every driver. The
-top level "NETWORKING DRIVERS (WIRELESS)" entry should be enough.
+Also i tried a T2UH Archer on my Raspberry Pi 3 B+ with a recent
+Linux-Next and i'm getting the following output:
 
--- 
-Kalle Valo
+Vendor request req:07 off:0404 failed:-110
+...
+
+instead of successful probe. The author of the former bug report
+provided the "lsusb -v" on a working system:
+
+Bus 001 Device 009: ID 148f:761a Ralink Technology, Corp. MT7610U
+("Archer T2U" 2.4G+5G WLAN Adapter
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.01
+  bDeviceClass            0
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  idVendor           0x148f Ralink Technology, Corp.
+  idProduct          0x761a MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter
+  bcdDevice            1.00
+  iManufacturer           1 MediaTek
+  iProduct                2 WiFi
+  iSerial                 3 1.0
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength       0x004a
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0
+    bmAttributes         0xa0
+      (Bus Powered)
+      Remote Wakeup
+    MaxPower              160mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           8
+      bInterfaceClass       255 Vendor Specific Class
+      bInterfaceSubClass      2
+      bInterfaceProtocol    255
+      iInterface              0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x84  EP 4 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x85  EP 5 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x08  EP 8 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x04  EP 4 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x05  EP 5 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x06  EP 6 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x07  EP 7 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x09  EP 9 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               1
+Binary Object Store Descriptor:
+  bLength                 5
+  bDescriptorType        15
+  wTotalLength       0x000c
+  bNumDeviceCaps          1
+  USB 2.0 Extension Device Capability:
+    bLength                 7
+    bDescriptorType        16
+    bDevCapabilityType      2
+    bmAttributes   0x00000002
+      HIRD Link Power Management (LPM) Supported
+can't get debug descriptor: Resource temporarily unavailable
+Device Status:     0x0000
+  (Bus Powered)
+
+The BCM2835 on the Raspberry Pi only have 8 EP. So i suspect that the
+amount of EP is the problem here.
+
+Is it possible to reduce them in the mt76x0 driver?
+
+[1] - https://github.com/raspberrypi/linux/issues/2817
