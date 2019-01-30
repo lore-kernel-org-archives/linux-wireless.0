@@ -6,41 +6,40 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED878C282D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 09:16:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BA2CC282D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 09:26:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 985942083B
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 09:16:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4ADE220882
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 09:26:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Gd+NBZrs"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ogwtnfC1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728298AbfA3JQg (ORCPT
+        id S1730297AbfA3J0A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Jan 2019 04:16:36 -0500
-Received: from nbd.name ([46.4.11.11]:56324 "EHLO nbd.name"
+        Wed, 30 Jan 2019 04:26:00 -0500
+Received: from nbd.name ([46.4.11.11]:56768 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726577AbfA3JQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Jan 2019 04:16:36 -0500
+        id S1727433AbfA3JZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Jan 2019 04:25:59 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=qryHQQOfdTm3AAwBIM5TcQSn0RdqeNTgGhWxAVMVbHA=; b=Gd+NBZrsLUJtPejI9iFl/OQf/9
-        FHANn/ZlacFgPS5S/OtNQwrET/WmVmgDNyvGHhDwW5O47V9rQmRA4cQwiBFiDnxXPkxBodtyGen2j
-        2lxd6QGQ7H4j8N6Vqow1nxWQCaqXEdhgBYLCoR9ii8TbYcE6f7VawNpYIkxJq6bRfw9U=;
+        bh=nCl+XHOwU+oAJ06P+DhBQGCppHXoha0NsAZC/rYoMpc=; b=ogwtnfC1zZ4ragcSn//qjlUA7b
+        Sn9iKDd1V6Dwi39nLFblEIExOrWrJrTL/SjRuRt0YcX88528EVdt9YrHp5bl26CH76r9XmZ7y4XKy
+        C6/uhpWWW7TnRfuj+dx9DN3JIQF7pDB4Q5yb11z7a8iES4k/EUPRKAn+fx+6ZVDyrsVM=;
 Subject: Re: [PATCH v2 0/7] mt76x02: Beacon support for USB
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
 References: <1548678108-9526-1-git-send-email-sgruszka@redhat.com>
  <87a7jju1mv.fsf@purkki.adurom.net>
  <8ec3b133-49eb-3c5f-4c3c-bc2bb4e84cde@nbd.name>
  <87k1inwtu5.fsf@codeaurora.org>
  <b6fb4aec-5e65-53aa-e14b-c1230e797786@nbd.name>
- <87fttbwtav.fsf@codeaurora.org> <20190129124056.GB2460@localhost.localdomain>
- <20190130083747.GB2720@redhat.com>
+ <20190130082937.GA2720@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -66,60 +65,64 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <ae2324b4-e79c-6984-b29e-5fef77ede672@nbd.name>
-Date:   Wed, 30 Jan 2019 10:16:34 +0100
+Message-ID: <8ec9c506-a43f-7274-65ed-a1734365e184@nbd.name>
+Date:   Wed, 30 Jan 2019 10:25:57 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.4.0
 MIME-Version: 1.0
-In-Reply-To: <20190130083747.GB2720@redhat.com>
+In-Reply-To: <20190130082937.GA2720@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-01-30 09:37, Stanislaw Gruszka wrote:
-> On Tue, Jan 29, 2019 at 01:40:57PM +0100, Lorenzo Bianconi wrote:
+On 2019-01-30 09:29, Stanislaw Gruszka wrote:
+> On Tue, Jan 29, 2019 at 01:10:08PM +0100, Felix Fietkau wrote:
+>> On 2019-01-29 13:07, Kalle Valo wrote:
 >> > Felix Fietkau <nbd@nbd.name> writes:
 >> > 
->> > > On 2019-01-29 13:07, Kalle Valo wrote:
->> > >> Felix Fietkau <nbd@nbd.name> writes:
->> > >> 
->> > >>> On 2019-01-29 12:47, Kalle Valo wrote:
->> > >>>> Stanislaw Gruszka <sgruszka@redhat.com> writes:
->> > >>>> 
->> > >>>>> We can configure beaconing, but without TBTT interrupt we
->> > >>>>> can not support PS buffering. This can be added later using
->> > >>>>> kernel hrtimer, if we can keep it in sycn with device timer.
->> > >>>>>
->> > >>>>> I tested AP and IBSS modes.
->> > >>>> 
->> > >>>> So how does this work reliably so that there's no packet loss with
->> > >>>> clients using power save?
->> > >>>
->> > >>> There will be multicast packet loss for clients using power save.
->> > >> 
->> > >> Isn't that a problem? At least as a normal user I would very frustrated
->> > >> if sometimes my connection work and sometimes not, for example if I'm
->> > >> trying discover devices from my network. Hopefully nobody won't use USB
->> > >> devices for any real AP stuff, but still enabling something which we
->> > >> know doesn't work realiably is concerning.
->> > >
->> > > I agree. Maybe we should leave out the flag for AP mode in this patch
->> > > until we have PS buffering and leave the rest of the code intact.
+>> >> On 2019-01-29 12:47, Kalle Valo wrote:
+>> >>> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+>> >>> 
+>> >>>> We can configure beaconing, but without TBTT interrupt we
+>> >>>> can not support PS buffering. This can be added later using
+>> >>>> kernel hrtimer, if we can keep it in sycn with device timer.
+>> >>>>
+>> >>>> I tested AP and IBSS modes.
+>> >>> 
+>> >>> So how does this work reliably so that there's no packet loss with
+>> >>> clients using power save?
+>> >>
+>> >> There will be multicast packet loss for clients using power save.
 >> > 
->> > At least for me that sounds good.
->> 
->> We can support ps buffering in AP as well using a hrtimer. In this way we
->> can reuse most of the existing code
+>> > Isn't that a problem? At least as a normal user I would very frustrated
+>> > if sometimes my connection work and sometimes not, for example if I'm
+>> > trying discover devices from my network. Hopefully nobody won't use USB
+>> > devices for any real AP stuff, but still enabling something which we
+>> > know doesn't work realiably is concerning.
+>> I agree. Maybe we should leave out the flag for AP mode in this patch
+>> until we have PS buffering and leave the rest of the code intact.
 > 
-> Yes, but there is issue to address, since kernel timer and device TBT
-> timer are independed, they possibly can get out of sync after some time,
-> for example few hours or days. So there is need to prevent/fix this
-> somehow.
-We could read the TSF timer value from the hardware and sync the hrtimer
-against that.
+> But how serious problem of dropping multicast frames for PS stations is?
+> I don't think from user perspective this is "sometimes my connection
+> work and sometimes not", but something much less annoying. 
+Actually, if you're considering two stations on an AP trying to connect
+to each other, it is exactly "sometimes my connection work and sometimes
+not", because of ARP. Clients won't see the ARP requests sent to each
+other, if the client being asked is in powersave mode.
+
+> Another thing is that this (D)TIM PS is not reliable by design,
+> that why UAPSD was introduced.
+UAPSD doesn't replace TIM based powersave indication, and I'm pretty
+sure it doesn't handle multicast either.
+
+> Moreover in the tree we have already bunch of drivers that do 
+> advertise AP mode support without HOST_BROADCAST_PS_BUFFERING 
+> like iwlwifi or brcm80211 .
+I haven't looked at the code, but they may be handling buffered
+multicast in a different way, possibly with firmware involvement.
 
 - Felix
