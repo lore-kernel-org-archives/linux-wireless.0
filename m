@@ -6,350 +6,379 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB96FC282D8
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 11:56:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08969C282D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 11:56:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5D9B20855
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 11:56:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE51D20855
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 11:56:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730839AbfA3L4a (ORCPT
+        id S1730843AbfA3L4f (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Jan 2019 06:56:30 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:52870 "EHLO
+        Wed, 30 Jan 2019 06:56:35 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:52878 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730308AbfA3L4a (ORCPT
+        with ESMTP id S1730308AbfA3L4e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Jan 2019 06:56:30 -0500
+        Wed, 30 Jan 2019 06:56:34 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gooTH-0003x8-Ej; Wed, 30 Jan 2019 13:56:00 +0200
+        id 1gooTD-0003x8-2E; Wed, 30 Jan 2019 13:55:55 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Wed, 30 Jan 2019 13:55:28 +0200
-Message-Id: <20190130115528.19922-18-luca@coelho.fi>
+Date:   Wed, 30 Jan 2019 13:55:24 +0200
+Message-Id: <20190130115528.19922-14-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190130115528.19922-1-luca@coelho.fi>
 References: <20190130115528.19922-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 17/17] iwlwifi: mvm: fix AP mode in WEP
+Subject: [PATCH 13/17] iwlwifi: Fix pre operational dumping flows
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Recently we started to send the WEP keys to the firmware so
-that we could use hardware Tx encryption also on newer
-devices that require the keys to be installed in the firmware
-for encryption (as opposed to older devices that can get
-the key in the Tx command for each Tx).
+There are several dumping flows in the driver in case of a fail
+prior to operational.
 
-When we implemented that, we forgot to remove the key when
-we remove a station leading to a situation where a station
-that connects and disconnects a lot of times exhausts the
-key database inside the firmware.
+In some cases we get 2 dumps while in others we get none.
 
-A fix was made for that, but we always removed the same
-key: mvmvif->ap_wep_key which means that we removed the
-same key entry in the firmware. This can make sense since
-in WEP, the key is the same for all the stations, but the
-internal implementation of iwl_mvm_set_sta_key and
-iwl_mvm_remove_sta_key assumes that each station uses a
-different key in the firmware's key database.
+Fix this by uniting the different flows.
+Add a different dump type to driver triggered dumps in case we want
+a dump but did not got assert, and make all dumping go through
+iwl_fw_dbg_collect_desc to avoid multiple dumps.
 
-So now we got to the situation where we have a single
-ieee80211_key_conf instance that means, a single
-ieee80211_key_conf.hw_key_idx index for several stations
-and hence for several keys.
-ieee80211_key_conf.hw_key_idx is set to 0 when the first
-station associates, and then it is overwritten to 1 when
-the second station associates which is a buggy of course.
-This led to the following message upon the removal of the
-second station:
-
-iwlwifi 0000:00:03.0: offset 1 not used in fw key table.
-WARNING: CPU: 2 PID: 27883 at net/mac80211/sta_info.c:1122 __sta_info_destroy_part2+0x16b/0x180 [mac80211]
-RIP: 0010:__sta_info_destroy_part2+0x16b/0x180 [mac80211]
- Call Trace:
-  __sta_info_destroy+0x2a/0x40 [mac80211]
-  sta_info_destroy_addr_bss+0x38/0x60 [mac80211]
-  ieee80211_del_station+0x1d/0x30 [mac80211]
-  nl80211_del_station+0xe0/0x1f0 [cfg80211]
-
-Fix this by copying the ieee80211_key_conf structure for
-each and every station. This is the easiest way to properly
-remove the keys with the right index. Another solution
-would have been to allow several stations to use the same
-key offset in the firmware. That would require to change
-the way we track keys in iwlmvm and not really worth it.
-
-Also, maintain correctly fw_key_table when we add a key
-for the multicast station.
-Remove the key when we remove the multicast station.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Fixes: 337bfc9881a2 ("iwlwifi: mvm: set wep key for all stations in soft ap mode")
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  30 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 132 +++++++++++-------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h  |   3 +
- 3 files changed, 102 insertions(+), 63 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 89 +++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  5 +-
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  3 +
+ drivers/net/wireless/intel/iwlwifi/fw/init.c  |  3 +
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    | 13 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  2 +
+ 8 files changed, 81 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 4e676a6936c1..92605aaca937 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3078,6 +3078,24 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 		ret = iwl_mvm_update_sta(mvm, vif, sta);
- 	} else if (old_state == IEEE80211_STA_ASSOC &&
- 		   new_state == IEEE80211_STA_AUTHORIZED) {
-+		/* if wep is used, need to set the key for the station now */
-+		if (vif->type == NL80211_IFTYPE_AP && mvmvif->ap_wep_key) {
-+			mvm_sta->wep_key =
-+				kmemdup(mvmvif->ap_wep_key,
-+					sizeof(*mvmvif->ap_wep_key) +
-+					mvmvif->ap_wep_key->keylen,
-+					GFP_KERNEL);
-+			if (!mvm_sta->wep_key) {
-+				ret = -ENOMEM;
-+				goto out_unlock;
-+			}
-+
-+			ret = iwl_mvm_set_sta_key(mvm, vif, sta,
-+						  mvm_sta->wep_key,
-+						  STA_KEY_IDX_INVALID);
-+		} else {
-+			ret = 0;
-+		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 0edc5bcdfb82..f8cf12804aee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1365,44 +1365,6 @@ const struct iwl_fw_dump_desc iwl_dump_desc_assert = {
+ };
+ IWL_EXPORT_SYMBOL(iwl_dump_desc_assert);
  
- 		/* we don't support TDLS during DCM */
- 		if (iwl_mvm_phy_ctx_count(mvm) > 1)
-@@ -3092,14 +3110,6 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 
- 		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
- 				     true);
+-void iwl_fw_assert_error_dump(struct iwl_fw_runtime *fwrt)
+-{
+-	IWL_INFO(fwrt, "error dump due to fw assert\n");
+-	fwrt->dump.desc = &iwl_dump_desc_assert;
+-	iwl_fw_error_dump(fwrt);
+-}
+-IWL_EXPORT_SYMBOL(iwl_fw_assert_error_dump);
 -
--		/* if wep is used, need to set the key for the station now */
--		if (vif->type == NL80211_IFTYPE_AP && mvmvif->ap_wep_key)
--			ret = iwl_mvm_set_sta_key(mvm, vif, sta,
--						  mvmvif->ap_wep_key,
--						  STA_KEY_IDX_INVALID);
--		else
--			ret = 0;
- 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
- 		   new_state == IEEE80211_STA_ASSOC) {
- 		/* disable beacon filtering */
-@@ -3127,10 +3137,12 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 		/* Remove STA key if this is an AP using WEP */
- 		if (vif->type == NL80211_IFTYPE_AP && mvmvif->ap_wep_key) {
- 			int rm_ret = iwl_mvm_remove_sta_key(mvm, vif, sta,
--							    mvmvif->ap_wep_key);
-+							    mvm_sta->wep_key);
- 
- 			if (!ret)
- 				ret = rm_ret;
-+			kfree(mvm_sta->wep_key);
-+			mvm_sta->wep_key = NULL;
- 		}
- 
- 	} else {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index a102a16a15f6..3ea39bb533e8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2337,11 +2337,13 @@ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	if (mvmvif->ap_wep_key) {
- 		u8 key_offset = iwl_mvm_set_fw_key_idx(mvm);
- 
-+		__set_bit(key_offset, mvm->fw_key_table);
-+
- 		if (key_offset == STA_KEY_IDX_INVALID)
- 			return -ENOSPC;
- 
- 		ret = iwl_mvm_send_sta_key(mvm, mvmvif->mcast_sta.sta_id,
--					   mvmvif->ap_wep_key, 1, 0, NULL, 0,
-+					   mvmvif->ap_wep_key, true, 0, NULL, 0,
- 					   key_offset, 0);
- 		if (ret)
- 			return ret;
-@@ -2350,6 +2352,59 @@ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	return 0;
+-void iwl_fw_alive_timeout_dump(struct iwl_fw_runtime *fwrt)
+-{
+-	struct iwl_fw_dump_desc *iwl_dump_desc_alive_timeout;
+-
+-	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
+-		return;
+-
+-	iwl_dump_desc_alive_timeout =
+-		kmalloc(sizeof(*iwl_dump_desc_alive_timeout), GFP_KERNEL);
+-	if (!iwl_dump_desc_alive_timeout)
+-		return;
+-
+-	iwl_dump_desc_alive_timeout->trig_desc.type =
+-		cpu_to_le32(FW_DBG_TRIGGER_ALIVE_TIMEOUT);
+-	iwl_dump_desc_alive_timeout->len = 0;
+-
+-	if (WARN_ON(fwrt->dump.desc))
+-		iwl_fw_free_dump_desc(fwrt);
+-
+-	IWL_WARN(fwrt, "Collecting data: trigger %d fired.\n",
+-		 FW_DBG_TRIGGER_ALIVE_TIMEOUT);
+-
+-	/* set STATUS_FW_ERROR to collect all memory regions. */
+-	set_bit(STATUS_FW_ERROR, &fwrt->trans->status);
+-
+-	fwrt->dump.desc = iwl_dump_desc_alive_timeout;
+-	iwl_fw_error_dump(fwrt);
+-}
+-IWL_EXPORT_SYMBOL(iwl_fw_alive_timeout_dump);
+-
+ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
+ 			    const struct iwl_fw_dump_desc *desc,
+ 			    bool monitor_only,
+@@ -1442,6 +1404,33 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
  }
+ IWL_EXPORT_SYMBOL(iwl_fw_dbg_collect_desc);
  
-+static int __iwl_mvm_remove_sta_key(struct iwl_mvm *mvm, u8 sta_id,
-+				    struct ieee80211_key_conf *keyconf,
-+				    bool mcast)
++int iwl_fw_dbg_error_collect(struct iwl_fw_runtime *fwrt,
++			     enum iwl_fw_dbg_trigger trig_type)
 +{
-+	union {
-+		struct iwl_mvm_add_sta_key_cmd_v1 cmd_v1;
-+		struct iwl_mvm_add_sta_key_cmd cmd;
-+	} u = {};
-+	bool new_api = fw_has_api(&mvm->fw->ucode_capa,
-+				  IWL_UCODE_TLV_API_TKIP_MIC_KEYS);
-+	__le16 key_flags;
-+	int ret, size;
-+	u32 status;
++	int ret;
++	struct iwl_fw_dump_desc *iwl_dump_error_desc =
++		kmalloc(sizeof(*iwl_dump_error_desc), GFP_KERNEL);
 +
-+	/* This is a valid situation for GTK removal */
-+	if (sta_id == IWL_MVM_INVALID_STA)
-+		return 0;
++	if (!iwl_dump_error_desc)
++		return -ENOMEM;
 +
-+	key_flags = cpu_to_le16((keyconf->keyidx << STA_KEY_FLG_KEYID_POS) &
-+				 STA_KEY_FLG_KEYID_MSK);
-+	key_flags |= cpu_to_le16(STA_KEY_FLG_NO_ENC | STA_KEY_FLG_WEP_KEY_MAP);
-+	key_flags |= cpu_to_le16(STA_KEY_NOT_VALID);
++	iwl_dump_error_desc->trig_desc.type = cpu_to_le32(trig_type);
++	iwl_dump_error_desc->len = 0;
 +
-+	if (mcast)
-+		key_flags |= cpu_to_le16(STA_KEY_MULTICAST);
++	ret = iwl_fw_dbg_collect_desc(fwrt, iwl_dump_error_desc, false, 0);
++	if (ret) {
++		kfree(iwl_dump_error_desc);
++	} else {
++		set_bit(STATUS_FW_WAIT_DUMP, &fwrt->trans->status);
 +
-+	/*
-+	 * The fields assigned here are in the same location at the start
-+	 * of the command, so we can do this union trick.
-+	 */
-+	u.cmd.common.key_flags = key_flags;
-+	u.cmd.common.key_offset = keyconf->hw_key_idx;
-+	u.cmd.common.sta_id = sta_id;
-+
-+	size = new_api ? sizeof(u.cmd) : sizeof(u.cmd_v1);
-+
-+	status = ADD_STA_SUCCESS;
-+	ret = iwl_mvm_send_cmd_pdu_status(mvm, ADD_STA_KEY, size, &u.cmd,
-+					  &status);
-+
-+	switch (status) {
-+	case ADD_STA_SUCCESS:
-+		IWL_DEBUG_WEP(mvm, "MODIFY_STA: remove sta key passed\n");
-+		break;
-+	default:
-+		ret = -EIO;
-+		IWL_ERR(mvm, "MODIFY_STA: remove sta key failed\n");
-+		break;
++		/* trigger nmi to halt the fw */
++		iwl_force_nmi(fwrt->trans);
 +	}
 +
 +	return ret;
 +}
++IWL_EXPORT_SYMBOL(iwl_fw_dbg_error_collect);
 +
- /*
-  * Send the FW a request to remove the station from it's internal data
-  * structures, and in addition remove it from the local data structure.
-@@ -2365,6 +2420,28 @@ int iwl_mvm_rm_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 
- 	iwl_mvm_disable_txq(mvm, NULL, mvmvif->cab_queue, 0, 0);
- 
-+	if (mvmvif->ap_wep_key) {
-+		int i;
+ int _iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
+ 			enum iwl_fw_dbg_trigger trig,
+ 			const char *str, size_t len,
+@@ -1893,3 +1882,27 @@ void iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 	_iwl_fw_dbg_apply_point(fwrt, data, apply_point, true);
+ }
+ IWL_EXPORT_SYMBOL(iwl_fw_dbg_apply_point);
 +
-+		if (!__test_and_clear_bit(mvmvif->ap_wep_key->hw_key_idx,
-+					  mvm->fw_key_table)) {
-+			IWL_ERR(mvm, "offset %d not used in fw key table.\n",
-+				mvmvif->ap_wep_key->hw_key_idx);
-+			return -ENOENT;
-+		}
++void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt)
++{
++	/* if the wait event timeout elapses instead of wake up then
++	 * the driver did not receive NMI interrupt and can not assume the FW
++	 * is halted
++	 */
++	int ret = wait_event_timeout(fwrt->trans->fw_halt_waitq,
++				     !test_bit(STATUS_FW_WAIT_DUMP,
++					       &fwrt->trans->status),
++				     msecs_to_jiffies(2000));
++	if (!ret) {
++		/* failed to receive NMI interrupt, assuming the FW is stuck */
++		set_bit(STATUS_FW_ERROR, &fwrt->trans->status);
 +
-+		/* track which key was deleted last */
-+		for (i = 0; i < STA_KEY_MAX_NUM; i++) {
-+			if (mvm->fw_key_deleted[i] < U8_MAX)
-+				mvm->fw_key_deleted[i]++;
-+		}
-+		mvm->fw_key_deleted[mvmvif->ap_wep_key->hw_key_idx] = 0;
-+		ret = __iwl_mvm_remove_sta_key(mvm, mvmvif->mcast_sta.sta_id,
-+					       mvmvif->ap_wep_key, true);
-+		if (ret)
-+			return ret;
++		clear_bit(STATUS_FW_WAIT_DUMP, &fwrt->trans->status);
 +	}
 +
- 	ret = iwl_mvm_rm_sta_common(mvm, mvmvif->mcast_sta.sta_id);
- 	if (ret)
- 		IWL_WARN(mvm, "Failed sending remove station\n");
-@@ -3396,59 +3473,6 @@ static int __iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 	return ret;
++	/* Assuming the op mode mutex is held at this point */
++	iwl_fw_dbg_collect_sync(fwrt);
++
++	iwl_trans_stop_device(fwrt->trans);
++}
++IWL_EXPORT_SYMBOL(iwl_fwrt_stop_device);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index 36e0f40dab3b..2fa7a19e02b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -112,6 +112,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt);
+ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
+ 			    const struct iwl_fw_dump_desc *desc,
+ 			    bool monitor_only, unsigned int delay);
++int iwl_fw_dbg_error_collect(struct iwl_fw_runtime *fwrt,
++			     enum iwl_fw_dbg_trigger trig_type);
+ int _iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
+ 			enum iwl_fw_dbg_trigger trig,
+ 			const char *str, size_t len,
+@@ -434,10 +436,9 @@ static inline void iwl_fw_resume_timestamp(struct iwl_fw_runtime *fwrt) {}
+ 
+ #endif /* CONFIG_IWLWIFI_DEBUGFS */
+ 
+-void iwl_fw_assert_error_dump(struct iwl_fw_runtime *fwrt);
+-void iwl_fw_alive_timeout_dump(struct iwl_fw_runtime *fwrt);
+ void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt);
+ void iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 			    enum iwl_fw_ini_apply_point apply_point);
+ 
++void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt);
+ #endif  /* __iwl_fw_dbg_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index d06707f3a2a4..e1c6aa61ab90 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -356,6 +356,8 @@ iwl_fw_error_next_data(struct iwl_fw_error_dump_data *data)
+  * @FW_DBG_TRIGGER_TX_STATUS: trigger log collection upon tx status when
+  *  the firmware sends a tx reply.
+  * @FW_DBG_TRIGGER_ALIVE_TIMEOUT: trigger log collection if alive flow timeouts
++ * @FW_DBG_TRIGGER_DRIVER: trigger log collection upon a flow failure
++ *	in the driver.
+  */
+ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_INVALID = 0,
+@@ -374,6 +376,7 @@ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_TDLS,
+ 	FW_DBG_TRIGGER_TX_STATUS,
+ 	FW_DBG_TRIGGER_ALIVE_TIMEOUT,
++	FW_DBG_TRIGGER_DRIVER,
+ 
+ 	/* must be last */
+ 	FW_DBG_TRIGGER_MAX,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/init.c b/drivers/net/wireless/intel/iwlwifi/fw/init.c
+index 2efac307909e..7adf4e4e841a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/init.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/init.c
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2017 Intel Deutschland GmbH
++ * Copyright(c) 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -26,6 +27,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2017 Intel Deutschland GmbH
++ * Copyright(c) 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -74,6 +76,7 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
+ 	fwrt->ops_ctx = ops_ctx;
+ 	INIT_DELAYED_WORK(&fwrt->dump.wk, iwl_fw_error_dump_wk);
+ 	iwl_fwrt_dbgfs_register(fwrt, dbgfs_dir);
++	init_waitqueue_head(&fwrt->trans->fw_halt_waitq);
+ }
+ IWL_EXPORT_SYMBOL(iwl_fw_runtime_init);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index a7009cd4232d..d79025d663df 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -30,6 +31,7 @@
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -330,6 +332,7 @@ enum iwl_d3_status {
+  *	are sent
+  * @STATUS_TRANS_IDLE: the trans is idle - general commands are not to be sent
+  * @STATUS_TRANS_DEAD: trans is dead - avoid any read/write operation
++ * @STATUS_FW_WAIT_DUMP: if set, wait until cleared before collecting dump
+  */
+ enum iwl_trans_status {
+ 	STATUS_SYNC_HCMD_ACTIVE,
+@@ -342,6 +345,7 @@ enum iwl_trans_status {
+ 	STATUS_TRANS_GOING_IDLE,
+ 	STATUS_TRANS_IDLE,
+ 	STATUS_TRANS_DEAD,
++	STATUS_FW_WAIT_DUMP,
+ };
+ 
+ static inline int
+@@ -796,6 +800,11 @@ struct iwl_trans {
+ 	bool suspending;
+ 	bool dbg_rec_on;
+ 
++	u32 lmac_error_event_table[2];
++	u32 umac_error_event_table;
++	unsigned int error_event_table_tlv_status;
++	wait_queue_head_t fw_halt_waitq;
++
+ 	/* pointer to trans specific struct */
+ 	/*Ensure that this pointer will always be aligned to sizeof pointer */
+ 	char trans_specific[0] __aligned(sizeof(void *));
+@@ -1202,6 +1211,10 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
+ 	/* prevent double restarts due to the same erroneous FW */
+ 	if (!test_and_set_bit(STATUS_FW_ERROR, &trans->status))
+ 		iwl_op_mode_nic_error(trans->op_mode);
++
++	if (test_and_clear_bit(STATUS_FW_WAIT_DUMP, &trans->status))
++		wake_up(&trans->fw_halt_waitq);
++
  }
  
--static int __iwl_mvm_remove_sta_key(struct iwl_mvm *mvm, u8 sta_id,
--				    struct ieee80211_key_conf *keyconf,
--				    bool mcast)
--{
--	union {
--		struct iwl_mvm_add_sta_key_cmd_v1 cmd_v1;
--		struct iwl_mvm_add_sta_key_cmd cmd;
--	} u = {};
--	bool new_api = fw_has_api(&mvm->fw->ucode_capa,
--				  IWL_UCODE_TLV_API_TKIP_MIC_KEYS);
--	__le16 key_flags;
--	int ret, size;
--	u32 status;
--
--	/* This is a valid situation for GTK removal */
--	if (sta_id == IWL_MVM_INVALID_STA)
--		return 0;
--
--	key_flags = cpu_to_le16((keyconf->keyidx << STA_KEY_FLG_KEYID_POS) &
--				 STA_KEY_FLG_KEYID_MSK);
--	key_flags |= cpu_to_le16(STA_KEY_FLG_NO_ENC | STA_KEY_FLG_WEP_KEY_MAP);
--	key_flags |= cpu_to_le16(STA_KEY_NOT_VALID);
--
--	if (mcast)
--		key_flags |= cpu_to_le16(STA_KEY_MULTICAST);
--
--	/*
--	 * The fields assigned here are in the same location at the start
--	 * of the command, so we can do this union trick.
+ /*****************************************************
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 25c8cea1180e..d8ae9561a9b0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -332,7 +332,8 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 		struct iwl_trans *trans = mvm->trans;
+ 
+ 		if (ret == -ETIMEDOUT)
+-			iwl_fw_alive_timeout_dump(&mvm->fwrt);
++			iwl_fw_dbg_error_collect(&mvm->fwrt,
++						 FW_DBG_TRIGGER_ALIVE_TIMEOUT);
+ 
+ 		if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22000)
+ 			IWL_ERR(mvm,
+@@ -408,7 +409,6 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 	ret = iwl_mvm_load_ucode_wait_alive(mvm, IWL_UCODE_REGULAR);
+ 	if (ret) {
+ 		IWL_ERR(mvm, "Failed to start RT ucode: %d\n", ret);
+-		iwl_fw_assert_error_dump(&mvm->fwrt);
+ 		goto error;
+ 	}
+ 
+@@ -1053,7 +1053,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	ret = iwl_mvm_load_rt_fw(mvm);
+ 	if (ret) {
+ 		IWL_ERR(mvm, "Failed to start RT ucode: %d\n", ret);
+-		iwl_fw_assert_error_dump(&mvm->fwrt);
++		iwl_fw_dbg_error_collect(&mvm->fwrt, FW_DBG_TRIGGER_DRIVER);
+ 		goto error;
+ 	}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index f7176020139d..ee61f4a00c5e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -2013,15 +2013,12 @@ static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
+ 			       &mvm->status))
+ 		iwl_fw_dbg_collect_desc(&mvm->fwrt, &iwl_dump_desc_assert,
+ 					false, 0);
+-	/* calling this function without using dump_start/end since at this
+-	 * point we already hold the op mode mutex
 -	 */
--	u.cmd.common.key_flags = key_flags;
--	u.cmd.common.key_offset = keyconf->hw_key_idx;
--	u.cmd.common.sta_id = sta_id;
--
--	size = new_api ? sizeof(u.cmd) : sizeof(u.cmd_v1);
--
--	status = ADD_STA_SUCCESS;
--	ret = iwl_mvm_send_cmd_pdu_status(mvm, ADD_STA_KEY, size, &u.cmd,
--					  &status);
--
--	switch (status) {
--	case ADD_STA_SUCCESS:
--		IWL_DEBUG_WEP(mvm, "MODIFY_STA: remove sta key passed\n");
--		break;
--	default:
--		ret = -EIO;
--		IWL_ERR(mvm, "MODIFY_STA: remove sta key failed\n");
--		break;
--	}
--
--	return ret;
--}
--
- int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 			struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 0614296244b3..79700c7310a1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -394,6 +394,7 @@ struct iwl_mvm_rxq_dup_data {
-  *	the BA window. To be used for UAPSD only.
-  * @ptk_pn: per-queue PTK PN data structures
-  * @dup_data: per queue duplicate packet detection data
-+ * @wep_key: used in AP mode. Is a duplicate of the WEP key.
-  * @deferred_traffic_tid_map: indication bitmap of deferred traffic per-TID
-  * @tx_ant: the index of the antenna to use for data tx to this station. Only
-  *	used during connection establishment (e.g. for the 4 way handshake
-@@ -425,6 +426,8 @@ struct iwl_mvm_sta {
- 	struct iwl_mvm_key_pn __rcu *ptk_pn[4];
- 	struct iwl_mvm_rxq_dup_data *dup_data;
- 
-+	struct ieee80211_key_conf *wep_key;
+-	iwl_fw_dbg_collect_sync(&mvm->fwrt);
 +
- 	u8 reserved_queue;
+ 	iwl_fw_cancel_timestamp(&mvm->fwrt);
+-	iwl_free_fw_paging(&mvm->fwrt);
+ 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
++	iwl_fwrt_stop_device(&mvm->fwrt);
++	iwl_free_fw_paging(&mvm->fwrt);
+ 	iwl_fw_dump_conf_clear(&mvm->fwrt);
+-	iwl_trans_stop_device(mvm->trans);
+ }
  
- 	/* Temporary, until the new TLC will control the Tx protection */
+ /* Re-configure the SCD for a queue that has already been configured */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index de288962773e..ad816007e546 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -817,6 +817,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	mutex_lock(&mvm->mutex);
+ 	iwl_mvm_ref(mvm, IWL_MVM_REF_INIT_UCODE);
+ 	err = iwl_run_init_mvm_ucode(mvm, true);
++	if (err)
++		iwl_fw_dbg_error_collect(&mvm->fwrt, FW_DBG_TRIGGER_DRIVER);
+ 	if (!iwlmvm_mod_params.init_dbg || !err)
+ 		iwl_mvm_stop_device(mvm);
+ 	iwl_mvm_unref(mvm, IWL_MVM_REF_INIT_UCODE);
 -- 
 2.20.1
 
