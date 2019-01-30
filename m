@@ -2,181 +2,243 @@ Return-Path: <SRS0=OIIa=QG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35CE1C282D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 10:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2736C282D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 10:34:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC751218A3
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 10:32:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548844363;
-	bh=C4DU94GWt4qEhbe+dI81RNYkCk5pHp9kQdM+Hm7pDQk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=FELh4wAmrAEcVqHol4bufZmFSxVfEHihI4mL5Bos28J2WFumUKRwfckS88/9V3EOX
-	 wXm369RGSChTmdkn4MOBSfSviiNpeiaReFYYhPSBSWHmmnDerZgVVTCfuaKwcBSPMW
-	 kfHZ5fcNrHVCpQGR08toS2rIRy6hZM7mTdjVlZXc=
+	by mail.kernel.org (Postfix) with ESMTP id 97CE4218AC
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Jan 2019 10:34:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IW6chDDG";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZY8csooD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730731AbfA3Kcg (ORCPT
+        id S1730708AbfA3Ke3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Jan 2019 05:32:36 -0500
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:45483 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730703AbfA3Kcg (ORCPT
+        Wed, 30 Jan 2019 05:34:29 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:42664 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730657AbfA3Ke2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Jan 2019 05:32:36 -0500
-Received: by mail-lj1-f195.google.com with SMTP id s5-v6so20203114ljd.12;
-        Wed, 30 Jan 2019 02:32:33 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=ft9BkvLH1Y/FBfGV+97dpueZ4pwzh0GlQFpeeqI/6cs=;
-        b=tEfZikx/f2ZG4Ro7T5jfbVh8BNlZbq8MZjyMWwg2FqZFWgJZoff/dwRaEOpoQWk7cC
-         HcnL4iCcnrPDmNsPr7+s6Lb8mLATx7YM4CVajli0gPmh/88k0n9mLsnvTsD6fFfd7KG+
-         KZq2FIwVrTN9ke2RqjAncDKhCnmyKZ+AKfVaCiMdu1lPO0eEmZJuDcp8fYu6tcTSic9N
-         wFWSz4ePMqts5iXOnMb+rgGg/d4zGgXgJOjH95TfA4EYLI5Gdi1pkC/Rdev7GNU77JC3
-         WUN6C2XMpIUIsptKlovCRF/A5L3yXtN7AsQiTSnMpcLm617E271aDjaRu8NfzYE9vxUb
-         EGnw==
-X-Gm-Message-State: AJcUukdCe+mAYqMd05vdgSL+9yScY3Pbrh0oDk4Tp17wUMLmi5QRLa6f
-        BB5fK2I1jNbkYV5fhZIH14w=
-X-Google-Smtp-Source: ALg8bN7wNvDaTi8sjUHn4unj76Gvm/ZOfle9NRPXrm315adA+A4WewjMXI6JvmBlEpaSh/6KzAbVmQ==
-X-Received: by 2002:a2e:8554:: with SMTP id u20-v6mr23528683ljj.193.1548844352727;
-        Wed, 30 Jan 2019 02:32:32 -0800 (PST)
-Received: from xi.terra (c-74bee655.07-184-6d6c6d4.bbcust.telenor.se. [85.230.190.116])
-        by smtp.gmail.com with ESMTPSA id 4-v6sm200271ljw.84.2019.01.30.02.32.31
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 30 Jan 2019 02:32:31 -0800 (PST)
-Received: from johan by xi.terra with local (Exim 4.91)
-        (envelope-from <johan@kernel.org>)
-        id 1gonAR-0001O3-Ry; Wed, 30 Jan 2019 11:32:27 +0100
-Date:   Wed, 30 Jan 2019 11:32:27 +0100
-From:   Johan Hovold <johan@kernel.org>
-To:     shuah <shuah@kernel.org>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>, linux-wireless@vger.kernel.org,
-        chris@the-brannons.com, devel@driverdev.osuosl.org,
-        robh@kernel.org, sameo@linux.intel.com,
-        linux-serial@vger.kernel.org, jslaby@suse.com,
-        santhameena13@gmail.com, kirk@reisers.ca, johan.hedberg@gmail.com,
-        arnd@arndb.de, marcel@holtmann.org, samuel.thibault@ens-lyon.org,
-        m.maya.nakamura@gmail.com, zhongjiang@huawei.com,
-        gregkh@linuxfoundation.org, speakup@linux-speakup.org,
-        linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        netdev@vger.kernel.org, nishka.dasgupta_ug18@ashoka.edu.in,
-        davem@davemloft.net
-Subject: Re: [PATCH] tty: Fix WARNING in tty_set_termios
-Message-ID: <20190130103227.GR3691@localhost>
-References: <20190125232905.21727-1-shuah@kernel.org>
- <20190126041416.GF2217@ZenIV.linux.org.uk>
- <fe4018a7-19e4-cdd1-3095-bbe88a82788e@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fe4018a7-19e4-cdd1-3095-bbe88a82788e@kernel.org>
-User-Agent: Mutt/1.11.2 (2019-01-07)
+        Wed, 30 Jan 2019 05:34:28 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 2231A609B4; Wed, 30 Jan 2019 10:34:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548844467;
+        bh=1qpX/yCiqAqDio7CyUrm47eKHusKjZCaq0y0Pd5i9JE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=IW6chDDGr49RAAEe50hGcExtiwZuHwSxsWkuco3CHn2fYb89rlDnxFAWgqOK6sryH
+         iKJZKdqOMSlmGBur59zn2fbKqFJk7fs538YC22ZSXDXfNX8M2kp8ufvx0E70JA3htF
+         nDXgEIIKJZkZKOsvt7ZvOUHhIbqcaNbb6iHwAAio=
+Received: from checstex0244823-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: bpothuno@codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 700C760989;
+        Wed, 30 Jan 2019 10:34:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548844465;
+        bh=1qpX/yCiqAqDio7CyUrm47eKHusKjZCaq0y0Pd5i9JE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ZY8csooD+w9kl9abm2LhTcwF8XF3qgCA9m1Po/4s7dINH//O96NsTZeXPkRQETK/1
+         ESjawz16j4PT/2oRzOgl5zzR0aYhEDOXxGyo9Hf4WgE0sdk4hFJDDXeAuMYvWpNNB/
+         iiiS5s0tv80oVvR79DXWoxCTg52boHn0YyxYFNA8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 700C760989
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bpothuno@codeaurora.org
+From:   Balaji Pothunoori <bpothuno@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Ashok Raj Nagarajan <arnagara@codeaurora.org>,
+        Balaji Pothunoori <bpothuno@codeaurora.org>
+Subject: [PATCH v2 1/3] cfg80211: Add support to set tx power for a station associated
+Date:   Wed, 30 Jan 2019 16:04:10 +0530
+Message-Id: <1548844450-13691-1-git-send-email-bpothuno@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jan 28, 2019 at 02:29:22PM -0700, shuah wrote:
-> On 1/25/19 9:14 PM, Al Viro wrote:
-> > On Fri, Jan 25, 2019 at 04:29:05PM -0700, Shuah Khan wrote:
-> >> tty_set_termios() has the following WARMN_ON which can be triggered with a
-> >> syscall to invoke TIOCGETD __NR_ioctl.
+From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
 
-You meant TIOCSETD here, and in fact its the call which sets the uart
-protocol that triggers the warning.
+This patch adds support to set transmit power setting type and transmit
+power level attributes to NL80211_CMD_SET_STATION in order to facilitate
+adjusting the transmit power level of a station associated to the AP.
 
-> >> WARN_ON(tty->driver->type == TTY_DRIVER_TYPE_PTY &&
-> >>                  tty->driver->subtype == PTY_TYPE_MASTER);
-> >> Reference: https://syzkaller.appspot.com/bug?id=2410d22f1d8e5984217329dd0884b01d99e3e48d
-> >>
-> >> A simple change would have been to print error message instead of WARN_ON.
-> >> However, the callers assume that tty_set_termios() always returns 0 and
-> >> don't check return value. The complete solution is fixing all the callers
-> >> to check error and bail out to fix the WARN_ON.
-> >>
-> >> This fix changes tty_set_termios() to return error and all the callers
-> >> to check error and bail out. The reproducer is used to reproduce the
-> >> problem and verify the fix.
-> > 
-> >> --- a/drivers/bluetooth/hci_ldisc.c
-> >> +++ b/drivers/bluetooth/hci_ldisc.c
-> >> @@ -321,6 +321,8 @@ void hci_uart_set_flow_control(struct hci_uart *hu, bool enable)
-> >>   		status = tty_set_termios(tty, &ktermios);
-> >>   		BT_DBG("Disabling hardware flow control: %s",
-> >>   		       status ? "failed" : "success");
-> >> +		if (status)
-> >> +			return;
-> > 
-> > Can that ldisc end up set on pty master?  And does it make any sense there?
-> 
-> The initial objective of the patch is to prevent the WARN_ON by making
-> the change to return error instead of WARN_ON. However, without changes
-> to places that don't check the return and keep making progress, there
-> will be secondary problems.
-> 
-> Without this change to return here, instead of WARN_ON, it will fail
-> with the following NULL pointer dereference at the next thing 
-> hci_uart_set_flow_control() attempts.
-> 
-> status = tty->driver->ops->tiocmget(tty);
-> 
-> kernel: [10140.649783] BUG: unable to handle kernel NULL pointer 
+The added attributes allow selection of automatic and limited transmit
+power level, with the level defined in dBm format.
 
-That's a separate issue, which is being fixed:
+Co-developed-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+Signed-off-by: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+---
+v2: add txpwr structure
+    replaced nla_get_u32 with nla_get_u8/s16
+    added NLA_POLICY_RANGE check
 
-	https://lkml.kernel.org/r/20190130095938.GP3691@localhost
+ include/net/cfg80211.h       | 14 ++++++++++++++
+ include/uapi/linux/nl80211.h | 14 ++++++++++++++
+ net/wireless/nl80211.c       | 38 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 66 insertions(+)
 
-> > IOW, I don't believe that this patch makes any sense.  If anything,
-> > we need to prevent unconditional tty_set_termios() on the path
-> > that *does* lead to calling it for pty.
-> 
-> I don't think preventing unconditional tty_set_termios() is enough to
-> prevent secondary problems such as the one above.
-> 
-> For example, the following call chain leads to the WARN_ON that was
-> reported. Even if void hci_uart_set_baudrate() prevents the very first
-> tty_set_termios() call, its caller hci_uart_setup() continues with
-> more tty setup. It goes ahead to call driver setup callback. The
-> driver callback goes on to do more setup calling tty_set_termios().
-> 
-> WARN_ON call path:
->   hci_uart_set_baudrate+0x1cc/0x250 drivers/bluetooth/hci_ldisc.c:378
->   hci_uart_setup+0xa2/0x490 drivers/bluetooth/hci_ldisc.c:401
->   hci_dev_do_open+0x6b1/0x1920 net/bluetooth/hci_core.c:1423
-> 
-> Once this WARN_ON is changed to return error, the following
-> happens, when hci_uart_setup() does driver setup callback.
-> 
-> kernel: [10140.649836]  mrvl_setup+0x17/0x80 [hci_uart]
-> kernel: [10140.649840]  hci_uart_setup+0x56/0x160 [hci_uart]
-> kernel: [10140.649850]  hci_dev_do_open+0xe6/0x630 [bluetooth]
-> kernel: [10140.649860]  hci_power_on+0x52/0x220 [bluetooth]
-> 
-> I think continuing to catch the invalid condition in tty_set_termios()
-> and preventing progress by checking return value is a straight forward
-> change to avoid secondary problems, and it might be difficult to catch
-> all the cases where it could fail.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7033c90..029d9fe 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -973,6 +973,7 @@ enum station_parameters_apply_mask {
+ 	STATION_PARAM_APPLY_UAPSD = BIT(0),
+ 	STATION_PARAM_APPLY_CAPABILITY = BIT(1),
+ 	STATION_PARAM_APPLY_PLINK_STATE = BIT(2),
++	STATION_PARAM_APPLY_STA_TXPOWER = BIT(3),
+ };
+ 
+ /**
+@@ -1017,6 +1018,15 @@ enum station_parameters_apply_mask {
+  * @he_capa: HE capabilities of station
+  * @he_capa_len: the length of the HE capabilities
+  * @airtime_weight: airtime scheduler weight for this station
++ * @power: tx power (in dBm) to be used for sending data traffic. If tx power
++ *	is not provided, the default per-interface tx power setting will be
++ *	overriding. Driver should be picking up the lowest tx power, either tx
++ *	power per-interface or per-station.
++ * @type: In particular if TPC %type is NL80211_TX_POWER_LIMITED then tx power
++ *	will be less than or equal to specified from userspace, whereas if TPC
++ *	%type is NL80211_TX_POWER_AUTOMATIC then it indicates default tx power.
++ *	NL80211_TX_POWER_FIXED is not a valid configuration option for
++ *	per peer TPC.
+  */
+ struct station_parameters {
+ 	const u8 *supported_rates;
+@@ -1047,6 +1057,10 @@ struct station_parameters {
+ 	const struct ieee80211_he_cap_elem *he_capa;
+ 	u8 he_capa_len;
+ 	u16 airtime_weight;
++	struct {
++		s16 power;
++		enum nl80211_tx_power_setting type;
++	} txpwr;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index dd4f86e..83040c6 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2308,6 +2308,15 @@ enum nl80211_commands {
+  * @NL80211_ATTR_AIRTIME_WEIGHT: Station's weight when scheduled by the airtime
+  *	scheduler.
+  *
++ * @NL80211_ATTR_STA_TX_POWER_SETTING: Transmit power setting type (u8) for
++ *	station associated with the AP. See &enum nl80211_tx_power_setting for
++ *	possible values.
++ * @NL80211_ATTR_STA_TX_POWER: Transmit power level (s16) in dBm units. This
++ *	allows to set Tx power for a station. If this attribute is not included,
++ *	the default per-interface tx power setting will be overriding. Driver
++ *	should be picking up the lowest tx power, either tx power per-interface
++ *	or per-station.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2758,6 +2767,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_PEER_MEASUREMENTS,
+ 
+ 	NL80211_ATTR_AIRTIME_WEIGHT,
++	NL80211_ATTR_STA_TX_POWER_SETTING,
++	NL80211_ATTR_STA_TX_POWER,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+@@ -5343,6 +5354,8 @@ enum nl80211_feature_flags {
+  * @NL80211_EXT_FEATURE_AP_PMKSA_CACHING: Driver/device supports PMKSA caching
+  *	(set/del PMKSA operations) in AP mode.
+  *
++ * @NL80211_EXT_FEATURE_STA_TX_PWR: This driver supports controlling tx power
++ 8	to a station.
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -5384,6 +5397,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER,
+ 	NL80211_EXT_FEATURE_AIRTIME_FAIRNESS,
+ 	NL80211_EXT_FEATURE_AP_PMKSA_CACHING,
++	NL80211_EXT_FEATURE_STA_TX_PWR,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index af89e5c..7e8073a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -347,6 +347,11 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 					       .len = NL80211_MAX_SUPP_RATES },
+ 	[NL80211_ATTR_STA_PLINK_ACTION] =
+ 		NLA_POLICY_MAX(NLA_U8, NUM_NL80211_PLINK_ACTIONS - 1),
++	[NL80211_ATTR_STA_TX_POWER_SETTING] =
++		NLA_POLICY_RANGE(NLA_U8,
++				 NL80211_TX_POWER_AUTOMATIC,
++				 NL80211_TX_POWER_FIXED),
++	[NL80211_ATTR_STA_TX_POWER] = { .type = NLA_S16 },
+ 	[NL80211_ATTR_STA_VLAN] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_MNTR_FLAGS] = { /* NLA_NESTED can't be empty */ },
+ 	[NL80211_ATTR_MESH_ID] = { .type = NLA_BINARY,
+@@ -5404,6 +5409,31 @@ static int nl80211_set_station_tdls(struct genl_info *info,
+ 	return nl80211_parse_sta_wme(info, params);
+ }
+ 
++static int nl80211_parse_sta_txpower_setting(struct genl_info *info,
++					     struct station_parameters *params)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	int idx;
++
++	if (info->attrs[NL80211_ATTR_STA_TX_POWER_SETTING]) {
++		if (!rdev->ops->set_tx_power ||
++		    !wiphy_ext_feature_isset(&rdev->wiphy,
++					 NL80211_EXT_FEATURE_STA_TX_PWR))
++			return -EOPNOTSUPP;
++
++		idx = NL80211_ATTR_STA_TX_POWER_SETTING;
++		params->txpwr.type = nla_get_u8(info->attrs[idx]);
++
++		if (params->txpwr.type == NL80211_TX_POWER_LIMITED) {
++			idx = NL80211_ATTR_STA_TX_POWER;
++			params->txpwr.power = nla_get_s16(info->attrs[idx]);
++		}
++		params->sta_modify_mask |= STATION_PARAM_APPLY_STA_TXPOWER;
++	}
++
++	return 0;
++}
++
+ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -5497,6 +5527,10 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 				     NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
+ 		return -EOPNOTSUPP;
+ 
++	err = nl80211_parse_sta_txpower_setting(info, &params);
++	if (err)
++		return err;
++
+ 	/* Include parameters for TDLS peer (will check later) */
+ 	err = nl80211_set_station_tdls(info, &params);
+ 	if (err)
+@@ -5634,6 +5668,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 				     NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
+ 		return -EOPNOTSUPP;
+ 
++	err = nl80211_parse_sta_txpower_setting(info, &params);
++	if (err)
++		return err;
++
+ 	err = nl80211_parse_sta_channel_info(info, &params);
+ 	if (err)
+ 		return err;
+-- 
+2.7.4
 
-I agree with Al that this change doesn't make much sense. The WARN_ON
-is there to catch any bugs leading to the termios being changed for a
-master side pty. Those should bugs should be fixed, and not worked
-around in order to silence a WARN_ON.
-
-The problem started with 7721383f4199 ("Bluetooth: hci_uart: Support
-operational speed during setup") which introduced a new way for how
-tty_set_termios() could end up being called for a master pty.
-
-As Al hinted at, setting these ldiscs for a master pty really makes no
-sense and perhaps that is what we should prevent unless simply making
-sure they do not call tty_set_termios() is sufficient for the time
-being.
-
-Finally, note that serdev never operates on a pty, and that this is only
-an issue for (the three) line disciplines.
-
-Johan
