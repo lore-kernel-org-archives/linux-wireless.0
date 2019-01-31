@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C59E6C282DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C83FC169C4
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A620D218AC
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED1E0218AC
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732844AbfAaMWQ (ORCPT
+        id S1732552AbfAaMWS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 07:22:16 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:53746 "EHLO
+        Thu, 31 Jan 2019 07:22:18 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:53745 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732838AbfAaMWP (ORCPT
+        with ESMTP id S1732839AbfAaMWP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 31 Jan 2019 07:22:15 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0VCM1YC016829, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0VCM2xt016839, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0VCM1YC016829
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0VCM2xt016839
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Thu, 31 Jan 2019 20:22:01 +0800
+        Thu, 31 Jan 2019 20:22:02 +0800
 Received: from localhost.localdomain (172.21.68.143) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Thu, 31 Jan 2019 20:22:00 +0800
+ 14.3.408.0; Thu, 31 Jan 2019 20:22:01 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <Larry.Finger@lwfinger.net>, <tehuang@realtek.com>,
         <briannorris@chromium.org>, <sgruszka@redhat.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH 22/24] rtw88: set OFDM ctx to receive ack after cts2self
-Date:   Thu, 31 Jan 2019 20:21:35 +0800
-Message-ID: <1548937297-14660-23-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 24/24] rtw88: 8822b: turn rtw_write32s_mask into macro
+Date:   Thu, 31 Jan 2019 20:21:37 +0800
+Message-ID: <1548937297-14660-25-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
 References: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
@@ -50,43 +50,65 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-8822B originally set OFDM CTX to 0xA, but this period was too short to
-receive ack, enlarge it to 0xE to fix it.
-
-For 8822C, also set it to the same value to synchronize their behavior.
+The inlined rtw_write32s_mask has to check range of addr with
+BUILD_BUG_ON. But with some variants of gcc version the function might
+not get inlined, and it will have no idea to know how to do, then
+results in a compile error. Turn it into a macro to make sure the values
+are known when compile time.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 2 +-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 10 ----------
+ drivers/net/wireless/realtek/rtw88/rtw8822b.h | 15 +++++++++++++++
+ 2 files changed, 15 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index 5e63096..1195fea 100644
+index c0e5d1f..22b880a 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -127,7 +127,7 @@ static void rtw8822b_phy_set_param(struct rtw_dev *rtwdev)
- #define WLAN_SLOT_TIME		0x05
- #define WLAN_PIFS_TIME		0x19
- #define WLAN_SIFS_CCK_CONT_TX	0xA
--#define WLAN_SIFS_OFDM_CONT_TX	0xA
-+#define WLAN_SIFS_OFDM_CONT_TX	0xE
- #define WLAN_SIFS_CCK_TRX	0x10
- #define WLAN_SIFS_OFDM_TRX	0x10
- #define WLAN_VO_TXOP_LIMIT	0x186 /* unit : 32us */
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index c3aebdc..4a1b4a0 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -721,7 +721,7 @@ static void rtw8822c_phy_set_param(struct rtw_dev *rtwdev)
- #define WLAN_SLOT_TIME		0x05
- #define WLAN_PIFS_TIME		0x1C
- #define WLAN_SIFS_CCK_CONT_TX	0x0A
--#define WLAN_SIFS_OFDM_CONT_TX	0x10
-+#define WLAN_SIFS_OFDM_CONT_TX	0x0E
- #define WLAN_SIFS_CCK_TRX	0x0A
- #define WLAN_SIFS_OFDM_TRX	0x10
- #define WLAN_NAV_MAX		0xC8
+@@ -224,16 +224,6 @@ static int rtw8822b_mac_init(struct rtw_dev *rtwdev)
+ 	return 0;
+ }
+ 
+-static inline void
+-rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+-{
+-	BUILD_BUG_ON(addr < 0xC00 || addr >= 0xD00);
+-
+-	rtw_write32_mask(rtwdev, addr, mask, data);
+-	/* 0xC00-0xCFF and 0xE00-0xEFF have the same layout */
+-	rtw_write32_mask(rtwdev, addr + 0x200, mask, data);
+-}
+-
+ static void rtw8822b_set_channel_rfe_efem(struct rtw_dev *rtwdev, u8 channel)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.h b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+index 311fe8a..4cf193b1 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+@@ -97,6 +97,21 @@ struct rtw8822b_efuse {
+ 	};
+ };
+ 
++static inline void
++_rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
++{
++	rtw_write32_mask(rtwdev, addr, mask, data);
++	rtw_write32_mask(rtwdev, addr + 0x200, mask, data);
++}
++
++/* 0xC00-0xCFF and 0xE00-0xEFF have the same layout */
++#define rtw_write32s_mask(rtwdev, addr, mask, data)			       \
++	do {								       \
++		BUILD_BUG_ON(addr < 0xC00 || addr >= 0xD00);		       \
++									       \
++		_rtw_write32s_mask(rtwdev, addr, mask, data);		       \
++	} while (0)
++
+ /* phy status page0 */
+ #define GET_PHY_STAT_P0_PWDB(phy_stat)                                         \
+ 	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
 -- 
 2.7.4
 
