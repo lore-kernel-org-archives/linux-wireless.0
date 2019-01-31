@@ -2,119 +2,137 @@ Return-Path: <SRS0=jXAT=QH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19E12C282DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 15:33:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A66AEC169C4
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 15:35:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E2C7F2085B
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 15:33:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548948799;
-	bh=zxoOimWcZtD3MCcVtP3uZ8IJ39VpA/kiZsz5/D8qJ6o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=G1G/vro/URfqZS3zsK/O0+rvG/GMzqzNHhJGTSkDyhEJCOEkJXJ/utaLKqvYPqGUX
-	 tT5V3SoSc9Mk1ysgevrwBo4tRfRIuGLeYEW8N7TH6k0dl6BFDRcCQuOgCHuD8FWYoK
-	 S0ggRIa6Bv06NA/BdTQo3mvh+C1X8Bt2Jz88h5UI=
+	by mail.kernel.org (Postfix) with ESMTP id 7901A20B1F
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 15:35:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="TaoT5s2p"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732665AbfAaPdO (ORCPT
+        id S1732605AbfAaPfl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 10:33:14 -0500
-Received: from mail-lj1-f193.google.com ([209.85.208.193]:42005 "EHLO
-        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726060AbfAaPdN (ORCPT
+        Thu, 31 Jan 2019 10:35:41 -0500
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:43026 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726060AbfAaPfl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Jan 2019 10:33:13 -0500
-Received: by mail-lj1-f193.google.com with SMTP id l15-v6so3006990lja.9;
-        Thu, 31 Jan 2019 07:33:11 -0800 (PST)
+        Thu, 31 Jan 2019 10:35:41 -0500
+Received: by mail-pl1-f195.google.com with SMTP id gn14so1620331plb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2019 07:35:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=1iT1OoAJ9Wp8fXpeUssYAOnTHPQXWZkCq0P3ZrWjLj4=;
+        b=TaoT5s2pyt9n9r/g82GlKM7gBEzU9iaNjZmOcNppEUVzMvpUBOnmuJ+c1tDi3M6tZ+
+         SawauXsE33FnxLF8Apvz+Wl/cCsf6HwJz2myNUGK0LGbbwZ0r6u+xGGVqFEhF1PqdQB/
+         BGQrc3Z7Y/7jX1ZIDUky0zs1UiiHpTZ9RiPME=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=kyyDI6FuXbBYrd75ayury4IZgfD/Uq3i12i/fWlvOjM=;
-        b=I25UGMXfBTueOiLHgIbQRPPvHNqTBmI+xUjQMncItVnjZOFlVTTY120fPDzU1K+c4I
-         jqrrizzrzLW47XXzVySBubNXzpKnINCtYjwPvj5e9OSk+ukaaPjZRO5OJmd1rC/hU+iL
-         gQbSxKbQiMviYerwWFBH62agdF9ddDLezj4R71W1I/4rP1tpbsr2ZPJCHqKVAc2S6v3r
-         VWrQO5Jk9+MbLQLbaVbt+ObmnlkJTku4+jxGHXJZhQFeIOzqClgQmSFmZpFOWBMq+Yia
-         JbxiE1RtoxPo0LVuOojKgM99FGKhUn4uywLlIPeuVoJ2VoGbiyg8sslg58b/N+T7cVLz
-         BKFg==
-X-Gm-Message-State: AJcUukezlE3t+CdFbtMfqsCNimQ5VLg/cLFFh/KsCCg4rCWZQ/E3Wcq2
-        BI8ixLJ46skwtmG2Ot7NAWo=
-X-Google-Smtp-Source: ALg8bN5MXqRIR3tCGLT6l3mUssY1qvs7A+NUu0jTPe/eW9Q45a5pYTH1Csr6dQ6dQyLAAG6U167EhA==
-X-Received: by 2002:a2e:2d11:: with SMTP id t17-v6mr28633044ljt.159.1548948790426;
-        Thu, 31 Jan 2019 07:33:10 -0800 (PST)
-Received: from xi.terra (c-74bee655.07-184-6d6c6d4.bbcust.telenor.se. [85.230.190.116])
-        by smtp.gmail.com with ESMTPSA id q67sm903018lfe.19.2019.01.31.07.33.09
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 31 Jan 2019 07:33:09 -0800 (PST)
-Received: from johan by xi.terra with local (Exim 4.91)
-        (envelope-from <johan@kernel.org>)
-        id 1gpEKw-0007Qn-TM; Thu, 31 Jan 2019 16:33:06 +0100
-Date:   Thu, 31 Jan 2019 16:33:06 +0100
-From:   Johan Hovold <johan@kernel.org>
-To:     Marcel Holtmann <marcel@holtmann.org>
-Cc:     Johan Hovold <johan@kernel.org>, shuah <shuah@kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        "open list:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>,
-        chris@the-brannons.com, devel@driverdev.osuosl.org,
-        Rob Herring <robh@kernel.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "open list:SERIAL DRIVERS" <linux-serial@vger.kernel.org>,
-        Jiri Slaby <jslaby@suse.com>, santhameena13@gmail.com,
-        kirk@reisers.ca, Johan Hedberg <johan.hedberg@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>, samuel.thibault@ens-lyon.org,
-        m.maya.nakamura@gmail.com, zhongjiang@huawei.com,
-        Greg KH <gregkh@linuxfoundation.org>,
-        speakup@linux-speakup.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bluez mailing list <linux-bluetooth@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        nishka.dasgupta_ug18@ashoka.edu.in,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH] tty: Fix WARNING in tty_set_termios
-Message-ID: <20190131153306.GT3691@localhost>
-References: <20190125232905.21727-1-shuah@kernel.org>
- <20190126041416.GF2217@ZenIV.linux.org.uk>
- <fe4018a7-19e4-cdd1-3095-bbe88a82788e@kernel.org>
- <20190130103227.GR3691@localhost>
- <D0EE5C33-2930-4286-998C-822DD7898B76@holtmann.org>
+        bh=1iT1OoAJ9Wp8fXpeUssYAOnTHPQXWZkCq0P3ZrWjLj4=;
+        b=ldyWITgcOgrEIUyYGRI4kXKzGXdfUXKdNUB3+eR8Q2mHuTDdv0DPA2sD6XpeuHDWAQ
+         JvmvfzGdaQX8Mwc/oquEOf3Cxu2qywOkkWmLm/gvMHoYcacx3P7CrW4ZPu3RMhO0RIpN
+         Pp22SMHlbGI7TnSvKUZRrW1sAKv2MEs7WJA3+KVF6l0XJkNSkicdVQpmKPy83OzYmXW5
+         vjC9Z0e7VM3Vq8kKfQ2EkgwQ+C3ePGlvMbdDSSUxA43rNLxBwh3TrfBivPs2TRDPjdTt
+         aGo4YNQViYfK3Fi4KMQLE4B0/+ZTdH33rx3nWbRFosskrkOQvSL36LlDm6rmkAUfgyhW
+         VrTw==
+X-Gm-Message-State: AJcUukeY4dvk0xF/0dVbbIeZaDSP8MaZxeL98beXVj88NHLc/Xe1grLC
+        hgeJKNU2baFkqWM4mX67qogb9A==
+X-Google-Smtp-Source: ALg8bN4zGXtN+7c9WRIYvupagquxd7jN7qiVNeTCmksk35BivTrsNQr+koMYtf2nQMsfIx2ni0Mp2w==
+X-Received: by 2002:a17:902:2887:: with SMTP id f7mr34479721plb.176.1548948940448;
+        Thu, 31 Jan 2019 07:35:40 -0800 (PST)
+Received: from tuxbook-pro (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id b26sm14315350pfe.91.2019.01.31.07.35.39
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 31 Jan 2019 07:35:39 -0800 (PST)
+Date:   Thu, 31 Jan 2019 07:35:37 -0800
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Rakesh Pillai <pillair@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath10k: Set DMA address mask to 35 bit for WCN3990
+Message-ID: <20190131153537.GC2387@tuxbook-pro>
+References: <1535992622-5074-1-git-send-email-pillair@codeaurora.org>
+ <20190130185721.GT31919@minitux>
+ <871s4tj5p9.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <D0EE5C33-2930-4286-998C-822DD7898B76@holtmann.org>
-User-Agent: Mutt/1.11.2 (2019-01-07)
+In-Reply-To: <871s4tj5p9.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 04:18:33PM +0100, Marcel Holtmann wrote:
+On Thu 31 Jan 05:51 PST 2019, Kalle Valo wrote:
 
-> > I agree with Al that this change doesn't make much sense. The WARN_ON
-> > is there to catch any bugs leading to the termios being changed for a
-> > master side pty. Those should bugs should be fixed, and not worked
-> > around in order to silence a WARN_ON.
-> > 
-> > The problem started with 7721383f4199 ("Bluetooth: hci_uart: Support
-> > operational speed during setup") which introduced a new way for how
-> > tty_set_termios() could end up being called for a master pty.
-> > 
-> > As Al hinted at, setting these ldiscs for a master pty really makes no
-> > sense and perhaps that is what we should prevent unless simply making
-> > sure they do not call tty_set_termios() is sufficient for the time
-> > being.
-> > 
-> > Finally, note that serdev never operates on a pty, and that this is only
-> > an issue for (the three) line disciplines.
+> Bjorn Andersson <bjorn.andersson@linaro.org> writes:
 > 
-> I think for PTYs we should just fail setting the HCI line discipline.
-> Fail early and just move on with life.
+> > On Mon 03 Sep 09:37 PDT 2018, Rakesh Pillai wrote:
+> >
+> >> WCN3990 is a 37-bit target but can address memory range
+> >> only upto 35 bits. The 36th bit is used to control the
+> >> smmu/iommu translation and the 37th bit is used by the
+> >> internal bus masters to access the wifi subsystem internal
+> >> SRAM. With the DMA mask set to 37i-bit, the host driver
+> >> can get 37-bit dma address, which leads to incorrect
+> >> address access in the target.
+> >> 
+> >> Hence the host driver can used addresses upto 35-bit
+> >> for WCN3990. Fix the dma mask for wcn3990 to 35-bit,
+> >> instead of 37-bit.
+> >> 
+> >> Tested HW: WCN3990
+> >> Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+> >> 
+> >> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> >
+> > This solves the problem I'm seeing on my SDM845, where I see a
+> > translation fault on a 32-bit address from the IOMMU, which we
+> > previously mapped the 36 bit version of (my dma-ranges is set to 36
+> > bits).
+> >
+> > So:
+> >
+> > Tested-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> 
+> Thanks for the reminder. This got piled up in my deferred queue in
+> patchwork and I hadn't looked at it yet. I'll queue this for -next.
+> 
 
-Sounds good to me. At least for the pty master. There may be some people
-trying to use a bluetooth device connected to a remote serial port (I've
-seen descriptions of such setups at least), and maybe we need not prevent
-that.
+Thanks
 
-Johan
+> > However, some of the changes in this patch and the fact that I get a
+> > translation error on the lower 32 bits of the mapped iova, makes me
+> > suspect that while the hardware is capable of 37 bits, the driver only
+> > dealt with the lower 32.  And if that's the case I would like to see
+> > that mentioned in the commit message.
+> 
+> Rakesh mentioned that it's actually 35 bits. Should something changed in
+> the commit log still? I can do that if needed.
+> 
+
+Right, so the patch and commit message matches. What I'm asking about is
+that in my testing I saw, from the IOMMU translation errors, that the
+addresses accessed by the hardware wasn't 35 bit, they where only 32
+bits.
+
+Given that the patch also makes changes to how it writes addresses to
+the ring I was wondering if the patch actually takes the limit from 32
+to 35, not 37 to 35.
+
+
+Regardless, I'm fine with the end result, you have my T-b and I would be
+happy to see this in v5.1.
+
+Regards,
+Bjorn
