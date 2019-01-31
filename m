@@ -2,171 +2,84 @@ Return-Path: <SRS0=jXAT=QH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D09ABC282DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 16:56:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20AB5C169C4
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 16:56:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AB8FD218AF
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 16:56:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB186218AF
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 16:56:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="M8aGXDbo";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lyEydgd5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388746AbfAaQ4T (ORCPT
+        id S1731099AbfAaQ4e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 11:56:19 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:33290 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727022AbfAaQ4S (ORCPT
+        Thu, 31 Jan 2019 11:56:34 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:60018 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727022AbfAaQ4d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Jan 2019 11:56:18 -0500
-Received: by mail-wr1-f68.google.com with SMTP id p7so4157584wru.0
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2019 08:56:17 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=HHlxkOeh+D363SlFen1wvOmfZGM4LpuXbtMk6w5zvK8=;
-        b=ja8dvRP/0M93tsyBHYCy0EXLGWFZe7SyR+lQCRqvErlD8bLLd6Z2rhfKk+G+RS+97P
-         gjMrgakYKx/ILOBX0D3U/k6CLJQdnhlz6KLf2T/uuVrqIrdl2xkOXxHwwl63R1Lq0fVF
-         TKVXV2NvIuUm1kt650lRkZ00+jYJu7PZlgX5mQxJ3k6k1BvdA39BNO0gSyBEcGW9bs+R
-         Z1AsbNIjBIkI4CURnxCsEhPWPo7FFPXQ/tCaxYFR1I+xRht/d4n9XiMkc8Uol04HF+mJ
-         wj0oH0mwelxlGZal70ZgQtIV5bP748yALQoxn3ZdNrffj7xsJNU3P7g7f/+mdtwd5+nN
-         vB1w==
-X-Gm-Message-State: AJcUukeNZt2va9ROTSE5qQXovu+sJPhRBoPgyVuOJ9g8zyXUqoLQGYQO
-        dihmxCY3k1IHfy0TSghxY6NZuQ==
-X-Google-Smtp-Source: ALg8bN65lLKBpNt2nWNNgw/8c2k+QvU4URHnJI5jTlZn22Qwf0j1ja57tP/1Lps1nKkBl4QE0Md55w==
-X-Received: by 2002:adf:ab51:: with SMTP id r17mr35137271wrc.62.1548953776945;
-        Thu, 31 Jan 2019 08:56:16 -0800 (PST)
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id k128sm9502889wmd.37.2019.01.31.08.56.16
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 31 Jan 2019 08:56:16 -0800 (PST)
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH 4/4] mt76x2: remove mt76x2_alloc_device routine
-Date:   Thu, 31 Jan 2019 17:55:57 +0100
-Message-Id: <4a49cdbb42a8f44f5b8e8cb9d1bdc1a02a2f811a.1548952312.git.lorenzo.bianconi@redhat.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1548952312.git.lorenzo.bianconi@redhat.com>
-References: <cover.1548952312.git.lorenzo.bianconi@redhat.com>
+        Thu, 31 Jan 2019 11:56:33 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id CB38760A08; Thu, 31 Jan 2019 16:56:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548953792;
+        bh=Dh7ziWrPn+PtdPEjZJiFZAnq8APoTdoY76JPdb4lFhg=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=M8aGXDbopXjHCqmOvwjHN3czFsbx1IlYqKHNoDrGjilM1ecFdcCuyFRhOj1zVuNqY
+         C3r52BNvlgwNBRmGLAvGmDXkbuOzWgmg1vs0e8c+ArgdAfaJglJ8EuOgbTRsOtBYVm
+         62ub1+BjxtB3zX0rCXcyGpwJI6wv5LKMT9GIU4kE=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0844860907;
+        Thu, 31 Jan 2019 16:56:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548953792;
+        bh=Dh7ziWrPn+PtdPEjZJiFZAnq8APoTdoY76JPdb4lFhg=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=lyEydgd5xROr8bPz1KIHDmyFX8ufjUqgDbGifQD4uSiPcUuCQ3dMrWWjeVt/mXGFC
+         jmoWjcxOq3jKPk4r+VY2pbsj6yg8Tiunqury7nd1pTAP/0+ba5z0oaEvMx8vGDT1oQ
+         6Ut5GUn3lT9Y2IHI1ypCFWXEw7+AZUTA5scPxZT4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0844860907
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH wireless-drivers] mt76x0: eeprom: fix chan_vs_power map in
+ mt76x0_get_power_info
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <44789d3d0dee6e2e0bb7d75f755927d415aa56d4.1548587542.git.lorenzo.bianconi@redhat.com>
+References: <44789d3d0dee6e2e0bb7d75f755927d415aa56d4.1548587542.git.lorenzo.bianconi@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name, sgruszka@redhat.com
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190131165632.CB38760A08@smtp.codeaurora.org>
+Date:   Thu, 31 Jan 2019 16:56:32 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove mt76x2_alloc_device since it just runs mt76_alloc_device.
-Move mt76_alloc_device call in mt76x2_probe
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- .../wireless/mediatek/mt76/mt76x2/mt76x2.h    |  1 -
- .../net/wireless/mediatek/mt76/mt76x2/pci.c   | 26 ++++++++++++++-----
- .../wireless/mediatek/mt76/mt76x2/pci_init.c  | 26 -------------------
- 3 files changed, 20 insertions(+), 33 deletions(-)
+> Report correct eeprom per channel power value.
+> Fix chan_vs_power map in mt76x0_get_power_info routine
+> 
+> Fixes: f2a2e819d672 ("mt76x0: remove eeprom dependency from mt76x0_get_power_info")
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
-index 28ec19acf9db..6c619f1c65c9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
-@@ -49,7 +49,6 @@ static inline bool mt76x2_channel_silent(struct mt76x02_dev *dev)
- 
- extern const struct ieee80211_ops mt76x2_ops;
- 
--struct mt76x02_dev *mt76x2_alloc_device(struct device *pdev);
- int mt76x2_register_device(struct mt76x02_dev *dev);
- 
- void mt76x2_phy_power_on(struct mt76x02_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
-index 92432fe97312..6274655e1f7e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
-@@ -30,7 +30,19 @@ static const struct pci_device_id mt76pci_device_table[] = {
- static int
- mt76pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
-+	static const struct mt76_driver_ops drv_ops = {
-+		.txwi_size = sizeof(struct mt76x02_txwi),
-+		.update_survey = mt76x02_update_channel,
-+		.tx_prepare_skb = mt76x02_tx_prepare_skb,
-+		.tx_complete_skb = mt76x02_tx_complete_skb,
-+		.rx_skb = mt76x02_queue_rx_skb,
-+		.rx_poll_complete = mt76x02_rx_poll_complete,
-+		.sta_ps = mt76x02_sta_ps,
-+		.sta_add = mt76x02_sta_add,
-+		.sta_remove = mt76x02_sta_remove,
-+	};
- 	struct mt76x02_dev *dev;
-+	struct mt76_dev *mdev;
- 	int ret;
- 
- 	ret = pcim_enable_device(pdev);
-@@ -47,17 +59,19 @@ mt76pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (ret)
- 		return ret;
- 
--	dev = mt76x2_alloc_device(&pdev->dev);
--	if (!dev)
-+	mdev = mt76_alloc_device(&pdev->dev, sizeof(*dev), &mt76x2_ops,
-+				 &drv_ops);
-+	if (!mdev)
- 		return -ENOMEM;
- 
--	mt76_mmio_init(&dev->mt76, pcim_iomap_table(pdev)[0]);
-+	dev = container_of(mdev, struct mt76x02_dev, mt76);
-+	mt76_mmio_init(mdev, pcim_iomap_table(pdev)[0]);
- 	mt76x2_reset_wlan(dev, false);
- 
--	dev->mt76.rev = mt76_rr(dev, MT_ASIC_VERSION);
--	dev_info(dev->mt76.dev, "ASIC revision: %08x\n", dev->mt76.rev);
-+	mdev->rev = mt76_rr(dev, MT_ASIC_VERSION);
-+	dev_info(mdev->dev, "ASIC revision: %08x\n", mdev->rev);
- 
--	ret = devm_request_irq(dev->mt76.dev, pdev->irq, mt76x02_irq_handler,
-+	ret = devm_request_irq(mdev->dev, pdev->irq, mt76x02_irq_handler,
- 			       IRQF_SHARED, KBUILD_MODNAME, dev);
- 	if (ret)
- 		goto error;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-index be2f53604311..59a827cfb2d2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-@@ -315,32 +315,6 @@ void mt76x2_cleanup(struct mt76x02_dev *dev)
- 	mt76x02_mcu_cleanup(dev);
- }
- 
--struct mt76x02_dev *mt76x2_alloc_device(struct device *pdev)
--{
--	static const struct mt76_driver_ops drv_ops = {
--		.txwi_size = sizeof(struct mt76x02_txwi),
--		.update_survey = mt76x02_update_channel,
--		.tx_prepare_skb = mt76x02_tx_prepare_skb,
--		.tx_complete_skb = mt76x02_tx_complete_skb,
--		.rx_skb = mt76x02_queue_rx_skb,
--		.rx_poll_complete = mt76x02_rx_poll_complete,
--		.sta_ps = mt76x02_sta_ps,
--		.sta_add = mt76x02_sta_add,
--		.sta_remove = mt76x02_sta_remove,
--	};
--	struct mt76x02_dev *dev;
--	struct mt76_dev *mdev;
--
--	mdev = mt76_alloc_device(pdev, sizeof(*dev), &mt76x2_ops,
--				 &drv_ops);
--	if (!mdev)
--		return NULL;
--
--	dev = container_of(mdev, struct mt76x02_dev, mt76);
--
--	return dev;
--}
--
- int mt76x2_register_device(struct mt76x02_dev *dev)
- {
- 	int ret;
+Patch applied to wireless-drivers.git, thanks.
+
+05672636b339 mt76x0: eeprom: fix chan_vs_power map in mt76x0_get_power_info
+
 -- 
-2.20.1
+https://patchwork.kernel.org/patch/10782801/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
