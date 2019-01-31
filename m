@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4BA2C169C4
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:22:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80364C282D9
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:22:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9A006218AF
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:22:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C43A218AF
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:22:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728022AbfAaUWV (ORCPT
+        id S1728047AbfAaUWW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 15:22:21 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:53564 "EHLO
+        Thu, 31 Jan 2019 15:22:22 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:53584 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727966AbfAaUWU (ORCPT
+        with ESMTP id S1728005AbfAaUWV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Jan 2019 15:22:20 -0500
+        Thu, 31 Jan 2019 15:22:21 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gpIqo-0004pL-E5; Thu, 31 Jan 2019 22:22:18 +0200
+        id 1gpIqq-0004pL-6i; Thu, 31 Jan 2019 22:22:20 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Thu, 31 Jan 2019 22:21:50 +0200
-Message-Id: <20190131202206.15903-6-luca@coelho.fi>
+Date:   Thu, 31 Jan 2019 22:21:52 +0200
+Message-Id: <20190131202206.15903-8-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190131202206.15903-1-luca@coelho.fi>
 References: <20190131202206.15903-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/21] iwlwifi: dvm: use %u for sscanf() into unsigned variable
+Subject: [PATCH 07/21] iwlwifi: mvm: add HE TB PPDU SIG-A BW to radiotap
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -45,37 +45,79 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Use %u instead of using %d which looks signed but then won't
-get signed output if using an unsigned variable. It doesn't
-matter much, but be consistent.
+Expose the trigger-based PPDU SIG-A bandwidth to radiotap in
+the newly defined bits thereof.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 21 +++++++++++++------
+ include/net/ieee80211_radiotap.h              |  6 ++++++
+ 2 files changed, 21 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c
-index 3d2e44a642de..e64cdafc5623 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c
-@@ -3,6 +3,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -2238,7 +2239,7 @@ static ssize_t iwl_dbgfs_log_event_write(struct file *file,
- 	buf_size = min(count, sizeof(buf) -  1);
- 	if (copy_from_user(buf, user_buf, buf_size))
- 		return -EFAULT;
--	if (sscanf(buf, "%d", &event_log_flag) != 1)
-+	if (sscanf(buf, "%u", &event_log_flag) != 1)
- 		return -EFAULT;
- 	if (event_log_flag == 1)
- 		iwl_dump_nic_event_log(priv, true, NULL);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index b5ff3325c1d3..d2728fe6a041 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -960,6 +960,7 @@ iwl_mvm_decode_he_phy_ru_alloc(struct iwl_mvm_rx_phy_data *phy_data,
+ 	 * the TSF/timers are not be transmitted in HE-MU.
+ 	 */
+ 	u8 ru = le32_get_bits(phy_data->d1, IWL_RX_PHY_DATA1_HE_RU_ALLOC_MASK);
++	u32 he_type = rate_n_flags & RATE_MCS_HE_TYPE_MSK;
+ 	u8 offs = 0;
+ 
+ 	rx_status->bw = RATE_INFO_BW_HE_RU;
+@@ -1002,19 +1003,27 @@ iwl_mvm_decode_he_phy_ru_alloc(struct iwl_mvm_rx_phy_data *phy_data,
+ 		he->data2 |=
+ 			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_SEC);
+ 
+-	if (he_mu) {
+ #define CHECK_BW(bw) \
+ 	BUILD_BUG_ON(IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_ ## bw ## MHZ != \
++		     RATE_MCS_CHAN_WIDTH_##bw >> RATE_MCS_CHAN_WIDTH_POS); \
++	BUILD_BUG_ON(IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_ ## bw ## MHZ != \
+ 		     RATE_MCS_CHAN_WIDTH_##bw >> RATE_MCS_CHAN_WIDTH_POS)
+-		CHECK_BW(20);
+-		CHECK_BW(40);
+-		CHECK_BW(80);
+-		CHECK_BW(160);
++	CHECK_BW(20);
++	CHECK_BW(40);
++	CHECK_BW(80);
++	CHECK_BW(160);
++
++	if (he_mu)
+ 		he_mu->flags2 |=
+ 			le16_encode_bits(FIELD_GET(RATE_MCS_CHAN_WIDTH_MSK,
+ 						   rate_n_flags),
+ 					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW);
+-	}
++	else if (he_type == RATE_MCS_HE_TYPE_TRIG)
++		he->data6 |=
++			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_KNOWN) |
++			le16_encode_bits(FIELD_GET(RATE_MCS_CHAN_WIDTH_MSK,
++						   rate_n_flags),
++					 IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW);
+ }
+ 
+ static void iwl_mvm_decode_he_phy_data(struct iwl_mvm *mvm,
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index 8014153bdd49..38c48bb80439 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -291,6 +291,12 @@ enum ieee80211_radiotap_he_bits {
+ 
+ 	IEEE80211_RADIOTAP_HE_DATA6_NSTS		= 0x000f,
+ 	IEEE80211_RADIOTAP_HE_DATA6_DOPPLER		= 0x0010,
++	IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_KNOWN	= 0x0020,
++	IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW		= 0x00c0,
++		IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_20MHZ	= 0,
++		IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_40MHZ	= 1,
++		IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_80MHZ	= 2,
++		IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_160MHZ	= 3,
+ 	IEEE80211_RADIOTAP_HE_DATA6_TXOP		= 0x7f00,
+ 	IEEE80211_RADIOTAP_HE_DATA6_MIDAMBLE_PDCTY	= 0x8000,
+ };
 -- 
 2.20.1
 
