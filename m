@@ -6,26 +6,26 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE802C169C4
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D28BBC282D9
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9C56A218AC
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A40DA218AC
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732799AbfAaMWE (ORCPT
+        id S1732808AbfAaMWF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 07:22:04 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:53704 "EHLO
+        Thu, 31 Jan 2019 07:22:05 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:53700 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732520AbfAaMWD (ORCPT
+        with ESMTP id S1732403AbfAaMWD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 31 Jan 2019 07:22:03 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0VCLnJx016760, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0VCLm9m016756, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0VCLnJx016760
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0VCLm9m016756
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Thu, 31 Jan 2019 20:21:49 +0800
+        Thu, 31 Jan 2019 20:21:48 +0800
 Received: from localhost.localdomain (172.21.68.143) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
  14.3.408.0; Thu, 31 Jan 2019 20:21:48 +0800
@@ -34,9 +34,9 @@ To:     <kvalo@codeaurora.org>
 CC:     <Larry.Finger@lwfinger.net>, <tehuang@realtek.com>,
         <briannorris@chromium.org>, <sgruszka@redhat.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/24] rtw88: 8822c: update efuse table as released
-Date:   Thu, 31 Jan 2019 20:21:20 +0800
-Message-ID: <1548937297-14660-8-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 06/24] rtw88: 8822c: correct crystal setting
+Date:   Thu, 31 Jan 2019 20:21:19 +0800
+Message-ID: <1548937297-14660-7-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
 References: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
@@ -50,165 +50,44 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Update efuse table layout as the document released.
-From the newest released document, 8822c has RFE type 1 and type 2.
-Without adding RFE 1 and 2 the user's efuse-programed chips will failed
-to pass the chip info check and cannot power on hardware.
-And 8822c has only 512 bytes for physical efuse.
+8822c crystal setting register is no longer at 0x24 and 0x28.
+It is at REG_ANAPAR_XTAL_0 instead.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 12 ++----
- drivers/net/wireless/realtek/rtw88/rtw8822c.h | 53 ++++++++++++++-------------
- 2 files changed, 31 insertions(+), 34 deletions(-)
+ drivers/net/wireless/realtek/rtw88/reg.h      | 1 +
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 6 +++---
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index 4923a45..e48ea2d 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -296,6 +296,7 @@
+ #define REG_WMAC_OPTION_FUNCTION 0x07D0
+ #define REG_WMAC_OPTION_FUNCTION_1 0x07D4
+ 
++#define REG_ANAPAR_XTAL_0	0x1040
+ #define REG_CPU_DMEM_CON	0x1080
+ #define BIT_WL_PLATFORM_RST	BIT(16)
+ #define BIT_WL_SECURITY_CLK	BIT(15)
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 71f2af0..5c06e32 100644
+index 38e770c..71f2af0 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -16,12 +16,10 @@
- static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
- 				     u8 rx_path, bool is_tx2_path);
+@@ -95,9 +95,9 @@ static void rtw8822c_phy_set_param(struct rtw_dev *rtwdev)
  
--static u8 temp_addr[ETH_ALEN] = {0x00, 0xe0, 0x4c, 0x88, 0x22, 0xce};
--
- static void rtw8822ce_efuse_parsing(struct rtw_efuse *efuse,
- 				    struct rtw8822c_efuse *map)
- {
--	ether_addr_copy(efuse->addr, temp_addr);
-+	ether_addr_copy(efuse->addr, map->e.mac_addr);
- }
+ 	rtw_phy_load_tables(rtwdev);
  
- static int rtw8822c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
-@@ -34,10 +32,6 @@ static int rtw8822c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
+-	crystal_cap = rtwdev->efuse.crystal_cap & 0x3F;
+-	rtw_write32_mask(rtwdev, 0x24, 0x7e000000, crystal_cap);
+-	rtw_write32_mask(rtwdev, 0x28, 0x7e, crystal_cap);
++	crystal_cap = rtwdev->efuse.crystal_cap & 0x7f;
++	rtw_write32_mask(rtwdev, REG_ANAPAR_XTAL_0, 0xfffc00,
++			 crystal_cap | (crystal_cap << 7));
  
- 	efuse->rfe_option = map->rfe_option;
- 	efuse->crystal_cap = map->xtal_k;
--	efuse->pa_type_2g = map->pa_type;
--	efuse->pa_type_5g = map->pa_type;
--	efuse->lna_type_2g = map->lna_type_2g[0];
--	efuse->lna_type_5g = map->lna_type_5g[0];
- 	efuse->channel_plan = map->channel_plan;
- 	efuse->country_code[0] = map->country_code[0];
- 	efuse->country_code[1] = map->country_code[1];
-@@ -1082,6 +1076,8 @@ static struct rtw_intf_phy_para_table phy_para_table_8822c = {
- 
- static const struct rtw_rfe_def rtw8822c_rfe_defs[] = {
- 	[0] = RTW_DEF_RFE(8822c, 0, 0),
-+	[1] = RTW_DEF_RFE(8822c, 0, 0),
-+	[2] = RTW_DEF_RFE(8822c, 0, 0),
- };
- 
- static struct rtw_hw_reg rtw8822c_dig[] = {
-@@ -1137,7 +1133,7 @@ struct rtw_chip_info rtw8822c_hw_spec = {
- 	.tx_buf_desc_sz = 16,
- 	.rx_pkt_desc_sz = 24,
- 	.rx_buf_desc_sz = 8,
--	.phy_efuse_size = 1024,
-+	.phy_efuse_size = 512,
- 	.log_efuse_size = 768,
- 	.ptct_efuse_size = 124,
- 	.txff_size = 262144,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-index e8abce0..d4806fd 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-@@ -8,27 +8,16 @@
- #include <asm/byteorder.h>
- 
- struct rtw8822cu_efuse {
--	u8 res4[4];			/* 0xd0 */
--	u8 usb_optional_function;
--	u8 res5[0x1e];
--	u8 res6[2];
--	u8 serial[0x0b];		/* 0xf5 */
--	u8 vid;				/* 0x100 */
--	u8 res7;
--	u8 pid;
--	u8 res8[4];
--	u8 mac_addr[ETH_ALEN];		/* 0x107 */
--	u8 res9[2];
--	u8 vendor_name[0x07];
--	u8 res10[2];
--	u8 device_name[0x14];
--	u8 res11[0xcf];
--	u8 package_type;		/* 0x1fb */
--	u8 res12[0x4];
-+	u8 res0[0x30];			/* 0x120 */
-+	u8 vid[2];			/* 0x150 */
-+	u8 pid[2];
-+	u8 res1[3];
-+	u8 mac_addr[ETH_ALEN];		/* 0x157 */
-+	u8 res2[0x3d];
- };
- 
- struct rtw8822ce_efuse {
--	u8 mac_addr[ETH_ALEN];		/* 0xd0 */
-+	u8 mac_addr[ETH_ALEN];		/* 0x120 */
- 	u8 vender_id[2];
- 	u8 device_id[2];
- 	u8 sub_vender_id[2];
-@@ -36,20 +25,20 @@ struct rtw8822ce_efuse {
- 	u8 pmc[2];
- 	u8 exp_device_cap[2];
- 	u8 msi_cap;
--	u8 ltr_cap;			/* 0xe3 */
-+	u8 ltr_cap;			/* 0x133 */
- 	u8 exp_link_control[2];
- 	u8 link_cap[4];
- 	u8 link_control[2];
- 	u8 serial_number[8];
--	u8 res0:2;			/* 0xf4 */
-+	u8 res0:2;			/* 0x144 */
- 	u8 ltr_en:1;
- 	u8 res1:2;
- 	u8 obff:2;
- 	u8 res2:3;
- 	u8 obff_cap:2;
- 	u8 res3:4;
--	u8 res4[3];
- 	u8 class_code[3];
-+	u8 res4;
- 	u8 pci_pm_L1_2_supp:1;
- 	u8 pci_pm_L1_1_supp:1;
- 	u8 aspm_pm_L1_2_supp:1;
-@@ -72,11 +61,9 @@ struct rtw8822c_efuse {
- 
- 	u8 channel_plan;		/* 0xb8 */
- 	u8 xtal_k;
--	u8 thermal_meter;
-+	u8 res1;
- 	u8 iqk_lck;
--	u8 pa_type;			/* 0xbc */
--	u8 lna_type_2g[2];		/* 0xbd */
--	u8 lna_type_5g[2];
-+	u8 res2[5];			/* 0xbc */
- 	u8 rf_board_option;
- 	u8 rf_feature_option;
- 	u8 rf_bt_setting;
-@@ -88,7 +75,21 @@ struct rtw8822c_efuse {
- 	u8 rf_antenna_option;		/* 0xc9 */
- 	u8 rfe_option;
- 	u8 country_code[2];
--	u8 res[3];
-+	u8 res3[3];
-+	u8 path_a_thermal;		/* 0xd0 */
-+	u8 path_b_thermal;
-+	u8 res4[2];
-+	u8 rx_gain_gap_2g_ofdm;
-+	u8 res5;
-+	u8 rx_gain_gap_2g_cck;
-+	u8 res6;
-+	u8 rx_gain_gap_5gl;
-+	u8 res7;
-+	u8 rx_gain_gap_5gm;
-+	u8 res8;
-+	u8 rx_gain_gap_5gh;
-+	u8 res9;
-+	u8 res10[0x42];
- 	union {
- 		struct rtw8822cu_efuse u;
- 		struct rtw8822ce_efuse e;
+ 	/* post init after header files config */
+ 	rtw8822c_header_file_init(rtwdev, false);
 -- 
 2.7.4
 
