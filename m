@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B894C169C4
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20B72C282DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 403DD218AC
+	by mail.kernel.org (Postfix) with ESMTP id E987E218AC
 	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 12:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732815AbfAaMWJ (ORCPT
+        id S1732819AbfAaMWK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 07:22:09 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:53729 "EHLO
+        Thu, 31 Jan 2019 07:22:10 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:53727 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732811AbfAaMWI (ORCPT
+        with ESMTP id S1732798AbfAaMWI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 31 Jan 2019 07:22:08 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0VCLqT7016773, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0VCLrpH016777, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0VCLqT7016773
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0VCLrpH016777
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Thu, 31 Jan 2019 20:21:52 +0800
+        Thu, 31 Jan 2019 20:21:53 +0800
 Received: from localhost.localdomain (172.21.68.143) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Thu, 31 Jan 2019 20:21:51 +0800
+ 14.3.408.0; Thu, 31 Jan 2019 20:21:52 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <Larry.Finger@lwfinger.net>, <tehuang@realtek.com>,
         <briannorris@chromium.org>, <sgruszka@redhat.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/24] rtw88: 8822c: update channel setting
-Date:   Thu, 31 Jan 2019 20:21:23 +0800
-Message-ID: <1548937297-14660-11-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 11/24] rtw88: 8822c: update trx mode setting
+Date:   Thu, 31 Jan 2019 20:21:24 +0800
+Message-ID: <1548937297-14660-12-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
 References: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
@@ -50,260 +50,181 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Chien-Hsun Liao <ben.liao@realtek.com>
 
-Update BB and RF channel settings. The old settings are not compatible
-with most of the chips now. To swtich to a target channel correctly,
-many of the PHY parameters needs to be modified.
-
-For BB, the DAC clock setting, CCK tx filter coefficient and OFDM dfir
-should be updated in order to meet 802.11 standards of spectral mask.
-CCK trx settings should be modified based on different band, because the
-CCK signals are not allowed in 5G bands.
-
-For RF, subband setting should be corrected, ch-140 ~ ch-144 is in
-band-3 instead of band-4. Also rx amplifier should be set to different
-values in different bandwidth, otherwise the rx sensitivity will
-degrade.
-
-Note the settings are based on phy parameter v27 table, should be
-applied together to make sure it work.
+We rearrange the coding style of trx mode setting based on ofdm_tx,
+ofdm_rx, cck_tx and cck_rx. We also modify cck_rx 1r setting because the
+original is incorrect and could cause the degradation of sensitivity.
 
 Signed-off-by: Chien-Hsun Liao <ben.liao@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/reg.h      |  1 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 85 +++++++++++++++++----------
- drivers/net/wireless/realtek/rtw88/rtw8822c.h | 15 +++--
- 3 files changed, 67 insertions(+), 34 deletions(-)
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 132 ++++++++++++++------------
+ 1 file changed, 72 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index e48ea2d..7fc2b8f 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -407,6 +407,7 @@
- #define RF_XTALX2	0xb8
- #define RF_MALSEL	0xbe
- #define RF_LUTDBG	0xdf
-+#define RF_LUTWE2	0xee
- #define RF_LUTWE	0xef
- 
- #endif
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 7dd1d15..c10894e 100644
+index c10894e..40008d7 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -337,6 +337,7 @@ static void rtw8822c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
- #define RF18_BW_80M		(BIT(12))
- 
- 	u32 rf_reg18 = 0;
-+	u32 rf_rxbb = 0;
- 
- 	rf_reg18 = rtw_read_rf(rtwdev, RF_PATH_A, 0x18, RFREG_MASK);
- 
-@@ -345,7 +346,7 @@ static void rtw8822c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
- 
- 	rf_reg18 |= (channel <= 14 ? RF18_BAND_2G : RF18_BAND_5G);
- 	rf_reg18 |= (channel & RF18_CHANNEL_MASK);
--	if (channel > 140)
-+	if (channel > 144)
- 		rf_reg18 |= RF18_RFSI_GT_CH140;
- 	else if (channel >= 80)
- 		rf_reg18 |= RF18_RFSI_GE_CH80;
-@@ -356,16 +357,29 @@ static void rtw8822c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
- 	case RTW_CHANNEL_WIDTH_20:
- 	default:
- 		rf_reg18 |= RF18_BW_20M;
-+		rf_rxbb = 0x18;
- 		break;
- 	case RTW_CHANNEL_WIDTH_40:
- 		/* RF bandwidth */
- 		rf_reg18 |= RF18_BW_40M;
-+		rf_rxbb = 0x10;
- 		break;
- 	case RTW_CHANNEL_WIDTH_80:
- 		rf_reg18 |= RF18_BW_80M;
-+		rf_rxbb = 0x8;
- 		break;
- 	}
- 
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE2, 0x04, 0x01);
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWA, 0x1f, 0x12);
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWD0, 0xfffff, rf_rxbb);
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE2, 0x04, 0x00);
-+
-+	rtw_write_rf(rtwdev, RF_PATH_B, RF_LUTWE2, 0x04, 0x01);
-+	rtw_write_rf(rtwdev, RF_PATH_B, RF_LUTWA, 0x1f, 0x12);
-+	rtw_write_rf(rtwdev, RF_PATH_B, RF_LUTWD0, 0xfffff, rf_rxbb);
-+	rtw_write_rf(rtwdev, RF_PATH_B, RF_LUTWE2, 0x04, 0x00);
-+
- 	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK, rf_reg18);
- 	rtw_write_rf(rtwdev, RF_PATH_B, RF_CFGCH, RFREG_MASK, rf_reg18);
+@@ -524,81 +524,26 @@ static void rtw8822c_set_channel(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 	rtw8822c_toggle_igi(rtwdev);
  }
-@@ -385,7 +399,9 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 				    u8 primary_ch_idx)
+ 
+-static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
+-				     u8 rx_path, bool is_tx2_path)
++static void rtw8822c_config_cck_rx_path(struct rtw_dev *rtwdev, u8 rx_path)
  {
- 	if (channel <= 14) {
--		rtw_write32_set(rtwdev, REG_ENCCK, BIT_CCK_BLK_EN);
-+		rtw_write32_clr(rtwdev, REG_BGCTRL, BITS_RX_IQ_WEIGHT);
-+		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x8);
-+		rtw_write32_set(rtwdev, REG_TXF4, BIT(20));
- 		rtw_write32_clr(rtwdev, REG_CCK_CHECK, BIT_CHECK_CCK_EN);
- 		rtw_write32_clr(rtwdev, REG_CCKTXONLY, BIT_BB_CCK_CHECK_EN);
- 		rtw_write32_mask(rtwdev, REG_CCAMSK, 0x3F000000, 0xF);
-@@ -398,22 +414,43 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x96a);
- 		else
- 			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x9aa);
+-	if ((tx_path | rx_path) & BB_PATH_A)
+-		rtw_write32_mask(rtwdev, REG_ORITXCODE, MASK20BITS, 0x33312);
+-	else
+-		rtw_write32_mask(rtwdev, REG_ORITXCODE, MASK20BITS, 0x11111);
+-	if ((tx_path | rx_path) & BB_PATH_B)
+-		rtw_write32_mask(rtwdev, REG_ORITXCODE2, MASK20BITS, 0x33312);
+-	else
+-		rtw_write32_mask(rtwdev, REG_ORITXCODE2, MASK20BITS, 0x11111);
 -
- 		if (channel == 14) {
--			rtw_write32_mask(rtwdev, REG_PSFGC2, MASKDWORD, 0x0000b81c);
--			rtw_write32_mask(rtwdev, REG_PSFGC6, MASKLWORD, 0x0000);
--			rtw_write32_mask(rtwdev, REG_PSFGC, MASKDWORD, 0x00003667);
-+			rtw_write32_mask(rtwdev, REG_TXF0, MASKHWORD, 0x3da0);
-+			rtw_write32_mask(rtwdev, REG_TXF1, MASKDWORD,
-+					 0x4962c931);
-+			rtw_write32_mask(rtwdev, REG_TXF2, MASKLWORD, 0x6aa3);
-+			rtw_write32_mask(rtwdev, REG_TXF3, MASKHWORD, 0xaa7b);
-+			rtw_write32_mask(rtwdev, REG_TXF4, MASKLWORD, 0xf3d7);
-+			rtw_write32_mask(rtwdev, REG_TXF5, MASKDWORD, 0x0);
-+			rtw_write32_mask(rtwdev, REG_TXF6, MASKDWORD,
-+					 0xff012455);
-+			rtw_write32_mask(rtwdev, REG_TXF7, MASKDWORD, 0xffff);
- 		} else {
--			rtw_write32_mask(rtwdev, REG_PSFGC2, MASKDWORD, 0x64b80c1c);
--			rtw_write32_mask(rtwdev, REG_PSFGC6, MASKLWORD, 0x8810);
--			rtw_write32_mask(rtwdev, REG_PSFGC, MASKDWORD, 0x01235667);
-+			rtw_write32_mask(rtwdev, REG_TXF0, MASKHWORD, 0x5284);
-+			rtw_write32_mask(rtwdev, REG_TXF1, MASKDWORD,
-+					 0x3e18fec8);
-+			rtw_write32_mask(rtwdev, REG_TXF2, MASKLWORD, 0x0a88);
-+			rtw_write32_mask(rtwdev, REG_TXF3, MASKHWORD, 0xacc4);
-+			rtw_write32_mask(rtwdev, REG_TXF4, MASKLWORD, 0xc8b2);
-+			rtw_write32_mask(rtwdev, REG_TXF5, MASKDWORD,
-+					 0x00faf0de);
-+			rtw_write32_mask(rtwdev, REG_TXF6, MASKDWORD,
-+					 0x00122344);
-+			rtw_write32_mask(rtwdev, REG_TXF7, MASKDWORD,
-+					 0x0fffffff);
- 		}
-+		if (channel == 13)
-+			rtw_write32_mask(rtwdev, REG_TXDFIR0, 0x70, 0x3);
-+		else
-+			rtw_write32_mask(rtwdev, REG_TXDFIR0, 0x70, 0x1);
- 	} else if (channel > 35) {
- 		rtw_write32_set(rtwdev, REG_CCKTXONLY, BIT_BB_CCK_CHECK_EN);
- 		rtw_write32_set(rtwdev, REG_CCK_CHECK, BIT_CHECK_CCK_EN);
--		rtw_write32_clr(rtwdev, REG_ENCCK, BIT_CCK_BLK_EN);
-+		rtw_write32_set(rtwdev, REG_BGCTRL, BITS_RX_IQ_WEIGHT);
-+		rtw_write32_clr(rtwdev, REG_TXF4, BIT(20));
-+		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x0);
- 		rtw_write32_mask(rtwdev, REG_CCAMSK, 0x3F000000, 0x22);
+-	rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x8);
+-	rtw_write32_mask(rtwdev, REG_CCKPATH, BIT(30), 0x1);
 -
-+		rtw_write32_mask(rtwdev, REG_TXDFIR0, 0x70, 0x3);
- 		if (channel >= 36 && channel <= 64) {
- 			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, 0x1f0, 0x1);
- 			rtw_write32_mask(rtwdev, REG_RXAGCCTL, 0x1f0, 0x1);
-@@ -443,13 +480,9 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 	case RTW_CHANNEL_WIDTH_20:
- 		rtw_write32_mask(rtwdev, REG_DFIRBW, 0x3FF0, 0x19B);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0x0);
--		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xc0, 0x0);
--		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xff00,
--				 (primary_ch_idx | (primary_ch_idx << 4)));
--		rtw_write32_mask(rtwdev, REG_TXCLK, MASKH3BYTES, 0xdb6db6);
--		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0xffffc000, 0x1F8A3);
--		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0x1, 0x0);
--		rtw_write32_mask(rtwdev, REG_DYMTHMIN, 0x3f, 0x1a);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xffc0, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700, 0x7);
-+		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700000, 0x6);
- 		break;
- 	case RTW_CHANNEL_WIDTH_40:
- 		rtw_write32_mask(rtwdev, REG_CCKSB, BIT(4),
-@@ -458,33 +491,26 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xc0, 0x0);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xff00,
- 				 (primary_ch_idx | (primary_ch_idx << 4)));
--		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0xffffc000, 0x1D821);
--		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0x1, 0x0);
--		rtw_write32_mask(rtwdev, REG_DYMTHMIN, MASK12BITS, 0x618);
--		rtw_write32_mask(rtwdev, REG_DYMENTH0, 0x3ffff, 0x1D821);
- 		break;
- 	case RTW_CHANNEL_WIDTH_80:
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0xa);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xc0, 0x0);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xff00,
- 				 (primary_ch_idx | (primary_ch_idx << 4)));
--		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0xffffc000, 0x1B79F);
--		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0x1, 0x0);
--		rtw_write32_mask(rtwdev, REG_DYMTHMIN, 0x3ffff, 0x18596);
--		rtw_write32_mask(rtwdev, REG_DYMENTH0, 0x3FFFFFFF, 0x2085D75E);
--		rtw_write32_mask(rtwdev, REG_DYMENTH, 0x3f, 0x1d);
- 		break;
- 	case RTW_CHANNEL_WIDTH_5:
- 		rtw_write32_mask(rtwdev, REG_DFIRBW, 0x3FF0, 0x2AB);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0x0);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xffc0, 0x1);
--		rtw_write32_mask(rtwdev, REG_TXCLK, MASKH3BYTES, 0xDB4DB2);
-+		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700, 0x4);
-+		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700000, 0x4);
- 		break;
- 	case RTW_CHANNEL_WIDTH_10:
- 		rtw_write32_mask(rtwdev, REG_DFIRBW, 0x3FF0, 0x2AB);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0x0);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xffc0, 0x2);
--		rtw_write32_mask(rtwdev, REG_TXCLK, MASKH3BYTES, 0xDB5DB4);
-+		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700, 0x6);
-+		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700000, 0x5);
- 		break;
- 	}
- }
-@@ -551,7 +577,6 @@ static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
- 
+-	if (tx_path == BB_PATH_A)
+-		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x8);
+-	else if (tx_path == BB_PATH_B)
+-		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x4);
+-	else if (tx_path == BB_PATH_AB)
+-		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0xc);
+-
+-	rtw_write32_mask(rtwdev, REG_TXANTSEG, 0xf, tx_path);
+-	rtw_write32_mask(rtwdev, REG_ENFN, BIT(16), 0x0);
+-	rtw_write32_mask(rtwdev, REG_ENFN, BIT(31), 0x1);
+-
+-	if (tx_path == BB_PATH_A) {
+-		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf, 0x1);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x3, 0x0);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc, 0x0);
+-	} else if (tx_path == BB_PATH_B) {
+-		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf, 0x2);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x3, 0x0);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc, 0x0);
+-	} else if (tx_path == BB_PATH_AB) {
+-		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf, 0x3);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x3, 0x0);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc, 0x1);
+-	}
+-
+-	if (tx_path == BB_PATH_A || tx_path == BB_PATH_B) {
+-		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf0, 0x1);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x300, 0x0);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc00, 0x0);
+-	} else if (tx_path == BB_PATH_AB) {
+-		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf0, 0x3);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x300, 0x0);
+-		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc00, 0x1);
+-	}
+-	rtw_write32_mask(rtwdev, REG_TXANT, 0xf, tx_path);
+-
  	if (rx_path == BB_PATH_A || rx_path == BB_PATH_B) {
++		rtw_write32_mask(rtwdev, REG_CCANRX, 0x00060000, 0x0);
  		rtw_write32_mask(rtwdev, REG_CCANRX, 0x00600000, 0x0);
--		rtw_write32_mask(rtwdev, REG_PCCAWT, 0x80000000, 0x0);
  	} else if (rx_path == BB_PATH_AB) {
  		rtw_write32_mask(rtwdev, REG_CCANRX, 0x00600000, 0x1);
  		rtw_write32_mask(rtwdev, REG_CCANRX, 0x00060000, 0x1);
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-index d4806fd..fa71104 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-@@ -119,6 +119,7 @@ struct rtw8822c_efuse {
- #define REG_ANAPARLDO_POW_MAC	0x0029
- #define BIT_LDOE25_PON		BIT(0)
+ 	}
  
-+#define REG_TXDFIR0	0x808
- #define REG_DFIRBW	0x810
- #define REG_ANTMAP0	0x820
- #define REG_ANTMAP	0x824
-@@ -140,16 +141,22 @@ struct rtw8822c_efuse {
- #define REG_RXAGCCTL0	0x18ac
- #define REG_CCKSB	0x1a00
- #define REG_RXCCKSEL	0x1a04
--#define REG_PSFGC2	0x1a24
--#define REG_PSFGC6	0x1a28
-+#define REG_BGCTRL	0x1a14
-+#define BITS_RX_IQ_WEIGHT	(BIT(8) | BIT(9))
-+#define REG_TXF0	0x1a20
-+#define REG_TXF1	0x1a24
-+#define REG_TXF2	0x1a28
- #define REG_CCANRX	0x1a2c
- #define BIT_CCK_FA_RST		(BIT(14) | BIT(15))
- #define BIT_OFDM_FA_RST		(BIT(12) | BIT(13))
- #define REG_CCK_FACNT	0x1a5c
- #define REG_CCKTXONLY	0x1a80
- #define BIT_BB_CCK_CHECK_EN	BIT(18)
--#define REG_PSFGC	0x1aac
--#define REG_PCCAWT	0x1ac0
-+#define REG_TXF3	0x1a98
-+#define REG_TXF4	0x1a9c
-+#define REG_TXF5	0x1aa0
-+#define REG_TXF6	0x1aac
-+#define REG_TXF7	0x1ab0
- #define REG_TXANT	0x1c28
- #define REG_ENCCK	0x1c3c
- #define BIT_CCK_BLK_EN		BIT(1)
+-	rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0x0f000000, 0x0);
+-
+ 	if (rx_path == BB_PATH_A)
+ 		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0x0f000000, 0x0);
+ 	else if (rx_path == BB_PATH_B)
+ 		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0x0f000000, 0x5);
+ 	else if (rx_path == BB_PATH_AB)
+ 		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0x0f000000, 0x1);
++}
+ 
+-	rtw_write32_mask(rtwdev, REG_ANTMAP, MASKBYTE3LOWNIBBLE, rx_path);
+-	rtw_write32_mask(rtwdev, REG_ANTMAP, 0x000F0000, rx_path);
+-
+-	if (!(rx_path & BB_PATH_A))
+-		rtw_write_rf(rtwdev, 0, 0, 0xf0000, 0x1);
+-	if (!(rx_path & BB_PATH_B))
+-		rtw_write_rf(rtwdev, 1, 0, 0xf0000, 0x1);
+-
++static void rtw8822c_config_ofdm_rx_path(struct rtw_dev *rtwdev, u8 rx_path)
++{
+ 	if (rx_path == BB_PATH_A || rx_path == BB_PATH_B) {
+ 		rtw_write32_mask(rtwdev, REG_RXFNCTL, 0x300, 0x0);
+ 		rtw_write32_mask(rtwdev, REG_RXFNCTL, 0x600000, 0x0);
+@@ -613,6 +558,73 @@ static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
+ 		rtw_write32_mask(rtwdev, REG_MRCM, BIT(24), 0x1);
+ 	}
+ 
++	rtw_write32_mask(rtwdev, 0x824, 0x0f000000, rx_path);
++	rtw_write32_mask(rtwdev, 0x824, 0x000f0000, rx_path);
++}
++
++static void rtw8822c_config_rx_path(struct rtw_dev *rtwdev, u8 rx_path)
++{
++	rtw8822c_config_cck_rx_path(rtwdev, rx_path);
++	rtw8822c_config_ofdm_rx_path(rtwdev, rx_path);
++}
++
++static void rtw8822c_config_cck_tx_path(struct rtw_dev *rtwdev, u8 tx_path,
++					bool is_tx2_path)
++{
++	if (tx_path == BB_PATH_A) {
++		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x8);
++	} else if (tx_path == BB_PATH_B) {
++		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x4);
++	} else {
++		if (is_tx2_path)
++			rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0xc);
++		else
++			rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x8);
++	}
++}
++
++static void rtw8822c_config_ofdm_tx_path(struct rtw_dev *rtwdev, u8 tx_path,
++					 bool is_tx2_path)
++{
++	if (tx_path == BB_PATH_A) {
++		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xff, 0x11);
++		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xff, 0x0);
++	} else if (tx_path == BB_PATH_B) {
++		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xff, 0x12);
++		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xff, 0x0);
++	} else {
++		if (is_tx2_path) {
++			rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xff, 0x33);
++			rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xffff, 0x0404);
++		} else {
++			rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xff, 0x31);
++			rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xffff, 0x0400);
++		}
++	}
++}
++
++static void rtw8822c_config_tx_path(struct rtw_dev *rtwdev, u8 tx_path,
++				    bool is_tx2_path)
++{
++	rtw8822c_config_cck_tx_path(rtwdev, tx_path, is_tx2_path);
++	rtw8822c_config_ofdm_tx_path(rtwdev, tx_path, is_tx2_path);
++}
++
++static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
++				     u8 rx_path, bool is_tx2_path)
++{
++	if ((tx_path | rx_path) & BB_PATH_A)
++		rtw_write32_mask(rtwdev, REG_ORITXCODE, MASK20BITS, 0x33312);
++	else
++		rtw_write32_mask(rtwdev, REG_ORITXCODE, MASK20BITS, 0x11111);
++	if ((tx_path | rx_path) & BB_PATH_B)
++		rtw_write32_mask(rtwdev, REG_ORITXCODE2, MASK20BITS, 0x33312);
++	else
++		rtw_write32_mask(rtwdev, REG_ORITXCODE2, MASK20BITS, 0x11111);
++
++	rtw8822c_config_rx_path(rtwdev, rx_path);
++	rtw8822c_config_tx_path(rtwdev, tx_path, is_tx2_path);
++
+ 	rtw8822c_toggle_igi(rtwdev);
+ }
+ 
 -- 
 2.7.4
 
