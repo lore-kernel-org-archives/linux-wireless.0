@@ -2,112 +2,165 @@ Return-Path: <SRS0=jXAT=QH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 072F1C169C4
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 13:51:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83166C282D9
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 15:18:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CCD412085B
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 13:51:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CDj5vqsG";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cY1LIvEP"
+	by mail.kernel.org (Postfix) with ESMTP id 5EF2320863
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 15:18:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732228AbfAaNvj (ORCPT
+        id S1730945AbfAaPSg convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 08:51:39 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:53310 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727202AbfAaNvi (ORCPT
+        Thu, 31 Jan 2019 10:18:36 -0500
+Received: from coyote.holtmann.net ([212.227.132.17]:37725 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726239AbfAaPSg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Jan 2019 08:51:38 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id F2F6860907; Thu, 31 Jan 2019 13:51:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548942697;
-        bh=s/9vfArZkHcYq/+TU3pNDpzA1RawHT72gLVAHafcYPw=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=CDj5vqsGKXydKdqEX6BBLstsK41awRQxn5SKu1dBn/xPo3HsI+wrl7LHITDuMCzvz
-         fazN9DuEKFe1iU3EuUuXgsgDQKVCRLNHHqOLHviIdb7hXCPaI9kGrNnJaCIACKBG6S
-         pWq8vXaaJC6ApomOPwyBCmgB8qgMPavrrsnv93oU=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 66B4560907;
-        Thu, 31 Jan 2019 13:51:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1548942694;
-        bh=s/9vfArZkHcYq/+TU3pNDpzA1RawHT72gLVAHafcYPw=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=cY1LIvEPZxtmSHIyuUODi6841usehCOjgmrSVIZn1tmE388ZZn9GUFLNMptYMz2XZ
-         zKZnfZKA1MxBpw5ANr5P3auRsvPnVxJ1v/q9dKxBYFrxhT+/0a+3wY94VJDbYF/MZY
-         FoCqIdZuiDSmercvtdXRGJTit+24LN/UUHwgBnx8=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 66B4560907
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Rakesh Pillai <pillair@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath10k: Set DMA address mask to 35 bit for WCN3990
-References: <1535992622-5074-1-git-send-email-pillair@codeaurora.org>
-        <20190130185721.GT31919@minitux>
-Date:   Thu, 31 Jan 2019 15:51:30 +0200
-In-Reply-To: <20190130185721.GT31919@minitux> (Bjorn Andersson's message of
-        "Wed, 30 Jan 2019 10:57:22 -0800")
-Message-ID: <871s4tj5p9.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 31 Jan 2019 10:18:36 -0500
+Received: from marcel-macpro.fritz.box (p4FF9FD60.dip0.t-ipconnect.de [79.249.253.96])
+        by mail.holtmann.org (Postfix) with ESMTPSA id A490ECEE02;
+        Thu, 31 Jan 2019 16:26:22 +0100 (CET)
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 12.2 \(3445.102.3\))
+Subject: Re: [PATCH] tty: Fix WARNING in tty_set_termios
+From:   Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <20190130103227.GR3691@localhost>
+Date:   Thu, 31 Jan 2019 16:18:33 +0100
+Cc:     shuah <shuah@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+        "open list:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>,
+        chris@the-brannons.com, devel@driverdev.osuosl.org,
+        Rob Herring <robh@kernel.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "open list:SERIAL DRIVERS" <linux-serial@vger.kernel.org>,
+        Jiri Slaby <jslaby@suse.com>, santhameena13@gmail.com,
+        kirk@reisers.ca, Johan Hedberg <johan.hedberg@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>, samuel.thibault@ens-lyon.org,
+        m.maya.nakamura@gmail.com, zhongjiang@huawei.com,
+        Greg KH <gregkh@linuxfoundation.org>,
+        speakup@linux-speakup.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bluez mailing list <linux-bluetooth@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        nishka.dasgupta_ug18@ashoka.edu.in,
+        "David S. Miller" <davem@davemloft.net>
+Content-Transfer-Encoding: 8BIT
+Message-Id: <D0EE5C33-2930-4286-998C-822DD7898B76@holtmann.org>
+References: <20190125232905.21727-1-shuah@kernel.org>
+ <20190126041416.GF2217@ZenIV.linux.org.uk>
+ <fe4018a7-19e4-cdd1-3095-bbe88a82788e@kernel.org>
+ <20190130103227.GR3691@localhost>
+To:     Johan Hovold <johan@kernel.org>
+X-Mailer: Apple Mail (2.3445.102.3)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+Hi Johan,
 
-> On Mon 03 Sep 09:37 PDT 2018, Rakesh Pillai wrote:
->
->> WCN3990 is a 37-bit target but can address memory range
->> only upto 35 bits. The 36th bit is used to control the
->> smmu/iommu translation and the 37th bit is used by the
->> internal bus masters to access the wifi subsystem internal
->> SRAM. With the DMA mask set to 37i-bit, the host driver
->> can get 37-bit dma address, which leads to incorrect
->> address access in the target.
+>>> On Fri, Jan 25, 2019 at 04:29:05PM -0700, Shuah Khan wrote:
+>>>> tty_set_termios() has the following WARMN_ON which can be triggered with a
+>>>> syscall to invoke TIOCGETD __NR_ioctl.
+> 
+> You meant TIOCSETD here, and in fact its the call which sets the uart
+> protocol that triggers the warning.
+> 
+>>>> WARN_ON(tty->driver->type == TTY_DRIVER_TYPE_PTY &&
+>>>>                 tty->driver->subtype == PTY_TYPE_MASTER);
+>>>> Reference: https://syzkaller.appspot.com/bug?id=2410d22f1d8e5984217329dd0884b01d99e3e48d
+>>>> 
+>>>> A simple change would have been to print error message instead of WARN_ON.
+>>>> However, the callers assume that tty_set_termios() always returns 0 and
+>>>> don't check return value. The complete solution is fixing all the callers
+>>>> to check error and bail out to fix the WARN_ON.
+>>>> 
+>>>> This fix changes tty_set_termios() to return error and all the callers
+>>>> to check error and bail out. The reproducer is used to reproduce the
+>>>> problem and verify the fix.
+>>> 
+>>>> --- a/drivers/bluetooth/hci_ldisc.c
+>>>> +++ b/drivers/bluetooth/hci_ldisc.c
+>>>> @@ -321,6 +321,8 @@ void hci_uart_set_flow_control(struct hci_uart *hu, bool enable)
+>>>>  		status = tty_set_termios(tty, &ktermios);
+>>>>  		BT_DBG("Disabling hardware flow control: %s",
+>>>>  		       status ? "failed" : "success");
+>>>> +		if (status)
+>>>> +			return;
+>>> 
+>>> Can that ldisc end up set on pty master?  And does it make any sense there?
 >> 
->> Hence the host driver can used addresses upto 35-bit
->> for WCN3990. Fix the dma mask for wcn3990 to 35-bit,
->> instead of 37-bit.
+>> The initial objective of the patch is to prevent the WARN_ON by making
+>> the change to return error instead of WARN_ON. However, without changes
+>> to places that don't check the return and keep making progress, there
+>> will be secondary problems.
 >> 
->> Tested HW: WCN3990
->> Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+>> Without this change to return here, instead of WARN_ON, it will fail
+>> with the following NULL pointer dereference at the next thing 
+>> hci_uart_set_flow_control() attempts.
 >> 
->> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
->
-> This solves the problem I'm seeing on my SDM845, where I see a
-> translation fault on a 32-bit address from the IOMMU, which we
-> previously mapped the 36 bit version of (my dma-ranges is set to 36
-> bits).
->
-> So:
->
-> Tested-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>> status = tty->driver->ops->tiocmget(tty);
+>> 
+>> kernel: [10140.649783] BUG: unable to handle kernel NULL pointer 
+> 
+> That's a separate issue, which is being fixed:
+> 
+> 	https://lkml.kernel.org/r/20190130095938.GP3691@localhost
+> 
+>>> IOW, I don't believe that this patch makes any sense.  If anything,
+>>> we need to prevent unconditional tty_set_termios() on the path
+>>> that *does* lead to calling it for pty.
+>> 
+>> I don't think preventing unconditional tty_set_termios() is enough to
+>> prevent secondary problems such as the one above.
+>> 
+>> For example, the following call chain leads to the WARN_ON that was
+>> reported. Even if void hci_uart_set_baudrate() prevents the very first
+>> tty_set_termios() call, its caller hci_uart_setup() continues with
+>> more tty setup. It goes ahead to call driver setup callback. The
+>> driver callback goes on to do more setup calling tty_set_termios().
+>> 
+>> WARN_ON call path:
+>>  hci_uart_set_baudrate+0x1cc/0x250 drivers/bluetooth/hci_ldisc.c:378
+>>  hci_uart_setup+0xa2/0x490 drivers/bluetooth/hci_ldisc.c:401
+>>  hci_dev_do_open+0x6b1/0x1920 net/bluetooth/hci_core.c:1423
+>> 
+>> Once this WARN_ON is changed to return error, the following
+>> happens, when hci_uart_setup() does driver setup callback.
+>> 
+>> kernel: [10140.649836]  mrvl_setup+0x17/0x80 [hci_uart]
+>> kernel: [10140.649840]  hci_uart_setup+0x56/0x160 [hci_uart]
+>> kernel: [10140.649850]  hci_dev_do_open+0xe6/0x630 [bluetooth]
+>> kernel: [10140.649860]  hci_power_on+0x52/0x220 [bluetooth]
+>> 
+>> I think continuing to catch the invalid condition in tty_set_termios()
+>> and preventing progress by checking return value is a straight forward
+>> change to avoid secondary problems, and it might be difficult to catch
+>> all the cases where it could fail.
+> 
+> I agree with Al that this change doesn't make much sense. The WARN_ON
+> is there to catch any bugs leading to the termios being changed for a
+> master side pty. Those should bugs should be fixed, and not worked
+> around in order to silence a WARN_ON.
+> 
+> The problem started with 7721383f4199 ("Bluetooth: hci_uart: Support
+> operational speed during setup") which introduced a new way for how
+> tty_set_termios() could end up being called for a master pty.
+> 
+> As Al hinted at, setting these ldiscs for a master pty really makes no
+> sense and perhaps that is what we should prevent unless simply making
+> sure they do not call tty_set_termios() is sufficient for the time
+> being.
+> 
+> Finally, note that serdev never operates on a pty, and that this is only
+> an issue for (the three) line disciplines.
 
-Thanks for the reminder. This got piled up in my deferred queue in
-patchwork and I hadn't looked at it yet. I'll queue this for -next.
+I think for PTYs we should just fail setting the HCI line discipline. Fail early and just move on with life.
 
-> However, some of the changes in this patch and the fact that I get a
-> translation error on the lower 32 bits of the mapped iova, makes me
-> suspect that while the hardware is capable of 37 bits, the driver only
-> dealt with the lower 32.  And if that's the case I would like to see
-> that mentioned in the commit message.
+Regards
 
-Rakesh mentioned that it's actually 35 bits. Should something changed in
-the commit log still? I can do that if needed.
+Marcel
 
--- 
-Kalle Valo
