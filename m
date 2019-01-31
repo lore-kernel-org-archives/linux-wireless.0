@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FEEDC282D9
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:22:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C176C169C4
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:22:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51B08218AF
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:22:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D65C218AF
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:22:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727779AbfAaUWq (ORCPT
+        id S1727947AbfAaUWu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 15:22:46 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:53662 "EHLO
+        Thu, 31 Jan 2019 15:22:50 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:53670 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727435AbfAaUWq (ORCPT
+        with ESMTP id S1727435AbfAaUWu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Jan 2019 15:22:46 -0500
+        Thu, 31 Jan 2019 15:22:50 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gpIqy-0004pL-F3; Thu, 31 Jan 2019 22:22:29 +0200
+        id 1gpIqv-0004pL-VD; Thu, 31 Jan 2019 22:22:26 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Thu, 31 Jan 2019 22:22:02 +0200
-Message-Id: <20190131202206.15903-18-luca@coelho.fi>
+Date:   Thu, 31 Jan 2019 22:21:59 +0200
+Message-Id: <20190131202206.15903-15-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190131202206.15903-1-luca@coelho.fi>
 References: <20190131202206.15903-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 17/21] iwlwifi: dbg_ini: implement paging memory dump
+Subject: [PATCH 14/21] iwlwifi: dbg_ini: create new dump flow and implement prph dump
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -45,311 +45,302 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Implement paging memory dump in the new dump mechanism.
-To support this change, moved iwl_self_init_dram strcut from trans_pcie
-to trans so that it will accessible via fw_runtime.
+Create a skeleton to unite all memory dumps in ini mode.
+Implement prph dump with the new skeleton.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 114 ++++++++++++++++--
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  15 +++
- .../wireless/intel/iwlwifi/pcie/ctxt-info.c   |   6 +-
- .../wireless/intel/iwlwifi/pcie/internal.h    |  18 +--
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  10 +-
- 5 files changed, 125 insertions(+), 38 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 164 +++++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |   4 +
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  34 ++++
+ 3 files changed, 163 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index edad8175c2a3..390401300fcf 100644
+index 9bcce27c6bcf..7fd7604751ef 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1095,6 +1095,43 @@ static int iwl_dump_ini_dev_mem_iter(struct iwl_fw_runtime *fwrt,
- 	return le32_to_cpu(range->range_data_size);
+@@ -1062,33 +1062,6 @@ _iwl_fw_error_dump(struct iwl_fw_runtime *fwrt,
+ 	return dump_file;
  }
  
-+static int
-+iwl_dump_ini_paging_gen2_iter(struct iwl_fw_runtime *fwrt,
-+			      struct iwl_fw_ini_error_dump_range *range,
-+			      struct iwl_fw_ini_region_cfg *reg,
-+			      int idx)
+-static void iwl_dump_prph_ini(struct iwl_trans *trans,
+-			      struct iwl_fw_error_dump_data **data,
+-			      struct iwl_fw_ini_region_cfg *reg)
+-{
+-	struct iwl_fw_error_dump_prph *prph;
+-	unsigned long flags;
+-	u32 i, size = le32_to_cpu(reg->internal.num_of_ranges);
+-
+-	IWL_DEBUG_INFO(trans, "WRT PRPH dump\n");
+-
+-	if (!iwl_trans_grab_nic_access(trans, &flags))
+-		return;
+-
+-	for (i = 0; i < size; i++) {
+-		(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_PRPH);
+-		(*data)->len =
+-			cpu_to_le32(le32_to_cpu(reg->internal.range_data_size) +
+-				    sizeof(*prph));
+-		prph = (void *)(*data)->data;
+-		prph->prph_start = reg->start_addr[i];
+-		prph->data[0] = cpu_to_le32(iwl_read_prph_no_grab(trans,
+-								  le32_to_cpu(prph->prph_start)));
+-		*data = iwl_fw_error_next_data(*data);
+-	}
+-	iwl_trans_release_nic_access(trans, &flags);
+-}
+-
+ static void iwl_dump_csr_ini(struct iwl_trans *trans,
+ 			     struct iwl_fw_error_dump_data **data,
+ 			     struct iwl_fw_ini_region_cfg *reg)
+@@ -1114,20 +1087,131 @@ static void iwl_dump_csr_ini(struct iwl_trans *trans,
+ 	}
+ }
+ 
++static int iwl_dump_ini_prph_iter(struct iwl_fw_runtime *fwrt,
++				  struct iwl_fw_ini_error_dump_range *range,
++				  struct iwl_fw_ini_region_cfg *reg,
++				  int idx)
 +{
-+	u32 page_size = fwrt->trans->init_dram.paging[idx].size;
++	__le32 *val = range->data;
++	u32 addr, prph_val, offset = le32_to_cpu(reg->offset);
++	int i;
 +
-+	range->start_addr = cpu_to_le32(idx);
-+	range->range_data_size = cpu_to_le32(page_size);
-+	memcpy(range->data, fwrt->trans->init_dram.paging[idx].block,
-+	       page_size);
++	range->start_addr = reg->start_addr[idx];
++	range->range_data_size = reg->internal.range_data_size;
++	for (i = 0; i < le32_to_cpu(reg->internal.range_data_size); i += 4) {
++		addr = le32_to_cpu(range->start_addr) + i;
++		prph_val = iwl_read_prph(fwrt->trans, addr + offset);
++		if (prph_val == 0x5a5a5a5a)
++			return -1;
++		*val++ = cpu_to_le32(prph_val);
++	}
 +	return le32_to_cpu(range->range_data_size);
 +}
 +
-+static int iwl_dump_ini_paging_iter(struct iwl_fw_runtime *fwrt,
-+				    struct iwl_fw_ini_error_dump_range *range,
-+				    struct iwl_fw_ini_region_cfg *reg,
-+				    int idx)
++static struct iwl_fw_ini_error_dump_range
++*iwl_dump_ini_mem_fill_header(struct iwl_fw_runtime *fwrt, void *data)
 +{
-+	/* increase idx by 1 since the pages are from 1 to
-+	 * fwrt->num_of_paging_blk + 1
-+	 */
-+	struct page *page = fwrt->fw_paging_db[++idx].fw_paging_block;
-+	dma_addr_t addr = fwrt->fw_paging_db[idx].fw_paging_phys;
-+	u32 page_size = fwrt->fw_paging_db[idx].fw_paging_size;
++	struct iwl_fw_ini_error_dump *dump = data;
 +
-+	range->start_addr = cpu_to_le32(idx);
-+	range->range_data_size = cpu_to_le32(page_size);
-+	dma_sync_single_for_cpu(fwrt->trans->dev, addr,	page_size,
-+				DMA_BIDIRECTIONAL);
-+	memcpy(range->data, page_address(page), page_size);
-+	dma_sync_single_for_device(fwrt->trans->dev, addr, page_size,
-+				   DMA_BIDIRECTIONAL);
-+	return le32_to_cpu(range->range_data_size);
++	return dump->ranges;
 +}
 +
- static struct iwl_fw_ini_error_dump_range
- *iwl_dump_ini_mem_fill_header(struct iwl_fw_runtime *fwrt, void *data)
- {
-@@ -1110,12 +1147,46 @@ static u32 iwl_dump_ini_mem_get_size(struct iwl_fw_runtime *fwrt,
- 		le32_to_cpu(reg->internal.range_data_size);
- }
- 
-+static u32 iwl_dump_ini_paging_gen2_get_size(struct iwl_fw_runtime *fwrt,
-+					     struct iwl_fw_ini_region_cfg *reg)
++static u32 iwl_dump_ini_mem_get_size(struct iwl_fw_runtime *fwrt,
++				     struct iwl_fw_ini_region_cfg *reg)
 +{
-+	int i;
-+	u32 size = 0;
-+
-+	for (i = 0; i < fwrt->trans->init_dram.paging_cnt; i++)
-+		size += fwrt->trans->init_dram.paging[i].size;
-+	return size;
++	return le32_to_cpu(reg->internal.num_of_ranges) *
++		le32_to_cpu(reg->internal.range_data_size);
 +}
 +
-+static u32 iwl_dump_ini_paging_get_size(struct iwl_fw_runtime *fwrt,
-+					struct iwl_fw_ini_region_cfg *reg)
++static u32 iwl_dump_ini_mem_ranges(struct iwl_fw_runtime *fwrt,
++				   struct iwl_fw_ini_region_cfg *reg)
 +{
-+	int i;
-+	u32 size = 0;
-+
-+	for (i = 1; i <= fwrt->num_of_paging_blk; i++)
-+		size += fwrt->fw_paging_db[i].fw_paging_size;
-+	return size;
++	return le32_to_cpu(reg->internal.num_of_ranges);
 +}
 +
- static u32 iwl_dump_ini_mem_ranges(struct iwl_fw_runtime *fwrt,
- 				   struct iwl_fw_ini_region_cfg *reg)
- {
- 	return le32_to_cpu(reg->internal.num_of_ranges);
- }
- 
-+static u32 iwl_dump_ini_paging_gen2_ranges(struct iwl_fw_runtime *fwrt,
-+					   struct iwl_fw_ini_region_cfg *reg)
-+{
-+	return fwrt->trans->init_dram.paging_cnt;
-+}
++/**
++ * struct iwl_dump_ini_mem_ops - ini memory dump operations
++ * @get_num_of_ranges: returns the number of memory ranges in the region.
++ * @get_size: returns the size of the region data without headers.
++ * @fill_mem_hdr: fills region type specific headers and returns the first
++ *	range or NULL if failed to fill headers.
++ * @fill_range: copies a given memory range into the dump.
++ *	Returns the size of the range or -1 otherwise.
++ */
++struct iwl_dump_ini_mem_ops {
++	u32 (*get_num_of_ranges)(struct iwl_fw_runtime *fwrt,
++				 struct iwl_fw_ini_region_cfg *reg);
++	u32 (*get_size)(struct iwl_fw_runtime *fwrt,
++			struct iwl_fw_ini_region_cfg *reg);
++	struct iwl_fw_ini_error_dump_range *
++		(*fill_mem_hdr)(struct iwl_fw_runtime *fwrt, void *data);
++	int (*fill_range)(struct iwl_fw_runtime *fwrt,
++			  struct iwl_fw_ini_error_dump_range *range,
++			  struct iwl_fw_ini_region_cfg *reg, int idx);
++};
 +
-+static u32 iwl_dump_ini_paging_ranges(struct iwl_fw_runtime *fwrt,
-+				      struct iwl_fw_ini_region_cfg *reg)
++/**
++ * iwl_dump_ini_mem - copy a memory region into the dump
++ * @fwrt: fw runtime struct.
++ * @data: dump memory data.
++ * @reg: region to copy to the dump.
++ */
++static void
++iwl_dump_ini_mem(struct iwl_fw_runtime *fwrt,
++		 enum iwl_fw_ini_region_type type,
++		 struct iwl_fw_error_dump_data **data,
++		 struct iwl_fw_ini_region_cfg *reg,
++		 struct iwl_dump_ini_mem_ops *ops)
 +{
-+	return fwrt->num_of_paging_blk;
-+}
++	struct iwl_fw_ini_error_dump_header *header = (void *)(*data)->data;
++	struct iwl_fw_ini_error_dump_range *range;
++	u32 num_of_ranges, i;
 +
- /**
-  * struct iwl_dump_ini_mem_ops - ini memory dump operations
-  * @get_num_of_ranges: returns the number of memory ranges in the region.
-@@ -1224,14 +1295,21 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
- 		case IWL_FW_INI_REGION_RXF:
- 			size += iwl_fw_rxf_len(fwrt, &fwrt->smem_cfg);
- 			break;
--		case IWL_FW_INI_REGION_PAGING:
--			if (!iwl_fw_dbg_is_paging_enabled(fwrt))
--				break;
--			size += fwrt->num_of_paging_blk *
--				(hdr_len +
--				 sizeof(struct iwl_fw_error_dump_paging) +
--				 PAGING_BLOCK_SIZE);
-+		case IWL_FW_INI_REGION_PAGING: {
-+			size += hdr_len + dump_header_len;
-+			if (iwl_fw_dbg_is_paging_enabled(fwrt)) {
-+				size += range_header_len *
-+					iwl_dump_ini_paging_ranges(fwrt, reg) +
-+					iwl_dump_ini_paging_get_size(fwrt, reg);
-+			} else {
-+				size += range_header_len *
-+					iwl_dump_ini_paging_gen2_ranges(fwrt,
-+									reg) +
-+					iwl_dump_ini_paging_gen2_get_size(fwrt,
-+									  reg);
-+			}
- 			break;
++	if (WARN_ON(!ops || !ops->get_num_of_ranges || !ops->get_size ||
++		    !ops->fill_mem_hdr || !ops->fill_range))
++		return;
++
++	num_of_ranges = ops->get_num_of_ranges(fwrt, reg);
++
++	(*data)->type = cpu_to_le32(type | INI_DUMP_BIT);
++	(*data)->len = cpu_to_le32(sizeof(*header) + num_of_ranges *
++				   sizeof(*range) + ops->get_size(fwrt, reg));
++
++	header->num_of_ranges = cpu_to_le32(num_of_ranges);
++	header->name_len = cpu_to_le32(min_t(int, IWL_FW_INI_MAX_NAME,
++					     le32_to_cpu(reg->name_len)));
++	memcpy(header->name, reg->name, le32_to_cpu(header->name_len));
++
++	range = ops->fill_mem_hdr(fwrt, header);
++	if (!range)
++		return;
++
++	for (i = 0; i < num_of_ranges; i++) {
++		int range_data_size = ops->fill_range(fwrt, range, reg, i);
++
++		if (range_data_size < 0) {
++			IWL_ERR(fwrt, "Failed to dump region type %d\n", type);
++			return;
 +		}
- 		case IWL_FW_INI_REGION_DRAM_BUFFER:
- 			/* Transport takes care of DRAM dumping */
- 		case IWL_FW_INI_REGION_INTERNAL_BUFFER:
-@@ -1286,12 +1364,24 @@ static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
- 		case IWL_FW_INI_REGION_DRAM_BUFFER:
- 			*dump_mask |= BIT(IWL_FW_ERROR_DUMP_FW_MONITOR);
- 			break;
--		case IWL_FW_INI_REGION_PAGING:
--			if (iwl_fw_dbg_is_paging_enabled(fwrt))
--				iwl_dump_paging(fwrt, data);
--			else
--				*dump_mask |= BIT(IWL_FW_ERROR_DUMP_PAGING);
-+		case IWL_FW_INI_REGION_PAGING: {
-+			ops.fill_mem_hdr = iwl_dump_ini_mem_fill_header;
-+			if (iwl_fw_dbg_is_paging_enabled(fwrt)) {
-+				ops.get_num_of_ranges =
-+					iwl_dump_ini_paging_ranges;
-+				ops.get_size = iwl_dump_ini_paging_get_size;
-+				ops.fill_range = iwl_dump_ini_paging_iter;
-+			} else {
-+				ops.get_num_of_ranges =
-+					iwl_dump_ini_paging_gen2_ranges;
-+				ops.get_size =
-+					iwl_dump_ini_paging_gen2_get_size;
-+				ops.fill_range = iwl_dump_ini_paging_gen2_iter;
-+			}
++		range = ((void *)range) + sizeof(*range) + range_data_size;
++	}
++	*data = iwl_fw_error_next_data(*data);
++}
 +
+ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
+ 				      struct iwl_fw_ini_trigger *trigger)
+ {
+-	int i, num, size = 0, hdr_len = sizeof(struct iwl_fw_error_dump_data);
++	int i, size = 0, hdr_len = sizeof(struct iwl_fw_error_dump_data);
++	u32 dump_header_len = sizeof(struct iwl_fw_ini_error_dump);
++	u32 range_header_len = sizeof(struct iwl_fw_ini_error_dump_range);
+ 
+ 	if (!trigger || !trigger->num_regions)
+ 		return 0;
+ 
+-	num = le32_to_cpu(trigger->num_regions);
+-	for (i = 0; i < num; i++) {
++	for (i = 0; i < le32_to_cpu(trigger->num_regions); i++) {
+ 		u32 reg_id = le32_to_cpu(trigger->data[i]);
+ 		struct iwl_fw_ini_region_cfg *reg;
+ 		enum iwl_fw_ini_region_type type;
+-		u32 num_entries;
+ 
+ 		if (WARN_ON(reg_id >= ARRAY_SIZE(fwrt->dump.active_regs)))
+ 			continue;
+@@ -1137,8 +1221,6 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
+ 			continue;
+ 
+ 		type = le32_to_cpu(reg->region_type);
+-		num_entries = le32_to_cpu(reg->internal.num_of_ranges);
+-
+ 		switch (type) {
+ 		case IWL_FW_INI_REGION_DEVICE_MEMORY:
+ 			size += hdr_len +
+@@ -1148,10 +1230,9 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
+ 		case IWL_FW_INI_REGION_PERIPHERY_MAC:
+ 		case IWL_FW_INI_REGION_PERIPHERY_PHY:
+ 		case IWL_FW_INI_REGION_PERIPHERY_AUX:
+-			size += num_entries *
+-				(hdr_len +
+-				 sizeof(struct iwl_fw_error_dump_prph) +
+-				 sizeof(u32));
++			size += hdr_len + dump_header_len + range_header_len *
++				iwl_dump_ini_mem_ranges(fwrt, reg) +
++				iwl_dump_ini_mem_get_size(fwrt, reg);
+ 			break;
+ 		case IWL_FW_INI_REGION_TXF:
+ 			size += iwl_fw_txf_len(fwrt, &fwrt->smem_cfg);
+@@ -1168,7 +1249,7 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
+ 				 PAGING_BLOCK_SIZE);
+ 			break;
+ 		case IWL_FW_INI_REGION_CSR:
+-			size += num_entries *
++			size += le32_to_cpu(reg->internal.num_of_ranges) *
+ 				(hdr_len +
+ 				 le32_to_cpu(reg->internal.range_data_size));
+ 			break;
+@@ -1195,6 +1276,7 @@ static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
+ 		u32 reg_id = le32_to_cpu(trigger->data[i]);
+ 		enum iwl_fw_ini_region_type type;
+ 		struct iwl_fw_ini_region_cfg *reg;
++		struct iwl_dump_ini_mem_ops ops;
+ 
+ 		if (reg_id >= ARRAY_SIZE(fwrt->dump.active_regs))
+ 			continue;
+@@ -1223,7 +1305,11 @@ static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
+ 		case IWL_FW_INI_REGION_PERIPHERY_MAC:
+ 		case IWL_FW_INI_REGION_PERIPHERY_PHY:
+ 		case IWL_FW_INI_REGION_PERIPHERY_AUX:
+-			iwl_dump_prph_ini(fwrt->trans, data, reg);
++			ops.get_num_of_ranges =	iwl_dump_ini_mem_ranges;
++			ops.get_size = iwl_dump_ini_mem_get_size;
++			ops.fill_mem_hdr = iwl_dump_ini_mem_fill_header;
++			ops.fill_range = iwl_dump_ini_prph_iter;
 +			iwl_dump_ini_mem(fwrt, type, data, reg, &ops);
  			break;
-+		}
- 		case IWL_FW_INI_REGION_TXF:
- 			iwl_fw_dump_txf(fwrt, data);
- 			break;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index d79025d663df..36d0addb79e8 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -700,6 +700,20 @@ struct iwl_dram_data {
- 	int size;
+ 		case IWL_FW_INI_REGION_DRAM_BUFFER:
+ 			*dump_mask |= BIT(IWL_FW_ERROR_DUMP_FW_MONITOR);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index 2fa7a19e02b6..a6133b5f9e83 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -441,4 +441,8 @@ void iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 			    enum iwl_fw_ini_apply_point apply_point);
+ 
+ void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt);
++
++/* This bit is used to differentiate the legacy dump from the ini dump */
++#define INI_DUMP_BIT BIT(31)
++
+ #endif  /* __iwl_fw_dbg_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index e1c6aa61ab90..fb2ff29762e2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -290,6 +290,40 @@ struct iwl_fw_error_dump_named_mem {
+ 	u8 data[];
  };
  
 +/**
-+ * struct iwl_self_init_dram - dram data used by self init process
-+ * @fw: lmac and umac dram data
-+ * @fw_cnt: total number of items in array
-+ * @paging: paging dram data
-+ * @paging_cnt: total number of items in array
++ * struct iwl_fw_ini_error_dump_range - range of memory
++ * @start_addr: the start address of this range
++ * @range_data_size: the size of this range, in bytes
++ * @data: the actual memory
 + */
-+struct iwl_self_init_dram {
-+	struct iwl_dram_data *fw;
-+	int fw_cnt;
-+	struct iwl_dram_data *paging;
-+	int paging_cnt;
++struct iwl_fw_ini_error_dump_range {
++	__le32 start_addr;
++	__le32 range_data_size;
++	__le32 data[];
++} __packed;
++
++/**
++ * struct iwl_fw_ini_error_dump_header - ini region dump header
++ * @num_of_ranges: number of ranges in this region
++ * @name_len: number of bytes allocated to the name string of this region
++ * @name: name of the region
++ */
++struct iwl_fw_ini_error_dump_header {
++	__le32 num_of_ranges;
++	__le32 name_len;
++	u8 name[IWL_FW_INI_MAX_NAME];
 +};
 +
++/**
++ * struct iwl_fw_ini_error_dump - ini region dump
++ * @header: the header of this region
++ * @ranges: the memory ranges of this this region
++ */
++struct iwl_fw_ini_error_dump {
++	struct iwl_fw_ini_error_dump_header header;
++	struct iwl_fw_ini_error_dump_range ranges[];
++} __packed;
++
  /**
-  * struct iwl_trans - transport common data
-  *
-@@ -794,6 +808,7 @@ struct iwl_trans {
- 	u8 dbg_n_dest_reg;
- 	int num_blocks;
- 	struct iwl_dram_data fw_mon[IWL_FW_INI_APPLY_NUM];
-+	struct iwl_self_init_dram init_dram;
- 
- 	enum iwl_plat_pm_mode system_pm_mode;
- 	enum iwl_plat_pm_mode runtime_pm_mode;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-index 7f4aaa810ea1..9274e317cc77 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-@@ -59,8 +59,7 @@
- 
- void iwl_pcie_ctxt_info_free_paging(struct iwl_trans *trans)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_self_init_dram *dram = &trans_pcie->init_dram;
-+	struct iwl_self_init_dram *dram = &trans->init_dram;
- 	int i;
- 
- 	if (!dram->paging) {
-@@ -83,8 +82,7 @@ int iwl_pcie_init_fw_sec(struct iwl_trans *trans,
- 			 const struct fw_img *fw,
- 			 struct iwl_context_info_dram *ctxt_dram)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_self_init_dram *dram = &trans_pcie->init_dram;
-+	struct iwl_self_init_dram *dram = &trans->init_dram;
- 	int i, ret, lmac_cnt, umac_cnt, paging_cnt;
- 
- 	if (WARN(dram->paging,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 0d16bcc3141f..ee38ae3b0d30 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -453,20 +453,6 @@ enum iwl_image_response_code {
- 	IWL_IMAGE_RESP_FAIL		= 2,
- };
- 
--/**
-- * struct iwl_self_init_dram - dram data used by self init process
-- * @fw: lmac and umac dram data
-- * @fw_cnt: total number of items in array
-- * @paging: paging dram data
-- * @paging_cnt: total number of items in array
-- */
--struct iwl_self_init_dram {
--	struct iwl_dram_data *fw;
--	int fw_cnt;
--	struct iwl_dram_data *paging;
--	int paging_cnt;
--};
--
- /**
-  * struct cont_rec: continuous recording data structure
-  * @prev_wr_ptr: the last address that was read in monitor_data
-@@ -554,7 +540,6 @@ struct iwl_trans_pcie {
- 	dma_addr_t prph_info_dma_addr;
- 	dma_addr_t prph_scratch_dma_addr;
- 	dma_addr_t iml_dma_addr;
--	struct iwl_self_init_dram init_dram;
- 	struct iwl_trans *trans;
- 
- 	struct net_device napi_dev;
-@@ -813,8 +798,7 @@ static inline int iwl_pcie_ctxt_info_alloc_dma(struct iwl_trans *trans,
- 
- static inline void iwl_pcie_ctxt_info_free_fw_img(struct iwl_trans *trans)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_self_init_dram *dram = &trans_pcie->init_dram;
-+	struct iwl_self_init_dram *dram = &trans->init_dram;
- 	int i;
- 
- 	if (!dram->fw) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index f26664b0f0f8..ac82c891595c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3220,10 +3220,10 @@ static struct iwl_trans_dump_data
- 
- 	/* Paged memory for gen2 HW */
- 	if (trans->cfg->gen2 && dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING))
--		for (i = 0; i < trans_pcie->init_dram.paging_cnt; i++)
-+		for (i = 0; i < trans->init_dram.paging_cnt; i++)
- 			len += sizeof(*data) +
- 			       sizeof(struct iwl_fw_error_dump_paging) +
--			       trans_pcie->init_dram.paging[i].size;
-+			       trans->init_dram.paging[i].size;
- 
- 	dump_data = vzalloc(len);
- 	if (!dump_data)
-@@ -3275,16 +3275,16 @@ static struct iwl_trans_dump_data
- 
- 	/* Paged memory for gen2 HW */
- 	if (trans->cfg->gen2 && dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING)) {
--		for (i = 0; i < trans_pcie->init_dram.paging_cnt; i++) {
-+		for (i = 0; i < trans->init_dram.paging_cnt; i++) {
- 			struct iwl_fw_error_dump_paging *paging;
--			u32 page_len = trans_pcie->init_dram.paging[i].size;
-+			u32 page_len = trans->init_dram.paging[i].size;
- 
- 			data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_PAGING);
- 			data->len = cpu_to_le32(sizeof(*paging) + page_len);
- 			paging = (void *)data->data;
- 			paging->index = cpu_to_le32(i);
- 			memcpy(paging->data,
--			       trans_pcie->init_dram.paging[i].block, page_len);
-+			       trans->init_dram.paging[i].block, page_len);
- 			data = iwl_fw_error_next_data(data);
- 
- 			len += sizeof(*data) + sizeof(*paging) + page_len;
+  * struct iwl_fw_error_dump_rb - content of an Receive Buffer
+  * @index: the index of the Receive Buffer in the Rx queue
 -- 
 2.20.1
 
