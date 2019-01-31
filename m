@@ -2,190 +2,111 @@ Return-Path: <SRS0=jXAT=QH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35913C169C4
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:23:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AD81C282D9
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:52:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 02B5D218AF
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:23:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AFA620B1F
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 20:52:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="DnFUTVtF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728177AbfAaUXT (ORCPT
+        id S1727216AbfAaUwR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 15:23:19 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:53734 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727435AbfAaUXT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Jan 2019 15:23:19 -0500
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1gpIqz-0004pL-Bk; Thu, 31 Jan 2019 22:22:29 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Thu, 31 Jan 2019 22:22:03 +0200
-Message-Id: <20190131202206.15903-19-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190131202206.15903-1-luca@coelho.fi>
-References: <20190131202206.15903-1-luca@coelho.fi>
+        Thu, 31 Jan 2019 15:52:17 -0500
+Received: from ozlabs.org ([203.11.71.1]:35487 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725787AbfAaUwR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Jan 2019 15:52:17 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by ozlabs.org (Postfix) with ESMTPSA id 43rC8q2LSPz9s4Z;
+        Fri,  1 Feb 2019 07:52:11 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1548967934;
+        bh=6ojlgWOipSNNpIltekx0oV48vVc446E2fvMonVyXl4g=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=DnFUTVtF6QdHweq+3sXV5DY+yKgsQcIu3Xexj/GFxKtFih1QzQ2gnKfeKbW4ptc1i
+         wFyTGGcIMyPZLIpISm82Tw/hmjtlJ24SWG9knlOlbliorgyQhUughp0WeAd/TPWRYk
+         VSCyxbTDL8kvG+gtgg0DNpDE1S3o0RSs/ybuoxyZ4HLhPXwiG/8z/AzXJ9FrOBnqiD
+         1H9bQt9MTl4s3Q9HTIoP/NpAhtacqdhcG94+7xRXYa/NFsyoz4gvzunCCWj1lnEZBW
+         Jg+phXZ+yU6jgumFGC9rkO4UtJnwJuaS+umNKotGREf9NBPsS6YuKEKmmCeq/eKi5Z
+         y/XNfZQ5Sm/uw==
+Date:   Fri, 1 Feb 2019 07:52:09 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Luca Coelho <luca@coelho.fi>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: linux-next: build warning after merge of the
+ wireless-drivers-next tree
+Message-ID: <20190201075209.1a91a472@canb.auug.org.au>
+In-Reply-To: <875zu5j5yc.fsf@kamboji.qca.qualcomm.com>
+References: <20190131104626.62ff05ce@canb.auug.org.au>
+        <9455f1b9e746f2c28d1573ccdce3836ece42cd8a.camel@coelho.fi>
+        <875zu5j5yc.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 18/21] iwlwifi: fix send hcmd timeout recovery flow
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/F3jxl5ezEzL=gD4wT7YNFve"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+--Sig_/F3jxl5ezEzL=gD4wT7YNFve
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Both iwl_trans_fw_error and iwl_force_nmi initiate async recovery flow.
-Calling them both is redundant and causing a race.
+Hi all,
 
-Solve this by removing the call to iwl_trans_fw_error.
+On Thu, 31 Jan 2019 15:46:03 +0200 Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+> Luca Coelho <luca@coelho.fi> writes:
+>=20
+> >
+> > This was a conflict resolution damage in one of the patches I applied.=
+=20
+> > We already have a fix for it[1] and Kalle will apply it to wireless-
+> > drivers-next soon.
+> >
+> > Sorry for the trouble, but somehow I didn't see this warning and
+> > kbuildbot also reported successful compilation with it. :(
+> >
+> > [1] https://patchwork.kernel.org/patch/10788503/ =20
+>=20
+> I applied the fix now:
+>=20
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-ne=
+xt.git/commit/?id=3D3864be551405b582ae38fbcdfdbb6e49052f5f6d
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Fixes: cfadc3ffccd5 ("iwlwifi: pcie: stop the firmware when we restart it")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  3 +++
- .../wireless/intel/iwlwifi/pcie/internal.h    |  1 +
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 25 +++++++++++++++++++
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  8 +++---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  8 +++---
- 5 files changed, 35 insertions(+), 10 deletions(-)
+Thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 36d0addb79e8..ef23c6aafb5c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -688,6 +688,9 @@ enum iwl_plat_pm_mode {
-  */
- #define IWL_TRANS_IDLE_TIMEOUT 2000
- 
-+/* Max time to wait for nmi interrupt */
-+#define IWL_TRANS_NMI_TIMEOUT (HZ / 4)
-+
- /**
-  * struct iwl_dram_data
-  * @physical: page phy pointer
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index ee38ae3b0d30..9e1bcafad786 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -1036,6 +1036,7 @@ static inline bool iwl_pcie_dbg_on(struct iwl_trans *trans)
- 
- void iwl_trans_pcie_rf_kill(struct iwl_trans *trans, bool state);
- void iwl_trans_pcie_dump_regs(struct iwl_trans *trans);
-+void iwl_trans_sync_nmi(struct iwl_trans *trans);
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index ac82c891595c..0b29b2ebb23d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3650,3 +3650,28 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	iwl_trans_free(trans);
- 	return ERR_PTR(ret);
- }
-+
-+void iwl_trans_sync_nmi(struct iwl_trans *trans)
-+{
-+	unsigned long timeout = jiffies + IWL_TRANS_NMI_TIMEOUT;
-+
-+	iwl_disable_interrupts(trans);
-+	iwl_force_nmi(trans);
-+	while (time_after(timeout, jiffies)) {
-+		u32 inta_hw = iwl_read32(trans,
-+					 CSR_MSIX_HW_INT_CAUSES_AD);
-+
-+		/* Error detected by uCode */
-+		if (inta_hw & MSIX_HW_INT_CAUSES_REG_SW_ERR) {
-+			/* Clear causes register */
-+			iwl_write32(trans, CSR_MSIX_HW_INT_CAUSES_AD,
-+				    inta_hw &
-+				    MSIX_HW_INT_CAUSES_REG_SW_ERR);
-+			break;
-+		}
-+
-+		mdelay(1);
-+	}
-+	iwl_enable_interrupts(trans);
-+	iwl_trans_fw_error(trans);
-+}
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index f3d2e8fe920b..88530d9f4a54 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -6,7 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018        Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -20,7 +20,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018        Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -965,9 +965,7 @@ static int iwl_pcie_gen2_send_hcmd_sync(struct iwl_trans *trans,
- 			       cmd_str);
- 		ret = -ETIMEDOUT;
- 
--		iwl_force_nmi(trans);
--		iwl_trans_fw_error(trans);
--
-+		iwl_trans_sync_nmi(trans);
- 		goto cancel;
- 	}
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 07395502f419..28a371814387 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -8,7 +8,7 @@
-  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-@@ -31,7 +31,7 @@
-  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -1942,9 +1942,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 			       iwl_get_cmd_string(trans, cmd->id));
- 		ret = -ETIMEDOUT;
- 
--		iwl_force_nmi(trans);
--		iwl_trans_fw_error(trans);
--
-+		iwl_trans_sync_nmi(trans);
- 		goto cancel;
- 	}
- 
--- 
-2.20.1
+--=20
+Cheers,
+Stephen Rothwell
 
+--Sig_/F3jxl5ezEzL=gD4wT7YNFve
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlxTX/kACgkQAVBC80lX
+0GyaOgf/UALlkaKxtkl5KQ27Sj7t8RCKTcyUuNwIIVKhBogm77UYD99n4FReTBhN
+/EP6sGkQhZxgWPhYV3xOq6o+zTkfr7Yc93sQ00T+Ma8jyTOA9H77EUCJwU0E75fU
+Bhm5bUa6zbcIwc3xzB2WtXRhbFsuGoipBjuvCT8QP64qBcmVpJknh6+kaiXETSSG
+7XOIPpDFU0tPoBxfetGvvVMMoeQBQSgXgVJG64lXVdZtm/77XTCOVF2RofGXg7uk
+FU3MBV7+GSXzQWfOaSkoxbhG804tLQ29l4/Gg0YQF99Fc0p/MhPlnTvvYzivs+el
+49uycgwCs2uM4HT0G/e68Otm11vOqA==
+=jtkV
+-----END PGP SIGNATURE-----
+
+--Sig_/F3jxl5ezEzL=gD4wT7YNFve--
