@@ -2,96 +2,124 @@ Return-Path: <SRS0=jXAT=QH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97692C169C4
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 11:37:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDC85C282D9
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 11:52:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C643218AF
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 11:37:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DCFA2087F
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Jan 2019 11:52:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WwdA4qG8";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SfAeZiOe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732255AbfAaLhF (ORCPT
+        id S1732228AbfAaLwj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 06:37:05 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:51453 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726221AbfAaLhF (ORCPT
+        Thu, 31 Jan 2019 06:52:39 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:54136 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726153AbfAaLwj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Jan 2019 06:37:05 -0500
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x0VBabs0011006, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv02.realtek.com.tw[172.21.6.19])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x0VBabs0011006
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Thu, 31 Jan 2019 19:36:37 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCASV02.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Thu, 31 Jan
- 2019 19:36:36 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Brian Norris <briannorris@chromium.org>
-CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        Thu, 31 Jan 2019 06:52:39 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id BB0BF60A60; Thu, 31 Jan 2019 11:52:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548935557;
+        bh=6dMshSwp/Kq18tHQmrK81SVabb7MrZhTzkIhxnELAc4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=WwdA4qG8WMuHmOiY709iAui4RH/i7PXYq9oPc2gDNTZyzxCw3h63MyDPQV48gfZk1
+         EmUv/zyvFw5Udyh0mrQhFQYEsZezhZ7DbOOmFpw+qmRcOC9nQ6Fl7OvLZDKQGt5/pS
+         129O2nA4nNbxndqzh3dDbrB2ud3XxSrL5j6eF5qg=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6788B60AD7;
+        Thu, 31 Jan 2019 11:52:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548935553;
+        bh=6dMshSwp/Kq18tHQmrK81SVabb7MrZhTzkIhxnELAc4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=SfAeZiOesV6xcOLO6jGFFolZv8AgW27/L9joOU22bIiPtycsI5vOY+3cD84DCImA8
+         +J/jGH+GDxcRyL07hn6QlQK7vc6sbs0ZavKMyE4gxFjFxnG9EtR6PZs+rGbvyLHGWk
+         8dauz048+c/pwHEG0kdNy7EnLUhQo2CLSRLsLSXQ=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6788B60AD7
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     Brian Norris <briannorris@chromium.org>,
+        "johannes\@sipsolutions.net" <johannes@sipsolutions.net>,
+        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
         Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v4 09/13] rtw88: chip files
-Thread-Topic: [PATCH v4 09/13] rtw88: chip files
-Thread-Index: AQHUuFC3BPdiKallRUKZ7P1Hq+CH5aXHsc6AgAGOL6A=
-Date:   Thu, 31 Jan 2019 11:36:35 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D179ABC2@RTITMBSVM04.realtek.com.tw>
+        "sgruszka\@redhat.com" <sgruszka@redhat.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 09/13] rtw88: chip files
 References: <1548820940-15237-1-git-send-email-yhchuang@realtek.com>
- <1548820940-15237-10-git-send-email-yhchuang@realtek.com>
- <20190130194453.GA156750@google.com>
-In-Reply-To: <20190130194453.GA156750@google.com>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.123]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        <1548820940-15237-10-git-send-email-yhchuang@realtek.com>
+        <20190130194453.GA156750@google.com>
+        <F7CD281DE3E379468C6D07993EA72F84D179ABC2@RTITMBSVM04.realtek.com.tw>
+Date:   Thu, 31 Jan 2019 13:52:28 +0200
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D179ABC2@RTITMBSVM04.realtek.com.tw>
+        (Tony Chuang's message of "Thu, 31 Jan 2019 11:36:35 +0000")
+Message-ID: <87ef8tjb7n.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-PiBGcm9tOiBCcmlhbiBOb3JyaXMgW21haWx0bzpicmlhbm5vcnJpc0BjaHJvbWl1bS5vcmddDQo+
-IA0KPiA+ICtzdGF0aWMgaW5saW5lIHZvaWQNCj4gPiArcnR3X3dyaXRlMzJzX21hc2soc3RydWN0
-IHJ0d19kZXYgKnJ0d2RldiwgdTMyIGFkZHIsIHUzMiBtYXNrLCB1MzIgZGF0YSkNCj4gPiArew0K
-PiA+ICsJQlVJTERfQlVHX09OKGFkZHIgPCAweEMwMCB8fCBhZGRyID49IDB4RDAwKTsNCj4gDQo+
-IFRoaXMgc2VlbXMgdG8gYmUgYSBub24tdHJhZGl0aW9uYWwgdXNlIG9mIEJVSUxEX0JVR19PTigp
-LiBOb3JtYWxseSwgSQ0KPiBzZWUgdGhpcyB1c2VkIGZvciBzdHVmZiB0aGF0J3MgZ3VhcmFudGVl
-ZCB0byBiZSBrbm93biBhdCBjb21waWxlIHRpbWUgLS0NCj4gc3RydWN0dXJlIG9mZnNldHMsIGNv
-bnN0YW50cywgZXRjLiBUaGlzIGlzIHVzdWFsbHkgKGFsd2F5cz8pIGEgY29uc3RhbnQsDQo+IGJ1
-dCBpdCBwYXNzZXMgdGhyb3VnaCBhIGZ1bmN0aW9uIHBhcmFtZXRlciwgc28gSSdtIG5vdCBzdXJl
-IGlmIHRoYXQncw0KPiByZWFsbHkgZ3VhcmFudGVlZC4NCj4gDQo+IEFueXdheS4uLnRoaXMgaXMg
-ZmFpbGluZyBjb25mdXNpbmdseSBmb3IgbWUgd2hlbiBJIHRyeSB0byBidWlsZDoNCj4gDQo+IGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvcnR3ODgyMmIuYzogSW4gZnVuY3Rpb24N
-Cj4g4oCYcnR3X3dyaXRlMzJzX21hc2vigJk6DQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0
-ZWsvcnR3ODgvcnR3ODgyMmIuYzoyMzA6MTc2OiBlcnJvcjogY2FsbCB0bw0KPiDigJhfX2NvbXBp
-bGV0aW1lX2Fzc2VydF8yMzDigJkgZGVjbGFyZWQgd2l0aCBhdHRyaWJ1dGUgZXJyb3I6IEJVSUxE
-X0JVR19PTg0KPiBmYWlsZWQ6IGFkZHIgPCAweEMwMCB8fCBhZGRyID49IDB4RDAwDQo+ICAgQlVJ
-TERfQlVHX09OKGFkZHIgPCAweEMwMCB8fCBhZGRyID49IDB4RDAwKTsNCj4gDQo+IF4NCj4gDQo+
-IEkgdHJpZWQgdG8gcGlucG9pbnQgd2hpY2ggY2FsbCB5aWVsZGVkIHRoaXMsIGFuZCBJIHRoaW5r
-IG9uY2UgSSBkZWxldGVkDQo+IGVub3VnaCBjYWxscyB0byBydHdfd3JpdGUzMnNfbWFzaygpIGl0
-IGNhbWUgZG93biB0byB0aGlzIG9uZToNCj4gDQo+ICAgICAgICAgcnR3X3dyaXRlMzJzX21hc2so
-cnR3ZGV2LCBSRUdfUkZFSU5WLCBCSVQoMTEpIHwgQklUKDEwKSB8IDB4M2YsDQo+IDB4MCk7DQo+
-IA0KPiB3aGljaCBkb2Vzbid0IHJlYWxseSBtYWtlIHNlbnNlLCBhcyB0aGF0J3MgYSB2YWx1ZSBv
-ZiAweGNiYy4NCj4gDQo+IFdoYXQgSSByZWFsbHkgdGhpbmsgaXQgY29tZXMgZG93biB0byBpcyB0
-aGF0IHlvdSBjYW4ndCBndWFyYW50ZWUNCj4gcnR3X3dyaXRlMzJzX21hc2soKSB3aWxsIGdldCBp
-bmxpbmVkLCBhbmQgc28gQlVJTERfQlVHX09OKCkgbWF5IG5vdCBrbm93DQo+IHdoYXQgdG8gZG8g
-d2l0aCBpdC4NCg0KWWVhaCwgeW91J3JlIHJpZ2h0LiBJIHRoaW5rIHdlIHNob3VsZCB0dXJuIGl0
-IGludG8gbWFjcm8uDQpJIHdpbGwgc2VuZCB0aGUgZml4IHBhdGNoIGluIHRoZSBuZXh0IHBhdGNo
-IHNldC4NClRoYW5rcyENCg0KPiANCj4gSSB0aGluayB5b3Ugc2hvdWxkIGVpdGhlciBkcm9wIHRo
-ZSBCVUlMRF9CVUdfT04oKSwgb3IgZWxzZSB0dXJuDQo+IHJ0d193cml0ZTMyc19tYXNrKCkgaW50
-byBhIG1hY3JvLg0KPiANCj4gQlRXLCBJJ20gdXNpbmcgYSB2YXJpYW50IG9mIGdjYyB2ZXJzaW9u
-IDQuOS4yLiBJIG5vcm1hbGx5IHVzZSBjbGFuZyBmb3INCj4ga2VybmVsIGJ1aWxkcyAoYXMgdGhh
-dCdzIHRoZSBjdXJyZW50IENocm9taXVtIE9TIHRvb2xjaGFpbiksIGJ1dCBjbGFuZw0KPiBzdGls
-bCByZWd1bGFybHkgaGFzIGJyZWFrYWdlIHVwc3RyZWFtLCBzbyBJJ20gc3RpbGwgYnVpbGRpbmcg
-d2l0aCBhbiBvbGQNCj4gR0NDIHRvb2xjaGFpbi4gSXQncyB0ZWNobmljYWxseSBzdGlsbCBzdXBw
-b3J0ZWQgaW4NCj4gRG9jdW1lbnRhdGlvbi9wcm9jZXNzL2NoYW5nZXMucnN0IHRob3VnaCENCg0K
-TGlrZSB5b3Ugc2FpZCwgc2hvdWxkIHN1cHBvcnQgaXQgYW55d2F5IDopDQoNCj4gDQo+IEJyaWFu
-DQo+IA0KDQpZYW4tSHN1YW4NCg==
+Tony Chuang <yhchuang@realtek.com> writes:
+
+>> From: Brian Norris [mailto:briannorris@chromium.org]
+>>=20
+>> > +static inline void
+>> > +rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 dat=
+a)
+>> > +{
+>> > +	BUILD_BUG_ON(addr < 0xC00 || addr >=3D 0xD00);
+>>=20
+>> This seems to be a non-traditional use of BUILD_BUG_ON(). Normally, I
+>> see this used for stuff that's guaranteed to be known at compile time --
+>> structure offsets, constants, etc. This is usually (always?) a constant,
+>> but it passes through a function parameter, so I'm not sure if that's
+>> really guaranteed.
+>>=20
+>> Anyway...this is failing confusingly for me when I try to build:
+>>=20
+>> drivers/net/wireless/realtek/rtw88/rtw8822b.c: In function
+>> =E2=80=98rtw_write32s_mask=E2=80=99:
+>> drivers/net/wireless/realtek/rtw88/rtw8822b.c:230:176: error: call to
+>> =E2=80=98__compiletime_assert_230=E2=80=99 declared with attribute error=
+: BUILD_BUG_ON
+>> failed: addr < 0xC00 || addr >=3D 0xD00
+>>   BUILD_BUG_ON(addr < 0xC00 || addr >=3D 0xD00);
+>>=20
+>> ^
+>>=20
+>> I tried to pinpoint which call yielded this, and I think once I deleted
+>> enough calls to rtw_write32s_mask() it came down to this one:
+>>=20
+>>         rtw_write32s_mask(rtwdev, REG_RFEINV, BIT(11) | BIT(10) | 0x3f,
+>> 0x0);
+>>=20
+>> which doesn't really make sense, as that's a value of 0xcbc.
+>>=20
+>> What I really think it comes down to is that you can't guarantee
+>> rtw_write32s_mask() will get inlined, and so BUILD_BUG_ON() may not know
+>> what to do with it.
+>
+> Yeah, you're right. I think we should turn it into macro.
+
+Does this really need to be a build time check? Like Brian said, this is
+not really common use of BUILD_BUG_ON(). I would just change it to
+WARN_ON_ONCE() or a ratelimited warning message so that we don't to have
+an ugly macro.
+
+--=20
+Kalle Valo
