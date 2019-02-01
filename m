@@ -2,132 +2,127 @@ Return-Path: <SRS0=B73O=QI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9477DC169C4
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 01:24:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B554C169C4
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 02:17:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 609DD2085B
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 01:24:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54DE220B1F
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 02:17:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="cFGq+x/W"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dnViYRNL";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dnViYRNL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726330AbfBABYw (ORCPT
+        id S1727961AbfBACRm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 20:24:52 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:41473 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725789AbfBABYw (ORCPT
+        Thu, 31 Jan 2019 21:17:42 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:60964 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726798AbfBACRm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Jan 2019 20:24:52 -0500
-Received: by mail-pg1-f196.google.com with SMTP id m1so2144355pgq.8
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2019 17:24:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=gZkuzVs+OsPj2ZKyI0PZZqXRVLw+omp58C/4dYLtu5U=;
-        b=cFGq+x/WiP5J51b4NnF1qcDkSHbuc4haw2n1/FeB3uAmuDrFPOdECDVW+XqbhvW8Lr
-         NGL4H6m6SaGYp292QwtXHOec0Q2iKks5OuZv3hArc24iWorYGz5CLQ2UNfNztLGtg1yI
-         d2/RYr0U35xoX6EW8JZpKA0bxWKKPSapMRPO8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=gZkuzVs+OsPj2ZKyI0PZZqXRVLw+omp58C/4dYLtu5U=;
-        b=lS44R0kUcahFVtzjIP6dJDQPTImLSw2LUVX3IB/0aITtbPuYOZbt1k6b4ORndYXcGe
-         /LS2H4eLIfPHFkA+x2w8Jb++E69HmjUGuzn18uKfNWR9EZLtOt/9zMOCTmFPf5PBiv/L
-         LZj0KxsS3hf0lLyWA3/uWIb30UlZtst2rw96iWhOJhA/7M0f3SNNuImg4sI/F6Ib7gw/
-         +3xaKrRsJbliMktibR5RfD2J1lO3XGY5eEroBaJvumiNQPzKq7xQUAxJciwOhn1tMrQ8
-         zg0VC68KpnBNr1iMYY0wpVVW4gaFyER3gS+WCGQyoqtNsk0na3wuhBDAaHhCypM6WBrJ
-         2WvQ==
-X-Gm-Message-State: AHQUAua0EIhriHFXElDK70t7Li/419356ZGhopY0AqMi1WLDhXukkj72
-        Oo/PNoMJUgl/pEGGHSaIXTe5tw==
-X-Google-Smtp-Source: AHgI3Iaykd3GiBoERe7ACXi6/dB/wIabQnL94Bo+Q9+ftsaWQqMBrfI7ngxxHtbhXm1ft2KZjyBMEw==
-X-Received: by 2002:a65:4381:: with SMTP id m1mr275368pgp.358.1548984291042;
-        Thu, 31 Jan 2019 17:24:51 -0800 (PST)
-Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
-        by smtp.gmail.com with ESMTPSA id t90sm12115353pfj.23.2019.01.31.17.24.49
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 31 Jan 2019 17:24:50 -0800 (PST)
-Date:   Thu, 31 Jan 2019 17:24:48 -0800
-From:   Brian Norris <briannorris@chromium.org>
-To:     yhchuang@realtek.com
-Cc:     kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        tehuang@realtek.com, sgruszka@redhat.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 24/24] rtw88: 8822b: turn rtw_write32s_mask into macro
-Message-ID: <20190201012446.GA103846@google.com>
-References: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
- <1548937297-14660-25-git-send-email-yhchuang@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1548937297-14660-25-git-send-email-yhchuang@realtek.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Thu, 31 Jan 2019 21:17:42 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id AC6F8602CB; Fri,  1 Feb 2019 02:17:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548987460;
+        bh=QeFRpfJFajDzigqfxS5d2WP6FiSe4fjrnPi3DE3UBus=;
+        h=From:To:Cc:Subject:Date:From;
+        b=dnViYRNLiOFwM9R1bu1es/xmbPINsmDteji6ePwtNDpIWPZlB8uVcULqQivB9Bl7c
+         015TmrD9OcaL/kF0EGwxmWTxpFGBx1hNxs9EMvLq+axS6RI1hYWcGm7fL8iXSipaVV
+         ogu+XoFx6KkHk9xja/W4nY3CT/9ku0YeRfQb2pCg=
+Received: from localhost.localdomain (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D0210601D1;
+        Fri,  1 Feb 2019 02:17:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548987460;
+        bh=QeFRpfJFajDzigqfxS5d2WP6FiSe4fjrnPi3DE3UBus=;
+        h=From:To:Cc:Subject:Date:From;
+        b=dnViYRNLiOFwM9R1bu1es/xmbPINsmDteji6ePwtNDpIWPZlB8uVcULqQivB9Bl7c
+         015TmrD9OcaL/kF0EGwxmWTxpFGBx1hNxs9EMvLq+axS6RI1hYWcGm7fL8iXSipaVV
+         ogu+XoFx6KkHk9xja/W4nY3CT/9ku0YeRfQb2pCg=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D0210601D1
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: reduce transmit msdu count
+Date:   Fri,  1 Feb 2019 10:17:09 +0800
+Message-Id: <1548987429-14008-1-git-send-email-wgong@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Alagu Sankar <alagusankar@silex-india.com>
 
-On Thu, Jan 31, 2019 at 08:21:37PM +0800, yhchuang@realtek.com wrote:
-> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> 
-> The inlined rtw_write32s_mask has to check range of addr with
-> BUILD_BUG_ON. But with some variants of gcc version the function might
-> not get inlined, and it will have no idea to know how to do, then
-> results in a compile error. Turn it into a macro to make sure the values
-> are known when compile time.
-> 
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> ---
->  drivers/net/wireless/realtek/rtw88/rtw8822b.c | 10 ----------
->  drivers/net/wireless/realtek/rtw88/rtw8822b.h | 15 +++++++++++++++
->  2 files changed, 15 insertions(+), 10 deletions(-)
-> 
-...
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.h b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-> index 311fe8a..4cf193b1 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-> @@ -97,6 +97,21 @@ struct rtw8822b_efuse {
->  	};
->  };
->  
-> +static inline void
-> +_rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
-> +{
-> +	rtw_write32_mask(rtwdev, addr, mask, data);
-> +	rtw_write32_mask(rtwdev, addr + 0x200, mask, data);
-> +}
-> +
-> +/* 0xC00-0xCFF and 0xE00-0xEFF have the same layout */
+Reduce the transmit MSDU count for SDIO, to match with the descriptors
+as used by the firmware. This also acts as a high watermark level for
+transmit. Too many packets to the firmware results in transmit overflow
+interrupt.
 
-Feels like this belongs with _rtw_write32s_mask() now, not here?
+It only affect SDIO chip, it will not cause functionaly changes to
+other hardware.
 
-> +#define rtw_write32s_mask(rtwdev, addr, mask, data)			       \
-> +	do {								       \
-> +		BUILD_BUG_ON(addr < 0xC00 || addr >= 0xD00);		       \
+Tested with QCA6174 SDIO with firmware
+WLAN.RMH.4.4.1-00005-QCARMSWP-1.
 
-You probably want parentheses around the 'addr'. You *probably* won't
-run into trouble with this particular macro, but if the caller is doing
-the wrong kinds of comparisons or arithmetic, this might not work they
-way you want.
+Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.c    | 6 +++++-
+ drivers/net/wireless/ath/ath10k/hw.h      | 1 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 +-
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-Brian
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 22cbe9a..fee4ec1 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2309,7 +2309,11 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
+ 		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
+-		ar->htt.max_num_pending_tx = TARGET_TLV_NUM_MSDU_DESC;
++		if (ar->hif.bus == ATH10K_BUS_SDIO)
++			ar->htt.max_num_pending_tx =
++				TARGET_TLV_NUM_MSDU_DESC_HL;
++		else
++			ar->htt.max_num_pending_tx = TARGET_TLV_NUM_MSDU_DESC;
+ 		ar->wow.max_num_patterns = TARGET_TLV_NUM_WOW_PATTERNS;
+ 		ar->fw_stats_req_mask = WMI_STAT_PDEV | WMI_STAT_VDEV |
+ 			WMI_STAT_PEER;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 1b5da27..c012523 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -724,6 +724,7 @@ struct ath10k_hw_ops {
+ #define TARGET_TLV_NUM_TDLS_VDEVS		1
+ #define TARGET_TLV_NUM_TIDS			((TARGET_TLV_NUM_PEERS) * 2)
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
++#define TARGET_TLV_NUM_MSDU_DESC_HL		64
+ #define TARGET_TLV_NUM_WOW_PATTERNS		22
+ #define TARGET_TLV_MGMT_NUM_MSDU_DESC		(50)
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index ad4114a..35fb852 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1611,7 +1611,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cfg->rx_skip_defrag_timeout_dup_detection_check = __cpu_to_le32(0);
+ 	cfg->vow_config = __cpu_to_le32(0);
+ 	cfg->gtk_offload_max_vdev = __cpu_to_le32(2);
+-	cfg->num_msdu_desc = __cpu_to_le32(TARGET_TLV_NUM_MSDU_DESC);
++	cfg->num_msdu_desc = __cpu_to_le32(ar->htt.max_num_pending_tx);
+ 	cfg->max_frag_entries = __cpu_to_le32(2);
+ 	cfg->num_tdls_vdevs = __cpu_to_le32(TARGET_TLV_NUM_TDLS_VDEVS);
+ 	cfg->num_tdls_conn_table_entries = __cpu_to_le32(0x20);
+-- 
+1.9.1
 
-> +									       \
-> +		_rtw_write32s_mask(rtwdev, addr, mask, data);		       \
-> +	} while (0)
-> +
->  /* phy status page0 */
->  #define GET_PHY_STAT_P0_PWDB(phy_stat)                                         \
->  	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
-> -- 
-> 2.7.4
-> 
