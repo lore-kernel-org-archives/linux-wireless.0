@@ -2,103 +2,82 @@ Return-Path: <SRS0=B73O=QI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FCC1C282D8
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 10:00:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57B66C282DB
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 10:17:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F41C021872
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 10:00:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="i2lhvIIB";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KYE3ZF/6"
+	by mail.kernel.org (Postfix) with ESMTP id 378442086C
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 10:17:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728201AbfBAKAW (ORCPT
+        id S1729679AbfBAKR5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Feb 2019 05:00:22 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:34236 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727192AbfBAKAW (ORCPT
+        Fri, 1 Feb 2019 05:17:57 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:37996 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726116AbfBAKR4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Feb 2019 05:00:22 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 7A8E360867; Fri,  1 Feb 2019 10:00:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549015221;
-        bh=SgJ9lFppbhDK5fuSvciCAANbjq8O/3FClAu4Ova19FM=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=i2lhvIIBJAcvs+i7AH8xtDfep62Ov1PEBI/q/+y+zBgZ5qWI8H8K0eD3f3TNRLSC/
-         68k8/IGdOY1OeTZAMrF31nlWh1WMnxLdeHjTiPoS0kuJzsTjjWsUo5MlZ6+slG8/2T
-         7gLesWkX7+A/Seq26kEc0fGU9j+F3nESlqZ8MfAU=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9D2486043F;
-        Fri,  1 Feb 2019 10:00:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549015220;
-        bh=SgJ9lFppbhDK5fuSvciCAANbjq8O/3FClAu4Ova19FM=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=KYE3ZF/6Wq6CSVDzxE0gy0IrylhIVtxVT7VWoyMr3CXsGmEuPFFNnKhen/FAbqOS3
-         l90QStW6KytvxyoNktqN1cNssy/6azgd5kmkjNpy3fGkJxRm0rPNay6ptAwlsV0RxE
-         /6oOkDltEpxhGmRlGMCbuf2xpCj3MEVtJfxqAP6M=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9D2486043F
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Siva Rebbagondla <siva8118@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, amitkarwar@gmail.com,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: Re: [PATCH] MAINTAINERS: add entry for redpine wireless driver
-References: <1549014070-3930-1-git-send-email-siva8118@gmail.com>
-Date:   Fri, 01 Feb 2019 12:00:16 +0200
-In-Reply-To: <1549014070-3930-1-git-send-email-siva8118@gmail.com> (Siva
-        Rebbagondla's message of "Fri, 1 Feb 2019 15:11:10 +0530")
-Message-ID: <87tvhnhlqn.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 1 Feb 2019 05:17:56 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC4)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gpVtR-0007MJ-QV; Fri, 01 Feb 2019 11:17:54 +0100
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     David Miller <davem@davemloft.net>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2019-02-01
+Date:   Fri,  1 Feb 2019 11:17:43 +0100
+Message-Id: <20190201101744.7551-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.17.2
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Siva Rebbagondla <siva8118@gmail.com> writes:
+Hi Dave,
 
-> From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
->
-> Create an entry for Redpine wireless driver and add Amit and myself as
-> maintainers.
->
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> ---
->  MAINTAINERS | 7 +++++++
->  1 file changed, 7 insertions(+)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 32d44447..c4e8fb4 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -16923,6 +16923,13 @@ L:	linux-mm@kvack.org
->  S:	Maintained
->  F:	mm/zswap.c
->  
-> +REDPINE WIRELESS DRIVER
-> +M:	Siva Rebbagondla <siva8118@gmail.com>
-> +M:	Amitkumar Karwar <amitkarwar@gmail.com>
-> +L:	linux-wireless@vger.kernel.org
-> +S:	Maintained
-> +F:	drivers/net/wireless/rsi/
-> +
->  THE REST
->  M:	Linus Torvalds <torvalds@linux-foundation.org>
->  L:	linux-kernel@vger.kernel.org
+Two more fixes for the current cycle, one is a new bug introduced
+in 4.20, the other one seems to be much older.
 
-Like documented in the beginning of the file these should be in
-alphabetical order. Please fix and resend.
+Please pull and let me know if there's any problem.
 
--- 
-Kalle Valo
+Thanks,
+johannes
+
+
+
+The following changes since commit 5e66e35aab335b83d9ffb220d8a3a13986a7a60e:
+
+  bnxt_en: Disable interrupts when allocating CP rings or NQs. (2019-01-31 12:55:28 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2019-02-01
+
+for you to fetch changes up to e005bd7ddea06784c1eb91ac5bb6b171a94f3b05:
+
+  cfg80211: call disconnect_wk when AP stops (2019-02-01 11:12:50 +0100)
+
+----------------------------------------------------------------
+Two more fixes:
+ * sometimes, not enough tailroom was allocated for
+   software-encrypted management frames in mac80211
+ * cfg80211 regulatory restore got an additional condition,
+   needs to rerun the checks after that condition changes
+
+----------------------------------------------------------------
+Felix Fietkau (1):
+      mac80211: ensure that mgmt tx skbs have tailroom for encryption
+
+Johannes Berg (1):
+      cfg80211: call disconnect_wk when AP stops
+
+ net/mac80211/tx.c   | 12 +++++++++---
+ net/wireless/ap.c   |  2 ++
+ net/wireless/core.h |  2 ++
+ net/wireless/sme.c  |  2 +-
+ 4 files changed, 14 insertions(+), 4 deletions(-)
+
