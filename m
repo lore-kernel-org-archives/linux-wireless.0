@@ -1,126 +1,113 @@
 Return-Path: <SRS0=B73O=QI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=no autolearn_force=no
+X-Spam-Level: 
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9B15C169C4
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 02:40:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01F57C282D8
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 05:34:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 73BFD20855
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 02:40:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6E3A20863
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 05:34:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="QyESdqte"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MjTSbjB2";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RPQygYe7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727783AbfBACkr (ORCPT
+        id S1726110AbfBAFef (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Jan 2019 21:40:47 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:35308 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727313AbfBACkr (ORCPT
+        Fri, 1 Feb 2019 00:34:35 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:35812 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725957AbfBAFee (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Jan 2019 21:40:47 -0500
-Received: by mail-pl1-f193.google.com with SMTP id p8so2428070plo.2
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2019 18:40:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=FhL5Nmvexx8gB53709TUjJGMdq01V16r0C22itMv2Fg=;
-        b=QyESdqteIl8+DtcbYJbJrILCvCl8mMQIWB3IpcVIRXGtkEGDalzyHI7KHus4qWpvZ4
-         g2ssHZkd8CkbVFUrzGf04gULZEw2X9yaardrIxaNwUgoSKZl/SuijO2sIKgB2fo6dilR
-         omUPPnblKZMIqRjizyu/FdADwLmLFzkDjXojc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=FhL5Nmvexx8gB53709TUjJGMdq01V16r0C22itMv2Fg=;
-        b=ssvXSJY/4gFuPhQz/lEsHSWvJGq6dGnr+vJzaC+Ij7tb9OYxgPasgXznJG3SK8DdZ3
-         EKc3sl14Q3dJ01Lxf4Lh5OJDiqiFGN1Swt0YgjPxZROWaohHVkFnEG2CcKKH13WcEsi2
-         4Iy/YWvx0pRZRwu91+Hc6yVuzIBSrf5BN0z/TamgMPkEOBRcpaRSVlqi4rYcPJo9xRHX
-         JDchK8xa2c1zNH+nLsMSQ+d47LW/Vb8ha+2m5khCRbfT0oewQUUCGZZpJyEgRRK1klMN
-         IY/f7g0xQC4OveJ/jY9sU5L7e7WOATKdv7xA+BX/n2j5I7Ce9rRsh6KMqBDsBnRAMmYy
-         +FAw==
-X-Gm-Message-State: AJcUukelXDT3N/k81fO6kghtm58gXZ/gY13KGZ7vq4ALVk/eK1Rqz5kB
-        voyA7gYXQ+L7Dct/1WpVoKkQ/w==
-X-Google-Smtp-Source: ALg8bN4xDR7dnMwCdE1SiORz4/JUxjNbLm47SMZ4ZwIQUIX4NW0hlGf03bgwW69m4Io7YB/j3aPMwA==
-X-Received: by 2002:a17:902:5601:: with SMTP id h1mr38334231pli.160.1548988846565;
-        Thu, 31 Jan 2019 18:40:46 -0800 (PST)
-Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
-        by smtp.gmail.com with ESMTPSA id j6sm12885528pfg.126.2019.01.31.18.40.45
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 31 Jan 2019 18:40:45 -0800 (PST)
-Date:   Thu, 31 Jan 2019 18:40:43 -0800
-From:   Brian Norris <briannorris@chromium.org>
-To:     yhchuang@realtek.com
-Cc:     kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        tehuang@realtek.com, sgruszka@redhat.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/24] rtw88: major fixes for 8822c to have stable
- functionalities
-Message-ID: <20190201024042.GB125494@google.com>
-References: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Fri, 1 Feb 2019 00:34:34 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 604AE608C5; Fri,  1 Feb 2019 05:34:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548999273;
+        bh=A2ssXpwHfRoPOu5Es9FccMPqeFHFVqZ4d+pUNDCy6c4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=MjTSbjB22uDBJE75AR1zCoc2hR2AAJsou+++kCzb8ctuRFz6cAFyjzZXFbsMz3Vnf
+         cHHuhfz3DRGcQiDR1UqdfW4rvgVT4+W1K3EwFQfEGtHTRCM+/hSgNw+cA+izloBwoY
+         U9NyxO3CNkFbSZ9kKDC8ZcGZVMOZBuxcJiv1DgAs=
+Received: from svishnoi-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: svishnoi@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 761906043F;
+        Fri,  1 Feb 2019 05:34:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1548999272;
+        bh=A2ssXpwHfRoPOu5Es9FccMPqeFHFVqZ4d+pUNDCy6c4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=RPQygYe7LIf244IgfbZrl9KpLBqUPReOt3Pfb/Dk5QV5TFXjO1oDGHpZOlDO19puh
+         2vaTaJ6ABXF0fOtQzEFDe8upjwepJkXorLt2IYeEM8k93XA5GMElj1vuKkUAnR8AzC
+         ODJlOKE5+qLxTmMxqt7fKGF6yED9tw07dz73zkvo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 761906043F
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=svishnoi@codeaurora.org
+From:   Surabhi Vishnoi <svishnoi@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Surabhi Vishnoi <svishnoi@codeaurora.org>
+Subject: [PATCH] ath10k: Add a condtion to fill the LDPC capability correctly
+Date:   Fri,  1 Feb 2019 11:04:22 +0530
+Message-Id: <1548999262-25353-1-git-send-email-svishnoi@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 08:21:13PM +0800, yhchuang@realtek.com wrote:
-> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> 
-> Note this patch set is based on the original patch set "rtw88: mac80211
-> driver for Realtek 802.11ac wireless network chips".
+The firmware advertises the LDPC support information for HT in
+HT capability info in the wmi service ready event. To provide
+granularity, firmware now advertises WMI_HT_CAP_RX_LDPC and
+WMI_HT_CAP_TX_LDPC separately. To support LDPC, host should
+also check for WMI_HT_CAP_RX_LDPC and WMI_HT_CAP_TX_LDPC in HT
+capabilities.
 
-The latest would be here, for reference:
+Add a condition to existing logic in host to know whether firmware
+supports LDPC or not.
 
-https://patchwork.kernel.org/cover/10787651/
-http://lkml.kernel.org/linux-wireless/1548820940-15237-1-git-send-email-yhchuang@realtek.com
+Tested HW: WCN3990
+Tested SW: WLAN.HL.2.0
 
-> These patches are mean to make sure 8822c chip to operate normal for most
-> of the basic functionalities, such as power on, switch channel, scan,
-> connection establish and connection monitor.
-> 
-> As the original patch set was sent 3 months ago, progress has been made
-> by Realtek during the past months. Now we have tested on more chips and
-> released tables and parameters for them. Also the chips are all
-> programed with efuse map released for 8822c.
-> 
-> Most of the changes are about BB and RF, both control the tx/rx path.
-> PHY parameters/seq and efuse info make sure the hardware is powered on
-> correctly. And channel setting updates help driver to switch to target
-> channel accurately. Then trx mode setting and DACK will make hardware to
-> have stable performance to tx/rx to connect to AP.
-> 
-> Here tx power control is also required to transmit with a precise power.
-> Otherwise if the power is too high or too low, the peer might not be able
-> to receive the signal.
-> 
-> Finally, we need to report correct tx status for mac80211's connection
-> monitor system, this requires firmware's C2H of tx status report. After
-> this, users can use 8822c chips for more stable wireless communication.
+Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 3 ++-
+ drivers/net/wireless/ath/ath10k/wmi.h | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-Besides the comments I added (and needing to fix the out-of-bounds
-reads), this series helpfully adds RFE 1 support, so the 8822C chip I
-have works for some basic functions -- it's not too snappy, and I feel
-like there's still plenty of room for improvement but:
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index e49b367..1645b1e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4549,7 +4549,8 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
+ 		ht_cap.cap |= stbc;
+ 	}
+ 
+-	if (ar->ht_cap_info & WMI_HT_CAP_LDPC)
++	if (ar->ht_cap_info & WMI_HT_CAP_LDPC || (ar->ht_cap_info &
++	    WMI_HT_CAP_RX_LDPC && (ar->ht_cap_info & WMI_HT_CAP_TX_LDPC)))
+ 		ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+ 
+ 	if (ar->ht_cap_info & WMI_HT_CAP_L_SIG_TXOP_PROT)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 427ca79..0aca84e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -2076,6 +2076,8 @@ enum wmi_channel_change_cause {
+ #define WMI_HT_CAP_MPDU_DENSITY           0x0700   /* MPDU Density */
+ #define WMI_HT_CAP_MPDU_DENSITY_MASK_SHIFT 8
+ #define WMI_HT_CAP_HT40_SGI               0x0800
++#define WMI_HT_CAP_RX_LDPC                0x1000   /* LDPC RX support */
++#define WMI_HT_CAP_TX_LDPC                0x2000   /* LDPC TX support */
+ 
+ #define WMI_HT_CAP_DEFAULT_ALL (WMI_HT_CAP_ENABLED       | \
+ 				WMI_HT_CAP_HT20_SGI      | \
+-- 
+1.9.1
 
-Tested-by: Brian Norris <briannorris@chromium.org>
-
-And except for a handful of patches (should look at patch 1 closer),
-these all look pretty sane and helpful.
-
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-I still need to pass back over the original patchset and try a few more
-things out.
-
-Regards,
-Brian
