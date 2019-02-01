@@ -2,158 +2,105 @@ Return-Path: <SRS0=B73O=QI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33774C282D8
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 15:32:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63445C282D8
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 15:45:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F33DD2086C
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 15:32:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FE9D218EA
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 15:45:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A5BGhsl+"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=qca.qualcomm.com header.i=@qca.qualcomm.com header.b="HSz+AU3W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729175AbfBAPco (ORCPT
+        id S1729564AbfBAPp3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Feb 2019 10:32:44 -0500
-Received: from mail-vs1-f67.google.com ([209.85.217.67]:45587 "EHLO
-        mail-vs1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726705AbfBAPco (ORCPT
+        Fri, 1 Feb 2019 10:45:29 -0500
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:52657 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727308AbfBAPpZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Feb 2019 10:32:44 -0500
-Received: by mail-vs1-f67.google.com with SMTP id x28so4388229vsh.12
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2019 07:32:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=XSIDPthZZ+K08ISXNoxB98xt2kVAy3zqCXmdasp2PH4=;
-        b=A5BGhsl+RdROgYkyTI8dA3UM2DIaXlUKxSSeuJiA+g8dEHEXDEuP20EIj0ommUt3k7
-         n4nkqBaKRma85zvH75THCZEUpNWJBn1A98FfKXhACR4QVt71/vebCeGumZF4p0tyVnd5
-         mRWaQ1R7ZgrlIv5mEqNir12LKK2Ar7kmrlnNpuUZlgiXZ2hee/oagtHKFlFlKUtEygah
-         +KSIajpo8RnX7ldb1EjdufnobOOJoHsgrwCq6Dc8PqJB1aeZilMyg6KAeFyD3MzT54uV
-         xTu4P5dvL1vR1wM739uyenb960rGASBIDqkYuy3EI3jWakyenGKScDC8G9qyauClCw++
-         w/kg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=XSIDPthZZ+K08ISXNoxB98xt2kVAy3zqCXmdasp2PH4=;
-        b=leMJM2XEnLKsRvwTlutQ6cFjeEJ4xsIsfiv5AzqZadFn5u4Zcb7Txa+U+rz85Hc9W2
-         tgaRGlZrnKCQdIVwrBmEAm+ZG9+s7t+Njin4IF/+5P5cfp7uytCsL3vlhCP3FpuV+Ua7
-         F7ixqAv2aC8EfJE93H3kKaMaC9NeZ3onVOxpauxhuvxRZ8+RjDj68tpr4ZUDVAvDbeNr
-         bwK2uiRf9WB4Hw7RPPSYOOvjo65+JGi+rC0dtNJyejUhJlUSzb4eD/2LTutSUL4Q4/yq
-         HCmUx8buKIBS5pQ7DRkt6hBXI6G+kr+FSNzlohnQA7+ZHaf3RbWwYZY0g1DaWX15VRq0
-         WxrA==
-X-Gm-Message-State: AJcUukehchU7ZoSAcl1WBiL5JawJmK4bz8tfoM5yvBvswvax7goikvFY
-        jxzeyxBxCSsOg6GbVuMhJ/7jBh79xnpp4QY7uYw=
-X-Google-Smtp-Source: ALg8bN5hQHDy2P78Ps3Sr0VHMpV9KcXVehHOi109yWPn4qbsZo249HjDG1qpIGwjLxv5q4QcuyovgpTLgj2SmtZy3k8=
-X-Received: by 2002:a67:4cd8:: with SMTP id h85mr16275467vsg.110.1549035162252;
- Fri, 01 Feb 2019 07:32:42 -0800 (PST)
+        Fri, 1 Feb 2019 10:45:25 -0500
+X-Greylist: delayed 372 seconds by postgrey-1.27 at vger.kernel.org; Fri, 01 Feb 2019 10:45:24 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=qca.qualcomm.com; i=@qca.qualcomm.com; q=dns/txt;
+  s=qcdkim; t=1549035924; x=1580571924;
+  h=from:to:cc:subject:date:message-id:
+   content-transfer-encoding:mime-version;
+  bh=B3k4ebMLiqI25wLnnmlM8RuSjuaaIcPdiaoCimR9Afo=;
+  b=HSz+AU3WMZGCe9r/0JaszcvZf/7h6dWP/DKTRA+64IN0ByVui8CEkHgx
+   UUeQ1O+iZMHXqsOUmUpn5JNx23YSipGqrWgP4kwgJBp/1MCWc21mHyvd5
+   ErhZ4zvizj6E/uU8jaR1jw9qvN34paL+pqIO7Kue9TH6N+FJjU3xBs2A6
+   E=;
+X-IronPort-AV: E=Sophos;i="5.56,549,1539640800"; 
+   d="scan'208";a="1910559"
+Received: from ironmsg02-ams.qualcomm.com ([10.251.56.3])
+  by alexa-out-ams-02.qualcomm.com with ESMTP; 01 Feb 2019 16:39:10 +0100
+X-IronPort-AV: E=McAfee;i="5900,7806,9153"; a="7093206"
+Received: from euamsexm01e.eu.qualcomm.com ([10.251.127.42])
+  by ironmsg02-ams.qualcomm.com with ESMTP/TLS/AES256-SHA; 01 Feb 2019 16:39:09 +0100
+Received: from euamsexm01a.eu.qualcomm.com (10.251.127.40) by
+ euamsexm01e.eu.qualcomm.com (10.251.127.42) with Microsoft SMTP Server (TLS)
+ id 15.0.1395.4; Fri, 1 Feb 2019 16:39:08 +0100
+Received: from euamsexm01a.eu.qualcomm.com ([10.251.127.40]) by
+ euamsexm01a.eu.qualcomm.com ([10.251.127.40]) with mapi id 15.00.1395.000;
+ Fri, 1 Feb 2019 16:39:07 +0100
+From:   Kalle Valo <kvalo@qca.qualcomm.com>
+To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC:     "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PULL] ath10k firmware 2019-02-01
+Thread-Topic: [PULL] ath10k firmware 2019-02-01
+Thread-Index: AQHUukQAKz/jcxW64kS24Cm1Kb/GLw==
+Date:   Fri, 1 Feb 2019 15:39:07 +0000
+Message-ID: <1549035547599.95403@qca.qualcomm.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-GB
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [199.106.107.6]
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <1548913985-7180-1-git-send-email-siva8118@gmail.com> <1548913985-7180-3-git-send-email-siva8118@gmail.com>
-In-Reply-To: <1548913985-7180-3-git-send-email-siva8118@gmail.com>
-From:   Siva Rebbagondla <siva8118@gmail.com>
-Date:   Fri, 1 Feb 2019 21:02:28 +0530
-Message-ID: <CANGSkXT2-UJreyf71NBpXQjpaKf6RsRVzdz1wtys-8njd5hwdA@mail.gmail.com>
-Subject: Re: [v2 2/5] rsi: add hci detach for hibernation and poweroff
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Linux Wireless <linux-wireless@vger.kernel.org>,
-        Rishikesh Basu <rishikesh.basu@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Krishna Babu Pedda <krishna.pedda@redpinesignals.com>,
-        Ganapathiraju Kondraju <ganapathi.kondraju@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle,
-On Thu, Jan 31, 2019 at 11:23 AM Siva Rebbagondla <siva8118@gmail.com> wrote:
->
-> From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
->
-> As we missed to detach HCI, while entering power off or hibernation,
-> an extra hci interface gets created whenever system is woken up, to
-> avoid this we added hci_detach() in rsi_disconnect(), rsi_freeze(),
-> and rsi_shutdown() functions which are invoked for these tests.
-> This patch fixes the issue
->
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> ---
->  drivers/net/wireless/rsi/rsi_91x_sdio.c | 15 +++++++++++++++
->  drivers/net/wireless/rsi/rsi_91x_usb.c  |  6 ++++++
->  2 files changed, 21 insertions(+)
->
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-> index b412b65e..4005c1d 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-> @@ -1132,6 +1132,11 @@ static void rsi_disconnect(struct sdio_func *pfunction)
->         rsi_mac80211_detach(adapter);
->         mdelay(10);
->
-> +       if (adapter->priv->coex_mode > 1 && adapter->priv->bt_adapter) {
-> +               rsi_bt_ops.detach(adapter->priv->bt_adapter);
-> +               adapter->priv->bt_adapter = NULL;
-> +       }
-> +
->         /* Reset Chip */
->         rsi_reset_chip(adapter);
->
-> @@ -1308,6 +1313,11 @@ static int rsi_freeze(struct device *dev)
->                 rsi_dbg(ERR_ZONE,
->                         "##### Device can not wake up through WLAN\n");
->
-> +       if (common->coex_mode > 1 && common->bt_adapter) {
-> +               rsi_bt_ops.detach(common->bt_adapter);
-> +               common->bt_adapter = NULL;
-> +       }
-> +
->         ret = rsi_sdio_disable_interrupts(pfunction);
->
->         if (sdev->write_fail)
-> @@ -1355,6 +1365,11 @@ static void rsi_shutdown(struct device *dev)
->         if (rsi_config_wowlan(adapter, wowlan))
->                 rsi_dbg(ERR_ZONE, "Failed to configure WoWLAN\n");
->
-> +       if (adapter->priv->coex_mode > 1 && adapter->priv->bt_adapter) {
-> +               rsi_bt_ops.detach(adapter->priv->bt_adapter);
-> +               adapter->priv->bt_adapter = NULL;
-> +       }
-> +
->         rsi_sdio_disable_interrupts(sdev->pfunction);
->
->         if (sdev->write_fail)
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-> index f360690..38b4880b 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-> @@ -816,6 +816,12 @@ static void rsi_disconnect(struct usb_interface *pfunction)
->                 return;
->
->         rsi_mac80211_detach(adapter);
-> +
-> +       if (adapter->priv->coex_mode > 1 && adapter->priv->bt_adapter) {
-> +               rsi_bt_ops.detach(adapter->priv->bt_adapter);
-> +               adapter->priv->bt_adapter = NULL;
-> +       }
-> +
->         rsi_reset_card(adapter);
->         rsi_deinit_usb_interface(adapter);
->         rsi_91x_deinit(adapter);
-> --
-> 2.5.5
->
-Kindly ignore this patch series as kbuild test got failed. It is
-because of "rsi_bt_ops". These ops are defined in
-drivers/bluetooth/btrsi.c and this file is under CONFIG_RSI_COEX flag.
-I was overlooked on this.
-As you suggested in v1 series, I will resend these patches with
-"IS_ENABLED(CONFIG_RSI_COEX)" check.
-
-Thanks,
-Siva Rebbagondla
+Hi,=0A=
+=0A=
+here are few ath10k firmware updates, please pull.=0A=
+=0A=
+Kalle=0A=
+=0A=
+The following changes since commit a8b75cac06f80dc1500ba385680ac5b5c1d1c4f8=
+:=0A=
+=0A=
+  Merge tag 'add-rpi-fw' of ssh://gitolite.kernel.org/pub/scm/linux/kernel/=
+git/matthias.bgg/linux-firmware (2019-01-18 07:04:02 -0500)=0A=
+=0A=
+are available in the git repository at:=0A=
+=0A=
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/linux-firmware.git at=
+h10k-20190201=0A=
+=0A=
+for you to fetch changes up to 6b5e23a113704867df5205f31f02ffbc3ec4453e:=0A=
+=0A=
+  ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.9.0.2-00021 (2019-=
+02-01 17:22:55 +0200)=0A=
+=0A=
+----------------------------------------------------------------=0A=
+Kalle Valo (4):=0A=
+      ath10k: QCA6174 hw3.0: update board-2.bin=0A=
+      ath10k: QCA9888 hw2.0: update firmware-5.bin to 10.4-3.9.0.2-00024=0A=
+      ath10k: QCA988X hw2.0: update firmware-5.bin to 10.2.4-1.0-00043=0A=
+      ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.9.0.2-00021=0A=
+=0A=
+ WHENCE                              |   6 +++---=0A=
+ ath10k/QCA6174/hw3.0/board-2.bin    | Bin 551128 -> 567608 bytes=0A=
+ ath10k/QCA9888/hw2.0/firmware-5.bin | Bin 675492 -> 688536 bytes=0A=
+ ath10k/QCA988X/hw2.0/firmware-5.bin | Bin 248200 -> 248840 bytes=0A=
+ ath10k/QCA9984/hw1.0/firmware-5.bin | Bin 662084 -> 676316 bytes=0A=
+ 5 files changed, 3 insertions(+), 3 deletions(-)=0A=
