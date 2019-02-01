@@ -6,64 +6,64 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE8DC282D8
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 12:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B31C282D8
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 12:31:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E2AF2082C
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 12:31:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97E132082C
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 12:31:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FMyqGf82";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="mwJgH5kv"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QKfiFRiy";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TofvvP6N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728637AbfBAMa5 (ORCPT
+        id S1728940AbfBAMbv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Feb 2019 07:30:57 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:41836 "EHLO
+        Fri, 1 Feb 2019 07:31:51 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:43518 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725807AbfBAMa5 (ORCPT
+        with ESMTP id S1725807AbfBAMbv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Feb 2019 07:30:57 -0500
+        Fri, 1 Feb 2019 07:31:51 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6D3C46090C; Fri,  1 Feb 2019 12:30:55 +0000 (UTC)
+        id 363D9608C5; Fri,  1 Feb 2019 12:31:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549024256;
-        bh=b+84VemlwMKOL4ro8vZaBjwMX61xpY+ZgXUgb2NNxcw=;
+        s=default; t=1549024310;
+        bh=4YrUKovPYKBILi6jyUue/CMz6th0GOhpklH3vmcmswc=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=FMyqGf82m1F/osiss17hQk24Fi177ro5nYViUMrf8dG+n7yPmaez78vwJ6Pzsyu8n
-         QMemiyzz4vyn2lFBY8FH981DvVzdEWEOcEsrqAMiXfeCgD5ynyEkjLb4iz/cy8uMbS
-         XcCLEzNUk/T2ogx+DjpLXEfBKqRDWTDgBNFlKokQ=
+        b=QKfiFRiyGiL129M769L4XfZ7f4KUjtNCCfy5U+5dh8QMvwp2+4GYnge967HV5SJ9Y
+         ZIYlb1wKEqrULhIxdkPaac1Q5lwJprUyDJ3TL+TnWAxr5jkQbN+88GphjWZt3t7KJu
+         s93i2uSnUQ1NNms5e66PfHHnV2HbuiiqTuE5jkAs=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8F495608CC;
-        Fri,  1 Feb 2019 12:30:53 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id CC6206043F;
+        Fri,  1 Feb 2019 12:31:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549024254;
-        bh=b+84VemlwMKOL4ro8vZaBjwMX61xpY+ZgXUgb2NNxcw=;
+        s=default; t=1549024308;
+        bh=4YrUKovPYKBILi6jyUue/CMz6th0GOhpklH3vmcmswc=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=mwJgH5kvZYu7UXSzTRW8jdfH7zLu2D1ruSE9DMEIaH5FmiTpbqSIAPSznhQZer/+6
-         gJeBUa+SxpyB9Tj+ToeiosVommfNQk9zj7hzUHn/ztnc74EbwsmfLYhn7p0H8LJPUA
-         05Ci5NhYtn5nNVy/xCN+VJtB/1qlZ1C4NUFTeTAA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8F495608CC
+        b=TofvvP6NXqWWlTrEDQHL9lkotyZgpu9luEsTuKWqR8qp0oB95l6Z8tdJ9JeiGgTkc
+         VqKQF19BcoSGMFl3jfg0UufNLMsZeUfxwns09wBeMn/IfSiyAL3kS2K7Ozfu5gNhzw
+         Zdu3Cr4tVCu7Z0/qnIi6J6kfBO8+EDvWEuNC3dAY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CC6206043F
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wl1251: no need to check return value of debugfs_create
+Subject: Re: [PATCH] wl12xx: no need to check return value of debugfs_create
  functions
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190122152151.16139-26-gregkh@linuxfoundation.org>
-References: <20190122152151.16139-26-gregkh@linuxfoundation.org>
+In-Reply-To: <20190122152151.16139-27-gregkh@linuxfoundation.org>
+References: <20190122152151.16139-27-gregkh@linuxfoundation.org>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     linux-kernel@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Tony Lindgren <tony@atomide.com>,
         linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190201123056.6D3C46090C@smtp.codeaurora.org>
-Date:   Fri,  1 Feb 2019 12:30:55 +0000 (UTC)
+Message-Id: <20190201123150.363D9608C5@smtp.codeaurora.org>
+Date:   Fri,  1 Feb 2019 12:31:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -83,10 +83,10 @@ Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-72efec9b67ae wl1251: no need to check return value of debugfs_create functions
+23f389660301 wl12xx: no need to check return value of debugfs_create functions
 
 -- 
-https://patchwork.kernel.org/patch/10775791/
+https://patchwork.kernel.org/patch/10775789/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
