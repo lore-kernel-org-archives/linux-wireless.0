@@ -2,66 +2,74 @@ Return-Path: <SRS0=B73O=QI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0E4CC282D8
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 22:23:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6648EC282D8
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 23:23:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD64220869
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 22:23:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35C04214C6
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 23:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726652AbfBAWXV (ORCPT
+        id S1727154AbfBAXXh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Feb 2019 17:23:21 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:50562 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725850AbfBAWXV (ORCPT
+        Fri, 1 Feb 2019 18:23:37 -0500
+Received: from mail.w1.fi ([212.71.239.96]:33236 "EHLO
+        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726529AbfBAXXh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Feb 2019 17:23:21 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92-RC4)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gphDT-0008HN-UG; Fri, 01 Feb 2019 23:23:20 +0100
-Message-ID: <7179602b12fbcdad6e3c8d71150e647b32b9425b.camel@sipsolutions.net>
-Subject: Re: iw release cadence?
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 01 Feb 2019 23:23:15 +0100
-In-Reply-To: <d4715a263661f442e1d610c63981a256fcba82e6.camel@sipsolutions.net> (sfid-20190201_231814_046444_53D86A8F)
-References: <CA+ASDXMVAP4CsE=vaomOn5mu_uAM0jc3jvWGzaVPFFif4kTX+Q@mail.gmail.com>
-         <2d274e00c3e15e9786ccc865215d9853a5ab30f0.camel@sipsolutions.net>
-         <3282a26ab610c1590742c0d50632c35ae4bb82c8.camel@sipsolutions.net>
-         <CA+ASDXMNu2Jv1nFCWMtg6bcks-XKv1fTGr6j2f0TdgtAhkQK3w@mail.gmail.com>
-         (sfid-20190201_231724_438987_1329FC1E) <d4715a263661f442e1d610c63981a256fcba82e6.camel@sipsolutions.net>
-         (sfid-20190201_231814_046444_53D86A8F)
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Fri, 1 Feb 2019 18:23:37 -0500
+X-Greylist: delayed 416 seconds by postgrey-1.27 at vger.kernel.org; Fri, 01 Feb 2019 18:23:36 EST
+Received: from localhost (localhost [127.0.0.1])
+        by li674-96.members.linode.com (Postfix) with ESMTP id 698DA11C51;
+        Fri,  1 Feb 2019 23:16:39 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at w1.fi
+Received: from li674-96.members.linode.com ([127.0.0.1])
+        by localhost (mail.w1.fi [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id SdtqmzvUw8sJ; Fri,  1 Feb 2019 23:16:38 +0000 (UTC)
+From:   Jouni Malinen <j@w1.fi>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [PATCH] mac80211_hwsim: Support boottime in scan results
+Date:   Sat,  2 Feb 2019 01:16:31 +0200
+Message-Id: <1549062991-28148-1-git-send-email-j@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-02-01 at 23:18 +0100, Johannes Berg wrote:
-> On Fri, 2019-02-01 at 14:17 -0800, Brian Norris wrote:
-> > On Fri, Feb 1, 2019 at 2:09 PM Johannes Berg <johannes@sipsolutions.net> wrote:
-> > > On Fri, 2019-02-01 at 22:54 +0100, Johannes Berg wrote:
-> > > > 
-> > > > I'll just tag one now :-)
-> > > 
-> > > Done. I updated a few things and pulled in our FTM support code too, now
-> > > that all the nl80211.h api is upstream.
-> > 
-> > Awesome, thanks! Presumably a tarball is on its way?
-> 
-> Need to figure out how to use kup again ...
+This makes the age information for cfg80211 scan results more accurate
+and fixes issues with wpa_supplicant dropping "old" scan results (e.g.,
+"wlan0: Own scan request started a scan in 0.000456 seconds") that
+looked like would have been received before a scan started due to the
+inaccuracy of the default timing mechanism for calculating the BSS entry
+age. This makes hwsim test cases significantly more robust to run.
 
-Ok I think I figured it out, but it takes a little while to sync and be
-visible on the public frontend.
+Signed-off-by: Jouni Malinen <j@w1.fi>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 320edca..87be2b1 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1273,10 +1273,12 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
+ 	 * probably doesn't really matter.
+ 	 */
+ 	if (ieee80211_is_beacon(hdr->frame_control) ||
+-	    ieee80211_is_probe_resp(hdr->frame_control))
++	    ieee80211_is_probe_resp(hdr->frame_control)) {
++		rx_status.boottime_ns = ktime_get_boot_ns();
+ 		now = data->abs_bcn_ts;
+-	else
++	} else {
+ 		now = mac80211_hwsim_get_tsf_raw();
++	}
+ 
+ 	/* Copy skb to all enabled radios that are on the current frequency */
+ 	spin_lock(&hwsim_radio_lock);
+-- 
+2.7.4
 
