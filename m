@@ -4,98 +4,91 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF74C282D8
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 12:08:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC19CC282D8
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 12:11:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A91B2077B
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 12:08:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B668B218AC
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Feb 2019 12:11:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IisyIYCf";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="X+e5bK3N"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="mq3RsBDL";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kpQAas6e"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729218AbfBAMH7 (ORCPT
+        id S1726582AbfBAMLT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Feb 2019 07:07:59 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:47992 "EHLO
+        Fri, 1 Feb 2019 07:11:19 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:51470 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729066AbfBAMH7 (ORCPT
+        with ESMTP id S1726486AbfBAMLT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Feb 2019 07:07:59 -0500
+        Fri, 1 Feb 2019 07:11:19 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 959D66085C; Fri,  1 Feb 2019 12:07:58 +0000 (UTC)
+        id 11A00605FC; Fri,  1 Feb 2019 12:11:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549022878;
-        bh=0NSVOROFJzYgSA6AboN9LxEevKQ12ifyQ6D7HU70/Nk=;
+        s=default; t=1549023079;
+        bh=baxOg1e6dCkEqIfV5jiJ54igWvxG/dfnmKp/AuNn3Ws=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=IisyIYCfa7EpJbDShiQMVys93Eiv+UaP2NgdqsVfjQpnIE1HJP1scfRbjGlCMr8pI
-         5M1X+i8hHYevFsMWyBdObGL4qG3KW0VcfQVNvpj5KZAXxu5HCLnoa5qfd+rL2Wzr1N
-         rNNjNflZEkkP1iiWhpX4ZI8WbW9ebR2EzhA0SZD8=
+        b=mq3RsBDLBknFwcdE0fy1jBVHbUEIsMSVIVO3Iq4sR0ketLMsW5C10PM958Unt/F0r
+         FpNKf3Mbrm1d/moCSXKrU5eWBo9/v33ZCKJCnev1GrBR7Q5WFGAAcU5ExkUsWrTbbb
+         SXY2NitAfxkLU3ceJds8TzB1OVnPbXxSvjwlVCtQ=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 781EA6030D;
-        Fri,  1 Feb 2019 12:07:56 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1AE0A6030D;
+        Fri,  1 Feb 2019 12:11:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549022878;
-        bh=0NSVOROFJzYgSA6AboN9LxEevKQ12ifyQ6D7HU70/Nk=;
+        s=default; t=1549023078;
+        bh=baxOg1e6dCkEqIfV5jiJ54igWvxG/dfnmKp/AuNn3Ws=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=X+e5bK3NA1rn/Q3xsuhm4qbWwTK9t8LGAmnCLowVNdv1sfK4a0CBo4fv29Iso8q2u
-         jgca6mBK5PcsSDPwK6SAM+zsTEBKYkncTN+2VXuyw8rb0xuwXmY6BuhJvsjdNLcvv3
-         do4gCC5qxxrs47zR6J76tS80UgZUgQL8EwF8aCsM=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 781EA6030D
+        b=kpQAas6eHjxcQD+0WrSZ2GVppTN5/gpyf8OUacBa/2nTMI///C32yNZWJkd+Ue3LD
+         Cg7XnUI3ZVzsBok3rEkPn0SfT+VWlLOys+JelVj9zEP9RWiKqTDYoAdyWMiygm7GyV
+         bYyoAk4aBOxVwRC2mQLQ+CRexUT1l3s8NmcXNwF4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1AE0A6030D
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v4 1/4] rtl8723ae: Take the FW LPS mode handling out
+Subject: Re: [PATCH v3] mwifiex: add support for sd8977 chipset
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <AM6PR07MB5608D3B84CFB7EB8A84C2030E48A0@AM6PR07MB5608.eurprd07.prod.outlook.com>
-References: <AM6PR07MB5608D3B84CFB7EB8A84C2030E48A0@AM6PR07MB5608.eurprd07.prod.outlook.com>
-To:     Bernd Edlinger <bernd.edlinger@hotmail.de>
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Andrew Lunn <andrew@lunn.ch>
+In-Reply-To: <CY4PR18MB1237E51E20E86ED04AF401D0A0840@CY4PR18MB1237.namprd18.prod.outlook.com>
+References: <CY4PR18MB1237E51E20E86ED04AF401D0A0840@CY4PR18MB1237.namprd18.prod.outlook.com>
+To:     Ganapathi Bhat <gbhat@marvell.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Rakesh Parmar <rakeshp@marvell.com>,
+        Hemantkumar Suthar <shemant@marvell.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190201120758.959D66085C@smtp.codeaurora.org>
-Date:   Fri,  1 Feb 2019 12:07:58 +0000 (UTC)
+Message-Id: <20190201121119.11A00605FC@smtp.codeaurora.org>
+Date:   Fri,  1 Feb 2019 12:11:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Bernd Edlinger <bernd.edlinger@hotmail.de> wrote:
+Ganapathi Bhat <gbhat@marvell.com> wrote:
 
-> This appears to trigger a firmware bug and causes severe
-> problems with rtl8723ae PCI devices.
+> From: Hemantkumar Suthar <shemant@marvell.com>
 > 
-> When the power save mode is activated for longer periods
-> of time the firmware stops to receive any packets.
+> This patch adds support for 8977 chipset to mwifiex with SDIO
+> interface. Register offsets and supported feature flags are
+> updated. Firmware image used will be mrvl/sd8977_uapsta.bin.
 > 
-> This problem was exposed by commit 873ffe154ae0 ("rtlwifi:
-> Fix logic error in enter/exit power-save mode").
-> 
-> Previously the power save mode was only active rarely and
-> only for a short time so that the problem was not noticeable.
-> 
-> Signed-off-by: Bernd Edlinger <bernd.edlinger@hotmail.de>
+> Signed-off-by: Hemantkumar Suthar <shemant@marvell.com>
+> Signed-off-by: Rakesh Parmar <rakeshp@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-4 patches applied to wireless-drivers-next.git, thanks.
+Patch applied to wireless-drivers-next.git, thanks.
 
-46b87976d7a8 rtl8723ae: Take the FW LPS mode handling out
-5bb5385fbf3e rtl8723ae: Dont use old data for input gain control
-28484b6b37ba rtl8723ae: Re-introduce the adaptive rate control
-051337d412d2 rtlwifi: Don't clear num_rx_inperiod too early
+1a0f547831dc mwifiex: add support for sd8977 chipset
 
 -- 
-https://patchwork.kernel.org/patch/10752995/
+https://patchwork.kernel.org/patch/10755375/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
