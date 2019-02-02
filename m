@@ -6,26 +6,26 @@ X-Spam-Status: No, score=0.1 required=3.0 tests=DATE_IN_PAST_06_12,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F36B5C282D7
-	for <linux-wireless@archiver.kernel.org>; Sun,  3 Feb 2019 02:14:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAF5CC282D7
+	for <linux-wireless@archiver.kernel.org>; Sun,  3 Feb 2019 02:24:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEF3920856
-	for <linux-wireless@archiver.kernel.org>; Sun,  3 Feb 2019 02:14:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DA6720856
+	for <linux-wireless@archiver.kernel.org>; Sun,  3 Feb 2019 02:24:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727412AbfBCCOs (ORCPT
+        id S1727461AbfBCCYw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Feb 2019 21:14:48 -0500
-Received: from mail.horeca-service.com ([185.53.168.19]:36179 "EHLO
+        Sat, 2 Feb 2019 21:24:52 -0500
+Received: from mail.horeca-service.com ([185.53.168.19]:55348 "EHLO
         shelterness.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727391AbfBCCOs (ORCPT
+        with ESMTP id S1727273AbfBCCYw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Feb 2019 21:14:48 -0500
-X-Greylist: delayed 5133 seconds by postgrey-1.27 at vger.kernel.org; Sat, 02 Feb 2019 21:14:47 EST
+        Sat, 2 Feb 2019 21:24:52 -0500
+X-Greylist: delayed 781 seconds by postgrey-1.27 at vger.kernel.org; Sat, 02 Feb 2019 21:24:51 EST
 To:     linux-wireless@vger.kernel.org
-Subject: Still need this?
-Message-ID: <0b9f6d44fdc7be43f96b7750da3bae37@karenwinters.com>
-Date:   Sat, 02 Feb 2019 15:33:34 +0100
-From:   "Grace" <lekkasnzze@verizon.net>
+Subject: Did you send the images?
+Message-ID: <451f3274e5352ac63382939df4c68163@artycraftykids.com>
+Date:   Sat, 02 Feb 2019 17:00:56 +0100
+From:   "Grace" <lekklekzze@verizon.net>
 Reply-To: jiantens@sina.com
 MIME-Version: 1.0
 Content-Type: text/plain; format=flowed; charset="UTF-8"
@@ -58,11 +58,8 @@ Grace
 
 
 
+Bottrodp
 
 
-
-Kerdpen
-
-
-Kdufbeuren
+Datteldn
 
