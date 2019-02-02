@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DDD7C282DA
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F14CC282D7
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD6AB2082C
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E21652082C
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="DX3d8Kl4"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="gmzfX5gq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726865AbfBBTRY (ORCPT
+        id S1726871AbfBBTR0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Feb 2019 14:17:24 -0500
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:55583 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726784AbfBBTRX (ORCPT
+        Sat, 2 Feb 2019 14:17:26 -0500
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12679 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726784AbfBBTRZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Feb 2019 14:17:23 -0500
+        Sat, 2 Feb 2019 14:17:25 -0500
 X-IronPort-AV: E=Sophos;i="5.56,553,1539673200"; 
-   d="scan'208";a="26075172"
+   d="scan'208";a="26232221"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 02 Feb 2019 12:17:22 -0700
+  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 02 Feb 2019 12:17:24 -0700
 Received: from NAM01-SN1-obe.outbound.protection.outlook.com (10.10.215.89) by
  email.microchip.com (10.10.76.38) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Sat, 2 Feb 2019 12:17:22 -0700
+ 14.3.352.0; Sat, 2 Feb 2019 12:17:24 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector1-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=QPrR3vjNlB71lzBA+YqHLKH4zHHezOpIDvOTYSb84Rw=;
- b=DX3d8Kl4J7ZtnlHZx7ozzekE1fCQYu+9A0+93lKZx4jfMQlN2jtEzLOdK2vv3J1YeAlPiLMuJS2h5kcf+w08YwTq8w+KvRGZ1f5BDRMO+dzYHf06UJBF1MWR7oqVPp6UxzHrGesYXnIHkFJnQay9Ti2r8T7VWf8sLHD3uxPLhpE=
+ bh=uvEa6FU/4iuiTn/F4Etr82dL8ErNfLgNf57KoNCnaW0=;
+ b=gmzfX5gqiIUOuf28xYu+p1twjJFk5ff0u9qauLicSaTWNkz0A69ak4X15XCrhEQcECHxOuEAIp8xfdyEx7/tO7DSZGfWkxXwIQm3WFsEi/ph4OHJh76dQ1GHZkk6ldsDUbsbjUXF10Gkl3wEEUEY4KbQOSjw5S7FaZktbI6An9g=
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com (52.135.226.160) by
  BYAPR11MB3638.namprd11.prod.outlook.com (20.178.237.19) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1580.16; Sat, 2 Feb 2019 19:17:19 +0000
+ 15.20.1580.16; Sat, 2 Feb 2019 19:17:22 +0000
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::cc6d:bc31:d5b:a27d]) by BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::cc6d:bc31:d5b:a27d%5]) with mapi id 15.20.1580.019; Sat, 2 Feb 2019
- 19:17:19 +0000
+ 19:17:22 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 10/15] staging: wilc1000: refactor
- linux_wlan_init_test_config()
-Thread-Topic: [PATCH 10/15] staging: wilc1000: refactor
- linux_wlan_init_test_config()
-Thread-Index: AQHUuyvq//+vh2NaCkOS22mlThxlWA==
-Date:   Sat, 2 Feb 2019 19:17:19 +0000
-Message-ID: <1549134974-5545-11-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 11/15] staging: wilc1000: refactor code to use cookie
+ information
+Thread-Topic: [PATCH 11/15] staging: wilc1000: refactor code to use cookie
+ information
+Thread-Index: AQHUuyvsQFthn0ifj0+lXPH43qRwdA==
+Date:   Sat, 2 Feb 2019 19:17:22 +0000
+Message-ID: <1549134974-5545-12-git-send-email-ajay.kathat@microchip.com>
 References: <1549134974-5545-1-git-send-email-ajay.kathat@microchip.com>
 In-Reply-To: <1549134974-5545-1-git-send-email-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -71,22 +71,22 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.7.4
 x-originating-ip: [49.205.218.11]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR11MB3638;6:ixxJF+BwZB4hVXGIdjo/BLY7JOHvV5bxpKcuyz3bAbkuC6RXhrTVUAjMuDpWMUrh8vTPA8Y738qi5RsjU3Rv2Clelc/bQUEDZp42qxskMSecEVA2YDhpNStXUDxCm/iukzKW7DRR3kXTVzmcMpWJkF0AjdZxMeQM8uq5+BlKWjC4YUWo4JA3BCGUd93ZAFcsQXhGHIqTtXFBDOYBmp+sHA3LX2ClXvXBmNaFrimWROIyXpXKcaouiIX8nV2mFdoAnh71E7S2ZyBK4W+elTjYXAvtR4talB9MN/cqNwx+RGR0WGBctINuGE7GCDmQN4m17wwe6fMmUwJ5/r4zjie+fBW5u0toP8OfDMLoX6IQ8tqopLw9GSjUL1YPz/Sok3nfHhDq9FLnaooyKgY5PPRLEhAggcMP4LwrY6mIfji7Wreez4BxaMuVqS0hCO2WXNRDteytzwcWgeR16is9Tphqcg==;5:Tcsn/+l8Dyx+3ZA8SqYu2a12J3svScDLNGUbvsUc9X3vJwKTUUlSb9yWmChcBfEN0gorga4y4wIXectFkYbHHvOui5cwFnuuWXiovE8Yb2oqoPWns4prttnOns5GplQVBLurFeaCKS4TLaQ62dACHQ/npnM3csEvJ0hHNjC4Giz25dtQxPjhB5JK0S8qSbjrrWgPtZPj+oK8yUxF2gwqyA==;7:pcurInIWTvfWwu5UAhpHFpF0nW4HEMPRaJatAYDyxl7GzTcgLQAAVj3YRoARu0iH3NVrdl6o0g3C8e8OBcFNn71f68NO1DKGAAIVg4cq652DzeOmi5XxcCVs/nrx0Zmbh24IRA1Ylt8C1k3HbpXnRA==
-x-ms-office365-filtering-correlation-id: 3cfd7be9-6bda-4fdd-2737-08d689430ce1
+x-microsoft-exchange-diagnostics: 1;BYAPR11MB3638;6:aQiHCRqbnRvg7BACul6DUbXje3GzvU/rG3azI0vylk1m4KNgWOy53FmR5zVaZKK+opp31u6YWGCv4SVsE3WwIa7YtBhlQv34ZaoRqyAquIlRxUZ56YBJTF68Whe3HkKfDW+4IHGSsxjjh3VEa4shB1cOn5jLCnbAqB75zLxQVcBnF5/uPbVzMBL1rMmJT2V8KjQ65gEey58IKi7N1Gi2ppoaS7ZaD5nph1O9Sljt8bNbkBt8dgx2sdp158RIqz2rriWymsupDl7FSizOXa66AZUxONTJP+2lNSJmf9E1jzoNz6P04LRNR1AesEjZZnfZnmNbf/CvufIoZXsCIpMWXKtI4pDi3joUJ1BJtoxTSjGQgHVNyRR0uURnN9erHX0njCV+gURAKRJ7hzwfqfvVyIuAzGIs7MBtJZ8J0WpkKa8qGX+5tX+V4+poI14N/0OwWZ3f9W73SH2XFa84yWJtzA==;5:6ExIt371AumVpO6H6MvNr9LM1xGUZwmI1SMLaUkIlIbpOzHlOev9rqPZE44ASdWbZZGzjYxCiksnivA6IICvU0Q/4/ZFSUxSEKO8AstpsonVW+vKrml+gTFUqyEw55dwf4EKkpSik6zq+jYQ7WcP9qIF1l5HnlPXNg0ZYntaoorypG9NQl7Zok4NuHCb37QngDNyEHdhLGh8FTXn9rSLqg==;7:1swSPao5P/K3Efy1T82MsYr6bBqTjAhWI4DB2QyX0lYOqzEGNKju6UytKS2G5Pt3WKzmsAIJTD6TjlmmeX+A5812rzdWn0edhyd4NVbmmOvdyBtLI4HWMHk+9TNNR+zbwsBxKfI2rCsK8nH1j7OJVA==
+x-ms-office365-filtering-correlation-id: 7c19b39d-a42c-4bb0-b8c9-08d689430e7f
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(2017052603328)(7153060)(7193020);SRVR:BYAPR11MB3638;
 x-ms-traffictypediagnostic: BYAPR11MB3638:
-x-microsoft-antispam-prvs: <BYAPR11MB3638BB6B65C1A6F150D31ABEE3930@BYAPR11MB3638.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR11MB3638D07C60DA4F2B2FE4AB33E3930@BYAPR11MB3638.namprd11.prod.outlook.com>
 x-forefront-prvs: 09368DB063
 x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39850400004)(396003)(376002)(136003)(346002)(366004)(189003)(199004)(26005)(478600001)(7736002)(186003)(105586002)(106356001)(2351001)(476003)(6486002)(446003)(2616005)(486006)(6512007)(66066001)(11346002)(2906002)(14454004)(6436002)(72206003)(71200400001)(71190400001)(386003)(6506007)(5640700003)(2501003)(68736007)(3846002)(97736004)(102836004)(6916009)(36756003)(76176011)(78486014)(25786009)(107886003)(81156014)(81166006)(4326008)(86362001)(52116002)(53936002)(316002)(305945005)(14444005)(99286004)(256004)(8676002)(6116002)(8936002)(50226002)(54906003);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB3638;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: YX10qdsjb7IUY36tC9K60qEUxQ5ZunFy48e+tKHgSvR3YL4jFt5ljSmsfHRZQ4EZauPOHr/kdJKiDG0tQxtzFoLVi525/1m7RpYM/7gqUDYWj6Oie6z7W+C5cBma/Q6j0bhVVnF6FTNtAXxW1gMXC56X0tXQPe2BTfgduJveCnGTeoHJzcbko6n77UBF+GLT73A2sYdgOjdYDmlNsofpnn+2EbZFF6csYGqa8HVJPjtZ/dkEKYAka4KOAibnw296OcTvZLRot0768l4CjJ8yakem6PjjfY9DPzvnxWS+3FkVFvMD5OoFyro+Qqnqay3iHLEQnU/6gocbdFdnOeocADsXuakpxnx4nOYZ6V98Hh4z4OeH58ZCbJfOoxQZY6FEWY3+T1RWWM+V8rtQByAi/liuihX0k4Iix0p0aqs4n/0=
+x-microsoft-antispam-message-info: K/XtvZJCbK7HpgjXthx6lbXRP7Ys3Zn7yeNh5/MisOuIlNaeXp0N9QlcFlrBd1GHt/tYgz9z5iUrAEwsAkomoqmekqPIrKfWwTbiB3rVJp81rplVle1chN9MjmmHqiXSWH3JIeoNWXy4Vu/RVY+ZPPRkNR/tNoMSB9beUS1RrZSymhSQFpBKmdWEnqRrVpaTOweMUqZjIq2vXSzV5eo/i5tl3KHfX0brNHlzMYKvmiLYJbJ7QIeyCoClDMdSVKxT2hxZ2d5DFE8Lfyl5NnaqrFW+gnffAehx0CHxvuV/ojNE4EOiIxOsh4MR5rp+cdbHWIYN2PDCpD1nIxW1otcBWGZp2IlTYyn++8EXlR+iaHzA7WSXfriTKcCxBP+UhIGH1CuyVAy9rvFvSl7lqNGP0D30Rv9WobPQ1fFHPwwOipM=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3cfd7be9-6bda-4fdd-2737-08d689430ce1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Feb 2019 19:17:16.8654
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7c19b39d-a42c-4bb0-b8c9-08d689430e7f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Feb 2019 19:17:19.9135
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
@@ -100,332 +100,339 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Refactor linux_wlan_init_test_config() to use correct endianness for wid
-values and remove unnecessary code.
+Make use of cookie information to pass to wpa_s and handle cookie value
+received in the cfg80211_ops callbacks.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c   | 200 +++++++++++++---------------=
+ drivers/staging/wilc1000/host_interface.c         | 72 +++++++------------=
 ----
- drivers/staging/wilc1000/wilc_wlan_if.h |   1 -
- 2 files changed, 83 insertions(+), 118 deletions(-)
+ drivers/staging/wilc1000/host_interface.h         | 13 ++--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 51 ++++++++--------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 +-
+ 4 files changed, 53 insertions(+), 85 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc10=
-00/linux_wlan.c
-index 466a1fa..484fe3d 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -304,204 +304,170 @@ static int wilc1000_firmware_download(struct net_de=
-vice *dev)
- 	return 0;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wi=
+lc1000/host_interface.c
+index 4598920..c6fcf27 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -920,40 +920,22 @@ static int handle_remain_on_chan(struct wilc_vif *vif=
+,
+ 	struct wid wid;
+ 	struct host_if_drv *hif_drv =3D vif->hif_drv;
+=20
+-	if (!hif_drv->remain_on_ch_pending) {
+-		hif_drv->remain_on_ch.arg =3D hif_remain_ch->arg;
+-		hif_drv->remain_on_ch.expired =3D hif_remain_ch->expired;
+-		hif_drv->remain_on_ch.ready =3D hif_remain_ch->ready;
+-		hif_drv->remain_on_ch.ch =3D hif_remain_ch->ch;
+-		hif_drv->remain_on_ch.id =3D hif_remain_ch->id;
+-	} else {
+-		hif_remain_ch->ch =3D hif_drv->remain_on_ch.ch;
+-	}
++	if (hif_drv->usr_scan_req.scan_result)
++		return -EBUSY;
+=20
+-	if (hif_drv->usr_scan_req.scan_result) {
+-		hif_drv->remain_on_ch_pending =3D 1;
+-		result =3D -EBUSY;
+-		goto error;
+-	}
+-	if (hif_drv->hif_state =3D=3D HOST_IF_WAITING_CONN_RESP) {
+-		result =3D -EBUSY;
+-		goto error;
+-	}
++	if (hif_drv->hif_state =3D=3D HOST_IF_WAITING_CONN_RESP)
++		return -EBUSY;
+=20
+-	if (vif->obtaining_ip || vif->connecting) {
+-		result =3D -EBUSY;
+-		goto error;
+-	}
++	if (vif->obtaining_ip || vif->connecting)
++		return -EBUSY;
+=20
+ 	remain_on_chan_flag =3D true;
+ 	wid.id =3D WID_REMAIN_ON_CHAN;
+ 	wid.type =3D WID_STR;
+ 	wid.size =3D 2;
+ 	wid.val =3D kmalloc(wid.size, GFP_KERNEL);
+-	if (!wid.val) {
+-		result =3D -ENOMEM;
+-		goto error;
+-	}
++	if (!wid.val)
++		return -ENOMEM;
+=20
+ 	wid.val[0] =3D remain_on_chan_flag;
+ 	wid.val[1] =3D (s8)hif_remain_ch->ch;
+@@ -961,21 +943,16 @@ static int handle_remain_on_chan(struct wilc_vif *vif=
+,
+ 	result =3D wilc_send_config_pkt(vif, WILC_SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	kfree(wid.val);
+-	if (result !=3D 0)
+-		netdev_err(vif->ndev, "Failed to set remain on channel\n");
++	if (result)
++		return -EBUSY;
+=20
+-error:
++	hif_drv->remain_on_ch.arg =3D hif_remain_ch->arg;
++	hif_drv->remain_on_ch.expired =3D hif_remain_ch->expired;
++	hif_drv->remain_on_ch.ch =3D hif_remain_ch->ch;
++	hif_drv->remain_on_ch.cookie =3D hif_remain_ch->cookie;
+ 	hif_drv->remain_on_ch_timer_vif =3D vif;
+-	mod_timer(&hif_drv->remain_on_ch_timer,
+-		  jiffies + msecs_to_jiffies(hif_remain_ch->duration));
+-
+-	if (hif_drv->remain_on_ch.ready)
+-		hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.arg);
+=20
+-	if (hif_drv->remain_on_ch_pending)
+-		hif_drv->remain_on_ch_pending =3D 0;
+-
+-	return result;
++	return 0;
  }
 =20
--static int linux_wlan_init_test_config(struct net_device *dev,
--				       struct wilc_vif *vif)
-+static int linux_wlan_init_fw_config(struct net_device *dev,
-+				     struct wilc_vif *vif)
- {
--	unsigned char c_val[64];
--	struct wilc *wilc =3D vif->wilc;
- 	struct wilc_priv *priv;
- 	struct host_if_drv *hif_drv;
-+	u8 b;
-+	u16 hw;
-+	u32 w;
+ static void handle_listen_state_expired(struct work_struct *work)
+@@ -1012,7 +989,7 @@ static void handle_listen_state_expired(struct work_st=
+ruct *work)
 =20
- 	netdev_dbg(dev, "Start configuring Firmware\n");
- 	priv =3D wiphy_priv(dev->ieee80211_ptr->wiphy);
- 	hif_drv =3D (struct host_if_drv *)priv->hif_drv;
- 	netdev_dbg(dev, "Host =3D %p\n", hif_drv);
--	wilc_get_chipid(wilc, false);
--
--	*(int *)c_val =3D 1;
--
--	if (!wilc_wlan_cfg_set(vif, 1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
--		goto fail;
--
--	c_val[0] =3D 0;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_PC_TEST_MODE, c_val, 1, 0, 0))
--		goto fail;
--
--	c_val[0] =3D WILC_FW_BSS_TYPE_INFRA;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_BSS_TYPE, c_val, 1, 0, 0))
--		goto fail;
--
--	c_val[0] =3D WILC_FW_TX_RATE_AUTO;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
--		goto fail;
--
--	c_val[0] =3D WILC_FW_OPER_MODE_G_MIXED_11B_2;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11G_OPERATING_MODE, c_val, 1, 0,
--			       0))
--		goto fail;
-=20
--	c_val[0] =3D 1;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_CURRENT_CHANNEL, c_val, 1, 0, 0))
--		goto fail;
--
--	c_val[0] =3D WILC_FW_PREAMBLE_SHORT;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_PREAMBLE, c_val, 1, 0, 0))
-+	w =3D vif->iftype;
-+	cpu_to_le32s(&w);
-+	if (!wilc_wlan_cfg_set(vif, 1, WID_SET_OPERATION_MODE, (u8 *)&w, 4,
-+			       0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_11N_PROT_AUTO;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_PROT_MECH, c_val, 1, 0, 0))
-+	b =3D WILC_FW_BSS_TYPE_INFRA;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_BSS_TYPE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_ACTIVE_SCAN;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_SCAN_TYPE, c_val, 1, 0, 0))
-+	b =3D WILC_FW_TX_RATE_AUTO;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_CURRENT_TX_RATE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_SITE_SURVEY_OFF;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_SITE_SURVEY, c_val, 1, 0, 0))
-+	b =3D WILC_FW_OPER_MODE_G_MIXED_11B_2;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11G_OPERATING_MODE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	*((int *)c_val) =3D 0xffff;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_RTS_THRESHOLD, c_val, 2, 0, 0))
-+	b =3D WILC_FW_PREAMBLE_SHORT;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_PREAMBLE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	*((int *)c_val) =3D 2346;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_FRAG_THRESHOLD, c_val, 2, 0, 0))
-+	b =3D WILC_FW_11N_PROT_AUTO;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_PROT_MECH, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 0;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_BCAST_SSID, c_val, 1, 0, 0))
-+	b =3D WILC_FW_ACTIVE_SCAN;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_SCAN_TYPE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 1;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_QOS_ENABLE, c_val, 1, 0, 0))
-+	b =3D WILC_FW_SITE_SURVEY_OFF;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_SITE_SURVEY, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_NO_POWERSAVE;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
-+	hw =3D 0xffff;
-+	cpu_to_le16s(&hw);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_RTS_THRESHOLD, (u8 *)&hw, 2, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_SEC_NO;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11I_MODE, c_val, 1, 0, 0))
-+	hw =3D 2346;
-+	cpu_to_le16s(&hw);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_FRAG_THRESHOLD, (u8 *)&hw, 2, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_AUTH_OPEN_SYSTEM;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_AUTH_TYPE, c_val, 1, 0, 0))
-+	b =3D 0;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_BCAST_SSID, &b, 1, 0, 0))
- 		goto fail;
-=20
--	strcpy(c_val, "123456790abcdef1234567890");
--	if (!wilc_wlan_cfg_set(vif, 0, WID_WEP_KEY_VALUE, c_val,
--			       (strlen(c_val) + 1), 0, 0))
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_QOS_ENABLE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	strcpy(c_val, "12345678");
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11I_PSK, c_val, (strlen(c_val)), 0,
--			       0))
-+	b =3D WILC_FW_NO_POWERSAVE;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_POWER_MANAGEMENT, &b, 1, 0, 0))
- 		goto fail;
-=20
--	strcpy(c_val, "password");
--	if (!wilc_wlan_cfg_set(vif, 0, WID_1X_KEY, c_val, (strlen(c_val) + 1),
--			       0, 0))
-+	b =3D WILC_FW_SEC_NO;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11I_MODE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 192;
--	c_val[1] =3D 168;
--	c_val[2] =3D 1;
--	c_val[3] =3D 112;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_1X_SERV_ADDR, c_val, 4, 0, 0))
-+	b =3D WILC_FW_AUTH_OPEN_SYSTEM;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_AUTH_TYPE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 3;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_LISTEN_INTERVAL, c_val, 1, 0, 0))
-+	b =3D 3;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_LISTEN_INTERVAL, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 3;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_DTIM_PERIOD, c_val, 1, 0, 0))
-+	b =3D 3;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_DTIM_PERIOD, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_ACK_POLICY_NORMAL;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_ACK_POLICY, c_val, 1, 0, 0))
-+	b =3D WILC_FW_ACK_POLICY_NORMAL;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_ACK_POLICY, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 0;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_USER_CONTROL_ON_TX_POWER, c_val, 1,
-+	b =3D 0;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_USER_CONTROL_ON_TX_POWER, &b, 1,
- 			       0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 48;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_TX_POWER_LEVEL_11A, c_val, 1, 0,
--			       0))
-+	b =3D 48;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_TX_POWER_LEVEL_11A, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 28;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_TX_POWER_LEVEL_11B, c_val, 1, 0,
--			       0))
-+	b =3D 28;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_TX_POWER_LEVEL_11B, &b, 1, 0, 0))
- 		goto fail;
-=20
--	*((int *)c_val) =3D 100;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_BEACON_INTERVAL, c_val, 2, 0, 0))
-+	hw =3D 100;
-+	cpu_to_le16s(&hw);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_BEACON_INTERVAL, (u8 *)&hw, 2, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_REKEY_POLICY_DISABLE;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_POLICY, c_val, 1, 0, 0))
-+	b =3D WILC_FW_REKEY_POLICY_DISABLE;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_POLICY, &b, 1, 0, 0))
- 		goto fail;
-=20
--	*((int *)c_val) =3D 84600;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_PERIOD, c_val, 4, 0, 0))
-+	w =3D 84600;
-+	cpu_to_le32s(&w);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_PERIOD, (u8 *)&w, 4, 0, 0))
- 		goto fail;
-=20
--	*((int *)c_val) =3D 500;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_PACKET_COUNT, c_val, 4, 0,
-+	w =3D 500;
-+	cpu_to_le32s(&w);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_PACKET_COUNT, (u8 *)&w, 4, 0,
- 			       0))
- 		goto fail;
-=20
--	c_val[0] =3D 1;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_SHORT_SLOT_ALLOWED, c_val, 1, 0,
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_SHORT_SLOT_ALLOWED, &b, 1, 0,
- 			       0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_ERP_PROT_SELF_CTS;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_ERP_PROT_TYPE, c_val, 1, 0, 0))
-+	b =3D WILC_FW_ERP_PROT_SELF_CTS;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_ERP_PROT_TYPE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 1;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_ENABLE, c_val, 1, 0, 0))
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_ENABLE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_11N_OP_MODE_HT_MIXED;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_OPERATING_MODE, c_val, 1, 0,
--			       0))
-+	b =3D WILC_FW_11N_OP_MODE_HT_MIXED;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_OPERATING_MODE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 1;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_TXOP_PROT_DISABLE, c_val, 1, 0,
--			       0))
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_TXOP_PROT_DISABLE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_OBBS_NONHT_DETECT_PROTECT_REPORT;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_OBSS_NONHT_DETECTION, c_val, 1,
-+	b =3D WILC_FW_OBBS_NONHT_DETECT_PROTECT_REPORT;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_OBSS_NONHT_DETECTION, &b, 1,
- 			       0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_HT_PROT_RTS_CTS_NONHT;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_HT_PROT_TYPE, c_val, 1, 0, 0))
-+	b =3D WILC_FW_HT_PROT_RTS_CTS_NONHT;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_HT_PROT_TYPE, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 0;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_RIFS_PROT_ENABLE, c_val, 1, 0,
-+	b =3D 0;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_RIFS_PROT_ENABLE, &b, 1, 0,
- 			       0))
- 		goto fail;
-=20
--	c_val[0] =3D WILC_FW_SMPS_MODE_MIMO;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_SMPS_MODE, c_val, 1, 0, 0))
--		goto fail;
--
--	c_val[0] =3D 7;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_CURRENT_TX_MCS, c_val, 1, 0,
--			       0))
-+	b =3D 7;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_CURRENT_TX_MCS, &b, 1, 0, 0))
- 		goto fail;
-=20
--	c_val[0] =3D 1;
--	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1,
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_IMMEDIATE_BA_ENABLED, &b, 1,
- 			       1, 1))
- 		goto fail;
-=20
-@@ -671,7 +637,7 @@ static int wilc_wlan_initialize(struct net_device *dev,=
- struct wilc_vif *vif)
- 			firmware_ver[size] =3D '\0';
- 			netdev_dbg(dev, "Firmware Ver =3D %s\n", firmware_ver);
+ 		if (hif_drv->remain_on_ch.expired) {
+ 			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
+-						      hif_remain_ch->id);
++						      hif_remain_ch->cookie);
  		}
--		ret =3D linux_wlan_init_test_config(dev, vif);
-+		ret =3D linux_wlan_init_fw_config(dev, vif);
+ 	} else {
+ 		netdev_dbg(vif->ndev, "Not in listen state\n");
+@@ -1036,7 +1013,7 @@ static void listen_timer_cb(struct timer_list *t)
+ 	if (IS_ERR(msg))
+ 		return;
 =20
- 		if (ret < 0) {
- 			netdev_err(dev, "Failed to configure firmware\n");
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc=
-1000/wilc_wlan_if.h
-index 9370caa..26aad49 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -686,7 +686,6 @@ enum {
- 	WID_TX_POWER_LEVEL_11N		=3D 0x00B1,
+-	msg->body.remain_on_ch.id =3D vif->hif_drv->remain_on_ch.id;
++	msg->body.remain_on_ch.cookie =3D vif->hif_drv->remain_on_ch.cookie;
 =20
- 	/* Custom Character WID list */
--	WID_PC_TEST_MODE		=3D 0x00C8,
- 	/* SCAN Complete notification WID*/
- 	WID_SCAN_COMPLETE		=3D 0x00C9,
+ 	result =3D wilc_enqueue_work(msg);
+ 	if (result) {
+@@ -1102,9 +1079,6 @@ static void handle_scan_complete(struct work_struct *=
+work)
 =20
+ 	handle_scan_done(msg->vif, SCAN_EVENT_DONE);
+=20
+-	if (msg->vif->hif_drv->remain_on_ch_pending)
+-		handle_remain_on_chan(msg->vif,
+-				      &msg->vif->hif_drv->remain_on_ch);
+ 	kfree(msg);
+ }
+=20
+@@ -1842,10 +1816,9 @@ void wilc_scan_complete_received(struct wilc *wilc, =
+u8 *buffer, u32 length)
+ 	}
+ }
+=20
+-int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
++int wilc_remain_on_channel(struct wilc_vif *vif, u64 cookie,
+ 			   u32 duration, u16 chan,
+-			   void (*expired)(void *, u32),
+-			   void (*ready)(void *),
++			   void (*expired)(void *, u64),
+ 			   void *user_arg)
+ {
+ 	struct remain_ch roc;
+@@ -1853,10 +1826,9 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32=
+ session_id,
+=20
+ 	roc.ch =3D chan;
+ 	roc.expired =3D expired;
+-	roc.ready =3D ready;
+ 	roc.arg =3D user_arg;
+ 	roc.duration =3D duration;
+-	roc.id =3D session_id;
++	roc.cookie =3D cookie;
+ 	result =3D handle_remain_on_chan(vif, &roc);
+ 	if (result)
+ 		netdev_err(vif->ndev, "%s: failed to set remain on channel\n",
+@@ -1865,7 +1837,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 =
+session_id,
+ 	return result;
+ }
+=20
+-int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id)
++int wilc_listen_state_expired(struct wilc_vif *vif, u64 cookie)
+ {
+ 	int result;
+ 	struct host_if_msg *msg;
+@@ -1882,7 +1854,7 @@ int wilc_listen_state_expired(struct wilc_vif *vif, u=
+32 session_id)
+ 	if (IS_ERR(msg))
+ 		return PTR_ERR(msg);
+=20
+-	msg->body.remain_on_ch.id =3D session_id;
++	msg->body.remain_on_ch.cookie =3D cookie;
+=20
+ 	result =3D wilc_enqueue_work(msg);
+ 	if (result) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wi=
+lc1000/host_interface.h
+index 0feb63f..994e641 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -140,10 +140,9 @@ struct wilc_conn_info {
+ struct remain_ch {
+ 	u16 ch;
+ 	u32 duration;
+-	void (*expired)(void *priv, u32 session_id);
+-	void (*ready)(void *priv);
++	void (*expired)(void *priv, u64 cookie);
+ 	void *arg;
+-	u32 id;
++	u32 cookie;
+ };
+=20
+ struct wilc;
+@@ -151,7 +150,6 @@ struct host_if_drv {
+ 	struct user_scan_req usr_scan_req;
+ 	struct wilc_conn_info conn_info;
+ 	struct remain_ch remain_on_ch;
+-	u8 remain_on_ch_pending;
+ 	u64 p2p_timeout;
+=20
+ 	enum host_if_state hif_state;
+@@ -227,12 +225,11 @@ int wilc_edit_station(struct wilc_vif *vif, const u8 =
+*mac,
+ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
+ int wilc_setup_multicast_filter(struct wilc_vif *vif, u32 enabled, u32 cou=
+nt,
+ 				u8 *mc_list);
+-int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
++int wilc_remain_on_channel(struct wilc_vif *vif, u64 cookie,
+ 			   u32 duration, u16 chan,
+-			   void (*expired)(void *, u32),
+-			   void (*ready)(void *),
++			   void (*expired)(void *, u64),
+ 			   void *user_arg);
+-int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
++int wilc_listen_state_expired(struct wilc_vif *vif, u64 cookie);
+ void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
+ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
+ 			     u8 ifc_id);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/st=
+aging/wilc1000/wilc_wfi_cfgoperations.c
+index 08b60ddd..f719b74 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1119,27 +1119,12 @@ static void wilc_wfi_mgmt_tx_complete(void *priv, i=
+nt status)
+ 	kfree(pv_data);
+ }
+=20
+-static void wilc_wfi_remain_on_channel_ready(void *priv_data)
+-{
+-	struct wilc_priv *priv;
+-
+-	priv =3D priv_data;
+-
+-	priv->p2p_listen_state =3D true;
+-
+-	cfg80211_ready_on_channel(priv->wdev,
+-				  priv->remain_on_ch_params.listen_cookie,
+-				  priv->remain_on_ch_params.listen_ch,
+-				  priv->remain_on_ch_params.listen_duration,
+-				  GFP_KERNEL);
+-}
+-
+-static void wilc_wfi_remain_on_channel_expired(void *data, u32 session_id)
++static void wilc_wfi_remain_on_channel_expired(void *data, u64 cookie)
+ {
+ 	struct wilc_priv *priv =3D data;
+ 	struct wilc_wfi_p2p_listen_params *params =3D &priv->remain_on_ch_params;
+=20
+-	if (session_id !=3D params->listen_session_id)
++	if (cookie !=3D params->listen_cookie)
+ 		return;
+=20
+ 	priv->p2p_listen_state =3D false;
+@@ -1156,24 +1141,36 @@ static int remain_on_channel(struct wiphy *wiphy,
+ 	int ret =3D 0;
+ 	struct wilc_priv *priv =3D wiphy_priv(wiphy);
+ 	struct wilc_vif *vif =3D netdev_priv(priv->dev);
++	u64 id;
+=20
+ 	if (wdev->iftype =3D=3D NL80211_IFTYPE_AP) {
+ 		netdev_dbg(vif->ndev, "Required while in AP mode\n");
+ 		return ret;
+ 	}
+=20
++	id =3D ++priv->inc_roc_cookie;
++	if (id =3D=3D 0)
++		id =3D ++priv->inc_roc_cookie;
++
++	ret =3D wilc_remain_on_channel(vif, id, duration, chan->hw_value,
++				     wilc_wfi_remain_on_channel_expired,
++				     (void *)priv);
++	if (ret)
++		return ret;
++
+ 	curr_channel =3D chan->hw_value;
+=20
+ 	priv->remain_on_ch_params.listen_ch =3D chan;
+-	priv->remain_on_ch_params.listen_cookie =3D *cookie;
++	priv->remain_on_ch_params.listen_cookie =3D id;
++	*cookie =3D id;
++	priv->p2p_listen_state =3D true;
+ 	priv->remain_on_ch_params.listen_duration =3D duration;
+-	priv->remain_on_ch_params.listen_session_id++;
+=20
+-	return wilc_remain_on_channel(vif,
+-				priv->remain_on_ch_params.listen_session_id,
+-				duration, chan->hw_value,
+-				wilc_wfi_remain_on_channel_expired,
+-				wilc_wfi_remain_on_channel_ready, (void *)priv);
++	cfg80211_ready_on_channel(wdev, *cookie, chan, duration, GFP_KERNEL);
++	mod_timer(&vif->hif_drv->remain_on_ch_timer,
++		  jiffies + msecs_to_jiffies(duration));
++
++	return ret;
+ }
+=20
+ static int cancel_remain_on_channel(struct wiphy *wiphy,
+@@ -1183,8 +1180,10 @@ static int cancel_remain_on_channel(struct wiphy *wi=
+phy,
+ 	struct wilc_priv *priv =3D wiphy_priv(wiphy);
+ 	struct wilc_vif *vif =3D netdev_priv(priv->dev);
+=20
+-	return wilc_listen_state_expired(vif,
+-			priv->remain_on_ch_params.listen_session_id);
++	if (cookie !=3D priv->remain_on_ch_params.listen_cookie)
++		return -ENOENT;
++
++	return wilc_listen_state_expired(vif, cookie);
+ }
+=20
+ static void wilc_wfi_cfg_tx_vendor_spec(struct wilc_priv *priv,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/stagin=
+g/wilc1000/wilc_wfi_netdevice.h
+index cc06ef9..a06b0c0 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -65,7 +65,6 @@ struct wilc_wfi_p2p_listen_params {
+ 	struct ieee80211_channel *listen_ch;
+ 	u32 listen_duration;
+ 	u64 listen_cookie;
+-	u32 listen_session_id;
+ };
+=20
+ struct wilc_p2p_var {
+@@ -161,6 +160,7 @@ struct wilc_priv {
+ 	struct ieee80211_rate bitrates[ARRAY_SIZE(wilc_bitrates)];
+ 	struct ieee80211_supported_band band;
+ 	u32 cipher_suites[ARRAY_SIZE(wilc_cipher_suites)];
++	u64 inc_roc_cookie;
+ };
+=20
+ struct frame_reg {
 --=20
 2.7.4
 
