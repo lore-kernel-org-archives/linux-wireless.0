@@ -7,55 +7,53 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47FD3C282D7
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A86C1C282D7
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FA8E2082C
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F1D92082C
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="Mz0w6fSa"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="3uwJHmFx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726799AbfBBTRF (ORCPT
+        id S1726818AbfBBTRH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Feb 2019 14:17:05 -0500
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:36455 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726784AbfBBTRE (ORCPT
+        Sat, 2 Feb 2019 14:17:07 -0500
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:24928 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726784AbfBBTRH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Feb 2019 14:17:04 -0500
+        Sat, 2 Feb 2019 14:17:07 -0500
 X-IronPort-AV: E=Sophos;i="5.56,553,1539673200"; 
-   d="scan'208";a="25789174"
+   d="scan'208";a="27205811"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 02 Feb 2019 12:17:03 -0700
+  by esa1.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 02 Feb 2019 12:17:06 -0700
 Received: from NAM03-DM3-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.76.108) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Sat, 2 Feb 2019 12:17:03 -0700
+ email.microchip.com (10.10.76.49) with Microsoft SMTP Server (TLS) id
+ 14.3.352.0; Sat, 2 Feb 2019 12:17:06 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector1-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=n5rUVZuh6Z2RSrsY2V7x7W2SlNuob5vuF3GFMRbQF2E=;
- b=Mz0w6fSaOaETSzFa03tKMwgjQnc1jzktteTbdTPyavlAYolunHj2UxXSf7MZ7I0zKZ1EnjY1VRDekPSJA3CKimoPQfYLuG2y64Hgat2/E3nu3bh8mXvVYCZ7bQVSMRfAEiafhs0wOqHcYD4lviPc+XDMxP4pQ/hgXGHHpxxb8+k=
+ bh=+2hqm+zttknyBndraW8EuqEof201oREous2KQ2UKNXw=;
+ b=3uwJHmFxoY5xcvZ958qagRQIVp43V2kS2lDHRBq0B35GCfGPp6471ONEnkJXx6DIOCon1ZcnXJYircxYl2l3dnHbFfnkUBLmu1Rilr6vgSKCO8rYN4i9E2qovR+tVTTad+UbPDaWBVc2mWb7ilttSw3euboLScMqeMsmoC9g9A0=
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com (52.135.226.160) by
  BYAPR11MB2998.namprd11.prod.outlook.com (20.177.224.159) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1558.21; Sat, 2 Feb 2019 19:17:02 +0000
+ 15.20.1558.21; Sat, 2 Feb 2019 19:17:05 +0000
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::cc6d:bc31:d5b:a27d]) by BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::cc6d:bc31:d5b:a27d%5]) with mapi id 15.20.1580.019; Sat, 2 Feb 2019
- 19:17:02 +0000
+ 19:17:05 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 04/15] staging: wilc1000: remove unnecessary debug log
- messages
-Thread-Topic: [PATCH 04/15] staging: wilc1000: remove unnecessary debug log
- messages
-Thread-Index: AQHUuyvgua6/kia3ykyboAjZFJF1Wg==
-Date:   Sat, 2 Feb 2019 19:17:02 +0000
-Message-ID: <1549134974-5545-5-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 05/15] staging: wilc1000: rename timeout related macros
+Thread-Topic: [PATCH 05/15] staging: wilc1000: rename timeout related macros
+Thread-Index: AQHUuyvh43ZAN6bCzUudObYJa32wsg==
+Date:   Sat, 2 Feb 2019 19:17:05 +0000
+Message-ID: <1549134974-5545-6-git-send-email-ajay.kathat@microchip.com>
 References: <1549134974-5545-1-git-send-email-ajay.kathat@microchip.com>
 In-Reply-To: <1549134974-5545-1-git-send-email-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -71,22 +69,22 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.7.4
 x-originating-ip: [49.205.218.11]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR11MB2998;6:ApDykclLIdcFU5Vk4X1SAPu+9PMkmeT+Vohiv/rP6bSZOwEynEZtUXhV0TK5SV30pE9zziu1iGtxJMRjsayL4qLActtM5URHUalJHfpypIZiGGZ4XnGCBD2eSBQTbQzmRWEPHpgoGCqM97SEuBqpd8z0cd2bq4aINoaj8vjbI2cWupyl0i/CeSU2CEvXEngtxx1YPsbDFUFz/zOb3+Yjhl/uo/9hOV2y8l1LoJGT+SQ6mtIRJYubtN3/khyTDZmX2M/5n79qQDzYI/FrCEh8DdsUR74nbyJ3NLY/XAKbmcz3X7gwtV6czTWCn88xbtL9nO1DJMQX+qlh+I72KlL0zgxrHxX3mDhLNt3jSAKjSyF/NOS10n/6JJ3iRZ4G646jPI8W3yDMZ4Bpx6XX4n7DF/jrxlLLqQMBP01pPZ5AKLLwbxQleFkp/hXiK8cdbf1vzA8Pua0q8QXjKVcRWufTkg==;5:0Kom+Gd2JRf7etsYH3gg4Qd6o84snTYqrqlUGbAl0SjtHrcJbaBPzqPhMQc0DN0KF+gqr397+ajC8/7FUpJvR8p1F+Kd9ph/BD5lpujCy6GTqDpdiofu40LEb7TRynWSMvMXLox05orqBEWxuZIKruAnj5Ril9nBJDvH9GM7fHIdbDdPPXtTp2QK3Amb7+RWjxgJXt3mgmETCuYC6VU8+A==;7:vCOOAV/lBsbHyW39ZQ3+YiDWq3td+xDQ+OPn4dQHsISkTWJuTXDohVJ18aPGO/nYqkVAxP5T1H7976cdITKeTtgyZqL+L5ENdH7cMHkQ69KDP/Y5ELAlW6A8TLNX7mQMLnnKJqlu8u3Q3w++gnw6DA==
-x-ms-office365-filtering-correlation-id: 0247c6e9-a584-4d69-dc90-08d689430280
+x-microsoft-exchange-diagnostics: 1;BYAPR11MB2998;6:xhe9ZkM6uIa3/DYEUNdL8wVlBBO9Vj1fE0YumL2pV81Osvv5Oa5XJviOMK9I9NSXvxdtxtPIn7Tjb9bOcWh9a+tqkNCE0RY9W0LGkVMf9WID2Pm/4lavlqweYPWnIF5Wd0Zggt5qdpROFbk2fd3e7IkOSQTu/53NHdtPiOSTzwq//umDEHuQbQriSTVuxlZRDORPoaw78EL/Soi5NUJHwhgfuvpbWbP5wUz7nm3Xitx0GPoq8FgzkIT8SCeQLdf9GfM3mPzpPq7Su0lrxcucVVO4PSVM/+JoA5bx5COUAj6GAVP8wTWvcucUEYky+tmz13DHrZAxHDpJJLij3iLNIdrI0hq6dfkK1nZPQ+EbzYtgJZbVnDfAE0C2mbDY4VTqSGljLAjNX201efeegUhCK2CDtk3KV6SDR8xPzbFYsCGju0lC5DDAlmlU4Yhs9QjB/8v4Zj9uxtxUZY2UMssRSg==;5:0SobPl0hTsZJJRQ81vaM+s7s+FJk/F6H4ijdussgmuUXfEDiuzetqTqW6j6AStK5xGepqmlnyOG11T6SbxTGqy6RynkEaMGB0Q7ygpULdJQ/qww4DxDAvpj+MUQy7d/OUQc2vZPAFGDOM/IwzfOppX/JryUnaXwxrA7NaRtrhDsfzhScbluw5gURTIm/BY4VvmTGYf83mQPy7wPsV2AggA==;7:01WYJ5iXCw+rKpwAKEyQmgEZ5fxxj/BdEquusLFSIVnvYP4qtvrnYW1IV0JitS5FVO1PI4jvG/yIKWi85cHLKPHfNptRR8SCZ7hR7t7Rnwc3bliHT+U/oupWIjrnpQbqrFcCDcrfC9FYJvqE8yyqqQ==
+x-ms-office365-filtering-correlation-id: 1d85a612-3ff4-42fb-8207-08d689430429
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(2017052603328)(7153060)(7193020);SRVR:BYAPR11MB2998;
 x-ms-traffictypediagnostic: BYAPR11MB2998:
-x-microsoft-antispam-prvs: <BYAPR11MB2998FBC352F41A2526634655E3930@BYAPR11MB2998.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR11MB2998B0828B64922C9B8A912EE3930@BYAPR11MB2998.namprd11.prod.outlook.com>
 x-forefront-prvs: 09368DB063
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(376002)(366004)(346002)(39850400004)(189003)(199004)(25786009)(107886003)(105586002)(78486014)(36756003)(50226002)(2501003)(6916009)(66066001)(8936002)(3846002)(4326008)(305945005)(7736002)(71200400001)(71190400001)(8676002)(6116002)(54906003)(81166006)(316002)(446003)(81156014)(6436002)(6486002)(2906002)(2616005)(486006)(476003)(76176011)(256004)(99286004)(11346002)(52116002)(53936002)(72206003)(478600001)(186003)(386003)(26005)(14454004)(106356001)(86362001)(5640700003)(97736004)(2351001)(68736007)(6506007)(15650500001)(102836004)(6512007);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB2998;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(376002)(366004)(346002)(39850400004)(189003)(199004)(25786009)(107886003)(105586002)(78486014)(36756003)(50226002)(2501003)(6916009)(66066001)(8936002)(3846002)(4326008)(305945005)(7736002)(71200400001)(71190400001)(8676002)(6116002)(54906003)(81166006)(316002)(446003)(81156014)(6436002)(6486002)(2906002)(2616005)(486006)(476003)(76176011)(256004)(99286004)(11346002)(52116002)(53936002)(72206003)(478600001)(186003)(386003)(26005)(14454004)(106356001)(86362001)(5640700003)(97736004)(2351001)(68736007)(6506007)(102836004)(6512007);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB2998;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: rS5Gzq0t1RswCW2DmoLuFyoxFdmmIbQhI9G7xqpvVdqlGYJ5Q0kz9XrHnx/adeD10FQqIvwEoI7o9LnKIkmD9mewagC9CunoIfAjz8poPZgV06YxoYvHIcaNaw3HsQ3IO9IN2XdE5tyIBAAogUbhW3IX1baDX6iHmtGuomrHxtjombtdtqsEi1uc2J5mpbr/h0Ca1dp0v5nFBf2n6QzkgZlQmC+QMrwPetfz8ClL4FD6LLiv9KJrX3HkpFZL3eM571m2gssQTjcRXQPXXngFZOW+AIoWHImGxh8DjKo0LlkATLTDSK08bOFihxaHoPhEfUhK+fIZfp1BfSAGsiZnwy5/+zmZ9xmojV52kXi84xzwSgdovN8TZq2Muw2NRX7AKVH8RjftStjNXPJb6Qm9okEal3gxcNNTPcn16TA8xw4=
+x-microsoft-antispam-message-info: ucj7kPWclol5llhr33NbQs0ydrP+l/Rpy93zEsgrcsdjLgvLpT0tyFKw4iQikivTY4Eo9ndVT/IaqRylbX3lxBVRteN3urFXai8yPeLSELSjdnkyyBxxWJ/0dqtcZPTqIR4DBrxNA8jhml2Dux1xs2bR8NyFw1vHSTKeWQMZRppcnzghAqutCxetLAek6NRzLpNyCRhqkdLiyux/WsSk1UaI+JG+wTvqMN6qbvg0EOy2nvbQl0mjLAkTXg/TK2Oxf3R1rrWevzwo8qbNVNk01ZbCVTJjYKobmoxRtVrErOLWdvE3yrnx2ConEgIj+j04blgeVJVaQtzcccm325+ZDLZFOtKEx2lh+6prBqOyGRPAOPjNfDiy4YhWBOF5kspdBWhj5xjpgUP6R8Oih4JRZo2ZDUGUxQI2f3V1uXO7AE8=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0247c6e9-a584-4d69-dc90-08d689430280
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Feb 2019 19:16:59.5862
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1d85a612-3ff4-42fb-8207-08d689430429
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Feb 2019 19:17:02.4912
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
@@ -99,90 +97,115 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Remove unnecessary debug log messages.
+Rename timeout related macros to have their unit clear from their name.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 31 -------------------------------
- 1 file changed, 31 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c              | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.h              | 2 +-
+ 4 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc10=
-00/linux_wlan.c
-index b0249d2..81472d2 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -19,9 +19,7 @@ static int dev_state_ev_handler(struct notifier_block *th=
-is,
- 	struct wilc_priv *priv;
- 	struct host_if_drv *hif_drv;
- 	struct net_device *dev;
--	u8 *ip_addr_buf;
- 	struct wilc_vif *vif;
--	u8 null_ip[4] =3D {0};
- 	char wlan_dev_name[5] =3D "wlan0";
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wi=
+lc1000/host_interface.c
+index e958f9b..3576834 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6,8 +6,8 @@
 =20
- 	if (!dev_iface || !dev_iface->ifa_dev || !dev_iface->ifa_dev->dev)
-@@ -56,13 +54,6 @@ static int dev_state_ev_handler(struct notifier_block *t=
-his,
- 		if (vif->wilc->enable_ps)
- 			wilc_set_power_mgmt(vif, 1, 0);
+ #include "wilc_wfi_netdevice.h"
 =20
--		netdev_dbg(dev, "[%s] Up IP\n", dev_iface->ifa_label);
--
--		ip_addr_buf =3D (char *)&dev_iface->ifa_address;
--		netdev_dbg(dev, "IP add=3D%d:%d:%d:%d\n",
--			   ip_addr_buf[0], ip_addr_buf[1],
--			   ip_addr_buf[2], ip_addr_buf[3]);
--
- 		break;
+-#define HOST_IF_SCAN_TIMEOUT                    4000
+-#define HOST_IF_CONNECT_TIMEOUT                 9500
++#define WILC_HIF_SCAN_TIMEOUT_MS                4000
++#define WILC_HIF_CONNECT_TIMEOUT_MS             9500
 =20
- 	case NETDEV_DOWN:
-@@ -77,13 +68,6 @@ static int dev_state_ev_handler(struct notifier_block *t=
-his,
+ #define FALSE_FRMWR_CHANNEL			100
 =20
- 		wilc_resolve_disconnect_aberration(vif);
+@@ -327,7 +327,7 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 =
+scan_type,
+ 	hif_drv->usr_scan_req.arg =3D user_arg;
+ 	hif_drv->scan_timer_vif =3D vif;
+ 	mod_timer(&hif_drv->scan_timer,
+-		  jiffies + msecs_to_jiffies(HOST_IF_SCAN_TIMEOUT));
++		  jiffies + msecs_to_jiffies(WILC_HIF_SCAN_TIMEOUT_MS));
 =20
--		netdev_dbg(dev, "[%s] Down IP\n", dev_iface->ifa_label);
--
--		ip_addr_buf =3D null_ip;
--		netdev_dbg(dev, "IP add=3D%d:%d:%d:%d\n",
--			   ip_addr_buf[0], ip_addr_buf[1],
--			   ip_addr_buf[2], ip_addr_buf[3]);
--
- 		break;
+ error:
+ 	if (search) {
+@@ -1442,7 +1442,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid=
+, const u8 *ies,
 =20
- 	default:
-@@ -851,9 +835,6 @@ netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct n=
-et_device *ndev)
- 	struct wilc *wilc =3D vif->wilc;
- 	struct tx_complete_data *tx_data =3D NULL;
- 	int queue_count;
--	char *udp_buf;
--	struct iphdr *ih;
--	struct ethhdr *eth_h;
+ 	hif_drv->connect_timer_vif =3D vif;
+ 	mod_timer(&hif_drv->connect_timer,
+-		  jiffies + msecs_to_jiffies(HOST_IF_CONNECT_TIMEOUT));
++		  jiffies + msecs_to_jiffies(WILC_HIF_CONNECT_TIMEOUT_MS));
 =20
- 	if (skb->dev !=3D ndev) {
- 		netdev_err(ndev, "Packet not destined to this device\n");
-@@ -871,18 +852,6 @@ netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct =
-net_device *ndev)
- 	tx_data->size =3D skb->len;
- 	tx_data->skb  =3D skb;
+ 	return 0;
 =20
--	eth_h =3D (struct ethhdr *)(skb->data);
--	if (eth_h->h_proto =3D=3D cpu_to_be16(0x8e88))
--		netdev_dbg(ndev, "EAPOL transmitted\n");
--
--	ih =3D (struct iphdr *)(skb->data + sizeof(struct ethhdr));
--
--	udp_buf =3D (char *)ih + sizeof(struct iphdr);
--	if ((udp_buf[1] =3D=3D 68 && udp_buf[3] =3D=3D 67) ||
--	    (udp_buf[1] =3D=3D 67 && udp_buf[3] =3D=3D 68))
--		netdev_dbg(ndev, "DHCP Message transmitted, type:%x %x %x\n",
--			   udp_buf[248], udp_buf[249], udp_buf[250]);
--
- 	vif->netstats.tx_packets++;
- 	vif->netstats.tx_bytes +=3D tx_data->size;
- 	tx_data->bssid =3D wilc->vif[vif->idx]->bssid;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/st=
+aging/wilc1000/wilc_wfi_cfgoperations.c
+index cd3df42..95230d7 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -72,7 +72,7 @@ static u8 curr_channel;
+ static u8 p2p_oui[] =3D {0x50, 0x6f, 0x9A, 0x09};
+ static u8 p2p_vendor_spec[] =3D {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
+=20
+-#define DURING_IP_TIME_OUT	15000
++#define WILC_IP_TIMEOUT_MS		15000
+=20
+ static void clear_during_ip(struct timer_list *t)
+ {
+@@ -1489,7 +1489,7 @@ static int change_virtual_intf(struct wiphy *wiphy, s=
+truct net_device *dev,
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		vif->obtaining_ip =3D true;
+ 		mod_timer(&vif->during_ip_timer,
+-			  jiffies + msecs_to_jiffies(DURING_IP_TIME_OUT));
++			  jiffies + msecs_to_jiffies(WILC_IP_TIMEOUT_MS));
+ 		wilc_set_operation_mode(vif, WILC_AP_MODE);
+ 		dev->ieee80211_ptr->iftype =3D type;
+ 		priv->wdev->iftype =3D type;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc100=
+0/wilc_wlan.c
+index 58bcdc1..7a757c9 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1141,7 +1141,7 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start=
+, u16 wid, u8 *buffer,
+ 		ret_size =3D 0;
+=20
+ 	if (!wait_for_completion_timeout(&wilc->cfg_event,
+-					 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
++					 WILC_CFG_PKTS_TIMEOUT)) {
+ 		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
+ 		ret_size =3D 0;
+ 	}
+@@ -1179,7 +1179,7 @@ int wilc_wlan_cfg_get(struct wilc_vif *vif, int start=
+, u16 wid, int commit,
+ 		ret_size =3D 0;
+=20
+ 	if (!wait_for_completion_timeout(&wilc->cfg_event,
+-					 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
++					 WILC_CFG_PKTS_TIMEOUT)) {
+ 		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
+ 		ret_size =3D 0;
+ 	}
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc100=
+0/wilc_wlan.h
+index 3880452..1d61e20 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -196,7 +196,7 @@
+ #define ENABLE_RX_VMM		(SEL_VMM_TBL1 | EN_VMM)
+ #define ENABLE_TX_VMM		(SEL_VMM_TBL0 | EN_VMM)
+ /*time for expiring the completion of cfg packets*/
+-#define CFG_PKTS_TIMEOUT	2000
++#define WILC_CFG_PKTS_TIMEOUT	msecs_to_jiffies(2000)
+=20
+ #define IS_MANAGMEMENT		0x100
+ #define IS_MANAGMEMENT_CALLBACK	0x080
 --=20
 2.7.4
 
