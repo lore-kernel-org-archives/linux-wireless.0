@@ -2,107 +2,82 @@ Return-Path: <SRS0=M3au=QJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,LOTS_OF_MONEY,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A70DC282D8
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 02:51:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AECBAC282D7
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 06:10:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 248542148D
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 02:51:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 747DE2146E
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 06:10:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="kb2KW8qi"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=yahoo.fr header.i=@yahoo.fr header.b="CPIoAKNi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726561AbfBBCvD (ORCPT
+        id S1726761AbfBBGKE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Feb 2019 21:51:03 -0500
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:41067 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725828AbfBBCvD (ORCPT
+        Sat, 2 Feb 2019 01:10:04 -0500
+Received: from walmailout07.yourhostingaccount.com ([65.254.253.58]:44613 "EHLO
+        walmailout07.yourhostingaccount.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725907AbfBBGKE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Feb 2019 21:51:03 -0500
-Received: by mail-ed1-f66.google.com with SMTP id a20so7047001edc.8
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2019 18:51:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=PWafC+4O2CB9XWGOVTduEG7m0W3QsKfVaF7EjD+9mpA=;
-        b=kb2KW8qixjghXmF+r5SyUmkgnhn014/S2Tl/zHdCFZCBic/i8pysIhEJBV4sPq6+la
-         spetUlfV8mrDNaoyuk4zT860xAiuA7qFCPpwnjAKw5HWJDHSzpgypdBHTECTD2h2zlyA
-         cWRvjKvHCAvWC0J8k7bfPFTspv6ktGTb5eDd4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=PWafC+4O2CB9XWGOVTduEG7m0W3QsKfVaF7EjD+9mpA=;
-        b=gj7LVUCUJP+3PFuhlOFlMtmDawd5HKRLf1FrX+TNH30yPA/inQGR9g/6BM0yvmg8Ib
-         2vuX0psgqqfwvAlRPWs6LtBULtvbeqWYvydRREHITEsvlplDwbuz8l44+dwdlHSnYhcf
-         fDxPE4uThh1JlF/VRDwwh8l0dkyOvjxmJvJp5xgNh5R8pCqrylAFr1cA75vJbT4pqWSA
-         FxIrM4GeB3RkwCqgfQ9At9bmZ6owNCFajiubfOc11O3gMpDWxRNj84fQA9S1m0EuGZUQ
-         gy0lFBH+THYFiqJI2MduzJ4JnrMkFRbMJy1hgCchGq5bq05fRy34TElCykCf8t5vPCok
-         kv9Q==
-X-Gm-Message-State: AJcUukff3FJ7HGqRrSXvzcdgB+4yOXYPM1uuEWu0TyJ3I4flQDHN61Bo
-        lOWb4nCdkmLa0f/hOqo6nzQdp2yqCXA=
-X-Google-Smtp-Source: ALg8bN5UumSsdk+TOqVpqX5zOh5FnoxrySmcIxmCe4ojO/blNL07pAiJeW6g9k0nntdzKjbbhT8dPg==
-X-Received: by 2002:a17:906:f146:: with SMTP id gw6mr37107246ejb.176.1549075860364;
-        Fri, 01 Feb 2019 18:51:00 -0800 (PST)
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com. [209.85.208.45])
-        by smtp.gmail.com with ESMTPSA id y3sm682400ejc.34.2019.02.01.18.50.57
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 Feb 2019 18:50:58 -0800 (PST)
-Received: by mail-ed1-f45.google.com with SMTP id b14so7060538edt.6
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2019 18:50:57 -0800 (PST)
-X-Received: by 2002:a17:906:68c8:: with SMTP id y8mr31171207ejr.87.1549075857286;
- Fri, 01 Feb 2019 18:50:57 -0800 (PST)
+        Sat, 2 Feb 2019 01:10:04 -0500
+X-Greylist: delayed 2435 seconds by postgrey-1.27 at vger.kernel.org; Sat, 02 Feb 2019 01:10:03 EST
+Received: from mailscan13.yourhostingaccount.com ([10.1.15.13] helo=walmailscan13.yourhostingaccount.com)
+        by walmailout07.yourhostingaccount.com with esmtp (Exim)
+        id 1gpnrq-0001GJ-5O
+        for linux-wireless@vger.kernel.org; Sat, 02 Feb 2019 00:29:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=yahoo.fr;
+         s=dkim; h=Sender:Content-Type:Content-Transfer-Encoding:MIME-Version:
+        Message-ID:Reply-To:From:Date:Subject:To:Cc:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=/Kr6BalbbowuRKABSpkMQvH7zBQv3OhYAcK90ITBi28=; b=CPIoAKNiJMzHx5In33f6Dyhueg
+        dyu8JeDBiG7PRCEUu8TLhu991rnWNhMriDG4PtdnIXit3TVVLsBeRgY+Pf5qnEXHFjB+Wr+GlM970
+        p2otvVes6Qka81rwguUe3pExprMx+b8DVO3YKCYlpyjJrkvZB6BYklZYHn7+q7j0adR5L9DaeaREK
+        nuUcvhKCbLr+EJbK6m73uXdEYh0/ZC74I0WlBmYGzzPdyTDgo8So1PhPQfzceDOXXKlC/14+1yVe9
+        QsLRB3TsoTYQY1AhdpuJGwMdmaMDMtfDVoGhJE4ckt3/bwlZbIqRVCa7HYy88xsjIZQbwX4QNaAeW
+        XtbqbOig==;
+Received: from [10.114.3.31] (helo=walimpout11)
+        by walmailscan13.yourhostingaccount.com with esmtp (Exim)
+        id 1gpnrq-0005QO-2J
+        for linux-wireless@vger.kernel.org; Sat, 02 Feb 2019 00:29:26 -0500
+Received: from walcustweb2001.yourhostingaccount.com ([10.1.112.115])
+        by walimpout11 with 
+        id XhVP1z0012VSHoy01hVSKL; Sat, 02 Feb 2019 00:29:26 -0500
+X-EN-SP-DIR: OUT
+X-EN-SP-SQ: 1
+Received: from as.echosecesa by walcustweb2001.yourhostingaccount.com with local (Exim)
+        id 1gpnqb-0008Ld-I9
+        for linux-wireless@vger.kernel.org; Sat, 02 Feb 2019 00:28:09 -0500
+X-EN-Info: U=as.echosecesa P=/index.php
+X-EN-CGIUser: as.echosecesa
+X-EN-CGIPath: /index.php
+X-EN-OrigIP: 185.104.184.114
+To:     linux-wireless@vger.kernel.org
+Subject: =?utf-8?Q?Copie_de_:_$15,000_a_month_(30mins_=D0=B2=D0=82=D1=9Awork?=  =?utf-8?Q?=D0=B2=D0=82=D1=9C_lol)?=
+X-PHP-Originating-Script: 4694593:phpmailer.php
+Date:   Sat, 2 Feb 2019 00:28:09 -0500
+From:   ECHOS ECESA <guyguyo@yahoo.fr>
+Reply-To: HoustonJen <linux-wireless@vger.kernel.org>
+Message-ID: <0c50665b9c1cded2cbd363ff999b7e2b@echosecesa.org>
+X-Priority: 3
+X-Mailer: PHPMailer 5.2.1 (http://code.google.com/a/apache-extras.org/p/phpmailer/)
 MIME-Version: 1.0
-References: <20190114153558.972-1-chunkeey@gmail.com>
-In-Reply-To: <20190114153558.972-1-chunkeey@gmail.com>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Fri, 1 Feb 2019 18:50:45 -0800
-X-Gmail-Original-Message-ID: <CA+ASDXMvFZNcyTeuJ5_q62XW+hME41nPUoTxrafqDB94GqribA@mail.gmail.com>
-Message-ID: <CA+ASDXMvFZNcyTeuJ5_q62XW+hME41nPUoTxrafqDB94GqribA@mail.gmail.com>
-Subject: Re: [PATCH] ath10k: implement set_base_macaddr to fix rx-bssid mask
- in multiple APs conf
-To:     Christian Lamparter <chunkeey@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ben Greear <greearb@candelatech.com>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+X-EN-Timestamp: Sat, 02 Feb 2019 00:28:09 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello!
+Ceci est une copie du message que vous avez envoyé à Contactez nous via ECHOS ECESA
 
-On Mon, Jan 14, 2019 at 7:36 AM Christian Lamparter <chunkeey@gmail.com> wrote:
-> Part of the "setting an alternate MAC" issue was already tackled by a
-> patch from Brian Norris:
-> commit 9d5804662ce1
-> ("ath10k: retrieve MAC address from system firmware if provided")
-> by allowing the option to specify an alternate MAC-address with the
-> established device_get_mac_address() function which extracts the right
-> address from DeviceTree/fwnode mac-address or local-mac-address
-> properties and saves it for later.
->
-> However, Ben Greear noted that the Qualcomm's ath10k firmware is liable
-> to not properly calculate its rx-bssid mask in this case. This can cause
-> issues in the popluar "multiple AP with a single ath10k instance"
-> configurations.
+Ceci est un message expédié via http://echosecesa.org/ par :
+HoustonJen <linux-wireless@vger.kernel.org>
 
-I'll admit that
-(a) I wasn't testing AP mode, or any similar configuration to this and
-(b) I'm not super familiar with the firmware features involved here.
+LAZY way for $200 in 20 mins: http://999.sh/192288
 
-That's to say, this patch could very well be completely justified and
-correct, but I may not the right person to analyze it.
-
-I do have it on my list to test out though, so I'll hopefully chime in
-again eventually.
-
-Regards,
-Brian
