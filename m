@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7833AC282D7
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BE99C282DA
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4AEC02082C
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5712F2082C
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:17:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="INBZmxmC"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="r8sNke+9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726852AbfBBTRR (ORCPT
+        id S1726818AbfBBTRS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Feb 2019 14:17:17 -0500
+        Sat, 2 Feb 2019 14:17:18 -0500
 Received: from esa4.microchip.iphmx.com ([68.232.154.123]:36467 "EHLO
         esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726784AbfBBTRR (ORCPT
+        with ESMTP id S1726784AbfBBTRS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Feb 2019 14:17:17 -0500
+        Sat, 2 Feb 2019 14:17:18 -0500
 X-IronPort-AV: E=Sophos;i="5.56,553,1539673200"; 
-   d="scan'208";a="25789181"
+   d="scan'208";a="25789183"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 02 Feb 2019 12:17:15 -0700
-Received: from NAM03-DM3-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.76.108) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Sat, 2 Feb 2019 12:17:14 -0700
+  by esa4.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 02 Feb 2019 12:17:17 -0700
+Received: from NAM01-BY2-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.76.106) with Microsoft SMTP Server (TLS) id
+ 14.3.352.0; Sat, 2 Feb 2019 12:17:17 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector1-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MWFsvsxw1NnZLOePfqvjArizv27M9uT1uDq5pl8heYI=;
- b=INBZmxmC9xpQTQUaNgXgg93RDljq6zYrbFS97xC1YqdmkTo0puBrX81nvEp4Pti7S+Lj/jDvCr2vWIs4IX4mSfyJJ9yxwlCIQO8ykV2/y1HSEHUbDgkxquuTgRPsjWGqOTySXsIeJeItnkdn0LJRIscFXVPd63J2GmclEpYQee0=
+ bh=PmYVSEFVHMQ8wj0BMWT4fIOD2T6R9K6/L+cy47oS9Ss=;
+ b=r8sNke+9+bxYit2KEhe8sygjx0fxFmSsSPFdqoN6bkcY8C+Vwz8lE3chZDLFRrPWQtR94Okgyp21GZaG0zcCvh7dFUqc786/PJQqNeR+Pr4Jo0bZUWBRZtTS39roqDK5fLCzq0zzSkjgj5nRucCR4KMAo1WgZRjQQTMdFXheMvk=
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com (52.135.226.160) by
  BYAPR11MB2998.namprd11.prod.outlook.com (20.177.224.159) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1558.21; Sat, 2 Feb 2019 19:17:13 +0000
+ 15.20.1558.21; Sat, 2 Feb 2019 19:17:16 +0000
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::cc6d:bc31:d5b:a27d]) by BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::cc6d:bc31:d5b:a27d%5]) with mapi id 15.20.1580.019; Sat, 2 Feb 2019
- 19:17:13 +0000
+ 19:17:16 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 08/15] staging: wilc1000: use correct condition in loops for
- 'vif_num' count
-Thread-Topic: [PATCH 08/15] staging: wilc1000: use correct condition in loops
- for 'vif_num' count
-Thread-Index: AQHUuyvnTipBfoysokuAty4Jr8EL5Q==
-Date:   Sat, 2 Feb 2019 19:17:13 +0000
-Message-ID: <1549134974-5545-9-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 09/15] staging: wilc1000: remove use of 'terminated_handle'
+ static variable
+Thread-Topic: [PATCH 09/15] staging: wilc1000: remove use of
+ 'terminated_handle' static variable
+Thread-Index: AQHUuyvooNbvePrjR0+z4StROIk53Q==
+Date:   Sat, 2 Feb 2019 19:17:16 +0000
+Message-ID: <1549134974-5545-10-git-send-email-ajay.kathat@microchip.com>
 References: <1549134974-5545-1-git-send-email-ajay.kathat@microchip.com>
 In-Reply-To: <1549134974-5545-1-git-send-email-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -71,22 +71,22 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.7.4
 x-originating-ip: [49.205.218.11]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR11MB2998;6:nnvFX8gFy8A5qKX4Y93maDO1MEZBqBW706cy8rDWPke+Wg6wjuS4naWA8npIrv5w4wh4lYUWTkjmIX3Eks9CCeE+4dFOXKeXR2hVySRfDR5eQAGCPYQkRGyv7C5vebiv06/P7vlStBY6eRmJ8NXeArHSNXit37XBXtD8RfSkW6iGv4RTilPa+HoUVqgR6hqdNNAvbUVb0fFexPM74yGckHuoCXn2JoOkYKR5ngdGeinoeX3S/fRG5cQmZGSFe16L3Q1ITIFpcQjQt/74e3a6OTaAZsubnm3GMlhH2xWk49Gp96pd3IB3hyLYDLY3Tx0kaX5nMWEyK9iga4pePoyqo3heXIWWxkze1BvB3eH9gBfFEwHB/zgtQ91S2w6BGw2ZsXZzFcEnr0dUir0RboCjHcw4k1MBK2/p8hW97CQ+q1Aduo5kSKAfoMQtX8g/2xXGeu8FlU7s/zHGAWsP/t2JuQ==;5:GFU0iymLEL2H+xNSv4fC+LYXsT2RECDH6rw1I0FagGjg44lp8ncYwbXQSoFSmD9hkmzCiLamI4CW65lmLpOtnb+rY2GTVp+MCb3faLjGnlOhxV7WR9aRIKincq9wKasO+0YvgNjPNguDTKePZd/rmLVyZ0Ahne5TRLDcPTjIg2dXYOX7aR4aUgbW+vZdjf0pSOGeSmb5BoJj9w4OQHlhSw==;7:7ANu8/aKfL6wRZv4t0ggWhoymcXhy62RxFkYAJx99b/1G95Gd70wZBM345l5TBnr8RSJATmuT0RnbDxpCSLl3zDr5xI5z0YwfmVGA4jfkcfVbiKU/1qJKNnYNTc1p6YDk2DBdDHi/NeViKySGsfRZA==
-x-ms-office365-filtering-correlation-id: 649ccaf1-5286-42db-0075-08d689430940
+x-microsoft-exchange-diagnostics: 1;BYAPR11MB2998;6:3ZARpvO0NeKowoZ14+87b4CXdJ+FpVYVBpb/9pxxGFfPR9795T6sL7/qv4+MNGLzKXzXC/QzKaHSYAsbveoAh/GD826PBczcVaBhrma5UQygICQL0o7abD4ibO50U3d2K7x7y53PngZwU5W5tnBuetoj3yyXWXkbFAKiAkpxAER2NPN39aWt+nFwtwpfIJKcbCRUBTG3FitGwA33fZPiEqJ3PD6nw0FhhMNwi0juL/H/lSnRDI/Hnq9nL/86RT8kk8t02FDDvsgSFI3Tm+sEjA0ifyRM8eNoB9Q1ZYzuh9U524Bd5tBmm1kXp7yFtKtKZ3REW3wmh96HmAu+0awvwwjLltoqapUjjZVTelARIxyoOzARPk9Xv1xSa4MBuMU/NPChYRYWBxiSbHma4XROSuJe0ZBCOC20Y9OE4FW3dq6v1kX98l9ieHx+as0QQ3mzXVM6XHS/bsR/Ivln8qYM7g==;5:jfTEZJE8xQlzlEoeo5+yDNf0ma2g0Es3LkPR4g86lVJr4XpI+oHOjKKHVH3FXrLHkvjO1rluWIBHTgSQa6cAXlmvt+eW0oHGjet7CGH8ddj3fT5BkoLfm+690AD3fHNCToHDuHDa88G0+kzi4kRyS/uR8XCag6/MER7YNHOO0naCY3N3UjqaDD6CE2sFc6a03CLluFJFQWvh/WGZpPUKAw==;7:sc/hLLXplWZR1NSCJjMelmpKPGtQiX14vyXqi8e6cUYZLJipWcOE8n8DHP3JT/fMiX0d+YOkIvy45dZ0hzfx7hp9UNGgGvbnSPl2xZmHUvqT+sfKCmVAqfmcNlXwneFGQVQ7DkHIY0xoodqlnsukSA==
+x-ms-office365-filtering-correlation-id: d857303e-1c58-47d8-39dc-08d689430b0c
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(2017052603328)(7153060)(7193020);SRVR:BYAPR11MB2998;
 x-ms-traffictypediagnostic: BYAPR11MB2998:
-x-microsoft-antispam-prvs: <BYAPR11MB2998229FBFC8295FE4A774D8E3930@BYAPR11MB2998.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR11MB2998C443CBF0694DE73002BEE3930@BYAPR11MB2998.namprd11.prod.outlook.com>
 x-forefront-prvs: 09368DB063
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(376002)(366004)(346002)(39850400004)(189003)(199004)(25786009)(107886003)(105586002)(78486014)(36756003)(50226002)(2501003)(6916009)(66066001)(8936002)(3846002)(4326008)(305945005)(7736002)(71200400001)(71190400001)(8676002)(6116002)(54906003)(81166006)(316002)(446003)(81156014)(6436002)(6486002)(2906002)(2616005)(486006)(476003)(76176011)(256004)(99286004)(11346002)(52116002)(53936002)(72206003)(478600001)(186003)(386003)(26005)(14454004)(106356001)(86362001)(5640700003)(97736004)(2351001)(68736007)(6506007)(102836004)(6512007);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB2998;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(376002)(366004)(346002)(39850400004)(189003)(199004)(25786009)(107886003)(105586002)(78486014)(36756003)(50226002)(2501003)(6916009)(66066001)(8936002)(3846002)(4326008)(305945005)(7736002)(71200400001)(71190400001)(8676002)(6116002)(54906003)(81166006)(316002)(446003)(81156014)(6436002)(6486002)(2906002)(2616005)(486006)(476003)(76176011)(256004)(99286004)(11346002)(14444005)(52116002)(53936002)(72206003)(478600001)(186003)(386003)(26005)(14454004)(106356001)(86362001)(5640700003)(97736004)(2351001)(68736007)(6506007)(102836004)(6512007);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB2998;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: lNMq+MrV4hJ+3Ii+bK5uZczPvN1va1aU2zmdhyiN1TcqeXgKR1vD+uXCbd1hEVqDoDaVZXDOK2t3UEpm5UIGekmVAFenVQ203oNBsZAI07yYOtPmPGb0szdoELYBJYZ7JjInycL3H4FsgL9vYSygDIDwtt0kP9gKpClkiaY+T9zUV9Ilx9C3t8Be+sw1o7ZSwBpIONScRu2ffL2uFAJbrpZdPHFeULh0mN3HsZIqfolFmiAdHNIEvGyjHJa19+zghOZgMSAVP2jj0AKwRFJXTbjaY2+rKh6dfODv8BmGKFh9xF1qcAk1S+0XGrJgXM0I2aTDsWwEdsfx9B0X6ZBq50IbVLUwipYH/kOVjE7cLpHnlxAROlmXrB1cgRtIeeramGg9spTcmxI5pTiFuvq/yW/e/dT61iNZkTrpDZhFCx0=
+x-microsoft-antispam-message-info: hE1bvh4Xx2AIDs3zraI0EUONoZMtF5mrranKoi24Z4rb/wg1aFRekD/118VyEJsB5svk7VBuCrCgomQJp+0gi19F8U+E7aKPlFSEqSM0msIHijcknFFPrEJHXS9Acl0FsQkZOebMBDgwPx2vJvT0q2pVTiaRhRI7u0yORL9Xw7UKE9jruwVvjZa0BINycD1g+XsnLKFMWQ6lptwxtG/vrV3iyZbbk8nvE8MZaPjGCJCh4ECaiiz2AA2vnQsBiP0VxqUOkbCiRAnV788XvaoMCstD2DpDW68elYSrL68Ry475XStjq+rsCt9Mv2fQ3zc72gkNu0rgmuZF7yzLMISMY40AuTrs9DnXzknrCqjNE4XszhP9ZnpnadvIa9L1quO7A1pZbdAGKbicMOv8oclQPxC0VXKobBNgzkc2gxzAj+E=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 649ccaf1-5286-42db-0075-08d689430940
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Feb 2019 19:17:11.1373
+X-MS-Exchange-CrossTenant-Network-Message-Id: d857303e-1c58-47d8-39dc-08d689430b0c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Feb 2019 19:17:13.8402
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
@@ -99,73 +99,88 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-The value of 'vif_num'(interface count) starts with 0, so modified the
-loop conditions to execute for all interface.
+Remove use of 'terminated_handle' variable and set the 'hif_drv' to
+NULL once it's free.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/linux_wlan.c     | 8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wi=
 lc1000/host_interface.c
-index 3576834..fde236a 100644
+index fde236a..4598920 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1659,7 +1659,7 @@ int wilc_init(struct net_device *dev, struct host_if_=
-drv **hif_drv_handler)
- 		return -ENOMEM;
+@@ -130,7 +130,6 @@ struct wilc_join_bss_param {
+ 	};
+ } __packed;
 =20
- 	*hif_drv_handler =3D hif_drv;
--	for (i =3D 0; i < wilc->vif_num; i++)
-+	for (i =3D 0; i <=3D wilc->vif_num; i++)
- 		if (dev =3D=3D wilc->vif[i]->ndev) {
- 			wilc->vif[i]->hif_drv =3D hif_drv;
- 			hif_drv->driver_handler_id =3D i + 1;
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc10=
-00/linux_wlan.c
-index 81472d2..466a1fa 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -164,7 +164,7 @@ static struct net_device *get_if_handler(struct wilc *w=
-ilc, u8 *mac_header)
- 	bssid =3D mac_header + 10;
- 	bssid1 =3D mac_header + 4;
+-static struct host_if_drv *terminated_handle;
+ static struct mutex hif_deinit_lock;
 =20
--	for (i =3D 0; i < wilc->vif_num; i++) {
-+	for (i =3D 0; i <=3D wilc->vif_num; i++) {
- 		if (wilc->vif[i]->mode =3D=3D WILC_STATION_MODE)
- 			if (ether_addr_equal_unaligned(bssid,
- 						       wilc->vif[i]->bssid))
-@@ -195,7 +195,7 @@ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
- 	u8 i =3D 0;
- 	u8 ret_val =3D 0;
+ /* 'msg' should be free by the caller for syc */
+@@ -1478,6 +1477,9 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, in=
+t index, u8 mode,
+ 	int result;
+ 	struct wilc_drv_handler drv;
 =20
--	for (i =3D 0; i < wilc->vif_num; i++)
-+	for (i =3D 0; i <=3D wilc->vif_num; i++)
- 		if (!is_zero_ether_addr(wilc->vif[i]->bssid))
- 			ret_val++;
++	if (!hif_drv)
++		return -EFAULT;
++
+ 	wid.id =3D WID_SET_DRV_HANDLER;
+ 	wid.type =3D WID_STR;
+ 	wid.size =3D sizeof(drv);
+@@ -1699,8 +1701,6 @@ int wilc_deinit(struct wilc_vif *vif)
 =20
-@@ -739,7 +739,7 @@ static int wilc_mac_open(struct net_device *ndev)
- 		return ret;
+ 	mutex_lock(&hif_deinit_lock);
+=20
+-	terminated_handle =3D hif_drv;
+-
+ 	del_timer_sync(&hif_drv->scan_timer);
+ 	del_timer_sync(&hif_drv->connect_timer);
+ 	del_timer_sync(&vif->periodic_rssi);
+@@ -1717,9 +1717,8 @@ int wilc_deinit(struct wilc_vif *vif)
+ 	hif_drv->hif_state =3D HOST_IF_IDLE;
+=20
+ 	kfree(hif_drv);
+-
++	vif->hif_drv =3D NULL;
+ 	vif->wilc->clients_count--;
+-	terminated_handle =3D NULL;
+ 	mutex_unlock(&hif_deinit_lock);
+ 	return result;
+ }
+@@ -1738,7 +1737,7 @@ void wilc_network_info_received(struct wilc *wilc, u8=
+ *buffer, u32 length)
+ 		return;
+ 	hif_drv =3D vif->hif_drv;
+=20
+-	if (!hif_drv || hif_drv =3D=3D terminated_handle) {
++	if (!hif_drv) {
+ 		netdev_err(vif->ndev, "driver not init[%p]\n", hif_drv);
+ 		return;
  	}
+@@ -1784,7 +1783,7 @@ void wilc_gnrl_async_info_received(struct wilc *wilc,=
+ u8 *buffer, u32 length)
 =20
--	for (i =3D 0; i < wl->vif_num; i++) {
-+	for (i =3D 0; i <=3D wl->vif_num; i++) {
- 		if (ndev =3D=3D wl->vif[i]->ndev) {
- 			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
- 						 vif->iftype, vif->ifc_id);
-@@ -941,7 +941,7 @@ void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 =
-size)
- 	int i =3D 0;
- 	struct wilc_vif *vif;
+ 	hif_drv =3D vif->hif_drv;
 =20
--	for (i =3D 0; i < wilc->vif_num; i++) {
-+	for (i =3D 0; i <=3D wilc->vif_num; i++) {
- 		vif =3D netdev_priv(wilc->vif[i]->ndev);
- 		if (vif->monitor_flag) {
- 			wilc_wfi_monitor_rx(wilc->monitor_dev, buff, size);
+-	if (!hif_drv || hif_drv =3D=3D terminated_handle) {
++	if (!hif_drv) {
+ 		mutex_unlock(&hif_deinit_lock);
+ 		return;
+ 	}
+@@ -1824,7 +1823,7 @@ void wilc_scan_complete_received(struct wilc *wilc, u=
+8 *buffer, u32 length)
+ 		return;
+ 	hif_drv =3D vif->hif_drv;
+=20
+-	if (!hif_drv || hif_drv =3D=3D terminated_handle)
++	if (!hif_drv)
+ 		return;
+=20
+ 	if (hif_drv->usr_scan_req.scan_result) {
 --=20
 2.7.4
 
