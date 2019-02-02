@@ -2,133 +2,139 @@ Return-Path: <SRS0=M3au=QJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 530FCC282D7
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 17:06:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED1F1C282D7
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:16:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2271320856
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 17:06:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAA412082C
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Feb 2019 19:16:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZW2U3Wja"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="de8Z8zGR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726649AbfBBRGa (ORCPT
+        id S1726770AbfBBTQj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Feb 2019 12:06:30 -0500
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:42511 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725828AbfBBRGa (ORCPT
+        Sat, 2 Feb 2019 14:16:39 -0500
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:24907 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726643AbfBBTQj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Feb 2019 12:06:30 -0500
-Received: by mail-oi1-f196.google.com with SMTP id w13so8397195oiw.9
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2019 09:06:30 -0800 (PST)
+        Sat, 2 Feb 2019 14:16:39 -0500
+X-IronPort-AV: E=Sophos;i="5.56,553,1539673200"; 
+   d="scan'208";a="27205805"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa1.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 02 Feb 2019 12:16:38 -0700
+Received: from NAM01-BY2-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.76.49) with Microsoft SMTP Server (TLS) id
+ 14.3.352.0; Sat, 2 Feb 2019 12:16:37 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:references:from:cc:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=xo8sbkSUeyP3AMS+TeN6fz+rcqQQZNi2Rd9uU80iW3E=;
-        b=ZW2U3WjaQoLWSSs24lM2cdJGUpUjkXJZutZcXPaNQPPkha8Kc2AvEGULPkZWU/JmFH
-         4gVuLTqNt2LPh7VI5e0ZH3iYSsYZt6DeP5u5KW/TzyvJq23HJ2zXsSam5lAgmqN0D/TS
-         8q4ThThepLRNTND/oXx/9LskqIQbl3c1qkXcwpz/jehYDNTtBMdjyKIeXmfZK+0pZSTO
-         P9rTOM3ZXGAQ0VKFWPFVsFWGoJ2djkpK8uNgsBDVf2nV5A768BsvZ9Q3r3VPBEX+s9X4
-         WnQOgtzogHIPjmRsPnhk8vM22AEsVEeQSnepHOBqiEn+qKubtxy+ZHgQNTW5YxoQ24NB
-         r78A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:references:from:cc:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=xo8sbkSUeyP3AMS+TeN6fz+rcqQQZNi2Rd9uU80iW3E=;
-        b=oebU/IDKV1TrR4GdS3ZTZAE/ST7EDpv90CFb3lPR9bBsWSukgRNSKatuRpHe5qUF8I
-         OzfPYPMbppp6YQFwGM/Xb/TNogt8Ar8a3HQQnnNdatrw65vMBnSoquzRfzdvj5Pwtsd3
-         mKwjd792GeBpxVIadYekz/AK8f/kZvVQ6nw9xhB/gp3upWcDwLu7oO0FomOjl41+YBGh
-         Bcl+mIMI/yrTb6YZBmsTQ7wMy0swIskVjEVQ9iEt5cOKLytqfbR6ykYqCLZwNg1D++Rt
-         HzQH4nTsG91gV/egbSGAurf5T9+y6pXtkYJYoDoAIWZoTqHu1ukhdmwP2osipaBdQUmw
-         Njwg==
-X-Gm-Message-State: AHQUAuavSBUNBRNPHZLfhBdQ6Ew058EAvzySeADuR3r+T1WczWsyCi66
-        4OMxD0fS6xoLnWZ8leT9URiKkyzr
-X-Google-Smtp-Source: AHgI3IaPeIk850IeytjeQnOItjdagsbbFukT+K+40POJuInZiQK7weSWyYztS4Cq40oJnklz7VtIyg==
-X-Received: by 2002:aca:4506:: with SMTP id s6mr20737943oia.115.1549127189539;
-        Sat, 02 Feb 2019 09:06:29 -0800 (PST)
-Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id h64sm4635590otb.45.2019.02.02.09.06.27
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Sat, 02 Feb 2019 09:06:27 -0800 (PST)
-Subject: Re: Compilation error in rtl8821ce driver and possible fix
-To:     Francesco Napoleoni <fnapoleoni@mclink.it>
-References: <4491429.ZAENLmHWg6@afrodite.mst.cosmic-odyssey.net>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <f9ac33af-0052-cf42-99b5-58212f703d44@lwfinger.net>
-Date:   Sat, 2 Feb 2019 11:06:26 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
-In-Reply-To: <4491429.ZAENLmHWg6@afrodite.mst.cosmic-odyssey.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector1-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LaYFBUHW9A0N2Y4nzLJ3Z2kVW3Z82ICfB/k1wHX8slE=;
+ b=de8Z8zGR0uv3mfSnNins2utgZ4Bvqiw2eUdmqYawiPJcAHT3lYMXXVG8ZGqHlyefNTClAd1EC3aCYx6KIHIxZY6R+VZguVACjW4ooauccudnzkeURBIBS+hMN5+ERwnWGvxAycD1D5EvOds9wlGpLJlMXS9v/7sxjRfTkmW1K1w=
+Received: from BYAPR11MB2567.namprd11.prod.outlook.com (52.135.226.160) by
+ BYAPR11MB2998.namprd11.prod.outlook.com (20.177.224.159) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1558.21; Sat, 2 Feb 2019 19:16:37 +0000
+Received: from BYAPR11MB2567.namprd11.prod.outlook.com
+ ([fe80::cc6d:bc31:d5b:a27d]) by BYAPR11MB2567.namprd11.prod.outlook.com
+ ([fe80::cc6d:bc31:d5b:a27d%5]) with mapi id 15.20.1580.019; Sat, 2 Feb 2019
+ 19:16:36 +0000
+From:   <Ajay.Kathat@microchip.com>
+To:     <linux-wireless@vger.kernel.org>
+CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
+        <Ajay.Kathat@microchip.com>
+Subject: [PATCH 00/15] staging: wilc1000: cleanup patches & handle review
+ comments
+Thread-Topic: [PATCH 00/15] staging: wilc1000: cleanup patches & handle review
+ comments
+Thread-Index: AQHUuyvRrd3rIuDjoUqQJnog/jU6Fw==
+Date:   Sat, 2 Feb 2019 19:16:36 +0000
+Message-ID: <1549134974-5545-1-git-send-email-ajay.kathat@microchip.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: MA1PR0101CA0011.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:a00:21::21) To BYAPR11MB2567.namprd11.prod.outlook.com
+ (2603:10b6:a02:c5::32)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Ajay.Kathat@microchip.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 2.7.4
+x-originating-ip: [49.205.218.11]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;BYAPR11MB2998;6:JBSjx57R6N3ky7P6N7Rs7FWHWcgwz0I0KhWXQ1WM0SiFxwawjKb3fJrz7sLOzpoSC3ZOOQp4o6LbsUX91Hw3FgoPPQf47lPFRG6/L9nbq0OC/KBTr0r0MLW3ffNbpZJL3U5AHCBXsvOWXzj+KjYExp9TgZ0LxHMT0gmePEHFMbjN9CPubFIpQ5QmRrvs5m4ftcxCoDXza9zbYR5Pqx6ZsW3ZEbqbLcYKffj9yRWr+aH0d5uiZZ6iFgN3jtp5Y0R+R7l6aTO5xGOD7aRBwmwEo9dfww9mSDW9B73HzunQCC0ajqXJ/ywksSXY+/I75eBMtVb2+GtVlHn5AMpq9BBbMzfsipy1ITCunSLgqRSuiAN7n5dT4WOrhlOuJBSHY9V9gHL2DQXhDwE1zZ1+1GGor6dRSGW3dlwGdGyuV4W0TXKWZDuDrL8jzP+DOx5Z/CZnwxOQpBOqgSVKis+9x3NHMw==;5:z/dsnMnurE1t0hTiwZt0ZDe9bXvvlfC7aVPpottAqs/33+oIzdYE/zw/IRuTMKbxksx9fWInqhuDFXGdr4BWWr2Fq7B4VSTK4WrVo8pXn2wwt032L0WGyK64nis5NyKLcpMJbk0AH0v+n+f5CnGcQ9kaMIPu6KYa4hwGsmAtN92aynXhJEciCZ/zzYEVnCDB+ZVmEqqXSncovlRB1AzOCQ==;7:euDg8QxeuWCv/VDfeSToU86LbEOML0qlN4HcrhhIppWHZ0u196B7w6lYN7gbU7ER+zexcN9opS/REqps1KI53U1tvnj26O1Ou8RZX2j6xzaOWB1rnR0vWsbdnSnAgwyZs2PFqLxs0kv2E8lVStMkNQ==
+x-ms-office365-filtering-correlation-id: 05790acf-313f-47f8-3e0b-08d68942f38d
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(2017052603328)(7153060)(7193020);SRVR:BYAPR11MB2998;
+x-ms-traffictypediagnostic: BYAPR11MB2998:
+x-microsoft-antispam-prvs: <BYAPR11MB299838CB645F21BF77918F08E3930@BYAPR11MB2998.namprd11.prod.outlook.com>
+x-forefront-prvs: 09368DB063
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(376002)(366004)(346002)(39850400004)(189003)(199004)(25786009)(107886003)(105586002)(78486014)(36756003)(50226002)(2501003)(6916009)(66066001)(8936002)(3846002)(4326008)(305945005)(7736002)(71200400001)(71190400001)(8676002)(6116002)(54906003)(81166006)(316002)(81156014)(6436002)(6486002)(2906002)(2616005)(486006)(476003)(256004)(99286004)(14444005)(52116002)(53936002)(72206003)(478600001)(186003)(386003)(26005)(14454004)(106356001)(86362001)(5640700003)(97736004)(2351001)(68736007)(6506007)(102836004)(6512007);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB2998;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: microchip.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: Z8hHQ3PXDmwpYhQeKw4EOJFjH+iLogp35yg8MFXOEMBcPmSNyJ2qwsld5vtnLrRR+3TTOIIQRXsnw6zkXGlYZEfdekZfkmi17ewBd7TNHUpjAI09MhMcrqK5KiepuT66ub1S5gFDgljPCanFwBfcmdw6BKM4uYqcsa5tQpuQ7ltPb19sukY/UXSd5GEEQAs7Cn0zXaPU3aGHDr5UzuYZZen+tMnuQxrI/9GJHodfceUGMj+6dG6p6Qs+zfU1bJikuZhW0p0yULKj1sClefDMO0nkrmv1+I/ob605ESe43/7/88Uc69ktCYThpt2uoQrfvB1NfL68oybS5fRI92K9BKct4G+ODVC46FXAFSiz6afVdU+QuIBWI5I1E+Oxz5fOJFzWsHKZYTtkfJXxeSBK7hIrxMliVPy3CqeRx/BChVg=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 05790acf-313f-47f8-3e0b-08d68942f38d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Feb 2019 19:16:34.3064
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR11MB2998
+X-OriginatorOrg: microchip.com
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/1/19 7:02 PM, Francesco Napoleoni wrote:
-> Hi
-> 
-> A few days ago I downloaded rtl8821ce wireless network driver from endlessm/
-> linux repository (master branch), and I managed to build module for kernel
-> 4.19.16 on my Linux laptop, a HP 15-DB0035NL with an AMD Ryzen 5 2500U CPU.
-> 
-> When upgrading to kernel 4.20.5 I could not build the module anymore, the
-> compilation stopped with an error about the use of get_monotonic_boottime()
-> function, which apparently was deprecated and has been removed.
-> 
-> I’m no expert in kernel development, however I discovered that such function
-> has been superseded by ktime_get_boottime_ts64(), and so I tried to use it in
-> place of get_monotonic_boottime(). The resulting code compiled correctly, and
-> the module seems to load and work without problem.
-> 
-> The code I changed is in the rtl8821ce/os_dep/linux/ioctl_cfg80211.c (lines
-> 338-339), you can find a patchfile attached here.
-> 
-> Sorry for any mistake I may have done in this report, this is the first time I
-> do such a thing.
+From: Ajay Singh <ajay.kathat@microchip.com>
 
-When you use an out-of-kernel driver, then you are responsible for making the 
-changes that result from kernel API changes. For the in-kernel drivers, the 
-person changing the API is responsible for all the fixes. For that reason, I'm 
-not sure that the linux-wireless mailing list was appropriate for your "fix", 
-but I am replying to it just in case someone else needs to fix one of Realtek's 
-drivers.
+This series contains cleanup patches and modification to handle few mainlin=
+e
+review comments mentioned below:
+ - avoid static variable for monitor net_device.
+ - remove conditional locking in wilc_wfi_deinit_mon_interface().
+ - avoid use of interface name('wlan0' & 'p2p0') string for validation.
+ - use cookie information in roc related callback.
 
-By the way, your fix will break the driver for anyone trying to go back to 
-kernel 4.19, or for anyone running a 32-bit system. My fix for this problem with 
-Realtek drivers is to make rtw_get_systime_us() to look like this:
+Ajay Singh (15):
+  staging: wilc1000: avoid the use of 'wilc_wfi_mon' static variable
+  staging: wilc1000: remove conditional lock in
+    wilc_wfi_deinit_mon_interface()
+  staging: wilc1000: remove redundant macros for radiotap
+  staging: wilc1000: remove unnecessary debug log messages
+  staging: wilc1000: rename timeout related macros
+  staging: wilc1000: make use of iface type to identify p2p interface
+  staging: wilc1000: refactor scan() cfg80211 ops callback
+  staging: wilc1000: use correct condition in loops for 'vif_num' count
+  staging: wilc1000: remove use of 'terminated_handle' static variable
+  staging: wilc1000: refactor linux_wlan_init_test_config()
+  staging: wilc1000: refactor code to use cookie information
+  staging: wilc1000: use random number for cookie instead of pointer
+  staging: wilc1000: avoid use of interface names for validation
+  staging: wilc1000: add check before performing operation on net_device
+  staging: wilc1000: remove unused struct 'add_sta_param'
 
-static u64 rtw_get_systime_us(void)
-{
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
-         u64 ts;
-         ts = ktime_get_boottime();
-         return do_div(ts, 1000);
-#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 39))
-         struct timespec ts;
-         get_monotonic_boottime(&ts);
-         return ((u64)ts.tv_sec * 1000000) + ts.tv_nsec / 1000;
-#else
-         struct timeval tv;
-         do_gettimeofday(&tv);
-         return ((u64)tv.tv_sec * 1000000) + tv.tv_usec;
-#endif
-}
+ drivers/staging/wilc1000/host_interface.c         |  97 ++---
+ drivers/staging/wilc1000/host_interface.h         |  27 +-
+ drivers/staging/wilc1000/linux_mon.c              |  68 ++--
+ drivers/staging/wilc1000/linux_wlan.c             | 408 +++++++++---------=
+----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 134 ++++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |   7 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   3 +-
+ drivers/staging/wilc1000/wilc_wlan.c              |   4 +-
+ drivers/staging/wilc1000/wilc_wlan.h              |   2 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h           |   1 -
+ 10 files changed, 308 insertions(+), 443 deletions(-)
 
-The above version will build on all kernel versions. The use of do_div() is to 
-prevent a missing divide routine in 32-bit systems.
-
-Larry
-
-
+--=20
+2.7.4
 
