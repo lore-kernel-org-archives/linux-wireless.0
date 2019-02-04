@@ -1,86 +1,104 @@
-Return-Path: <SRS0=ytbo=QK=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=6Uy3=QL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07E18C169C4
-	for <linux-wireless@archiver.kernel.org>; Sun,  3 Feb 2019 19:42:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 023E4C282D7
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Feb 2019 06:07:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE84721773
-	for <linux-wireless@archiver.kernel.org>; Sun,  3 Feb 2019 19:42:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8D73217D9
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Feb 2019 06:07:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="U25TSLhI";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="B77+COQG"
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="X2q4F2LN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727905AbfBCTma (ORCPT
+        id S1725928AbfBDGHU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 3 Feb 2019 14:42:30 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:48058 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726577AbfBCTm3 (ORCPT
+        Mon, 4 Feb 2019 01:07:20 -0500
+Received: from mail-ua1-f65.google.com ([209.85.222.65]:45979 "EHLO
+        mail-ua1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725906AbfBDGHU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 3 Feb 2019 14:42:29 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id F0EB860746; Sun,  3 Feb 2019 19:42:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549222949;
-        bh=pInt3iP4PRZ2W8rAD6kj3RN5ygGRUNcw+hq/kKgbCkc=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=U25TSLhIi2Ayzer49gJmwt+HmFnQvwmzFa9mHl3JVW7jgLi2+gwk3Mv8ACAZeUPcI
-         GkhUF9cYvK+hPbAS7iN8h8PNpgiXccRqQNYWjGPE7kXc7MFYz4370QS3xapDPnthyc
-         0RflNuWU26eFKooDlmfKAzq7X50kmpqBSV8U5Irw=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7F97C6032C;
-        Sun,  3 Feb 2019 19:42:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549222948;
-        bh=pInt3iP4PRZ2W8rAD6kj3RN5ygGRUNcw+hq/kKgbCkc=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=B77+COQGq0jn6asHWGZBfzH3lvu3HFCkh4xo8+BcOKLVgn3Y2QartiQ3gM4JG+CU2
-         4iZbssMbxiCBQT3iOEVeTkrI0SrX3HeevX6n8dEitphC7IKtsiIdgP9pfmujHKDLFC
-         JzrQdttBEk6UXqIy7SGnFY7t7IfsmqfQW+jJXtVo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7F97C6032C
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Mon, 4 Feb 2019 01:07:20 -0500
+Received: by mail-ua1-f65.google.com with SMTP id e16so4073471uam.12
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2019 22:07:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=KG15wM6Jwx9Avl8HGL6Rq2KKwKL64VNzgD6ZPPI8pTY=;
+        b=X2q4F2LNVwkuzn5p6WpLwB3s2R5YFu7qGAr55eorUXnrm0NoV8nlSzjilmwHg1qcXl
+         DD6qzO39oFADV329MhsvAveYtE/qJWzZIiMgpZ46M+yTGpYmvGL4fp+KV+aoDMRxJP3L
+         ifeZ7aS7tZsRCC4eECwsQwQ31mQRPrsQlY9oI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=KG15wM6Jwx9Avl8HGL6Rq2KKwKL64VNzgD6ZPPI8pTY=;
+        b=nsM0Co5bj1Hfjoi1UMHhVO4O1yCL49/yF6UlI8kICPsv1LiPj4DjEPk+MVmhr2VBz3
+         1YS729/hWgDngBSDbbIcrQMddPxaUo/s3hXHCvoFvoOygTNl8JSiGnUsDrtlPyhlS2hN
+         6T6hK5KtAV8l9W2BvULG42cr60Hn0G5TBed8Uz1834qVa/RCIykPL21KfB9qV85rh5ri
+         0MIEmHujhXwdwNsmnk1B0imk4HjiQdZ3K6OaKiq4KqbWn1Z+w46nyz8CFPQyoxfwPhil
+         4TIbDv+JvH8qYA9HjW4qYr3ywuaH5EkBZmfApAm9yRhoWqJOOsqj5R8ZRsIkGGY+QQDt
+         rkVQ==
+X-Gm-Message-State: AJcUukfdPvDY198DgiumZzgUra45UtWymUyG51vQZ7dt3NYk1ylobtkC
+        //ixmmJFZYLY4B3C1oe+V01tPB1hxB5J1xLccPRWCA==
+X-Google-Smtp-Source: ALg8bN4FpJdHRTRWA4ygDlfIdgG0Zg11v1m6of6DJzSd7yJ27nXx183e6ThqUE4MLG7Ixl95gvAUFuazndfxxCxBKSo=
+X-Received: by 2002:ab0:31d5:: with SMTP id e21mr21397916uan.107.1549260438893;
+ Sun, 03 Feb 2019 22:07:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [v2] MAINTAINERS: add entry for redpine wireless driver
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1549019120-9376-1-git-send-email-siva8118@gmail.com>
-References: <1549019120-9376-1-git-send-email-siva8118@gmail.com>
-To:     Siva Rebbagondla <siva8118@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, amitkarwar@gmail.com,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190203194228.F0EB860746@smtp.codeaurora.org>
-Date:   Sun,  3 Feb 2019 19:42:28 +0000 (UTC)
+References: <e944650d-514f-3727-2e68-b318aab9ee7f@web.de> <14a011aa-862f-7132-8741-df5173875f34@hisilicon.com>
+In-Reply-To: <14a011aa-862f-7132-8741-df5173875f34@hisilicon.com>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Mon, 4 Feb 2019 07:06:41 +0100
+Message-ID: <CAPDyKFqYWGv7bWW7rcCYhc-PdmRCBdskUTycFxK25VQgd0TWeg@mail.gmail.com>
+Subject: Re: [PATCH v2] arm64: dts: hikey: Give wifi some time after power-on
+To:     Wei Xu <xuwei5@hisilicon.com>
+Cc:     Jan Kiszka <jan.kiszka@web.de>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        Ryan Grachek <ryan@edited.us>,
+        John Stultz <john.stultz@linaro.org>,
+        linux-wireless@vger.kernel.org, "Reizer, Eyal" <eyalr@ti.com>,
+        Valentin Schneider <valentin.schneider@arm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Tony Lindgren <tony@atomide.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Siva Rebbagondla <siva8118@gmail.com> wrote:
+On Fri, 1 Feb 2019 at 17:34, Wei Xu <xuwei5@hisilicon.com> wrote:
+>
+> Hi Jan,
+>
+> On 1/24/2019 7:52 AM, Jan Kiszka wrote:
+> > From: Jan Kiszka <jan.kiszka@siemens.com>
+> >
+> > Somewhere along recent changes to power control of the wl1835, power-on
+> > became very unreliable on the hikey, failing like this:
+> >
+> > wl1271_sdio: probe of mmc2:0001:1 failed with error -16
+> > wl1271_sdio: probe of mmc2:0001:2 failed with error -16
+> >
+> > After playing with some dt parameters and comparing to other users of
+> > this chip, it turned out we need some power-on delay to make things
+> > stable again. In contrast to those other users which define 200 ms, the
+> > hikey would already be happy with 1 ms. Still, we use the safer 10 ms,
+> > like on the Ultra96.
+> >
+> > Fixes: ea452678734e ("arm64: dts: hikey: Fix WiFi support")
+> > Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> > Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+>
+> Applied to the hisilicon soc dt tree.
 
-> From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> 
-> Create an entry for Redpine wireless driver and add Amit and myself as
-> maintainers.
-> 
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Wei, can you please also add a stable tag to it?
 
-Patch applied to wireless-drivers.git, thanks.
+[...]
 
-8c22d81d5535 MAINTAINERS: add entry for redpine wireless driver
-
--- 
-https://patchwork.kernel.org/patch/10792501/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Thanks and kind regards
+Uffe
