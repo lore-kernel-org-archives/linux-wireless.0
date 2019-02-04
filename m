@@ -6,133 +6,93 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F4164C282C4
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Feb 2019 15:45:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A467C282C4
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Feb 2019 15:49:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C29E12082E
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Feb 2019 15:45:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDF652082E
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Feb 2019 15:49:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PvfIXMt8";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PVy1x9pH"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OhkhSihQ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bvUSkIhZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731454AbfBDPpT (ORCPT
+        id S1730343AbfBDPtl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Feb 2019 10:45:19 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:42532 "EHLO
+        Mon, 4 Feb 2019 10:49:41 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:48974 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728216AbfBDPpS (ORCPT
+        with ESMTP id S1728216AbfBDPtk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Feb 2019 10:45:18 -0500
+        Mon, 4 Feb 2019 10:49:40 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id A5831608FF; Mon,  4 Feb 2019 15:45:17 +0000 (UTC)
+        id 6D251608CF; Mon,  4 Feb 2019 15:49:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549295117;
-        bh=6Pq/hqPmsqqexY0Unq38BrFRF5kejgaNUs/2DTqedL4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=PvfIXMt8cDjvfLvUppxKKZRonmE+Ai/pQHAxneUGJp87hkfe9EBXMasbBCfKEV7Rj
-         8qvailGW1mt0Jz/vBNoU5/hwnzvCGwoHLWhSf/fT/0Bfl9FTjhymYnGAAFLYWqBhP/
-         1Q1nqwE7k/mmkG1N6ZmA/cEju4m0rSzQvesVlotY=
+        s=default; t=1549295379;
+        bh=46l+d16Eo581xawDZolsQi80POtLTVcoSsp5FYB2WoM=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=OhkhSihQU0HZY9WkJdT2EvfJxNMgFyoUzMeSyHPg+de65Qc9/0aTvsARAb39hB0N5
+         IDPZCgDe+nu/V33SpPbLdyIssZeXMQTTHfcBM2ez6vZaLfe379U9qJISfc/zbEN98N
+         9cbXPDvQ+/HiK1cR4PI7l2DyJhXaWfYYSQvJlTXM=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 630D26047C;
-        Mon,  4 Feb 2019 15:45:14 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id F1126607DF;
+        Mon,  4 Feb 2019 15:49:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549295116;
-        bh=6Pq/hqPmsqqexY0Unq38BrFRF5kejgaNUs/2DTqedL4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=PVy1x9pHxjP/NycQ72XFMcuXPpa12rnogdfO4wWBH5U4hMI5/OJORU6K63mFW1jN9
-         E4ibF+E+nVTIWZxGGksbXf5yhv2VOriR9e/qHqIGmXHP2k9POt5yIREIZv4N7CzOXJ
-         u/rKXqgzLWFMwcb6KQEONzlQIRwYVoj+sc8yGTXs=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 630D26047C
+        s=default; t=1549295378;
+        bh=46l+d16Eo581xawDZolsQi80POtLTVcoSsp5FYB2WoM=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=bvUSkIhZssH8JvK/4DLJwKHACCtiy/RTq+X0MzLSKnbiRn6++GpooMvPR7V/Z3n8y
+         Kl8jh82QpwBvN4kQhrwm3mCkotg3VAixKcU3yR9avCrOU1wZUYQRRwV+Td+XKlgc5S
+         Pwg2O5h46sGuf1TjWa2tykHeAFKHuDNDZsl03InE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F1126607DF
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Christian Lamparter <chunkeey@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Ben Greear <greearb@candelatech.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Mathias Kresin <dev@kresin.me>, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] ath10k: implement set_base_macaddr to fix rx-bssid mask in multiple APs conf
-References: <20190114153558.972-1-chunkeey@gmail.com>
-Date:   Mon, 04 Feb 2019 17:45:12 +0200
-In-Reply-To: <20190114153558.972-1-chunkeey@gmail.com> (Christian Lamparter's
-        message of "Mon, 14 Jan 2019 16:35:58 +0100")
-Message-ID: <87tvhjd0c7.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2] ath10k: Set DMA address mask to 35 bit for WCN3990
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1535992622-5074-1-git-send-email-pillair@codeaurora.org>
+References: <1535992622-5074-1-git-send-email-pillair@codeaurora.org>
+To:     Rakesh Pillai <pillair@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190204154939.6D251608CF@smtp.codeaurora.org>
+Date:   Mon,  4 Feb 2019 15:49:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Christian Lamparter <chunkeey@gmail.com> writes:
+Rakesh Pillai <pillair@codeaurora.org> wrote:
 
-> Many integrated QCA9984 WiFis in various IPQ806x platform routers
-> from various vendors (Netgear R7800, ZyXEL NBG6817, TP-LINK C2600,
-> etc.) have either blank, bogus or non-unique MAC-addresses in
-> their calibration data.
->
-> As a result, OpenWrt utilizes a discouraged binary calibration data
-> patching method that allows to modify the device's MAC-addresses right
-> at the source. This is because the ath10k' firmware extracts the MAC
-> address from the supplied radio/calibration data and issues a response
-> to the ath10k linux driver. Which was designed to take the main MAC in
-> ath10k_wmi_event_ready().
->
-> Part of the "setting an alternate MAC" issue was already tackled by a
-> patch from Brian Norris:
-> commit 9d5804662ce1
-> ("ath10k: retrieve MAC address from system firmware if provided")
-> by allowing the option to specify an alternate MAC-address with the
-> established device_get_mac_address() function which extracts the right
-> address from DeviceTree/fwnode mac-address or local-mac-address
-> properties and saves it for later.
->
-> However, Ben Greear noted that the Qualcomm's ath10k firmware is liable
-> to not properly calculate its rx-bssid mask in this case. This can cause
-> issues in the popluar "multiple AP with a single ath10k instance"
-> configurations.
->
-> To improve MAC address handling, Felix Fietkau suggested to call
-> pdev_set_base_macaddr_cmdid before bringing up the first vif and
-> use the first vif MAC address there. Which is in ath10k_core_start().
->
-> This patch implement Felix Fietkau's request to
-> "call pdev_set_base_macaddr_cmdid before bringing up the first vif".
-> The pdev_set_base_macaddr_cmdid is already declared for all devices
-> and version. The driver just needed the support code for this
-> function.
->
-> BugLink: https://lists.openwrt.org/pipermail/openwrt-devel/2018-November/014595.html
-> Fixes: 9d5804662ce1 ("ath10k: retrieve MAC address from system firmware if provided")
-> Cc: Brian Norris <briannorris@chromium.org>
-> Cc: Ben Greear <greearb@candelatech.com>
-> Cc: Felix Fietkau <nbd@nbd.name>
-> Cc: Mathias Kresin <dev@kresin.me>
-> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+> WCN3990 is a 37-bit target but can address memory range
+> only upto 35 bits. The 36th bit is used to control the
+> smmu/iommu translation and the 37th bit is used by the
+> internal bus masters to access the wifi subsystem internal
+> SRAM. With the DMA mask set to 37i-bit, the host driver
+> can get 37-bit dma address, which leads to incorrect
+> address access in the target.
+> 
+> Hence the host driver can used addresses upto 35-bit
+> for WCN3990. Fix the dma mask for wcn3990 to 35-bit,
+> instead of 37-bit.
+> 
+> Tested HW: WCN3990
+> Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+> 
+> Tested-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-[...]
+Patch applied to ath-next branch of ath.git, thanks.
 
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -2649,6 +2649,13 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
->  		goto err_hif_stop;
->  	}
->  
-> +	status = ath10k_wmi_pdev_set_base_macaddr(ar, ar->mac_addr);
-> +	if (status) {
-> +		ath10k_err(ar,
-> +			   "failed to set base mac address: %d\n", status);
-> +		goto err_hif_stop;
-> +	}
-
-Oh, and as the new parameter is not supported with WMI TLV interface
-(QCA6174, WCN3990 etc) this will print an error on those. I think you
-need to check for -EOPNOTSUPP and then just ignore the error on that
-case. IIRC we have similar checks elsewhere in ath10k.
+5b9030cee1be ath10k: Set DMA address mask to 35 bit for WCN3990
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10586127/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
