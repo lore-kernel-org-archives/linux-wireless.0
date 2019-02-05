@@ -2,87 +2,123 @@ Return-Path: <SRS0=RZRw=QM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 703D8C282D7
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 15:52:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62FB7C282D7
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 16:01:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 495962075D
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 15:52:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32D002080F
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 16:01:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b8INj1l5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729892AbfBEPwi (ORCPT
+        id S1729905AbfBEQBW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Feb 2019 10:52:38 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:39481 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728740AbfBEPwi (ORCPT
+        Tue, 5 Feb 2019 11:01:22 -0500
+Received: from mail-it1-f193.google.com ([209.85.166.193]:54808 "EHLO
+        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727397AbfBEQBW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Feb 2019 10:52:38 -0500
-Received: by mail-wm1-f68.google.com with SMTP id y8so4195856wmi.4
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2019 07:52:36 -0800 (PST)
+        Tue, 5 Feb 2019 11:01:22 -0500
+Received: by mail-it1-f193.google.com with SMTP id i145so9560476ita.4;
+        Tue, 05 Feb 2019 08:01:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=0gC8NlSJs+7zlaU+/3qAU9IlYl1p9D7dYB3zpo1O8G0=;
+        b=b8INj1l5QFr3kZhOux9Wf41c3PcoHpBVhbET1R+T6GBPMtc21WUHhyoNofOtjG7drd
+         QGs9qUH4oN8epgY41bhbPueXHuHn14d79P8C0a4MNmKQDut2t5GUcLs5VBkfLqhUztJ9
+         5NesVDuhLna5uY0h3DmZybiVaGccE/r3VpNc5Y7XnyvW8mhZt0WRS2jbA6XYus6GUsDn
+         RsHNgQqx3vDwaH5uNVzUCg731PClkhmrYvPam0Fq1z4Y0h6I/f8S5xwR9vrOGTaYK3yU
+         proeNOQ1mNyx8lmUVvNTRO91gpj2JIEaBTc6YQw+N8ZFz9ZEiLJAC9Q/7dUeOrXKIEbM
+         ykxw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=/jFRO5KgRDg/HzuJwG7SsQCqpkW37vuVYVxdbKuCESQ=;
-        b=GTFeLdj+iiL4Wnbz7fGlG7+IC0eFNlHQN+w55/2GojikqcMFOzCqHVBZLKgKFcyoLj
-         /HOReNJYRPejPWzWR0uM/G7EEOzGGcr8t1rQQ8qhQj4R0uiZXOhbkvJ+hMU8yJzwTZfj
-         n1RuyeapIwPzRUFqbjTts44O6aosiOFfQ74AvgN0ywVc0mZl2nw1/exp517FJhNqPSCX
-         zO0/pJRoxiLKqLyMnYdwzBBht4Kb7GCmy15+fhEodjrbLM39YQf5B3P4dIkYoNolY4s4
-         43aa34two+FDsLhhLZF8exDfdRgNwVI/LR7IS+24ClhF6gw1Ov2ggignRTG8u6O057aL
-         lTyg==
-X-Gm-Message-State: AHQUAuYs1g8O/kKGpyWim51BXjdVhGbZOwwjZumE4cVEIsOPb44WYX6E
-        Te0fHN50+JgBH4I7OcDxyJnhyw==
-X-Google-Smtp-Source: AHgI3IZlAVh2/FQn6IeUmzJBbztWQLMxyhBziuR/j5VzM3dAW8hqy9G3HPMjkZJ9juwiZOQ4aDDqJQ==
-X-Received: by 2002:a1c:414:: with SMTP id 20mr4332387wme.67.1549381956160;
-        Tue, 05 Feb 2019 07:52:36 -0800 (PST)
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id o64sm15671506wmo.47.2019.02.05.07.52.34
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Tue, 05 Feb 2019 07:52:35 -0800 (PST)
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH] mt76x0: mcu: remove useless commented configuration
-Date:   Tue,  5 Feb 2019 16:52:25 +0100
-Message-Id: <7c17ba9e101c590ce3971d41f132fe9b31832b4d.1549381840.git.lorenzo.bianconi@redhat.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1549381840.git.lorenzo.bianconi@redhat.com>
-References: <cover.1549381840.git.lorenzo.bianconi@redhat.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=0gC8NlSJs+7zlaU+/3qAU9IlYl1p9D7dYB3zpo1O8G0=;
+        b=OhDCEsnwVRIA3MVYtPPQ7bjSxEwyMTtO8mzi32nv+FhyCDgwxnGhs3ANOJnX0sXaaX
+         sgf8EvKUfwqVmXe+Slwds92/SwnzLbwV/FWsSbowGPJsaRervu3mqJ12V56+U9t5h0gh
+         EfgV2+M4RiBkL2O+phYyhtvajHPBwlvIQfoAecuS0yDrEplHqgX22rHHVOHkmEgomq4o
+         p80pxeVfqsOLsvNkYCbYGJAOZx37vhA7ATvf/Trd56pMhKpimkwYlyN3xIyuNrr3BU4r
+         CC3v40R3md5a+FUinNeqNONk1CsZgZCUGE8iO1Rxqz0FXqR9QZ9xbMSWSIlL7rjFt5jv
+         Ju7g==
+X-Gm-Message-State: AHQUAuaxSTlOMyc+s+7/6JLm5Us8TqDdc22j11uAgeTohyIGtvqlqjho
+        JTNIsbvdVelR27zUzQWicfA=
+X-Google-Smtp-Source: AHgI3Ib1lUeNWKlvEVKZHoqbNvPK2K2H+F773Y7uya2XV28rQscuMrxUmcmCpfpPfQX9f+Q1YIq1IA==
+X-Received: by 2002:a02:6:: with SMTP id 6mr2910857jaa.19.1549382481635;
+        Tue, 05 Feb 2019 08:01:21 -0800 (PST)
+Received: from svens-asus.arcx.com ([184.94.50.30])
+        by smtp.gmail.com with ESMTPSA id a79sm1887447ita.11.2019.02.05.08.01.20
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 05 Feb 2019 08:01:20 -0800 (PST)
+From:   Sven Van Asbroeck <thesven73@gmail.com>
+X-Google-Original-From: Sven Van Asbroeck <TheSven73@googlemail.com>
+To:     Samuel Ortiz <sameo@linux.intel.com>
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [RFC v1] NFC: port100: prevent use-after-free on disconnect
+Date:   Tue,  5 Feb 2019 11:01:18 -0500
+Message-Id: <20190205160118.27491-1-TheSven73@googlemail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove useless commented out configuration in mt76x0u_load_firmware
-routine
+Problem:
+The cmd_complete_work work could potentially run after resources
+are freed in disconnect(). This could cause user-after-free
+issues.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Solution:
+Reorder disconnect() calls, and explicitly cancel the work
+using cancel_work_sync().
+
+Signed-off-by: Sven Van Asbroeck <TheSven73@googlemail.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/usb_mcu.c | 6 ------
- 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb_mcu.c
-index f391d2d21fbc..4a282761ca58 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb_mcu.c
-@@ -140,12 +140,6 @@ static int mt76x0u_load_firmware(struct mt76x02_dev *dev)
- 		 FIELD_PREP(MT_USB_DMA_CFG_RX_BULK_AGG_TOUT, 0x20));
- 	mt76x02u_mcu_fw_reset(dev);
- 	usleep_range(5000, 6000);
--/*
--	mt76x0_rmw(dev, MT_PBF_CFG, 0, (MT_PBF_CFG_TX0Q_EN |
--					 MT_PBF_CFG_TX1Q_EN |
--					 MT_PBF_CFG_TX2Q_EN |
--					 MT_PBF_CFG_TX3Q_EN));
--*/
+Samuel,
+
+I'm unfamiliar with this driver, and I don't have the h/w, so I cannot test it.
+This is just a suggestion on how to fix a potential issue.
+
+Sven
+
+ drivers/nfc/port100.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+
+diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
+index bb43cebda9dc..66d1bda9208c 100644
+--- a/drivers/nfc/port100.c
++++ b/drivers/nfc/port100.c
+@@ -1630,19 +1630,19 @@ static void port100_disconnect(struct usb_interface *interface)
+ 	struct port100 *dev;
  
- 	mt76_wr(dev, MT_FCE_PSE_CTRL, 1);
+ 	dev = usb_get_intfdata(interface);
+-	usb_set_intfdata(interface, NULL);
  
+ 	nfc_digital_unregister_device(dev->nfc_digital_dev);
+-	nfc_digital_free_device(dev->nfc_digital_dev);
+-
+ 	usb_kill_urb(dev->in_urb);
+ 	usb_kill_urb(dev->out_urb);
+ 
++	cancel_work_sync(&dev->cmd_complete_work);
++
+ 	usb_free_urb(dev->in_urb);
+ 	usb_free_urb(dev->out_urb);
+ 	usb_put_dev(dev->udev);
+-
++	nfc_digital_free_device(dev->nfc_digital_dev);
+ 	kfree(dev->cmd);
++	usb_set_intfdata(interface, NULL);
+ 
+ 	nfc_info(&interface->dev, "Sony Port-100 NFC device disconnected\n");
+ }
 -- 
-2.20.1
+2.17.1
 
