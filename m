@@ -3,33 +3,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C689AC282CB
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 20:07:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95747C282CB
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 20:08:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9960C2083B
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 20:07:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65ACB2083B
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 20:08:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727951AbfBEUHF (ORCPT
+        id S1729121AbfBEUIg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Feb 2019 15:07:05 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:40838 "EHLO
+        Tue, 5 Feb 2019 15:08:36 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:40850 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727346AbfBEUHE (ORCPT
+        with ESMTP id S1726726AbfBEUIg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Feb 2019 15:07:04 -0500
+        Tue, 5 Feb 2019 15:08:36 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC4)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gr6zl-0006X7-B9; Tue, 05 Feb 2019 21:07:01 +0100
+        id 1gr71F-0006ZQ-PM; Tue, 05 Feb 2019 21:08:34 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: restore regulatory without calling userspace
-Date:   Tue,  5 Feb 2019 21:06:58 +0100
-Message-Id: <20190205200658.9320-1-johannes@sipsolutions.net>
+Subject: [PATCH v2] cfg80211: restore regulatory without calling userspace
+Date:   Tue,  5 Feb 2019 21:08:29 +0100
+Message-Id: <20190205200829.9469-1-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.17.2
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -59,12 +59,12 @@ restore as described above.
 Reported-by: Jouni Malinen <j@w1.fi>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/reg.c | 70 ++++++++++++++++++++++++++++++++++++----------
+ net/wireless/reg.c | 71 +++++++++++++++++++++++++++++++++++++---------
  net/wireless/reg.h |  1 +
- 2 files changed, 57 insertions(+), 14 deletions(-)
+ 2 files changed, 58 insertions(+), 14 deletions(-)
 
 diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index dd58b9909ac9..d35bb51e03a4 100644
+index dd58b9909ac9..31cceddb1804 100644
 --- a/net/wireless/reg.c
 +++ b/net/wireless/reg.c
 @@ -131,7 +131,8 @@ static spinlock_t reg_indoor_lock;
@@ -128,13 +128,13 @@ index dd58b9909ac9..d35bb51e03a4 100644
  {
  	char alpha2[2];
  	char world_alpha2[2];
-@@ -3178,15 +3189,40 @@ static void restore_regulatory_settings(bool reset_user)
+@@ -3178,15 +3189,41 @@ static void restore_regulatory_settings(bool reset_user)
  			restore_custom_reg_settings(&rdev->wiphy);
  	}
  
 -	regulatory_hint_core(world_alpha2);
-+	if (cached && is_an_alpha2(alpha2) &&
-+	    !IS_ERR_OR_NULL(cfg80211_user_regdom)) {
++	if (cached && (!is_an_alpha2(alpha2) ||
++		       !IS_ERR_OR_NULL(cfg80211_user_regdom))) {
 +		reset_regdomains(false, cfg80211_world_regdom);
 +		update_all_wiphy_regulatory(NL80211_REGDOM_SET_BY_CORE);
 +		print_regdomain(get_cfg80211_regdom());
@@ -148,7 +148,8 @@ index dd58b9909ac9..d35bb51e03a4 100644
 -	 */
 -	if (is_an_alpha2(alpha2))
 -		regulatory_hint_user(alpha2, NL80211_USER_REG_HINT_USER);
-+		if (!regulatory_hint_user(alpha2, NL80211_USER_REG_HINT_USER)) {
++		if (is_an_alpha2(alpha2) &&
++		    !regulatory_hint_user(alpha2, NL80211_USER_REG_HINT_USER)) {
 +			struct regulatory_request *ureq;
 +
 +			spin_lock(&reg_requests_lock);
@@ -177,7 +178,7 @@ index dd58b9909ac9..d35bb51e03a4 100644
  
  	spin_lock(&reg_requests_lock);
  	list_splice_tail_init(&tmp_reg_req_list, &reg_requests_list);
-@@ -3246,7 +3282,7 @@ void regulatory_hint_disconnect(void)
+@@ -3246,7 +3283,7 @@ void regulatory_hint_disconnect(void)
  	}
  
  	pr_debug("All devices are disconnected, going to restore regulatory settings\n");
@@ -186,7 +187,7 @@ index dd58b9909ac9..d35bb51e03a4 100644
  }
  
  static bool freq_is_chan_12_13_14(u32 freq)
-@@ -3563,6 +3599,9 @@ int set_regdom(const struct ieee80211_regdomain *rd,
+@@ -3563,6 +3600,9 @@ int set_regdom(const struct ieee80211_regdomain *rd,
  	bool user_reset = false;
  	int r;
  
@@ -196,7 +197,7 @@ index dd58b9909ac9..d35bb51e03a4 100644
  	if (!reg_is_valid_request(rd->alpha2)) {
  		kfree(rd);
  		return -EINVAL;
-@@ -3579,6 +3618,7 @@ int set_regdom(const struct ieee80211_regdomain *rd,
+@@ -3579,6 +3619,7 @@ int set_regdom(const struct ieee80211_regdomain *rd,
  		r = reg_set_rd_core(rd);
  		break;
  	case NL80211_REGDOM_SET_BY_USER:
@@ -204,7 +205,7 @@ index dd58b9909ac9..d35bb51e03a4 100644
  		r = reg_set_rd_user(rd, lr);
  		user_reset = true;
  		break;
-@@ -3601,7 +3641,7 @@ int set_regdom(const struct ieee80211_regdomain *rd,
+@@ -3601,7 +3642,7 @@ int set_regdom(const struct ieee80211_regdomain *rd,
  			break;
  		default:
  			/* Back to world regulatory in case of errors */
@@ -213,7 +214,7 @@ index dd58b9909ac9..d35bb51e03a4 100644
  		}
  
  		kfree(rd);
-@@ -3937,6 +3977,8 @@ void regulatory_exit(void)
+@@ -3937,6 +3978,8 @@ void regulatory_exit(void)
  
  	if (!IS_ERR_OR_NULL(regdb))
  		kfree(regdb);
