@@ -2,79 +2,125 @@ Return-Path: <SRS0=RZRw=QM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B73DCC282CB
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 15:14:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20E06C282CB
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 15:37:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 86B1420811
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 15:14:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECAFD2083B
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Feb 2019 15:37:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729385AbfBEPOm (ORCPT
+        id S1728406AbfBEPhv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Feb 2019 10:14:42 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:47780 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728220AbfBEPOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Feb 2019 10:14:42 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 985A888E52;
-        Tue,  5 Feb 2019 15:14:42 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.152])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1359B1001F3D;
-        Tue,  5 Feb 2019 15:14:41 +0000 (UTC)
-Date:   Tue, 5 Feb 2019 16:10:23 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Rosen Penev <rosenp@gmail.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [mt76x2e] minipcie card is not working
-Message-ID: <20190205151022.GE7510@redhat.com>
-References: <CAKxU2N9choD2mdQd+Qwf5047VNWdwKOPB_YRXvw4i6BtLn6vxQ@mail.gmail.com>
+        Tue, 5 Feb 2019 10:37:51 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:44653 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727076AbfBEPhu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Feb 2019 10:37:50 -0500
+Received: by mail-wr1-f67.google.com with SMTP id v16so2245628wrn.11
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2019 07:37:49 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=fmxlT1Ath4D6Bn96cGgKj59SS15zsawLbQnfZwJ0gvU=;
+        b=Sj8lvH2F6e7IfCm/dySottcjhKxag2CqNGrYCGNLtEgmM9JsVycXaqe6TYL52xV79u
+         rC+13mDzep7Hznye4XXJaQpg0THD1HfqJZrDjhZVMgjBgf2RlRmyqP8vJiOYoRq85UWV
+         vNW4lMOcWl9l71F+Z2eQxDLtn8c1qg0Wm4BbZAmop6k/J6wl79g2t7dYNGZ8L7+7SRmx
+         eLMt9H6T/x/QmxWRZa0GykvM5i5l7RAvMtjQ50y99pjSNLGOplb3/IkJnB15ORjP6kh/
+         ywqdlh6goZZwtYDWj4GdkGN7jAo2B0APGomvrPZHBuxbWGiMd5BULVxcjQ2Q3iUdpHTA
+         OxTA==
+X-Gm-Message-State: AHQUAuaPtCcN2CnSHx4QG1+L5K4Hb1NDcgVA6mcdjlbxzSoKNd4VHQl9
+        WAbp/mfHmouDwCSpDWW3BOweeA==
+X-Google-Smtp-Source: AHgI3IYGn/h6QnpYr/k/0koumqJ+LU5jK5uMYj/0w94YTTPur3A30SU5WLRQIk74ehOcquJMRijjLg==
+X-Received: by 2002:adf:8061:: with SMTP id 88mr4355880wrk.10.1549381068786;
+        Tue, 05 Feb 2019 07:37:48 -0800 (PST)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id e7sm9635568wme.15.2019.02.05.07.37.47
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 05 Feb 2019 07:37:47 -0800 (PST)
+Date:   Tue, 5 Feb 2019 16:37:45 +0100
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH 5.0] mt76x0u: fix suspend/resume
+Message-ID: <20190205153744.GA13965@localhost.localdomain>
+References: <1549378057-13790-1-git-send-email-sgruszka@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAKxU2N9choD2mdQd+Qwf5047VNWdwKOPB_YRXvw4i6BtLn6vxQ@mail.gmail.com>
-User-Agent: Mutt/1.5.20 (2009-12-10)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Tue, 05 Feb 2019 15:14:42 +0000 (UTC)
+In-Reply-To: <1549378057-13790-1-git-send-email-sgruszka@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jan 28, 2019 at 12:14:49PM -0800, Rosen Penev wrote:
-> I have a full height production sample mt7612e card that does not work
-> in either Access Point or Client mode. Monitor mode does not work
-> either (no packets received/transmitted).
+> We need to reset MCU and do other initalizations on resume otherwise
+> MT7610U device will fail to initalize, what cause system hung due to
+> USB requests timeouts.
 > 
-> dmesg shows everything to be fine:
+> Patch fixes 4.19 -> 4.20 regression.
 > 
-> [    5.801993] mt76x2e 0000:2b:00.0: enabling device (0000 -> 0002)
-> [    5.802122] mt76x2e 0000:2b:00.0: ASIC revision: 76120044
-> [    6.466527] mt76x2e 0000:2b:00.0: ROM patch build: 20141115060606a
-> [    6.468999] mt76x2e 0000:2b:00.0: Firmware Version: 0.0.00
-> [    6.469000] mt76x2e 0000:2b:00.0: Build: 1
-> [    6.469001] mt76x2e 0000:2b:00.0: Build Time: 201507311614____
-> [    6.496042] mt76x2e 0000:2b:00.0: Firmware running!
-> [    6.497999] mt76x2e 0000:2b:00.0 wlp43s0: renamed from wlan0
+> Cc: stable@vger.kernel.org # 4.20+
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 43 +++++++++++++------
+>  1 file changed, 29 insertions(+), 14 deletions(-)
 > 
-> This is on 5.0-rc3.
-> 
-> Tested with a desktop running Ubuntu 18.04 (custom kernel) and an
-> mvebu device (Turris Omnia) running OpenWrt on kernel 4.14.
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+> index 0e6b43bb4678..bd1dedcb7952 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+> @@ -158,39 +158,52 @@ static const struct ieee80211_ops mt76x0u_ops = {
+>  	.get_txpower = mt76x02_get_txpower,
+>  };
+>  
+> -static int mt76x0u_register_device(struct mt76x02_dev *dev)
+> +static int mt76x0u_init_hardware(struct mt76x02_dev *dev)
+>  {
+> -	struct ieee80211_hw *hw = dev->mt76.hw;
+>  	int err;
+>  
+> -	err = mt76u_alloc_queues(&dev->mt76);
+> -	if (err < 0)
+> -		goto out_err;
+> -
+> -	err = mt76u_mcu_init_rx(&dev->mt76);
+> -	if (err < 0)
+> -		goto out_err;
+> -
+>  	mt76x0_chip_onoff(dev, true, true);
+> +
 
-I have access to similar device and it does not work for me.
+Why this new line here? it is not related to the patch
 
-You can check latest mt76 driver https://github.com/openwrt/mt76 ,
-some users reported success with mt76x2e problems, but I can
-not confirm that with my device.
+>  	if (!mt76x02_wait_for_mac(&dev->mt76)) {
+>  		err = -ETIMEDOUT;
+> -		goto out_err;
+> +		return err;
 
-Do you have Mediatek driver for it (i.e. received driver on associated
-CD with the device) or know about such driver. If so, does it work?
+just return -ETIMEDOUT here
 
-Thanks
-Stanislaw
+For the rest looks good to me
+
+Regards,
+Lorenzo
+
+>  	}
+>  
+>  	err = mt76x0u_mcu_init(dev);
+>  	if (err < 0)
+> -		goto out_err;
+> +		return err;
+>  
+>  	mt76x0_init_usb_dma(dev);
+> +
+>  	err = mt76x0_init_hardware(dev);
+>  	if (err < 0)
+> -		goto out_err;
+> +		return err;
+>  
