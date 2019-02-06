@@ -2,137 +2,107 @@ Return-Path: <SRS0=cSSL=QN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 743EEC169C4
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Feb 2019 06:03:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2CA8C169C4
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Feb 2019 06:08:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3FA0B218A1
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Feb 2019 06:03:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4EE5218A1
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Feb 2019 06:08:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726508AbfBFGDR (ORCPT
+        id S1726679AbfBFGIm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Feb 2019 01:03:17 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:55550 "EHLO
+        Wed, 6 Feb 2019 01:08:42 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:55562 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726001AbfBFGDR (ORCPT
+        with ESMTP id S1725897AbfBFGIm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Feb 2019 01:03:17 -0500
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        Wed, 6 Feb 2019 01:08:42 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1grGIl-00015M-D9; Wed, 06 Feb 2019 08:03:15 +0200
+        id 1grGO0-00015m-8C; Wed, 06 Feb 2019 08:08:40 +0200
+Message-ID: <1592d4db90b6cee8bc794bcbce06a14fd5226b16.camel@coelho.fi>
 From:   Luca Coelho <luca@coelho.fi>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date:   Wed,  6 Feb 2019 08:03:10 +0200
-Message-Id: <20190206060310.12200-1-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <b2d8b60f32aacd58d18307d58c5cc4810899029f.camel@coelho.fi>
-References: <b2d8b60f32aacd58d18307d58c5cc4810899029f.camel@coelho.fi>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH] cfg80211: pmsr: fix abort locking
+To:     Jordan Glover <Golden_Miller83@protonmail.ch>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc:     linuxwifi@intel.com
+Date:   Wed, 06 Feb 2019 08:08:39 +0200
+In-Reply-To: <CsFdFFRzbpRX_m4C5xfEsE9P5-uv6mNwOUyPl734lLQreQIV9__vxr1NWPkf5oltyFjTZ--34SLql_9ywXamnmw1B7K8lWFzU9kwzWJTdRI=@protonmail.ch>
+References: <CsFdFFRzbpRX_m4C5xfEsE9P5-uv6mNwOUyPl734lLQreQIV9__vxr1NWPkf5oltyFjTZ--34SLql_9ywXamnmw1B7K8lWFzU9kwzWJTdRI=@protonmail.ch>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.4-1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [BUG] Microcode SW error detected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2019-02-05 at 14:24 +0000, Jordan Glover wrote:
+> Hello,
 
-When we destroy the interface we already hold the wdev->mtx
-while calling cfg80211_pmsr_wdev_down(), which assumes this
-isn't true and flushes the worker that takes the lock, thus
-leading to a deadlock.
+Hi,
 
-Fix this by refactoring the worker and calling its code in
-cfg80211_pmsr_wdev_down() directly.
 
-We still need to flush the work later to make sure it's not
-still running and will crash, but it will not do anything.
+> For a couple of weeks I see following errors printed in
+> dmesg from time to time:
+> 
+> iwlwifi 0000:04:00.0: Queue 4 is active on fifo 1 and stuck for 10000
+> ms. SW [189, 201] HW [189, 201] FH TRB=0x0c01040c8
+> iwlwifi 0000:04:00.0: Microcode SW error detected.  Restarting
+> 0x2000000.
+> iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
+> iwlwifi 0000:04:00.0: Status: 0x00000100, count: 6
+> iwlwifi 0000:04:00.0: Loaded firmware version: 36.9f0a2d68.0
+> iwlwifi 0000:04:00.0: 0x00000084 | NMI_INTERRUPT_UNKNOWN
+> iwlwifi 0000:04:00.0: 0x200002B0 | trm_hw_status0
+> iwlwifi 0000:04:00.0: 0x00000000 | trm_hw_status1
+> iwlwifi 0000:04:00.0: 0x0002485C | branchlink2
+> iwlwifi 0000:04:00.0: 0x0003A7CA | interruptlink1
+> iwlwifi 0000:04:00.0: 0x0003E6A4 | interruptlink2
+> iwlwifi 0000:04:00.0: 0x00000000 | data1
+> iwlwifi 0000:04:00.0: 0x00000080 | data2
+> iwlwifi 0000:04:00.0: 0x07830000 | data3
+> iwlwifi 0000:04:00.0: 0x82818D06 | beacon time
+> iwlwifi 0000:04:00.0: 0x4E60EC46 | tsf low
+> iwlwifi 0000:04:00.0: 0x00000257 | tsf hi
+> iwlwifi 0000:04:00.0: 0x00000000 | time gp1
+> iwlwifi 0000:04:00.0: 0xBF706F42 | time gp2
+> iwlwifi 0000:04:00.0: 0x00000001 | uCode revision type
+> iwlwifi 0000:04:00.0: 0x00000024 | uCode version major
+> iwlwifi 0000:04:00.0: 0x9F0A2D68 | uCode version minor
+> iwlwifi 0000:04:00.0: 0x00000230 | hw version
+> iwlwifi 0000:04:00.0: 0x00489000 | board version
+> iwlwifi 0000:04:00.0: 0x0000001C | hcmd
+> iwlwifi 0000:04:00.0: 0x0222204A | isr0
+> iwlwifi 0000:04:00.0: 0x00800000 | isr1
+> iwlwifi 0000:04:00.0: 0x0800180A | isr2
+> iwlwifi 0000:04:00.0: 0x004000C0 | isr3
+> iwlwifi 0000:04:00.0: 0x00000000 | isr4
+> iwlwifi 0000:04:00.0: 0xA138009D | last cmd Id
+> iwlwifi 0000:04:00.0: 0x00000000 | wait_event
+> iwlwifi 0000:04:00.0: 0x00000080 | l2p_control
+> iwlwifi 0000:04:00.0: 0x00011420 | l2p_duration
+> iwlwifi 0000:04:00.0: 0x0000003F | l2p_mhvalid
+> iwlwifi 0000:04:00.0: 0x000000CE | l2p_addr_match
+> iwlwifi 0000:04:00.0: 0x0000000D | lmpm_pmg_sel
+> iwlwifi 0000:04:00.0: 0x04120134 | timestamp
+> iwlwifi 0000:04:00.0: 0x0034B0C8 | flow_handler
 
-Fixes: 9bb7e0f24e7e ("cfg80211: add peer measurement with FTM initiator API")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c |  2 ++
- net/wireless/pmsr.c | 22 +++++++++++++++-------
- 2 files changed, 17 insertions(+), 7 deletions(-)
+This seems to be related to this bugzilla:
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 623dfe5e211c..b36ad8efb5e5 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1068,6 +1068,8 @@ static void __cfg80211_unregister_wdev(struct wireless_dev *wdev, bool sync)
- 
- 	ASSERT_RTNL();
- 
-+	flush_work(&wdev->pmsr_free_wk);
-+
- 	nl80211_notify_iface(rdev, wdev, NL80211_CMD_DEL_INTERFACE);
- 
- 	list_del_rcu(&wdev->list);
-diff --git a/net/wireless/pmsr.c b/net/wireless/pmsr.c
-index f2e388e329fd..78c3f5633692 100644
---- a/net/wireless/pmsr.c
-+++ b/net/wireless/pmsr.c
-@@ -529,14 +529,14 @@ void cfg80211_pmsr_report(struct wireless_dev *wdev,
- }
- EXPORT_SYMBOL_GPL(cfg80211_pmsr_report);
- 
--void cfg80211_pmsr_free_wk(struct work_struct *work)
-+static void cfg80211_pmsr_process_abort(struct wireless_dev *wdev)
- {
--	struct wireless_dev *wdev = container_of(work, struct wireless_dev,
--						 pmsr_free_wk);
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
- 	struct cfg80211_pmsr_request *req, *tmp;
- 	LIST_HEAD(free_list);
- 
-+	lockdep_assert_held(&wdev->mtx);
-+
- 	spin_lock_bh(&wdev->pmsr_lock);
- 	list_for_each_entry_safe(req, tmp, &wdev->pmsr_list, list) {
- 		if (req->nl_portid)
-@@ -546,14 +546,22 @@ void cfg80211_pmsr_free_wk(struct work_struct *work)
- 	spin_unlock_bh(&wdev->pmsr_lock);
- 
- 	list_for_each_entry_safe(req, tmp, &free_list, list) {
--		wdev_lock(wdev);
- 		rdev_abort_pmsr(rdev, wdev, req);
--		wdev_unlock(wdev);
- 
- 		kfree(req);
- 	}
- }
- 
-+void cfg80211_pmsr_free_wk(struct work_struct *work)
-+{
-+	struct wireless_dev *wdev = container_of(work, struct wireless_dev,
-+						 pmsr_free_wk);
-+
-+	wdev_lock(wdev);
-+	cfg80211_pmsr_process_abort(wdev);
-+	wdev_unlock(wdev);
-+}
-+
- void cfg80211_pmsr_wdev_down(struct wireless_dev *wdev)
- {
- 	struct cfg80211_pmsr_request *req;
-@@ -567,8 +575,8 @@ void cfg80211_pmsr_wdev_down(struct wireless_dev *wdev)
- 	spin_unlock_bh(&wdev->pmsr_lock);
- 
- 	if (found)
--		schedule_work(&wdev->pmsr_free_wk);
--	flush_work(&wdev->pmsr_free_wk);
-+		cfg80211_pmsr_process_abort(wdev);
-+
- 	WARN_ON(!list_empty(&wdev->pmsr_list));
- }
- 
--- 
-2.20.1
+https://bugzilla.kernel.org/show_bug.cgi?id=202397
+
+Can you please comment on that report stating that you are experiencing
+the same (or something similar)?
+
+Thanks!
+
+--
+Cheers,
+Luca.
 
