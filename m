@@ -2,82 +2,101 @@ Return-Path: <SRS0=cSSL=QN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19335C169C4
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Feb 2019 19:05:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C32C5C169C4
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Feb 2019 23:56:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D90D82075C
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Feb 2019 19:05:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91F802084D
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Feb 2019 23:56:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="R/JZaxxX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726708AbfBFTFp (ORCPT
+        id S1726515AbfBFX4A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Feb 2019 14:05:45 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:60420 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726186AbfBFTFp (ORCPT
+        Wed, 6 Feb 2019 18:56:00 -0500
+Received: from mail-yb1-f201.google.com ([209.85.219.201]:36367 "EHLO
+        mail-yb1-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726161AbfBFXz7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Feb 2019 14:05:45 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92-RC4)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1grSVu-0005e3-Jn; Wed, 06 Feb 2019 20:05:38 +0100
-Message-ID: <1b42081df8509e04046c3c0923a3319101852c5e.camel@sipsolutions.net>
-Subject: Re: [PATCH 07/21] iwlwifi: mvm: add HE TB PPDU SIG-A BW to radiotap
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Kalle Valo <kvalo@codeaurora.org>, Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Wed, 06 Feb 2019 20:05:36 +0100
-In-Reply-To: <875ztwss5s.fsf@purkki.adurom.net> (sfid-20190206_191207_006680_B30CBFD8)
-References: <20190131202206.15903-1-luca@coelho.fi>
-         <20190131202206.15903-8-luca@coelho.fi> <875ztwss5s.fsf@purkki.adurom.net>
-         (sfid-20190206_191207_006680_B30CBFD8)
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+        Wed, 6 Feb 2019 18:55:59 -0500
+Received: by mail-yb1-f201.google.com with SMTP id 63so4589332ybf.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2019 15:55:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=aO0K/0tKy8AOp6h35fENa/NV5JSrDiAT7U9CyNpTqow=;
+        b=R/JZaxxX15aqoj9AUJmLk1xwSMuiNELhse4z3SzsoY8j7tVj9qsrVFTiDzideqAwh/
+         T+8bNMBY9Y/NZ3BWtcQlLAgz9m6nZ6ZauK+jzk9TXVD2iO1aSRHyqFEGdPF53LzCNcjj
+         2RPRvLszljEHMvvDIcpzWLUmPOU/h/DKZPOXZu27Zee0lYPihWDtiJxC5D5uHH4E6xob
+         3VOlFJGfemfPfBv5yp7rZqEw20flmRpBCvKcwzzRYfaqysTs89ipd5FVyLTfoMACn57/
+         HpSI1gWR8OZ9lxbcedvAVkKFlVap1vgjRoud0l4CgY66qrzB2QHKtd56jB0Zu2kihvim
+         wOsg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
+        bh=aO0K/0tKy8AOp6h35fENa/NV5JSrDiAT7U9CyNpTqow=;
+        b=dkl6L2qjNBu6Y9zrJKZiGQ1JP9P+9grLcHj/uqwSgpkNyRGDZaHAZpYJc4TK9eGacG
+         M3GnEFchD8F4YZPGoiT9cnSjAURKJNHAP9pSfFp5/3OE70GNPIDfPXc1uKZ758MuL9WN
+         eyKIwQSRIFSrNPCAHIWEYuzEU0nNq6nzycQFykZIe4zQoYMKWwUolP5fR4CATVd7jDvY
+         WvHeJ8tb0n8RIuO60pzIauu1pKJeUfIoTNpj7U5VYDCR0eqrjHmm7An+TDskHUFAw8Jy
+         41R4cSCoDAn8F7ieUEozymBaiF5a9/Isw0h8lUCzd+n0uNyw/heWF4YbQ3ymUC/SmowR
+         tO9w==
+X-Gm-Message-State: AHQUAuYIqPKvQcu7eDJc1Skvp3wf0wvXcHxmphANBXY1vfJplLEAsT0U
+        dsAbmBYNGQd291qmUKQFBy5oUT1IJV+jZOar
+X-Google-Smtp-Source: AHgI3IaCHk4/+QK/h+OTMA2mhoHo1NbWQRVF8mAMhttaVWpDFghmIPOkE+BC72aiyz2ZLqGMFloWS2eURLCI+bnw
+X-Received: by 2002:a25:6643:: with SMTP id z3mr5565779ybm.16.1549497358866;
+ Wed, 06 Feb 2019 15:55:58 -0800 (PST)
+Date:   Wed,  6 Feb 2019 15:54:15 -0800
+Message-Id: <20190206235415.10394-1-schuffelen@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+X-Mailer: git-send-email 2.20.1.611.gfbb209baf1-goog
+Subject: [PATCH mac80211-next] virt_wifi: Remove REGULATORY_WIPHY_SELF_MANAGED
+From:   Cody Schuffelen <schuffelen@google.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kernel-team@android.com,
+        Cody Schuffelen <schuffelen@google.com>,
+        Alistair Strachan <astrachan@google.com>,
+        Greg Hartman <ghartman@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2019-02-06 at 20:11 +0200, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Expose the trigger-based PPDU SIG-A bandwidth to radiotap in
-> > the newly defined bits thereof.
-> > 
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> 
-> [...]
-> 
-> > --- a/include/net/ieee80211_radiotap.h
-> > +++ b/include/net/ieee80211_radiotap.h
-> > @@ -291,6 +291,12 @@ enum ieee80211_radiotap_he_bits {
-> >  
-> >  	IEEE80211_RADIOTAP_HE_DATA6_NSTS		= 0x000f,
-> >  	IEEE80211_RADIOTAP_HE_DATA6_DOPPLER		= 0x0010,
-> > +	IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_KNOWN	= 0x0020,
-> > +	IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW		= 0x00c0,
-> > +		IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_20MHZ	= 0,
-> > +		IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_40MHZ	= 1,
-> > +		IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_80MHZ	= 2,
-> > +		IEEE80211_RADIOTAP_HE_DATA6_TB_PPDU_BW_160MHZ	= 3,
-> >  	IEEE80211_RADIOTAP_HE_DATA6_TXOP		= 0x7f00,
-> >  	IEEE80211_RADIOTAP_HE_DATA6_MIDAMBLE_PDCTY	= 0x8000,
-> >  };
-> 
-> Johannes, as you wrote the patch I take it that you are ok to push this
-> via wireless-drivers-next?
+REGULATORY_WIPHY_SELF_MANAGED as set here breaks NL80211_CMD_GET_REG,
+because it expects the wiphy to do regulatory management. Since
+virt_wifi does not do regulatory management, this triggers a WARN_ON in
+NL80211_CMD_GET_REG and fails the netlink command.
 
-Oops, maybe I should've split that, but it doesn't really matter much.
-Sure, take it.
+Removing REGULATORY_WIPHY_SELF_MANAGED fixes the problem and the virtual
+wireless network continues to work.
 
-johannes
+Signed-off-by: Cody Schuffelen <schuffelen@google.com>
+Acked-by: Alistair Strachan <astrachan@google.com>
+Acked-by: Greg Hartman <ghartman@google.com>
+---
+ drivers/net/wireless/virt_wifi.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/virt_wifi.c b/drivers/net/wireless/virt_wifi.c
+index 71044c6cfd8c..606999f102eb 100644
+--- a/drivers/net/wireless/virt_wifi.c
++++ b/drivers/net/wireless/virt_wifi.c
+@@ -360,7 +360,6 @@ static struct wiphy *virt_wifi_make_wiphy(void)
+ 	wiphy->bands[NL80211_BAND_5GHZ] = &band_5ghz;
+ 	wiphy->bands[NL80211_BAND_60GHZ] = NULL;
+ 
+-	wiphy->regulatory_flags = REGULATORY_WIPHY_SELF_MANAGED;
+ 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+ 	priv = wiphy_priv(wiphy);
+-- 
+2.20.1.611.gfbb209baf1-goog
 
