@@ -3,91 +3,91 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D7FCC282CC
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:55:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2772C282C4
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:56:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DFF122190A
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:55:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B137821872
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:56:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ap+GcrAt";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="mTcwM5zF"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kMw4uCoB";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UbqjXoBm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726654AbfBGOzh (ORCPT
+        id S1727002AbfBGO4q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 09:55:37 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:58730 "EHLO
+        Thu, 7 Feb 2019 09:56:46 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:59374 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726037AbfBGOzh (ORCPT
+        with ESMTP id S1726793AbfBGO4h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 09:55:37 -0500
+        Thu, 7 Feb 2019 09:56:37 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 745936055C; Thu,  7 Feb 2019 14:55:36 +0000 (UTC)
+        id 12C5160131; Thu,  7 Feb 2019 14:56:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549551336;
-        bh=Mf1qYoVzCZL3pkCUCfc0CudEz4N0pJiYocqSCJdDyaA=;
+        s=default; t=1549551397;
+        bh=AZruXV3gSFETc9efqAMW1J3eGvOgKfJ/VpJ29Hczs7o=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Ap+GcrAt3b6u1w/BpQLrpIcmq5Fmsh0fSX/ghy9vd8DUuktK8tDoYvNU8g9SO3Iwq
-         nojdsIp93iITfjNOApbXeEFnO3kzknxZAVS0+SIRd7O3tQ2LoTMrWSDMXsDoPixmjU
-         rCxbkZJXrPKnmqFCWmLYoFG9oHT1mKovHF+OONJg=
+        b=kMw4uCoBvjjJNk9hNaHLfbiNUDv9HIKIKEmmw/eRtytrGeFEoBM70WB40zzArI4oO
+         8PdVWHCL10gFjZau57231NbItIUiyHin5gp9FWQhtvfBbOF72c+mw6d+V+yhXXaV6E
+         SF054pIXWHf4yAkyFLcUyvJiwzkhQS+0Rb02tJy4=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2678A60247;
-        Thu,  7 Feb 2019 14:55:34 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7B79560131;
+        Thu,  7 Feb 2019 14:56:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549551336;
-        bh=Mf1qYoVzCZL3pkCUCfc0CudEz4N0pJiYocqSCJdDyaA=;
+        s=default; t=1549551396;
+        bh=AZruXV3gSFETc9efqAMW1J3eGvOgKfJ/VpJ29Hczs7o=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=mTcwM5zFesfQR1gW9SLzvroT7cS4xp1rvf8GV6+imSaQwlhe21de7qP9YSxLjy9Pz
-         WCw+4/6a/IvSj21c+U/Jw+qdW4MbxF7vQRPDqGrLrYsvA/f7ye2aDCRBbX1eEGDzpT
-         X4YCMdsKG0UVNF5C5hrLpM6OEX7/qPJK4jGQC+ps=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2678A60247
+        b=UbqjXoBmyNrCT01jm0TAQAN+3xeYt5M3sKnj2KLdkfac8vNuq9cXL91fAXgazgZXl
+         2EvBJ6m7OIEXrrDx67hAM5NkDvx5N5MwilYQDBAkfb0QiqBP8AbwNJy0WScApfaKFN
+         HZoEAly2ztOxUfJC4RbAOIC6KJQxWZkFopjvQcww=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7B79560131
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: do not return invalid pointers as a *dentry
+Subject: Re: [PATCH] ath10k: reduce transmit msdu count
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190131131556.GB19807@kroah.com>
-References: <20190131131556.GB19807@kroah.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
+In-Reply-To: <1548987429-14008-1-git-send-email-wgong@codeaurora.org>
+References: <1548987429-14008-1-git-send-email-wgong@codeaurora.org>
+To:     Wen Gong <wgong@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190207145536.745936055C@smtp.codeaurora.org>
-Date:   Thu,  7 Feb 2019 14:55:36 +0000 (UTC)
+Message-Id: <20190207145637.12C5160131@smtp.codeaurora.org>
+Date:   Thu,  7 Feb 2019 14:56:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
+Wen Gong <wgong@codeaurora.org> wrote:
 
-> When calling debugfs functions, they can now return error values if
-> something went wrong.  If that happens, return a NULL as a *dentry to
-> the relay core instead of passing it an illegal pointer.
+> Reduce the transmit MSDU count for SDIO, to match with the descriptors
+> as used by the firmware. This also acts as a high watermark level for
+> transmit. Too many packets to the firmware results in transmit overflow
+> interrupt.
 > 
-> The relay core should be able to handle an illegal pointer, but add this
-> check to be safe.
+> It only affect SDIO chip, it will not cause functionaly changes to
+> other hardware.
 > 
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: ath10k@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Tested with QCA6174 SDIO with firmware
+> WLAN.RMH.4.4.1-00005-QCARMSWP-1.
+> 
+> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-0b38b4b44516 ath10k: do not return invalid pointers as a *dentry
+a73dbce3a6f4 ath10k: reduce transmit msdu count
 
 -- 
-https://patchwork.kernel.org/patch/10790493/
+https://patchwork.kernel.org/patch/10791705/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
