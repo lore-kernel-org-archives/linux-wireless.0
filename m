@@ -6,378 +6,441 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06992C282C4
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 22:37:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28CE8C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 22:37:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C8F202173B
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 22:37:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCDED2173B
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 22:37:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727003AbfBGWhD (ORCPT
+        id S1727021AbfBGWhH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 17:37:03 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:56688 "EHLO
+        Thu, 7 Feb 2019 17:37:07 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:56696 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726758AbfBGWhD (ORCPT
+        with ESMTP id S1726758AbfBGWhG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 17:37:03 -0500
+        Thu, 7 Feb 2019 17:37:06 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1grsHm-0002II-79; Fri, 08 Feb 2019 00:36:46 +0200
+        id 1grsHn-0002II-4W; Fri, 08 Feb 2019 00:36:48 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri,  8 Feb 2019 00:36:17 +0200
-Message-Id: <20190207223622.9642-13-luca@coelho.fi>
+Date:   Fri,  8 Feb 2019 00:36:18 +0200
+Message-Id: <20190207223622.9642-14-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190207223622.9642-1-luca@coelho.fi>
 References: <20190207223622.9642-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 12/17] iwlwifi: dbg_ini: rewrite trigger flow and align to FW API changes
+Subject: [PATCH 13/17] iwlwifi: introduce device family AX210
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-Trigger field ignore_default was changed to override_trig.
-The first byte of the field indicates the driver to override existing
-configuration or keep the previous one
-The second byte of the field indicated the driver to replace the regions
-of the previous trigger or to append new regions to it.
+Add new device family AX210.
+Make the needed changes for this family.
 
-Change the way the active triggers are maintained to support trigger
-override in different apply points.
-Do this by making a trigger that updates at runtime by the
-triggers that are being used in the different apply points.
-
-In case of an assert, the driver does not reconfigure the triggers
-and uses the old configuration which leads to undefined behavior.
-Solve this by clearing the triggers in assert recovery flow.
-
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   |  11 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 116 ++++++++++++------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |   7 +-
- drivers/net/wireless/intel/iwlwifi/fw/img.h   |  10 +-
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  12 ++
- 5 files changed, 107 insertions(+), 49 deletions(-)
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    | 47 +++++++++++++++++++
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  7 +++
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |  4 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  3 +-
+ .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 13 +++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  8 ++++
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 15 +++++-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  7 +--
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 17 +++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  | 12 ++++-
+ 10 files changed, 119 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
-index 75e23c426be8..70cc0820e068 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
-@@ -204,8 +204,13 @@ struct iwl_fw_ini_region_tlv {
-  * struct iwl_fw_ini_trigger - (IWL_FW_INI_TLV_TYPE_DUMP_CFG)
-  * Region sections define IDs and triggers that use those IDs TLV
-  *
-- * @trigger_id: enum &iwl_fw_ini_trigger_id
-- * @ignore_default: override FW TLV with binary TLV
-+ * @trigger_id: enum &iwl_fw_ini_tigger_id
-+ * @override_trig: determines how apply trigger in case a trigger with the
-+ *	same id is already in use. Using the first 2 bytes:
-+ *	Byte 0: if 0, override trigger configuration, otherwise use the
-+ *	existing configuration.
-+ *	Byte 1: if 0, override trigger regions, otherwise append regions to
-+ *	existing trigger.
-  * @dump_delay: delay from trigger fire to dump, in usec
-  * @occurrences: max amount of times to be fired
-  * @ignore_consec: ignore consecutive triggers, in usec
-@@ -217,7 +222,7 @@ struct iwl_fw_ini_region_tlv {
-  */
- struct iwl_fw_ini_trigger {
- 	__le32 trigger_id;
--	__le32 ignore_default;
-+	__le32 override_trig;
- 	__le32 dump_delay;
- 	__le32 occurrences;
- 	__le32 ignore_consec;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 512af6128fa5..728fe051745b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1473,20 +1473,19 @@ _iwl_fw_error_ini_dump(struct iwl_fw_runtime *fwrt,
- 	int size, id = le32_to_cpu(fwrt->dump.desc->trig_desc.type);
- 	struct iwl_fw_error_dump_data *dump_data;
- 	struct iwl_fw_error_dump_file *dump_file;
--	struct iwl_fw_ini_trigger *trigger, *ext;
-+	struct iwl_fw_ini_trigger *trigger;
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index e4933c355dfd..6f231d05fc1b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -84,6 +84,10 @@
+ #define IWL_22000_SU_Z0_FW_PRE		"iwlwifi-su-z0-"
+ #define IWL_QU_B_JF_B_FW_PRE		"iwlwifi-Qu-b0-jf-b0-"
+ #define IWL_CC_A_FW_PRE			"iwlwifi-cc-a0-"
++#define IWL_22000_SO_A_JF_B_FW_PRE	"iwlwifi-so-a0-jf-b0-"
++#define IWL_22000_SO_A_HR_B_FW_PRE      "iwlwifi-so-a0-hr-b0-"
++#define IWL_22000_SO_A_GF_A_FW_PRE      "iwlwifi-so-a0-gf-a0-"
++#define IWL_22000_TY_A_GF_A_FW_PRE      "iwlwifi-ty-a0-gf-a0-"
  
- 	if (id == FW_DBG_TRIGGER_FW_ASSERT)
- 		id = IWL_FW_TRIGGER_ID_FW_ASSERT;
+ #define IWL_22000_HR_MODULE_FIRMWARE(api) \
+ 	IWL_22000_HR_FW_PRE __stringify(api) ".ucode"
+@@ -107,6 +111,14 @@
+ 	IWL_QU_B_JF_B_FW_PRE __stringify(api) ".ucode"
+ #define IWL_CC_A_MODULE_FIRMWARE(api) \
+ 	IWL_CC_A_FW_PRE __stringify(api) ".ucode"
++#define IWL_22000_SO_A_JF_B_MODULE_FIRMWARE(api) \
++	IWL_22000_SO_A_JF_B_FW_PRE __stringify(api) ".ucode"
++#define IWL_22000_SO_A_HR_B_MODULE_FIRMWARE(api) \
++	IWL_22000_SO_A_HR_B_FW_PRE __stringify(api) ".ucode"
++#define IWL_22000_SO_A_GF_A_MODULE_FIRMWARE(api) \
++	IWL_22000_SO_A_GF_A_FW_PRE __stringify(api) ".ucode"
++#define IWL_22000_TY_A_GF_A_MODULE_FIRMWARE(api) \
++	IWL_22000_TY_A_GF_A_FW_PRE __stringify(api) ".ucode"
  
--	if (WARN_ON(id >= ARRAY_SIZE(fwrt->dump.active_trigs)))
-+	if (WARN_ON(id >= ARRAY_SIZE(fwrt->dump.active_trigs)) ||
-+	    !fwrt->dump.active_trigs[id].active)
- 		return NULL;
+ static const struct iwl_base_params iwl_22000_base_params = {
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
+@@ -179,6 +191,13 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
+ 	.base_params = &iwl_22560_base_params,				\
+ 	.csr = &iwl_csr_v2
  
--	trigger = fwrt->dump.active_trigs[id].conf;
--	ext = fwrt->dump.active_trigs[id].conf_ext;
-+	trigger = fwrt->dump.active_trigs[id].trig;
- 
- 	size = sizeof(*dump_file);
- 	size += iwl_fw_ini_get_trigger_len(fwrt, trigger);
--	size += iwl_fw_ini_get_trigger_len(fwrt, ext);
- 
- 	if (!size)
- 		return NULL;
-@@ -1501,10 +1500,7 @@ _iwl_fw_error_ini_dump(struct iwl_fw_runtime *fwrt,
- 	dump_data = (void *)dump_file->data;
- 	dump_file->file_len = cpu_to_le32(size);
- 
--	if (trigger)
--		iwl_fw_ini_dump_trigger(fwrt, trigger, &dump_data);
--	if (ext)
--		iwl_fw_ini_dump_trigger(fwrt, ext, &dump_data);
-+	iwl_fw_ini_dump_trigger(fwrt, trigger, &dump_data);
- 
- 	return dump_file;
- }
-@@ -1696,6 +1692,7 @@ int iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
- 		       u32 id, const char *str, size_t len)
- {
- 	struct iwl_fw_dump_desc *desc;
-+	struct iwl_fw_ini_active_triggers *active;
- 	u32 occur, delay;
- 
- 	if (!fwrt->trans->ini_valid)
-@@ -1704,15 +1701,17 @@ int iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
- 	if (id == FW_DBG_TRIGGER_USER)
- 		id = IWL_FW_TRIGGER_ID_USER_TRIGGER;
- 
--	if (WARN_ON(!fwrt->dump.active_trigs[id].active))
-+	active = &fwrt->dump.active_trigs[id];
++#define IWL_DEVICE_AX210						\
++	IWL_DEVICE_22000_COMMON,					\
++	.device_family = IWL_DEVICE_FAMILY_AX210,			\
++	.base_params = &iwl_22000_base_params,				\
++	.csr = &iwl_csr_v1,						\
++	.min_txq_size = 128
 +
-+	if (WARN_ON(!active->active))
- 		return -EINVAL;
- 
--	delay = le32_to_cpu(fwrt->dump.active_trigs[id].conf->dump_delay);
--	occur = le32_to_cpu(fwrt->dump.active_trigs[id].conf->occurrences);
-+	delay = le32_to_cpu(active->trig->dump_delay);
-+	occur = le32_to_cpu(active->trig->occurrences);
- 	if (!occur)
- 		return 0;
- 
--	if (le32_to_cpu(fwrt->dump.active_trigs[id].conf->force_restart)) {
-+	if (le32_to_cpu(active->trig->force_restart)) {
- 		IWL_WARN(fwrt, "Force restart: trigger %d fired.\n", id);
- 		iwl_force_nmi(fwrt->trans);
- 		return 0;
-@@ -1722,8 +1721,7 @@ int iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
- 	if (!desc)
- 		return -ENOMEM;
- 
--	occur--;
--	fwrt->dump.active_trigs[id].conf->occurrences = cpu_to_le32(occur);
-+	active->trig->occurrences = cpu_to_le32(--occur);
- 
- 	desc->len = len;
- 	desc->trig_desc.type = cpu_to_le32(id);
-@@ -2022,6 +2020,26 @@ static void iwl_fw_dbg_update_regions(struct iwl_fw_runtime *fwrt,
- 	}
- }
- 
-+static int iwl_fw_dbg_trig_realloc(struct iwl_fw_runtime *fwrt,
-+				   struct iwl_fw_ini_active_triggers *active,
-+				   u32 id, int size)
-+{
-+	void *ptr;
-+
-+	if (size <= active->size)
-+		return 0;
-+
-+	ptr = krealloc(active->trig, size, GFP_KERNEL);
-+	if (!ptr) {
-+		IWL_ERR(fwrt, "Failed to allocate memory for trigger %d\n", id);
-+		return -ENOMEM;
-+	}
-+	active->trig = ptr;
-+	active->size = size;
-+
-+	return 0;
-+}
-+
- static void iwl_fw_dbg_update_triggers(struct iwl_fw_runtime *fwrt,
- 				       struct iwl_fw_ini_trigger_tlv *tlv,
- 				       bool ext,
-@@ -2034,43 +2052,63 @@ static void iwl_fw_dbg_update_triggers(struct iwl_fw_runtime *fwrt,
- 		struct iwl_fw_ini_trigger *trig = iter;
- 		struct iwl_fw_ini_active_triggers *active;
- 		int id = le32_to_cpu(trig->trigger_id);
--		u32 num;
-+		u32 trig_regs_size = le32_to_cpu(trig->num_regions) *
-+			sizeof(__le32);
- 
- 		if (WARN_ON(id >= ARRAY_SIZE(fwrt->dump.active_trigs)))
- 			break;
- 
- 		active = &fwrt->dump.active_trigs[id];
- 
--		if (active->apply_point != apply_point) {
--			active->conf = NULL;
--			active->conf_ext = NULL;
--		}
-+		if (!active->active) {
-+			size_t trig_size = sizeof(*trig) + trig_regs_size;
-+
-+			if (iwl_fw_dbg_trig_realloc(fwrt, active, id,
-+						    trig_size))
-+				goto next;
- 
--		num = le32_to_cpu(trig->num_regions);
-+			memcpy(active->trig, trig, trig_size);
- 
--		if (ext && active->apply_point == apply_point) {
--			num += le32_to_cpu(active->conf->num_regions);
--			if (trig->ignore_default) {
--				active->conf_ext = active->conf;
--				active->conf = trig;
-+		} else {
-+			u32 conf_override =
-+				!(le32_to_cpu(trig->override_trig) & 0xff);
-+			u32 region_override =
-+				!(le32_to_cpu(trig->override_trig) & 0xff00);
-+			u32 offset = 0;
-+			u32 active_regs =
-+				le32_to_cpu(active->trig->num_regions);
-+			u32 new_regs = le32_to_cpu(trig->num_regions);
-+			int mem_to_add = trig_regs_size;
-+
-+			if (region_override) {
-+				mem_to_add -= active_regs * sizeof(__le32);
- 			} else {
--				active->conf_ext = trig;
-+				offset += active_regs;
-+				new_regs += active_regs;
- 			}
--		} else {
--			active->conf = trig;
-+
-+			if (iwl_fw_dbg_trig_realloc(fwrt, active, id,
-+						    active->size + mem_to_add))
-+				goto next;
-+
-+			if (conf_override)
-+				memcpy(active->trig, trig, sizeof(*trig));
-+
-+			memcpy(active->trig->data + offset, trig->data,
-+			       trig_regs_size);
-+			active->trig->num_regions = cpu_to_le32(new_regs);
- 		}
- 
- 		/* Since zero means infinity - just set to -1 */
--		if (!le32_to_cpu(trig->occurrences))
--			trig->occurrences = cpu_to_le32(-1);
--		if (!le32_to_cpu(trig->ignore_consec))
--			trig->ignore_consec = cpu_to_le32(-1);
-+		if (!le32_to_cpu(active->trig->occurrences))
-+			active->trig->occurrences = cpu_to_le32(-1);
-+		if (!le32_to_cpu(active->trig->ignore_consec))
-+			active->trig->ignore_consec = cpu_to_le32(-1);
- 
--		iter += sizeof(*trig) +
--			le32_to_cpu(trig->num_regions) * sizeof(__le32);
-+		active->active = true;
-+next:
-+		iter += sizeof(*trig) + trig_regs_size;
- 
--		active->active = num;
--		active->apply_point = apply_point;
- 	}
- }
- 
-@@ -2129,6 +2167,10 @@ void iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
- 	if (apply_point == IWL_FW_INI_APPLY_EARLY) {
- 		for (i = 0; i < IWL_FW_INI_MAX_REGION_ID; i++)
- 			fwrt->dump.active_regs[i] = NULL;
-+
-+		/* disable the triggers, used in recovery flow */
-+		for (i = 0; i < IWL_FW_TRIGGER_ID_NUM; i++)
-+			fwrt->dump.active_trigs[i].active = false;
- 	}
- 
- 	_iwl_fw_dbg_apply_point(fwrt, data, apply_point, false);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index d11923edd695..b64fdfdcbce7 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -225,16 +225,17 @@ static inline bool
- _iwl_fw_ini_trigger_on(struct iwl_fw_runtime *fwrt,
- 		       const enum iwl_fw_dbg_trigger id)
- {
--	struct iwl_fw_ini_active_triggers *trig = &fwrt->dump.active_trigs[id];
-+	struct iwl_fw_ini_active_triggers *active =
-+		&fwrt->dump.active_trigs[id];
- 	u32 ms;
- 
- 	if (!fwrt->trans->ini_valid)
- 		return false;
- 
--	if (!trig || !trig->active)
-+	if (!active->active)
- 		return false;
- 
--	ms = le32_to_cpu(trig->conf->ignore_consec);
-+	ms = le32_to_cpu(active->trig->ignore_consec);
- 	if (ms)
- 		ms /= USEC_PER_MSEC;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-index 23f982be800f..6ffa2e39a25c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-@@ -234,15 +234,13 @@ struct iwl_fw_ini_allocation_data {
- /**
-  * struct iwl_fw_ini_active_triggers
-  * @active: is this trigger active
-- * @apply_point: last apply point that updated this trigger
-- * @conf: active trigger
-- * @conf_ext: second trigger, contains extra regions to dump
-+ * @size: allocated memory size of the trigger
-+ * @trig: trigger
-  */
- struct iwl_fw_ini_active_triggers {
- 	bool active;
--	enum iwl_fw_ini_apply_point apply_point;
--	struct iwl_fw_ini_trigger *conf;
--	struct iwl_fw_ini_trigger *conf_ext;
-+	size_t size;
-+	struct iwl_fw_ini_trigger *trig;
+ const struct iwl_cfg iwl22000_2ac_cfg_hr = {
+ 	.name = "Intel(R) Dual Band Wireless AC 22000",
+ 	.fw_name_pre = IWL_22000_HR_FW_PRE,
+@@ -387,6 +406,30 @@ const struct iwl_cfg iwl22560_2ax_cfg_su_cdb = {
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
  };
  
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 52af848f2eb3..2bbae7a1f492 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -160,8 +160,20 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
++const struct iwl_cfg iwlax210_2ax_cfg_so_jf_a0 = {
++	.name = "Intel(R) Wireless-AC 9560 160MHz",
++	.fw_name_pre = IWL_22000_SO_A_JF_B_FW_PRE,
++	IWL_DEVICE_AX210,
++};
++
++const struct iwl_cfg iwlax210_2ax_cfg_so_hr_a0 = {
++	.name = "Intel(R) Wi-Fi 6 AX201 160MHz",
++	.fw_name_pre = IWL_22000_SO_A_HR_B_FW_PRE,
++	IWL_DEVICE_AX210,
++};
++
++const struct iwl_cfg iwlax210_2ax_cfg_so_gf_a0 = {
++	.name = "Intel(R) Wi-Fi 7 AX211 160MHz",
++	.fw_name_pre = IWL_22000_SO_A_GF_A_FW_PRE,
++	IWL_DEVICE_AX210,
++};
++
++const struct iwl_cfg iwlax210_2ax_cfg_ty_gf_a0 = {
++	.name = "Intel(R) Wi-Fi 7 AX210 160MHz",
++	.fw_name_pre = IWL_22000_TY_A_GF_A_FW_PRE,
++	IWL_DEVICE_AX210,
++};
++
+ MODULE_FIRMWARE(IWL_22000_HR_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_22000_JF_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_22000_HR_A_F0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+@@ -397,3 +440,7 @@ MODULE_FIRMWARE(IWL_22000_HR_A0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_22000_SU_Z0_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_QU_B_JF_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_CC_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_SO_A_JF_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_SO_A_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_SO_A_GF_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_TY_A_GF_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 5e713730165a..d25b632eaa41 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -89,6 +89,7 @@ enum iwl_device_family {
+ 	IWL_DEVICE_FAMILY_9000,
+ 	IWL_DEVICE_FAMILY_22000,
+ 	IWL_DEVICE_FAMILY_22560,
++	IWL_DEVICE_FAMILY_AX210,
+ };
  
- static inline void iwl_fw_runtime_free(struct iwl_fw_runtime *fwrt)
- {
-+	int i;
+ /*
+@@ -380,6 +381,7 @@ struct iwl_csr_params {
+  * @d3_debug_data_base_addr: base address where D3 debug data is stored
+  * @d3_debug_data_length: length of the D3 debug data
+  * @bisr_workaround: BISR hardware workaround (for 22260 series devices)
++ * @min_txq_size: minimum number of slots required in a TX queue
+  *
+  * We enable the driver to be backward compatible wrt. hardware features.
+  * API differences in uCode shouldn't be handled here but through TLVs
+@@ -445,6 +447,7 @@ struct iwl_cfg {
+ 	u32 extra_phy_cfg_flags;
+ 	u32 d3_debug_data_base_addr;
+ 	u32 d3_debug_data_length;
++	u32 min_txq_size;
+ };
+ 
+ extern const struct iwl_csr_params iwl_csr_v1;
+@@ -563,6 +566,10 @@ extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_b0;
+ extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_jf_b0;
+ extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0;
+ extern const struct iwl_cfg iwl22560_2ax_cfg_su_cdb;
++extern const struct iwl_cfg iwlax210_2ax_cfg_so_jf_a0;
++extern const struct iwl_cfg iwlax210_2ax_cfg_so_hr_a0;
++extern const struct iwl_cfg iwlax210_2ax_cfg_so_gf_a0;
++extern const struct iwl_cfg iwlax210_2ax_cfg_ty_gf_a0;
+ #endif /* CPTCFG_IWLMVM || CPTCFG_IWLFMAC */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index d0ce3a79c387..aea6d03e545a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -328,11 +328,14 @@ enum {
+ #define CSR_HW_REV_TYPE_QNJ		(0x0000360)
+ #define CSR_HW_REV_TYPE_QNJ_B0		(0x0000364)
+ #define CSR_HW_REV_TYPE_HR_CDB		(0x0000340)
++#define CSR_HW_REV_TYPE_SO		(0x0000370)
++#define CSR_HW_REV_TYPE_TY		(0x0000420)
+ 
+ /* RF_ID value */
+ #define CSR_HW_RF_ID_TYPE_JF		(0x00105100)
+ #define CSR_HW_RF_ID_TYPE_HR		(0x0010A000)
+ #define CSR_HW_RF_ID_TYPE_HRCDB		(0x00109F00)
++#define CSR_HW_RF_ID_TYPE_GF		(0x0010D000)
+ 
+ /* HW_RF CHIP ID  */
+ #define CSR_HW_RF_ID_TYPE_CHIP_ID(_val) (((_val) >> 12) & 0xFFF)
+@@ -594,6 +597,7 @@ enum msix_hw_int_causes {
+ 	MSIX_HW_INT_CAUSES_REG_ALIVE		= BIT(0),
+ 	MSIX_HW_INT_CAUSES_REG_WAKEUP		= BIT(1),
+ 	MSIX_HW_INT_CAUSES_REG_IPC		= BIT(1),
++	MSIX_HW_INT_CAUSES_REG_IML              = BIT(2),
+ 	MSIX_HW_INT_CAUSES_REG_SW_ERR_V2	= BIT(5),
+ 	MSIX_HW_INT_CAUSES_REG_CT_KILL		= BIT(6),
+ 	MSIX_HW_INT_CAUSES_REG_RF_KILL		= BIT(7),
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 27839c10d5e3..498c315291cf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -750,7 +750,8 @@ static int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm,
+ 
+ 	if (tid == IWL_MAX_TID_COUNT) {
+ 		tid = IWL_MGMT_TID;
+-		size = IWL_MGMT_QUEUE_SIZE;
++		size = max_t(u32, IWL_MGMT_QUEUE_SIZE,
++			     mvm->trans->cfg->min_txq_size);
+ 	}
+ 	queue = iwl_trans_txq_alloc(mvm->trans,
+ 				    cpu_to_le16(TX_QUEUE_CFG_ENABLE_QUEUE),
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index ceb3aa03d561..55b9120a1360 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -66,6 +66,7 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	void *iml_img;
+ 	u32 control_flags = 0;
+ 	int ret;
++	int cmdq_size = max_t(u32, TFD_CMD_SLOTS, trans->cfg->min_txq_size);
+ 
+ 	/* Allocate prph scratch */
+ 	prph_scratch = dma_alloc_coherent(trans->dev, sizeof(*prph_scratch),
+@@ -151,7 +152,7 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	ctxt_info_gen3->mcr_base_addr =
+ 		cpu_to_le64(trans_pcie->rxq->used_bd_dma);
+ 	ctxt_info_gen3->mtr_size =
+-		cpu_to_le16(TFD_QUEUE_CB_SIZE(TFD_CMD_SLOTS));
++		cpu_to_le16(TFD_QUEUE_CB_SIZE(cmdq_size));
+ 	ctxt_info_gen3->mcr_size =
+ 		cpu_to_le16(RX_QUEUE_CB_SIZE(MQ_RX_TABLE_SIZE));
+ 
+@@ -175,8 +176,14 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	iwl_write64(trans, CSR_IML_DATA_ADDR,
+ 		    trans_pcie->iml_dma_addr);
+ 	iwl_write32(trans, CSR_IML_SIZE_ADDR, trans->iml_len);
+-	iwl_set_bit(trans, CSR_CTXT_INFO_BOOT_CTRL, CSR_AUTO_FUNC_BOOT_ENA);
+-	iwl_set_bit(trans, CSR_GP_CNTRL, CSR_AUTO_FUNC_INIT);
 +
- 	kfree(fwrt->dump.d3_debug_data);
- 	fwrt->dump.d3_debug_data = NULL;
-+
-+	for (i = 0; i < IWL_FW_TRIGGER_ID_NUM; i++) {
-+		struct iwl_fw_ini_active_triggers *active =
-+			&fwrt->dump.active_trigs[i];
-+
-+		active->active = false;
-+		active->size = 0;
-+		kfree(active->trig);
-+		active->trig = NULL;
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
++		iwl_write_prph(trans, UREG_CPU_INIT_RUN, 1);
++	} else {
++		iwl_set_bit(trans, CSR_CTXT_INFO_BOOT_CTRL,
++			    CSR_AUTO_FUNC_BOOT_ENA);
++		iwl_set_bit(trans, CSR_GP_CNTRL, CSR_AUTO_FUNC_INIT);
 +	}
- }
  
- void iwl_fw_runtime_suspend(struct iwl_fw_runtime *fwrt);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index a22e47639a4e..4a1b7bb9a6c6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -948,6 +948,14 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x1a56, 0x1653, killer1650w_2ax_cfg)},
+ 	{IWL_PCI_DEVICE(0x1a56, 0x1654, killer1650x_2ax_cfg)},
+ 
++	{IWL_PCI_DEVICE(0x2725, 0x0090, iwlax210_2ax_cfg_so_hr_a0)},
++	{IWL_PCI_DEVICE(0x7A70, 0x0090, iwlax210_2ax_cfg_so_hr_a0)},
++	{IWL_PCI_DEVICE(0x7A70, 0x0310, iwlax210_2ax_cfg_so_hr_a0)},
++	{IWL_PCI_DEVICE(0x2725, 0x0020, iwlax210_2ax_cfg_so_hr_a0)},
++	{IWL_PCI_DEVICE(0x2725, 0x0310, iwlax210_2ax_cfg_so_hr_a0)},
++	{IWL_PCI_DEVICE(0x2725, 0x0A10, iwlax210_2ax_cfg_so_hr_a0)},
++	{IWL_PCI_DEVICE(0x2725, 0x00B0, iwlax210_2ax_cfg_so_hr_a0)},
++
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 49c2ce549c86..587bb06c2cb1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -247,7 +247,7 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
+ 	}
+ 
+ 	rxq->write_actual = round_down(rxq->write, 8);
+-	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
++	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_22560)
+ 		iwl_write32(trans, HBUS_TARG_WRPTR,
+ 			    (rxq->write_actual |
+ 			     ((FIRST_RX_QUEUE + rxq->id) << 16)));
+@@ -2133,7 +2133,7 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
+ 		}
+ 	}
+ 
+-	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560 &&
++	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_22560 &&
+ 	    inta_hw & MSIX_HW_INT_CAUSES_REG_IPC) {
+ 		/* Reflect IML transfer status */
+ 		int res = iwl_read32(trans, CSR_IML_RESP_ADDR);
+@@ -2152,6 +2152,17 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
+ 		isr_stats->wakeup++;
+ 	}
+ 
++	if (inta_hw & MSIX_HW_INT_CAUSES_REG_IML) {
++		/* Reflect IML transfer status */
++		int res = iwl_read32(trans, CSR_IML_RESP_ADDR);
++
++		IWL_DEBUG_ISR(trans, "IML transfer status: %d\n", res);
++		if (res == IWL_IMAGE_RESP_FAIL) {
++			isr_stats->sw++;
++			iwl_pcie_irq_handle_error(trans);
++		}
++	}
++
+ 	/* Chip got too hot and stopped itself */
+ 	if (inta_hw & MSIX_HW_INT_CAUSES_REG_CT_KILL) {
+ 		IWL_ERR(trans, "Microcode CT kill error detected.\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index e2d64378c932..9c203ca75de9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -171,7 +171,7 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+ 	}
+ 
+ 	iwl_pcie_ctxt_info_free_paging(trans);
+-	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_22560)
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
+ 		iwl_pcie_ctxt_info_gen3_free(trans);
+ 	else
+ 		iwl_pcie_ctxt_info_free(trans);
+@@ -234,6 +234,7 @@ void iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+ static int iwl_pcie_gen2_nic_init(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	int queue_size = max_t(u32, TFD_CMD_SLOTS, trans->cfg->min_txq_size);
+ 
+ 	/* TODO: most of the logic can be removed in A0 - but not in Z0 */
+ 	spin_lock(&trans_pcie->irq_lock);
+@@ -247,7 +248,7 @@ static int iwl_pcie_gen2_nic_init(struct iwl_trans *trans)
+ 		return -ENOMEM;
+ 
+ 	/* Allocate or reset and init all Tx and Command queues */
+-	if (iwl_pcie_gen2_tx_init(trans, trans_pcie->cmd_queue, TFD_CMD_SLOTS))
++	if (iwl_pcie_gen2_tx_init(trans, trans_pcie->cmd_queue, queue_size))
+ 		return -ENOMEM;
+ 
+ 	/* enable shadow regs in HW */
+@@ -332,7 +333,7 @@ int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
+ 		goto out;
+ 	}
+ 
+-	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_22560)
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
+ 		ret = iwl_pcie_ctxt_info_gen3_init(trans, fw);
+ 	else
+ 		ret = iwl_pcie_ctxt_info_init(trans, fw);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 375d8f25b886..6c30c88fc41e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1094,6 +1094,7 @@ static struct iwl_causes_list causes_list[] = {
+ 	{MSIX_FH_INT_CAUSES_FH_ERR,		CSR_MSIX_FH_INT_MASK_AD, 0x5},
+ 	{MSIX_HW_INT_CAUSES_REG_ALIVE,		CSR_MSIX_HW_INT_MASK_AD, 0x10},
+ 	{MSIX_HW_INT_CAUSES_REG_WAKEUP,		CSR_MSIX_HW_INT_MASK_AD, 0x11},
++	{MSIX_HW_INT_CAUSES_REG_IML,            CSR_MSIX_HW_INT_MASK_AD, 0x12},
+ 	{MSIX_HW_INT_CAUSES_REG_CT_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x16},
+ 	{MSIX_HW_INT_CAUSES_REG_RF_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x17},
+ 	{MSIX_HW_INT_CAUSES_REG_PERIODIC,	CSR_MSIX_HW_INT_MASK_AD, 0x18},
+@@ -1126,7 +1127,7 @@ static void iwl_pcie_map_non_rx_causes(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie =  IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int val = trans_pcie->def_irq | MSIX_NON_AUTO_CLEAR_CAUSE;
+ 	int i, arr_size =
+-		(trans->cfg->device_family < IWL_DEVICE_FAMILY_22560) ?
++		(trans->cfg->device_family != IWL_DEVICE_FAMILY_22560) ?
+ 		ARRAY_SIZE(causes_list) : ARRAY_SIZE(causes_list_v2);
+ 
+ 	/*
+@@ -1136,7 +1137,7 @@ static void iwl_pcie_map_non_rx_causes(struct iwl_trans *trans)
+ 	 */
+ 	for (i = 0; i < arr_size; i++) {
+ 		struct iwl_causes_list *causes =
+-			(trans->cfg->device_family < IWL_DEVICE_FAMILY_22560) ?
++			(trans->cfg->device_family != IWL_DEVICE_FAMILY_22560) ?
+ 			causes_list : causes_list_v2;
+ 
+ 		iwl_write8(trans, CSR_MSIX_IVAR(causes[i].addr), val);
+@@ -3503,7 +3504,17 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ #if IS_ENABLED(CONFIG_IWLMVM)
+ 	trans->hw_rf_id = iwl_read32(trans, CSR_HW_RF_ID);
+ 
+-	if (cfg == &iwl22560_2ax_cfg_hr) {
++	if (cfg == &iwlax210_2ax_cfg_so_hr_a0) {
++		if (trans->hw_rev == CSR_HW_REV_TYPE_TY) {
++			trans->cfg = &iwlax210_2ax_cfg_ty_gf_a0;
++		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
++			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_JF)) {
++			trans->cfg = &iwlax210_2ax_cfg_so_jf_a0;
++		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
++			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_GF)) {
++			trans->cfg = &iwlax210_2ax_cfg_so_gf_a0;
++		}
++	} else if (cfg == &iwl22560_2ax_cfg_hr) {
+ 		if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
+ 		    CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR)) {
+ 			trans->cfg = &iwl22560_2ax_cfg_hr;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 28a371814387..d8773e0a6062 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -995,7 +995,11 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
+ 	     txq_id++) {
+ 		bool cmd_queue = (txq_id == trans_pcie->cmd_queue);
+ 
+-		slots_num = cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
++		if (cmd_queue)
++			slots_num = max_t(u32, TFD_CMD_SLOTS,
++					  trans->cfg->min_txq_size);
++		else
++			slots_num = TFD_TX_CMD_SLOTS;
+ 		trans_pcie->txq[txq_id] = &trans_pcie->txq_memory[txq_id];
+ 		ret = iwl_pcie_txq_alloc(trans, trans_pcie->txq[txq_id],
+ 					 slots_num, cmd_queue);
+@@ -1044,7 +1048,11 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 	     txq_id++) {
+ 		bool cmd_queue = (txq_id == trans_pcie->cmd_queue);
+ 
+-		slots_num = cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
++		if (cmd_queue)
++			slots_num = max_t(u32, TFD_CMD_SLOTS,
++					  trans->cfg->min_txq_size);
++		else
++			slots_num = TFD_TX_CMD_SLOTS;
+ 		ret = iwl_pcie_txq_init(trans, trans_pcie->txq[txq_id],
+ 					slots_num, cmd_queue);
+ 		if (ret) {
 -- 
 2.20.1
 
