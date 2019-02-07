@@ -2,84 +2,86 @@ Return-Path: <SRS0=Kusg=QO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 743EAC282CC
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 11:40:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B34EC282CC
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 12:11:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37AFA21872
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 11:40:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="276eWrT0"
+	by mail.kernel.org (Postfix) with ESMTP id 0A2272190C
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 12:11:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726748AbfBGLk5 (ORCPT
+        id S1726909AbfBGMLr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 06:40:57 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:57590 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726549AbfBGLk5 (ORCPT
+        Thu, 7 Feb 2019 07:11:47 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:46865 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726740AbfBGMLq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 06:40:57 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x17BcvPH044170;
-        Thu, 7 Feb 2019 11:40:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=I9SvguprerubbLH7i7K6bC4P8bKFNdDwurp26S03D7w=;
- b=276eWrT0NyQB7XmeizsmHvloFzc0zhuDAdyPO4M9ZxmVZ7cyLhqZ04pYUwohBkKuemmC
- 1PdBdJcWtBXWg4LT3Oxq4m4KHLbG1AHNmqCekJuE7Sp3PWjD0JGQPg5yGJDNyZ1FgavW
- OEjLK579vjH74t3WGOc4Ko922MFILJ4LefEQMc75P9CQ+usussAf5rcCGRlAcmPsAD8i
- zUTkU0W3Iq+dn8sPljsLqu4Bbrdzjwp7sztkKkwO+/TqQ+RDtcMHerlr80LyLrpl3Msr
- sidOPvIDIK1YFezQUuJmdv5ui9N9mtkVhb5RT8Sxl214oQcTvOSJsB73fzGAZC8KCwuc sA== 
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2qd97f6ehy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Feb 2019 11:40:50 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x17BemcL028337
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 7 Feb 2019 11:40:49 GMT
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x17Bem7h031938;
-        Thu, 7 Feb 2019 11:40:48 GMT
-Received: from kadam (/41.202.241.45)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Feb 2019 11:40:47 +0000
-Date:   Thu, 7 Feb 2019 14:40:30 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Ajay.Kathat@microchip.com
-Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        gregkh@linuxfoundation.org, stable@vger.kernel.org,
-        Adham.Abozaeid@microchip.com, johannes@sipsolutions.net
-Subject: Re: [PATCH v2 1/8] staging: wilc1000: fix to set correct value for
- 'vif_num'
-Message-ID: <20190207114030.GF1978@kadam>
-References: <1549538913-17463-1-git-send-email-ajay.kathat@microchip.com>
- <1549538913-17463-2-git-send-email-ajay.kathat@microchip.com>
+        Thu, 7 Feb 2019 07:11:46 -0500
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+        (Exim 4.76)
+        (envelope-from <colin.king@canonical.com>)
+        id 1griWs-0007FZ-1p; Thu, 07 Feb 2019 12:11:42 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rsi:  fix indentation issue with a code block
+Date:   Thu,  7 Feb 2019 12:11:41 +0000
+Message-Id: <20190207121141.28336-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1549538913-17463-2-git-send-email-ajay.kathat@microchip.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9159 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=633 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1902070092
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Thanks so much!
+From: Colin Ian King <colin.king@canonical.com>
 
-Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
+There is a block of code that is indented at the wrong level. Fix this
+with extra tabbing.
 
-regards,
-dan carpenter
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index aded1ae4fad5..747d96e14bcd 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -810,15 +810,15 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
+ 		adapter->ps_info.dtim_interval_duration = bss->dtim_period;
+ 		adapter->ps_info.listen_interval = conf->listen_interval;
+ 
+-	/* If U-APSD is updated, send ps parameters to firmware */
+-	if (bss->assoc) {
+-		if (common->uapsd_bitmap) {
+-			rsi_dbg(INFO_ZONE, "Configuring UAPSD\n");
+-			rsi_conf_uapsd(adapter, vif);
++		/* If U-APSD is updated, send ps parameters to firmware */
++		if (bss->assoc) {
++			if (common->uapsd_bitmap) {
++				rsi_dbg(INFO_ZONE, "Configuring UAPSD\n");
++				rsi_conf_uapsd(adapter, vif);
++			}
++		} else {
++			common->uapsd_bitmap = 0;
+ 		}
+-	} else {
+-		common->uapsd_bitmap = 0;
+-	}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_CQM) {
+-- 
+2.20.1
 
