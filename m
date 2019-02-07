@@ -4,58 +4,58 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63479C282C4
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 07:22:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70757C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 07:22:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2742E2075C
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 07:22:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 363E02075C
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 07:22:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="aotHl3tL"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="yrHWFWYz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726716AbfBGHWg (ORCPT
+        id S1726728AbfBGHWi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 02:22:36 -0500
+        Thu, 7 Feb 2019 02:22:38 -0500
 Received: from esa6.microchip.iphmx.com ([216.71.154.253]:10628 "EHLO
         esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726186AbfBGHWg (ORCPT
+        with ESMTP id S1726186AbfBGHWi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 02:22:36 -0500
+        Thu, 7 Feb 2019 02:22:38 -0500
 X-IronPort-AV: E=Sophos;i="5.58,342,1544511600"; 
-   d="scan'208";a="23532150"
+   d="scan'208";a="23532154"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 07 Feb 2019 00:22:34 -0700
+  by esa6.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 07 Feb 2019 00:22:37 -0700
 Received: from NAM01-SN1-obe.outbound.protection.outlook.com (10.10.215.89) by
  email.microchip.com (10.10.76.108) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Thu, 7 Feb 2019 00:22:34 -0700
+ 14.3.352.0; Thu, 7 Feb 2019 00:22:37 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector1-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NaT5pk9V42i3kf33kIzO81mo3ZxEJPgAHQ7ak10Tas4=;
- b=aotHl3tLq0C6AWcjBM8V95Id24ecKIUW5/vG+hoKkVhbFCxp0gGR8dVq/mHMziq0bKqb1GKj24wN/kPpGYc84OJSV+Clnfi/Gr/K3BVRwjw+PguncCanG7qnQhLvOs4XtMw+VlnsY4EVN6GSee8Hq4PPp/Lxn3r8Q1k0Oloabgg=
+ bh=Z+vHQ1mj2EjPsMFWZFfPFFsz1Y8ZB6ftnSsUBCBYybo=;
+ b=yrHWFWYz+tpNQUmY0j9nE02/YwA1nxVvFDm6qljDpdhIF+bH0QVTyE1wECSMFGKzQBBjNQjCwpBXosTclF32z+fASCycdcK/P5jgR0bWYTb5aEhpi58kXcqB9gfEPn3DQBw9fSAE6hIchjFdsRvwh2qtnDK29mTTqLKHhmzXF/8=
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com (52.135.226.160) by
  BYAPR11MB3415.namprd11.prod.outlook.com (20.177.224.204) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1580.22; Thu, 7 Feb 2019 07:22:32 +0000
+ 15.20.1580.22; Thu, 7 Feb 2019 07:22:36 +0000
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::cc6d:bc31:d5b:a27d]) by BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::cc6d:bc31:d5b:a27d%5]) with mapi id 15.20.1601.016; Thu, 7 Feb 2019
- 07:22:32 +0000
+ 07:22:36 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 4/9] staging: wilc1000: move macro and function prototype from
- wilc_wlan_if.h file
-Thread-Topic: [PATCH 4/9] staging: wilc1000: move macro and function prototype
- from wilc_wlan_if.h file
-Thread-Index: AQHUvrXkIzHyd3+Ws02t0nuvEjSpRg==
-Date:   Thu, 7 Feb 2019 07:22:32 +0000
-Message-ID: <1549519927-2651-5-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 5/9] staging: wilc1000: avoid function forward declaration in
+ wilc_sdio.c file
+Thread-Topic: [PATCH 5/9] staging: wilc1000: avoid function forward
+ declaration in wilc_sdio.c file
+Thread-Index: AQHUvrXm9D8ud1/Hi0y6Oh4SPfjteg==
+Date:   Thu, 7 Feb 2019 07:22:36 +0000
+Message-ID: <1549519927-2651-6-git-send-email-ajay.kathat@microchip.com>
 References: <1549519927-2651-1-git-send-email-ajay.kathat@microchip.com>
 In-Reply-To: <1549519927-2651-1-git-send-email-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -71,22 +71,22 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.7.4
 x-originating-ip: [223.237.230.157]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR11MB3415;6:CH+uyKS35uZJfybc7sG+cxbs8wwTguNpTbGfnfGpGdKvFOMiYESdhxZM3P2aaqO+d816wCRP6WWHX6oUQS7ojiIaXzrIaJ7P3Lik7TaaWrbhh4lYnsNMMNpbzAZ7SsPCPhTA4Lvv5sGA2tFsCZJRCoNBbm49poNiDLG/Js7Ud5GCI1Cez3zRgMsrTM+9NMcHUjJqGtp1y+o+2jS8hGnLdPNrVBsKDy6axi5WfT8bGvZbI5LQS80VrKYJb3E6XDcmNA55aTcaxJ4bF/M55kEjsozjreK6OjNNvib2bNQBMrKWWI5A7E34cyZKIA3Ag/3dTdQEV/aeAwGUS1Q8owL98nbqZ13Df6uKWViIwHZRUHupmklfMDzz9nhENIzBD5Uz7uDGotXFQMKLEL7kjcL5BhKE1yLrkqNujNfPSk+7fF5VXntS1ZUsJBDrnzuL01rVIhg3ulDFVYsffDzGz8/qKQ==;5:kLzTZ0zdG6YBFBwTBQhLaJcsoUu3IVu5MNKEoPkUm2nLr2lJSUhC4VrodxdhmzT2yIHdL8U0o3XP41chUgCNmam5d13+4SMvVvQ4nKydeEod0lPB5V5vkcnXpoE32LOJctXSLusAndq8MmOZjZF3WvyoVu8E+ZrrySl5bQEqR2ectguSKEI622I3x3QnrOqeLssd/1ssvT5dT8zjXF1dZA==;7:EXXViijMIuaaI42aZ8y6GcjjvGbmcBwPzegTvbReYgeeq+LpwEvUsP6JVVRkACAdBfXElV61LbMCjiUDbTqzn0EmLcmUsQtxeTGCNoR2PfQQs2jXJM33frJWTykY7PuYZ6baO6g188AURNRLlmouHQ==
-x-ms-office365-filtering-correlation-id: fcc29b09-a994-4fac-544e-08d68ccd0647
+x-microsoft-exchange-diagnostics: 1;BYAPR11MB3415;6:UiA2Qj8+w6NL9ci2klR4TbUSeUsYJ4TiHNvAbrmH41QuHKjSoEPbcuR8nMSpDfQm/+86IMeDuq088kmoui2hH9sM/ZxJi7yfjGCo1bEmYaYXkouyciKg8Skxz8oESA8BFoV7VLt93fo6LziDLpqJodZlxbLshB7tZFbn3Af/N7RO28yCEqCa6u+MFfkIpqsa4GUwAP8tTOqUWNUSdp/7wMWy1jWPaiC482ZPJjYjEh8klsj6ZM+K3vDMDfzDLFfnqZMeRdNE3W3/Tf6xiKVaz8jzzrSrSakR0ctLfzlyy5YDNLjlnhcincOLgNEAK52xl/N7zcQqdXUWAziZmwdkzGbJCDBob7pAvyRXn1/Pj2xGHp70RLkF+p/evGzoJtytxH5vsiEQa0pUQLeQ3hsXM7mN5SwERveSY5r6L39MM+GR+/5ChjaFCAlbGqyxUK9vS+wC+KjJAUKQITvBcp40pg==;5:w2R0Os+TgdTusToAC7VVnffqNnmE3ygLcACEXMyB9ub8hsMj+rNxQNQlLHgi5ivKmPO+xTfGub4X4lpEX25YbgKjHVrl7E2mrREOYT6fGn5zym9GWrprnPdYTW33ANjTMXifdzrHAlakGYYl5a/ghgdshPPgM3P4BG6y/PtAPbo8qczRNUv1eiYzuCVAsV0zLUu7yd/72HwG76ZPRt9EMA==;7:KaULiWkacVlPnXp4xbogw/cZ2q9ADiYqhm5D3DYiYRyD6rAVnEeD+bbInF8KmnuixqyvI6v3Tz9GR2NggcpZkbLvzOm0q1EMgk+VY5Wu3OzCxf2xAi/mUblb6yCFrL+is9ms0Pm/SQaKRhBl431lrQ==
+x-ms-office365-filtering-correlation-id: 3ef257f4-0884-41d5-11bc-08d68ccd085e
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(2017052603328)(7153060)(7193020);SRVR:BYAPR11MB3415;
 x-ms-traffictypediagnostic: BYAPR11MB3415:
-x-microsoft-antispam-prvs: <BYAPR11MB34151EDC05BB798A9EBBCB3DE3680@BYAPR11MB3415.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR11MB34154CBF603566C187E21F65E3680@BYAPR11MB3415.namprd11.prod.outlook.com>
 x-forefront-prvs: 0941B96580
 x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(39860400002)(136003)(366004)(396003)(376002)(189003)(199004)(86362001)(5640700003)(478600001)(6116002)(446003)(3846002)(72206003)(6486002)(11346002)(6436002)(25786009)(2351001)(2616005)(476003)(6512007)(105586002)(106356001)(486006)(26005)(6506007)(102836004)(386003)(36756003)(71190400001)(2501003)(97736004)(71200400001)(81156014)(305945005)(66066001)(54906003)(4326008)(186003)(68736007)(8936002)(81166006)(107886003)(52116002)(50226002)(53936002)(256004)(6916009)(14444005)(316002)(99286004)(14454004)(2906002)(76176011)(7736002)(8676002);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB3415;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 2cnhpM7v9IYqgWzswCllX1UmE7Y5cB39wdq/RuNSgOE8V28V9rHnhY8SucphtYw6hn9BHNuMx+ubieMI0SstPMvtbQOxrSMlg8HeGsKva9Wih4QLR4eL3ZQ63CjyT12Fr+omAFEfIHCQdabCkD1PEC7rcgSLuHB/jUfyowaBO4NKUToLii5OqpROADcx70eOBZSXnZ/NR7NLBpMNBsNYBofgMzvVBKVjs+g/PD7CxsaMAwxkpVoMRnxt5Gh06jb5XeS2YDiX+hL4LgTccUjpxyTchaWBjcQKH0lv0HFiFAlNzD1i1l87rlfZF+hG4IP40TzcNck2er4kIYY74x2tDnI0AOreSCTfBbLZ5tnNHMMMcen7wvpcNqXOpxIZrZEUDxmHbjDiBuBppktkkfYQGwOvgd3bqLjqSqlf0GW4MPo=
+x-microsoft-antispam-message-info: b1S8U5HdCdxppjnxk/we3VQaf9FOdfGvpSB/YSWSOF6jhUzWARgY7l3fDKfrPLuTOrPahWqjzNmUGYF0IdjraxnOrEx98dF0ks2HnzoZOpG1JssbQ0pz21tfXQXbvcN4f8PQHD/eBGKsgl21oM7RfB5coJOceO/TSFQBM+sDmGepXYtLiLiuAUhReKleJfmdNo/YNUkn/H2INn7vwbU1x9PQT7drwR14DSuCkLAfjYX5SAQyzw3kx4m9J+6l/auDepB+w5AIYcELT+ntgTD5WZLklaj4K9xYrlKjeH2S5Wf5ACNu1W/hauC9baC/OmNSylobBc9T8M6sejFdkANTCTrYcUY7zNiOeo/iRQD26tWmoFeOCRvqYr9DrLsVaJV+gaavYATjA7YX3i0hNbhL2mlV4kgmyQa2Tg/BB1N6ITA=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: fcc29b09-a994-4fac-544e-08d68ccd0647
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Feb 2019 07:22:29.7359
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3ef257f4-0884-41d5-11bc-08d68ccd085e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Feb 2019 07:22:33.1703
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
@@ -100,151 +100,130 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Move data structure and function prototype from 'wilc_wlan_if.h file.
-Now, this file contains constant specific to the firmware.
+Cleanup patch to avoid function forward declaration by reordering the
+function.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/host_interface.c |  1 +
- drivers/staging/wilc1000/host_interface.h | 11 ++++++++++
- drivers/staging/wilc1000/linux_wlan.c     |  2 ++
- drivers/staging/wilc1000/wilc_wlan.h      |  9 ++++++++
- drivers/staging/wilc1000/wilc_wlan_if.h   | 36 ---------------------------=
+ drivers/staging/wilc1000/wilc_sdio.c | 91 +++++++++++++++++---------------=
 ----
- 5 files changed, 23 insertions(+), 36 deletions(-)
+ 1 file changed, 43 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wi=
-lc1000/host_interface.c
-index 9abe341..50dc2dd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -10,6 +10,7 @@
- #define WILC_HIF_CONNECT_TIMEOUT_MS             9500
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc100=
+0/wilc_sdio.c
+index e2f739f..a62eabe 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -51,10 +51,6 @@ struct sdio_cmd53 {
 =20
- #define WILC_FALSE_FRMWR_CHANNEL		100
-+#define WILC_MAX_RATES_SUPPORTED		12
+ static const struct wilc_hif_func wilc_hif_sdio;
 =20
- struct wilc_rcvd_mac_info {
- 	u8 status;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wi=
-lc1000/host_interface.h
-index a007625..678e623 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -97,6 +97,17 @@ enum conn_event {
- 	CONN_DISCONN_EVENT_FORCE_32BIT		=3D 0xFFFFFFFF
- };
-=20
-+enum {
-+	WILC_HIF_SDIO =3D 0,
-+	WILC_HIF_SPI =3D BIT(0)
-+};
-+
-+enum {
-+	WILC_MAC_STATUS_INIT =3D -1,
-+	WILC_MAC_STATUS_DISCONNECTED =3D 0,
-+	WILC_MAC_STATUS_CONNECTED =3D 1
-+};
-+
- struct wilc_rcvd_net_info {
- 	s8 rssi;
- 	u8 ch;
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc10=
-00/linux_wlan.c
-index 8fa5f90..b279811 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -12,6 +12,8 @@
-=20
- #include "wilc_wfi_cfgoperations.h"
-=20
-+#define WILC_MULTICAST_TABLE_SIZE	8
-+
- static irqreturn_t isr_uh_routine(int irq, void *user_data)
+-static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
+-static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data);
+-static int sdio_init(struct wilc *wilc, bool resume);
+-
+ static void wilc_sdio_interrupt(struct sdio_func *func)
  {
- 	struct net_device *dev =3D user_data;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc100=
-0/wilc_wlan.h
-index d8fabe8..1a27f62 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -250,6 +250,13 @@ struct wilc_hif_func {
+ 	sdio_release_host(func);
+@@ -215,50 +211,6 @@ static int wilc_sdio_suspend(struct device *dev)
+ 	return 0;
+ }
 =20
- #define WILC_MAX_CFG_FRAME_SIZE		1468
-=20
-+struct tx_complete_data {
-+	int size;
-+	void *buff;
-+	u8 *bssid;
-+	struct sk_buff *skb;
-+};
-+
- struct wilc_cfg_cmd_hdr {
- 	u8 cmd_type;
- 	u8 seq_no;
-@@ -301,4 +308,6 @@ void chip_allow_sleep(struct wilc *wilc);
- void chip_wakeup(struct wilc *wilc);
- int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
- 			 u32 count, u32 drv);
-+int wilc_wlan_init(struct net_device *dev);
-+u32 wilc_get_chipid(struct wilc *wilc, bool update);
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc=
-1000/wilc_wlan_if.h
-index 9b8cce8..b15de36 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -11,41 +11,9 @@
-=20
- /********************************************
-  *
-- *      Host Interface Defines
-- *
-- ********************************************/
+-static int wilc_sdio_resume(struct device *dev)
+-{
+-	struct sdio_func *func =3D dev_to_sdio_func(dev);
+-	struct wilc *wilc =3D sdio_get_drvdata(func);
 -
--enum {
--	WILC_HIF_SDIO =3D 0,
--	WILC_HIF_SPI =3D BIT(0)
+-	dev_info(dev, "sdio resume\n");
+-	sdio_release_host(func);
+-	chip_wakeup(wilc);
+-	sdio_init(wilc, true);
+-
+-	if (wilc->suspend_event)
+-		host_wakeup_notify(wilc);
+-
+-	chip_allow_sleep(wilc);
+-
+-	return 0;
+-}
+-
+-static const struct of_device_id wilc_of_match[] =3D {
+-	{ .compatible =3D "microchip,wilc1000-sdio", },
+-	{ /* sentinel */ }
+-};
+-MODULE_DEVICE_TABLE(of, wilc_of_match);
+-
+-static const struct dev_pm_ops wilc_sdio_pm_ops =3D {
+-	.suspend =3D wilc_sdio_suspend,
+-	.resume =3D wilc_sdio_resume,
 -};
 -
--/********************************************
-- *
-- *      Wlan Interface Defines
-- *
-- ********************************************/
--
--enum {
--	WILC_MAC_STATUS_INIT =3D -1,
--	WILC_MAC_STATUS_DISCONNECTED =3D 0,
--	WILC_MAC_STATUS_CONNECTED =3D 1
+-static struct sdio_driver wilc_sdio_driver =3D {
+-	.name		=3D SDIO_MODALIAS,
+-	.id_table	=3D wilc_sdio_ids,
+-	.probe		=3D linux_sdio_probe,
+-	.remove		=3D linux_sdio_remove,
+-	.drv =3D {
+-		.pm =3D &wilc_sdio_pm_ops,
+-		.of_match_table =3D wilc_of_match,
+-	}
 -};
+-module_driver(wilc_sdio_driver,
+-	      sdio_register_driver,
+-	      sdio_unregister_driver);
+-MODULE_LICENSE("GPL");
 -
--struct tx_complete_data {
--	int size;
--	void *buff;
--	u8 *bssid;
--	struct sk_buff *skb;
--};
--
--/********************************************
-- *
-  *      Wlan Configuration ID
-  *
-  ********************************************/
--#define WILC_MULTICAST_TABLE_SIZE	8
--#define WILC_MAX_RATES_SUPPORTED     12
-=20
- enum bss_types {
- 	WILC_FW_BSS_TYPE_INFRA =3D 0,
-@@ -832,8 +800,4 @@ enum {
- 	WID_MAX				=3D 0xFFFF
+ static int wilc_sdio_enable_interrupt(struct wilc *dev)
+ {
+ 	struct sdio_func *func =3D container_of(dev->dev, struct sdio_func, dev);
+@@ -1143,3 +1095,46 @@ static const struct wilc_hif_func wilc_hif_sdio =3D =
+{
+ 	.disable_interrupt =3D wilc_sdio_disable_interrupt,
  };
 =20
--struct wilc;
--int wilc_wlan_init(struct net_device *dev);
--u32 wilc_get_chipid(struct wilc *wilc, bool update);
--
- #endif
++static int wilc_sdio_resume(struct device *dev)
++{
++	struct sdio_func *func =3D dev_to_sdio_func(dev);
++	struct wilc *wilc =3D sdio_get_drvdata(func);
++
++	dev_info(dev, "sdio resume\n");
++	sdio_release_host(func);
++	chip_wakeup(wilc);
++	sdio_init(wilc, true);
++
++	if (wilc->suspend_event)
++		host_wakeup_notify(wilc);
++
++	chip_allow_sleep(wilc);
++
++	return 0;
++}
++
++static const struct of_device_id wilc_of_match[] =3D {
++	{ .compatible =3D "microchip,wilc1000-sdio", },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, wilc_of_match);
++
++static const struct dev_pm_ops wilc_sdio_pm_ops =3D {
++	.suspend =3D wilc_sdio_suspend,
++	.resume =3D wilc_sdio_resume,
++};
++
++static struct sdio_driver wilc_sdio_driver =3D {
++	.name		=3D SDIO_MODALIAS,
++	.id_table	=3D wilc_sdio_ids,
++	.probe		=3D linux_sdio_probe,
++	.remove		=3D linux_sdio_remove,
++	.drv =3D {
++		.pm =3D &wilc_sdio_pm_ops,
++		.of_match_table =3D wilc_of_match,
++	}
++};
++module_driver(wilc_sdio_driver,
++	      sdio_register_driver,
++	      sdio_unregister_driver);
++MODULE_LICENSE("GPL");
 --=20
 2.7.4
 
