@@ -2,61 +2,87 @@ Return-Path: <SRS0=Kusg=QO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E01B7C282CC
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:51:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86815C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:54:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B8F8A21908
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:51:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52E3D21907
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:54:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="dMKtK5O4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727122AbfBGNvC (ORCPT
+        id S1727070AbfBGNyo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 08:51:02 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:52212 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726558AbfBGNvC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 08:51:02 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92-RC4)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1grk4w-00044K-OL; Thu, 07 Feb 2019 14:50:59 +0100
-Message-ID: <fee1bdca8bb21a472a75c1a43fa61aad7fe4bff5.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] rhashtable: make walk safe from softirq context
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Herbert Xu <herbert@gondor.apana.org.au>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Jouni Malinen <j@w1.fi>, Thomas Graf <tgraf@suug.ch>
-Date:   Thu, 07 Feb 2019 14:50:54 +0100
-In-Reply-To: <20190207134006.gmuooqmyc5womcaf@gondor.apana.org.au>
-References: <20190206090721.8001-1-johannes@sipsolutions.net>
-         <20190207134006.gmuooqmyc5womcaf@gondor.apana.org.au>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
+        Thu, 7 Feb 2019 08:54:44 -0500
+Received: from nbd.name ([46.4.11.11]:47900 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726558AbfBGNyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Feb 2019 08:54:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=NJ92N7SGJji8cg5cYBaZa3nhjA4SbqZiVuDZDelrQjI=; b=dMKtK5O4t12Uje9X4lt0OOxyK1
+        dacb4V7GMLYfsr7BPFi3rNAY8jNsiG0WIDFVFQw9TXyZeIbAf9i9VSzboUiwj5kztJKTHA0kaoRww
+        L4xdH1aaMzYqiYEFi9TS3FcdaeSEzKA7cBtQt8Ed3c6HR2IHlJakADcau2WXk2HXD8BU=;
+Subject: Re: [PATCH 0/4] mt76x{0,2}: move alloc_device common code in
+ mt76_common module
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
+References: <cover.1548952312.git.lorenzo.bianconi@redhat.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <f7019215-8961-9b2e-2a0b-446b72602e30@nbd.name>
+Date:   Thu, 7 Feb 2019 14:54:40 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.5.0
+MIME-Version: 1.0
+In-Reply-To: <cover.1548952312.git.lorenzo.bianconi@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On 2019-01-31 17:55, Lorenzo Bianconi wrote:
+> Move mt76x{0,2} alloc_device common code in mt76_alloc_device and remove
+> duplicated code
+> 
+> Lorenzo Bianconi (4):
+>   mt76: move alloc_device common code in mt76_alloc_device
+>   mt76x2u: remove mt76x2u_alloc_device routine
+>   mt76x0: remove mt76x0u_alloc_device routine
+>   mt76x2: remove mt76x2_alloc_device routine
+Applied, thanks.
 
-> This interface wasn't designed for use in softirq contexts.
-
-Well, it clearly was used there. You even gave it a gfp_t argument in
-rhashtable_walk_init(), so you can't really claim it wasn't designed for
-this. I see now that it's ignored, but still?
-
-> Could you please show me who is doing this so I can review that
-> to see whether it's a legitimate use of this API?
-
-I'm sure you'll say it's not legitimate, but it still exists ;-)
-
-mesh_plink_broken() gets called from the TX status path, via
-ieee80211s_update_metric().
-
-johannes
-
+- Felix
