@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A18E6C282C2
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 19:06:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05757C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 19:06:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F8AD218D3
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 19:06:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C82B421904
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 19:06:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549566376;
-	bh=7BG/ivVuXTI84oQ9cTKhJV8pAFjaL1F4tb8KlP/bB/4=;
+	s=default; t=1549566381;
+	bh=f6IAsmxcib3626amipBaJwyrzYE00bHxbndnxtncDjw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=sB60b8B8t1QSVOb5GwDUpCvXY/eW4Z590BTQnlVGmeCKKvE5tlt9xENtZeb/z7FU1
-	 bcheXDCovDXgxWIBcNWwr8HVKnbohnCy2D5LjdWi+Lv3rNeVF2+JClSDAXVaQGdMTB
-	 ZZSsHRxZbY7lyn09JBlwcCApcUl82SeVrZbSb6sY=
+	b=wxh5d2zudOyIFPuSYwkXqqHevg1od615HeqsvabkE9ezOqupBQG/cndCRNBgS9G5E
+	 9PYEsu/LsAbi9i9dNuF+zuIEexjaZiUWodmAOSajeVvv2gP3qrXrCbS6/dS+7Wp8rt
+	 lnn6S93cT62ChdKdGG1Pko6lZnZh+wHWLixahY4Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726977AbfBGTGK (ORCPT
+        id S1727073AbfBGTGQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 14:06:10 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38270 "EHLO mail.kernel.org"
+        Thu, 7 Feb 2019 14:06:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38334 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726902AbfBGTGK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 14:06:10 -0500
+        id S1726990AbfBGTGL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Feb 2019 14:06:11 -0500
 Received: from garbanzo.lan (c-73-71-40-85.hsd1.ca.comcast.net [73.71.40.85])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 212C021919;
-        Thu,  7 Feb 2019 19:06:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6CBF321927;
+        Thu,  7 Feb 2019 19:06:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549566369;
-        bh=7BG/ivVuXTI84oQ9cTKhJV8pAFjaL1F4tb8KlP/bB/4=;
+        s=default; t=1549566370;
+        bh=f6IAsmxcib3626amipBaJwyrzYE00bHxbndnxtncDjw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jaZKtHrOAlEJphoKX7oEemvccNru293qge4e7bvpzDldQaLoPAVx+lOue7G74cmiX
-         q4Wn8jGHkbO6ywA39jC4mV6wDwOq9rEsasrE/JR+Duy6dDKcXJ9vxfEmNqfXG190QJ
-         LuzB+xmlWfSaapa+6El1uG5Qv951pRyofejB7H4Y=
+        b=tWlupUSQApHVPoRb4yxPw+dhCh0u9mcZDYg+YYbxtTZG8l7Jwk7wl9MSlCXNWKxc9
+         kR3/L2WkCscZkS6Ga6/rNM1QHmyhuxUuz7buayR++VX7p8EOhxk7Gwv5nivwDfnbzH
+         jevkl3lvnXh4mnlM24mz12/vUue6Yn+86fYxGoBA=
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -53,10 +53,11 @@ Cc:     akpm@linux-foundation.org, josh@joshtriplett.org,
         jewalt@lgsinnovations.com, cantabile.desu@gmail.com, ast@fb.com,
         andresx7@gmail.com, dan.rue@linaro.org, brendanhiggins@google.com,
         yzaikin@google.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 2/3] Revert "selftests: firmware: remove use of non-standard diff -Z option"
-Date:   Thu,  7 Feb 2019 11:06:01 -0800
-Message-Id: <20190207190602.502-3-mcgrof@kernel.org>
+        linux-fsdevel@vger.kernel.org,
+        Luis Chamberlain <mcgrof@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH 3/3] selftests: firmware: fix verify_reqs() return value
+Date:   Thu,  7 Feb 2019 11:06:02 -0800
+Message-Id: <20190207190602.502-4-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20190207190602.502-1-mcgrof@kernel.org>
 References: <20190207190602.502-1-mcgrof@kernel.org>
@@ -67,44 +68,31 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-This reverts commit f70b472e937bb659a7b7a14e64f07308e230888c.
+commit a6a9be9270c87 ("selftests: firmware: return Kselftest Skip code
+for skipped tests") by Shuah modified failures to return the special
+error code of $ksft_skip (4). We have a corner case issue where we
+*do* want to verify_reqs().
 
-This breaks testing on Debian, and this patch was NACKed anyway.
-The proper way to address this is a quirk for busybox as that is
-where the issue is present.
-
+Cc: <stable@vger.kernel.org> # >= 4.18
+Fixes: a6a9be9270c87 ("selftests: firmware: return Kselftest Skip code for for skipped tests")
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- tools/testing/selftests/firmware/fw_filesystem.sh | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ tools/testing/selftests/firmware/fw_lib.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/tools/testing/selftests/firmware/fw_filesystem.sh b/tools/testing/selftests/firmware/fw_filesystem.sh
-index 466cf2f91ba0..a4320c4b44dc 100755
---- a/tools/testing/selftests/firmware/fw_filesystem.sh
-+++ b/tools/testing/selftests/firmware/fw_filesystem.sh
-@@ -155,8 +155,11 @@ read_firmwares()
- {
- 	for i in $(seq 0 3); do
- 		config_set_read_fw_idx $i
--		# Verify the contents match
--		if ! diff -q "$FW" $DIR/read_firmware 2>/dev/null ; then
-+		# Verify the contents are what we expect.
-+		# -Z required for now -- check for yourself, md5sum
-+		# on $FW and DIR/read_firmware will yield the same. Even
-+		# cmp agrees, so something is off.
-+		if ! diff -q -Z "$FW" $DIR/read_firmware 2>/dev/null ; then
- 			echo "request #$i: firmware was not loaded" >&2
- 			exit 1
+diff --git a/tools/testing/selftests/firmware/fw_lib.sh b/tools/testing/selftests/firmware/fw_lib.sh
+index 6c5f1b2ffb74..1cbb12e284a6 100755
+--- a/tools/testing/selftests/firmware/fw_lib.sh
++++ b/tools/testing/selftests/firmware/fw_lib.sh
+@@ -91,7 +91,7 @@ verify_reqs()
+ 	if [ "$TEST_REQS_FW_SYSFS_FALLBACK" = "yes" ]; then
+ 		if [ ! "$HAS_FW_LOADER_USER_HELPER" = "yes" ]; then
+ 			echo "usermode helper disabled so ignoring test"
+-			exit $ksft_skip
++			exit 0
  		fi
-@@ -168,7 +171,7 @@ read_firmwares_expect_nofile()
- 	for i in $(seq 0 3); do
- 		config_set_read_fw_idx $i
- 		# Ensures contents differ
--		if diff -q "$FW" $DIR/read_firmware 2>/dev/null ; then
-+		if diff -q -Z "$FW" $DIR/read_firmware 2>/dev/null ; then
- 			echo "request $i: file was not expected to match" >&2
- 			exit 1
- 		fi
+ 	fi
+ }
 -- 
 2.18.0
 
