@@ -6,36 +6,35 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 661B4C282C2
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:43:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6FEAC282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:43:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31ED121904
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:43:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6AEB21904
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:43:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="UJf0yNKd"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="a8mSV5k8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726809AbfBGNnS (ORCPT
+        id S1726952AbfBGNnb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 08:43:18 -0500
-Received: from nbd.name ([46.4.11.11]:47370 "EHLO nbd.name"
+        Thu, 7 Feb 2019 08:43:31 -0500
+Received: from nbd.name ([46.4.11.11]:47398 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726558AbfBGNnS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 08:43:18 -0500
+        id S1726558AbfBGNna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Feb 2019 08:43:30 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=xd/VVrpsam8iAAtyU8UU6oC2pJUdaQVTcIKqJHIJD20=; b=UJf0yNKdG4DUP8otEHITHbtFxO
-        fjrZ9x4z+e5A+PA9WrLGevVCNT540SFj1KGBtzW2dpHUFt1YcgdHLTzpSnoSEG9GPCQezmRCZKIlm
-        q2OuGZ+AcQ/g3rDNlsu+BG4WhRzwmDFUeEKEaX6kNmxlDDtD/VMhm5Xysr4ueUwMniz8=;
-Subject: Re: [PATCH v2] mt76: move mt76_dma_tx_queue_skb_raw in mt76-core
- module
+        bh=jkzOo3a0wLYUquwK+hPNDnOk+FD47GX1ao54AHYzjyE=; b=a8mSV5k8NlAcrpIhL2Iril11/T
+        wl+YaMRksY1QmJtpH8jc9Ki/06sL0S1XdF9vwAw5YAEoAn9f9T3V0ekAsXs69f3Qe6WRWD0/LvJYo
+        n2zQqyR82s22dTgqBn1z7UnRolflIQhWV2MNt9yqv7hhvIyYQ2N1LT5Mb2B4ZY7D0nMA=;
+Subject: Re: [PATCH] mt76: remove add_buf pointer in mt76_queue_ops
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-References: <cover.1549533229.git.lorenzo.bianconi@redhat.com>
- <68febba653edb280369615b29e402f3f31bb61f0.1549533229.git.lorenzo.bianconi@redhat.com>
+References: <cover.1549533273.git.lorenzo.bianconi@redhat.com>
+ <c84fc9d5a502acca6f7243bef0d2ace563e2a95c.1549533273.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -61,12 +60,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <36ba4dcd-3fe8-67c0-c5d2-4c203ff506e0@nbd.name>
-Date:   Thu, 7 Feb 2019 14:43:15 +0100
+Message-ID: <b97ab2ea-0428-b86b-7fb6-80a5b8f1b57f@nbd.name>
+Date:   Thu, 7 Feb 2019 14:43:27 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.0
 MIME-Version: 1.0
-In-Reply-To: <68febba653edb280369615b29e402f3f31bb61f0.1549533229.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <c84fc9d5a502acca6f7243bef0d2ace563e2a95c.1549533273.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -75,11 +74,9 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-07 11:10, Lorenzo Bianconi wrote:
-> Move mt76_dma_tx_queue_skb_raw routine in dma.c and add the
-> corresponding entry in mt76_queue_ops data structure.
-> mt76_dma_tx_queue_skb_raw  will be reused adding support for
-> mt7603 driver
+On 2019-02-07 11:14, Lorenzo Bianconi wrote:
+> Remove add_buf function pointer in mt76_queue_ops data structure since
+> it is no longer used
 > 
 > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Applied, thanks.
