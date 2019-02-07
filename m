@@ -2,38 +2,39 @@ Return-Path: <SRS0=Kusg=QO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5D37C282C2
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:41:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB94C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:42:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69A132147C
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:41:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08B692147C
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:42:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="i4CFhbof"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="EpvoUwH2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726983AbfBGNld (ORCPT
+        id S1726983AbfBGNmG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 08:41:33 -0500
-Received: from nbd.name ([46.4.11.11]:47278 "EHLO nbd.name"
+        Thu, 7 Feb 2019 08:42:06 -0500
+Received: from nbd.name ([46.4.11.11]:47306 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726750AbfBGNld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 08:41:33 -0500
+        id S1726750AbfBGNmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Feb 2019 08:42:06 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=nH292EJcyBOQvLEA/JU+MOG/dclyXvGESF/ixlCOlIw=; b=i4CFhbof+ITSIGzROSqdtt358h
-        lqy3HncyFXTclBUPbf+yodvPUCzR6sWXI1k0UDiBHY4smxL+ERklHyYlzoBvzY12ZJjU9sVZRr889
-        mTLTCeOdjkuW2Bcj27QGaXVC67IUCfL5FP6QDYSnPh9YvC2GIf1hBE6gDmVVgJzfC7UY=;
-Subject: Re: [PATCH 0/3] move mcu shared code in mt76-core
+        bh=Y2io5GXAzLnTYhh4gw+NpRaTJDkJfhd0g4ms3CRMBhE=; b=EpvoUwH2DIaB0vMOmMBAokBgS2
+        SciKPFt5AxciIpxfo0SdC2ifktEXHhJTS9Ahv+YzEdtuhXvvQa1QrEQ5qGoVGLwMoK4cbkzpwxGsJ
+        M6VaOpOZx2+C9hevn0iGLHaPfRJA7aJSTgF3q/B5/Eq4sbWqjEakEkEOwvZrbngllmFQ=;
+Subject: Re: [PATCH] mt76x0: mcu: remove useless commented configuration
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-References: <cover.1549298196.git.lorenzo.bianconi@redhat.com>
+References: <cover.1549381840.git.lorenzo.bianconi@redhat.com>
+ <7c17ba9e101c590ce3971d41f132fe9b31832b4d.1549381840.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -59,12 +60,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <6c04a96d-158b-cbac-6465-d4a29579e25b@nbd.name>
-Date:   Thu, 7 Feb 2019 14:41:30 +0100
+Message-ID: <b29d7642-af6d-21ae-67a6-4018ecce031e@nbd.name>
+Date:   Thu, 7 Feb 2019 14:42:02 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.0
 MIME-Version: 1.0
-In-Reply-To: <cover.1549298196.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <7c17ba9e101c590ce3971d41f132fe9b31832b4d.1549381840.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -73,9 +74,11 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-04 17:51, Lorenzo Bianconi wrote:
-> Move mcu shared routines in mt76-core module in order to
-> reuse them adding support for mt7603 driver
+On 2019-02-05 16:52, Lorenzo Bianconi wrote:
+> Remove useless commented out configuration in mt76x0u_load_firmware
+> routine
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Applied, thanks.
 
 - Felix
