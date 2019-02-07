@@ -2,39 +2,38 @@ Return-Path: <SRS0=Kusg=QO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22B2BC282C2
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:40:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5D37C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:41:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E56BE2146E
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:40:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69A132147C
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:41:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Wh1zwI/M"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="i4CFhbof"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727073AbfBGNkU (ORCPT
+        id S1726983AbfBGNld (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 08:40:20 -0500
-Received: from nbd.name ([46.4.11.11]:47218 "EHLO nbd.name"
+        Thu, 7 Feb 2019 08:41:33 -0500
+Received: from nbd.name ([46.4.11.11]:47278 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726809AbfBGNkT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 08:40:19 -0500
+        id S1726750AbfBGNld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Feb 2019 08:41:33 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=u6Xb30S6EGmTOkN0Mltz3eEp0uP5CPnqeHTH2AbkMVw=; b=Wh1zwI/MnQXQlpGUwVxQYjE02K
-        nVcQW0PyOF/lTXVGWLGmNfskGvuC+Zp/Jg2VSqaLLeQD27vmmZFzdVdLWdmAZNlEDzi2c2RypQgLp
-        hOEeyH8PYdvXouUFOaAAGJ2krWos3fqstG1wAP/rSm6/cRNmNMDa177lKyfVWAHybXbs=;
-Subject: Re: [PATCH] mt76x0: eeprom: fix VHT mcs{8,9} rate power offset
+        bh=nH292EJcyBOQvLEA/JU+MOG/dclyXvGESF/ixlCOlIw=; b=i4CFhbof+ITSIGzROSqdtt358h
+        lqy3HncyFXTclBUPbf+yodvPUCzR6sWXI1k0UDiBHY4smxL+ERklHyYlzoBvzY12ZJjU9sVZRr889
+        mTLTCeOdjkuW2Bcj27QGaXVC67IUCfL5FP6QDYSnPh9YvC2GIf1hBE6gDmVVgJzfC7UY=;
+Subject: Re: [PATCH 0/3] move mcu shared code in mt76-core
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-References: <cover.1549375500.git.lorenzo.bianconi@redhat.com>
- <2c8c824603c2cf9e41abcc2ff716585adef24d2d.1549375500.git.lorenzo.bianconi@redhat.com>
+References: <cover.1549298196.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -60,12 +59,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <875d6b86-7244-82bc-1bed-9651c160d672@nbd.name>
-Date:   Thu, 7 Feb 2019 14:40:16 +0100
+Message-ID: <6c04a96d-158b-cbac-6465-d4a29579e25b@nbd.name>
+Date:   Thu, 7 Feb 2019 14:41:30 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.0
 MIME-Version: 1.0
-In-Reply-To: <2c8c824603c2cf9e41abcc2ff716585adef24d2d.1549375500.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <cover.1549298196.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -74,13 +73,9 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-05 15:06, Lorenzo Bianconi wrote:
-> Fix rate power configuration for VHT mcs 8 and 9 in
-> mt76x0_get_tx_power_per_rate. Moreover use the rate power
-> offset used for HT/VHT mcs 6 even for HT/VHT mcs 7
-> 
-> Fixes: b37bbc8c8251 ("mt76x0: remove eeprom dependency from mt76x0_set_tx_power_per_rate")
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+On 2019-02-04 17:51, Lorenzo Bianconi wrote:
+> Move mcu shared routines in mt76-core module in order to
+> reuse them adding support for mt7603 driver
 Applied, thanks.
 
 - Felix
