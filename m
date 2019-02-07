@@ -2,67 +2,85 @@ Return-Path: <SRS0=Kusg=QO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F231C282CC
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 21:56:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06674C282CC
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 22:02:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 663D82175B
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 21:56:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C736D21721
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 22:02:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726896AbfBGV4M (ORCPT
+        id S1727166AbfBGWCv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 16:56:12 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:59806 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726622AbfBGV4L (ORCPT
+        Thu, 7 Feb 2019 17:02:51 -0500
+Received: from orcrist.hmeau.com ([104.223.48.154]:57938 "EHLO
+        deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727085AbfBGWCv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 16:56:11 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92-RC4)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1grreS-0006P7-Ug; Thu, 07 Feb 2019 22:56:09 +0100
-Message-ID: <99d5f95e0085ff738e4877f9e2aa7960d3972565.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] rhashtable: make walk safe from softirq context
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Herbert Xu <herbert@gondor.apana.org.au>
+        Thu, 7 Feb 2019 17:02:51 -0500
+Received: from gondobar.mordor.me.apana.org.au ([192.168.128.4] helo=gondobar)
+        by deadmen.hmeau.com with esmtps (Exim 4.89 #2 (Debian))
+        id 1grrkv-0002Le-Nn; Fri, 08 Feb 2019 06:02:49 +0800
+Received: from herbert by gondobar with local (Exim 4.89)
+        (envelope-from <herbert@gondor.apana.org.au>)
+        id 1grrkt-0007YP-Fa; Fri, 08 Feb 2019 06:02:47 +0800
+Date:   Fri, 8 Feb 2019 06:02:47 +0800
+From:   Herbert Xu <herbert@gondor.apana.org.au>
+To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Jouni Malinen <j@w1.fi>, Thomas Graf <tgraf@suug.ch>
-Date:   Thu, 07 Feb 2019 22:56:06 +0100
-In-Reply-To: <20190207214834.awrpkxunnvfdorbe@gondor.apana.org.au>
+Subject: Re: [PATCH v2] rhashtable: make walk safe from softirq context
+Message-ID: <20190207220247.vgzgqn627hkwnllp@gondor.apana.org.au>
 References: <20190206090721.8001-1-johannes@sipsolutions.net>
-         <20190207134006.gmuooqmyc5womcaf@gondor.apana.org.au>
-         <fee1bdca8bb21a472a75c1a43fa61aad7fe4bff5.camel@sipsolutions.net>
-         <20190207214834.awrpkxunnvfdorbe@gondor.apana.org.au>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+ <20190207134006.gmuooqmyc5womcaf@gondor.apana.org.au>
+ <fee1bdca8bb21a472a75c1a43fa61aad7fe4bff5.camel@sipsolutions.net>
+ <20190207214834.awrpkxunnvfdorbe@gondor.apana.org.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190207214834.awrpkxunnvfdorbe@gondor.apana.org.au>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-02-08 at 05:48 +0800, Herbert Xu wrote:
-> On Thu, Feb 07, 2019 at 02:50:54PM +0100, Johannes Berg wrote:
+On Fri, Feb 08, 2019 at 05:48:34AM +0800, Herbert Xu wrote:
+>
+> > > Could you please show me who is doing this so I can review that
+> > > to see whether it's a legitimate use of this API?
 > > 
-> > > This interface wasn't designed for use in softirq contexts.
+> > I'm sure you'll say it's not legitimate, but it still exists ;-)
 > > 
-> > Well, it clearly was used there. You even gave it a gfp_t argument in
-> > rhashtable_walk_init(), so you can't really claim it wasn't designed for
-> > this. I see now that it's ignored, but still?
+> > mesh_plink_broken() gets called from the TX status path, via
+> > ieee80211s_update_metric().
 > 
-> I see.  This was added behind my back so I wasn't aware of it.
+> Let me take a look.
 
-It's not used and actually I was wrong anyway: this would have also
-allowed doing the walk while holding a spinlock or with softirqs
-disabled, rather than from IRQ/softirq context.
+OK I think it is wrong but you already knew that :)
 
-In any case, it's clearly working to iterate from this context, and
-doing a spinlock_bh vs. a spinlock in the rhashtable code isn't really
-that big a deal? Not sure I really understand your objection.
+First of all our current walk interface does not guarantee that you
+will see all elements because a parallel remove can cause you to miss
+elements.  Although Neil Brown was trying to fix that it is still
+not in the tree yet.
 
-johannes
+But more fundamentally, iterating over an unbounded list in a sotirq
+context is *broken*!
 
+Either you don't really need a hash table at all because your list
+is short enough to start with, or you need to add more hash tables
+(or other data structures) to efficiently look things up using these
+alternative keys so that you don't end up hogging the softirq.
+
+So this needs to be fixed in mesh.
+
+Once that is gone hopefully we can remove the long obsolete init
+API that carries the GFP flag.
+
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
