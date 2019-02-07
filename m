@@ -2,87 +2,114 @@ Return-Path: <SRS0=Kusg=QO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86815C282C2
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:54:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E208C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:14:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 52E3D21907
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:54:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2482E2147C
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:14:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="dMKtK5O4"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oBSAwkUP";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Bpnzz0li"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727070AbfBGNyo (ORCPT
+        id S1726786AbfBGOOh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 08:54:44 -0500
-Received: from nbd.name ([46.4.11.11]:47900 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726558AbfBGNyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 08:54:43 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=NJ92N7SGJji8cg5cYBaZa3nhjA4SbqZiVuDZDelrQjI=; b=dMKtK5O4t12Uje9X4lt0OOxyK1
-        dacb4V7GMLYfsr7BPFi3rNAY8jNsiG0WIDFVFQw9TXyZeIbAf9i9VSzboUiwj5kztJKTHA0kaoRww
-        L4xdH1aaMzYqiYEFi9TS3FcdaeSEzKA7cBtQt8Ed3c6HR2IHlJakADcau2WXk2HXD8BU=;
-Subject: Re: [PATCH 0/4] mt76x{0,2}: move alloc_device common code in
- mt76_common module
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-References: <cover.1548952312.git.lorenzo.bianconi@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <f7019215-8961-9b2e-2a0b-446b72602e30@nbd.name>
-Date:   Thu, 7 Feb 2019 14:54:40 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.5.0
+        Thu, 7 Feb 2019 09:14:37 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:40166 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726558AbfBGOOh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Feb 2019 09:14:37 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 4F43B607DF; Thu,  7 Feb 2019 14:14:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549548876;
+        bh=5dl/IdNEQeqfO1AMpr58BoI8q4vDraMif9T5Wa9+VzA=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=oBSAwkUPod027Kkme5oLx/Elk+qWqqZkNzGy31eF2K7X/dyfyMDgrSYMLhcfN4lqU
+         MzkbVwj7943oZW1fZUnzE7Hlj+qw8C1NTZ+rEpTJma7ZXB/migHTP2Kgj8ZUhwXHDr
+         CM/mT1Ue08NFQWX29umoFiFy8MJZDhDwpZAcSlLk=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6F09E60351;
+        Thu,  7 Feb 2019 14:14:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549548875;
+        bh=5dl/IdNEQeqfO1AMpr58BoI8q4vDraMif9T5Wa9+VzA=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Bpnzz0li2lT0J1F/rI3A7r1z2sjQdmgCyPHdQTvUqQ1dWKny/PIVQXS171SQyzE9o
+         hvHIVoN0BDbYYk+je64CwchNO3bFDlF1o9H9h3SxU+5lLcfwufAHhPNM5KFg/ulpKA
+         /PodUNGz861zt0bvaNo/8OlSzcU3rKkeH/oNWjVk=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6F09E60351
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     Rakesh Pillai <pillair@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: Enable Factory Test Mode for WCN3990
+References: <1535526038-4299-1-git-send-email-pillair@codeaurora.org>
+        <20190205010207.GA219734@google.com>
+Date:   Thu, 07 Feb 2019 16:14:31 +0200
+In-Reply-To: <20190205010207.GA219734@google.com> (Brian Norris's message of
+        "Mon, 4 Feb 2019 17:02:08 -0800")
+Message-ID: <871s4jado8.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <cover.1548952312.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-01-31 17:55, Lorenzo Bianconi wrote:
-> Move mt76x{0,2} alloc_device common code in mt76_alloc_device and remove
-> duplicated code
-> 
-> Lorenzo Bianconi (4):
->   mt76: move alloc_device common code in mt76_alloc_device
->   mt76x2u: remove mt76x2u_alloc_device routine
->   mt76x0: remove mt76x0u_alloc_device routine
->   mt76x2: remove mt76x2_alloc_device routine
-Applied, thanks.
+Brian Norris <briannorris@chromium.org> writes:
 
-- Felix
+> On Wed, Aug 29, 2018 at 12:30:38PM +0530, Rakesh Pillai wrote:
+>> The support to put WCN3990 firmware into Factory
+>> test mode is not present currently. The WCN3990
+>> firmware can operate in Factory test mode based
+>> on the mode it receives in the wlan enable message
+>> from the host driver.
+>> 
+>> When the host driver is started in testmode send
+>> the operating mode as UTF mode, to the WCN3990
+>> firmware, in the wlan enable message to start the
+>> firmware in Factory test mode.
+>> 
+>> Tested on: WCN3990
+>> Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1.
+>> 
+>> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/ahb.c      |  3 ++-
+>>  drivers/net/wireless/ath/ath10k/core.c     |  2 +-
+>>  drivers/net/wireless/ath/ath10k/hif.h      |  7 ++++---
+>>  drivers/net/wireless/ath/ath10k/mac.c      |  2 +-
+>>  drivers/net/wireless/ath/ath10k/pci.c      |  3 ++-
+>>  drivers/net/wireless/ath/ath10k/sdio.c     |  3 ++-
+>>  drivers/net/wireless/ath/ath10k/snoc.c     | 20 ++++++++++++++++----
+>>  drivers/net/wireless/ath/ath10k/testmode.c |  2 +-
+>>  drivers/net/wireless/ath/ath10k/usb.c      |  3 ++-
+>>  9 files changed, 31 insertions(+), 14 deletions(-)
+>
+> What ever happened here? I'm told this is useful, but I see no comments
+> and it's marked Deferred in patchwork:
+>
+> https://patchwork.kernel.org/patch/10579559/
+
+Not sure, I guess it just got accidentally hidden with other patches.
+It's in new state now.
+
+> FWIW, it looks OK to me:
+>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+
+Thanks!
+
+-- 
+Kalle Valo
