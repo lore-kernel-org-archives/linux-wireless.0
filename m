@@ -2,104 +2,207 @@ Return-Path: <SRS0=Kusg=QO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 155FAC282CC
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 10:02:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CED89C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 10:11:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D4914218FE
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 10:02:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dU8SDZG1"
+	by mail.kernel.org (Postfix) with ESMTP id 902BB21872
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 10:11:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726675AbfBGKCn (ORCPT
+        id S1726675AbfBGKLN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 05:02:43 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:37628 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbfBGKCm (ORCPT
+        Thu, 7 Feb 2019 05:11:13 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:36316 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726448AbfBGKLN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 05:02:42 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x179siFh153016;
-        Thu, 7 Feb 2019 10:02:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=ATyNVxlxObVvI4vZL2hk1KfjzAuJEdedWoRuALIH0ps=;
- b=dU8SDZG1dBC38CdxV4SNhyv9AZNJfd6svbcyX4KJH5Jgbo9r74AP33/9YxT5TaSihaQh
- 27i0miLEHmF/RbG2fliXFcyT8tWRLIJG3PK7QHq9ZD4mVU0s7MYOMQaluRGX78++MuOC
- /NUa/KukJ6FXsV4E1I3sZVhtrUWAtANktNOVqsQ2bE+sLsB1tKBDGvQct3HFJf8+aUuX
- wdbdic8iENQclnSF2r5H1MidmmXv+5lDCHVxEe6o6b31tlm0GgfCQ7xFH2XfqRVPSfbp
- wqoKL4gYLQBdw11wCfL70H4w/MQbVKS7mHNx7pFLuuzx9LFtq6AeCnp03dEVO3Irg5aB dA== 
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2120.oracle.com with ESMTP id 2qd98ne159-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Feb 2019 10:02:36 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x17A2Z7G028920
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 7 Feb 2019 10:02:35 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x17A2Y7k029984;
-        Thu, 7 Feb 2019 10:02:35 GMT
-Received: from kadam (/41.202.241.45)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Feb 2019 02:02:34 -0800
-Date:   Thu, 7 Feb 2019 13:02:25 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Ajay.Kathat@microchip.com
-Cc:     devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
-        linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-        Adham.Abozaeid@microchip.com, johannes@sipsolutions.net
-Subject: Re: [PATCH 1/9] staging: wilc1000: revert fix related to vif index
-Message-ID: <20190207100225.GE1978@kadam>
-References: <1549519927-2651-1-git-send-email-ajay.kathat@microchip.com>
- <1549519927-2651-2-git-send-email-ajay.kathat@microchip.com>
- <20190207081242.GC1978@kadam>
- <8952ae4a-52a9-354b-2368-76419d15e6af@microchip.com>
+        Thu, 7 Feb 2019 05:11:13 -0500
+Received: by mail-wr1-f68.google.com with SMTP id z3so10873447wrv.3
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2019 02:11:11 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Y7LaFPI2PaQfO8gRgNIyTXXz2OxmM3M51lY7IXEOBUU=;
+        b=S8Qat2Tlzroc3HySkRyjgnCVI1FqCPqpZScUxWRpRXsQc/9mzGYQTow/N7M9vl54Dw
+         qgIpcqgXSk9AeU8n/gK0dBqTVLwFfmUExxBzL1EL85qNOA50S7E0Y3hjN9XeS5IJekxF
+         wJ7yFAk8R+6CRv5pWUsp/X6FvpNrk/Dx2YWTUp+i+/Dx/mR67EA6dubGT+trwoDelE+T
+         ggOPRwrmQkRCbkmyKYGBBMHInQ8Vzwn6F/LRYfkyL4Ektk0o031BBearJdMEENDhK8kk
+         4EuMF3lYjwl4dluxlzK/68uu4aL4IxNO+gCnmjoqz502aBo+Sz4tV8fq34+eMpIyTqKX
+         SIxg==
+X-Gm-Message-State: AHQUAuZ8ERsZs15gS7bCWyLUjbjs6xIajo9nY8t4t9XkLGIxQx4HyoFP
+        i5gFOuZp1Q2MAg+l2svKxjgpCsT1Mss=
+X-Google-Smtp-Source: AHgI3IYc7Dn0FYnYJJe0mjaXgJ/hTT7n64hxWQGkoNZsMDeTV+qQqDhaf1lDwr/QFSS4Cm//tRG+nA==
+X-Received: by 2002:adf:f28d:: with SMTP id k13mr12063298wro.78.1549534270449;
+        Thu, 07 Feb 2019 02:11:10 -0800 (PST)
+Received: from lore-desk.lan ([151.66.10.5])
+        by smtp.gmail.com with ESMTPSA id t199sm33376346wmt.1.2019.02.07.02.11.09
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Thu, 07 Feb 2019 02:11:09 -0800 (PST)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH v2] mt76: move mt76_dma_tx_queue_skb_raw in mt76-core module
+Date:   Thu,  7 Feb 2019 11:10:57 +0100
+Message-Id: <68febba653edb280369615b29e402f3f31bb61f0.1549533229.git.lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <cover.1549533229.git.lorenzo.bianconi@redhat.com>
+References: <cover.1549533229.git.lorenzo.bianconi@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8952ae4a-52a9-354b-2368-76419d15e6af@microchip.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9159 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1902070079
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Feb 07, 2019 at 09:39:54AM +0000, Ajay.Kathat@microchip.com wrote:
-> Hi Dan,
-> 
-> On 2/7/2019 1:42 PM, Dan Carpenter wrote:
-> > This patch was very confusing to review...
-> 
-> Apologies for the confusion.
-> 
-> > From a process perspective, you really should fold patches 1 and 2
-> > together.  Otherwise we're re-introducing a bug.
-> 
-> Patch 1 and Patch 2 both are required if commit 0e490657c721 ("staging:
-> wilc1000: Fix problem with wrong vif index") is applied else Patch 2 is
-> enough for complete fix. For the above reason, I have divided the fixes
-> into 2 patches.
-> Please suggest, if I should go ahead and submit this in a single patch.
-> Should I put 2 'Fixes:' tag in that merge commit or only 0e490657c721
-> commit is enough.
-> 
+Move mt76_dma_tx_queue_skb_raw routine in dma.c and add the
+corresponding entry in mt76_queue_ops data structure.
+mt76_dma_tx_queue_skb_raw  will be reused adding support for
+mt7603 driver
 
-I always just go with the oldest one.  Another option is to include
-both.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+Changes since v1:
+- rename mt76_tx_queue_mcu in mt76_dma_tx_queue_skb_raw and
+  add related function pointer in mt76_dma_ops
+---
+ drivers/net/wireless/mediatek/mt76/dma.c      | 25 ++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  4 ++
+ .../net/wireless/mediatek/mt76/mt76x02_mcu.c  | 40 ++++---------------
+ 3 files changed, 37 insertions(+), 32 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index a37b284168c6..0dd78d364751 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -242,6 +242,30 @@ mt76_dma_kick_queue(struct mt76_dev *dev, struct mt76_queue *q)
+ 	iowrite32(q->head, &q->regs->cpu_idx);
+ }
+ 
++static int
++mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
++			  struct sk_buff *skb, u32 tx_info)
++{
++	struct mt76_queue *q = &dev->q_tx[qid];
++	struct mt76_queue_buf buf;
++	dma_addr_t addr;
++
++	addr = dma_map_single(dev->dev, skb->data, skb->len,
++			      DMA_TO_DEVICE);
++	if (dma_mapping_error(dev->dev, addr))
++		return -ENOMEM;
++
++	buf.addr = addr;
++	buf.len = skb->len;
++
++	spin_lock_bh(&q->lock);
++	mt76_dma_add_buf(dev, q, &buf, 1, tx_info, skb, NULL);
++	mt76_dma_kick_queue(dev, q);
++	spin_unlock_bh(&q->lock);
++
++	return 0;
++}
++
+ int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
+ 			  struct sk_buff *skb, struct mt76_wcid *wcid,
+ 			  struct ieee80211_sta *sta)
+@@ -523,6 +547,7 @@ static const struct mt76_queue_ops mt76_dma_ops = {
+ 	.init = mt76_dma_init,
+ 	.alloc = mt76_dma_alloc_queue,
+ 	.add_buf = mt76_dma_add_buf,
++	.tx_queue_skb_raw = mt76_dma_tx_queue_skb_raw,
+ 	.tx_queue_skb = mt76_dma_tx_queue_skb,
+ 	.tx_cleanup = mt76_dma_tx_cleanup,
+ 	.rx_reset = mt76_dma_rx_reset,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 1bdac293b347..108d6bab70f0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -157,6 +157,9 @@ struct mt76_queue_ops {
+ 			    struct sk_buff *skb, struct mt76_wcid *wcid,
+ 			    struct ieee80211_sta *sta);
+ 
++	int (*tx_queue_skb_raw)(struct mt76_dev *dev, enum mt76_txq_id qid,
++				struct sk_buff *skb, u32 tx_info);
++
+ 	void *(*dequeue)(struct mt76_dev *dev, struct mt76_queue *q, bool flush,
+ 			 int *len, u32 *info, bool *more);
+ 
+@@ -566,6 +569,7 @@ static inline u16 mt76_rev(struct mt76_dev *dev)
+ #define mt76_init_queues(dev)		(dev)->mt76.queue_ops->init(&((dev)->mt76))
+ #define mt76_queue_alloc(dev, ...)	(dev)->mt76.queue_ops->alloc(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_queue_add_buf(dev, ...)	(dev)->mt76.queue_ops->add_buf(&((dev)->mt76), __VA_ARGS__)
++#define mt76_tx_queue_skb_raw(dev, ...)	(dev)->mt76.queue_ops->tx_queue_skb_raw(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_queue_rx_reset(dev, ...)	(dev)->mt76.queue_ops->rx_reset(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_queue_tx_cleanup(dev, ...)	(dev)->mt76.queue_ops->tx_cleanup(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_queue_kick(dev, ...)	(dev)->mt76.queue_ops->kick(&((dev)->mt76), __VA_ARGS__)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
+index b44d128f6f93..4752c104abf3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
+@@ -21,43 +21,13 @@
+ 
+ #include "mt76x02_mcu.h"
+ 
+-static int
+-mt76x02_tx_queue_mcu(struct mt76x02_dev *dev, enum mt76_txq_id qid,
+-		     struct sk_buff *skb, int cmd, int seq)
+-{
+-	struct mt76_queue *q = &dev->mt76.q_tx[qid];
+-	struct mt76_queue_buf buf;
+-	dma_addr_t addr;
+-	u32 tx_info;
+-
+-	tx_info = MT_MCU_MSG_TYPE_CMD |
+-		  FIELD_PREP(MT_MCU_MSG_CMD_TYPE, cmd) |
+-		  FIELD_PREP(MT_MCU_MSG_CMD_SEQ, seq) |
+-		  FIELD_PREP(MT_MCU_MSG_PORT, CPU_TX_PORT) |
+-		  FIELD_PREP(MT_MCU_MSG_LEN, skb->len);
+-
+-	addr = dma_map_single(dev->mt76.dev, skb->data, skb->len,
+-			      DMA_TO_DEVICE);
+-	if (dma_mapping_error(dev->mt76.dev, addr))
+-		return -ENOMEM;
+-
+-	buf.addr = addr;
+-	buf.len = skb->len;
+-
+-	spin_lock_bh(&q->lock);
+-	mt76_queue_add_buf(dev, q, &buf, 1, tx_info, skb, NULL);
+-	mt76_queue_kick(dev, q);
+-	spin_unlock_bh(&q->lock);
+-
+-	return 0;
+-}
+-
+ int mt76x02_mcu_msg_send(struct mt76_dev *mdev, int cmd, const void *data,
+ 			 int len, bool wait_resp)
+ {
+ 	struct mt76x02_dev *dev = container_of(mdev, struct mt76x02_dev, mt76);
+ 	unsigned long expires = jiffies + HZ;
+ 	struct sk_buff *skb;
++	u32 tx_info;
+ 	int ret;
+ 	u8 seq;
+ 
+@@ -71,7 +41,13 @@ int mt76x02_mcu_msg_send(struct mt76_dev *mdev, int cmd, const void *data,
+ 	if (!seq)
+ 		seq = ++mdev->mmio.mcu.msg_seq & 0xf;
+ 
+-	ret = mt76x02_tx_queue_mcu(dev, MT_TXQ_MCU, skb, cmd, seq);
++	tx_info = MT_MCU_MSG_TYPE_CMD |
++		  FIELD_PREP(MT_MCU_MSG_CMD_TYPE, cmd) |
++		  FIELD_PREP(MT_MCU_MSG_CMD_SEQ, seq) |
++		  FIELD_PREP(MT_MCU_MSG_PORT, CPU_TX_PORT) |
++		  FIELD_PREP(MT_MCU_MSG_LEN, skb->len);
++
++	ret = mt76_tx_queue_skb_raw(dev, MT_TXQ_MCU, skb, tx_info);
+ 	if (ret)
+ 		goto out;
+ 
+-- 
+2.20.1
 
