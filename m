@@ -2,117 +2,98 @@ Return-Path: <SRS0=Kusg=QO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D4DC282C2
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:23:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD5C6C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:25:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B9DF62147C
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:23:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A01E2147C
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 14:25:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="ET1ke0Sf"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UtUyfoFv";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UtUyfoFv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726901AbfBGOXx (ORCPT
+        id S1726960AbfBGOZU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 09:23:53 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:47724 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727512AbfBGOXk (ORCPT
+        Thu, 7 Feb 2019 09:25:20 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:57930 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726785AbfBGOZU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 09:23:40 -0500
-Received: from [192.168.1.47] (104-235-164-208.evrt.wa.frontiernet.net [104.235.164.208])
+        Thu, 7 Feb 2019 09:25:20 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B7D6D607F5; Thu,  7 Feb 2019 14:25:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549549519;
+        bh=bD+mdQbU4SKXfRdQ5al0t2Xk+4Z24bU7lL8zVtDcbHo=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=UtUyfoFvW5GrDqNiqg01XyjQTKKeQhMcGyFYku3km8/8oM+6CucorFfO7j6NMjPFJ
+         YXOfbn8W9ywwH8FiHVqsxnCV3XaeVV21QSr+xDJON4J4EPUCrVgkJ5kDyHA+NNaMWN
+         keb8MbSCTFdrPOxhnOjhtoowiqIb/fUBArylkkBs=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id D96E840C7D4;
-        Thu,  7 Feb 2019 06:23:28 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail2.candelatech.com D96E840C7D4
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1549549417;
-        bh=VmPqzukjqqQEPxj2MMqLAjBI20FfoXHP/vrt/o1Em5E=;
-        h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
-        b=ET1ke0Sffe2pBh8N4/b3uOy2YKJK0EYf1l4ZHeURAVETJ13GqGZjTEHOFyclTtJRF
-         E83QWbFr6lMp+Qwyv67jBdTWVfXTnsEStYOOB1Ir09P6nfdNMvBS9KYYKTl4U554+8
-         jWwpL327ZfFbvggI+Wj9fUEY/6MLTdxgQLtTYcJ4=
-Subject: Re: [PATCH] ath10k: implement set_base_macaddr to fix rx-bssid mask
- in multiple APs conf
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        Christian Lamparter <chunkeey@gmail.com>
-References: <20190114153558.972-1-chunkeey@gmail.com>
- <87tvhjd0c7.fsf@kamboji.qca.qualcomm.com> <4891660.4ehrp1WKpm@debian64>
- <87womb8yw1.fsf@kamboji.qca.qualcomm.com>
-Cc:     Brian Norris <briannorris@chromium.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Mathias Kresin <dev@kresin.me>, Felix Fietkau <nbd@nbd.name>
-From:   Ben Greear <greearb@candelatech.com>
-Message-ID: <bd92e361-f6f3-cfd9-090d-6381134edfdb@candelatech.com>
-Date:   Thu, 7 Feb 2019 06:23:26 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
- Thunderbird/45.8.0
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E8579602CC;
+        Thu,  7 Feb 2019 14:25:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549549519;
+        bh=bD+mdQbU4SKXfRdQ5al0t2Xk+4Z24bU7lL8zVtDcbHo=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=UtUyfoFvW5GrDqNiqg01XyjQTKKeQhMcGyFYku3km8/8oM+6CucorFfO7j6NMjPFJ
+         YXOfbn8W9ywwH8FiHVqsxnCV3XaeVV21QSr+xDJON4J4EPUCrVgkJ5kDyHA+NNaMWN
+         keb8MbSCTFdrPOxhnOjhtoowiqIb/fUBArylkkBs=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E8579602CC
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     yiboz <yiboz@codeaurora.org>
+Cc:     erik.stromdahl@gmail.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: FW: [PATCH] ath10k: fix return value check in wake_tx_q op
+References: <20180506132500.16888-1-erik.stromdahl@gmail.com>
+        <6dc00772b826410e930306891fd13ed9@euamsexm01f.eu.qualcomm.com>
+        <c77a1c0961f34ee68b7266444d2207f5@aptaiexm02e.ap.qualcomm.com>
+        <66a74025a23795f305de37989c1b8aa3@codeaurora.org>
+Date:   Thu, 07 Feb 2019 16:25:15 +0200
+In-Reply-To: <66a74025a23795f305de37989c1b8aa3@codeaurora.org>
+        (yiboz@codeaurora.org's message of "Mon, 28 Jan 2019 15:01:50 +0800")
+Message-ID: <87sgwz8ylw.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <87womb8yw1.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+(please don't top post)
 
+yiboz <yiboz@codeaurora.org> writes:
 
-On 02/07/2019 06:19 AM, Kalle Valo wrote:
-> Christian Lamparter <chunkeey@gmail.com> writes:
+> We have met performance issue on our two-core system after applying
+> your patch. In WDS mode, we found that the peak throughput in TCP-DL
+> and UDP-DL dropped more than 10% compared with previous one. And in
+> some cases, though throughput stays the same, one CPU usage rises
+> about 20% which leads to 10% in total CPU usage. With your change, I
+> think driver will try its best to push as many packets as it can.
+> During this time, the driver's queue lock will be held for too much
+> time in one CPU and as a result, the other CPU will be blocked if it
+> wants to acquired the same lock. Working in this way seems not
+> efficiency.
 >
->> On Monday, February 4, 2019 4:45:12 PM CET Kalle Valo wrote:
->>> Christian Lamparter <chunkeey@gmail.com> writes:
->>>
->>>> @@ -8885,6 +8904,7 @@ static const struct wmi_ops wmi_ops = {
->>>>
->>>>  	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
->>>>  	.gen_pdev_resume = ath10k_wmi_op_gen_pdev_resume,
->>>> +	.gen_pdev_set_base_macaddr = ath10k_wmi_op_gen_pdev_set_base_macaddr,
->>>>  	.gen_pdev_set_rd = ath10k_wmi_op_gen_pdev_set_rd,
->>>>  	.gen_pdev_set_param = ath10k_wmi_op_gen_pdev_set_param,
->>>>  	.gen_init = ath10k_wmi_op_gen_init,
->>>> @@ -8960,6 +8980,7 @@ static const struct wmi_ops wmi_10_1_ops = {
->>>>
->>>>  	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
->>>>  	.gen_pdev_resume = ath10k_wmi_op_gen_pdev_resume,
->>>> +	.gen_pdev_set_base_macaddr = ath10k_wmi_op_gen_pdev_set_base_macaddr,
->>>>  	.gen_pdev_set_param = ath10k_wmi_op_gen_pdev_set_param,
->>>>  	.gen_stop_scan = ath10k_wmi_op_gen_stop_scan,
->>>>  	.gen_vdev_create = ath10k_wmi_op_gen_vdev_create,
->>>> @@ -9032,6 +9053,7 @@ static const struct wmi_ops wmi_10_2_ops = {
->>>>
->>>>  	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
->>>>  	.gen_pdev_resume = ath10k_wmi_op_gen_pdev_resume,
->>>> +	.gen_pdev_set_base_macaddr = ath10k_wmi_op_gen_pdev_set_base_macaddr,
->>>>  	.gen_pdev_set_param = ath10k_wmi_op_gen_pdev_set_param,
->>>>  	.gen_stop_scan = ath10k_wmi_op_gen_stop_scan,
->>>>  	.gen_vdev_create = ath10k_wmi_op_gen_vdev_create,
->>>
->>> These are in practise obsolete WMI interfaces so not sure if it makes it
->>> worth to support this parameter in them. But on the other hand it won't
->>> hurt either, so dunno.
->>
->> Ok. I looked what firmware interfaces (wmi_cmd_map) supported the
->> pdev_set_base_macaddr_cmdid and all did (including the old and tlv)
->> so I added the line everywhere I could.
->> As far as the support for the old firmwares goes: I don't think
->> anybody with a current ath10k is willingly still stuck on the 10.1,
->> 10.2 firmware. So, I might as well just remove those for 10_2, 10_1 and MAIN.
->
-> Yeah, that's the best. BTW I'm planning (or better hoping) to remove
-> 10.1, 10.2 and main WMI interfaces altogether. They are just making
-> these unnecessary complex.
+> So I think it is better to revert the change till we come up with a
+> new solution.
 
-My wave-1 firmware uses the 10.1 interface and it is used by a fair number of people,
-so please leave that one in place.
+I don't think reverting is a clear option at this stage because that
+again creates problems for SDIO. IIRC without this patch SDIO was
+sending one packet a time (or something like that, can't remember all
+the details right now).
 
-Thanks,
-Ben
+Why does this happen only WDS mode? Did you test other modes, like AP or
+client mode?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
