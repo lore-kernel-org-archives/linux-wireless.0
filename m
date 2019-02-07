@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFEAEC282CC
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 20:13:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A82CC282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 20:15:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9A1672173B
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 20:13:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA07021721
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 20:15:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tbbOkjVX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nw3hqVLS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727383AbfBGUNC (ORCPT
+        id S1727448AbfBGUPo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 15:13:02 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:36154 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727282AbfBGUM5 (ORCPT
+        Thu, 7 Feb 2019 15:15:44 -0500
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:34014 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726650AbfBGUPn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 15:12:57 -0500
-Received: by mail-pl1-f193.google.com with SMTP id g9so470190plo.3
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2019 12:12:56 -0800 (PST)
+        Thu, 7 Feb 2019 15:15:43 -0500
+Received: by mail-pl1-f194.google.com with SMTP id w4so479178plz.1
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2019 12:15:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id;
         bh=y/VB52mm7sDg9LpGrF2wLJjfaHCbtFpkXRAqBFi667k=;
-        b=tbbOkjVXF0O/BmLRrE+aOWV7mwZdgWXiR8Lcy/6GvU5xNvzJ0d7s3/AYRpciJXGula
-         +AK5Cq9n10UEsdr5Swwzcm7a4zFlOU5sn0XYyB9GjlLfxe+JPrQV7Xx96tjB+Pn5NEIw
-         w/TeVzf80K5eJWjPuV1K1y2pvdhtLOCRGzvZRaD0g6DPiRiXlhgCjKvG25mCHk9vmYQQ
-         2zdGubJyK3tiBgN2sE4L/iN2A8Fu8Lt++BaKTrIEgQdCpnyd8vjZHitue3ti3n82eCac
-         AMZVb+T1Pz+D5ELVGpZU4GtNIp0unKlphr5uW878vky3yOLxKHfwuc5qqVVT/bYMDFMH
-         ZoJg==
+        b=nw3hqVLS/GE1xTXnkXE5LmL6cxFmXr3HVCM83v+GfVbvfPX37DAMSkquorkko56b4t
+         nwyOIsr7xnT56+9iPgi16OK3EyD7EHMH2obElIJfpDEj4nGv6gjjgVLDj9p6WM3sUk/Z
+         e7epHf3iZ6jPNqW8+TxT5ZGP8IYjfEFr5NW5O3f6MoQfF0M9v2jRD7Cubct5kNx1g/4/
+         +a+FSV/isPqq9dvEXTHHecK85hGT9t0e5J69gn2j7Tz+ajGsIp1Nh+tM0Kea/Ddo98Ue
+         44KHP84djR9fmTA0EHqqhcAhXJI88v6D4FyvExSrraAwIdyS3pyXCdUiE6SUMDuJCKnI
+         SvMQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
         bh=y/VB52mm7sDg9LpGrF2wLJjfaHCbtFpkXRAqBFi667k=;
-        b=lCbDWgfdN1b8BL8NuMZyybhDCi8tj8AK62wXdR9185L3zni1xAdIr9dNJH8Np2txeo
-         JA+7bgjYlly46ZPZEaarV+7YJZxTCXPgT9QsOXCX9LdhfYIOF3htGNYnb0Cx76t8jTMh
-         N2NW7tEArYLAtnEvVLrBGVKZG60kWws4kX7a87HgMBVHxX785a5Ajv8NzKUCwVMAFdHT
-         HtmVdUkrthquF1Wxs5APUReuGqqLOxp8jAiN1cZ/iMbcLy8k8vFQHoAvvs+YKXSdpUBI
-         xcQ40QK2FIJXjnX5n1ZAy4lreRRViBymzm+2yHAKFo4lJI0vBaQfWN+73tKoQEyoM0iJ
-         Zgkw==
-X-Gm-Message-State: AHQUAubsK2uVYMCBtyOjjkWlhOyJ6EC/cd6i9VBwjjTbeTnC9TKYB/Js
-        WVWV4kpvrEzsTpurk7o8bRO3evttUrc=
-X-Google-Smtp-Source: AHgI3IYXmZOoTo7wD6HGtc4hpeKKV712vw5kA1VR/xbt0V5y6G6deNKQZHTt4nVS5T/CZj3RHiiJGQ==
-X-Received: by 2002:a17:902:32b:: with SMTP id 40mr17669843pld.327.1549570376402;
-        Thu, 07 Feb 2019 12:12:56 -0800 (PST)
+        b=riYWaSwwEry0wagtGJikezUftcITbmOTBgnfQv5VXhXPM20MfUpYOpyszeqzNhhx+S
+         idXexhn5bjiED9w+SlfsUZ91uDTt7qp5P3rNHSnSM7HUg3hIKPNFBXFkv/Rw4exNgsT4
+         aM4YaWThonok0NQSZKly1F6Ai38BPq0UOynlnKvJQa3NHoentaq/uY9FOj7F2JFbkXle
+         DotJQYwPCniim33E83dU9MlpTLnFPFNk4iaJMX/S8eoYCOcb9cCr37xWVKezc/KRZApr
+         TGFfVEOdNRjZcj4OFSgZdER3r6HszdHNQfuF8TU3ThmapizMZpMnRcfgamzhWsDdzomM
+         LHCg==
+X-Gm-Message-State: AHQUAua8Zp3iiXRSlpYSzalshTUXuOqH43ci9rqUUrkq3ekwuUWcUC9f
+        IH6XxJMpxcu2gwTpfyHlExE/BpdEKh0=
+X-Google-Smtp-Source: AHgI3IYGF1PuzpxuAJ2RkWEZSlJ/2CZpibB1jEMsxr5sLn0sUHfEXSikHz5THwKhckzT6/XpIZTQvA==
+X-Received: by 2002:a17:902:aa07:: with SMTP id be7mr18360021plb.63.1549570543276;
+        Thu, 07 Feb 2019 12:15:43 -0800 (PST)
 Received: from localhost.localdomain ([100.90.116.195])
-        by smtp.googlemail.com with ESMTPSA id l8sm20183248pgf.60.2019.02.07.12.12.55
+        by smtp.googlemail.com with ESMTPSA id m198sm20133857pga.10.2019.02.07.12.15.42
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Thu, 07 Feb 2019 12:12:55 -0800 (PST)
+        Thu, 07 Feb 2019 12:15:42 -0800 (PST)
 From:   Narayanraddi Masti <team.nmasti@gmail.com>
-To:     johannes@sipsolutios.net
+To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Narayanraddi Masti <team.nmasti@gmail.com>
 Subject: [PATCH 1/2] mac80211: Add support for NL80211_STA_INFO_AIRTIME_LINK_METRIC
-Date:   Thu,  7 Feb 2019 12:13:17 -0800
-Message-Id: <1549570398-28575-1-git-send-email-team.nmasti@gmail.com>
+Date:   Thu,  7 Feb 2019 12:16:05 -0800
+Message-Id: <1549570566-28658-1-git-send-email-team.nmasti@gmail.com>
 X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
