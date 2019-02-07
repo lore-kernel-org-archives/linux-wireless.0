@@ -6,35 +6,36 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB94C282C2
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 661B4C282C2
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:43:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 08B692147C
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:42:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31ED121904
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 13:43:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="EpvoUwH2"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="UJf0yNKd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726983AbfBGNmG (ORCPT
+        id S1726809AbfBGNnS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 08:42:06 -0500
-Received: from nbd.name ([46.4.11.11]:47306 "EHLO nbd.name"
+        Thu, 7 Feb 2019 08:43:18 -0500
+Received: from nbd.name ([46.4.11.11]:47370 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726750AbfBGNmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 08:42:06 -0500
+        id S1726558AbfBGNnS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Feb 2019 08:43:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Y2io5GXAzLnTYhh4gw+NpRaTJDkJfhd0g4ms3CRMBhE=; b=EpvoUwH2DIaB0vMOmMBAokBgS2
-        SciKPFt5AxciIpxfo0SdC2ifktEXHhJTS9Ahv+YzEdtuhXvvQa1QrEQ5qGoVGLwMoK4cbkzpwxGsJ
-        M6VaOpOZx2+C9hevn0iGLHaPfRJA7aJSTgF3q/B5/Eq4sbWqjEakEkEOwvZrbngllmFQ=;
-Subject: Re: [PATCH] mt76x0: mcu: remove useless commented configuration
+        bh=xd/VVrpsam8iAAtyU8UU6oC2pJUdaQVTcIKqJHIJD20=; b=UJf0yNKdG4DUP8otEHITHbtFxO
+        fjrZ9x4z+e5A+PA9WrLGevVCNT540SFj1KGBtzW2dpHUFt1YcgdHLTzpSnoSEG9GPCQezmRCZKIlm
+        q2OuGZ+AcQ/g3rDNlsu+BG4WhRzwmDFUeEKEaX6kNmxlDDtD/VMhm5Xysr4ueUwMniz8=;
+Subject: Re: [PATCH v2] mt76: move mt76_dma_tx_queue_skb_raw in mt76-core
+ module
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-References: <cover.1549381840.git.lorenzo.bianconi@redhat.com>
- <7c17ba9e101c590ce3971d41f132fe9b31832b4d.1549381840.git.lorenzo.bianconi@redhat.com>
+References: <cover.1549533229.git.lorenzo.bianconi@redhat.com>
+ <68febba653edb280369615b29e402f3f31bb61f0.1549533229.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -60,12 +61,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <b29d7642-af6d-21ae-67a6-4018ecce031e@nbd.name>
-Date:   Thu, 7 Feb 2019 14:42:02 +0100
+Message-ID: <36ba4dcd-3fe8-67c0-c5d2-4c203ff506e0@nbd.name>
+Date:   Thu, 7 Feb 2019 14:43:15 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.0
 MIME-Version: 1.0
-In-Reply-To: <7c17ba9e101c590ce3971d41f132fe9b31832b4d.1549381840.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <68febba653edb280369615b29e402f3f31bb61f0.1549533229.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -74,9 +75,11 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-05 16:52, Lorenzo Bianconi wrote:
-> Remove useless commented out configuration in mt76x0u_load_firmware
-> routine
+On 2019-02-07 11:10, Lorenzo Bianconi wrote:
+> Move mt76_dma_tx_queue_skb_raw routine in dma.c and add the
+> corresponding entry in mt76_queue_ops data structure.
+> mt76_dma_tx_queue_skb_raw  will be reused adding support for
+> mt7603 driver
 > 
 > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Applied, thanks.
