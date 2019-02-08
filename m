@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F18ECC169C4
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:24:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5F6C169C4
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:24:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB6E720869
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:24:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A5F120869
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:24:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727879AbfBHNYP (ORCPT
+        id S1727880AbfBHNYR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 08:24:15 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:48856 "EHLO
+        Fri, 8 Feb 2019 08:24:17 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:48860 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727553AbfBHNYO (ORCPT
+        with ESMTP id S1727230AbfBHNYR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Feb 2019 08:24:14 -0500
+        Fri, 8 Feb 2019 08:24:17 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC4)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gs60R-0008Jb-Iw; Fri, 08 Feb 2019 14:15:47 +0100
+        id 1gs60R-0008Jb-6U; Fri, 08 Feb 2019 14:15:47 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v8 15/15] cfg80211: add missing kernel-doc for multi-BSSID fields
-Date:   Fri,  8 Feb 2019 14:15:39 +0100
-Message-Id: <20190208131539.6813-15-johannes@sipsolutions.net>
+Cc:     Jouni Malinen <jouni@codeaurora.org>
+Subject: [PATCH v8 14/15] mac80211_hwsim: Declare support for Multi-BSSID
+Date:   Fri,  8 Feb 2019 14:15:38 +0100
+Message-Id: <20190208131539.6813-14-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.17.2
 In-Reply-To: <20190208131539.6813-1-johannes@sipsolutions.net>
 References: <20190208131539.6813-1-johannes@sipsolutions.net>
@@ -38,31 +38,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Jouni Malinen <jouni@codeaurora.org>
 
-Add the missing kernel-doc for the new multi-BSSID fields
-in struct cfg80211_bss.
+This can be used to test cfg80211 support for Multi-BSSID scan result
+parsing.
 
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mac80211_hwsim.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 76efdc3a2200..b61b71f369c7 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2035,6 +2035,10 @@ struct cfg80211_bss_ies {
-  *	a BSS that hides the SSID in its beacon, this points to the BSS struct
-  *	that holds the beacon data. @beacon_ies is still valid, of course, and
-  *	points to the same data as hidden_beacon_bss->beacon_ies in that case.
-+ * @transmitted_bss: pointer to the transmitted BSS, if this is a
-+ *	non-transmitted one (multi-BSSID support)
-+ * @nontrans_list: list of non-transmitted BSS, if this is a transmitted one
-+ *	(multi-BSSID support)
-  * @signal: signal strength value (type depends on the wiphy's signal_type)
-  * @chains: bitmask for filled values in @chain_signal.
-  * @chain_signal: per-chain signal strength of last received BSS in dBm.
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 87be2b18063a..e8e359c80ad0 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2801,6 +2801,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	ieee80211_hw_set(hw, TDLS_WIDER_BW);
+ 	if (rctbl)
+ 		ieee80211_hw_set(hw, SUPPORTS_RC_TABLE);
++	ieee80211_hw_set(hw, SUPPORTS_MULTI_BSSID);
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+ 			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
 -- 
 2.17.2
 
