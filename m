@@ -6,62 +6,62 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA33DC282CC
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3B6DC282CB
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 505DE20855
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BBEB20855
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sneYx9l1"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SgKVuyGl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727913AbfBHRWo (ORCPT
+        id S1727920AbfBHRWp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 12:22:44 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:43144 "EHLO
+        Fri, 8 Feb 2019 12:22:45 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:40420 "EHLO
         mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727445AbfBHRWn (ORCPT
+        with ESMTP id S1727262AbfBHRWp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Feb 2019 12:22:43 -0500
-Received: by mail-ot1-f65.google.com with SMTP id a11so7034743otr.10
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 09:22:42 -0800 (PST)
+        Fri, 8 Feb 2019 12:22:45 -0500
+Received: by mail-ot1-f65.google.com with SMTP id s5so7058538oth.7
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 09:22:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=V9sByQFGyHUvHHSy8idO7F6S5jlNxAeuc/3V50IqzWE=;
-        b=sneYx9l1J3LvHIs1eb8Y9qqBqwiq+Mkhnr3mB7uwu5ZobiOKIHnRDw4SEhJK/P8Rvv
-         5hgf29oqQ/tkrEN0zs51nqeQxmCCuXfUawalMhP5gIw9SiWe0igKyorw0Xhzmd78unDU
-         BXiO4yXdc4sdRI6JrZAwwwbl9eIMcS1zZ4WB1RN8FBR+QUZ7gMO7Nh93fG5LRq2rNs/r
-         RqM2InGCBs/bfDI4IVDjX/LiEB41sLRsC/gN7rDyJqhOApCCRC5loI6g6OCI/oDXaH+s
-         gRAJ2af/W7MY3uIy+oQ+56Pe2jkUtR9k15AciykP1h6kiTA/MnGHvqnD9kRIZ6GDxLKY
-         n8lw==
+        bh=nJnZnMSFnqlGCYJ6ADqBfNN4ZJ2Yjr9U2hSBv++LoR0=;
+        b=SgKVuyGlMawLzJI4VoZtrsFUbYv57VI5pA9O0LvBlp+5xbHlQwbpqTMf06a5XsbILq
+         ttUlOA2LQss9KqMopMZ5/8GKxzqTD4BJhBW/e7I0wJ8AcS8Oj2sKmHDe9gTwRm//QdQq
+         ddp/c73VUdDKzBx+zwAo9nSAqSrRox5CXIWskkGinao9furulqWMkVRDWdrAqbSdnoF9
+         0L+Zq3iIy6hMzfgeMw/UMkKX9mgItxKU89wLojruq5RuQiuFduTIRrX28y3i4FNtzl3d
+         XkDcxiVKDE+huU2qRe/DS5qs9ytWx9hgdRSyejZK1fBZjb26iTs2kGHJbJTGC1Q2Ruiw
+         Bdpw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
          :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=V9sByQFGyHUvHHSy8idO7F6S5jlNxAeuc/3V50IqzWE=;
-        b=EN04ucdKFjUe6eoQdnMQOpiRwqIHq+sOal9utDZzq4QtgJ9+lGV/5SeGfghPBDLtLg
-         W6Cr3EIW9SL0cGaHmVd/Gb895vmOKWfedy52SVbCnUbrMKs30VQBvv2rTFu+CjfUO/B9
-         P47Vl11HCVtlV2TjOFip0te3bk5D0edzYIOJqhpzS1NkAbIogQod7SIZ6h5aN5tvGgOe
-         n6bgfG/BKg6pemjBCisdA6/WLlggN0oMIIFsyZRRNSu2TLBAZczJL+uGF/d0Sajtla3W
-         VUXcMNTwLAVm1twjo23hlyncxl3bx1WoDqXFshws/q9+6F6ZYR/I/eCG20M6lpDSe1nM
-         18Tg==
-X-Gm-Message-State: AHQUAuYar64XDlVclBkpG7N7xWGM+bH84foelGFMSDED3OojhcAejZZA
-        DqRf0iUrmRUOFl4u13fwwLQ=
-X-Google-Smtp-Source: AHgI3IYphgv7jCGlK1Q3H0QdJUlLOCb5YaRkwQNZWQyaUtFC2GN21PvD3NuWeGMK+EbF/KU3U1YFpw==
-X-Received: by 2002:a9d:7c86:: with SMTP id q6mr15162521otn.257.1549646561659;
-        Fri, 08 Feb 2019 09:22:41 -0800 (PST)
+        bh=nJnZnMSFnqlGCYJ6ADqBfNN4ZJ2Yjr9U2hSBv++LoR0=;
+        b=oJ1JggrPOrvsI1mezraGCDv8tVkBN7B/WMviMJvsrQunZPmGlKQkY4atDGwwBQaUl4
+         7Yiq3vNoorIfaHXxoumn19v11DSaPe7LTcN73icbpgA3lBiiOQgH+325aYcbqvnqUjEV
+         24ptVQSzdLIyGD17YcJRaaZ/qTvMRFtdqV1f23lN1TNJhwdAD1+r9GVkob5xmTmcEPEW
+         dzXS/iLsA3Ezh5YWUhC8XS2bI8uQ9Y6zD3SoaqMbUlEzj0L0oyIDgcHiDPjDde+3fF70
+         DGmlsv34yUV8JkEz0PEloMASzoMwU63wAkyNQ5b4u0IpiPmUH74Nko4zxoK7CC7ZH8jy
+         Gv9g==
+X-Gm-Message-State: AHQUAubyLVrxT9DlKFUOz29Q3fbapq/J1k/fsYLKFkry1F5+1hv8fHXB
+        S3tmEyywbeEt67RLiBA5To4=
+X-Google-Smtp-Source: AHgI3IZgicISigw4N7B+SnNu8QI+g8M3UyOJj0jxQFQa/7UVyOgEZdQ50USdulzUbMCsUyr//VWbnQ==
+X-Received: by 2002:a9d:4:: with SMTP id 4mr14787320ota.174.1549646562479;
+        Fri, 08 Feb 2019 09:22:42 -0800 (PST)
 Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id o2sm1107262otj.2.2019.02.08.09.22.40
+        by smtp.gmail.com with ESMTPSA id o2sm1107262otj.2.2019.02.08.09.22.41
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 08 Feb 2019 09:22:41 -0800 (PST)
+        Fri, 08 Feb 2019 09:22:42 -0800 (PST)
 From:   Larry Finger <Larry.Finger@lwfinger.net>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
         Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 02/13] rtlwifi: btcoex: Replace old-style license information
-Date:   Fri,  8 Feb 2019 11:21:58 -0600
-Message-Id: <20190208172209.28530-3-Larry.Finger@lwfinger.net>
+Subject: [PATCH 03/13] rtlwifi: rtl8188ee: Replace old-style license information
+Date:   Fri,  8 Feb 2019 11:21:59 -0600
+Message-Id: <20190208172209.28530-4-Larry.Finger@lwfinger.net>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190208172209.28530-1-Larry.Finger@lwfinger.net>
 References: <20190208172209.28530-1-Larry.Finger@lwfinger.net>
@@ -72,526 +72,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The old-style license information is replaced by the SPDX form. There
+The traditional license information is replaced by the SPDX form. There
 are no code changes.
 
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h | 25 ++-----------
- .../rtlwifi/btcoexist/halbtc8192e2ant.c       | 35 ++-----------------
- .../rtlwifi/btcoexist/halbtc8192e2ant.h       | 27 ++------------
- .../rtlwifi/btcoexist/halbtc8723b1ant.c       | 26 ++------------
- .../rtlwifi/btcoexist/halbtc8723b1ant.h       | 27 ++------------
- .../rtlwifi/btcoexist/halbtc8723b2ant.c       | 27 ++------------
- .../rtlwifi/btcoexist/halbtc8723b2ant.h       | 27 ++------------
- .../rtlwifi/btcoexist/halbtc8821a1ant.c       | 26 ++------------
- .../rtlwifi/btcoexist/halbtc8821a1ant.h       | 26 ++------------
- .../rtlwifi/btcoexist/halbtc8821a2ant.c       | 26 ++------------
- .../rtlwifi/btcoexist/halbtc8821a2ant.h       | 26 ++------------
- .../rtlwifi/btcoexist/halbtc8822bwifionly.c   | 17 ++-------
- .../rtlwifi/btcoexist/halbtc8822bwifionly.h   |  3 ++
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c  | 26 ++------------
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h  | 27 ++------------
- .../realtek/rtlwifi/btcoexist/rtl_btc.c       | 27 ++------------
- .../realtek/rtlwifi/btcoexist/rtl_btc.h       | 25 ++-----------
- 17 files changed, 42 insertions(+), 381 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8188ee/def.h  | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/dm.c   | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/dm.h   | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/fw.c   | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/fw.h   | 25 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/hw.c   | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/hw.h   | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/led.c  | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/led.h  | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/phy.c  | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/phy.h  | 26 ++---------------
+ .../realtek/rtlwifi/rtl8188ee/pwrseq.c        | 26 ++---------------
+ .../realtek/rtlwifi/rtl8188ee/pwrseq.h        | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/reg.h  | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/rf.c   | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/rf.h   | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/sw.c   | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/sw.h   | 26 ++---------------
+ .../realtek/rtlwifi/rtl8188ee/table.c         | 28 ++-----------------
+ .../realtek/rtlwifi/rtl8188ee/table.h         | 28 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/trx.c  | 26 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/trx.h  | 26 ++---------------
+ 22 files changed, 44 insertions(+), 531 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-index 02dff4c3f664..8705c85c2693 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-@@ -1,26 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- ******************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2007-2011  Realtek Corporation.*/
- 
- #ifndef	__HALBT_PRECOMP_H__
- #define __HALBT_PRECOMP_H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-index f22fec093f1d..d5f20d3c420b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-@@ -1,36 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
--/**************************************************************
-- * Description:
-- *
-- * This file is for RTL8192E Co-exist mechanism
-- *
-- * History
-- * 2012/11/15 Cosa first check in.
-- *
-- **************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
- 
- /**************************************************************
-  *   include files
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.h
-index b8c95c7afc06..7e008fca8bd0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.h
-@@ -1,27 +1,6 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
-+
- /*****************************************************************
-  *   The following is for 8192E 2Ant BT Co-exist definition
-  *****************************************************************/
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 59553db020ef..134a139f6149 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h
+index 45c866d3ca88..0d856c82a622 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h
 @@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
- 
- /***************************************************************
-  * Description:
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-index 934f27893c16..4fada28a83f5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.h
-@@ -1,27 +1,6 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
-+
- /**********************************************************************
-  * The following is for 8723B 1ANT BT Co-exist definition
-  **********************************************************************/
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 6597f7cb3411..0949b4ff0889 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -1,27 +1,6 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
-+
- /***************************************************************
-  * Description:
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-index aa24da402fb9..ce85965c74e8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-@@ -1,27 +1,6 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
-+
- #ifndef _HAL8723B_2_ANT
- #define _HAL8723B_2_ANT
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index b5d65872db84..d8028f6e0cab 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
- 
- /**************************************************************
-  * Description:
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-index a498ff5b1b9c..8478a87b89ee 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
-@@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
- 
- /*===========================================
-  * The following is for 8821A 1ANT BT Co-exist definition
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 01a9d303603b..579702bae759 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
- 
- /************************************************************
-  * Description:
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-index ce3e58c4e660..810ccfa7b37f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.h
-@@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2012  Realtek Corporation.*/
- 
- /*===========================================
-  * The following is for 8821A 2Ant BT Co-exist definition
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
-index 951b8c1e0153..dfb5060ffc7b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
-@@ -1,17 +1,6 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2016-2017  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2016-2017  Realtek Corporation.*/
-+
- #include "halbt_precomp.h"
- 
- void ex_hal8822b_wifi_only_hw_config(struct wifi_only_cfg *wifionlycfg)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
-index 6ec356542eea..fa4f6034f7d7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
-@@ -1,3 +1,6 @@
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2016-2017  Realtek Corporation.*/
-+
- /******************************************************************************
-  *
-  * Copyright(c) 2016-2017  Realtek Corporation.
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index d748aab66aa2..adcec94acee8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2007 - 2013 Realtek Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- ******************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2007-2013  Realtek Corporation.*/
- 
- #include "halbt_precomp.h"
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 9eae87d19120..de4575700757 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -1,27 +1,6 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2009-2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2009-2012  Realtek Corporation.*/
-+
- #ifndef	__HALBTC_OUT_SRC_H__
- #define __HALBTC_OUT_SRC_H__
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index cce4a37ea408..d9c9bfe38399 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -1,27 +1,6 @@
 -/******************************************************************************
 - *
 - * Copyright(c) 2009-2013  Realtek Corporation.
@@ -618,18 +132,119 @@ index cce4a37ea408..d9c9bfe38399 100644
 - *****************************************************************************/
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/* Copyright(c) 2009-2013  Realtek Corporation.*/
-+
+ 
+ #ifndef __RTL92C_DEF_H__
+ #define __RTL92C_DEF_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
+index e05af7d60830..057414b324ef 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
  #include "../wifi.h"
- #include <linux/vmalloc.h>
- #include <linux/module.h>
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-index 8c996055de71..622586d5f7c3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+ #include "../base.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.h
+index 50f26a9a97db..559490b42964 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef	__RTL88E_DM_H__
+ #define __RTL88E_DM_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+index 63874512598b..390b05650931 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #include "../wifi.h"
+ #include "../pci.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.h
+index b884c30c7b37..a5aab35b6e18 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.h
 @@ -1,26 +1,5 @@
 -/******************************************************************************
 - *
-- * Copyright(c) 2009-2010  Realtek Corporation.
+- * Copyright(c) 2009-2013  Realtek Corporation.
 - *
 - * This program is free software; you can redistribute it and/or modify it
 - * under the terms of version 2 of the GNU General Public License as
@@ -651,10 +266,592 @@ index 8c996055de71..622586d5f7c3 100644
 - *
 - *****************************************************************************/
 +/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2009-2010  Realtek Corporation.*/
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
  
- #ifndef __RTL_BTC_H__
- #define __RTL_BTC_H__
+ #ifndef __RTL92C__FW__H__
+ #define __RTL92C__FW__H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index 4932076b344e..45174a7c1a26 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #include "../wifi.h"
+ #include "../efuse.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h
+index 214cd2a32018..3250e52dce6f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef __RTL92CE_HW_H__
+ #define __RTL92CE_HW_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c
+index df3e214460db..36555ba1d4f8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #include "../wifi.h"
+ #include "../pci.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.h
+index 4b325b75faaf..b328c81e14de 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef __RTL92CE_LED_H__
+ #define __RTL92CE_LED_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
+index 14a256062614..6f1469205621 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #include "../wifi.h"
+ #include "../pci.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.h
+index b29bd77210f4..397692d514b9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef __RTL92C_PHY_H__
+ #define __RTL92C_PHY_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/pwrseq.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/pwrseq.c
+index 02013df968a0..3bad46cb570c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/pwrseq.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/pwrseq.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #include "../pwrseqcmd.h"
+ #include "pwrseq.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/pwrseq.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/pwrseq.h
+index 8379a3e5198c..4ff40278f0a6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/pwrseq.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/pwrseq.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef __RTL8723E_PWRSEQ_H__
+ #define __RTL8723E_PWRSEQ_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
+index 0c0d64aea651..7cbec6ac7eae 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef __RTL92C_REG_H__
+ #define __RTL92C_REG_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
+index 30798b12a363..ae36adad7431 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #include "../wifi.h"
+ #include "reg.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.h
+index 0eca030e3238..a6f0557614f6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef __RTL92C_RF_H__
+ #define __RTL92C_RF_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+index 8c15ffd3568b..2005dae9920e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #include "../wifi.h"
+ #include "../core.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.h
+index 22398c3753a6..8f0be68ad93d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef __RTL92CE_SW_H__
+ #define __RTL92CE_SW_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/table.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/table.c
+index 68bcb7fe6a65..281733a74f4b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/table.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/table.c
+@@ -1,29 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Created on  2010/ 5/18,  1:41
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #include "table.h"
+ u32 RTL8188EEPHY_REG_1TARRAY[] = {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/table.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/table.h
+index 403c4ddd236f..0655662eb796 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/table.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/table.h
+@@ -1,29 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Created on  2010/ 5/18,  1:41
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef __RTL92CE_TABLE__H_
+ #define __RTL92CE_TABLE__H_
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
+index 14dcb0816bc0..c2f670726198 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #include "../wifi.h"
+ #include "../pci.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
+index 127ba977206f..830ce43685da 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2013  Realtek Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2013  Realtek Corporation.*/
+ 
+ #ifndef __RTL92CE_TRX_H__
+ #define __RTL92CE_TRX_H__
 -- 
 2.20.1
 
