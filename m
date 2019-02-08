@@ -1,267 +1,59 @@
-Return-Path: <SRS0=Kusg=QO=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=Ms0V=QP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
+	HEADER_FROM_DIFFERENT_DOMAINS,LOTS_OF_MONEY,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9DE3C282C2
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 22:37:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE62C282C4
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 01:16:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2BC22173B
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Feb 2019 22:37:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 557DA2146E
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 01:16:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727045AbfBGWhR (ORCPT
+        id S1726864AbfBHBQn convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Feb 2019 17:37:17 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:56720 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726650AbfBGWhR (ORCPT
+        Thu, 7 Feb 2019 20:16:43 -0500
+Received: from static-ady237.rev.nazwa.pl ([77.55.102.237]:40266 "EHLO
+        static-ady237.rev.nazwa.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726793AbfBHBQn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Feb 2019 17:37:17 -0500
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1grsHq-0002II-J1; Fri, 08 Feb 2019 00:36:51 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri,  8 Feb 2019 00:36:22 +0200
-Message-Id: <20190207223622.9642-18-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190207223622.9642-1-luca@coelho.fi>
-References: <20190207223622.9642-1-luca@coelho.fi>
+        Thu, 7 Feb 2019 20:16:43 -0500
+X-Greylist: delayed 671 seconds by postgrey-1.27 at vger.kernel.org; Thu, 07 Feb 2019 20:16:42 EST
+X-Virus-Scanned: by amavisd-new using ClamAV (6)
+Received: from [212.83.175.149] (212-83-175-149.rev.poneytelecom.eu [212.83.175.149])
+        by darekwojciec.nazwa.pl (Postfix) with ESMTP id 5A3321C6C4C
+        for <linux-wireless@vger.kernel.org>; Fri,  8 Feb 2019 02:05:30 +0100 (CET)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 17/17] iwlwifi: mvm: support beacon IE injection
+Content-Transfer-Encoding: 8BIT
+Content-Description: Mail message body
+Subject: DONATION
+To:     linux-wireless@vger.kernel.org
+From:   " Susanne Klatten" <muzeum@okislubomierz.pl>
+Date:   Thu, 07 Feb 2019 17:05:28 -0800
+Reply-To: susanneklatten502@gmail.com
+Message-Id: <20190208010530.5A3321C6C4C@darekwojciec.nazwa.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+Dear Beloved,
 
-This is useful for automated tests.
+ 
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c  | 106 ++++++++++++++++++
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  22 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  11 ++
- 3 files changed, 128 insertions(+), 11 deletions(-)
+Kindly Confirm ownership of your e-mail [linux-wireless@vger.kernel.org]. It was randomly selected after an Electronic Computer SPIN BALL draw, to receive a donation of €1,000.000.00 (One Million Euros) as part of Susanne Klatten charity project.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index e136475a34f6..80b0b2ed69bb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1188,6 +1188,108 @@ static ssize_t iwl_dbgfs_inject_packet_write(struct iwl_mvm *mvm,
- 	return ret ?: count;
- }
- 
-+static int _iwl_dbgfs_inject_beacon_ie(struct iwl_mvm *mvm, char *bin, int len)
-+{
-+	struct ieee80211_vif *vif;
-+	struct iwl_mvm_vif *mvmvif;
-+	struct sk_buff *beacon;
-+	struct ieee80211_tx_info *info;
-+	struct iwl_mac_beacon_cmd beacon_cmd = {};
-+	u8 rate;
-+	u16 flags;
-+	int i;
-+
-+	len /= 2;
-+
-+	/* Element len should be represented by u8 */
-+	if (len >= U8_MAX)
-+		return -EINVAL;
-+
-+	if (!iwl_mvm_firmware_running(mvm))
-+		return -EIO;
-+
-+	if (!iwl_mvm_has_new_tx_api(mvm) &&
-+	    !fw_has_api(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE))
-+		return -EINVAL;
-+
-+	rcu_read_lock();
-+
-+	for (i = 0; i < NUM_MAC_INDEX_DRIVER; i++) {
-+		vif = iwl_mvm_rcu_dereference_vif_id(mvm, i, true);
-+		if (!vif)
-+			continue;
-+
-+		if (vif->type == NL80211_IFTYPE_AP)
-+			break;
-+	}
-+
-+	if (i == NUM_MAC_INDEX_DRIVER || !vif)
-+		goto out_err;
-+
-+	mvm->hw->extra_beacon_tailroom = len;
-+
-+	beacon = ieee80211_beacon_get_template(mvm->hw, vif, NULL);
-+	if (!beacon)
-+		goto out_err;
-+
-+	if (len && hex2bin(skb_put_zero(beacon, len), bin, len)) {
-+		dev_kfree_skb(beacon);
-+		goto out_err;
-+	}
-+
-+	mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	info = IEEE80211_SKB_CB(beacon);
-+	rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
-+	flags = iwl_mvm_mac80211_idx_to_hwrate(rate);
-+
-+	if (rate == IWL_FIRST_CCK_RATE)
-+		flags |= IWL_MAC_BEACON_CCK;
-+
-+	beacon_cmd.flags = cpu_to_le16(flags);
-+	beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon->len);
-+	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
-+
-+	iwl_mvm_mac_ctxt_set_tim(mvm, &beacon_cmd.tim_idx,
-+				 &beacon_cmd.tim_size,
-+				 beacon->data, beacon->len);
-+
-+	mutex_lock(&mvm->mutex);
-+	iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
-+					 sizeof(beacon_cmd));
-+	mutex_unlock(&mvm->mutex);
-+
-+	dev_kfree_skb(beacon);
-+
-+	rcu_read_unlock();
-+	return 0;
-+
-+out_err:
-+	rcu_read_unlock();
-+	return -EINVAL;
-+}
-+
-+static ssize_t iwl_dbgfs_inject_beacon_ie_write(struct iwl_mvm *mvm,
-+						char *buf, size_t count,
-+						loff_t *ppos)
-+{
-+	int ret = _iwl_dbgfs_inject_beacon_ie(mvm, buf, count);
-+
-+	mvm->hw->extra_beacon_tailroom = 0;
-+	return ret ?: count;
-+}
-+
-+static ssize_t iwl_dbgfs_inject_beacon_ie_restore_write(struct iwl_mvm *mvm,
-+							char *buf,
-+							size_t count,
-+							loff_t *ppos)
-+{
-+	int ret = _iwl_dbgfs_inject_beacon_ie(mvm, NULL, 0);
-+
-+	mvm->hw->extra_beacon_tailroom = 0;
-+	return ret ?: count;
-+}
-+
- static ssize_t iwl_dbgfs_fw_dbg_conf_read(struct file *file,
- 					  char __user *user_buf,
- 					  size_t count, loff_t *ppos)
-@@ -1806,6 +1908,8 @@ MVM_DEBUGFS_WRITE_FILE_OPS(max_amsdu_len, 8);
- MVM_DEBUGFS_WRITE_FILE_OPS(indirection_tbl,
- 			   (IWL_RSS_INDIRECTION_TABLE_SIZE * 2));
- MVM_DEBUGFS_WRITE_FILE_OPS(inject_packet, 512);
-+MVM_DEBUGFS_WRITE_FILE_OPS(inject_beacon_ie, 512);
-+MVM_DEBUGFS_WRITE_FILE_OPS(inject_beacon_ie_restore, 512);
- 
- MVM_DEBUGFS_READ_FILE_OPS(uapsd_noagg_bssids);
- 
-@@ -2007,6 +2111,8 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 	MVM_DEBUGFS_ADD_FILE(send_echo_cmd, mvm->debugfs_dir, 0200);
- 	MVM_DEBUGFS_ADD_FILE(indirection_tbl, mvm->debugfs_dir, 0200);
- 	MVM_DEBUGFS_ADD_FILE(inject_packet, mvm->debugfs_dir, 0200);
-+	MVM_DEBUGFS_ADD_FILE(inject_beacon_ie, mvm->debugfs_dir, 0200);
-+	MVM_DEBUGFS_ADD_FILE(inject_beacon_ie_restore, mvm->debugfs_dir, 0200);
- #ifdef CONFIG_ACPI
- 	MVM_DEBUGFS_ADD_FILE(sar_geo_profile, dbgfs_dir, 0400);
- #endif
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 83711b555036..9bd4376cad9b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -811,9 +811,9 @@ static int iwl_mvm_mac_ctxt_cmd_p2p_device(struct iwl_mvm *mvm,
- 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
- }
- 
--static void iwl_mvm_mac_ctxt_set_tim(struct iwl_mvm *mvm,
--				     __le32 *tim_index, __le32 *tim_size,
--				     u8 *beacon, u32 frame_size)
-+void iwl_mvm_mac_ctxt_set_tim(struct iwl_mvm *mvm,
-+			      __le32 *tim_index, __le32 *tim_size,
-+			      u8 *beacon, u32 frame_size)
- {
- 	u32 tim_idx;
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)beacon;
-@@ -853,8 +853,8 @@ static u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
- 	return ie - beacon;
- }
- 
--static u8 iwl_mvm_mac_ctxt_get_lowest_rate(struct ieee80211_tx_info *info,
--					   struct ieee80211_vif *vif)
-+u8 iwl_mvm_mac_ctxt_get_lowest_rate(struct ieee80211_tx_info *info,
-+				    struct ieee80211_vif *vif)
- {
- 	u8 rate;
- 
-@@ -904,9 +904,9 @@ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
- 
- }
- 
--static int iwl_mvm_mac_ctxt_send_beacon_cmd(struct iwl_mvm *mvm,
--					    struct sk_buff *beacon,
--					    void *data, int len)
-+int iwl_mvm_mac_ctxt_send_beacon_cmd(struct iwl_mvm *mvm,
-+				     struct sk_buff *beacon,
-+				     void *data, int len)
- {
- 	struct iwl_host_cmd cmd = {
- 		.id = BEACON_TEMPLATE_CMD,
-@@ -1009,9 +1009,9 @@ static int iwl_mvm_mac_ctxt_send_beacon_v9(struct iwl_mvm *mvm,
- 						sizeof(beacon_cmd));
- }
- 
--static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
--					struct ieee80211_vif *vif,
--					struct sk_buff *beacon)
-+int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
-+				 struct ieee80211_vif *vif,
-+				 struct sk_buff *beacon)
- {
- 	if (WARN_ON(!beacon))
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index c70fc90680af..f4fc81695df1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1693,6 +1693,17 @@ int iwl_mvm_mac_ctxt_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- int iwl_mvm_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_mac_ctxt_beacon_changed(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif);
-+int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
-+				 struct ieee80211_vif *vif,
-+				 struct sk_buff *beacon);
-+int iwl_mvm_mac_ctxt_send_beacon_cmd(struct iwl_mvm *mvm,
-+				     struct sk_buff *beacon,
-+				     void *data, int len);
-+u8 iwl_mvm_mac_ctxt_get_lowest_rate(struct ieee80211_tx_info *info,
-+				    struct ieee80211_vif *vif);
-+void iwl_mvm_mac_ctxt_set_tim(struct iwl_mvm *mvm,
-+			      __le32 *tim_index, __le32 *tim_size,
-+			      u8 *beacon, u32 frame_size);
- void iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
- 			     struct iwl_rx_cmd_buffer *rxb);
- void iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
--- 
-2.20.1
+  
 
+Confirm your email now by sending confirmation response to me now and I shall explain in detail all you need to know.
+
+ 
+
+Best Regards,
+Susanne Klatten.
+===============
+
+DISCLAIMER: THIS EMAIL IS PROPOSED TO (linux-wireless@vger.kernel.org); KINDLY DISREGARD IF YOU ARE NOT THE RIGHTFUL OWNER.
