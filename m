@@ -6,170 +6,311 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E33C282CB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44593C282D7
 	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 10:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D70DB21919
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 10:47:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E37C21919
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 10:47:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727650AbfBHKrW (ORCPT
+        id S1727651AbfBHKrX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 05:47:22 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:56946 "EHLO
+        Fri, 8 Feb 2019 05:47:23 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:56954 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727134AbfBHKrW (ORCPT
+        with ESMTP id S1727485AbfBHKrW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 8 Feb 2019 05:47:22 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gs3gl-0002jg-Au; Fri, 08 Feb 2019 12:47:20 +0200
+        id 1gs3gm-0002jg-NL; Fri, 08 Feb 2019 12:47:21 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri,  8 Feb 2019 12:46:54 +0200
-Message-Id: <20190208104712.16210-3-luca@coelho.fi>
+Date:   Fri,  8 Feb 2019 12:46:55 +0200
+Message-Id: <20190208104712.16210-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190208104712.16210-1-luca@coelho.fi>
 References: <20190208104712.16210-1-luca@coelho.fi>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 02/20] iwlwifi: pcie: fix TX while flushing
+Subject: [PATCH 03/20] iwlwifi: mvm: add support for 32kHz external clock indication
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-When flushing TX queues no new TX should go into the system.
-However, in the following scenario we get TX:
-1. Queues are stopped and there are packets in overflow queue
-2. Station is removed and flush begins
-3. Flush empties space, and reclaim path TXes SKB from overflow
-   queue.
+In low power modes, the chip clock source for platform integrated
+devices is 32kHz. It is generated internally and supplied by a crystal
+oscillator. However using a 32kHz sourced from crystal oscillator
+has high power penalty.
 
-Note that the fact the queues are stopped during the process
-doesn't matter - the packet will be TXed since the TX path
-doesn't care if TX queues are stopped or not, just if there is
-space in the queue, which there is, since we just freed a
-packet.
+There is an option to get an external 32kHz clock from the platform. Past
+experience shows that the reliability is platform dependent,
+i.e. on some platforms it works good and on other it doesn’t.
 
-A fix here is rather complicated, since the flow is very racy.
+Working from external clock will save 0.5 mW in sleep state, from overall
+1.8mW that we have today, i.e. almost 30%.
 
-Change code not to warn if we are TXing from overflow TX.
-In case there is TX from both overflow TX and TX path we will
-miss a warning we optimally had, but we can live with that.
+Each OEM can enable or disable the use of the external 32kHz clock by
+setting a BIOS configuration. In case the OEM configured to use 32kHz
+external clock the driver will pass this indication to the FW.
 
-Make sure we don't return before overflow queue is empty, otherwise
-we will think queues are empty, but they will be refilled, resulting
-with assert.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Fixes: 3955525d5d17 ("iwlwifi: pcie: buffer packets to avoid overflowing Tx queues")
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/pcie/internal.h    |  2 ++
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 24 +++++++++++++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  | 10 ++++++++
- 3 files changed, 34 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c  | 32 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h  | 22 +++++++++++--
+ .../net/wireless/intel/iwlwifi/fw/api/power.h | 13 ++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  7 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  2 ++
+ .../net/wireless/intel/iwlwifi/mvm/power.c    |  7 ++--
+ 6 files changed, 74 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 9e1bcafad786..0ecd90d050e6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -400,6 +400,8 @@ struct iwl_txq {
- 	u32 id;
- 	int low_mark;
- 	int high_mark;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+index 32d000cffe9f..405038ce98d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2017        Intel Deutschland GmbH
++ * Copyright (C) 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -26,6 +27,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2017        Intel Deutschland GmbH
++ * Copyright (C) 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -205,3 +207,33 @@ u64 iwl_acpi_get_pwr_limit(struct device *dev)
+ 	return dflt_pwr_limit;
+ }
+ IWL_EXPORT_SYMBOL(iwl_acpi_get_pwr_limit);
 +
-+	bool overflow_tx;
++int iwl_acpi_get_eckv(struct device *dev, u32 *extl_clk)
++{
++	union acpi_object *wifi_pkg, *data;
++	int ret;
++
++	data = iwl_acpi_get_object(dev, ACPI_ECKV_METHOD);
++	if (IS_ERR(data))
++		return PTR_ERR(data);
++
++	wifi_pkg = iwl_acpi_get_wifi_pkg(dev, data, ACPI_ECKV_WIFI_DATA_SIZE);
++	if (IS_ERR(wifi_pkg)) {
++		ret = PTR_ERR(wifi_pkg);
++		goto out_free;
++	}
++
++	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER) {
++		ret = -EINVAL;
++		goto out_free;
++	}
++
++	*extl_clk = wifi_pkg->package.elements[1].integer.value;
++
++	ret = 0;
++
++out_free:
++	kfree(data);
++	return ret;
++}
++IWL_EXPORT_SYMBOL(iwl_acpi_get_eckv);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+index 7492dfb6729b..f5704e16643f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+@@ -6,7 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2017        Intel Deutschland GmbH
+- * Copyright(c) 2018        Intel Corporation
++ * Copyright(c) 2018 - 2019        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -27,7 +27,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2017        Intel Deutschland GmbH
+- * Copyright(c) 2018        Intel Corporation
++ * Copyright(c) 2018 - 2019       Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -67,6 +67,7 @@
+ #define ACPI_WGDS_METHOD	"WGDS"
+ #define ACPI_WRDD_METHOD	"WRDD"
+ #define ACPI_SPLC_METHOD	"SPLC"
++#define ACPI_ECKV_METHOD	"ECKV"
+ 
+ #define ACPI_WIFI_DOMAIN	(0x07)
+ 
+@@ -86,6 +87,7 @@
+ #define ACPI_WGDS_WIFI_DATA_SIZE	19
+ #define ACPI_WRDD_WIFI_DATA_SIZE	2
+ #define ACPI_SPLC_WIFI_DATA_SIZE	2
++#define ACPI_ECKV_WIFI_DATA_SIZE	2
+ 
+ #define ACPI_WGDS_NUM_BANDS		2
+ #define ACPI_WGDS_TABLE_SIZE		3
+@@ -109,6 +111,17 @@ int iwl_acpi_get_mcc(struct device *dev, char *mcc);
+ 
+ u64 iwl_acpi_get_pwr_limit(struct device *dev);
+ 
++/*
++ * iwl_acpi_get_eckv - read external clock validation from ACPI, if available
++ *
++ * @dev: the struct device
++ * @extl_clk: output var (2 bytes) that will get the clk indication.
++ *
++ * This function tries to read the external clock indication
++ * from ACPI if available.
++ */
++int iwl_acpi_get_eckv(struct device *dev, u32 *extl_clk);
++
+ #else /* CONFIG_ACPI */
+ 
+ static inline void *iwl_acpi_get_object(struct device *dev, acpi_string method)
+@@ -133,5 +146,10 @@ static inline u64 iwl_acpi_get_pwr_limit(struct device *dev)
+ 	return 0;
+ }
+ 
++static inline int iwl_acpi_get_eckv(struct device *dev, u32 *extl_clk)
++{
++	return -ENOENT;
++}
++
+ #endif /* CONFIG_ACPI */
+ #endif /* __iwl_fw_acpi__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+index 5844898ee92c..01f003c6cff9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright (C) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright (C) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -200,9 +200,16 @@ struct iwl_powertable_cmd {
+  * @DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK:
+  *	'1' Allow to save power by turning off
+  *	receiver and transmitter. '0' - does not allow.
++ * @DEVICE_POWER_FLAGS_ALLOW_MEM_RETENTION_MSK:
++ *	Device Retention indication, '1' indicate retention is enabled.
++ * @DEVICE_POWER_FLAGS_32K_CLK_VALID_MSK:
++ *	32Khz external slow clock valid indication, '1' indicate cloack is
++ *	valid.
+ */
+ enum iwl_device_power_flags {
+-	DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK	= BIT(0),
++	DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK		= BIT(0),
++	DEVICE_POWER_FLAGS_ALLOW_MEM_RETENTION_MSK	= BIT(1),
++	DEVICE_POWER_FLAGS_32K_CLK_VALID_MSK		= BIT(12),
  };
  
- static inline dma_addr_t
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 6c30c88fc41e..4b31b0cdbd09 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2240,6 +2240,7 @@ static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, int txq_idx)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_txq *txq;
- 	unsigned long now = jiffies;
-+	bool overflow_tx;
- 	u8 wr_ptr;
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 28ef204c9cf7..0278f19180d5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018        Intel Corporation
++ * Copyright(c) 2018 - 2019        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018        Intel Corporation
++ * Copyright(c) 2018 - 2019       Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1266,6 +1266,9 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
+ 		iwl_mvm_send_recovery_cmd(mvm, ERROR_RECOVERY_UPDATE_DB);
  
- 	/* Make sure the NIC is still alive in the bus */
-@@ -2251,18 +2252,37 @@ static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, int txq_idx)
- 
- 	IWL_DEBUG_TX_QUEUES(trans, "Emptying queue %d...\n", txq_idx);
- 	txq = trans_pcie->txq[txq_idx];
++	if (iwl_acpi_get_eckv(mvm->dev, &mvm->ext_clock_valid))
++		IWL_DEBUG_INFO(mvm, "ECKV table doesn't exist in BIOS\n");
 +
-+	spin_lock_bh(&txq->lock);
-+	overflow_tx = txq->overflow_tx ||
-+		      !skb_queue_empty(&txq->overflow_q);
-+	spin_unlock_bh(&txq->lock);
+ 	ret = iwl_mvm_sar_init(mvm);
+ 	if (ret == 0) {
+ 		ret = iwl_mvm_sar_geo_init(mvm);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index f4fc81695df1..9993337a2bbd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1104,6 +1104,8 @@ struct iwl_mvm {
+ 
+ 	/* Indicate if device power save is allowed */
+ 	u8 ps_disabled; /* u8 instead of bool to ease debugfs_create_* usage */
++	/* Indicate if 32Khz external clock is valid */
++	u32 ext_clock_valid;
+ 	unsigned int max_amsdu_len; /* used for debugfs only */
+ 
+ 	struct ieee80211_vif __rcu *csa_vif;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+index df9f1d6cdf78..36f5fa1ee793 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright (C) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright (C) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -544,6 +544,9 @@ int iwl_mvm_power_update_device(struct iwl_mvm *mvm)
+ 		cmd.flags &=
+ 			cpu_to_le16(~DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK);
+ #endif
++	if (mvm->ext_clock_valid)
++		cmd.flags |= cpu_to_le16(DEVICE_POWER_FLAGS_32K_CLK_VALID_MSK);
 +
- 	wr_ptr = READ_ONCE(txq->write_ptr);
- 
--	while (txq->read_ptr != READ_ONCE(txq->write_ptr) &&
-+	while ((txq->read_ptr != READ_ONCE(txq->write_ptr) ||
-+		overflow_tx) &&
- 	       !time_after(jiffies,
- 			   now + msecs_to_jiffies(IWL_FLUSH_WAIT_MS))) {
- 		u8 write_ptr = READ_ONCE(txq->write_ptr);
- 
--		if (WARN_ONCE(wr_ptr != write_ptr,
-+		/*
-+		 * If write pointer moved during the wait, warn only
-+		 * if the TX came from op mode. In case TX came from
-+		 * trans layer (overflow TX) don't warn.
-+		 */
-+		if (WARN_ONCE(wr_ptr != write_ptr && !overflow_tx,
- 			      "WR pointer moved while flushing %d -> %d\n",
- 			      wr_ptr, write_ptr))
- 			return -ETIMEDOUT;
-+		wr_ptr = write_ptr;
-+
- 		usleep_range(1000, 2000);
-+
-+		spin_lock_bh(&txq->lock);
-+		overflow_tx = txq->overflow_tx ||
-+			      !skb_queue_empty(&txq->overflow_q);
-+		spin_unlock_bh(&txq->lock);
- 	}
- 
- 	if (txq->read_ptr != txq->write_ptr) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index d8773e0a6062..9fbd37d23e85 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1181,6 +1181,15 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 		__skb_queue_head_init(&overflow_skbs);
- 		skb_queue_splice_init(&txq->overflow_q, &overflow_skbs);
- 
-+		/*
-+		 * We are going to transmit from the overflow queue.
-+		 * Remember this state so that wait_for_txq_empty will know we
-+		 * are adding more packets to the TFD queue. It cannot rely on
-+		 * the state of &txq->overflow_q, as we just emptied it, but
-+		 * haven't TXed the content yet.
-+		 */
-+		txq->overflow_tx = true;
-+
- 		/*
- 		 * This is tricky: we are in reclaim path which is non
- 		 * re-entrant, so noone will try to take the access the
-@@ -1209,6 +1218,7 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 			iwl_wake_queue(trans, txq);
- 
- 		spin_lock_bh(&txq->lock);
-+		txq->overflow_tx = false;
- 	}
- 
- 	if (txq->read_ptr == txq->write_ptr) {
+ 	IWL_DEBUG_POWER(mvm,
+ 			"Sending device power command with flags = 0x%X\n",
+ 			cmd.flags);
 -- 
 2.20.1
 
