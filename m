@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD48C282CC
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C8ABC282CB
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AEE4F20855
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A67520855
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Gy0QDXqf"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Zpl2U+iL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727930AbfBHRWs (ORCPT
+        id S1727944AbfBHRWt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 12:22:48 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:40439 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727918AbfBHRWs (ORCPT
+        Fri, 8 Feb 2019 12:22:49 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:40430 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727926AbfBHRWr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Feb 2019 12:22:48 -0500
-Received: by mail-ot1-f66.google.com with SMTP id s5so7058953oth.7
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 09:22:47 -0800 (PST)
+        Fri, 8 Feb 2019 12:22:47 -0500
+Received: by mail-ot1-f65.google.com with SMTP id s5so7058840oth.7
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 09:22:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Iws6TTIOD4ZGQyBo3kAPigGDwrNP4CRn7eXdgAL1AAI=;
-        b=Gy0QDXqftKP5RAYVdaw+HK4oYIUhVRNBQVYgWyNFMEIu7cyIy5MoTHjeSVCU/X/9ZB
-         7m/9Uskjs2XljrCHIgmg9OrW04/RuOd+b1sWaiolyYpSWsTy5h4Ya8z9iilxnZzZ1REp
-         DmxcQb11mvYjQK1g+Z9AVCCHnu2Ae/CZ9REsKzMLbbjMgzhggs/V4FuOSAQ3x42RAJe6
-         afTbpVzXMbT9FDzN4FVatNpEDoII5LLEp+Mhr2OfBR8DVR2wXQbg3R0nNByTSN3pIDNL
-         ZcRzGTTnIT9dbL9Uk7Aoco7znl5Yv1UgAvc1Rec0LgcrM3p56hqbIS0Z/Djgxd337CVQ
-         IMtw==
+        bh=ZDGHr1u2jzGCUuFj7HDNn2Tjm5S3/1lDG5MwwDOFqNA=;
+        b=Zpl2U+iLYy1KIkVaP2gPpXac7FlzQPyBxBI2RL8N/C9e/f93084Za5UXFtwxanxDey
+         qi9U3v3stzHBJSs3KPdtw3OhFtaVs04jjXsTYxWWUVRbT/DMa5NPIFXmSwyR43C9Tgau
+         jydqcjqSefZ3B14472oUMdOAhTstwaBYLU4Rky4uPT8OBOvCvpwrDiSyYJyOfAdIS8bn
+         uuJ28Ro504o1bjAnme7Hl0BgI2Cfx1m8FMJkLP5zxX9gJc4IveFMbBpGswQA3jVYRUX8
+         6WzN6/O5YRuTWbcTzOdmg3pt8drUlO3g7cVa1uVA43QjISdJgIz4N/4TQM01adT0oKtX
+         W5dg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
          :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=Iws6TTIOD4ZGQyBo3kAPigGDwrNP4CRn7eXdgAL1AAI=;
-        b=T1b2HGywm9a6VRdKLIMpSshCYXv2BX7HV0upJ5eAgQDN4IvRteOPvo41XGYVBBcESp
-         vTfZTJPqUkZoRzZQC4p1KxgMqbEvC8R8A8ijnPTevl7m3hlZglCgVVIyfJFh1hvOEPyY
-         yl6Lh2f0FOMEdEz4j8twteb4jOg7EAHjts5lNbNX+CwKNL4lkefiYFhnQbgNSAmuHV/a
-         DGoLRBieT6kl6+NR//Cf13ut7rnT+rLPGKmA6ehwIHvTyZwCoWpyKP7FcGJWaxlPOKCP
-         ddUcyG0oGdnTOpuxOE5aZ25cdKT06skdGwZkSMRrNS6X//ySbfhaF+Z/VMnTNV1JZ4AF
-         QKuA==
-X-Gm-Message-State: AHQUAubnGolhPkpmkVq+by8aZQVP86hcsk5yA6zHHTJ1R68aYVt9nWk4
-        ntLCUO3UV2FI2XLfBHkEmm8=
-X-Google-Smtp-Source: AHgI3IYrBh0g4XObo9wRfhew02mMUFqixLPkmfhuyobjXu3WUWYKkcb/fStViX5Jk3fyZXrZt2NiRA==
-X-Received: by 2002:a9d:750e:: with SMTP id r14mr3574023otk.138.1549646566718;
-        Fri, 08 Feb 2019 09:22:46 -0800 (PST)
+        bh=ZDGHr1u2jzGCUuFj7HDNn2Tjm5S3/1lDG5MwwDOFqNA=;
+        b=phHrFqDnpO7CesHo1dUyAjJnWjLs3xuQw8eSH1XIYtfxS6D10r3nsekWuoULkzJGbK
+         wTYjE9og2R6HnTObwBgmkm7kcOHkCk1gKGDCTmFyWRzQvZ6cTRFvnCqROC1vRi0xGAn9
+         +3rciLrq6MpvuDv8KBAwhrQM7u54IIyXHO1Tk7tqrJR1XPmwkk362ussbBQYZa2NfugU
+         rhNE+Bngp1RvLlDqStmUtAPw+euc51x+hMLH8WRY9CbRHZm7OUR5VzN/5Sdgqh07hvUd
+         H6cjZf5Ne0UQDVqFp2M/f63UW/zvoKnSxW8UuQ9+TyQVHvN+KY+oGWtPd/D5BYPVU1Ui
+         RCHw==
+X-Gm-Message-State: AHQUAuZj41vyCm+JP4i/r5nuHmqN63gY9dtuCP16XuWek2W7DssP4t+L
+        KoZikExPHVOhQJ5owS9dreU=
+X-Google-Smtp-Source: AHgI3IbGbFwsbEUsk52mxFrWSJkBTeHJAlNmhPM7pkSedzaT6dSnjDhVGoN2Mlmw7yVuLA1jMKR8XA==
+X-Received: by 2002:a9d:5c6:: with SMTP id 64mr14310137otd.274.1549646565786;
+        Fri, 08 Feb 2019 09:22:45 -0800 (PST)
 Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
         by smtp.gmail.com with ESMTPSA id o2sm1107262otj.2.2019.02.08.09.22.45
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 08 Feb 2019 09:22:46 -0800 (PST)
+        Fri, 08 Feb 2019 09:22:45 -0800 (PST)
 From:   Larry Finger <Larry.Finger@lwfinger.net>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
         Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 07/13] rtlwifi: rtl8192de: Replace old-style license information
-Date:   Fri,  8 Feb 2019 11:22:03 -0600
-Message-Id: <20190208172209.28530-8-Larry.Finger@lwfinger.net>
+Subject: [PATCH 06/13] rtlwifi: rtl8192cu: Replace old-style license information
+Date:   Fri,  8 Feb 2019 11:22:02 -0600
+Message-Id: <20190208172209.28530-7-Larry.Finger@lwfinger.net>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190208172209.28530-1-Larry.Finger@lwfinger.net>
 References: <20190208172209.28530-1-Larry.Finger@lwfinger.net>
@@ -78,32 +78,32 @@ are no code changes.
 
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- .../wireless/realtek/rtlwifi/rtl8192de/def.h  | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/dm.c   | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/dm.h   | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/fw.c   | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/fw.h   | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/hw.c   | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/hw.h   | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/led.c  | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/led.h  | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/phy.c  | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/phy.h  | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/reg.h  | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/rf.c   | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/rf.h   | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/sw.c   | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/sw.h   | 26 ++----------------
- .../realtek/rtlwifi/rtl8192de/table.c         | 27 ++-----------------
- .../realtek/rtlwifi/rtl8192de/table.h         | 27 ++-----------------
- .../wireless/realtek/rtlwifi/rtl8192de/trx.c  | 26 ++----------------
- .../wireless/realtek/rtlwifi/rtl8192de/trx.h  | 26 ++----------------
- 20 files changed, 40 insertions(+), 482 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8192cu/def.h  | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/dm.c   | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/dm.h   | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/hw.c   | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/hw.h   | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/led.c  | 24 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/led.h  | 24 ++---------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/mac.c  | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/mac.h  | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/phy.c  | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/phy.h  | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/reg.h  | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/rf.c   | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/rf.h   | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/sw.c   | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/sw.h   | 26 ++-----------------
+ .../realtek/rtlwifi/rtl8192cu/table.c         | 26 ++-----------------
+ .../realtek/rtlwifi/rtl8192cu/table.h         | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/trx.c  | 26 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/trx.h  | 26 ++-----------------
+ 20 files changed, 40 insertions(+), 476 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/def.h
-index cb7b9b727e3a..48c71709358a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/def.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/def.h
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/def.h
+index 316fe9990b6d..9ffa7fc998ff 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/def.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/def.h
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
@@ -132,12 +132,12 @@ index cb7b9b727e3a..48c71709358a 100644
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/* Copyright(c) 2009-2012  Realtek Corporation.*/
  
- #ifndef __RTL92D_DEF_H__
- #define __RTL92D_DEF_H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-index ac6d554b67c8..a8b81dcf9c13 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
+ #include "../rtl8192ce/def.h"
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/dm.c
+index 00fc0685317a..c10e92b2fcc2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/dm.c
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
@@ -168,10 +168,10 @@ index ac6d554b67c8..a8b81dcf9c13 100644
  
  #include "../wifi.h"
  #include "../base.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.h
-index 5d346ec366ce..fb33ab1bf511 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.h
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/dm.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/dm.h
+index ce71433792e3..d01e2cf0fd03 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/dm.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/dm.h
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
@@ -200,84 +200,16 @@ index 5d346ec366ce..fb33ab1bf511 100644
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/* Copyright(c) 2009-2012  Realtek Corporation.*/
  
- #ifndef	__RTL92C_DM_H__
- #define __RTL92C_DM_H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-index 75bfa9dfef4a..910ca7e4c5ed 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-@@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2009-2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2009-2012  Realtek Corporation.*/
+ #include "../rtl8192ce/dm.h"
  
- #include "../wifi.h"
- #include "../pci.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.h
-index 6b435236a28e..7ee5413fcc15 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.h
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index 1e60f70481f5..1afd2a9a3778 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
-- * Copyright(c) 2009-2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2009-2012  Realtek Corporation.*/
- 
- #ifndef __RTL92D__FW__H__
- #define __RTL92D__FW__H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-index 80123fd97221..9797caee4856 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-@@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2009-2012  Realtek Corporation.
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
 - *
 - * This program is free software; you can redistribute it and/or modify it
 - * under the terms of version 2 of the GNU General Public License as
@@ -304,10 +236,10 @@ index 80123fd97221..9797caee4856 100644
  
  #include "../wifi.h"
  #include "../efuse.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.h
-index e6c702e69ecf..e09620f01188 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.h
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.h
+index ebd168400d45..988af26ae598 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.h
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
@@ -336,12 +268,144 @@ index e6c702e69ecf..e09620f01188 100644
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/* Copyright(c) 2009-2012  Realtek Corporation.*/
  
- #ifndef __RTL92DE_HW_H__
- #define __RTL92DE_HW_H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
-index 8851038c9eba..9042765536e0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
+ #ifndef __RTL92CU_HW_H__
+ #define __RTL92CU_HW_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
+index 66d2784de67d..065f3c9267b7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
+@@ -1,25 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2012  Realtek Corporation.*/
+ 
+ #include "../wifi.h"
+ #include "../usb.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.h
+index 551deb8afb6f..f3fc06a45040 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.h
+@@ -1,25 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2012  Realtek Corporation.*/
+ 
+ #ifndef __RTL92CU_LED_H__
+ #define __RTL92CU_LED_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+index 5657b1e34ad0..51bad6ce7fec 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+-****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2012  Realtek Corporation.*/
+ 
+ #include "../wifi.h"
+ #include "../pci.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.h
+index 8573b7e257d9..c610066214e5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2012  Realtek Corporation.*/
+ 
+ #ifndef __RTL92C_MAC_H__
+ #define __RTL92C_MAC_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
+index f068dd5317a7..87a0a200f846 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
@@ -372,10 +436,10 @@ index 8851038c9eba..9042765536e0 100644
  
  #include "../wifi.h"
  #include "../pci.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.h
-index 9874519704d3..b6768316669d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.h
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.h
+index a422c4db1a41..2f1a2bb620e0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.h
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
@@ -404,13 +468,13 @@ index 9874519704d3..b6768316669d 100644
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/* Copyright(c) 2009-2012  Realtek Corporation.*/
  
- #ifndef __RTL92CE_LED_H__
- #define __RTL92CE_LED_H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index de98d88199d6..4849f2368c14 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -1,27 +1,5 @@
+ #include "../rtl8192ce/phy.h"
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/reg.h
+index 8185886daa8e..1c54c146b589 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/reg.h
+@@ -1,26 +1,4 @@
 -/******************************************************************************
 - *
 - * Copyright(c) 2009-2012  Realtek Corporation.
@@ -438,80 +502,11 @@ index de98d88199d6..4849f2368c14 100644
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/* Copyright(c) 2009-2012  Realtek Corporation.*/
  
- #include "../wifi.h"
- #include "../pci.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.h
-index 58b56b523dbe..f5b834b4024d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.h
-@@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2009-2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2009-2012  Realtek Corporation.*/
- 
- #ifndef __RTL92D_PHY_H__
- #define __RTL92D_PHY_H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-index d4c4e76a9244..b040cca66041 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-@@ -1,27 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2009-2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2009-2012  Realtek Corporation.*/
- 
- #ifndef __RTL92D_REG_H__
- #define __RTL92D_REG_H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
-index 021d3c538ac2..39b269bf1c3e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
+ #include "../rtl8192ce/reg.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+index cf551785eb08..09fb3ced68b3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
@@ -542,10 +537,10 @@ index 021d3c538ac2..39b269bf1c3e 100644
  
  #include "../wifi.h"
  #include "reg.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.h
-index c650a8dcdb26..236903616d05 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.h
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.h
+index 07aec0b20cc9..051288eb981b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.h
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
@@ -574,16 +569,16 @@ index c650a8dcdb26..236903616d05 100644
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/* Copyright(c) 2009-2012  Realtek Corporation.*/
  
- #ifndef __RTL92D_RF_H__
- #define __RTL92D_RF_H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-index d5ba2bace79b..efd35bef1a52 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+ #ifndef __RTL92CU_RF_H__
+ #define __RTL92CU_RF_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+index 43e021b49260..8c7aadb39dc0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
-- * Copyright(c) 2009-2012  Realtek Corporation.
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
 - *
 - * This program is free software; you can redistribute it and/or modify it
 - * under the terms of version 2 of the GNU General Public License as
@@ -610,10 +605,44 @@ index d5ba2bace79b..efd35bef1a52 100644
  
  #include "../wifi.h"
  #include "../core.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.h
-index fd7d036e9abc..15678ee33725 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.h
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h
+index 4ea2cb225580..3fb600cb1702 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2012  Realtek Corporation.*/
+ 
+ #ifndef __RTL92CU_SW_H__
+ #define __RTL92CU_SW_H__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.c
+index b3ac981d88c6..468a896d89b8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.c
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
@@ -642,86 +671,50 @@ index fd7d036e9abc..15678ee33725 100644
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/* Copyright(c) 2009-2012  Realtek Corporation.*/
  
- #ifndef __RTL92DE_SW_H__
- #define __RTL92DE_SW_H__
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/table.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/table.c
-index 4badb183cf35..7259c51b445f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/table.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/table.c
-@@ -1,28 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2009-2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- * Created on  2010/12/23,  6:38
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2009-2012  Realtek Corporation.*/
+ #include "table.h"
  
- #include <linux/types.h>
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/table.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/table.h
-index 7fefc483ec28..028a7058b67d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/table.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/table.h
-@@ -1,28 +1,5 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2009-2012  Realtek Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- * wlanfae <wlanfae@realtek.com>
-- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-- * Hsinchu 300, Taiwan.
-- *
-- * Larry Finger <Larry.Finger@lwfinger.net>
-- *
-- * Created on  2010/ 5/18,  1:41
-- *****************************************************************************/
-+/* SPDX-License-Identifier: GPL-2.0+ */
-+/* Copyright(c) 2009-2012  Realtek Corporation.*/
- 
- #ifndef __RTL92DE_TABLE__H_
- #define __RTL92DE_TABLE__H_
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
-index d7b023cf7400..37a6ec8d153b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.h
+index 851bf53d246c..9a9805808541 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.h
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
-- * Copyright(c) 2009-2012  Realtek Corporation.
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- * wlanfae <wlanfae@realtek.com>
+- * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+- * Hsinchu 300, Taiwan.
+- *
+- * Larry Finger <Larry.Finger@lwfinger.net>
+- *
+- *****************************************************************************/
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright(c) 2009-2012  Realtek Corporation.*/
+ 
+ #ifndef __RTL92CU_TABLE__H_
+ #define __RTL92CU_TABLE__H_
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+index 9ab56827124e..c46c808a637f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+@@ -1,27 +1,5 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
 - *
 - * This program is free software; you can redistribute it and/or modify it
 - * under the terms of version 2 of the GNU General Public License as
@@ -747,15 +740,15 @@ index d7b023cf7400..37a6ec8d153b 100644
 +/* Copyright(c) 2009-2012  Realtek Corporation.*/
  
  #include "../wifi.h"
- #include "../pci.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.h
-index f7f776539438..fedeb4853d06 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.h
+ #include "../usb.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
+index 15a66c547287..21038540a5b2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
 @@ -1,27 +1,5 @@
 -/******************************************************************************
 - *
-- * Copyright(c) 2009-2012  Realtek Corporation.
+- * Copyright(c) 2009-2012  Realtek Corporation. All rights reserved.
 - *
 - * This program is free software; you can redistribute it and/or modify it
 - * under the terms of version 2 of the GNU General Public License as
@@ -780,8 +773,8 @@ index f7f776539438..fedeb4853d06 100644
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/* Copyright(c) 2009-2012  Realtek Corporation.*/
  
- #ifndef __RTL92DE_TRX_H__
- #define __RTL92DE_TRX_H__
+ #ifndef __RTL92CU_TRX_H__
+ #define __RTL92CU_TRX_H__
 -- 
 2.20.1
 
