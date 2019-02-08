@@ -2,52 +2,228 @@ Return-Path: <SRS0=Ms0V=QP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEB90C169C4
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:02:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2DD6C169C4
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:15:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9521120844
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:02:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B321217D8
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:15:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726624AbfBHNCD (ORCPT
+        id S1727309AbfBHNPo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 08:02:03 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:48152 "EHLO
+        Fri, 8 Feb 2019 08:15:44 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:48682 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726456AbfBHNCD (ORCPT
+        with ESMTP id S1726465AbfBHNPo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Feb 2019 08:02:03 -0500
+        Fri, 8 Feb 2019 08:15:44 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC4)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gs5n8-0007xg-Ey
-        for linux-wireless@vger.kernel.org; Fri, 08 Feb 2019 14:02:02 +0100
-Message-ID: <453eddecb74fd814146bcb253a66165556769c16.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/4] cfg80211: add and use strongly typed element
- iteration macros
+        id 1gs60M-0008Jb-8P; Fri, 08 Feb 2019 14:15:42 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Date:   Fri, 08 Feb 2019 14:02:00 +0100
-In-Reply-To: <20190208123154.22414-1-johannes@sipsolutions.net> (sfid-20190208_133206_618228_932A8E9D)
-References: <20190208123154.22414-1-johannes@sipsolutions.net>
-         (sfid-20190208_133206_618228_932A8E9D)
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Cc:     Sara Sharon <sara.sharon@intel.com>
+Subject: [PATCH v8 02/15] mac80211: move the bss update from elements to an helper
+Date:   Fri,  8 Feb 2019 14:15:26 +0100
+Message-Id: <20190208131539.6813-2-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.17.2
+In-Reply-To: <20190208131539.6813-1-johannes@sipsolutions.net>
+References: <20190208131539.6813-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-02-08 at 13:31 +0100, Johannes Berg wrote:
-> 
-> +static inline bool for_each_element_completed(struct element *element,
-> +					      void *data, size_t datalen)
+From: Sara Sharon <sara.sharon@intel.com>
 
-Those pointer arguments should be const.
+This will allow iterating over multiple BSSs inside
+cfg80211_bss, in case of multiple BSSID.
 
-johannes
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/scan.c | 150 +++++++++++++++++++++++---------------------
+ 1 file changed, 80 insertions(+), 70 deletions(-)
+
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index b58f75da9c84..20211cbc63f4 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -58,6 +58,85 @@ static bool is_uapsd_supported(struct ieee802_11_elems *elems)
+ 	return qos_info & IEEE80211_WMM_IE_AP_QOSINFO_UAPSD;
+ }
+ 
++static void
++ieee80211_update_bss_from_elems(struct ieee80211_local *local,
++				struct ieee80211_bss *bss,
++				struct ieee802_11_elems *elems,
++				struct ieee80211_rx_status *rx_status,
++				bool beacon)
++{
++	int clen, srlen;
++
++	if (beacon)
++		bss->device_ts_beacon = rx_status->device_timestamp;
++	else
++		bss->device_ts_presp = rx_status->device_timestamp;
++
++	if (elems->parse_error) {
++		if (beacon)
++			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_BEACON;
++		else
++			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_PROBE_RESP;
++	} else {
++		if (beacon)
++			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_BEACON;
++		else
++			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_PROBE_RESP;
++	}
++
++	/* save the ERP value so that it is available at association time */
++	if (elems->erp_info && (!elems->parse_error ||
++				!(bss->valid_data & IEEE80211_BSS_VALID_ERP))) {
++		bss->erp_value = elems->erp_info[0];
++		bss->has_erp_value = true;
++		if (!elems->parse_error)
++			bss->valid_data |= IEEE80211_BSS_VALID_ERP;
++	}
++
++	/* replace old supported rates if we get new values */
++	if (!elems->parse_error ||
++	    !(bss->valid_data & IEEE80211_BSS_VALID_RATES)) {
++		srlen = 0;
++		if (elems->supp_rates) {
++			clen = IEEE80211_MAX_SUPP_RATES;
++			if (clen > elems->supp_rates_len)
++				clen = elems->supp_rates_len;
++			memcpy(bss->supp_rates, elems->supp_rates, clen);
++			srlen += clen;
++		}
++		if (elems->ext_supp_rates) {
++			clen = IEEE80211_MAX_SUPP_RATES - srlen;
++			if (clen > elems->ext_supp_rates_len)
++				clen = elems->ext_supp_rates_len;
++			memcpy(bss->supp_rates + srlen, elems->ext_supp_rates,
++			       clen);
++			srlen += clen;
++		}
++		if (srlen) {
++			bss->supp_rates_len = srlen;
++			if (!elems->parse_error)
++				bss->valid_data |= IEEE80211_BSS_VALID_RATES;
++		}
++	}
++
++	if (!elems->parse_error ||
++	    !(bss->valid_data & IEEE80211_BSS_VALID_WMM)) {
++		bss->wmm_used = elems->wmm_param || elems->wmm_info;
++		bss->uapsd_supported = is_uapsd_supported(elems);
++		if (!elems->parse_error)
++			bss->valid_data |= IEEE80211_BSS_VALID_WMM;
++	}
++
++	if (beacon) {
++		struct ieee80211_supported_band *sband =
++			local->hw.wiphy->bands[rx_status->band];
++		if (!(rx_status->encoding == RX_ENC_HT) &&
++		    !(rx_status->encoding == RX_ENC_VHT))
++			bss->beacon_rate =
++				&sband->bitrates[rx_status->rate_idx];
++	}
++}
++
+ struct ieee80211_bss *
+ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 			  struct ieee80211_rx_status *rx_status,
+@@ -67,7 +146,6 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 	bool beacon = ieee80211_is_beacon(mgmt->frame_control);
+ 	struct cfg80211_bss *cbss;
+ 	struct ieee80211_bss *bss;
+-	int clen, srlen;
+ 	struct cfg80211_inform_bss bss_meta = {
+ 		.boottime_ns = rx_status->boottime_ns,
+ 	};
+@@ -132,75 +210,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+ 
+ 	bss = (void *)cbss->priv;
+-
+-	if (beacon)
+-		bss->device_ts_beacon = rx_status->device_timestamp;
+-	else
+-		bss->device_ts_presp = rx_status->device_timestamp;
+-
+-	if (elems.parse_error) {
+-		if (beacon)
+-			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_BEACON;
+-		else
+-			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_PROBE_RESP;
+-	} else {
+-		if (beacon)
+-			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_BEACON;
+-		else
+-			bss->corrupt_data &= ~IEEE80211_BSS_CORRUPT_PROBE_RESP;
+-	}
+-
+-	/* save the ERP value so that it is available at association time */
+-	if (elems.erp_info && (!elems.parse_error ||
+-			       !(bss->valid_data & IEEE80211_BSS_VALID_ERP))) {
+-		bss->erp_value = elems.erp_info[0];
+-		bss->has_erp_value = true;
+-		if (!elems.parse_error)
+-			bss->valid_data |= IEEE80211_BSS_VALID_ERP;
+-	}
+-
+-	/* replace old supported rates if we get new values */
+-	if (!elems.parse_error ||
+-	    !(bss->valid_data & IEEE80211_BSS_VALID_RATES)) {
+-		srlen = 0;
+-		if (elems.supp_rates) {
+-			clen = IEEE80211_MAX_SUPP_RATES;
+-			if (clen > elems.supp_rates_len)
+-				clen = elems.supp_rates_len;
+-			memcpy(bss->supp_rates, elems.supp_rates, clen);
+-			srlen += clen;
+-		}
+-		if (elems.ext_supp_rates) {
+-			clen = IEEE80211_MAX_SUPP_RATES - srlen;
+-			if (clen > elems.ext_supp_rates_len)
+-				clen = elems.ext_supp_rates_len;
+-			memcpy(bss->supp_rates + srlen, elems.ext_supp_rates,
+-			       clen);
+-			srlen += clen;
+-		}
+-		if (srlen) {
+-			bss->supp_rates_len = srlen;
+-			if (!elems.parse_error)
+-				bss->valid_data |= IEEE80211_BSS_VALID_RATES;
+-		}
+-	}
+-
+-	if (!elems.parse_error ||
+-	    !(bss->valid_data & IEEE80211_BSS_VALID_WMM)) {
+-		bss->wmm_used = elems.wmm_param || elems.wmm_info;
+-		bss->uapsd_supported = is_uapsd_supported(&elems);
+-		if (!elems.parse_error)
+-			bss->valid_data |= IEEE80211_BSS_VALID_WMM;
+-	}
+-
+-	if (beacon) {
+-		struct ieee80211_supported_band *sband =
+-			local->hw.wiphy->bands[rx_status->band];
+-		if (!(rx_status->encoding == RX_ENC_HT) &&
+-		    !(rx_status->encoding == RX_ENC_VHT))
+-			bss->beacon_rate =
+-				&sband->bitrates[rx_status->rate_idx];
+-	}
++	ieee80211_update_bss_from_elems(local, bss, &elems, rx_status, beacon);
+ 
+ 	return bss;
+ }
+-- 
+2.17.2
 
