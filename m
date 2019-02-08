@@ -2,132 +2,97 @@ Return-Path: <SRS0=Ms0V=QP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A628C169C4
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:42:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31216C282CB
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 14:12:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 557F820869
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:42:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC20920844
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 14:12:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JGbTL4Kv";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="A0hhvXPl"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NrdxSzof";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NrdxSzof"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726887AbfBHNmu (ORCPT
+        id S1727947AbfBHOMo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 08:42:50 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:57280 "EHLO
+        Fri, 8 Feb 2019 09:12:44 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:50218 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726585AbfBHNmu (ORCPT
+        with ESMTP id S1727944AbfBHOMo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Feb 2019 08:42:50 -0500
+        Fri, 8 Feb 2019 09:12:44 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 2E37D601C4; Fri,  8 Feb 2019 13:42:49 +0000 (UTC)
+        id E38F260791; Fri,  8 Feb 2019 14:12:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549633369;
-        bh=7WlItZRojM42UyzLD4zFmxBsBPySukjoXDhqpvvpQsE=;
+        s=default; t=1549635163;
+        bh=eNZhY7OSgt/VeIAk0Tner2bt5mgsF3pCiuE65nNQpbE=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=JGbTL4KvnC+B9IvZtvAagpv05+1crNuw6VFliV+dBjmVmUK3nJV5fz50/mA5fo+uv
-         lZ2HJG5sE2hayTX39SFGeegfPUgnhpRk6Yf50qL/r/RNMMHbhJgfqF03+x9jmrBpfl
-         ElzvBkaczxGsbPBJ2QszpLxOYKklndDE/Z8u3Df8=
+        b=NrdxSzof5jhYtNqNi9I8l8cnk6DRRWxFHH5ECyglFg6fGA9KKZ4ydbwj9jEZX7R/L
+         tMuGqcIQYbvYTjNRZUu4ycj1TitpLJCnElr3amm0F+MdT27dCVdNSsu5JZf9EQocXg
+         FfhLJKVHvdYFnwuQBYol+OMvwJzFFdURONAV0tgY=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C93D6601C4;
-        Fri,  8 Feb 2019 13:42:46 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 68682602CC;
+        Fri,  8 Feb 2019 14:12:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549633368;
-        bh=7WlItZRojM42UyzLD4zFmxBsBPySukjoXDhqpvvpQsE=;
+        s=default; t=1549635163;
+        bh=eNZhY7OSgt/VeIAk0Tner2bt5mgsF3pCiuE65nNQpbE=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=A0hhvXPl/YPNh6Efd5a/mvUa8pKcedudeiuERGoXbaFY7wODh0bfs9QGlTKW4Fsgz
-         e9ROgPSXB+dn61onSfdFz+eqONdhp+LiXgVvfJoA9XUSXp7/Keqxff2sJMe9Mo/AME
-         /S4r7PP+l7FJR7c+tkbzKiRXX7dpWup43cVPCUs4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C93D6601C4
+        b=NrdxSzof5jhYtNqNi9I8l8cnk6DRRWxFHH5ECyglFg6fGA9KKZ4ydbwj9jEZX7R/L
+         tMuGqcIQYbvYTjNRZUu4ycj1TitpLJCnElr3amm0F+MdT27dCVdNSsu5JZf9EQocXg
+         FfhLJKVHvdYFnwuQBYol+OMvwJzFFdURONAV0tgY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 68682602CC
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
-Cc:     wgong@qti.qualcomm.com, briannorris@chromium.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org, Wen Gong <wgong@codeaurora.org>
-Subject: Re: [PATCH] ath10k: support PCIe enter L1 state
-References: <1542163848-837-1-git-send-email-wgong@codeaurora.org>
-        <20181115002836.GA71934@google.com>
-        <c94346b26a6d4b11a045a176ca854051@aptaiexm02f.ap.qualcomm.com>
-        <20181115184333.GA87504@google.com> <87va4x8q2c.fsf@codeaurora.org>
-        <CABvG-CVAnwkiKVJik0PdsmRxF62kKv2N+aRKNq=nbopoExLvDA@mail.gmail.com>
-Date:   Fri, 08 Feb 2019 15:42:44 +0200
-In-Reply-To: <CABvG-CVAnwkiKVJik0PdsmRxF62kKv2N+aRKNq=nbopoExLvDA@mail.gmail.com>
-        (=?utf-8?Q?=22Micha=C5=82?= Kazior"'s message of "Fri, 16 Nov 2018 08:56:27
- +0100")
-Message-ID: <87y36q75wr.fsf@kamboji.qca.qualcomm.com>
+To:     Surabhi Vishnoi <svishnoi@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath10k: Add support to provide higher range mem chunks in wmi init command
+References: <1544524740-31372-1-git-send-email-svishnoi@codeaurora.org>
+Date:   Fri, 08 Feb 2019 16:12:40 +0200
+In-Reply-To: <1544524740-31372-1-git-send-email-svishnoi@codeaurora.org>
+        (Surabhi Vishnoi's message of "Tue, 11 Dec 2018 16:09:00 +0530")
+Message-ID: <87tvhe74iv.fsf@kamboji.qca.qualcomm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Micha=C5=82 Kazior <kazikcz@gmail.com> writes:
+Surabhi Vishnoi <svishnoi@codeaurora.org> writes:
 
-> On Fri, 16 Nov 2018 at 08:00, Kalle Valo <kvalo@codeaurora.org> wrote:
->>
->> Brian Norris <briannorris@chromium.org> writes:
->> > On Thu, Nov 15, 2018 at 06:38:25AM +0000, Wen Gong wrote:
->> >> >
->> >> > Is there some reason L1 was disabled in the first place? Was it kno=
-wn to be
->> >> > unreliable?
->> >>
->> >> Hi Brian,
->> >> It is a BUG for power, and it is not considered this BUG before.
->> >> So this change will fix the bug.
->> >
->> > I understand that the existing behavior is suboptimal for power, but on
->> > the other hand, code that goes out of its way to *clear* the L1 flag
->> > doesn't just pop up out of nowhere. Somebody clearly wrote that! If it
->> > just meant "we didn't verify L1 at first", then maybe it's fine to
->> > enable it unconditionally and see what happens, but if it meant "we
->> > tried L1 on some old chip XXXX and it caused problems", then it would =
-be
->> > nice to know what those problems were.
->> >
->> > Or maybe that is hard to figure out, given there's no public git histo=
-ry
->> > tracking the original code, and we just need to try it out.
->>
->> Yeah, it seems L1 was disabled already on the first ath10k commit:
->>
->> 5e3dd157d7e70 (Kalle Valo 2013-06-12 20:52:10 +0300 2404)
->> pcie_config_flags &=3D ~PCIE_CONFIG_FLAG_ENABLE_L1;
->>
->> I don't remember anymore why but my guess is that the proprietary driver
->> at the time didn't support it with QCA998X. Or maybe QCA988X doesn't
->> even support L1? Michal, do you remember?
+> With the current implementation of wmi init command,
+> there is no provision for the host driver to provide mem
+> chunks addresses with more than 32-bit, to the firmware.
+> WCN3990 is a 35-bit target and can accept mem chunks addresses
+> which are above 32-bit.
 >
-> Proprietary driver has it ifdef-ed to enable/disable.
+> If firmware supports address range more than 32 bit, it
+> advertises the support by setting the WMI_SERVICE_EXTEND_ADDRESS
+> service. Based on this service fill the upper bits of paddr while
+> providing the mem chunks in the wmi init command.
 >
-> Older driver enabled it only for some station-only target/product so
-> by default QCA988X would build with L1 flag masked out. It made sense
-> to be conservative and change as little as possible to avoid random
-> bugs and breakage - so the logic was inherited minus the build-time
-> ifdef.
+> Tested HW: WCN3990
+> Tested FW: WLAN.HL.2.0-01552-QCAHLSWMTPL-1
 >
-> However 10.4 driver seems to enable it unconditionally. I'm not sure
-> if this depends on target firmware in any way or if some other host
-> driver or bus settings need to be pre-set before L1 can be expected to
-> work reliably.
->
-> I guess there's no way other than testing it out.
+> Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
 
-No replies from anyone (including Wen) for 3 months about testing this
-patch on anything else than QCA6174. So I'll drop this now, please
-resubmit once test coverage is better.
+Does not apply and I even tried to find a commit from December to make
+it work, and as the sha1 is not valid so 3-way merge won't work either.
+I strongly recommend to use pristine ath.git master branch (meaning that
+there are no other unapplied patches on top) when submitting patches,
+otherwise this can happen. Please rebase and resubmit.
 
---=20
+Applying: ath10k: Add support to provide higher range mem chunks in wmi init command
+fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/wmi-tlv.c).
+error: could not build fake ancestor
+Patch failed at 0001 ath10k: Add support to provide higher range mem chunks in wmi init comman
+
+-- 
 Kalle Valo
