@@ -2,176 +2,118 @@ Return-Path: <SRS0=Ms0V=QP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C024BC282CB
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:24:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D685C282CC
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:32:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9AD2E20869
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:24:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BFC820857
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 13:32:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AndHQEMS";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AndHQEMS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727174AbfBHNYY (ORCPT
+        id S1726716AbfBHNcR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 08:24:24 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:48872 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727879AbfBHNYY (ORCPT
+        Fri, 8 Feb 2019 08:32:17 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:45862 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726585AbfBHNcR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Feb 2019 08:24:24 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92-RC4)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gs60P-0008Jb-FV; Fri, 08 Feb 2019 14:15:45 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Sara Sharon <sara.sharon@intel.com>
-Subject: [PATCH v8 11/15] mac80211: indicate support for multiple BSSID
-Date:   Fri,  8 Feb 2019 14:15:35 +0100
-Message-Id: <20190208131539.6813-11-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.17.2
-In-Reply-To: <20190208131539.6813-1-johannes@sipsolutions.net>
-References: <20190208131539.6813-1-johannes@sipsolutions.net>
+        Fri, 8 Feb 2019 08:32:17 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id DE78C602CC; Fri,  8 Feb 2019 13:32:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549632735;
+        bh=61EGU6tzkXMnOx8Y9QbIRzeijAJcvTJ/ObWCNgUSKX0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=AndHQEMSs0BgjxZLlDp96yuw+ZaM1R/0ywQD3U6ZVSjnjOPHSqwZNLmaeJef9c0bd
+         OogWDlg3fU0cMX3deGyuaf9TOU4cQJjQJ/bAsngGbOe4z423BMftBWLcDaEr7VXmH8
+         g+vViJ36CYH06LvAYKH9+4UGqMxc5PGoZDoz0Qjo=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D0B3460264;
+        Fri,  8 Feb 2019 13:32:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549632735;
+        bh=61EGU6tzkXMnOx8Y9QbIRzeijAJcvTJ/ObWCNgUSKX0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=AndHQEMSs0BgjxZLlDp96yuw+ZaM1R/0ywQD3U6ZVSjnjOPHSqwZNLmaeJef9c0bd
+         OogWDlg3fU0cMX3deGyuaf9TOU4cQJjQJ/bAsngGbOe4z423BMftBWLcDaEr7VXmH8
+         g+vViJ36CYH06LvAYKH9+4UGqMxc5PGoZDoz0Qjo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D0B3460264
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Wen Gong <wgong@qti.qualcomm.com>
+Cc:     =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Wen Gong <wgong@codeaurora.org>
+Subject: Re: [PATCH] ath10k: Remove ATH10K_STATE_RESTARTED in simulate fw crash
+References: <1542163824-795-1-git-send-email-wgong@codeaurora.org>
+        <CABvG-CWg-VXAtoN8HZumW-ZdP6dX9cO_8fWJ58C22kD2yDcXdw@mail.gmail.com>
+        <195f3bb0c88c43a6b1ca0ad336f947c0@aptaiexm02f.ap.qualcomm.com>
+        <CABvG-CWAfB8jjCDW4ggjJ8_YC++CjttJOMOt4s24F3mymvNR9A@mail.gmail.com>
+        <e18e50cae69e44f4b9e4abb1fa110193@aptaiexm02f.ap.qualcomm.com>
+Date:   Fri, 08 Feb 2019 15:32:11 +0200
+In-Reply-To: <e18e50cae69e44f4b9e4abb1fa110193@aptaiexm02f.ap.qualcomm.com>
+        (Wen Gong's message of "Tue, 8 Jan 2019 08:45:26 +0000")
+Message-ID: <877eea8kys.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+Wen Gong <wgong@qti.qualcomm.com> writes:
 
-Set multi-bssid support flags according to driver support.
+>> > > > It is because the state has not changed to ATH10K_STATE_ON
+>> > > > immediately, then it will have more than two simulate crash
+>> > > > process running meanwhile, and complete/wakeup some field twice,
+>> > > > it destroy the normal recovery process.
+>> > >
+>> > > This was intended to allow testing not only firmware crash path (and
+>> > > recovery) but also firmware crash while recovering from a firmware crash.
+>> > >
+>> > If firmware is recovering from crash, then simulate a new crash will trigger
+>> error.
+>> > So remove it.
+>> 
+>> That's actually a feature, not a bug. If firmware crashes while driver is
+>> restarting after a crash then its likely going to fail again and again causing a
+>> crash-restart loop which can affect system performance and responsiveness.
+>> It's better to give up and let the system admin take over.
+>> 
+>> If it's still bothering you then please consider a crash counter threshold so
+>> that, e.g. after 5 crash-while-restarting it's going to give up. However I doubt
+>> it's worth the effort. My experience tells me firmware crashes during
+>> recovery are rarely, if at all, transient.
+>> 
+>> The simulated fw crash is not representative here. It's a mere tool to test
+>> driver code.
+>
+> The simulated fw crash is only a tool for user to trigger fw crash
+> with command
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h |  5 +++++
- include/net/mac80211.h    |  7 +++++++
- net/mac80211/debugfs.c    |  4 +++-
- net/mac80211/main.c       | 13 ++++++++++++-
- net/mac80211/mlme.c       | 15 +++++++++++++++
- 5 files changed, 42 insertions(+), 2 deletions(-)
+I think Michal knows what simulate_fw_crash as he is the one who
+implemented it in commit 278c4a85e626 :)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 7479f0bd50e1..8da5ba97328f 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2657,6 +2657,11 @@ enum ieee80211_tdls_actioncode {
-  */
- #define WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING	BIT(2)
- 
-+/* Multiple BSSID capability is set in the 6th bit of 3rd byte of the
-+ * @WLAN_EID_EXT_CAPABILITY information element
-+ */
-+#define WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT	BIT(6)
-+
- /* TDLS capabilities in the the 4th byte of @WLAN_EID_EXT_CAPABILITY */
- #define WLAN_EXT_CAPA4_TDLS_BUFFER_STA		BIT(4)
- #define WLAN_EXT_CAPA4_TDLS_PEER_PSM		BIT(5)
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index b0e364f50285..97aed7b1ba5d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2234,6 +2234,11 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_TX_STATUS_NO_AMPDU_LEN: Driver does not report accurate A-MPDU
-  *	length in tx status information
-  *
-+ * @IEEE80211_HW_SUPPORTS_MULTI_BSSID: Hardware supports multi BSSID
-+ *
-+ * @IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID: Hardware supports multi BSSID
-+ *	only for HE APs. Applies if @IEEE80211_HW_SUPPORTS_MULTI_BSSID is set.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -2283,6 +2288,8 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_VHT_EXT_NSS_BW,
- 	IEEE80211_HW_STA_MMPDU_TXQ,
- 	IEEE80211_HW_TX_STATUS_NO_AMPDU_LEN,
-+	IEEE80211_HW_SUPPORTS_MULTI_BSSID,
-+	IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID,
- 
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 343ad0a915e4..2d43bc127043 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -3,7 +3,7 @@
-  *
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-- * Copyright (C) 2018 Intel Corporation
-+ * Copyright (C) 2018 - 2019 Intel Corporation
-  *
-  * GPLv2
-  *
-@@ -219,6 +219,8 @@ static const char *hw_flag_names[] = {
- 	FLAG(SUPPORTS_VHT_EXT_NSS_BW),
- 	FLAG(STA_MMPDU_TXQ),
- 	FLAG(TX_STATUS_NO_AMPDU_LEN),
-+	FLAG(SUPPORTS_MULTI_BSSID),
-+	FLAG(SUPPORTS_ONLY_HE_MULTI_BSSID),
- #undef FLAG
- };
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 71005b6dfcd1..5055aeba5c5a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -4,7 +4,7 @@
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2017     Intel Deutschland GmbH
-- * Copyright (C) 2018 Intel Corporation
-+ * Copyright (C) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -1112,6 +1112,17 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (ieee80211_hw_check(&local->hw, CHANCTX_STA_CSA))
- 		local->ext_capa[0] |= WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING;
- 
-+	/* mac80211 supports multi BSSID, if the driver supports it */
-+	if (ieee80211_hw_check(&local->hw, SUPPORTS_MULTI_BSSID)) {
-+		local->hw.wiphy->support_mbssid = true;
-+		if (ieee80211_hw_check(&local->hw,
-+				       SUPPORTS_ONLY_HE_MULTI_BSSID))
-+			local->hw.wiphy->support_only_he_mbssid = true;
-+		else
-+			local->ext_capa[2] |=
-+				WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT;
-+	}
-+
- 	local->hw.wiphy->max_num_csa_counters = IEEE80211_MAX_CSA_COUNTERS_NUM;
- 
- 	result = wiphy_register(local->hw.wiphy);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 64b6ddb67456..a49fbb3f3ed7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -813,6 +813,21 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		}
- 	}
- 
-+	/* Set MBSSID support for HE AP if needed */
-+	if (ieee80211_hw_check(&local->hw, SUPPORTS_ONLY_HE_MULTI_BSSID) &&
-+	    !(ifmgd->flags & IEEE80211_STA_DISABLE_HE) && assoc_data->ie_len) {
-+		struct element *elem;
-+
-+		/* we know it's writable, cast away the const */
-+		elem = (void *)cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY,
-+						  assoc_data->ie,
-+						  assoc_data->ie_len);
-+
-+		/* We can probably assume both always true */
-+		if (elem && elem->datalen >= 3)
-+			elem->data[2] |= WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT;
-+	}
-+
- 	/* if present, add any custom IEs that go before HT */
- 	if (assoc_data->ie_len) {
- 		static const u8 before_ht[] = {
+> This change's purpose is to disallow user to trigger fw crash if the fw is not in a
+> Normal state.
+>
+> If the fw is in recovering state triggered by user's command or by fw, then it will
+> disallow user to run command to trigger fw crash again until fw become to a normal
+> State.
+
+I agree with Michal here and his proposal about having a crash counter
+sounds like a good to me. So I'm dropping this patch.
+
 -- 
-2.17.2
-
+Kalle Valo
