@@ -2,142 +2,89 @@ Return-Path: <SRS0=Ms0V=QP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8457BC282CC
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 14:24:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B35A7C169C4
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 14:29:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5396420863
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 14:24:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FDAA20869
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 14:29:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hZFkReF/"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BTCC+N5O";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BTCC+N5O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727739AbfBHOYt (ORCPT
+        id S1727553AbfBHO3g (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 09:24:49 -0500
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:42414 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726813AbfBHOYt (ORCPT
+        Fri, 8 Feb 2019 09:29:36 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:38462 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727406AbfBHO3g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Feb 2019 09:24:49 -0500
-Received: by mail-lf1-f66.google.com with SMTP id l10so2647179lfh.9
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 06:24:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=AoQVMP14/aPprmvFvZlWqml54OEoelf969I8391ycyI=;
-        b=hZFkReF/fIfKvnZHijpGc9PBiiKUnE9VqGfaO1K2zhu2bCSJK5mjeLuxKrMK+fqwRj
-         PV5v4YOATVag8r4bfuCNwNxsDOR9YNTE6rNb0e+NZEtdLV4ng0P7wNDH5EdEhw+4dLsm
-         t3cRQHFGufYOVwXveLh4LGtVckv4BkEJzmm20+j4VBLztKK2F5jnkg2khFA7C8zJMKNh
-         DH7dhBHyHvrBWpCDh9dJu3xDXiu5MHfwH+1NnNHs0D5snjosEWaaR/+LAEjZb20Cdpcm
-         r/Fw2PNj8nsUcQZrH60XA/MEAjNR7MI4EiKIkZhI+01wJHfpmM/Dk+3ArenEbyO3eEsw
-         suRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=AoQVMP14/aPprmvFvZlWqml54OEoelf969I8391ycyI=;
-        b=N6MOzzIuux7Muh+kXxNB7LU1Y1qU3+X4hhCaPBbbWJd9SxRaQig5nPxQwm/lu0Qmt5
-         NHtiAgv/Lfwc/lNPWUzQiSQfoN+tvDWaZmrBYMWCql9uIN9b/Rg1IG3CMx66bWGTKI4u
-         RODAclFxBDPw0AqnNn7xOSqdwNDab/UzQRfADQIK3LaXwu/vexfbSix2XaGCa7aCgBOY
-         owsp1HJopvt+0MgF0BUFmAJcDiP4pOEtt/EY2aH97jAvfEV4vZ/+9mTo0vJ5ok77cIhT
-         1rpoj54hVuNM4V9hd2giJGccThJ1RIOEr738r5fckZWHH1T4dQ+pNa10s89Cn7o0RWkY
-         Hd0Q==
-X-Gm-Message-State: AHQUAubK4r4gWni0ZSoyg1ei0Ra0p3hEERqohtDsYrRcnmN7KTpPmI96
-        37bNAh+/R/oVyFvdstpJOG4=
-X-Google-Smtp-Source: AHgI3IZ3fv7patz6lqCZr4egYfE0wAL2BFp6tAn63eoX0dSDDCKjtQpj3qoV96l+isOoSRpJmCyFxg==
-X-Received: by 2002:ac2:561a:: with SMTP id v26mr13683826lfd.38.1549635886984;
-        Fri, 08 Feb 2019 06:24:46 -0800 (PST)
-Received: from elitebook.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
-        by smtp.gmail.com with ESMTPSA id d10sm390612lfa.71.2019.02.08.06.24.45
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 08 Feb 2019 06:24:46 -0800 (PST)
-From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] brcmfmac: print firmware reported ring status errors
-Date:   Fri,  8 Feb 2019 15:24:39 +0100
-Message-Id: <20190208142439.21479-1-zajec5@gmail.com>
-X-Mailer: git-send-email 2.20.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        Fri, 8 Feb 2019 09:29:36 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id AE7EF60351; Fri,  8 Feb 2019 14:29:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549636175;
+        bh=mrkDF5WjMirddKQt4tuBCGn2JPtwL04BwQ2FT1Sxjgc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=BTCC+N5OCtBbbOdWiC+puzICTmsH96EFYyh0umPhekwgz9BTVW5iktO6CAwYLCDw9
+         1HJDerBJQ/kjZLRpcqjxcZsNVcxFWCHtgHG5NPStOTcNC6qVmnK3S7QGZFaL2FubgX
+         Dx2pOG8U1JKBVJjSDPwQ5xql2S1LhDSbtv+f/PwY=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8B6A5602CB;
+        Fri,  8 Feb 2019 14:29:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549636175;
+        bh=mrkDF5WjMirddKQt4tuBCGn2JPtwL04BwQ2FT1Sxjgc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=BTCC+N5OCtBbbOdWiC+puzICTmsH96EFYyh0umPhekwgz9BTVW5iktO6CAwYLCDw9
+         1HJDerBJQ/kjZLRpcqjxcZsNVcxFWCHtgHG5NPStOTcNC6qVmnK3S7QGZFaL2FubgX
+         Dx2pOG8U1JKBVJjSDPwQ5xql2S1LhDSbtv+f/PwY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8B6A5602CB
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: fix line length warning in ath10k_ce_alloc_dest_ring()
+Date:   Fri,  8 Feb 2019 16:29:31 +0200
+Message-Id: <1549636171-32628-1-git-send-email-kvalo@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rafał Miłecki <rafal@milecki.pl>
+Commit 750afb08ca71 ("cross-tree: phase out dma_zalloc_coherent()") introduced
+a new checkpatch warning:
 
-Firmware is capable of reporting ring status. It's used e.g. to signal
-some problem with a specific ring setup. This patch adds support for
-printing ring & error number which may be useful for debugging setup
-issues.
+drivers/net/wireless/ath/ath10k/ce.c:1602: line over 90 characters
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- .../broadcom/brcm80211/brcmfmac/msgbuf.c      | 25 +++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ drivers/net/wireless/ath/ath10k/ce.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index 4e8397a0cbc8..bbef2d41cb3b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -134,6 +134,14 @@ struct msgbuf_completion_hdr {
- 	__le16				flow_ring_id;
- };
- 
-+/* Data struct for the MSGBUF_TYPE_RING_STATUS */
-+struct msgbuf_ring_status {
-+	struct msgbuf_common_hdr	msg;
-+	struct msgbuf_completion_hdr	compl_hdr;
-+	__le16				write_idx;
-+	__le32				rsvd0[5];
-+};
-+
- struct msgbuf_rx_event {
- 	struct msgbuf_common_hdr	msg;
- 	struct msgbuf_completion_hdr	compl_hdr;
-@@ -1180,6 +1188,19 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
- 	brcmf_netif_rx(ifp, skb);
- }
- 
-+static void brcmf_msgbuf_process_ring_status(struct brcmf_msgbuf *msgbuf,
-+					     void *buf)
-+{
-+	struct msgbuf_ring_status *ring_status = buf;
-+	int err;
-+
-+	err = le16_to_cpu(ring_status->compl_hdr.status);
-+	if (err) {
-+		int ring = le16_to_cpu(ring_status->compl_hdr.flow_ring_id);
-+
-+		brcmf_err("Firmware reported ring %d error: %d\n", ring, err);
-+	}
-+}
- 
- static void
- brcmf_msgbuf_process_flow_ring_create_response(struct brcmf_msgbuf *msgbuf,
-@@ -1241,6 +1262,10 @@ static void brcmf_msgbuf_process_msgtype(struct brcmf_msgbuf *msgbuf, void *buf)
- 
- 	msg = (struct msgbuf_common_hdr *)buf;
- 	switch (msg->msgtype) {
-+	case MSGBUF_TYPE_RING_STATUS:
-+		brcmf_dbg(MSGBUF, "MSGBUF_TYPE_RING_STATUS\n");
-+		brcmf_msgbuf_process_ring_status(msgbuf, buf);
-+		break;
- 	case MSGBUF_TYPE_FLOW_RING_CREATE_CMPLT:
- 		brcmf_dbg(MSGBUF, "MSGBUF_TYPE_FLOW_RING_CREATE_CMPLT\n");
- 		brcmf_msgbuf_process_flow_ring_create_response(msgbuf, buf);
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 8b4a9102d7eb..17ff65937136 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -1599,7 +1599,8 @@ ath10k_ce_alloc_dest_ring(struct ath10k *ar, unsigned int ce_id,
+ 	 */
+ 	dest_ring->base_addr_owner_space_unaligned =
+ 		dma_alloc_coherent(ar->dev,
+-				   (nentries * sizeof(struct ce_desc) + CE_DESC_RING_ALIGN),
++				   (nentries * sizeof(struct ce_desc) +
++				    CE_DESC_RING_ALIGN),
+ 				   &base_addr, GFP_KERNEL);
+ 	if (!dest_ring->base_addr_owner_space_unaligned) {
+ 		kfree(dest_ring);
 -- 
-2.20.1
+2.7.4
 
