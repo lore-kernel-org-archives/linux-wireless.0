@@ -2,91 +2,345 @@ Return-Path: <SRS0=Ms0V=QP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6B7DC282CB
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24CE4C169C4
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A332520863
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:05:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2EBF20855
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 17:22:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Vqje0E1B"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Cva/WBbm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727863AbfBHRF2 (ORCPT
+        id S1727669AbfBHRWg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 12:05:28 -0500
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:43007 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727139AbfBHRF2 (ORCPT
+        Fri, 8 Feb 2019 12:22:36 -0500
+Received: from mail-ot1-f45.google.com ([209.85.210.45]:39054 "EHLO
+        mail-ot1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727262AbfBHRWg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Feb 2019 12:05:28 -0500
-Received: by mail-ed1-f65.google.com with SMTP id r15so3348126eds.9
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 09:05:27 -0800 (PST)
+        Fri, 8 Feb 2019 12:22:36 -0500
+Received: by mail-ot1-f45.google.com with SMTP id n8so7064667otl.6
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 09:22:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=MWMOX+oYPgK2dUHfERzejc5eIWlGjgJ9HuVBpHoRkT4=;
-        b=Vqje0E1Bs9d1tcKDuJBl82t4ZtCFtoSm1w2AqgP/7IoqcMRWZGdt6ovrQEWqqmKzzH
-         mQX8UeHzPg3PvbRXth94zqXJMAjg3D+IzFJW8LcmBMlEhzPMmBHxn9H5XRmaomKchoOx
-         GPluPxxe9wS+0CvxrWoW0XVnVRZ1dYz9xkxTU=
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=PN9493HKSlTnnHz8/LQdCuDZ9Y/Qat94mMkRl31jEvc=;
+        b=Cva/WBbmI1qbUz7otUM1vj+QsEgwHOUmhBMkmB0SLPMTTDjq/WwY48c/Uhs3sy65Yf
+         RJC9UBmYuwv/2Yso0oo0+PSs6oKw9oPyOBcZkoNi0LoFQ8v2uEQorubipbIcXONmCSz3
+         WuQrLh+FIxALPwJ6E17jWRgU5+jXWcEigOKTZVQV+4lsbXZJyLd/LBG16f4FF6O3AypV
+         R7u6LqCHLhEjQa+Tr9ImRAnOMCsYbPLVOxQURt8LVdLibY8Sc/HwY/JJkoZr/ByWOc9N
+         1AP1nL9FxznSv1C3p9wBJcQxIWwStxJu9p28Xg5W0aJdM6BSXCBh3X27PKYI+xKDf09U
+         +3fQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=MWMOX+oYPgK2dUHfERzejc5eIWlGjgJ9HuVBpHoRkT4=;
-        b=WKEsP9z3ERdDRFJ5PQBQjNLzCDSrRPV64b7tax0AWDXH+q1hv67e1SI/RAfCm/L3tO
-         ToF+JtCGk3+iOM6p5azIXb+bSOg/ZN8Q2howyXKSrtVwPQJDYsORLb6HYQjcdx+qtMvd
-         Du+SSWvYQKf/OrvS/MtZVAt5MuOvT7TQrJdUgOwMFRB4pcfwM0prxJ9oQHPI6t1tihze
-         gW2mbuaGqLBdOeNahgh/fG1PHR205+HZWPkcUQ2+zgrZdMSNTwcqpRXzvU17gW6O0E+A
-         AnLE9OWvGLZPUulfD5sFoIBj6Vxr28LTl7ErKPG7dxPdsWqQjmf07pwmO3Syp0YmT6/e
-         RqVw==
-X-Gm-Message-State: AHQUAuYJ/w3GxT8ZbwJXAek3y4FzEJQ/L3QzRB5It7xRs5MgaNCFFfra
-        pGk5QegCsfRKssidAB995cXVu/oh/Sk=
-X-Google-Smtp-Source: AHgI3IbUM0d+z3Oh/AS1umEPh7y4LjWkeMrxrC1/ZoWxc8+qT8n6l3xN/a02aanGUoQICp67K5iKVg==
-X-Received: by 2002:aa7:d749:: with SMTP id a9mr17221890eds.223.1549645526316;
-        Fri, 08 Feb 2019 09:05:26 -0800 (PST)
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com. [209.85.208.42])
-        by smtp.gmail.com with ESMTPSA id t26sm581801ejs.48.2019.02.08.09.05.24
-        for <linux-wireless@vger.kernel.org>
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
+         :mime-version:content-transfer-encoding;
+        bh=PN9493HKSlTnnHz8/LQdCuDZ9Y/Qat94mMkRl31jEvc=;
+        b=cbLUeEnPYmXkM2r1MN7aCsY0TDbiWJv7CT2ovR3MzGVlTJKFdYi8iNSMGFE/B40zon
+         HRMAo5B2ejhTnfhzDOBr5D8m6Cj5t23xI+6v8HOKyAzpfHp+tTDXxZRIsDnQ7XoucrD6
+         zdaLuy3WX+PamFzN5Obz+gwS5aS5VJMqR1vRNTPulkXBdnHCTtWur0vUMALSGuW56NSC
+         aqNF+4iQJjb7jpeWSmyOIcmGTLI9Rr7c6YQGhA09GBkuLXtkhJ0ni8POUA3nLYjiDt3d
+         BF4+mLlesS7CAGeFLQm5ZdyM3pmwTQTZ90Gl2JF2GCyxP67dO8fEEHzDvlOeHXYHH26V
+         kLCA==
+X-Gm-Message-State: AHQUAuaaVy0n/qrQng5W1oJUYtJSiHyfRG/Jllu1uG68/CfQdqTAWh2x
+        saQaJXGUxer4xMpmUTOzHpE=
+X-Google-Smtp-Source: AHgI3IbSQVYHJ/Pw+UjZixKHpl578u5KopX3lUbRtGPX9u1Bq0Nctr/ENRMhhr5Jvk8m4SSjWHX44w==
+X-Received: by 2002:a9d:7a8c:: with SMTP id l12mr14323670otn.335.1549646554909;
+        Fri, 08 Feb 2019 09:22:34 -0800 (PST)
+Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id o2sm1107262otj.2.2019.02.08.09.22.33
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 08 Feb 2019 09:05:25 -0800 (PST)
-Received: by mail-ed1-f42.google.com with SMTP id t6so3337434edw.12
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 09:05:24 -0800 (PST)
-X-Received: by 2002:a17:906:5382:: with SMTP id g2mr4042771ejo.163.1549645523924;
- Fri, 08 Feb 2019 09:05:23 -0800 (PST)
+        Fri, 08 Feb 2019 09:22:34 -0800 (PST)
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 00/13] rtlwifi: Replace old-style license info with SPDX form
+Date:   Fri,  8 Feb 2019 11:21:56 -0600
+Message-Id: <20190208172209.28530-1-Larry.Finger@lwfinger.net>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-References: <1542163848-837-1-git-send-email-wgong@codeaurora.org>
- <20181115002836.GA71934@google.com> <c94346b26a6d4b11a045a176ca854051@aptaiexm02f.ap.qualcomm.com>
- <20181115184333.GA87504@google.com> <87va4x8q2c.fsf@codeaurora.org>
- <CABvG-CVAnwkiKVJik0PdsmRxF62kKv2N+aRKNq=nbopoExLvDA@mail.gmail.com> <87y36q75wr.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87y36q75wr.fsf@kamboji.qca.qualcomm.com>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Fri, 8 Feb 2019 09:05:11 -0800
-X-Gmail-Original-Message-ID: <CA+ASDXO8NujrORVLZMPbDy916cnzOvx_Bp8Vr-VvkbBwJvB97A@mail.gmail.com>
-Message-ID: <CA+ASDXO8NujrORVLZMPbDy916cnzOvx_Bp8Vr-VvkbBwJvB97A@mail.gmail.com>
-Subject: Re: [PATCH] ath10k: support PCIe enter L1 state
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>,
-        Wen Gong <wgong@qti.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org, Wen Gong <wgong@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Feb 8, 2019 at 5:42 AM Kalle Valo <kvalo@codeaurora.org> wrote:
-> No replies from anyone (including Wen) for 3 months about testing this
-> patch on anything else than QCA6174. So I'll drop this now, please
-> resubmit once test coverage is better.
+These patches change all the license information from the old-stype format
+to the newer SPDX format. There are no code changes.
 
-I know this isn't exactly what you're asking for, but FWIW we've been
-using this since late November on all our QCA6174 products. No issues
-seen as far as I know, and we have seen some power savings.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Regards,
-Brian
+Larry Finger (13):
+  rtlwifi: Replace old-style license information
+  rtlwifi: btcoex: Replace old-style license information
+  rtlwifi: rtl8188ee: Replace old-style license information
+  rtlwifi: rtl8192com: Replace old-style license information
+  rtlwifi: rtl8192ce: Replace old-style license information
+  rtlwifi: rtl8192cu: Replace old-style license information
+  rtlwifi: rtl8192de: Replace old-style license information
+  rtlwifi: rtl8192ee: Replace old-style license information
+  rtlwifi: rtl8192se: Replace old-style license information
+  rtlwifi: rtl8723ae: Replace old-style license information
+  rtlwifi: rtl8723be: Replace old-style license information
+  rtlwifi: rtl8723_common: Replace old-style license information
+  rtlwifi: rtl8821ae: Replace old-style license information
+
+ drivers/net/wireless/realtek/rtlwifi/base.c   | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/base.h   | 26 ++------------
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h | 25 ++-----------
+ .../rtlwifi/btcoexist/halbtc8192e2ant.c       | 35 ++-----------------
+ .../rtlwifi/btcoexist/halbtc8192e2ant.h       | 27 ++------------
+ .../rtlwifi/btcoexist/halbtc8723b1ant.c       | 26 ++------------
+ .../rtlwifi/btcoexist/halbtc8723b1ant.h       | 27 ++------------
+ .../rtlwifi/btcoexist/halbtc8723b2ant.c       | 27 ++------------
+ .../rtlwifi/btcoexist/halbtc8723b2ant.h       | 27 ++------------
+ .../rtlwifi/btcoexist/halbtc8821a1ant.c       | 26 ++------------
+ .../rtlwifi/btcoexist/halbtc8821a1ant.h       | 26 ++------------
+ .../rtlwifi/btcoexist/halbtc8821a2ant.c       | 26 ++------------
+ .../rtlwifi/btcoexist/halbtc8821a2ant.h       | 26 ++------------
+ .../rtlwifi/btcoexist/halbtc8822bwifionly.c   | 17 ++-------
+ .../rtlwifi/btcoexist/halbtc8822bwifionly.h   |  3 ++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c  | 26 ++------------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h  | 27 ++------------
+ .../realtek/rtlwifi/btcoexist/rtl_btc.c       | 27 ++------------
+ .../realtek/rtlwifi/btcoexist/rtl_btc.h       | 25 ++-----------
+ drivers/net/wireless/realtek/rtlwifi/cam.c    | 27 ++------------
+ drivers/net/wireless/realtek/rtlwifi/cam.h    | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/core.c   | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/core.h   | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/debug.c  | 25 ++-----------
+ drivers/net/wireless/realtek/rtlwifi/debug.h  | 25 ++-----------
+ drivers/net/wireless/realtek/rtlwifi/efuse.c  | 27 ++------------
+ drivers/net/wireless/realtek/rtlwifi/efuse.h  | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/pci.c    | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/pci.h    | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/ps.c     | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/ps.h     | 26 ++------------
+ .../net/wireless/realtek/rtlwifi/pwrseqcmd.h  | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/rc.c     | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/rc.h     | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/regd.c   | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/regd.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/def.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/dm.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/dm.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/fw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/fw.h   | 25 ++-----------
+ .../wireless/realtek/rtlwifi/rtl8188ee/hw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/hw.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/led.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/led.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/phy.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/phy.h  | 26 ++------------
+ .../realtek/rtlwifi/rtl8188ee/pwrseq.c        | 26 ++------------
+ .../realtek/rtlwifi/rtl8188ee/pwrseq.h        | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/reg.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/rf.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/rf.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/sw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/sw.h   | 26 ++------------
+ .../realtek/rtlwifi/rtl8188ee/table.c         | 28 ++-------------
+ .../realtek/rtlwifi/rtl8188ee/table.h         | 28 ++-------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/trx.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8188ee/trx.h  | 26 ++------------
+ .../realtek/rtlwifi/rtl8192c/dm_common.c      | 26 ++------------
+ .../realtek/rtlwifi/rtl8192c/dm_common.h      | 26 ++------------
+ .../realtek/rtlwifi/rtl8192c/fw_common.c      | 26 ++------------
+ .../realtek/rtlwifi/rtl8192c/fw_common.h      | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192c/main.c  | 26 ++------------
+ .../realtek/rtlwifi/rtl8192c/phy_common.c     | 26 ++------------
+ .../realtek/rtlwifi/rtl8192c/phy_common.h     | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/def.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/dm.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/dm.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/hw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/hw.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/led.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/led.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/phy.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/phy.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/reg.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/rf.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/rf.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/sw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/sw.h   | 26 ++------------
+ .../realtek/rtlwifi/rtl8192ce/table.c         | 28 ++-------------
+ .../realtek/rtlwifi/rtl8192ce/table.h         | 28 ++-------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/trx.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ce/trx.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/def.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/dm.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/dm.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/hw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/hw.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/led.c  | 24 ++-----------
+ .../wireless/realtek/rtlwifi/rtl8192cu/led.h  | 24 ++-----------
+ .../wireless/realtek/rtlwifi/rtl8192cu/mac.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/mac.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/phy.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/phy.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/reg.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/rf.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/rf.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/sw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/sw.h   | 26 ++------------
+ .../realtek/rtlwifi/rtl8192cu/table.c         | 26 ++------------
+ .../realtek/rtlwifi/rtl8192cu/table.h         | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/trx.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192cu/trx.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/def.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/dm.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/dm.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/fw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/fw.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/hw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/hw.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/led.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/led.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/phy.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/phy.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/reg.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/rf.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/rf.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/sw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/sw.h   | 26 ++------------
+ .../realtek/rtlwifi/rtl8192de/table.c         | 27 ++------------
+ .../realtek/rtlwifi/rtl8192de/table.h         | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/trx.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192de/trx.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/def.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/dm.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/dm.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/fw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/fw.h   | 25 ++-----------
+ .../wireless/realtek/rtlwifi/rtl8192ee/hw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/hw.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/led.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/led.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/phy.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/phy.h  | 26 ++------------
+ .../realtek/rtlwifi/rtl8192ee/pwrseq.c        | 26 ++------------
+ .../realtek/rtlwifi/rtl8192ee/pwrseq.h        | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/reg.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/rf.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/rf.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/sw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/sw.h   | 26 ++------------
+ .../realtek/rtlwifi/rtl8192ee/table.c         | 28 ++-------------
+ .../realtek/rtlwifi/rtl8192ee/table.h         | 28 ++-------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/trx.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/trx.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/def.h  | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/dm.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/dm.h   | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/fw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/fw.h   | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/hw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/hw.h   | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/led.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/led.h  | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/phy.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/phy.h  | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/reg.h  | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/rf.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/rf.h   | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/sw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/sw.h   | 25 ++-----------
+ .../realtek/rtlwifi/rtl8192se/table.c         | 27 ++------------
+ .../realtek/rtlwifi/rtl8192se/table.h         | 20 ++---------
+ .../wireless/realtek/rtlwifi/rtl8192se/trx.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8192se/trx.h  | 27 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/btc.h  | 25 ++-----------
+ .../wireless/realtek/rtlwifi/rtl8723ae/def.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/dm.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/dm.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/fw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/fw.h   | 25 ++-----------
+ .../rtlwifi/rtl8723ae/hal_bt_coexist.c        | 26 ++------------
+ .../rtlwifi/rtl8723ae/hal_bt_coexist.h        | 25 ++-----------
+ .../realtek/rtlwifi/rtl8723ae/hal_btc.c       | 27 ++------------
+ .../realtek/rtlwifi/rtl8723ae/hal_btc.h       | 25 ++-----------
+ .../wireless/realtek/rtlwifi/rtl8723ae/hw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/hw.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/led.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/led.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/phy.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/phy.h  | 26 ++------------
+ .../realtek/rtlwifi/rtl8723ae/pwrseq.c        | 26 ++------------
+ .../realtek/rtlwifi/rtl8723ae/pwrseq.h        | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/reg.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/rf.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/rf.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/sw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/sw.h   | 26 ++------------
+ .../realtek/rtlwifi/rtl8723ae/table.c         | 28 ++-------------
+ .../realtek/rtlwifi/rtl8723ae/table.h         | 28 ++-------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/trx.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723ae/trx.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/def.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/dm.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/dm.h   | 23 ++----------
+ .../wireless/realtek/rtlwifi/rtl8723be/fw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/fw.h   | 25 ++-----------
+ .../wireless/realtek/rtlwifi/rtl8723be/hw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/hw.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/led.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/led.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/phy.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/phy.h  | 26 ++------------
+ .../realtek/rtlwifi/rtl8723be/pwrseq.c        | 26 ++------------
+ .../realtek/rtlwifi/rtl8723be/pwrseq.h        | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/reg.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/rf.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/rf.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/sw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/sw.h   | 26 ++------------
+ .../realtek/rtlwifi/rtl8723be/table.c         | 28 ++-------------
+ .../realtek/rtlwifi/rtl8723be/table.h         | 28 ++-------------
+ .../wireless/realtek/rtlwifi/rtl8723be/trx.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8723be/trx.h  | 26 ++------------
+ .../realtek/rtlwifi/rtl8723com/dm_common.c    | 26 ++------------
+ .../realtek/rtlwifi/rtl8723com/dm_common.h    | 26 ++------------
+ .../realtek/rtlwifi/rtl8723com/fw_common.c    | 26 ++------------
+ .../realtek/rtlwifi/rtl8723com/fw_common.h    | 26 ++------------
+ .../realtek/rtlwifi/rtl8723com/main.c         | 26 ++------------
+ .../realtek/rtlwifi/rtl8723com/phy_common.c   | 26 ++------------
+ .../realtek/rtlwifi/rtl8723com/phy_common.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/def.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/dm.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/dm.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/fw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/fw.h   | 25 ++-----------
+ .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/hw.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/led.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/led.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/phy.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/phy.h  | 26 ++------------
+ .../realtek/rtlwifi/rtl8821ae/pwrseq.c        | 26 ++------------
+ .../realtek/rtlwifi/rtl8821ae/pwrseq.h        | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/reg.h  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/rf.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/rf.h   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/sw.c   | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/sw.h   | 26 ++------------
+ .../realtek/rtlwifi/rtl8821ae/table.c         | 29 ++-------------
+ .../realtek/rtlwifi/rtl8821ae/table.h         | 28 ++-------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/trx.c  | 26 ++------------
+ .../wireless/realtek/rtlwifi/rtl8821ae/trx.h  | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/stats.c  | 27 ++------------
+ drivers/net/wireless/realtek/rtlwifi/stats.h  | 26 ++------------
+ drivers/net/wireless/realtek/rtlwifi/usb.c    | 24 ++-----------
+ drivers/net/wireless/realtek/rtlwifi/usb.h    | 24 ++-----------
+ drivers/net/wireless/realtek/rtlwifi/wifi.h   | 26 ++------------
+ 248 files changed, 520 insertions(+), 5922 deletions(-)
+
+-- 
+2.20.1
+
