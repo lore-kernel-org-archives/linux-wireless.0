@@ -2,143 +2,97 @@ Return-Path: <SRS0=Ta2d=QQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3961C282C4
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 08:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3545C282C4
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 09:00:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D67F21773
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 08:31:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FC6A20818
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 09:00:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jJx321Kq";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Bkjf3F/t"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ve423dsI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726788AbfBIIbY (ORCPT
+        id S1726977AbfBIJAW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Feb 2019 03:31:24 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:33008 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726047AbfBIIbY (ORCPT
+        Sat, 9 Feb 2019 04:00:22 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:47526 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726047AbfBIJAW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Feb 2019 03:31:24 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6DB96607DD; Sat,  9 Feb 2019 08:31:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549701083;
-        bh=1CkMdSb3tN4kl4UfHP6K1AhkwlD5/dFr5c76rSNbHSc=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=jJx321Kq9dTYLo/cWl2dCqfAgzf2GQF/nHuw7ektaNWaCcIA4o4VgSbaeA+lMHtzJ
-         HoA6GmmgiQS/5fFlrpuH7vN7Mc5c6Bt+JPJwAWUbOA1bI09zeAczC8xr16Ll0JjS4f
-         yQSNblaOt14FYBnmzPrTeBnQjAzh57FBPKWififM=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1ACD2602CB;
-        Sat,  9 Feb 2019 08:31:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549701082;
-        bh=1CkMdSb3tN4kl4UfHP6K1AhkwlD5/dFr5c76rSNbHSc=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Bkjf3F/true7dBZIj5pPGZ/mx1hVYWkGW9SsZQf7ZCV8XE4rAN5wKaI84gUl3oIOt
-         BWHMDR8FgAMXY/vdzVutpi0KcCeO7SkW9JThVHZDGuj2+5wqIiU+duPScgqhckWYol
-         I8lerwehu5+0p0rCLScf/Wn/X0ZSJ678y69aTMOc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1ACD2602CB
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     kbuild test robot <lkp@intel.com>
-Cc:     Maya Erez <merez@codeaurora.org>, kbuild-all@01.org,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath6kl:pending 12/32] drivers/net/wireless/ath/wil6210/txrx.c:341:25: warning: 'rtap' may be used uninitialized in this function
-References: <201902090225.xWQGRZWS%fengguang.wu@intel.com>
-Date:   Sat, 09 Feb 2019 10:31:18 +0200
-In-Reply-To: <201902090225.xWQGRZWS%fengguang.wu@intel.com> (kbuild test
-        robot's message of "Sat, 9 Feb 2019 02:26:28 +0800")
-Message-ID: <87pns17489.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Sat, 9 Feb 2019 04:00:22 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x198wmYO134053;
+        Sat, 9 Feb 2019 09:00:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2018-07-02;
+ bh=m4n/Gp8z35HWMck4rGTXrZJtQLqwtnieH+ty0D7Lmas=;
+ b=Ve423dsI6cmorI/CWoN8r8gwvsVeaWHkrALSzIiB+T9pMWHhn9v+C9PlNJeVBpUpaHjb
+ mJG2n9tWqL6cyOTosBmbcdnWWWPgLRkKXR26VxlPhWJnMT1KDvDgFM/PUArutbxXnNl6
+ qu5IA1ETbCUO+rCugU/tKEzpoA3NgxY8C/BWfBoGFBHsb+KYxXALwVveeD2fhD0LaQh6
+ XJ+8JbstiS7snkre3XqkXXczlM38RiJHryUM+douSSQMWpJ1pF1CPRLI6IqQoVGfRgCv
+ xFPFAEBTG6xiT9JgoRfpCOX25PCSdsrfkPzEt7qIS7mNIHBdADRIUE/qZsaNSdEc0zua lw== 
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2qhrek07uy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 09 Feb 2019 09:00:18 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1990HCx017995
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 9 Feb 2019 09:00:17 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x1990HWH019985;
+        Sat, 9 Feb 2019 09:00:17 GMT
+Received: from kadam (/197.157.0.32)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 09 Feb 2019 01:00:17 -0800
+Date:   Sat, 9 Feb 2019 12:00:09 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc:     Siva Rebbagondla <siva8118@gmail.com>,
+        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH] rsi: fix a typo in a debug message
+Message-ID: <20190209090009.GA4865@kadam>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9161 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
+ definitions=main-1902090067
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-+ linux-wireless
+There is a \b (backspace) character in the message that wasn't intended.
 
-kbuild test robot <lkp@intel.com> writes:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git pending
-> head:   6e56895b48f885973e44231cac5f3f39a7068d36
-> commit: 18c7c63dcc54feb0e0438ff20b528ea3945d82e0 [12/32] wil6210: remove rtap_include_phy_info module param
-> config: xtensa-allyesconfig (attached as .config)
-> compiler: xtensa-linux-gcc (GCC) 8.2.0
-> reproduce:
->         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         git checkout 18c7c63dcc54feb0e0438ff20b528ea3945d82e0
->         # save the attached .config to linux build tree
->         GCC_VERSION=8.2.0 make.cross ARCH=xtensa 
->
-> Note: it may well be a FALSE warning. FWIW you are at least aware of it now.
-> http://gcc.gnu.org/wiki/Better_Uninitialized_Warnings
->
-> All warnings (new ones prefixed by >>):
->
->    drivers/net/wireless/ath/wil6210/txrx.c: In function 'wil_vring_reap_rx':
->>> drivers/net/wireless/ath/wil6210/txrx.c:341:25: warning: 'rtap' may be used uninitialized in this function [-Wmaybe-uninitialized]
->      rtap->rthdr.it_version = PKTHDR_RADIOTAP_VERSION;
->    drivers/net/wireless/ath/wil6210/txrx.c:331:23: note: 'rtap' was declared here
->      struct wil6210_rtap *rtap;
->                           ^~~~
->
-> vim +/rtap +341 drivers/net/wireless/ath/wil6210/txrx.c
->
->    304	
->    305	/**
->    306	 * Adds radiotap header
->    307	 *
->    308	 * Any error indicated as "Bad FCS"
->    309	 *
->    310	 * Vendor data for 04:ce:14-1 (Wilocity-1) consists of:
->    311	 *  - Rx descriptor: 32 bytes
->    312	 *  - Phy info
->    313	 */
->    314	static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
->    315					       struct sk_buff *skb)
->    316	{
->    317		struct wil6210_rtap {
->    318			struct ieee80211_radiotap_header rthdr;
->    319			/* fields should be in the order of bits in rthdr.it_present */
->    320			/* flags */
->    321			u8 flags;
->    322			/* channel */
->    323			__le16 chnl_freq __aligned(2);
->    324			__le16 chnl_flags;
->    325			/* MCS */
->    326			u8 mcs_present;
->    327			u8 mcs_flags;
->    328			u8 mcs_index;
->    329		} __packed;
-
-This is an odd place to define a structure.
-
->    330		struct vring_rx_desc *d = wil_skb_rxdesc(skb);
->    331		struct wil6210_rtap *rtap;
->    332		int rtap_len = sizeof(struct wil6210_rtap);
->    333		struct ieee80211_channel *ch = wil->monitor_chandef.chan;
->    334	
->    335		if (skb_headroom(skb) < rtap_len &&
->    336		    pskb_expand_head(skb, rtap_len, 0, GFP_ATOMIC)) {
->    337			wil_err(wil, "Unable to expand headroom to %d\n", rtap_len);
->    338			return;
->    339		}
->    340	
->  > 341		rtap->rthdr.it_version = PKTHDR_RADIOTAP_VERSION;
-
-Looks like a valid warning to me.
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index aded1ae4fad5..1dbc0fbbef3f 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -285,7 +285,7 @@ static void rsi_mac80211_cancel_hw_scan(struct ieee80211_hw *hw,
+ 			common->bgscan_en = false;
+ 		info.aborted = false;
+ 		ieee80211_scan_completed(adapter->hw, &info);
+-		rsi_dbg(INFO_ZONE, "Back ground scan cancelled\b\n");
++		rsi_dbg(INFO_ZONE, "Back ground scan cancelled\n");
+ 	}
+ 	common->hwscan = NULL;
+ 	mutex_unlock(&common->mutex);
 -- 
-Kalle Valo
+2.17.1
+
