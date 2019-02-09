@@ -2,109 +2,137 @@ Return-Path: <SRS0=Ta2d=QQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D7EFC282C4
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 21:03:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2246BC282C4
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 22:47:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 185252081B
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 21:03:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HQQgUUTz"
+	by mail.kernel.org (Postfix) with ESMTP id E580C218D2
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 22:47:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726932AbfBIVDy (ORCPT
+        id S1727068AbfBIWrt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Feb 2019 16:03:54 -0500
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:45233 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726873AbfBIVDy (ORCPT
+        Sat, 9 Feb 2019 17:47:49 -0500
+Received: from mout.kundenserver.de ([212.227.126.135]:53847 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726944AbfBIWrs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Feb 2019 16:03:54 -0500
-Received: by mail-ot1-f67.google.com with SMTP id 32so11571521ota.12
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Feb 2019 13:03:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=ceDRGlDKF4bwNMvvxIkEnnaropCtlgce0OaSL/2FqqM=;
-        b=HQQgUUTzHe0/2LJQxftSr0oucQebDFC0r19zGWvG9nQ22qcHsndZPElke1adhuBcIU
-         f4GUpxVPlQbB7OcSCIdVpTQow8PhKG+Fft8UaaDATO5tj5OZnDRwvABi1Mw0ABPRGard
-         7QDkNC2mLY9k2yRjqI9tRKtjousflzieP6lBmSkJBk6laXndhqYlxUpIYui1kRleZ5LF
-         W++WJXWY6tEHlbxyWmgLFDF6qZjNCxcFpRgsQcSx+wNpAaq9sjgJtR9v82WxBUJ57koh
-         aif+mWApfT4n0s4D+MARicIDOToar1lmjhYgQk1ilBjXzMuQH3oV84ty6enGyiBHxp1M
-         Ey7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ceDRGlDKF4bwNMvvxIkEnnaropCtlgce0OaSL/2FqqM=;
-        b=siP5x0qqrfj0otk1na7te4gLDPQdfEMaOHVDhI+n5Aoc6IcPrNgITSiYOUWNHt/0Mb
-         NaYB7L8IdIxh/z7tm4sNf+5yoW57DAx7R0k+LrmINhiN+FMH60+Oate6drXjZkNpzMbG
-         odWF+wFkY8MyKUnEdjfT5etmUK+yglN6BZQ506NVtZ0jlzlfo1Z5fi8Vcz6iL/s+8pPU
-         VCNiJ8660Iv772mrdkMtHrBpR7fc5IUCJkYtIP+h7Qs/e4OogQqdAd4ThkZ2/GPobKnP
-         SeN3tg4hfgsK4QXhD0fqUDdx3TUP+lGjQFDVrL2P/sbepWlcxXq2s3F/hbkzaPFhACTc
-         8P5w==
-X-Gm-Message-State: AHQUAuZ4rCquJ+T9ZaKAkwYCGWpVsvIiuMtIA6l2bgzoq4BdCdwbSNbu
-        ua48ws2Pp9QPnF4HrcqFbwU=
-X-Google-Smtp-Source: AHgI3IYKNbB2oT/O4znPZa0BZBsBtce8HCUWu4i1FMylKKGPR/y8YpvJpUNd5h/WCHAOiGqPCDtoLA==
-X-Received: by 2002:a9d:75c5:: with SMTP id c5mr20199644otl.356.1549746233395;
-        Sat, 09 Feb 2019 13:03:53 -0800 (PST)
-Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id t67sm2310486oib.44.2019.02.09.13.03.52
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 09 Feb 2019 13:03:52 -0800 (PST)
-Subject: Re: [PATCH 00/13] rtlwifi: Replace old-style license info with SPDX
- form
-To:     Joe Perches <joe@perches.com>, kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com
-References: <20190208172209.28530-1-Larry.Finger@lwfinger.net>
- <50b60844f3ac435a41ff99a3043ee10133e30870.camel@perches.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <a17f532a-5cfe-3fed-0c13-8e0eff196a44@lwfinger.net>
-Date:   Sat, 9 Feb 2019 15:03:51 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        Sat, 9 Feb 2019 17:47:48 -0500
+Received: from oxbaltgw58.schlund.de ([172.19.246.145]) by
+ mrelayeu.kundenserver.de (mreue011 [213.165.67.97]) with ESMTPSA (Nemesis) id
+ 1N0Fh1-1h3w462My7-00xKlK; Sat, 09 Feb 2019 23:47:37 +0100
+Date:   Sat, 9 Feb 2019 23:47:36 +0100 (CET)
+From:   Stefan Wahren <stefan.wahren@i2se.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Doug Anderson <dianders@chromium.org>,
+        Minas Harutyunyan <hminas@synopsys.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-usb@vger.kernel.org
+Message-ID: <1967648755.294991.1549752456082@email.ionos.de>
+In-Reply-To: <CAJ0CqmXhPRh8L3QkKDEJZffPOKV0TgMg27sdP7UX9PRvEy-eQg@mail.gmail.com>
+References: <2003727085.234456.1549714119945@email.ionos.de>
+ <CAJ0CqmXSuNQ_tQOatyKwO9O2KsxqD5NZRQnngOme5PURssiv5Q@mail.gmail.com>
+ <165515185.283024.1549744145982@email.ionos.de>
+ <CAJ0CqmXhPRh8L3QkKDEJZffPOKV0TgMg27sdP7UX9PRvEy-eQg@mail.gmail.com>
+Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
 MIME-Version: 1.0
-In-Reply-To: <50b60844f3ac435a41ff99a3043ee10133e30870.camel@perches.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Priority: 3
+Importance: Medium
+X-Mailer: Open-Xchange Mailer v7.8.4-Rev47
+X-Originating-Client: open-xchange-appsuite
+X-Provags-ID: V03:K1:+kHTRArE/+FcEDtF8tDd7s7rrs2uf4irO0/SFrBId4dzIOi1Oif
+ OxR7nZ/a610GyHDDjLLt48JKCavCczJ6B/SRTIuQJkOzgEOL2Fj5pPKmtZO7AjJo2KTyoLu
+ KKXaeiQc7F17MwUn1W1uYhll4zO2dUnT6TktVc5gkXoBCBBYb3ieJx/BkJaaRtanL+W2/zk
+ Ys+oxjaqcfeRFGK1wiCTw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:TtWm5eyboOU=:hS/ypMXX0hA3G18ItF2fCa
+ zoBHGCfIPMRA4AOlsm7nzc7A4x4MDO1wEDHeQysaJQpw3FcJWhI1XQMKLdFD5vjhfZoH/5cOu
+ DabZ8INkL2AAJaDX4bWSBzhhB/Da2MZBgTd8VPddqT0BIhDem7KOiGJhB6H0a29TLJDEdBmPk
+ HGEF3j2imkWbC+1uxIKThOjie/QwRTb/apTxghUMocY2dwZaChlj46Y6WW+Y+N4MhzYpLfRuY
+ YR3c2ByOn/Q+QxANzBjtRQ7YgYfbec7rO072E14DEolaNt4gukz8qui4OgmR0UuOVhkOUfnBh
+ YUwkw2HJ/n37326V5t2K2Zlacq9SBIJIagiaJE/7vOs/gmhzdKF5yVLrD4VAag0fPmN8sANmM
+ MLy7jXzL3OPvEnaJhN/RJJ50VBgE+zYeTQvMoKvPoGC7cu865jdWtZNzRlLYUSx1HhJRvUPy1
+ /4N894Zz5hGWv8r/Hc8IOHAZIMCvWfcOYp1455rpfOy1ZCry0Dof+1EzU46tHghhFebkFdnEt
+ k0USfcFCm9mQWIKrAK1PXjpCJk5hcHwRXOvSM6tVMuw1LZaamK6oAyqFBApiwK8W4wjrA08CU
+ gLJ0YqK7SYrUrtpJ30qj9MU1XPunB/Jr9l3xcyH5kqrKFlC8V8S6JoT4o7AwuH3AX3CtxBDVX
+ JRpTcg2TF8K99LP8xYCuxOjTPz1nHD2P8Sj+S7HzWz2gf0jzvioZO9uTM0iV+qOCL3LiySV/c
+ 4HBHA/j3XSth8lZFrMr6CcK64q8LvDMEhl63j7bLrWl2YdJtCiWb3APBEg0=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/8/19 9:00 PM, Joe Perches wrote:
-> On Fri, 2019-02-08 at 11:21 -0600, Larry Finger wrote:
->> These patches change all the license information from the old-stype format
->> to the newer SPDX format. There are no code changes.
-> 
-> About some of the removals:
-> 
->> Copyright(c) 2009-2012  Realtek Corporation.
-> 
-> I believe these copyright markings should _not_ be removed.
+Hi Lorenzo,
 
-I thought I did keep the Copyright information. I have now checked twice to 
-verify that it was done correctly, and that the original dates were kept. If I 
-missed any, I have not found that instance. Please let me know which ones you saw.
-> 
->> - * Contact Information:
->> - * wlanfae <wlanfae@realtek.com
->> - * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
->> - * Hsinchu 300, Taiwan.
-> 
-> Why take out the contact information?  Is it invalid?
-
-Realtek no longer supplies that info with their latest drivers, thus I removed 
-it here. That E-mail address is a dummy that people report is never answered - I 
-have not personally tried it.
-
-Larry
-
+> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> hat am 9. Februar 2019 um 21:33 geschrieben:
 > 
 > 
+> >
+> > Hi Lorenzo,
+> >
+> > > Lorenzo Bianconi <lorenzo.bianconi@redhat.com> hat am 9. Februar 2019 um 19:46 geschrieben:
+> > >
+> > >
+> > > >
+> > > > Hi,
+> > > >
+> > > > as already reported here [1], that there are probing issues of mt76 using TP-Link Archer T2UH (wifi USB dongle) on Raspberry Pi 3 B+.
+> > > >
+> > > > I retested it with recent linux-next 20190208 (aarch64 defconfig + enabling mt76 driver) and got the following output after plugin the wifi dongle:
+> > > >
+> > > > [   29.778524] usb 1-1.3: new high-speed USB device number 6 using dwc2
+> > > > [   31.794581] usb 1-1.3: reset high-speed USB device number 6 using dwc2
+> > > > [   31.919916] mt76x0u 1-1.3:1.0: ASIC revision: 76100002 MAC revision: 76502000
+> > > > [   32.304412] dwc2 3f980000.usb: dwc2_update_urb_state(): trimming xfer length
+> > > > [   32.325724] dwc2 3f980000.usb: dwc2_update_urb_state(): trimming xfer length
+> > > > [   32.346866] dwc2 3f980000.usb: dwc2_update_urb_state(): trimming xfer length
+> > > > [   33.410559] mt76x0u 1-1.3:1.0: firmware upload timed out
+> > > > [   33.435458] mt76x0u: probe of 1-1.3:1.0 failed with error -110
+> > > > [   33.454829] usbcore: registered new interface driver mt76x0u
+> > > >
+> > > > I took the firmware files from here [2].
+> > > >
+> > > > Btw there is another issue, if i disconnect the wifi dongle during probe i'm getting a endless flood of the following output:
+> > > >
+> > > > mt76x0u 1.1.3:1.0: rx urb failed: -71
+> > > >
+> > > > Any chance to narrow down these issues?
+> > >
+> > > Hi Stefan,
+> > >
+> > > could you please test the following series:
+> > > https://patchwork.kernel.org/cover/10764453/
+> >
+> > yeah this fixed the probing timeout and the driver will probe successful. AFAIK the dwc2 host mode doesn't support scatter-gather yet.
+> >
+> 
+> Hi Stefan,
+> 
+> is the dongle working properly now? Are you able to connect to your AP?
 
+i successful tested STA mode with 2.4 GHz and 5 GHz.
+
+> 
+> > > Applying this series I am able to connect to my home AP using an Asus
+> > > USB-AC51 (mt76x0u) connected to a Raspberry Pi 3 B+.
+> > > I am running rpi-5.0.y branch of https://github.com/raspberrypi/linux.git
+> >
+> > The foundation kernel uses a different USB driver called dwc-otg which make use of FIQ.
+> >
+> > Okay, now we only need to find a solution for the "rx urb failed" flood ;-)
+> 
+> Does it happen just if you remove the dongle during probe?
+
+I also see those messages while disconnecting after a successful probe but in this case the messages stopps after a few seconds. In case of a disconnect while probing the flood never ends. It looks like the rx tasklet is triggered forever.
+
+Stefan
+
+> 
+> Regards,
+> Lorenzo
+>
