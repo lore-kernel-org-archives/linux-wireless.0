@@ -2,102 +2,96 @@ Return-Path: <SRS0=Ta2d=QQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F7DC282C4
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 15:17:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F06C282C4
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 15:55:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CBD62218D2
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 15:17:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="J16jnVGT"
+	by mail.kernel.org (Postfix) with ESMTP id C998B217D8
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 15:55:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726866AbfBIPRi (ORCPT
+        id S1726933AbfBIPzo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Feb 2019 10:17:38 -0500
-Received: from 1.mo173.mail-out.ovh.net ([178.33.111.180]:39371 "EHLO
-        1.mo173.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726484AbfBIPRi (ORCPT
+        Sat, 9 Feb 2019 10:55:44 -0500
+Received: from fudo.makrotopia.org ([185.142.180.71]:46154 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726907AbfBIPzo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Feb 2019 10:17:38 -0500
-X-Greylist: delayed 4197 seconds by postgrey-1.27 at vger.kernel.org; Sat, 09 Feb 2019 10:17:37 EST
-Received: from player779.ha.ovh.net (unknown [10.109.159.123])
-        by mo173.mail-out.ovh.net (Postfix) with ESMTP id 8EAECF222A
-        for <linux-wireless@vger.kernel.org>; Sat,  9 Feb 2019 15:02:14 +0100 (CET)
-Received: from awhome.eu (p579AAB97.dip0.t-ipconnect.de [87.154.171.151])
-        (Authenticated sender: postmaster@awhome.eu)
-        by player779.ha.ovh.net (Postfix) with ESMTPSA id 1EE22270ABDC;
-        Sat,  9 Feb 2019 14:02:12 +0000 (UTC)
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1549720931;
-        bh=Wx+JqDrZsucoQhyjrH465dOtdUGn5rejaBNjK8K7gFA=;
-        h=From:To:Cc:Subject:Date;
-        b=J16jnVGT/6Q0fu264+rrZyIWcoPtIOrKqMxFjMu5ymSZ+tjWNSv4aPFWt3DJjseo2
-         t58ctOfxRUbwPSVxhDP/XCK/q0uGNXMlkT6FPrQkQK8kLzS61JW5B1U9+yMhgkJY7t
-         3rn7NUnT/jnodV4Vb9sIUM7c4fl/n2Q9F4+zwkjA=
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, mpubbise@codeaurora.org,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [PATCH] mac80211: Honor SW_CRYPTO_CONTROL in AP VLAN mode
-Date:   Sat,  9 Feb 2019 15:01:38 +0100
-Message-Id: <20190209140138.16692-1-alexander@wetzel-home.de>
-X-Mailer: git-send-email 2.20.1
+        Sat, 9 Feb 2019 10:55:44 -0500
+X-Greylist: delayed 989 seconds by postgrey-1.27 at vger.kernel.org; Sat, 09 Feb 2019 10:55:43 EST
+Received: from local
+        by fudo.makrotopia.org with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
+         (Exim 4.91)
+        (envelope-from <daniel@makrotopia.org>)
+        id 1gsUig-0001Ao-TX; Sat, 09 Feb 2019 16:39:08 +0100
+Date:   Sat, 9 Feb 2019 16:38:53 +0100
+From:   Daniel Golle <daniel@makrotopia.org>
+To:     Tom Psyborg <pozega.tomislav@gmail.com>
+Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        Randy Oostdyk <linux-kernel@oostdyk.com>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+Subject: Re: [PATCH v2 3/3] rt2x00: do not print error when queue is full
+Message-ID: <20190209153850.GA19297@makrotopia.org>
+References: <CAKR_QVJeteexpQX=pJm17WrrarmihYw56hKuTbsNagbcA6U96A@mail.gmail.com>
+ <20181221095938.GA29536@redhat.com>
+ <CAKR_QVKQMcGGpY_3ur9kFjuYpaKgca=YfUJxjSjLEfP1HELuJw@mail.gmail.com>
+ <20181227102535.GA25885@redhat.com>
+ <CAKR_QVK_2j6a9YiwUEKuWF+ss0-pr808Sr=AUrX4a6L3Zw=F0w@mail.gmail.com>
+ <20190102081934.GA5300@redhat.com>
+ <20190209110259.GA14900@redhat.com>
+ <CAKR_QVK7N_NGFR+_2+6fP5iZ0j3dDbvdxJOQt3Yjwn7DMBUfYA@mail.gmail.com>
+ <20190209115628.GA16082@redhat.com>
+ <CAKR_QVJtQdRcbRMV+WDKw=N2CxLhUSo6hE8mUME2orD6JEMAmQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 15953438730106182770
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrleeggddvlecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAKR_QVJtQdRcbRMV+WDKw=N2CxLhUSo6hE8mUME2orD6JEMAmQ@mail.gmail.com>
+User-Agent: Mutt/1.11.3 (2019-02-01)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Restore @SW_CRYPTO_CONTROL when interface is in AP Vlan mode and don't
-override driver decision for unicast keys.
+Hi Tom,
 
-Fixes commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on crypto
-controlled devices"), which should only have allow SW crypto fallback for
-group keys.
+On Sat, Feb 09, 2019 at 01:28:32PM +0100, Tom Psyborg wrote:
+> On 09/02/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > On Sat, Feb 09, 2019 at 12:11:03PM +0100, Tom Psyborg wrote:
+> >> Can you reproduce interface freeze with this patch if you enable debug
+> >> options to print all dbg messages?
+> >
+> > Haven't tried that, but I expect enabling debug messages will
+> > cause troubles at hardware where printk make CPU hog.
+> >
+> > Stanislaw
+> >
+> 
+> Take a look at my comment from 23.01.2019. on this link:
+> https://bugs.openwrt.org/index.php?do=details&task_id=2018
+> There might be a chance dbg printks do not cause problems.
 
-Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
----
- net/mac80211/key.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+This is very likely just overheat because of missing TSSI. It happends
+on boards where MT7620A is used without heatsink (and easy to
+reproduce, I've tried. We just need TSSI and for bad board design it
+will mean limiting to one TX-queue soon after serious traffic starts).
+We should tell those users to glue heatsink on the chip for $0.05 they
+can fix this in hardware -- and implement TSSI to mitigate at least the
+very worst effects (such as hardware stuck until reset).
+So dkg printks can make this worse, of course, because logging overhead
+also burns CPU cycles and increases system load.
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 4700718e010f..37e372896230 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -167,8 +167,10 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 		 * The driver doesn't know anything about VLAN interfaces.
- 		 * Hence, don't send GTKs for VLAN interfaces to the driver.
- 		 */
--		if (!(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+		if (!(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
-+			ret = 1;
- 			goto out_unsupported;
-+		}
- 	}
- 
- 	ret = drv_set_key(key->local, SET_KEY, sdata,
-@@ -213,11 +215,8 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 		/* all of these we can do in software - if driver can */
- 		if (ret == 1)
- 			return 0;
--		if (ieee80211_hw_check(&key->local->hw, SW_CRYPTO_CONTROL)) {
--			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--				return 0;
-+		if (ieee80211_hw_check(&key->local->hw, SW_CRYPTO_CONTROL))
- 			return -EINVAL;
--		}
- 		return 0;
- 	default:
- 		return -EINVAL;
--- 
-2.20.1
+I remember in Rt5350 (and other predecessors of Rt6352 aka. MT7620)
+also had problems like that and it was possible to improve it by all
+sorts of things like removing power from unused ports of the Ethernet
+switch -- so for those boards (like Xiaomi MiWiFi mini) even this maybe
+the trick, because they also only use 3 out of 5 ports, and maybe we
+need to try harder to disable the power of unused ports (and also those
+without cable plugged in only periodicly power them up and check for
+link)....
 
+Cheers
+
+Daniel
