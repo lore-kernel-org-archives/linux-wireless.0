@@ -1,4 +1,4 @@
-Return-Path: <SRS0=Ms0V=QP=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=Ta2d=QQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-4.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C516C169C4
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 22:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CAC7C169C4
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 02:18:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 09D2A2075C
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Feb 2019 22:29:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DAA820869
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 02:18:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="cJGRNmSY"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="oCz/kqh9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727122AbfBHW3B (ORCPT
+        id S1726796AbfBICOj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Feb 2019 17:29:01 -0500
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:46136 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726788AbfBHW3A (ORCPT
+        Fri, 8 Feb 2019 21:14:39 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:36513 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726663AbfBICOj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Feb 2019 17:29:00 -0500
-Received: by mail-pg1-f194.google.com with SMTP id w7so2164284pgp.13
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 14:29:00 -0800 (PST)
+        Fri, 8 Feb 2019 21:14:39 -0500
+Received: by mail-pg1-f195.google.com with SMTP id n2so2374046pgm.3
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2019 18:14:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=1cV0RsGNoq78xL7fnM5I0bdwGKP7qbDI2Xn+tY/8fWg=;
-        b=cJGRNmSYIezeazLNNSaRlW+eETB8wc+znJoVO2haukeAKei8hlYKA4HcmtDD3ukR6J
-         rBuYHaIhuO9Fk/yYKFjDKnkFbCzWYJCym0he4wWcsf/6fUqMasj0Xz2wITRIbLVLA16A
-         PF20Z5DBA66md8hGb9Ydu7KRqIS51lDMxcpOg=
+        bh=5tOmQ+tHey24E4Y4iHV1MdLxwpm+TXTe0k3baV6SZLU=;
+        b=oCz/kqh9dqKQ0onoeEh46awq+m9g/vPHZiJXT2qW77DEJfAQnZ74vAlFkfJbGEyxBs
+         tS7soAj+RmEj3/Dlxy202qWlIe7na63cKKM96pEQIvDuj5v/5auNzxg/J+z4fXIGj7IS
+         pYViqrOl3tpZW0JQ/NJhj83TKA47Tn1cmBUcc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=1cV0RsGNoq78xL7fnM5I0bdwGKP7qbDI2Xn+tY/8fWg=;
-        b=ilycmIplkuS9++RwylDkFsvEmzfdC/HP2VNoHjMw/hp59K/KCL65dJ4aWO1R0STW8k
-         CZ6Zc04vIfQgy6PW168UBwcJpWoNgKSzUcloNfQ9dh0d8csyTgH8+cTLZ2ZF1lhC+5T7
-         TTz3Fr5nJdViocQv6IzStJSQA5Eosh7bZnoFAJFPmrHjyyLACG4ONzKTChyyRAXOQCO7
-         gN6y9EcUEmBZBd8RbCBJerVJgKiJCaagWTya+k57WW2sjiSaWeiST/bzCmeXC8q015kG
-         78b7ZsbeY7xwz1YOHV14PEZx/ytoMT8jZqhs0ODE/A2Y698QmH/X5ULlmR9pp4WsJJsp
-         FOng==
-X-Gm-Message-State: AHQUAuZxf5dvhWlgWXBJYFyi/K/w69XzQgGSvi8YjBNFFwFLQrvOoFYc
-        Pd8WkU399W6ZRGZCJo0EAnig6g==
-X-Google-Smtp-Source: AHgI3IY1KnJorK2MtJLFbUv5c2GgKenbthKbZHQg/fSjvu6Pu4DYUsGN7feJkKQt7nnoRp5KSx9+1g==
-X-Received: by 2002:a62:8a57:: with SMTP id y84mr24416857pfd.197.1549664939763;
-        Fri, 08 Feb 2019 14:28:59 -0800 (PST)
+        bh=5tOmQ+tHey24E4Y4iHV1MdLxwpm+TXTe0k3baV6SZLU=;
+        b=UhUKmsITkX9u9FQIgb5BkI1wwWl51Vn8KjLLXIPyqWX17ce5ZYzvdN140bZsYh85bb
+         FlcDwO3a2ZCvKgD2Bk/P9qlHPURQIy1m4M2VL+BL80N3PbJllhdz5tuEN/uav6kQRgEF
+         HXCaRVdFlQKmQmxmwalifQvAxpl4AwihOEj7ZAxfieXWIGVUiTftbzJKCyLnUcXW1t5C
+         lqcBFLiVabxirTTBp8VUKAUQBsx44XrxWqoBGGarYfmhhDLfHaXntVQ05hznY0TrVBWd
+         r1vT8W9tor7+ieBCP4DgrZyL9HdYV2MNOa1+s1I7KaiCj+POQhlIQrqc+qy/c1fN7RuI
+         jvWA==
+X-Gm-Message-State: AHQUAubpT1mAynlG+pbkW3B2hd2hJOGtGvLYuRPob+kftG7dG3TY3uGh
+        i5fwcycJOoUy25STjeDiVW+P18TRkbg=
+X-Google-Smtp-Source: AHgI3IYxcuhOjwnz5E3JECVfP7zdlbJNIKZP/zalTUHupAQj8OL9ShVfnqlFhKxeMeJ+qKYEl6Bzgg==
+X-Received: by 2002:a65:64d6:: with SMTP id t22mr23644460pgv.52.1549678477945;
+        Fri, 08 Feb 2019 18:14:37 -0800 (PST)
 Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
-        by smtp.gmail.com with ESMTPSA id i5sm4937060pfg.34.2019.02.08.14.28.58
+        by smtp.gmail.com with ESMTPSA id t5sm5834893pgo.70.2019.02.08.18.14.36
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 08 Feb 2019 14:28:58 -0800 (PST)
-Date:   Fri, 8 Feb 2019 14:28:56 -0800
+        Fri, 08 Feb 2019 18:14:36 -0800 (PST)
+Date:   Fri, 8 Feb 2019 18:14:34 -0800
 From:   Brian Norris <briannorris@chromium.org>
 To:     yhchuang@realtek.com
 Cc:     kvalo@codeaurora.org, johannes@sipsolutions.net,
         Larry.Finger@lwfinger.net, pkshih@realtek.com, tehuang@realtek.com,
         sgruszka@redhat.com, linux-wireless@vger.kernel.org
 Subject: Re: [PATCH v4 03/13] rtw88: hci files
-Message-ID: <20190208222855.GA31454@google.com>
+Message-ID: <20190209021426.GA163159@google.com>
 References: <1548820940-15237-1-git-send-email-yhchuang@realtek.com>
  <1548820940-15237-4-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
@@ -73,9 +73,10 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
-
-One more comment for now, below:
+FYI, I have some more review comments because I'm trying to see why your
+TX path doesn't work all that well. At least, it's not reporting things
+correctly. (I know there's one ACK reporting bug you fixed in a
+follow-up patch, but then, that patch is buggy too I think.)
 
 On Wed, Jan 30, 2019 at 12:02:10PM +0800, yhchuang@realtek.com wrote:
 > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
@@ -94,105 +95,90 @@ On Wed, Jan 30, 2019 at 12:02:10PM +0800, yhchuang@realtek.com wrote:
 >  create mode 100644 drivers/net/wireless/realtek/rtw88/hci.h
 >  create mode 100644 drivers/net/wireless/realtek/rtw88/pci.c
 >  create mode 100644 drivers/net/wireless/realtek/rtw88/pci.h
+> 
+> diff --git a/drivers/net/wireless/realtek/rtw88/hci.h b/drivers/net/wireless/realtek/rtw88/hci.h
+> new file mode 100644
+> index 0000000..91b15ef
+> --- /dev/null
+> +++ b/drivers/net/wireless/realtek/rtw88/hci.h
+> @@ -0,0 +1,211 @@
 
 ...
 
-> diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-> new file mode 100644
-> index 0000000..ef3c9bb
-> --- /dev/null
-> +++ b/drivers/net/wireless/realtek/rtw88/pci.c
-> @@ -0,0 +1,1210 @@
-
-> +static void rtw_pci_rx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
-> +			   u8 hw_queue)
+> +static int rtw_pci_xmit(struct rtw_dev *rtwdev,
+> +			struct rtw_tx_pkt_info *pkt_info,
+> +			struct sk_buff *skb, u8 queue)
 > +{
+> +	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
 > +	struct rtw_chip_info *chip = rtwdev->chip;
-> +	struct rtw_pci_rx_ring *ring;
-> +	struct rtw_rx_pkt_stat pkt_stat;
-> +	struct ieee80211_rx_status rx_status;
-> +	struct sk_buff *skb, *new;
-> +	u32 cur_wp, cur_rp, tmp;
-> +	u32 count;
-> +	u32 pkt_offset;
-> +	u32 pkt_desc_sz = chip->rx_pkt_desc_sz;
-> +	u32 buf_desc_sz = chip->rx_buf_desc_sz;
-> +	u8 *rx_desc;
+> +	struct rtw_pci_tx_ring *ring;
+> +	struct rtw_pci_tx_data *tx_data;
 > +	dma_addr_t dma;
+> +	u32 tx_pkt_desc_sz = chip->tx_pkt_desc_sz;
+> +	u32 tx_buf_desc_sz = chip->tx_buf_desc_sz;
+> +	u32 size;
+> +	u32 psb_len;
+> +	u8 *pkt_desc;
+> +	struct rtw_pci_tx_buffer_desc *buf_desc;
+> +	u32 bd_idx;
 > +
-> +	ring = &rtwpci->rx_rings[RTW_RX_QUEUE_MPDU];
+> +	ring = &rtwpci->tx_rings[queue];
 > +
-> +	tmp = rtw_read32(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ);
-> +	cur_wp = tmp >> 16;
-> +	cur_wp &= 0xfff;
-> +	if (cur_wp >= ring->r.wp)
-> +		count = cur_wp - ring->r.wp;
-> +	else
-> +		count = ring->r.len - (ring->r.wp - cur_wp);
+> +	size = skb->len;
 > +
-> +	cur_rp = ring->r.rp;
-> +	while (count--) {
-> +		rtw_pci_dma_check(rtwdev, ring, cur_rp);
-> +		skb = ring->buf[cur_rp];
-> +		dma = *((dma_addr_t *)skb->cb);
-> +		pci_unmap_single(rtwpci->pdev, dma, RTK_PCI_RX_BUF_SIZE,
-> +				 PCI_DMA_FROMDEVICE);
-> +		rx_desc = skb->data;
-> +		chip->ops->query_rx_desc(rtwdev, rx_desc, &pkt_stat, &rx_status);
+> +	if (queue == RTW_TX_QUEUE_BCN)
+> +		rtw_pci_release_rsvd_page(rtwpci, ring);
+> +	else if (!avail_desc(ring->r.wp, ring->r.rp, ring->r.len))
+> +		return -ENOSPC;
 > +
-> +		/* offset from rx_desc to payload */
-> +		pkt_offset = pkt_desc_sz + pkt_stat.drv_info_sz +
-> +			     pkt_stat.shift;
+> +	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
+> +	memset(pkt_desc, 0, tx_pkt_desc_sz);
+> +	pkt_info->qsel = rtw_pci_get_tx_qsel(skb, queue);
+> +	rtw_tx_fill_tx_desc(pkt_info, skb);
+> +	dma = pci_map_single(rtwpci->pdev, skb->data, skb->len,
+> +			     PCI_DMA_TODEVICE);
+> +	if (pci_dma_mapping_error(rtwpci->pdev, dma))
+> +		return -EBUSY;
 > +
-> +		if (pkt_stat.is_c2h) {
-> +			/* keep rx_desc, halmac needs it */
-> +			skb_put(skb, pkt_stat.pkt_len + pkt_offset);
+> +	/* after this we got dma mapped, there is no way back */
+> +	buf_desc = get_tx_buffer_desc(ring, tx_buf_desc_sz);
+> +	memset(buf_desc, 0, tx_buf_desc_sz);
+> +	psb_len = (skb->len - 1) / 128 + 1;
+> +	if (queue == RTW_TX_QUEUE_BCN)
+> +		psb_len |= 1 << RTK_PCI_TXBD_OWN_OFFSET;
 > +
-> +			/* pass offset for further operation */
-> +			*((u32 *)skb->cb) = pkt_offset;
-> +			skb_queue_tail(&rtwdev->c2h_queue, skb);
-> +			ieee80211_queue_work(rtwdev->hw, &rtwdev->c2h_work);
-> +		} else {
-> +			/* remove rx_desc, maybe use skb_pull? */
-> +			skb_put(skb, pkt_stat.pkt_len);
-> +			skb_reserve(skb, pkt_offset);
+> +	buf_desc[0].psb_len = cpu_to_le16(psb_len);
+> +	buf_desc[0].buf_size = cpu_to_le16(tx_pkt_desc_sz);
+> +	buf_desc[0].dma = cpu_to_le32(dma);
+> +	buf_desc[1].buf_size = cpu_to_le16(size);
+> +	buf_desc[1].dma = cpu_to_le32(dma + tx_pkt_desc_sz);
 > +
-> +			/* alloc a smaller skb to mac80211 */
-> +			new = dev_alloc_skb(pkt_stat.pkt_len);
-> +			if (!new) {
-> +				new = skb;
-> +			} else {
-> +				skb_put_data(new, skb->data, skb->len);
-> +				dev_kfree_skb_any(skb);
-> +			}
-> +			/* TODO: merge into rx.c */
-> +			rtw_rx_stats(rtwdev, pkt_stat.vif, skb);
-> +			memcpy(new->cb, &rx_status, sizeof(rx_status));
-> +			ieee80211_rx_irqsafe(rtwdev->hw, new);
-> +		}
-> +
-> +		/* skb delivered to mac80211, alloc a new one in rx ring */
-> +		new = dev_alloc_skb(RTK_PCI_RX_BUF_SIZE);
-> +		if (WARN(!new, "rx routine starvation\n"))
-> +			return;
-> +
-> +		ring->buf[cur_rp] = new;
-> +		rtw_pci_reset_rx_desc(rtwdev, new, ring, cur_rp, buf_desc_sz);
+> +	tx_data = rtw_pci_get_tx_data(skb);
+> +	tx_data->dma = dma;
+> +	skb_queue_tail(&ring->queue, skb);
 
-You aren't handling failures from this function. It's not quite clear to
-me whether that will just leak the SKB, or if it will end in an
-unbalanced unmap later.
+IIUC, you have no locking for this queue. That seems like a bad idea. It
+then gets pulled off this queue in your ISR, again without a lock. So
+for example, if the only packet in your queue gets completed while you
+are trying to queue another one, you might corrupt the list.
 
 Brian
 
 > +
-> +		/* host read next element in ring */
-> +		if (++cur_rp >= ring->r.len)
-> +			cur_rp = 0;
+> +	/* kick off tx queue */
+> +	if (queue != RTW_TX_QUEUE_BCN) {
+> +		if (++ring->r.wp >= ring->r.len)
+> +			ring->r.wp = 0;
+> +		bd_idx = rtw_pci_tx_queue_idx_addr[queue];
+> +		rtw_write16(rtwdev, bd_idx, ring->r.wp & 0xfff);
+> +	} else {
+> +		u32 reg_bcn_work;
+> +
+> +		reg_bcn_work = rtw_read8(rtwdev, RTK_PCI_TXBD_BCN_WORK);
+> +		reg_bcn_work |= BIT_PCI_BCNQ_FLAG;
+> +		rtw_write8(rtwdev, RTK_PCI_TXBD_BCN_WORK, reg_bcn_work);
 > +	}
 > +
-> +	ring->r.rp = cur_rp;
-> +	ring->r.wp = cur_wp;
-> +	rtw_write16(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ, ring->r.rp);
+> +	return 0;
 > +}
- 
+...
