@@ -2,91 +2,102 @@ Return-Path: <SRS0=Ta2d=QQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE2D7C282C4
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 12:28:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F7DC282C4
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 15:17:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAF70218D2
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 12:28:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBD62218D2
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 15:17:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZtQXPBdB"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="J16jnVGT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726940AbfBIM2d (ORCPT
+        id S1726866AbfBIPRi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Feb 2019 07:28:33 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:40005 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726704AbfBIM2d (ORCPT
+        Sat, 9 Feb 2019 10:17:38 -0500
+Received: from 1.mo173.mail-out.ovh.net ([178.33.111.180]:39371 "EHLO
+        1.mo173.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726484AbfBIPRi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Feb 2019 07:28:33 -0500
-Received: by mail-ot1-f66.google.com with SMTP id s5so10393538oth.7
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Feb 2019 04:28:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=oyum7+BTPKcakqSAz0WIvlIRDvcgczBnqFLGaAWN/Fs=;
-        b=ZtQXPBdBTmZT8j6ZKTZr2ILdVyIHTWIvk8zxwOSi7d1+59hTcOe4FLC45WZq0E33bV
-         vwDSizgTpNJcF4PZwsryFxHNwz3JCaT2xGoCUThiu2Qg5CGmH/KowbIywlbv9I9SpFVg
-         MU+9G/v7v8sG261TRt3UxozxjFOGykajVpFhLSBHdn6ZJFn3F1D2kv+iEHAz7Fdd18Fd
-         PFF149IJ86DpxbDfTUVoTxxFFgJN16vrsUdsoAwAgYEr5BfloHGuo2Y4ANzgal+5dEwn
-         JSZUK2SJXbYUwCQFYivYPSV2ZTIEgobd9P5nlwVhEKXxuIOPkvbX3RlTJmIxgBjuu2bk
-         /xiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=oyum7+BTPKcakqSAz0WIvlIRDvcgczBnqFLGaAWN/Fs=;
-        b=olON2bS+UVCgqhqhge3SQ19Ri6aUzixeyH4Qzv5D16B5kuSxxDhGdDs0C2h98DUzVC
-         lPh/o9Xq6S4EYubtcMvwo7nWRf1NrCUQkWyzW+G4wi3jsctyYJGoftBw+8AdccUpjW+e
-         Vtbz6KtqXy+9gyGIhDpZ3UfUo88tS67fcf6a8i+iF1Y5HxI/sgaeWP4V9DSlcZbNVl8+
-         deCbJudSAkLTDWV5Au4VMXnbtQlSMq62+82Fogiuj89huvlUBIqoqLhLwuav1l2CdaoS
-         JtBV3N0UnmxRdUzzLvDpM3lSIud0ISiRUKRO4DTTkorGVkHVFKrOEYbPSzI0IBgAoYRf
-         QWRQ==
-X-Gm-Message-State: AHQUAuYkVid1pWgeekpfws1NF8hNG1DwLTDseNO41ucR3EyXYfhEBaWT
-        HDG0r2XqIEHL4mJUAz9cCSFLD9y60f1Ue9mdKFPbg1qiiFs=
-X-Google-Smtp-Source: AHgI3IZToOgNmLy89znKR6sJdoGyZBh7zTKK2oDRJ1AGaF/xvhebQyARH8h+G6ec3YJ5QpG6Rnl4L1ZTIQHnFHxG+YY=
-X-Received: by 2002:a9d:63d0:: with SMTP id e16mr15075176otl.322.1549715312741;
- Sat, 09 Feb 2019 04:28:32 -0800 (PST)
+        Sat, 9 Feb 2019 10:17:38 -0500
+X-Greylist: delayed 4197 seconds by postgrey-1.27 at vger.kernel.org; Sat, 09 Feb 2019 10:17:37 EST
+Received: from player779.ha.ovh.net (unknown [10.109.159.123])
+        by mo173.mail-out.ovh.net (Postfix) with ESMTP id 8EAECF222A
+        for <linux-wireless@vger.kernel.org>; Sat,  9 Feb 2019 15:02:14 +0100 (CET)
+Received: from awhome.eu (p579AAB97.dip0.t-ipconnect.de [87.154.171.151])
+        (Authenticated sender: postmaster@awhome.eu)
+        by player779.ha.ovh.net (Postfix) with ESMTPSA id 1EE22270ABDC;
+        Sat,  9 Feb 2019 14:02:12 +0000 (UTC)
+From:   Alexander Wetzel <alexander@wetzel-home.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+        s=wetzel-home; t=1549720931;
+        bh=Wx+JqDrZsucoQhyjrH465dOtdUGn5rejaBNjK8K7gFA=;
+        h=From:To:Cc:Subject:Date;
+        b=J16jnVGT/6Q0fu264+rrZyIWcoPtIOrKqMxFjMu5ymSZ+tjWNSv4aPFWt3DJjseo2
+         t58ctOfxRUbwPSVxhDP/XCK/q0uGNXMlkT6FPrQkQK8kLzS61JW5B1U9+yMhgkJY7t
+         3rn7NUnT/jnodV4Vb9sIUM7c4fl/n2Q9F4+zwkjA=
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, mpubbise@codeaurora.org,
+        Alexander Wetzel <alexander@wetzel-home.de>
+Subject: [PATCH] mac80211: Honor SW_CRYPTO_CONTROL in AP VLAN mode
+Date:   Sat,  9 Feb 2019 15:01:38 +0100
+Message-Id: <20190209140138.16692-1-alexander@wetzel-home.de>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Received: by 2002:a9d:4b14:0:0:0:0:0 with HTTP; Sat, 9 Feb 2019 04:28:32 -0800 (PST)
-In-Reply-To: <20190209115628.GA16082@redhat.com>
-References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
- <1545318971-28351-3-git-send-email-sgruszka@redhat.com> <CAKR_QVJeteexpQX=pJm17WrrarmihYw56hKuTbsNagbcA6U96A@mail.gmail.com>
- <20181221095938.GA29536@redhat.com> <CAKR_QVKQMcGGpY_3ur9kFjuYpaKgca=YfUJxjSjLEfP1HELuJw@mail.gmail.com>
- <20181227102535.GA25885@redhat.com> <CAKR_QVK_2j6a9YiwUEKuWF+ss0-pr808Sr=AUrX4a6L3Zw=F0w@mail.gmail.com>
- <20190102081934.GA5300@redhat.com> <20190209110259.GA14900@redhat.com>
- <CAKR_QVK7N_NGFR+_2+6fP5iZ0j3dDbvdxJOQt3Yjwn7DMBUfYA@mail.gmail.com> <20190209115628.GA16082@redhat.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Sat, 9 Feb 2019 13:28:32 +0100
-Message-ID: <CAKR_QVJtQdRcbRMV+WDKw=N2CxLhUSo6hE8mUME2orD6JEMAmQ@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] rt2x00: do not print error when queue is full
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Randy Oostdyk <linux-kernel@oostdyk.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Ovh-Tracer-Id: 15953438730106182770
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: 0
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrleeggddvlecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecu
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 09/02/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Sat, Feb 09, 2019 at 12:11:03PM +0100, Tom Psyborg wrote:
->> Can you reproduce interface freeze with this patch if you enable debug
->> options to print all dbg messages?
->
-> Haven't tried that, but I expect enabling debug messages will
-> cause troubles at hardware where printk make CPU hog.
->
-> Stanislaw
->
+Restore @SW_CRYPTO_CONTROL when interface is in AP Vlan mode and don't
+override driver decision for unicast keys.
 
-Take a look at my comment from 23.01.2019. on this link:
-https://bugs.openwrt.org/index.php?do=details&task_id=2018
-There might be a chance dbg printks do not cause problems.
+Fixes commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on crypto
+controlled devices"), which should only have allow SW crypto fallback for
+group keys.
+
+Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+---
+ net/mac80211/key.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 4700718e010f..37e372896230 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -167,8 +167,10 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 		 * The driver doesn't know anything about VLAN interfaces.
+ 		 * Hence, don't send GTKs for VLAN interfaces to the driver.
+ 		 */
+-		if (!(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE))
++		if (!(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
++			ret = 1;
+ 			goto out_unsupported;
++		}
+ 	}
+ 
+ 	ret = drv_set_key(key->local, SET_KEY, sdata,
+@@ -213,11 +215,8 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 		/* all of these we can do in software - if driver can */
+ 		if (ret == 1)
+ 			return 0;
+-		if (ieee80211_hw_check(&key->local->hw, SW_CRYPTO_CONTROL)) {
+-			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+-				return 0;
++		if (ieee80211_hw_check(&key->local->hw, SW_CRYPTO_CONTROL))
+ 			return -EINVAL;
+-		}
+ 		return 0;
+ 	default:
+ 		return -EINVAL;
+-- 
+2.20.1
+
