@@ -2,88 +2,91 @@ Return-Path: <SRS0=Ta2d=QQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F95FC282C4
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 12:08:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE2D7C282C4
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 12:28:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0EB942084D
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 12:08:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAF70218D2
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Feb 2019 12:28:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZtQXPBdB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726896AbfBIMIx (ORCPT
+        id S1726940AbfBIM2d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Feb 2019 07:08:53 -0500
-Received: from mout.kundenserver.de ([212.227.126.187]:51415 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726722AbfBIMIx (ORCPT
+        Sat, 9 Feb 2019 07:28:33 -0500
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:40005 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726704AbfBIM2d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Feb 2019 07:08:53 -0500
-Received: from oxbaltgw66.schlund.de ([172.19.246.153]) by
- mrelayeu.kundenserver.de (mreue011 [213.165.67.97]) with ESMTPSA (Nemesis) id
- 1MuV3i-1h9HUx2VUI-00rZIX; Sat, 09 Feb 2019 13:08:41 +0100
-Date:   Sat, 9 Feb 2019 13:08:39 +0100 (CET)
-From:   Stefan Wahren <stefan.wahren@i2se.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Doug Anderson <dianders@chromium.org>,
-        Minas Harutyunyan <hminas@synopsys.com>
-Cc:     linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-Message-ID: <2003727085.234456.1549714119945@email.ionos.de>
-Subject: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
+        Sat, 9 Feb 2019 07:28:33 -0500
+Received: by mail-ot1-f66.google.com with SMTP id s5so10393538oth.7
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Feb 2019 04:28:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=oyum7+BTPKcakqSAz0WIvlIRDvcgczBnqFLGaAWN/Fs=;
+        b=ZtQXPBdBTmZT8j6ZKTZr2ILdVyIHTWIvk8zxwOSi7d1+59hTcOe4FLC45WZq0E33bV
+         vwDSizgTpNJcF4PZwsryFxHNwz3JCaT2xGoCUThiu2Qg5CGmH/KowbIywlbv9I9SpFVg
+         MU+9G/v7v8sG261TRt3UxozxjFOGykajVpFhLSBHdn6ZJFn3F1D2kv+iEHAz7Fdd18Fd
+         PFF149IJ86DpxbDfTUVoTxxFFgJN16vrsUdsoAwAgYEr5BfloHGuo2Y4ANzgal+5dEwn
+         JSZUK2SJXbYUwCQFYivYPSV2ZTIEgobd9P5nlwVhEKXxuIOPkvbX3RlTJmIxgBjuu2bk
+         /xiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=oyum7+BTPKcakqSAz0WIvlIRDvcgczBnqFLGaAWN/Fs=;
+        b=olON2bS+UVCgqhqhge3SQ19Ri6aUzixeyH4Qzv5D16B5kuSxxDhGdDs0C2h98DUzVC
+         lPh/o9Xq6S4EYubtcMvwo7nWRf1NrCUQkWyzW+G4wi3jsctyYJGoftBw+8AdccUpjW+e
+         Vtbz6KtqXy+9gyGIhDpZ3UfUo88tS67fcf6a8i+iF1Y5HxI/sgaeWP4V9DSlcZbNVl8+
+         deCbJudSAkLTDWV5Au4VMXnbtQlSMq62+82Fogiuj89huvlUBIqoqLhLwuav1l2CdaoS
+         JtBV3N0UnmxRdUzzLvDpM3lSIud0ISiRUKRO4DTTkorGVkHVFKrOEYbPSzI0IBgAoYRf
+         QWRQ==
+X-Gm-Message-State: AHQUAuYkVid1pWgeekpfws1NF8hNG1DwLTDseNO41ucR3EyXYfhEBaWT
+        HDG0r2XqIEHL4mJUAz9cCSFLD9y60f1Ue9mdKFPbg1qiiFs=
+X-Google-Smtp-Source: AHgI3IZToOgNmLy89znKR6sJdoGyZBh7zTKK2oDRJ1AGaF/xvhebQyARH8h+G6ec3YJ5QpG6Rnl4L1ZTIQHnFHxG+YY=
+X-Received: by 2002:a9d:63d0:: with SMTP id e16mr15075176otl.322.1549715312741;
+ Sat, 09 Feb 2019 04:28:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Priority: 3
-Importance: Medium
-X-Mailer: Open-Xchange Mailer v7.8.4-Rev47
-X-Originating-Client: open-xchange-appsuite
-X-Provags-ID: V03:K1:2Jv1i4Qd/YPDGreg9X8adeKfaotGj0XgaXwMTJ8um/wt0jmDLF7
- 0UMl0aJWXDD3rxyVxkSz9aK5tu2CWv1BzwCd21p5jtUzrmSIY0zBNmxpq9WISWNQkP7G4ue
- Unq2MCr14iQ4IEhEUtrtHd2TpPX+yUoovkytL7gzQjFTUlNNwu4nJ2CvzjkoSOZbl5ZQ87J
- FXVbQoc5rRIM4vPC7+YxA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:A5AxalNJmtQ=:0+tcCIFECgCZSXGJP0AOUz
- NSMOU9W03jLuT2rzv/n/vdpoH+uv1BNa07HlANz1qencK1mDRnAEUVyy24nuUsa1HC4JUkR4k
- f6LUte2d5w582caBWBxdKuGTOTMd7u1rJm1gadyKSTUYnbKDXIWJ0sDUYkE9isp6ixTAMQwqk
- HbQEDOOfTXDgNGY8XIn79xpWnuVMk+LqRf1zWI2yp5DgX1j91qrpFd0asW1/kYTKCcTW1ChDM
- n88+6zf95NHglGG7iseAf3YtVAyDA/GyHCzw9E/JSqI+VgHisb3f0MThc48n9/OE9R509mr3f
- 6clN883a0zZ3Q4BBkRTSJMj1jW5J1PCe8NLB/roedROhGbkjI7jxfjiKe80UkCDEoS/ZkhhbD
- TC6Zk4C0UulY98DugA2Tdzz8GxVzzEurq4OdQRux6GH5u7wZR6gHecyCJYX1C+g9F+sqbGAue
- tcoK7sICHdJhcq8rT8RSxgVIpxb/9dnvwbF1a9droKPbABfyoMo4gmq9vTzuoytDj8n4pt8WN
- B09TJk+/5AgkfMUXEwflrwoaF9ydg3esfglEuKhYjuRDuIdNhTGDYAklEHRCOJ/TefYwgTdtu
- LLAvM5rFfiW8rlYnoArguq3yn868HTRwxT3R874bKXWUNBu0xs8Ue8umgUvJ1pif5S9ruzGxZ
- dUbiyFF2N6zXW5YrheZ2VBXsdhfU+y4j3TBYeyS7WwgMLmohz9yc7k4+KJL62Vy5vhLFSS8/W
- B6btbEScjGnd0mcX3KVg7+IAfrqeW7DoNlC2gcJW47c85aNCRtGlpHm6t8I=
+Received: by 2002:a9d:4b14:0:0:0:0:0 with HTTP; Sat, 9 Feb 2019 04:28:32 -0800 (PST)
+In-Reply-To: <20190209115628.GA16082@redhat.com>
+References: <1545318971-28351-1-git-send-email-sgruszka@redhat.com>
+ <1545318971-28351-3-git-send-email-sgruszka@redhat.com> <CAKR_QVJeteexpQX=pJm17WrrarmihYw56hKuTbsNagbcA6U96A@mail.gmail.com>
+ <20181221095938.GA29536@redhat.com> <CAKR_QVKQMcGGpY_3ur9kFjuYpaKgca=YfUJxjSjLEfP1HELuJw@mail.gmail.com>
+ <20181227102535.GA25885@redhat.com> <CAKR_QVK_2j6a9YiwUEKuWF+ss0-pr808Sr=AUrX4a6L3Zw=F0w@mail.gmail.com>
+ <20190102081934.GA5300@redhat.com> <20190209110259.GA14900@redhat.com>
+ <CAKR_QVK7N_NGFR+_2+6fP5iZ0j3dDbvdxJOQt3Yjwn7DMBUfYA@mail.gmail.com> <20190209115628.GA16082@redhat.com>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Sat, 9 Feb 2019 13:28:32 +0100
+Message-ID: <CAKR_QVJtQdRcbRMV+WDKw=N2CxLhUSo6hE8mUME2orD6JEMAmQ@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] rt2x00: do not print error when queue is full
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Randy Oostdyk <linux-kernel@oostdyk.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On 09/02/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Sat, Feb 09, 2019 at 12:11:03PM +0100, Tom Psyborg wrote:
+>> Can you reproduce interface freeze with this patch if you enable debug
+>> options to print all dbg messages?
+>
+> Haven't tried that, but I expect enabling debug messages will
+> cause troubles at hardware where printk make CPU hog.
+>
+> Stanislaw
+>
 
-as already reported here [1], that there are probing issues of mt76 using TP-Link Archer T2UH (wifi USB dongle) on Raspberry Pi 3 B+.
-
-I retested it with recent linux-next 20190208 (aarch64 defconfig + enabling mt76 driver) and got the following output after plugin the wifi dongle:
-
-[   29.778524] usb 1-1.3: new high-speed USB device number 6 using dwc2
-[   31.794581] usb 1-1.3: reset high-speed USB device number 6 using dwc2
-[   31.919916] mt76x0u 1-1.3:1.0: ASIC revision: 76100002 MAC revision: 76502000
-[   32.304412] dwc2 3f980000.usb: dwc2_update_urb_state(): trimming xfer length
-[   32.325724] dwc2 3f980000.usb: dwc2_update_urb_state(): trimming xfer length
-[   32.346866] dwc2 3f980000.usb: dwc2_update_urb_state(): trimming xfer length
-[   33.410559] mt76x0u 1-1.3:1.0: firmware upload timed out
-[   33.435458] mt76x0u: probe of 1-1.3:1.0 failed with error -110
-[   33.454829] usbcore: registered new interface driver mt76x0u
-
-I took the firmware files from here [2].
-
-Btw there is another issue, if i disconnect the wifi dongle during probe i'm getting a endless flood of the following output:
-
-mt76x0u 1.1.3:1.0: rx urb failed: -71
-
-Any chance to narrow down these issues?
-
-[1] - https://marc.info/?l=linux-wireless&m=154875316703367
-[2] - https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/mediatek
+Take a look at my comment from 23.01.2019. on this link:
+https://bugs.openwrt.org/index.php?do=details&task_id=2018
+There might be a chance dbg printks do not cause problems.
