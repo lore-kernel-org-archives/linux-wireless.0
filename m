@@ -2,50 +2,51 @@ Return-Path: <SRS0=fcMp=QR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BA11C282C2
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 16:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00E45C282C2
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 17:39:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 123E72176F
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 16:52:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C889D213F2
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 17:39:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725973AbfBJQwn (ORCPT
+        id S1726000AbfBJRj1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 Feb 2019 11:52:43 -0500
-Received: from mail-it1-f194.google.com ([209.85.166.194]:53267 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725896AbfBJQwm (ORCPT
+        Sun, 10 Feb 2019 12:39:27 -0500
+Received: from mail-it1-f196.google.com ([209.85.166.196]:54866 "EHLO
+        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725966AbfBJRj0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Feb 2019 11:52:42 -0500
-Received: by mail-it1-f194.google.com with SMTP id g85so20658355ita.3
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 08:52:42 -0800 (PST)
+        Sun, 10 Feb 2019 12:39:26 -0500
+Received: by mail-it1-f196.google.com with SMTP id i145so20787039ita.4
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 09:39:26 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=Yq3MV50lsJtYeeVTNOIm1M2YeBHrJ7x+8u8P6QC6fpY=;
-        b=jGT3eRWKUYkD8CCYovU1ZCvjJHnUVelRT/VuKRINYCMjseEdxiLShGDArCIrh4mhTt
-         p2jN8ad2BGdr1RLIHVWHwntDi6IO3qe1xrfVwKwfWAtyRn9EfC9OlOo0dQ5Oq8HfQ8s4
-         pG78ucncUD6GU/NGA/wQCTtNov+978mvMDMCahL8Bak/WVdylBpAcz2rrRVdqiM27b6x
-         GTzNV2GYGP0w/A8xvRT23STu70He/rKs2Ic/9LwZwtunghFXK91PaCqnV1DWzUApeEI7
-         gM/eCumda++yz9eDUCKRUqjQ7OvDi2OQJYwYvzEteeCdtqc68KAiFkTl10k4yPZwn/V8
-         q5aw==
-X-Gm-Message-State: AHQUAuZ1ORkwe2odScGNx4ckrm7W5D7oNd1g19uaWkpgugK9TPSe1He8
-        IUObsavNSwut5W8bx3dGdNzh2MNi54t1gJBvNCmPAg==
-X-Google-Smtp-Source: AHgI3IaCAZrgnJIPoXYvDfoYqTOlmXrJYQv/ZUIGJBWoEsBSZlzzf3/t/opOGGMAqHwMLbl5PyuljHR/pbsK5QsKcD0=
-X-Received: by 2002:a05:660c:80a:: with SMTP id j10mr1005040itk.68.1549817561687;
- Sun, 10 Feb 2019 08:52:41 -0800 (PST)
+        bh=NRA/bkAAwC6GOEzZjwwKbH5aKfxNbKNg2I/6gBJDsF4=;
+        b=TkTePs8A528naI/eJtZiQJB6CXslY9GEG+9IjUxcZ45L0rtcRNT+daxyW+y0FtIM5r
+         UH7Nom/clb0X6QiFciTmjFHDssipHNNV8z54+H003+0HIKV7zQvhm5vuxYCccfazNv+N
+         gpHJlFbanyCSJrxJ4UvSuCOjZVRJUgXaBgc4dpmt2Ebqjkdj4Qqpga/qVJugTOJdtnes
+         Cf8Xj6GtPnDsVh8NFdftDgkZ/6qO7qkd2S+kWE3H9o0kI9caEgAYy2Bk4trhu0hBQt7B
+         hVR0olNigMF2s7skrnkUt0VNeVkYh9aJxTU2bM90vIOpRtcngxSLgwbvdO0Z00tE08zB
+         nm9A==
+X-Gm-Message-State: AHQUAuZPH51M3JKxhzFQci+M904SindlAyhnhM0c9ETGAPYAfp9tA4ct
+        SJtSrekdnAmKBOouh1pjoaoIAwL16M/8+IV78NNPEA==
+X-Google-Smtp-Source: AHgI3IblsfQ0r4e6aTBoKN8KsUQU6ctnK51lmVieztpm8FKmdNJnW89dmzQqX7sw71Qiia6ZggJAGjJ+ou5KKtYpDY0=
+X-Received: by 2002:a6b:6e11:: with SMTP id d17mr6818805ioh.297.1549820365649;
+ Sun, 10 Feb 2019 09:39:25 -0800 (PST)
 MIME-Version: 1.0
 References: <2003727085.234456.1549714119945@email.ionos.de>
  <CAJ0CqmXSuNQ_tQOatyKwO9O2KsxqD5NZRQnngOme5PURssiv5Q@mail.gmail.com>
  <20190210092943.GA2913@redhat.com> <307601671.418864.1549816737996@email.ionos.de>
-In-Reply-To: <307601671.418864.1549816737996@email.ionos.de>
+ <CAJ0CqmXL_PXf0LuFOnshbYZb=j_KEHyfmV5wpHHW5HXcexhDJA@mail.gmail.com>
+In-Reply-To: <CAJ0CqmXL_PXf0LuFOnshbYZb=j_KEHyfmV5wpHHW5HXcexhDJA@mail.gmail.com>
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date:   Sun, 10 Feb 2019 17:52:30 +0100
-Message-ID: <CAJ0CqmXL_PXf0LuFOnshbYZb=j_KEHyfmV5wpHHW5HXcexhDJA@mail.gmail.com>
+Date:   Sun, 10 Feb 2019 18:39:14 +0100
+Message-ID: <CAJ0CqmVhS+qny0nLdjBDzzgxAEN4UNxN9jQR0CrH7urGbX390Q@mail.gmail.com>
 Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
 To:     Stefan Wahren <stefan.wahren@i2se.com>
 Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
@@ -54,73 +55,95 @@ Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
         Minas Harutyunyan <hminas@synopsys.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         linux-usb@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/mixed; boundary="0000000000005c784705818dac3b"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
->
-> Hi,
->
-> > Stanislaw Gruszka <sgruszka@redhat.com> hat am 10. Februar 2019 um 10:29 geschrieben:
-> >
-> >
-> > On Sat, Feb 09, 2019 at 07:46:37PM +0100, Lorenzo Bianconi wrote:
-> > > > as already reported here [1], that there are probing issues of mt76 using TP-Link Archer T2UH (wifi USB dongle) on Raspberry Pi 3 B+.
-> > > >
-> > > > I retested it with recent linux-next 20190208 (aarch64 defconfig + enabling mt76 driver) and got the following output after plugin the wifi dongle:
-> > > >
-> > > > [   29.778524] usb 1-1.3: new high-speed USB device number 6 using dwc2
-> > > > [   31.794581] usb 1-1.3: reset high-speed USB device number 6 using dwc2
-> > > > [   31.919916] mt76x0u 1-1.3:1.0: ASIC revision: 76100002 MAC revision: 76502000
-> > > > [   32.304412] dwc2 3f980000.usb: dwc2_update_urb_state(): trimming xfer length
-> > > > [   32.325724] dwc2 3f980000.usb: dwc2_update_urb_state(): trimming xfer length
-> > > > [   32.346866] dwc2 3f980000.usb: dwc2_update_urb_state(): trimming xfer length
-> > > > [   33.410559] mt76x0u 1-1.3:1.0: firmware upload timed out
-> > > > [   33.435458] mt76x0u: probe of 1-1.3:1.0 failed with error -110
-> > > > [   33.454829] usbcore: registered new interface driver mt76x0u
-> > > >
-> > > > I took the firmware files from here [2].
-> > > >
-> > > > Btw there is another issue, if i disconnect the wifi dongle during probe i'm getting a endless flood of the following output:
-> > > >
-> > > > mt76x0u 1.1.3:1.0: rx urb failed: -71
-> > > >
-> > > > Any chance to narrow down these issues?
-> > >
-> > > Hi Stefan,
-> > >
-> > > could you please test the following series:
-> > > https://patchwork.kernel.org/cover/10764453/
-> > > Applying this series I am able to connect to my home AP using an Asus
-> > > USB-AC51 (mt76x0u) connected to a Raspberry Pi 3 B+.
-> > > I am running rpi-5.0.y branch of https://github.com/raspberrypi/linux.git
-> >
-> > How the patch series fixed the issue since it was reported before that
-> > it does not work on 4.19.x which do not use scatter gatter I/O ?
-> >
-> > Or it is regression ? 4.19.x driver works with rasperrypi/linux but -next
-> > does not ?
->
-> sorry for all the confusion (i never tested the foundation kernel). I made my functional tests with arm/multi_v7_defconfig which doesn't need any patches to work.
->
-> Here the current results for next-2019-02-08:
->
-> arm/multi_v7_defconfig w/o any patches -> wlan0 online
-> arm64/defconfig w/o any patches -> timeout during firmware upload
-> arm64/defconfig w Lorenzo's series -> driver probe, but dhcp doesn't work (could be a problem in my arm64 rootfs)
-> arm/multi_v7_defconfig w Stanislaw's patch -> NULL pointer dereference
->
+--0000000000005c784705818dac3b
+Content-Type: text/plain; charset="UTF-8"
 
-I am looking at this issue, it is not related to Stanislaw's patch,
-there is a bug in the error code path.
-Anyway we will need to avoid SG since dwc_otg controller does not support it
+> > sorry for all the confusion (i never tested the foundation kernel). I made my functional tests with arm/multi_v7_defconfig which doesn't need any patches to work.
+> >
+> > Here the current results for next-2019-02-08:
+> >
+> > arm/multi_v7_defconfig w/o any patches -> wlan0 online
+> > arm64/defconfig w/o any patches -> timeout during firmware upload
+> > arm64/defconfig w Lorenzo's series -> driver probe, but dhcp doesn't work (could be a problem in my arm64 rootfs)
+> > arm/multi_v7_defconfig w Stanislaw's patch -> NULL pointer dereference
+> >
+
+Hi Stefan,
+
+Could you please try the following patch? It should fix the  NULL
+pointer dereference crash.
+Anyway in order to enable mt76x0u on rpi3 we will need the RFC series
 
 Regards,
 Lorenzo
 
-> I will test linux-4.19 and linux-5.0-rc5 to get a better picture ...
 >
+> I am looking at this issue, it is not related to Stanislaw's patch,
+> there is a bug in the error code path.
+> Anyway we will need to avoid SG since dwc_otg controller does not support it
+>
+> Regards,
+> Lorenzo
+>
+> > I will test linux-4.19 and linux-5.0-rc5 to get a better picture ...
 > >
-> > Stanislaw
+> > >
+> > > Stanislaw
+
+--0000000000005c784705818dac3b
+Content-Type: text/x-patch; charset="US-ASCII"; 
+	name="0001-mt76-fix-NULL-pointer-dereference-in-mt76u_mcu_deini.patch"
+Content-Disposition: attachment; 
+	filename="0001-mt76-fix-NULL-pointer-dereference-in-mt76u_mcu_deini.patch"
+Content-Transfer-Encoding: base64
+Content-ID: <f_jrz6zu2q0>
+X-Attachment-Id: f_jrz6zu2q0
+
+RnJvbSAxODFhNjk2YWRlZWI3N2JjNGFjMDUxOTA3NjMyNDA3MzUyMzRmZGJiIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpNZXNzYWdlLUlkOiA8MTgxYTY5NmFkZWViNzdiYzRhYzA1MTkwNzYzMjQw
+NzM1MjM0ZmRiYi4xNTQ5ODIwMjgwLmdpdC5tZUBsb3JlbnpvYmlhbmNvbmkubmV0PgpJbi1SZXBs
+eS1UbzogPGNvdmVyLjE1NDk4MjAyODAuZ2l0Lm1lQGxvcmVuem9iaWFuY29uaS5uZXQ+ClJlZmVy
+ZW5jZXM6IDxjb3Zlci4xNTQ5ODIwMjgwLmdpdC5tZUBsb3JlbnpvYmlhbmNvbmkubmV0PgpGcm9t
+OiBMb3JlbnpvIEJpYW5jb25pIDxtZUBsb3JlbnpvYmlhbmNvbmkubmV0PgpEYXRlOiBTdW4sIDEw
+IEZlYiAyMDE5IDE4OjM3OjM4ICswMTAwClN1YmplY3Q6IFtQQVRDSF0gbXQ3NjogZml4IE5VTEwg
+cG9pbnRlciBkZXJlZmVyZW5jZSBpbiBtdDc2dV9tY3VfZGVpbml0CgpTaWduZWQtb2ZmLWJ5OiBM
+b3JlbnpvIEJpYW5jb25pIDxtZUBsb3JlbnpvYmlhbmNvbmkubmV0PgotLS0KIGRyaXZlcnMvbmV0
+L3dpcmVsZXNzL21lZGlhdGVrL210NzYvdXNiLmMgICAgIHwgMTUgKysrKy0tLS0tLS0tLS0tCiBk
+cml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L3VzYl9tY3UuYyB8ICA4ICsrKysrLS0t
+CiAyIGZpbGVzIGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKSwgMTQgZGVsZXRpb25zKC0pCgpkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni91c2IuYyBiL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvdXNiLmMKaW5kZXggYjA2MTI2MzQ1M2Q0Li4x
+NWVmMWE4NzU0YWIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
+NzYvdXNiLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni91c2IuYwpA
+QCAtNzY1LDggKzc2NSw3IEBAIHN0YXRpYyBpbnQgbXQ3NnVfYWxsb2NfdHgoc3RydWN0IG10NzZf
+ZGV2ICpkZXYpCiAJCWlmICghcS0+ZW50cnkpCiAJCQlyZXR1cm4gLUVOT01FTTsKIAotCQlxLT5u
+ZGVzYyA9IE1UX05VTV9UWF9FTlRSSUVTOwotCQlmb3IgKGogPSAwOyBqIDwgcS0+bmRlc2M7IGor
+KykgeworCQlmb3IgKGogPSAwOyBqIDwgTVRfTlVNX1RYX0VOVFJJRVM7IGorKykgewogCQkJYnVm
+ID0gJnEtPmVudHJ5W2pdLnVidWY7CiAJCQlidWYtPmRldiA9IGRldjsKIApAQCAtNzc4LDYgKzc3
+Nyw3IEBAIHN0YXRpYyBpbnQgbXQ3NnVfYWxsb2NfdHgoc3RydWN0IG10NzZfZGV2ICpkZXYpCiAJ
+CQlpZiAoIWJ1Zi0+dXJiLT5zZykKIAkJCQlyZXR1cm4gLUVOT01FTTsKIAkJfQorCQlxLT5uZGVz
+YyA9IE1UX05VTV9UWF9FTlRSSUVTOwogCX0KIAlyZXR1cm4gMDsKIH0KQEAgLTgzOCwxNiArODM4
+LDkgQEAgaW50IG10NzZ1X2FsbG9jX3F1ZXVlcyhzdHJ1Y3QgbXQ3Nl9kZXYgKmRldikKIAogCWVy
+ciA9IG10NzZ1X2FsbG9jX3J4KGRldik7CiAJaWYgKGVyciA8IDApCi0JCWdvdG8gZXJyOwotCi0J
+ZXJyID0gbXQ3NnVfYWxsb2NfdHgoZGV2KTsKLQlpZiAoZXJyIDwgMCkKLQkJZ290byBlcnI7CisJ
+CXJldHVybiBlcnI7CiAKLQlyZXR1cm4gMDsKLWVycjoKLQltdDc2dV9xdWV1ZXNfZGVpbml0KGRl
+dik7Ci0JcmV0dXJuIGVycjsKKwlyZXR1cm4gbXQ3NnVfYWxsb2NfdHgoZGV2KTsKIH0KIEVYUE9S
+VF9TWU1CT0xfR1BMKG10NzZ1X2FsbG9jX3F1ZXVlcyk7CiAKZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvdXNiX21jdS5jIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbWVkaWF0ZWsvbXQ3Ni91c2JfbWN1LmMKaW5kZXggMDM2YmU0MTYzZTY5Li45NTI3ZTEyMTZm
+M2QgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvdXNiX21j
+dS5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvdXNiX21jdS5jCkBA
+IC00OCw5ICs0OCwxMSBAQCBFWFBPUlRfU1lNQk9MX0dQTChtdDc2dV9tY3VfaW5pdF9yeCk7CiAK
+IHZvaWQgbXQ3NnVfbWN1X2RlaW5pdChzdHJ1Y3QgbXQ3Nl9kZXYgKmRldikKIHsKLQlzdHJ1Y3Qg
+bXQ3Nl91c2IgKnVzYiA9ICZkZXYtPnVzYjsKKwlzdHJ1Y3QgbXQ3NnVfYnVmICpidWYgPSAmZGV2
+LT51c2IubWN1LnJlczsKIAotCXVzYl9raWxsX3VyYih1c2ItPm1jdS5yZXMudXJiKTsKLQltdDc2
+dV9idWZfZnJlZSgmdXNiLT5tY3UucmVzKTsKKwlpZiAoYnVmLT51cmIpIHsKKwkJdXNiX2tpbGxf
+dXJiKGJ1Zi0+dXJiKTsKKwkJbXQ3NnVfYnVmX2ZyZWUoYnVmKTsKKwl9CiB9CiBFWFBPUlRfU1lN
+Qk9MX0dQTChtdDc2dV9tY3VfZGVpbml0KTsKLS0gCjIuMjAuMQoK
+--0000000000005c784705818dac3b--
