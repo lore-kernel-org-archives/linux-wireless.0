@@ -7,403 +7,332 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D554C282C2
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:12:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14B02C282C2
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:21:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE6362145D
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:12:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C038D2145D
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:21:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="GkyFBPnr"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="Mn/CzWXE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726207AbfBJVMN (ORCPT
+        id S1726144AbfBJVV6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 Feb 2019 16:12:13 -0500
-Received: from 19.mo1.mail-out.ovh.net ([178.32.97.206]:53865 "EHLO
-        19.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726144AbfBJVMN (ORCPT
+        Sun, 10 Feb 2019 16:21:58 -0500
+Received: from 3.mo177.mail-out.ovh.net ([46.105.36.172]:60392 "EHLO
+        3.mo177.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725973AbfBJVV5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Feb 2019 16:12:13 -0500
-X-Greylist: delayed 318 seconds by postgrey-1.27 at vger.kernel.org; Sun, 10 Feb 2019 16:12:07 EST
-Received: from player788.ha.ovh.net (unknown [10.109.160.217])
-        by mo1.mail-out.ovh.net (Postfix) with ESMTP id ED257151001
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 22:06:48 +0100 (CET)
+        Sun, 10 Feb 2019 16:21:57 -0500
+X-Greylist: delayed 905 seconds by postgrey-1.27 at vger.kernel.org; Sun, 10 Feb 2019 16:21:54 EST
+Received: from player776.ha.ovh.net (unknown [10.109.143.209])
+        by mo177.mail-out.ovh.net (Postfix) with ESMTP id C79FBDAD82
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 22:06:46 +0100 (CET)
 Received: from awhome.eu (p579AAB97.dip0.t-ipconnect.de [87.154.171.151])
         (Authenticated sender: postmaster@awhome.eu)
-        by player788.ha.ovh.net (Postfix) with ESMTPSA id 82CB028A59EB;
-        Sun, 10 Feb 2019 21:06:47 +0000 (UTC)
+        by player776.ha.ovh.net (Postfix) with ESMTPSA id 1F14728731D6;
+        Sun, 10 Feb 2019 21:06:44 +0000 (UTC)
 From:   Alexander Wetzel <alexander@wetzel-home.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
         s=wetzel-home; t=1549832804;
-        bh=Bi6wKFZvDqP5lEnl0JbuPMspQBjCBU2LQVzWifytkSw=;
+        bh=1TjtHQtHICvx+c1FmoCu1hYWzGIvlnAKJj3Tp3n0Ars=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=GkyFBPnr/jA4/aYVFmkUxhv9bQrL/gYJxG00mBfbsiS5efCoD/MGJZqz2kj6tFuaB
-         4JQqRC2Rsuglr5etAeYXAghXqsqS/BKK+lZYY/UYK7mozFzLtZv9jToC0QO9cg6XkZ
-         J93Ebmsz8IadCN5Wld3Y/PVUht1d8m0xUVOiEGgM=
+        b=Mn/CzWXEv5rK7YL4+UMAbMxSH22tobkfx4f7xj9R1kOwTZxZiSXujvE7gnFc76E5C
+         5knPeMT02BuexOorPFhDcQRyGrPd9zZJBI7iWnopHqso6ZLCE8zYEfpiNmgI3y07Pu
+         GmwBOsFgJ9g8KmaZ2gg5OJw3EbA7TlDCj8IS9x/c=
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [RFC PATCH v3 04/12] mac80211: Compatibility Extended Key ID support
-Date:   Sun, 10 Feb 2019 22:06:12 +0100
-Message-Id: <20190210210620.31181-5-alexander@wetzel-home.de>
+Subject: [RFC PATCH v3 02/12] nl80211/cfg80211: Extended Key ID support
+Date:   Sun, 10 Feb 2019 22:06:10 +0100
+Message-Id: <20190210210620.31181-3-alexander@wetzel-home.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190210210620.31181-1-alexander@wetzel-home.de>
 References: <20190210210620.31181-1-alexander@wetzel-home.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 10549682127409388743
+X-Ovh-Tracer-Id: 10549119180040707271
 X-VR-SPAMSTATE: OK
 X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrleehgdekhecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecu
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrleefgddvfecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecu
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Allow drivers to support Extended Key ID when they are not able to
-handle two unicast keys per station for Rx by falling back to software
-decryption when replacing keys.
+Add support for IEEE 802.11-2016 "Extended Key ID for Individually
+Addressed Frames".
 
-Rx HW decryption activation is delayed till we either get the first MPDU
-encrypted with the new key or for max 10s.
+Extends cfg80211 and nl80211 to allow pairwise keys to be installed Rx
+only, switch Tx over separately and to use keyidx 1 for pairwise keys.
 
 Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
 ---
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h | 23 ++++++++++++++++++++++-
+ net/wireless/nl80211.c       | 32 ++++++++++++++++++++++++++++----
+ net/wireless/rdev-ops.h      |  3 ++-
+ net/wireless/trace.h         | 31 ++++++++++++++++++++++++++-----
+ net/wireless/util.c          | 20 ++++++++++++++------
+ 6 files changed, 94 insertions(+), 17 deletions(-)
 
-Most drivers with the exception of ath10k should be able to support this
-mode even without firmware updates from the vendors. (ath10k seems to be
-a no-go without some firmware update, but that's not for discussion
-here.)
-Biggest downside are - besides the added complexity - potential severe
-CPU peaks. (Imagine an rebooted AP with hundred of clients using
-it with rekeying enabled and a weak CPU.) 
-
-Also noteworthy is, that using HW Rx decryption here at all is kind of
-breaking the standard: As soon as one Rx key is offloaded to the
-hardware we are/may no longer be able to decrypt packets with the "other"
-valid keyid. (The hardware may have tried to decrypt it with the wrong
-key and then hands over the decryption failure instead of the original
-data.) So this will only work correctly as long as the remote sta is
-switching to the new keyid at a time within 10s and not mixing old and
-new keyids for a while. If that assumption breaks, mac80211 will not be
-able to decrypt mangled packets.
-That said it seems unlikely that this could be much more than some
-retransmits and I get perfect looking rekeys in my test setup with max a
-few dozen packets decrypted in software.
-
- include/net/mac80211.h  | 46 ++++++++++++++++++++++++++++
- net/mac80211/debugfs.c  |  1 +
- net/mac80211/key.c      | 67 +++++++++++++++++++++++++++++++++++++++--
- net/mac80211/key.h      |  4 +++
- net/mac80211/main.c     |  3 +-
- net/mac80211/rx.c       |  7 +++++
- net/mac80211/sta_info.c |  3 ++
- net/mac80211/sta_info.h |  2 ++
- 8 files changed, 129 insertions(+), 4 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e16bc7623dc0..eafad5eb8953 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1814,12 +1814,16 @@ struct ieee80211_cipher_scheme {
-  * @EXT_SET_KEY: a new key must be set but is only valid for decryption
-  * @EXT_KEY_RX_TX: a key installed with @EXT_SET_KEY is becoming the
-  *	designated Rx/Tx key for the station
-+ * @EXT_DISABLE_KEY_RX: installed key must switch to to software decryption
-+ *	while not altering Tx encryption. Command only required when driver
-+ *	is using EXT_KEY_ID_COMPAT for Extended Key ID support.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7f2739a90bdb..71ebb3492e21 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -485,6 +485,7 @@ struct vif_params {
+  *	with the get_key() callback, must be in little endian,
+  *	length given by @seq_len.
+  * @seq_len: length of @seq.
++ * @install_mode: key install mode (Rx/Tx, Rx only or set Tx)
   */
- enum set_key_cmd {
- 	SET_KEY,
- 	DISABLE_KEY,
- 	EXT_SET_KEY,
- 	EXT_KEY_RX_TX,
-+	EXT_DISABLE_KEY_RX,
+ struct key_params {
+ 	const u8 *key;
+@@ -492,6 +493,7 @@ struct key_params {
+ 	int key_len;
+ 	int seq_len;
+ 	u32 cipher;
++	enum nl80211_key_install_mode install_mode;
  };
  
  /**
-@@ -2231,6 +2235,10 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_EXT_KEY_ID_NATIVE: Driver and hardware are supporting Extended
-  *	Key ID and can handle two unicast keys per station for Rx and Tx.
-  *
-+ * @IEEE80211_HW_EXT_KEY_ID_COMPAT: Driver and hardware support Extended Key ID
-+ *	when mac80211 handles Rx decryption during transition from one keyid to
-+ *	the next.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -2281,6 +2289,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_STA_MMPDU_TXQ,
- 	IEEE80211_HW_TX_STATUS_NO_AMPDU_LEN,
- 	IEEE80211_HW_EXT_KEY_ID_NATIVE,
-+	IEEE80211_HW_EXT_KEY_ID_COMPAT,
- 
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-@@ -2641,6 +2650,43 @@ void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb);
-    Mac80211 will not queue any new frames for a deleted key to the driver.
-  */
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index dd4f86ee286e..8ccede541913 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4134,6 +4134,21 @@ enum nl80211_channel_type {
+ 	NL80211_CHAN_HT40PLUS
+ };
  
 +/**
-+ * DOC: Extended Key ID support
++ * enum nl80211_key_install_mode - Key install mode
 + *
-+ * Mac80211 can support "Extended Key ID" from IEEE 802.11-2016, allowing to
-+ * rekey the in-use unicast key with ideally zero impact for ongoing
-+ * transmissions.
-+ *
-+ * There are two options for a driver to support Extended Key ID:
-+ * 1) Native:
-+ *    The "Native" Extended Key ID mode is using the key commands
-+ *    %EXT_SET_KEY, %EXT_KEY_RX_TX and %DISABLE_KEY.
-+ *    Drivers/cards fully compatible can set @IEEE80211_HW_EXT_KEY_ID_NATIVE,
-+ *    allowing mac80211 to install two unicast keys per station to the driver.
-+ *    Mac80211 will then inform the driver via %EXT_SET_KEY when a key must be
-+ *    added for Rx decryption and again with %EXT_KEY_RX_TX when the driver has
-+ *    to switch Tx to a new key. When the driver returns any other code than 0
-+ *    for those two commands the key install is aborted and reported as failed.
-+ *
-+ * 2) Compatibility
-+ *    This mode is for Drivers and cards which are not able to handle two
-+ *    unicast key for a station on Rx, but are fine with it for Tx and can
-+ *    pass trough the still encrypted MPDUs to mac80211.
-+ *    The "Compatibility" Extended Key ID mode is using the key commands
-+ *    %EXT_SET_KEY, %EXT_KEY_RX_TX, %EXT_DISABLE_KEY_RX and %DISABLE_KEY.
-+ *    A driver setting @IEEE80211_HW_EXT_KEY_ID_COMPAT must
-+ *    - implement %EXT_DISABLE_KEY_RX to switch a running key to Rx software
-+ *      decryption without changing Tx handling for the key.
-+ *    - Add a new key for Tx when called with %EXT_SET_KEY for the same station
-+ *      with another keyid (to have a key ready allowing Tx)
-+ *    - Optionally activate Rx decryption when called with %EXT_KEY_RX_TX
-+ *    Only the command %EXT_KEY_RX_TX is allowed to return a value not 0, any
-+ *    other command failing will abort the key install.
-+ *
-+ * Additionally any driver/card setting @IEEE80211_HW_EXT_KEY_ID_NATIVE or
-+ * @IEEE80211_HW_EXT_KEY_ID_COMPAT must allow keyid 0 and 1 to for unicast keys.
++ * @NL80211_KEY_RX_TX: Key must be installed for Rx and Tx
++ * @NL80211_KEY_RX_ONLY: Allowed in combination with @NL80211_CMD_NEW_KEY:
++ *	Unicast key has to be installed for Rx only.
++ * @NL80211_KEY_SWITCH_TX: Allowed in combination with @NL80211_CMD_SET_KEY:
++ *	Switch Tx to a Rx only, referenced by sta mac and idx.
 + */
++enum nl80211_key_install_mode {
++	NL80211_KEY_RX_TX,
++	NL80211_KEY_RX_ONLY,
++	NL80211_KEY_SWITCH_TX
++};
 +
  /**
-  * DOC: Powersave support
+  * enum nl80211_chan_width - channel width definitions
   *
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 334a9883894f..01849b093287 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -220,6 +220,7 @@ static const char *hw_flag_names[] = {
- 	FLAG(STA_MMPDU_TXQ),
- 	FLAG(TX_STATUS_NO_AMPDU_LEN),
- 	FLAG(EXT_KEY_ID_NATIVE),
-+	FLAG(EXT_KEY_ID_COMPAT),
- #undef FLAG
+@@ -4377,6 +4392,9 @@ enum nl80211_key_default_types {
+  * @NL80211_KEY_DEFAULT_TYPES: A nested attribute containing flags
+  *	attributes, specifying what a key should be set as default as.
+  *	See &enum nl80211_key_default_types.
++ * @NL80211_KEY_INSTALL_MODE: the install mode from
++ *	enum nl80211_key_install_mode. Defaults to @NL80211_KEY_RX_TX.
++ *
+  * @__NL80211_KEY_AFTER_LAST: internal
+  * @NL80211_KEY_MAX: highest key attribute
+  */
+@@ -4390,6 +4408,7 @@ enum nl80211_key_attributes {
+ 	NL80211_KEY_DEFAULT_MGMT,
+ 	NL80211_KEY_TYPE,
+ 	NL80211_KEY_DEFAULT_TYPES,
++	NL80211_KEY_INSTALL_MODE,
+ 
+ 	/* keep last */
+ 	__NL80211_KEY_AFTER_LAST,
+@@ -5330,11 +5349,12 @@ enum nl80211_feature_flags {
+  *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
+  * @NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER: Driver supports enabling fine
+  *	timing measurement responder role.
+- *
+  * @NL80211_EXT_FEATURE_CAN_REPLACE_PTK0: Driver/device confirm that they are
+  *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
+  *      if this flag is not set. Ignoring this can leak clear text packets and/or
+  *      freeze the connection.
++ * @NL80211_EXT_FEATURE_EXT_KEY_ID: Driver supports "Extended Key ID for
++ *      Individually Addressed Frames" from IEEE802.11-2016.
+  *
+  * @NL80211_EXT_FEATURE_AIRTIME_FAIRNESS: Driver supports getting airtime
+  *	fairness for transmitted packets and has enabled airtime fairness
+@@ -5384,6 +5404,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER,
+ 	NL80211_EXT_FEATURE_AIRTIME_FAIRNESS,
+ 	NL80211_EXT_FEATURE_AP_PMKSA_CACHING,
++	NL80211_EXT_FEATURE_EXT_KEY_ID,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a3cc039b9f55..2a076b99737e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -565,6 +565,7 @@ static const struct nla_policy nl80211_key_policy[NL80211_KEY_MAX + 1] = {
+ 	[NL80211_KEY_DEFAULT_MGMT] = { .type = NLA_FLAG },
+ 	[NL80211_KEY_TYPE] = NLA_POLICY_MAX(NLA_U32, NUM_NL80211_KEYTYPES - 1),
+ 	[NL80211_KEY_DEFAULT_TYPES] = { .type = NLA_NESTED },
++	[NL80211_KEY_INSTALL_MODE] = { .type = NLA_U8 },
  };
  
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index d91503de1e1d..7f673887ec50 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -184,10 +184,32 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 		}
+ /* policy for the key default flags */
+@@ -970,6 +971,9 @@ static int nl80211_parse_key_new(struct genl_info *info, struct nlattr *key,
+ 		k->def_multi = kdt[NL80211_KEY_DEFAULT_TYPE_MULTICAST];
  	}
  
--	if (rx_only)
-+	if (rx_only) {
-+		/* EXT_KEY_ID_COMPAT drivers may scramble the payload when
-+		 * using the wrong HW key for decryption. Therefore only use SW
-+		 * decryption for the critical window.
-+		 */
-+		if (sta && pairwise && !ext_native && !local->wowlan &&
-+		    sta->ptk_idx != key->conf.keyidx) {
-+			struct ieee80211_key *old;
++	if (tb[NL80211_KEY_INSTALL_MODE])
++		k->p.install_mode = nla_get_u8(tb[NL80211_KEY_INSTALL_MODE]);
 +
-+			old = key_mtx_dereference(local,
-+						  sta->ptk[sta->ptk_idx]);
-+			if (old) {
-+				if (drv_set_key(local, EXT_DISABLE_KEY_RX,
-+						sdata, &sta->sta, &old->conf))
-+					return -EINVAL;
-+			}
-+		}
-+
-+		/* Install the key to hardware. EXT_KEY_ID_NATIVE drivers can
-+		 * use it for decryption but EXT_KEY_ID_COMPAT drivers must
-+		 * prepare it as a not yet used Tx only key.
-+		 */
- 		cmd = EXT_SET_KEY;
--	else
-+	} else {
- 		cmd = SET_KEY;
-+	}
- 
- 	ret = drv_set_key(local, cmd, sdata,
- 			  sta ? &sta->sta : NULL, &key->conf);
-@@ -282,6 +304,7 @@ int ieee80211_key_activate_tx(struct ieee80211_key *key)
- 	struct sta_info *sta = key->sta;
- 	struct ieee80211_local *local = key->local;
- 	struct ieee80211_key *old;
-+	bool ext_native = ieee80211_hw_check(&local->hw, EXT_KEY_ID_NATIVE);
- 	int ret;
- 
- 	assert_key_lock(local);
-@@ -294,7 +317,7 @@ int ieee80211_key_activate_tx(struct ieee80211_key *key)
- 			       IEEE80211_KEY_FLAG_RESERVE_TAILROOM))
- 		increment_tailroom_need_count(sdata);
- 
--	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
-+	if (ext_native && key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
- 		ret = drv_set_key(local, EXT_KEY_RX_TX, sdata,
- 				  &sta->sta, &key->conf);
- 		if (ret) {
-@@ -309,6 +332,13 @@ int ieee80211_key_activate_tx(struct ieee80211_key *key)
- 	sta->ptk_idx = key->conf.keyidx;
- 	ieee80211_check_fast_xmit(sta);
- 
-+	if (!ext_native && key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
-+		key->flags |= KEY_FLAG_RX_SW_CRYPTO;
-+		/* Activate Rx crypto offload after max 10s when idle */
-+		ieee80211_queue_delayed_work(&local->hw, &sta->ext_key_compat_wk,
-+					     round_jiffies_relative(HZ * 10));
-+	}
-+
- 	if (old) {
- 		old->flags |= KEY_FLAG_RX_ONLY;
- 
-@@ -1109,6 +1139,37 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 	mutex_unlock(&local->key_mtx);
+ 	return 0;
  }
  
-+/* EXT_KEY_ID_COMPAT support can't install PTK keys to the card/driver for
-+ * hardware decryption as long as the remote sta may use both keyids. Those
-+ * cards are not aware that the keyid must be checked and try to decrypt the
-+ * payload with the wrong key, which would effectively scrambling it. This
-+ * worker is therefore used to activate Rx hardware decryption when we assume
-+ * there will be only packets for the new key.
-+ */
-+void ext_key_compat_rx_offload_work(struct work_struct *wk)
-+{
-+	struct sta_info *sta;
-+	struct ieee80211_local *local;
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_key *key;
+@@ -3646,8 +3650,11 @@ static int nl80211_set_key(struct sk_buff *skb, struct genl_info *info)
+ 	if (key.idx < 0)
+ 		return -EINVAL;
+ 
+-	/* only support setting default key */
+-	if (!key.def && !key.defmgmt)
++	/* Only support setting default key and
++	 * Extended Key ID action @NL80211_KEY_SWITCH_TX.
++	 */
++	if (!key.def && !key.defmgmt &&
++	    !(key.p.install_mode == NL80211_KEY_SWITCH_TX))
+ 		return -EINVAL;
+ 
+ 	wdev_lock(dev->ieee80211_ptr);
+@@ -3671,7 +3678,7 @@ static int nl80211_set_key(struct sk_buff *skb, struct genl_info *info)
+ #ifdef CONFIG_CFG80211_WEXT
+ 		dev->ieee80211_ptr->wext.default_key = key.idx;
+ #endif
+-	} else {
++	} else if (key.defmgmt) {
+ 		if (key.def_uni || !key.def_multi) {
+ 			err = -EINVAL;
+ 			goto out;
+@@ -3693,8 +3700,25 @@ static int nl80211_set_key(struct sk_buff *skb, struct genl_info *info)
+ #ifdef CONFIG_CFG80211_WEXT
+ 		dev->ieee80211_ptr->wext.default_mgmt_key = key.idx;
+ #endif
+-	}
++	} else if (key.p.install_mode == NL80211_KEY_SWITCH_TX &&
++		   wiphy_ext_feature_isset(&rdev->wiphy,
++					   NL80211_EXT_FEATURE_EXT_KEY_ID)) {
++		u8 *mac_addr = NULL;
+ 
++		if (info->attrs[NL80211_ATTR_MAC])
++			mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
 +
-+	sta = container_of(wk, struct sta_info, ext_key_compat_wk.work);
-+	local = sta->local;
-+	sdata = sta->sdata;
-+
-+	mutex_lock(&local->key_mtx);
-+	key = key_mtx_dereference(local, sta->ptk[sta->ptk_idx]);
-+
-+	if (key->flags & KEY_FLAG_RX_SW_CRYPTO)
-+		key->flags &= ~KEY_FLAG_RX_SW_CRYPTO;
-+
-+	if (drv_set_key(local, EXT_KEY_RX_TX, sdata, &sta->sta, &key->conf)) {
-+		sdata_info(sdata, "Could not switch Rx to HW crypto (%d, %pM)\n",
-+			   key->conf.keyidx, sta->sta.addr);
-+	}
-+	mutex_unlock(&local->key_mtx);
-+}
-+
- void ieee80211_delayed_tailroom_dec(struct work_struct *wk)
- {
- 	struct ieee80211_sub_if_data *sdata;
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 1a3da999e0c4..d74c8c36491a 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -32,12 +32,15 @@ struct sta_info;
-  * @KEY_FLAG_TAINTED: Key is tainted and packets should be dropped.
-  * @KEY_FLAG_CIPHER_SCHEME: This key is for a hardware cipher scheme
-  * @KEY_FLAG_RX_ONLY: Pairwise key only allowed to be used on Rx.
-+ * @KEY_FLAG_RX_SW_CRYPTO: This key is using Rx SW decryption to work around HW
-+ *	limitations. Flag can only set when using EXT_KEY_COMPAT for max 10s.
-  */
- enum ieee80211_internal_key_flags {
- 	KEY_FLAG_UPLOADED_TO_HARDWARE	= BIT(0),
- 	KEY_FLAG_TAINTED		= BIT(1),
- 	KEY_FLAG_CIPHER_SCHEME		= BIT(2),
- 	KEY_FLAG_RX_ONLY		= BIT(3),
-+	KEY_FLAG_RX_SW_CRYPTO		= BIT(4),
- };
- 
- enum ieee80211_internal_tkip_state {
-@@ -167,5 +170,6 @@ void ieee80211_reset_crypto_tx_tailroom(struct ieee80211_sub_if_data *sdata);
- 	rcu_dereference_protected(ref, lockdep_is_held(&((local)->key_mtx)))
- 
- void ieee80211_delayed_tailroom_dec(struct work_struct *wk);
-+void ext_key_compat_rx_offload_work(struct work_struct *wk);
- 
- #endif /* IEEE80211_KEY_H */
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index ea34544985f3..dbabfa58c4c9 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1052,7 +1052,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	}
- 
- 	/* mac80211 supports Extended Key ID when driver does */
--	if (ieee80211_hw_check(&local->hw, EXT_KEY_ID_NATIVE))
-+	if (ieee80211_hw_check(&local->hw, EXT_KEY_ID_COMPAT) ||
-+	    ieee80211_hw_check(&local->hw, EXT_KEY_ID_NATIVE))
- 		wiphy_ext_feature_set(local->hw.wiphy,
- 				      NL80211_EXT_FEATURE_EXT_KEY_ID);
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index ce786311baf4..95c13f4c7e4a 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2015,6 +2015,13 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 		if (unlikely(rx->key->flags & KEY_FLAG_TAINTED))
- 			return RX_DROP_MONITOR;
- 
-+		if (unlikely(rx->key->flags & KEY_FLAG_RX_SW_CRYPTO)) {
-+			rx->key->flags &= ~KEY_FLAG_RX_SW_CRYPTO;
-+			cancel_delayed_work(&rx->sta->ext_key_compat_wk);
-+			ieee80211_queue_delayed_work(&rx->local->hw,
-+						     &rx->sta->ext_key_compat_wk, 0);
++		if (!mac_addr || key.idx < 0 || key.idx > 1) {
++			err = -EINVAL;
++			goto out;
 +		}
 +
- 		/* TODO: add threshold stuff again */
- 	} else {
- 		return RX_DROP_MONITOR;
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 09c69955c6e3..a20e05439173 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -132,6 +132,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		mesh_sta_cleanup(sta);
++		err = rdev_add_key(rdev, dev, key.idx,
++				   NL80211_KEYTYPE_PAIRWISE,
++				   mac_addr, &key.p);
++	} else {
++		err = -EINVAL;
++	}
+  out:
+ 	wdev_unlock(dev->ieee80211_ptr);
  
-+	cancel_delayed_work_sync(&sta->ext_key_compat_wk);
- 	cancel_work_sync(&sta->drv_deliver_wk);
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 5cb48d135fab..4bf4e3774825 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -77,7 +77,8 @@ static inline int rdev_add_key(struct cfg80211_registered_device *rdev,
+ 			       struct key_params *params)
+ {
+ 	int ret;
+-	trace_rdev_add_key(&rdev->wiphy, netdev, key_index, pairwise, mac_addr);
++	trace_rdev_add_key(&rdev->wiphy, netdev, key_index, pairwise,
++			   mac_addr, params->install_mode);
+ 	ret = rdev->ops->add_key(&rdev->wiphy, netdev, key_index, pairwise,
+ 				  mac_addr, params);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 44b2ce1bb13a..b5c9e6729ff1 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -430,22 +430,43 @@ DECLARE_EVENT_CLASS(key_handle,
+ 		  BOOL_TO_STR(__entry->pairwise), MAC_PR_ARG(mac_addr))
+ );
  
- 	/*
-@@ -326,6 +327,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	spin_lock_init(&sta->ps_lock);
- 	INIT_WORK(&sta->drv_deliver_wk, sta_deliver_ps_frames);
- 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
-+	INIT_DELAYED_WORK(&sta->ext_key_compat_wk,
-+			  ext_key_compat_rx_offload_work);
- 	mutex_init(&sta->ampdu_mlme.mtx);
- #ifdef CONFIG_MAC80211_MESH
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 304a7ea24757..1fd1a349a875 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -450,6 +450,7 @@ struct ieee80211_sta_rx_stats {
-  * @sdata: virtual interface this station belongs to
-  * @ptk: peer keys negotiated with this station, if any
-  * @ptk_idx: peer key index to use for transmissions
-+ * @ext_key_compat_wk: supports PTK key installs when using EXT_KEY_ID_COMPAT
-  * @gtk: group keys negotiated with this station, if any
-  * @rate_ctrl: rate control algorithm reference
-  * @rate_ctrl_lock: spinlock used to protect rate control data
-@@ -530,6 +531,7 @@ struct sta_info {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
- 	struct ieee80211_key __rcu *ptk[NUM_DEFAULT_KEYS];
-+	struct delayed_work ext_key_compat_wk;
- 	u8 ptk_idx;
- 	struct rate_control_ref *rate_ctrl;
- 	void *rate_ctrl_priv;
+-DEFINE_EVENT(key_handle, rdev_add_key,
++DEFINE_EVENT(key_handle, rdev_get_key,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 		 bool pairwise, const u8 *mac_addr),
+ 	TP_ARGS(wiphy, netdev, key_index, pairwise, mac_addr)
+ );
+ 
+-DEFINE_EVENT(key_handle, rdev_get_key,
++DEFINE_EVENT(key_handle, rdev_del_key,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 		 bool pairwise, const u8 *mac_addr),
+ 	TP_ARGS(wiphy, netdev, key_index, pairwise, mac_addr)
+ );
+ 
+-DEFINE_EVENT(key_handle, rdev_del_key,
++TRACE_EVENT(rdev_add_key,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+-		 bool pairwise, const u8 *mac_addr),
+-	TP_ARGS(wiphy, netdev, key_index, pairwise, mac_addr)
++		 bool pairwise, const u8 *mac_addr, u8 install_mode),
++	TP_ARGS(wiphy, netdev, key_index, pairwise, mac_addr, install_mode),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		MAC_ENTRY(mac_addr)
++		__field(u8, key_index)
++		__field(bool, pairwise)
++		__field(u8, install_mode)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		MAC_ASSIGN(mac_addr, mac_addr);
++		__entry->key_index = key_index;
++		__entry->pairwise = pairwise;
++		__entry->install_mode = install_mode;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", key_index: %u, "
++		  "install_mode: %u, pairwise: %s, mac addr: " MAC_PR_FMT,
++		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->key_index,
++		  __entry->install_mode, BOOL_TO_STR(__entry->pairwise),
++		  MAC_PR_ARG(mac_addr))
+ );
+ 
+ TRACE_EVENT(rdev_set_default_key,
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index cd48cdd582c0..a3338e611190 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -236,14 +236,22 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ 	case WLAN_CIPHER_SUITE_CCMP_256:
+ 	case WLAN_CIPHER_SUITE_GCMP:
+ 	case WLAN_CIPHER_SUITE_GCMP_256:
+-		/* Disallow pairwise keys with non-zero index unless it's WEP
+-		 * or a vendor specific cipher (because current deployments use
+-		 * pairwise WEP keys with non-zero indices and for vendor
+-		 * specific ciphers this should be validated in the driver or
+-		 * hardware level - but 802.11i clearly specifies to use zero)
++		/* IEEE802.11-2016 allows only 0 and - when using Extended Key
++		 * ID - 1 as index for pairwise keys.
++		 * @NL80211_KEY_RX_ONLY is only allowed for pairwise keys when
++		 * the driver supports Extended Key ID.
++		 * @NL80211_KEY_SWITCH_TX must not be set when validating a key.
+ 		 */
+-		if (pairwise && key_idx)
++		if (params->install_mode == NL80211_KEY_RX_ONLY) {
++			if (!wiphy_ext_feature_isset(&rdev->wiphy,
++						     NL80211_EXT_FEATURE_EXT_KEY_ID))
++				return -EINVAL;
++			else if (!pairwise || key_idx < 0 || key_idx > 1)
++				return -EINVAL;
++		} else if ((pairwise && key_idx) ||
++			   params->install_mode == NL80211_KEY_SWITCH_TX) {
+ 			return -EINVAL;
++		}
+ 		break;
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
 -- 
 2.20.1
 
