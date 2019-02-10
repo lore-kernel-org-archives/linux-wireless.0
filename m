@@ -1,156 +1,197 @@
-Return-Path: <SRS0=fcMp=QR=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=RvtO=QS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 251A5C282C2
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 22:23:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAAC0C282C2
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 00:42:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E2A7A2084D
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 22:23:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 255F12146F
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 00:42:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="F6sqy0qK"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="rQe1qCIh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726157AbfBJWXX (ORCPT
+        id S1726127AbfBKAmM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 Feb 2019 17:23:23 -0500
-Received: from 5.mo3.mail-out.ovh.net ([87.98.178.36]:50607 "EHLO
-        5.mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725971AbfBJWXX (ORCPT
+        Sun, 10 Feb 2019 19:42:12 -0500
+Received: from 10.mo5.mail-out.ovh.net ([46.105.52.148]:40869 "EHLO
+        10.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725971AbfBKAmL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Feb 2019 17:23:23 -0500
-X-Greylist: delayed 3605 seconds by postgrey-1.27 at vger.kernel.org; Sun, 10 Feb 2019 17:23:21 EST
-Received: from player729.ha.ovh.net (unknown [10.109.159.140])
-        by mo3.mail-out.ovh.net (Postfix) with ESMTP id 761011F9216
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 22:06:48 +0100 (CET)
+        Sun, 10 Feb 2019 19:42:11 -0500
+Received: from player746.ha.ovh.net (unknown [10.109.160.153])
+        by mo5.mail-out.ovh.net (Postfix) with ESMTP id 11E6C219AE3
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 22:06:45 +0100 (CET)
 Received: from awhome.eu (p579AAB97.dip0.t-ipconnect.de [87.154.171.151])
         (Authenticated sender: postmaster@awhome.eu)
-        by player729.ha.ovh.net (Postfix) with ESMTPSA id 087852B80774;
-        Sun, 10 Feb 2019 21:06:47 +0000 (UTC)
+        by player746.ha.ovh.net (Postfix) with ESMTPSA id B615C2A70923;
+        Sun, 10 Feb 2019 21:06:44 +0000 (UTC)
 From:   Alexander Wetzel <alexander@wetzel-home.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1549832805;
-        bh=DsjUnxl4e6z2xAMWSsMJkRl6ddFXBpwI37En5PIoUGo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=F6sqy0qKnHF+/eDrZpql1khg8EKl/QnvOJIsn31vQOB42cF/8V6YhWcbEYYCRJh6S
-         OY4X+hen47zYQpwYLNn7rJCjGjIfirDaGHwL4pyF8IzGXcZ10HvHcaS00i6JOhHjWX
-         hJPKI9SBv68a+mgveeMDg9VX6fiXcsZPJMmI/98Q=
+        s=wetzel-home; t=1549832804;
+        bh=cgiz0aO6B5EhA6Tlv7frWdMYLNjuLFweKXpU6TdeMYk=;
+        h=From:To:Cc:Subject:Date;
+        b=rQe1qCIh+hwe0FFAgOYPptVd1QenDnBplNbWvfgjmdOxdFckFx8U7z1OdwHGs4dt6
+         YMX6/lZJumYOs0hOk5Eyfit2MBM6efiYbB1QNWEVATX0dXqKNv4gfKVC10pVgZ5b33
+         6W8y2rebo0hVGWDNouF6ag1qO5l0/sosq6dv4N/k=
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
-Date:   Sun, 10 Feb 2019 22:06:15 +0100
-Message-Id: <20190210210620.31181-8-alexander@wetzel-home.de>
+Subject: [RFC PATCH v3 00/12] Draft for Extended Key ID support
+Date:   Sun, 10 Feb 2019 22:06:08 +0100
+Message-Id: <20190210210620.31181-1-alexander@wetzel-home.de>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190210210620.31181-1-alexander@wetzel-home.de>
-References: <20190210210620.31181-1-alexander@wetzel-home.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 10549682131081764039
+X-Ovh-Tracer-Id: 10548837704532171975
 X-VR-SPAMSTATE: OK
 X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrleefgddthecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecu
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrledvgdduvddvucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenuc
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is not ready for merge and has known issues.
-The patch is only for discussions to sort out how to handle it correctly!
+This is my current development version for Extended Key ID support in
+linux and mac80211.
+I consider the all patches in this series against nl80211/mac80211 ready
+for merge and if they still have defects not mentioned in the patch I
+need your help to see them.
+There are still some questions if we even want/need all those patches,
+and so I've added some remarks to behind some commit message to start the
+different discussions.
 
-Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
----
+The driver patches are - with the exception of the hwsim patch -
+definitely not ready for merge and mostly here to illustrate how the
+different APIs can be used and to start some discussions how to handle HW
+specific challenges. Of course if someone wants to play with Extended Key
+ID they also should be useful... (I can provide updated mostly working
+hostapd/wpa_supplicant patches if someone is interested. Don't try to
+use the old ones I sent to hostapd mailing list in November.)
 
-iwlwifi intel cards had two big surprises:
+That said I'm now using most of the patches or their predecessor in my
+private Wlan with devices both supporting and not supporting Extended
+Key ID fine.
 
-Assuming I did not make some stupid errors it looks like my old
-"Intel Corporation Centrino Ultimate-N 6300 (rev 3e)" using ucode 
-9.221.4.1 build 25532 is perfectly fine with two keys uploaded to
-harware and honoring the keyid in the MPDUs. For a card launched 2011
-that's a pleasant surprise:-)
+Compared to the last RFC patch only the nl80211 patch is still close to
+what we discussed. It got the API cleanup/changes and the open sanity
+checks and not much more.
 
-A much shorter test with a modern "Intel Corporation Wireless 8265 /
-8175 (rev 78)" using ucode version 36.e91976c0.0 shows what seems to be
-MPDUs decoded with the wrong key at each rekey and therefore a candidate
-for the COMPAT support only..
-So the bad news seems to be, that the modern card dropped the support.
+The mac80211 patch from RFC v2 had serious defects. The most serious one
+was probably to not select the key based on the keyid of the MPDU.
+I think outlining all the changes will not be useful here, the initial
+patch was too broken for anything but SW crypto. (Which also had
+issues...)
+It started out with more or less all the fixes we discussed but when
+trying to get it really correct and feature complete it became three
+different patches we better review from the scratch. They are now
+touching much more code and make in some cases drastic changes.
 
-It also seems to force us to add some per-card or per-firmware depending
-check to decide which card can use the Native Extended Key ID support
-and use the Compat mode for the rest.
-Is there any way to find out which cards/firmware can be used with
-Extended Key ID?
-I also have tested patch for iwldvm using the Compat mode and I think
-mvm cards will also work with that.
+Here a short overview of the patches in the series and why they are in
+it:
 
- drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c | 5 +++++
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 5 +++++
- 2 files changed, 10 insertions(+)
+1) mac80211: Optimize tailroom_needed update checks:
+   This would be a standalone patch, but some other patches depend on it
+   to apply cleanly.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-index 54b759cec8b3..0dd5c19ac412 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-@@ -111,6 +111,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 	ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
- 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
- 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
-+	ieee80211_hw_set(hw, EXT_KEY_ID_NATIVE);
+2) nl80211/cfg80211: Extended Key ID support
+   Generic support for Extended Key ID.
+
+3) mac80211: IEEE 802.11 Extended Key ID support
+   Mac80211 Extended Key ID support for drivers when the hardware is able to
+   handle Extended Key ID (aka two pairwise keys in HW).
+
+4) mac80211: Compatibility Extended Key ID support
+   Mac80211 Extended Key ID support for most devices not able to handle
+   two unicast keys in HW.
+
+5) mac80211: Mark A-MPDU keyid borders for drivers
+   This is one big question, see the patch for why we may want this or
+   not...
+
+6) mac80211_hwsim: Ext Key ID support (NATIVE)
+   Just a one-liner to allow Extended Key ID to be used with hwsim.
+
+--- No patch below this line is ready for merge ---
+
+7) iwlwifi: Extended Key ID support (NATIVE)
+   Hopefully the seed to support Extended Key ID for all iwlwifi cards,
+   see the patch description for the (big) issue it has.
+   As it is it's mostly an example how Native Extended Key ID support
+   will look like working with only some cards.
+
+8) iwlwifi: dvm - EXT_KEY_ID A-MPDU API update
+   Stops iwldvm drivers to complain when used together with the
+   experimental "mac80211: Mark A-MPDU keyid boarders for drivers"
+   patch.
+
+The following patches in the series are only illustrating the COMPAT
+Extended Key ID support:
+
+9) ath: Basic Extended Key ID support
+   Experimental patch for generic Extended Key ID support for all ath
+   drivers.
+
+10) ath5k: ath_key_config() API compatibility update
+    Allows to still compile ath5k drivers with the patch above.
+    Only provided to not break any drivers if someone wants to test
+    this.
+
+11) ath9k: Extended Key ID support (COMPAT)
+    The example for Compatibility Key ID support, works together with
+    "ath: Basic Extended Key ID support".
  
- 	if (priv->trans->max_skb_frags)
- 		hw->netdev_features = NETIF_F_HIGHDMA | NETIF_F_SG;
-@@ -676,6 +677,7 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 
- 	switch (cmd) {
-+	case EXT_SET_KEY:
- 	case SET_KEY:
- 		if (is_default_wep_key) {
- 			ret = iwl_set_default_wep_key(priv, vif_priv->ctx, key);
-@@ -701,6 +703,9 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 		IWL_DEBUG_MAC80211(priv, "disable hwcrypto key\n");
- 		break;
-+	case EXT_KEY_RX_TX:
-+		ret = 0;
-+		break;
- 	default:
- 		ret = -EINVAL;
- 	}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index fc251cc47b7f..102367d2572f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -442,6 +442,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	ieee80211_hw_set(hw, STA_MMPDU_TXQ);
- 	ieee80211_hw_set(hw, TX_AMSDU);
- 	ieee80211_hw_set(hw, TX_FRAG_LIST);
-+	ieee80211_hw_set(hw, EXT_KEY_ID_NATIVE);
- 
- 	if (iwl_mvm_has_tlc_offload(mvm)) {
- 		ieee80211_hw_set(hw, TX_AMPDU_SETUP_IN_HW);
-@@ -3357,6 +3358,7 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 	mutex_lock(&mvm->mutex);
- 
- 	switch (cmd) {
-+	case EXT_SET_KEY:
- 	case SET_KEY:
- 		if ((vif->type == NL80211_IFTYPE_ADHOC ||
- 		     vif->type == NL80211_IFTYPE_AP) && !sta) {
-@@ -3464,6 +3466,9 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 		IWL_DEBUG_MAC80211(mvm, "disable hwcrypto key\n");
- 		ret = iwl_mvm_remove_sta_key(mvm, vif, sta, key);
- 		break;
-+	case EXT_KEY_RX_TX:
-+		ret = 0;
-+		break;
- 	default:
- 		ret = -EINVAL;
- 	}
+12) ath9k: EXT_KEY_ID A-MPDU API update
+    A mostly untested example how drivers may benefit from "mac80211:
+    Mark A-MPDU keyid boarders for drivers".
+
+Alexander Wetzel (12):
+  mac80211: Optimize tailroom_needed update checks
+  nl80211/cfg80211: Extended Key ID support
+  mac80211: IEEE 802.11 Extended Key ID support
+  mac80211: Compatibility Extended Key ID support
+  mac80211: Mark A-MPDU keyid boarders for drivers
+  mac80211_hwsim: Ext Key ID support (NATIVE)
+  iwlwifi: Extended Key ID support (NATIVE)
+  iwlwifi: dvm - EXT_KEY_ID A-MPDU API update
+  ath: Basic Extended Key ID support (COMPAT+NATIVE)
+  ath5k: ath_key_config() API compatibility update
+  ath9k: Extended Key ID support (COMPAT)
+  ath9k: EXT_KEY_ID A-MPDU API update
+
+ drivers/net/wireless/ath/ath.h                |   7 +-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |   2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   2 +-
+ drivers/net/wireless/ath/ath9k/init.c         |   1 +
+ drivers/net/wireless/ath/ath9k/main.c         |  20 +-
+ drivers/net/wireless/ath/ath9k/xmit.c         |  14 +-
+ drivers/net/wireless/ath/key.c                |  35 ++-
+ .../net/wireless/intel/iwlwifi/dvm/mac80211.c |   5 +
+ drivers/net/wireless/intel/iwlwifi/dvm/tx.c   |   2 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   5 +
+ drivers/net/wireless/mac80211_hwsim.c         |   1 +
+ include/net/cfg80211.h                        |   2 +
+ include/net/mac80211.h                        |  65 ++++-
+ include/uapi/linux/nl80211.h                  |  23 +-
+ net/mac80211/cfg.c                            |  38 +++
+ net/mac80211/debugfs.c                        |   2 +
+ net/mac80211/ieee80211_i.h                    |   2 +-
+ net/mac80211/key.c                            | 223 +++++++++++++++---
+ net/mac80211/key.h                            |   9 +
+ net/mac80211/main.c                           |   6 +
+ net/mac80211/rx.c                             |  81 ++++---
+ net/mac80211/sta_info.c                       |  13 +
+ net/mac80211/sta_info.h                       |   6 +-
+ net/mac80211/tx.c                             |  77 ++++--
+ net/wireless/nl80211.c                        |  32 ++-
+ net/wireless/rdev-ops.h                       |   3 +-
+ net/wireless/trace.h                          |  31 ++-
+ net/wireless/util.c                           |  20 +-
+ 28 files changed, 601 insertions(+), 126 deletions(-)
+
 -- 
 2.20.1
 
