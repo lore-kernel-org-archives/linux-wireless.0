@@ -4,94 +4,81 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4B15C282C2
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:23:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBAD9C282C2
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:42:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8CCFB2145D
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:23:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9146020823
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:42:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="zBBzNplC"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="lNkhl7zB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726032AbfBJVXc (ORCPT
+        id S1726057AbfBJVlx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 Feb 2019 16:23:32 -0500
-Received: from 17.mo6.mail-out.ovh.net ([46.105.36.150]:47571 "EHLO
-        17.mo6.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725973AbfBJVXc (ORCPT
+        Sun, 10 Feb 2019 16:41:53 -0500
+Received: from 18.mo1.mail-out.ovh.net ([46.105.35.72]:55289 "EHLO
+        18.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726000AbfBJVlx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Feb 2019 16:23:32 -0500
-Received: from player730.ha.ovh.net (unknown [10.109.143.225])
-        by mo6.mail-out.ovh.net (Postfix) with ESMTP id EFB3D1AD0A5
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 22:06:47 +0100 (CET)
+        Sun, 10 Feb 2019 16:41:53 -0500
+X-Greylist: delayed 1200 seconds by postgrey-1.27 at vger.kernel.org; Sun, 10 Feb 2019 16:41:52 EST
+Received: from player734.ha.ovh.net (unknown [10.109.160.40])
+        by mo1.mail-out.ovh.net (Postfix) with ESMTP id 27946152C01
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 22:06:49 +0100 (CET)
 Received: from awhome.eu (p579AAB97.dip0.t-ipconnect.de [87.154.171.151])
         (Authenticated sender: postmaster@awhome.eu)
-        by player730.ha.ovh.net (Postfix) with ESMTPSA id B5F17272F50B;
-        Sun, 10 Feb 2019 21:06:46 +0000 (UTC)
+        by player734.ha.ovh.net (Postfix) with ESMTPSA id A66D1281F84E;
+        Sun, 10 Feb 2019 21:06:47 +0000 (UTC)
 From:   Alexander Wetzel <alexander@wetzel-home.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1549832805;
-        bh=/If4cTKzuDwGDSb1kFFnFj9z9C7qva1zD++P8+lumTU=;
+        s=wetzel-home; t=1549832804;
+        bh=6wKspGX1PLnF88YEuK0zORsV0ZldzZwAqYYmHmTmwrU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=zBBzNplC0KtS2DawTz1hlE54WFzPdHyXOV6p4eiepS+droDlR+pW68A8hSKem6Ok4
-         lM1KDaoNqHd+Zu3iv0z9X7i0BP3RvJ3/oe6o4wnqS0MTpdwho8RapmUznBN6qB2fnb
-         LIfpfQGjiiOkaZdgVp9so45LKcw/FntdCn88Z6Bc=
+        b=lNkhl7zBLlmCq8jvRu1aLRNEUNwmFx0ckKgbwAr/V1GLT0zwFvaMNE8DTxFr/MwD2
+         PpBYdBmcXsr9nP2XtOUYBmeVZqsLOGm61x8Dzuj8zqRL+C1iRcFuObt+MNsLlF7Tkq
+         6cao/mWnOhPuMuZmhUneGmifVjd9Bzn/Eg4wEyeU=
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [RFC PATCH v3 08/12] iwlwifi: dvm - EXT_KEY_ID A-MPDU API update
-Date:   Sun, 10 Feb 2019 22:06:16 +0100
-Message-Id: <20190210210620.31181-9-alexander@wetzel-home.de>
+Subject: [RFC PATCH v3 06/12] mac80211_hwsim: Ext Key ID support (NATIVE)
+Date:   Sun, 10 Feb 2019 22:06:14 +0100
+Message-Id: <20190210210620.31181-7-alexander@wetzel-home.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190210210620.31181-1-alexander@wetzel-home.de>
 References: <20190210210620.31181-1-alexander@wetzel-home.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 10549400655381142727
+X-Ovh-Tracer-Id: 10549682127531023559
 X-VR-SPAMSTATE: OK
 X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrledvgddugeduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenuc
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrleehgdekhecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecu
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When using Extended Key ID mac80211 drops @IEEE80211_TX_CTL_AMPDU for
-the last packet which can be added to a A-MPDU in preparation.
-
-Don't throw a warning and just handle the frame as if
-@IEEE80211_TX_CTL_AMPDU would have been set.
+Driver is not supporting hardware encryption and therefore fully
+compatible with Extended Key ID.
 
 Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
 ---
+ drivers/net/wireless/mac80211_hwsim.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I cold not figure out so far how to make sure the card will not mix
-A-MPDU frames. Looks like that is handled fully in the HW and I didn't
-find any interface to influence it. (It even may work already, I have
-some problems to capture A-MPDU frames with A-MPDU information intact
-and the topic was pretty low on the list so far. After all it works...)
-
-This patch is therefore basically just using aggregation when it's
-enabled and ignores the key border signal from mac80211.
-
- drivers/net/wireless/intel/iwlwifi/dvm/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-index 4ff323a3a4e5..478f8e1c3e52 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-@@ -420,7 +420,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
- 		hdr->seq_ctrl |= cpu_to_le16(seq_number);
- 		seq_number += 0x10;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 87be2b18063a..306583316f5d 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2799,6 +2799,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	ieee80211_hw_set(hw, SIGNAL_DBM);
+ 	ieee80211_hw_set(hw, SUPPORTS_PS);
+ 	ieee80211_hw_set(hw, TDLS_WIDER_BW);
++	ieee80211_hw_set(hw, EXT_KEY_ID_NATIVE);
+ 	if (rctbl)
+ 		ieee80211_hw_set(hw, SUPPORTS_RC_TABLE);
  
--		if (info->flags & IEEE80211_TX_CTL_AMPDU)
-+		if (tid_data->agg.state == IWL_AGG_ON)
- 			is_agg = true;
- 		is_data_qos = true;
- 	}
 -- 
 2.20.1
 
