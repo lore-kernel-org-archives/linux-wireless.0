@@ -6,48 +6,48 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D278AC282C2
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:49:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5BF0C282C2
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:49:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0408213F2
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:49:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94B5D213F2
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Feb 2019 21:49:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726530AbfBJVtn (ORCPT
+        id S1726751AbfBJVtq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 Feb 2019 16:49:43 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:35190 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726008AbfBJVtn (ORCPT
+        Sun, 10 Feb 2019 16:49:46 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:52326 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726008AbfBJVtp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Feb 2019 16:49:43 -0500
-Received: by mail-wm1-f65.google.com with SMTP id t200so13309879wmt.0
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 13:49:42 -0800 (PST)
+        Sun, 10 Feb 2019 16:49:45 -0500
+Received: by mail-wm1-f68.google.com with SMTP id m1so13786909wml.2
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2019 13:49:44 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=EM4pdGLHRU/lVQyT45gCPHPza74VRDDVhq/VZ5wVjfA=;
-        b=sBcuSmczIAwkk9PP65hO9rVMiTCs32Gh91xWHAvsHN6gGeESjl8DjOKISQ/yANw7g/
-         Klffku69bF/4OgoJc9MBZOPKfOs9rXQrC+LhDfuzL+5VtsY5oOijVToo5vmfB1/EHDuh
-         KlqffsY4NfqQgsTQ74rK4hTresZPZTrge2NW+gEmblSl9Ti5o/qFk6Ce7PsaeHJVNsq9
-         gzyh4tZXPd/Cfz56MIAUQipKI0zfHOsO53eo3Mf6QNtlqzMUipWJWNCvBlEOIUq/DsgQ
-         f6i3O2AC+yQbd/cxSeMoN2rj5VGiAz81fJPFYgeQFANT7ZwKGOL5mR6Ox4cIL7Ot2AC2
-         yc5A==
-X-Gm-Message-State: AHQUAubqxHNa05wsqlzfdqPD+4DR+ni8IiOSmPd4/S4Rwurojzgv3cfM
-        8LBnpBd8Qp6CsiD4p569wjQAHzFyjE0=
-X-Google-Smtp-Source: AHgI3Ia7FYO202aKduHx1et9huBQ3vTw1GaG6t376elu30ET7yf42pPSZXE6SLDefmT0TfV2k2t1Zw==
-X-Received: by 2002:a1c:7016:: with SMTP id l22mr7366843wmc.70.1549835381452;
-        Sun, 10 Feb 2019 13:49:41 -0800 (PST)
+        bh=EQeYL9uyP/dFrsUbpXBcL0FMiGD+/51bsSe3i9CZAqY=;
+        b=IWr/+S5DC+NRvdTCf/mtaknx3Imiqv1Or6qWxJ7WZg+xOgmMFNJT1JLTWSymuK34bt
+         5XrU1WbrONIPdnrY3QH0pWQAvWBWTRuR7KkqDntgXjX033QTCmat5MDRJUTc4oSGd886
+         jKl9n3U3gALbC3YHt+xOnegbghewjCV+7n7mcnQw+h0yPGkqZxo5vzrMLh6xgfMZlfik
+         54V1tMuMFX7tFEWvI8R3j1OZioVQnueltjyzUOqPmRujTSpcLkwRsNzFkfs8xKUX+n9F
+         Bd06obelDlBdDCYcKVNoZo9+/L9/icjhLEvB2948Mgq9tu/1VPO3fKHidDIPxl01u2vS
+         5olA==
+X-Gm-Message-State: AHQUAuYadaPVMZFbMdT38FKl5mPmF4sVXCxfTJcL29jtJk5rPRR8M+1p
+        eN9xUteIooJRp4E+U8iN/HEHFjxeneM=
+X-Google-Smtp-Source: AHgI3IYP1UXiI/MFhhLiUSFVe6JnFIOnckkhVOkw4ZAp0wb4F4i6bxkqaOfK5PIUSnSkeTLffNcpNw==
+X-Received: by 2002:a7b:c302:: with SMTP id k2mr6800452wmj.71.1549835383485;
+        Sun, 10 Feb 2019 13:49:43 -0800 (PST)
 Received: from lore-desk.lan ([151.66.10.5])
-        by smtp.gmail.com with ESMTPSA id q14sm5436323wrw.39.2019.02.10.13.49.40
+        by smtp.gmail.com with ESMTPSA id q14sm5436323wrw.39.2019.02.10.13.49.42
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Sun, 10 Feb 2019 13:49:40 -0800 (PST)
+        Sun, 10 Feb 2019 13:49:42 -0800 (PST)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     nbd@nbd.name, sgruszka@redhat.com, stefan.wahren@i2se.com
-Subject: [PATCH wireless-drivers 1/3] mt76: usb: fix possible NULL pointer dereference in mt76u_mcu_deinit
-Date:   Sun, 10 Feb 2019 22:49:13 +0100
-Message-Id: <54c995e58ca2bdc7ad1cb79926999e0155bb0e16.1549832428.git.lorenzo.bianconi@redhat.com>
+Subject: [PATCH wireless-drivers 2/3] mt76: usb: fix possible memory leak in mt76u_buf_free
+Date:   Sun, 10 Feb 2019 22:49:14 +0100
+Message-Id: <5d9891a95014b3bf724d81fc5693f3c7d00d4df2.1549832428.git.lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <cover.1549832428.git.lorenzo.bianconi@redhat.com>
 References: <cover.1549832428.git.lorenzo.bianconi@redhat.com>
@@ -58,34 +58,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix possible NULL pointer dereference in mt76u_mcu_deinit routine that
-can occur if initialization path fails before calling mt76u_mcu_init_rx
+Move q->ndesc initialization before the for loop in mt76u_alloc_rx
+since otherwise allocated urbs will not be freed in mt76u_buf_free
+Double-check scatterlist pointer in mt76u_buf_free
 
-Fixes: ee676cd5017c ("mt76: add driver code for MT76x2u based devices")
+Fixes: b40b15e1521f ("mt76: add usb support to mt76 layer")
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/usb_mcu.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/usb.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-index 036be4163e69..9527e1216f3d 100644
---- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-@@ -48,9 +48,11 @@ EXPORT_SYMBOL_GPL(mt76u_mcu_init_rx);
- 
- void mt76u_mcu_deinit(struct mt76_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index b061263453d4..31c18ac1c94a 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -331,10 +331,16 @@ EXPORT_SYMBOL_GPL(mt76u_buf_alloc);
+ void mt76u_buf_free(struct mt76u_buf *buf)
  {
--	struct mt76_usb *usb = &dev->usb;
-+	struct mt76u_buf *buf = &dev->usb.mcu.res;
+ 	struct urb *urb = buf->urb;
++	struct scatterlist *sg;
+ 	int i;
  
--	usb_kill_urb(usb->mcu.res.urb);
--	mt76u_buf_free(&usb->mcu.res);
-+	if (buf->urb) {
-+		usb_kill_urb(buf->urb);
-+		mt76u_buf_free(buf);
+-	for (i = 0; i < urb->num_sgs; i++)
+-		skb_free_frag(sg_virt(&urb->sg[i]));
++	for (i = 0; i < urb->num_sgs; i++) {
++		sg = &urb->sg[i];
++		if (!sg)
++			continue;
++
++		skb_free_frag(sg_virt(sg));
 +	}
+ 	usb_free_urb(buf->urb);
  }
- EXPORT_SYMBOL_GPL(mt76u_mcu_deinit);
+ EXPORT_SYMBOL_GPL(mt76u_buf_free);
+@@ -540,7 +546,8 @@ static int mt76u_alloc_rx(struct mt76_dev *dev)
+ 		nsgs = 1;
+ 	}
+ 
+-	for (i = 0; i < MT_NUM_RX_ENTRIES; i++) {
++	q->ndesc = MT_NUM_RX_ENTRIES;
++	for (i = 0; i < q->ndesc; i++) {
+ 		err = mt76u_buf_alloc(dev, &q->entry[i].ubuf,
+ 				      nsgs, q->buf_size,
+ 				      SKB_WITH_OVERHEAD(q->buf_size),
+@@ -548,7 +555,6 @@ static int mt76u_alloc_rx(struct mt76_dev *dev)
+ 		if (err < 0)
+ 			return err;
+ 	}
+-	q->ndesc = MT_NUM_RX_ENTRIES;
+ 
+ 	return mt76u_submit_rx_buffers(dev);
+ }
 -- 
 2.20.1
 
