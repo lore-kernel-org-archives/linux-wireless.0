@@ -2,107 +2,85 @@ Return-Path: <SRS0=RvtO=QS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CDA7C169C4
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 17:56:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 196EFC169C4
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 19:00:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C11621B68
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 17:56:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCCFA20863
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 19:00:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="coK6sk2A"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="fJ5LLt4+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729671AbfBKR4j (ORCPT
+        id S1732403AbfBKTAO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 12:56:39 -0500
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:39031 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726104AbfBKR4j (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 12:56:39 -0500
-Received: by mail-ed1-f66.google.com with SMTP id b14so9667649edt.6
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2019 09:56:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=pIeowyW41eOo9CVNk9ZFj9ScRprRWs2JpeKe3YuLIHQ=;
-        b=coK6sk2AvA7sIHe2POLMmd1/fzmgBmN2IS/GRZkFhARJG5meAoVNSmmPGIHAHQF3Ys
-         wMwCKfgEhrKLDDAQlTzosrUv5YxGOMlSgpvIniIYOXxjyRk7J4wtGykwiUO8/K0Wd4fK
-         ntXwlHQ650KsN3FVocV/XrTtNohBdAPDXAqHc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=pIeowyW41eOo9CVNk9ZFj9ScRprRWs2JpeKe3YuLIHQ=;
-        b=QOi0u4pgSU2XmmFtGLR9F4Ia/02WBVUHzQQ5Gb8wnP7TkM0nynqV9DcTvTbz3TeRS5
-         ihto3NzdhmOhrFrq+ch1qFcK1yk6jJ5Jhq0YozFvrL47qfRRrnP+udqYVbsATB83sYSz
-         URbtJrw8wO9YpDkn44S2vdpF/45q27oc9hvWF7kuaFhbV48Kv6O3gcXehowQ2MORF5R1
-         DgiBg6PBUlGcRN1sdlEJlbHzOqlQI0EKY2/7HsoSGZaXQhIpqo6AOeQpCP/OU4yPTpLX
-         FRS5FFlnCvNFHVjf0u0NC370NZU19jvbpFlaFYLKpNqwJ/nLeqBHK9B9kLrxOkTV+n/E
-         t8Rg==
-X-Gm-Message-State: AHQUAubSdUYnLEOJfEl5EF5ulyQ0buP5LxUVa4P4UaZqquUD89qlWk89
-        I6fD17CcErg1GNVw8wKL//ysqNXk/KQ=
-X-Google-Smtp-Source: AHgI3IYf366rb3unn5TY+WVdzbbpL/CUu7MtVUhJJ+cWALrjpLYO84GEvEM6LnJhKhTeBsd9qG3xzA==
-X-Received: by 2002:a17:906:3482:: with SMTP id g2mr313812ejb.242.1549907797589;
-        Mon, 11 Feb 2019 09:56:37 -0800 (PST)
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com. [209.85.208.41])
-        by smtp.gmail.com with ESMTPSA id v10sm1040847ejj.55.2019.02.11.09.56.34
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 11 Feb 2019 09:56:35 -0800 (PST)
-Received: by mail-ed1-f41.google.com with SMTP id h58so2398789edb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2019 09:56:34 -0800 (PST)
-X-Received: by 2002:a50:c8c9:: with SMTP id k9mr29830436edh.6.1549907793940;
- Mon, 11 Feb 2019 09:56:33 -0800 (PST)
+        Mon, 11 Feb 2019 14:00:14 -0500
+Received: from nbd.name ([46.4.11.11]:47394 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726212AbfBKTAO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Feb 2019 14:00:14 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=S/x5orM8THSKd8YpQgCraZ4XSIySNtlNFSm/QhQmltI=; b=fJ5LLt4+jnLuNY5SlAix50RoAi
+        VZ+Z0O8fPU2dldNSoNnC71CJ8Zn/1z/i9f6ozYHb3x0Yl4Z2jRbBs6/8e64JBju2pMmtncCJkJavH
+        /4A4mEhDKSKF7Klm9HojOTAdC57uQ232RY+KOL3q4xmJOuQe2QYUILQ7YSCjbCCqJJsg=;
+Subject: Re: [PATCH] mt76: change the retun type of mt76_dma_attach()
+To:     Ryder Lee <ryder.lee@mediatek.com>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     Roy Luo <roychl666@gmail.com>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+References: <228fdddb9ca96e8ce861e324eb9039722cf18f49.1549850911.git.ryder.lee@mediatek.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <39241b1d-3743-a837-8600-5ed824dc4fe9@nbd.name>
+Date:   Mon, 11 Feb 2019 20:00:10 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.5.0
 MIME-Version: 1.0
-References: <1548820940-15237-1-git-send-email-yhchuang@realtek.com>
- <1548820940-15237-4-git-send-email-yhchuang@realtek.com> <20190209021426.GA163159@google.com>
- <F7CD281DE3E379468C6D07993EA72F84D17A2AC2@RTITMBSVM04.realtek.com.tw>
-In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17A2AC2@RTITMBSVM04.realtek.com.tw>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Mon, 11 Feb 2019 09:56:22 -0800
-X-Gmail-Original-Message-ID: <CA+ASDXNmU3_nZ1VXeGZ4GMijgQKSL+LJMvy44FP9u1THBohSbA@mail.gmail.com>
-Message-ID: <CA+ASDXNmU3_nZ1VXeGZ4GMijgQKSL+LJMvy44FP9u1THBohSbA@mail.gmail.com>
-Subject: Re: [PATCH v4 03/13] rtw88: hci files
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <228fdddb9ca96e8ce861e324eb9039722cf18f49.1549850911.git.ryder.lee@mediatek.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Feb 10, 2019 at 9:48 PM Tony Chuang <yhchuang@realtek.com> wrote:
-> > From: Brian Norris [mailto:briannorris@chromium.org]
-> > > +   tx_data = rtw_pci_get_tx_data(skb);
-> > > +   tx_data->dma = dma;
-> > > +   skb_queue_tail(&ring->queue, skb);
-> >
-> > IIUC, you have no locking for this queue. That seems like a bad idea. It
-> > then gets pulled off this queue in your ISR, again without a lock. So
-> > for example, if the only packet in your queue gets completed while you
-> > are trying to queue another one, you might corrupt the list.
-> >
->
-> I think skb_queue_tail already has its own spinlock to protect the queue?
-> Cannot see why the list might be corrupted. Or I misunderstand you.
+On 2019-02-11 03:13, Ryder Lee wrote:
+> There is no need to retun 0 in mt76_dma_attach(), so switch it to void.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Applied, thanks.
 
-Ah, no of course you're correct. I think I kept looking at the
-definition of __skb_queue_tail() instead. It also doesn't help that,
-in skbuff.h, the kerneldoc comments for __skb_queue_tail() are put
-above skb_queue_tail(). So it's extra easy to confuse them...
-
-And to be clear, so far I don't think I've seen actual corruption of
-this queue yet. Just bad TX status reporting, including plenty of
-driver WARN()s. So my comment was only theoretical (and incorrect).
-
-Regards,
-Brian
+- Felix
