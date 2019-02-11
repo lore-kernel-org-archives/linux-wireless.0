@@ -2,88 +2,89 @@ Return-Path: <SRS0=RvtO=QS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 289CDC169C4
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:12:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2A7FC169C4
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:24:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1174222A7
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:12:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LR8EZ+cC";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YlzktFib"
+	by mail.kernel.org (Postfix) with ESMTP id 7140C21B1A
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:24:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403912AbfBKPJ7 (ORCPT
+        id S2387771AbfBKPYd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 10:09:59 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:43136 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2403802AbfBKPJ5 (ORCPT
+        Mon, 11 Feb 2019 10:24:33 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:44722 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390406AbfBKPC0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 10:09:57 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id AC05A618E2; Mon, 11 Feb 2019 15:09:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549897796;
-        bh=DxSPw5Ltq7ijmgi6nY3/Z8HDO8TMd5USROHJvM8lWO4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LR8EZ+cCUVYb2+9wqJAYsJZJItFAstnvC+b/oxtqnPiDtyVYeLnKouw80dMDzzaMn
-         ItONUqVK9X+rE42TIz1yXeopeTCOLrQa5WVthrgLkQtAgBnae7paoFbDsnlWlvgCpW
-         HEWSktR+3WfkZQJPZECzuehz+HkyWAFHoTGtBODM=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BA8C1618E2;
-        Mon, 11 Feb 2019 15:09:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549897795;
-        bh=DxSPw5Ltq7ijmgi6nY3/Z8HDO8TMd5USROHJvM8lWO4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YlzktFibHMVE8/tTvw83GC4qDafG5m72pler4aTjNVlSR0zdonctkJ7cIhGhnpL8P
-         kDyfv0R/zHKmzofq+vNjcisyHw6JuTZTedNQHo/da7gHKKswyreiADf8ahPfxz4fS/
-         1ZfpbUiEGJFUWyPGrl6Up2mwQvCxWR6CHOLMGA3k=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BA8C1618E2
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 3/6] ath10k: change wmi.h to include only ieee80211.h
-Date:   Mon, 11 Feb 2019 17:09:44 +0200
-Message-Id: <1549897787-28537-3-git-send-email-kvalo@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1549897787-28537-1-git-send-email-kvalo@codeaurora.org>
-References: <1549897787-28537-1-git-send-email-kvalo@codeaurora.org>
+        Mon, 11 Feb 2019 10:02:26 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC4)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gtD6G-00089o-Q3; Mon, 11 Feb 2019 16:02:24 +0100
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Jouni Malinen <j@w1.fi>, Peng Xu <pxu@codeaurora.org>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: fix and clean up cfg80211_gen_new_bssid()
+Date:   Mon, 11 Feb 2019 16:02:22 +0100
+Message-Id: <20190211150222.1304-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.17.2
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-wmi.h does not use anything from mac80211.h so change it to include only
-ieee80211.h.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Fix cfg80211_gen_new_bssid() to not rely on u64 modulo arithmetic,
+which isn't needed since we really just want to mask there. Also,
+clean it up to calculate the mask only once and use GENMASK_ULL()
+instead of open-coding the mask calculation.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/net/cfg80211.h | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 74ce1a4c0e8f..23fe482834b4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -20,7 +20,7 @@
- #define _WMI_H_
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b61b71f369c7..3f7820b2ea4d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5475,22 +5475,20 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+  * @bssid: transmitter BSSID
+  * @max_bssid: max BSSID indicator, taken from Multiple BSSID element
+  * @mbssid_index: BSSID index, taken from Multiple BSSID index element
+- * @new_bssid_addr: address of the resulting BSSID
++ * @new_bssid: address of the resulting BSSID
+  */
+ static inline void cfg80211_gen_new_bssid(const u8 *bssid, u8 max_bssid,
+-					  u8 mbssid_index, u8 *new_bssid_addr)
++					  u8 mbssid_index, u8 *new_bssid)
+ {
+-	u64 bssid_tmp, new_bssid;
+-	u64 lsb_n;
++	u64 bssid_u64 = ether_addr_to_u64(bssid_addr);
++	u64 mask = GENMASK_ULL(max_bssid - 1, 0);
++	u64 new_bssid_u64;
  
- #include <linux/types.h>
--#include <net/mac80211.h>
-+#include <linux/ieee80211.h>
+-	bssid_tmp = ether_addr_to_u64(bssid);
++	new_bssid_u64 = bssid_u64 & ~mask;
  
- /*
-  * This file specifies the WMI interface for the Unified Software
+-	lsb_n = bssid_tmp & ((1 << max_bssid) - 1);
+-	new_bssid = bssid_tmp;
+-	new_bssid &= ~((1 << max_bssid) - 1);
+-	new_bssid |= (lsb_n + mbssid_index) % (1 << max_bssid);
++	new_bssid_u64 |= ((bssid_u64 & mask) + mbssid_index) & mask;
+ 
+-	u64_to_ether_addr(new_bssid, new_bssid_addr);
++	u64_to_ether_addr(new_bssid_u64, new_bssid);
+ }
+ 
+ /**
 -- 
-2.7.4
+2.17.2
 
