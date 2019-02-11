@@ -7,108 +7,118 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81338C169C4
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 09:28:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B521BC169C4
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 09:31:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3BD7220823
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 09:28:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82CFB20823
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 09:31:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Cxbfe3J4";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UzAgS6f3"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="M4vuQcWe";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ipOBkeny"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726045AbfBKJ2q (ORCPT
+        id S1726892AbfBKJbC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 04:28:46 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:34678 "EHLO
+        Mon, 11 Feb 2019 04:31:02 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:35762 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725931AbfBKJ2q (ORCPT
+        with ESMTP id S1725986AbfBKJbC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 04:28:46 -0500
+        Mon, 11 Feb 2019 04:31:02 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id ABE4A60886; Mon, 11 Feb 2019 09:28:44 +0000 (UTC)
+        id 08953605FC; Mon, 11 Feb 2019 09:30:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549877324;
-        bh=78XoK4ovJJvUkwn0OPwjtbVMRX5DfhZtSdqbHbmFJ/I=;
+        s=default; t=1549877458;
+        bh=N1+Ejv7War7mgILAIbDgQi9g9ogMm7rrksZit7xv1LY=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Cxbfe3J4oMpQmZiS8szCmTC2XhzhhQV7J1lbtDcrGpepabh72tKJCvVLuA/q7KHb5
-         jyCjQbDSBZ/YTCBkXl4Inv+Ch0re1H/j30YhlcNfjDtgVHF+FzYpDrZ9fqK/wSh3IF
-         iXmjO2wHBBq5Mes5ZCsaRtwqUcxCGbWIWjNoF/V4=
+        b=M4vuQcWeTqZhkd5LHeUU49ynCAUb5rpmWElaMuhWzHVVxQ+TZfTXkXVX9BlC9IAOJ
+         OYGnLi7qhGUlG5cV8IaZ6a1LZH2ZFgpYa3oEWBVjOPszt4GZ8dS3kLHLTDPxTOzp7g
+         MpaOndOh5TcKnje7vP20lPM+2GyDGcGmUbKR5nUY=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C5FE060886;
-        Mon, 11 Feb 2019 09:28:42 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DE8B860908;
+        Mon, 11 Feb 2019 09:30:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549877323;
-        bh=78XoK4ovJJvUkwn0OPwjtbVMRX5DfhZtSdqbHbmFJ/I=;
+        s=default; t=1549877456;
+        bh=N1+Ejv7War7mgILAIbDgQi9g9ogMm7rrksZit7xv1LY=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=UzAgS6f3ci/soMoq+PD4g7VA2938syc0482PJdsIMtlmRbU8BACrjOE62mwxgeqYX
-         xLkph9jIJn32QJTApypyasYGt0XCPbRkXeT7I3yvVOSMdJkLjCXpKEl12PfilcphUK
-         RLwnthRefDCJ+2XjV8yu1q62M6gjofJgDKw9sZZ4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C5FE060886
+        b=ipOBkeny5xhMjF9lCweseCymNglgUnC5Rvwc6dXHwFQv1YFNmuF8R1+0/MWfNHhei
+         XD0kL0iUzJxsGojYinTEbDF0m4FZPt4pVDNxe9VOEL1JU5f7/HYi0PL/0W2O0Mrcg+
+         1z5WzfHihN9++420Im49cWf3OrQHoWj8eIj0YMJU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DE8B860908
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: Add support to configure ftm responder role
+Subject: Re: [PATCH v2] ath10k: add dynamic vlan support
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1549439910-9315-1-git-send-email-pradeepc@codeaurora.org>
-References: <1549439910-9315-1-git-send-email-pradeepc@codeaurora.org>
-To:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+In-Reply-To: <1542798288-8946-1-git-send-email-mpubbise@codeaurora.org>
+References: <1542798288-8946-1-git-send-email-mpubbise@codeaurora.org>
+To:     Manikanta Pubbisetty <mpubbise@codeaurora.org>
 Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190211092844.ABE4A60886@smtp.codeaurora.org>
-Date:   Mon, 11 Feb 2019 09:28:44 +0000 (UTC)
+Message-Id: <20190211093058.08953605FC@smtp.codeaurora.org>
+Date:   Mon, 11 Feb 2019 09:30:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Pradeep Kumar Chitrapu <pradeepc@codeaurora.org> wrote:
+Manikanta Pubbisetty <mpubbise@codeaurora.org> wrote:
 
-> Configure fine timing measurement (FTM) responder role from the
-> ftm_responder bss param sent by mac80211. With FTM functionality offloaded
-> to firmware, adding the interface allows userspace to enable or disable
-> FTM responder functionality. ath10k disables it at the time of interface
-> creation.
+> Multicast/broadcast traffic destined for a particular vlan group will
+> always be encrypted in software. To enable dynamic VLANs, it requires
+> driver support for sending software encrypted packets.
 > 
-> Supported FW: 10.4
+> In ath10k, sending software encrypted frames is allowed only when we insmod
+> the driver with cryptmode param set to 1, this configuration disables
+> hardware crypto and enables RAW mode implicitly. Since, enabling raw
+> mode has performance impact, this cannot be considered as an ideal
+> solution for supporting VLANs in the driver.
 > 
-> Tested on IPQ4019 with firmware: 10.4-3.2.1.1-00022
+> As an alternative take, in this approach, cryptographic keys for
+> unicast traffic (per peer PTKs) and keys for non-vlan group traffic
+> will be configured in hardware, allowing hardware encryption for unicast
+> and non-vlan group traffic. Only vlan group traffic will be encrypted in
+> software and pushed to the target with encap mode set to RAW in the TX
+> descriptors.
 > 
-> Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+> Not all firmwares can support this type of key configuration(having few
+> keys installed in hardware and few only in software); for this purpose a
+> new WMI service flag "WMI_SERVICE_PER_PACKET_SW_ENCRYPT" is introduced to
+> advertise this support.
+> 
+> Also, adding the logic required to send sw encrypted frames in raw mode.
+> 
+> Hardwares Tested : QCA9984, QCA988X
+> Firmwares Tested : 10.4-3.5.3-00057, 10.2.4-1.0-00042
+> 
+> Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 I had to fix some conflicts, please carefully check my resolution in the pending branch:
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=a3e53eb1c7c58b131ebc0581aa44b0912809e430
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=7ae879447535ae1327e78dc614385ff6dd45c2fd
 
-$ git am -s -3 10798883.mbox
-Applying: ath10k: Add support to configure ftm responder role
+Applying: ath10k: add dynamic vlan support
 Using index info to reconstruct a base tree...
 M       drivers/net/wireless/ath/ath10k/core.h
 M       drivers/net/wireless/ath/ath10k/mac.c
-M       drivers/net/wireless/ath/ath10k/wmi.c
 M       drivers/net/wireless/ath/ath10k/wmi.h
 Falling back to patching base and 3-way merge...
 Auto-merging drivers/net/wireless/ath/ath10k/wmi.h
 CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi.h
-Auto-merging drivers/net/wireless/ath/ath10k/wmi.c
-CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi.c
 Auto-merging drivers/net/wireless/ath/ath10k/mac.c
-CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/mac.c
 Auto-merging drivers/net/wireless/ath/ath10k/core.h
-Recorded preimage for 'drivers/net/wireless/ath/ath10k/mac.c'
-Recorded preimage for 'drivers/net/wireless/ath/ath10k/wmi.c'
 Recorded preimage for 'drivers/net/wireless/ath/ath10k/wmi.h'
 error: Failed to merge in the changes.
-Patch failed at 0001 ath10k: Add support to configure ftm responder role
+Patch failed at 0001 ath10k: add dynamic vlan support
 
 -- 
-https://patchwork.kernel.org/patch/10798883/
+https://patchwork.kernel.org/patch/10692385/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
