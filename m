@@ -2,83 +2,146 @@ Return-Path: <SRS0=RvtO=QS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 935BAC169C4
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 19:03:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39235C169C4
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 19:21:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C5A920863
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 19:03:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08C1621B25
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 19:21:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="pqXNqTg6"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="oH8SwQsD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387527AbfBKTDk (ORCPT
+        id S1728329AbfBKTV4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 14:03:40 -0500
-Received: from nbd.name ([46.4.11.11]:47530 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731317AbfBKTDk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 14:03:40 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=/SFCQi15kycMpvciJ6SiaJWv8/JA9V0l0eVJZNh5Yvc=; b=pqXNqTg6vy3pyKOwrTUtFymzak
-        mYLS+TtjmOU/WZ+D5Tg/6ucYysOzEKzDuC14oLIKe5mMF29iLz0gEgI+Gr5/4CJdrIBfkd54DocdP
-        RnYQCmkUVq+ab3Ow5EmAYb3ht2mdo626LSKVACm8SHxsjQOW7Y/h2RwuPz37b4XyQRIo=;
-Subject: Re: [PATCH] mt76x02u: use usb_bulk_msg to upload firmware
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-References: <1549872974-7268-1-git-send-email-sgruszka@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <3a9df8c7-0898-65db-d1b2-c3492f0d6901@nbd.name>
-Date:   Mon, 11 Feb 2019 20:03:38 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.5.0
+        Mon, 11 Feb 2019 14:21:56 -0500
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:39074 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727766AbfBKTVz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Feb 2019 14:21:55 -0500
+Received: by mail-ed1-f66.google.com with SMTP id b14so27699edt.6
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2019 11:21:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=uuPKGMWk0CKHmAqXuZ+zrX3AMH6iT0BU/0sLG9WrhKE=;
+        b=oH8SwQsDoSIMEnTApfRe0KusZy/MuOIsuYpJTWj3VcGPgD4gIjdFKRCs1U9dHk7Oc8
+         1Hfiabp2OdidYOCM3H+gpZ1WuJfEv6JEDEyc91iF0YAH78HMmjFbFsy3adGeBg6Y/ZPK
+         3yZJHgJS+M91Z0nuv6NccyCmqIUTVRcGw/dss=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=uuPKGMWk0CKHmAqXuZ+zrX3AMH6iT0BU/0sLG9WrhKE=;
+        b=bMi5/bz7N8uHPuhrVGLZ8WRvAj4uZ9vjL9iz/NhsXWhuK2Z7t8wDUFE623p3ZE0gfS
+         kOHOekeWTfXYCmVZMYXwTVbSiOIWbYDXMCTQFrPs8CEIC77uDesYjo+KMymsgQWI7CzJ
+         MsFjW2r21aW5ZRM+0leVxThLw0AGx5xR/6y4Wr2gxu11IqxN/Lt+qO/eBwhOg9Jt+EYU
+         8WvDRC05AduAOyn4FMGYnQzjJSq+QiTJNAzKhVm1EcoZ/pnAsHQpgQoMoBqRLkvS7cnq
+         HX7tYUOSfzGCob5DqvlaLYwG/Am3mgdlJV/3PbcKOe3hy7C0nFeQJ2Vi2vwSX1OZ1d81
+         x0Cg==
+X-Gm-Message-State: AHQUAubhaZHfftXWRvTVXzjAdGmAEzAlBLDCZHVQ5yifQg46ztpB7eGE
+        JdgLSS5SvkSSRecPWBAT/5wXiFGLdUg=
+X-Google-Smtp-Source: AHgI3Iaw5sxZ4XHgibB0hadS0X3IzwcVHCrBTa2oewbH7LhUSqp/kaHeEWiz6qQ5IRN8kQkhC6X0VA==
+X-Received: by 2002:a17:906:1191:: with SMTP id n17mr28467604eja.47.1549912913816;
+        Mon, 11 Feb 2019 11:21:53 -0800 (PST)
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com. [209.85.208.47])
+        by smtp.gmail.com with ESMTPSA id c14sm3129331eds.73.2019.02.11.11.21.52
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 11 Feb 2019 11:21:52 -0800 (PST)
+Received: by mail-ed1-f47.google.com with SMTP id o59so43782edb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2019 11:21:52 -0800 (PST)
+X-Received: by 2002:a17:906:b886:: with SMTP id hb6mr27624923ejb.71.1549912912069;
+ Mon, 11 Feb 2019 11:21:52 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1549872974-7268-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
+ <1548937297-14660-2-git-send-email-yhchuang@realtek.com> <20190209030756.GB163159@google.com>
+ <F7CD281DE3E379468C6D07993EA72F84D17A2A22@RTITMBSVM04.realtek.com.tw>
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17A2A22@RTITMBSVM04.realtek.com.tw>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Mon, 11 Feb 2019 11:21:40 -0800
+X-Gmail-Original-Message-ID: <CA+ASDXP5PCDnQoLXVnCkjyRoM31DbieusJa214_Km_BTiZMPkA@mail.gmail.com>
+Message-ID: <CA+ASDXP5PCDnQoLXVnCkjyRoM31DbieusJa214_Km_BTiZMPkA@mail.gmail.com>
+Subject: Re: [PATCH 01/24] rtw88: report correct tx status if mac80211
+ requested one
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        Andy Huang <tehuang@realtek.com>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-11 09:16, Stanislaw Gruszka wrote:
-> We don't need to send firmware data asynchronously, much simpler is just
-> use synchronous usb_bulk_msg().
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Applied, thanks.
+On Sun, Feb 10, 2019 at 8:31 PM Tony Chuang <yhchuang@realtek.com> wrote:
+> To fix `iw wlan0 station dump` display, I think I can just restore one line
+> in pci.c. That is, restore IEEE80211_TX_STAT_ACK flag line:
+>
+> +                       continue;
+> +               }
+>                 ieee80211_tx_info_clear_status(info);
+> -               info->flags |= IEEE80211_TX_STAT_ACK;
+>                 ieee80211_tx_status_irqsafe(hw, skb)
+>
+> And with some modifications, such as IEEE80211_TX_CTL_NO_ACK check.
+> Then we can better reporting ACK status for data frames without
+> IEEE80211_TX_CTL_REQ_TX_STATUS. This way we can also ensure the
+> connection monitor can work. (but it will be no loss)
 
-- Felix
+This seems like a small improvement. It means you will almost never
+actually report a "drop", but that's still probably better than
+*always* reporting drops I think. I also see that there are handful of
+older (likely poorly-maintained? or perhaps similarly-constrained)
+drivers that have a similar default behavior -- they report ACK by
+default, apparently without any particular notice that the packet was
+actually ACKed by the receiver.
+
+But I'm not really a mac80211 expert, so someone else may have better
+ideas here.
+
+> It's not buggy I think, if firmware is not reporting status, something must
+> go wrong. And after some test I know why you feel it's unreliable.
+>
+> For WOW implementation, we modified a lot in fw.c functions.
+> And correct some driver-firmware interface behaviors. To make sure the
+> firmware is running as expected. But the patches are still holding in my hand.
+> I can attach them in this patch set, and apparently I should. I will separate
+> them out of WOW patch set and resend again.
+
+Ah, well I don't know at what point we should cut things off, but I'll
+stick to my stated opinion from previously: all bugfixes will help
+someone like me. It's tough to differentiate firmware bugs from driver
+bugs, especially when I have absolutely no firmware documentation :)
+
+BTW, while we're at it: is this still a reasonable firmware to reference?
+
+https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/commit/?id=338684a0c7760644031483311464c7cf5b3aac94
+rtw88: Add firmware file for driver rtw88
+
+> I think we should keep this feature. Because we actually can report status,
+> despite not for every packet. The only problem is when we use `iw wlan0
+> station dump` we could get *no* packet loss (like I've mentioned above,
+> report TX_STAT_ACK for every other packets not have
+> IEEE80211_TX_CTL_REQ_TX_STATUS). We cannot accurately report
+> everything by firmware report, it takes too many tx bandwidth, and
+> the performance will degrade severely. If we really cannot accept reporting
+
+Yeah, it does seem like it would be pretty heavyweight to do this C2H
+reporting for every frame.
+
+> tx status this way, we need to find another way to solve it. That means I
+> need some time to investigate and test connect monitor system and get
+> a better report logic if we drop the REPORTS_TX_ACK_STATUS feature.
+> Or if you have a point of view, we can discuss about it.
+> Thanks!
+
+Regards,
+Brian
