@@ -6,46 +6,46 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4AFCC169C4
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 04:31:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B8FC169C4
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 05:42:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B19420855
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 04:31:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9982B2146F
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 05:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726244AbfBKEba convert rfc822-to-8bit (ORCPT
+        id S1725962AbfBKFmD convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 Feb 2019 23:31:30 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:49970 "EHLO
+        Mon, 11 Feb 2019 00:42:03 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:54899 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726177AbfBKEba (ORCPT
+        with ESMTP id S1725931AbfBKFmD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Feb 2019 23:31:30 -0500
+        Mon, 11 Feb 2019 00:42:03 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x1B4V4Z6026246, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x1B4V4Z6026246
-        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Mon, 11 Feb 2019 12:31:04 +0800
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x1B5fa8k013007, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcas12.realtek.com.tw[172.21.6.16])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x1B5fa8k013007
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Mon, 11 Feb 2019 13:41:36 +0800
 Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCASV01.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Mon, 11 Feb
- 2019 12:31:03 +0800
+ RTITCAS12.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Mon, 11 Feb
+ 2019 13:41:35 +0800
 From:   Tony Chuang <yhchuang@realtek.com>
 To:     Brian Norris <briannorris@chromium.org>
 CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
         "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        Andy Huang <tehuang@realtek.com>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
         "sgruszka@redhat.com" <sgruszka@redhat.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 01/24] rtw88: report correct tx status if mac80211 requested one
-Thread-Topic: [PATCH 01/24] rtw88: report correct tx status if mac80211
- requested one
-Thread-Index: AQHUuV+XknyXKg2sIUuVU1GvRxjW06XWUHuAgAO1UbA=
-Date:   Mon, 11 Feb 2019 04:31:03 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17A2A22@RTITMBSVM04.realtek.com.tw>
-References: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
- <1548937297-14660-2-git-send-email-yhchuang@realtek.com>
- <20190209030756.GB163159@google.com>
-In-Reply-To: <20190209030756.GB163159@google.com>
+Subject: RE: [PATCH v4 08/13] rtw88: debug files
+Thread-Topic: [PATCH v4 08/13] rtw88: debug files
+Thread-Index: AQHUuFC0DSsi7hsaw0mRa3Yo1It/TaXK18wAgA9M1PA=
+Date:   Mon, 11 Feb 2019 05:41:34 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17A2A9D@RTITMBSVM04.realtek.com.tw>
+References: <1548820940-15237-1-git-send-email-yhchuang@realtek.com>
+ <1548820940-15237-9-git-send-email-yhchuang@realtek.com>
+ <20190201194938.GA98048@google.com>
+In-Reply-To: <20190201194938.GA98048@google.com>
 Accept-Language: zh-TW, en-US
 Content-Language: zh-TW
 X-MS-Has-Attach: 
@@ -64,146 +64,96 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 > -----Original Message-----
 > From: Brian Norris [mailto:briannorris@chromium.org]
 > 
-> On Thu, Jan 31, 2019 at 08:21:14PM +0800, yhchuang@realtek.com wrote:
+> Hi,
+> 
+> On Wed, Jan 30, 2019 at 12:02:15PM +0800, yhchuang@realtek.com wrote:
 > > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 > >
-> > Before this commit, driver always reports IEEE80211_TX_STAT_ACK for
-> > every tx packet, but it will confuse the mac80211 stack for connection
-> > monitor system. mac80211 stack needs correct ack information about some
-> > specific packets such as prop_req, null, auth, assoc, in order to know
-> > if AP is alive. And for such packets, mac80211 will pass a tx flag
-> > IEEE80211_TX_CTL_REQ_TX_STATUS to driver. Driver then need to request a
-> > tx report from hardware.
-> 
-> I think you're misinterpreting the mac80211 semantics here. This flag
-> isn't for the driver to determine whether or not it should report ACKs
-> -- it's to help ensure that status reports *really* make it back up to
-> the upper layers (and don't get dropped).
-> 
-> On the contrary, if you look at __ieee80211_tx_status(), it's expecting
-> that everything that has IEEE80211_HW_REPORTS_TX_ACK_STATUS will report
-> an appropriate IEEE80211_TX_STAT_ACK status. The logic is basically:
-> 
-> 	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
-> 		if (!(info->flags & IEEE80211_TX_STAT_ACK))
-> 			ieee80211_lost_packet(sta, info);
-> 
-> That explains why I see almost every packet get reported as lost in `iw
-> wlan0 station dump`.
-
-To fix `iw wlan0 station dump` display, I think I can just restore one line
-in pci.c. That is, restore IEEE80211_TX_STAT_ACK flag line:
-
-+			continue;
-+		}
-  		ieee80211_tx_info_clear_status(info);
--		info->flags |= IEEE80211_TX_STAT_ACK;
-  		ieee80211_tx_status_irqsafe(hw, skb)
-
-And with some modifications, such as IEEE80211_TX_CTL_NO_ACK check.
-Then we can better reporting ACK status for data frames without
-IEEE80211_TX_CTL_REQ_TX_STATUS. This way we can also ensure the
-connection monitor can work. (but it will be no loss)
-
-
-> 
-> > The tx report is not passed by hardware with the tx'ed packet, it is
-> > passed through C2H. So driver need to queue the packets that require
-> > correct tx report and upon the tx report is received, report to mac80211
-> > stack, with the frame is acked or not.
-> >
-> > In case of driver missed the C2H report, setup a 500ms timer to purge
-> > the tx report skb queue (500ms is time mac80211 used as probe_time).
+> > debug files for Realtek 802.11ac wireless network chips
 > >
 > > Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 > > ---
-> >  drivers/net/wireless/realtek/rtw88/fw.c   | 21 ++++++-
-> >  drivers/net/wireless/realtek/rtw88/fw.h   |  8 +++
-> >  drivers/net/wireless/realtek/rtw88/main.c | 10 ++++
-> >  drivers/net/wireless/realtek/rtw88/main.h | 13 +++++
-> >  drivers/net/wireless/realtek/rtw88/pci.c  |  8 ++-
-> >  drivers/net/wireless/realtek/rtw88/pci.h  |  1 +
-> >  drivers/net/wireless/realtek/rtw88/tx.c   | 96
-> +++++++++++++++++++++++++++++++
-> >  drivers/net/wireless/realtek/rtw88/tx.h   |  8 +++
-> >  8 files changed, 163 insertions(+), 2 deletions(-)
+> >  drivers/net/wireless/realtek/rtw88/debug.c | 631
+> +++++++++++++++++++++++++++++
+> >  drivers/net/wireless/realtek/rtw88/debug.h |  35 ++
+> >  2 files changed, 666 insertions(+)
+> >  create mode 100644 drivers/net/wireless/realtek/rtw88/debug.c
+> >  create mode 100644 drivers/net/wireless/realtek/rtw88/debug.h
+> >
+> > diff --git a/drivers/net/wireless/realtek/rtw88/debug.c
+> b/drivers/net/wireless/realtek/rtw88/debug.c
+> > new file mode 100644
+> > index 0000000..d0cb9d3
+> > --- /dev/null
+> > +++ b/drivers/net/wireless/realtek/rtw88/debug.c
+> > @@ -0,0 +1,631 @@
 > 
 > ...
 > 
-> > diff --git a/drivers/net/wireless/realtek/rtw88/pci.c
-> b/drivers/net/wireless/realtek/rtw88/pci.c
-> > index ef3c9bb..7de4638 100644
-> > --- a/drivers/net/wireless/realtek/rtw88/pci.c
-> > +++ b/drivers/net/wireless/realtek/rtw88/pci.c
-> > @@ -585,6 +585,7 @@ static int rtw_pci_xmit(struct rtw_dev *rtwdev,
-> >
-> >  	tx_data = rtw_pci_get_tx_data(skb);
-> >  	tx_data->dma = dma;
-> > +	tx_data->sn = pkt_info->sn;
-> >  	skb_queue_tail(&ring->queue, skb);
-> >
-> >  	/* kick off tx queue */
-> > @@ -716,8 +717,13 @@ static void rtw_pci_tx_isr(struct rtw_dev *rtwdev,
-> struct rtw_pci *rtwpci,
-> >  		skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
-> >
-> >  		info = IEEE80211_SKB_CB(skb);
+> > +#ifdef CONFIG_RTW88_DEBUG
 > > +
-> > +		/* enqueue to wait for tx report */
-> > +		if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
-> > +			rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
+> > +void __rtw_dbg(struct rtw_dev *rtwdev, const char *fmt, ...)
+> > +{
+> > +	struct va_format vaf = {
+> > +		.fmt = fmt,
+> > +	};
+> > +	va_list args;
+> > +
+> > +	va_start(args, fmt);
+> > +	vaf.va = &args;
+> > +
+> > +	if (net_ratelimit())
+> > +		dev_dbg(rtwdev->dev, "%pV", &vaf);
 > 
-> This reporting code appears to be very buggy. At least, it's extremely
-> easy to hit the WARN() you've inserted ("purge skb(s) not reported by
-> firmware"), which means that the TX reporting queue is not getting
-> responses for a lot of packets.
-
-It's not buggy I think, if firmware is not reporting status, something must
-go wrong. And after some test I know why you feel it's unreliable.
-
-For WOW implementation, we modified a lot in fw.c functions.
-And correct some driver-firmware interface behaviors. To make sure the
-firmware is running as expected. But the patches are still holding in my hand.
-I can attach them in this patch set, and apparently I should. I will separate
-them out of WOW patch set and resend again.
-
+> I understand some questions came up about this dbg() interface
+> previously, without the most constructive result, but...
 > 
-> So it's not clear if you should be trying to accurately report
-> everything (even if your firmware status reports are unreliable), or if
-> you should just drop the REPORTS_TX_ACK_STATUS feature.
+> ...I do find one particular aspect of this interface a little weird: it
+> has its own separate Kconfig flag, and yet it's still implicitly
+> dependent on CONFIG_DYNAMIC_DEBUG. Note how dev_dbg() gets completely
+> stubbed out if !defined(CONFIG_DYNAMIC_DEBUG) && !defined(DEBUG).
+> 
+> I think some other similar loggers end up just using
+> dev_printk(KERN_DEBUG, ...) for this piece of the equation, so that if
+> somebody has bothered to enable CONFIG_RTW88_DEBUG, they can be sure
+> their log messages are at least compiled in.
+> 
+> But then, other drivers that have used dev_printk() *also* have dynamic
+> methods to enable/disable their dbg-level messages (e.g., with a 'mask'
+> module parameter, for classifying different types of messages). That
+> also gives us the option of compiling in the messages while leaving them
+> disabled for printing by default. IOW, they basically implement a
+> categorized version of CONFIG_DYNAMIC_DEBUG.
+> 
+> (Also note: my systems generally have DYNAMIC_DEBUG disabled, but we
+> *do* like to have a few driver-specific debug options enabled for WiFi,
+> so we can debug problems in the field via runtime enable/disable.)
+> 
+> Altogether, I think this means you should either:
+> 
+>  (a) alias RTW88_DEBUG with DYNAMIC_DEBUG (e.g., RTW88_DEBUG selects
+> or
+>      depends on DYNAMIC_DEBUG?) or, remove your own special Kconfig
+>      entirely; or
+>  (b) implement runtime controls to enable/disable your dbg() messages,
+>      and do not depend on DYNAMIC_DEBUG
+> 
+> I kinda lean toward (b), since that's how many other WiFi drivers work,
+> and it prevents me from having to enable all of DYNAMIC_DEBUG (although,
+> it may be time to reevaluate why Chrome OS has it disabled...probably
+> just for mild savings on size). It also gives you the option of
+> classifying your debug messages even further.
+> 
 
-I think we should keep this feature. Because we actually can report status,
-despite not for every packet. The only problem is when we use `iw wlan0
-station dump` we could get *no* packet loss (like I've mentioned above,
-report TX_STAT_ACK for every other packets not have
-IEEE80211_TX_CTL_REQ_TX_STATUS). We cannot accurately report
-everything by firmware report, it takes too many tx bandwidth, and
-the performance will degrade severely. If we really cannot accept reporting
-tx status this way, we need to find another way to solve it. That means I
-need some time to investigate and test connect monitor system and get
-a better report logic if we drop the REPORTS_TX_ACK_STATUS feature.
-Or if you have a point of view, we can discuss about it.
-Thanks!
+So I think I can add a debug_mask and change dev_dbg to dev_printk.
+And leave rtw_[err|warn|info] unchanged. This way rtw_dbg will no more
+depend on DYNAMIC_DEBUG, also better for a wifi driver to select debug
+messages we want. Actually as more components added I think it's time to
+do it for developers to debug on various scenarios. :)
 
-> 
-> > +			continue;
-> > +		}
-> >  		ieee80211_tx_info_clear_status(info);
-> > -		info->flags |= IEEE80211_TX_STAT_ACK;
-> >  		ieee80211_tx_status_irqsafe(hw, skb);
-> 
-> One other problem with your code is that it doesn't check for
-> IEEE80211_TX_CTL_NO_ACK anywhere. With that flag, you should be
-> reporting IEEE80211_TX_STAT_NOACK_TRANSMITTED instead of
-> IEEE80211_TX_STAT_ACK.
-
-Should add the check with that restored line I mentioned for pci.c
-
-> 
-> >  	}
-> >
-> 
-> Brian
-> 
+It will take days for me to change the debug log and resend the patch set.
+But I think it's worth that we don't bother to have another patch to fix it.
+And I hope it won't have bad impact for reviewers.
 
 Yan-Hsuan
+
