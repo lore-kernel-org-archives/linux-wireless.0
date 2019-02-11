@@ -2,89 +2,110 @@ Return-Path: <SRS0=RvtO=QS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,UPPERCASE_50_75,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59A8CC282CE
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:03:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F937C169C4
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:09:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CA18222B9
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:03:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10118222B8
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:09:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="a6RVXdop";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ds7tejan"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390608AbfBKPDV (ORCPT
+        id S2403799AbfBKPJ4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 10:03:21 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:44742 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390599AbfBKPDV (ORCPT
+        Mon, 11 Feb 2019 10:09:56 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:43054 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391733AbfBKPJy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 10:03:21 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92-RC4)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gtD79-0008BB-4R; Mon, 11 Feb 2019 16:03:19 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Jouni Malinen <j@w1.fi>, Peng Xu <pxu@codeaurora.org>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] cfg80211: fix and clean up cfg80211_gen_new_bssid()
-Date:   Mon, 11 Feb 2019 16:03:12 +0100
-Message-Id: <20190211150312.2523-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.17.2
+        Mon, 11 Feb 2019 10:09:54 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 76B07608C6; Mon, 11 Feb 2019 15:09:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549897793;
+        bh=NOfeJC8Q3GgkEVMREeb0m1P7I26EZcJ28D1CYATd2Ng=;
+        h=From:To:Cc:Subject:Date:From;
+        b=a6RVXdopmmKCBffNzfGT0uwVNJTOdHxCA1Xzt/0Hwl0ZAmK9pdhr3f7TL1e2uWLmo
+         Q3BkTLbnGdbvi0MPYewvTkgbdsVPjaff2glRW8UbK5En2DbYTdGXoHCcHeu1spKnf+
+         MKZzANCXlMnOX4c61fp8ZJ+vR72LSP4TpKspsV2c=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C7E3860C8E;
+        Mon, 11 Feb 2019 15:09:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549897792;
+        bh=NOfeJC8Q3GgkEVMREeb0m1P7I26EZcJ28D1CYATd2Ng=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Ds7tejanJ4TwjqfNqQMsIXn4U2TM22aYPZFhPW/nXy3pPb662N12Fyp5RtqnaRwDa
+         kTlXqfxnNCI8xVmc3QjG3uuGMtmF93sn3yi0Iog20YUxP32wO3jg9n5xf30f9ZtHke
+         uEHiy1UFjZSYt+IsZZW52bAfUq/YzbQ9R8IZGbl0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C7E3860C8E
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH 1/6] ath10k: add missing values to wmi_service_name()
+Date:   Mon, 11 Feb 2019 17:09:42 +0200
+Message-Id: <1549897787-28537-1-git-send-email-kvalo@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+After implementing the next patch GCC reported:
 
-Fix cfg80211_gen_new_bssid() to not rely on u64 modulo arithmetic,
-which isn't needed since we really just want to mask there. Also,
-clean it up to calculate the mask only once and use GENMASK_ULL()
-instead of open-coding the mask calculation.
+drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_BTCOEX' not handled in switch [-Wswitch]
+drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_MGMT_TX_WMI' not handled in switch [-Wswitch]
+drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_SPOOF_MAC_SUPPORT' not handled in switch [-Wswitch]
+drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT' not handled in switch [-Wswitch]
+drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT' not handled in switch [-Wswitch]
+drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_THERM_THROT' not handled in switch [-Wswitch]
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- include/net/cfg80211.h | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b61b71f369c7..02a4d5a80521 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5475,22 +5475,20 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
-  * @bssid: transmitter BSSID
-  * @max_bssid: max BSSID indicator, taken from Multiple BSSID element
-  * @mbssid_index: BSSID index, taken from Multiple BSSID index element
-- * @new_bssid_addr: address of the resulting BSSID
-+ * @new_bssid: address of the resulting BSSID
-  */
- static inline void cfg80211_gen_new_bssid(const u8 *bssid, u8 max_bssid,
--					  u8 mbssid_index, u8 *new_bssid_addr)
-+					  u8 mbssid_index, u8 *new_bssid)
- {
--	u64 bssid_tmp, new_bssid;
--	u64 lsb_n;
-+	u64 bssid_u64 = ether_addr_to_u64(bssid);
-+	u64 mask = GENMASK_ULL(max_bssid - 1, 0);
-+	u64 new_bssid_u64;
- 
--	bssid_tmp = ether_addr_to_u64(bssid);
-+	new_bssid_u64 = bssid_u64 & ~mask;
- 
--	lsb_n = bssid_tmp & ((1 << max_bssid) - 1);
--	new_bssid = bssid_tmp;
--	new_bssid &= ~((1 << max_bssid) - 1);
--	new_bssid |= (lsb_n + mbssid_index) % (1 << max_bssid);
-+	new_bssid_u64 |= ((bssid_u64 & mask) + mbssid_index) & mask;
- 
--	u64_to_ether_addr(new_bssid, new_bssid_addr);
-+	u64_to_ether_addr(new_bssid_u64, new_bssid);
- }
- 
- /**
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index b10ed523b99e..529f5a26f3f3 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -475,6 +475,7 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_PULL);
+ 	SVCSTR(WMI_SERVICE_TX_MODE_DYNAMIC);
+ 	SVCSTR(WMI_SERVICE_VDEV_RX_FILTER);
++	SVCSTR(WMI_SERVICE_BTCOEX);
+ 	SVCSTR(WMI_SERVICE_CHECK_CAL_VERSION);
+ 	SVCSTR(WMI_SERVICE_DBGLOG_WARN2);
+ 	SVCSTR(WMI_SERVICE_BTCOEX_DUTY_CYCLE);
+@@ -484,13 +485,18 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_SMART_LOGGING_SUPPORT);
+ 	SVCSTR(WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE);
+ 	SVCSTR(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY);
++	SVCSTR(WMI_SERVICE_MGMT_TX_WMI);
+ 	SVCSTR(WMI_SERVICE_TDLS_WIDER_BANDWIDTH);
+ 	SVCSTR(WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS);
+ 	SVCSTR(WMI_SERVICE_HOST_DFS_CHECK_SUPPORT);
+ 	SVCSTR(WMI_SERVICE_TPC_STATS_FINAL);
+ 	SVCSTR(WMI_SERVICE_RESET_CHIP);
++	SVCSTR(WMI_SERVICE_SPOOF_MAC_SUPPORT);
+ 	SVCSTR(WMI_SERVICE_TX_DATA_ACK_RSSI);
+ 	SVCSTR(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT);
++	SVCSTR(WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT);
++	SVCSTR(WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT);
++	SVCSTR(WMI_SERVICE_THERM_THROT);
+ 	SVCSTR(WMI_SERVICE_RTT_RESPONDER_ROLE);
+ 	SVCSTR(WMI_SERVICE_PER_PACKET_SW_ENCRYPT);
+ 	SVCSTR(WMI_SERVICE_REPORT_AIRTIME);
 -- 
-2.17.2
+2.7.4
 
