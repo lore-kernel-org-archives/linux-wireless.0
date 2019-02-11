@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0072AC169C4
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 13:40:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F4C3C282CE
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 13:48:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C506B21B24
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 13:40:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA94E222A5
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 13:48:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p4uHCVB6"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nRyj/uj1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728064AbfBKNke (ORCPT
+        id S1728260AbfBKNsP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 08:40:34 -0500
-Received: from mail-it1-f194.google.com ([209.85.166.194]:55694 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727688AbfBKNkd (ORCPT
+        Mon, 11 Feb 2019 08:48:15 -0500
+Received: from mail-it1-f193.google.com ([209.85.166.193]:52066 "EHLO
+        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727223AbfBKNsP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 08:40:33 -0500
-Received: by mail-it1-f194.google.com with SMTP id f18so15259516itb.5;
-        Mon, 11 Feb 2019 05:40:32 -0800 (PST)
+        Mon, 11 Feb 2019 08:48:15 -0500
+Received: by mail-it1-f193.google.com with SMTP id y184so20069204itc.1;
+        Mon, 11 Feb 2019 05:48:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=Q1uKVdY+cO0rOE73T/6bXXPdmXo2uSurICeVpjRQCt0=;
-        b=p4uHCVB619mYSO0YS3TUuH+WqdvCiknzowNTOgnMaWzJnzmQTZiAFoHuHsdBBCRllF
-         rF6emCj/sBKoRwn//fRk5eMmcUHTuE2LnH8a1mwun42M5yKR72GyHOcVO8Xwsk4q73iN
-         lzHcStlVn56HnyPu8p6/WWHCX5UU/3wphHNskT55anWo5w70UAQ4XNt4wWAvtxDWhlSA
-         1/MoC0I4fcEFaQRVV4rl97E3rDa0q9Y174lVZsA/vld1cnSBNzzQygUcFNgDYw0cf1lQ
-         P6x358s8Cz4cGwUQSyqscN5m4E7gY/5xDMu3b9+I3V8jgJ5AWwpcwFbrvZL279w+l2AV
-         bBzQ==
+        bh=lU7XzI1+NUUCkc2QQXTdBpFx4U5t8JLxEN662tfkH/8=;
+        b=nRyj/uj1U0XpT5NVTdru444k5ZRGhvgaERY/j6xoCLBI9En9Z98V6tcNeCHVuIefVU
+         x2YJrJxE086UnX1/zaPbsifcmApXp0yL13WOc/RjBf0fDMkGflQHQNAlHQnTVHbf83F5
+         6ivMHmq2s19Xi5nnZ99+niBsi8+zJ+UkiBf2Jx7RnyAxU6OqA5Rx6t+hKcG66L5dEwBe
+         rQTU/mXYPBeXhmn9x3R7pwnEn6Dzd1yINsJmTwSTDO6tuJwgL3FxSOUrUiS7L9lTilIA
+         YbN4mgQAmjeHch1uVZJlftXRxXHvwqMfi4vgT0W8rpXAkkdZlO5bAjVwcr52rDmId2f8
+         2thA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=Q1uKVdY+cO0rOE73T/6bXXPdmXo2uSurICeVpjRQCt0=;
-        b=XhBoTxqf+Ch92sRQUF5VrVpOJNqKMpMvAV9ANAHvtaG2wJEioQ7DV8vyeN39xoPSjr
-         GVb9QBRFDR8l/eQfK2h2m9g+tTzEfUkp/4rTTmascOxDVHwaP295raVSzAEgFdO1Ebhs
-         7RkLaXkIEHFa4bfQVMqetydTbwJttOZyvpHTQycxpHUfaVh1p2jmCT8kuF4jfDH03s95
-         jxrnhbXzn8eG6e6+PI4Krc/TcmrZMQWcianNlYCFqroS/rAdB5RBIHHwTVVhL9JJLUgf
-         rwYWuiJbloj6uLaxq8NCiGPR9v+PAax473uQncE40HoWOkvxMNGhhsb2qjvBuKw2NGbZ
-         hHug==
-X-Gm-Message-State: AHQUAuYqgiQOyq/HuXfNozrQaRirtyka1gzr3SlDZfkGbQTNH85LAVov
-        bZAHHM6KOuUwF0KzWfvf1xpqpnSeSSPaGt9Pw4w=
-X-Google-Smtp-Source: AHgI3IaSgYPwWoVqaMshGskb6Bq0xW8dhwWF6z/7jFT1BRG117UguhMfVjlG0VLzXm5mPK+GUWV0nWG+5xEjSYeSgc8=
-X-Received: by 2002:a5d:8545:: with SMTP id b5mr10352899ios.288.1549892432394;
- Mon, 11 Feb 2019 05:40:32 -0800 (PST)
+        bh=lU7XzI1+NUUCkc2QQXTdBpFx4U5t8JLxEN662tfkH/8=;
+        b=Kx7y4viSli6ERHeKLARPguYKZ3GEhewbRqDvxAtcvKcSe1EzqBAyKY2KRWxe3QlOv0
+         MdAtQ3AGz7dTROlmpME0bi0MJQVUu+++iAXb1KjJoQQuv5lZZZMTR8BdkVNNsP5bnMSY
+         CBCrGQ4wFQnDqulRi9jyLg3eM2BIP3y3DSTUnQ/KLCrgoTy/o5dQV/dp/FgjFJ24U4wS
+         /URaLki4yDrrlOtDNpFEWkSMzt63KVRYCzUV38H4pGIqoEXDYbRLLoEuw2bk/+62k9T9
+         bLa4z5kLeJbhoI7q+nlO+Cbj16hfjDrpucZptxF2Dv+kqThEsm4W45aC/JCw9P2X6mPX
+         xmVg==
+X-Gm-Message-State: AHQUAuYIBQTFIo8jrlKsbBRQIA+bntcLBH3QJkXM5grXVVd48ewHxOxX
+        D7IgRvX5FTEOd6oOnI44YVuVY0F0GmCK9C5+uzU=
+X-Google-Smtp-Source: AHgI3Iap4ICxG2SQqen8FGi7zWs3wtE5e1RuT/Fe6SK+ESk3QJnUSeZYmkcXQfR6qcbtPSJqoXusI/TSdh5uMBklnMw=
+X-Received: by 2002:a02:8561:: with SMTP id g88mr17480876jai.68.1549892894176;
+ Mon, 11 Feb 2019 05:48:14 -0800 (PST)
 MIME-Version: 1.0
-References: <20190210194822.18539-1-lkundrak@v3.sk>
-In-Reply-To: <20190210194822.18539-1-lkundrak@v3.sk>
+References: <20190210195217.18817-1-lkundrak@v3.sk> <20190210195217.18817-2-lkundrak@v3.sk>
+In-Reply-To: <20190210195217.18817-2-lkundrak@v3.sk>
 From:   Steve deRosier <derosier@gmail.com>
-Date:   Mon, 11 Feb 2019 05:39:55 -0800
-Message-ID: <CALLGbRJCH5-ASTi19SdjMP3a2AO1wDmf1z=kGDeLRR0_NRxfQg@mail.gmail.com>
-Subject: Re: [PATCH] libertas_tf: fix signal reporting
+Date:   Mon, 11 Feb 2019 05:47:37 -0800
+Message-ID: <CALLGbRJN-gDA5nDCfZdH-SYhUgPCa7AegutGBOSYnZaoKW7NXQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] libertas_tf: move hardware callbacks to a separate structure
 To:     Lubomir Rintel <lkundrak@v3.sk>
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -70,41 +70,162 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Feb 10, 2019 at 11:48 AM Lubomir Rintel <lkundrak@v3.sk> wrote:
+On Sun, Feb 10, 2019 at 11:52 AM Lubomir Rintel <lkundrak@v3.sk> wrote:
 >
-> Instead of exposing the signal-to-noise ration, calculate the actual signal
-> level taking the noise floor into account.
->
-> Also, flip the SIGNAL_DBM bit on, so that mac80211 exposes the signal
-> level along with the station info in scan results. This fills
-> NetworkManager's "nmcli d wifi output" output with colors, bars and joy.
+> We'll need to talk to the firmware to get a hardware address before
+> device is registered with ieee80211 subsystem at the end of
+> lbtf_add_card(). Hooking the callbacks after that is too late.
 >
 > Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
 > ---
->  drivers/net/wireless/marvell/libertas_tf/main.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  drivers/net/wireless/marvell/libertas_tf/cmd.c  |  2 +-
+>  .../net/wireless/marvell/libertas_tf/if_usb.c   | 12 +++++++-----
+>  .../wireless/marvell/libertas_tf/libertas_tf.h  | 17 +++++++++++------
+>  drivers/net/wireless/marvell/libertas_tf/main.c | 10 ++++++----
+>  4 files changed, 25 insertions(+), 16 deletions(-)
 >
+> diff --git a/drivers/net/wireless/marvell/libertas_tf/cmd.c b/drivers/net/wireless/marvell/libertas_tf/cmd.c
+> index 64b147dd2432..130f578daafd 100644
+> --- a/drivers/net/wireless/marvell/libertas_tf/cmd.c
+> +++ b/drivers/net/wireless/marvell/libertas_tf/cmd.c
+> @@ -256,7 +256,7 @@ static void lbtf_submit_command(struct lbtf_private *priv,
+>                      command, le16_to_cpu(cmd->seqnum), cmdsize);
+>         lbtf_deb_hex(LBTF_DEB_CMD, "DNLD_CMD", (void *) cmdnode->cmdbuf, cmdsize);
+>
+> -       ret = priv->hw_host_to_card(priv, MVMS_CMD, (u8 *) cmd, cmdsize);
+> +       ret = priv->ops->hw_host_to_card(priv, MVMS_CMD, (u8 *)cmd, cmdsize);
+>         spin_unlock_irqrestore(&priv->driver_lock, flags);
+>
+>         if (ret) {
+> diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+> index 6ede6168bd85..7a5a1a85dcf7 100644
+> --- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+> +++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+> @@ -131,6 +131,12 @@ static void if_usb_fw_timeo(struct timer_list *t)
+>         lbtf_deb_leave(LBTF_DEB_USB);
+>  }
+>
+> +static const struct lbtf_ops if_usb_ops = {
+> +       .hw_host_to_card = if_usb_host_to_card,
+> +       .hw_prog_firmware = if_usb_prog_firmware,
+> +       .hw_reset_device = if_usb_reset_device,
+> +};
+> +
+>  /**
+>   *  if_usb_probe - sets the configuration values
+>   *
+> @@ -216,15 +222,11 @@ static int if_usb_probe(struct usb_interface *intf,
+>                 goto dealloc;
+>         }
+>
+> -       priv = lbtf_add_card(cardp, &udev->dev);
+> +       priv = lbtf_add_card(cardp, &udev->dev, &if_usb_ops);
+>         if (!priv)
+>                 goto dealloc;
+>
+>         cardp->priv = priv;
+> -
+> -       priv->hw_host_to_card = if_usb_host_to_card;
+> -       priv->hw_prog_firmware = if_usb_prog_firmware;
+> -       priv->hw_reset_device = if_usb_reset_device;
+>         cardp->boot2_version = udev->descriptor.bcdDevice;
+>
+>         usb_get_dev(udev);
+> diff --git a/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h b/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
+> index ad77b92d0b41..11d5ff68bc5e 100644
+> --- a/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
+> +++ b/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
+> @@ -173,10 +173,19 @@ struct channel_range {
+>
+>  struct if_usb_card;
+>
+> +struct lbtf_ops {
+> +       /** Hardware access */
+> +       int (*hw_host_to_card)(struct lbtf_private *priv, u8 type,
+> +                              u8 *payload, u16 nb);
+> +       int (*hw_prog_firmware)(struct if_usb_card *cardp);
+> +       int (*hw_reset_device)(struct if_usb_card *cardp);
+> +};
+> +
+>  /** Private structure for the MV device */
+>  struct lbtf_private {
+>         void *card;
+>         struct ieee80211_hw *hw;
+> +       const struct lbtf_ops *ops;
+>
+>         /* Command response buffer */
+>         u8 cmd_resp_buff[LBS_UPLD_SIZE];
+> @@ -188,11 +197,6 @@ struct lbtf_private {
+>
+>         struct work_struct cmd_work;
+>         struct work_struct tx_work;
+> -       /** Hardware access */
+> -       int (*hw_host_to_card) (struct lbtf_private *priv, u8 type, u8 *payload, u16 nb);
+> -       int (*hw_prog_firmware) (struct if_usb_card *cardp);
+> -       int (*hw_reset_device) (struct if_usb_card *cardp);
+> -
+>
+>         /** Wlan adapter data structure*/
+>         /** STATUS variables */
+> @@ -486,7 +490,8 @@ void lbtf_cmd_response_rx(struct lbtf_private *priv);
+>  /* main.c */
+>  struct chan_freq_power *lbtf_get_region_cfp_table(u8 region,
+>         int *cfp_no);
+> -struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev);
+> +struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev,
+> +                                  const struct lbtf_ops *ops);
+>  int lbtf_remove_card(struct lbtf_private *priv);
+>  int lbtf_start_card(struct lbtf_private *priv);
+>  int lbtf_rx(struct lbtf_private *priv, struct sk_buff *skb);
 > diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
-> index c71ad87cdc44..f93b400db949 100644
+> index f93b400db949..8ed3cd158cf5 100644
 > --- a/drivers/net/wireless/marvell/libertas_tf/main.c
 > +++ b/drivers/net/wireless/marvell/libertas_tf/main.c
-> @@ -562,7 +562,7 @@ int lbtf_rx(struct lbtf_private *priv, struct sk_buff *skb)
->                 stats.flag |= RX_FLAG_FAILED_FCS_CRC;
->         stats.freq = priv->cur_freq;
->         stats.band = NL80211_BAND_2GHZ;
-> -       stats.signal = prxpd->snr;
-> +       stats.signal = prxpd->snr - prxpd->nf;
->         priv->noise = prxpd->nf;
->         /* Marvell rate index has a hole at value 4 */
->         if (prxpd->rx_rate > 4)
-> @@ -626,6 +626,7 @@ struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev)
+> @@ -281,7 +281,7 @@ static void lbtf_tx_work(struct work_struct *work)
+>         BUG_ON(priv->tx_skb);
+>         spin_lock_irq(&priv->driver_lock);
+>         priv->tx_skb = skb;
+> -       err = priv->hw_host_to_card(priv, MVMS_DAT, skb->data, skb->len);
+> +       err = priv->ops->hw_host_to_card(priv, MVMS_DAT, skb->data, skb->len);
+>         spin_unlock_irq(&priv->driver_lock);
+>         if (err) {
+>                 dev_kfree_skb_any(skb);
+> @@ -301,7 +301,7 @@ static int lbtf_op_start(struct ieee80211_hw *hw)
+>
+>         if (!priv->fw_ready)
+>                 /* Upload firmware */
+> -               if (priv->hw_prog_firmware(card))
+> +               if (priv->ops->hw_prog_firmware(card))
+>                         goto err_prog_firmware;
+>
+>         /* poke the firmware */
+> @@ -322,7 +322,7 @@ static int lbtf_op_start(struct ieee80211_hw *hw)
+>         return 0;
+>
+>  err_prog_firmware:
+> -       priv->hw_reset_device(card);
+> +       priv->ops->hw_reset_device(card);
+>         lbtf_deb_leave_args(LBTF_DEB_MACOPS, "error programming fw; ret=%d", ret);
+>         return ret;
+>  }
+> @@ -605,7 +605,8 @@ EXPORT_SYMBOL_GPL(lbtf_rx);
+>   *
+>   *  Returns: pointer to struct lbtf_priv.
+>   */
+> -struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev)
+> +struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev,
+> +                                  const struct lbtf_ops *ops)
+>  {
+>         struct ieee80211_hw *hw;
+>         struct lbtf_private *priv = NULL;
+> @@ -622,6 +623,7 @@ struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev)
+>
+>         priv->hw = hw;
+>         priv->card = card;
+> +       priv->ops = ops;
+>         priv->tx_skb = NULL;
 >
 >         hw->queues = 1;
->         ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
-> +       ieee80211_hw_set(hw, SIGNAL_DBM);
->         hw->extra_tx_headroom = sizeof(struct txpd);
->         memcpy(priv->channels, lbtf_channels, sizeof(lbtf_channels));
->         memcpy(priv->rates, lbtf_rates, sizeof(lbtf_rates));
 > --
 > 2.20.1
 >
