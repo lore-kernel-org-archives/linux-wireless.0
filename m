@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1EB5C4151A
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:12:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C54D0C282CE
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:12:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C388B222A8
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:12:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9320B222A7
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 15:12:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aFIK2guv";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LsJdwas3"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gtv0/VYc";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SLYCQ7ET"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403935AbfBKPKC (ORCPT
+        id S2403925AbfBKPKA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 10:10:02 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:43242 "EHLO
+        Mon, 11 Feb 2019 10:10:00 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:43178 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2403932AbfBKPKB (ORCPT
+        with ESMTP id S2403911AbfBKPJ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 10:10:01 -0500
+        Mon, 11 Feb 2019 10:09:59 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 33922619D7; Mon, 11 Feb 2019 15:10:01 +0000 (UTC)
+        id 77BCC619E3; Mon, 11 Feb 2019 15:09:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549897801;
-        bh=5VXbjWri6vbZxqXQx6NTLrbB3AFtQpJll3z+Risvj1E=;
+        s=default; t=1549897798;
+        bh=MZEcwysdfdD/1wpOHcY3EIBmucsz7ud7wY2EzfG1424=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aFIK2guvunBgNVY7X8V/xSgdmykLXi09q07rfKegL7uASIGnOKXlEye5XB63vbhrk
-         vk3hPeZDpRjlO7GNKclo6Z3U7W+YXBkt5wjKOs0gfjmstIUrr63fSChArtms9/xpap
-         EnEIpLDc5GqBBwrz9suUrHyIlslBhqeih71/K7VY=
+        b=gtv0/VYcTPWkJCZsJFyXJEiKRGuncP7G8y9UAaddzLxDwPSvWSiNKiPWNt2T9eBwb
+         Bxg30jor0XSDxwhkR+5mCytGRDrnrbGcVvgi4wqjfodLkRoxaU7KTKOzaDfIA7jQA5
+         qA1xc1PwMH3AapDL9vvnSGzpT/xLkxE2PnwYb2jc=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B683B619EB;
-        Mon, 11 Feb 2019 15:09:59 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 792696198C;
+        Mon, 11 Feb 2019 15:09:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549897800;
-        bh=5VXbjWri6vbZxqXQx6NTLrbB3AFtQpJll3z+Risvj1E=;
+        s=default; t=1549897797;
+        bh=MZEcwysdfdD/1wpOHcY3EIBmucsz7ud7wY2EzfG1424=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LsJdwas3e/HWY8Dv7+GsMEBb8a2a7iJD4HQ7cmob/KSUg6jaCtBkNgxdrjLzfia2p
-         XJ80sw31Z4E7N+ko5ZLABrSr6FFzQNTcpm4A0tBHB9WWsg0CT5eagc8rhHbuyBY4wK
-         nb8ZgLTvsPxf06AOPLQQNY1+kqthhUkE+ZOVKToY=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B683B619EB
+        b=SLYCQ7ETpttouTmUnJv6pvfujY92qS5/m1wA0lOi5lKBNbA3jVRpeszYKdYz/ZVYj
+         4QPZSogaks3CRNjBUN4KSQJ88V04WKurn9sknbOGG6mC9pvKaKCWLhILd9WCYs0Vcq
+         /0hvMOBhArwlimGgopbAK+p0THEIUyYV2KXistzY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 792696198C
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 6/6] ath10k: copy the whole struct ath10k_bus_params in ath10k_core_register()
-Date:   Mon, 11 Feb 2019 17:09:47 +0200
-Message-Id: <1549897787-28537-6-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 4/6] ath10k: align ath10k_htt_txbuf structures
+Date:   Mon, 11 Feb 2019 17:09:45 +0200
+Message-Id: <1549897787-28537-4-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1549897787-28537-1-git-send-email-kvalo@codeaurora.org>
 References: <1549897787-28537-1-git-send-email-kvalo@codeaurora.org>
@@ -63,32 +63,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Instead of copying fields one by one copy the whole structure. This way there's
-no need to modify the function every time we add a new field to the struct.
+With W=1 GCC warns:
 
-Compile tested only.
+drivers/net/wireless/ath/ath10k/htt.h:1746:1: warning: alignment 1 of 'struct ath10k_htt_txbuf_32' is less than 4 [-Wpacked-not-aligned]
+drivers/net/wireless/ath/ath10k/htt.h:1753:1: warning: alignment 1 of 'struct ath10k_htt_txbuf_64' is less than 4 [-Wpacked-not-aligned]
+
+Fix that by using __align(4). Compile tested only.
 
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 6c1dd5f8d012..a1b2aea4a77f 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2997,9 +2997,8 @@ static void ath10k_core_register_work(struct work_struct *work)
- int ath10k_core_register(struct ath10k *ar,
- 			 const struct ath10k_bus_params *bus_params)
- {
--	ar->bus_param.chip_id = bus_params->chip_id;
--	ar->bus_param.dev_type = bus_params->dev_type;
--	ar->bus_param.link_can_suspend = bus_params->link_can_suspend;
-+	ar->bus_param = *bus_params;
-+
- 	queue_work(ar->workqueue, &ar->register_work);
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 005fad94edad..d194bbe18fc3 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1743,14 +1743,14 @@ struct ath10k_htt_txbuf_32 {
+ 	struct ath10k_htc_hdr htc_hdr;
+ 	struct htt_cmd_hdr cmd_hdr;
+ 	struct htt_data_tx_desc cmd_tx;
+-} __packed;
++} __packed __aligned(4);
  
- 	return 0;
+ struct ath10k_htt_txbuf_64 {
+ 	struct htt_data_tx_desc_frag frags[2];
+ 	struct ath10k_htc_hdr htc_hdr;
+ 	struct htt_cmd_hdr cmd_hdr;
+ 	struct htt_data_tx_desc_64 cmd_tx;
+-} __packed;
++} __packed __aligned(4);
+ 
+ struct ath10k_htt {
+ 	struct ath10k *ar;
 -- 
 2.7.4
 
