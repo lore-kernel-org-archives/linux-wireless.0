@@ -2,232 +2,151 @@ Return-Path: <SRS0=RvtO=QS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F4C3C282CE
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 13:48:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C5BCC169C4
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 14:04:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA94E222A5
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 13:48:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nRyj/uj1"
+	by mail.kernel.org (Postfix) with ESMTP id 48616222B4
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 14:04:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728260AbfBKNsP (ORCPT
+        id S1727306AbfBKOEe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 08:48:15 -0500
-Received: from mail-it1-f193.google.com ([209.85.166.193]:52066 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727223AbfBKNsP (ORCPT
+        Mon, 11 Feb 2019 09:04:34 -0500
+Received: from mout.kundenserver.de ([212.227.17.24]:33229 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726036AbfBKOEe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 08:48:15 -0500
-Received: by mail-it1-f193.google.com with SMTP id y184so20069204itc.1;
-        Mon, 11 Feb 2019 05:48:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=lU7XzI1+NUUCkc2QQXTdBpFx4U5t8JLxEN662tfkH/8=;
-        b=nRyj/uj1U0XpT5NVTdru444k5ZRGhvgaERY/j6xoCLBI9En9Z98V6tcNeCHVuIefVU
-         x2YJrJxE086UnX1/zaPbsifcmApXp0yL13WOc/RjBf0fDMkGflQHQNAlHQnTVHbf83F5
-         6ivMHmq2s19Xi5nnZ99+niBsi8+zJ+UkiBf2Jx7RnyAxU6OqA5Rx6t+hKcG66L5dEwBe
-         rQTU/mXYPBeXhmn9x3R7pwnEn6Dzd1yINsJmTwSTDO6tuJwgL3FxSOUrUiS7L9lTilIA
-         YbN4mgQAmjeHch1uVZJlftXRxXHvwqMfi4vgT0W8rpXAkkdZlO5bAjVwcr52rDmId2f8
-         2thA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=lU7XzI1+NUUCkc2QQXTdBpFx4U5t8JLxEN662tfkH/8=;
-        b=Kx7y4viSli6ERHeKLARPguYKZ3GEhewbRqDvxAtcvKcSe1EzqBAyKY2KRWxe3QlOv0
-         MdAtQ3AGz7dTROlmpME0bi0MJQVUu+++iAXb1KjJoQQuv5lZZZMTR8BdkVNNsP5bnMSY
-         CBCrGQ4wFQnDqulRi9jyLg3eM2BIP3y3DSTUnQ/KLCrgoTy/o5dQV/dp/FgjFJ24U4wS
-         /URaLki4yDrrlOtDNpFEWkSMzt63KVRYCzUV38H4pGIqoEXDYbRLLoEuw2bk/+62k9T9
-         bLa4z5kLeJbhoI7q+nlO+Cbj16hfjDrpucZptxF2Dv+kqThEsm4W45aC/JCw9P2X6mPX
-         xmVg==
-X-Gm-Message-State: AHQUAuYIBQTFIo8jrlKsbBRQIA+bntcLBH3QJkXM5grXVVd48ewHxOxX
-        D7IgRvX5FTEOd6oOnI44YVuVY0F0GmCK9C5+uzU=
-X-Google-Smtp-Source: AHgI3Iap4ICxG2SQqen8FGi7zWs3wtE5e1RuT/Fe6SK+ESk3QJnUSeZYmkcXQfR6qcbtPSJqoXusI/TSdh5uMBklnMw=
-X-Received: by 2002:a02:8561:: with SMTP id g88mr17480876jai.68.1549892894176;
- Mon, 11 Feb 2019 05:48:14 -0800 (PST)
-MIME-Version: 1.0
-References: <20190210195217.18817-1-lkundrak@v3.sk> <20190210195217.18817-2-lkundrak@v3.sk>
-In-Reply-To: <20190210195217.18817-2-lkundrak@v3.sk>
-From:   Steve deRosier <derosier@gmail.com>
-Date:   Mon, 11 Feb 2019 05:47:37 -0800
-Message-ID: <CALLGbRJN-gDA5nDCfZdH-SYhUgPCa7AegutGBOSYnZaoKW7NXQ@mail.gmail.com>
-Subject: Re: [PATCH 1/3] libertas_tf: move hardware callbacks to a separate structure
-To:     Lubomir Rintel <lkundrak@v3.sk>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
+        Mon, 11 Feb 2019 09:04:34 -0500
+Received: from [192.168.178.52] ([109.104.49.86]) by mrelayeu.kundenserver.de
+ (mreue106 [212.227.15.183]) with ESMTPSA (Nemesis) id
+ 1N9d91-1h7Ctv46GT-015W78; Mon, 11 Feb 2019 15:04:23 +0100
+From:   Stefan Wahren <stefan.wahren@i2se.com>
+Subject: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Doug Anderson <dianders@chromium.org>,
+        Minas Harutyunyan <hminas@synopsys.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        linux-usb@vger.kernel.org
+References: <2003727085.234456.1549714119945@email.ionos.de>
+ <CAJ0CqmXSuNQ_tQOatyKwO9O2KsxqD5NZRQnngOme5PURssiv5Q@mail.gmail.com>
+ <165515185.283024.1549744145982@email.ionos.de>
+ <20190210094123.GB2913@redhat.com>
+ <CAJ0CqmXp2a-zwPMyMFu+UCqTHP7qNRiJFopDSdZWdms7dVef4Q@mail.gmail.com>
+ <20190211074455.GA6292@redhat.com>
+ <20190211100405.GD3467@localhost.localdomain>
+ <f7c29b08-c7d5-4d10-4be1-958ee79678f1@i2se.com>
+ <20190211110635.GD2293@localhost.localdomain>
+Message-ID: <8a996497-ed69-4087-2c37-7f73633cbb4e@i2se.com>
+Date:   Mon, 11 Feb 2019 15:04:21 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
+MIME-Version: 1.0
+In-Reply-To: <20190211110635.GD2293@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Provags-ID: V03:K1:3Dtfg1RobswGJ8nFFYaO+n5PH0PrzHMzaScFXVjk9/YULR/ZRM8
+ Y41oGaUzYbPwt0fb2NWWhNj+Mswhca+vTWY2neGYExyJjilg5ruGFNv7iYVavXhsl5eSolN
+ bTBiE9OkYg3GVaCg0Y+4Ht0OSdaq2towMrad731/K6qt8twQCC7zVgU8DryovvmpPbp15Ym
+ bN2XfGA9BI5c63haDQM3w==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:gYPtX4WLR28=:re800GoKnGAwIH7hwGYyOC
+ hbieveALwPHZgoWFUsf1aWDWpBbtxCWXAymcQDChxX4dTkL+5a8Ku5BCYN4I9gNxcLr2ZVEp5
+ ceus+lQYt9LgFawqwY5eosIWNDDX9WrZATva357rHf7hbfh91U498fSTVnBbo5j442Mv403He
+ H4FtzGVaxbUrG6xtbz8BEs8ADFkALRb41GX/jmhMhvIuR8UhsQhBRfSQZ10YvlnpDTZWAsr+F
+ HZfMjVUyCwUElt/6E/s2LMtz3O+c+bwqxmoY7EnbbQL6xgtDk9aIXz+efArJ48t3LeOHK0X1a
+ JAVl138GIj4uEnkHkkTLArApl5/scDxYMCRHhTHZi7OVgn9PRnCcnNwzXBEas2/sb+JpcFY7R
+ 6//57NvNT0rJEGf8dZuz4BxdXh9Rk0vyDMdsZTa2DaiyKVuaMuGQfQflKRXjzp3gK92r+FcSp
+ 23kbsRcn5neU4sOQR4fLdKFK3br3vdP5TCMrV8sD1prz6yf4uSbotTgVaNaj6GaIDyEQwKuL6
+ LBilPpue5T+kSQdgrUQcDtdaUp2nfHy4D0sK3Kq530z219yK5jbM7cf+rPAc7Mq8LR8ZLvyzk
+ NBQ676SEW9qstDcmfrNer7EzqqHBpjiQ1s7+LRTq9qxc5rxlbsBhnez/hzvNGeLG6HDa/DiEX
+ Y+MVTg3bWLbQFe9nMVmq06UAbkJXWzRBOkeXMtXGMFsXSEXDtaVaOv1m6Dxh7FOJKABOzQYPf
+ dm1kNK7Eseo4MAM9k69OunbZ2qfTRS+DQPLnYahS56T/uS/Gpj6uRpdkz18=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Feb 10, 2019 at 11:52 AM Lubomir Rintel <lkundrak@v3.sk> wrote:
->
-> We'll need to talk to the firmware to get a hardware address before
-> device is registered with ieee80211 subsystem at the end of
-> lbtf_add_card(). Hooking the callbacks after that is too late.
->
-> Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
-> ---
->  drivers/net/wireless/marvell/libertas_tf/cmd.c  |  2 +-
->  .../net/wireless/marvell/libertas_tf/if_usb.c   | 12 +++++++-----
->  .../wireless/marvell/libertas_tf/libertas_tf.h  | 17 +++++++++++------
->  drivers/net/wireless/marvell/libertas_tf/main.c | 10 ++++++----
->  4 files changed, 25 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/libertas_tf/cmd.c b/drivers/net/wireless/marvell/libertas_tf/cmd.c
-> index 64b147dd2432..130f578daafd 100644
-> --- a/drivers/net/wireless/marvell/libertas_tf/cmd.c
-> +++ b/drivers/net/wireless/marvell/libertas_tf/cmd.c
-> @@ -256,7 +256,7 @@ static void lbtf_submit_command(struct lbtf_private *priv,
->                      command, le16_to_cpu(cmd->seqnum), cmdsize);
->         lbtf_deb_hex(LBTF_DEB_CMD, "DNLD_CMD", (void *) cmdnode->cmdbuf, cmdsize);
->
-> -       ret = priv->hw_host_to_card(priv, MVMS_CMD, (u8 *) cmd, cmdsize);
-> +       ret = priv->ops->hw_host_to_card(priv, MVMS_CMD, (u8 *)cmd, cmdsize);
->         spin_unlock_irqrestore(&priv->driver_lock, flags);
->
->         if (ret) {
-> diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-> index 6ede6168bd85..7a5a1a85dcf7 100644
-> --- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-> +++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-> @@ -131,6 +131,12 @@ static void if_usb_fw_timeo(struct timer_list *t)
->         lbtf_deb_leave(LBTF_DEB_USB);
->  }
->
-> +static const struct lbtf_ops if_usb_ops = {
-> +       .hw_host_to_card = if_usb_host_to_card,
-> +       .hw_prog_firmware = if_usb_prog_firmware,
-> +       .hw_reset_device = if_usb_reset_device,
-> +};
-> +
->  /**
->   *  if_usb_probe - sets the configuration values
->   *
-> @@ -216,15 +222,11 @@ static int if_usb_probe(struct usb_interface *intf,
->                 goto dealloc;
->         }
->
-> -       priv = lbtf_add_card(cardp, &udev->dev);
-> +       priv = lbtf_add_card(cardp, &udev->dev, &if_usb_ops);
->         if (!priv)
->                 goto dealloc;
->
->         cardp->priv = priv;
-> -
-> -       priv->hw_host_to_card = if_usb_host_to_card;
-> -       priv->hw_prog_firmware = if_usb_prog_firmware;
-> -       priv->hw_reset_device = if_usb_reset_device;
->         cardp->boot2_version = udev->descriptor.bcdDevice;
->
->         usb_get_dev(udev);
-> diff --git a/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h b/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
-> index ad77b92d0b41..11d5ff68bc5e 100644
-> --- a/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
-> +++ b/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
-> @@ -173,10 +173,19 @@ struct channel_range {
->
->  struct if_usb_card;
->
-> +struct lbtf_ops {
-> +       /** Hardware access */
-> +       int (*hw_host_to_card)(struct lbtf_private *priv, u8 type,
-> +                              u8 *payload, u16 nb);
-> +       int (*hw_prog_firmware)(struct if_usb_card *cardp);
-> +       int (*hw_reset_device)(struct if_usb_card *cardp);
-> +};
-> +
->  /** Private structure for the MV device */
->  struct lbtf_private {
->         void *card;
->         struct ieee80211_hw *hw;
-> +       const struct lbtf_ops *ops;
->
->         /* Command response buffer */
->         u8 cmd_resp_buff[LBS_UPLD_SIZE];
-> @@ -188,11 +197,6 @@ struct lbtf_private {
->
->         struct work_struct cmd_work;
->         struct work_struct tx_work;
-> -       /** Hardware access */
-> -       int (*hw_host_to_card) (struct lbtf_private *priv, u8 type, u8 *payload, u16 nb);
-> -       int (*hw_prog_firmware) (struct if_usb_card *cardp);
-> -       int (*hw_reset_device) (struct if_usb_card *cardp);
-> -
->
->         /** Wlan adapter data structure*/
->         /** STATUS variables */
-> @@ -486,7 +490,8 @@ void lbtf_cmd_response_rx(struct lbtf_private *priv);
->  /* main.c */
->  struct chan_freq_power *lbtf_get_region_cfp_table(u8 region,
->         int *cfp_no);
-> -struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev);
-> +struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev,
-> +                                  const struct lbtf_ops *ops);
->  int lbtf_remove_card(struct lbtf_private *priv);
->  int lbtf_start_card(struct lbtf_private *priv);
->  int lbtf_rx(struct lbtf_private *priv, struct sk_buff *skb);
-> diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
-> index f93b400db949..8ed3cd158cf5 100644
-> --- a/drivers/net/wireless/marvell/libertas_tf/main.c
-> +++ b/drivers/net/wireless/marvell/libertas_tf/main.c
-> @@ -281,7 +281,7 @@ static void lbtf_tx_work(struct work_struct *work)
->         BUG_ON(priv->tx_skb);
->         spin_lock_irq(&priv->driver_lock);
->         priv->tx_skb = skb;
-> -       err = priv->hw_host_to_card(priv, MVMS_DAT, skb->data, skb->len);
-> +       err = priv->ops->hw_host_to_card(priv, MVMS_DAT, skb->data, skb->len);
->         spin_unlock_irq(&priv->driver_lock);
->         if (err) {
->                 dev_kfree_skb_any(skb);
-> @@ -301,7 +301,7 @@ static int lbtf_op_start(struct ieee80211_hw *hw)
->
->         if (!priv->fw_ready)
->                 /* Upload firmware */
-> -               if (priv->hw_prog_firmware(card))
-> +               if (priv->ops->hw_prog_firmware(card))
->                         goto err_prog_firmware;
->
->         /* poke the firmware */
-> @@ -322,7 +322,7 @@ static int lbtf_op_start(struct ieee80211_hw *hw)
->         return 0;
->
->  err_prog_firmware:
-> -       priv->hw_reset_device(card);
-> +       priv->ops->hw_reset_device(card);
->         lbtf_deb_leave_args(LBTF_DEB_MACOPS, "error programming fw; ret=%d", ret);
->         return ret;
->  }
-> @@ -605,7 +605,8 @@ EXPORT_SYMBOL_GPL(lbtf_rx);
->   *
->   *  Returns: pointer to struct lbtf_priv.
->   */
-> -struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev)
-> +struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev,
-> +                                  const struct lbtf_ops *ops)
->  {
->         struct ieee80211_hw *hw;
->         struct lbtf_private *priv = NULL;
-> @@ -622,6 +623,7 @@ struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev)
->
->         priv->hw = hw;
->         priv->card = card;
-> +       priv->ops = ops;
->         priv->tx_skb = NULL;
->
->         hw->queues = 1;
-> --
-> 2.20.1
->
+Hi Lorenzo,
 
-Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
+Am 11.02.19 um 12:06 schrieb Lorenzo Bianconi:
+>> Hi,
+>>
+>> Am 11.02.19 um 11:04 schrieb Lorenzo Bianconi:
+>>>> On Sun, Feb 10, 2019 at 11:22:25AM +0100, Lorenzo Bianconi wrote:
+>>>>>> On Sat, Feb 09, 2019 at 09:29:05PM +0100, Stefan Wahren wrote:
+>>>>>>>> could you please test the following series:
+>>>>>>>> https://patchwork.kernel.org/cover/10764453/
+>>>>>>> yeah this fixed the probing timeout and the driver will probe successful. AFAIK the dwc2 host mode doesn't support scatter-gather yet.
+>>>>>> So this is either dwc2 scatter-gather problem which should be addressed in
+>>>>>> this driver or mt76x0u does something wrong when configuring SG.
+>>>>>>
+>>>>>> Disabling SG is just workaround, which do not address actual problem.
+>>>>>>
+>>>>>> I think I found mt76x0u issue that could cause this USB probe error
+>>>>>> (and possibly also address AMD IOMMU issue). We seems do not correctly
+>>>>>> set URB transfer length smaller than sg buffer length. Attached  patch
+>>>>>> should correct that.
+>>>>> Hi Stanislaw,
+>>>>>
+>>>>> I think 'sg[0].length' is already set in mt76u_fill_rx_sg().
+>>>> It is, buf->len and sg[0].length are initialized to the same value for 1
+>>>> segment. But then buf->len (assigned to urb->buffer_transfer_length) change
+>>>> to smaller value , but sg[0].length stay the same. What I think can be
+>>>> problem for usb host driver.
+>>>>
+>>>>> Moreover applying this patch I got the following crash (rpi-5.0.y):
+>>>> Ok, so with patch probe fail instantly and trigger yet another bug(s)
+>>>> on error path. You seems to address that already. 
+>>>>
+>>>>> Moreover for mt76x0u SG is 'already' disabled since we use just one
+>>>>> buffer so from performance point of view I do not see any difference
+>>>>> of using a standard usb buffer.
+>>>>> This patch has been tested in multiple scenarios and seems to fix
+>>>>> reported issues (for usb2.0).
+>>>> Ok, so passing buffer via urb->transfer_buffer works. But why urb->sg
+>>>> does not work for 1 segment ?
+>>> Here it is a different issue respect to the AMD IOMMU one, dwc2 host driver
+>>> does not implement SG I/O so probing fails. I guess it is still useful to
+>>> implement a 'legacy' mode that enable mt76 on host controllers that do not implement
+>>> SG I/O (rpi is a very common device so it will be cool to have mt76 working on
+>>> it). Moreover we are not removing functionalities, user experience will remain
+>>> the same
+>>>
+>> i'm not sure that you understand my mail [1] with the summary of my test
+>> results.
+>>
+> Yes right, I did not get it sorry :)
+> as indicated here https://www.raspberrypi.org/documentation/linux/kernel/building.md
+> I am using bcm2709_defconfig config (using it I spotted the mt76 crashes and
+> probe failure)
+
+no problem, at the beginning this could be very confusing. I only want
+to clarify that this documentation refers to the vendor kernel (with a
+different USB host driver) of the Raspberry Pi Foundation.
+
+All my results refers to the mainline kernel we all should talk about. I
+started a gist which try to describe the mainline variant:
+https://gist.github.com/lategoodbye/c7317a42bf7f9c07f5a91baed8c68f75
+
+Maybe this could be helpful.
+
+Stefan
+
+> Regards,
+> Lorenzo
+>
+>> In case of using the arm/multi_v7_defconfig (32 bit) the mt76 works like
+>> a charm without your sg avoid patch series, but the arm64/defconfig (64
+>> bit) requires the series to probe at least. So i wouldn't conclude from
+>> the fact that dwc2 doesn't support SG any probing issues on arm64. So we
+>> need to investigate which config option triggers the problem.
+>>
+>> Stefan
+>>
+>> [1] - https://marc.info/?l=linux-usb&m=154981675724078
+>>
