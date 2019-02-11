@@ -2,95 +2,88 @@ Return-Path: <SRS0=RvtO=QS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46943C282D7
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 08:48:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2FD3C169C4
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 09:19:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1785C20823
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 08:48:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8118D20863
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 09:19:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EqvrERqU";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EqvrERqU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727125AbfBKIst (ORCPT
+        id S1726340AbfBKJTf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 03:48:49 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:1489 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726663AbfBKIst (ORCPT
+        Mon, 11 Feb 2019 04:19:35 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:43590 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726046AbfBKJTe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 03:48:49 -0500
-X-UUID: b70ecbec81c0485083de5ba5a381ccd3-20190211
-X-UUID: b70ecbec81c0485083de5ba5a381ccd3-20190211
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 313218281; Mon, 11 Feb 2019 16:48:39 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 11 Feb 2019 16:48:37 +0800
-Received: from mtkslt306.mediatek.inc (10.21.14.136) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 11 Feb 2019 16:48:37 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Felix Fietkau <nbd@nbd.name>, Kalle Valo <kvalo@codeaurora.org>
-CC:     Roy Luo <roychl666@gmail.com>, <linux-wireless@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [Resend PATCH] mt76: change the return type of mt76_dma_attach()
-Date:   Mon, 11 Feb 2019 16:48:29 +0800
-Message-ID:
- <228fdddb9ca96e8ce861e324eb9039722cf18f49.1549850911.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 1.9.1
+        Mon, 11 Feb 2019 04:19:34 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B8E56607DF; Mon, 11 Feb 2019 09:19:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549876773;
+        bh=w7vNofABHkmV2IriZIaKXGIVjSCa9cvWKSQNtMH07no=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=EqvrERqUB688WWSutDbadKvSu++wyGb4+sPDQStsU6HuduARpusWMuarXttCRR/3y
+         SULwJSFU8XNeRpVjhqDg+k+0lz5BZsnMdhVzJBZ/37Yqc/BZl+mhRlUUVw2xtA27rq
+         QN+OYWpWZWox9GLz8lAo3sxOxD4Ga+BrlxWVp/CA=
+Received: from x230.qca.qualcomm.com (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 15F0A601CF;
+        Mon, 11 Feb 2019 09:19:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549876773;
+        bh=w7vNofABHkmV2IriZIaKXGIVjSCa9cvWKSQNtMH07no=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=EqvrERqUB688WWSutDbadKvSu++wyGb4+sPDQStsU6HuduARpusWMuarXttCRR/3y
+         SULwJSFU8XNeRpVjhqDg+k+0lz5BZsnMdhVzJBZ/37Yqc/BZl+mhRlUUVw2xtA27rq
+         QN+OYWpWZWox9GLz8lAo3sxOxD4Ga+BrlxWVp/CA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 15F0A601CF
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Ryder Lee <ryder.lee@mediatek.com>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Felix Fietkau <nbd@nbd.name>, Roy Luo <roychl666@gmail.com>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-mediatek@lists.infradead.org>
+Subject: Re: [Resend PATCH] mt76: change the return type of mt76_dma_attach()
+References: <228fdddb9ca96e8ce861e324eb9039722cf18f49.1549850911.git.ryder.lee@mediatek.com>
+Date:   Mon, 11 Feb 2019 11:19:28 +0200
+In-Reply-To: <228fdddb9ca96e8ce861e324eb9039722cf18f49.1549850911.git.ryder.lee@mediatek.com>
+        (Ryder Lee's message of "Mon, 11 Feb 2019 16:48:29 +0800")
+Message-ID: <87lg2m3cnz.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-X-MTK:  N
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
-Message-ID: <20190211084829.EG2lf0PWA93f7pUXaAnhpR3vCmxCko9n4Wu5-I3EK-o@z>
 
-There is no need to return 0 in mt76_dma_attach(), so switch it to void.
+Ryder Lee <ryder.lee@mediatek.com> writes:
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/dma.c | 3 +--
- drivers/net/wireless/mediatek/mt76/dma.h | 2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+> There is no need to return 0 in mt76_dma_attach(), so switch it to void.
+>
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index e2ba263..d934d72 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -522,10 +522,9 @@ int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
- 	.kick = mt76_dma_kick_queue,
- };
- 
--int mt76_dma_attach(struct mt76_dev *dev)
-+void mt76_dma_attach(struct mt76_dev *dev)
- {
- 	dev->queue_ops = &mt76_dma_ops;
--	return 0;
- }
- EXPORT_SYMBOL_GPL(mt76_dma_attach);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.h b/drivers/net/wireless/mediatek/mt76/dma.h
-index 357cc35..e3292df 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.h
-+++ b/drivers/net/wireless/mediatek/mt76/dma.h
-@@ -54,7 +54,7 @@ enum mt76_mcu_evt_type {
- 	EVT_EVENT_DFS_DETECT_RSP,
- };
- 
--int mt76_dma_attach(struct mt76_dev *dev);
-+void mt76_dma_attach(struct mt76_dev *dev);
- void mt76_dma_cleanup(struct mt76_dev *dev);
- 
- #endif
+When you send a new version mark it as v2:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
+
+And add a changelog:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
+
+No need to resend because of this, but please do remember this in the
+future.
+
 -- 
-1.9.1
-
+Kalle Valo
