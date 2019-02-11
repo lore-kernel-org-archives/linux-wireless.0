@@ -2,92 +2,106 @@ Return-Path: <SRS0=RvtO=QS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87D13C282D7
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 02:13:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99444C282C2
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 02:30:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 564E520661
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 02:13:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AC402083B
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 02:30:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726961AbfBKCNt (ORCPT
+        id S1726157AbfBKCaF convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 Feb 2019 21:13:49 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:28651 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726663AbfBKCNs (ORCPT
+        Sun, 10 Feb 2019 21:30:05 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:41073 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726101AbfBKCaE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Feb 2019 21:13:48 -0500
-X-UUID: 9ce9099a8d274005ab948555a5301d05-20190211
-X-UUID: 9ce9099a8d274005ab948555a5301d05-20190211
-Received: from mtkmrs01.mediatek.inc [(172.21.131.159)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 475461017; Mon, 11 Feb 2019 10:13:43 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 11 Feb 2019 10:13:42 +0800
-Received: from mtkslt306.mediatek.inc (10.21.14.136) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 11 Feb 2019 10:13:42 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Felix Fietkau <nbd@nbd.name>, Kalle Valo <kvalo@codeaurora.org>
-CC:     Roy Luo <roychl666@gmail.com>, <linux-wireless@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] mt76: change the retun type of mt76_dma_attach()
-Date:   Mon, 11 Feb 2019 10:13:41 +0800
-Message-ID: <228fdddb9ca96e8ce861e324eb9039722cf18f49.1549850911.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 1.9.1
+        Sun, 10 Feb 2019 21:30:04 -0500
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x1B2Tich011877, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcas11.realtek.com.tw[172.21.6.12])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x1B2Tich011877
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Mon, 11 Feb 2019 10:29:44 +0800
+Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
+ RTITCAS11.realtek.com.tw ([fe80::7c6d:ced5:c4ff:8297%15]) with mapi id
+ 14.03.0399.000; Mon, 11 Feb 2019 10:29:44 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     Brian Norris <briannorris@chromium.org>
+CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        Andy Huang <tehuang@realtek.com>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 24/24] rtw88: 8822b: turn rtw_write32s_mask into macro
+Thread-Topic: [PATCH 24/24] rtw88: 8822b: turn rtw_write32s_mask into macro
+Thread-Index: AQHUuV+dvM3bezbrhEu5gAS5rqj4sqXJoPsAgBBO8aA=
+Date:   Mon, 11 Feb 2019 02:29:43 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17A2837@RTITMBSVM04.realtek.com.tw>
+References: <1548937297-14660-1-git-send-email-yhchuang@realtek.com>
+ <1548937297-14660-25-git-send-email-yhchuang@realtek.com>
+ <20190201012446.GA103846@google.com>
+In-Reply-To: <20190201012446.GA103846@google.com>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.124]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is no need to retun 0 in mt76_dma_attach(), so switch it to void.
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/dma.c | 3 +--
- drivers/net/wireless/mediatek/mt76/dma.h | 2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index e2ba263..d934d72 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -522,10 +522,9 @@ int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
- 	.kick = mt76_dma_kick_queue,
- };
- 
--int mt76_dma_attach(struct mt76_dev *dev)
-+void mt76_dma_attach(struct mt76_dev *dev)
- {
- 	dev->queue_ops = &mt76_dma_ops;
--	return 0;
- }
- EXPORT_SYMBOL_GPL(mt76_dma_attach);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.h b/drivers/net/wireless/mediatek/mt76/dma.h
-index 357cc35..e3292df 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.h
-+++ b/drivers/net/wireless/mediatek/mt76/dma.h
-@@ -54,7 +54,7 @@ enum mt76_mcu_evt_type {
- 	EVT_EVENT_DFS_DETECT_RSP,
- };
- 
--int mt76_dma_attach(struct mt76_dev *dev);
-+void mt76_dma_attach(struct mt76_dev *dev);
- void mt76_dma_cleanup(struct mt76_dev *dev);
- 
- #endif
--- 
-1.9.1
+> From: Brian Norris [mailto:briannorris@chromium.org]
+> 
+> Hi,
+> 
+> >
+> > +static inline void
+> > +_rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32
+> data)
+> > +{
+> > +	rtw_write32_mask(rtwdev, addr, mask, data);
+> > +	rtw_write32_mask(rtwdev, addr + 0x200, mask, data);
+> > +}
+> > +
+> > +/* 0xC00-0xCFF and 0xE00-0xEFF have the same layout */
+> 
+> Feels like this belongs with _rtw_write32s_mask() now, not here?
 
+Yeah.
+
+> 
+> > +#define rtw_write32s_mask(rtwdev, addr, mask, data)			       \
+> > +	do {								       \
+> > +		BUILD_BUG_ON(addr < 0xC00 || addr >= 0xD00);		       \
+> 
+> You probably want parentheses around the 'addr'. You *probably* won't
+> run into trouble with this particular macro, but if the caller is doing
+> the wrong kinds of comparisons or arithmetic, this might not work they
+> way you want.
+
+Should add parentheses to protect in case of some coding mistakes.
+Thanks
+
+> 
+> Brian
+> 
+> > +									       \
+> > +		_rtw_write32s_mask(rtwdev, addr, mask, data);		       \
+> > +	} while (0)
+> > +
+> >  /* phy status page0 */
+> >  #define GET_PHY_STAT_P0_PWDB(phy_stat)
+> \
+> >  	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
+> > --
+
+Yan-Hsuan
