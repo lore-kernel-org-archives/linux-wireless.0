@@ -2,179 +2,105 @@ Return-Path: <SRS0=RvtO=QS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5421C169C4
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 14:12:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 350B3C282CE
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 14:29:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A09E2222B7
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 14:12:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KW5pxPWv"
+	by mail.kernel.org (Postfix) with ESMTP id 0FA2120675
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Feb 2019 14:29:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726892AbfBKOMS (ORCPT
+        id S1729979AbfBKO3U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Feb 2019 09:12:18 -0500
-Received: from mail-it1-f193.google.com ([209.85.166.193]:53827 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726170AbfBKOMS (ORCPT
+        Mon, 11 Feb 2019 09:29:20 -0500
+Received: from mail.w1.fi ([212.71.239.96]:36126 "EHLO
+        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729402AbfBKO3T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Feb 2019 09:12:18 -0500
-Received: by mail-it1-f193.google.com with SMTP id g85so26559815ita.3;
-        Mon, 11 Feb 2019 06:12:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=S7F8iOswapPYd77PwaLJtcMSUtbMvO6i/bDB5sKUbSU=;
-        b=KW5pxPWvIctmAjgKpd9aktcU/sTZEOF1WJImXcXTEEgCixJ2YTB+iF0gb/NSQSFwIM
-         JYRE+SYsCGlPsg3mEvNSeJ1fmDoVC4M3sQPRqEm/dKP728wktt3WrCapCR2EPt55HObM
-         2Y9LUIEq5a1qDwW/mBrhznPm8LxALeDknMb/EK4qyb/ssjdF0L/oS4nzraNGbcH/Mmp4
-         FQGpG3jAbupotTdBvzJSZLb7+otvW6QpvDrpXtxl7+kDp+BjuJdABjmL6rRm9VHKilsU
-         n9zy8B7d8xVdoZJesWv/+lopOUkv1rNOen7N2XmlNTTzTik7bJwdeLpX8pnas7zZPb36
-         vBQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=S7F8iOswapPYd77PwaLJtcMSUtbMvO6i/bDB5sKUbSU=;
-        b=W5Cfo2z7j8vIplnQ8DSq3W7N3j7W1VW6pk5XMOS6s1AY8sJ84BJ4Nh3V4OuNM7XqQW
-         2kl5NMbsAgii5K3ogg5RKUtHzfc3JfFm1uCDLelP9WDfnKmb1t4DDyJBLBQJG1V4x0O+
-         WAPzzHo63kFL/wpGk7hKSSM5jbag+NmPFa7TiGnp7SLA1OnQgixSZMhawTbrz0TPlo1C
-         IXVqHr+3cSS4l2ychUjZdn3iLRFrrB14QCcj4VOWSgt6vzGPA+HVtCjM0SvVmWrwJAeM
-         CfazDfCMErvoqM4VRrOKpEB2neQ71LXHhONzAA03lfGCnurmOuApxx/ynahX+SStGLUk
-         SO4A==
-X-Gm-Message-State: AHQUAuaYbBUUKYmikTfTDCJdgQPNb3FRj0Mo4COrSCvTcKUPeQmeVY8+
-        J9jayrkoitZ6gxkQprXKhcO6X1S1hpdTazC4TiWq/gfx
-X-Google-Smtp-Source: AHgI3Ibbn3vnE64LaH6moqN7EBTTj9CVY3WMCEjbYfxxD83ZQyWuElKvORWvSIUwGThahtc+exYiKqn/qNYYq9ORWWY=
-X-Received: by 2002:a24:7c44:: with SMTP id a65mr4029744itd.137.1549894337299;
- Mon, 11 Feb 2019 06:12:17 -0800 (PST)
-MIME-Version: 1.0
-References: <20190210195217.18817-1-lkundrak@v3.sk> <20190210195217.18817-4-lkundrak@v3.sk>
-In-Reply-To: <20190210195217.18817-4-lkundrak@v3.sk>
-From:   Steve deRosier <derosier@gmail.com>
-Date:   Mon, 11 Feb 2019 06:11:40 -0800
-Message-ID: <CALLGbRJvZrdg8+oGOkNxm+QNkBcCjTWkXvfG+rqbTc-2UMmNng@mail.gmail.com>
-Subject: Re: [PATCH 3/3] libertas_tf: get the MAC address before registering
- the device
-To:     Lubomir Rintel <lkundrak@v3.sk>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 11 Feb 2019 09:29:19 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by li674-96.members.linode.com (Postfix) with ESMTP id AEF9511C62;
+        Mon, 11 Feb 2019 14:29:17 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at w1.fi
+Received: from li674-96.members.linode.com ([127.0.0.1])
+        by localhost (mail.w1.fi [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id EqK6VRwyLBTa; Mon, 11 Feb 2019 14:29:16 +0000 (UTC)
+From:   Jouni Malinen <j@w1.fi>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [PATCH] cfg80211: Use const more consistently in for_each_element macros
+Date:   Mon, 11 Feb 2019 16:29:04 +0200
+Message-Id: <1549895344-15021-1-git-send-email-j@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Feb 10, 2019 at 11:52 AM Lubomir Rintel <lkundrak@v3.sk> wrote:
->
-> The start() callback is too late for this: NetworkManager would already
-> have seen the hardware, thinking 00:00:00:00:00:00 is its permanent
-> address.
->
-> Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
-> ---
->  .../net/wireless/marvell/libertas_tf/main.c   | 57 ++++---------------
->  1 file changed, 11 insertions(+), 46 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
-> index b4bd3047eb4e..da53da71987e 100644
-> --- a/drivers/net/wireless/marvell/libertas_tf/main.c
-> +++ b/drivers/net/wireless/marvell/libertas_tf/main.c
-> @@ -125,37 +125,6 @@ static void lbtf_cmd_work(struct work_struct *work)
->         lbtf_deb_leave(LBTF_DEB_CMD);
->  }
->
-> -/**
-> - *  lbtf_setup_firmware: initialize firmware.
-> - *
-> - *  @priv    A pointer to struct lbtf_private structure
-> - *
-> - *  Returns: 0 on success.
-> - */
-> -static int lbtf_setup_firmware(struct lbtf_private *priv)
-> -{
-> -       int ret = -1;
-> -
-> -       lbtf_deb_enter(LBTF_DEB_FW);
-> -       /*
-> -        * Read priv address from HW
-> -        */
-> -       eth_broadcast_addr(priv->current_addr);
-> -       ret = lbtf_update_hw_spec(priv);
-> -       if (ret) {
-> -               ret = -1;
-> -               goto done;
-> -       }
-> -
-> -       lbtf_set_mac_control(priv);
-> -       lbtf_set_radio_control(priv);
-> -
-> -       ret = 0;
-> -done:
-> -       lbtf_deb_leave_args(LBTF_DEB_FW, "ret: %d", ret);
-> -       return ret;
-> -}
-> -
->  /**
->   *  This function handles the timeout of command sending.
->   *  It will re-send the same command again.
-> @@ -289,30 +258,17 @@ static void lbtf_tx_work(struct work_struct *work)
->  static int lbtf_op_start(struct ieee80211_hw *hw)
->  {
->         struct lbtf_private *priv = hw->priv;
-> -       int ret = -1;
->
->         lbtf_deb_enter(LBTF_DEB_MACOPS);
->
-> -       /* poke the firmware */
->         priv->capability = WLAN_CAPABILITY_SHORT_PREAMBLE;
->         priv->radioon = RADIO_ON;
->         priv->mac_control = CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
-> -       ret = lbtf_setup_firmware(priv);
-> -       if (ret)
-> -               goto err_setup_firmware;
-> -
-> -       if ((priv->fwrelease < LBTF_FW_VER_MIN) ||
-> -           (priv->fwrelease > LBTF_FW_VER_MAX)) {
-> -               ret = -1;
-> -               goto err_setup_firmware;
-> -       }
-> +       lbtf_set_mac_control(priv);
-> +       lbtf_set_radio_control(priv);
->
->         lbtf_deb_leave(LBTF_DEB_MACOPS);
->         return 0;
-> -
-> -err_setup_firmware:
-> -       lbtf_deb_leave_args(LBTF_DEB_MACOPS, "fw setup error; ret=%d", ret);
-> -       return ret;
->  }
->
->  static void lbtf_op_stop(struct ieee80211_hw *hw)
-> @@ -649,6 +605,15 @@ struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev,
->                 goto err_init_adapter;
->         }
->
-> +       eth_broadcast_addr(priv->current_addr);
-> +       if (lbtf_update_hw_spec(priv))
-> +               goto err_init_adapter;
-> +
-> +       if (priv->fwrelease < LBTF_FW_VER_MIN ||
-> +           priv->fwrelease > LBTF_FW_VER_MAX) {
-> +               goto err_init_adapter;
-> +       }
-> +
->         /* The firmware seems to start with the radio enabled. Turn it
->          * off before an actual mac80211 start callback is invoked.
->          */
-> --
-> 2.20.1
->
+Enforce the first argument to be a correct type of a pointer to struct
+element and avoid unnecessary typecasts from const to non-const pointers
+(the change in validate_ie_attr() is needed to make this part work). In
+addition, avoid signed/unsigned comparison within for_each_element() and
+mark struct element packed just in case.
 
-Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
+Signed-off-by: Jouni Malinen <j@w1.fi>
+---
+ include/linux/ieee80211.h | 18 +++++++++---------
+ net/wireless/nl80211.c    |  2 +-
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 8da5ba9..8584c14 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -3284,16 +3284,16 @@ struct element {
+ 	u8 id;
+ 	u8 datalen;
+ 	u8 data[];
+-};
++} __packed;
+ 
+ /* element iteration helpers */
+-#define for_each_element(element, _data, _datalen)			\
+-	for (element = (void *)(_data);					\
+-	     (u8 *)(_data) + (_datalen) - (u8 *)element >=		\
+-		sizeof(*element) &&					\
+-	     (u8 *)(_data) + (_datalen) - (u8 *)element >=		\
+-		sizeof(*element) + element->datalen;			\
+-	     element = (void *)(element->data + element->datalen))
++#define for_each_element(_elem, _data, _datalen)			\
++	for (_elem = (const struct element *)(_data);			\
++	     (const u8 *)(_data) + (_datalen) - (const u8 *)_elem >=	\
++		(int)sizeof(*_elem) &&					\
++	     (const u8 *)(_data) + (_datalen) - (const u8 *)_elem >=	\
++		(int)sizeof(*_elem) + _elem->datalen;			\
++	     _elem = (const struct element *)(_elem->data + _elem->datalen))
+ 
+ #define for_each_element_id(element, _id, data, datalen)		\
+ 	for_each_element(element, data, datalen)			\
+@@ -3330,7 +3330,7 @@ struct element {
+ static inline bool for_each_element_completed(const struct element *element,
+ 					      const void *data, size_t datalen)
+ {
+-	return (u8 *)element == (u8 *)data + datalen;
++	return (const u8 *)element == (const u8 *)data + datalen;
+ }
+ 
+ #endif /* LINUX_IEEE80211_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5d85f60..80878b4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -205,7 +205,7 @@ static int validate_ie_attr(const struct nlattr *attr,
+ {
+ 	const u8 *data = nla_data(attr);
+ 	unsigned int len = nla_len(attr);
+-	struct element *elem;
++	const struct element *elem;
+ 
+ 	for_each_element(elem, data, len) {
+ 		/* nothing */
+-- 
+2.7.4
+
