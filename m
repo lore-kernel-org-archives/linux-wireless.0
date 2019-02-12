@@ -2,108 +2,132 @@ Return-Path: <SRS0=LoJ4=QT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AABC282C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 15:36:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5B1C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 15:38:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94A95217FA
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 15:36:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6670B20811
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 15:38:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="zCg8eRoX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729066AbfBLPg2 (ORCPT
+        id S1729347AbfBLPi5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 10:36:28 -0500
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:48536 "EHLO
-        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726238AbfBLPg2 (ORCPT
+        Tue, 12 Feb 2019 10:38:57 -0500
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:37521 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726238AbfBLPi5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 10:36:28 -0500
-Received: from ben by shadbolt.decadent.org.uk with local (Exim 4.89)
-        (envelope-from <ben@decadent.org.uk>)
-        id 1gta6j-0006Xa-2S; Tue, 12 Feb 2019 15:36:26 +0000
-Date:   Tue, 12 Feb 2019 15:36:24 +0000
-From:   Ben Hutchings <ben@decadent.org.uk>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc:     linux-wireless@vger.kernel.org
-Message-ID: <20190212153624.u6x5dqvmixq63div@decadent.org.uk>
+        Tue, 12 Feb 2019 10:38:57 -0500
+Received: by mail-ed1-f67.google.com with SMTP id m12so872829edv.4
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 07:38:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=6pBqO3xp/1B0zFnqLcuHxvRhsA22yWdbUAXgQ9hiknQ=;
+        b=zCg8eRoXWYBCsvybjdNlWj+M2/h3YmOBzi/7XcMpsOgtWZyBTfDzfFxs9XwhtBVn7T
+         mRvFAAvf9bfpdznKU1/l08JzkwQQZ+iEoTylOSpMVyaPr88u7XU9a9275aT7QlImrFzp
+         8QzaIFTC0iPrvIABUzL7JbEbHMwA3n0/kAJSck02gsez/RipoQhcIshWMF0dKWfdMKAV
+         TlX1t/RENSvqxsedrT/t6PuKQ/5+wP2XRIcBsBp6j+4sLPVA+bgVCCsJgo45rSncaj5V
+         +jcgMX/b8DMGoovR1lEin4/lluBTqn1a/CAFtZXyuaJWQJXteeSdYaJ0EYp6ismOqQn/
+         MPEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=6pBqO3xp/1B0zFnqLcuHxvRhsA22yWdbUAXgQ9hiknQ=;
+        b=haPmMZorBqhkqxvTigp9mvu7mJRd9uoytP4mdm6URL7JtQ7IvPxZKnQBRkzrs8wnnY
+         GUicyLXiCEmyiT0eiFyId3k6r+KvnsJvq5Vt+yJoHp+nzQJRYuMTCCqjomPaS68lCzlJ
+         vym9ni+8wGN69vnvre1hJUzNIc+ATx2X0Z/ojWG72HzjDwy2k7QUnaC70eefOU8F3FkR
+         2s/KzwqNAYpMIZv+b4Km8vLN4UqfCACl2j3VYUhg7+ZUW6HjipNaehqQjEoU4Imy9tf0
+         sXsjOhfOI4rT+fZ+3eEQxCXP2KAyiQoq9UKYLygSuxgzJSYhIf/4bNbSooaqlJIIG2DM
+         gRGA==
+X-Gm-Message-State: AHQUAuZTpghOfhyvERcEVx+DzNk/GQzDAUc6OPTJ9mEjj4gbuun/C6no
+        2HM4OufKzGA9MjUZ7d4IW+iGDmwwzA/7d3MVuIBlAg==
+X-Google-Smtp-Source: AHgI3IaqXo4ydZf//Hn6G1eGoZsai+hu999Ws03JREaJu8Yt5Nhi1slh3Sw6Ef7qpTW+BCsvxCOOEEhxp79iAiXfAeQ=
+X-Received: by 2002:a17:906:9a2:: with SMTP id q2mr3177416eje.40.1549985935042;
+ Tue, 12 Feb 2019 07:38:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="4ontilymfijhsakq"
-Content-Disposition: inline
-User-Agent: NeoMutt/20170113 (1.7.2)
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: ben@decadent.org.uk
-Subject: [PATCH] mt76: Use the correct hweight8() function
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on shadbolt.decadent.org.uk)
+References: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com>
+ <20180111103006.GA17574@thinktank.home.org> <14c5f7f4-0d5b-cecd-b45b-3672b67da07a@gmail.com>
+ <CAL9uMOG77it=kqkbjryPVpY2eVJqqjedVeAhdxqpZM6Z8JWuiA@mail.gmail.com> <CAB4CAwd2WtWwf9p=kZZQ-SzE6DhsLu1OpGaVyS1Mq8wx8eT6ww@mail.gmail.com>
+In-Reply-To: <CAB4CAwd2WtWwf9p=kZZQ-SzE6DhsLu1OpGaVyS1Mq8wx8eT6ww@mail.gmail.com>
+From:   Chris Chiu <chiu@endlessm.com>
+Date:   Tue, 12 Feb 2019 23:38:44 +0800
+Message-ID: <CAB4CAwdkYSJBLODnS2_vgps8Ds+vhedSDVVRATMAz3OGhW_5=Q@mail.gmail.com>
+Subject: Re: RTL8723bu: poor signal and connection troubles
+To:     Carlo Caione <carlo@endlessm.com>
+Cc:     Jes Sorensen <jes.sorensen@gmail.com>,
+        Barry Day <briselec@gmail.com>, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org,
+        mylene.josserand@free-electrons.com,
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Tue, Jan 29, 2019 at 5:56 PM Chris Chiu <chiu@endlessm.com> wrote:
+>
+> On Mon, Jan 22, 2018 at 6:56 AM Carlo Caione <carlo@endlessm.com> wrote:
+> >
+> > On Sun, Jan 21, 2018 at 9:46 PM, Jes Sorensen <jes.sorensen@gmail.com> wrote:
+> > > On 01/11/2018 05:30 AM, Barry Day wrote:
+> >
+> > > One issue with rtl8723bu is that it needs to coexist with the bluetooth
+> > > driver. When I wrote the rtl8723bu support that was no BT support for
+> > > the chip in the kernel and it worked fine, at least for me. However if
+> > > you load the BT driver for the dongle which someone pushed into the
+> > > kernel since then, it is likely to hijack the antennas causing the weak
+> > > signal you describe.
+> >
+> > Yeah, that's why when testing the dongle I carefully disabled BT and
+> > made sure no BT driver was probed at all. Still I can see the issue.
+> > I honestly doubt that the problem is caused by BT coexistence. Any
+> > other idea or suggestion to debug this problem?
+> >
+> > Thanks,
+> >
+> > --
+> > Carlo Caione  |  +44.7384.69.16.04  |  Endless
+>
+> This problem has been reported for 1 year, but it still persists now.
+>
+> I found that the problem disappeared after I resume from suspend. Before
+> suspend, the rssi observed from AP side for this dongle is quite poor. But
+> it comes back to normal after resume. The signal strength differs almost
+> 30dBm. So I compared/checked the RF/BB related register values
+> (in .init_phy_bb/.init_phy_rf/.set_tx_power) but they are identical with the
+> same routines in the driver from https://github.com/lwfinger/rtl8723bu
+>
+> The registers also remain the same across suspend/resume. Don't really
+> know why a simple suspend/resume could cause such difference. Can
+> anyone suggest which part I should look into to get more information?
+>
+> Chris
 
---4ontilymfijhsakq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I found one thing interesting. It does seem to be related to BT coexist just
+as Jes mentioned. Follow the steps below and the signal can always come
+back to normal. The '1-7:1.0' is one of the IDs for the rtl8723bu usb interface.
 
-mt76_init_stream_cap() and mt76_get_txpower() call __sw_hweight8()
-directly, but that's only defined if CONFIG_GENERIC_HWEIGHT is
-enabled.  The function that works on all architectures is hweight8().
+1. unbind btusb first, cd /sys/bus/usb/drivers/btusb; echo 1-7:1.0 > unbind
+2. unload rtl8xxxu driver then reload it. The signal stays at poor level
+3. bind the btusb. cd /sys/bus/usb/drivers/btusb; echo 1-7:1.0 > bind
 
-Fixes: 551e1ef4d291 ("mt76: add mt76_init_stream_cap routine")
-Fixes: 9313faacbb4e ("mt76: move mt76x02_get_txpower to mt76 core")
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Seems that the BT firmware loaded is helpful for the only antenna config
+which is shared by WiFi/BT. If I load the BT firmware after rtl8xxxu driver,
+everything's fine.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wi=
-reless/mediatek/mt76/mac80211.c
-index 484d3ac3a206..7c3a24cc9c77 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -124,7 +124,7 @@ static void mt76_init_stream_cap(struct mt76_dev *dev,
- 				 bool vht)
- {
- 	struct ieee80211_sta_ht_cap *ht_cap =3D &sband->ht_cap;
--	int i, nstream =3D __sw_hweight8(dev->antenna_mask);
-+	int i, nstream =3D hweight8(dev->antenna_mask);
- 	struct ieee80211_sta_vht_cap *vht_cap;
- 	u16 mcs_map =3D 0;
-=20
-@@ -714,7 +714,7 @@ int mt76_get_txpower(struct ieee80211_hw *hw, struct ie=
-ee80211_vif *vif,
- 		     int *dbm)
- {
- 	struct mt76_dev *dev =3D hw->priv;
--	int n_chains =3D __sw_hweight8(dev->antenna_mask);
-+	int n_chains =3D hweight8(dev->antenna_mask);
-=20
- 	*dbm =3D dev->txpower_cur / 2;
-=20
+Can anyone suggest the next step? I've compared all registers and h2c cmds
+between vendor driver and rtl8xxxu driver. Basically, they're almost the same
+even the bt coexist related settings. So it's difficult to imagine why the same
+power on sequence setting and RF enable setting cause that huge signal
+difference.
 
---4ontilymfijhsakq
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEErCspvTSmr92z9o8157/I7JWGEQkFAlxi5/gACgkQ57/I7JWG
-EQkpLw/7BFPuEh4/iKL8ENwPPV9ELqBP9+ujri5GrNSy+lL5YHShty84W2hNGWVq
-Yn0pvd5tqaUMGxWswdAHMt3Nq1e+V7NaoTG9JMg3BXxe7C2+hHcT/k3ulDcZiaIY
-1FBT5yYU8AfC2g1OF21tB9mOuaxcftcDx/IFJaJ8vGGw37gkOFMQzpPY8262HggP
-txT2S/hh2uaaOU7JXThSSSx/Ty/pbVQ2eDkbH+1jEGuhIfsnFYWcPbnWQSz8oits
-uEgpvCybyehPWysr94evJo4q5MjG1Db329aTLvLFWDSsG29eVcDgJ9exD0O9u+BP
-5/fEIKlKG1WR3tmiJGNMDQRBhpB8V1JYVk+5F+VCqCdUTexqYqTiJ1fJfSCNdA42
-6LRDGzrkLYgtKr7g4i6CxK9tZokBWS1q+J/GHe3Jd1X48oP9q141BH4wrzklI/q2
-o3WvbVYYvP/bsAd7HVXhYdTBK/4zV2hFbGQ769YMdDRDYEXd/9x8U0CcXC11vEsi
-HS4JnRomIAVCqJC+quQJ5KrM/K6Fm9uSEtEy5qx71DM+P1hU6xsmuGGmITjDXvDc
-Vi4hNFATrZiuPg8PczEp17qY0sa+JyKtTlE+9G0yRRv2l+vSN6+8+iji+rZ2gb0K
-6zOqbXmzWie49gmRlOVqXSUtGXegPdDgJp3qG0/dmmuhChSYC9Y=
-=oV2P
------END PGP SIGNATURE-----
-
---4ontilymfijhsakq--
+Chris
