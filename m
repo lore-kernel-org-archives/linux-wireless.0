@@ -6,88 +6,87 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55A4AC282C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:45:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C17C5C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:46:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 158D52190B
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:45:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9096B2190B
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:46:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="nVWGcJLq";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aQbXcs6B"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jQKlsYyE";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="I5arnXSY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730096AbfBLSpp (ORCPT
+        id S1732087AbfBLSqv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 13:45:45 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:39436 "EHLO
+        Tue, 12 Feb 2019 13:46:51 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:40426 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727303AbfBLSpo (ORCPT
+        with ESMTP id S1732076AbfBLSqr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 13:45:44 -0500
+        Tue, 12 Feb 2019 13:46:47 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 43A6660208; Tue, 12 Feb 2019 18:45:44 +0000 (UTC)
+        id 84256607DF; Tue, 12 Feb 2019 18:46:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549997144;
-        bh=cBs2qsOgt2Pp1+10w7CYlKr2ObY5/XgaF//tr52//7Q=;
+        s=default; t=1549997207;
+        bh=LBLJRWGMAU+nCQPR5v9Y0U3VorbGYMQ0LDGYtqKQzUI=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=nVWGcJLqj80eOVmMOgTGR59Si0j25OcLm5q42dFkXOP5Pt3UdaY4hiTinbsQZ5Mjr
-         /CwiSV9Ns95sFguySUxCKD2F7hKSgCWucbrhQLotBMbiTtjE1OZMem3l4Rvm9D/og+
-         dHTXAGpGSkVt3NXY4roof76Fssoll5Dl0R93Kmnw=
+        b=jQKlsYyEApg9VR2hN/1CS118YQnPagViasqrKMBcUNeqZO3JMy3IiW7K03Tli3xoW
+         6KA9ogDrW7XZH+JduAStqSrRFdA8S/xvm4eib9E+juebyxaWSwbWX5s1qEmM/oXUTo
+         UtNeEiqooCgvyyViRRosdj+OnkzzhgVI0M8dg2KU=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0610E6030D;
-        Tue, 12 Feb 2019 18:45:41 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E12706030D;
+        Tue, 12 Feb 2019 18:46:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549997143;
-        bh=cBs2qsOgt2Pp1+10w7CYlKr2ObY5/XgaF//tr52//7Q=;
+        s=default; t=1549997206;
+        bh=LBLJRWGMAU+nCQPR5v9Y0U3VorbGYMQ0LDGYtqKQzUI=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=aQbXcs6BNKBVgaJL2u9cWLYCayNtx5a2TooT+vEI2DDALqDGfA3SYvhuJ940n2xZH
-         rTzNlmMh9GDE7BWSn1E9w4oy+jKDty2gbXbcvoRL10OVWEKYrBekxJ7crQ8Vei75SW
-         8cNfOJ9dX0il+xDr9Z6RdL8j7J/fiwKU6izhBASw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0610E6030D
+        b=I5arnXSYFPaELwqSmpXfVXqpvHLj987Zx1PDpFSaJAL1p5lMEih/akZ1JX5BXlOVP
+         tg2PFCh3Rms8iIGWfC1+mEQ89XL0i/dvNrojthrBFpG+8f6wO4Xge1sLy80X5qNIM/
+         /99Vz+QWhzxBHlY/98x/4vDPSuQu/ULcPfj2UnpE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E12706030D
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v6 2/4] ath9k: Switch to mac80211 TXQ scheduling and
- airtime APIs
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath10k: Add support to configure ftm responder role
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190122142019.21417-3-toke@redhat.com>
-References: <20190122142019.21417-3-toke@redhat.com>
-To:     =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        ath10k@lists.infradead.org, make-wifi-fast@lists.bufferbloat.net
+In-Reply-To: <1549439910-9315-1-git-send-email-pradeepc@codeaurora.org>
+References: <1549439910-9315-1-git-send-email-pradeepc@codeaurora.org>
+To:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190212184544.43A6660208@smtp.codeaurora.org>
-Date:   Tue, 12 Feb 2019 18:45:44 +0000 (UTC)
+Message-Id: <20190212184647.84256607DF@smtp.codeaurora.org>
+Date:   Tue, 12 Feb 2019 18:46:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Toke Høiland-Jørgensen wrote:
+Pradeep Kumar Chitrapu <pradeepc@codeaurora.org> wrote:
 
-> This moves the ath9k driver to use the mac80211 TXQ scheduling and
-> airtime accounting APIs, removing the corresponding state tracking
-> inside the driver.
+> Configure fine timing measurement (FTM) responder role from the
+> ftm_responder bss param sent by mac80211. With FTM functionality offloaded
+> to firmware, adding the interface allows userspace to enable or disable
+> FTM responder functionality. ath10k disables it at the time of interface
+> creation.
 > 
-> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
-> [rmanohar@codeaurora.org: fixed checkpatch error and warnings]
-> Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+> Supported FW: 10.4
+> 
+> Tested on IPQ4019 with firmware: 10.4-3.2.1.1-00022
+> 
+> Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-3 patches applied to ath-next branch of ath.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-89cea7493a34 ath9k: Switch to mac80211 TXQ scheduling and airtime APIs
-bb2edb733586 ath10k: migrate to mac80211 txq scheduling
-d1ce37b7831a ath10k: report estimated frame transmit airtime to improve fairness
+059104bff312 ath10k: add support to configure ftm responder role
 
 -- 
-https://patchwork.kernel.org/patch/10775549/
+https://patchwork.kernel.org/patch/10798883/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
