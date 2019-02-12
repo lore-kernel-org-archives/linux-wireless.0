@@ -2,118 +2,183 @@ Return-Path: <SRS0=LoJ4=QT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9AD2C282CE
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 21:54:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8919EC282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 22:04:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5201222B1
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 21:54:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47F5B20842
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 22:04:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bobcopeland-com.20150623.gappssmtp.com header.i=@bobcopeland-com.20150623.gappssmtp.com header.b="q01WVYvy"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Hb5qVZVP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727952AbfBLVyk (ORCPT
+        id S1732009AbfBLWET (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 16:54:40 -0500
-Received: from mail-it1-f194.google.com ([209.85.166.194]:54447 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726809AbfBLVyk (ORCPT
+        Tue, 12 Feb 2019 17:04:19 -0500
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:43808 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726809AbfBLWET (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 16:54:40 -0500
-Received: by mail-it1-f194.google.com with SMTP id p11so543398itf.4
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 13:54:39 -0800 (PST)
+        Tue, 12 Feb 2019 17:04:19 -0500
+Received: by mail-ed1-f65.google.com with SMTP id f9so190221eds.10
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 14:04:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bobcopeland-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=ONUEYjzAHpWPE8vf/wPJo/4M5pYR5iObCcWZqTM/Nc8=;
-        b=q01WVYvy0Gd7CRBjoQR3aLB+KLt+75jY5t+1VVKcVt0JW6FijsvyJ43CYPEH67WgJc
-         XCsMht31ZQUe6uSQX1cfbGKCeMKbbQQJWvKA45Wq9e7hTObw6INu+6nfYinBi+M3nIDy
-         3SkDu/UCR2yQJBYWuoZ4c16BcWK4v5qGFqhRPM+cw737AcF65H5qTWSQAz4lJzoVJ8yo
-         +8bR2bxX68qtjarK6OLrjkCcd1yzCqI8bw1BmH4D3PBKNFj1PCpSXBT/a/ubp10K9awa
-         QWhaXCMYBXCSu5G8OxFL4sYHMCKrVnaL46a+el9XhWWU9vFQ9NYSOzMUKfNT+HXDUMW3
-         5NIw==
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=pkMTu2cnGg47Dq/vpnq9W4pTmWvUYEKL4hOvDkRKsB0=;
+        b=Hb5qVZVPAJmTv+6Zt+6ZNRt12uDu0aXeQCF1C9hpv82T9754Gh10eRuHU2ZkUVqYud
+         GPA5oPsmltCR0py5dEjYYfkKNvQi/Ji6VHetAHJP/isRBsI4hNdabt7UFwz2EqqJ7Uso
+         hlWe50KnrAmaP0whoe2wsMahWg70yh/XsufB8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=ONUEYjzAHpWPE8vf/wPJo/4M5pYR5iObCcWZqTM/Nc8=;
-        b=Xe6yMx1dq6WAH2EOjt3nS9xXDufRK6LEA2Bkucd3X5v/2cIWK8cT3qNcLk/D14OpPA
-         Kon7XsAvWfcesHlgQdElqPx90Ql1HLK/PTld+LlBH4VjtH70P4iT88TqFGPbb8tXwcSV
-         l/ip4R8srfQFEnftCDbi/kCHiaY6soO3fy3p8+JOpW3xltuEw3ujZ0z7Afb2puNHyDhD
-         MvAD2m+qFuQ9REI1D8ylIzJKa7KC0G5HnFOa9ga8QJ7lhcxwORYEoOciwCC9fOdGJ692
-         MEPfhnaLDNnhHXNV1jJzJOn61kpLDdbxk+Kv2nUMe1+xOGuug6pMtdVHY9lbPgzBn+OJ
-         AQVg==
-X-Gm-Message-State: AHQUAuYypvqVpFhYRwZ+8SlN74rqN/YcYaMcIyJZ5KzhYcvVmDsRpLKd
-        w1jACUP4z2/TUbEX0QiXHWk0vQ==
-X-Google-Smtp-Source: AHgI3IbnXRfwlHBPI/zR+atuj4jzvn7g1/tDIW0UrFa/gJNqPYR8wj1Cg0AkQJKO3LRr7JZx0kOq4w==
-X-Received: by 2002:a24:1f0c:: with SMTP id d12mr508018itd.147.1550008479018;
-        Tue, 12 Feb 2019 13:54:39 -0800 (PST)
-Received: from hash (CPE30b5c2fb365b-CM18593342f28f.cpe.net.cable.rogers.com. [99.232.51.173])
-        by smtp.gmail.com with ESMTPSA id j142sm1997115itj.40.2019.02.12.13.54.37
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 12 Feb 2019 13:54:38 -0800 (PST)
-Received: from bob by hash with local (Exim 4.92-RC4)
-        (envelope-from <me@bobcopeland.com>)
-        id 1gtg0j-0006gD-7D; Tue, 12 Feb 2019 16:54:37 -0500
-Date:   Tue, 12 Feb 2019 16:54:37 -0500
-From:   Bob Copeland <me@bobcopeland.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, j@w1.fi, tgraf@suug.ch,
-        herbert@gondor.apana.org.au
-Subject: Re: [PATCH v2] rhashtable: make walk safe from softirq context
-Message-ID: <20190212215437.GA18182@localhost>
-References: <20190206090721.8001-1-johannes@sipsolutions.net>
- <20190212.104339.1794719792249723582.davem@davemloft.net>
- <ea6479e089dffc46bb9b09e28d364db4c071998f.camel@sipsolutions.net>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=pkMTu2cnGg47Dq/vpnq9W4pTmWvUYEKL4hOvDkRKsB0=;
+        b=KVMQOwqBJY/VM1LqtRp6Dsq5vRpb3UvIoRHNiNOUT0OFmAG1aiYSAXVSx0/4Y84ngL
+         27N90Egy4BvF1eEK23B6khEv12eDZPlMNL9OjGBOMUyyRwNRhn5g1VFtWMcvsuzNsMkd
+         fGyDV54b6Wl++v7s11XDsmBfoiwvN41Gh7PORxtjbdtdAzamNjI1Pdq1Z6GbsJ1DJm8h
+         OfUM/CJRDq8sCIc6idXwv8LSbCHBGajqIZHQYIBpLBdEyF5QOCuQPIU7EyiV+FM1SI+a
+         2PQw4WvWax0uur72iBG4ntD/C9aRXWMsTLhB+z+306r4RXUlvUt2nGPPIbjsuHLeXg7K
+         V6ug==
+X-Gm-Message-State: AHQUAubhCOi66bi6L1oWXdMQrr4NFTAhSg+A8pYKlN3sakgFz5PPFVsG
+        RYN7R9tt8fw4XjlhBWJJCBRLzoMexkY=
+X-Google-Smtp-Source: AHgI3IYWw8T0gov9qM0X5fNf2MRQesszFwOFd44Omjt7bKtGks1HI3kSzCWIjHEQLTGv+fZSXfk+BA==
+X-Received: by 2002:a50:a2e5:: with SMTP id 92mr4887796edm.169.1550009056523;
+        Tue, 12 Feb 2019 14:04:16 -0800 (PST)
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com. [209.85.208.53])
+        by smtp.gmail.com with ESMTPSA id t12sm4095664edq.11.2019.02.12.14.04.15
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 12 Feb 2019 14:04:16 -0800 (PST)
+Received: by mail-ed1-f53.google.com with SMTP id m12so220698edv.4
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 14:04:15 -0800 (PST)
+X-Received: by 2002:a17:906:1f98:: with SMTP id t24mr4160952ejr.247.1550009054319;
+ Tue, 12 Feb 2019 14:04:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ea6479e089dffc46bb9b09e28d364db4c071998f.camel@sipsolutions.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <1548820940-15237-1-git-send-email-yhchuang@realtek.com>
+ <1548820940-15237-4-git-send-email-yhchuang@realtek.com> <20190131223609.GA191502@google.com>
+ <F7CD281DE3E379468C6D07993EA72F84D17A3A5E@RTITMBSVM04.realtek.com.tw>
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17A3A5E@RTITMBSVM04.realtek.com.tw>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Tue, 12 Feb 2019 14:04:02 -0800
+X-Gmail-Original-Message-ID: <CA+ASDXMGtktTQtwoyCtaYmc9n5+OkXWMJn8FK-nGnoOLrbFe+w@mail.gmail.com>
+Message-ID: <CA+ASDXMGtktTQtwoyCtaYmc9n5+OkXWMJn8FK-nGnoOLrbFe+w@mail.gmail.com>
+Subject: Re: [PATCH v4 03/13] rtw88: hci files
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Feb 12, 2019 at 08:03:17PM +0100, Johannes Berg wrote:
-> commit 60854fd94573f0d3b80b55b40cf0140a0430f3ab
-> Author: Bob Copeland <me@bobcopeland.com>
-> Date:   Wed Mar 2 10:09:20 2016 -0500
-> 
->     mac80211: mesh: convert path table to rhashtable
-> 
-> which is kinda old. Not sure why this didn't surface before, because the
-> spinlock was introduced *before*, otherwise certainly the mutex would've
-> caused us to not be able to do this code to start with (commit
-> c6ff5268293 - rhashtable: Fix walker list corruption).
-> 
-> That commit also just converted an existing hashtable walk to
-> rhashtable, so not sure that counts as having introduced the problem :-)
+On Mon, Feb 11, 2019 at 10:19 PM Tony Chuang <yhchuang@realtek.com> wrote:
+> > From: Brian Norris [mailto:briannorris@chromium.org]
+> > On Wed, Jan 30, 2019 at 12:02:10PM +0800, yhchuang@realtek.com wrote:
+> > > diff --git a/drivers/net/wireless/realtek/rtw88/pci.c
+> > b/drivers/net/wireless/realtek/rtw88/pci.c
+> > > new file mode 100644
+> > > index 0000000..ef3c9bb
+> > > --- /dev/null
+> > > +++ b/drivers/net/wireless/realtek/rtw88/pci.c
+> > > @@ -0,0 +1,1210 @@
+> >
+> > ...
+> >
+> > > +static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
+> > > +                           struct rtw_pci_rx_ring *rx_ring,
+> > > +                           u8 desc_size, u32 len)
+> > > +{
+> > > +   struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
+> > > +   struct sk_buff *skb = NULL;
+> > > +   dma_addr_t dma;
+> > > +   u8 *head;
+> > > +   int ring_sz = desc_size * len;
+> > > +   int buf_sz = RTK_PCI_RX_BUF_SIZE;
+> > > +   int i, allocated;
+> > > +   int ret = 0;
+> > > +
+> > > +   head = pci_zalloc_consistent(pdev, ring_sz, &dma);
+> > > +   if (!head) {
+> > > +           rtw_err(rtwdev, "failed to allocate rx ring\n");
+> > > +           return -ENOMEM;
+> > > +   }
+> > > +   rx_ring->r.head = head;
+> > > +
+> > > +   for (i = 0; i < len; i++) {
+> > > +           skb = dev_alloc_skb(buf_sz);
+> > > +           if (!skb) {
+> > > +                   allocated = i;
+> > > +                   ret = -ENOMEM;
+> > > +                   goto err_out;
+> > > +           }
+> > > +
+> > > +           memset(skb->data, 0, buf_sz);
+> > > +           rx_ring->buf[i] = skb;
+> > > +           ret = rtw_pci_reset_rx_desc(rtwdev, skb, rx_ring, i, desc_size);
+> > > +           if (ret) {
+> > > +                   allocated = i;
+> > > +                   goto err_out;
+> > > +           }
+> > > +   }
+> > > +
+> > > +   rx_ring->r.dma = dma;
+> > > +   rx_ring->r.len = len;
+> > > +   rx_ring->r.desc_size = desc_size;
+> > > +   rx_ring->r.wp = 0;
+> > > +   rx_ring->r.rp = 0;
+> > > +
+> > > +   return 0;
+> > > +
+> > > +err_out:
+> > > +   dev_kfree_skb_any(skb);
+> >
+> > Maybe I'm misreading but...shouldn't this line not be here? You properly
+> > iterate over the allocated SKBs below, and this looks like you're just
+> > going to be double-freeing (or, negative ref-counting).
+>
+> Yeah, I think I should move this line above after reset_rx_desc failed.
 
-Yeah, I didn't change any of the contexts in which the iterations were
-called, except making it possible to replace the previous mesh-specific
-RCU hashtable with rhashtable by introducing this.  That said, it would
-certainly be nice to not have to walk the table to find paths that
-use a specific station as nexthop.
+Ah yes, so it's not technically incorrect, it's just a bit strange to
+read. Yes, moving it up to the failure location would make it clearer
+IMO. Thanks.
 
-> But I guess we should also ask Bob first:
-> 1) do you think it'd be easy to maintain a separate list or avoid the
->    iteration in some otherway, and make that a small enough patch to be
->    applicable for stable?
+> > > +   for (i = 0; i < allocated; i++) {
+> > > +           skb = rx_ring->buf[i];
+> > > +           if (!skb)
+> > > +                   continue;
+> > > +           dma = *((dma_addr_t *)skb->cb);
+> > > +           pci_unmap_single(pdev, dma, buf_sz, PCI_DMA_FROMDEVICE);
+> > > +           dev_kfree_skb_any(skb);
+> > > +           rx_ring->buf[i] = NULL;
+> > > +   }
+> > > +   pci_free_consistent(pdev, ring_sz, head, dma);
+> > > +
+> > > +   rtw_err(rtwdev, "failed to init rx buffer\n");
+> > > +
+> > > +   return ret;
+> > > +}
+> > > +
 
-I'm not sure, it's been a while.  I guess most of the difficulties would
-be around station removal?
+...
 
-> 2) or do you think maybe the mesh_plink_broken() call could just be
->    lifted into a workqueue instead?
+> After some testing, this function I think can be removed.
+> (rtw_pci_parse_configuration)
 
-As far as I know, no reason this can't wait until later; we might send
-a few frames to the wrong destination but that can happen anyway.  But
-there are a couple more walks in there like mesh_path_flush_by_nexthop().
+Why was it here in the first place? Were there any hardware quirks
+that this was covering? Or, are you just saying that the default
+values are already correct (plus, the PCI framework already brings you
+out of D3)? I do also see that removing this function doesn't actually
+have a net effect on the the PCI configuration, judging by lspci
+-vvvxxxx.
 
--- 
-Bob Copeland %% https://bobcopeland.com/
+Brian
