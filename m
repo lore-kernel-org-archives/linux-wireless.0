@@ -2,93 +2,87 @@ Return-Path: <SRS0=LoJ4=QT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3BA6C282C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:51:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AED0C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:59:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E7F7222BE
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:51:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E805222C0
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:59:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TT+Phy1J";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FCDUKIhs"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YbXM/p3v";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YbXM/p3v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728383AbfBLSv0 (ORCPT
+        id S1730450AbfBLS7p (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 13:51:26 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:47994 "EHLO
+        Tue, 12 Feb 2019 13:59:45 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:60722 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727348AbfBLSv0 (ORCPT
+        with ESMTP id S1728353AbfBLS7p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 13:51:26 -0500
+        Tue, 12 Feb 2019 13:59:45 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 168CC60734; Tue, 12 Feb 2019 18:51:25 +0000 (UTC)
+        id 714B460227; Tue, 12 Feb 2019 18:59:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549997485;
-        bh=7MdaXdIg+mUvfGbWjRALGiNA8qU/zMxwjPnFnSLekpQ=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=TT+Phy1JnQGF8wMBGtD/g6SOM7CxU5mk9WnbJ0//jrcKGvh/AB1Fj/9EJojrRJdEE
-         ZoYsiA6dzuawskMGQlp9vfspAMOF8qysLaL70IYXf1vcGhk0AFkkMeJPPCbfJ0bKhS
-         aaDXaimYeoBI7fA/MS/rTGtZHOxGXTIxaoqhfmSc=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        s=default; t=1549997984;
+        bh=DIAoN7wfg86xaD9z1+i7Ro8Uz/atNuH1GLWGHufgAsM=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=YbXM/p3v9NO9a5TqwoIc/TzheKqlWbgik5zu8HJGO1N0FkNISDPPeogLe8Y2RHQOK
+         0VxEg2zk55KdcTV5v+5RY6f3+8lOY2XVzCfpNMzvWJ0sOIwGAcOr0pBhN7CEyMVFY/
+         zHpw3D1LeGGjs5AlTD4AJtw8nnqILQucq/36R5S4=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A03CF60208;
-        Tue, 12 Feb 2019 18:51:23 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 19B85601C4;
+        Tue, 12 Feb 2019 18:59:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549997484;
-        bh=7MdaXdIg+mUvfGbWjRALGiNA8qU/zMxwjPnFnSLekpQ=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=FCDUKIhs59I+R5Z+UfC4ASZUCZ0ONJmjQ7rUwZvX7FUQwXcQl6elyXBgqWWNUyvLY
-         zRTfKMHuGKLYTY3tIyP6r+/ImmPkEAgVN3L6uiZikp+KhSCvtCrrSNT0CLZJ7D48Cd
-         ewSl25AknuDU5LuBCWT1UyKvJciKNAB+n1iwQcBA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A03CF60208
+        s=default; t=1549997984;
+        bh=DIAoN7wfg86xaD9z1+i7Ro8Uz/atNuH1GLWGHufgAsM=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=YbXM/p3v9NO9a5TqwoIc/TzheKqlWbgik5zu8HJGO1N0FkNISDPPeogLe8Y2RHQOK
+         0VxEg2zk55KdcTV5v+5RY6f3+8lOY2XVzCfpNMzvWJ0sOIwGAcOr0pBhN7CEyMVFY/
+         zHpw3D1LeGGjs5AlTD4AJtw8nnqILQucq/36R5S4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 19B85601C4
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/6] ath10k: add missing values to wmi_service_name()
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1549897787-28537-1-git-send-email-kvalo@codeaurora.org>
-References: <1549897787-28537-1-git-send-email-kvalo@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190212185125.168CC60734@smtp.codeaurora.org>
-Date:   Tue, 12 Feb 2019 18:51:25 +0000 (UTC)
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name, sgruszka@redhat.com,
+        stefan.wahren@i2se.com
+Subject: Re: [PATCH wireless-drivers 0/3] fix multiple issues in mt76u error path
+References: <cover.1549832428.git.lorenzo.bianconi@redhat.com>
+Date:   Tue, 12 Feb 2019 20:59:40 +0200
+In-Reply-To: <cover.1549832428.git.lorenzo.bianconi@redhat.com> (Lorenzo
+        Bianconi's message of "Sun, 10 Feb 2019 22:49:12 +0100")
+Message-ID: <87va1orfxf.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
-> After implementing the next patch GCC reported:
-> 
-> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_BTCOEX' not handled in switch [-Wswitch]
-> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_MGMT_TX_WMI' not handled in switch [-Wswitch]
-> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_SPOOF_MAC_SUPPORT' not handled in switch [-Wswitch]
-> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT' not handled in switch [-Wswitch]
-> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT' not handled in switch [-Wswitch]
-> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_THERM_THROT' not handled in switch [-Wswitch]
-> 
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Fix following issues in mt76u initialization error path:
+> - NULL pointer dereference in mt76u_mcu_deinit
+> - possible memory leak in mt76u_buf_free
+> - use-after-free warning since mt76u_queues_deinit is run twice
+>
+> This series has been tested running mt76x0u driver on rpi3+
+> (dwc_otg controller does not support SG I/O)
+>
+> Lorenzo Bianconi (3):
+>   mt76: usb: fix possible NULL pointer dereference in mt76u_mcu_deinit
+>   mt76: usb: fix possible memory leak in mt76u_buf_free
+>   mt76: usb: do not run mt76u_queues_deinit twice
 
-6 patches applied to ath-next branch of ath.git, thanks.
-
-2321dd5d78fb ath10k: add missing values to wmi_service_name()
-95cccf4d79fe ath10k: make wmi_service_name() warn about missing service ids
-db3b6280f5f1 ath10k: change wmi.h to include only ieee80211.h
-385bd8816cb5 ath10k: align ath10k_htt_txbuf structures
-bdf2bd9aa684 ath10k: fix documentation in ath10k_wow_convert_8023_to_80211()
-01dc76dfdc91 ath10k: copy the whole struct ath10k_bus_params in ath10k_core_register()
+As we are in -rc6 now, better to push these via -next. So I assume Felix
+will take these.
 
 -- 
-https://patchwork.kernel.org/patch/10806063/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Kalle Valo
