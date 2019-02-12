@@ -2,82 +2,92 @@ Return-Path: <SRS0=LoJ4=QT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E953C282CE
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:43:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55A4AC282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:45:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D0B282190B
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:43:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 158D52190B
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:45:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="nVWGcJLq";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aQbXcs6B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732003AbfBLSnl (ORCPT
+        id S1730096AbfBLSpp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 13:43:41 -0500
-Received: from shards.monkeyblade.net ([23.128.96.9]:56252 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727469AbfBLSnk (ORCPT
+        Tue, 12 Feb 2019 13:45:45 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:39436 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727303AbfBLSpo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 13:43:40 -0500
-Received: from localhost (96-89-128-221-static.hfc.comcastbusiness.net [96.89.128.221])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 1781B14C50532;
-        Tue, 12 Feb 2019 10:43:40 -0800 (PST)
-Date:   Tue, 12 Feb 2019 10:43:39 -0800 (PST)
-Message-Id: <20190212.104339.1794719792249723582.davem@davemloft.net>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi,
-        tgraf@suug.ch, herbert@gondor.apana.org.au, johannes.berg@intel.com
-Subject: Re: [PATCH v2] rhashtable: make walk safe from softirq context
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20190206090721.8001-1-johannes@sipsolutions.net>
-References: <20190206090721.8001-1-johannes@sipsolutions.net>
-X-Mailer: Mew version 6.8 on Emacs 26.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Tue, 12 Feb 2019 10:43:40 -0800 (PST)
+        Tue, 12 Feb 2019 13:45:44 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 43A6660208; Tue, 12 Feb 2019 18:45:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549997144;
+        bh=cBs2qsOgt2Pp1+10w7CYlKr2ObY5/XgaF//tr52//7Q=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=nVWGcJLqj80eOVmMOgTGR59Si0j25OcLm5q42dFkXOP5Pt3UdaY4hiTinbsQZ5Mjr
+         /CwiSV9Ns95sFguySUxCKD2F7hKSgCWucbrhQLotBMbiTtjE1OZMem3l4Rvm9D/og+
+         dHTXAGpGSkVt3NXY4roof76Fssoll5Dl0R93Kmnw=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0610E6030D;
+        Tue, 12 Feb 2019 18:45:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1549997143;
+        bh=cBs2qsOgt2Pp1+10w7CYlKr2ObY5/XgaF//tr52//7Q=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=aQbXcs6BNKBVgaJL2u9cWLYCayNtx5a2TooT+vEI2DDALqDGfA3SYvhuJ940n2xZH
+         rTzNlmMh9GDE7BWSn1E9w4oy+jKDty2gbXbcvoRL10OVWEKYrBekxJ7crQ8Vei75SW
+         8cNfOJ9dX0il+xDr9Z6RdL8j7J/fiwKU6izhBASw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0610E6030D
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v6 2/4] ath9k: Switch to mac80211 TXQ scheduling and
+ airtime APIs
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190122142019.21417-3-toke@redhat.com>
+References: <20190122142019.21417-3-toke@redhat.com>
+To:     =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        ath10k@lists.infradead.org, make-wifi-fast@lists.bufferbloat.net
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190212184544.43A6660208@smtp.codeaurora.org>
+Date:   Tue, 12 Feb 2019 18:45:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed,  6 Feb 2019 10:07:21 +0100
+Toke Høiland-Jørgensen wrote:
 
-> From: Johannes Berg <johannes.berg@intel.com>
+> This moves the ath9k driver to use the mac80211 TXQ scheduling and
+> airtime accounting APIs, removing the corresponding state tracking
+> inside the driver.
 > 
-> When an rhashtable walk is done from softirq context, we rightfully
-> get a lockdep complaint saying that we could get a softirq in the
-> middle of a rehash, and thus deadlock on &ht->lock. This happened
-> e.g. in mac80211 as it does a walk in softirq context.
-> 
-> Fix this by using spin_lock_bh() wherever we use the &ht->lock.
-> 
-> Initially, I thought it would be sufficient to do this only in the
-> rehash (rhashtable_rehash_table), but I changed my mind:
->  * the caller doesn't really need to disable softirqs across all
->    of the rhashtable_walk_* functions, only those parts that they
->    actually do within the lock need it
->  * maybe more importantly, it would still lead to massive lockdep
->    complaints - false positives, but hard to fix - because lockdep
->    wouldn't know about different ht->lock instances, and thus one
->    user of the code doing a walk w/o any locking (when it only ever
->    uses process context this is fine) vs. another user like in wifi
->    where we noticed this problem would still cause it to complain.
-> 
-> Cc: stable@vger.kernel.org
-> Reported-by: Jouni Malinen <j@w1.fi>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+> [rmanohar@codeaurora.org: fixed checkpatch error and warnings]
+> Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Herbert and Johannes, I need some guidance.
+3 patches applied to ath-next branch of ath.git, thanks.
 
-It seems Herbert wants the softirq usage of rhashtables removed, but
-since things have been like this for so long that's not the most
-reasonable requirement if we can fix it more simply with Johannes's
-patch especially for -stable.
+89cea7493a34 ath9k: Switch to mac80211 TXQ scheduling and airtime APIs
+bb2edb733586 ath10k: migrate to mac80211 txq scheduling
+d1ce37b7831a ath10k: report estimated frame transmit airtime to improve fairness
 
-Thanks.
+-- 
+https://patchwork.kernel.org/patch/10775549/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
