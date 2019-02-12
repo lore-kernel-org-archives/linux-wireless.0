@@ -2,289 +2,206 @@ Return-Path: <SRS0=LoJ4=QT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3A90C282C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 09:30:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3790EC282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 11:29:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34C10218A3
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 09:30:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAF9C2080F
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 11:29:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nHqw0Hhx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728832AbfBLJam (ORCPT
+        id S1728082AbfBLL3A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 04:30:42 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:45150 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726026AbfBLJam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 04:30:42 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 37243C05D419;
-        Tue, 12 Feb 2019 09:30:41 +0000 (UTC)
-Received: from localhost (ovpn-204-125.brq.redhat.com [10.40.204.125])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 71B3C62943;
-        Tue, 12 Feb 2019 09:30:37 +0000 (UTC)
-Date:   Tue, 12 Feb 2019 10:30:36 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Stefan Wahren <stefan.wahren@i2se.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Doug Anderson <dianders@chromium.org>,
-        Minas Harutyunyan <hminas@synopsys.com>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
-Message-ID: <20190212093035.GB12906@redhat.com>
-References: <20190211173315.GE6292@redhat.com>
- <Pine.LNX.4.44L0.1902111246410.1543-100000@iolanthe.rowland.org>
- <CAJ0CqmVFVBXi5E07-ZsYojC7mP4ogpwbcDkDTeebHwX+ayz2DQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="FL5UXtIhxfXey3p5"
-Content-Disposition: inline
-In-Reply-To: <CAJ0CqmVFVBXi5E07-ZsYojC7mP4ogpwbcDkDTeebHwX+ayz2DQ@mail.gmail.com>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Tue, 12 Feb 2019 09:30:41 +0000 (UTC)
+        Tue, 12 Feb 2019 06:29:00 -0500
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:46745 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726044AbfBLL3A (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Feb 2019 06:29:00 -0500
+Received: by mail-pf1-f194.google.com with SMTP id g6so1137352pfh.13
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 03:28:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=dQB05cyqgNTdWU1w5LMiOlQ2f9MRJ1sA5SNyUQFtfF4=;
+        b=nHqw0Hhxkway923h9YEExomkRQb2rIG1BlKi41DVXE8I0CRceTPF70ygFb/hqmoyYZ
+         ZUoDXfQQJo/c7oh8NzPLkxIqIjEmYV6/R4+HAfvr6sXFPwF8v4APkmiLTgAvB9V13kRt
+         tRSU+7aSPOITmL9jMvqxSwZWxGWjSJsuX4Eo6UroMyHylDAiaZjDNDQXIFBtWBWXGFcS
+         R8mOD4KyVvkUeHrxl5t1dEjFJzv4iFBCflAgHNDxqzmdYGAj3RkD7TyDx7nXI0F8u5b6
+         7eiN1pYxgnowXMRSf/vrTccqFkNnKcjvaSH8vG3TuiovD3wM3+GokJe49pnIO4GixXVu
+         VZnA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=dQB05cyqgNTdWU1w5LMiOlQ2f9MRJ1sA5SNyUQFtfF4=;
+        b=M/65K3pv0PBJXWlmW4WZG9FbRaJHPeFqTM5D2bUcmSHAHRQTO8NNL/RYnIstVwz1kD
+         ROg7p1PCyhWX5xNnDiGwEmMnzreIw3NVPLvWOpWY6Vpg9XjLUJhtpS2Ig1fkF5pnA5aw
+         STjkfU5lq7/zwVMgPD+L9Qv6jzCYW9VzASjS3BN8UpIWcxlqQ5OXHuolmuszZW9wdFku
+         hVUOlkThax9W2mMhUVTH4HZEi2YU0P7o9o5WP6AVvp0o6RtPGOIm5RQcfw0Zr7KInff+
+         QBp8riUzaiuP+Zeh9NrAjEI6G1ObJkn6MPK1yZG83JN4ayPef5CayP4gNFcnUa/HJMxm
+         VjQw==
+X-Gm-Message-State: AHQUAuaaH2PQV6JuE2y497MFi6ctnirsySF1aMfGnsP1i+XGD4icqJ3E
+        cFjmI3tteVQ5a3+MOUIResA=
+X-Google-Smtp-Source: AHgI3Iah3giIKc0QOh+5al9PpCdFeET6PYhW5yRzVz/NxLBd9njoJfDkAmQnxbhqvIVDuXDJj0nfiw==
+X-Received: by 2002:a63:5109:: with SMTP id f9mr3192974pgb.450.1549970938169;
+        Tue, 12 Feb 2019 03:28:58 -0800 (PST)
+Received: from cpu459.localdomain ([203.196.161.90])
+        by smtp.gmail.com with ESMTPSA id t65sm26445006pfi.117.2019.02.12.03.28.55
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 12 Feb 2019 03:28:57 -0800 (PST)
+From:   Siva Rebbagondla <siva8118@gmail.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, amitkarwar@gmail.com,
+        siva.rebbagondla@redpinesignals.com,
+        rishikesh.basu@redpinesignals.com
+Subject: [PATCH] rsi: fix spelling mistakes
+Date:   Tue, 12 Feb 2019 16:58:34 +0530
+Message-Id: <1549970914-3880-1-git-send-email-siva8118@gmail.com>
+X-Mailer: git-send-email 2.5.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
---FL5UXtIhxfXey3p5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Trivial fixes to spelling mistakes in various files in rsi folder.
 
-On Tue, Feb 12, 2019 at 01:06:00AM +0100, Lorenzo Bianconi wrote:
-> >
-> > On Mon, 11 Feb 2019, Stanislaw Gruszka wrote:
-> >
-> > > On Mon, Feb 11, 2019 at 10:12:57AM -0500, Alan Stern wrote:
-> > > > On Mon, 11 Feb 2019, Lorenzo Bianconi wrote:
-> > > >
-> > > > > Here it is a different issue respect to the AMD IOMMU one, dwc2 host driver
-> > > > > does not implement SG I/O so probing fails. I guess it is still useful to
-> > > > > implement a 'legacy' mode that enable mt76 on host controllers that do not implement
-> > > > > SG I/O (rpi is a very common device so it will be cool to have mt76 working on
-> > > > > it). Moreover we are not removing functionalities, user experience will remain
-> > > > > the same
-> > > >
-> > > > Has anyone considered adding SG support to dwc2?  It shouldn't be very
-> > > > difficult.  The corresponding change for ehci-hcd required adding no
-> > > > more than about 30 lines of code.
-> > >
-> > > That would be cool. Perhaps somebody with dwc2 hardware could do this.
-> > >
-> > > However in mt76x02u we possibly would like to support other usb host
-> > > drivers with sg_tablesize = 0 . I would like to clarify what is correct
-> > > to do with such drivers.
-> > >
-> > > Is ok to pass buffer via urb->sg with urb->num_sgs = 1 ? Or maybe
-> > > urb->num_sgs should be 0 to pass buffer via urb->sg on such drivers ?
-> > > Or maybe non of above is correct and the only option that will work
-> > > in 100% is pass buffer via urb->transfer_buffer ?
-> >
-> > See the kerneldoc for usb_sg_init(), usb_sg_wait(), and usb_sg_cancel()
-> > in drivers/usb/core/message.c.  These routines will always do the right
-> > thing -- however usb_sg_wait() must be called in process context.
-> >
-> > Alan Stern
-> >
-> 
-> Hi Alan,
-> 
-> I actually used usb_sg_init()/usb_sg_wait() as reference to implement
-> mt76u {tx/rx} datapath, but I will double-check.
-> I guess we should even consider if there are other usb host drivers
-> that do not implement SG I/O and it is worth to support.
-> I am wondering if the right approach is to add SG to the controller
-> one by one or have legacy I/O in mt76 (not sure what is the 'best'
-> approach)
-
-In usb_sg_init() urb->num_sgs is set 0 for sg_tablesize = 0 controllers.
-In mt76 we set urb->num_sgs to 1. I thought it is fine, but now I think
-this is bug. We can fix that without changing allocation method and
-still use SG allocation. Attached patch do this, please check if it works
-on rpi. Patch is on top of your error path fixes.
-
-Stanislaw
-
---FL5UXtIhxfXey3p5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="0001-mt76usb-do-not-set-urb-num_sgs-to-1-for-non-SG-usb-h.patch"
-
-From f79ac0df967d406523d0a1c03a138d1394e7665a Mon Sep 17 00:00:00 2001
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Tue, 12 Feb 2019 10:02:53 +0100
-Subject: [PATCH] mt76usb: do not set urb->num_sgs to 1 for non SG usb host
- drivers
-
-Track number of segments in mt76u_buf structure and do not
-submit urbs with urb->num_sgs = 1 if usb host driver
-sg_tablesize is zero.
-
-This suppose fix problem of mt76 not working with some usb
-host controllers like dwc2.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h |  1 +
- drivers/net/wireless/mediatek/mt76/usb.c  | 55 ++++++++++++++---------
- 2 files changed, 36 insertions(+), 20 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c  | 8 ++++----
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 2 +-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 8 ++++----
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 4 ++--
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 2 +-
+ 5 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 2e5bcb3fdff7..eadc913c37b6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -86,6 +86,7 @@ struct mt76_queue_buf {
- struct mt76u_buf {
- 	struct mt76_dev *dev;
- 	struct urb *urb;
-+	int num_sgs;
- 	size_t len;
- 	bool done;
- };
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index a1811c39415e..d82de59ec6dc 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -299,14 +299,14 @@ mt76u_fill_rx_sg(struct mt76_dev *dev, struct mt76u_buf *buf,
- 	if (i < nsgs) {
- 		int j;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+index d0c35f3..c71b41e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
++++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+@@ -59,7 +59,7 @@ static int rsi_sdio_stats_read(struct seq_file *seq, void *data)
+ }
  
--		for (j = nsgs; j < urb->num_sgs; j++)
-+		for (j = nsgs; j < buf->num_sgs; j++)
- 			skb_free_frag(sg_virt(&urb->sg[j]));
--		urb->num_sgs = i;
-+		buf->num_sgs = i;
+ /**
+- * rsi_sdio_stats_open() - This funtion calls single open function of seq_file
++ * rsi_sdio_stats_open() - This function calls single open function of seq_file
+  *			   to open file and read contents from it.
+  * @inode: Pointer to the inode structure.
+  * @file: Pointer to the file structure.
+@@ -93,7 +93,7 @@ static int rsi_version_read(struct seq_file *seq, void *data)
+ }
+ 
+ /**
+- * rsi_version_open() - This funtion calls single open function of seq_file to
++ * rsi_version_open() - This function calls single open function of seq_file to
+  *			open file and read contents from it.
+  * @inode: Pointer to the inode structure.
+  * @file: Pointer to the file structure.
+@@ -178,7 +178,7 @@ static int rsi_stats_read(struct seq_file *seq, void *data)
+ }
+ 
+ /**
+- * rsi_stats_open() - This funtion calls single open function of seq_file to
++ * rsi_stats_open() - This function calls single open function of seq_file to
+  *		      open file and read contents from it.
+  * @inode: Pointer to the inode structure.
+  * @file: Pointer to the file structure.
+@@ -207,7 +207,7 @@ static int rsi_debug_zone_read(struct seq_file *seq, void *data)
+ }
+ 
+ /**
+- * rsi_debug_read() - This funtion calls single open function of seq_file to
++ * rsi_debug_read() - This function calls single open function of seq_file to
+  *		      open file and read contents from it.
+  * @inode: Pointer to the inode structure.
+  * @file: Pointer to the file structure.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index aded1ae..6584f51 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -1332,7 +1332,7 @@ static void rsi_fill_rx_status(struct ieee80211_hw *hw,
+ }
+ 
+ /**
+- * rsi_indicate_pkt_to_os() - This function sends recieved packet to mac80211.
++ * rsi_indicate_pkt_to_os() - This function sends received packet to mac80211.
+  * @common: Pointer to the driver private structure.
+  * @skb: Pointer to the socket buffer structure.
+  *
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 4042414..a77f0a8 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -409,8 +409,8 @@ static int rsi_load_radio_caps(struct rsi_common *common)
+  * rsi_mgmt_pkt_to_core() - This function is the entry point for Mgmt module.
+  * @common: Pointer to the driver private structure.
+  * @msg: Pointer to received packet.
+- * @msg_len: Length of the recieved packet.
+- * @type: Type of recieved packet.
++ * @msg_len: Length of the received packet.
++ * @type: Type of received packet.
+  *
+  * Return: 0 on success, -1 on failure.
+  */
+@@ -1547,7 +1547,7 @@ int rsi_send_ps_request(struct rsi_hw *adapter, bool enable,
+ }
+ 
+ /**
+- * rsi_set_antenna() - This fuction send antenna configuration request
++ * rsi_set_antenna() - This function send antenna configuration request
+  *		       to device
+  *
+  * @common: Pointer to the driver private structure.
+@@ -1955,7 +1955,7 @@ int rsi_handle_card_ready(struct rsi_common *common, u8 *msg)
+ 
+ /**
+  * rsi_mgmt_pkt_recv() - This function processes the management packets
+- *			 recieved from the hardware.
++ *			 received from the hardware.
+  * @common: Pointer to the driver private structure.
+  * @msg: Pointer to the received packet.
+  *
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index b412b65e..aa9d67d 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -138,7 +138,7 @@ static int rsi_issue_sdiocommand(struct sdio_func *func,
+ }
+ 
+ /**
+- * rsi_handle_interrupt() - This function is called upon the occurence
++ * rsi_handle_interrupt() - This function is called upon the occurrence
+  *			    of an interrupt.
+  * @function: Pointer to the sdio_func structure.
+  *
+@@ -875,7 +875,7 @@ static int rsi_init_sdio_interface(struct rsi_hw *adapter,
+ 		goto fail;
  	}
  
--	urb->num_sgs = max_t(int, i, urb->num_sgs);
--	buf->len = urb->num_sgs * sglen,
--	sg_init_marker(urb->sg, urb->num_sgs);
-+	buf->num_sgs = max_t(int, i, buf->num_sgs);
-+	buf->len = buf->num_sgs * sglen,
-+	sg_init_marker(urb->sg, buf->num_sgs);
+-	rsi_dbg(INIT_ZONE, "%s: Setup card succesfully\n", __func__);
++	rsi_dbg(INIT_ZONE, "%s: Setup card successfully\n", __func__);
  
- 	return i ? : -ENOMEM;
- }
-@@ -325,6 +325,7 @@ int mt76u_buf_alloc(struct mt76_dev *dev, struct mt76u_buf *buf,
+ 	status = rsi_init_sdio_slave_regs(adapter);
+ 	if (status) {
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index f360690..5b82d29 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -252,7 +252,7 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
  
- 	sg_init_table(buf->urb->sg, nsgs);
- 	buf->dev = dev;
-+	buf->num_sgs = nsgs;
- 
- 	return mt76u_fill_rx_sg(dev, buf, nsgs, len, sglen);
- }
-@@ -336,7 +337,7 @@ void mt76u_buf_free(struct mt76u_buf *buf)
- 	struct scatterlist *sg;
- 	int i;
- 
--	for (i = 0; i < urb->num_sgs; i++) {
-+	for (i = 0; i < buf->num_sgs; i++) {
- 		sg = &urb->sg[i];
- 		if (!sg)
- 			continue;
-@@ -347,9 +348,10 @@ void mt76u_buf_free(struct mt76u_buf *buf)
- }
- EXPORT_SYMBOL_GPL(mt76u_buf_free);
- 
--int mt76u_submit_buf(struct mt76_dev *dev, int dir, int index,
--		     struct mt76u_buf *buf, gfp_t gfp,
--		     usb_complete_t complete_fn, void *context)
-+static void
-+mt76u_fill_bulk_urb(struct mt76_dev *dev, int dir, int index,
-+		    struct mt76u_buf *buf, usb_complete_t complete_fn,
-+		    void *context)
- {
- 	struct usb_interface *intf = to_usb_interface(dev->dev);
- 	struct usb_device *udev = interface_to_usbdev(intf);
-@@ -360,9 +362,25 @@ int mt76u_submit_buf(struct mt76_dev *dev, int dir, int index,
- 	else
- 		pipe = usb_sndbulkpipe(udev, dev->usb.out_ep[index]);
- 
--	usb_fill_bulk_urb(buf->urb, udev, pipe, NULL, buf->len,
--			  complete_fn, context);
-+	usb_fill_bulk_urb(buf->urb, udev, pipe, NULL, buf->len, complete_fn,
-+			  context);
-+
-+	if (udev->bus->sg_tablesize > 0) {
-+		buf->urb->num_sgs = buf->num_sgs;
-+	} else {
-+		WARN_ON_ONCE(buf->num_sgs != 1);
-+		/* See usb_sg_init() */
-+		buf->urb->num_sgs = 0;
-+		if (!PageHighMem(sg_page(buf->urb->sg)))
-+			buf->urb->transfer_buffer = sg_virt(buf->urb->sg);
-+	}
-+}
- 
-+int mt76u_submit_buf(struct mt76_dev *dev, int dir, int index,
-+		     struct mt76u_buf *buf, gfp_t gfp,
-+		     usb_complete_t complete_fn, void *context)
-+{
-+	mt76u_fill_bulk_urb(dev, dir, index, buf, complete_fn, context);
- 	return usb_submit_urb(buf->urb, gfp);
- }
- EXPORT_SYMBOL_GPL(mt76u_submit_buf);
-@@ -672,10 +690,11 @@ static void mt76u_complete_tx(struct urb *urb)
- }
- 
- static int
--mt76u_tx_build_sg(struct sk_buff *skb, struct urb *urb)
-+mt76u_tx_build_sg(struct sk_buff *skb, struct mt76u_buf *buf)
- {
- 	int nsgs = 1 + skb_shinfo(skb)->nr_frags;
- 	struct sk_buff *iter;
-+	struct urb *urb = buf->urb;
- 
- 	skb_walk_frags(skb, iter)
- 		nsgs += 1 + skb_shinfo(iter)->nr_frags;
-@@ -684,7 +703,8 @@ mt76u_tx_build_sg(struct sk_buff *skb, struct urb *urb)
- 
- 	nsgs = min_t(int, MT_SG_MAX_SIZE, nsgs);
- 	sg_init_marker(urb->sg, nsgs);
--	urb->num_sgs = nsgs;
-+	buf->num_sgs = nsgs;
-+	buf->len = skb->len;
- 
- 	return skb_to_sgvec_nomark(skb, urb->sg, 0, skb->len);
- }
-@@ -694,12 +714,9 @@ mt76u_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
- 		   struct sk_buff *skb, struct mt76_wcid *wcid,
- 		   struct ieee80211_sta *sta)
- {
--	struct usb_interface *intf = to_usb_interface(dev->dev);
--	struct usb_device *udev = interface_to_usbdev(intf);
- 	u8 ep = q2ep(q->hw_idx);
- 	struct mt76u_buf *buf;
- 	u16 idx = q->tail;
--	unsigned int pipe;
- 	int err;
- 
- 	if (q->queued == q->ndesc)
-@@ -712,13 +729,11 @@ mt76u_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
- 	buf = &q->entry[idx].ubuf;
- 	buf->done = false;
- 
--	err = mt76u_tx_build_sg(skb, buf->urb);
-+	err = mt76u_tx_build_sg(skb, buf);
- 	if (err < 0)
- 		return err;
- 
--	pipe = usb_sndbulkpipe(udev, dev->usb.out_ep[ep]);
--	usb_fill_bulk_urb(buf->urb, udev, pipe, NULL, skb->len,
--			  mt76u_complete_tx, buf);
-+	mt76u_fill_bulk_urb(dev, USB_DIR_OUT, ep, buf, mt76u_complete_tx, buf);
- 
- 	q->tail = (q->tail + 1) % q->ndesc;
- 	q->entry[idx].skb = skb;
+ /**
+  * rsi_rx_done_handler() - This function is called when a packet is received
+- *			   from USB stack. This is callback to recieve done.
++ *			   from USB stack. This is callback to receive done.
+  * @urb: Received URB.
+  *
+  * Return: None.
 -- 
-2.19.2
+2.5.5
 
-
---FL5UXtIhxfXey3p5--
