@@ -2,106 +2,118 @@ Return-Path: <SRS0=LoJ4=QT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E93C7C282C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 20:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9AD2C282CE
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 21:54:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B60E8222C1
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 20:02:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5201222B1
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 21:54:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="L8qCl0Yh";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QEgh6LJR"
+	dkim=pass (2048-bit key) header.d=bobcopeland-com.20150623.gappssmtp.com header.i=@bobcopeland-com.20150623.gappssmtp.com header.b="q01WVYvy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732190AbfBLUCU (ORCPT
+        id S1727952AbfBLVyk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 15:02:20 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:41092 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731104AbfBLUCU (ORCPT
+        Tue, 12 Feb 2019 16:54:40 -0500
+Received: from mail-it1-f194.google.com ([209.85.166.194]:54447 "EHLO
+        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726809AbfBLVyk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 15:02:20 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id E5AB760AD8; Tue, 12 Feb 2019 20:02:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550001738;
-        bh=jKT03a08Z30mEnYMARbltaWxzfCWnE1YtlEckHE2t54=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=L8qCl0YhQ6OwA6PuMvcPRnh7DycwkAcOGSZK0A7dMLlhcsSvcwdGInsJC3kNaYxLr
-         +rgHnAyT2RyBVtAkm+F780BavyHAVO4DdfgTMZdW/Kwu+vT/zGC5H2jrLJW8Te5oFw
-         rmItTxVfyxUuNbT4NC5PMZT5MEWQ4FnNTXa8gmL0=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 21AEF608CC;
-        Tue, 12 Feb 2019 20:02:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550001734;
-        bh=jKT03a08Z30mEnYMARbltaWxzfCWnE1YtlEckHE2t54=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=QEgh6LJRWJUoL+B2Z0xF4DHdTs4crW8XMBSjZWfEJlc3LNFmhIME9U0ea2eJYmCuJ
-         8SDyXIqVIu0UoI9YQU9R1lrABHCAjS+90ashKjSQ2aozz0lQmqva+sDIOE69uesMPO
-         BUCbxYZUwgx9e3qv83bP8/YSQ4TPR/eJ/wGf06/4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 21AEF608CC
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Tue, 12 Feb 2019 16:54:40 -0500
+Received: by mail-it1-f194.google.com with SMTP id p11so543398itf.4
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 13:54:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bobcopeland-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ONUEYjzAHpWPE8vf/wPJo/4M5pYR5iObCcWZqTM/Nc8=;
+        b=q01WVYvy0Gd7CRBjoQR3aLB+KLt+75jY5t+1VVKcVt0JW6FijsvyJ43CYPEH67WgJc
+         XCsMht31ZQUe6uSQX1cfbGKCeMKbbQQJWvKA45Wq9e7hTObw6INu+6nfYinBi+M3nIDy
+         3SkDu/UCR2yQJBYWuoZ4c16BcWK4v5qGFqhRPM+cw737AcF65H5qTWSQAz4lJzoVJ8yo
+         +8bR2bxX68qtjarK6OLrjkCcd1yzCqI8bw1BmH4D3PBKNFj1PCpSXBT/a/ubp10K9awa
+         QWhaXCMYBXCSu5G8OxFL4sYHMCKrVnaL46a+el9XhWWU9vFQ9NYSOzMUKfNT+HXDUMW3
+         5NIw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=ONUEYjzAHpWPE8vf/wPJo/4M5pYR5iObCcWZqTM/Nc8=;
+        b=Xe6yMx1dq6WAH2EOjt3nS9xXDufRK6LEA2Bkucd3X5v/2cIWK8cT3qNcLk/D14OpPA
+         Kon7XsAvWfcesHlgQdElqPx90Ql1HLK/PTld+LlBH4VjtH70P4iT88TqFGPbb8tXwcSV
+         l/ip4R8srfQFEnftCDbi/kCHiaY6soO3fy3p8+JOpW3xltuEw3ujZ0z7Afb2puNHyDhD
+         MvAD2m+qFuQ9REI1D8ylIzJKa7KC0G5HnFOa9ga8QJ7lhcxwORYEoOciwCC9fOdGJ692
+         MEPfhnaLDNnhHXNV1jJzJOn61kpLDdbxk+Kv2nUMe1+xOGuug6pMtdVHY9lbPgzBn+OJ
+         AQVg==
+X-Gm-Message-State: AHQUAuYypvqVpFhYRwZ+8SlN74rqN/YcYaMcIyJZ5KzhYcvVmDsRpLKd
+        w1jACUP4z2/TUbEX0QiXHWk0vQ==
+X-Google-Smtp-Source: AHgI3IbnXRfwlHBPI/zR+atuj4jzvn7g1/tDIW0UrFa/gJNqPYR8wj1Cg0AkQJKO3LRr7JZx0kOq4w==
+X-Received: by 2002:a24:1f0c:: with SMTP id d12mr508018itd.147.1550008479018;
+        Tue, 12 Feb 2019 13:54:39 -0800 (PST)
+Received: from hash (CPE30b5c2fb365b-CM18593342f28f.cpe.net.cable.rogers.com. [99.232.51.173])
+        by smtp.gmail.com with ESMTPSA id j142sm1997115itj.40.2019.02.12.13.54.37
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 12 Feb 2019 13:54:38 -0800 (PST)
+Received: from bob by hash with local (Exim 4.92-RC4)
+        (envelope-from <me@bobcopeland.com>)
+        id 1gtg0j-0006gD-7D; Tue, 12 Feb 2019 16:54:37 -0500
+Date:   Tue, 12 Feb 2019 16:54:37 -0500
+From:   Bob Copeland <me@bobcopeland.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, j@w1.fi, tgraf@suug.ch,
+        herbert@gondor.apana.org.au
+Subject: Re: [PATCH v2] rhashtable: make walk safe from softirq context
+Message-ID: <20190212215437.GA18182@localhost>
+References: <20190206090721.8001-1-johannes@sipsolutions.net>
+ <20190212.104339.1794719792249723582.davem@davemloft.net>
+ <ea6479e089dffc46bb9b09e28d364db4c071998f.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2 1/2] ath10k: Add support for ack rssi value of
- management tx packets
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1549975191-20912-2-git-send-email-aambure@codeaurora.org>
-References: <1549975191-20912-2-git-send-email-aambure@codeaurora.org>
-To:     Abhishek Ambure <aambure@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Abhishek Ambure <aambure@codeaurora.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190212200218.E5AB760AD8@smtp.codeaurora.org>
-Date:   Tue, 12 Feb 2019 20:02:14 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ea6479e089dffc46bb9b09e28d364db4c071998f.camel@sipsolutions.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Abhishek Ambure <aambure@codeaurora.org> wrote:
-
-> In WCN3990, WMI_TLV_SERVICE_TX_DATA_MGMT_ACK_RSSI service Indicates that
-> the firmware has the capability to send the RSSI value of the ACK for all
-> data and management packets transmitted.
+On Tue, Feb 12, 2019 at 08:03:17PM +0100, Johannes Berg wrote:
+> commit 60854fd94573f0d3b80b55b40cf0140a0430f3ab
+> Author: Bob Copeland <me@bobcopeland.com>
+> Date:   Wed Mar 2 10:09:20 2016 -0500
 > 
-> If WMI_RSRC_CFG_FLAG_TX_ACK_RSSI is set in host capability then firmware
-> sends RSSI value in "management" tx completion event. Host extracts ack
-> rssi values of management packets from their tx completion event.
+>     mac80211: mesh: convert path table to rhashtable
 > 
-> Tested HW: WCN3990
-> Tested FW: WLAN.HL.2.0-01617-QCAHLSWMTPLZ-1
+> which is kinda old. Not sure why this didn't surface before, because the
+> spinlock was introduced *before*, otherwise certainly the mutex would've
+> caused us to not be able to do this code to start with (commit
+> c6ff5268293 - rhashtable: Fix walker list corruption).
 > 
-> Signed-off-by: Abhishek Ambure <aambure@codeaurora.org>
-> V2: Tested HW & Tested FW added
+> That commit also just converted an existing hashtable walk to
+> rhashtable, so not sure that counts as having introduced the problem :-)
 
-Does not apply. Also the sha1 information was incorrect so 3-way merge
-didn't work. Did you use ath.git master branch as the baseline for these
-patches?
+Yeah, I didn't change any of the contexts in which the iterations were
+called, except making it possible to replace the previous mesh-specific
+RCU hashtable with rhashtable by introducing this.  That said, it would
+certainly be nice to not have to walk the table to find paths that
+use a specific station as nexthop.
 
-error: patch failed: drivers/net/wireless/ath/ath10k/wmi-tlv.c:1619
-error: drivers/net/wireless/ath/ath10k/wmi-tlv.c: patch does not apply
-error: patch failed: drivers/net/wireless/ath/ath10k/wmi-tlv.h:1578
-error: drivers/net/wireless/ath/ath10k/wmi-tlv.h: patch does not apply
-error: patch failed: drivers/net/wireless/ath/ath10k/wmi.c:2369
-error: drivers/net/wireless/ath/ath10k/wmi.c: patch does not apply
-stg import: Diff does not apply cleanly
+> But I guess we should also ask Bob first:
+> 1) do you think it'd be easy to maintain a separate list or avoid the
+>    iteration in some otherway, and make that a small enough patch to be
+>    applicable for stable?
 
-2 patches set to Changes Requested.
+I'm not sure, it's been a while.  I guess most of the difficulties would
+be around station removal?
 
-10807833 [v2,1/2] ath10k: Add support for ack rssi value of management tx packets
-10807837 [v2,2/2] ath10k: Add support for ack rssi value of data tx packets
+> 2) or do you think maybe the mesh_plink_broken() call could just be
+>    lifted into a workqueue instead?
+
+As far as I know, no reason this can't wait until later; we might send
+a few frames to the wrong destination but that can happen anyway.  But
+there are a couple more walks in there like mesh_path_flush_by_nexthop().
 
 -- 
-https://patchwork.kernel.org/patch/10807833/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Bob Copeland %% https://bobcopeland.com/
