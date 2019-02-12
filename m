@@ -2,132 +2,101 @@ Return-Path: <SRS0=LoJ4=QT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5B1C282C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 15:38:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BEC2C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 15:50:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6670B20811
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 15:38:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="zCg8eRoX"
+	by mail.kernel.org (Postfix) with ESMTP id 52CF920842
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 15:50:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729347AbfBLPi5 (ORCPT
+        id S1729371AbfBLPuH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 10:38:57 -0500
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:37521 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726238AbfBLPi5 (ORCPT
+        Tue, 12 Feb 2019 10:50:07 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:54878 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728347AbfBLPuH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 10:38:57 -0500
-Received: by mail-ed1-f67.google.com with SMTP id m12so872829edv.4
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 07:38:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=6pBqO3xp/1B0zFnqLcuHxvRhsA22yWdbUAXgQ9hiknQ=;
-        b=zCg8eRoXWYBCsvybjdNlWj+M2/h3YmOBzi/7XcMpsOgtWZyBTfDzfFxs9XwhtBVn7T
-         mRvFAAvf9bfpdznKU1/l08JzkwQQZ+iEoTylOSpMVyaPr88u7XU9a9275aT7QlImrFzp
-         8QzaIFTC0iPrvIABUzL7JbEbHMwA3n0/kAJSck02gsez/RipoQhcIshWMF0dKWfdMKAV
-         TlX1t/RENSvqxsedrT/t6PuKQ/5+wP2XRIcBsBp6j+4sLPVA+bgVCCsJgo45rSncaj5V
-         +jcgMX/b8DMGoovR1lEin4/lluBTqn1a/CAFtZXyuaJWQJXteeSdYaJ0EYp6ismOqQn/
-         MPEA==
+        Tue, 12 Feb 2019 10:50:07 -0500
+Received: by mail-wm1-f65.google.com with SMTP id a62so3500057wmh.4
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 07:50:06 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=6pBqO3xp/1B0zFnqLcuHxvRhsA22yWdbUAXgQ9hiknQ=;
-        b=haPmMZorBqhkqxvTigp9mvu7mJRd9uoytP4mdm6URL7JtQ7IvPxZKnQBRkzrs8wnnY
-         GUicyLXiCEmyiT0eiFyId3k6r+KvnsJvq5Vt+yJoHp+nzQJRYuMTCCqjomPaS68lCzlJ
-         vym9ni+8wGN69vnvre1hJUzNIc+ATx2X0Z/ojWG72HzjDwy2k7QUnaC70eefOU8F3FkR
-         2s/KzwqNAYpMIZv+b4Km8vLN4UqfCACl2j3VYUhg7+ZUW6HjipNaehqQjEoU4Imy9tf0
-         sXsjOhfOI4rT+fZ+3eEQxCXP2KAyiQoq9UKYLygSuxgzJSYhIf/4bNbSooaqlJIIG2DM
-         gRGA==
-X-Gm-Message-State: AHQUAuZTpghOfhyvERcEVx+DzNk/GQzDAUc6OPTJ9mEjj4gbuun/C6no
-        2HM4OufKzGA9MjUZ7d4IW+iGDmwwzA/7d3MVuIBlAg==
-X-Google-Smtp-Source: AHgI3IaqXo4ydZf//Hn6G1eGoZsai+hu999Ws03JREaJu8Yt5Nhi1slh3Sw6Ef7qpTW+BCsvxCOOEEhxp79iAiXfAeQ=
-X-Received: by 2002:a17:906:9a2:: with SMTP id q2mr3177416eje.40.1549985935042;
- Tue, 12 Feb 2019 07:38:55 -0800 (PST)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=IP69Wk7eKto4mwCIQtSsvuI25dMkz5RzYKhiNUtIgLI=;
+        b=KIeJeT1opvYwFRanmzvr0Agv+H6D8XmH8jbAvQIGlOMuS771m70N1L3tCbbvctaSmF
+         ZSvgC0lwyM0w+pcSVoolwyE0w2N9VLNsp1q57suv3VKXQqieDalhFPQUIrQ/NEdeeJm0
+         b+3JA2hn2SCbe8CMwQFyif7WyOKbcJyegDZ1TVyxkp5scJFTuSHKNIVEygfqtEFACKwu
+         s8A/C0gfpvRGWlaoyx1WiMhbix8/H3JgDDV1V6acaR1bjarudUsBURY1IDgt2W63FYNB
+         4af2afPYWCtJtrYoybVG/PdrDpiWp6+thjXBBJAOfostakAYk9ZF2yEXek7gHYNnweuF
+         dqWw==
+X-Gm-Message-State: AHQUAuY9QUX49oOD9/kYTNKWQ7pb6lw6WWyy0xMJHt9GLtgfiLQjEwhP
+        eHUPl8v8pPiHVLbHdk1MBXwNQQ==
+X-Google-Smtp-Source: AHgI3IasSRlj8+2FQp1arX8BJuvEspb/k9dhKOeUHnaCZNZqPLiIVzJn5hyNH6axVmSCSo61QxOTLg==
+X-Received: by 2002:a1c:f916:: with SMTP id x22mr3546438wmh.87.1549986605258;
+        Tue, 12 Feb 2019 07:50:05 -0800 (PST)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id v6sm29039172wrd.88.2019.02.12.07.50.04
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 12 Feb 2019 07:50:04 -0800 (PST)
+Date:   Tue, 12 Feb 2019 16:50:02 +0100
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        lorenzo@kernel.org
+Subject: Re: [PATCH 0/4] do not use sg if not properly supported by usb
+ controller
+Message-ID: <20190212155001.GA12780@localhost.localdomain>
+References: <cover.1549977282.git.lorenzo@kernel.org>
+ <20190212134550.GA12256@redhat.com>
+ <20190212135100.GA15292@redhat.com>
+ <CAJ0CqmVhH61P1V1fmhicPXwA7vHjv+Hh7h2DYbci1uDRJCyENA@mail.gmail.com>
+ <20190212141725.GD12906@redhat.com>
+ <20190212142528.GB24197@localhost.localdomain>
+ <20190212145424.GE12906@redhat.com>
+ <20190212150836.GA10823@localhost.localdomain>
+ <20190212152559.GB23126@redhat.com>
 MIME-Version: 1.0
-References: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com>
- <20180111103006.GA17574@thinktank.home.org> <14c5f7f4-0d5b-cecd-b45b-3672b67da07a@gmail.com>
- <CAL9uMOG77it=kqkbjryPVpY2eVJqqjedVeAhdxqpZM6Z8JWuiA@mail.gmail.com> <CAB4CAwd2WtWwf9p=kZZQ-SzE6DhsLu1OpGaVyS1Mq8wx8eT6ww@mail.gmail.com>
-In-Reply-To: <CAB4CAwd2WtWwf9p=kZZQ-SzE6DhsLu1OpGaVyS1Mq8wx8eT6ww@mail.gmail.com>
-From:   Chris Chiu <chiu@endlessm.com>
-Date:   Tue, 12 Feb 2019 23:38:44 +0800
-Message-ID: <CAB4CAwdkYSJBLODnS2_vgps8Ds+vhedSDVVRATMAz3OGhW_5=Q@mail.gmail.com>
-Subject: Re: RTL8723bu: poor signal and connection troubles
-To:     Carlo Caione <carlo@endlessm.com>
-Cc:     Jes Sorensen <jes.sorensen@gmail.com>,
-        Barry Day <briselec@gmail.com>, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org,
-        mylene.josserand@free-electrons.com,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190212152559.GB23126@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 5:56 PM Chris Chiu <chiu@endlessm.com> wrote:
->
-> On Mon, Jan 22, 2018 at 6:56 AM Carlo Caione <carlo@endlessm.com> wrote:
-> >
-> > On Sun, Jan 21, 2018 at 9:46 PM, Jes Sorensen <jes.sorensen@gmail.com> wrote:
-> > > On 01/11/2018 05:30 AM, Barry Day wrote:
-> >
-> > > One issue with rtl8723bu is that it needs to coexist with the bluetooth
-> > > driver. When I wrote the rtl8723bu support that was no BT support for
-> > > the chip in the kernel and it worked fine, at least for me. However if
-> > > you load the BT driver for the dongle which someone pushed into the
-> > > kernel since then, it is likely to hijack the antennas causing the weak
-> > > signal you describe.
-> >
-> > Yeah, that's why when testing the dongle I carefully disabled BT and
-> > made sure no BT driver was probed at all. Still I can see the issue.
-> > I honestly doubt that the problem is caused by BT coexistence. Any
-> > other idea or suggestion to debug this problem?
-> >
-> > Thanks,
-> >
-> > --
-> > Carlo Caione  |  +44.7384.69.16.04  |  Endless
->
-> This problem has been reported for 1 year, but it still persists now.
->
-> I found that the problem disappeared after I resume from suspend. Before
-> suspend, the rssi observed from AP side for this dongle is quite poor. But
-> it comes back to normal after resume. The signal strength differs almost
-> 30dBm. So I compared/checked the RF/BB related register values
-> (in .init_phy_bb/.init_phy_rf/.set_tx_power) but they are identical with the
-> same routines in the driver from https://github.com/lwfinger/rtl8723bu
->
-> The registers also remain the same across suspend/resume. Don't really
-> know why a simple suspend/resume could cause such difference. Can
-> anyone suggest which part I should look into to get more information?
->
-> Chris
+> On Tue, Feb 12, 2019 at 04:08:37PM +0100, Lorenzo Bianconi wrote:
+> > > > > What unnecessary operation ?
+> > > > 
+> > > > the ones in mt76u_fill_bulk_urb()
+> > > 
+> > > Your patches also add extra operations on hotpath due to urb->num_sgs and
+> > > dev->usb.sg_en checks.
+> > 
+> > here I guess you should use mt76u_check_sg() instead of
+> > udev->bus->sg_tablesize > 0 so I think you need to precompute it since it is in
+> > the hotpath
+> 
+> It's not necessary. If udev->bus->sg_tablesize > 0 is true and rest
+> of mt76u_check_sg() is not, we will submit urb with urb->num_sgs = 1 to
+> usb host driver, what is fine. 
+> 
+> > Moreover the RFC series has been tested by multiple users and on multiple
+> > devices
+> 
+> I know. Perhaps you could test my patch on rpi ?
 
-I found one thing interesting. It does seem to be related to BT coexist just
-as Jes mentioned. Follow the steps below and the signal can always come
-back to normal. The '1-7:1.0' is one of the IDs for the rtl8723bu usb interface.
+sure, I will do it later
 
-1. unbind btusb first, cd /sys/bus/usb/drivers/btusb; echo 1-7:1.0 > unbind
-2. unload rtl8xxxu driver then reload it. The signal stays at poor level
-3. bind the btusb. cd /sys/bus/usb/drivers/btusb; echo 1-7:1.0 > bind
+Regards,
+Lorenzo
 
-Seems that the BT firmware loaded is helpful for the only antenna config
-which is shared by WiFi/BT. If I load the BT firmware after rtl8xxxu driver,
-everything's fine.
-
-Can anyone suggest the next step? I've compared all registers and h2c cmds
-between vendor driver and rtl8xxxu driver. Basically, they're almost the same
-even the bt coexist related settings. So it's difficult to imagine why the same
-power on sequence setting and RF enable setting cause that huge signal
-difference.
-
-Chris
+> 
+> Stanislaw 
+> 
+> 
