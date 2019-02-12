@@ -2,98 +2,86 @@ Return-Path: <SRS0=LoJ4=QT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C06CC282C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 12:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C99C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 13:15:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56E0B20823
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 12:47:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549975633;
-	bh=V+UeM8ADHzD6Ey7KUTJrcLGUDt/D65LeuiSOHNMMDuM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=RGf/8fE5XcGx8nLl+EsAdL4LWd0RFNz8rk5P6xTavg/adSg7n/uAIfn8Na1vGBBcd
-	 Lb6mUew43G7W9uY6hiq0c7T3/fp7wVd/AoRayLcoG3PEUjZ9K2b05T367lXWjzTgcc
-	 d4vYU/9IIQ4G4lSKw1DWrKyI4Yf/qJqLR6Mxhj7k=
+	by mail.kernel.org (Postfix) with ESMTP id 3C6CB214DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 13:15:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728041AbfBLMrM (ORCPT
+        id S1729009AbfBLNPq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 07:47:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36626 "EHLO mail.kernel.org"
+        Tue, 12 Feb 2019 08:15:46 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:47046 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725916AbfBLMrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 07:47:12 -0500
-Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1727312AbfBLNPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Feb 2019 08:15:46 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3510820823
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 12:47:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549975631;
-        bh=V+UeM8ADHzD6Ey7KUTJrcLGUDt/D65LeuiSOHNMMDuM=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=KB+W+/j4EXANbUEa9nqSixnTIlWmC6iTEa7YNXzADIDawi6PvuKoYu7ys9k6Pib3w
-         xWGspAAuK/cqvoKwHX4PYNQVX4SSyS/16kiPU6iv33m+7VU6mQd+77gd5GsGBRBo5S
-         7tCGrw6JTHUCXfpNE/F9n3lOu/wBy0OsfrsindaU=
-Received: by mail-qt1-f182.google.com with SMTP id b8so2694629qtr.9
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2019 04:47:11 -0800 (PST)
-X-Gm-Message-State: AHQUAuY8lISVq/gH6MZWkuaXYfdRH+V4vfMYurHGEYoqkxJqselAlKdD
-        LqJJlbxhrslcHRrW0zXx5yW+yw5vsT8QeYRL2LA=
-X-Google-Smtp-Source: AHgI3IYJR7HBd/Plv89mA/66ri9b0RMPxDf5hBC1abGjG52BMyalvUOLhTnbXF/3+FrDUAnv16F/IrfVJhKiPOZOOag=
-X-Received: by 2002:a0c:a5a2:: with SMTP id z31mr2533807qvz.108.1549975630455;
- Tue, 12 Feb 2019 04:47:10 -0800 (PST)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7573980481;
+        Tue, 12 Feb 2019 13:15:45 +0000 (UTC)
+Received: from localhost (ovpn-204-125.brq.redhat.com [10.40.204.125])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 67FB31992A;
+        Tue, 12 Feb 2019 13:15:44 +0000 (UTC)
+Date:   Tue, 12 Feb 2019 14:15:43 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Alan Stern <stern@rowland.harvard.edu>,
+        Stefan Wahren <stefan.wahren@i2se.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Doug Anderson <dianders@chromium.org>,
+        Minas Harutyunyan <hminas@synopsys.com>,
+        USB list <linux-usb@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
+Message-ID: <20190212131542.GC12906@redhat.com>
+References: <20190211173315.GE6292@redhat.com>
+ <Pine.LNX.4.44L0.1902111246410.1543-100000@iolanthe.rowland.org>
+ <CAJ0CqmVFVBXi5E07-ZsYojC7mP4ogpwbcDkDTeebHwX+ayz2DQ@mail.gmail.com>
+ <20190212093035.GB12906@redhat.com>
+ <20190212115842.GA24197@localhost.localdomain>
 MIME-Version: 1.0
-References: <DM5PR18MB12412307A7C6EDD99B522785A0650@DM5PR18MB1241.namprd18.prod.outlook.com>
-In-Reply-To: <DM5PR18MB12412307A7C6EDD99B522785A0650@DM5PR18MB1241.namprd18.prod.outlook.com>
-From:   Josh Boyer <jwboyer@kernel.org>
-Date:   Tue, 12 Feb 2019 07:46:59 -0500
-X-Gmail-Original-Message-ID: <CA+5PVA5yQbjg3vaT7F8120B6ngLn7+sZC0OWt0KoUiQR9hS4FA@mail.gmail.com>
-Message-ID: <CA+5PVA5yQbjg3vaT7F8120B6ngLn7+sZC0OWt0KoUiQR9hS4FA@mail.gmail.com>
-Subject: Re: pull-request mwifiex-firmware 2019-02-12
-To:     Ganapathi Bhat <gbhat@marvell.com>
-Cc:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>, James Cao <jcao@marvell.com>,
-        Prashanth Ranganathan <rprashk@marvell.com>,
-        Rakesh Parmar <rakeshp@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190212115842.GA24197@localhost.localdomain>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Tue, 12 Feb 2019 13:15:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Feb 12, 2019 at 1:17 AM Ganapathi Bhat <gbhat@marvell.com> wrote:
+On Tue, Feb 12, 2019 at 12:58:43PM +0100, Lorenzo Bianconi wrote:
+> > +	usb_fill_bulk_urb(buf->urb, udev, pipe, NULL, buf->len, complete_fn,
+> > +			  context);
+> > +
+> > +	if (udev->bus->sg_tablesize > 0) {
+> > +		buf->urb->num_sgs = buf->num_sgs;
+> > +	} else {
+> > +		WARN_ON_ONCE(buf->num_sgs != 1);
+> > +		/* See usb_sg_init() */
+> > +		buf->urb->num_sgs = 0;
+> > +		if (!PageHighMem(sg_page(buf->urb->sg)))
+> > +			buf->urb->transfer_buffer = sg_virt(buf->urb->sg);
+> 
+> please correct me if I am wrong but doing so we will use transfer_buffer
+> for 95% of the use cases, right? If so why not keep it simple and always
+> use it when sg_tablesize is 0 (avoiding SG I/O)?
 >
-> The following changes since commit 63ca64a73c05fa5bcceb687422cbc28185bb6355:
->
->   linux-firmware: update Marvell USB8801 B0 firmware image (2019-01-09 11:24:42 +0530)
->
-> are available in the git repository at:
->
->   git://git.marvell.com/mwifiex-firmware.git
->
-> for you to fetch changes up to bd72387b8e49b1b7268ee60c97a131419284fb39:
->
->   linux-firmware: update Marvell PCIe-USB8997 firmware image (2019-02-12 11:42:24 +0530)
->
-> ----------------------------------------------------------------
-> Ganapathi Bhat (3):
->       linux-firmware: add Marvell SD8977 firmware image
->       linux-firmware: update Marvell SD8897-B0 firmware image
->       linux-firmware: update Marvell PCIe-USB8997 firmware image
->
->  WHENCE                        |   7 +++++--
->  mrvl/pcieusb8997_combo_v4.bin | Bin 631012 -> 634228 bytes
->  mrvl/sd8897_uapsta.bin        | Bin 821024 -> 701072 bytes
->  mrvl/sdsd8977_combo_v2.bin    | Bin 0 -> 587052 bytes
->  4 files changed, 5 insertions(+), 2 deletions(-)
->  create mode 100755 mrvl/sdsd8977_combo_v2.bin
+> Btw this is what I proposed with the RFC series actually :) (always use
+> transfer_buffer in the usb 2.0 case)
 
-Pulled and pushed out.  Thanks.
+Because this way we do not change allocation method (use SG allocation)
+what is simpler IMHO than having two buffer allocation methods.
 
-josh
+And this way we do not hide problems with SG allocation and test it.
+
+Additionally this patch address actual bug: using wrong urb->num_sgs and
+can be easier to backport to older releases than 4 patch series. 
+
+Stanislaw
