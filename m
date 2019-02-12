@@ -6,88 +6,89 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5654C282C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:48:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3BA6C282C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:51:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 942432190B
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:48:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E7F7222BE
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Feb 2019 18:51:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="idnVe5+0";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="G+tPosYV"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TT+Phy1J";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FCDUKIhs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730106AbfBLSsr (ORCPT
+        id S1728383AbfBLSv0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Feb 2019 13:48:47 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:44420 "EHLO
+        Tue, 12 Feb 2019 13:51:26 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:47994 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729066AbfBLSsr (ORCPT
+        with ESMTP id S1727348AbfBLSv0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Feb 2019 13:48:47 -0500
+        Tue, 12 Feb 2019 13:51:26 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 090AF6030D; Tue, 12 Feb 2019 18:48:45 +0000 (UTC)
+        id 168CC60734; Tue, 12 Feb 2019 18:51:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549997326;
-        bh=YVjx0L0FGfXLKoBF4VJWWZHsJSazJSP9oof4yk+8Irs=;
+        s=default; t=1549997485;
+        bh=7MdaXdIg+mUvfGbWjRALGiNA8qU/zMxwjPnFnSLekpQ=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=idnVe5+0Jc4b6AUgbLr763W5a6aqsp9SuO1p2P19hzV0WDJwRxz24cDTH8gn1Uk+o
-         1uWAtlLL5wY/fOS44kXmD6PMA4PXu2wLUa5Wc3GKg4bFOUrl4j2YZlPEd7SMUd5z0W
-         USckefKhofxGx09lGfi3CTk5aqTYE0Ma31ov7yjI=
+        b=TT+Phy1JnQGF8wMBGtD/g6SOM7CxU5mk9WnbJ0//jrcKGvh/AB1Fj/9EJojrRJdEE
+         ZoYsiA6dzuawskMGQlp9vfspAMOF8qysLaL70IYXf1vcGhk0AFkkMeJPPCbfJ0bKhS
+         aaDXaimYeoBI7fA/MS/rTGtZHOxGXTIxaoqhfmSc=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 738156090B;
-        Tue, 12 Feb 2019 18:48:44 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A03CF60208;
+        Tue, 12 Feb 2019 18:51:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1549997325;
-        bh=YVjx0L0FGfXLKoBF4VJWWZHsJSazJSP9oof4yk+8Irs=;
+        s=default; t=1549997484;
+        bh=7MdaXdIg+mUvfGbWjRALGiNA8qU/zMxwjPnFnSLekpQ=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=G+tPosYVAE6mvBuPS4ACD60a+I7WEEqwWdEHSG7KNA2HSw7iPInXgD0ozOYdv2jXJ
-         yJ/fkMdSNgVB4I//S5Ykbkh5yM33R7rrAYgb4nHTRDThSXF34LJow6WwyYj4urjQ8H
-         OI4UEMfBNO6Cd11FKe6Q91lLKnyX5vcW4wAT9DNk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 738156090B
+        b=FCDUKIhs59I+R5Z+UfC4ASZUCZ0ONJmjQ7rUwZvX7FUQwXcQl6elyXBgqWWNUyvLY
+         zRTfKMHuGKLYTY3tIyP6r+/ImmPkEAgVN3L6uiZikp+KhSCvtCrrSNT0CLZJ7D48Cd
+         ewSl25AknuDU5LuBCWT1UyKvJciKNAB+n1iwQcBA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A03CF60208
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: report tx airtime provided by fw
+Subject: Re: [PATCH 1/6] ath10k: add missing values to wmi_service_name()
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1542298483-15879-1-git-send-email-mpubbise@codeaurora.org>
-References: <1542298483-15879-1-git-send-email-mpubbise@codeaurora.org>
-To:     Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+In-Reply-To: <1549897787-28537-1-git-send-email-kvalo@codeaurora.org>
+References: <1549897787-28537-1-git-send-email-kvalo@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190212184846.090AF6030D@smtp.codeaurora.org>
-Date:   Tue, 12 Feb 2019 18:48:45 +0000 (UTC)
+Message-Id: <20190212185125.168CC60734@smtp.codeaurora.org>
+Date:   Tue, 12 Feb 2019 18:51:25 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Manikanta Pubbisetty <mpubbise@codeaurora.org> wrote:
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-> If supported, update transmit airtime in mac80211 with the airtime
-> values reported by the firmware. TX airtime of the PPDU is reported
-> via HTT data TX completion indication message.
+> After implementing the next patch GCC reported:
 > 
-> A new service flag 'WMI_SERVICE_REPORT_AIRTIME' is added to advertise
-> the firmware support. For firmwares which do not support this feature,
-> TX airtime is calculated in the driver using TX bitrate.
+> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_BTCOEX' not handled in switch [-Wswitch]
+> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_MGMT_TX_WMI' not handled in switch [-Wswitch]
+> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_SPOOF_MAC_SUPPORT' not handled in switch [-Wswitch]
+> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT' not handled in switch [-Wswitch]
+> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_BB_TIMING_CONFIG_SUPPORT' not handled in switch [-Wswitch]
+> drivers/net/wireless/ath/ath10k/wmi.h:385:2: warning: enumeration value 'WMI_SERVICE_THERM_THROT' not handled in switch [-Wswitch]
 > 
-> Hardwares tested : QCA9984
-> Firmwares tested : 10.4-3.6.1-00841
-> 
-> Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to ath-next branch of ath.git, thanks.
+6 patches applied to ath-next branch of ath.git, thanks.
 
-bb31b7cb106c ath10k: report tx airtime provided by fw
+2321dd5d78fb ath10k: add missing values to wmi_service_name()
+95cccf4d79fe ath10k: make wmi_service_name() warn about missing service ids
+db3b6280f5f1 ath10k: change wmi.h to include only ieee80211.h
+385bd8816cb5 ath10k: align ath10k_htt_txbuf structures
+bdf2bd9aa684 ath10k: fix documentation in ath10k_wow_convert_8023_to_80211()
+01dc76dfdc91 ath10k: copy the whole struct ath10k_bus_params in ath10k_core_register()
 
 -- 
-https://patchwork.kernel.org/patch/10684687/
+https://patchwork.kernel.org/patch/10806063/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
