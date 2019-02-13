@@ -2,87 +2,141 @@ Return-Path: <SRS0=xkZe=QU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF452C282C2
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:05:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3154FC282C2
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:08:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4456222B2
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:05:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Fxx1WfKf";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OeeMFkIt"
+	by mail.kernel.org (Postfix) with ESMTP id 0136E222B2
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:08:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387925AbfBMLFG (ORCPT
+        id S2389969AbfBMLIj convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Feb 2019 06:05:06 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:51514 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727894AbfBMLFG (ORCPT
+        Wed, 13 Feb 2019 06:08:39 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:55008 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727894AbfBMLIi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Feb 2019 06:05:06 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 41B186095F; Wed, 13 Feb 2019 11:05:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550055905;
-        bh=Z9Mt+k0czYkoBiXgRejUHFWTNSUM4VL67OMATzyihgI=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Fxx1WfKfTGVvZrfl8Nv7nsH1Qg5mJtdBNHMB9A8n9nNqBnJeZ2cCHFcGfFyXXeTn+
-         yUqfzb63TKasEsgtf+2TulhiAMWJKMU50rj1ICqZDwth/Ld6KmE6VLIe6fSfFfaBd7
-         fKg98pJ/qh3o7SDE0TQL2gjncVwDPxGq/1tjuelA=
-Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B05A960740;
-        Wed, 13 Feb 2019 11:05:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550055904;
-        bh=Z9Mt+k0czYkoBiXgRejUHFWTNSUM4VL67OMATzyihgI=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=OeeMFkItEAf+9KIAmHQNOM9Mnol8ez7Mg/RYT6oPyKKGJ8rh3mQ+smUWeIU8yrJKh
-         Tr1Malg7yZy9bnEbVhPlCDbl5Z5pzsKuIKRxVcuWbuHnnbk6rnNW5yoQs0qEPSrbAF
-         aWeXtT8SSvoeYmWIq0s3Lh+M0I6rMQ+w2AS82hVg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B05A960740
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Alexander Wetzel <alexander@wetzel-home.de>
-Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v3 09/12] ath: Basic Extended Key ID support (COMPAT+NATIVE)
-References: <20190210210620.31181-1-alexander@wetzel-home.de>
-        <20190210210620.31181-10-alexander@wetzel-home.de>
-Date:   Wed, 13 Feb 2019 13:05:00 +0200
-In-Reply-To: <20190210210620.31181-10-alexander@wetzel-home.de> (Alexander
-        Wetzel's message of "Sun, 10 Feb 2019 22:06:17 +0100")
-Message-ID: <87r2ccq78j.fsf@purkki.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+        Wed, 13 Feb 2019 06:08:38 -0500
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x1DB8EuF019534, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x1DB8EuF019534
+        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
+        Wed, 13 Feb 2019 19:08:14 +0800
+Received: from RTITEXH01.realtek.com.tw (172.21.6.62) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server (TLS) id
+ 14.3.408.0; Wed, 13 Feb 2019 19:08:14 +0800
+Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
+ RTITEXH01.realtek.com.tw ([::1]) with mapi id 14.03.0435.000; Wed, 13 Feb
+ 2019 19:08:13 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     Tony Chuang <yhchuang@realtek.com>,
+        Brian Norris <briannorris@chromium.org>
+CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v4 03/13] rtw88: hci files
+Thread-Topic: [PATCH v4 03/13] rtw88: hci files
+Thread-Index: AQHUuFCwL7VQDfSYhE2MAb8drhRitKXJdAKAgBDPKrCAAzN8gA==
+Date:   Wed, 13 Feb 2019 11:08:13 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17A5B7D@RTITMBSVM04.realtek.com.tw>
+References: <1548820940-15237-1-git-send-email-yhchuang@realtek.com>
+ <1548820940-15237-4-git-send-email-yhchuang@realtek.com>
+ <20190131223609.GA191502@google.com>
+ <F7CD281DE3E379468C6D07993EA72F84D17A3A5E@RTITMBSVM04.realtek.com.tw>
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17A3A5E@RTITMBSVM04.realtek.com.tw>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.124]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Alexander Wetzel <alexander@wetzel-home.de> writes:
+Hi
 
-> Extend the shared ath key cache code to support Extended Key ID.
->
-> The key cache code has to accept unicast keys to use key idx 1 and allow
-> drivers to enable/disable hardware Rx decryption for a key independent
-> from Tx.
->
-> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
-> ---
->
-> I know this is the wrong audience to discuss ath drivers.
+> On Behalf Of Tony Chuang
+> Subject: RE: [PATCH v4 03/13] rtw88: hci files
+> 
+> > From: Brian Norris [mailto:briannorris@chromium.org]
+> >
+> > Hi,
+> >
+> > A few scattered comments:
+> >
+> > > +static void rtw_pci_dma_check(struct rtw_dev *rtwdev,
+> > > +			      struct rtw_pci_rx_ring *rx_ring,
+> > > +			      u32 idx)
+> > > +{
+> > > +	struct rtw_chip_info *chip = rtwdev->chip;
+> > > +	struct rtw_pci_rx_buffer_desc *buf_desc;
+> > > +	u32 desc_sz = chip->rx_buf_desc_sz;
+> > > +	u16 total_pkt_size;
+> > > +	int i;
+> > > +
+> > > +	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
+> > > +						     idx * desc_sz);
+> > > +	for (i = 0; i < 20; i++) {
+> > > +		total_pkt_size = le16_to_cpu(buf_desc->total_pkt_size);
+> > > +		if (total_pkt_size)
+> > > +			return;
+> > > +	}
+> >
+> >
+> > Umm, what are you trying to do here? This is a non-sensical loop. I
+> > *imagine* you're trying to do some kind of timeout loop here, but since
+> > there's nothing telling the compiler that this is anything but normal
+> > memory, this loop gets flattened by the compiler into a single check of
+> > ->total_pkt_size (I checked; my compiler gets rid of the loop).
+> >
+> > So, at a minimum, you should just remove the loop. But I'm not sure if
+> > this "check" function has any value at all...
+> >
+> > > +
+> > > +	if (i >= 20)
+> > > +		rtw_warn(rtwdev, "pci bus timeout, drop packet\n");
+> >
+> > ...BTW, I'm seeing this get triggered quite a bit.
+> 
+> It's quite strange though... triggered on my laptop as well.
+> I am looking for the reason that cause it. I found that 8822BE does not
+> trigger this. And it's like even if I added a volatile before it to hint the
+> compiler not to optimize, it still happens. Now trying to figure out why
+> the bus continues to timeout.
+> 
+> After this problem is resolved I'll either remove the loop or add proper
+> hint for the compiler to check the value. But it seems to take many days
+> to debug, so I think for this patch set I can just remain it here.
+> 
+> >
+> > Do you have some kind of memory mapping/ordering issue or something? I
+> > wouldn't think you should expect to just drop packets on the floor so
+> > often like this.
+> >
+> 
+> Looks like the cause is that the DMA might not have done when the interrupt
+> arrived. Need to do more test to figure it out.
+> 
 
-I think this is the right forum. Do note that somewhere in this patch
-(in the cover letter) you mentioned "all ath drivers" but AFAICS this
-patch only changes functionality for ath5k, ath9k and ath9k_htc. All the
-rest like wil6210, ath6kl and ath10k are unaffected.
 
--- 
-Kalle Valo
+I tested and checked again. I found that I didn't enable DMA sync for
+the TRX path. After some work it can be resolved if I turn DMA sync on.
+So I will include this in the PATCH v5.
+
+
+> 
+> 
+> Yan-Hsuan
+> 
+
+Yan-Hsuan
