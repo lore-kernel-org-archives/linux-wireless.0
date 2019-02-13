@@ -2,115 +2,103 @@ Return-Path: <SRS0=xkZe=QU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F151C282C2
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 06:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6945FC282CA
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 07:05:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D27B8222BE
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 06:55:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DD7221904
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 07:05:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387502AbfBMGzc (ORCPT
+        id S2389807AbfBMHFY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Feb 2019 01:55:32 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:59192 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2387415AbfBMGzc (ORCPT
+        Wed, 13 Feb 2019 02:05:24 -0500
+Received: from mout.kundenserver.de ([217.72.192.75]:37399 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389744AbfBMHFX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Feb 2019 01:55:32 -0500
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1gtoS9-0006Lr-PJ; Wed, 13 Feb 2019 08:55:30 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Wed, 13 Feb 2019 08:55:24 +0200
-Message-Id: <20190213065524.2875-1-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190212075620.12055-1-luca@coelho.fi>
-References: <20190212075620.12055-1-luca@coelho.fi>
+        Wed, 13 Feb 2019 02:05:23 -0500
+Received: from oxbaltgw08.schlund.de ([172.19.246.14]) by
+ mrelayeu.kundenserver.de (mreue109 [213.165.67.113]) with ESMTPSA (Nemesis)
+ id 1N17gy-1h46Rk38WY-012YMH; Wed, 13 Feb 2019 08:05:14 +0100
+Date:   Wed, 13 Feb 2019 08:05:13 +0100 (CET)
+From:   Stefan Wahren <stefan.wahren@i2se.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Doug Anderson <dianders@chromium.org>,
+        Minas Harutyunyan <hminas@synopsys.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-usb@vger.kernel.org
+Message-ID: <1262387327.433113.1550041513349@email.ionos.de>
+In-Reply-To: <20190211155726.GE8128@localhost.localdomain>
+References: <165515185.283024.1549744145982@email.ionos.de>
+ <20190210094123.GB2913@redhat.com>
+ <CAJ0CqmXp2a-zwPMyMFu+UCqTHP7qNRiJFopDSdZWdms7dVef4Q@mail.gmail.com>
+ <20190211074455.GA6292@redhat.com>
+ <20190211100405.GD3467@localhost.localdomain>
+ <f7c29b08-c7d5-4d10-4be1-958ee79678f1@i2se.com>
+ <20190211110635.GD2293@localhost.localdomain>
+ <8a996497-ed69-4087-2c37-7f73633cbb4e@i2se.com>
+ <20190211151055.GC8128@localhost.localdomain>
+ <500c0d4a-611a-1b00-5ea4-7368e5e9f1e9@i2se.com>
+ <20190211155726.GE8128@localhost.localdomain>
+Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/20 v3] iwlwifi: mvm: add debug prints for FTM
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+Importance: Medium
+X-Mailer: Open-Xchange Mailer v7.8.4-Rev47
+X-Originating-Client: open-xchange-appsuite
+X-Provags-ID: V03:K1:Is3DFfFL30il0WWcjMRhne/XhTQhOoRftXbbehhsgGGsYbkT1Up
+ TDN8MJDPI0PXuwaQhBOacuV0bBjGk2Inu0XAqDlbUeCUT10fEpyBPB/gGUdk7VcCUPThiL+
+ YtzbpU+tcAVkrTZqBjwcTaHJYlCIVlxPvPkQRu7EJA0S7pfwqHUOqGLXN4tPi3xXRXvC32u
+ N89ALwNvMDIhVwNl9AcEw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:7CWxAfUf0r0=:Z7OdWHy9HapBkrc3sK2zy7
+ lZGVslyjNddAanqI3vWhOlojnf5crMsrntLe9mXRPeeJz7aPdVNYYV5fjCMFZMoHpH4XKGP45
+ sSDtgHHViHB8I8lrTFAtPOrslyXJDgaZNt0xmHtzKsPyxX3HkQlzoMDAkG0Tb33mAGJ4Tx1vp
+ 4fRooj+JhrgwOF5qbhKT+dZYpdRbUBhslpySlBIWfiqca2kqyct1e1crq8A+oikhydpbil1g9
+ r4PJX467CYiDruAJ2A+WO5J/ExR/MSbXr1e+yjnTfjElO4tT4f8QFnP3JFTpBeMWWiWpVpmo5
+ vHlsgDHItcnom+CpjkJbMIwOdqjqX8Rn/QGT7OwfCIsmuJZxs0QUZZvKTUn69fady7d14qtt/
+ Lgts0zu70mmLw1/ORLcKtBqmVzgQARay20dcNVVY8unS4ILGXflK+1qPuP7HCngT4NeQLQQuM
+ iu68FrJRbxT9hZpluVxzMw+jiGQbEnJjlmFos4ZEBBhbCM5+/XGG3XQc5QXL0PyV0dkMcbZB5
+ qXP9cv47ueoAPpD0iDdolRQu5+muOnc1fU6f8LUtWDa1swl9lhENJlpd85w3bZDgxbNdQNrsU
+ RY7Ty74KgjkVig6/Rn3IisbBEM5itPpeTj386ek3N58E6RjimUDI5IYRRHExQJxa6cs7fnk0C
+ DUA+G6lgtPZRWnAJuBLGfcIhjlJZ6U47IYdYfbH9EiYMbaaMzzcd5NIyDW90GafGqABEyxaQY
+ vAYiNUzcG7C562I5gxTlyZYMk2fZDlq9/x/gYGJpZAQcz2LEDcrj/o1faDw=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+Hi,
 
-Add debug prints for FTM results info. These prints are used by
-tests automation.
+> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> hat am 11. Februar 2019 um 16:57 geschrieben:
+> 
+> 
+> > 
+> > Compiling the mainline kernel with arm/multi_v7_defconfig it works.
+> > Using the same kernel but with arm64/defconfig doesn't work. But i don't
+> > think this is a 32/64 bit issue. The arm64 defconfig is much more
+> > complex (e.g. enables more IOMMU stuff).
+> 
+> thx for the clarification :)
+> 
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
-In v3:
+i was busy to enable the mt76xx wifi driver in my build system. Usually i handle this via scripts/config but i didn't manage to enable the driver. Finally i gave up and enabled it via defconfig patch.
 
-   * Johannes was not happy with my do_div() comment, so I removed it.
+Here are my test results for Raspberry Pi 3 B+ (without any additional patches):
 
+multi_v7_defconfig 5.0.0-rc6 -> firmware timeout
+multi_v7_defconfig next-2019-02-12 -> firmware timeout
+arm64_defconfig 5.0.0-rc6 -> vendor request 07: -110 (timeout)
+arm64_defconfig next-2019-02-12 -> vendor request 07: -110 (timeout)
 
-.../intel/iwlwifi/mvm/ftm-initiator.c         | 27 +++++++++++++++++++
- 1 file changed, 27 insertions(+)
+Shame on me for the wrong result before (assume to not properly cleanup the kernel modules on sd card). So there is no config option in arm64_defconfig which breaks mt76xx.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index c1d9703ab40c..e9822a3ec373 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -457,6 +457,27 @@ static int iwl_mvm_ftm_range_resp_valid(struct iwl_mvm *mvm, u8 request_id,
- 	return 0;
- }
- 
-+static void iwl_mvm_debug_range_resp(struct iwl_mvm *mvm, u8 index,
-+				     struct cfg80211_pmsr_result *res)
-+{
-+	s64 rtt_avg = res->ftm.rtt_avg * 100;
-+
-+	do_div(rtt_avg, 6666);
-+
-+	IWL_DEBUG_INFO(mvm, "entry %d\n", index);
-+	IWL_DEBUG_INFO(mvm, "\tstatus: %d\n", res->status);
-+	IWL_DEBUG_INFO(mvm, "\tBSSID: %pM\n", res->addr);
-+	IWL_DEBUG_INFO(mvm, "\thost time: %llu\n", res->host_time);
-+	IWL_DEBUG_INFO(mvm, "\tburst index: %hhu\n", res->ftm.burst_index);
-+	IWL_DEBUG_INFO(mvm, "\tsuccess num: %u\n", res->ftm.num_ftmr_successes);
-+	IWL_DEBUG_INFO(mvm, "\trssi: %d\n", res->ftm.rssi_avg);
-+	IWL_DEBUG_INFO(mvm, "\trssi spread: %hhu\n", res->ftm.rssi_spread);
-+	IWL_DEBUG_INFO(mvm, "\trtt: %lld\n", res->ftm.rtt_avg);
-+	IWL_DEBUG_INFO(mvm, "\trtt var: %llu\n", res->ftm.rtt_variance);
-+	IWL_DEBUG_INFO(mvm, "\trtt spread: %llu\n", res->ftm.rtt_spread);
-+	IWL_DEBUG_INFO(mvm, "\tdistance: %lld\n", rtt_avg);
-+}
-+
- void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-@@ -490,6 +511,10 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		last_in_batch = fw_resp_v5->last_in_batch;
- 	}
- 
-+	IWL_DEBUG_INFO(mvm, "Range response received\n");
-+	IWL_DEBUG_INFO(mvm, "request id: %lld, num of entries: %hhu\n",
-+		       mvm->ftm_initiator.req->cookie, num_of_aps);
-+
- 	for (i = 0; i < num_of_aps && i < IWL_MVM_TOF_MAX_APS; i++) {
- 		struct cfg80211_pmsr_result result = {};
- 		struct iwl_tof_range_rsp_ap_entry_ntfy *fw_ap;
-@@ -564,6 +589,8 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		cfg80211_pmsr_report(mvm->ftm_initiator.req_wdev,
- 				     mvm->ftm_initiator.req,
- 				     &result, GFP_KERNEL);
-+
-+		iwl_mvm_debug_range_resp(mvm, i, &result);
- 	}
- 
- 	if (last_in_batch) {
--- 
-2.20.1
+I will try the recent patches later.
 
+Thanks
+Stefan
