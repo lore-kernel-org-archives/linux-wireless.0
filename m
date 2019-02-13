@@ -1,211 +1,131 @@
-Return-Path: <SRS0=xkZe=QU=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=/9EI=QV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31DEAC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 23:45:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD6C8C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 00:07:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 00ACE222C9
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 23:45:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550101539;
-	bh=Bh2Rh9Qn99qCGaXqaYREjxyp0NAUXoyromK0SVWdbco=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=wDtWLixv1mbQg3wi6xgPBkf7wqKXbKUfswP+IiV2nGavhOLtsKPHtZ4LhBmRFNzpU
-	 vx5Qvj5ESrZ8DN//GuoKD/hcPXfa7ckH8+wbOFAmccYeW9mx4xyHjeejzdmAJZ8xHZ
-	 UYGzyyy/aBRSdWM741zSEu4mN+4MaEoUK/6aGVVY=
+	by mail.kernel.org (Postfix) with ESMTP id 739B7218FF
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 00:07:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="BvRJOu2E"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732478AbfBMXpi (ORCPT
+        id S2404619AbfBNAHk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Feb 2019 18:45:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53434 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728665AbfBMXpi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Feb 2019 18:45:38 -0500
-Received: from localhost.localdomain (unknown [151.66.10.5])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 489722229F;
-        Wed, 13 Feb 2019 23:45:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550101537;
-        bh=Bh2Rh9Qn99qCGaXqaYREjxyp0NAUXoyromK0SVWdbco=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WBWOWW+GREXtROsS7MZKnsZoNmg6/VIuRx4kyc8OG34Wsyr2+NfzyM3OkjyH6KYTs
-         qkX8rKfE9eRPDFyoQl6hDiHnOlpcnVTDHGd0XG8k8T31IEww+e1cGS0OKMONp6Pixo
-         /ZL4b4jn/FInApZTxT41cKaigx9PscOQqIWq6VO4=
-From:   lorenzo@kernel.org
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        lorenzo.bianconi@redhat.com
-Subject: [PATCH 2/2] mt76: dma: move mt76x02_init_{tx,rx}_queue in mt76 module
-Date:   Thu, 14 Feb 2019 00:44:59 +0100
-Message-Id: <ba0b6ea3aa2d75df0f1ba14a1df9934331646245.1550099224.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1550099224.git.lorenzo@kernel.org>
-References: <cover.1550099224.git.lorenzo@kernel.org>
+        Wed, 13 Feb 2019 19:07:40 -0500
+Received: from 5.mo173.mail-out.ovh.net ([46.105.40.148]:32929 "EHLO
+        5.mo173.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404614AbfBNAHk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Feb 2019 19:07:40 -0500
+X-Greylist: delayed 1799 seconds by postgrey-1.27 at vger.kernel.org; Wed, 13 Feb 2019 19:07:39 EST
+Received: from player761.ha.ovh.net (unknown [10.109.143.246])
+        by mo173.mail-out.ovh.net (Postfix) with ESMTP id BF064ECBBF
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2019 00:29:03 +0100 (CET)
+Received: from awhome.eu (p579AAB97.dip0.t-ipconnect.de [87.154.171.151])
+        (Authenticated sender: postmaster@awhome.eu)
+        by player761.ha.ovh.net (Postfix) with ESMTPSA id 534712B48472;
+        Wed, 13 Feb 2019 23:29:01 +0000 (UTC)
+Subject: Re: [RFC PATCH v3 09/12] ath: Basic Extended Key ID support
+ (COMPAT+NATIVE)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+        s=wetzel-home; t=1550099739;
+        bh=ReYCvH/uDF9ZviSbRMuYewHQaYRMsPGyLm3EPZ1cRSg=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To;
+        b=BvRJOu2EjGNnQ2/9vbW5eyrGb/E5AYLNVox7RIbifopu6u4axccnrYwTsncdr3CxL
+         JCOH4fbyG4QHi7RXJ+hx5D76qZ/KY8RHMepOT8Zlh5tHHuUBq/GMA8gyKV19GshiH7
+         cxFKJfTJO2ByWn5tkxVpAJeF2NCu2bESCd0rfcDg=
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+ <20190210210620.31181-10-alexander@wetzel-home.de>
+ <87r2ccq78j.fsf@purkki.adurom.net>
+From:   Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <750c25be-478e-4be4-6118-f272825ea50c@wetzel-home.de>
+Date:   Thu, 14 Feb 2019 00:15:33 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <87r2ccq78j.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Ovh-Tracer-Id: 12123408725449317400
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtledrleeggddvlecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+> 
+>> Extend the shared ath key cache code to support Extended Key ID.
+>>
+>> The key cache code has to accept unicast keys to use key idx 1 and allow
+>> drivers to enable/disable hardware Rx decryption for a key independent
+>> from Tx.
+>>
+>> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+>> ---
+>>
+>> I know this is the wrong audience to discuss ath drivers.
+> 
+> I think this is the right forum. Do note that somewhere in this patch
+You are of course right. I mixed that up somehow.
 
-Move mt76x02_init_tx_queue and mt76x02_init_rx_queue in mt76
-module in order to be reused adding support for mt7603 driver.
-Squash mt76x02_init_tx_queue and mt76x02_init_rx_queue in
-mt76_alloc_hw_queue
+We can of course also discuss the ath patches any time :-)
+My initial plan was, to get the nl80211/mac80211 API finalized and then 
+get them reviewed together with another planned fix after some more 
+polishing.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/dma.c      | 24 +++++++++++-
- drivers/net/wireless/mediatek/mt76/mt76.h     |  5 ++-
- drivers/net/wireless/mediatek/mt76/mt76x02.h  | 18 +++++++++
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 38 -------------------
- 4 files changed, 45 insertions(+), 40 deletions(-)
+At this stage they are just a POC and not ready for merge. They work 
+with ath9k in AP (vlan) mode and I believe managed mode should either 
+work or need some trivial fix only. (There even seems to be a chance 
+that managed mode could allow the usage of the NATIVE Extended Key ID 
+mode, but so far I could not tested that.)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 6eedc0ec7661..420d09c1a06e 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -51,6 +51,28 @@ mt76_dma_alloc_queue(struct mt76_dev *dev, struct mt76_queue *q)
- 	return 0;
- }
- 
-+static int
-+mt76_alloc_hw_queue(struct mt76_dev *dev, struct mt76_queue *q,
-+		    int idx, int n_desc, int bufsize,
-+		    u32 ring_base, u32 irq_addr,
-+		    u32 irq_mask)
-+{
-+	int ret;
-+
-+	q->regs = dev->mmio.regs + ring_base + idx * MT_RING_SIZE;
-+	q->ndesc = n_desc;
-+	q->buf_size = bufsize;
-+	q->hw_idx = idx;
-+
-+	ret = mt76_dma_alloc_queue(dev, q);
-+	if (ret)
-+		return ret;
-+
-+	mt76_irq_enable(dev, irq_addr, irq_mask);
-+
-+	return 0;
-+}
-+
- static int
- mt76_dma_add_buf(struct mt76_dev *dev, struct mt76_queue *q,
- 		 struct mt76_queue_buf *buf, int nbufs, u32 info,
-@@ -545,7 +567,7 @@ mt76_dma_init(struct mt76_dev *dev)
- 
- static const struct mt76_queue_ops mt76_dma_ops = {
- 	.init = mt76_dma_init,
--	.alloc = mt76_dma_alloc_queue,
-+	.alloc = mt76_alloc_hw_queue,
- 	.tx_queue_skb_raw = mt76_dma_tx_queue_skb_raw,
- 	.tx_queue_skb = mt76_dma_tx_queue_skb,
- 	.tx_cleanup = mt76_dma_tx_cleanup,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index b54611f53605..5b6790b5e31e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -147,7 +147,10 @@ struct mt76_mcu_ops {
- struct mt76_queue_ops {
- 	int (*init)(struct mt76_dev *dev);
- 
--	int (*alloc)(struct mt76_dev *dev, struct mt76_queue *q);
-+	int (*alloc)(struct mt76_dev *dev, struct mt76_queue *q,
-+		     int idx, int n_desc, int bufsize,
-+		     u32 ring_base, u32 irq_addr,
-+		     u32 irq_mask);
- 
- 	int (*add_buf)(struct mt76_dev *dev, struct mt76_queue *q,
- 		       struct mt76_queue_buf *buf, int nbufs, u32 info,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index ecbdb4385885..d323aeb92424 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -203,6 +203,24 @@ static inline void mt76x02_irq_disable(struct mt76x02_dev *dev, u32 mask)
- 	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, mask, 0);
- }
- 
-+static inline int
-+mt76x02_init_tx_queue(struct mt76x02_dev *dev, struct mt76_queue *q,
-+		      int idx, int n_desc)
-+{
-+	return mt76_queue_alloc(dev, q, idx, n_desc, 0,
-+				MT_TX_RING_BASE, MT_INT_MASK_CSR,
-+				MT_INT_TX_DONE(idx));
-+}
-+
-+static inline int
-+mt76x02_init_rx_queue(struct mt76x02_dev *dev, struct mt76_queue *q,
-+		      int idx, int n_desc, int bufsize)
-+{
-+	return mt76_queue_alloc(dev, q, idx, n_desc, bufsize,
-+				MT_RX_RING_BASE, MT_INT_MASK_CSR,
-+				MT_INT_RX_DONE(idx));
-+}
-+
- static inline bool
- mt76x02_wait_for_txrx_idle(struct mt76_dev *dev)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index c86af8c85fd4..a7ba9f5528aa 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -151,44 +151,6 @@ static void mt76x02_pre_tbtt_tasklet(unsigned long arg)
- 	spin_unlock_bh(&q->lock);
- }
- 
--static int
--mt76x02_init_tx_queue(struct mt76x02_dev *dev, struct mt76_queue *q,
--		      int idx, int n_desc)
--{
--	int ret;
--
--	q->regs = dev->mt76.mmio.regs + MT_TX_RING_BASE + idx * MT_RING_SIZE;
--	q->ndesc = n_desc;
--	q->hw_idx = idx;
--
--	ret = mt76_queue_alloc(dev, q);
--	if (ret)
--		return ret;
--
--	mt76x02_irq_enable(dev, MT_INT_TX_DONE(idx));
--
--	return 0;
--}
--
--static int
--mt76x02_init_rx_queue(struct mt76x02_dev *dev, struct mt76_queue *q,
--		      int idx, int n_desc, int bufsize)
--{
--	int ret;
--
--	q->regs = dev->mt76.mmio.regs + MT_RX_RING_BASE + idx * MT_RING_SIZE;
--	q->ndesc = n_desc;
--	q->buf_size = bufsize;
--
--	ret = mt76_queue_alloc(dev, q);
--	if (ret)
--		return ret;
--
--	mt76x02_irq_enable(dev, MT_INT_RX_DONE(idx));
--
--	return 0;
--}
--
- static void mt76x02_process_tx_status_fifo(struct mt76x02_dev *dev)
- {
- 	struct mt76x02_tx_status stat;
--- 
-2.20.1
+> (in the cover letter) you mentioned "all ath drivers" but AFAICS this
+> patch only changes functionality for ath5k, ath9k and ath9k_htc. All the
+> rest like wil6210, ath6kl and ath10k are unaffected.
+> 
+You are right, I should have used "shared ath key cache code" in the 
+Cover Letter, as in the patch itself. This is not (yet) an attempt to 
+implement Extended Key ID for anything else than ath9k AP mode. So any 
+driver not using ath_key_config() won't be affected at all.
+
+Now I believe it's possible for all Atheros drivers but the ath10k to 
+get support. As long as a card can work with SW crypto we only need a 
+way to disable Rx HW crypto for a running key without impact for ongoing Tx.
+But the initial results when trying my hand at ath10k are strongly 
+indicating the best we can hope there is SW encryption only with CT 
+firmware... or maybe a firmware update.
+
+While the API itself is perfectly able to handle NATIVE mode the keyid 
+is not handled correctly. Installing a second key switches TX to the new 
+key and overwrites the keyid in the MPDU mac80211 prepared. (I could not 
+even get the card to properly make an RX/TX key to an TX only key, that 
+caused clear text packets when changing the key and it looks like that 
+SW crypto is only possible - with nonfree CT - when not using HW crypto 
+for TX at all. With those limitations I shelved any plans for ath10k.)
+
+One of my next planned steps is now to either get another ath9k card or 
+get another driver working in AP mode to test ath9k also in managed 
+mode. Of course I also have to get sniffing working properly, all cards 
+tried so far have issues and it also looks like I have to update 
+wireshark for serious testing. So I guess driver support will still take 
+some time and efforts when we got the generic issues sorted out.
+
+I can also try my hand at porting the other Atheros drives, but without 
+someone being able to confirm it works I'm not planning that at the moment.
+
+Alexander
+
+
+
+
 
