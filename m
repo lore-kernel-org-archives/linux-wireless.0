@@ -2,160 +2,167 @@ Return-Path: <SRS0=xkZe=QU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E916C282CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 14:06:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4C95C282C2
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 14:12:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6E0A62075D
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 14:06:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550066806;
-	bh=Qspvit2uW6KFUNIXNiQB8n4IK+v1A3RzNnsQVOOFWSo=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=XVsWR4erAOlLJOiBiwSLQwHqkbiDQRub/LrOjzZELkY7qGrOwC/0z2xTwwcFvQqrN
-	 UoPff2bI/Kd9FG/D7vsNNV73uIRan3QMeJ7EbZa/46Azweo0jqBYPQUrSgqVXNIgGg
-	 sWkOZElt3FXm8zi3d56NX/qEm5PrzAo2zPab4k08=
+	by mail.kernel.org (Postfix) with ESMTP id A6F70222BA
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 14:12:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="P6CUhhF1";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NRldXanX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391560AbfBMOGo (ORCPT
+        id S1732988AbfBMOMp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Feb 2019 09:06:44 -0500
-Received: from mail.stusta.mhn.de ([141.84.69.5]:55134 "EHLO
-        mail.stusta.mhn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729622AbfBMOGo (ORCPT
+        Wed, 13 Feb 2019 09:12:45 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:39066 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732191AbfBMOMp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Feb 2019 09:06:44 -0500
-X-Greylist: delayed 420 seconds by postgrey-1.27 at vger.kernel.org; Wed, 13 Feb 2019 09:06:42 EST
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by mail.stusta.mhn.de (Postfix) with ESMTPSA id 4401Np2PW5z3K;
-        Wed, 13 Feb 2019 14:59:38 +0100 (CET)
-From:   Adrian Bunk <bunk@kernel.org>
-To:     netdev@vger.kernel.org
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH net] mwifiex: Fix NL80211_TX_POWER_LIMITED
-Date:   Wed, 13 Feb 2019 15:59:38 +0200
-Message-Id: <20190213135938.13664-1-bunk@kernel.org>
-X-Mailer: git-send-email 2.11.0
+        Wed, 13 Feb 2019 09:12:45 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 2E6646074F; Wed, 13 Feb 2019 14:12:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550067164;
+        bh=FfbnkInw/xz1x7lH3WXzSutRZmdoYxn85ofqibEiAI8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=P6CUhhF1t/XdlUtj+5S010cAkt6KBeE2Kw7Zjs8SpzITd5oknvS2U94e+e+3A/wBT
+         XgPfoBmOcs9ZuNo14C7HrhsRnKiuhoKAP3O45PiUQIS+OUglIhcc9ezMyG+TVbABJv
+         09oDDfvT3rktE14j0XHYxTVXkrKTdsNXKjT6KFv4=
+Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: pillair@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 691D36086B;
+        Wed, 13 Feb 2019 14:12:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550067162;
+        bh=FfbnkInw/xz1x7lH3WXzSutRZmdoYxn85ofqibEiAI8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=NRldXanX1F/8xd38OJ1aJzO96n+kg1M6zyF3FOkQDA3DPfIqU7tOWVqZTFK5xxHsB
+         5VznbfQFu2Q1qL/5KjjgUyatfBsOAFDXABV0pcxvn8TrGtSwx9PKXx2KiNmzvWkBe7
+         b4ouBPJHR+uS3rvo7Ovf1j4iRQrhBl2EmU299zXo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 691D36086B
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
+From:   Rakesh Pillai <pillair@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH] ath10k: Report low ack rssi based on the reason code
+Date:   Wed, 13 Feb 2019 19:42:30 +0530
+Message-Id: <1550067150-8796-1-git-send-email-pillair@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-NL80211_TX_POWER_LIMITED was treated as NL80211_TX_POWER_AUTOMATIC,
-which is the opposite of what should happen and can cause nasty
-regulatory problems.
+Firmware sends peer sta kickout event to the driver
+along with the reason code for a particular peer.
 
-if/else converted to a switch without default to make gcc warn
-on unhandled enum values.
+Currently the sta kickout event is delivered to the
+upper layer without checking if the reason code is
+valid or not. This causes frequent disconnection of
+the STA.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Report low ack rssi event to mac80211 only if the reason
+code is valid.
 
+Tested HW: WCN3990
+Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 ---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  2 ++
+ drivers/net/wireless/ath/ath10k/wmi.c     |  9 ++++++---
+ drivers/net/wireless/ath/ath10k/wmi.h     | 12 ++++++++++++
+ 3 files changed, 20 insertions(+), 3 deletions(-)
 
-I tried to follow the conventions used inside this driver for
-variable types, dbm_min is u16 like dbm.
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 13 +++++++++++--
- drivers/net/wireless/marvell/mwifiex/ioctl.h     |  1 +
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 11 +++++++----
- 3 files changed, 19 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 1467af22e394..9ef0fc108641 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -376,11 +376,20 @@ mwifiex_cfg80211_set_tx_power(struct wiphy *wiphy,
- 	struct mwifiex_power_cfg power_cfg;
- 	int dbm = MBM_TO_DBM(mbm);
- 
--	if (type == NL80211_TX_POWER_FIXED) {
-+	switch (type) {
-+	case NL80211_TX_POWER_FIXED:
- 		power_cfg.is_power_auto = 0;
-+		power_cfg.is_power_fixed = 1;
- 		power_cfg.power_level = dbm;
--	} else {
-+		break;
-+	case NL80211_TX_POWER_LIMITED:
-+		power_cfg.is_power_auto = 0;
-+		power_cfg.is_power_fixed = 0;
-+		power_cfg.power_level = dbm;
-+		break;
-+	case NL80211_TX_POWER_AUTOMATIC:
- 		power_cfg.is_power_auto = 1;
-+		break;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 90617e1..63ca9c5 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -885,6 +885,8 @@ static int ath10k_wmi_tlv_op_pull_peer_kick_ev(struct ath10k *ar,
  	}
  
- 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
-diff --git a/drivers/net/wireless/marvell/mwifiex/ioctl.h b/drivers/net/wireless/marvell/mwifiex/ioctl.h
-index 48e154e1865d..0dd592ea6e83 100644
---- a/drivers/net/wireless/marvell/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/marvell/mwifiex/ioctl.h
-@@ -267,6 +267,7 @@ struct mwifiex_ds_encrypt_key {
+ 	arg->mac_addr = ev->peer_macaddr.addr;
++	arg->reason = __le32_to_cpu(ev->reason);
++	arg->reason_code_valid = true;
  
- struct mwifiex_power_cfg {
- 	u32 is_power_auto;
-+	u32 is_power_fixed;
- 	u32 power_level;
+ 	kfree(tb);
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index b99b3a1..75707d6b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3393,9 +3393,6 @@ void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar, struct sk_buff *skb)
+ 		return;
+ 	}
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event peer sta kickout %pM\n",
+-		   arg.mac_addr);
+-
+ 	rcu_read_lock();
+ 
+ 	sta = ieee80211_find_sta_by_ifaddr(ar->hw, arg.mac_addr, NULL);
+@@ -3405,10 +3402,16 @@ void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar, struct sk_buff *skb)
+ 		goto exit;
+ 	}
+ 
++	if (arg.reason_code_valid &&
++	    arg.reason == WMI_PEER_STA_KICKOUT_REASON_UNSPECIFIED)
++		goto exit;
++
+ 	ieee80211_report_low_ack(sta, 10);
+ 
+ exit:
+ 	rcu_read_unlock();
++	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event peer sta kickout %pM reason code %d\n",
++		    arg.mac_addr, arg.reason);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 1f82f10..492ce0f 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6498,6 +6498,7 @@ struct wmi_10_4_chan_info_event {
+ 
+ struct wmi_peer_sta_kickout_event {
+ 	struct wmi_mac_addr peer_macaddr;
++	__le32 reason;
+ } __packed;
+ 
+ #define WMI_CHAN_INFO_FLAG_COMPLETE BIT(0)
+@@ -6737,6 +6738,8 @@ struct wmi_vdev_start_ev_arg {
+ 
+ struct wmi_peer_kick_ev_arg {
+ 	const u8 *mac_addr;
++	u32 reason;
++	bool reason_code_valid;
  };
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index b454b5f85503..ebc0e41e5d3b 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -688,6 +688,9 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
- 	txp_cfg = (struct host_cmd_ds_txpwr_cfg *) buf;
- 	txp_cfg->action = cpu_to_le16(HostCmd_ACT_GEN_SET);
- 	if (!power_cfg->is_power_auto) {
-+		u16 dbm_min = power_cfg->is_power_fixed ?
-+			      dbm : priv->min_tx_power_level;
+ struct wmi_swba_ev_arg {
+@@ -6827,6 +6830,15 @@ struct wmi_pdev_bss_chan_info_event {
+ 	__le32 reserved;
+ } __packed;
+ 
++enum wmi_peer_sta_kickout_reason {
++	WMI_PEER_STA_KICKOUT_REASON_UNSPECIFIED,
++	WMI_PEER_STA_KICKOUT_REASON_XRETRY,
++	WMI_PEER_STA_KICKOUT_REASON_INACTIVITY,
++	WMI_PEER_STA_KICKOUT_REASON_IBSS_DISCONNECT,
++	WMI_PEER_STA_KICKOUT_REASON_TDLS_DISCONNECT,
++	WMI_PEER_STA_KICKOUT_REASON_SA_QUERY_TIMEOUT,
++};
 +
- 		txp_cfg->mode = cpu_to_le32(1);
- 		pg_tlv = (struct mwifiex_types_power_group *)
- 			 (buf + sizeof(struct host_cmd_ds_txpwr_cfg));
-@@ -702,7 +705,7 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
- 		pg->last_rate_code = 0x03;
- 		pg->modulation_class = MOD_CLASS_HR_DSSS;
- 		pg->power_step = 0;
--		pg->power_min = (s8) dbm;
-+		pg->power_min = (s8) dbm_min;
- 		pg->power_max = (s8) dbm;
- 		pg++;
- 		/* Power group for modulation class OFDM */
-@@ -710,7 +713,7 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
- 		pg->last_rate_code = 0x07;
- 		pg->modulation_class = MOD_CLASS_OFDM;
- 		pg->power_step = 0;
--		pg->power_min = (s8) dbm;
-+		pg->power_min = (s8) dbm_min;
- 		pg->power_max = (s8) dbm;
- 		pg++;
- 		/* Power group for modulation class HTBW20 */
-@@ -718,7 +721,7 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
- 		pg->last_rate_code = 0x20;
- 		pg->modulation_class = MOD_CLASS_HT;
- 		pg->power_step = 0;
--		pg->power_min = (s8) dbm;
-+		pg->power_min = (s8) dbm_min;
- 		pg->power_max = (s8) dbm;
- 		pg->ht_bandwidth = HT_BW_20;
- 		pg++;
-@@ -727,7 +730,7 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
- 		pg->last_rate_code = 0x20;
- 		pg->modulation_class = MOD_CLASS_HT;
- 		pg->power_step = 0;
--		pg->power_min = (s8) dbm;
-+		pg->power_min = (s8) dbm_min;
- 		pg->power_max = (s8) dbm;
- 		pg->ht_bandwidth = HT_BW_40;
- 	}
+ /* WOW structures */
+ enum wmi_wow_wakeup_event {
+ 	WOW_BMISS_EVENT = 0,
 -- 
-2.11.0
+2.7.4
 
