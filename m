@@ -2,116 +2,104 @@ Return-Path: <SRS0=xkZe=QU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B041C282C2
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:00:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 525E0C282C2
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:04:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3E5EC20842
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:00:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FA29222B2
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:04:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="StP8Olht";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="h7rASYqB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732594AbfBMLAs (ORCPT
+        id S1729210AbfBMLEH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Feb 2019 06:00:48 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:33804 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729210AbfBMLAr (ORCPT
+        Wed, 13 Feb 2019 06:04:07 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:50344 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727894AbfBMLEH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Feb 2019 06:00:47 -0500
-Received: by mail-wr1-f68.google.com with SMTP id f14so1995963wrg.1
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2019 03:00:46 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=RxYwZMfOqTmyDYsxmdBZ/FKItZE1YvCMXbA+VIGz8Dk=;
-        b=eZZp6tH8VbUJ+hH/vQWES3VrZliOaURX3+I9gp+jlzwYeiZwAGyLapoAadCZ57iIhi
-         X6jA50P0I95Bkbej5Sx3FLq3UgI1d1oRj9M91XN7jPqLJ1wGh8FjLyKqBVXKMB70Ir6h
-         SfJrwPUjyGoRDAXS6LoTdnHf75s6XE01hrQ+K/hX9cLBm43bo3h/6Wbr8piRfixOv1+F
-         sFiGJTOu1blw4FJ2nJRQz1KzPLgn+vJnwkRhBTLP3k0FnV6gQDN3lSsIc3J9seEgw4pa
-         cw6b+SRjhVdmG76arcaAMclJvObDWPuKjJhNLl2NAqU6Dey7dTfmkQhUUI/xYwxlqouM
-         9yUg==
-X-Gm-Message-State: AHQUAuZ4JcAMZWZoTg6ScMJChO+ak9GNjV99kl7JULS8fejRmT4ZvSI+
-        OWMD1JrTUOZT3q+lcTSFa6tqow==
-X-Google-Smtp-Source: AHgI3IbHCwylraueo/sF3/+aGFrSuWX8lxylXI4neR29264oIlf+7GhJ08/Xf0ZWYrcQUwc2zw0sSQ==
-X-Received: by 2002:adf:9ecc:: with SMTP id b12mr6619980wrf.83.1550055646046;
-        Wed, 13 Feb 2019 03:00:46 -0800 (PST)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id t199sm10396398wmt.1.2019.02.13.03.00.44
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 13 Feb 2019 03:00:45 -0800 (PST)
-Date:   Wed, 13 Feb 2019 12:00:42 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        lorenzo@kernel.org
-Subject: Re: [PATCH 0/4] do not use sg if not properly supported by usb
- controller
-Message-ID: <20190213110041.GI6376@localhost.localdomain>
-References: <20190212135100.GA15292@redhat.com>
- <CAJ0CqmVhH61P1V1fmhicPXwA7vHjv+Hh7h2DYbci1uDRJCyENA@mail.gmail.com>
- <20190212141725.GD12906@redhat.com>
- <20190212142528.GB24197@localhost.localdomain>
- <20190212145424.GE12906@redhat.com>
- <20190212150836.GA10823@localhost.localdomain>
- <20190212152559.GB23126@redhat.com>
- <20190212155001.GA12780@localhost.localdomain>
- <20190212220902.GA27836@localhost.localdomain>
- <20190213094449.GA5749@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190213094449.GA5749@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Wed, 13 Feb 2019 06:04:07 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 3D5CA608A5; Wed, 13 Feb 2019 11:04:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550055846;
+        bh=wuL7eg+utkCJZNDIRf9TFvmUgCzmdzoOIq2kQXUqmtY=;
+        h=From:To:Cc:Subject:Date:From;
+        b=StP8Olht7JsfoZ760thtI9EjGwYqSJYpvRWzHHhQeJQZjRke944RzUj6iqdAA48ei
+         rqPxrOMtknUoY/JxctMIXudKUUIDcB3yqS2Qybapmngt4C4OFhtYoWQpIwGTJw5NHK
+         Ij+NkicwpKFdYcQYcUNCcx6muF+ccZa5l8/F03O8=
+Received: from aambure-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: aambure@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 72C68605FC;
+        Wed, 13 Feb 2019 11:04:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550055845;
+        bh=wuL7eg+utkCJZNDIRf9TFvmUgCzmdzoOIq2kQXUqmtY=;
+        h=From:To:Cc:Subject:Date:From;
+        b=h7rASYqBldHGRCVRNMVrLS/qdLjZkL/8JZkHobg9wmww2S78248pLFrxvWCziRDch
+         uSXNftXLwqo31FrMFDVw7UNExtCnkkTh5qPXlLtI5hpJRNdVLppyIHN0TkIetp/YnK
+         AYcxGqiS7c6X31rX3s1LQFUVUsm5IzA9DnoT437g=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 72C68605FC
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=aambure@codeaurora.org
+From:   Abhishek Ambure <aambure@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Abhishek Ambure <aambure@codeaurora.org>
+Subject: [PATCH v3 0/2] Add support for ack rssi values of all data and
+Date:   Wed, 13 Feb 2019 16:33:57 +0530
+Message-Id: <1550055839-24454-1-git-send-email-aambure@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Feb 13, Stanislaw Gruszka wrote:
-> On Tue, Feb 12, 2019 at 11:09:03PM +0100, Lorenzo Bianconi wrote:
-> > > > On Tue, Feb 12, 2019 at 04:08:37PM +0100, Lorenzo Bianconi wrote:
-> > > > > > > > What unnecessary operation ?
-> > > > > > > 
-> > > > > > > the ones in mt76u_fill_bulk_urb()
-> > > > > > 
-> > > > > > Your patches also add extra operations on hotpath due to urb->num_sgs and
-> > > > > > dev->usb.sg_en checks.
-> > > > > 
-> > > > > here I guess you should use mt76u_check_sg() instead of
-> > > > > udev->bus->sg_tablesize > 0 so I think you need to precompute it since it is in
-> > > > > the hotpath
-> > > > 
-> > > > It's not necessary. If udev->bus->sg_tablesize > 0 is true and rest
-> > > > of mt76u_check_sg() is not, we will submit urb with urb->num_sgs = 1 to
-> > > > usb host driver, what is fine. 
-> > > > 
-> > > > > Moreover the RFC series has been tested by multiple users and on multiple
-> > > > > devices
-> > > > 
-> > > > I know. Perhaps you could test my patch on rpi ?
-> > > 
-> > > sure, I will do it later
-> > 
-> > I confirm that even with Stanislaw's patch the usb dongle is properly working
-> > on rpi3+
-> 
-> Thanks for testing. Would be ok to you to post my patch against
-> wireless-drivers tree and cc stable as fix for non-SG usb hosts,
-> drop your set for -next and work for fix for SG issue on AMD IOMMU?
+WCN3990 firmware supporting WMI_TLV_SERVICE_TX_DATA_MGMT_ACK_RSSI sends
+ack rssi value of all data and management tx packets to host through tx
+completion event.
 
-I agree that your patch works (since it does not use SG I/O :)) but
-I think it is more clear (and manageable) to have two separated
-routines for memory allocation.
-Moreover I think that this check has to be done in the control plane instead
-of the data plane, so I would like to spend some more time in order to see if it is
-possible to remove some checks in the hot-path
+If WMI_RSRC_CFG_FLAG_TX_ACK_RSSI is set in host capability then firmware
+sends RSSI value in tx completion events of data and management packets.
+Host driver extracts ack rssi values of tx packets from their tx
+completion event.
 
-Regards,
-Lorenzo
+Applications gets ack rssi value of data and managent tx packets using
+below commands,
+For Data ack rssi command: - iw dev <interface-name> station dump
+O/P: - check last_ack_rssi value in output
 
-> 
-> Stanislaw
+For Management ack rssi command: - 
+hostapd_cli POLL_STA <MAC-ADDR-OF-STA>
+O/P: - OK
+
+hostapd_cli STA <MAC-ADDR-OF-STA>
+O/P: - check last_ack_rssi value in output
+
+V2: Tested firmware and Tested hardware added
+V3: Host capability WMI_RSRC_CFG_FLAG_TX_ACK_RSSI appended in 1/2 patch
+    Merge conflicts resolved in htt_rx.c for 2/2 patch
+
+Abhishek Ambure (2):
+  ath10k: Add support for ack rssi value of management tx packets
+  ath10k: Add support for ack rssi value of data tx packets
+
+ drivers/net/wireless/ath/ath10k/htt.h     | 86 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c  | 12 +++--
+ drivers/net/wireless/ath/ath10k/hw.c      | 32 +++++++++++-
+ drivers/net/wireless/ath/ath10k/hw.h      | 22 ++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 25 ++++++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 25 +++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c     | 42 ++++++++++-----
+ drivers/net/wireless/ath/ath10k/wmi.h     | 11 ++++
+ 8 files changed, 236 insertions(+), 19 deletions(-)
+
+-- 
+1.9.1
+
