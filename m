@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8EFDC282C2
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2B5DC282CE
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 95F14222B2
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:04:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 862F2222B2
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 11:04:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DjKVEjSj";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="A7aqkpeS"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="o+6gut6C";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UStGQcx3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732417AbfBMLEK (ORCPT
+        id S2387735AbfBMLEL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Feb 2019 06:04:10 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:50414 "EHLO
+        Wed, 13 Feb 2019 06:04:11 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:50470 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727894AbfBMLEK (ORCPT
+        with ESMTP id S1727894AbfBMLEL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Feb 2019 06:04:10 -0500
+        Wed, 13 Feb 2019 06:04:11 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 01CC7605FC; Wed, 13 Feb 2019 11:04:08 +0000 (UTC)
+        id AEDA360909; Wed, 13 Feb 2019 11:04:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550055849;
-        bh=UpsMCeqJYPRl/ORURDRih8MP+fS8HwkJYkLhiKms/q0=;
+        s=default; t=1550055850;
+        bh=hBivftpI78oY+LOuF3gBOHBIZcbfoRGtlBMghIWbMYA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DjKVEjSjm2frrjixCiliTuUlIKEw2GTXIXdec0TRtks9aKxvKD4oddMcgO5ALnzmm
-         F1Oe1hMFZNe3DbwmcOQRtriMxwMubVYMQr2ds0hXklTm0+UFOl9klMPOK5VX9J5n5r
-         OiBFs4o5+h+Yjof+65NclaraCe0Blp3/lRQYyXhY=
+        b=o+6gut6C9iz/zowElLu4WMS+rcC4MtmHJyekVKmivfth2dESTFv2RCF6kBiX2TK+a
+         24MMo/UbrJczDNzQjpo0M5WY9Nx3f6D8nUeckwJZFAa6xC5xre+1mp98QOsB+NCskZ
+         Tqa/5TRQhOjMZZfN1JZQqmUKE2PGDlCx0dI/TFgk=
 Received: from aambure-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: aambure@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 57E5D6085F;
-        Wed, 13 Feb 2019 11:04:06 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7F886608CC;
+        Wed, 13 Feb 2019 11:04:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550055847;
-        bh=UpsMCeqJYPRl/ORURDRih8MP+fS8HwkJYkLhiKms/q0=;
+        s=default; t=1550055849;
+        bh=hBivftpI78oY+LOuF3gBOHBIZcbfoRGtlBMghIWbMYA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=A7aqkpeSv1qdd6JgyNg8KpDeuNUsX5zSaStKNBu2uc+28LQ5/2lXVdzni+ejCOD33
-         sZ5wIh1cEkXjGFP/zOfTY/169JWsH0AMeQOwNu/A1i21VArOytBgl+ch69P0aIbrbI
-         VtjJUvNbestlDsqg25OhQUQ1F/jfwkhF44AMJByI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 57E5D6085F
+        b=UStGQcx3u0S4uzin2cZemSov/o722Sb6l3/Jt9EtHrTnzfY2Hgn9OCAIOthccL/Wj
+         472Dh5j6llg8uugZZ8DdcpiMSUNQd2Gz+69gea9M+k8/DgcMZ0hG0WocIjoB4iGjAE
+         /TZJTlV0A0OfzW2YJmMAE/5GPnqqQPrjdTb6T+VI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7F886608CC
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=aambure@codeaurora.org
 From:   Abhishek Ambure <aambure@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Abhishek Ambure <aambure@codeaurora.org>
-Subject: [PATCH v3 1/2] ath10k: Add support for ack rssi value of management tx packets
-Date:   Wed, 13 Feb 2019 16:33:58 +0530
-Message-Id: <1550055839-24454-2-git-send-email-aambure@codeaurora.org>
+Subject: [PATCH v3 2/2] ath10k: Add support for ack rssi value of data tx packets
+Date:   Wed, 13 Feb 2019 16:33:59 +0530
+Message-Id: <1550055839-24454-3-git-send-email-aambure@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1550055839-24454-1-git-send-email-aambure@codeaurora.org>
 References: <1550055839-24454-1-git-send-email-aambure@codeaurora.org>
@@ -69,8 +69,8 @@ the firmware has the capability to send the RSSI value of the ACK for all
 data and management packets transmitted.
 
 If WMI_RSRC_CFG_FLAG_TX_ACK_RSSI is set in host capability then firmware
-sends RSSI value in "management" tx completion event. Host extracts ack
-rssi values of management packets from their tx completion event.
+sends RSSI value in "data" tx completion event. Host extracts ack rssi
+values of data packets from their tx completion event.
 
 Tested HW: WCN3990
 Tested FW: WLAN.HL.2.0-01617-QCAHLSWMTPLZ-1
@@ -78,281 +78,254 @@ Tested FW: WLAN.HL.2.0-01617-QCAHLSWMTPLZ-1
 Signed-off-by: Abhishek Ambure <aambure@codeaurora.org>
 ---
 V2: Tested HW & Tested FW added
-V3: Host capabilty WMI_RSRC_CFG_FLAG_TX_ACK_RSSI appended
+V3: Merge conflicts resolved in htt_rx.c
 ---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 25 +++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h | 25 ++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c     | 42 ++++++++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/wmi.h     | 11 ++++++++
- 4 files changed, 90 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.h    | 86 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 12 +++--
+ drivers/net/wireless/ath/ath10k/hw.c     | 32 +++++++++++-
+ drivers/net/wireless/ath/ath10k/hw.h     | 22 ++++++++
+ 4 files changed, 146 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 5d05bff..48394d2 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -684,6 +684,10 @@ static int ath10k_wmi_tlv_op_pull_scan_ev(struct ath10k *ar,
- 	arg->desc_id = ev->desc_id;
- 	arg->status = ev->status;
- 	arg->pdev_id = ev->pdev_id;
-+	arg->ppdu_id = ev->ppdu_id;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index d194bbe..960cb3e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -589,6 +589,10 @@ struct htt_mgmt_tx_completion {
+ #define HTT_TX_CMPL_FLAG_PA_PRESENT		BIT(2)
+ #define HTT_TX_CMPL_FLAG_PPDU_DURATION_PRESENT	BIT(3)
+ 
++#define HTT_TX_DATA_RSSI_ENABLE_WCN3990 BIT(3)
++#define HTT_TX_DATA_APPEND_RETRIES BIT(0)
++#define HTT_TX_DATA_APPEND_TIMESTAMP BIT(1)
 +
-+	if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map))
-+		arg->ack_rssi = ev->ack_rssi;
+ struct htt_rx_indication_hdr {
+ 	u8 info0; /* %HTT_RX_INDICATION_INFO0_ */
+ 	__le16 peer_id;
+@@ -863,6 +867,88 @@ enum htt_data_tx_flags {
  
- 	kfree(tb);
- 	return 0;
-@@ -693,8 +697,12 @@ struct wmi_tlv_tx_bundle_compl_parse {
- 	const __le32 *num_reports;
- 	const __le32 *desc_ids;
- 	const __le32 *status;
-+	const __le32 *ppdu_ids;
-+	const __le32 *ack_rssi;
- 	bool desc_ids_done;
- 	bool status_done;
-+	bool ppdu_ids_done;
-+	bool ack_rssi_done;
- };
+ #define HTT_TX_COMPL_INV_MSDU_ID 0xFFFF
  
- static int
-@@ -714,6 +722,12 @@ struct wmi_tlv_tx_bundle_compl_parse {
- 		} else if (!bundle_tx_compl->status_done) {
- 			bundle_tx_compl->status_done = true;
- 			bundle_tx_compl->status = ptr;
-+		} else if (!bundle_tx_compl->ppdu_ids_done) {
-+			bundle_tx_compl->ppdu_ids_done = true;
-+			bundle_tx_compl->ppdu_ids = ptr;
-+		} else if (!bundle_tx_compl->ack_rssi_done) {
-+			bundle_tx_compl->ack_rssi_done = true;
-+			bundle_tx_compl->ack_rssi = ptr;
++struct htt_append_retries {
++	__le16 msdu_id;
++	u8 tx_retries;
++	u8 flag;
++} __packed;
++
++struct htt_data_tx_completion_ext {
++	struct htt_append_retries a_retries;
++	__le32 t_stamp;
++	__le16 msdus_rssi[0];
++} __packed;
++
++/**
++ * @brief target -> host TX completion indication message definition
++ *
++ * @details
++ * The following diagram shows the format of the TX completion indication sent
++ * from the target to the host
++ *
++ *          |31 28|27|26|25|24|23        16| 15 |14 11|10   8|7          0|
++ *          |-------------------------------------------------------------|
++ * header:  |rsvd |A2|TP|A1|A0|     num    | t_i| tid |status|  msg_type  |
++ *          |-------------------------------------------------------------|
++ * payload: |            MSDU1 ID          |         MSDU0 ID             |
++ *          |-------------------------------------------------------------|
++ *          :            MSDU3 ID          :         MSDU2 ID             :
++ *          |-------------------------------------------------------------|
++ *          |          struct htt_tx_compl_ind_append_retries             |
++ *          |- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -|
++ *          |          struct htt_tx_compl_ind_append_tx_tstamp           |
++ *          |- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -|
++ *          |           MSDU1 ACK RSSI     |        MSDU0 ACK RSSI        |
++ *          |-------------------------------------------------------------|
++ *          :           MSDU3 ACK RSSI     :        MSDU2 ACK RSSI        :
++ *          |- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -|
++ *    -msg_type
++ *     Bits 7:0
++ *     Purpose: identifies this as HTT TX completion indication
++ *    -status
++ *     Bits 10:8
++ *     Purpose: the TX completion status of payload fragmentations descriptors
++ *     Value: could be HTT_TX_COMPL_IND_STAT_OK or HTT_TX_COMPL_IND_STAT_DISCARD
++ *    -tid
++ *     Bits 14:11
++ *     Purpose: the tid associated with those fragmentation descriptors. It is
++ *     valid or not, depending on the tid_invalid bit.
++ *     Value: 0 to 15
++ *    -tid_invalid
++ *     Bits 15:15
++ *     Purpose: this bit indicates whether the tid field is valid or not
++ *     Value: 0 indicates valid, 1 indicates invalid
++ *    -num
++ *     Bits 23:16
++ *     Purpose: the number of payload in this indication
++ *     Value: 1 to 255
++ *    -A0 = append
++ *     Bits 24:24
++ *     Purpose: append the struct htt_tx_compl_ind_append_retries which contains
++ *            the number of tx retries for one MSDU at the end of this message
++ *     Value: 0 indicates no appending, 1 indicates appending
++ *    -A1 = append1
++ *     Bits 25:25
++ *     Purpose: Append the struct htt_tx_compl_ind_append_tx_tstamp which
++ *            contains the timestamp info for each TX msdu id in payload.
++ *     Value: 0 indicates no appending, 1 indicates appending
++ *    -TP = MSDU tx power presence
++ *     Bits 26:26
++ *     Purpose: Indicate whether the TX_COMPL_IND includes a tx power report
++ *            for each MSDU referenced by the TX_COMPL_IND message.
++ *            The order of the per-MSDU tx power reports matches the order
++ *            of the MSDU IDs.
++ *     Value: 0 indicates not appending, 1 indicates appending
++ *    -A2 = append2
++ *     Bits 27:27
++ *     Purpose: Indicate whether data ACK RSSI is appended for each MSDU in
++ *            TX_COMP_IND message.  The order of the per-MSDU ACK RSSI report
++ *            matches the order of the MSDU IDs.
++ *            The ACK RSSI values are valid when status is COMPLETE_OK (and
++ *            this append2 bit is set).
++ *     Value: 0 indicates not appending, 1 indicates appending
++ */
++
+ struct htt_data_tx_completion {
+ 	union {
+ 		u8 flags;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index d5c666c..3da346b 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2221,7 +2221,7 @@ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
+ 	__le16 msdu_id, *msdus;
+ 	bool rssi_enabled = false;
+ 	u8 msdu_count = 0, num_airtime_records, tid;
+-	int i;
++	int i, htt_pad = 0;
+ 	struct htt_data_tx_compl_ppdu_dur *ppdu_info;
+ 	struct ath10k_peer *peer;
+ 	u16 ppdu_info_offset = 0, peer_id;
+@@ -2250,9 +2250,11 @@ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
+ 
+ 	msdu_count = resp->data_tx_completion.num_msdus;
+ 	msdus = resp->data_tx_completion.msdus;
++	rssi_enabled = ath10k_is_rssi_enable(&ar->hw_params, resp);
+ 
+-	if (resp->data_tx_completion.flags2 & HTT_TX_CMPL_FLAG_DATA_RSSI)
+-		rssi_enabled = true;
++	if (rssi_enabled)
++		htt_pad = ath10k_tx_data_rssi_get_pad_bytes(&ar->hw_params,
++							    resp);
+ 
+ 	for (i = 0; i < msdu_count; i++) {
+ 		msdu_id = msdus[i];
+@@ -2264,10 +2266,10 @@ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
+ 			 * last msdu id with 0xffff
+ 			 */
+ 			if (msdu_count & 0x01) {
+-				msdu_id = msdus[msdu_count +  i + 1];
++				msdu_id = msdus[msdu_count +  i + 1 + htt_pad];
+ 				tx_done.ack_rssi = __le16_to_cpu(msdu_id);
+ 			} else {
+-				msdu_id = msdus[msdu_count +  i];
++				msdu_id = msdus[msdu_count +  i + htt_pad];
+ 				tx_done.ack_rssi = __le16_to_cpu(msdu_id);
+ 			}
  		}
- 		break;
- 	default:
-@@ -744,6 +758,10 @@ static int ath10k_wmi_tlv_op_pull_mgmt_tx_bundle_compl_ev(
- 	arg->num_reports = *bundle_tx_compl.num_reports;
- 	arg->desc_ids = bundle_tx_compl.desc_ids;
- 	arg->status = bundle_tx_compl.status;
-+	arg->ppdu_ids = bundle_tx_compl.ppdu_ids;
-+
-+	if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map))
-+		arg->ack_rssi = bundle_tx_compl.ack_rssi;
- 
- 	return 0;
- }
-@@ -1690,6 +1708,9 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	cfg->num_ocb_schedules = __cpu_to_le32(0);
- 	cfg->host_capab = __cpu_to_le32(WMI_TLV_FLAG_MGMT_BUNDLE_TX_COMPL);
- 
-+	if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map))
-+		cfg->host_capab |= __cpu_to_le32(WMI_RSRC_CFG_FLAG_TX_ACK_RSSI);
-+
- 	ath10k_wmi_put_host_mem_chunks(ar, chunks);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv init\n");
-@@ -2756,7 +2777,9 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
- 	arvif = (void *)cb->vif->drv_priv;
- 	vdev_id = arvif->vdev_id;
- 
--	if (WARN_ON_ONCE(!ieee80211_is_mgmt(hdr->frame_control)))
-+	if (WARN_ON_ONCE(!ieee80211_is_mgmt(hdr->frame_control) &&
-+			 (!(ieee80211_is_nullfunc(hdr->frame_control) ||
-+			 ieee80211_is_qos_nullfunc(hdr->frame_control)))))
- 		return ERR_PTR(-EINVAL);
- 
- 	len = sizeof(*cmd) + 2 * sizeof(*tlv);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 4fba581..13dc605 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -25,6 +25,8 @@
- #define WMI_TLV_VDEV_PARAM_UNSUPPORTED 0
- #define WMI_TLV_MGMT_TX_FRAME_MAX_LEN	64
- 
-+#define WMI_RSRC_CFG_FLAG_TX_ACK_RSSI		BIT(18)
-+
- enum wmi_tlv_grp_id {
- 	WMI_TLV_GRP_START = 0x3,
- 	WMI_TLV_GRP_SCAN = WMI_TLV_GRP_START,
-@@ -1395,6 +1397,25 @@ enum wmi_tlv_service {
- 	WMI_TLV_SERVICE_AP_TWT = 153,
- 	WMI_TLV_SERVICE_GMAC_OFFLOAD_SUPPORT = 154,
- 	WMI_TLV_SERVICE_SPOOF_MAC_SUPPORT = 155,
-+	WMI_TLV_SERVICE_PEER_TID_CONFIGS_SUPPORT = 156,
-+	WMI_TLV_SERVICE_VDEV_SWRETRY_PER_AC_CONFIG_SUPPORT = 157,
-+	WMI_TLV_SERVICE_DUAL_BEACON_ON_SINGLE_MAC_SCC_SUPPORT = 158,
-+	WMI_TLV_SERVICE_DUAL_BEACON_ON_SINGLE_MAC_MCC_SUPPORT = 159,
-+	WMI_TLV_SERVICE_MOTION_DET = 160,
-+	WMI_TLV_SERVICE_INFRA_MBSSID = 161,
-+	WMI_TLV_SERVICE_OBSS_SPATIAL_REUSE = 162,
-+	WMI_TLV_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT = 163,
-+	WMI_TLV_SERVICE_NAN_DBS_SUPPORT = 164,
-+	WMI_TLV_SERVICE_NDI_DBS_SUPPORT = 165,
-+	WMI_TLV_SERVICE_NAN_SAP_SUPPORT = 166,
-+	WMI_TLV_SERVICE_NDI_SAP_SUPPORT = 167,
-+	WMI_TLV_SERVICE_CFR_CAPTURE_SUPPORT = 168,
-+	WMI_TLV_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_1 = 169,
-+	WMI_TLV_SERVICE_ESP_SUPPORT = 170,
-+	WMI_TLV_SERVICE_PEER_CHWIDTH_CHANGE = 171,
-+	WMI_TLV_SERVICE_WLAN_HPCS_PULSE = 172,
-+	WMI_TLV_SERVICE_PER_VDEV_CHAINMASK_CONFIG_SUPPORT = 173,
-+	WMI_TLV_SERVICE_TX_DATA_MGMT_ACK_RSSI = 174,
- 
- 	WMI_TLV_MAX_EXT_SERVICE = 256,
- };
-@@ -1568,6 +1589,8 @@ enum wmi_tlv_service {
- 	SVCMAP(WMI_TLV_SERVICE_THERM_THROT,
- 	       WMI_SERVICE_THERM_THROT,
- 	       WMI_TLV_MAX_SERVICE);
-+	SVCMAP(WMI_TLV_SERVICE_TX_DATA_MGMT_ACK_RSSI,
-+	       WMI_SERVICE_TX_DATA_ACK_RSSI, WMI_TLV_MAX_SERVICE);
- }
- 
- #undef SVCMAP
-@@ -1599,6 +1622,8 @@ struct wmi_tlv_mgmt_tx_compl_ev {
- 	__le32 desc_id;
- 	__le32 status;
- 	__le32 pdev_id;
-+	__le32 ppdu_id;
-+	__le32 ack_rssi;
- };
- 
- #define WMI_TLV_MGMT_RX_NUM_RSSI 4
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 704c71b..6e5bd0e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2353,8 +2353,8 @@ static bool ath10k_wmi_rx_is_decrypted(struct ath10k *ar,
- 	return true;
- }
- 
--static int wmi_process_mgmt_tx_comp(struct ath10k *ar, u32 desc_id,
--				    u32 status)
-+static int
-+wmi_process_mgmt_tx_comp(struct ath10k *ar, struct mgmt_tx_compl_params *param)
- {
- 	struct ath10k_mgmt_tx_pkt_addr *pkt_addr;
- 	struct ath10k_wmi *wmi = &ar->wmi;
-@@ -2364,10 +2364,10 @@ static int wmi_process_mgmt_tx_comp(struct ath10k *ar, u32 desc_id,
- 
- 	spin_lock_bh(&ar->data_lock);
- 
--	pkt_addr = idr_find(&wmi->mgmt_pending_tx, desc_id);
-+	pkt_addr = idr_find(&wmi->mgmt_pending_tx, param->desc_id);
- 	if (!pkt_addr) {
- 		ath10k_warn(ar, "received mgmt tx completion for invalid msdu_id: %d\n",
--			    desc_id);
-+			    param->desc_id);
- 		ret = -ENOENT;
- 		goto out;
- 	}
-@@ -2377,17 +2377,21 @@ static int wmi_process_mgmt_tx_comp(struct ath10k *ar, u32 desc_id,
- 			 msdu->len, DMA_TO_DEVICE);
- 	info = IEEE80211_SKB_CB(msdu);
- 
--	if (status)
-+	if (param->status) {
- 		info->flags &= ~IEEE80211_TX_STAT_ACK;
--	else
-+	} else {
- 		info->flags |= IEEE80211_TX_STAT_ACK;
-+		info->status.ack_signal = ATH10K_DEFAULT_NOISE_FLOOR +
-+					  param->ack_rssi;
-+		info->status.is_valid_ack_signal = true;
-+	}
- 
- 	ieee80211_tx_status_irqsafe(ar->hw, msdu);
- 
- 	ret = 0;
- 
- out:
--	idr_remove(&wmi->mgmt_pending_tx, desc_id);
-+	idr_remove(&wmi->mgmt_pending_tx, param->desc_id);
- 	spin_unlock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index 48886b6..b3f4147 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -1111,6 +1111,32 @@ int ath10k_hw_diag_fast_download(struct ath10k *ar,
  	return ret;
  }
-@@ -2395,6 +2399,7 @@ static int wmi_process_mgmt_tx_comp(struct ath10k *ar, u32 desc_id,
- int ath10k_wmi_event_mgmt_tx_compl(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_tlv_mgmt_tx_compl_ev_arg arg;
-+	struct mgmt_tx_compl_params param;
- 	int ret;
  
- 	ret = ath10k_wmi_pull_mgmt_tx_compl(ar, skb, &arg);
-@@ -2403,8 +2408,14 @@ int ath10k_wmi_event_mgmt_tx_compl(struct ath10k *ar, struct sk_buff *skb)
- 		return ret;
- 	}
- 
--	wmi_process_mgmt_tx_comp(ar, __le32_to_cpu(arg.desc_id),
--				 __le32_to_cpu(arg.status));
-+	memset(&param, 0, sizeof(struct mgmt_tx_compl_params));
-+	param.desc_id = __le32_to_cpu(arg.desc_id);
-+	param.status = __le32_to_cpu(arg.status);
++static int ath10k_htt_tx_rssi_enable(struct htt_resp *resp)
++{
++	return (resp->data_tx_completion.flags2 & HTT_TX_CMPL_FLAG_DATA_RSSI);
++}
 +
-+	if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map))
-+		param.ack_rssi = __le32_to_cpu(arg.ack_rssi);
++static int ath10k_htt_tx_rssi_enable_wcn3990(struct htt_resp *resp)
++{
++	return (resp->data_tx_completion.flags2 &
++		HTT_TX_DATA_RSSI_ENABLE_WCN3990);
++}
 +
-+	wmi_process_mgmt_tx_comp(ar, &param);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv evnt mgmt tx completion\n");
- 
-@@ -2414,6 +2425,7 @@ int ath10k_wmi_event_mgmt_tx_compl(struct ath10k *ar, struct sk_buff *skb)
- int ath10k_wmi_event_mgmt_tx_bundle_compl(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_tlv_mgmt_tx_bundle_compl_ev_arg arg;
-+	struct mgmt_tx_compl_params param;
- 	u32 num_reports;
- 	int i, ret;
- 
-@@ -2425,9 +2437,15 @@ int ath10k_wmi_event_mgmt_tx_bundle_compl(struct ath10k *ar, struct sk_buff *skb
- 
- 	num_reports = __le32_to_cpu(arg.num_reports);
- 
--	for (i = 0; i < num_reports; i++)
--		wmi_process_mgmt_tx_comp(ar, __le32_to_cpu(arg.desc_ids[i]),
--					 __le32_to_cpu(arg.status[i]));
-+	for (i = 0; i < num_reports; i++) {
-+		memset(&param, 0, sizeof(struct mgmt_tx_compl_params));
-+		param.desc_id = __le32_to_cpu(arg.desc_ids[i]);
-+		param.status = __le32_to_cpu(arg.desc_ids[i]);
++static int ath10k_get_htt_tx_data_rssi_pad(struct htt_resp *resp)
++{
++	struct htt_data_tx_completion_ext extd;
++	int pad_bytes = 0;
 +
-+		if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map))
-+			param.ack_rssi = __le32_to_cpu(arg.ack_rssi[i]);
-+		wmi_process_mgmt_tx_comp(ar, &param);
-+	}
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv event bundle mgmt tx completion\n");
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 0e27878..fd59ce4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6736,16 +6736,27 @@ struct wmi_scan_ev_arg {
- 	__le32 vdev_id;
++	if (resp->data_tx_completion.flags2 & HTT_TX_DATA_APPEND_RETRIES)
++		pad_bytes += sizeof(extd.a_retries) /
++			     sizeof(extd.msdus_rssi[0]);
++
++	if (resp->data_tx_completion.flags2 & HTT_TX_DATA_APPEND_TIMESTAMP)
++		pad_bytes += sizeof(extd.t_stamp) / sizeof(extd.msdus_rssi[0]);
++
++	return pad_bytes;
++}
++
+ const struct ath10k_hw_ops qca988x_ops = {
+ 	.set_coverage_class = ath10k_hw_qca988x_set_coverage_class,
+ };
+@@ -1135,6 +1161,10 @@ static bool ath10k_qca99x0_rx_desc_msdu_limit_error(struct htt_rx_desc *rxd)
+ const struct ath10k_hw_ops qca6174_ops = {
+ 	.set_coverage_class = ath10k_hw_qca988x_set_coverage_class,
+ 	.enable_pll_clk = ath10k_hw_qca6174_enable_pll_clock,
++	.is_rssi_enable = ath10k_htt_tx_rssi_enable,
  };
  
-+struct mgmt_tx_compl_params {
-+	u32 desc_id;
-+	u32 status;
-+	u32 ppdu_id;
-+	int ack_rssi;
+-const struct ath10k_hw_ops wcn3990_ops = {};
++const struct ath10k_hw_ops wcn3990_ops = {
++	.tx_data_rssi_pad_bytes = ath10k_get_htt_tx_data_rssi_pad,
++	.is_rssi_enable = ath10k_htt_tx_rssi_enable_wcn3990,
 +};
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index f9ffed5..fe6b2ed 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -620,6 +620,8 @@ struct ath10k_hw_params {
+ };
+ 
+ struct htt_rx_desc;
++struct htt_resp;
++struct htt_data_tx_completion_ext;
+ 
+ /* Defines needed for Rx descriptor abstraction */
+ struct ath10k_hw_ops {
+@@ -627,6 +629,8 @@ struct ath10k_hw_ops {
+ 	void (*set_coverage_class)(struct ath10k *ar, s16 value);
+ 	int (*enable_pll_clk)(struct ath10k *ar);
+ 	bool (*rx_desc_get_msdu_limit_error)(struct htt_rx_desc *rxd);
++	int (*tx_data_rssi_pad_bytes)(struct htt_resp *htt);
++	int (*is_rssi_enable)(struct htt_resp *resp);
+ };
+ 
+ extern const struct ath10k_hw_ops qca988x_ops;
+@@ -654,6 +658,24 @@ struct ath10k_hw_ops {
+ 	return false;
+ }
+ 
++static inline int
++ath10k_tx_data_rssi_get_pad_bytes(struct ath10k_hw_params *hw,
++				  struct htt_resp *htt)
++{
++	if (hw->hw_ops->tx_data_rssi_pad_bytes)
++		return hw->hw_ops->tx_data_rssi_pad_bytes(htt);
++	return 0;
++}
 +
- struct wmi_tlv_mgmt_tx_compl_ev_arg {
- 	__le32 desc_id;
- 	__le32 status;
- 	__le32 pdev_id;
-+	__le32 ppdu_id;
-+	__le32 ack_rssi;
- };
- 
- struct wmi_tlv_mgmt_tx_bundle_compl_ev_arg {
- 	__le32 num_reports;
- 	const __le32 *desc_ids;
- 	const __le32 *status;
-+	const __le32 *ppdu_ids;
-+	const __le32 *ack_rssi;
- };
- 
- struct wmi_mgmt_rx_ev_arg {
++static inline int
++ath10k_is_rssi_enable(struct ath10k_hw_params *hw,
++		      struct htt_resp *resp)
++{
++	if (hw->hw_ops->is_rssi_enable)
++		return hw->hw_ops->is_rssi_enable(resp);
++	return 0;
++}
++
+ /* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
 -- 
 1.9.1
 
