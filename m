@@ -2,162 +2,125 @@ Return-Path: <SRS0=xkZe=QU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B725C282CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 12:50:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E829C282C2
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 13:01:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24E26222C1
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 12:50:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35B5A20643
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Feb 2019 13:01:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cb6ZLmYK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731758AbfBMMu0 (ORCPT
+        id S2388204AbfBMNBv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Feb 2019 07:50:26 -0500
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:21384
-        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731246AbfBMMu0 (ORCPT
+        Wed, 13 Feb 2019 08:01:51 -0500
+Received: from mail-yb1-f193.google.com ([209.85.219.193]:44120 "EHLO
+        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730946AbfBMNBv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Feb 2019 07:50:26 -0500
-X-IronPort-AV: E=Sophos;i="5.58,365,1544482800"; 
-   d="scan'208";a="296059003"
-Received: from vaio-julia.rsr.lip6.fr ([132.227.76.33])
-  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Feb 2019 13:50:22 +0100
-Date:   Wed, 13 Feb 2019 13:50:20 +0100 (CET)
-From:   Julia Lawall <julia.lawall@lip6.fr>
-X-X-Sender: jll@hadrien
-To:     Herbert Xu <herbert@gondor.apana.org.au>
-cc:     David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi,
-        tgraf@suug.ch, johannes.berg@intel.com, kbuild-all@01.org
-Subject: Re: [PATCH 2/2] mac80211: Free mpath object when rhashtable insertion
- fails (fwd)
-Message-ID: <alpine.DEB.2.20.1902131349440.3561@hadrien>
-User-Agent: Alpine 2.20 (DEB 67 2015-01-07)
+        Wed, 13 Feb 2019 08:01:51 -0500
+Received: by mail-yb1-f193.google.com with SMTP id b15so847202ybn.11
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2019 05:01:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=B0sH/I+ChPykS2ram8qWVJ6mCX37MXOVqHWxeMm8JbI=;
+        b=cb6ZLmYKmYgWuVAvL2T4DF3mmuDvheCPgACX7inz3Yivi5/S2Xp5kmB7KrWah0/Q+z
+         t3kkr74FI9V+lC8HWE+W9A47liKuoV8yUf0AKkdQmGf/ol85UMs84zSHOmqB7Votjm7S
+         5U7jGJTcZ3ela8UfM2nNsjtJl/UHXYyeKgpR4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=B0sH/I+ChPykS2ram8qWVJ6mCX37MXOVqHWxeMm8JbI=;
+        b=C2vpeIdRLARHwt4WKsoWXtQsaVCxgnf55WlTyZm74uUSdYK6q8wKStiyvmi/RaXnfv
+         JrQ/NTGyqoQhkNH5mRnmcmS5tZ8SvA6i4T6ZfpGcsUJJC013LJF6FxxKlNEAiD5VxHm6
+         vTv8BjtxtuvHDmVazVfk2qhtxbWaXSSQsrByqqT1QYkOQZoH6KTz3BJMY4QYa1SwJ54R
+         T1kkttR3msiMUA2okUbFE3yEoV1xlG1+7t+nxZvS+ohSwhw5n1hJAgXpq5k4vwcgHjvl
+         2S29bYYiwkZXEYyrRzh+YoIXsaXj7xBMp0tjV45cNpjwY/aVFxiwy8AoO35QM+Ivpzf1
+         myqg==
+X-Gm-Message-State: AHQUAuYjzi+825RQaJOgGim6kf4mrAwGRIO8VpAWUDbRyyFEJOxZMcIJ
+        Qc5Gl8pPxY49PXYuTlp4RhC1AQ==
+X-Google-Smtp-Source: AHgI3IaHPHQ1jOVqpqaAKpjXxEQFTgtNi9YHaq5DMuO+Sfju2Cpx1Tnvug1rWkc7WPfejaR0rHM1QQ==
+X-Received: by 2002:a25:8507:: with SMTP id w7mr305074ybk.505.1550062910225;
+        Wed, 13 Feb 2019 05:01:50 -0800 (PST)
+Received: from [10.176.68.125] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id e3sm864609ywe.33.2019.02.13.05.01.47
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 13 Feb 2019 05:01:49 -0800 (PST)
+Subject: Re: PROBLEM: Oops - Null pointer dereference in brcm80211/brcmfmac
+ [BCM4350]
+To:     Aaron Blair <aaron@aaronpb.me>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>
+References: <20190212055731.gxy3e3uulztketbf@datkip>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <43fcfb23-9c35-cdf4-18ea-69212612c460@broadcom.com>
+Date:   Wed, 13 Feb 2019 14:01:46 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.0
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323329-939106836-1550062220=:3561"
+In-Reply-To: <20190212055731.gxy3e3uulztketbf@datkip>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On 2/12/2019 6:57 AM, Aaron Blair wrote:
+> I apologise if my report is lacking in detail; it is my first attempt at 
+> bug/issue reporting in the kernel.
+> Please follow up if something is missing, or more detail/testing is 
+> required.
+> It is certainly possible for me to provide more oops reports if 
+> required, as they generally surface at least once a day.
 
---8323329-939106836-1550062220=:3561
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8BIT
+No apologies needed. I am generally happy with kernel log and short 
+context description.
 
-Perhaps a return is needed after line 436.
+> Thank you.
+> 
+> [1.] Oops - Null pointer dereference in brcm80211/brcmfmac [BCM4350]
+> 
+> [2.] Seemingly randomly, when connected to a wireless network, my laptop 
+> will begin failing to tx/rx data, and begin repeatedly reporting the 
+> following messages in the kernel ring buffer:
+> 
+> ```
+> [18990.872335] brcmfmac: brcmf_cfg80211_get_station: GET STA INFO 
+> failed, -12
+> [18990.872433] brcmfmac: brcmf_msgbuf_tx_ioctl: Failed to reserve space 
+> in commonring
+> [18990.872439] brcmfmac: brcmf_cfg80211_get_tx_power: error (-12)
+> ```
 
-julia
+The "reserve space" issue has been reported before although I have not 
+looking into it yet.
 
----------- Forwarded message ----------
-Date: Wed, 13 Feb 2019 20:29:38 +0800
-From: kbuild test robot <lkp@intel.com>
-To: kbuild@01.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 2/2] mac80211: Free mpath object when rhashtable insertion
-    fails
+> Upon trying to rmmod && modload brcmfmac, I receive the oops dump 
+> included below, and am unable to continue using the wireless NIC until I 
+> reboot.
+> 
+> This does not appear to have a pattern, except that it usually happens 
+> at least once throughout a day of work.
+> 
+> It has been happening at least since 4.20.4, but potentially earlier 
+> (this machine wasn't in heavy use before then).
 
-CC: kbuild-all@01.org
-In-Reply-To: <E1gtmu6-0001Vl-O7@gondobar>
-References: <E1gtmu6-0001Vl-O7@gondobar>
-TO: Herbert Xu <herbert@gondor.apana.org.au>
-CC: David Miller <davem@davemloft.net>, johannes@sipsolutions.net, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi, tgraf@suug.ch, johannes.berg@intel.com
-CC:
+I will look into the NULL pointer access.
 
-Hi Herbert,
-
-I love your patch! Perhaps something to improve:
-
-[auto build test WARNING on mac80211-next/master]
-[also build test WARNING on v5.0-rc4 next-20190212]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Herbert-Xu/mac80211-Fix-incorrect-usage-of-rhashtable-walk-API/20190213-181325
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-:::::: branch date: 2 hours ago
-:::::: commit date: 2 hours ago
-
->> net/mac80211/mesh_pathtbl.c:448:8-17: ERROR: reference preceded by free on line 436
-
-# https://github.com/0day-ci/linux/commit/a0886e834aacf883ceaf0c34c842c4cdb4d318fd
-git remote add linux-review https://github.com/0day-ci/linux
-git remote update linux-review
-git checkout a0886e834aacf883ceaf0c34c842c4cdb4d318fd
-vim +448 net/mac80211/mesh_pathtbl.c
-
-b15dc38b9 Bob Copeland         2016-02-28  390
-eb2b9311f Luis Carlos Cobo     2008-02-23  391  /**
-eb2b9311f Luis Carlos Cobo     2008-02-23  392   * mesh_path_add - allocate and add a new path to the mesh path table
-bf7cd94dc Johannes Berg        2013-02-15  393   * @dst: destination address of the path (ETH_ALEN length)
-f698d856f Jasper Bryant-Greene 2008-08-03  394   * @sdata: local subif
-eb2b9311f Luis Carlos Cobo     2008-02-23  395   *
-af901ca18 André Goddard Rosa   2009-11-14  396   * Returns: 0 on success
-eb2b9311f Luis Carlos Cobo     2008-02-23  397   *
-eb2b9311f Luis Carlos Cobo     2008-02-23  398   * State: the initial state of the new path is set to 0
-eb2b9311f Luis Carlos Cobo     2008-02-23  399   */
-ae76eef02 Bob Copeland         2013-03-29  400  struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
-ae76eef02 Bob Copeland         2013-03-29  401  				const u8 *dst)
-eb2b9311f Luis Carlos Cobo     2008-02-23  402  {
-349eb8cf4 Johannes Berg        2011-05-14  403  	struct mesh_table *tbl;
-eb2b9311f Luis Carlos Cobo     2008-02-23  404  	struct mesh_path *mpath, *new_mpath;
-60854fd94 Bob Copeland         2016-03-02  405  	int ret;
-eb2b9311f Luis Carlos Cobo     2008-02-23  406
-b203ca391 Joe Perches          2012-05-08  407  	if (ether_addr_equal(dst, sdata->vif.addr))
-eb2b9311f Luis Carlos Cobo     2008-02-23  408  		/* never add ourselves as neighbours */
-ae76eef02 Bob Copeland         2013-03-29  409  		return ERR_PTR(-ENOTSUPP);
-eb2b9311f Luis Carlos Cobo     2008-02-23  410
-eb2b9311f Luis Carlos Cobo     2008-02-23  411  	if (is_multicast_ether_addr(dst))
-ae76eef02 Bob Copeland         2013-03-29  412  		return ERR_PTR(-ENOTSUPP);
-eb2b9311f Luis Carlos Cobo     2008-02-23  413
-472dbc45d Johannes Berg        2008-09-11  414  	if (atomic_add_unless(&sdata->u.mesh.mpaths, 1, MESH_MAX_MPATHS) == 0)
-ae76eef02 Bob Copeland         2013-03-29  415  		return ERR_PTR(-ENOSPC);
-ae76eef02 Bob Copeland         2013-03-29  416
-b15dc38b9 Bob Copeland         2016-02-28  417  	new_mpath = mesh_path_new(sdata, dst, GFP_ATOMIC);
-402d7752e Pavel Emelyanov      2008-05-06  418  	if (!new_mpath)
-60854fd94 Bob Copeland         2016-03-02  419  		return ERR_PTR(-ENOMEM);
-402d7752e Pavel Emelyanov      2008-05-06  420
-60854fd94 Bob Copeland         2016-03-02  421  	tbl = sdata->u.mesh.mesh_paths;
-60854fd94 Bob Copeland         2016-03-02  422  	do {
-60854fd94 Bob Copeland         2016-03-02  423  		ret = rhashtable_lookup_insert_fast(&tbl->rhead,
-60854fd94 Bob Copeland         2016-03-02  424  						    &new_mpath->rhash,
-60854fd94 Bob Copeland         2016-03-02  425  						    mesh_rht_params);
-f84e71a94 Pavel Emelyanov      2008-05-06  426
-60854fd94 Bob Copeland         2016-03-02  427  		if (ret == -EEXIST)
-60854fd94 Bob Copeland         2016-03-02  428  			mpath = rhashtable_lookup_fast(&tbl->rhead,
-60854fd94 Bob Copeland         2016-03-02  429  						       dst,
-60854fd94 Bob Copeland         2016-03-02  430  						       mesh_rht_params);
-05b0152f1 Herbert Xu           2019-02-13  431  		else if (!ret)
-05b0152f1 Herbert Xu           2019-02-13  432  			hlist_add_head(&new_mpath->walk_list, &tbl->walk_head);
-60854fd94 Bob Copeland         2016-03-02  433  	} while (unlikely(ret == -EEXIST && !mpath));
-f5ea9120b Johannes Berg        2009-08-07  434
-a0886e834 Herbert Xu           2019-02-13  435  	if (ret)
-a0886e834 Herbert Xu           2019-02-13 @436  		kfree(new_mpath);
-a0886e834 Herbert Xu           2019-02-13  437
-a0886e834 Herbert Xu           2019-02-13  438  	if (ret != -EEXIST)
-60854fd94 Bob Copeland         2016-03-02  439  		return ERR_PTR(ret);
-ae76eef02 Bob Copeland         2013-03-29  440
-60854fd94 Bob Copeland         2016-03-02  441  	/* At this point either new_mpath was added, or we found a
-60854fd94 Bob Copeland         2016-03-02  442  	 * matching entry already in the table; in the latter case
-60854fd94 Bob Copeland         2016-03-02  443  	 * free the unnecessary new entry.
-60854fd94 Bob Copeland         2016-03-02  444  	 */
-a0886e834 Herbert Xu           2019-02-13  445  	if (ret == -EEXIST)
-60854fd94 Bob Copeland         2016-03-02  446  		new_mpath = mpath;
-60854fd94 Bob Copeland         2016-03-02  447  	sdata->u.mesh.mesh_paths_generation++;
-60854fd94 Bob Copeland         2016-03-02 @448  	return new_mpath;
-18889231e Javier Cardona       2009-08-10  449  }
-eb2b9311f Luis Carlos Cobo     2008-02-23  450
-
-:::::: The code at line 448 was first introduced by commit
-:::::: 60854fd94573f0d3b80b55b40cf0140a0430f3ab mac80211: mesh: convert path table to rhashtable
-
-:::::: TO: Bob Copeland <me@bobcopeland.com>
-:::::: CC: Johannes Berg <johannes.berg@intel.com>
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
---8323329-939106836-1550062220=:3561--
+Regards,
+Arend
