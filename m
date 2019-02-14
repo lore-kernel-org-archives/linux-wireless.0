@@ -2,98 +2,151 @@ Return-Path: <SRS0=/9EI=QV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5C66C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 12:25:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 874C3C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 12:38:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 83D4C21900
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 12:25:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50FDF2229F
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 12:38:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rnVenRON"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="EU/yh2h7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406930AbfBNMZN (ORCPT
+        id S2387798AbfBNMiJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 07:25:13 -0500
-Received: from mail-lj1-f178.google.com ([209.85.208.178]:42124 "EHLO
-        mail-lj1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392585AbfBNMZN (ORCPT
+        Thu, 14 Feb 2019 07:38:09 -0500
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:37581 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726097AbfBNMiJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 07:25:13 -0500
-Received: by mail-lj1-f178.google.com with SMTP id l7-v6so5044797ljg.9
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2019 04:25:11 -0800 (PST)
+        Thu, 14 Feb 2019 07:38:09 -0500
+Received: by mail-ed1-f65.google.com with SMTP id m12so4884351edv.4
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2019 04:38:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=broadcom.com; s=google;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=bn7WSKsncraqiSOmjmMQeBIU0NToZDDgaFH9+konIoU=;
-        b=rnVenRONx4AlvkIxY79Am6ByCwapqHAJWxX/AZZAssynE8eKF66bxrp7LaLLvFnfpq
-         TQce8tqU48MT8xMi0OpuSzrO2+aiUqh1psP8mECRcdPsWNn3pE4JWBbW43udbO/yr0u+
-         8PmOEg4k7sbQyVlglsoS3pmbv158/p6XAPfOhjP6lua+ZG6BSqArD4k2vjCK8SBn/Rpk
-         +DGbE7uRPclVZ/nfv0Bez/uv7DB/CRZL/ZyMs4puYM54DxLJYfKKGTStyykhzp5rg7ed
-         9OGV3+PdP6P/dIWSizVxHGrVBSB6NhElVlZ82qgtWuICQhBTY2MZQ+8wNly+YyQNDFnd
-         UnuA==
+        bh=807NVNM32fus4kYDbrdb18Xe00GdxwcaFmifypo3V1U=;
+        b=EU/yh2h7VETHe5JhozWSDyWAIrAwnaB0j40ZvaMnaM4zEeN2KjPdbXMX/AapOTEkOS
+         es+TGlQ11bDQqQ2RXmdBl/NzrAP5Ww/cveykSCVpDXDiKuEfpH2rSc/mVP9o/p9uQdPS
+         ZaSBFGjI26rrd7s8SY1/f1wWJyR1na0BpbD5c=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=bn7WSKsncraqiSOmjmMQeBIU0NToZDDgaFH9+konIoU=;
-        b=lYoACGk0kgauNBwUWB6cbFrCuAPFhqo3lD/Zhe/s+vqnfhLjRDAH3SxcUCgksFKZgH
-         6PEthvTOO/xDdN8yQ7OaXASkeQvheDiV3wgGdyNSl8++x6qAcwDMPjVbFrD7b8Ilyj+l
-         uQHgb9toFIctJL5WgjajZS+lvOEkdl04DTXdq7KosbUq8uxbAT2Hi/AO+P9flxxP0bIo
-         Y7RWM8MIRV8fw4oTGDNpDwmdu/v3Y8exvNUP+p068UsaoW9LNNWyiCnbzVXk7rq2dmBB
-         R9Tx51O5QVa4iQrFyQ9m2YgXSTD9Z62+eS/4fENihecPMNDoRCVPzgSQEpxEPZGhNTh5
-         Lkmw==
-X-Gm-Message-State: AHQUAuYEj8Bp2cLVwvAPMqmhKB+tJj9TjtSu+fZUGALqHdkJOMoiLoeK
-        NPXBzz8husdZGZm+ky1tutI=
-X-Google-Smtp-Source: AHgI3IaAS3iqlvG2N3mqOor7gys8IrxM4rN9QaShCCxUDBW6Ji2BmqvPKxkT9SonFTWUpbL7Jn2S6w==
-X-Received: by 2002:a2e:3319:: with SMTP id d25-v6mr2208007ljc.187.1550147110717;
-        Thu, 14 Feb 2019 04:25:10 -0800 (PST)
-Received: from elitebook.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
-        by smtp.googlemail.com with ESMTPSA id 8sm411768ljs.42.2019.02.14.04.25.09
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Thu, 14 Feb 2019 04:25:10 -0800 (PST)
-Subject: Re: PROBLEM: Oops - Null pointer dereference in brcm80211/brcmfmac
- [BCM4350]
-To:     Aaron Blair <aaron@aaronpb.me>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>
-References: <20190212055731.gxy3e3uulztketbf@datkip>
-From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <6f2061fe-b734-1bb4-6608-db8c3fcd1363@gmail.com>
-Date:   Thu, 14 Feb 2019 13:25:08 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        bh=807NVNM32fus4kYDbrdb18Xe00GdxwcaFmifypo3V1U=;
+        b=aZ+1FYnMXMqIWELiXjGSlmW7pfJUPswzc2h0NcQvIIvMOPbWvdjla3Nbceqvg6zcCJ
+         H+wjbH6JxQHKOWmw97liiI3fzHbcrfqkWLEQyz30qxKvdCitqA15bjRoUyjCU4n/yUlP
+         H65ODiHyEX0MUoMyq+ekoxoWhlGfzoGYOGI3ZYcRLf6GX5bp1B/akQEpRnbiOcRwHNJB
+         MfGHDOm5HOUncxpULaxQYg3JryFNLQzBEEKGLmOmwYXPXPXFKKq1+WLa0OMys1xBYgpr
+         k+4ZJRWg0BZQ0YHfUduhSxSIaSbsjJaDOeZuIVgI2xahgSElceCGJ0P2j/h28/DQAypt
+         X4OQ==
+X-Gm-Message-State: AHQUAuZPeZoXRGlDtaNkVsxbN0V/t+PqtQOvWXpFf0j69f2cumh6LrPQ
+        8Cz41WJCpzXk+WIx1+QVCm882w==
+X-Google-Smtp-Source: AHgI3IaUa9RWd6P7oNRGlMZ4hDNJL6cvHKzxuDpSP6tRuC6kOBWtTVuGoUqecvYMgEMNRaJ7OI6oNQ==
+X-Received: by 2002:a50:c946:: with SMTP id p6mr3071296edh.0.1550147886987;
+        Thu, 14 Feb 2019 04:38:06 -0800 (PST)
+Received: from [10.230.33.15] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id t12sm636109edj.61.2019.02.14.04.38.05
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 14 Feb 2019 04:38:06 -0800 (PST)
+Subject: Re: [PATCH] brcmfmac: use bphy_err() in all wiphy-related code
+To:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+References: <20190213112619.23899-1-zajec5@gmail.com>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <cc894af8-c61d-076a-d32d-41b566d73017@broadcom.com>
+Date:   Thu, 14 Feb 2019 13:38:05 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.0
 MIME-Version: 1.0
-In-Reply-To: <20190212055731.gxy3e3uulztketbf@datkip>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20190213112619.23899-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 12.02.2019 06:57, Aaron Blair wrote:
-> [18990.872335] brcmfmac: brcmf_cfg80211_get_station: GET STA INFO failed, -12
-> [18990.872433] brcmfmac: brcmf_msgbuf_tx_ioctl: Failed to reserve space in commonring
-> [18990.872439] brcmfmac: brcmf_cfg80211_get_tx_power: error (-12)
+On 2/13/2019 12:26 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> This recently added macro provides more meaningful error messages thanks
+> to identifying a specific wiphy. It's especially important on systems
+> with few cards supported by the same (brcmfmac) driver.
 
-FullMAC firmware (the one running on card's ARM CPU) has crashed.
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> I obviously couldn't hit & test all error cases. To perform some basic
+> testing I added:
+> bphy_err(wiphy, "test\n");
+> for every wiphy variable added by this patch & tested in on BCM4366.
+> 
+> I got a lot of messages like:
+> [ 2842.424524] ieee80211 phy1: brcmf_netdev_start_xmit: test
+> [ 2842.434921] ieee80211 phy1: brcmf_msgbuf_txflow: test
+> [ 2842.440275] ieee80211 phy1: brcmf_msgbuf_process_msgtype: test
+> [ 2842.446141] ieee80211 phy1: brcmf_get_ifp: test
+> so it seems to work correctly.
 
+I was thinking about fact that module name is no longer prefixed, but I 
+am not sure that is a bad thing here.
 
-> Upon trying to rmmod && modload brcmfmac, I receive the oops dump included below, and am unable to continue using the wireless NIC until I reboot.
+> ---
+>   .../broadcom/brcm80211/brcmfmac/bcdc.c        | 26 +++---
+>   .../broadcom/brcm80211/brcmfmac/common.c      | 38 +++++----
+>   .../broadcom/brcm80211/brcmfmac/core.c        | 78 ++++++++++-------
+>   .../broadcom/brcm80211/brcmfmac/feature.c     |  6 +-
+>   .../broadcom/brcm80211/brcmfmac/fweh.c        | 22 +++--
+>   .../broadcom/brcm80211/brcmfmac/fwil.c        | 15 ++--
+>   .../broadcom/brcm80211/brcmfmac/fwsignal.c    | 36 +++++---
+>   .../broadcom/brcm80211/brcmfmac/msgbuf.c      | 65 ++++++++------
+>   .../broadcom/brcm80211/brcmfmac/p2p.c         | 85 +++++++++++--------
+>   .../broadcom/brcm80211/brcmfmac/pno.c         | 22 +++--
+>   .../broadcom/brcm80211/brcmfmac/proto.c       |  7 +-
+>   11 files changed, 240 insertions(+), 160 deletions(-)
 
-Interestingly I've experienced the same problem (for the first time)
-last week. I started working on it but didn't achieve anything yet.
+[...]
+
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index e772c0845638..2e0e2badfb80 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+
+[...]
+
+> @@ -141,7 +142,8 @@ void brcmf_configure_arp_nd_offload(struct brcmf_if *ifp, bool enable)
+>   
+>   static void _brcmf_set_multicast_list(struct work_struct *work)
+>   {
+> -	struct brcmf_if *ifp;
+> +	struct brcmf_if *ifp = container_of(work, struct brcmf_if, multicast_work);
+
+checkpatch complains about the length here.
+
+> +	struct wiphy *wiphy = ifp->drvr->wiphy;
+>   	struct net_device *ndev;
+>   	struct netdev_hw_addr *ha;
+>   	u32 cmd_value, cnt;
+> @@ -150,8 +152,6 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
+>   	u32 buflen;
+>   	s32 err;
+>   
+> -	ifp = container_of(work, struct brcmf_if, multicast_work);
+
+So maybe keep this and initialize wiphy here as well.
+
+> -
+>   	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
+>   
+>   	ndev = ifp->ndev;
