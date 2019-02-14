@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLACK,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3311C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 22:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97965C4360F
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 22:37:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6137121B18
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 22:37:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A0A521B18
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 22:37:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LxTjHpxo"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b8CrkxQB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503422AbfBNWhH (ORCPT
+        id S2503419AbfBNWhG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 17:37:07 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:43767 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729020AbfBNWg4 (ORCPT
+        Thu, 14 Feb 2019 17:37:06 -0500
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:45096 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729805AbfBNWhA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 17:36:56 -0500
-Received: by mail-ot1-f65.google.com with SMTP id n71so13349183ota.10
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2019 14:36:54 -0800 (PST)
+        Thu, 14 Feb 2019 17:37:00 -0500
+Received: by mail-ot1-f67.google.com with SMTP id 32so13321800ota.12
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2019 14:36:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=eUXEGGD/p/FsAY3y2DRmrkPnBissd4NQ+POcw0T1RzU=;
-        b=LxTjHpxoMo+ae9GjWvrY3OanWa1l9rpyjOyEydBOQjjt0g0q9sEWJ0ECSHGiwzjEWF
-         x06xBk3OiOZQguCm43D3DlNwc8xVAopdBkBHrfCSJNKQAXEsf3evgtaXxGRLwlUCmNW7
-         xxOcXFy+rzqZDtmX3wI5foeYdwlqULXpGaAw+RoDjIrU5k2axfxYUNWQk4udzJnB5Ycm
-         Vi4GIOrbH3ehaDIQpKdwEBAoWdXtv2SLUfTWkRY74dPc+rw6Lg4vPnI7lMsEymmq4s7e
-         N5RkDkmBEAO7I3hloATGjAaztIUaG22GRIgWwqMnmfbgMdmHJ996StfbaebLKNLgB9oU
-         6wGg==
+        bh=LzupjXb65JCyNf3+e58W7wc+MX78QjUPdaYvz+ArRfU=;
+        b=b8CrkxQByQw3RRRuxYR82PZkWImi0saOZtzCruFL/6Y2BBmaNMH6aWlFmrlfLLJEbU
+         Vlq2z3MGWqUDlDPwlXv3GChMp/dIhsstzKZx70EiQRSttfY3ZnJljiiGk9Btbcau8aYA
+         NQcPodpSaiyVgzdJAfgGplJmJhs015FqknmT9IIz0iWO5Jcxcw8RIPGUH7utotxaWMQc
+         +Y4faPGiA0G2acJLT0ZPtcZlCcQXLlV0tzq2OoP/8p/x+pVsx7Zzy/lDDVrspEP1dfJc
+         xM1dE794+hK7vYmXRP3qDQRHoAS8Lo5Fp8B584xutZvdHeXymQ56vhhy4quuWtbKLmvY
+         qbTg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
          :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=eUXEGGD/p/FsAY3y2DRmrkPnBissd4NQ+POcw0T1RzU=;
-        b=s2jqmbqgBAOns70n/fUfCF2SE0+xXL/6PLQC3aydjaEfXrfoeNsx87LrrikAY2OIdE
-         L7fpgEfDfxDipzyTZmUXlzDg9fHn1N8jP7jRdZoJli0apQrtyYS+qPnOhDkHKGUqqVuS
-         XehqU+5n/jLsET8hZuyF/aVmEp/jqyCF+jdr0rm7FiPghZM8OJU4eXmEC1wac+4U00gb
-         jTvg3ZsnSQ/Rz51MHnfKq7BkdwrVbSnfXg0+o8Lvqcvm8quyygTdeWTM5r7AkgzBJwv5
-         Q3r+o4ZG9gPY9qnla4GR3sMtNaBCjSGQMMYZZ/CRJXipCZllzlW7Y6aV/cCDxwxIvXW8
-         JVEg==
-X-Gm-Message-State: AHQUAuYXA7mZvvRfXZ26Om45B2qSDOlQPS21aqLKzE/Z96Fe4zE+v4Qe
-        X5XPHqbWOcf3R1VXI4lrzaw=
-X-Google-Smtp-Source: AHgI3IYxPApsdO23KUDd7PqKFMN5k2lGA3YOKkDDQJsawYyHMOMGKeuv69oRW56C9BsnCE66LnqmxQ==
-X-Received: by 2002:aca:39d7:: with SMTP id g206mr4060673oia.142.1550183812568;
-        Thu, 14 Feb 2019 14:36:52 -0800 (PST)
+        bh=LzupjXb65JCyNf3+e58W7wc+MX78QjUPdaYvz+ArRfU=;
+        b=cbIavBR+ZSKM0Ol1eFcnkbL2CgjGzEQbRpNEIA82Xrh8/NnEMq3cQFkxPPqJwWcvl+
+         bTPWart8ffZfHZxrg039r/rfqPCDoq9+baeLha0pzKaieZG1XR5QbVc3k8mlsrRhvdiW
+         bxetSrONjAirFQIt4ua+UUpIt6XqHAWf5pDOiym+3oKMZAzOkMsFul1cwV8Q3tiJosSB
+         LIdUyx3RLlFHvc+805DU8sswYNqmk6NUa5Hu98P2N65VVVocLWlHK2O7PyrYRNhtYaBy
+         HZRAg0kPkS0iZBfJOzEbRjNOyV4EKbLtT6uQHNTpoHhdRZ8retJp6GCQY2Zzg67/6qKP
+         nZmA==
+X-Gm-Message-State: AHQUAuZ4kIm94mi4SG2V1fXwYZmoBmVYFnbi7SsqTj9c4f+eAKmtS/Na
+        P93vsLDlWGVFbvEbLqQ5uvw=
+X-Google-Smtp-Source: AHgI3IYO6r9EOhpOwm0JN0gkDak5FviT3aN1c0hRRetqNRB96exj4r5RB1zuYJAq0kK1g6j7EZdNTA==
+X-Received: by 2002:aca:6206:: with SMTP id w6mr4005464oib.132.1550183817395;
+        Thu, 14 Feb 2019 14:36:57 -0800 (PST)
 Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id h1sm1463938otm.0.2019.02.14.14.36.51
+        by smtp.gmail.com with ESMTPSA id h1sm1463938otm.0.2019.02.14.14.36.56
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 14 Feb 2019 14:36:51 -0800 (PST)
+        Thu, 14 Feb 2019 14:36:56 -0800 (PST)
 From:   Larry Finger <Larry.Finger@lwfinger.net>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
         Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 4/8] rtlwifi: rtl8192{c,u}: Remove CamelCase variables
-Date:   Thu, 14 Feb 2019 16:36:40 -0600
-Message-Id: <20190214223644.8035-5-Larry.Finger@lwfinger.net>
+Subject: [PATCH 8/8] rtlwifi: rtl8821ae: Remove CamelCase variables
+Date:   Thu, 14 Feb 2019 16:36:44 -0600
+Message-Id: <20190214223644.8035-9-Larry.Finger@lwfinger.net>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190214223644.8035-1-Larry.Finger@lwfinger.net>
 References: <20190214223644.8035-1-Larry.Finger@lwfinger.net>
@@ -73,2028 +73,1466 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch affects modules rtl8192ce, rtl8192cu, and rtl8192com.
+If a macro is in CamelCase, it it converted to upper case. Variables
+and routine names are converted to lower case.
 
 The following checkpatch exceptions are also fixed:
 
-CHECK: No space is necessary after a cast
-#237: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c:90:
-+                                                     (u8 *) (&rfstate));
+WARNING: line over 80 characters
+#316: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c:1751:
++       SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_EXT_MEM(u1rsvdpageloc2, GTKEXT_PG);
 
-CHECK: No space is necessary after a cast
-#744: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c:329:
-+                       pwr_val[i] = (u8) ((writeval & (0x7f <<
+CHECK: spaces preferred around that '+' (ctx:VxV)
+#357: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c:2591:
++                (eeaddr+1), hwinfo[eeaddr+1]);
+                        ^
 
-CHECK: No space is necessary after a cast
-#784: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c:365:
-+                                              (u8) writeval);
+CHECK: spaces preferred around that '+' (ctx:VxV)
+#357: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c:2591:
++                (eeaddr+1), hwinfo[eeaddr+1]);
+                                          ^
 
-CHECK: spaces preferred around that '/' (ctx:VxV)
-#963: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c:513:
-+               txqpageunit = txqpagenum/outepnum;
-                                        ^
+CHECK: spaces preferred around that '+' (ctx:VxV)
+#358: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c:2592:
++       if (0xFF == hwinfo[eeaddr+1])  /*YJ,add,120316*/
+                                 ^
 
-CHECK: Unnecessary parentheses around 'outepnum > 1'
-#975: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c:521:
-+               if ((outepnum > 1) && (txqremaininpage))
+WARNING: Comparisons should place the constant on the right side of the test
+#358: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c:2592:
++       if (0xFF == hwinfo[eeaddr+1])  /*YJ,add,120316*/
 
-CHECK: Alignment should match open parenthesis
-#1059: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c:617:
-+static void _rtl92cu_init_chipn_two_out_ep_priority(struct ieee80211_hw *hw,
-                                                                bool wmm_enable,
-
-ERROR: "foo * bar" should be "foo *bar"
-#1940: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c:591:
-+void rtl92cu_fill_fake_txdesc(struct ieee80211_hw *hw, u8 *pdesc,
-
+CHECK: spaces preferred around that '&' (ctx:VxV)
+#501: FILE: drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c:2666:
++                               pwrinfo24g->bw40_diff[rfpath][txcount] = (hwinfo[eeaddr]&0xf0) >> 4;
+                                                                                        ^
 Note that not all checkpatch exceptions are addressed. Those will be
 handled in later patches.
 
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- .../realtek/rtlwifi/rtl8192c/dm_common.h      |   4 +-
- .../realtek/rtlwifi/rtl8192c/fw_common.c      |  14 +-
- .../realtek/rtlwifi/rtl8192c/phy_common.c     |  24 +-
- .../realtek/rtlwifi/rtl8192c/phy_common.h     |   6 +-
- .../wireless/realtek/rtlwifi/rtl8192ce/dm.h   |   4 +-
- .../wireless/realtek/rtlwifi/rtl8192ce/hw.c   |  42 +--
- .../wireless/realtek/rtlwifi/rtl8192ce/phy.c  |  10 +-
- .../wireless/realtek/rtlwifi/rtl8192ce/phy.h  |   6 +-
- .../wireless/realtek/rtlwifi/rtl8192ce/reg.h  |  59 ++--
- .../wireless/realtek/rtlwifi/rtl8192ce/rf.c   | 112 +++----
- .../wireless/realtek/rtlwifi/rtl8192cu/hw.c   | 276 +++++++++---------
- .../wireless/realtek/rtlwifi/rtl8192cu/hw.h   |   4 +-
- .../wireless/realtek/rtlwifi/rtl8192cu/led.c  |   6 +-
- .../wireless/realtek/rtlwifi/rtl8192cu/phy.c  |  16 +-
- .../wireless/realtek/rtlwifi/rtl8192cu/rf.c   | 112 +++----
- .../realtek/rtlwifi/rtl8192cu/table.c         |   8 +-
- .../realtek/rtlwifi/rtl8192cu/table.h         |  16 +-
- .../wireless/realtek/rtlwifi/rtl8192cu/trx.c  |  58 ++--
- .../wireless/realtek/rtlwifi/rtl8192cu/trx.h  |   4 +-
- 19 files changed, 390 insertions(+), 391 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8821ae/dm.h   |  10 +-
+ .../wireless/realtek/rtlwifi/rtl8821ae/fw.c   | 102 ++++----
+ .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   | 234 +++++++++---------
+ .../wireless/realtek/rtlwifi/rtl8821ae/phy.c  | 132 +++++-----
+ .../wireless/realtek/rtlwifi/rtl8821ae/phy.h  |   4 +-
+ .../wireless/realtek/rtlwifi/rtl8821ae/reg.h  |  34 +--
+ .../realtek/rtlwifi/rtl8821ae/table.c         | 184 +++++++-------
+ 7 files changed, 350 insertions(+), 350 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.h
-index 2cad719e2970..d23150b98ef2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.h
-@@ -27,7 +27,7 @@
- #define DM_DIG_FA_TH1				0x100
- #define DM_DIG_FA_TH2				0x200
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.h
+index 8e43336b7c00..d2eb0a70b16b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.h
+@@ -70,11 +70,11 @@
+ #define	DM_REG_CCK_CCA_CNT_11N			0xA60
+ #define	DM_REG_BB_PWR_SAV4_11N			0xA74
+ /*PAGE B */
+-#define	DM_REG_LNA_SWITCH_11N			0xB2C
+-#define	DM_REG_PATH_SWITCH_11N			0xB30
+-#define	DM_REG_RSSI_CTRL_11N			0xB38
+-#define	DM_REG_CONFIG_ANTA_11N			0xB68
+-#define	DM_REG_RSSI_BT_11N				0xB9C
++#define	DM_REG_LNA_SWITCH_11N			0XB2C
++#define	DM_REG_PATH_SWITCH_11N			0XB30
++#define	DM_REG_RSSI_CTRL_11N			0XB38
++#define	DM_REG_CONFIG_ANTA_11N			0XB68
++#define	DM_REG_RSSI_BT_11N				0XB9C
+ /*PAGE C */
+ #define	DM_REG_OFDM_FA_HOLDC_11N		0xC00
+ #define	DM_REG_RX_PATH_11N				0xC04
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index 4c87de69b54e..a0b6ebcc6c9c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -822,9 +822,9 @@ static u8 reserved_page_packet_8821[TOTAL_RESERVED_PKT_LEN_8821] = {
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	/* page 3: qos null data */
+-	0xC8, 0x01, 0x00, 0x00,  0x84, 0xC9, 0xB2, 0xA7,
+-	0xB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
+-	0x84, 0xC9, 0xB2, 0xA7,  0xB3, 0x6E, 0x00, 0x00,
++	0xC8, 0x01, 0x00, 0x00,  0x84, 0xC9, 0XB2, 0xA7,
++	0XB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
++	0x84, 0xC9, 0XB2, 0xA7,  0XB3, 0x6E, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+@@ -855,9 +855,9 @@ static u8 reserved_page_packet_8821[TOTAL_RESERVED_PKT_LEN_8821] = {
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	/* page 4: BT qos null data */
+-	0xC8, 0x01, 0x00, 0x00,  0x84, 0xC9, 0xB2, 0xA7,
+-	0xB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
+-	0x84, 0xC9, 0xB2, 0xA7,  0xB3, 0x6E, 0x00, 0x00,
++	0xC8, 0x01, 0x00, 0x00,  0x84, 0xC9, 0XB2, 0xA7,
++	0XB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
++	0x84, 0xC9, 0XB2, 0xA7,  0XB3, 0x6E, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+@@ -889,9 +889,9 @@ static u8 reserved_page_packet_8821[TOTAL_RESERVED_PKT_LEN_8821] = {
+ 	0x00, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	/* page 5~7 is for wowlan */
+ 	/* page 5: ARP resp */
+-	0x08, 0x01, 0x00, 0x00,  0x84, 0xC9, 0xB2, 0xA7,
+-	0xB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
+-	0x84, 0xC9, 0xB2, 0xA7,  0xB3, 0x6E, 0x00, 0x00,
++	0x08, 0x01, 0x00, 0x00,  0x84, 0xC9, 0XB2, 0xA7,
++	0XB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
++	0x84, 0xC9, 0XB2, 0xA7,  0XB3, 0x6E, 0x00, 0x00,
+ 	0xAA, 0xAA, 0x03, 0x00,  0x00, 0x00, 0x08, 0x06,
+ 	0x00, 0x01, 0x08, 0x00,  0x06, 0x04, 0x00, 0x02,
+ 	0x00, 0xE0, 0x4C, 0x02,  0x51, 0x02, 0x00, 0x00,
+@@ -993,7 +993,7 @@ static u8 reserved_page_packet_8812[TOTAL_RESERVED_PKT_LEN_8812] = {
+ 	/* page 0: beacon */
+ 	0x80, 0x00, 0x00, 0x00,  0xFF, 0xFF, 0xFF, 0xFF,
+ 	0xFF, 0xFF, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
+-	0x84, 0xC9, 0xB2, 0xA7,  0xB3, 0x6E, 0x60, 0x00,
++	0x84, 0xC9, 0XB2, 0xA7,  0XB3, 0x6E, 0x60, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x64, 0x00, 0x20, 0x04,  0x00, 0x03, 0x32, 0x31,
+ 	0x35, 0x01, 0x08, 0x82,  0x84, 0x8B, 0x96, 0x0C,
+@@ -1056,8 +1056,8 @@ static u8 reserved_page_packet_8812[TOTAL_RESERVED_PKT_LEN_8812] = {
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	/* page 1: ps-poll */
+-	0xA4, 0x10, 0x09, 0xC0,  0x84, 0xC9, 0xB2, 0xA7,
+-	0xB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
++	0xA4, 0x10, 0x09, 0xC0,  0x84, 0xC9, 0XB2, 0xA7,
++	0XB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+@@ -1121,9 +1121,9 @@ static u8 reserved_page_packet_8812[TOTAL_RESERVED_PKT_LEN_8812] = {
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	/* page 2: null data */
+-	0x48, 0x01, 0x00, 0x00,  0x84, 0xC9, 0xB2, 0xA7,
+-	0xB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
+-	0x84, 0xC9, 0xB2, 0xA7,  0xB3, 0x6E, 0x00, 0x00,
++	0x48, 0x01, 0x00, 0x00,  0x84, 0xC9, 0XB2, 0xA7,
++	0XB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
++	0x84, 0xC9, 0XB2, 0xA7,  0XB3, 0x6E, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+@@ -1186,9 +1186,9 @@ static u8 reserved_page_packet_8812[TOTAL_RESERVED_PKT_LEN_8812] = {
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	/* page 3: Qos null data */
+-	0xC8, 0x01, 0x00, 0x00,  0x84, 0xC9, 0xB2, 0xA7,
+-	0xB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
+-	0x84, 0xC9, 0xB2, 0xA7,  0xB3, 0x6E, 0x00, 0x00,
++	0xC8, 0x01, 0x00, 0x00,  0x84, 0xC9, 0XB2, 0xA7,
++	0XB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
++	0x84, 0xC9, 0XB2, 0xA7,  0XB3, 0x6E, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+@@ -1251,9 +1251,9 @@ static u8 reserved_page_packet_8812[TOTAL_RESERVED_PKT_LEN_8812] = {
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	/* page 4: BT Qos null data */
+-	0xC8, 0x01, 0x00, 0x00,  0x84, 0xC9, 0xB2, 0xA7,
+-	0xB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
+-	0x84, 0xC9, 0xB2, 0xA7,  0xB3, 0x6E, 0x00, 0x00,
++	0xC8, 0x01, 0x00, 0x00,  0x84, 0xC9, 0XB2, 0xA7,
++	0XB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
++	0x84, 0xC9, 0XB2, 0xA7,  0XB3, 0x6E, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+@@ -1317,9 +1317,9 @@ static u8 reserved_page_packet_8812[TOTAL_RESERVED_PKT_LEN_8812] = {
+ 	0x00, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+ 	/* page 5~7 is for wowlan */
+ 	/* page 5: ARP resp */
+-	0x08, 0x01, 0x00, 0x00,  0x84, 0xC9, 0xB2, 0xA7,
+-	0xB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
+-	0x84, 0xC9, 0xB2, 0xA7,  0xB3, 0x6E, 0x00, 0x00,
++	0x08, 0x01, 0x00, 0x00,  0x84, 0xC9, 0XB2, 0xA7,
++	0XB3, 0x6E, 0x00, 0xE0,  0x4C, 0x02, 0x51, 0x02,
++	0x84, 0xC9, 0XB2, 0xA7,  0XB3, 0x6E, 0x00, 0x00,
+ 	0xAA, 0xAA, 0x03, 0x00,  0x00, 0x00, 0x08, 0x06,
+ 	0x00, 0x01, 0x08, 0x00,  0x06, 0x04, 0x00, 0x02,
+ 	0x00, 0xE0, 0x4C, 0x02,  0x51, 0x02, 0x00, 0x00,
+@@ -1521,8 +1521,8 @@ void rtl8812ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	struct sk_buff *skb = NULL;
+ 	u32 totalpacketlen;
+ 	bool rtstatus;
+-	u8 u1RsvdPageLoc[5] = { 0 };
+-	u8 u1RsvdPageLoc2[7] = { 0 };
++	u8 u1rsvdpageloc[5] = { 0 };
++	u8 u1rsvdpageloc2[7] = { 0 };
+ 	bool b_dlok = false;
+ 	u8 *beacon;
+ 	u8 *p_pspoll;
+@@ -1552,7 +1552,7 @@ void rtl8812ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_PS_POLL_BSSID(p_pspoll, mac->bssid);
+ 	SET_80211_PS_POLL_TA(p_pspoll, mac->mac_addr);
  
--#define RXPATHSELECTION_SS_TH_lOW		30
-+#define RXPATHSELECTION_SS_TH_LOW		30
- #define RXPATHSELECTION_DIFF_TH			18
+-	SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(u1RsvdPageLoc, PSPOLL_PG);
++	SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(u1rsvdpageloc, PSPOLL_PG);
  
- #define DM_RATR_STA_INIT			0
-@@ -38,7 +38,7 @@
- #define CTS2SELF_THVAL				30
- #define REGC38_TH				20
+ 	/*--------------------------------------------------------
+ 	 *			(3) null data
+@@ -1563,7 +1563,7 @@ void rtl8812ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_HDR_ADDRESS2(nullfunc, mac->mac_addr);
+ 	SET_80211_HDR_ADDRESS3(nullfunc, mac->bssid);
  
--#define WAIOTTHVal				25
-+#define WAIOTTHVAL				25
+-	SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(u1RsvdPageLoc, NULL_PG);
++	SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(u1rsvdpageloc, NULL_PG);
  
- #define TXHIGHPWRLEVEL_NORMAL			0
- #define TXHIGHPWRLEVEL_LEVEL1			1
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-index 44e896374fc4..ad3fcc84a1a5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-@@ -57,27 +57,27 @@ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "FW size is %d bytes,\n", size);
- 	is_version_b = IS_NORMAL_CHIP(version);
- 	if (is_version_b) {
--		u32 pageNums, remainsize;
-+		u32 pagenums, remainsize;
- 		u32 page, offset;
+ 	/*---------------------------------------------------------
+ 	 *			(4) Qos null data
+@@ -1574,7 +1574,7 @@ void rtl8812ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_HDR_ADDRESS2(qosnull, mac->mac_addr);
+ 	SET_80211_HDR_ADDRESS3(qosnull, mac->bssid);
  
- 		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
- 			rtl_fill_dummy(bufferptr, &size);
+-	SET_H2CCMD_RSVDPAGE_LOC_QOS_NULL_DATA(u1RsvdPageLoc, QOSNULL_PG);
++	SET_H2CCMD_RSVDPAGE_LOC_QOS_NULL_DATA(u1rsvdpageloc, QOSNULL_PG);
  
--		pageNums = size / FW_8192C_PAGE_SIZE;
-+		pagenums = size / FW_8192C_PAGE_SIZE;
- 		remainsize = size % FW_8192C_PAGE_SIZE;
+ 	/*---------------------------------------------------------
+ 	 *			(5) BT Qos null data
+@@ -1585,7 +1585,7 @@ void rtl8812ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_HDR_ADDRESS2(btqosnull, mac->mac_addr);
+ 	SET_80211_HDR_ADDRESS3(btqosnull, mac->bssid);
  
--		if (pageNums > 4)
-+		if (pagenums > 4)
- 			pr_err("Page numbers should not greater then 4\n");
+-	SET_H2CCMD_RSVDPAGE_LOC_BT_QOS_NULL_DATA(u1RsvdPageLoc, BT_QOSNULL_PG);
++	SET_H2CCMD_RSVDPAGE_LOC_BT_QOS_NULL_DATA(u1rsvdpageloc, BT_QOSNULL_PG);
  
--		for (page = 0; page < pageNums; page++) {
-+		for (page = 0; page < pagenums; page++) {
- 			offset = page * FW_8192C_PAGE_SIZE;
- 			rtl_fw_page_write(hw, page, (bufferptr + offset),
- 					  FW_8192C_PAGE_SIZE);
+ 	if (!dl_whole_packets) {
+ 		totalpacketlen = 512 * (BT_QOSNULL_PG + 1) - 40;
+@@ -1600,20 +1600,20 @@ void rtl8812ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_HDR_ADDRESS2(arpresp, mac->mac_addr);
+ 	SET_80211_HDR_ADDRESS3(arpresp, mac->bssid);
+ 
+-	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_ARP_RSP(u1RsvdPageLoc2, ARPRESP_PG);
++	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_ARP_RSP(u1rsvdpageloc2, ARPRESP_PG);
+ 
+ 	/*---------------------------------------------------------
+ 	 *			(7) Remote Wake Ctrl
+ 	 *----------------------------------------------------------
+ 	 */
+-	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_REMOTE_WAKE_CTRL_INFO(u1RsvdPageLoc2,
++	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_REMOTE_WAKE_CTRL_INFO(u1rsvdpageloc2,
+ 								REMOTE_PG);
+ 
+ 	/*---------------------------------------------------------
+ 	 *			(8) GTK Ext Memory
+ 	 *----------------------------------------------------------
+ 	 */
+-	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_EXT_MEM(u1RsvdPageLoc2, GTKEXT_PG);
++	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_EXT_MEM(u1rsvdpageloc2, GTKEXT_PG);
+ 
+ 	totalpacketlen = TOTAL_RESERVED_PKT_LEN_8812 - 40;
+ 
+@@ -1632,14 +1632,14 @@ void rtl8812ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 
+ 	if (!b_dl_finished && b_dlok) {
+ 		RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
+-			      "H2C_RSVDPAGE:\n", u1RsvdPageLoc, 5);
++			      "H2C_RSVDPAGE:\n", u1rsvdpageloc, 5);
+ 		rtl8821ae_fill_h2c_cmd(hw, H2C_8821AE_RSVDPAGE,
+-				       sizeof(u1RsvdPageLoc), u1RsvdPageLoc);
++				       sizeof(u1rsvdpageloc), u1rsvdpageloc);
+ 		if (dl_whole_packets) {
+ 			RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
+-				      "wowlan H2C_RSVDPAGE:\n", u1RsvdPageLoc2, 7);
++				      "wowlan H2C_RSVDPAGE:\n", u1rsvdpageloc2, 7);
+ 			rtl8821ae_fill_h2c_cmd(hw, H2C_8821AE_AOAC_RSVDPAGE,
+-					       sizeof(u1RsvdPageLoc2), u1RsvdPageLoc2);
++					       sizeof(u1rsvdpageloc2), u1rsvdpageloc2);
  		}
+ 	}
  
- 		if (remainsize) {
--			offset = pageNums * FW_8192C_PAGE_SIZE;
--			page = pageNums;
-+			offset = pagenums * FW_8192C_PAGE_SIZE;
-+			page = pagenums;
- 			rtl_fw_page_write(hw, page, (bufferptr + offset),
- 					  remainsize);
+@@ -1656,8 +1656,8 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	struct sk_buff *skb = NULL;
+ 	u32 totalpacketlen;
+ 	bool rtstatus;
+-	u8 u1RsvdPageLoc[5] = { 0 };
+-	u8 u1RsvdPageLoc2[7] = { 0 };
++	u8 u1rsvdpageloc[5] = { 0 };
++	u8 u1rsvdpageloc2[7] = { 0 };
+ 	bool b_dlok = false;
+ 	u8 *beacon;
+ 	u8 *p_pspoll;
+@@ -1687,7 +1687,7 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_PS_POLL_BSSID(p_pspoll, mac->bssid);
+ 	SET_80211_PS_POLL_TA(p_pspoll, mac->mac_addr);
+ 
+-	SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(u1RsvdPageLoc, PSPOLL_PG);
++	SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(u1rsvdpageloc, PSPOLL_PG);
+ 
+ 	/*--------------------------------------------------------
+ 	 *			(3) null data
+@@ -1698,7 +1698,7 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_HDR_ADDRESS2(nullfunc, mac->mac_addr);
+ 	SET_80211_HDR_ADDRESS3(nullfunc, mac->bssid);
+ 
+-	SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(u1RsvdPageLoc, NULL_PG);
++	SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(u1rsvdpageloc, NULL_PG);
+ 
+ 	/*---------------------------------------------------------
+ 	 *			(4) Qos null data
+@@ -1709,7 +1709,7 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_HDR_ADDRESS2(qosnull, mac->mac_addr);
+ 	SET_80211_HDR_ADDRESS3(qosnull, mac->bssid);
+ 
+-	SET_H2CCMD_RSVDPAGE_LOC_QOS_NULL_DATA(u1RsvdPageLoc, QOSNULL_PG);
++	SET_H2CCMD_RSVDPAGE_LOC_QOS_NULL_DATA(u1rsvdpageloc, QOSNULL_PG);
+ 
+ 	/*---------------------------------------------------------
+ 	 *			(5) Qos null data
+@@ -1720,7 +1720,7 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_HDR_ADDRESS2(btqosnull, mac->mac_addr);
+ 	SET_80211_HDR_ADDRESS3(btqosnull, mac->bssid);
+ 
+-	SET_H2CCMD_RSVDPAGE_LOC_BT_QOS_NULL_DATA(u1RsvdPageLoc, BT_QOSNULL_PG);
++	SET_H2CCMD_RSVDPAGE_LOC_BT_QOS_NULL_DATA(u1rsvdpageloc, BT_QOSNULL_PG);
+ 
+ 	if (!dl_whole_packets) {
+ 		totalpacketlen = 256 * (BT_QOSNULL_PG + 1) - 40;
+@@ -1735,20 +1735,20 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 	SET_80211_HDR_ADDRESS2(arpresp, mac->mac_addr);
+ 	SET_80211_HDR_ADDRESS3(arpresp, mac->bssid);
+ 
+-	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_ARP_RSP(u1RsvdPageLoc2, ARPRESP_PG);
++	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_ARP_RSP(u1rsvdpageloc2, ARPRESP_PG);
+ 
+ 	/*---------------------------------------------------------
+ 	 *			(7) Remote Wake Ctrl
+ 	 *----------------------------------------------------------
+ 	 */
+-	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_REMOTE_WAKE_CTRL_INFO(u1RsvdPageLoc2,
++	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_REMOTE_WAKE_CTRL_INFO(u1rsvdpageloc2,
+ 									REMOTE_PG);
+ 
+ 	/*---------------------------------------------------------
+ 	 *			(8) GTK Ext Memory
+ 	 *----------------------------------------------------------
+ 	 */
+-	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_EXT_MEM(u1RsvdPageLoc2, GTKEXT_PG);
++	SET_8821AE_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_EXT_MEM(u1rsvdpageloc2, GTKEXT_PG);
+ 
+ 	totalpacketlen = TOTAL_RESERVED_PKT_LEN_8821 - 40;
+ 
+@@ -1770,16 +1770,16 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+ 			 "Set RSVD page location to Fw.\n");
+ 		RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
+-				"H2C_RSVDPAGE:\n", u1RsvdPageLoc, 5);
++				"H2C_RSVDPAGE:\n", u1rsvdpageloc, 5);
+ 		rtl8821ae_fill_h2c_cmd(hw, H2C_8821AE_RSVDPAGE,
+-				       sizeof(u1RsvdPageLoc), u1RsvdPageLoc);
++				       sizeof(u1rsvdpageloc), u1rsvdpageloc);
+ 		if (dl_whole_packets) {
+ 			RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
+ 				      "wowlan H2C_RSVDPAGE:\n",
+-				      u1RsvdPageLoc2, 7);
++				      u1rsvdpageloc2, 7);
+ 			rtl8821ae_fill_h2c_cmd(hw, H2C_8821AE_AOAC_RSVDPAGE,
+-					       sizeof(u1RsvdPageLoc2),
+-					       u1RsvdPageLoc2);
++					       sizeof(u1rsvdpageloc2),
++					       u1rsvdpageloc2);
  		}
-@@ -96,7 +96,7 @@ static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
- 	do {
- 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
- 	} while ((counter++ < FW_8192C_POLLING_TIMEOUT_COUNT) &&
--		 (!(value32 & FWDL_ChkSum_rpt)));
-+		 (!(value32 & FWDL_CHKSUM_RPT)));
- 
- 	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
- 		pr_err("chksum report fail! REG_MCUFWDL:0x%08x .\n",
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-index 49fb4bd7df61..d16913b49a65 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-@@ -217,7 +217,7 @@ bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
- 
- EXPORT_SYMBOL(_rtl92c_phy_bb8192c_config_parafile);
- 
--void _rtl92c_store_pwrIndex_diffrate_offset(struct ieee80211_hw *hw,
-+void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
- 					    u32 regaddr, u32 bitmask,
- 					    u32 data)
- {
-@@ -371,7 +371,7 @@ void _rtl92c_store_pwrIndex_diffrate_offset(struct ieee80211_hw *hw,
- 		rtlphy->pwrgroup_cnt++;
- 	}
- }
--EXPORT_SYMBOL(_rtl92c_store_pwrIndex_diffrate_offset);
-+EXPORT_SYMBOL(_rtl92c_store_pwrindex_diffrate_offset);
- 
- void rtl92c_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw)
- {
-@@ -430,10 +430,10 @@ void _rtl92c_phy_init_bb_rf_register_definition(struct ieee80211_hw *hw)
- 	rtlphy->phyreg_def[RF90_PATH_B].rf3wire_offset =
- 	    RFPGA0_XB_LSSIPARAMETER;
- 
--	rtlphy->phyreg_def[RF90_PATH_A].rflssi_select = rFPGA0_XAB_RFPARAMETER;
--	rtlphy->phyreg_def[RF90_PATH_B].rflssi_select = rFPGA0_XAB_RFPARAMETER;
--	rtlphy->phyreg_def[RF90_PATH_C].rflssi_select = rFPGA0_XCD_RFPARAMETER;
--	rtlphy->phyreg_def[RF90_PATH_D].rflssi_select = rFPGA0_XCD_RFPARAMETER;
-+	rtlphy->phyreg_def[RF90_PATH_A].rflssi_select = RFPGA0_XAB_RFPARAMETER;
-+	rtlphy->phyreg_def[RF90_PATH_B].rflssi_select = RFPGA0_XAB_RFPARAMETER;
-+	rtlphy->phyreg_def[RF90_PATH_C].rflssi_select = RFPGA0_XCD_RFPARAMETER;
-+	rtlphy->phyreg_def[RF90_PATH_D].rflssi_select = RFPGA0_XCD_RFPARAMETER;
- 
- 	rtlphy->phyreg_def[RF90_PATH_A].rftxgain_stage = RFPGA0_TXGAINSTAGE;
- 	rtlphy->phyreg_def[RF90_PATH_B].rftxgain_stage = RFPGA0_TXGAINSTAGE;
-@@ -1098,19 +1098,19 @@ static void _rtl92c_phy_reload_mac_registers(struct ieee80211_hw *hw,
- static void _rtl92c_phy_path_adda_on(struct ieee80211_hw *hw,
- 				     u32 *addareg, bool is_patha_on, bool is2t)
- {
--	u32 pathOn;
-+	u32 pathon;
- 	u32 i;
- 
--	pathOn = is_patha_on ? 0x04db25a4 : 0x0b1b25a4;
-+	pathon = is_patha_on ? 0x04db25a4 : 0x0b1b25a4;
- 	if (false == is2t) {
--		pathOn = 0x0bdb25a0;
-+		pathon = 0x0bdb25a0;
- 		rtl_set_bbreg(hw, addareg[0], MASKDWORD, 0x0b1b25a0);
- 	} else {
--		rtl_set_bbreg(hw, addareg[0], MASKDWORD, pathOn);
-+		rtl_set_bbreg(hw, addareg[0], MASKDWORD, pathon);
  	}
  
- 	for (i = 1; i < IQK_ADDA_REG_NUM; i++)
--		rtl_set_bbreg(hw, addareg[i], MASKDWORD, pathOn);
-+		rtl_set_bbreg(hw, addareg[i], MASKDWORD, pathon);
- }
- 
- static void _rtl92c_phy_mac_setting_calibration(struct ieee80211_hw *hw,
-@@ -1339,7 +1339,7 @@ static void _rtl92c_phy_set_rfpath_switch(struct ieee80211_hw *hw,
- 
- 	if (is_hal_stop(rtlhal)) {
- 		rtl_set_bbreg(hw, REG_LEDCFG0, BIT(23), 0x01);
--		rtl_set_bbreg(hw, rFPGA0_XAB_RFPARAMETER, BIT(13), 0x01);
-+		rtl_set_bbreg(hw, RFPGA0_XAB_RFPARAMETER, BIT(13), 0x01);
- 	}
- 	if (is2t) {
- 		if (bmain)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.h
-index f1ed1a999b8f..c4d28bf175eb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.h
-@@ -22,9 +22,9 @@
- 
- #define LOOP_LIMIT			5
- #define MAX_STALL_TIME			50
--#define AntennaDiversityValue		0x80
-+#define ANTENNADIVERSITYVALUE		0x80
- #define MAX_TXPWR_IDX_NMODE_92S		63
--#define Reset_Cnt_Limit			3
-+#define RESET_CNT_LIMIT			3
- 
- #define IQK_ADDA_REG_NUM		16
- #define IQK_MAC_REG_NUM			4
-@@ -220,7 +220,7 @@ void _rtl92c_phy_rf_serial_write(struct ieee80211_hw *hw,
- 				 enum radio_path rfpath, u32 offset,
- 				 u32 data);
- bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw);
--void _rtl92c_store_pwrIndex_diffrate_offset(struct ieee80211_hw *hw,
-+void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
- 					    u32 regaddr, u32 bitmask,
- 					    u32 data);
- bool rtl92c_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.h
-index 7132696a4f50..69cd65421a0c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.h
-@@ -22,7 +22,7 @@
- #define DM_DIG_FA_TH1				0x100
- #define DM_DIG_FA_TH2				0x200
- 
--#define RXPATHSELECTION_SS_TH_lOW		30
-+#define RXPATHSELECTION_SS_TH_LOW		30
- #define RXPATHSELECTION_DIFF_TH			18
- 
- #define DM_RATR_STA_INIT			0
-@@ -33,7 +33,7 @@
- #define CTS2SELF_THVAL				30
- #define REGC38_TH				20
- 
--#define WAIOTTHVal				25
-+#define WAIOTTHVAL				25
- 
- #define TXHIGHPWRLEVEL_NORMAL			0
- #define TXHIGHPWRLEVEL_LEVEL1			1
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-index 2602e384fa94..87a2541eb434 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-@@ -82,13 +82,13 @@ void rtl92ce_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		*((enum rf_pwrstate *)(val)) = ppsc->rfpwr_state;
- 		break;
- 	case HW_VAR_FWLPS_RF_ON:{
--			enum rf_pwrstate rfState;
-+			enum rf_pwrstate rfstate;
- 			u32 val_rcr;
- 
- 			rtlpriv->cfg->ops->get_hw_reg(hw,
- 						      HW_VAR_RF_STATE,
--						      (u8 *) (&rfState));
--			if (rfState == ERFOFF) {
-+						      (u8 *)(&rfstate));
-+			if (rfstate == ERFOFF) {
- 				*((bool *) (val)) = true;
- 			} else {
- 				val_rcr = rtl_read_dword(rtlpriv, REG_RCR);
-@@ -314,13 +314,13 @@ void rtl92ce_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 			if (acm) {
- 				switch (e_aci) {
- 				case AC0_BE:
--					acm_ctrl |= AcmHw_BeqEn;
-+					acm_ctrl |= ACMHW_BEQEN;
- 					break;
- 				case AC2_VI:
--					acm_ctrl |= AcmHw_ViqEn;
-+					acm_ctrl |= ACMHW_VIQEN;
- 					break;
- 				case AC3_VO:
--					acm_ctrl |= AcmHw_VoqEn;
-+					acm_ctrl |= ACMHW_VOQEN;
- 					break;
- 				default:
- 					RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-@@ -331,13 +331,13 @@ void rtl92ce_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 			} else {
- 				switch (e_aci) {
- 				case AC0_BE:
--					acm_ctrl &= (~AcmHw_BeqEn);
-+					acm_ctrl &= (~ACMHW_BEQEN);
- 					break;
- 				case AC2_VI:
--					acm_ctrl &= (~AcmHw_ViqEn);
-+					acm_ctrl &= (~ACMHW_VIQEN);
- 					break;
- 				case AC3_VO:
--					acm_ctrl &= (~AcmHw_VoqEn);
-+					acm_ctrl &= (~ACMHW_VOQEN);
- 					break;
- 				default:
- 					pr_err("switch case %#x not processed\n",
-@@ -562,23 +562,23 @@ static bool _rtl92ce_llt_table_init(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index dbc16da10eb2..84bc13461240 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -2584,50 +2584,50 @@ static void _rtl8821ae_read_power_value_fromprom(struct ieee80211_hw *hw,
+ 	u8 *hwinfo)
+ {
  	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	unsigned short i;
- 	u8 txpktbuf_bndy;
--	u8 maxPage;
-+	u8 maxpage;
- 	bool status;
- 
- #if LLT_CONFIG == 1
--	maxPage = 255;
-+	maxpage = 255;
- 	txpktbuf_bndy = 252;
- #elif LLT_CONFIG == 2
--	maxPage = 127;
-+	maxpage = 127;
- 	txpktbuf_bndy = 124;
- #elif LLT_CONFIG == 3
--	maxPage = 255;
-+	maxpage = 255;
- 	txpktbuf_bndy = 174;
- #elif LLT_CONFIG == 4
--	maxPage = 255;
-+	maxpage = 255;
- 	txpktbuf_bndy = 246;
- #elif LLT_CONFIG == 5
--	maxPage = 255;
-+	maxpage = 255;
- 	txpktbuf_bndy = 246;
- #endif
- 
-@@ -617,13 +617,13 @@ static bool _rtl92ce_llt_table_init(struct ieee80211_hw *hw)
- 	if (true != status)
- 		return status;
- 
--	for (i = txpktbuf_bndy; i < maxPage; i++) {
-+	for (i = txpktbuf_bndy; i < maxpage; i++) {
- 		status = _rtl92ce_llt_write(hw, i, (i + 1));
- 		if (true != status)
- 			return status;
- 	}
- 
--	status = _rtl92ce_llt_write(hw, maxPage, txpktbuf_bndy);
-+	status = _rtl92ce_llt_write(hw, maxpage, txpktbuf_bndy);
- 	if (true != status)
- 		return status;
- 
-@@ -876,7 +876,7 @@ void rtl92ce_enable_hw_security_config(struct ieee80211_hw *hw)
- 	u8 sec_reg_value;
+-	u32 rfPath, eeAddr = EEPROM_TX_PWR_INX, group, TxCount = 0;
++	u32 rfpath, eeaddr = EEPROM_TX_PWR_INX, group, txcount = 0;
  
  	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "PairwiseEncAlgorithm = %d GroupEncAlgorithm = %d\n",
-+		 "PairwiseENcAlgorithm = %d GroupEncAlgorithm = %d\n",
- 		 rtlpriv->sec.pairwise_enc_algorithm,
- 		 rtlpriv->sec.group_enc_algorithm);
+ 		 "hal_ReadPowerValueFromPROM8821ae(): hwinfo[0x%x]=0x%x\n",
+-		 (eeAddr+1), hwinfo[eeAddr+1]);
+-	if (0xFF == hwinfo[eeAddr+1])  /*YJ,add,120316*/
++		 (eeaddr + 1), hwinfo[eeaddr + 1]);
++	if (hwinfo[eeaddr + 1] == 0xFF)  /*YJ,add,120316*/
+ 		autoload_fail = true;
  
-@@ -886,11 +886,11 @@ void rtl92ce_enable_hw_security_config(struct ieee80211_hw *hw)
- 		return;
- 	}
- 
--	sec_reg_value = SCR_TxEncEnable | SCR_RxDecEnable;
-+	sec_reg_value = SCR_TXENCENABLE | SCR_RXDECENABLE;
- 
- 	if (rtlpriv->sec.use_defaultkey) {
--		sec_reg_value |= SCR_TxUseDK;
--		sec_reg_value |= SCR_RxUseDK;
-+		sec_reg_value |= SCR_TXUSEDK;
-+		sec_reg_value |= SCR_RXUSEDK;
- 	}
- 
- 	sec_reg_value |= (SCR_RXBCUSEDK | SCR_TXBCUSEDK);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-index f9a86a5d74e0..aea4df9814ba 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-@@ -82,7 +82,7 @@ bool rtl92c_phy_bb_config(struct ieee80211_hw *hw)
- 	rtl_write_byte(rtlpriv, REG_RF_CTRL, RF_EN | RF_RSTB | RF_SDMRSTB);
- 	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN,
- 		       FEN_PPLL | FEN_PCIEA | FEN_DIO_PCIE |
--		       FEN_BB_GLB_RSTn | FEN_BBRSTB);
-+		       FEN_BB_GLB_RSTN | FEN_BBRSTB);
- 	rtl_write_byte(rtlpriv, REG_AFE_XTAL_CTRL + 1, 0x80);
- 	regvaldw = rtl_read_dword(rtlpriv, REG_LEDCFG0);
- 	rtl_write_dword(rtlpriv, REG_LEDCFG0, regvaldw | BIT(23));
-@@ -214,7 +214,7 @@ bool _rtl92ce_phy_config_bb_with_pgheaderfile(struct ieee80211_hw *hw,
- 		for (i = 0; i < phy_regarray_pg_len; i = i + 3) {
- 			rtl_addr_delay(phy_regarray_table_pg[i]);
- 
--			_rtl92c_store_pwrIndex_diffrate_offset(hw,
-+			_rtl92c_store_pwrindex_diffrate_offset(hw,
- 					       phy_regarray_table_pg[i],
- 					       phy_regarray_table_pg[i + 1],
- 					       phy_regarray_table_pg[i + 2]);
-@@ -442,13 +442,13 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 			if ((ppsc->rfpwr_state == ERFOFF) &&
- 			    RT_IN_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC)) {
- 				bool rtstatus;
--				u32 InitializeCount = 0;
-+				u32 initializecount = 0;
- 				do {
--					InitializeCount++;
-+					initializecount++;
- 					RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
- 						 "IPS Set eRf nic enable\n");
- 					rtstatus = rtl_ps_enable_nic(hw);
--				} while (!rtstatus && (InitializeCount < 10));
-+				} while (!rtstatus && (initializecount < 10));
- 				RT_CLEAR_PS_LEVEL(ppsc,
- 						  RT_RF_OFF_LEVL_HALT_NIC);
- 			} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h
-index f86dcd7cfe1c..a7f6f30729da 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h
-@@ -22,9 +22,9 @@
- 
- #define LOOP_LIMIT			5
- #define MAX_STALL_TIME			50
--#define AntennaDiversityValue		0x80
-+#define ANTENNADIVERSITYVALUE		0x80
- #define MAX_TXPWR_IDX_NMODE_92S		63
--#define Reset_Cnt_Limit			3
-+#define RESET_CNT_LIMIT			3
- 
- #define IQK_ADDA_REG_NUM		16
- #define IQK_MAC_REG_NUM			4
-@@ -100,7 +100,7 @@ void _rtl92c_phy_rf_serial_write(struct ieee80211_hw *hw,
- void _rtl92c_phy_fw_rf_serial_write(struct ieee80211_hw *hw,
- 				    enum radio_path rfpath, u32 offset,
- 				    u32 data);
--void _rtl92c_store_pwrIndex_diffrate_offset(struct ieee80211_hw *hw,
-+void _rtl92c_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
- 					    u32 regaddr, u32 bitmask, u32 data);
- bool _rtl92ce_phy_config_mac_with_headerfile(struct ieee80211_hw *hw);
- void _rtl92c_phy_init_bb_rf_register_definition(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-index 4f003ff83630..2301b30c8caf 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-@@ -680,7 +680,7 @@
- #define PWC_EV12V				BIT(15)
- 
- #define FEN_BBRSTB				BIT(0)
--#define FEN_BB_GLB_RSTn				BIT(1)
-+#define FEN_BB_GLB_RSTN				BIT(1)
- #define FEN_USBA				BIT(2)
- #define FEN_UPLL				BIT(3)
- #define FEN_USBD				BIT(4)
-@@ -700,7 +700,7 @@
- #define PFM_ALDN				BIT(1)
- #define PFM_LDKP				BIT(2)
- #define PFM_WOWL				BIT(3)
--#define EnPDN					BIT(4)
-+#define ENPDN					BIT(4)
- #define PDN_PL					BIT(5)
- #define APFM_ONMAC				BIT(8)
- #define APFM_OFF				BIT(9)
-@@ -815,19 +815,19 @@
- #define LDOE25_EN				BIT(31)
- 
- #define RSM_EN					BIT(0)
--#define Timer_EN				BIT(4)
-+#define TIMER_EN				BIT(4)
- 
- #define TRSW0EN					BIT(2)
- #define TRSW1EN					BIT(3)
- #define EROM_EN					BIT(4)
--#define EnBT					BIT(5)
--#define EnUart					BIT(8)
--#define Uart_910				BIT(9)
--#define EnPMAC					BIT(10)
-+#define ENBT					BIT(5)
-+#define ENUART					BIT(8)
-+#define UART_910				BIT(9)
-+#define ENPMAC					BIT(10)
- #define SIC_SWRST				BIT(11)
--#define EnSIC					BIT(12)
-+#define ENSIC					BIT(12)
- #define SIC_23					BIT(13)
--#define EnHDP					BIT(14)
-+#define ENHDP					BIT(14)
- #define SIC_LBK					BIT(15)
- 
- #define LED0PL					BIT(4)
-@@ -836,7 +836,7 @@
- 
- #define MCUFWDL_EN				BIT(0)
- #define MCUFWDL_RDY				BIT(1)
--#define FWDL_ChkSum_rpt				BIT(2)
-+#define FWDL_CHKSUM_RPT				BIT(2)
- #define MACINI_RDY				BIT(3)
- #define BBINI_RDY				BIT(4)
- #define RFINI_RDY				BIT(5)
-@@ -1054,13 +1054,13 @@
- #define	DIS_TSF_UDT0_NORMAL_CHIP		BIT(4)
- #define	DIS_TSF_UDT0_TEST_CHIP			BIT(5)
- 
--#define	AcmHw_HwEn				BIT(0)
--#define	AcmHw_BeqEn				BIT(1)
--#define	AcmHw_ViqEn				BIT(2)
--#define	AcmHw_VoqEn				BIT(3)
--#define	AcmHw_BeqStatus				BIT(4)
--#define	AcmHw_ViqStatus				BIT(5)
--#define	AcmHw_VoqStatus				BIT(6)
-+#define	ACMHW_HWEN				BIT(0)
-+#define	ACMHW_BEQEN				BIT(1)
-+#define	ACMHW_VIQEN				BIT(2)
-+#define	ACMHW_VOQEN				BIT(3)
-+#define	ACMHW_BEQSTATUS				BIT(4)
-+#define	ACMHW_VIQSTATUS				BIT(5)
-+#define	ACMHW_VOQSTATUS				BIT(6)
- 
- #define APSDOFF					BIT(6)
- #define APSDOFF_STATUS				BIT(7)
-@@ -1099,7 +1099,7 @@
- #define BM_DATA_EN				BIT(17)
- #define MFBEN					BIT(22)
- #define LSIGEN					BIT(23)
--#define EnMBID					BIT(24)
-+#define ENMBID					BIT(24)
- #define APP_BASSN				BIT(27)
- #define APP_PHYSTS				BIT(28)
- #define APP_ICV					BIT(29)
-@@ -1128,12 +1128,12 @@
- #define RXERR_RPT_RST				BIT(27)
- #define _RXERR_RPT_SEL(type)			((type) << 28)
- 
--#define	SCR_TxUseDK				BIT(0)
--#define	SCR_RxUseDK				BIT(1)
--#define	SCR_TxEncEnable				BIT(2)
--#define	SCR_RxDecEnable				BIT(3)
--#define	SCR_SKByA2				BIT(4)
--#define	SCR_NoSKMC				BIT(5)
-+#define	SCR_TXUSEDK				BIT(0)
-+#define	SCR_RXUSEDK				BIT(1)
-+#define	SCR_TXENCENABLE				BIT(2)
-+#define	SCR_RXDECENABLE				BIT(3)
-+#define	SCR_SKBYA2				BIT(4)
-+#define	SCR_NOSKMC				BIT(5)
- #define SCR_TXBCUSEDK				BIT(6)
- #define SCR_RXBCUSEDK				BIT(7)
- 
-@@ -1186,7 +1186,7 @@
- #define	RPMAC_CCKPLCPHEADER			0x144
- #define	RPMAC_CCKCRC16				0x148
- #define	RPMAC_OFDMRXCRC32OK			0x170
--#define	RPMAC_OFDMRXCRC32Er			0x174
-+#define	RPMAC_OFDMRXCRC32ER			0x174
- #define	RPMAC_OFDMRXPARITYER			0x178
- #define	RPMAC_OFDMRXCRC8ER			0x17c
- #define	RPMAC_CCKCRXRC16ER			0x180
-@@ -1224,8 +1224,8 @@
- #define	RFPGA0_XAB_RFINTERFACESW		0x870
- #define	RFPGA0_XCD_RFINTERFACESW		0x874
- 
--#define	rFPGA0_XAB_RFPARAMETER			0x878
--#define	rFPGA0_XCD_RFPARAMETER			0x87c
-+#define	RFPGA0_XAB_RFPARAMETER			0x878
-+#define	RFPGA0_XCD_RFPARAMETER			0x87c
- 
- #define	RFPGA0_ANALOGPARAMETER1			0x880
- #define	RFPGA0_ANALOGPARAMETER2			0x884
-@@ -1499,8 +1499,8 @@
- #define	BCCKTXCRC16				0xffff
- #define	BCCKTXSTATUS				0x1
- #define	BOFDMTXSTATUS				0x2
--#define IS_BB_REG_OFFSET_92S(_Offset)		\
--	((_Offset >= 0x800) && (_Offset <= 0xfff))
-+#define IS_BB_REG_OFFSET_92S(_offset)		\
-+	(((_offset) >= 0x800) && ((_offset) <= 0xfff))
- 
- #define	BRFMOD					0x1
- #define	BJAPANMODE				0x2
-@@ -1693,7 +1693,6 @@
- #define	BCCK_RF_EXTEND				0x20000000
- #define	BCCK_RXAGC_SATLEVEL			0x1f000000
- #define	BCCK_RXAGC_SATCOUNT			0xe0
--#define	bCCKRxRFSettle				0x1f
- #define	BCCK_FIXED_RXAGC			0x8000
- #define	BCCK_ANTENNA_POLARITY			0x2000
- #define	BCCK_TXFILTER_TYPE			0x0c00
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c
-index cf150e6f6d75..20768e9ef0be 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c
-@@ -128,18 +128,18 @@ static void rtl92c_phy_get_power_base(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
--	u32 powerBase0, powerBase1;
-+	u32 powerbase0, powerbase1;
- 	u8 legacy_pwrdiff, ht20_pwrdiff;
- 	u8 i, powerlevel[2];
- 
- 	for (i = 0; i < 2; i++) {
- 		powerlevel[i] = ppowerlevel[i];
- 		legacy_pwrdiff = rtlefuse->txpwr_legacyhtdiff[i][channel - 1];
--		powerBase0 = powerlevel[i] + legacy_pwrdiff;
-+		powerbase0 = powerlevel[i] + legacy_pwrdiff;
- 
--		powerBase0 = (powerBase0 << 24) | (powerBase0 << 16) |
--		    (powerBase0 << 8) | powerBase0;
--		*(ofdmbase + i) = powerBase0;
-+		powerbase0 = (powerbase0 << 24) | (powerbase0 << 16) |
-+		    (powerbase0 << 8) | powerbase0;
-+		*(ofdmbase + i) = powerbase0;
- 		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
- 			" [OFDM power base index rf(%c) = 0x%x]\n",
- 			i == 0 ? 'A' : 'B', *(ofdmbase + i));
-@@ -150,11 +150,11 @@ static void rtl92c_phy_get_power_base(struct ieee80211_hw *hw,
- 			ht20_pwrdiff = rtlefuse->txpwr_ht20diff[i][channel - 1];
- 			powerlevel[i] += ht20_pwrdiff;
- 		}
--		powerBase1 = powerlevel[i];
--		powerBase1 = (powerBase1 << 24) |
--		    (powerBase1 << 16) | (powerBase1 << 8) | powerBase1;
-+		powerbase1 = powerlevel[i];
-+		powerbase1 = (powerbase1 << 24) |
-+		    (powerbase1 << 16) | (powerbase1 << 8) | powerbase1;
- 
--		*(mcsbase + i) = powerBase1;
-+		*(mcsbase + i) = powerbase1;
- 
- 		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
- 			" [MCS power base index rf(%c) = 0x%x]\n",
-@@ -164,37 +164,37 @@ static void rtl92c_phy_get_power_base(struct ieee80211_hw *hw,
- 
- static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
- 						       u8 channel, u8 index,
--						       u32 *powerBase0,
--						       u32 *powerBase1,
-+						       u32 *powerbase0,
-+						       u32 *powerbase1,
- 						       u32 *p_outwriteval)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	u8 i, chnlgroup = 0, pwr_diff_limit[4];
--	u32 writeVal, customer_limit, rf;
-+	u32 writeval, customer_limit, rf;
- 
- 	for (rf = 0; rf < 2; rf++) {
- 		switch (rtlefuse->eeprom_regulatory) {
- 		case 0:
- 			chnlgroup = 0;
- 
--			writeVal = rtlphy->mcs_offset[chnlgroup][index +
-+			writeval = rtlphy->mcs_offset[chnlgroup][index +
- 			    (rf ? 8 : 0)]
--			    + ((index < 2) ? powerBase0[rf] : powerBase1[rf]);
-+			    + ((index < 2) ? powerbase0[rf] : powerbase1[rf]);
- 
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--				"RTK better performance, writeVal(%c) = 0x%x\n",
--				rf == 0 ? 'A' : 'B', writeVal);
-+				"RTK better performance, writeval(%c) = 0x%x\n",
-+				rf == 0 ? 'A' : 'B', writeval);
- 			break;
- 		case 1:
- 			if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40) {
--				writeVal = ((index < 2) ? powerBase0[rf] :
--					    powerBase1[rf]);
-+				writeval = ((index < 2) ? powerbase0[rf] :
-+					    powerbase1[rf]);
- 
- 				RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--					"Realtek regulatory, 40MHz, writeVal(%c) = 0x%x\n",
--					rf == 0 ? 'A' : 'B', writeVal);
-+					"Realtek regulatory, 40MHz, writeval(%c) = 0x%x\n",
-+					rf == 0 ? 'A' : 'B', writeval);
- 			} else {
- 				if (rtlphy->pwrgroup_cnt == 1)
- 					chnlgroup = 0;
-@@ -209,23 +209,23 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
- 						chnlgroup++;
+ 	if (autoload_fail) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 			 "auto load fail : Use Default value!\n");
+-		for (rfPath = 0 ; rfPath < MAX_RF_PATH ; rfPath++) {
++		for (rfpath = 0 ; rfpath < MAX_RF_PATH ; rfpath++) {
+ 			/*2.4G default value*/
+ 			for (group = 0 ; group < MAX_CHNL_GROUP_24G; group++) {
+-				pwrinfo24g->index_cck_base[rfPath][group] =	0x2D;
+-				pwrinfo24g->index_bw40_base[rfPath][group] = 0x2D;
++				pwrinfo24g->index_cck_base[rfpath][group] = 0x2D;
++				pwrinfo24g->index_bw40_base[rfpath][group] = 0x2D;
+ 			}
+-			for (TxCount = 0; TxCount < MAX_TX_COUNT; TxCount++) {
+-				if (TxCount == 0) {
+-					pwrinfo24g->bw20_diff[rfPath][0] = 0x02;
+-					pwrinfo24g->ofdm_diff[rfPath][0] = 0x04;
++			for (txcount = 0; txcount < MAX_TX_COUNT; txcount++) {
++				if (txcount == 0) {
++					pwrinfo24g->bw20_diff[rfpath][0] = 0x02;
++					pwrinfo24g->ofdm_diff[rfpath][0] = 0x04;
+ 				} else {
+-					pwrinfo24g->bw20_diff[rfPath][TxCount] = 0xFE;
+-					pwrinfo24g->bw40_diff[rfPath][TxCount] = 0xFE;
+-					pwrinfo24g->cck_diff[rfPath][TxCount] =	0xFE;
+-					pwrinfo24g->ofdm_diff[rfPath][TxCount] = 0xFE;
++					pwrinfo24g->bw20_diff[rfpath][txcount] = 0xFE;
++					pwrinfo24g->bw40_diff[rfpath][txcount] = 0xFE;
++					pwrinfo24g->cck_diff[rfpath][txcount] =	0xFE;
++					pwrinfo24g->ofdm_diff[rfpath][txcount] = 0xFE;
  				}
- 
--				writeVal = rtlphy->mcs_offset[chnlgroup]
-+				writeval = rtlphy->mcs_offset[chnlgroup]
- 				    [index + (rf ? 8 : 0)] + ((index < 2) ?
--							      powerBase0[rf] :
--							      powerBase1[rf]);
-+							      powerbase0[rf] :
-+							      powerbase1[rf]);
- 
- 				RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--					"Realtek regulatory, 20MHz, writeVal(%c) = 0x%x\n",
--					rf == 0 ? 'A' : 'B', writeVal);
-+					"Realtek regulatory, 20MHz, writeval(%c) = 0x%x\n",
-+					rf == 0 ? 'A' : 'B', writeval);
  			}
- 			break;
- 		case 2:
--			writeVal =
--			    ((index < 2) ? powerBase0[rf] : powerBase1[rf]);
-+			writeval =
-+			    ((index < 2) ? powerbase0[rf] : powerbase1[rf]);
- 
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--				"Better regulatory, writeVal(%c) = 0x%x\n",
--				rf == 0 ? 'A' : 'B', writeVal);
-+				"Better regulatory, writeval(%c) = 0x%x\n",
-+				rf == 0 ? 'A' : 'B', writeval);
- 			break;
- 		case 3:
- 			chnlgroup = 0;
-@@ -275,36 +275,36 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
- 				"Customer's limit rf(%c) = 0x%x\n",
- 				rf == 0 ? 'A' : 'B', customer_limit);
- 
--			writeVal = customer_limit +
--			    ((index < 2) ? powerBase0[rf] : powerBase1[rf]);
-+			writeval = customer_limit +
-+			    ((index < 2) ? powerbase0[rf] : powerbase1[rf]);
- 
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--				"Customer, writeVal rf(%c)= 0x%x\n",
--				rf == 0 ? 'A' : 'B', writeVal);
-+				"Customer, writeval rf(%c)= 0x%x\n",
-+				rf == 0 ? 'A' : 'B', writeval);
- 			break;
- 		default:
- 			chnlgroup = 0;
--			writeVal = rtlphy->mcs_offset[chnlgroup]
-+			writeval = rtlphy->mcs_offset[chnlgroup]
- 			    [index + (rf ? 8 : 0)]
--			    + ((index < 2) ? powerBase0[rf] : powerBase1[rf]);
-+			    + ((index < 2) ? powerbase0[rf] : powerbase1[rf]);
- 
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--				"RTK better performance, writeVal rf(%c) = 0x%x\n",
--				rf == 0 ? 'A' : 'B', writeVal);
-+				"RTK better performance, writeval rf(%c) = 0x%x\n",
-+				rf == 0 ? 'A' : 'B', writeval);
- 			break;
- 		}
- 
- 		if (rtlpriv->dm.dynamic_txhighpower_lvl == TXHIGHPWRLEVEL_BT1)
--			writeVal = writeVal - 0x06060606;
-+			writeval = writeval - 0x06060606;
- 		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
- 			 TXHIGHPWRLEVEL_BT2)
--			writeVal = writeVal - 0x0c0c0c0c;
--		*(p_outwriteval + rf) = writeVal;
-+			writeval = writeval - 0x0c0c0c0c;
-+		*(p_outwriteval + rf) = writeval;
- 	}
- }
- 
- static void _rtl92c_write_ofdm_power_reg(struct ieee80211_hw *hw,
--					 u8 index, u32 *pValue)
-+					 u8 index, u32 *value)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-@@ -320,29 +320,29 @@ static void _rtl92c_write_ofdm_power_reg(struct ieee80211_hw *hw,
- 		RTXAGC_B_MCS11_MCS08, RTXAGC_B_MCS15_MCS12
- 	};
- 	u8 i, rf, pwr_val[4];
--	u32 writeVal;
-+	u32 writeval;
- 	u16 regoffset;
- 
- 	for (rf = 0; rf < 2; rf++) {
--		writeVal = pValue[rf];
-+		writeval = value[rf];
- 		for (i = 0; i < 4; i++) {
--			pwr_val[i] = (u8) ((writeVal & (0x7f <<
-+			pwr_val[i] = (u8)((writeval & (0x7f <<
- 							(i * 8))) >> (i * 8));
- 
- 			if (pwr_val[i] > RF6052_MAX_TX_PWR)
- 				pwr_val[i] = RF6052_MAX_TX_PWR;
- 		}
--		writeVal = (pwr_val[3] << 24) | (pwr_val[2] << 16) |
-+		writeval = (pwr_val[3] << 24) | (pwr_val[2] << 16) |
- 		    (pwr_val[1] << 8) | pwr_val[0];
- 
- 		if (rf == 0)
- 			regoffset = regoffset_a[index];
- 		else
- 			regoffset = regoffset_b[index];
--		rtl_set_bbreg(hw, regoffset, MASKDWORD, writeVal);
-+		rtl_set_bbreg(hw, regoffset, MASKDWORD, writeval);
- 
- 		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--			"Set 0x%x = %08x\n", regoffset, writeVal);
-+			"Set 0x%x = %08x\n", regoffset, writeval);
- 
- 		if (((get_rf_type(rtlphy) == RF_2T2R) &&
- 		     (regoffset == RTXAGC_A_MCS15_MCS12 ||
-@@ -351,7 +351,7 @@ static void _rtl92c_write_ofdm_power_reg(struct ieee80211_hw *hw,
- 		     (regoffset == RTXAGC_A_MCS07_MCS04 ||
- 		      regoffset == RTXAGC_B_MCS07_MCS04))) {
- 
--			writeVal = pwr_val[3];
-+			writeval = pwr_val[3];
- 			if (regoffset == RTXAGC_A_MCS15_MCS12 ||
- 			    regoffset == RTXAGC_A_MCS07_MCS04)
- 				regoffset = 0xc90;
-@@ -360,9 +360,9 @@ static void _rtl92c_write_ofdm_power_reg(struct ieee80211_hw *hw,
- 				regoffset = 0xc98;
- 
- 			for (i = 0; i < 3; i++) {
--				writeVal = (writeVal > 6) ? (writeVal - 6) : 0;
-+				writeval = (writeval > 6) ? (writeval - 6) : 0;
- 				rtl_write_byte(rtlpriv, (u32) (regoffset + i),
--					       (u8) writeVal);
-+					       (u8)writeval);
+ 			/*5G default value*/
+ 			for (group = 0 ; group < MAX_CHNL_GROUP_5G; group++)
+-				pwrinfo5g->index_bw40_base[rfPath][group] = 0x2A;
+-
+-			for (TxCount = 0; TxCount < MAX_TX_COUNT; TxCount++) {
+-				if (TxCount == 0) {
+-					pwrinfo5g->ofdm_diff[rfPath][0] = 0x04;
+-					pwrinfo5g->bw20_diff[rfPath][0] = 0x00;
+-					pwrinfo5g->bw80_diff[rfPath][0] = 0xFE;
+-					pwrinfo5g->bw160_diff[rfPath][0] = 0xFE;
++				pwrinfo5g->index_bw40_base[rfpath][group] = 0x2A;
++
++			for (txcount = 0; txcount < MAX_TX_COUNT; txcount++) {
++				if (txcount == 0) {
++					pwrinfo5g->ofdm_diff[rfpath][0] = 0x04;
++					pwrinfo5g->bw20_diff[rfpath][0] = 0x00;
++					pwrinfo5g->bw80_diff[rfpath][0] = 0xFE;
++					pwrinfo5g->bw160_diff[rfpath][0] = 0xFE;
+ 				} else {
+-					pwrinfo5g->ofdm_diff[rfPath][0] = 0xFE;
+-					pwrinfo5g->bw20_diff[rfPath][0] = 0xFE;
+-					pwrinfo5g->bw40_diff[rfPath][0] = 0xFE;
+-					pwrinfo5g->bw80_diff[rfPath][0] = 0xFE;
+-					pwrinfo5g->bw160_diff[rfPath][0] = 0xFE;
++					pwrinfo5g->ofdm_diff[rfpath][0] = 0xFE;
++					pwrinfo5g->bw20_diff[rfpath][0] = 0xFE;
++					pwrinfo5g->bw40_diff[rfpath][0] = 0xFE;
++					pwrinfo5g->bw80_diff[rfpath][0] = 0xFE;
++					pwrinfo5g->bw160_diff[rfpath][0] = 0xFE;
+ 				}
  			}
  		}
- 	}
-@@ -371,20 +371,20 @@ static void _rtl92c_write_ofdm_power_reg(struct ieee80211_hw *hw,
- void rtl92ce_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
- 					u8 *ppowerlevel, u8 channel)
- {
--	u32 writeVal[2], powerBase0[2], powerBase1[2];
-+	u32 writeval[2], powerbase0[2], powerbase1[2];
- 	u8 index;
+@@ -2636,112 +2636,112 @@ static void _rtl8821ae_read_power_value_fromprom(struct ieee80211_hw *hw,
  
- 	rtl92c_phy_get_power_base(hw, ppowerlevel,
--				  channel, &powerBase0[0], &powerBase1[0]);
-+				  channel, &powerbase0[0], &powerbase1[0]);
+ 	rtl_priv(hw)->efuse.txpwr_fromeprom = true;
  
- 	for (index = 0; index < 6; index++) {
- 		_rtl92c_get_txpower_writeval_by_regulatory(hw,
- 							   channel, index,
--							   &powerBase0[0],
--							   &powerBase1[0],
--							   &writeVal[0]);
-+							   &powerbase0[0],
-+							   &powerbase1[0],
-+							   &writeval[0]);
- 
--		_rtl92c_write_ofdm_power_reg(hw, index, &writeVal[0]);
-+		_rtl92c_write_ofdm_power_reg(hw, index, &writeval[0]);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index 7557d23f56e2..58599d1f6bb8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -31,9 +31,9 @@ static void _rtl92cu_phy_param_tab_init(struct ieee80211_hw *hw)
- 	rtlphy->hwparam_tables[MAC_REG].pdata = RTL8192CUMAC_2T_ARRAY;
- 	if (IS_HIGHT_PA(rtlefuse->board_type)) {
- 		rtlphy->hwparam_tables[PHY_REG_PG].length =
--			RTL8192CUPHY_REG_Array_PG_HPLength;
-+			RTL8192CUPHY_REG_ARRAY_PG_HPLENGTH;
- 		rtlphy->hwparam_tables[PHY_REG_PG].pdata =
--			RTL8192CUPHY_REG_Array_PG_HP;
-+			RTL8192CUPHY_REG_ARRAY_PG_HP;
- 	} else {
- 		rtlphy->hwparam_tables[PHY_REG_PG].length =
- 			RTL8192CUPHY_REG_ARRAY_PGLENGTH;
-@@ -60,21 +60,21 @@ static void _rtl92cu_phy_param_tab_init(struct ieee80211_hw *hw)
- 	/* 1T */
- 	if (IS_HIGHT_PA(rtlefuse->board_type)) {
- 		rtlphy->hwparam_tables[PHY_REG_1T].length =
--			RTL8192CUPHY_REG_1T_HPArrayLength;
-+			RTL8192CUPHY_REG_1T_HPARRAYLENGTH;
- 		rtlphy->hwparam_tables[PHY_REG_1T].pdata =
--			RTL8192CUPHY_REG_1T_HPArray;
-+			RTL8192CUPHY_REG_1T_HPARRAY;
- 		rtlphy->hwparam_tables[RADIOA_1T].length =
--			RTL8192CURadioA_1T_HPArrayLength;
-+			RTL8192CURADIOA_1T_HPARRAYLENGTH;
- 		rtlphy->hwparam_tables[RADIOA_1T].pdata =
--			RTL8192CURadioA_1T_HPArray;
-+			RTL8192CURADIOA_1T_HPARRAY;
- 		rtlphy->hwparam_tables[RADIOB_1T].length =
- 			RTL8192CURADIOB_1TARRAYLENGTH;
- 		rtlphy->hwparam_tables[RADIOB_1T].pdata =
- 			RTL8192CU_RADIOB_1TARRAY;
- 		rtlphy->hwparam_tables[AGCTAB_1T].length =
--			RTL8192CUAGCTAB_1T_HPArrayLength;
-+			RTL8192CUAGCTAB_1T_HPARRAYLENGTH;
- 		rtlphy->hwparam_tables[AGCTAB_1T].pdata =
--			Rtl8192CUAGCTAB_1T_HPArray;
-+			RTL8192CUAGCTAB_1T_HPARRAY;
- 	} else {
- 		rtlphy->hwparam_tables[PHY_REG_1T].length =
- 			 RTL8192CUPHY_REG_1TARRAY_LENGTH;
-@@ -301,16 +301,16 @@ static void _rtl92cu_read_board_type(struct ieee80211_hw *hw, u8 *contents)
- {
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u8 boardType;
-+	u8 boardtype;
- 
- 	if (IS_NORMAL_CHIP(rtlhal->version)) {
--		boardType = ((contents[EEPROM_RF_OPT1]) &
-+		boardtype = ((contents[EEPROM_RF_OPT1]) &
- 			    BOARD_TYPE_NORMAL_MASK) >> 5; /*bit[7:5]*/
- 	} else {
--		boardType = contents[EEPROM_RF_OPT4];
--		boardType &= BOARD_TYPE_TEST_MASK;
-+		boardtype = contents[EEPROM_RF_OPT4];
-+		boardtype &= BOARD_TYPE_TEST_MASK;
- 	}
--	rtlefuse->board_type = boardType;
-+	rtlefuse->board_type = boardtype;
- 	if (IS_HIGHT_PA(rtlefuse->board_type))
- 		rtlefuse->external_pa = 1;
- 	pr_info("Board Type %x\n", rtlefuse->board_type);
-@@ -420,7 +420,7 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
- 	u16		value16;
- 	u8		value8;
- 	/*  polling autoload done. */
--	u32	pollingCount = 0;
-+	u32	pollingcount = 0;
- 
- 	do {
- 		if (rtl_read_byte(rtlpriv, REG_APS_FSMCO) & PFM_ALDN) {
-@@ -428,7 +428,7 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
- 				 "Autoload Done!\n");
- 			break;
+-	for (rfPath = 0 ; rfPath < MAX_RF_PATH ; rfPath++) {
++	for (rfpath = 0 ; rfpath < MAX_RF_PATH ; rfpath++) {
+ 		/*2.4G default value*/
+ 		for (group = 0 ; group < MAX_CHNL_GROUP_24G; group++) {
+-			pwrinfo24g->index_cck_base[rfPath][group] = hwinfo[eeAddr++];
+-			if (pwrinfo24g->index_cck_base[rfPath][group] == 0xFF)
+-				pwrinfo24g->index_cck_base[rfPath][group] = 0x2D;
++			pwrinfo24g->index_cck_base[rfpath][group] = hwinfo[eeaddr++];
++			if (pwrinfo24g->index_cck_base[rfpath][group] == 0xFF)
++				pwrinfo24g->index_cck_base[rfpath][group] = 0x2D;
  		}
--		if (pollingCount++ > 100) {
-+		if (pollingcount++ > 100) {
- 			pr_err("Failed to polling REG_APS_FSMCO[PFM_ALDN] done!\n");
- 			return -ENODEV;
+ 		for (group = 0 ; group < MAX_CHNL_GROUP_24G - 1; group++) {
+-			pwrinfo24g->index_bw40_base[rfPath][group] = hwinfo[eeAddr++];
+-			if (pwrinfo24g->index_bw40_base[rfPath][group] == 0xFF)
+-				pwrinfo24g->index_bw40_base[rfPath][group] = 0x2D;
++			pwrinfo24g->index_bw40_base[rfpath][group] = hwinfo[eeaddr++];
++			if (pwrinfo24g->index_bw40_base[rfpath][group] == 0xFF)
++				pwrinfo24g->index_bw40_base[rfpath][group] = 0x2D;
  		}
-@@ -452,7 +452,7 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
- 		rtl_write_byte(rtlpriv, REG_SYS_ISO_CTRL, value8);
- 	}
- 	/*  auto enable WLAN */
--	pollingCount = 0;
-+	pollingcount = 0;
- 	value16 = rtl_read_word(rtlpriv, REG_APS_FSMCO);
- 	value16 |= APFM_ONMAC;
- 	rtl_write_word(rtlpriv, REG_APS_FSMCO, value16);
-@@ -461,7 +461,7 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
- 			pr_info("MAC auto ON okay!\n");
- 			break;
- 		}
--		if (pollingCount++ > 1000) {
-+		if (pollingcount++ > 1000) {
- 			pr_err("Failed to polling REG_APS_FSMCO[APFM_ONMAC] done!\n");
- 			return -ENODEV;
- 		}
-@@ -473,12 +473,12 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
- 	value16 &= ~ISO_DIOR;
- 	rtl_write_word(rtlpriv, REG_SYS_ISO_CTRL, value16);
- 	/* Reconsider when to do this operation after asking HWSD. */
--	pollingCount = 0;
-+	pollingcount = 0;
- 	rtl_write_byte(rtlpriv, REG_APSD_CTRL, (rtl_read_byte(rtlpriv,
- 						REG_APSD_CTRL) & ~BIT(6)));
- 	do {
--		pollingCount++;
--	} while ((pollingCount < 200) &&
-+		pollingcount++;
-+	} while ((pollingcount < 200) &&
- 		 (rtl_read_byte(rtlpriv, REG_APSD_CTRL) & BIT(7)));
- 	/* Enable MAC DMA/WMAC/SCHEDULE/SEC block */
- 	value16 = rtl_read_word(rtlpriv,  REG_CR);
-@@ -495,60 +495,60 @@ static void _rtl92cu_init_queue_reserved_page(struct ieee80211_hw *hw,
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	bool isChipN = IS_NORMAL_CHIP(rtlhal->version);
--	u32 outEPNum = (u32)out_ep_num;
--	u32 numHQ = 0;
--	u32 numLQ = 0;
--	u32 numNQ = 0;
--	u32 numPubQ;
-+	bool ischipn = IS_NORMAL_CHIP(rtlhal->version);
-+	u32 outepnum = (u32)out_ep_num;
-+	u32 numhq = 0;
-+	u32 numlq = 0;
-+	u32 numnq = 0;
-+	u32 numpubq;
- 	u32 value32;
- 	u8 value8;
--	u32 txQPageNum, txQPageUnit, txQRemainPage;
-+	u32 txqpagenum, txqpageunit, txqremaininpage;
+-		for (TxCount = 0; TxCount < MAX_TX_COUNT; TxCount++) {
+-			if (TxCount == 0) {
+-				pwrinfo24g->bw40_diff[rfPath][TxCount] = 0;
++		for (txcount = 0; txcount < MAX_TX_COUNT; txcount++) {
++			if (txcount == 0) {
++				pwrinfo24g->bw40_diff[rfpath][txcount] = 0;
+ 				/*bit sign number to 8 bit sign number*/
+-				pwrinfo24g->bw20_diff[rfPath][TxCount] = (hwinfo[eeAddr] & 0xf0) >> 4;
+-				if (pwrinfo24g->bw20_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo24g->bw20_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo24g->bw20_diff[rfpath][txcount] = (hwinfo[eeaddr] & 0xf0) >> 4;
++				if (pwrinfo24g->bw20_diff[rfpath][txcount] & BIT(3))
++					pwrinfo24g->bw20_diff[rfpath][txcount] |= 0xF0;
+ 				/*bit sign number to 8 bit sign number*/
+-				pwrinfo24g->ofdm_diff[rfPath][TxCount] = (hwinfo[eeAddr] & 0x0f);
+-				if (pwrinfo24g->ofdm_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo24g->ofdm_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo24g->ofdm_diff[rfpath][txcount] = (hwinfo[eeaddr] & 0x0f);
++				if (pwrinfo24g->ofdm_diff[rfpath][txcount] & BIT(3))
++					pwrinfo24g->ofdm_diff[rfpath][txcount] |= 0xF0;
  
- 	if (!wmm_enable) {
--		numPubQ = (isChipN) ? CHIP_B_PAGE_NUM_PUBQ :
-+		numpubq = (ischipn) ? CHIP_B_PAGE_NUM_PUBQ :
- 			  CHIP_A_PAGE_NUM_PUBQ;
--		txQPageNum = TX_TOTAL_PAGE_NUMBER - numPubQ;
-+		txqpagenum = TX_TOTAL_PAGE_NUMBER - numpubq;
- 
--		txQPageUnit = txQPageNum/outEPNum;
--		txQRemainPage = txQPageNum % outEPNum;
-+		txqpageunit = txqpagenum / outepnum;
-+		txqremaininpage = txqpagenum % outepnum;
- 		if (queue_sel & TX_SELE_HQ)
--			numHQ = txQPageUnit;
-+			numhq = txqpageunit;
- 		if (queue_sel & TX_SELE_LQ)
--			numLQ = txQPageUnit;
-+			numlq = txqpageunit;
- 		/* HIGH priority queue always present in the configuration of
- 		 * 2 out-ep. Remainder pages have assigned to High queue */
--		if ((outEPNum > 1) && (txQRemainPage))
--			numHQ += txQRemainPage;
-+		if (outepnum > 1 && txqremaininpage)
-+			numhq += txqremaininpage;
- 		/* NOTE: This step done before writting REG_RQPN. */
--		if (isChipN) {
-+		if (ischipn) {
- 			if (queue_sel & TX_SELE_NQ)
--				numNQ = txQPageUnit;
--			value8 = (u8)_NPQ(numNQ);
-+				numnq = txqpageunit;
-+			value8 = (u8)_NPQ(numnq);
- 			rtl_write_byte(rtlpriv,  REG_RQPN_NPQ, value8);
- 		}
- 	} else {
- 		/* for WMM ,number of out-ep must more than or equal to 2! */
--		numPubQ = isChipN ? WMM_CHIP_B_PAGE_NUM_PUBQ :
-+		numpubq = ischipn ? WMM_CHIP_B_PAGE_NUM_PUBQ :
- 			  WMM_CHIP_A_PAGE_NUM_PUBQ;
- 		if (queue_sel & TX_SELE_HQ) {
--			numHQ = isChipN ? WMM_CHIP_B_PAGE_NUM_HPQ :
-+			numhq = ischipn ? WMM_CHIP_B_PAGE_NUM_HPQ :
- 				WMM_CHIP_A_PAGE_NUM_HPQ;
- 		}
- 		if (queue_sel & TX_SELE_LQ) {
--			numLQ = isChipN ? WMM_CHIP_B_PAGE_NUM_LPQ :
-+			numlq = ischipn ? WMM_CHIP_B_PAGE_NUM_LPQ :
- 				WMM_CHIP_A_PAGE_NUM_LPQ;
- 		}
- 		/* NOTE: This step done before writting REG_RQPN. */
--		if (isChipN) {
-+		if (ischipn) {
- 			if (queue_sel & TX_SELE_NQ)
--				numNQ = WMM_CHIP_B_PAGE_NUM_NPQ;
--			value8 = (u8)_NPQ(numNQ);
-+				numnq = WMM_CHIP_B_PAGE_NUM_NPQ;
-+			value8 = (u8)_NPQ(numnq);
- 			rtl_write_byte(rtlpriv, REG_RQPN_NPQ, value8);
- 		}
- 	}
- 	/* TX DMA */
--	value32 = _HPQ(numHQ) | _LPQ(numLQ) | _PUBQ(numPubQ) | LD_RQPN;
-+	value32 = _HPQ(numhq) | _LPQ(numlq) | _PUBQ(numpubq) | LD_RQPN;
- 	rtl_write_dword(rtlpriv, REG_RQPN, value32);
- }
- 
-@@ -575,20 +575,20 @@ static void _rtl92c_init_trx_buffer(struct ieee80211_hw *hw, bool wmm_enable)
- 	rtl_write_byte(rtlpriv, REG_PBP, value8);
- }
- 
--static void _rtl92c_init_chipN_reg_priority(struct ieee80211_hw *hw, u16 beQ,
--					    u16 bkQ, u16 viQ, u16 voQ,
--					    u16 mgtQ, u16 hiQ)
-+static void _rtl92c_init_chipn_reg_priority(struct ieee80211_hw *hw, u16 beq,
-+					    u16 bkq, u16 viq, u16 voq,
-+					    u16 mgtq, u16 hiq)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u16 value16 = (rtl_read_word(rtlpriv, REG_TRXDMA_CTRL) & 0x7);
- 
--	value16 |= _TXDMA_BEQ_MAP(beQ) | _TXDMA_BKQ_MAP(bkQ) |
--		   _TXDMA_VIQ_MAP(viQ) | _TXDMA_VOQ_MAP(voQ) |
--		   _TXDMA_MGQ_MAP(mgtQ) | _TXDMA_HIQ_MAP(hiQ);
-+	value16 |= _TXDMA_BEQ_MAP(beq) | _TXDMA_BKQ_MAP(bkq) |
-+		   _TXDMA_VIQ_MAP(viq) | _TXDMA_VOQ_MAP(voq) |
-+		   _TXDMA_MGQ_MAP(mgtq) | _TXDMA_HIQ_MAP(hiq);
- 	rtl_write_word(rtlpriv,  REG_TRXDMA_CTRL, value16);
- }
- 
--static void _rtl92cu_init_chipN_one_out_ep_priority(struct ieee80211_hw *hw,
-+static void _rtl92cu_init_chipn_one_out_ep_priority(struct ieee80211_hw *hw,
- 						    bool wmm_enable,
- 						    u8 queue_sel)
- {
-@@ -608,96 +608,96 @@ static void _rtl92cu_init_chipN_one_out_ep_priority(struct ieee80211_hw *hw,
- 		WARN_ON(1); /* Shall not reach here! */
- 		break;
- 	}
--	_rtl92c_init_chipN_reg_priority(hw, value, value, value, value,
-+	_rtl92c_init_chipn_reg_priority(hw, value, value, value, value,
- 					value, value);
- 	pr_info("Tx queue select: 0x%02x\n", queue_sel);
- }
- 
--static void _rtl92cu_init_chipN_two_out_ep_priority(struct ieee80211_hw *hw,
--								bool wmm_enable,
--								u8 queue_sel)
-+static void _rtl92cu_init_chipn_two_out_ep_priority(struct ieee80211_hw *hw,
-+						     bool wmm_enable,
-+						     u8 queue_sel)
- {
--	u16 beQ, bkQ, viQ, voQ, mgtQ, hiQ;
--	u16 uninitialized_var(valueHi);
--	u16 uninitialized_var(valueLow);
-+	u16 beq, bkq, viq, voq, mgtq, hiq;
-+	u16 uninitialized_var(valuehi);
-+	u16 uninitialized_var(valuelow);
- 
- 	switch (queue_sel) {
- 	case (TX_SELE_HQ | TX_SELE_LQ):
--		valueHi = QUEUE_HIGH;
--		valueLow = QUEUE_LOW;
-+		valuehi = QUEUE_HIGH;
-+		valuelow = QUEUE_LOW;
- 		break;
- 	case (TX_SELE_NQ | TX_SELE_LQ):
--		valueHi = QUEUE_NORMAL;
--		valueLow = QUEUE_LOW;
-+		valuehi = QUEUE_NORMAL;
-+		valuelow = QUEUE_LOW;
- 		break;
- 	case (TX_SELE_HQ | TX_SELE_NQ):
--		valueHi = QUEUE_HIGH;
--		valueLow = QUEUE_NORMAL;
-+		valuehi = QUEUE_HIGH;
-+		valuelow = QUEUE_NORMAL;
- 		break;
- 	default:
- 		WARN_ON(1);
- 		break;
- 	}
- 	if (!wmm_enable) {
--		beQ = valueLow;
--		bkQ = valueLow;
--		viQ = valueHi;
--		voQ = valueHi;
--		mgtQ = valueHi;
--		hiQ = valueHi;
-+		beq = valuelow;
-+		bkq = valuelow;
-+		viq = valuehi;
-+		voq = valuehi;
-+		mgtq = valuehi;
-+		hiq = valuehi;
- 	} else {/* for WMM ,CONFIG_OUT_EP_WIFI_MODE */
--		beQ = valueHi;
--		bkQ = valueLow;
--		viQ = valueLow;
--		voQ = valueHi;
--		mgtQ = valueHi;
--		hiQ = valueHi;
-+		beq = valuehi;
-+		bkq = valuelow;
-+		viq = valuelow;
-+		voq = valuehi;
-+		mgtq = valuehi;
-+		hiq = valuehi;
- 	}
--	_rtl92c_init_chipN_reg_priority(hw, beQ, bkQ, viQ, voQ, mgtQ, hiQ);
-+	_rtl92c_init_chipn_reg_priority(hw, beq, bkq, viq, voq, mgtq, hiq);
- 	pr_info("Tx queue select: 0x%02x\n", queue_sel);
- }
- 
--static void _rtl92cu_init_chipN_three_out_ep_priority(struct ieee80211_hw *hw,
-+static void _rtl92cu_init_chipn_three_out_ep_priority(struct ieee80211_hw *hw,
- 						      bool wmm_enable,
- 						      u8 queue_sel)
- {
--	u16 beQ, bkQ, viQ, voQ, mgtQ, hiQ;
-+	u16 beq, bkq, viq, voq, mgtq, hiq;
- 
- 	if (!wmm_enable) { /* typical setting */
--		beQ	= QUEUE_LOW;
--		bkQ	= QUEUE_LOW;
--		viQ	= QUEUE_NORMAL;
--		voQ	= QUEUE_HIGH;
--		mgtQ	= QUEUE_HIGH;
--		hiQ	= QUEUE_HIGH;
-+		beq	= QUEUE_LOW;
-+		bkq	= QUEUE_LOW;
-+		viq	= QUEUE_NORMAL;
-+		voq	= QUEUE_HIGH;
-+		mgtq	= QUEUE_HIGH;
-+		hiq	= QUEUE_HIGH;
- 	} else { /* for WMM */
--		beQ	= QUEUE_LOW;
--		bkQ	= QUEUE_NORMAL;
--		viQ	= QUEUE_NORMAL;
--		voQ	= QUEUE_HIGH;
--		mgtQ	= QUEUE_HIGH;
--		hiQ	= QUEUE_HIGH;
-+		beq	= QUEUE_LOW;
-+		bkq	= QUEUE_NORMAL;
-+		viq	= QUEUE_NORMAL;
-+		voq	= QUEUE_HIGH;
-+		mgtq	= QUEUE_HIGH;
-+		hiq	= QUEUE_HIGH;
- 	}
--	_rtl92c_init_chipN_reg_priority(hw, beQ, bkQ, viQ, voQ, mgtQ, hiQ);
-+	_rtl92c_init_chipn_reg_priority(hw, beq, bkq, viq, voq, mgtq, hiq);
- 	pr_info("Tx queue select :0x%02x..\n", queue_sel);
- }
- 
--static void _rtl92cu_init_chipN_queue_priority(struct ieee80211_hw *hw,
-+static void _rtl92cu_init_chipn_queue_priority(struct ieee80211_hw *hw,
- 					       bool wmm_enable,
- 					       u8 out_ep_num,
- 					       u8 queue_sel)
- {
- 	switch (out_ep_num) {
- 	case 1:
--		_rtl92cu_init_chipN_one_out_ep_priority(hw, wmm_enable,
-+		_rtl92cu_init_chipn_one_out_ep_priority(hw, wmm_enable,
- 							queue_sel);
- 		break;
- 	case 2:
--		_rtl92cu_init_chipN_two_out_ep_priority(hw, wmm_enable,
-+		_rtl92cu_init_chipn_two_out_ep_priority(hw, wmm_enable,
- 							queue_sel);
- 		break;
- 	case 3:
--		_rtl92cu_init_chipN_three_out_ep_priority(hw, wmm_enable,
-+		_rtl92cu_init_chipn_three_out_ep_priority(hw, wmm_enable,
- 							  queue_sel);
- 		break;
- 	default:
-@@ -706,7 +706,7 @@ static void _rtl92cu_init_chipN_queue_priority(struct ieee80211_hw *hw,
- 	}
- }
- 
--static void _rtl92cu_init_chipT_queue_priority(struct ieee80211_hw *hw,
-+static void _rtl92cu_init_chipt_queue_priority(struct ieee80211_hw *hw,
- 					       bool wmm_enable,
- 					       u8 out_ep_num,
- 					       u8 queue_sel)
-@@ -748,10 +748,10 @@ static void _rtl92cu_init_queue_priority(struct ieee80211_hw *hw,
- {
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	if (IS_NORMAL_CHIP(rtlhal->version))
--		_rtl92cu_init_chipN_queue_priority(hw, wmm_enable, out_ep_num,
-+		_rtl92cu_init_chipn_queue_priority(hw, wmm_enable, out_ep_num,
- 						   queue_sel);
- 	else
--		_rtl92cu_init_chipT_queue_priority(hw, wmm_enable, out_ep_num,
-+		_rtl92cu_init_chipt_queue_priority(hw, wmm_enable, out_ep_num,
- 						   queue_sel);
- }
- 
-@@ -867,10 +867,10 @@ void rtl92cu_enable_hw_security_config(struct ieee80211_hw *hw)
- 			 "not open sw encryption\n");
- 		return;
- 	}
--	sec_reg_value = SCR_TxEncEnable | SCR_RxDecEnable;
-+	sec_reg_value = SCR_TXENCENABLE | SCR_RXDECENABLE;
- 	if (rtlpriv->sec.use_defaultkey) {
--		sec_reg_value |= SCR_TxUseDK;
--		sec_reg_value |= SCR_RxUseDK;
-+		sec_reg_value |= SCR_TXUSEDK;
-+		sec_reg_value |= SCR_RXUSEDK;
- 	}
- 	if (IS_NORMAL_CHIP(rtlhal->version))
- 		sec_reg_value |= (SCR_RXBCUSEDK | SCR_TXBCUSEDK);
-@@ -899,7 +899,7 @@ static void _rtl92cu_hw_configure(struct ieee80211_hw *hw)
- 	rtl_write_byte(rtlpriv, REG_BCN_CTRL, (u8)rtlusb->reg_bcn_ctrl_val);
- }
- 
--static void _InitPABias(struct ieee80211_hw *hw)
-+static void _initpabias(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-@@ -995,14 +995,14 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
- 		rtl92c_phy_lc_calibrate(hw);
- 	}
- 	_rtl92cu_hw_configure(hw);
--	_InitPABias(hw);
-+	_initpabias(hw);
- 	rtl92c_dm_init(hw);
- exit:
- 	local_irq_restore(flags);
- 	return err;
- }
- 
--static void _DisableRFAFEAndResetBB(struct ieee80211_hw *hw)
-+static void disable_rfafeandresetbb(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- /**************************************
-@@ -1012,20 +1012,20 @@ c.	APSD_CTRL 0x600[7:0] = 0x40
- d.	SYS_FUNC_EN 0x02[7:0] = 0x16	reset BB state machine
- e.	SYS_FUNC_EN 0x02[7:0] = 0x14	reset BB state machine
- ***************************************/
--	u8 eRFPath = 0, value8 = 0;
-+	u8 erfpath = 0, value8 = 0;
- 	rtl_write_byte(rtlpriv, REG_TXPAUSE, 0xFF);
--	rtl_set_rfreg(hw, (enum radio_path)eRFPath, 0x0, MASKBYTE0, 0x0);
-+	rtl_set_rfreg(hw, (enum radio_path)erfpath, 0x0, MASKBYTE0, 0x0);
- 
- 	value8 |= APSDOFF;
- 	rtl_write_byte(rtlpriv, REG_APSD_CTRL, value8); /*0x40*/
- 	value8 = 0;
--	value8 |= (FEN_USBD | FEN_USBA | FEN_BB_GLB_RSTn);
-+	value8 |= (FEN_USBD | FEN_USBA | FEN_BB_GLB_RSTN);
- 	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN, value8);/*0x16*/
--	value8 &= (~FEN_BB_GLB_RSTn);
-+	value8 &= (~FEN_BB_GLB_RSTN);
- 	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN, value8); /*0x14*/
- }
- 
--static void  _ResetDigitalProcedure1(struct ieee80211_hw *hw, bool bWithoutHWSM)
-+static void  _resetdigitalprocedure1(struct ieee80211_hw *hw, bool withouthwsm)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-@@ -1076,7 +1076,7 @@ static void  _ResetDigitalProcedure1(struct ieee80211_hw *hw, bool bWithoutHWSM)
- 		rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN + 1, 0x54);
- 		rtl_write_byte(rtlpriv, REG_MCUFWDL, 0);
- 	}
--	if (bWithoutHWSM) {
-+	if (withouthwsm) {
- 		/*****************************
- 		  Without HW auto state machine
- 		g.SYS_CLKR 0x08[15:0] = 0x30A3		disable MAC clock
-@@ -1091,7 +1091,7 @@ static void  _ResetDigitalProcedure1(struct ieee80211_hw *hw, bool bWithoutHWSM)
- 	}
- }
- 
--static void _ResetDigitalProcedure2(struct ieee80211_hw *hw)
-+static void _resetdigitalprocedure2(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- /*****************************
-@@ -1103,7 +1103,7 @@ m. SYS_ISO_CTRL 0x01[7:0] = 0x83	isolated ELDR to PON
- 	rtl_write_byte(rtlpriv, REG_SYS_ISO_CTRL+1, 0x82);
- }
- 
--static void _DisableGPIO(struct ieee80211_hw *hw)
-+static void _disablegpio(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- /***************************************
-@@ -1133,13 +1133,13 @@ n. LEDCFG 0x4C[15:0] = 0x8080
- 	rtl_write_word(rtlpriv, REG_LEDCFG0, 0x8080);
- }
- 
--static void _DisableAnalog(struct ieee80211_hw *hw, bool bWithoutHWSM)
-+static void disable_analog(struct ieee80211_hw *hw, bool withouthwsm)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u16 value16 = 0;
- 	u8 value8 = 0;
- 
--	if (bWithoutHWSM) {
-+	if (withouthwsm) {
- 		/*****************************
- 		n. LDOA15_CTRL 0x20[7:0] = 0x04	 disable A15 power
- 		o. LDOV12D_CTRL 0x21[7:0] = 0x54 disable digital core power
-@@ -1162,30 +1162,30 @@ i. APS_FSMCO 0x04[15:0] = 0x4802	set USB suspend
- 	rtl_write_byte(rtlpriv, REG_RSV_CTRL, 0x0E);
- }
- 
--static void _CardDisableHWSM(struct ieee80211_hw *hw)
-+static void carddisable_hwsm(struct ieee80211_hw *hw)
- {
- 	/* ==== RF Off Sequence ==== */
--	_DisableRFAFEAndResetBB(hw);
-+	disable_rfafeandresetbb(hw);
- 	/* ==== Reset digital sequence   ====== */
--	_ResetDigitalProcedure1(hw, false);
-+	_resetdigitalprocedure1(hw, false);
- 	/*  ==== Pull GPIO PIN to balance level and LED control ====== */
--	_DisableGPIO(hw);
-+	_disablegpio(hw);
- 	/* ==== Disable analog sequence === */
--	_DisableAnalog(hw, false);
-+	disable_analog(hw, false);
- }
- 
--static void _CardDisableWithoutHWSM(struct ieee80211_hw *hw)
-+static void carddisablewithout_hwsm(struct ieee80211_hw *hw)
- {
- 	/*==== RF Off Sequence ==== */
--	_DisableRFAFEAndResetBB(hw);
-+	disable_rfafeandresetbb(hw);
- 	/*  ==== Reset digital sequence   ====== */
--	_ResetDigitalProcedure1(hw, true);
-+	_resetdigitalprocedure1(hw, true);
- 	/*  ==== Pull GPIO PIN to balance level and LED control ====== */
--	_DisableGPIO(hw);
-+	_disablegpio(hw);
- 	/*  ==== Reset digital sequence   ====== */
--	_ResetDigitalProcedure2(hw);
-+	_resetdigitalprocedure2(hw);
- 	/*  ==== Disable analog sequence === */
--	_DisableAnalog(hw, true);
-+	disable_analog(hw, true);
- }
- 
- static void _rtl92cu_set_bcn_ctrl_reg(struct ieee80211_hw *hw,
-@@ -1332,9 +1332,9 @@ void rtl92cu_card_disable(struct ieee80211_hw *hw)
- 	rtlpriv->cfg->ops->led_control(hw, LED_CTL_POWER_OFF);
- 	RT_SET_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
- 	if (rtlusb->disablehwsm)
--		_CardDisableHWSM(hw);
-+		carddisable_hwsm(hw);
- 	else
--		_CardDisableWithoutHWSM(hw);
-+		carddisablewithout_hwsm(hw);
- 
- 	/* after power off we should do iqk again */
- 	rtlpriv->phy.iqk_initialized = false;
-@@ -1476,12 +1476,12 @@ void rtl92cu_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		*((enum rf_pwrstate *)(val)) = ppsc->rfpwr_state;
- 		break;
- 	case HW_VAR_FWLPS_RF_ON:{
--			enum rf_pwrstate rfState;
-+			enum rf_pwrstate rfstate;
- 			u32 val_rcr;
- 
- 			rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RF_STATE,
--						      (u8 *)(&rfState));
--			if (rfState == ERFOFF) {
-+						      (u8 *)(&rfstate));
-+			if (rfstate == ERFOFF) {
- 				*((bool *) (val)) = true;
+-				pwrinfo24g->cck_diff[rfPath][TxCount] = 0;
+-				eeAddr++;
++				pwrinfo24g->cck_diff[rfpath][txcount] = 0;
++				eeaddr++;
  			} else {
- 				val_rcr = rtl_read_dword(rtlpriv, REG_RCR);
-@@ -1608,7 +1608,7 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 								&e_aci);
+-				pwrinfo24g->bw40_diff[rfPath][TxCount] = (hwinfo[eeAddr]&0xf0) >> 4;
+-				if (pwrinfo24g->bw40_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo24g->bw40_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo24g->bw40_diff[rfpath][txcount] = (hwinfo[eeaddr] & 0xf0) >> 4;
++				if (pwrinfo24g->bw40_diff[rfpath][txcount] & BIT(3))
++					pwrinfo24g->bw40_diff[rfpath][txcount] |= 0xF0;
+ 
+-				pwrinfo24g->bw20_diff[rfPath][TxCount] = (hwinfo[eeAddr] & 0x0f);
+-				if (pwrinfo24g->bw20_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo24g->bw20_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo24g->bw20_diff[rfpath][txcount] = (hwinfo[eeaddr] & 0x0f);
++				if (pwrinfo24g->bw20_diff[rfpath][txcount] & BIT(3))
++					pwrinfo24g->bw20_diff[rfpath][txcount] |= 0xF0;
+ 
+-				eeAddr++;
++				eeaddr++;
+ 
+-				pwrinfo24g->ofdm_diff[rfPath][TxCount] = (hwinfo[eeAddr] & 0xf0) >> 4;
+-				if (pwrinfo24g->ofdm_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo24g->ofdm_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo24g->ofdm_diff[rfpath][txcount] = (hwinfo[eeaddr] & 0xf0) >> 4;
++				if (pwrinfo24g->ofdm_diff[rfpath][txcount] & BIT(3))
++					pwrinfo24g->ofdm_diff[rfpath][txcount] |= 0xF0;
+ 
+-				pwrinfo24g->cck_diff[rfPath][TxCount] =	(hwinfo[eeAddr] & 0x0f);
+-				if (pwrinfo24g->cck_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo24g->cck_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo24g->cck_diff[rfpath][txcount] =	(hwinfo[eeaddr] & 0x0f);
++				if (pwrinfo24g->cck_diff[rfpath][txcount] & BIT(3))
++					pwrinfo24g->cck_diff[rfpath][txcount] |= 0xF0;
+ 
+-				eeAddr++;
++				eeaddr++;
+ 			}
+ 		}
+ 
+ 		/*5G default value*/
+ 		for (group = 0 ; group < MAX_CHNL_GROUP_5G; group++) {
+-			pwrinfo5g->index_bw40_base[rfPath][group] = hwinfo[eeAddr++];
+-			if (pwrinfo5g->index_bw40_base[rfPath][group] == 0xFF)
+-				pwrinfo5g->index_bw40_base[rfPath][group] = 0xFE;
++			pwrinfo5g->index_bw40_base[rfpath][group] = hwinfo[eeaddr++];
++			if (pwrinfo5g->index_bw40_base[rfpath][group] == 0xFF)
++				pwrinfo5g->index_bw40_base[rfpath][group] = 0xFE;
+ 		}
+ 
+-		for (TxCount = 0; TxCount < MAX_TX_COUNT; TxCount++) {
+-			if (TxCount == 0) {
+-				pwrinfo5g->bw40_diff[rfPath][TxCount] = 0;
++		for (txcount = 0; txcount < MAX_TX_COUNT; txcount++) {
++			if (txcount == 0) {
++				pwrinfo5g->bw40_diff[rfpath][txcount] = 0;
+ 
+-				pwrinfo5g->bw20_diff[rfPath][0] = (hwinfo[eeAddr] & 0xf0) >> 4;
+-				if (pwrinfo5g->bw20_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo5g->bw20_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo5g->bw20_diff[rfpath][0] = (hwinfo[eeaddr] & 0xf0) >> 4;
++				if (pwrinfo5g->bw20_diff[rfpath][txcount] & BIT(3))
++					pwrinfo5g->bw20_diff[rfpath][txcount] |= 0xF0;
+ 
+-				pwrinfo5g->ofdm_diff[rfPath][0] = (hwinfo[eeAddr] & 0x0f);
+-				if (pwrinfo5g->ofdm_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo5g->ofdm_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo5g->ofdm_diff[rfpath][0] = (hwinfo[eeaddr] & 0x0f);
++				if (pwrinfo5g->ofdm_diff[rfpath][txcount] & BIT(3))
++					pwrinfo5g->ofdm_diff[rfpath][txcount] |= 0xF0;
+ 
+-				eeAddr++;
++				eeaddr++;
  			} else {
- 				u8 sifstime = 0;
--				u8	u1bAIFS;
-+				u8	u1baifs;
+-				pwrinfo5g->bw40_diff[rfPath][TxCount] = (hwinfo[eeAddr] & 0xf0) >> 4;
+-				if (pwrinfo5g->bw40_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo5g->bw40_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo5g->bw40_diff[rfpath][txcount] = (hwinfo[eeaddr] & 0xf0) >> 4;
++				if (pwrinfo5g->bw40_diff[rfpath][txcount] & BIT(3))
++					pwrinfo5g->bw40_diff[rfpath][txcount] |= 0xF0;
  
- 				if (IS_WIRELESS_MODE_A(wirelessmode) ||
- 				    IS_WIRELESS_MODE_N_24G(wirelessmode) ||
-@@ -1616,15 +1616,15 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 					sifstime = 16;
- 				else
- 					sifstime = 10;
--				u1bAIFS = sifstime + (2 *  val[0]);
-+				u1baifs = sifstime + (2 *  val[0]);
- 				rtl_write_byte(rtlpriv, REG_EDCA_VO_PARAM,
--					       u1bAIFS);
-+					       u1baifs);
- 				rtl_write_byte(rtlpriv, REG_EDCA_VI_PARAM,
--					       u1bAIFS);
-+					       u1baifs);
- 				rtl_write_byte(rtlpriv, REG_EDCA_BE_PARAM,
--					       u1bAIFS);
-+					       u1baifs);
- 				rtl_write_byte(rtlpriv, REG_EDCA_BK_PARAM,
--					       u1bAIFS);
-+					       u1baifs);
- 			}
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.h
-index 988af26ae598..6ff52dc28d1c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.h
-@@ -49,14 +49,14 @@
- /* should be renamed and moved to another file */
- enum _BOARD_TYPE_8192CUSB {
- 	BOARD_USB_DONGLE		= 0,	/* USB dongle */
--	BOARD_USB_High_PA		= 1,	/* USB dongle - high power PA */
-+	BOARD_USB_HIGH_PA		= 1,	/* USB dongle - high power PA */
- 	BOARD_MINICARD			= 2,	/* Minicard */
- 	BOARD_USB_SOLO			= 3,	/* USB solo-Slim module */
- 	BOARD_USB_COMBO			= 4,	/* USB Combo-Slim module */
- };
+-				pwrinfo5g->bw20_diff[rfPath][TxCount] = (hwinfo[eeAddr] & 0x0f);
+-				if (pwrinfo5g->bw20_diff[rfPath][TxCount] & BIT(3))
+-					pwrinfo5g->bw20_diff[rfPath][TxCount] |= 0xF0;
++				pwrinfo5g->bw20_diff[rfpath][txcount] = (hwinfo[eeaddr] & 0x0f);
++				if (pwrinfo5g->bw20_diff[rfpath][txcount] & BIT(3))
++					pwrinfo5g->bw20_diff[rfpath][txcount] |= 0xF0;
  
- #define IS_HIGHT_PA(boardtype)		\
--	((boardtype == BOARD_USB_High_PA) ? true : false)
-+	((boardtype == BOARD_USB_HIGH_PA) ? true : false)
- 
- #define RTL92C_DRIVER_INFO_SIZE				4
- void rtl92cu_read_eeprom_info(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
-index 065f3c9267b7..436ba2baaa92 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
-@@ -14,7 +14,7 @@ static void _rtl92cu_init_led(struct ieee80211_hw *hw,
- 	pled->ledon = false;
- }
- 
--static void _rtl92cu_deInit_led(struct rtl_led *pled)
-+static void rtl92cu_deinit_led(struct rtl_led *pled)
- {
- }
- 
-@@ -88,8 +88,8 @@ void rtl92cu_deinit_sw_leds(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	_rtl92cu_deInit_led(&rtlpriv->ledctl.sw_led0);
--	_rtl92cu_deInit_led(&rtlpriv->ledctl.sw_led1);
-+	rtl92cu_deinit_led(&rtlpriv->ledctl.sw_led0);
-+	rtl92cu_deinit_led(&rtlpriv->ledctl.sw_led1);
- }
- 
- static void _rtl92cu_sw_led_control(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-index 87a0a200f846..09d0cd510cb8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-@@ -103,7 +103,7 @@ bool rtl92cu_phy_bb_config(struct ieee80211_hw *hw)
- 	rtl_write_byte(rtlpriv, REG_AFE_PLL_CTRL + 1, 0xdb);
- 	rtl_write_byte(rtlpriv, REG_RF_CTRL, RF_EN | RF_RSTB | RF_SDMRSTB);
- 	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN, FEN_USBA | FEN_USBD |
--		       FEN_BB_GLB_RSTn | FEN_BBRSTB);
-+		       FEN_BB_GLB_RSTN | FEN_BBRSTB);
- 	regval32 = rtl_read_dword(rtlpriv, 0x87c);
- 	rtl_write_dword(rtlpriv, 0x87c, regval32 & (~BIT(31)));
- 	rtl_write_byte(rtlpriv, REG_LDOHCI12_CTRL, 0x0f);
-@@ -121,7 +121,7 @@ bool _rtl92cu_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
- 	u32 arraylength;
- 	u32 *ptrarray;
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl819XMACPHY_Array\n");
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl819XMACPHY_ARRAY\n");
- 	arraylength =  rtlphy->hwparam_tables[MAC_REG].length ;
- 	ptrarray = rtlphy->hwparam_tables[MAC_REG].pdata;
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Img:RTL8192CUMAC_2T_ARRAY\n");
-@@ -159,7 +159,7 @@ bool _rtl92cu_phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
- 				      phy_regarray_table[i + 1]);
- 			udelay(1);
- 			RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--				 "The phy_regarray_table[0] is %x Rtl819XPHY_REGArray[1] is %x\n",
-+				 "The phy_regarray_table[0] is %x Rtl819XPHY_REGARRAY[1] is %x\n",
- 				 phy_regarray_table[i],
- 				 phy_regarray_table[i + 1]);
- 		}
-@@ -169,7 +169,7 @@ bool _rtl92cu_phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
- 				      agctab_array_table[i + 1]);
- 			udelay(1);
- 			RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--				 "The agctab_array_table[0] is %x Rtl819XPHY_REGArray[1] is %x\n",
-+				 "The agctab_array_table[0] is %x Rtl819XPHY_REGARRAY[1] is %x\n",
- 				 agctab_array_table[i],
- 				 agctab_array_table[i + 1]);
- 		}
-@@ -192,7 +192,7 @@ bool _rtl92cu_phy_config_bb_with_pgheaderfile(struct ieee80211_hw *hw,
- 	if (configtype == BASEBAND_CONFIG_PHY_REG) {
- 		for (i = 0; i < phy_regarray_pg_len; i = i + 3) {
- 			rtl_addr_delay(phy_regarray_table_pg[i]);
--			_rtl92c_store_pwrIndex_diffrate_offset(hw,
-+			_rtl92c_store_pwrindex_diffrate_offset(hw,
- 						  phy_regarray_table_pg[i],
- 						  phy_regarray_table_pg[i + 1],
- 						  phy_regarray_table_pg[i + 2]);
-@@ -386,14 +386,14 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		if ((ppsc->rfpwr_state == ERFOFF) &&
- 		    RT_IN_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC)) {
- 			bool rtstatus;
--			u32 InitializeCount = 0;
-+			u32 init_count = 0;
- 
- 			do {
--				InitializeCount++;
-+				init_count++;
- 				RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
- 					 "IPS Set eRf nic enable\n");
- 				rtstatus = rtl_ps_enable_nic(hw);
--			} while (!rtstatus && (InitializeCount < 10));
-+			} while (!rtstatus && (init_count < 10));
- 			RT_CLEAR_PS_LEVEL(ppsc,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-index 09fb3ced68b3..aa902fe54ffa 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-@@ -126,17 +126,17 @@ static void rtl92c_phy_get_power_base(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
--	u32 powerBase0, powerBase1;
-+	u32 powerbase0, powerbase1;
- 	u8 legacy_pwrdiff = 0, ht20_pwrdiff = 0;
- 	u8 i, powerlevel[2];
- 
- 	for (i = 0; i < 2; i++) {
- 		powerlevel[i] = ppowerlevel[i];
- 		legacy_pwrdiff = rtlefuse->txpwr_legacyhtdiff[i][channel - 1];
--		powerBase0 = powerlevel[i] + legacy_pwrdiff;
--		powerBase0 = (powerBase0 << 24) | (powerBase0 << 16) |
--		    (powerBase0 << 8) | powerBase0;
--		*(ofdmbase + i) = powerBase0;
-+		powerbase0 = powerlevel[i] + legacy_pwrdiff;
-+		powerbase0 = (powerbase0 << 24) | (powerbase0 << 16) |
-+		    (powerbase0 << 8) | powerbase0;
-+		*(ofdmbase + i) = powerbase0;
- 		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
- 			" [OFDM power base index rf(%c) = 0x%x]\n",
- 			i == 0 ? 'A' : 'B', *(ofdmbase + i));
-@@ -146,10 +146,10 @@ static void rtl92c_phy_get_power_base(struct ieee80211_hw *hw,
- 			ht20_pwrdiff = rtlefuse->txpwr_ht20diff[i][channel - 1];
- 			powerlevel[i] += ht20_pwrdiff;
- 		}
--		powerBase1 = powerlevel[i];
--		powerBase1 = (powerBase1 << 24) |
--		    (powerBase1 << 16) | (powerBase1 << 8) | powerBase1;
--		*(mcsbase + i) = powerBase1;
-+		powerbase1 = powerlevel[i];
-+		powerbase1 = (powerbase1 << 24) |
-+		    (powerbase1 << 16) | (powerbase1 << 8) | powerbase1;
-+		*(mcsbase + i) = powerbase1;
- 		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
- 			" [MCS power base index rf(%c) = 0x%x]\n",
- 			i == 0 ? 'A' : 'B', *(mcsbase + i));
-@@ -158,26 +158,26 @@ static void rtl92c_phy_get_power_base(struct ieee80211_hw *hw,
- 
- static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
- 						       u8 channel, u8 index,
--						       u32 *powerBase0,
--						       u32 *powerBase1,
-+						       u32 *powerbase0,
-+						       u32 *powerbase1,
- 						       u32 *p_outwriteval)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	u8 i, chnlgroup = 0, pwr_diff_limit[4];
--	u32 writeVal, customer_limit, rf;
-+	u32 writeval, customer_limit, rf;
- 
- 	for (rf = 0; rf < 2; rf++) {
- 		switch (rtlefuse->eeprom_regulatory) {
- 		case 0:
- 			chnlgroup = 0;
--			writeVal = rtlphy->mcs_offset
-+			writeval = rtlphy->mcs_offset
- 			    [chnlgroup][index + (rf ? 8 : 0)]
--			    + ((index < 2) ? powerBase0[rf] : powerBase1[rf]);
-+			    + ((index < 2) ? powerbase0[rf] : powerbase1[rf]);
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--				"RTK better performance,writeVal(%c) = 0x%x\n",
--				rf == 0 ? 'A' : 'B', writeVal);
-+				"RTK better performance,writeval(%c) = 0x%x\n",
-+				rf == 0 ? 'A' : 'B', writeval);
- 			break;
- 		case 1:
- 			if (rtlphy->pwrgroup_cnt == 1)
-@@ -195,20 +195,20 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
- 				else
- 					chnlgroup += 4;
- 			}
--			writeVal = rtlphy->mcs_offset[chnlgroup][index +
-+			writeval = rtlphy->mcs_offset[chnlgroup][index +
- 					(rf ? 8 : 0)] +
--					((index < 2) ? powerBase0[rf] :
--					powerBase1[rf]);
-+					((index < 2) ? powerbase0[rf] :
-+					powerbase1[rf]);
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--				"Realtek regulatory, 20MHz, writeVal(%c) = 0x%x\n",
--				rf == 0 ? 'A' : 'B', writeVal);
-+				"Realtek regulatory, 20MHz, writeval(%c) = 0x%x\n",
-+				rf == 0 ? 'A' : 'B', writeval);
- 			break;
- 		case 2:
--			writeVal = ((index < 2) ? powerBase0[rf] :
--				   powerBase1[rf]);
-+			writeval = ((index < 2) ? powerbase0[rf] :
-+				   powerbase1[rf]);
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--				"Better regulatory,writeVal(%c) = 0x%x\n",
--				rf == 0 ? 'A' : 'B', writeVal);
-+				"Better regulatory,writeval(%c) = 0x%x\n",
-+				rf == 0 ? 'A' : 'B', writeval);
- 			break;
- 		case 3:
- 			chnlgroup = 0;
-@@ -253,36 +253,36 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
- 				"Customer's limit rf(%c) = 0x%x\n",
- 				rf == 0 ? 'A' : 'B', customer_limit);
--			writeVal = customer_limit + ((index < 2) ?
--				   powerBase0[rf] : powerBase1[rf]);
-+			writeval = customer_limit + ((index < 2) ?
-+				   powerbase0[rf] : powerbase1[rf]);
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--				"Customer, writeVal rf(%c)= 0x%x\n",
--				rf == 0 ? 'A' : 'B', writeVal);
-+				"Customer, writeval rf(%c)= 0x%x\n",
-+				rf == 0 ? 'A' : 'B', writeval);
- 			break;
- 		default:
- 			chnlgroup = 0;
--			writeVal = rtlphy->mcs_offset[chnlgroup]
-+			writeval = rtlphy->mcs_offset[chnlgroup]
- 				   [index + (rf ? 8 : 0)] + ((index < 2) ?
--				   powerBase0[rf] : powerBase1[rf]);
-+				   powerbase0[rf] : powerbase1[rf]);
- 			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--				"RTK better performance, writeValrf(%c) = 0x%x\n",
--				rf == 0 ? 'A' : 'B', writeVal);
-+				"RTK better performance, writevalrf(%c) = 0x%x\n",
-+				rf == 0 ? 'A' : 'B', writeval);
- 			break;
- 		}
- 		if (rtlpriv->dm.dynamic_txhighpower_lvl ==
- 		    TXHIGHPWRLEVEL_LEVEL1)
--			writeVal = 0x14141414;
-+			writeval = 0x14141414;
- 		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
- 			 TXHIGHPWRLEVEL_LEVEL2)
--			writeVal = 0x00000000;
-+			writeval = 0x00000000;
- 		if (rtlpriv->dm.dynamic_txhighpower_lvl == TXHIGHPWRLEVEL_BT1)
--			writeVal = writeVal - 0x06060606;
--		*(p_outwriteval + rf) = writeVal;
-+			writeval = writeval - 0x06060606;
-+		*(p_outwriteval + rf) = writeval;
- 	}
- }
- 
- static void _rtl92c_write_ofdm_power_reg(struct ieee80211_hw *hw,
--					 u8 index, u32 *pValue)
-+					 u8 index, u32 *value)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-@@ -297,33 +297,33 @@ static void _rtl92c_write_ofdm_power_reg(struct ieee80211_hw *hw,
- 		RTXAGC_B_MCS11_MCS08, RTXAGC_B_MCS15_MCS12
- 	};
- 	u8 i, rf, pwr_val[4];
--	u32 writeVal;
-+	u32 writeval;
- 	u16 regoffset;
- 
- 	for (rf = 0; rf < 2; rf++) {
--		writeVal = pValue[rf];
-+		writeval = value[rf];
- 		for (i = 0; i < 4; i++) {
--			pwr_val[i] = (u8)((writeVal & (0x7f << (i * 8))) >>
-+			pwr_val[i] = (u8)((writeval & (0x7f << (i * 8))) >>
- 					  (i * 8));
- 			if (pwr_val[i] > RF6052_MAX_TX_PWR)
- 				pwr_val[i] = RF6052_MAX_TX_PWR;
- 		}
--		writeVal = (pwr_val[3] << 24) | (pwr_val[2] << 16) |
-+		writeval = (pwr_val[3] << 24) | (pwr_val[2] << 16) |
- 		    (pwr_val[1] << 8) | pwr_val[0];
- 		if (rf == 0)
- 			regoffset = regoffset_a[index];
- 		else
- 			regoffset = regoffset_b[index];
--		rtl_set_bbreg(hw, regoffset, MASKDWORD, writeVal);
-+		rtl_set_bbreg(hw, regoffset, MASKDWORD, writeval);
- 		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
--			"Set 0x%x = %08x\n", regoffset, writeVal);
-+			"Set 0x%x = %08x\n", regoffset, writeval);
- 		if (((get_rf_type(rtlphy) == RF_2T2R) &&
- 		     (regoffset == RTXAGC_A_MCS15_MCS12 ||
- 		      regoffset == RTXAGC_B_MCS15_MCS12)) ||
- 		    ((get_rf_type(rtlphy) != RF_2T2R) &&
- 		     (regoffset == RTXAGC_A_MCS07_MCS04 ||
- 		      regoffset == RTXAGC_B_MCS07_MCS04))) {
--			writeVal = pwr_val[3];
-+			writeval = pwr_val[3];
- 			if (regoffset == RTXAGC_A_MCS15_MCS12 ||
- 			    regoffset == RTXAGC_A_MCS07_MCS04)
- 				regoffset = 0xc90;
-@@ -332,13 +332,13 @@ static void _rtl92c_write_ofdm_power_reg(struct ieee80211_hw *hw,
- 				regoffset = 0xc98;
- 			for (i = 0; i < 3; i++) {
- 				if (i != 2)
--					writeVal = (writeVal > 8) ?
--						   (writeVal - 8) : 0;
-+					writeval = (writeval > 8) ?
-+						   (writeval - 8) : 0;
- 				else
--					writeVal = (writeVal > 6) ?
--						   (writeVal - 6) : 0;
-+					writeval = (writeval > 6) ?
-+						   (writeval - 6) : 0;
- 				rtl_write_byte(rtlpriv, (u32)(regoffset + i),
--					      (u8)writeVal);
-+					      (u8)writeval);
+-				eeAddr++;
++				eeaddr++;
  			}
  		}
- 	}
-@@ -347,18 +347,18 @@ static void _rtl92c_write_ofdm_power_reg(struct ieee80211_hw *hw,
- void rtl92cu_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
- 					 u8 *ppowerlevel, u8 channel)
- {
--	u32 writeVal[2], powerBase0[2], powerBase1[2];
-+	u32 writeval[2], powerbase0[2], powerbase1[2];
- 	u8 index = 0;
  
- 	rtl92c_phy_get_power_base(hw, ppowerlevel,
--				  channel, &powerBase0[0], &powerBase1[0]);
-+				  channel, &powerbase0[0], &powerbase1[0]);
- 	for (index = 0; index < 6; index++) {
- 		_rtl92c_get_txpower_writeval_by_regulatory(hw,
- 							   channel, index,
--							   &powerBase0[0],
--							   &powerBase1[0],
--							   &writeVal[0]);
--		_rtl92c_write_ofdm_power_reg(hw, index, &writeVal[0]);
-+							   &powerbase0[0],
-+							   &powerbase1[0],
-+							   &writeval[0]);
-+		_rtl92c_write_ofdm_power_reg(hw, index, &writeval[0]);
- 	}
- }
+-		pwrinfo5g->ofdm_diff[rfPath][1] =	(hwinfo[eeAddr] & 0xf0) >> 4;
+-		pwrinfo5g->ofdm_diff[rfPath][2] =	(hwinfo[eeAddr] & 0x0f);
++		pwrinfo5g->ofdm_diff[rfpath][1] =	(hwinfo[eeaddr] & 0xf0) >> 4;
++		pwrinfo5g->ofdm_diff[rfpath][2] =	(hwinfo[eeaddr] & 0x0f);
  
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.c
-index 468a896d89b8..2a9164cf7d6a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.c
-@@ -1247,7 +1247,7 @@ u32 RTL8192CUAGCTAB_1TARRAY[RTL8192CUAGCTAB_1TARRAYLENGTH] = {
- 	0xc78, 0x621f001e,
- };
+-		eeAddr++;
++		eeaddr++;
  
--u32 RTL8192CUPHY_REG_1T_HPArray[RTL8192CUPHY_REG_1T_HPArrayLength] = {
-+u32 RTL8192CUPHY_REG_1T_HPARRAY[RTL8192CUPHY_REG_1T_HPARRAYLENGTH] = {
- 	0x024, 0x0011800f,
- 	0x028, 0x00ffdb83,
- 	0x040, 0x000c0004,
-@@ -1439,7 +1439,7 @@ u32 RTL8192CUPHY_REG_1T_HPArray[RTL8192CUPHY_REG_1T_HPArrayLength] = {
- 	0xf00, 0x00000300,
- };
+-		pwrinfo5g->ofdm_diff[rfPath][3] = (hwinfo[eeAddr] & 0x0f);
++		pwrinfo5g->ofdm_diff[rfpath][3] = (hwinfo[eeaddr] & 0x0f);
  
--u32 RTL8192CUPHY_REG_Array_PG_HP[RTL8192CUPHY_REG_Array_PG_HPLength] = {
-+u32 RTL8192CUPHY_REG_ARRAY_PG_HP[RTL8192CUPHY_REG_ARRAY_PG_HPLENGTH] = {
- 	0xe00, 0xffffffff, 0x06080808,
- 	0xe04, 0xffffffff, 0x00040406,
- 	0xe08, 0x0000ff00, 0x00000000,
-@@ -1554,7 +1554,7 @@ u32 RTL8192CUPHY_REG_Array_PG_HP[RTL8192CUPHY_REG_Array_PG_HPLength] = {
- 	0x868, 0xffffffff, 0x00000000,
- };
+-		eeAddr++;
++		eeaddr++;
  
--u32 RTL8192CURadioA_1T_HPArray[RTL8192CURadioA_1T_HPArrayLength] = {
-+u32 RTL8192CURADIOA_1T_HPARRAY[RTL8192CURADIOA_1T_HPARRAYLENGTH] = {
- 	0x000, 0x00030159,
- 	0x001, 0x00031284,
- 	0x002, 0x00098000,
-@@ -1698,7 +1698,7 @@ u32 RTL8192CURadioA_1T_HPArray[RTL8192CURadioA_1T_HPArrayLength] = {
- 	0x000, 0x00030159,
- };
- 
--u32 Rtl8192CUAGCTAB_1T_HPArray[RTL8192CUAGCTAB_1T_HPArrayLength] = {
-+u32 RTL8192CUAGCTAB_1T_HPARRAY[RTL8192CUAGCTAB_1T_HPARRAYLENGTH] = {
- 	0xc78, 0x7b000001,
- 	0xc78, 0x7b010001,
- 	0xc78, 0x7b020001,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.h
-index 9a9805808541..9efe57ab7bc4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/table.h
-@@ -31,15 +31,15 @@ extern u32 RTL8192CUAGCTAB_2TARRAY[RTL8192CUAGCTAB_2TARRAYLENGTH];
- #define RTL8192CUAGCTAB_1TARRAYLENGTH	320
- extern u32 RTL8192CUAGCTAB_1TARRAY[RTL8192CUAGCTAB_1TARRAYLENGTH];
- 
--#define RTL8192CUPHY_REG_1T_HPArrayLength 378
--extern u32 RTL8192CUPHY_REG_1T_HPArray[RTL8192CUPHY_REG_1T_HPArrayLength];
-+#define RTL8192CUPHY_REG_1T_HPARRAYLENGTH 378
-+extern u32 RTL8192CUPHY_REG_1T_HPARRAY[RTL8192CUPHY_REG_1T_HPARRAYLENGTH];
- 
--#define RTL8192CUPHY_REG_Array_PG_HPLength 336
--extern u32 RTL8192CUPHY_REG_Array_PG_HP[RTL8192CUPHY_REG_Array_PG_HPLength];
-+#define RTL8192CUPHY_REG_ARRAY_PG_HPLENGTH 336
-+extern u32 RTL8192CUPHY_REG_ARRAY_PG_HP[RTL8192CUPHY_REG_ARRAY_PG_HPLENGTH];
- 
--#define RTL8192CURadioA_1T_HPArrayLength 282
--extern u32 RTL8192CURadioA_1T_HPArray[RTL8192CURadioA_1T_HPArrayLength];
--#define RTL8192CUAGCTAB_1T_HPArrayLength 320
--extern u32 Rtl8192CUAGCTAB_1T_HPArray[RTL8192CUAGCTAB_1T_HPArrayLength];
-+#define RTL8192CURADIOA_1T_HPARRAYLENGTH 282
-+extern u32 RTL8192CURADIOA_1T_HPARRAY[RTL8192CURADIOA_1T_HPARRAYLENGTH];
-+#define RTL8192CUAGCTAB_1T_HPARRAYLENGTH 320
-+extern u32 RTL8192CUAGCTAB_1T_HPARRAY[RTL8192CUAGCTAB_1T_HPARRAYLENGTH];
- 
- #endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-index be2330f3aec8..1e310a630db2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-@@ -14,7 +14,7 @@
- #include "trx.h"
- #include "../rtl8192c/fw_common.h"
- 
--static int _ConfigVerTOutEP(struct ieee80211_hw *hw)
-+static int configvertoutep(struct ieee80211_hw *hw)
- {
- 	u8 ep_cfg, txqsele;
- 	u8 ep_nums = 0;
-@@ -47,7 +47,7 @@ static int _ConfigVerTOutEP(struct ieee80211_hw *hw)
- 	return (rtlusb->out_ep_nums == ep_nums) ? 0 : -EINVAL;
- }
- 
--static int _ConfigVerNOutEP(struct ieee80211_hw *hw)
-+static int configvernoutep(struct ieee80211_hw *hw)
- {
- 	u8 ep_cfg;
- 	u8 ep_nums = 0;
-@@ -76,7 +76,7 @@ static int _ConfigVerNOutEP(struct ieee80211_hw *hw)
- 	return (rtlusb->out_ep_nums == ep_nums) ? 0 : -EINVAL;
- }
- 
--static void _TwoOutEpMapping(struct ieee80211_hw *hw, bool bIsChipB,
-+static void twooutepmapping(struct ieee80211_hw *hw, bool is_chip8,
- 			     bool  bwificfg, struct rtl_ep_map *ep_map)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -104,7 +104,7 @@ static void _TwoOutEpMapping(struct ieee80211_hw *hw, bool bIsChipB,
- 	}
- }
- 
--static void _ThreeOutEpMapping(struct ieee80211_hw *hw, bool  bwificfg,
-+static void threeoutepmapping(struct ieee80211_hw *hw, bool  bwificfg,
- 			       struct rtl_ep_map *ep_map)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -131,7 +131,7 @@ static void _ThreeOutEpMapping(struct ieee80211_hw *hw, bool  bwificfg,
- 	}
- }
- 
--static void _OneOutEpMapping(struct ieee80211_hw *hw, struct rtl_ep_map *ep_map)
-+static void oneoutepmapping(struct ieee80211_hw *hw, struct rtl_ep_map *ep_map)
- {
- 	ep_map->ep_mapping[RTL_TXQ_BE]	= 2;
- 	ep_map->ep_mapping[RTL_TXQ_BK]	= 2;
-@@ -144,27 +144,27 @@ static void _OneOutEpMapping(struct ieee80211_hw *hw, struct rtl_ep_map *ep_map)
- static int _out_ep_mapping(struct ieee80211_hw *hw)
- {
- 	int err = 0;
--	bool bIsChipN, bwificfg = false;
-+	bool ischipn, bwificfg = false;
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
- 	struct rtl_ep_map *ep_map = &(rtlusb->ep_map);
- 
--	bIsChipN = IS_NORMAL_CHIP(rtlhal->version);
-+	ischipn = IS_NORMAL_CHIP(rtlhal->version);
- 	switch (rtlusb->out_ep_nums) {
- 	case 2:
--		_TwoOutEpMapping(hw, bIsChipN, bwificfg, ep_map);
-+		twooutepmapping(hw, ischipn, bwificfg, ep_map);
- 		break;
- 	case 3:
- 		/* Test chip doesn't support three out EPs. */
--		if (!bIsChipN) {
-+		if (!ischipn) {
- 			err  =  -EINVAL;
- 			goto err_out;
+-		for (TxCount = 1; TxCount < MAX_TX_COUNT; TxCount++) {
+-			if (pwrinfo5g->ofdm_diff[rfPath][TxCount] & BIT(3))
+-				pwrinfo5g->ofdm_diff[rfPath][TxCount] |= 0xF0;
++		for (txcount = 1; txcount < MAX_TX_COUNT; txcount++) {
++			if (pwrinfo5g->ofdm_diff[rfpath][txcount] & BIT(3))
++				pwrinfo5g->ofdm_diff[rfpath][txcount] |= 0xF0;
  		}
--		_ThreeOutEpMapping(hw, bIsChipN, ep_map);
-+		threeoutepmapping(hw, ischipn, ep_map);
- 		break;
- 	case 1:
--		_OneOutEpMapping(hw, ep_map);
-+		oneoutepmapping(hw, ep_map);
- 		break;
- 	default:
- 		err  =  -EINVAL;
-@@ -180,9 +180,9 @@ int  rtl8192cu_endpoint_mapping(struct ieee80211_hw *hw)
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	int error = 0;
- 	if (likely(IS_NORMAL_CHIP(rtlhal->version)))
--		error = _ConfigVerNOutEP(hw);
-+		error = configvernoutep(hw);
- 	else
--		error = _ConfigVerTOutEP(hw);
-+		error = configvertoutep(hw);
- 	if (error)
- 		goto err_out;
- 	error = _out_ep_mapping(hw);
-@@ -588,28 +588,28 @@ void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
- 	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "==>\n");
- }
+-		for (TxCount = 0; TxCount < MAX_TX_COUNT; TxCount++) {
+-			pwrinfo5g->bw80_diff[rfPath][TxCount] =	(hwinfo[eeAddr] & 0xf0) >> 4;
++		for (txcount = 0; txcount < MAX_TX_COUNT; txcount++) {
++			pwrinfo5g->bw80_diff[rfpath][txcount] =	(hwinfo[eeaddr] & 0xf0) >> 4;
+ 			/* 4bit sign number to 8 bit sign number */
+-			if (pwrinfo5g->bw80_diff[rfPath][TxCount] & BIT(3))
+-				pwrinfo5g->bw80_diff[rfPath][TxCount] |= 0xF0;
++			if (pwrinfo5g->bw80_diff[rfpath][txcount] & BIT(3))
++				pwrinfo5g->bw80_diff[rfpath][txcount] |= 0xF0;
+ 			/* 4bit sign number to 8 bit sign number */
+-			pwrinfo5g->bw160_diff[rfPath][TxCount] = (hwinfo[eeAddr] & 0x0f);
+-			if (pwrinfo5g->bw160_diff[rfPath][TxCount] & BIT(3))
+-				pwrinfo5g->bw160_diff[rfPath][TxCount] |= 0xF0;
++			pwrinfo5g->bw160_diff[rfpath][txcount] = (hwinfo[eeaddr] & 0x0f);
++			if (pwrinfo5g->bw160_diff[rfpath][txcount] & BIT(3))
++				pwrinfo5g->bw160_diff[rfpath][txcount] |= 0xF0;
  
--void rtl92cu_fill_fake_txdesc(struct ieee80211_hw *hw, u8 * pDesc,
--			      u32 buffer_len, bool bIsPsPoll)
-+void rtl92cu_fill_fake_txdesc(struct ieee80211_hw *hw, u8 *pdesc,
-+			      u32 buffer_len, bool is_pspoll)
- {
- 	/* Clear all status */
--	memset(pDesc, 0, RTL_TX_HEADER_SIZE);
--	SET_TX_DESC_FIRST_SEG(pDesc, 1); /* bFirstSeg; */
--	SET_TX_DESC_LAST_SEG(pDesc, 1); /* bLastSeg; */
--	SET_TX_DESC_OFFSET(pDesc, RTL_TX_HEADER_SIZE); /* Offset = 32 */
--	SET_TX_DESC_PKT_SIZE(pDesc, buffer_len); /* Buffer size + command hdr */
--	SET_TX_DESC_QUEUE_SEL(pDesc, QSLT_MGNT); /* Fixed queue of Mgnt queue */
-+	memset(pdesc, 0, RTL_TX_HEADER_SIZE);
-+	SET_TX_DESC_FIRST_SEG(pdesc, 1); /* bFirstSeg; */
-+	SET_TX_DESC_LAST_SEG(pdesc, 1); /* bLastSeg; */
-+	SET_TX_DESC_OFFSET(pdesc, RTL_TX_HEADER_SIZE); /* Offset = 32 */
-+	SET_TX_DESC_PKT_SIZE(pdesc, buffer_len); /* Buffer size + command hdr */
-+	SET_TX_DESC_QUEUE_SEL(pdesc, QSLT_MGNT); /* Fixed queue of Mgnt queue */
- 	/* Set NAVUSEHDR to prevent Ps-poll AId filed to be changed to error
- 	 * vlaue by Hw. */
--	if (bIsPsPoll) {
--		SET_TX_DESC_NAV_USE_HDR(pDesc, 1);
-+	if (is_pspoll) {
-+		SET_TX_DESC_NAV_USE_HDR(pdesc, 1);
- 	} else {
--		SET_TX_DESC_HWSEQ_EN(pDesc, 1); /* Hw set sequence number */
--		SET_TX_DESC_PKT_ID(pDesc, 0x100); /* set bit3 to 1. */
-+		SET_TX_DESC_HWSEQ_EN(pdesc, 1); /* Hw set sequence number */
-+		SET_TX_DESC_PKT_ID(pdesc, 0x100); /* set bit3 to 1. */
+-			eeAddr++;
++			eeaddr++;
+ 		}
  	}
--	SET_TX_DESC_USE_RATE(pDesc, 1); /* use data rate which is set by Sw */
--	SET_TX_DESC_OWN(pDesc, 1);
--	SET_TX_DESC_TX_RATE(pDesc, DESC_RATE1M);
--	_rtl_tx_desc_checksum(pDesc);
-+	SET_TX_DESC_USE_RATE(pdesc, 1); /* use data rate which is set by Sw */
-+	SET_TX_DESC_OWN(pdesc, 1);
-+	SET_TX_DESC_TX_RATE(pdesc, DESC_RATE1M);
-+	_rtl_tx_desc_checksum(pdesc);
+ }
+@@ -2908,8 +2908,8 @@ static void _rtl8812ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 
+ 	if (!autoload_fail) {
+-		rtlhal->pa_type_2g = hwinfo[0xBC];
+-		rtlhal->lna_type_2g = hwinfo[0xBD];
++		rtlhal->pa_type_2g = hwinfo[0XBC];
++		rtlhal->lna_type_2g = hwinfo[0XBD];
+ 		if (rtlhal->pa_type_2g == 0xFF && rtlhal->lna_type_2g == 0xFF) {
+ 			rtlhal->pa_type_2g = 0;
+ 			rtlhal->lna_type_2g = 0;
+@@ -2921,8 +2921,8 @@ static void _rtl8812ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
+ 					   (rtlhal->lna_type_2g & BIT(3))) ?
+ 					  1 : 0;
+ 
+-		rtlhal->pa_type_5g = hwinfo[0xBC];
+-		rtlhal->lna_type_5g = hwinfo[0xBF];
++		rtlhal->pa_type_5g = hwinfo[0XBC];
++		rtlhal->lna_type_5g = hwinfo[0XBF];
+ 		if (rtlhal->pa_type_5g == 0xFF && rtlhal->lna_type_5g == 0xFF) {
+ 			rtlhal->pa_type_5g = 0;
+ 			rtlhal->lna_type_5g = 0;
+@@ -2947,18 +2947,18 @@ static void _rtl8812ae_read_amplifier_type(struct ieee80211_hw *hw, u8 *hwinfo,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 
+-	u8 ext_type_pa_2g_a  = (hwinfo[0xBD] & BIT(2))      >> 2; /* 0xBD[2] */
+-	u8 ext_type_pa_2g_b  = (hwinfo[0xBD] & BIT(6))      >> 6; /* 0xBD[6] */
+-	u8 ext_type_pa_5g_a  = (hwinfo[0xBF] & BIT(2))      >> 2; /* 0xBF[2] */
+-	u8 ext_type_pa_5g_b  = (hwinfo[0xBF] & BIT(6))      >> 6; /* 0xBF[6] */
+-	/* 0xBD[1:0] */
+-	u8 ext_type_lna_2g_a = (hwinfo[0xBD] & (BIT(1) | BIT(0))) >> 0;
+-	/* 0xBD[5:4] */
+-	u8 ext_type_lna_2g_b = (hwinfo[0xBD] & (BIT(5) | BIT(4))) >> 4;
+-	/* 0xBF[1:0] */
+-	u8 ext_type_lna_5g_a = (hwinfo[0xBF] & (BIT(1) | BIT(0))) >> 0;
+-	/* 0xBF[5:4] */
+-	u8 ext_type_lna_5g_b = (hwinfo[0xBF] & (BIT(5) | BIT(4))) >> 4;
++	u8 ext_type_pa_2g_a  = (hwinfo[0XBD] & BIT(2))      >> 2; /* 0XBD[2] */
++	u8 ext_type_pa_2g_b  = (hwinfo[0XBD] & BIT(6))      >> 6; /* 0XBD[6] */
++	u8 ext_type_pa_5g_a  = (hwinfo[0XBF] & BIT(2))      >> 2; /* 0XBF[2] */
++	u8 ext_type_pa_5g_b  = (hwinfo[0XBF] & BIT(6))      >> 6; /* 0XBF[6] */
++	/* 0XBD[1:0] */
++	u8 ext_type_lna_2g_a = (hwinfo[0XBD] & (BIT(1) | BIT(0))) >> 0;
++	/* 0XBD[5:4] */
++	u8 ext_type_lna_2g_b = (hwinfo[0XBD] & (BIT(5) | BIT(4))) >> 4;
++	/* 0XBF[1:0] */
++	u8 ext_type_lna_5g_a = (hwinfo[0XBF] & (BIT(1) | BIT(0))) >> 0;
++	/* 0XBF[5:4] */
++	u8 ext_type_lna_5g_b = (hwinfo[0XBF] & (BIT(5) | BIT(4))) >> 4;
+ 
+ 	_rtl8812ae_read_pa_type(hw, hwinfo, autoload_fail);
+ 
+@@ -2986,8 +2986,8 @@ static void _rtl8821ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 
+ 	if (!autoload_fail) {
+-		rtlhal->pa_type_2g = hwinfo[0xBC];
+-		rtlhal->lna_type_2g = hwinfo[0xBD];
++		rtlhal->pa_type_2g = hwinfo[0XBC];
++		rtlhal->lna_type_2g = hwinfo[0XBD];
+ 		if (rtlhal->pa_type_2g == 0xFF && rtlhal->lna_type_2g == 0xFF) {
+ 			rtlhal->pa_type_2g = 0;
+ 			rtlhal->lna_type_2g = 0;
+@@ -2995,8 +2995,8 @@ static void _rtl8821ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
+ 		rtlhal->external_pa_2g = (rtlhal->pa_type_2g & BIT(5)) ? 1 : 0;
+ 		rtlhal->external_lna_2g = (rtlhal->lna_type_2g & BIT(7)) ? 1 : 0;
+ 
+-		rtlhal->pa_type_5g = hwinfo[0xBC];
+-		rtlhal->lna_type_5g = hwinfo[0xBF];
++		rtlhal->pa_type_5g = hwinfo[0XBC];
++		rtlhal->lna_type_5g = hwinfo[0XBF];
+ 		if (rtlhal->pa_type_5g == 0xFF && rtlhal->lna_type_5g == 0xFF) {
+ 			rtlhal->pa_type_5g = 0;
+ 			rtlhal->lna_type_5g = 0;
+@@ -4011,10 +4011,10 @@ void rtl8821ae_add_wowlan_pattern(struct ieee80211_hw *hw,
+ 	rtl_write_byte(rtlpriv, REG_PKT_BUFF_ACCESS_CTRL, RXPKT_BUF_SELECT);
+ 	for (addr = 0; addr < WKFMCAM_ADDR_NUM; addr++) {
+ 		/* Set Rx packet buffer offset.
+-		 * RxBufer pointer increases 1,
++		 * RXBufer pointer increases 1,
+ 		 * we can access 8 bytes in Rx packet buffer.
+ 		 * CAM start offset (unit: 1 byte) =  index*WKFMCAM_SIZE
+-		 * RxBufer addr = (CAM start offset +
++		 * RXBufer addr = (CAM start offset +
+ 		 *                 per entry offset of a WKFM CAM)/8
+ 		 *	* index: The index of the wake up frame mask
+ 		 *	* WKFMCAM_SIZE: the total size of one WKFM CAM
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+index 7524aad020f4..b0b1dad95dbe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+@@ -453,7 +453,7 @@ u32 phy_get_tx_swing_8812A(struct ieee80211_hw *hw, u8	band,
+ 	const s8 auto_temp = -1;
+ 
+ 	RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
+-		 "===> PHY_GetTxBBSwing_8812A, bbSwing_2G: %d, bbSwing_5G: %d,autoload_failflag=%d.\n",
++		 "===> PHY_GetTXBBSwing_8812A, bbSwing_2G: %d, bbSwing_5G: %d,autoload_failflag=%d.\n",
+ 		 (int)swing_2g, (int)swing_5g,
+ 		 (int)rtlefuse->autoload_failflag);
+ 
+@@ -534,7 +534,7 @@ u32 phy_get_tx_swing_8812A(struct ieee80211_hw *hw, u8	band,
+ 		swing_a = (swing & 0x3) >> 0; /* 0xC6/C7[1:0] */
+ 		swing_b = (swing & 0xC) >> 2; /* 0xC6/C7[3:2] */
+ 		RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
+-			 "===> PHY_GetTxBBSwing_8812A, swingA: 0x%X, swingB: 0x%X\n",
++			 "===> PHY_GetTXBBSwing_8812A, swingA: 0x%X, swingB: 0x%X\n",
+ 			 swing_a, swing_b);
+ 
+ 		/* 3 Path-A */
+@@ -592,7 +592,7 @@ u32 phy_get_tx_swing_8812A(struct ieee80211_hw *hw, u8	band,
+ 	}
+ 
+ 	RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
+-		 "<=== PHY_GetTxBBSwing_8812A, out = 0x%X\n", out);
++		 "<=== PHY_GetTXBBSwing_8812A, out = 0x%X\n", out);
+ 	return out;
  }
  
- void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
-index 21038540a5b2..cc9b26830cc7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
-@@ -375,8 +375,8 @@ void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
- 			  struct sk_buff *skb,
- 			  u8 queue_index,
- 			  struct rtl_tcb_desc *tcb_desc);
--void rtl92cu_fill_fake_txdesc(struct ieee80211_hw *hw, u8 * pDesc,
--			      u32 buffer_len, bool bIsPsPoll);
-+void rtl92cu_fill_fake_txdesc(struct ieee80211_hw *hw, u8 *pdesc,
-+			       u32 buffer_len, bool ispspoll);
- void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
- 			     u8 *pdesc, bool b_firstseg,
- 			     bool b_lastseg, struct sk_buff *skb);
+@@ -1056,52 +1056,52 @@ static void _rtl8821ae_phy_store_txpower_by_rate_base(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
+-	u16 rawValue = 0;
++	u16 rawvalue = 0;
+ 	u8 base = 0, path = 0;
+ 
+ 	for (path = RF90_PATH_A; path <= RF90_PATH_B; ++path) {
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_1TX][0] >> 24) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_1TX][0] >> 24) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_2_4G, path, CCK, RF_1TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_1TX][2] >> 24) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_1TX][2] >> 24) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_2_4G, path, OFDM, RF_1TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_1TX][4] >> 24) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_1TX][4] >> 24) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_2_4G, path, HT_MCS0_MCS7, RF_1TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_2TX][6] >> 24) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_2TX][6] >> 24) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_2_4G, path, HT_MCS8_MCS15, RF_2TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_1TX][8] >> 24) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_1TX][8] >> 24) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_2_4G, path, VHT_1SSMCS0_1SSMCS9, RF_1TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_2TX][11] >> 8) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][path][RF_2TX][11] >> 8) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_2_4G, path, VHT_2SSMCS0_2SSMCS9, RF_2TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_1TX][2] >> 24) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_1TX][2] >> 24) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_5G, path, OFDM, RF_1TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_1TX][4] >> 24) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_1TX][4] >> 24) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_5G, path, HT_MCS0_MCS7, RF_1TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_2TX][6] >> 24) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_2TX][6] >> 24) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_5G, path, HT_MCS8_MCS15, RF_2TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_1TX][8] >> 24) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_1TX][8] >> 24) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_5G, path, VHT_1SSMCS0_1SSMCS9, RF_1TX, base);
+ 
+-		rawValue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_2TX][11] >> 8) & 0xFF;
+-		base = (rawValue >> 4) * 10 + (rawValue & 0xF);
++		rawvalue = (u16)(rtlphy->tx_power_by_rate_offset[BAND_ON_5G][path][RF_2TX][11] >> 8) & 0xFF;
++		base = (rawvalue >> 4) * 10 + (rawvalue & 0xF);
+ 		_rtl8821ae_phy_set_txpower_by_rate_base(hw, BAND_ON_5G, path, VHT_2SSMCS0_2SSMCS9, RF_2TX, base);
+ 	}
+ }
+@@ -1358,7 +1358,7 @@ static void _rtl8812ae_phy_convert_txpower_limit_to_power_index(struct ieee80211
+ 						}
+ 
+ 						RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-							"TxPwrLimit_2_4G[regulation %d][bw %d][rateSection %d][channel %d] = %d\n(TxPwrLimit in dBm %d - BW40PwrLmt2_4G[channel %d][rfPath %d] %d)\n",
++							"TxPwrLimit_2_4G[regulation %d][bw %d][rateSection %d][channel %d] = %d\n(TxPwrLimit in dBm %d - BW40PwrLmt2_4G[channel %d][rfpath %d] %d)\n",
+ 							regulation, bw, rate_section, channel,
+ 							rtlphy->txpwr_limit_2_4g[regulation][bw]
+ 							[rate_section][channel][rf_path], (temp_pwrlmt == 63)
+@@ -1423,7 +1423,7 @@ static void _rtl8812ae_phy_convert_txpower_limit_to_power_index(struct ieee80211
+ 						}
+ 
+ 						RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-							"TxPwrLimit_5G[regulation %d][bw %d][rateSection %d][channel %d] =%d\n(TxPwrLimit in dBm %d - BW40PwrLmt5G[chnl group %d][rfPath %d] %d)\n",
++							"TxPwrLimit_5G[regulation %d][bw %d][rateSection %d][channel %d] =%d\n(TxPwrLimit in dBm %d - BW40PwrLmt5G[chnl group %d][rfpath %d] %d)\n",
+ 							regulation, bw, rate_section,
+ 							channel, rtlphy->txpwr_limit_5g[regulation]
+ 							[bw][rate_section][channel][rf_path],
+@@ -1473,106 +1473,106 @@ static void _rtl8821ae_phy_convert_txpower_dbm_to_relative_value(struct ieee8021
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
+-	u8 base = 0, rfPath = 0;
++	u8 base = 0, rfpath = 0;
+ 
+-	for (rfPath = RF90_PATH_A; rfPath <= RF90_PATH_B; ++rfPath) {
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfPath, RF_1TX, CCK);
++	for (rfpath = RF90_PATH_A; rfpath <= RF90_PATH_B; ++rfpath) {
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfpath, RF_1TX, CCK);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_1TX][0],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_1TX][0],
+ 			0, 3, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfPath, RF_1TX, OFDM);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfpath, RF_1TX, OFDM);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_1TX][1],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_1TX][1],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_1TX][2],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_1TX][2],
+ 			0, 3, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfPath, RF_1TX, HT_MCS0_MCS7);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfpath, RF_1TX, HT_MCS0_MCS7);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_1TX][3],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_1TX][3],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_1TX][4],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_1TX][4],
+ 			0, 3, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfPath, RF_2TX, HT_MCS8_MCS15);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfpath, RF_2TX, HT_MCS8_MCS15);
+ 
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_2TX][5],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_2TX][5],
+ 			0, 3, base);
+ 
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_2TX][6],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_2TX][6],
+ 			0, 3, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfPath, RF_1TX, VHT_1SSMCS0_1SSMCS9);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfpath, RF_1TX, VHT_1SSMCS0_1SSMCS9);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_1TX][7],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_1TX][7],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_1TX][8],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_1TX][8],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_1TX][9],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_1TX][9],
+ 			0, 1, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfPath, RF_2TX, VHT_2SSMCS0_2SSMCS9);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_2_4G, rfpath, RF_2TX, VHT_2SSMCS0_2SSMCS9);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_1TX][9],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_1TX][9],
+ 			2, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_2TX][10],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_2TX][10],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfPath][RF_2TX][11],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_2_4G][rfpath][RF_2TX][11],
+ 			0, 3, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfPath, RF_1TX, OFDM);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfpath, RF_1TX, OFDM);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_1TX][1],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_1TX][1],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_1TX][2],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_1TX][2],
+ 			0, 3, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfPath, RF_1TX, HT_MCS0_MCS7);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfpath, RF_1TX, HT_MCS0_MCS7);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_1TX][3],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_1TX][3],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_1TX][4],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_1TX][4],
+ 			0, 3, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfPath, RF_2TX, HT_MCS8_MCS15);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfpath, RF_2TX, HT_MCS8_MCS15);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_2TX][5],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_2TX][5],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_2TX][6],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_2TX][6],
+ 			0, 3, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfPath, RF_1TX, VHT_1SSMCS0_1SSMCS9);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfpath, RF_1TX, VHT_1SSMCS0_1SSMCS9);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_1TX][7],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_1TX][7],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_1TX][8],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_1TX][8],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_1TX][9],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_1TX][9],
+ 			0, 1, base);
+ 
+-		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfPath, RF_2TX, VHT_2SSMCS0_2SSMCS9);
++		base = _rtl8821ae_phy_get_txpower_by_rate_base(hw, BAND_ON_5G, rfpath, RF_2TX, VHT_2SSMCS0_2SSMCS9);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_1TX][9],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_1TX][9],
+ 			2, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_2TX][10],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_2TX][10],
+ 			0, 3, base);
+ 		_phy_convert_txpower_dbm_to_relative_value(
+-			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfPath][RF_2TX][11],
++			&rtlphy->tx_power_by_rate_offset[BAND_ON_5G][rfpath][RF_2TX][11],
+ 			0, 3, base);
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.h
+index e68bd8af4a01..0b087b3b9966 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.h
+@@ -37,9 +37,9 @@
+ 
+ #define LOOP_LIMIT				5
+ #define MAX_STALL_TIME				50
+-#define AntennaDiversityValue			0x80
++#define ANTENNADIVERSITYVALUE			0x80
+ #define MAX_TXPWR_IDX_NMODE_92S			63
+-#define Reset_Cnt_Limit				3
++#define RESET_CNT_LIMIT				3
+ 
+ #define IQK_ADDA_REG_NUM			16
+ #define IQK_MAC_REG_NUM				4
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
+index 3798791626c1..4068b5bae1f7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
+@@ -674,7 +674,7 @@
+ #define	EEPROM_CHANNEL_PLAN_TELEC		0x8
+ #define	EEPROM_CHANNEL_PLAN_GLOBAL_DOMAIN	0x9
+ #define	EEPROM_CHANNEL_PLAN_WORLD_WIDE_13	0xA
+-#define	EEPROM_CHANNEL_PLAN_NCC			0xB
++#define	EEPROM_CHANNEL_PLAN_NCC			0XB
+ #define	EEPROM_CHANNEL_PLAN_BY_HW_MASK		0x80
+ 
+ #define EEPROM_CID_DEFAULT			0x0
+@@ -696,10 +696,10 @@
+ 
+ #define	EEPROM_TX_PWR_INX			0x10
+ 
+-#define	EEPROM_CHANNELPLAN			0xB8
+-#define	EEPROM_XTAL_8821AE			0xB9
+-#define	EEPROM_THERMAL_METER			0xBA
+-#define	EEPROM_IQK_LCK_88E			0xBB
++#define	EEPROM_CHANNELPLAN			0XB8
++#define	EEPROM_XTAL_8821AE			0XB9
++#define	EEPROM_THERMAL_METER			0XBA
++#define	EEPROM_IQK_LCK_88E			0XBB
+ 
+ #define	EEPROM_RF_BOARD_OPTION			0xC1
+ #define	EEPROM_RF_FEATURE_OPTION_88E		0xC2
+@@ -993,7 +993,7 @@
+ #define _LBMODE(x)				(((x) & 0xF) << 24)
+ #define MASK_LBMODE				0xF000000
+ #define LOOPBACK_NORMAL				0x0
+-#define LOOPBACK_IMMEDIATELY			0xB
++#define LOOPBACK_IMMEDIATELY			0XB
+ #define LOOPBACK_MAC_DELAY			0x3
+ #define LOOPBACK_PHY				0x1
+ #define LOOPBACK_DMA				0x7
+@@ -1408,7 +1408,7 @@
+ #define	RCCK0_FACOUNTERUPPER		0xa58
+ #define	RCCK0_CCA_CNT			0xa60
+ 
+-/* PageB(0xB00) */
++/* PageB(0XB00) */
+ #define	RPDP_ANTA			0xb00
+ #define	RPDP_ANTA_4			0xb04
+ #define	RPDP_ANTA_8			0xb08
+@@ -1455,16 +1455,16 @@
+ #define	RPM_RX3_ANTB			0xbf8
+ 
+ /*RSSI Dump*/
+-#define		RA_RSSI_DUMP		0xBF0
+-#define		RB_RSSI_DUMP		0xBF1
+-#define		RS1_RX_EVM_DUMP		0xBF4
+-#define		RS2_RX_EVM_DUMP		0xBF5
+-#define		RA_RX_SNR_DUMP		0xBF6
+-#define		RB_RX_SNR_DUMP		0xBF7
+-#define		RA_CFO_SHORT_DUMP	0xBF8
+-#define		RB_CFO_SHORT_DUMP	0xBFA
+-#define		RA_CFO_LONG_DUMP	0xBEC
+-#define		RB_CFO_LONG_DUMP	0xBEE
++#define		RA_RSSI_DUMP		0XBF0
++#define		RB_RSSI_DUMP		0XBF1
++#define		RS1_RX_EVM_DUMP		0XBF4
++#define		RS2_RX_EVM_DUMP		0XBF5
++#define		RA_RX_SNR_DUMP		0XBF6
++#define		RB_RX_SNR_DUMP		0XBF7
++#define		RA_CFO_SHORT_DUMP	0XBF8
++#define		RB_CFO_SHORT_DUMP	0XBFA
++#define		RA_CFO_LONG_DUMP	0XBEC
++#define		RB_CFO_LONG_DUMP	0XBEE
+ 
+ /*Page C*/
+ #define	ROFDM0_LSTF			0xc00
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/table.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/table.c
+index c9e3adf19e4b..de0d19a9dda1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/table.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/table.c
+@@ -111,30 +111,30 @@ u32 RTL8812AE_PHY_REG_ARRAY[] = {
+ 		0xA7C, 0x225B0606,
+ 		0xA80, 0x218075B2,
+ 		0xA84, 0x001F8C80,
+-		0xB00, 0x03100000,
+-		0xB04, 0x0000B000,
+-		0xB08, 0xAE0201EB,
+-		0xB0C, 0x01003207,
+-		0xB10, 0x00009807,
+-		0xB14, 0x01000000,
+-		0xB18, 0x00000002,
+-		0xB1C, 0x00000002,
+-		0xB20, 0x0000001F,
+-		0xB24, 0x03020100,
+-		0xB28, 0x07060504,
+-		0xB2C, 0x0B0A0908,
+-		0xB30, 0x0F0E0D0C,
+-		0xB34, 0x13121110,
+-		0xB38, 0x17161514,
+-		0xB3C, 0x0000003A,
+-		0xB40, 0x00000000,
+-		0xB44, 0x00000000,
+-		0xB48, 0x13000032,
+-		0xB4C, 0x48080000,
+-		0xB50, 0x00000000,
+-		0xB54, 0x00000000,
+-		0xB58, 0x00000000,
+-		0xB5C, 0x00000000,
++		0XB00, 0x03100000,
++		0XB04, 0x0000B000,
++		0XB08, 0xAE0201EB,
++		0XB0C, 0x01003207,
++		0XB10, 0x00009807,
++		0XB14, 0x01000000,
++		0XB18, 0x00000002,
++		0XB1C, 0x00000002,
++		0XB20, 0x0000001F,
++		0XB24, 0x03020100,
++		0XB28, 0x07060504,
++		0XB2C, 0x0B0A0908,
++		0XB30, 0x0F0E0D0C,
++		0XB34, 0x13121110,
++		0XB38, 0x17161514,
++		0XB3C, 0x0000003A,
++		0XB40, 0x00000000,
++		0XB44, 0x00000000,
++		0XB48, 0x13000032,
++		0XB4C, 0x48080000,
++		0XB50, 0x00000000,
++		0XB54, 0x00000000,
++		0XB58, 0x00000000,
++		0XB5C, 0x00000000,
+ 		0xC00, 0x00000007,
+ 		0xC04, 0x00042020,
+ 		0xC08, 0x80410231,
+@@ -174,7 +174,7 @@ u32 RTL8812AE_PHY_REG_ARRAY[] = {
+ 		0xC68, 0x59791979,
+ 	0xA0000000, 0x00000000,
+ 		0xC68, 0x59799979,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0xC6C, 0x59795979,
+ 		0xC70, 0x19795979,
+ 		0xC74, 0x19795979,
+@@ -344,30 +344,30 @@ u32 RTL8821AE_PHY_REG_ARRAY[] = {
+ 	0xA7C, 0x225B0606,
+ 	0xA80, 0x21805490,
+ 	0xA84, 0x001F0000,
+-	0xB00, 0x03100040,
+-	0xB04, 0x0000B000,
+-	0xB08, 0xAE0201EB,
+-	0xB0C, 0x01003207,
+-	0xB10, 0x00009807,
+-	0xB14, 0x01000000,
+-	0xB18, 0x00000002,
+-	0xB1C, 0x00000002,
+-	0xB20, 0x0000001F,
+-	0xB24, 0x03020100,
+-	0xB28, 0x07060504,
+-	0xB2C, 0x0B0A0908,
+-	0xB30, 0x0F0E0D0C,
+-	0xB34, 0x13121110,
+-	0xB38, 0x17161514,
+-	0xB3C, 0x0000003A,
+-	0xB40, 0x00000000,
+-	0xB44, 0x00000000,
+-	0xB48, 0x13000032,
+-	0xB4C, 0x48080000,
+-	0xB50, 0x00000000,
+-	0xB54, 0x00000000,
+-	0xB58, 0x00000000,
+-	0xB5C, 0x00000000,
++	0XB00, 0x03100040,
++	0XB04, 0x0000B000,
++	0XB08, 0xAE0201EB,
++	0XB0C, 0x01003207,
++	0XB10, 0x00009807,
++	0XB14, 0x01000000,
++	0XB18, 0x00000002,
++	0XB1C, 0x00000002,
++	0XB20, 0x0000001F,
++	0XB24, 0x03020100,
++	0XB28, 0x07060504,
++	0XB2C, 0x0B0A0908,
++	0XB30, 0x0F0E0D0C,
++	0XB34, 0x13121110,
++	0XB38, 0x17161514,
++	0XB3C, 0x0000003A,
++	0XB40, 0x00000000,
++	0XB44, 0x00000000,
++	0XB48, 0x13000032,
++	0XB4C, 0x48080000,
++	0XB50, 0x00000000,
++	0XB54, 0x00000000,
++	0XB58, 0x00000000,
++	0XB5C, 0x00000000,
+ 	0xC00, 0x00000007,
+ 	0xC04, 0x00042020,
+ 	0xC08, 0x80410231,
+@@ -498,12 +498,12 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x086, 0x00014B3A,
+ 	0xA0000000, 0x00000000,
+ 		0x086, 0x00014B38,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 	0x80000004, 0x00000000, 0x40000000, 0x00000000,
+ 		0x08B, 0x00080180,
+ 	0xA0000000, 0x00000000,
+ 		0x08B, 0x00087180,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0B1, 0x0001FC1A,
+ 		0x0B3, 0x000F0810,
+ 		0x0B4, 0x0001A78D,
+@@ -534,7 +534,7 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x03B, 0x00018248,
+ 		0x03B, 0x00010240,
+ 		0x03B, 0x00008240,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000100,
+ 	0x80000002, 0x00000000, 0x40000000, 0x00000000,
+ 		0x034, 0x0000A4EE,
+@@ -560,7 +560,7 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x034, 0x000024E7,
+ 		0x034, 0x0000146B,
+ 		0x034, 0x0000006D,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000000,
+ 		0x0EF, 0x000020A2,
+ 		0x0DF, 0x00000080,
+@@ -689,7 +689,7 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x034, 0x000428C5,
+ 		0x034, 0x000418C2,
+ 		0x034, 0x000408C0,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+ 		0x034, 0x0002A0B2,
+ 		0x034, 0x000290AF,
+@@ -726,7 +726,7 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x034, 0x000228C5,
+ 		0x034, 0x000218C2,
+ 		0x034, 0x000208C0,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+ 		0x034, 0x0000A0B2,
+ 		0x034, 0x000090AF,
+@@ -763,7 +763,7 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x034, 0x000028C9,
+ 		0x034, 0x000018C6,
+ 		0x034, 0x000008C3,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000000,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+ 		0x018, 0x0001712A,
+@@ -801,7 +801,7 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x035, 0x000401D8,
+ 		0x035, 0x000481D8,
+ 		0x035, 0x000501D8,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000000,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+ 		0x018, 0x0001712A,
+@@ -848,7 +848,7 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x036, 0x000CCC35,
+ 		0x036, 0x000D4C35,
+ 		0x036, 0x000DCC35,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000000,
+ 		0x0EF, 0x00000008,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+@@ -863,7 +863,7 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x03C, 0x000002A8,
+ 		0x03C, 0x000005A2,
+ 		0x03C, 0x00000880,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000000,
+ 		0x018, 0x0001712A,
+ 		0x0EF, 0x00000002,
+@@ -887,7 +887,7 @@ u32 RTL8812AE_RADIOA_ARRAY[] = {
+ 		0x063, 0x000114EB,
+ 		0x064, 0x000196AC,
+ 		0x065, 0x000911D7,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x008, 0x00008400,
+ 		0x01C, 0x000739D2,
+ 		0x0B4, 0x0001E78D,
+@@ -912,12 +912,12 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x086, 0x00014B3A,
+ 	0xA0000000, 0x00000000,
+ 		0x086, 0x00014B38,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 	0x80000004, 0x00000000, 0x40000000, 0x00000000,
+ 		0x08B, 0x00080180,
+ 	0xA0000000, 0x00000000,
+ 		0x08B, 0x00087180,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x018, 0x00000006,
+ 		0x0EF, 0x00002000,
+ 	0x80000001, 0x00000000, 0x40000000, 0x00000000,
+@@ -944,7 +944,7 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x03B, 0x00018248,
+ 		0x03B, 0x00010240,
+ 		0x03B, 0x00008240,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000100,
+ 	0x80000002, 0x00000000, 0x40000000, 0x00000000,
+ 		0x034, 0x0000A4EE,
+@@ -970,7 +970,7 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x034, 0x000024E7,
+ 		0x034, 0x0000146B,
+ 		0x034, 0x0000006D,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000000,
+ 		0x0EF, 0x000020A2,
+ 		0x0DF, 0x00000080,
+@@ -1099,7 +1099,7 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x034, 0x000428C5,
+ 		0x034, 0x000418C2,
+ 		0x034, 0x000408C0,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+ 		0x034, 0x0002A0B2,
+ 		0x034, 0x000290AF,
+@@ -1136,7 +1136,7 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x034, 0x000228C5,
+ 		0x034, 0x000218C2,
+ 		0x034, 0x000208C0,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+ 		0x034, 0x0000A0B2,
+ 		0x034, 0x000090AF,
+@@ -1173,7 +1173,7 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x034, 0x000028C9,
+ 		0x034, 0x000018C6,
+ 		0x034, 0x000008C3,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000000,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+ 		0x018, 0x0001712A,
+@@ -1214,7 +1214,7 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x035, 0x000481D8,
+ 		0x035, 0x000501D8,
+ 		0x0EF, 0x00000000,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+ 		0x018, 0x0001712A,
+ 		0x0EF, 0x00000010,
+@@ -1260,7 +1260,7 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x036, 0x000CCC35,
+ 		0x036, 0x000D4C35,
+ 		0x036, 0x000DCC35,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000000,
+ 		0x0EF, 0x00000008,
+ 	0x80000008, 0x00000000, 0x40000000, 0x00000000,
+@@ -1275,7 +1275,7 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x03C, 0x000002A8,
+ 		0x03C, 0x000005A2,
+ 		0x03C, 0x00000880,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x0EF, 0x00000000,
+ 		0x018, 0x0001712A,
+ 		0x0EF, 0x00000002,
+@@ -1304,7 +1304,7 @@ u32 RTL8812AE_RADIOB_ARRAY[] = {
+ 		0x063, 0x000114EB,
+ 		0x064, 0x000196AC,
+ 		0x065, 0x000911D7,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x008, 0x00008400,
+ };
+ 
+@@ -1910,7 +1910,7 @@ u32 RTL8812AE_MAC_REG_ARRAY[] = {
+ 		0x011, 0x00000066,
+ 	0xA0000000, 0x00000000,
+ 		0x011, 0x0000005A,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0x025, 0x0000000F,
+ 		0x072, 0x00000000,
+ 		0x420, 0x00000080,
+@@ -2314,7 +2314,7 @@ u32 RTL8812AE_AGC_TAB_ARRAY[] = {
+ 		0x81C, 0x417A0001,
+ 		0x81C, 0x417C0001,
+ 		0x81C, 0x417E0001,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 	0x80000004, 0x00000000, 0x40000000, 0x00000000,
+ 		0x81C, 0xFC800001,
+ 		0x81C, 0xFB820001,
+@@ -2445,7 +2445,7 @@ u32 RTL8812AE_AGC_TAB_ARRAY[] = {
+ 		0x81C, 0x01FA0001,
+ 		0x81C, 0x01FC0001,
+ 		0x81C, 0x01FE0001,
+-	0xB0000000, 0x00000000,
++	0XB0000000, 0x00000000,
+ 		0xC50, 0x00000022,
+ 		0xC50, 0x00000020,
+ 		0xE50, 0x00000022,
+@@ -2455,24 +2455,24 @@ u32 RTL8812AE_AGC_TAB_ARRAY[] = {
+ u32 RTL8812AE_AGC_TAB_1TARRAYLEN = ARRAY_SIZE(RTL8812AE_AGC_TAB_ARRAY);
+ 
+ u32 RTL8821AE_AGC_TAB_ARRAY[] = {
+-		0x81C, 0xBF000001,
+-		0x81C, 0xBF020001,
+-		0x81C, 0xBF040001,
+-		0x81C, 0xBF060001,
+-		0x81C, 0xBE080001,
+-		0x81C, 0xBD0A0001,
+-		0x81C, 0xBC0C0001,
+-		0x81C, 0xBA0E0001,
+-		0x81C, 0xB9100001,
+-		0x81C, 0xB8120001,
+-		0x81C, 0xB7140001,
+-		0x81C, 0xB6160001,
+-		0x81C, 0xB5180001,
+-		0x81C, 0xB41A0001,
+-		0x81C, 0xB31C0001,
+-		0x81C, 0xB21E0001,
+-		0x81C, 0xB1200001,
+-		0x81C, 0xB0220001,
++		0x81C, 0XBF000001,
++		0x81C, 0XBF020001,
++		0x81C, 0XBF040001,
++		0x81C, 0XBF060001,
++		0x81C, 0XBE080001,
++		0x81C, 0XBD0A0001,
++		0x81C, 0XBC0C0001,
++		0x81C, 0XBA0E0001,
++		0x81C, 0XB9100001,
++		0x81C, 0XB8120001,
++		0x81C, 0XB7140001,
++		0x81C, 0XB6160001,
++		0x81C, 0XB5180001,
++		0x81C, 0XB41A0001,
++		0x81C, 0XB31C0001,
++		0x81C, 0XB21E0001,
++		0x81C, 0XB1200001,
++		0x81C, 0XB0220001,
+ 		0x81C, 0xAF240001,
+ 		0x81C, 0xAE260001,
+ 		0x81C, 0xAD280001,
 -- 
 2.20.1
 
