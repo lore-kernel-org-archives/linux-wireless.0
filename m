@@ -2,101 +2,65 @@ Return-Path: <SRS0=/9EI=QV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D0EDC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 14:03:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75145C10F04
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 14:05:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1524E2229F
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 14:03:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5070B222D4
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 14:05:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732498AbfBNODg (ORCPT
+        id S2391542AbfBNOE6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 09:03:36 -0500
-Received: from orcrist.hmeau.com ([104.223.48.154]:39750 "EHLO
+        Thu, 14 Feb 2019 09:04:58 -0500
+Received: from orcrist.hmeau.com ([104.223.48.154]:39798 "EHLO
         deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729458AbfBNODf (ORCPT
+        with ESMTP id S2388734AbfBNOE6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 09:03:35 -0500
+        Thu, 14 Feb 2019 09:04:58 -0500
 Received: from gondobar.mordor.me.apana.org.au ([192.168.128.4] helo=gondobar)
         by deadmen.hmeau.com with esmtps (Exim 4.89 #2 (Debian))
-        id 1guHbq-00037G-Rb; Thu, 14 Feb 2019 22:03:26 +0800
+        id 1guHdE-0003D2-76; Thu, 14 Feb 2019 22:04:52 +0800
 Received: from herbert by gondobar with local (Exim 4.89)
         (envelope-from <herbert@gondor.apana.org.au>)
-        id 1guHbq-0000OB-JQ; Thu, 14 Feb 2019 22:03:26 +0800
-Subject: [PATCH 3/4] mac80211: Use rhashtable_lookup_get_insert_fast instead of racy code
-References: <20190214140236.omt74prxhkfaasue@gondor.apana.org.au>
-To:     David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi,
-        tgraf@suug.ch, johannes.berg@intel.com,
-        Julia Lawall <julia.lawall@lip6.fr>
-Message-Id: <E1guHbq-0000OB-JQ@gondobar>
+        id 1guHdD-0000PU-K6; Thu, 14 Feb 2019 22:04:51 +0800
+Date:   Thu, 14 Feb 2019 22:04:51 +0800
 From:   Herbert Xu <herbert@gondor.apana.org.au>
-Date:   Thu, 14 Feb 2019 22:03:26 +0800
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, j@w1.fi, tgraf@suug.ch
+Subject: Re: [PATCH 2/4] mac80211: Free mpath object when rhashtable
+ insertion fails
+Message-ID: <20190214140451.45vzwoeehxtxjawb@gondor.apana.org.au>
+References: <20190213143853.labj6zdcsoupkris@gondor.apana.org.au>
+ <E1gtvgu-0006bT-4G@gondobar>
+ <36adaef5c982ba10444d6f837b0d5c55ac953bdf.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <36adaef5c982ba10444d6f837b0d5c55ac953bdf.camel@sipsolutions.net>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The code in mesh_path_add tries to handle the case where a duplicate
-entry is added to the rhashtable by doing a lookup after a failed
-insertion.  It also tries to handle races by repeating the insertion
-should the lookup fail.
+On Wed, Feb 13, 2019 at 04:04:29PM +0100, Johannes Berg wrote:
+>
+> Yes, that's a small change in behaviour as to when the generation
+> counter is updated, but I'm pretty sure it really only needs updating
+> when we inserted something, not if we found an old mpath.
 
-This is now unnecessary as we have rhashtable API functions that can
-directly return the mathcing object.
+I decided not to do this in my patch as it's not directly related
+to the kfree issue.
 
-Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
----
+But I agree that this makes more sense and we should make that
+change in another patch.
 
- net/mac80211/mesh_pathtbl.c |   24 ++++++++----------------
- 1 file changed, 8 insertions(+), 16 deletions(-)
-
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index c3a7396fb955..8902395e406e 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -404,7 +404,6 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
- {
- 	struct mesh_table *tbl;
- 	struct mesh_path *mpath, *new_mpath;
--	int ret;
- 
- 	if (ether_addr_equal(dst, sdata->vif.addr))
- 		/* never add ourselves as neighbours */
-@@ -422,25 +421,18 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
- 
- 	tbl = sdata->u.mesh.mesh_paths;
- 	spin_lock_bh(&tbl->walk_lock);
--	do {
--		ret = rhashtable_lookup_insert_fast(&tbl->rhead,
--						    &new_mpath->rhash,
--						    mesh_rht_params);
--
--		if (ret == -EEXIST)
--			mpath = rhashtable_lookup_fast(&tbl->rhead,
--						       dst,
--						       mesh_rht_params);
--		else if (!ret)
--			hlist_add_head(&new_mpath->walk_list, &tbl->walk_head);
--	} while (unlikely(ret == -EEXIST && !mpath));
-+	mpath = rhashtable_lookup_get_insert_fast(&tbl->rhead,
-+						  &new_mpath->rhash,
-+						  mesh_rht_params);
-+	if (!mpath)
-+		hlist_add_head(&new_mpath->walk_list, &tbl->walk_head);
- 	spin_unlock_bh(&tbl->walk_lock);
- 
--	if (ret) {
-+	if (mpath) {
- 		kfree(new_mpath);
- 
--		if (ret != -EEXIST)
--			return ERR_PTR(ret);
-+		if (IS_ERR(mpath))
-+			return mpath;
- 
- 		new_mpath = mpath;
- 	}
+Thanks!
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
