@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31A6AC4360F
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 08:59:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FD2CC10F04
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 08:59:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0AE94222A4
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 08:59:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CAB7222A4
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 08:59:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391134AbfBNI7t (ORCPT
+        id S2389409AbfBNI7p (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 03:59:49 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:39636 "EHLO
+        Thu, 14 Feb 2019 03:59:45 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:39626 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390954AbfBNI7s (ORCPT
+        with ESMTP id S2387827AbfBNI7o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 03:59:48 -0500
+        Thu, 14 Feb 2019 03:59:44 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x1E8xUeR005936, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x1E8xRFN005916, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x1E8xUeR005936
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x1E8xRFN005916
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Thu, 14 Feb 2019 16:59:30 +0800
+        Thu, 14 Feb 2019 16:59:27 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Thu, 14 Feb 2019 16:59:29 +0800
+ 14.3.408.0; Thu, 14 Feb 2019 16:59:26 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <johannes@sipsolutions.net>
 CC:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
         <pkshih@realtek.com>, <tehuang@realtek.com>,
         <briannorris@chromium.org>, <sgruszka@redhat.com>
-Subject: [PATCH v2 24/24] rtw88: 8822b: turn rtw_write32s_mask into macro
-Date:   Thu, 14 Feb 2019 16:59:03 +0800
-Message-ID: <1550134743-17443-25-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v2 20/24] rtw88: 8822c: parse packet by sigb length
+Date:   Thu, 14 Feb 2019 16:58:59 +0800
+Message-ID: <1550134743-17443-21-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1550134743-17443-1-git-send-email-yhchuang@realtek.com>
 References: <1550134743-17443-1-git-send-email-yhchuang@realtek.com>
@@ -50,65 +50,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-The inlined rtw_write32s_mask has to check range of addr with
-BUILD_BUG_ON. But with some variants of gcc version the function might
-not get inlined, and it will have no idea to know how to do, then
-results in a compile error. Turn it into a macro to make sure the values
-are known when compile time.
+Based on current hardware setting, if we parse packet by LSIG, driver
+will not receive phy status report from hardware. To fix it, parse
+packet by SIGB length.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 10 ----------
- drivers/net/wireless/realtek/rtw88/rtw8822b.h | 15 +++++++++++++++
- 2 files changed, 15 insertions(+), 10 deletions(-)
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index 474f952..7432c37 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -224,16 +224,6 @@ static int rtw8822b_mac_init(struct rtw_dev *rtwdev)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index d20f45f..3e22597 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -788,7 +788,7 @@ static void rtw8822c_phy_set_param(struct rtw_dev *rtwdev)
  
--static inline void
--rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
--{
--	BUILD_BUG_ON(addr < 0xC00 || addr >= 0xD00);
--
--	rtw_write32_mask(rtwdev, addr, mask, data);
--	/* 0xC00-0xCFF and 0xE00-0xEFF have the same layout */
--	rtw_write32_mask(rtwdev, addr + 0x200, mask, data);
--}
--
- static void rtw8822b_set_channel_rfe_efem(struct rtw_dev *rtwdev, u8 channel)
- {
- 	struct rtw_hal *hal = &rtwdev->hal;
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.h b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-index 311fe8a..8036e30 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-@@ -97,6 +97,21 @@ struct rtw8822b_efuse {
- 	};
- };
+ #define WLAN_TX_FUNC_CFG1		0x30
+ #define WLAN_TX_FUNC_CFG2		0x30
+-#define WLAN_MAC_OPT_NORM_FUNC1		0x90
++#define WLAN_MAC_OPT_NORM_FUNC1		0x98
+ #define WLAN_MAC_OPT_LB_FUNC1		0x80
+ #define WLAN_MAC_OPT_FUNC2		0x30810041
  
-+static inline void
-+_rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
-+{
-+	/* 0xC00-0xCFF and 0xE00-0xEFF have the same layout */
-+	rtw_write32_mask(rtwdev, addr, mask, data);
-+	rtw_write32_mask(rtwdev, addr + 0x200, mask, data);
-+}
-+
-+#define rtw_write32s_mask(rtwdev, addr, mask, data)			       \
-+	do {								       \
-+		BUILD_BUG_ON((addr) < 0xC00 || (addr) >= 0xD00);	       \
-+									       \
-+		_rtw_write32s_mask(rtwdev, addr, mask, data);		       \
-+	} while (0)
-+
- /* phy status page0 */
- #define GET_PHY_STAT_P0_PWDB(phy_stat)                                         \
- 	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
 -- 
 2.7.4
 
