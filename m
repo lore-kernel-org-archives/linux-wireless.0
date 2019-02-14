@@ -2,94 +2,88 @@ Return-Path: <SRS0=/9EI=QV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0641C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 06:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F3F5C4360F
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 06:57:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C784C2229F
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 06:50:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1B6A222A4
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 06:57:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388656AbfBNGuK (ORCPT
+        id S2405935AbfBNG5Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 01:50:10 -0500
-Received: from mout.kundenserver.de ([212.227.17.24]:54437 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729172AbfBNGuK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 01:50:10 -0500
-Received: from oxbaltgw58.schlund.de ([172.19.246.145]) by
- mrelayeu.kundenserver.de (mreue109 [213.165.67.113]) with ESMTPSA (Nemesis)
- id 1N5mOb-1hA5s42wfr-017FxV; Thu, 14 Feb 2019 07:49:59 +0100
-Date:   Thu, 14 Feb 2019 07:49:57 +0100 (CET)
-From:   Stefan Wahren <stefan.wahren@i2se.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Felix Fietkau <nbd@nbd.name>,
-        Doug Anderson <dianders@chromium.org>,
-        Minas Harutyunyan <hminas@synopsys.com>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <404607590.373282.1550126997144@email.ionos.de>
-In-Reply-To: <20190212093035.GB12906@redhat.com>
-References: <20190211173315.GE6292@redhat.com>
- <Pine.LNX.4.44L0.1902111246410.1543-100000@iolanthe.rowland.org>
- <CAJ0CqmVFVBXi5E07-ZsYojC7mP4ogpwbcDkDTeebHwX+ayz2DQ@mail.gmail.com>
- <20190212093035.GB12906@redhat.com>
-Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
+        Thu, 14 Feb 2019 01:57:24 -0500
+Received: from mga17.intel.com ([192.55.52.151]:10068 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2405705AbfBNG5Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Feb 2019 01:57:24 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Feb 2019 22:57:23 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.58,367,1544515200"; 
+   d="scan'208";a="318902102"
+Received: from hnswanep-mobl.amr.corp.intel.com ([10.252.8.171])
+  by fmsmga006.fm.intel.com with ESMTP; 13 Feb 2019 22:57:21 -0800
+Message-ID: <34b38d463c5eddef2a3923cbc291c8284eb54cf9.camel@intel.com>
+Subject: Re: [PATCH v2 1/2] iwlwifi: Use kmemdup instead of duplicating its
+ function
+From:   Luciano Coelho <luciano.coelho@intel.com>
+To:     YueHaibing <yuehaibing@huawei.com>, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
+        kvalo@codeaurora.org
+Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Date:   Thu, 14 Feb 2019 08:57:20 +0200
+In-Reply-To: <20190129032144.18120-2-yuehaibing@huawei.com>
+References: <20190129032144.18120-1-yuehaibing@huawei.com>
+         <20190129032144.18120-2-yuehaibing@huawei.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5-1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Priority: 3
-Importance: Medium
-X-Mailer: Open-Xchange Mailer v7.8.4-Rev47
-X-Originating-Client: open-xchange-appsuite
-X-Provags-ID: V03:K1:Isqzx2psC+Piqvp1si2802LAxvs5HJOl0rQHg13RB/MGE57va6r
- vIwCqQ0Qj/Ouwt9JzzCc2blDWYXXWYJUJA843mWokCOyQ3BfBntXHuUe3I7frGmcgHBuFAb
- i5gmxYdE7tPpEhJB5RetT5QeYjIuJFXgEXoMa6Gkl0QNy4VzFSp5ScWvWrl5rE+L649BMY2
- usoSqAUwrv/HCtwuhYY0Q==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:Ss9C29IQjyE=:BLoRdZJTWsraixaw95eeG9
- raldm/vmRWxxTTPSZqZnXuLUKcWKOTORyqrFPQpqHNFKPDT+zxQVfaWy8nTV450Z6bRex1vb9
- ynlIxlXw3jraKsZPRxZXtBMcB/3oiN8W/T4680jmPCbqb0JzZQDIWER98bOUXe3LtDx2HNhqb
- VMA52tGnMg2yf2mySziZMvBqGoq8L8gR+Fy0EK3YZClPxXtE6tDEjpZBKJ3bhVEsPoZ7UaZhg
- 0BbjN7Np2XN/v4p+gPAGtJJG9LoCwjgikgV8+sRYgtiNgMV9e0O1QOqGOiTdDt3oX8ddi4B5x
- WhHSly6YsIPDjAnmL7u1Wf6J+mveNraT/F4VoYC0NDxQrIj3wVLQCgvSnIHb0hnpIMwbFaKXS
- TA3DQwkQyaTpMOvbdrYAuDlqUG9W48tRh/Ppl8rxdwKO0gAVME4f14wgnvT+aC1Cm4snwwxnV
- nQpYvQ2pRfM4TuL0rGt67FRcnCousjRXu0iOXUvZLHHJd+JhzpKprtB45O0+3+SaCVqDnMCcn
- OLaGXbUQw54qtxRDyY2ejNfEUumwbnaYgIaRyePvOEabBdoMsBvdHHcmltpmVT4tFFEbW5yH1
- DnGRjtS5KXoZfk2fx90VhlkiC55KPNWn0zaHFyrkUGB+KsV2yijuqSzF7TS8NM8QcIclN/414
- GWfVTbwaVMwqqGBPqQ4t3s+IRfI9CPejXdbR6V9V197Z3qjTvPR5N2XbiPYx7oFqUbOeXbcNx
- Qc6RoRy/zE57IQmZCrOiqrICrExYsyoRTOkWgSI61t0Mo1YMv86hR7Gyelc=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Stanislaw,
-
-> Stanislaw Gruszka <sgruszka@redhat.com> hat am 12. Februar 2019 um 10:30 geschrieben:
+On Tue, 2019-01-29 at 11:21 +0800, YueHaibing wrote:
+> Use kmemdup rather than duplicating its implementation
 > 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 8 ++------
+>  1 file changed, 2 insertions(+), 6 deletions(-)
 > 
-> 
-> In usb_sg_init() urb->num_sgs is set 0 for sg_tablesize = 0 controllers.
-> In mt76 we set urb->num_sgs to 1. I thought it is fine, but now I think
-> this is bug. We can fix that without changing allocation method and
-> still use SG allocation. Attached patch do this, please check if it works
-> on rpi. Patch is on top of your error path fixes.
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> index d9afedc..569cc50 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> @@ -1196,13 +1196,9 @@ iwl_parse_nvm_mcc_info(struct device *dev,
+> const struct iwl_cfg *cfg,
+>  	regd_to_copy = sizeof(struct ieee80211_regdomain) +
+>  		valid_rules * sizeof(struct ieee80211_reg_rule);
+>  
+> -	copy_rd = kzalloc(regd_to_copy, GFP_KERNEL);
+> -	if (!copy_rd) {
+> +	copy_rd = kmemdup(regd, regd_to_copy, GFP_KERNEL);
+> +	if (!copy_rd)
+>  		copy_rd = ERR_PTR(-ENOMEM);
+> -		goto out;
+> -	}
+> -
+> -	memcpy(copy_rd, regd, regd_to_copy);
+>  
+>  out:
+>  	kfree(regdb_ptrs);
 
-your patch didn't apply cleanly to yesterdays next. After some minor manual fixup, i was able to build them and here are the results starting from boot (please ignore the invalid time in the kernel log):
-https://gist.github.com/lategoodbye/33bd5bc75b9fc935faa231bc472defa8
+This was already applied.  Dropping.
 
-Using multi_v7_defconfig i'm getting a warning on the first connect and always this flood of rx urb failed on disconnect. The driver seems to probe but isn't functional even after 2 tries.
+--
+Luca.
 
-Using arm64_defconfig i don't get any warning. But except of this i'm getting similiar results to multi_v7_defconfig.
-
-So in comparison, Lorenzo's workaround behaves better.
-
-Stefan
-
-> 
-> Stanislaw
