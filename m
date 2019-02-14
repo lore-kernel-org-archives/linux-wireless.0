@@ -3,40 +3,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 330FAC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 08:08:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F27C4360F
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 08:09:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF3202070C
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 08:08:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5821222A1
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 08:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394481AbfBNII4 (ORCPT
+        id S2394411AbfBNII7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 03:08:56 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:35488 "EHLO
+        Thu, 14 Feb 2019 03:08:59 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:35493 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2394409AbfBNIIy (ORCPT
+        with ESMTP id S2394409AbfBNII7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 03:08:54 -0500
+        Thu, 14 Feb 2019 03:08:59 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x1E88MXB019533, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x1E88OZE019541, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x1E88MXB019533
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x1E88OZE019541
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Thu, 14 Feb 2019 16:08:22 +0800
+        Thu, 14 Feb 2019 16:08:24 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Thu, 14 Feb 2019 16:08:21 +0800
+ 14.3.408.0; Thu, 14 Feb 2019 16:08:23 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <johannes@sipsolutions.net>
 CC:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
         <pkshih@realtek.com>, <tehuang@realtek.com>,
         <briannorris@chromium.org>, <sgruszka@redhat.com>
-Subject: [PATCH v5 09/13] rtw88: chip files
-Date:   Thu, 14 Feb 2019 16:07:47 +0800
-Message-ID: <1550131671-2601-10-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v5 11/13] rtw88: 8822C init table
+Date:   Thu, 14 Feb 2019 16:07:49 +0800
+Message-ID: <1550131671-2601-12-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1550131671-2601-1-git-send-email-yhchuang@realtek.com>
 References: <1550131671-2601-1-git-send-email-yhchuang@realtek.com>
@@ -50,3181 +50,4170 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-chip files Realtek 802.11ac wireless network chips
-8822B & 8822C series files
+8822C init table for chip files Realtek 802.11ac wireless network chips
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822b.c      | 1591 ++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8822b.h      |  155 ++
- .../net/wireless/realtek/rtw88/rtw8822b_table.h    |   18 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c      | 1169 ++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8822c.h      |  171 +++
- .../net/wireless/realtek/rtw88/rtw8822c_table.h    |   16 +
- 6 files changed, 3120 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b_table.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.h
+ .../net/wireless/realtek/rtw88/rtw8822c_table.c    | 4150 ++++++++++++++++++++
+ 1 file changed, 4150 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.c
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c_table.c b/drivers/net/wireless/realtek/rtw88/rtw8822c_table.c
 new file mode 100644
-index 0000000..784e725
+index 0000000..e95ad82
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -0,0 +1,1591 @@
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c_table.c
+@@ -0,0 +1,4150 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
 +#include "main.h"
-+#include "fw.h"
-+#include "tx.h"
-+#include "rx.h"
 +#include "phy.h"
-+#include "rtw8822b.h"
-+#include "rtw8822b_table.h"
-+#include "mac.h"
-+#include "reg.h"
-+#include "debug.h"
-+
-+static void rtw8822b_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
-+				     u8 rx_path, bool is_tx2_path);
-+
-+static void rtw8822be_efuse_parsing(struct rtw_efuse *efuse,
-+				    struct rtw8822b_efuse *map)
-+{
-+	ether_addr_copy(efuse->addr, map->e.mac_addr);
-+}
-+
-+static int rtw8822b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
-+{
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	struct rtw8822b_efuse *map;
-+	int i;
-+
-+	map = (struct rtw8822b_efuse *)log_map;
-+
-+	efuse->rfe_option = map->rfe_option;
-+	efuse->crystal_cap = map->xtal_k;
-+	efuse->pa_type_2g = map->pa_type;
-+	efuse->pa_type_5g = map->pa_type;
-+	efuse->lna_type_2g = map->lna_type_2g[0];
-+	efuse->lna_type_5g = map->lna_type_5g[0];
-+	efuse->channel_plan = map->channel_plan;
-+	efuse->country_code[0] = map->country_code[0];
-+	efuse->country_code[1] = map->country_code[1];
-+	efuse->bt_setting = map->rf_bt_setting;
-+	efuse->regd = map->rf_board_option & 0x7;
-+
-+	for (i = 0; i < 4; i++)
-+		efuse->txpwr_idx_table[i] = map->txpwr_idx_table[i];
-+
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		rtw8822be_efuse_parsing(efuse, map);
-+		break;
-+	default:
-+		/* unsupported now */
-+		return -ENOTSUPP;
-+	}
-+
-+	return 0;
-+}
-+
-+static void rtw8822b_phy_rfe_init(struct rtw_dev *rtwdev)
-+{
-+	/* chip top mux */
-+	rtw_write32_mask(rtwdev, 0x64, BIT(29) | BIT(28), 0x3);
-+	rtw_write32_mask(rtwdev, 0x4c, BIT(26) | BIT(25), 0x0);
-+	rtw_write32_mask(rtwdev, 0x40, BIT(2), 0x1);
-+
-+	/* from s0 or s1 */
-+	rtw_write32_mask(rtwdev, 0x1990, 0x3f, 0x30);
-+	rtw_write32_mask(rtwdev, 0x1990, (BIT(11) | BIT(10)), 0x3);
-+
-+	/* input or output */
-+	rtw_write32_mask(rtwdev, 0x974, 0x3f, 0x3f);
-+	rtw_write32_mask(rtwdev, 0x974, (BIT(11) | BIT(10)), 0x3);
-+}
-+
-+static void rtw8822b_phy_set_param(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	u8 crystal_cap;
-+	bool is_tx2_path;
-+
-+	/* power on BB/RF domain */
-+	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN,
-+		       BIT_FEN_BB_RSTB | BIT_FEN_BB_GLB_RST);
-+	rtw_write8_set(rtwdev, REG_RF_CTRL,
-+		       BIT_RF_EN | BIT_RF_RSTB | BIT_RF_SDM_RSTB);
-+	rtw_write32_set(rtwdev, REG_WLRF1, BIT_WLRF1_BBRF_EN);
-+
-+	/* pre init before header files config */
-+	rtw_write32_clr(rtwdev, REG_RXPSEL, BIT_RX_PSEL_RST);
-+
-+	rtw_phy_load_tables(rtwdev);
-+
-+	crystal_cap = rtwdev->efuse.crystal_cap & 0x3F;
-+	rtw_write32_mask(rtwdev, 0x24, 0x7e000000, crystal_cap);
-+	rtw_write32_mask(rtwdev, 0x28, 0x7e, crystal_cap);
-+
-+	/* post init after header files config */
-+	rtw_write32_set(rtwdev, REG_RXPSEL, BIT_RX_PSEL_RST);
-+
-+	is_tx2_path = false;
-+	rtw8822b_config_trx_mode(rtwdev, hal->antenna_tx, hal->antenna_rx,
-+				 is_tx2_path);
-+	rtw_phy_init(rtwdev);
-+
-+	rtw8822b_phy_rfe_init(rtwdev);
-+
-+	/* wifi path controller */
-+	rtw_write32_mask(rtwdev, 0x70, 0x4000000, 1);
-+	/* BB control */
-+	rtw_write32_mask(rtwdev, 0x4c, 0x01800000, 0x2);
-+	/* antenna mux switch */
-+	rtw_write8(rtwdev, 0x974, 0xff);
-+	rtw_write32_mask(rtwdev, 0x1990, 0x300, 0);
-+	rtw_write32_mask(rtwdev, 0xcbc, 0x80000, 0x0);
-+	/* SW control */
-+	rtw_write8(rtwdev, 0xcb4, 0x77);
-+	/* switch to WL side controller and gnt_wl gnt_bt debug signal */
-+	rtw_write32_mask(rtwdev, 0x70, 0xff000000, 0x0e);
-+	/* gnt_wl = 1, gnt_bt = 0 */
-+	rtw_write32(rtwdev, 0x1704, 0x7700);
-+	rtw_write32(rtwdev, 0x1700, 0xc00f0038);
-+	/* switch for WL 2G */
-+	rtw_write8(rtwdev, 0xcbd, 0x2);
-+}
-+
-+#define WLAN_SLOT_TIME		0x05
-+#define WLAN_PIFS_TIME		0x19
-+#define WLAN_SIFS_CCK_CONT_TX	0xA
-+#define WLAN_SIFS_OFDM_CONT_TX	0xA
-+#define WLAN_SIFS_CCK_TRX	0x10
-+#define WLAN_SIFS_OFDM_TRX	0x10
-+#define WLAN_VO_TXOP_LIMIT	0x186 /* unit : 32us */
-+#define WLAN_VI_TXOP_LIMIT	0x3BC /* unit : 32us */
-+#define WLAN_RDG_NAV		0x05
-+#define WLAN_TXOP_NAV		0x1B
-+#define WLAN_CCK_RX_TSF		0x30
-+#define WLAN_OFDM_RX_TSF	0x30
-+#define WLAN_TBTT_PROHIBIT	0x04 /* unit : 32us */
-+#define WLAN_TBTT_HOLD_TIME	0x064 /* unit : 32us */
-+#define WLAN_DRV_EARLY_INT	0x04
-+#define WLAN_BCN_DMA_TIME	0x02
-+
-+#define WLAN_RX_FILTER0		0x0FFFFFFF
-+#define WLAN_RX_FILTER2		0xFFFF
-+#define WLAN_RCR_CFG		0xE400220E
-+#define WLAN_RXPKT_MAX_SZ	12288
-+#define WLAN_RXPKT_MAX_SZ_512	(WLAN_RXPKT_MAX_SZ >> 9)
-+
-+#define WLAN_AMPDU_MAX_TIME		0x70
-+#define WLAN_RTS_LEN_TH			0xFF
-+#define WLAN_RTS_TX_TIME_TH		0x08
-+#define WLAN_MAX_AGG_PKT_LIMIT		0x20
-+#define WLAN_RTS_MAX_AGG_PKT_LIMIT	0x20
-+#define FAST_EDCA_VO_TH		0x06
-+#define FAST_EDCA_VI_TH		0x06
-+#define FAST_EDCA_BE_TH		0x06
-+#define FAST_EDCA_BK_TH		0x06
-+#define WLAN_BAR_RETRY_LIMIT		0x01
-+#define WLAN_RA_TRY_RATE_AGG_LIMIT	0x08
-+
-+#define WLAN_TX_FUNC_CFG1		0x30
-+#define WLAN_TX_FUNC_CFG2		0x30
-+#define WLAN_MAC_OPT_NORM_FUNC1		0x98
-+#define WLAN_MAC_OPT_LB_FUNC1		0x80
-+#define WLAN_MAC_OPT_FUNC2		0x30810041
-+
-+#define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
-+			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
-+			(WLAN_SIFS_CCK_TRX << BIT_SHIFT_SIFS_CCK_TRX) | \
-+			(WLAN_SIFS_OFDM_TRX << BIT_SHIFT_SIFS_OFDM_TRX))
-+
-+#define WLAN_TBTT_TIME	(WLAN_TBTT_PROHIBIT |\
-+			(WLAN_TBTT_HOLD_TIME << BIT_SHIFT_TBTT_HOLD_TIME_AP))
-+
-+#define WLAN_NAV_CFG		(WLAN_RDG_NAV | (WLAN_TXOP_NAV << 16))
-+#define WLAN_RX_TSF_CFG		(WLAN_CCK_RX_TSF | (WLAN_OFDM_RX_TSF) << 8)
-+
-+static int rtw8822b_mac_init(struct rtw_dev *rtwdev)
-+{
-+	u32 value32;
-+
-+	/* protocol configuration */
-+	rtw_write8_clr(rtwdev, REG_SW_AMPDU_BURST_MODE_CTRL, BIT_PRE_TX_CMD);
-+	rtw_write8(rtwdev, REG_AMPDU_MAX_TIME_V1, WLAN_AMPDU_MAX_TIME);
-+	rtw_write8_set(rtwdev, REG_TX_HANG_CTRL, BIT_EN_EOF_V1);
-+	value32 = WLAN_RTS_LEN_TH | (WLAN_RTS_TX_TIME_TH << 8) |
-+		  (WLAN_MAX_AGG_PKT_LIMIT << 16) |
-+		  (WLAN_RTS_MAX_AGG_PKT_LIMIT << 24);
-+	rtw_write32(rtwdev, REG_PROT_MODE_CTRL, value32);
-+	rtw_write16(rtwdev, REG_BAR_MODE_CTRL + 2,
-+		    WLAN_BAR_RETRY_LIMIT | WLAN_RA_TRY_RATE_AGG_LIMIT << 8);
-+	rtw_write8(rtwdev, REG_FAST_EDCA_VOVI_SETTING, FAST_EDCA_VO_TH);
-+	rtw_write8(rtwdev, REG_FAST_EDCA_VOVI_SETTING + 2, FAST_EDCA_VI_TH);
-+	rtw_write8(rtwdev, REG_FAST_EDCA_BEBK_SETTING, FAST_EDCA_BE_TH);
-+	rtw_write8(rtwdev, REG_FAST_EDCA_BEBK_SETTING + 2, FAST_EDCA_BK_TH);
-+	/* EDCA configuration */
-+	rtw_write8_clr(rtwdev, REG_TIMER0_SRC_SEL, BIT_TSFT_SEL_TIMER0);
-+	rtw_write16(rtwdev, REG_TXPAUSE, 0x0000);
-+	rtw_write8(rtwdev, REG_SLOT, WLAN_SLOT_TIME);
-+	rtw_write8(rtwdev, REG_PIFS, WLAN_PIFS_TIME);
-+	rtw_write32(rtwdev, REG_SIFS, WLAN_SIFS_CFG);
-+	rtw_write16(rtwdev, REG_EDCA_VO_PARAM + 2, WLAN_VO_TXOP_LIMIT);
-+	rtw_write16(rtwdev, REG_EDCA_VI_PARAM + 2, WLAN_VI_TXOP_LIMIT);
-+	rtw_write32(rtwdev, REG_RD_NAV_NXT, WLAN_NAV_CFG);
-+	rtw_write16(rtwdev, REG_RXTSF_OFFSET_CCK, WLAN_RX_TSF_CFG);
-+	/* Set beacon cotnrol - enable TSF and other related functions */
-+	rtw_write8_set(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
-+	/* Set send beacon related registers */
-+	rtw_write32(rtwdev, REG_TBTT_PROHIBIT, WLAN_TBTT_TIME);
-+	rtw_write8(rtwdev, REG_DRVERLYINT, WLAN_DRV_EARLY_INT);
-+	rtw_write8(rtwdev, REG_BCNDMATIM, WLAN_BCN_DMA_TIME);
-+	rtw_write8_clr(rtwdev, REG_TX_PTCL_CTRL + 1, BIT_SIFS_BK_EN >> 8);
-+	/* WMAC configuration */
-+	rtw_write32(rtwdev, REG_RXFLTMAP0, WLAN_RX_FILTER0);
-+	rtw_write16(rtwdev, REG_RXFLTMAP2, WLAN_RX_FILTER2);
-+	rtw_write32(rtwdev, REG_RCR, WLAN_RCR_CFG);
-+	rtw_write8(rtwdev, REG_RX_PKT_LIMIT, WLAN_RXPKT_MAX_SZ_512);
-+	rtw_write8(rtwdev, REG_TCR + 2, WLAN_TX_FUNC_CFG2);
-+	rtw_write8(rtwdev, REG_TCR + 1, WLAN_TX_FUNC_CFG1);
-+	rtw_write32(rtwdev, REG_WMAC_OPTION_FUNCTION + 8, WLAN_MAC_OPT_FUNC2);
-+	rtw_write8(rtwdev, REG_WMAC_OPTION_FUNCTION + 4, WLAN_MAC_OPT_NORM_FUNC1);
-+
-+	return 0;
-+}
-+
-+static inline void
-+rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
-+{
-+	BUILD_BUG_ON(addr < 0xC00 || addr >= 0xD00);
-+
-+	rtw_write32_mask(rtwdev, addr, mask, data);
-+	/* 0xC00-0xCFF and 0xE00-0xEFF have the same layout */
-+	rtw_write32_mask(rtwdev, addr + 0x200, mask, data);
-+}
-+
-+static void rtw8822b_set_channel_rfe_efem(struct rtw_dev *rtwdev, u8 channel)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	bool is_channel_2g = (channel <= 14) ? true : false;
-+
-+	if (is_channel_2g) {
-+		rtw_write32s_mask(rtwdev, REG_RFESEL0, 0xffffff, 0x705770);
-+		rtw_write32s_mask(rtwdev, REG_RFESEL8, MASKBYTE1, 0x57);
-+		rtw_write32s_mask(rtwdev, REG_RFECTL, BIT(4), 0);
-+	} else {
-+		rtw_write32s_mask(rtwdev, REG_RFESEL0, 0xffffff, 0x177517);
-+		rtw_write32s_mask(rtwdev, REG_RFESEL8, MASKBYTE1, 0x75);
-+		rtw_write32s_mask(rtwdev, REG_RFECTL, BIT(5), 0);
-+	}
-+
-+	rtw_write32s_mask(rtwdev, REG_RFEINV, BIT(11) | BIT(10) | 0x3f, 0x0);
-+
-+	if (hal->antenna_rx == BB_PATH_AB ||
-+	    hal->antenna_tx == BB_PATH_AB) {
-+		/* 2TX or 2RX */
-+		rtw_write32s_mask(rtwdev, REG_TRSW, MASKLWORD, 0xa501);
-+	} else if (hal->antenna_rx == hal->antenna_tx) {
-+		/* TXA+RXA or TXB+RXB */
-+		rtw_write32s_mask(rtwdev, REG_TRSW, MASKLWORD, 0xa500);
-+	} else {
-+		/* TXB+RXA or TXA+RXB */
-+		rtw_write32s_mask(rtwdev, REG_TRSW, MASKLWORD, 0xa005);
-+	}
-+}
-+
-+static void rtw8822b_set_channel_rfe_ifem(struct rtw_dev *rtwdev, u8 channel)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	bool is_channel_2g = (channel <= 14) ? true : false;
-+
-+	if (is_channel_2g) {
-+		/* signal source */
-+		rtw_write32s_mask(rtwdev, REG_RFESEL0, 0xffffff, 0x745774);
-+		rtw_write32s_mask(rtwdev, REG_RFESEL8, MASKBYTE1, 0x57);
-+	} else {
-+		/* signal source */
-+		rtw_write32s_mask(rtwdev, REG_RFESEL0, 0xffffff, 0x477547);
-+		rtw_write32s_mask(rtwdev, REG_RFESEL8, MASKBYTE1, 0x75);
-+	}
-+
-+	rtw_write32s_mask(rtwdev, REG_RFEINV, BIT(11) | BIT(10) | 0x3f, 0x0);
-+
-+	if (is_channel_2g) {
-+		if (hal->antenna_rx == BB_PATH_AB ||
-+		    hal->antenna_tx == BB_PATH_AB) {
-+			/* 2TX or 2RX */
-+			rtw_write32s_mask(rtwdev, REG_TRSW, MASKLWORD, 0xa501);
-+		} else if (hal->antenna_rx == hal->antenna_tx) {
-+			/* TXA+RXA or TXB+RXB */
-+			rtw_write32s_mask(rtwdev, REG_TRSW, MASKLWORD, 0xa500);
-+		} else {
-+			/* TXB+RXA or TXA+RXB */
-+			rtw_write32s_mask(rtwdev, REG_TRSW, MASKLWORD, 0xa005);
-+		}
-+	} else {
-+		rtw_write32s_mask(rtwdev, REG_TRSW, MASKLWORD, 0xa5a5);
-+	}
-+}
-+
-+enum {
-+	CCUT_IDX_1R_2G,
-+	CCUT_IDX_2R_2G,
-+	CCUT_IDX_1R_5G,
-+	CCUT_IDX_2R_5G,
-+	CCUT_IDX_NR,
-+};
-+
-+struct cca_ccut {
-+	u32 reg82c[CCUT_IDX_NR];
-+	u32 reg830[CCUT_IDX_NR];
-+	u32 reg838[CCUT_IDX_NR];
-+};
-+
-+static const struct cca_ccut cca_ifem_ccut = {
-+	{0x75C97010, 0x75C97010, 0x75C97010, 0x75C97010}, /*Reg82C*/
-+	{0x79a0eaaa, 0x79A0EAAC, 0x79a0eaaa, 0x79a0eaaa}, /*Reg830*/
-+	{0x87765541, 0x87746341, 0x87765541, 0x87746341}, /*Reg838*/
-+};
-+
-+static const struct cca_ccut cca_efem_ccut = {
-+	{0x75B86010, 0x75B76010, 0x75B86010, 0x75B76010}, /*Reg82C*/
-+	{0x79A0EAA8, 0x79A0EAAC, 0x79A0EAA8, 0x79a0eaaa}, /*Reg830*/
-+	{0x87766451, 0x87766431, 0x87766451, 0x87766431}, /*Reg838*/
-+};
-+
-+static const struct cca_ccut cca_ifem_ccut_ext = {
-+	{0x75da8010, 0x75da8010, 0x75da8010, 0x75da8010}, /*Reg82C*/
-+	{0x79a0eaaa, 0x97A0EAAC, 0x79a0eaaa, 0x79a0eaaa}, /*Reg830*/
-+	{0x87765541, 0x86666341, 0x87765561, 0x86666361}, /*Reg838*/
-+};
-+
-+static void rtw8822b_get_cca_val(const struct cca_ccut *cca_ccut, u8 col,
-+				 u32 *reg82c, u32 *reg830, u32 *reg838)
-+{
-+	*reg82c = cca_ccut->reg82c[col];
-+	*reg830 = cca_ccut->reg830[col];
-+	*reg838 = cca_ccut->reg838[col];
-+}
-+
-+struct rtw8822b_rfe_info {
-+	const struct cca_ccut *cca_ccut_2g;
-+	const struct cca_ccut *cca_ccut_5g;
-+	enum rtw_rfe_fem fem;
-+	bool ifem_ext;
-+	void (*rtw_set_channel_rfe)(struct rtw_dev *rtwdev, u8 channel);
-+};
-+
-+#define I2GE5G_CCUT(set_ch) {						\
-+	.cca_ccut_2g = &cca_ifem_ccut,					\
-+	.cca_ccut_5g = &cca_efem_ccut,					\
-+	.fem = RTW_RFE_IFEM2G_EFEM5G,					\
-+	.ifem_ext = false,						\
-+	.rtw_set_channel_rfe = &rtw8822b_set_channel_rfe_ ## set_ch,	\
-+	}
-+#define IFEM_EXT_CCUT(set_ch) {						\
-+	.cca_ccut_2g = &cca_ifem_ccut_ext,				\
-+	.cca_ccut_5g = &cca_ifem_ccut_ext,				\
-+	.fem = RTW_RFE_IFEM,						\
-+	.ifem_ext = true,						\
-+	.rtw_set_channel_rfe = &rtw8822b_set_channel_rfe_ ## set_ch,	\
-+	}
-+
-+static const struct rtw8822b_rfe_info rtw8822b_rfe_info[] = {
-+	[2] = I2GE5G_CCUT(efem),
-+	[5] = IFEM_EXT_CCUT(ifem),
-+};
-+
-+static void rtw8822b_set_channel_cca(struct rtw_dev *rtwdev, u8 channel, u8 bw,
-+				     const struct rtw8822b_rfe_info *rfe_info)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	const struct cca_ccut *cca_ccut;
-+	u8 col;
-+	u32 reg82c, reg830, reg838;
-+	bool is_efem_cca = false, is_ifem_cca = false, is_rfe_type = false;
-+
-+	if (channel <= 14) {
-+		cca_ccut = rfe_info->cca_ccut_2g;
-+
-+		if (hal->antenna_rx == BB_PATH_A ||
-+		    hal->antenna_rx == BB_PATH_B)
-+			col = CCUT_IDX_1R_2G;
-+		else
-+			col = CCUT_IDX_2R_2G;
-+	} else {
-+		cca_ccut = rfe_info->cca_ccut_5g;
-+
-+		if (hal->antenna_rx == BB_PATH_A ||
-+		    hal->antenna_rx == BB_PATH_B)
-+			col = CCUT_IDX_1R_5G;
-+		else
-+			col = CCUT_IDX_2R_5G;
-+	}
-+
-+	rtw8822b_get_cca_val(cca_ccut, col, &reg82c, &reg830, &reg838);
-+
-+	switch (rfe_info->fem) {
-+	case RTW_RFE_IFEM:
-+	default:
-+		is_ifem_cca = true;
-+		if (rfe_info->ifem_ext)
-+			is_rfe_type = true;
-+		break;
-+	case RTW_RFE_EFEM:
-+		is_efem_cca = true;
-+		break;
-+	case RTW_RFE_IFEM2G_EFEM5G:
-+		if (channel <= 14)
-+			is_ifem_cca = true;
-+		else
-+			is_efem_cca = true;
-+		break;
-+	}
-+
-+	if (is_ifem_cca) {
-+		if ((hal->cut_version == RTW_CHIP_VER_CUT_B &&
-+		     (col == CCUT_IDX_2R_2G || col == CCUT_IDX_2R_5G) &&
-+		     bw == RTW_CHANNEL_WIDTH_40) ||
-+		    (!is_rfe_type && col == CCUT_IDX_2R_5G &&
-+		     bw == RTW_CHANNEL_WIDTH_40) ||
-+		    (efuse->rfe_option == 5 && col == CCUT_IDX_2R_5G))
-+			reg830 = 0x79a0ea28;
-+	}
-+
-+	rtw_write32_mask(rtwdev, REG_CCASEL, MASKDWORD, reg82c);
-+	rtw_write32_mask(rtwdev, REG_PDMFTH, MASKDWORD, reg830);
-+	rtw_write32_mask(rtwdev, REG_CCA2ND, MASKDWORD, reg838);
-+
-+	if (is_efem_cca && !(hal->cut_version == RTW_CHIP_VER_CUT_B))
-+		rtw_write32_mask(rtwdev, REG_L1WT, MASKDWORD, 0x9194b2b9);
-+
-+	if (bw == RTW_CHANNEL_WIDTH_20 &&
-+	    ((channel >= 52 && channel <= 64) ||
-+	     (channel >= 100 && channel <= 144)))
-+		rtw_write32_mask(rtwdev, REG_CCA2ND, 0xf0, 0x4);
-+}
-+
-+static const u8 low_band[15] = {0x7, 0x6, 0x6, 0x5, 0x0, 0x0, 0x7, 0xff, 0x6,
-+				0x5, 0x0, 0x0, 0x7, 0x6, 0x6};
-+static const u8 middle_band[23] = {0x6, 0x5, 0x0, 0x0, 0x7, 0x6, 0x6, 0xff, 0x0,
-+				   0x0, 0x7, 0x6, 0x6, 0x5, 0x0, 0xff, 0x7, 0x6,
-+				   0x6, 0x5, 0x0, 0x0, 0x7};
-+static const u8 high_band[15] = {0x5, 0x5, 0x0, 0x7, 0x7, 0x6, 0x5, 0xff, 0x0,
-+				 0x7, 0x7, 0x6, 0x5, 0x5, 0x0};
-+
-+static void rtw8822b_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
-+{
-+#define RF18_BAND_MASK		(BIT(16) | BIT(9) | BIT(8))
-+#define RF18_BAND_2G		(0)
-+#define RF18_BAND_5G		(BIT(16) | BIT(8))
-+#define RF18_CHANNEL_MASK	(MASKBYTE0)
-+#define RF18_RFSI_MASK		(BIT(18) | BIT(17))
-+#define RF18_RFSI_GE_CH80	(BIT(17))
-+#define RF18_RFSI_GT_CH144	(BIT(18))
-+#define RF18_BW_MASK		(BIT(11) | BIT(10))
-+#define RF18_BW_20M		(BIT(11) | BIT(10))
-+#define RF18_BW_40M		(BIT(11))
-+#define RF18_BW_80M		(BIT(10))
-+#define RFBE_MASK		(BIT(17) | BIT(16) | BIT(15))
-+
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	u32 rf_reg18, rf_reg_be;
-+
-+	rf_reg18 = rtw_read_rf(rtwdev, RF_PATH_A, 0x18, RFREG_MASK);
-+
-+	rf_reg18 &= ~(RF18_BAND_MASK | RF18_CHANNEL_MASK | RF18_RFSI_MASK |
-+		      RF18_BW_MASK);
-+
-+	rf_reg18 |= (channel <= 14 ? RF18_BAND_2G : RF18_BAND_5G);
-+	rf_reg18 |= (channel & RF18_CHANNEL_MASK);
-+	if (channel > 144)
-+		rf_reg18 |= RF18_RFSI_GT_CH144;
-+	else if (channel >= 80)
-+		rf_reg18 |= RF18_RFSI_GE_CH80;
-+
-+	switch (bw) {
-+	case RTW_CHANNEL_WIDTH_5:
-+	case RTW_CHANNEL_WIDTH_10:
-+	case RTW_CHANNEL_WIDTH_20:
-+	default:
-+		rf_reg18 |= RF18_BW_20M;
-+		break;
-+	case RTW_CHANNEL_WIDTH_40:
-+		rf_reg18 |= RF18_BW_40M;
-+		break;
-+	case RTW_CHANNEL_WIDTH_80:
-+		rf_reg18 |= RF18_BW_80M;
-+		break;
-+	}
-+
-+	if (channel <= 14)
-+		rf_reg_be = 0x0;
-+	else if (channel >= 36 && channel <= 64)
-+		rf_reg_be = low_band[(channel - 36) >> 1];
-+	else if (channel >= 100 && channel <= 144)
-+		rf_reg_be = middle_band[(channel - 100) >> 1];
-+	else if (channel >= 149 && channel <= 177)
-+		rf_reg_be = high_band[(channel - 149) >> 1];
-+	else
-+		goto err;
-+
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_MALSEL, RFBE_MASK, rf_reg_be);
-+
-+	/* need to set 0xdf[18]=1 before writing RF18 when channel 144 */
-+	if (channel == 144)
-+		rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTDBG, BIT(18), 0x1);
-+	else
-+		rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTDBG, BIT(18), 0x0);
-+
-+	rtw_write_rf(rtwdev, RF_PATH_A, 0x18, RFREG_MASK, rf_reg18);
-+	if (hal->rf_type > RF_1T1R)
-+		rtw_write_rf(rtwdev, RF_PATH_B, 0x18, RFREG_MASK, rf_reg18);
-+
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_XTALX2, BIT(19), 0);
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_XTALX2, BIT(19), 1);
-+
-+	return;
-+
-+err:
-+	WARN_ON(1);
-+}
-+
-+static void rtw8822b_toggle_igi(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	u32 igi;
-+
-+	igi = rtw_read32_mask(rtwdev, REG_RXIGI_A, 0x7f);
-+	rtw_write32_mask(rtwdev, REG_RXIGI_A, 0x7f, igi - 2);
-+	rtw_write32_mask(rtwdev, REG_RXIGI_A, 0x7f, igi);
-+	rtw_write32_mask(rtwdev, REG_RXIGI_B, 0x7f, igi - 2);
-+	rtw_write32_mask(rtwdev, REG_RXIGI_B, 0x7f, igi);
-+
-+	rtw_write32_mask(rtwdev, REG_RXPSEL, MASKBYTE0, 0x0);
-+	rtw_write32_mask(rtwdev, REG_RXPSEL, MASKBYTE0,
-+			 hal->antenna_rx | (hal->antenna_rx << 4));
-+}
-+
-+static void rtw8822b_set_channel_rxdfir(struct rtw_dev *rtwdev, u8 bw)
-+{
-+	if (bw == RTW_CHANNEL_WIDTH_40) {
-+		/* RX DFIR for BW40 */
-+		rtw_write32_mask(rtwdev, REG_ACBB0, BIT(29) | BIT(28), 0x1);
-+		rtw_write32_mask(rtwdev, REG_ACBBRXFIR, BIT(29) | BIT(28), 0x0);
-+		rtw_write32s_mask(rtwdev, REG_TXDFIR, BIT(31), 0x0);
-+	} else if (bw == RTW_CHANNEL_WIDTH_80) {
-+		/* RX DFIR for BW80 */
-+		rtw_write32_mask(rtwdev, REG_ACBB0, BIT(29) | BIT(28), 0x2);
-+		rtw_write32_mask(rtwdev, REG_ACBBRXFIR, BIT(29) | BIT(28), 0x1);
-+		rtw_write32s_mask(rtwdev, REG_TXDFIR, BIT(31), 0x0);
-+	} else {
-+		/* RX DFIR for BW20, BW10 and BW5*/
-+		rtw_write32_mask(rtwdev, REG_ACBB0, BIT(29) | BIT(28), 0x2);
-+		rtw_write32_mask(rtwdev, REG_ACBBRXFIR, BIT(29) | BIT(28), 0x2);
-+		rtw_write32s_mask(rtwdev, REG_TXDFIR, BIT(31), 0x1);
-+	}
-+}
-+
-+static void rtw8822b_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
-+				    u8 primary_ch_idx)
-+{
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	u8 rfe_option = efuse->rfe_option;
-+	u32 val32;
-+
-+	if (channel <= 14) {
-+		rtw_write32_mask(rtwdev, REG_RXPSEL, BIT(28), 0x1);
-+		rtw_write32_mask(rtwdev, REG_CCK_CHECK, BIT(7), 0x0);
-+		rtw_write32_mask(rtwdev, REG_ENTXCCK, BIT(18), 0x0);
-+		rtw_write32_mask(rtwdev, REG_RXCCAMSK, 0x0000FC00, 15);
-+
-+		rtw_write32_mask(rtwdev, REG_ACGG2TBL, 0x1f, 0x0);
-+		rtw_write32_mask(rtwdev, REG_CLKTRK, 0x1ffe0000, 0x96a);
-+		if (channel == 14) {
-+			rtw_write32_mask(rtwdev, REG_TXSF2, MASKDWORD, 0x00006577);
-+			rtw_write32_mask(rtwdev, REG_TXSF6, MASKLWORD, 0x0000);
-+		} else {
-+			rtw_write32_mask(rtwdev, REG_TXSF2, MASKDWORD, 0x384f6577);
-+			rtw_write32_mask(rtwdev, REG_TXSF6, MASKLWORD, 0x1525);
-+		}
-+
-+		rtw_write32_mask(rtwdev, REG_RFEINV, 0x300, 0x2);
-+	} else if (channel > 35) {
-+		rtw_write32_mask(rtwdev, REG_ENTXCCK, BIT(18), 0x1);
-+		rtw_write32_mask(rtwdev, REG_CCK_CHECK, BIT(7), 0x1);
-+		rtw_write32_mask(rtwdev, REG_RXPSEL, BIT(28), 0x0);
-+		rtw_write32_mask(rtwdev, REG_RXCCAMSK, 0x0000FC00, 34);
-+
-+		if (channel >= 36 && channel <= 64)
-+			rtw_write32_mask(rtwdev, REG_ACGG2TBL, 0x1f, 0x1);
-+		else if (channel >= 100 && channel <= 144)
-+			rtw_write32_mask(rtwdev, REG_ACGG2TBL, 0x1f, 0x2);
-+		else if (channel >= 149)
-+			rtw_write32_mask(rtwdev, REG_ACGG2TBL, 0x1f, 0x3);
-+
-+		if (channel >= 36 && channel <= 48)
-+			rtw_write32_mask(rtwdev, REG_CLKTRK, 0x1ffe0000, 0x494);
-+		else if (channel >= 52 && channel <= 64)
-+			rtw_write32_mask(rtwdev, REG_CLKTRK, 0x1ffe0000, 0x453);
-+		else if (channel >= 100 && channel <= 116)
-+			rtw_write32_mask(rtwdev, REG_CLKTRK, 0x1ffe0000, 0x452);
-+		else if (channel >= 118 && channel <= 177)
-+			rtw_write32_mask(rtwdev, REG_CLKTRK, 0x1ffe0000, 0x412);
-+
-+		rtw_write32_mask(rtwdev, 0xcbc, 0x300, 0x1);
-+	}
-+
-+	switch (bw) {
-+	case RTW_CHANNEL_WIDTH_20:
-+	default:
-+		val32 = rtw_read32_mask(rtwdev, REG_ADCCLK, MASKDWORD);
-+		val32 &= 0xFFCFFC00;
-+		val32 |= (RTW_CHANNEL_WIDTH_20);
-+		rtw_write32_mask(rtwdev, REG_ADCCLK, MASKDWORD, val32);
-+
-+		rtw_write32_mask(rtwdev, REG_ADC160, BIT(30), 0x1);
-+		break;
-+	case RTW_CHANNEL_WIDTH_40:
-+		if (primary_ch_idx == 1)
-+			rtw_write32_set(rtwdev, REG_RXSB, BIT(4));
-+		else
-+			rtw_write32_clr(rtwdev, REG_RXSB, BIT(4));
-+
-+		val32 = rtw_read32_mask(rtwdev, REG_ADCCLK, MASKDWORD);
-+		val32 &= 0xFF3FF300;
-+		val32 |= (((primary_ch_idx & 0xf) << 2) | RTW_CHANNEL_WIDTH_40);
-+		rtw_write32_mask(rtwdev, REG_ADCCLK, MASKDWORD, val32);
-+
-+		rtw_write32_mask(rtwdev, REG_ADC160, BIT(30), 0x1);
-+		break;
-+	case RTW_CHANNEL_WIDTH_80:
-+		val32 = rtw_read32_mask(rtwdev, REG_ADCCLK, MASKDWORD);
-+		val32 &= 0xFCEFCF00;
-+		val32 |= (((primary_ch_idx & 0xf) << 2) | RTW_CHANNEL_WIDTH_80);
-+		rtw_write32_mask(rtwdev, REG_ADCCLK, MASKDWORD, val32);
-+
-+		rtw_write32_mask(rtwdev, REG_ADC160, BIT(30), 0x1);
-+
-+		if (rfe_option == 2) {
-+			rtw_write32_mask(rtwdev, REG_L1PKWT, 0x0000f000, 0x6);
-+			rtw_write32_mask(rtwdev, REG_ADC40, BIT(10), 0x1);
-+		}
-+		break;
-+	case RTW_CHANNEL_WIDTH_5:
-+		val32 = rtw_read32_mask(rtwdev, REG_ADCCLK, MASKDWORD);
-+		val32 &= 0xEFEEFE00;
-+		val32 |= ((BIT(6) | RTW_CHANNEL_WIDTH_20));
-+		rtw_write32_mask(rtwdev, REG_ADCCLK, MASKDWORD, val32);
-+
-+		rtw_write32_mask(rtwdev, REG_ADC160, BIT(30), 0x0);
-+		rtw_write32_mask(rtwdev, REG_ADC40, BIT(31), 0x1);
-+		break;
-+	case RTW_CHANNEL_WIDTH_10:
-+		val32 = rtw_read32_mask(rtwdev, REG_ADCCLK, MASKDWORD);
-+		val32 &= 0xEFFEFF00;
-+		val32 |= ((BIT(7) | RTW_CHANNEL_WIDTH_20));
-+		rtw_write32_mask(rtwdev, REG_ADCCLK, MASKDWORD, val32);
-+
-+		rtw_write32_mask(rtwdev, REG_ADC160, BIT(30), 0x0);
-+		rtw_write32_mask(rtwdev, REG_ADC40, BIT(31), 0x1);
-+		break;
-+	}
-+}
-+
-+static void rtw8822b_set_channel(struct rtw_dev *rtwdev, u8 channel, u8 bw,
-+				 u8 primary_chan_idx)
-+{
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	const struct rtw8822b_rfe_info *rfe_info;
-+
-+	if (WARN(efuse->rfe_option >= ARRAY_SIZE(rtw8822b_rfe_info),
-+		 "rfe_option %d is out of boundary\n", efuse->rfe_option))
-+		return;
-+
-+	rfe_info = &rtw8822b_rfe_info[efuse->rfe_option];
-+
-+	rtw8822b_set_channel_bb(rtwdev, channel, bw, primary_chan_idx);
-+	rtw_set_channel_mac(rtwdev, channel, bw, primary_chan_idx);
-+	rtw8822b_set_channel_rf(rtwdev, channel, bw);
-+	rtw8822b_set_channel_rxdfir(rtwdev, bw);
-+	rtw8822b_toggle_igi(rtwdev);
-+	rtw8822b_set_channel_cca(rtwdev, channel, bw, rfe_info);
-+	(*rfe_info->rtw_set_channel_rfe)(rtwdev, channel);
-+}
-+
-+static void rtw8822b_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
-+				     u8 rx_path, bool is_tx2_path)
-+{
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	const struct rtw8822b_rfe_info *rfe_info;
-+	u8 ch = rtwdev->hal.current_channel;
-+	u8 tx_path_sel, rx_path_sel;
-+	int counter;
-+
-+	if (WARN(efuse->rfe_option >= ARRAY_SIZE(rtw8822b_rfe_info),
-+		 "rfe_option %d is out of boundary\n", efuse->rfe_option))
-+		return;
-+
-+	rfe_info = &rtw8822b_rfe_info[efuse->rfe_option];
-+
-+	if ((tx_path | rx_path) & BB_PATH_A)
-+		rtw_write32_mask(rtwdev, REG_AGCTR_A, MASKLWORD, 0x3231);
-+	else
-+		rtw_write32_mask(rtwdev, REG_AGCTR_A, MASKLWORD, 0x1111);
-+
-+	if ((tx_path | rx_path) & BB_PATH_B)
-+		rtw_write32_mask(rtwdev, REG_AGCTR_B, MASKLWORD, 0x3231);
-+	else
-+		rtw_write32_mask(rtwdev, REG_AGCTR_B, MASKLWORD, 0x1111);
-+
-+	rtw_write32_mask(rtwdev, REG_CDDTXP, (BIT(19) | BIT(18)), 0x3);
-+	rtw_write32_mask(rtwdev, REG_TXPSEL, (BIT(29) | BIT(28)), 0x1);
-+	rtw_write32_mask(rtwdev, REG_TXPSEL, BIT(30), 0x1);
-+
-+	if (tx_path & BB_PATH_A) {
-+		rtw_write32_mask(rtwdev, REG_CDDTXP, 0xfff00000, 0x001);
-+		rtw_write32_mask(rtwdev, REG_ADCINI, 0xf0000000, 0x8);
-+	} else if (tx_path & BB_PATH_B) {
-+		rtw_write32_mask(rtwdev, REG_CDDTXP, 0xfff00000, 0x002);
-+		rtw_write32_mask(rtwdev, REG_ADCINI, 0xf0000000, 0x4);
-+	}
-+
-+	if (tx_path == BB_PATH_A || tx_path == BB_PATH_B)
-+		rtw_write32_mask(rtwdev, REG_TXPSEL1, 0xfff0, 0x01);
-+	else
-+		rtw_write32_mask(rtwdev, REG_TXPSEL1, 0xfff0, 0x43);
-+
-+	tx_path_sel = (tx_path << 4) | tx_path;
-+	rtw_write32_mask(rtwdev, REG_TXPSEL, MASKBYTE0, tx_path_sel);
-+
-+	if (tx_path != BB_PATH_A && tx_path != BB_PATH_B) {
-+		if (is_tx2_path || rtwdev->mp_mode) {
-+			rtw_write32_mask(rtwdev, REG_CDDTXP, 0xfff00000, 0x043);
-+			rtw_write32_mask(rtwdev, REG_ADCINI, 0xf0000000, 0xc);
-+		}
-+	}
-+
-+	rtw_write32_mask(rtwdev, REG_RXDESC, BIT(22), 0x0);
-+	rtw_write32_mask(rtwdev, REG_RXDESC, BIT(18), 0x0);
-+
-+	if (rx_path & BB_PATH_A)
-+		rtw_write32_mask(rtwdev, REG_ADCINI, 0x0f000000, 0x0);
-+	else if (rx_path & BB_PATH_B)
-+		rtw_write32_mask(rtwdev, REG_ADCINI, 0x0f000000, 0x5);
-+
-+	rx_path_sel = (rx_path << 4) | rx_path;
-+	rtw_write32_mask(rtwdev, REG_RXPSEL, MASKBYTE0, rx_path_sel);
-+
-+	if (rx_path == BB_PATH_A || rx_path == BB_PATH_B) {
-+		rtw_write32_mask(rtwdev, REG_ANTWT, BIT(16), 0x0);
-+		rtw_write32_mask(rtwdev, REG_HTSTFWT, BIT(28), 0x0);
-+		rtw_write32_mask(rtwdev, REG_MRC, BIT(23), 0x0);
-+	} else {
-+		rtw_write32_mask(rtwdev, REG_ANTWT, BIT(16), 0x1);
-+		rtw_write32_mask(rtwdev, REG_HTSTFWT, BIT(28), 0x1);
-+		rtw_write32_mask(rtwdev, REG_MRC, BIT(23), 0x1);
-+	}
-+
-+	for (counter = 100; counter > 0; counter--) {
-+		u32 rf_reg33;
-+
-+		rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, RFREG_MASK, 0x80000);
-+		rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWA, RFREG_MASK, 0x00001);
-+
-+		udelay(2);
-+		rf_reg33 = rtw_read_rf(rtwdev, RF_PATH_A, 0x33, RFREG_MASK);
-+
-+		if (rf_reg33 == 0x00001)
-+			break;
-+	}
-+
-+	if (WARN(counter <= 0, "write RF mode table fail\n"))
-+		return;
-+
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, RFREG_MASK, 0x80000);
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWA, RFREG_MASK, 0x00001);
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWD1, RFREG_MASK, 0x00034);
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWD0, RFREG_MASK, 0x4080c);
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, RFREG_MASK, 0x00000);
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, RFREG_MASK, 0x00000);
-+
-+	rtw8822b_toggle_igi(rtwdev);
-+	rtw8822b_set_channel_cca(rtwdev, 1, RTW_CHANNEL_WIDTH_20, rfe_info);
-+	(*rfe_info->rtw_set_channel_rfe)(rtwdev, ch);
-+}
-+
-+static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
-+				   struct rtw_rx_pkt_stat *pkt_stat)
-+{
-+	s8 min_rx_power = -120;
-+	u8 pwdb = GET_PHY_STAT_P0_PWDB(phy_status);
-+
-+	pkt_stat->rx_power[RF_PATH_A] = pwdb - 110;
-+	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
-+	pkt_stat->bw = RTW_CHANNEL_WIDTH_20;
-+	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
-+				     min_rx_power);
-+}
-+
-+static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
-+				   struct rtw_rx_pkt_stat *pkt_stat)
-+{
-+	u8 rxsc, bw;
-+	s8 min_rx_power = -120;
-+
-+	if (pkt_stat->rate > DESC_RATE11M && pkt_stat->rate < DESC_RATEMCS0)
-+		rxsc = GET_PHY_STAT_P1_L_RXSC(phy_status);
-+	else
-+		rxsc = GET_PHY_STAT_P1_HT_RXSC(phy_status);
-+
-+	if (rxsc >= 1 && rxsc <= 8)
-+		bw = RTW_CHANNEL_WIDTH_20;
-+	else if (rxsc >= 9 && rxsc <= 12)
-+		bw = RTW_CHANNEL_WIDTH_40;
-+	else if (rxsc >= 13)
-+		bw = RTW_CHANNEL_WIDTH_80;
-+	else
-+		bw = GET_PHY_STAT_P1_RF_MODE(phy_status);
-+
-+	pkt_stat->rx_power[RF_PATH_A] = GET_PHY_STAT_P1_PWDB_A(phy_status) - 110;
-+	pkt_stat->rx_power[RF_PATH_B] = GET_PHY_STAT_P1_PWDB_B(phy_status) - 110;
-+	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 2);
-+	pkt_stat->bw = bw;
-+	pkt_stat->signal_power = max3(pkt_stat->rx_power[RF_PATH_A],
-+				      pkt_stat->rx_power[RF_PATH_B],
-+				      min_rx_power);
-+}
-+
-+static void query_phy_status(struct rtw_dev *rtwdev, u8 *phy_status,
-+			     struct rtw_rx_pkt_stat *pkt_stat)
-+{
-+	u8 page;
-+
-+	page = *phy_status & 0xf;
-+
-+	switch (page) {
-+	case 0:
-+		query_phy_status_page0(rtwdev, phy_status, pkt_stat);
-+		break;
-+	case 1:
-+		query_phy_status_page1(rtwdev, phy_status, pkt_stat);
-+		break;
-+	default:
-+		rtw_warn(rtwdev, "unused phy status page (%d)\n", page);
-+		return;
-+	}
-+}
-+
-+static void rtw8822b_query_rx_desc(struct rtw_dev *rtwdev, u8 *rx_desc,
-+				   struct rtw_rx_pkt_stat *pkt_stat,
-+				   struct ieee80211_rx_status *rx_status)
-+{
-+	struct ieee80211_hdr *hdr;
-+	u32 desc_sz = rtwdev->chip->rx_pkt_desc_sz;
-+	u8 *phy_status = NULL;
-+
-+	memset(pkt_stat, 0, sizeof(*pkt_stat));
-+
-+	pkt_stat->phy_status = GET_RX_DESC_PHYST(rx_desc);
-+	pkt_stat->icv_err = GET_RX_DESC_ICV_ERR(rx_desc);
-+	pkt_stat->crc_err = GET_RX_DESC_CRC32(rx_desc);
-+	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc);
-+	pkt_stat->is_c2h = GET_RX_DESC_C2H(rx_desc);
-+	pkt_stat->pkt_len = GET_RX_DESC_PKT_LEN(rx_desc);
-+	pkt_stat->drv_info_sz = GET_RX_DESC_DRV_INFO_SIZE(rx_desc);
-+	pkt_stat->shift = GET_RX_DESC_SHIFT(rx_desc);
-+	pkt_stat->rate = GET_RX_DESC_RX_RATE(rx_desc);
-+	pkt_stat->cam_id = GET_RX_DESC_MACID(rx_desc);
-+	pkt_stat->ppdu_cnt = GET_RX_DESC_PPDU_CNT(rx_desc);
-+	pkt_stat->tsf_low = GET_RX_DESC_TSFL(rx_desc);
-+
-+	/* drv_info_sz is in unit of 8-bytes */
-+	pkt_stat->drv_info_sz *= 8;
-+
-+	/* c2h cmd pkt's rx/phy status is not interested */
-+	if (pkt_stat->is_c2h)
-+		return;
-+
-+	hdr = (struct ieee80211_hdr *)(rx_desc + desc_sz + pkt_stat->shift +
-+				       pkt_stat->drv_info_sz);
-+	if (pkt_stat->phy_status) {
-+		phy_status = rx_desc + desc_sz + pkt_stat->shift;
-+		query_phy_status(rtwdev, phy_status, pkt_stat);
-+	}
-+
-+	rtw_rx_fill_rx_status(rtwdev, pkt_stat, hdr, rx_status, phy_status);
-+}
-+
-+static void rtw8822b_set_tx_power_index(struct rtw_dev *rtwdev, u8 power_index,
-+					u8 path, u8 rate)
-+{
-+	static const u32 offset_txagc[2] = {0x1d00, 0x1d80};
-+	static u32 phy_pwr_idx;
-+	u8 rate_idx;
-+	u8 shift;
-+
-+	if (path > RF_PATH_B || rate > 0x53)
-+		return;
-+
-+	/*
-+	 * 8822B uses four bytes tx power index, driver needs to combine every
-+	 * one-byte value for the phydm
-+	 */
-+	shift = rate & 0x3;
-+	phy_pwr_idx |= ((u32)power_index << (shift * 8));
-+	if (shift == 0x3) {
-+		rate_idx = rate & 0xfc;
-+		rtw_write32(rtwdev, offset_txagc[path] + rate_idx, phy_pwr_idx);
-+		phy_pwr_idx = 0;
-+	}
-+}
-+
-+static bool rtw8822b_check_rf_path(u8 antenna)
-+{
-+	switch (antenna) {
-+	case BB_PATH_A:
-+	case BB_PATH_B:
-+	case BB_PATH_AB:
-+		return true;
-+	default:
-+		return false;
-+	}
-+}
-+
-+static void rtw8822b_set_antenna(struct rtw_dev *rtwdev, u8 antenna_tx,
-+				 u8 antenna_rx)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+
-+	rtw_dbg(rtwdev, RTW_DBG_PHY, "config RF path, tx=0x%x rx=0x%x\n",
-+		antenna_tx, antenna_rx);
-+
-+	if (!rtw8822b_check_rf_path(antenna_tx)) {
-+		rtw_info(rtwdev, "unsupport tx path, set to default path ab\n");
-+		antenna_tx = BB_PATH_AB;
-+	}
-+	if (!rtw8822b_check_rf_path(antenna_rx)) {
-+		rtw_info(rtwdev, "unsupport rx path, set to default path ab\n");
-+		antenna_rx = BB_PATH_AB;
-+	}
-+	hal->antenna_tx = antenna_tx;
-+	hal->antenna_rx = antenna_rx;
-+	rtw8822b_config_trx_mode(rtwdev, antenna_tx, antenna_rx, false);
-+}
-+
-+static void rtw8822b_cfg_ldo25(struct rtw_dev *rtwdev, bool enable)
-+{
-+	u8 ldo_pwr;
-+
-+	ldo_pwr = rtw_read8(rtwdev, REG_LDO_EFUSE_CTRL + 3);
-+	ldo_pwr = enable ? ldo_pwr | BIT(7) : ldo_pwr & ~BIT(7);
-+	rtw_write8(rtwdev, REG_LDO_EFUSE_CTRL + 3, ldo_pwr);
-+}
-+
-+static void rtw8822b_false_alarm_statistics(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	u32 cck_enable;
-+	u32 cck_fa_cnt;
-+	u32 ofdm_fa_cnt;
-+
-+	cck_enable = rtw_read32(rtwdev, 0x808) & BIT(28);
-+	cck_fa_cnt = rtw_read16(rtwdev, 0xa5c);
-+	ofdm_fa_cnt = rtw_read16(rtwdev, 0xf48);
-+
-+	dm_info->cck_fa_cnt = cck_fa_cnt;
-+	dm_info->ofdm_fa_cnt = ofdm_fa_cnt;
-+	dm_info->total_fa_cnt = ofdm_fa_cnt;
-+	dm_info->total_fa_cnt += cck_enable ? cck_fa_cnt : 0;
-+
-+	rtw_write32_set(rtwdev, 0x9a4, BIT(17));
-+	rtw_write32_clr(rtwdev, 0x9a4, BIT(17));
-+	rtw_write32_clr(rtwdev, 0xa2c, BIT(15));
-+	rtw_write32_set(rtwdev, 0xa2c, BIT(15));
-+	rtw_write32_set(rtwdev, 0xb58, BIT(0));
-+	rtw_write32_clr(rtwdev, 0xb58, BIT(0));
-+}
-+
-+static void rtw8822b_do_iqk(struct rtw_dev *rtwdev)
-+{
-+	static int do_iqk_cnt;
-+	struct rtw_iqk_para para = {.clear = 0, .segment_iqk = 0};
-+	u32 rf_reg, iqk_fail_mask;
-+	int counter;
-+	bool reload;
-+
-+	rtw_fw_do_iqk(rtwdev, &para);
-+
-+	for (counter = 0; counter < 300; counter++) {
-+		rf_reg = rtw_read_rf(rtwdev, RF_PATH_A, RF_DTXLOK, RFREG_MASK);
-+		if (rf_reg == 0xabcde)
-+			break;
-+		msleep(20);
-+	}
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_DTXLOK, RFREG_MASK, 0x0);
-+
-+	reload = !!rtw_read32_mask(rtwdev, REG_IQKFAILMSK, BIT(16));
-+	iqk_fail_mask = rtw_read32_mask(rtwdev, REG_IQKFAILMSK, GENMASK(0, 7));
-+	rtw_dbg(rtwdev, RTW_DBG_PHY,
-+		"iqk counter=%d reload=%d do_iqk_cnt=%d n_iqk_fail(mask)=0x%02x\n",
-+		counter, reload, ++do_iqk_cnt, iqk_fail_mask);
-+}
-+
-+static struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8822b[] = {
-+	{0x0086,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0086,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_POLLING, BIT(1), BIT(1)},
-+	{0x004A,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(3) | BIT(4) | BIT(7), 0},
-+	{0x0300,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x0301,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0xFFFF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 0,
-+	 RTW_PWR_CMD_END, 0, 0},
-+};
-+
-+static struct rtw_pwr_seq_cmd trans_cardemu_to_act_8822b[] = {
-+	{0x0012,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0012,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0020,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0001,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_DELAY, 1, RTW_PWR_DELAY_MS},
-+	{0x0000,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, (BIT(4) | BIT(3) | BIT(2)), 0},
-+	{0x0075,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0006,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_POLLING, BIT(1), BIT(1)},
-+	{0x0075,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0xFF1A,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x0006,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(7), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, (BIT(4) | BIT(3)), 0},
-+	{0x10C3,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_POLLING, BIT(0), 0},
-+	{0x0020,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(3), BIT(3)},
-+	{0x10A8,
-+	 RTW_PWR_CUT_C_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x10A9,
-+	 RTW_PWR_CUT_C_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0xef},
-+	{0x10AA,
-+	 RTW_PWR_CUT_C_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0x0c},
-+	{0x0068,
-+	 RTW_PWR_CUT_C_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(4), BIT(4)},
-+	{0x0029,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0xF9},
-+	{0x0024,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(2), 0},
-+	{0x0074,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), BIT(5)},
-+	{0x00AF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), BIT(5)},
-+	{0xFFFF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 0,
-+	 RTW_PWR_CMD_END, 0, 0},
-+};
-+
-+static struct rtw_pwr_seq_cmd trans_act_to_cardemu_8822b[] = {
-+	{0x0003,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(2), 0},
-+	{0x0093,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(3), 0},
-+	{0x001F,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x00EF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0xFF1A,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0x30},
-+	{0x0049,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0006,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0002,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x10C3,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_POLLING, BIT(1), 0},
-+	{0x0020,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(3), 0},
-+	{0x0000,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), BIT(5)},
-+	{0xFFFF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 0,
-+	 RTW_PWR_CMD_END, 0, 0},
-+};
-+
-+static struct rtw_pwr_seq_cmd trans_cardemu_to_carddis_8822b[] = {
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(7), BIT(7)},
-+	{0x0007,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0x20},
-+	{0x0067,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(2), BIT(2)},
-+	{0x004A,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0067,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), 0},
-+	{0x0067,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(4), 0},
-+	{0x004F,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0067,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0046,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(6), BIT(6)},
-+	{0x0067,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(2), 0},
-+	{0x0046,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(7), BIT(7)},
-+	{0x0062,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(4), BIT(4)},
-+	{0x0081,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(7) | BIT(6), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(3) | BIT(4), BIT(3)},
-+	{0x0086,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0086,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_POLLING, BIT(1), 0},
-+	{0x0090,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0044,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x0040,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0x90},
-+	{0x0041,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0x00},
-+	{0x0042,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0x04},
-+	{0xFFFF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 0,
-+	 RTW_PWR_CMD_END, 0, 0},
-+};
-+
-+static struct rtw_pwr_seq_cmd *card_enable_flow_8822b[] = {
-+	trans_carddis_to_cardemu_8822b,
-+	trans_cardemu_to_act_8822b,
-+	NULL
-+};
-+
-+static struct rtw_pwr_seq_cmd *card_disable_flow_8822b[] = {
-+	trans_act_to_cardemu_8822b,
-+	trans_cardemu_to_carddis_8822b,
-+	NULL
-+};
-+
-+static struct rtw_intf_phy_para usb2_param_8822b[] = {
-+	{0xFFFF, 0x00,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_ALL,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+};
-+
-+static struct rtw_intf_phy_para usb3_param_8822b[] = {
-+	{0x0001, 0xA841,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_D,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0xFFFF, 0x0000,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_ALL,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+};
-+
-+static struct rtw_intf_phy_para pcie_gen1_param_8822b[] = {
-+	{0x0001, 0xA841,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0002, 0x60C6,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0008, 0x3596,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0009, 0x321C,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x000A, 0x9623,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0020, 0x94FF,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0021, 0xFFCF,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0026, 0xC006,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0029, 0xFF0E,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x002A, 0x1840,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0xFFFF, 0x0000,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_ALL,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+};
-+
-+static struct rtw_intf_phy_para pcie_gen2_param_8822b[] = {
-+	{0x0001, 0xA841,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0002, 0x60C6,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0008, 0x3597,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0009, 0x321C,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x000A, 0x9623,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0020, 0x94FF,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0021, 0xFFCF,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0026, 0xC006,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x0029, 0xFF0E,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0x002A, 0x3040,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_C,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+	{0xFFFF, 0x0000,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_ALL,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+};
-+
-+static struct rtw_intf_phy_para_table phy_para_table_8822b = {
-+	.usb2_para	= usb2_param_8822b,
-+	.usb3_para	= usb3_param_8822b,
-+	.gen1_para	= pcie_gen1_param_8822b,
-+	.gen2_para	= pcie_gen2_param_8822b,
-+	.n_usb2_para	= ARRAY_SIZE(usb2_param_8822b),
-+	.n_usb3_para	= ARRAY_SIZE(usb2_param_8822b),
-+	.n_gen1_para	= ARRAY_SIZE(pcie_gen1_param_8822b),
-+	.n_gen2_para	= ARRAY_SIZE(pcie_gen2_param_8822b),
-+};
-+
-+static const struct rtw_rfe_def rtw8822b_rfe_defs[] = {
-+	[2] = RTW_DEF_RFE(8822b, 2, 2),
-+	[5] = RTW_DEF_RFE(8822b, 5, 5),
-+};
-+
-+static struct rtw_hw_reg rtw8822b_dig[] = {
-+	[0] = { .addr = 0xc50, .mask = 0x7f },
-+	[1] = { .addr = 0xe50, .mask = 0x7f },
-+};
-+
-+static struct rtw_page_table page_table_8822b[] = {
-+	{64, 64, 64, 64, 1},
-+	{64, 64, 64, 64, 1},
-+	{64, 64, 0, 0, 1},
-+	{64, 64, 64, 0, 1},
-+	{64, 64, 64, 64, 1},
-+};
-+
-+static struct rtw_rqpn rqpn_table_8822b[] = {
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_HIGH,
-+	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
-+};
-+
-+static struct rtw_chip_ops rtw8822b_ops = {
-+	.phy_set_param		= rtw8822b_phy_set_param,
-+	.read_efuse		= rtw8822b_read_efuse,
-+	.query_rx_desc		= rtw8822b_query_rx_desc,
-+	.set_channel		= rtw8822b_set_channel,
-+	.mac_init		= rtw8822b_mac_init,
-+	.read_rf		= rtw_phy_read_rf,
-+	.write_rf		= rtw_phy_write_rf_reg_sipi,
-+	.set_tx_power_index	= rtw8822b_set_tx_power_index,
-+	.set_antenna		= rtw8822b_set_antenna,
-+	.cfg_ldo25		= rtw8822b_cfg_ldo25,
-+	.false_alarm_statistics	= rtw8822b_false_alarm_statistics,
-+	.do_iqk			= rtw8822b_do_iqk,
-+};
-+
-+struct rtw_chip_info rtw8822b_hw_spec = {
-+	.ops = &rtw8822b_ops,
-+	.id = RTW_CHIP_TYPE_8822B,
-+	.fw_name = "rtw88/rtw8822b_fw.bin",
-+	.tx_pkt_desc_sz = 48,
-+	.tx_buf_desc_sz = 16,
-+	.rx_pkt_desc_sz = 24,
-+	.rx_buf_desc_sz = 8,
-+	.phy_efuse_size = 1024,
-+	.log_efuse_size = 768,
-+	.ptct_efuse_size = 96,
-+	.txff_size = 262144,
-+	.rxff_size = 24576,
-+	.csi_buf_pg_num = 0,
-+	.band = RTW_BAND_2G | RTW_BAND_5G,
-+	.page_size = 128,
-+	.dig_min = 0x1c,
-+	.ht_supported = true,
-+	.vht_supported = true,
-+	.sys_func_en = 0xDC,
-+	.pwr_on_seq = card_enable_flow_8822b,
-+	.pwr_off_seq = card_disable_flow_8822b,
-+	.page_table = page_table_8822b,
-+	.rqpn_table = rqpn_table_8822b,
-+	.intf_table = &phy_para_table_8822b,
-+	.dig = rtw8822b_dig,
-+	.rf_base_addr = {0x2800, 0x2c00},
-+	.rf_sipi_addr = {0xc90, 0xe90},
-+	.mac_tbl = &rtw8822b_mac_tbl,
-+	.agc_tbl = &rtw8822b_agc_tbl,
-+	.bb_tbl = &rtw8822b_bb_tbl,
-+	.rf_tbl = {&rtw8822b_rf_a_tbl, &rtw8822b_rf_b_tbl},
-+	.rfe_defs = rtw8822b_rfe_defs,
-+	.rfe_defs_size = ARRAY_SIZE(rtw8822b_rfe_defs),
-+};
-+EXPORT_SYMBOL(rtw8822b_hw_spec);
-+
-+MODULE_FIRMWARE("rtw88/rtw8822b_fw.bin");
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.h b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-new file mode 100644
-index 0000000..311fe8a
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
-@@ -0,0 +1,155 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#ifndef __RTW8822B_H__
-+#define __RTW8822B_H__
-+
-+#include <asm/byteorder.h>
-+
-+#define RCR_VHT_ACK		BIT(26)
-+
-+struct rtw8822bu_efuse {
-+	u8 res4[4];			/* 0xd0 */
-+	u8 usb_optional_function;
-+	u8 res5[0x1e];
-+	u8 res6[2];
-+	u8 serial[0x0b];		/* 0xf5 */
-+	u8 vid;				/* 0x100 */
-+	u8 res7;
-+	u8 pid;
-+	u8 res8[4];
-+	u8 mac_addr[ETH_ALEN];		/* 0x107 */
-+	u8 res9[2];
-+	u8 vendor_name[0x07];
-+	u8 res10[2];
-+	u8 device_name[0x14];
-+	u8 res11[0xcf];
-+	u8 package_type;		/* 0x1fb */
-+	u8 res12[0x4];
-+};
-+
-+struct rtw8822be_efuse {
-+	u8 mac_addr[ETH_ALEN];		/* 0xd0 */
-+	u8 vender_id[2];
-+	u8 device_id[2];
-+	u8 sub_vender_id[2];
-+	u8 sub_device_id[2];
-+	u8 pmc[2];
-+	u8 exp_device_cap[2];
-+	u8 msi_cap;
-+	u8 ltr_cap;			/* 0xe3 */
-+	u8 exp_link_control[2];
-+	u8 link_cap[4];
-+	u8 link_control[2];
-+	u8 serial_number[8];
-+	u8 res0:2;			/* 0xf4 */
-+	u8 ltr_en:1;
-+	u8 res1:2;
-+	u8 obff:2;
-+	u8 res2:3;
-+	u8 obff_cap:2;
-+	u8 res3:4;
-+	u8 res4[3];
-+	u8 class_code[3];
-+	u8 pci_pm_L1_2_supp:1;
-+	u8 pci_pm_L1_1_supp:1;
-+	u8 aspm_pm_L1_2_supp:1;
-+	u8 aspm_pm_L1_1_supp:1;
-+	u8 L1_pm_substates_supp:1;
-+	u8 res5:3;
-+	u8 port_common_mode_restore_time;
-+	u8 port_t_power_on_scale:2;
-+	u8 res6:1;
-+	u8 port_t_power_on_value:5;
-+	u8 res7;
-+};
-+
-+struct rtw8822b_efuse {
-+	__le16 rtl_id;
-+	u8 res0[0x0e];
-+
-+	/* power index for four RF paths */
-+	struct rtw_txpwr_idx txpwr_idx_table[4];
-+
-+	u8 channel_plan;		/* 0xb8 */
-+	u8 xtal_k;
-+	u8 thermal_meter;
-+	u8 iqk_lck;
-+	u8 pa_type;			/* 0xbc */
-+	u8 lna_type_2g[2];		/* 0xbd */
-+	u8 lna_type_5g[2];
-+	u8 rf_board_option;
-+	u8 rf_feature_option;
-+	u8 rf_bt_setting;
-+	u8 eeprom_version;
-+	u8 eeprom_customer_id;
-+	u8 tx_bb_swing_setting_2g;
-+	u8 tx_bb_swing_setting_5g;
-+	u8 tx_pwr_calibrate_rate;
-+	u8 rf_antenna_option;		/* 0xc9 */
-+	u8 rfe_option;
-+	u8 country_code[2];
-+	u8 res[3];
-+	union {
-+		struct rtw8822bu_efuse u;
-+		struct rtw8822be_efuse e;
-+	};
-+};
-+
-+/* phy status page0 */
-+#define GET_PHY_STAT_P0_PWDB(phy_stat)                                         \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
-+
-+/* phy status page1 */
-+#define GET_PHY_STAT_P1_PWDB_A(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
-+#define GET_PHY_STAT_P1_PWDB_B(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(23, 16))
-+#define GET_PHY_STAT_P1_RF_MODE(phy_stat)                                      \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x03), GENMASK(29, 28))
-+#define GET_PHY_STAT_P1_L_RXSC(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x01), GENMASK(11, 8))
-+#define GET_PHY_STAT_P1_HT_RXSC(phy_stat)                                      \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x01), GENMASK(15, 12))
-+
-+#define REG_HTSTFWT	0x800
-+#define REG_RXPSEL	0x808
-+#define BIT_RX_PSEL_RST		(BIT(28) | BIT(29))
-+#define REG_TXPSEL	0x80c
-+#define REG_RXCCAMSK	0x814
-+#define REG_CCASEL	0x82c
-+#define REG_PDMFTH	0x830
-+#define REG_CCA2ND	0x838
-+#define REG_L1WT	0x83c
-+#define REG_L1PKWT	0x840
-+#define REG_MRC		0x850
-+#define REG_CLKTRK	0x860
-+#define REG_ADCCLK	0x8ac
-+#define REG_ADC160	0x8c4
-+#define REG_ADC40	0x8c8
-+#define REG_CDDTXP	0x93c
-+#define REG_TXPSEL1	0x940
-+#define REG_ACBB0	0x948
-+#define REG_ACBBRXFIR	0x94c
-+#define REG_ACGG2TBL	0x958
-+#define REG_RXSB	0xa00
-+#define REG_ADCINI	0xa04
-+#define REG_TXSF2	0xa24
-+#define REG_TXSF6	0xa28
-+#define REG_RXDESC	0xa2c
-+#define REG_ENTXCCK	0xa80
-+#define REG_AGCTR_A	0xc08
-+#define REG_TXDFIR	0xc20
-+#define REG_RXIGI_A	0xc50
-+#define REG_TRSW	0xca0
-+#define REG_RFESEL0	0xcb0
-+#define REG_RFESEL8	0xcb4
-+#define REG_RFECTL	0xcb8
-+#define REG_RFEINV	0xcbc
-+#define REG_AGCTR_B	0xe08
-+#define REG_RXIGI_B	0xe50
-+#define REG_ANTWT	0x1904
-+#define REG_IQKFAILMSK	0x1bf0
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b_table.h b/drivers/net/wireless/realtek/rtw88/rtw8822b_table.h
-new file mode 100644
-index 0000000..693b781
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b_table.h
-@@ -0,0 +1,18 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#ifndef __RTW8822B_TABLE_H__
-+#define __RTW8822B_TABLE_H__
-+
-+extern const struct rtw_table rtw8822b_mac_tbl;
-+extern const struct rtw_table rtw8822b_agc_tbl;
-+extern const struct rtw_table rtw8822b_bb_tbl;
-+extern const struct rtw_table rtw8822b_bb_pg_type2_tbl;
-+extern const struct rtw_table rtw8822b_bb_pg_type5_tbl;
-+extern const struct rtw_table rtw8822b_rf_a_tbl;
-+extern const struct rtw_table rtw8822b_rf_b_tbl;
-+extern const struct rtw_table rtw8822b_txpwr_lmt_type2_tbl;
-+extern const struct rtw_table rtw8822b_txpwr_lmt_type5_tbl;
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-new file mode 100644
-index 0000000..38e770c
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -0,0 +1,1169 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#include "main.h"
-+#include "fw.h"
-+#include "tx.h"
-+#include "rx.h"
-+#include "phy.h"
-+#include "rtw8822c.h"
 +#include "rtw8822c_table.h"
-+#include "mac.h"
-+#include "reg.h"
-+#include "debug.h"
 +
-+static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
-+				     u8 rx_path, bool is_tx2_path);
-+
-+static u8 temp_addr[ETH_ALEN] = {0x00, 0xe0, 0x4c, 0x88, 0x22, 0xce};
-+
-+static void rtw8822ce_efuse_parsing(struct rtw_efuse *efuse,
-+				    struct rtw8822c_efuse *map)
-+{
-+	ether_addr_copy(efuse->addr, temp_addr);
-+}
-+
-+static int rtw8822c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
-+{
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	struct rtw8822c_efuse *map;
-+	int i;
-+
-+	map = (struct rtw8822c_efuse *)log_map;
-+
-+	efuse->rfe_option = map->rfe_option;
-+	efuse->crystal_cap = map->xtal_k;
-+	efuse->pa_type_2g = map->pa_type;
-+	efuse->pa_type_5g = map->pa_type;
-+	efuse->lna_type_2g = map->lna_type_2g[0];
-+	efuse->lna_type_5g = map->lna_type_5g[0];
-+	efuse->channel_plan = map->channel_plan;
-+	efuse->country_code[0] = map->country_code[0];
-+	efuse->country_code[1] = map->country_code[1];
-+	efuse->bt_setting = map->rf_bt_setting;
-+	efuse->regd = map->rf_board_option & 0x7;
-+
-+	for (i = 0; i < 4; i++)
-+		efuse->txpwr_idx_table[i] = map->txpwr_idx_table[i];
-+
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		rtw8822ce_efuse_parsing(efuse, map);
-+		break;
-+	default:
-+		/* unsupported now */
-+		return -ENOTSUPP;
-+	}
-+
-+	return 0;
-+}
-+
-+static void rtw8822c_header_file_init(struct rtw_dev *rtwdev, bool pre)
-+{
-+	rtw_write32_set(rtwdev, REG_3WIRE, BIT_3WIRE_TX_EN | BIT_3WIRE_RX_EN);
-+	rtw_write32_set(rtwdev, REG_3WIRE, BIT_3WIRE_PI_ON);
-+	rtw_write32_set(rtwdev, REG_3WIRE2, BIT_3WIRE_TX_EN | BIT_3WIRE_RX_EN);
-+	rtw_write32_set(rtwdev, REG_3WIRE2, BIT_3WIRE_PI_ON);
-+
-+	if (pre)
-+		rtw_write32_clr(rtwdev, REG_ENCCK, BIT_CCK_OFDM_BLK_EN);
-+	else
-+		rtw_write32_set(rtwdev, REG_ENCCK, BIT_CCK_OFDM_BLK_EN);
-+}
-+
-+static void rtw8822c_phy_set_param(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	u8 crystal_cap;
-+	u8 cck_gi_u_bnd_msb = 0;
-+	u8 cck_gi_u_bnd_lsb = 0;
-+	u8 cck_gi_l_bnd_msb = 0;
-+	u8 cck_gi_l_bnd_lsb = 0;
-+	bool is_tx2_path;
-+
-+	/* power on BB/RF domain */
-+	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN,
-+		       BIT_FEN_BB_GLB_RST | BIT_FEN_BB_RSTB);
-+	rtw_write8_set(rtwdev, REG_RF_CTRL,
-+		       BIT_RF_EN | BIT_RF_RSTB | BIT_RF_SDM_RSTB);
-+	rtw_write32_set(rtwdev, REG_WLRF1, BIT_WLRF1_BBRF_EN);
-+
-+	/* pre init before header files config */
-+	rtw8822c_header_file_init(rtwdev, true);
-+
-+	rtw_phy_load_tables(rtwdev);
-+
-+	crystal_cap = rtwdev->efuse.crystal_cap & 0x3F;
-+	rtw_write32_mask(rtwdev, 0x24, 0x7e000000, crystal_cap);
-+	rtw_write32_mask(rtwdev, 0x28, 0x7e, crystal_cap);
-+
-+	/* post init after header files config */
-+	rtw8822c_header_file_init(rtwdev, false);
-+
-+	is_tx2_path = false;
-+	rtw8822c_config_trx_mode(rtwdev, hal->antenna_tx, hal->antenna_rx,
-+				 is_tx2_path);
-+	rtw_phy_init(rtwdev);
-+
-+	cck_gi_u_bnd_msb = (u8)rtw_read32_mask(rtwdev, 0x1a98, 0xc000);
-+	cck_gi_u_bnd_lsb = (u8)rtw_read32_mask(rtwdev, 0x1aa8, 0xf0000);
-+	cck_gi_l_bnd_msb = (u8)rtw_read32_mask(rtwdev, 0x1a98, 0xc0);
-+	cck_gi_l_bnd_lsb = (u8)rtw_read32_mask(rtwdev, 0x1a70, 0x0f000000);
-+
-+	dm_info->cck_gi_u_bnd = ((cck_gi_u_bnd_msb << 4) | (cck_gi_u_bnd_lsb));
-+	dm_info->cck_gi_l_bnd = ((cck_gi_l_bnd_msb << 4) | (cck_gi_l_bnd_lsb));
-+
-+	/* wifi path controller */
-+	rtw_write32_mask(rtwdev, 0x70, 0xff000000, 0x0e);
-+	rtw_write32_mask(rtwdev, 0x1704, 0xffffffff, 0x7700);
-+	rtw_write32_mask(rtwdev, 0x1700, 0xffffffff, 0xc00f0038);
-+	rtw_write32_mask(rtwdev, 0x6c0, 0xffffffff, 0xaaaaaaaa);
-+	rtw_write32_mask(rtwdev, 0x6c4, 0xffffffff, 0xaaaaaaaa);
-+}
-+
-+#define WLAN_TXQ_RPT_EN		0x1F
-+#define WLAN_SLOT_TIME		0x05
-+#define WLAN_PIFS_TIME		0x1C
-+#define WLAN_SIFS_CCK_CONT_TX	0x0A
-+#define WLAN_SIFS_OFDM_CONT_TX	0x10
-+#define WLAN_SIFS_CCK_TRX	0x0A
-+#define WLAN_SIFS_OFDM_TRX	0x10
-+#define WLAN_NAV_MAX		0xC8
-+#define WLAN_RDG_NAV		0x05
-+#define WLAN_TXOP_NAV		0x1B
-+#define WLAN_CCK_RX_TSF		0x30
-+#define WLAN_OFDM_RX_TSF	0x30
-+#define WLAN_TBTT_PROHIBIT	0x04 /* unit : 32us */
-+#define WLAN_TBTT_HOLD_TIME	0x064 /* unit : 32us */
-+#define WLAN_DRV_EARLY_INT	0x04
-+#define WLAN_BCN_CTRL_CLT0	0x10
-+#define WLAN_BCN_DMA_TIME	0x02
-+#define WLAN_BCN_MAX_ERR	0xFF
-+#define WLAN_SIFS_CCK_DUR_TUNE	0x0A
-+#define WLAN_SIFS_OFDM_DUR_TUNE	0x10
-+#define WLAN_SIFS_CCK_CTX	0x0A
-+#define WLAN_SIFS_CCK_IRX	0x0A
-+#define WLAN_SIFS_OFDM_CTX	0x0E
-+#define WLAN_SIFS_OFDM_IRX	0x0E
-+#define WLAN_EIFS_DUR_TUNE	0x40
-+#define WLAN_EDCA_VO_PARAM	0x002FA226
-+#define WLAN_EDCA_VI_PARAM	0x005EA328
-+#define WLAN_EDCA_BE_PARAM	0x005EA42B
-+#define WLAN_EDCA_BK_PARAM	0x0000A44F
-+
-+#define WLAN_RX_FILTER0		0xFFFFFFFF
-+#define WLAN_RX_FILTER2		0xFFFF
-+#define WLAN_RCR_CFG		0xE400220E
-+#define WLAN_RXPKT_MAX_SZ	12288
-+#define WLAN_RXPKT_MAX_SZ_512	(WLAN_RXPKT_MAX_SZ >> 9)
-+
-+#define WLAN_AMPDU_MAX_TIME		0x70
-+#define WLAN_RTS_LEN_TH			0xFF
-+#define WLAN_RTS_TX_TIME_TH		0x08
-+#define WLAN_MAX_AGG_PKT_LIMIT		0x20
-+#define WLAN_RTS_MAX_AGG_PKT_LIMIT	0x20
-+#define WLAN_PRE_TXCNT_TIME_TH		0x1E0
-+#define FAST_EDCA_VO_TH		0x06
-+#define FAST_EDCA_VI_TH		0x06
-+#define FAST_EDCA_BE_TH		0x06
-+#define FAST_EDCA_BK_TH		0x06
-+#define WLAN_BAR_RETRY_LIMIT		0x01
-+#define WLAN_BAR_ACK_TYPE		0x05
-+#define WLAN_RA_TRY_RATE_AGG_LIMIT	0x08
-+#define WLAN_RESP_TXRATE		0x84
-+#define WLAN_ACK_TO			0x40
-+#define WLAN_DATA_RATE_FB_CNT_1_4	0x01000000
-+#define WLAN_DATA_RATE_FB_CNT_5_8	0x08070504
-+#define WLAN_RTS_RATE_FB_CNT_5_8	0x08070504
-+#define WLAN_DATA_RATE_FB_RATE0		0xFE01F010
-+#define WLAN_DATA_RATE_FB_RATE0_H	0x40000000
-+#define WLAN_RTS_RATE_FB_RATE1		0x003FF010
-+#define WLAN_RTS_RATE_FB_RATE1_H	0x40000000
-+#define WLAN_RTS_RATE_FB_RATE4		0x0600F010
-+#define WLAN_RTS_RATE_FB_RATE4_H	0x400003E0
-+#define WLAN_RTS_RATE_FB_RATE5		0x0600F015
-+#define WLAN_RTS_RATE_FB_RATE5_H	0x000000E0
-+
-+#define WLAN_TX_FUNC_CFG1		0x30
-+#define WLAN_TX_FUNC_CFG2		0x30
-+#define WLAN_MAC_OPT_NORM_FUNC1		0x90
-+#define WLAN_MAC_OPT_LB_FUNC1		0x80
-+#define WLAN_MAC_OPT_FUNC2		0x30810041
-+
-+#define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
-+			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
-+			(WLAN_SIFS_CCK_TRX << BIT_SHIFT_SIFS_CCK_TRX) | \
-+			(WLAN_SIFS_OFDM_TRX << BIT_SHIFT_SIFS_OFDM_TRX))
-+
-+#define WLAN_SIFS_DUR_TUNE	(WLAN_SIFS_CCK_DUR_TUNE | \
-+				(WLAN_SIFS_OFDM_DUR_TUNE << 8))
-+
-+#define WLAN_TBTT_TIME	(WLAN_TBTT_PROHIBIT |\
-+			(WLAN_TBTT_HOLD_TIME << BIT_SHIFT_TBTT_HOLD_TIME_AP))
-+
-+#define WLAN_NAV_CFG		(WLAN_RDG_NAV | (WLAN_TXOP_NAV << 16))
-+#define WLAN_RX_TSF_CFG		(WLAN_CCK_RX_TSF | (WLAN_OFDM_RX_TSF) << 8)
-+
-+#define MAC_CLK_SPEED	80 /* 80M */
-+#define EFUSE_PCB_INFO_OFFSET	0xCA
-+
-+static int rtw8822c_mac_init(struct rtw_dev *rtwdev)
-+{
-+	u8 value8;
-+	u16 value16;
-+	u32 value32;
-+	u16 pre_txcnt;
-+
-+	/* txq control */
-+	value8 = rtw_read8(rtwdev, REG_FWHW_TXQ_CTRL);
-+	value8 |= (BIT(7) & ~BIT(1) & ~BIT(2));
-+	rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL, value8);
-+	rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 1, WLAN_TXQ_RPT_EN);
-+	/* sifs control */
-+	rtw_write16(rtwdev, REG_SPEC_SIFS, WLAN_SIFS_DUR_TUNE);
-+	rtw_write32(rtwdev, REG_SIFS, WLAN_SIFS_CFG);
-+	rtw_write16(rtwdev, REG_RESP_SIFS_CCK,
-+		    WLAN_SIFS_CCK_CTX | WLAN_SIFS_CCK_IRX << 8);
-+	rtw_write16(rtwdev, REG_RESP_SIFS_OFDM,
-+		    WLAN_SIFS_OFDM_CTX | WLAN_SIFS_OFDM_IRX << 8);
-+	/* rate fallback control */
-+	rtw_write32(rtwdev, REG_DARFRC, WLAN_DATA_RATE_FB_CNT_1_4);
-+	rtw_write32(rtwdev, REG_DARFRCH, WLAN_DATA_RATE_FB_CNT_5_8);
-+	rtw_write32(rtwdev, REG_RARFRCH, WLAN_RTS_RATE_FB_CNT_5_8);
-+	rtw_write32(rtwdev, REG_ARFR0, WLAN_DATA_RATE_FB_RATE0);
-+	rtw_write32(rtwdev, REG_ARFRH0, WLAN_DATA_RATE_FB_RATE0_H);
-+	rtw_write32(rtwdev, REG_ARFR1_V1, WLAN_RTS_RATE_FB_RATE1);
-+	rtw_write32(rtwdev, REG_ARFRH1_V1, WLAN_RTS_RATE_FB_RATE1_H);
-+	rtw_write32(rtwdev, REG_ARFR4, WLAN_RTS_RATE_FB_RATE4);
-+	rtw_write32(rtwdev, REG_ARFRH4, WLAN_RTS_RATE_FB_RATE4_H);
-+	rtw_write32(rtwdev, REG_ARFR5, WLAN_RTS_RATE_FB_RATE5);
-+	rtw_write32(rtwdev, REG_ARFRH5, WLAN_RTS_RATE_FB_RATE5_H);
-+	/* protocol configuration */
-+	rtw_write8(rtwdev, REG_AMPDU_MAX_TIME_V1, WLAN_AMPDU_MAX_TIME);
-+	rtw_write8_set(rtwdev, REG_TX_HANG_CTRL, BIT_EN_EOF_V1);
-+	pre_txcnt = WLAN_PRE_TXCNT_TIME_TH | BIT_EN_PRECNT;
-+	rtw_write8(rtwdev, REG_PRECNT_CTRL, (u8)(pre_txcnt & 0xFF));
-+	rtw_write8(rtwdev, REG_PRECNT_CTRL + 1, (u8)(pre_txcnt >> 8));
-+	value32 = WLAN_RTS_LEN_TH | (WLAN_RTS_TX_TIME_TH << 8) |
-+		  (WLAN_MAX_AGG_PKT_LIMIT << 16) |
-+		  (WLAN_RTS_MAX_AGG_PKT_LIMIT << 24);
-+	rtw_write32(rtwdev, REG_PROT_MODE_CTRL, value32);
-+	rtw_write16(rtwdev, REG_BAR_MODE_CTRL + 2,
-+		    WLAN_BAR_RETRY_LIMIT | WLAN_RA_TRY_RATE_AGG_LIMIT << 8);
-+	rtw_write8(rtwdev, REG_FAST_EDCA_VOVI_SETTING, FAST_EDCA_VO_TH);
-+	rtw_write8(rtwdev, REG_FAST_EDCA_VOVI_SETTING + 2, FAST_EDCA_VI_TH);
-+	rtw_write8(rtwdev, REG_FAST_EDCA_BEBK_SETTING, FAST_EDCA_BE_TH);
-+	rtw_write8(rtwdev, REG_FAST_EDCA_BEBK_SETTING + 2, FAST_EDCA_BK_TH);
-+	/* close BA parser */
-+	rtw_write8_clr(rtwdev, REG_LIFETIME_EN, BIT_BA_PARSER_EN);
-+
-+	/* EDCA configuration */
-+	rtw_write32(rtwdev, REG_EDCA_VO_PARAM, WLAN_EDCA_VO_PARAM);
-+	rtw_write32(rtwdev, REG_EDCA_VI_PARAM, WLAN_EDCA_VI_PARAM);
-+	rtw_write32(rtwdev, REG_EDCA_BE_PARAM, WLAN_EDCA_BE_PARAM);
-+	rtw_write32(rtwdev, REG_EDCA_BK_PARAM, WLAN_EDCA_BK_PARAM);
-+	rtw_write8(rtwdev, REG_PIFS, WLAN_PIFS_TIME);
-+	rtw_write8_clr(rtwdev, REG_TX_PTCL_CTRL + 1, BIT_SIFS_BK_EN >> 8);
-+	rtw_write8_set(rtwdev, REG_RD_CTRL + 1,
-+		       (BIT_DIS_TXOP_CFE | BIT_DIS_LSIG_CFE |
-+			BIT_DIS_STBC_CFE) >> 8);
-+
-+	/* MAC clock configuration */
-+	rtw_write32_clr(rtwdev, REG_AFE_CTRL1, BIT_MAC_CLK_SEL);
-+	rtw_write8(rtwdev, REG_USTIME_TSF, MAC_CLK_SPEED);
-+	rtw_write8(rtwdev, REG_USTIME_EDCA, MAC_CLK_SPEED);
-+
-+	rtw_write8_set(rtwdev, REG_MISC_CTRL,
-+		       BIT_EN_FREE_CNT | BIT_DIS_SECOND_CCA);
-+	rtw_write8_clr(rtwdev, REG_TIMER0_SRC_SEL, BIT_TSFT_SEL_TIMER0);
-+	rtw_write16(rtwdev, REG_TXPAUSE, 0x0000);
-+	rtw_write8(rtwdev, REG_SLOT, WLAN_SLOT_TIME);
-+	rtw_write32(rtwdev, REG_RD_NAV_NXT, WLAN_NAV_CFG);
-+	rtw_write16(rtwdev, REG_RXTSF_OFFSET_CCK, WLAN_RX_TSF_CFG);
-+	/* Set beacon cotnrol - enable TSF and other related functions */
-+	rtw_write8_set(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
-+	/* Set send beacon related registers */
-+	rtw_write32(rtwdev, REG_TBTT_PROHIBIT, WLAN_TBTT_TIME);
-+	rtw_write8(rtwdev, REG_DRVERLYINT, WLAN_DRV_EARLY_INT);
-+	rtw_write8(rtwdev, REG_BCN_CTRL_CLINT0, WLAN_BCN_CTRL_CLT0);
-+	rtw_write8(rtwdev, REG_BCNDMATIM, WLAN_BCN_DMA_TIME);
-+	rtw_write8(rtwdev, REG_BCN_MAX_ERR, WLAN_BCN_MAX_ERR);
-+
-+	/* WMAC configuration */
-+	rtw_write8(rtwdev, REG_BBPSF_CTRL + 2, WLAN_RESP_TXRATE);
-+	rtw_write8(rtwdev, REG_ACKTO, WLAN_ACK_TO);
-+	rtw_write16(rtwdev, REG_EIFS, WLAN_EIFS_DUR_TUNE);
-+	rtw_write8(rtwdev, REG_NAV_CTRL + 2, WLAN_NAV_MAX);
-+	rtw_write8(rtwdev, REG_WMAC_TRXPTCL_CTL_H  + 2, WLAN_BAR_ACK_TYPE);
-+	rtw_write32(rtwdev, REG_RXFLTMAP0, WLAN_RX_FILTER0);
-+	rtw_write16(rtwdev, REG_RXFLTMAP2, WLAN_RX_FILTER2);
-+	rtw_write32(rtwdev, REG_RCR, WLAN_RCR_CFG);
-+	rtw_write8(rtwdev, REG_RX_PKT_LIMIT, WLAN_RXPKT_MAX_SZ_512);
-+	rtw_write8(rtwdev, REG_TCR + 2, WLAN_TX_FUNC_CFG2);
-+	rtw_write8(rtwdev, REG_TCR + 1, WLAN_TX_FUNC_CFG1);
-+	rtw_write32(rtwdev, REG_WMAC_OPTION_FUNCTION + 8, WLAN_MAC_OPT_FUNC2);
-+	rtw_write8(rtwdev, REG_WMAC_OPTION_FUNCTION_1, WLAN_MAC_OPT_NORM_FUNC1);
-+
-+	/* init low power */
-+	value16 = rtw_read16(rtwdev, REG_RXPSF_CTRL + 2) & 0xF00F;
-+	value16 |= (BIT_RXGCK_VHT_FIFOTHR(1) | BIT_RXGCK_HT_FIFOTHR(1) |
-+		    BIT_RXGCK_OFDM_FIFOTHR(1) | BIT_RXGCK_CCK_FIFOTHR(1)) >> 16;
-+	rtw_write16(rtwdev, REG_RXPSF_CTRL + 2, value16);
-+	value16 = 0;
-+	value16 = BIT_SET_RXPSF_PKTLENTHR(value16, 1);
-+	value16 |= BIT_RXPSF_CTRLEN | BIT_RXPSF_VHTCHKEN | BIT_RXPSF_HTCHKEN
-+		| BIT_RXPSF_OFDMCHKEN | BIT_RXPSF_CCKCHKEN
-+		| BIT_RXPSF_OFDMRST | BIT_RXPSF_CCKRST;
-+	rtw_write16(rtwdev, REG_RXPSF_CTRL, value16);
-+	rtw_write32(rtwdev, REG_RXPSF_TYPE_CTRL, 0xFFFFFFFF);
-+	/* rx ignore configuration */
-+	value16 = rtw_read16(rtwdev, REG_RXPSF_CTRL);
-+	value16 &= ~(BIT_RXPSF_MHCHKEN | BIT_RXPSF_CCKRST |
-+		     BIT_RXPSF_CONT_ERRCHKEN);
-+	value16 = BIT_SET_RXPSF_ERRTHR(value16, 0x07);
-+	rtw_write16(rtwdev, REG_RXPSF_CTRL, value16);
-+
-+	return 0;
-+}
-+
-+static void rtw8822c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
-+{
-+#define RF18_BAND_MASK		(BIT(16) | BIT(9) | BIT(8))
-+#define RF18_BAND_2G		(0)
-+#define RF18_BAND_5G		(BIT(16) | BIT(8))
-+#define RF18_CHANNEL_MASK	(MASKBYTE0)
-+#define RF18_RFSI_MASK		(BIT(18) | BIT(17))
-+#define RF18_RFSI_GE_CH80	(BIT(17))
-+#define RF18_RFSI_GT_CH140	(BIT(18))
-+#define RF18_BW_MASK		(BIT(13) | BIT(12))
-+#define RF18_BW_20M		(BIT(13) | BIT(12))
-+#define RF18_BW_40M		(BIT(13))
-+#define RF18_BW_80M		(BIT(12))
-+
-+	u32 rf_reg18 = 0;
-+
-+	rf_reg18 = rtw_read_rf(rtwdev, RF_PATH_A, 0x18, RFREG_MASK);
-+
-+	rf_reg18 &= ~(RF18_BAND_MASK | RF18_CHANNEL_MASK | RF18_RFSI_MASK |
-+		      RF18_BW_MASK);
-+
-+	rf_reg18 |= (channel <= 14 ? RF18_BAND_2G : RF18_BAND_5G);
-+	rf_reg18 |= (channel & RF18_CHANNEL_MASK);
-+	if (channel > 140)
-+		rf_reg18 |= RF18_RFSI_GT_CH140;
-+	else if (channel >= 80)
-+		rf_reg18 |= RF18_RFSI_GE_CH80;
-+
-+	switch (bw) {
-+	case RTW_CHANNEL_WIDTH_5:
-+	case RTW_CHANNEL_WIDTH_10:
-+	case RTW_CHANNEL_WIDTH_20:
-+	default:
-+		rf_reg18 |= RF18_BW_20M;
-+		break;
-+	case RTW_CHANNEL_WIDTH_40:
-+		/* RF bandwidth */
-+		rf_reg18 |= RF18_BW_40M;
-+		break;
-+	case RTW_CHANNEL_WIDTH_80:
-+		rf_reg18 |= RF18_BW_80M;
-+		break;
-+	}
-+
-+	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK, rf_reg18);
-+	rtw_write_rf(rtwdev, RF_PATH_B, RF_CFGCH, RFREG_MASK, rf_reg18);
-+}
-+
-+static void rtw8822c_toggle_igi(struct rtw_dev *rtwdev)
-+{
-+	u32 igi;
-+
-+	igi = rtw_read32_mask(rtwdev, REG_RXIGI, 0x7f);
-+	rtw_write32_mask(rtwdev, REG_RXIGI, 0x7f, igi - 2);
-+	rtw_write32_mask(rtwdev, REG_RXIGI, 0x7f00, igi - 2);
-+	rtw_write32_mask(rtwdev, REG_RXIGI, 0x7f, igi);
-+	rtw_write32_mask(rtwdev, REG_RXIGI, 0x7f00, igi);
-+}
-+
-+static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
-+				    u8 primary_ch_idx)
-+{
-+	if (channel <= 14) {
-+		rtw_write32_set(rtwdev, REG_ENCCK, BIT_CCK_BLK_EN);
-+		rtw_write32_clr(rtwdev, REG_CCK_CHECK, BIT_CHECK_CCK_EN);
-+		rtw_write32_clr(rtwdev, REG_CCKTXONLY, BIT_BB_CCK_CHECK_EN);
-+		rtw_write32_mask(rtwdev, REG_CCAMSK, 0x3F000000, 0xF);
-+
-+		rtw_write32_mask(rtwdev, REG_RXAGCCTL0, 0x1f0, 0x0);
-+		rtw_write32_mask(rtwdev, REG_RXAGCCTL, 0x1f0, 0x0);
-+		if (channel == 13 || channel == 14)
-+			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x969);
-+		else if (channel == 11 || channel == 12)
-+			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x96a);
-+		else
-+			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x9aa);
-+
-+		if (channel == 14) {
-+			rtw_write32_mask(rtwdev, REG_PSFGC2, MASKDWORD, 0x0000b81c);
-+			rtw_write32_mask(rtwdev, REG_PSFGC6, MASKLWORD, 0x0000);
-+			rtw_write32_mask(rtwdev, REG_PSFGC, MASKDWORD, 0x00003667);
-+		} else {
-+			rtw_write32_mask(rtwdev, REG_PSFGC2, MASKDWORD, 0x64b80c1c);
-+			rtw_write32_mask(rtwdev, REG_PSFGC6, MASKLWORD, 0x8810);
-+			rtw_write32_mask(rtwdev, REG_PSFGC, MASKDWORD, 0x01235667);
-+		}
-+	} else if (channel > 35) {
-+		rtw_write32_set(rtwdev, REG_CCKTXONLY, BIT_BB_CCK_CHECK_EN);
-+		rtw_write32_set(rtwdev, REG_CCK_CHECK, BIT_CHECK_CCK_EN);
-+		rtw_write32_clr(rtwdev, REG_ENCCK, BIT_CCK_BLK_EN);
-+		rtw_write32_mask(rtwdev, REG_CCAMSK, 0x3F000000, 0x22);
-+
-+		if (channel >= 36 && channel <= 64) {
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, 0x1f0, 0x1);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, 0x1f0, 0x1);
-+		} else if (channel >= 100 && channel <= 144) {
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, 0x1f0, 0x2);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, 0x1f0, 0x2);
-+		} else if (channel >= 149) {
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, 0x1f0, 0x3);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, 0x1f0, 0x3);
-+		}
-+
-+		if (channel >= 36 && channel <= 51)
-+			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x494);
-+		else if (channel >= 52 && channel <= 55)
-+			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x493);
-+		else if (channel >= 56 && channel <= 111)
-+			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x453);
-+		else if (channel >= 112 && channel <= 119)
-+			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x452);
-+		else if (channel >= 120 && channel <= 172)
-+			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x412);
-+		else if (channel >= 173 && channel <= 177)
-+			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x411);
-+	}
-+
-+	switch (bw) {
-+	case RTW_CHANNEL_WIDTH_20:
-+		rtw_write32_mask(rtwdev, REG_DFIRBW, 0x3FF0, 0x19B);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xc0, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xff00,
-+				 (primary_ch_idx | (primary_ch_idx << 4)));
-+		rtw_write32_mask(rtwdev, REG_TXCLK, MASKH3BYTES, 0xdb6db6);
-+		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0xffffc000, 0x1F8A3);
-+		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0x1, 0x0);
-+		rtw_write32_mask(rtwdev, REG_DYMTHMIN, 0x3f, 0x1a);
-+		break;
-+	case RTW_CHANNEL_WIDTH_40:
-+		rtw_write32_mask(rtwdev, REG_CCKSB, BIT(4),
-+				 (primary_ch_idx == 1 ? 1 : 0));
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0x5);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xc0, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xff00,
-+				 (primary_ch_idx | (primary_ch_idx << 4)));
-+		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0xffffc000, 0x1D821);
-+		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0x1, 0x0);
-+		rtw_write32_mask(rtwdev, REG_DYMTHMIN, MASK12BITS, 0x618);
-+		rtw_write32_mask(rtwdev, REG_DYMENTH0, 0x3ffff, 0x1D821);
-+		break;
-+	case RTW_CHANNEL_WIDTH_80:
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0xa);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xc0, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xff00,
-+				 (primary_ch_idx | (primary_ch_idx << 4)));
-+		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0xffffc000, 0x1B79F);
-+		rtw_write32_mask(rtwdev, REG_DYMPRITH, 0x1, 0x0);
-+		rtw_write32_mask(rtwdev, REG_DYMTHMIN, 0x3ffff, 0x18596);
-+		rtw_write32_mask(rtwdev, REG_DYMENTH0, 0x3FFFFFFF, 0x2085D75E);
-+		rtw_write32_mask(rtwdev, REG_DYMENTH, 0x3f, 0x1d);
-+		break;
-+	case RTW_CHANNEL_WIDTH_5:
-+		rtw_write32_mask(rtwdev, REG_DFIRBW, 0x3FF0, 0x2AB);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xffc0, 0x1);
-+		rtw_write32_mask(rtwdev, REG_TXCLK, MASKH3BYTES, 0xDB4DB2);
-+		break;
-+	case RTW_CHANNEL_WIDTH_10:
-+		rtw_write32_mask(rtwdev, REG_DFIRBW, 0x3FF0, 0x2AB);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xffc0, 0x2);
-+		rtw_write32_mask(rtwdev, REG_TXCLK, MASKH3BYTES, 0xDB5DB4);
-+		break;
-+	}
-+}
-+
-+static void rtw8822c_set_channel(struct rtw_dev *rtwdev, u8 channel, u8 bw,
-+				 u8 primary_chan_idx)
-+{
-+	rtw8822c_set_channel_bb(rtwdev, channel, bw, primary_chan_idx);
-+	rtw_set_channel_mac(rtwdev, channel, bw, primary_chan_idx);
-+	rtw8822c_set_channel_rf(rtwdev, channel, bw);
-+	rtw8822c_toggle_igi(rtwdev);
-+}
-+
-+static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
-+				     u8 rx_path, bool is_tx2_path)
-+{
-+	if ((tx_path | rx_path) & BB_PATH_A)
-+		rtw_write32_mask(rtwdev, REG_ORITXCODE, MASK20BITS, 0x33312);
-+	else
-+		rtw_write32_mask(rtwdev, REG_ORITXCODE, MASK20BITS, 0x11111);
-+	if ((tx_path | rx_path) & BB_PATH_B)
-+		rtw_write32_mask(rtwdev, REG_ORITXCODE2, MASK20BITS, 0x33312);
-+	else
-+		rtw_write32_mask(rtwdev, REG_ORITXCODE2, MASK20BITS, 0x11111);
-+
-+	rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x8);
-+	rtw_write32_mask(rtwdev, REG_CCKPATH, BIT(30), 0x1);
-+
-+	if (tx_path == BB_PATH_A)
-+		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x8);
-+	else if (tx_path == BB_PATH_B)
-+		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x4);
-+	else if (tx_path == BB_PATH_AB)
-+		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0xc);
-+
-+	rtw_write32_mask(rtwdev, REG_TXANTSEG, 0xf, tx_path);
-+	rtw_write32_mask(rtwdev, REG_ENFN, BIT(16), 0x0);
-+	rtw_write32_mask(rtwdev, REG_ENFN, BIT(31), 0x1);
-+
-+	if (tx_path == BB_PATH_A) {
-+		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf, 0x1);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x3, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc, 0x0);
-+	} else if (tx_path == BB_PATH_B) {
-+		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf, 0x2);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x3, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc, 0x0);
-+	} else if (tx_path == BB_PATH_AB) {
-+		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf, 0x3);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x3, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc, 0x1);
-+	}
-+
-+	if (tx_path == BB_PATH_A || tx_path == BB_PATH_B) {
-+		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf0, 0x1);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x300, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc00, 0x0);
-+	} else if (tx_path == BB_PATH_AB) {
-+		rtw_write32_mask(rtwdev, REG_ANTMAP0, 0xf0, 0x3);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0x300, 0x0);
-+		rtw_write32_mask(rtwdev, REG_TXLGMAP, 0xc00, 0x1);
-+	}
-+	rtw_write32_mask(rtwdev, REG_TXANT, 0xf, tx_path);
-+
-+	if (rx_path == BB_PATH_A || rx_path == BB_PATH_B) {
-+		rtw_write32_mask(rtwdev, REG_CCANRX, 0x00600000, 0x0);
-+		rtw_write32_mask(rtwdev, REG_PCCAWT, 0x80000000, 0x0);
-+	} else if (rx_path == BB_PATH_AB) {
-+		rtw_write32_mask(rtwdev, REG_CCANRX, 0x00600000, 0x1);
-+		rtw_write32_mask(rtwdev, REG_CCANRX, 0x00060000, 0x1);
-+	}
-+
-+	rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0x0f000000, 0x0);
-+
-+	if (rx_path == BB_PATH_A)
-+		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0x0f000000, 0x0);
-+	else if (rx_path == BB_PATH_B)
-+		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0x0f000000, 0x5);
-+	else if (rx_path == BB_PATH_AB)
-+		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0x0f000000, 0x1);
-+
-+	rtw_write32_mask(rtwdev, REG_ANTMAP, MASKBYTE3LOWNIBBLE, rx_path);
-+	rtw_write32_mask(rtwdev, REG_ANTMAP, 0x000F0000, rx_path);
-+
-+	if (!(rx_path & BB_PATH_A))
-+		rtw_write_rf(rtwdev, 0, 0, 0xf0000, 0x1);
-+	if (!(rx_path & BB_PATH_B))
-+		rtw_write_rf(rtwdev, 1, 0, 0xf0000, 0x1);
-+
-+	if (rx_path == BB_PATH_A || rx_path == BB_PATH_B) {
-+		rtw_write32_mask(rtwdev, REG_RXFNCTL, 0x300, 0x0);
-+		rtw_write32_mask(rtwdev, REG_RXFNCTL, 0x600000, 0x0);
-+		rtw_write32_mask(rtwdev, REG_AGCSWSH, BIT(17), 0x0);
-+		rtw_write32_mask(rtwdev, REG_ANTWTPD, BIT(20), 0x0);
-+		rtw_write32_mask(rtwdev, REG_MRCM, BIT(24), 0x0);
-+	} else if (rx_path == BB_PATH_AB) {
-+		rtw_write32_mask(rtwdev, REG_RXFNCTL, 0x300, 0x1);
-+		rtw_write32_mask(rtwdev, REG_RXFNCTL, 0x600000, 0x1);
-+		rtw_write32_mask(rtwdev, REG_AGCSWSH, BIT(17), 0x1);
-+		rtw_write32_mask(rtwdev, REG_ANTWTPD, BIT(20), 0x1);
-+		rtw_write32_mask(rtwdev, REG_MRCM, BIT(24), 0x1);
-+	}
-+
-+	rtw8822c_toggle_igi(rtwdev);
-+}
-+
-+static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
-+				   struct rtw_rx_pkt_stat *pkt_stat)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	u8 l_bnd, u_bnd;
-+	u8 gain_a, gain_b;
-+	s8 rx_power[RTW_RF_PATH_MAX];
-+	s8 min_rx_power = -120;
-+
-+	rx_power[RF_PATH_A] = GET_PHY_STAT_P0_PWDB_A(phy_status);
-+	rx_power[RF_PATH_B] = GET_PHY_STAT_P0_PWDB_B(phy_status);
-+	l_bnd = dm_info->cck_gi_l_bnd;
-+	u_bnd = dm_info->cck_gi_u_bnd;
-+	gain_a = GET_PHY_STAT_P0_GAIN_A(phy_status);
-+	gain_b = GET_PHY_STAT_P0_GAIN_B(phy_status);
-+	if (gain_a < l_bnd)
-+		rx_power[RF_PATH_A] += (l_bnd - gain_a) << 1;
-+	else if (gain_a > u_bnd)
-+		rx_power[RF_PATH_A] -= (gain_a - u_bnd) << 1;
-+	if (gain_b < l_bnd)
-+		rx_power[RF_PATH_A] += (l_bnd - gain_b) << 1;
-+	else if (gain_b > u_bnd)
-+		rx_power[RF_PATH_A] -= (gain_b - u_bnd) << 1;
-+
-+	rx_power[RF_PATH_A] -= 110;
-+	rx_power[RF_PATH_B] -= 110;
-+
-+	pkt_stat->rx_power[RF_PATH_A] = max3(rx_power[RF_PATH_A],
-+					     rx_power[RF_PATH_B],
-+					     min_rx_power);
-+	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
-+	pkt_stat->bw = RTW_CHANNEL_WIDTH_20;
-+	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
-+				     min_rx_power);
-+}
-+
-+static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
-+				   struct rtw_rx_pkt_stat *pkt_stat)
-+{
-+	u8 rxsc, bw;
-+	s8 min_rx_power = -120;
-+
-+	if (pkt_stat->rate > DESC_RATE11M && pkt_stat->rate < DESC_RATEMCS0)
-+		rxsc = GET_PHY_STAT_P1_L_RXSC(phy_status);
-+	else
-+		rxsc = GET_PHY_STAT_P1_HT_RXSC(phy_status);
-+
-+	if (rxsc >= 9 && rxsc <= 12)
-+		bw = RTW_CHANNEL_WIDTH_40;
-+	else if (rxsc >= 13)
-+		bw = RTW_CHANNEL_WIDTH_80;
-+	else
-+		bw = RTW_CHANNEL_WIDTH_20;
-+
-+	pkt_stat->rx_power[RF_PATH_A] = GET_PHY_STAT_P1_PWDB_A(phy_status) - 110;
-+	pkt_stat->rx_power[RF_PATH_B] = GET_PHY_STAT_P1_PWDB_B(phy_status) - 110;
-+	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 2);
-+	pkt_stat->bw = bw;
-+	pkt_stat->signal_power = max3(pkt_stat->rx_power[RF_PATH_A],
-+				      pkt_stat->rx_power[RF_PATH_B],
-+				      min_rx_power);
-+}
-+
-+static void query_phy_status(struct rtw_dev *rtwdev, u8 *phy_status,
-+			     struct rtw_rx_pkt_stat *pkt_stat)
-+{
-+	u8 page;
-+
-+	page = *phy_status & 0xf;
-+
-+	switch (page) {
-+	case 0:
-+		query_phy_status_page0(rtwdev, phy_status, pkt_stat);
-+		break;
-+	case 1:
-+		query_phy_status_page1(rtwdev, phy_status, pkt_stat);
-+		break;
-+	default:
-+		rtw_warn(rtwdev, "unused phy status page (%d)\n", page);
-+		return;
-+	}
-+}
-+
-+static void rtw8822c_query_rx_desc(struct rtw_dev *rtwdev, u8 *rx_desc,
-+				   struct rtw_rx_pkt_stat *pkt_stat,
-+				   struct ieee80211_rx_status *rx_status)
-+{
-+	struct ieee80211_hdr *hdr;
-+	u32 desc_sz = rtwdev->chip->rx_pkt_desc_sz;
-+	u8 *phy_status = NULL;
-+
-+	memset(pkt_stat, 0, sizeof(*pkt_stat));
-+
-+	pkt_stat->phy_status = GET_RX_DESC_PHYST(rx_desc);
-+	pkt_stat->icv_err = GET_RX_DESC_ICV_ERR(rx_desc);
-+	pkt_stat->crc_err = GET_RX_DESC_CRC32(rx_desc);
-+	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc);
-+	pkt_stat->is_c2h = GET_RX_DESC_C2H(rx_desc);
-+	pkt_stat->pkt_len = GET_RX_DESC_PKT_LEN(rx_desc);
-+	pkt_stat->drv_info_sz = GET_RX_DESC_DRV_INFO_SIZE(rx_desc);
-+	pkt_stat->shift = GET_RX_DESC_SHIFT(rx_desc);
-+	pkt_stat->rate = GET_RX_DESC_RX_RATE(rx_desc);
-+	pkt_stat->cam_id = GET_RX_DESC_MACID(rx_desc);
-+	pkt_stat->ppdu_cnt = GET_RX_DESC_PPDU_CNT(rx_desc);
-+	pkt_stat->tsf_low = GET_RX_DESC_TSFL(rx_desc);
-+
-+	/* drv_info_sz is in unit of 8-bytes */
-+	pkt_stat->drv_info_sz *= 8;
-+
-+	/* c2h cmd pkt's rx/phy status is not interested */
-+	if (pkt_stat->is_c2h)
-+		return;
-+
-+	hdr = (struct ieee80211_hdr *)(rx_desc + desc_sz + pkt_stat->shift +
-+				       pkt_stat->drv_info_sz);
-+	if (pkt_stat->phy_status) {
-+		phy_status = rx_desc + desc_sz + pkt_stat->shift;
-+		query_phy_status(rtwdev, phy_status, pkt_stat);
-+	}
-+
-+	rtw_rx_fill_rx_status(rtwdev, pkt_stat, hdr, rx_status, phy_status);
-+}
-+
-+static void rtw8822c_set_tx_power_index(struct rtw_dev *rtwdev, u8 power_index,
-+					u8 path, u8 rate)
-+{
-+	/* 8822C will use TSSI to track tx power */
-+}
-+
-+static void rtw8822c_cfg_ldo25(struct rtw_dev *rtwdev, bool enable)
-+{
-+	u8 ldo_pwr;
-+
-+	ldo_pwr = rtw_read8(rtwdev, REG_ANAPARLDO_POW_MAC);
-+	ldo_pwr = enable ? ldo_pwr | BIT_LDOE25_PON : ldo_pwr & ~BIT_LDOE25_PON;
-+	rtw_write8(rtwdev, REG_ANAPARLDO_POW_MAC, ldo_pwr);
-+}
-+
-+static void rtw8822c_false_alarm_statistics(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	u32 cck_enable;
-+	u32 cck_fa_cnt;
-+	u32 ofdm_fa_cnt;
-+	u32 ofdm_tx_counter;
-+
-+	cck_enable = rtw_read32(rtwdev, REG_ENCCK) & BIT_CCK_BLK_EN;
-+	cck_fa_cnt = rtw_read16(rtwdev, REG_CCK_FACNT);
-+	ofdm_fa_cnt = rtw_read16(rtwdev, REG_OFDM_FACNT);
-+	ofdm_tx_counter = rtw_read16(rtwdev, REG_OFDM_TXCNT);
-+	ofdm_fa_cnt -= ofdm_tx_counter;
-+
-+	dm_info->cck_fa_cnt = cck_fa_cnt;
-+	dm_info->ofdm_fa_cnt = ofdm_fa_cnt;
-+	dm_info->total_fa_cnt = ofdm_fa_cnt;
-+	dm_info->total_fa_cnt += cck_enable ? cck_fa_cnt : 0;
-+
-+	rtw_write32_mask(rtwdev, REG_CCANRX, BIT_CCK_FA_RST, 0);
-+	rtw_write32_mask(rtwdev, REG_CCANRX, BIT_CCK_FA_RST, 2);
-+	rtw_write32_mask(rtwdev, REG_CCANRX, BIT_OFDM_FA_RST, 0);
-+	rtw_write32_mask(rtwdev, REG_CCANRX, BIT_OFDM_FA_RST, 2);
-+	rtw_write32_set(rtwdev, REG_CNT_CTRL, BIT_ALL_CNT_RST);
-+	rtw_write32_clr(rtwdev, REG_CNT_CTRL, BIT_ALL_CNT_RST);
-+}
-+
-+static void rtw8822c_do_iqk(struct rtw_dev *rtwdev)
-+{
-+}
-+
-+static struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8822c[] = {
-+	{0x0086,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0086,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_POLLING, BIT(1), BIT(1)},
-+	{0x002E,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(2), BIT(2)},
-+	{0x002D,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x007F,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(7), 0},
-+	{0x004A,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(3) | BIT(4) | BIT(7), 0},
-+	{0xFFFF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 0,
-+	 RTW_PWR_CMD_END, 0, 0},
++static const u32 rtw8822c_mac[] = {
 +};
 +
-+static struct rtw_pwr_seq_cmd trans_cardemu_to_act_8822c[] = {
-+	{0x0000,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, (BIT(4) | BIT(3) | BIT(2)), 0},
-+	{0x0075,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0006,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_POLLING, BIT(1), BIT(1)},
-+	{0x0075,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0xFF1A,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x002E,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(3), 0},
-+	{0x0006,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(7), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, (BIT(4) | BIT(3)), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_POLLING, BIT(0), 0},
-+	{0x0074,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), BIT(5)},
-+	{0x0071,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(4), 0},
-+	{0x0062,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, (BIT(7) | BIT(6) | BIT(5)),
-+	 (BIT(7) | BIT(6) | BIT(5))},
-+	{0x0061,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, (BIT(7) | BIT(6) | BIT(5)), 0},
-+	{0x001F,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, (BIT(7) | BIT(6)), BIT(7)},
-+	{0x00EF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, (BIT(7) | BIT(6)), BIT(7)},
-+	{0x1045,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(4), BIT(4)},
-+	{0xFFFF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 0,
-+	 RTW_PWR_CMD_END, 0, 0},
++RTW_DECL_TABLE_PHY_COND(rtw8822c_mac, rtw_phy_cfg_mac);
++
++static const u32 rtw8822c_agc[] = {
++		0x1D90, 0x300001FF,
++		0x1D90, 0x300101FF,
++		0x1D90, 0x300201FF,
++		0x1D90, 0x300301FF,
++		0x1D90, 0x300401FF,
++		0x1D90, 0x300501FF,
++		0x1D90, 0x300601FE,
++		0x1D90, 0x300701FD,
++		0x1D90, 0x300801FC,
++		0x1D90, 0x300901FB,
++		0x1D90, 0x300A01FA,
++		0x1D90, 0x300B01F9,
++		0x1D90, 0x300C01F8,
++		0x1D90, 0x300D01F7,
++		0x1D90, 0x300E01F6,
++		0x1D90, 0x300F01F5,
++		0x1D90, 0x301001F4,
++		0x1D90, 0x301101F3,
++		0x1D90, 0x301201F2,
++		0x1D90, 0x301301F1,
++		0x1D90, 0x301401F0,
++		0x1D90, 0x301501EF,
++		0x1D90, 0x301601AF,
++		0x1D90, 0x301701AE,
++		0x1D90, 0x301801AD,
++		0x1D90, 0x301901AC,
++		0x1D90, 0x301A01AB,
++		0x1D90, 0x301B01AA,
++		0x1D90, 0x301C01A9,
++		0x1D90, 0x301D0188,
++		0x1D90, 0x301E0187,
++		0x1D90, 0x301F0186,
++		0x1D90, 0x30200185,
++		0x1D90, 0x30210168,
++		0x1D90, 0x30220167,
++		0x1D90, 0x30230166,
++		0x1D90, 0x30240108,
++		0x1D90, 0x30250107,
++		0x1D90, 0x30260106,
++		0x1D90, 0x30270144,
++		0x1D90, 0x30280143,
++		0x1D90, 0x30290142,
++		0x1D90, 0x302A0141,
++		0x1D90, 0x302B0140,
++		0x1D90, 0x302C00C9,
++		0x1D90, 0x302D00C8,
++		0x1D90, 0x302E00C7,
++		0x1D90, 0x302F00C6,
++		0x1D90, 0x303000C5,
++		0x1D90, 0x303100C4,
++		0x1D90, 0x303200C3,
++		0x1D90, 0x30330088,
++		0x1D90, 0x30340087,
++		0x1D90, 0x30350086,
++		0x1D90, 0x30360045,
++		0x1D90, 0x30370044,
++		0x1D90, 0x30380043,
++		0x1D90, 0x30390023,
++		0x1D90, 0x303A0022,
++		0x1D90, 0x303B0021,
++		0x1D90, 0x303C0020,
++		0x1D90, 0x303D0002,
++		0x1D90, 0x303E0001,
++		0x1D90, 0x303F0000,
++		0x1D90, 0x304000FF,
++		0x1D90, 0x304100FF,
++		0x1D90, 0x304200FF,
++		0x1D90, 0x304300FF,
++		0x1D90, 0x304400FF,
++		0x1D90, 0x304500FE,
++		0x1D90, 0x304600FD,
++		0x1D90, 0x304700FC,
++		0x1D90, 0x304800FB,
++		0x1D90, 0x304900FA,
++		0x1D90, 0x304A00F9,
++		0x1D90, 0x304B00F8,
++		0x1D90, 0x304C00F7,
++		0x1D90, 0x304D00F6,
++		0x1D90, 0x304E00F5,
++		0x1D90, 0x304F00F4,
++		0x1D90, 0x305000F3,
++		0x1D90, 0x305100F2,
++		0x1D90, 0x305200F1,
++		0x1D90, 0x305300F0,
++		0x1D90, 0x305400EF,
++		0x1D90, 0x305500EE,
++		0x1D90, 0x305600ED,
++		0x1D90, 0x305700EC,
++		0x1D90, 0x305800EB,
++		0x1D90, 0x305900EA,
++		0x1D90, 0x305A00E9,
++		0x1D90, 0x305B00E8,
++		0x1D90, 0x305C00E7,
++		0x1D90, 0x305D00E6,
++		0x1D90, 0x305E00E5,
++		0x1D90, 0x305F00E4,
++		0x1D90, 0x306000E3,
++		0x1D90, 0x306100C3,
++		0x1D90, 0x306200C2,
++		0x1D90, 0x306300C1,
++		0x1D90, 0x30640088,
++		0x1D90, 0x30650087,
++		0x1D90, 0x30660086,
++		0x1D90, 0x30670085,
++		0x1D90, 0x30680084,
++		0x1D90, 0x30690083,
++		0x1D90, 0x306A0082,
++		0x1D90, 0x306B0081,
++		0x1D90, 0x306C0068,
++		0x1D90, 0x306D0067,
++		0x1D90, 0x306E0066,
++		0x1D90, 0x306F0065,
++		0x1D90, 0x30700064,
++		0x1D90, 0x30710063,
++		0x1D90, 0x30720045,
++		0x1D90, 0x30730044,
++		0x1D90, 0x30740043,
++		0x1D90, 0x30750026,
++		0x1D90, 0x30760025,
++		0x1D90, 0x30770024,
++		0x1D90, 0x30780023,
++		0x1D90, 0x30790022,
++		0x1D90, 0x307A0021,
++		0x1D90, 0x307B0020,
++		0x1D90, 0x307C0001,
++		0x1D90, 0x307D0000,
++		0x1D90, 0x307E0000,
++		0x1D90, 0x307F0000,
++		0x1D90, 0x308000FF,
++		0x1D90, 0x308100FF,
++		0x1D90, 0x308200FF,
++		0x1D90, 0x308300FF,
++		0x1D90, 0x308400FF,
++		0x1D90, 0x308500FE,
++		0x1D90, 0x308600FD,
++		0x1D90, 0x308700FC,
++		0x1D90, 0x308800FB,
++		0x1D90, 0x308900FA,
++		0x1D90, 0x308A00F9,
++		0x1D90, 0x308B00F8,
++		0x1D90, 0x308C00F7,
++		0x1D90, 0x308D00F6,
++		0x1D90, 0x308E00F5,
++		0x1D90, 0x308F00F4,
++		0x1D90, 0x309000F3,
++		0x1D90, 0x309100F2,
++		0x1D90, 0x309200F1,
++		0x1D90, 0x309300F0,
++		0x1D90, 0x309400EF,
++		0x1D90, 0x309500EE,
++		0x1D90, 0x309600ED,
++		0x1D90, 0x309700EC,
++		0x1D90, 0x309800EB,
++		0x1D90, 0x309900EA,
++		0x1D90, 0x309A00E9,
++		0x1D90, 0x309B00E8,
++		0x1D90, 0x309C00E7,
++		0x1D90, 0x309D00E6,
++		0x1D90, 0x309E00E5,
++		0x1D90, 0x309F00E4,
++		0x1D90, 0x30A000E3,
++		0x1D90, 0x30A100C3,
++		0x1D90, 0x30A200C2,
++		0x1D90, 0x30A300C1,
++		0x1D90, 0x30A40088,
++		0x1D90, 0x30A50087,
++		0x1D90, 0x30A60086,
++		0x1D90, 0x30A70085,
++		0x1D90, 0x30A80084,
++		0x1D90, 0x30A90083,
++		0x1D90, 0x30AA0082,
++		0x1D90, 0x30AB0081,
++		0x1D90, 0x30AC0068,
++		0x1D90, 0x30AD0067,
++		0x1D90, 0x30AE0066,
++		0x1D90, 0x30AF0065,
++		0x1D90, 0x30B00064,
++		0x1D90, 0x30B10063,
++		0x1D90, 0x30B20045,
++		0x1D90, 0x30B30044,
++		0x1D90, 0x30B40043,
++		0x1D90, 0x30B50026,
++		0x1D90, 0x30B60025,
++		0x1D90, 0x30B70024,
++		0x1D90, 0x30B80023,
++		0x1D90, 0x30B90022,
++		0x1D90, 0x30BA0021,
++		0x1D90, 0x30BB0020,
++		0x1D90, 0x30BC0001,
++		0x1D90, 0x30BD0000,
++		0x1D90, 0x30BE0000,
++		0x1D90, 0x30BF0000,
++		0x1D90, 0x30C000FF,
++		0x1D90, 0x30C100FF,
++		0x1D90, 0x30C200FF,
++		0x1D90, 0x30C300FF,
++		0x1D90, 0x30C400FF,
++		0x1D90, 0x30C500FE,
++		0x1D90, 0x30C600FD,
++		0x1D90, 0x30C700FC,
++		0x1D90, 0x30C800FB,
++		0x1D90, 0x30C900FA,
++		0x1D90, 0x30CA00F9,
++		0x1D90, 0x30CB00F8,
++		0x1D90, 0x30CC00F7,
++		0x1D90, 0x30CD00F6,
++		0x1D90, 0x30CE00F5,
++		0x1D90, 0x30CF00F4,
++		0x1D90, 0x30D000F3,
++		0x1D90, 0x30D100F2,
++		0x1D90, 0x30D200F1,
++		0x1D90, 0x30D300F0,
++		0x1D90, 0x30D400EF,
++		0x1D90, 0x30D500EE,
++		0x1D90, 0x30D600ED,
++		0x1D90, 0x30D700EC,
++		0x1D90, 0x30D800EB,
++		0x1D90, 0x30D900EA,
++		0x1D90, 0x30DA00E9,
++		0x1D90, 0x30DB00E8,
++		0x1D90, 0x30DC00E7,
++		0x1D90, 0x30DD00E6,
++		0x1D90, 0x30DE00E5,
++		0x1D90, 0x30DF00E4,
++		0x1D90, 0x30E000E3,
++		0x1D90, 0x30E100C3,
++		0x1D90, 0x30E200C2,
++		0x1D90, 0x30E300C1,
++		0x1D90, 0x30E40088,
++		0x1D90, 0x30E50087,
++		0x1D90, 0x30E60086,
++		0x1D90, 0x30E70085,
++		0x1D90, 0x30E80084,
++		0x1D90, 0x30E90083,
++		0x1D90, 0x30EA0082,
++		0x1D90, 0x30EB0081,
++		0x1D90, 0x30EC0068,
++		0x1D90, 0x30ED0067,
++		0x1D90, 0x30EE0066,
++		0x1D90, 0x30EF0065,
++		0x1D90, 0x30F00064,
++		0x1D90, 0x30F10063,
++		0x1D90, 0x30F20045,
++		0x1D90, 0x30F30044,
++		0x1D90, 0x30F40043,
++		0x1D90, 0x30F50026,
++		0x1D90, 0x30F60025,
++		0x1D90, 0x30F70024,
++		0x1D90, 0x30F80023,
++		0x1D90, 0x30F90022,
++		0x1D90, 0x30FA0021,
++		0x1D90, 0x30FB0020,
++		0x1D90, 0x30FC0001,
++		0x1D90, 0x30FD0000,
++		0x1D90, 0x30FE0000,
++		0x1D90, 0x30FF0000,
++		0x1D90, 0x310001FF,
++		0x1D90, 0x310101FF,
++		0x1D90, 0x310201FF,
++		0x1D90, 0x310301FF,
++		0x1D90, 0x310401FF,
++		0x1D90, 0x310501FF,
++		0x1D90, 0x310601FF,
++		0x1D90, 0x310701FF,
++		0x1D90, 0x310801FF,
++		0x1D90, 0x310901FF,
++		0x1D90, 0x310A01FF,
++		0x1D90, 0x310B01FF,
++		0x1D90, 0x310C01FF,
++		0x1D90, 0x310D01FE,
++		0x1D90, 0x310E01FD,
++		0x1D90, 0x310F01FC,
++		0x1D90, 0x311001FB,
++		0x1D90, 0x311101FA,
++		0x1D90, 0x311201F9,
++		0x1D90, 0x311301F8,
++		0x1D90, 0x311401F7,
++		0x1D90, 0x311501F6,
++		0x1D90, 0x311601F5,
++		0x1D90, 0x311701F4,
++		0x1D90, 0x311801F3,
++		0x1D90, 0x311901F2,
++		0x1D90, 0x311A01F1,
++		0x1D90, 0x311B01F0,
++		0x1D90, 0x311C01EF,
++		0x1D90, 0x311D01AF,
++		0x1D90, 0x311E01AE,
++		0x1D90, 0x311F01AD,
++		0x1D90, 0x312001AC,
++		0x1D90, 0x312101AB,
++		0x1D90, 0x312201AA,
++		0x1D90, 0x312301A9,
++		0x1D90, 0x31240188,
++		0x1D90, 0x31250187,
++		0x1D90, 0x31260186,
++		0x1D90, 0x31270185,
++		0x1D90, 0x31280168,
++		0x1D90, 0x31290167,
++		0x1D90, 0x312A0166,
++		0x1D90, 0x312B0108,
++		0x1D90, 0x312C0107,
++		0x1D90, 0x312D0106,
++		0x1D90, 0x312E0144,
++		0x1D90, 0x312F0143,
++		0x1D90, 0x31300142,
++		0x1D90, 0x31310141,
++		0x1D90, 0x31320140,
++		0x1D90, 0x313300C9,
++		0x1D90, 0x313400C8,
++		0x1D90, 0x313500C7,
++		0x1D90, 0x313600C6,
++		0x1D90, 0x313700C5,
++		0x1D90, 0x313800C4,
++		0x1D90, 0x313900C3,
++		0x1D90, 0x313A0088,
++		0x1D90, 0x313B0087,
++		0x1D90, 0x313C0086,
++		0x1D90, 0x313D0045,
++		0x1D90, 0x313E0044,
++		0x1D90, 0x313F0043,
++		0x1D70, 0x22222222,
++		0x1D70, 0x20202020,
 +};
 +
-+static struct rtw_pwr_seq_cmd trans_act_to_cardemu_8822c[] = {
-+	{0x0093,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(3), 0},
-+	{0x001F,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x00EF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x1045,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(4), 0},
-+	{0xFF1A,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0x30},
-+	{0x0049,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0006,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0002,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_POLLING, BIT(1), 0},
-+	{0x0000,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), BIT(5)},
-+	{0xFFFF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 0,
-+	 RTW_PWR_CMD_END, 0, 0},
++RTW_DECL_TABLE_PHY_COND(rtw8822c_agc, rtw_phy_cfg_agc);
++
++static const u32 rtw8822c_bb[] = {
++		0x1D0C, 0x00410000,
++		0x1C3C, 0x01038040,
++		0x1C90, 0x00E49708,
++		0x800, 0x00000000,
++		0x804, 0xD6300000,
++		0x808, 0x60956093,
++		0x80C, 0x00000025,
++		0x810, 0x11B019B0,
++		0x814, 0x00904080,
++		0x818, 0xC30056F1,
++		0x81C, 0x00050000,
++		0x820, 0x11111111,
++		0x824, 0xC3C3CCC4,
++		0x828, 0x30FB186C,
++		0x82C, 0x11454517,
++		0x830, 0x17511454,
++		0x834, 0x776995D7,
++		0x838, 0x74777A7D,
++		0x83C, 0xF9AA9982,
++		0x840, 0x89AA9ABB,
++		0x844, 0x0DEEDDC1,
++		0x848, 0xCDEEDEFF,
++		0x84C, 0xFFFF5555,
++		0x850, 0x6F7A727D,
++		0x854, 0x6C776F7A,
++		0x858, 0x6F7A6C77,
++		0x85C, 0x69746974,
++		0x860, 0x6F7A6C77,
++		0x864, 0x6C776C77,
++		0x868, 0x727D6F7A,
++		0x86C, 0x69D7B197,
++		0x870, 0x1A6D769B,
++		0x874, 0x55823917,
++		0x878, 0x00C025BD,
++		0x87C, 0x4140557D,
++		0x880, 0x7A1D9D47,
++		0x884, 0x1D67534F,
++		0x888, 0x2857A857,
++		0x88C, 0x520E8A24,
++		0x890, 0x8F628C44,
++		0x894, 0x72745F43,
++		0x898, 0x03F02F0D,
++		0x89C, 0x5DB6886F,
++		0x8A0, 0x07DC309F,
++		0x8A4, 0x09412495,
++		0x8A8, 0x222222A9,
++		0x8AC, 0x89628C44,
++		0x8B0, 0x72745F43,
++		0x8B4, 0x03F02F0D,
++		0x8B8, 0x55B6886F,
++		0x8BC, 0x07D0309F,
++		0x8C0, 0x70404023,
++		0x8C4, 0x00440001,
++		0x8C8, 0x7A7A7D7D,
++		0x8CC, 0x25297777,
++		0x8D0, 0x6CEB6DCE,
++		0x8D4, 0x0005A632,
++		0x8D8, 0x00000000,
++		0x8DC, 0x00000000,
++		0x8E0, 0x00000000,
++		0x8E4, 0x00000000,
++		0x8E8, 0x00000000,
++		0x8EC, 0x00000000,
++		0x8F0, 0x00000000,
++		0x8F4, 0x00000000,
++		0x8F8, 0x25239843,
++		0x900, 0x00000000,
++		0x904, 0x00000000,
++		0x908, 0x000008CB,
++		0x90C, 0x00000000,
++		0x910, 0x00000000,
++		0x914, 0x20000000,
++		0x918, 0x20000000,
++		0x91C, 0x20000000,
++		0x920, 0x20000000,
++		0x924, 0x00000000,
++		0x928, 0x0000003A,
++		0x92C, 0x0000003A,
++		0x930, 0x0000003A,
++		0x934, 0x0000003A,
++		0x938, 0x0000000F,
++		0x93C, 0x00000000,
++		0x940, 0x4E1F3E81,
++		0x944, 0x4E1F3E81,
++		0x948, 0x4E1F3E81,
++		0x94C, 0x4E1F3E81,
++		0x950, 0x03020100,
++		0x954, 0x07060504,
++		0x958, 0x0B0A0908,
++		0x95C, 0x0F0E0D0C,
++		0x960, 0x13121110,
++		0x964, 0x17161514,
++		0x968, 0x03020100,
++		0x96C, 0x07060504,
++		0x970, 0x0B0A0908,
++		0x974, 0x0F0E0D0C,
++		0x978, 0x13121110,
++		0x97C, 0x17161514,
++		0x980, 0x03020100,
++		0x984, 0x07060504,
++		0x988, 0x0B0A0908,
++		0x98C, 0x0F0E0D0C,
++		0x990, 0x13121110,
++		0x994, 0x17161514,
++		0x998, 0x03020100,
++		0x99C, 0x07060504,
++		0x9A0, 0x0B0A0908,
++		0x9A4, 0x0F0E0D0C,
++		0x9A8, 0x13121110,
++		0x9AC, 0x17161514,
++		0x9B0, 0x00002200,
++		0x9B4, 0xDB6DB600,
++		0x9B8, 0x00400064,
++		0x9BC, 0x00000000,
++		0x9C0, 0x01010101,
++		0x9C4, 0x00640064,
++		0x9C8, 0x00640064,
++		0x9CC, 0x00007777,
++		0x9D0, 0x00000000,
++		0x9D4, 0x00000000,
++		0x9D8, 0x00000000,
++		0x9DC, 0x00000000,
++		0x9E0, 0x00000000,
++		0x9E4, 0x00000000,
++		0x9E8, 0x00000000,
++		0x9EC, 0x00000000,
++		0x9F0, 0x100024E0,
++		0x9F4, 0x00000000,
++		0x9F8, 0x00000000,
++		0xA00, 0x02001208,
++		0xA04, 0x00000000,
++		0xA08, 0x00000000,
++		0xA0C, 0x00000000,
++		0xA10, 0x00000000,
++		0xA14, 0x00000000,
++		0xA18, 0x00000000,
++		0xA1C, 0x00000000,
++		0xA20, 0xEB31B333,
++		0xA24, 0x00275485,
++		0xA28, 0x00166366,
++		0xA2C, 0x00275485,
++		0xA30, 0x00166366,
++		0xA34, 0x00275485,
++		0xA38, 0x00200400,
++		0xA3C, 0x00200400,
++		0xA40, 0xB35DC5BD,
++		0xA44, 0x3033BEBD,
++		0xA48, 0x2A521254,
++		0xA4C, 0xA2533345,
++		0xA50, 0x605BE083,
++		0xA54, 0x50000968,
++		0xA58, 0x00020000,
++		0xA5C, 0x01000000,
++		0xA60, 0x02000000,
++		0xA64, 0x03000000,
++		0xA68, 0x00030000,
++		0xA6C, 0x00000000,
++		0xA70, 0x00000000,
++		0xA74, 0x00000000,
++		0xA78, 0x00000000,
++		0xA7C, 0x00000000,
++		0xA80, 0x00000000,
++		0xA84, 0x00000000,
++		0xA88, 0x00000000,
++		0xA8C, 0x00000000,
++		0xA90, 0x00000000,
++		0xA94, 0x00000000,
++		0xA98, 0x00000000,
++		0xA9C, 0x00000000,
++		0xAA0, 0x00000000,
++		0xAA4, 0x00000000,
++		0xAA8, 0x00000000,
++		0xAAC, 0x00000000,
++		0xAB0, 0x00000000,
++		0xAB4, 0x00000000,
++		0xAB8, 0x00000000,
++		0xABC, 0x00000000,
++		0xAC0, 0x00000000,
++		0xAC4, 0x00000000,
++		0xAC8, 0x00000000,
++		0xACC, 0x00000000,
++		0xAD0, 0x00000000,
++		0xAD4, 0x00000000,
++		0xAD8, 0x00000000,
++		0xADC, 0x00000000,
++		0xAE0, 0x00000000,
++		0xAE4, 0x00000000,
++		0xAE8, 0x00000000,
++		0xAEC, 0x00000000,
++		0xAF0, 0x00000000,
++		0xAF4, 0x00000000,
++		0xAF8, 0x00000000,
++		0xB00, 0x00000000,
++		0xB04, 0x00000000,
++		0xB08, 0x00000000,
++		0xB0C, 0x00000000,
++		0xB10, 0x00000000,
++		0xB14, 0x00000000,
++		0xB18, 0x00000000,
++		0xB1C, 0x00000000,
++		0xB20, 0x00000000,
++		0xB24, 0x00000000,
++		0xB28, 0x00000000,
++		0xB2C, 0x00000000,
++		0xB30, 0x00000000,
++		0xB34, 0x00000000,
++		0xB38, 0x00000000,
++		0xB3C, 0x00000000,
++		0xB40, 0x00000000,
++		0xB44, 0x00000000,
++		0xB48, 0x00000000,
++		0xB4C, 0x00000000,
++		0xB50, 0x00000000,
++		0xB54, 0x00000000,
++		0xB58, 0x00060100,
++		0xB5C, 0x00000000,
++		0xB60, 0x00000000,
++		0xB64, 0x00000000,
++		0xB68, 0x00000000,
++		0xB6C, 0x00000000,
++		0xB70, 0x00000000,
++		0xB74, 0x00000000,
++		0xB78, 0x00000000,
++		0xB7C, 0x00000000,
++		0xB80, 0x00000000,
++		0xB84, 0x00000000,
++		0xB88, 0x00000000,
++		0xB8C, 0x00000000,
++		0xB90, 0x00000000,
++		0xB94, 0x00000000,
++		0xB98, 0x00000000,
++		0xB9C, 0x00000000,
++		0xBA0, 0x00000000,
++		0xBA4, 0x00000000,
++		0xBA8, 0x00000000,
++		0xBAC, 0x00000000,
++		0xBB0, 0x00000000,
++		0xBB4, 0x00000000,
++		0xBB8, 0x00000000,
++		0xBBC, 0x00000000,
++		0xBC0, 0x00000000,
++		0xBC4, 0x00000000,
++		0xBC8, 0x00000000,
++		0xBCC, 0x00000000,
++		0xBD0, 0x00000000,
++		0xBD4, 0x00000000,
++		0xBD8, 0x00000000,
++		0xBDC, 0x00000000,
++		0xBE0, 0x00000000,
++		0xBE4, 0x00000000,
++		0xBE8, 0x00000000,
++		0xBEC, 0x00000000,
++		0xBF0, 0x00000000,
++		0xBF4, 0x00000000,
++		0xBF8, 0x00000000,
++		0xC00, 0x1D8BA0D6,
++		0xC04, 0x00000001,
++		0xC08, 0x00000000,
++		0xC0C, 0x02F1D8B7,
++		0xC10, 0x000000B0,
++		0xC14, 0x0000D891,
++		0xC18, 0x00087672,
++		0xC1C, 0x15260000,
++		0xC20, 0x00000000,
++		0xC24, 0x40600000,
++		0xC28, 0x06400F76,
++		0xC2C, 0xE30020E1,
++		0xC30, 0x140C9494,
++		0xC34, 0x00A04946,
++		0xC38, 0x011D4820,
++		0xC3C, 0x168DB61B,
++		0xC40, 0x009C50F8,
++		0xC44, 0x2013BAD1,
++		0xC48, 0xFFFFF7CC,
++		0xC4C, 0xA000FFFF,
++		0xC50, 0x20D0F800,
++		0xC54, 0x941A0200,
++		0xC58, 0x18380111,
++		0xC5C, 0x006E01B8,
++		0xC60, 0x2CA5555B,
++		0xC64, 0x0210005F,
++		0xC68, 0x039A5300,
++		0xC6C, 0x0265C2BA,
++		0xC70, 0x000CEB21,
++		0xC74, 0x0E149CA1,
++		0xC78, 0x1AB4956B,
++		0xC7C, 0x00000ABF,
++		0xC80, 0xC02A8799,
++		0xC84, 0x06C636C6,
++		0xC88, 0x08090202,
++		0xC8C, 0x00204048,
++		0xC90, 0x00F85F85,
++		0xC94, 0x00000F85,
++		0xC98, 0x58385858,
++		0xC9C, 0x18382838,
++		0xCA0, 0x00002838,
++		0xCA4, 0x3A253A3A,
++		0xCA8, 0x10251A25,
++		0xCAC, 0x00001025,
++		0xCB0, 0x3A133A3A,
++		0xCB4, 0x08130D13,
++		0xCB8, 0x00000813,
++		0xCBC, 0x003F1066,
++		0xCC0, 0x88A00400,
++		0xCC4, 0x00200400,
++		0xCC8, 0x0B200400,
++		0xCCC, 0x00600400,
++		0xCD0, 0x00000092,
++		0xCD4, 0x22220000,
++		0xCD8, 0x22222222,
++		0xCDC, 0x22222222,
++		0xCE0, 0x22222222,
++		0xCE4, 0x22222222,
++		0xCE8, 0x00002222,
++		0xCEC, 0x00000000,
++		0xCF0, 0x00000000,
++		0xCF4, 0x00000000,
++		0xCF8, 0x00000000,
++		0xD00, 0x1083A10A,
++		0xD04, 0x0EC42948,
++		0xD08, 0x10852108,
++		0xD0C, 0x0CC41D08,
++		0xD10, 0x108620EC,
++		0xD14, 0x0CA42108,
++		0xD18, 0x107620E8,
++		0xD1C, 0x0E742108,
++		0xD20, 0x0E8618C8,
++		0xD24, 0x00000108,
++		0xD28, 0x288C224C,
++		0xD2C, 0x11C6320C,
++		0xD30, 0x30CEBD98,
++		0xD34, 0x10C31908,
++		0xD38, 0x310A318C,
++		0xD3C, 0x18C41D08,
++		0xD40, 0x28CC4190,
++		0xD44, 0x19062108,
++		0xD48, 0x294A5A17,
++		0xD4C, 0x00000108,
++		0xD50, 0x10A3A908,
++		0xD54, 0x10842148,
++		0xD58, 0x14C5314A,
++		0xD5C, 0x1086258C,
++		0xD60, 0x10A42948,
++		0xD64, 0x10842108,
++		0xD68, 0x08C42108,
++		0xD6C, 0x10842148,
++		0xD70, 0x08822084,
++		0xD74, 0x10841D04,
++		0xD78, 0x08421088,
++		0xD7C, 0x1083A104,
++		0xD80, 0x10842108,
++		0xD84, 0x1085294A,
++		0xD88, 0x08822104,
++		0xD8C, 0x10852948,
++		0xD90, 0x08421084,
++		0xD94, 0x10852104,
++		0xD98, 0x08421084,
++		0xD9C, 0x10863184,
++		0xDA0, 0x1083B10A,
++		0xDA4, 0x10842148,
++		0xDA8, 0x1984718C,
++		0xDAC, 0x108C33AF,
++		0xDB0, 0x00000000,
++		0xDB4, 0x00000000,
++		0xDB8, 0x00000000,
++		0xDBC, 0x00000000,
++		0xDC0, 0x00000000,
++		0xDC4, 0x00000000,
++		0xDC8, 0x00000000,
++		0xDCC, 0x00000000,
++		0xDD0, 0x00000000,
++		0xDD4, 0x00000000,
++		0xDD8, 0x00000000,
++		0xDDC, 0x00000000,
++		0xDE0, 0x00000000,
++		0xDE4, 0x00000000,
++		0xDE8, 0x00000000,
++		0xDEC, 0x00000000,
++		0xDF0, 0x00000000,
++		0xDF4, 0x00000000,
++		0xDF8, 0x00000000,
++		0x1800, 0x00033312,
++		0x1804, 0x00033312,
++		0x180C, 0x17F40060,
++		0x1810, 0x02D508C4,
++		0x1814, 0x506AA5B4,
++		0x1818, 0x000004FF,
++		0x181C, 0x00000000,
++		0x1820, 0x02D508CC,
++		0x1824, 0x506AA5B4,
++		0x1828, 0x000004FD,
++		0x182C, 0x00000000,
++		0x1834, 0x00000000,
++		0x1838, 0x20000000,
++		0x183C, 0x00000000,
++		0x1840, 0x00000000,
++		0x1844, 0x00000000,
++		0x1848, 0x00000000,
++		0x184C, 0x00000000,
++		0x1850, 0x00000000,
++		0x1854, 0x00000000,
++		0x1858, 0x00000000,
++		0x185C, 0x00000000,
++		0x1860, 0xF0040FF8,
++		0x1864, 0x7F000000,
++		0x1868, 0x00000000,
++		0x186C, 0x0000FF00,
++		0x1870, 0x00000000,
++		0x1874, 0x00000000,
++		0x1878, 0x00000000,
++		0x187C, 0x00000000,
++		0x1880, 0x00000000,
++		0x1884, 0x02B00000,
++		0x1888, 0x00000000,
++		0x188C, 0x00000000,
++		0x1890, 0x00000000,
++		0x1894, 0x00000000,
++		0x1898, 0x00000000,
++		0x18A0, 0x00510000,
++		0x18A4, 0x183C1F7F,
++		0x18A8, 0x0A02C99A,
++		0x18AC, 0x00004200,
++		0x18B0, 0x0809FB08,
++		0x18B0, 0x0809FB09,
++		0x18B4, 0x00000000,
++		0x18B8, 0x00000000,
++		0x18BC, 0x00C3FF80,
++		0x18C0, 0x0002D100,
++		0x18C4, 0x00000004,
++		0x18C8, 0x001FFFE0,
++		0x18CC, 0x0809FB08,
++		0x18CC, 0x0809FB09,
++		0x18D0, 0x00000000,
++		0x18D4, 0x00000000,
++		0x18D8, 0x00C3FF80,
++		0x18DC, 0x0002D100,
++		0x18E0, 0x00000004,
++		0x18E4, 0x001FFFE0,
++		0x18E8, 0x00800000,
++		0x18EC, 0x1EC08000,
++		0x18F0, 0x7F000064,
++		0x18F4, 0x1F7DE75C,
++		0x18F8, 0x7F7F7F7F,
++		0x18FC, 0x7F7F7F7F,
++		0x1900, 0xA7A7A7A7,
++		0x1904, 0x95959595,
++		0x1908, 0x00777787,
++		0x190C, 0x77776666,
++		0x1910, 0x00033333,
++		0x1914, 0xAAAC875A,
++		0x1918, 0x2AA2A8A2,
++		0x191C, 0x2AAAA8A2,
++		0x1920, 0x00878766,
++		0x1924, 0x004E4924,
++		0x1928, 0x1669B6C0,
++		0x192C, 0x00409190,
++		0x1930, 0xB85C0DB6,
++		0x1934, 0x00B4A298,
++		0x1938, 0x00030151,
++		0x193C, 0x0058C618,
++		0x1940, 0x41000000,
++		0x1944, 0x00000BCB,
++		0x1948, 0xAAAAAAAA,
++		0x194C, 0x00B99999,
++		0x1950, 0x88888665,
++		0x1954, 0x08888888,
++		0x1958, 0x00000618,
++		0x195C, 0x00000000,
++		0x1960, 0x00000000,
++		0x1964, 0x00000000,
++		0x1968, 0x00000000,
++		0x196C, 0x00000000,
++		0x1970, 0x00000000,
++		0x1974, 0x00000000,
++		0x1978, 0x00000000,
++		0x197C, 0x00000000,
++		0x1980, 0x00000000,
++		0x1984, 0x00000000,
++		0x1988, 0x00000000,
++		0x198C, 0x00000000,
++		0x1990, 0x00000000,
++		0x1994, 0x00000000,
++		0x1998, 0x00000000,
++		0x199C, 0x00000000,
++		0x19A0, 0x00000000,
++		0x19A4, 0x00000000,
++		0x19A8, 0x00000000,
++		0x19AC, 0x00000000,
++		0x19B0, 0x00000000,
++		0x19B4, 0x00000000,
++		0x19B8, 0x00000000,
++		0x19BC, 0x00000000,
++		0x19C0, 0x00000000,
++		0x19C4, 0x00000000,
++		0x19C8, 0x00000000,
++		0x19CC, 0x00000000,
++		0x19D0, 0x00000000,
++		0x19D4, 0x00000000,
++		0x19D8, 0x00000000,
++		0x19DC, 0x00000000,
++		0x19E0, 0x00000000,
++		0x19E4, 0x00000000,
++		0x19E8, 0x00000000,
++		0x19EC, 0x00000000,
++		0x19F0, 0x00000000,
++		0x19F4, 0x00000000,
++		0x19F8, 0x00000000,
++		0x1C00, 0x00000000,
++		0x1C04, 0x00000000,
++		0x1C08, 0x00000000,
++		0x1C0C, 0x00000000,
++		0x1C10, 0x00000000,
++		0x1C14, 0x00000000,
++		0x1C18, 0x00000000,
++		0x1C1C, 0x00000000,
++		0x1C20, 0x03C23F00,
++		0x1C24, 0xF101F002,
++		0x1C28, 0x0FFE0010,
++		0x1C2C, 0x453090FF,
++		0x1C30, 0xFE0090FE,
++		0x1C34, 0xE4E42000,
++		0x1C38, 0xFFA1005E,
++		0x1C40, 0x8F588837,
++		0x1C44, 0x04400300,
++		0x1C48, 0x00000000,
++		0x1C4C, 0x00000200,
++		0x1C50, 0x8E588837,
++		0x1C54, 0x04400300,
++		0x1C58, 0x00000000,
++		0x1C5C, 0xFFFFFFFF,
++		0x1C60, 0x0F030032,
++		0x1C64, 0x360F0000,
++		0x1C68, 0x007F0000,
++		0x1C6C, 0x00010000,
++		0x1C70, 0x00031DD5,
++		0x1C74, 0x00000000,
++		0x1C78, 0x00020000,
++		0x1C7C, 0x00310000,
++		0x1C80, 0x0E38E000,
++		0x1C84, 0x245120D4,
++		0x1C88, 0xC8400483,
++		0x1C8C, 0x40005A20,
++		0x1C94, 0x00000000,
++		0x1C98, 0x00000000,
++		0x1C9C, 0x00000000,
++		0x1CA0, 0x00000000,
++		0x1CA4, 0x20000000,
++		0x1CA8, 0x0E000000,
++		0x1CAC, 0xE424A2CC,
++		0x1CB0, 0x00000000,
++		0x1CB4, 0x00000000,
++		0x1CB8, 0x24800000,
++		0x1CBC, 0x60004800,
++		0x1CC0, 0x24800000,
++		0x1CC4, 0x60004800,
++		0x1CC8, 0xF0444900,
++		0x1CCC, 0x030300F1,
++		0x1CD0, 0x0F000000,
++		0x1CD4, 0x02024B00,
++		0x1CD8, 0x04000000,
++		0x1CDC, 0x10000000,
++		0x1CE0, 0x60000000,
++		0x1CE4, 0x00000000,
++		0x1CE8, 0xC0000000,
++		0x1CEC, 0x00000000,
++		0x1CF0, 0x00000000,
++		0x1CF4, 0xE4000000,
++		0x1CF8, 0x00000000,
++		0x1D00, 0x00000000,
++		0x1D04, 0x08A3C000,
++		0x1D08, 0xA0000000,
++		0x1D10, 0x08B5BBBB,
++		0x1D14, 0x77777777,
++		0x1D18, 0x99999999,
++		0x1D1C, 0x99999999,
++		0x1D20, 0x000081E0,
++		0x1D24, 0x00000000,
++		0x1D28, 0x00000000,
++		0x1D2C, 0xC0000000,
++		0x1D30, 0x50009C00,
++		0x1D34, 0x00000000,
++		0x1D38, 0x00000000,
++		0x1D3C, 0xF8000000,
++		0x1D40, 0x00000000,
++		0x1D44, 0x74740000,
++		0x1D48, 0x14147474,
++		0x1D4C, 0x00FFFF14,
++		0x1D50, 0x00000000,
++		0x1D54, 0x03A00000,
++		0x1D58, 0x80800000,
++		0x1D5C, 0x00000000,
++		0x1D60, 0x00000000,
++		0x1D64, 0x88000000,
++		0x1D68, 0x00000000,
++		0x1D6C, 0x666D8001,
++		0x1D70, 0x20202020,
++		0x1D74, 0x4E4E4E4E,
++		0x1D78, 0x18189818,
++		0x1D7C, 0x0005A000,
++		0x1D80, 0x00080000,
++		0x1D84, 0x00080000,
++		0x1D88, 0x000000EF,
++		0x1D8C, 0x0C0C0C0C,
++		0x1D90, 0x103F003F,
++		0x1D94, 0x00000000,
++		0x1D98, 0x00000000,
++		0x1D9C, 0x00000000,
++		0x1DA0, 0x00000000,
++		0x1DA4, 0x00000000,
++		0x1DA8, 0x00000000,
++		0x1DAC, 0x00000000,
++		0x1DB0, 0x00000000,
++		0x1DB4, 0x00000000,
++		0x1DB8, 0x00000000,
++		0x1DBC, 0x00000000,
++		0x1DC0, 0x00000000,
++		0x1DC4, 0x00000000,
++		0x1DC8, 0x00000000,
++		0x1DCC, 0x00000000,
++		0x1DD0, 0x00000000,
++		0x1DD4, 0x00000000,
++		0x1DD8, 0x00000000,
++		0x1DDC, 0x1FDF0000,
++		0x1DE0, 0x01010000,
++		0x1DE4, 0x05210123,
++		0x1DE8, 0xFFFF4848,
++		0x1DEC, 0x00000000,
++		0x1DF0, 0x00000000,
++		0x1DF4, 0x80000000,
++		0x1DF8, 0x00000000,
++		0x1E00, 0x00000000,
++		0x1E04, 0x00000000,
++		0x1E08, 0x00000000,
++		0x1E0C, 0x00000000,
++		0x1E10, 0x00000000,
++		0x1E14, 0x00000000,
++		0x1E18, 0x00000000,
++		0x1E1C, 0x00000000,
++		0x1E20, 0x00000000,
++		0x1E24, 0x80003000,
++		0x1E28, 0x000CC0C3,
++		0x1E2C, 0xE4E4E4E4,
++		0x1E30, 0xE4E4E4E4,
++		0x1E34, 0xF3001234,
++		0x1E38, 0x00000000,
++		0x1E3C, 0x00000000,
++		0x1E40, 0x00000000,
++		0x1E44, 0x00000000,
++		0x1E48, 0x00000000,
++		0x1E4C, 0x00000000,
++		0x1E50, 0x00000000,
++		0x1E54, 0x00000000,
++		0x1E58, 0x00000000,
++		0x1E5C, 0xC1000000,
++		0x1E60, 0x00000000,
++		0x1E64, 0xF3A00001,
++		0x1E68, 0x0028846E,
++		0x1E6C, 0x40274906,
++		0x1E70, 0x00001000,
++		0x1E74, 0x00000000,
++		0x1E78, 0x00000000,
++		0x1E7C, 0x00000000,
++		0x1E80, 0x00000000,
++		0x1E84, 0x00000000,
++		0x1E84, 0x40000000,
++		0x1E84, 0x41000000,
++		0x1E84, 0x42000000,
++		0x1E84, 0x43000000,
++		0x1E84, 0x44000000,
++		0x1E84, 0x45000000,
++		0x1E84, 0x46000000,
++		0x1E84, 0x47000000,
++		0x1E84, 0x48000000,
++		0x1E84, 0x49000000,
++		0x1E84, 0x4A000000,
++		0x1E84, 0x4B000000,
++		0x1E84, 0x4C000000,
++		0x1E84, 0x4D000000,
++		0x1E84, 0x4E000000,
++		0x1E84, 0x4F000000,
++		0x1E84, 0x50000000,
++		0x1E84, 0x51000000,
++		0x1E84, 0x52000000,
++		0x1E84, 0x53000000,
++		0x1E84, 0x54000000,
++		0x1E84, 0x55000000,
++		0x1E84, 0x56000000,
++		0x1E84, 0x57000000,
++		0x1E84, 0x58000000,
++		0x1E84, 0x59000000,
++		0x1E84, 0x5A000000,
++		0x1E84, 0x5B000000,
++		0x1E84, 0x5C000000,
++		0x1E84, 0x5D000000,
++		0x1E84, 0x5E000000,
++		0x1E84, 0x5F000000,
++		0x1E84, 0x60000000,
++		0x1E84, 0x61000000,
++		0x1E84, 0x62000000,
++		0x1E84, 0x63000000,
++		0x1E84, 0x64000000,
++		0x1E84, 0x65000000,
++		0x1E84, 0x66000000,
++		0x1E84, 0x67000000,
++		0x1E84, 0x68000000,
++		0x1E84, 0x69000000,
++		0x1E84, 0x6A000000,
++		0x1E84, 0x6B000000,
++		0x1E84, 0x6C000000,
++		0x1E84, 0x6D000000,
++		0x1E84, 0x6E000000,
++		0x1E84, 0x6F000000,
++		0x1E84, 0x70000000,
++		0x1E84, 0x71000000,
++		0x1E84, 0x72000000,
++		0x1E84, 0x73000000,
++		0x1E84, 0x74000000,
++		0x1E84, 0x75000000,
++		0x1E84, 0x76000000,
++		0x1E84, 0x77000000,
++		0x1E84, 0x78000000,
++		0x1E84, 0x79000000,
++		0x1E84, 0x7A000000,
++		0x1E84, 0x7B000000,
++		0x1E84, 0x7C000000,
++		0x1E84, 0x7D000000,
++		0x1E84, 0x7E000000,
++		0x1E84, 0x7F000000,
++		0x1E84, 0x80000000,
++		0x1E84, 0x00000000,
++		0x1E88, 0x0200FC1C,
++		0x1E8C, 0x00000000,
++		0x1E90, 0x00000000,
++		0x1E94, 0x04000000,
++		0x1E98, 0x00000000,
++		0x1E9C, 0x00000000,
++		0x1EA0, 0x00000000,
++		0x1EA4, 0x00000000,
++		0x1EA8, 0xAA464646,
++		0x1EAC, 0x01800030,
++		0x1EB0, 0x00003002,
++		0x1EB4, 0x31800002,
++		0x1EB8, 0x00000000,
++		0x1EBC, 0x00000000,
++		0x1EC0, 0x00000000,
++		0x1EC4, 0x00000000,
++		0x1EC8, 0x00000000,
++		0x1ECC, 0x00000000,
++		0x1ED0, 0x00000000,
++		0x1ED4, 0x8000000A,
++		0x1ED8, 0x800B03E8,
++		0x1EDC, 0x83E90FFF,
++		0x1EE0, 0x8000FFFF,
++		0x1EE4, 0x70000000,
++		0x1EE8, 0x00000000,
++		0x1EEC, 0x0280A933,
++		0x1EF0, 0x00000A80,
++		0x1EF4, 0x00001266,
++		0x1EF8, 0x01000100,
++		0x3A00, 0x0004080C,
++		0x3A04, 0x1C202428,
++		0x3A08, 0x0C101418,
++		0x3A0C, 0x181C2024,
++		0x3A10, 0x080C1014,
++		0x3A14, 0x181C2024,
++		0x3A18, 0x080C1014,
++		0x3A1C, 0x00000000,
++		0x3A20, 0x00000000,
++		0x3A24, 0x00000000,
++		0x3A28, 0x00000000,
++		0x3A2C, 0x181C2024,
++		0x3A30, 0x080C1014,
++		0x3A34, 0x20240004,
++		0x3A38, 0x1014181C,
++		0x3A3C, 0x0004080C,
++		0x3A40, 0x00000000,
++		0x3A44, 0x00000000,
++		0x3A48, 0x00000000,
++		0x3A4C, 0x00000000,
++		0x3A50, 0x00000000,
++		0x3A54, 0x00000000,
++		0x3A58, 0x00000000,
++		0x3A5C, 0x00000000,
++		0x3A60, 0x00000000,
++		0x3A64, 0x00000000,
++		0x3A68, 0x00000000,
++		0x3A6C, 0x00000000,
++		0x3A70, 0x00000000,
++		0x3A74, 0x00000000,
++		0x3A78, 0x00000000,
++		0x3A7C, 0x00000000,
++		0x3A80, 0x00000000,
++		0x3A84, 0x00000000,
++		0x3A88, 0x00000000,
++		0x3A8C, 0x00000000,
++		0x3A90, 0x00000000,
++		0x3A94, 0x00000000,
++		0x3A98, 0x00000000,
++		0x3A9C, 0x00000000,
++		0x3AA0, 0x00000000,
++		0x3AA4, 0x00000000,
++		0x4000, 0xA6A6A6A6,
++		0x4004, 0x95959595,
++		0x4008, 0x00777777,
++		0x400C, 0x77776666,
++		0x4010, 0x00033333,
++		0x4014, 0xAAAC875A,
++		0x4018, 0x2AA2A8A2,
++		0x401C, 0x2AAAA8A2,
++		0x4020, 0x00878766,
++		0x4024, 0x004E4924,
++		0x4028, 0x1669B6C0,
++		0x402C, 0x00409190,
++		0x4030, 0xB85C0DB6,
++		0x4034, 0x00B4A298,
++		0x4038, 0x00030151,
++		0x403C, 0x0058C618,
++		0x4040, 0x41000000,
++		0x4044, 0x00000BCB,
++		0x4048, 0xAAAAAAAA,
++		0x404C, 0x00B98989,
++		0x4050, 0x88888665,
++		0x4054, 0x08888888,
++		0x4058, 0x00000618,
++		0x405C, 0x00000000,
++		0x4060, 0x00000000,
++		0x4064, 0x00000000,
++		0x4068, 0x00000000,
++		0x406C, 0x00000000,
++		0x4070, 0x00000000,
++		0x4074, 0x00000000,
++		0x4078, 0x00000000,
++		0x407C, 0x00000000,
++		0x4080, 0x00000000,
++		0x4084, 0x00000000,
++		0x4088, 0x00000000,
++		0x408C, 0x00000000,
++		0x4090, 0x00000000,
++		0x4094, 0x00000000,
++		0x4098, 0x00000000,
++		0x409C, 0x00000000,
++		0x40A0, 0x00000000,
++		0x40A4, 0x00000000,
++		0x40A8, 0x00000000,
++		0x40AC, 0x00000000,
++		0x40B0, 0x00000000,
++		0x40B4, 0x00000000,
++		0x40B8, 0x00000000,
++		0x40BC, 0x00000000,
++		0x40C0, 0x00000000,
++		0x40C4, 0x00000000,
++		0x40C8, 0x00000000,
++		0x40CC, 0x00000000,
++		0x40D0, 0x00000000,
++		0x40D4, 0x00000000,
++		0x40D8, 0x00000000,
++		0x40DC, 0x00000000,
++		0x40E0, 0x00000000,
++		0x40E4, 0x00000000,
++		0x40E8, 0x00000000,
++		0x40EC, 0x00000000,
++		0x40F0, 0x00000000,
++		0x40F4, 0x00000000,
++		0x40F8, 0x00000000,
++		0x4100, 0x00033312,
++		0x4104, 0x00033312,
++		0x410C, 0x17F40060,
++		0x4110, 0x02D508C4,
++		0x4114, 0x506AA5B4,
++		0x4118, 0x000004FF,
++		0x411C, 0x00000000,
++		0x4120, 0x02D508CC,
++		0x4124, 0x506AA5B4,
++		0x4128, 0x000004FD,
++		0x412C, 0x00000000,
++		0x4134, 0x00000000,
++		0x4138, 0x20000000,
++		0x413C, 0x00000000,
++		0x4140, 0x00000000,
++		0x4144, 0x00000000,
++		0x4148, 0x00000000,
++		0x414C, 0x00000000,
++		0x4150, 0x00000000,
++		0x4154, 0x00000000,
++		0x4158, 0x00000000,
++		0x415C, 0x00000000,
++		0x4160, 0xF0040FF8,
++		0x4164, 0x7F000000,
++		0x4168, 0x00000000,
++		0x416C, 0x00008000,
++		0x4170, 0x00000000,
++		0x4174, 0x00000000,
++		0x4178, 0x00000000,
++		0x417C, 0x00000000,
++		0x4180, 0x00000000,
++		0x4184, 0x02B00000,
++		0x4188, 0x00000000,
++		0x418C, 0x00000000,
++		0x4190, 0x00000000,
++		0x4194, 0x00000000,
++		0x4198, 0x00000000,
++		0x41A0, 0x00510000,
++		0x41A4, 0x183C1F7F,
++		0x41A8, 0x1402C99A,
++		0x41AC, 0x00004200,
++		0x41B0, 0x0809FB08,
++		0x41B0, 0x0809FB09,
++		0x41B4, 0x00000000,
++		0x41B8, 0x00000000,
++		0x41BC, 0x00C3FF80,
++		0x41C0, 0x0002D100,
++		0x41C4, 0x00000004,
++		0x41C8, 0x001FFFE0,
++		0x41CC, 0x0809FB08,
++		0x41CC, 0x0809FB09,
++		0x41D0, 0x00000000,
++		0x41D4, 0x00000000,
++		0x41D8, 0x00C3FF80,
++		0x41DC, 0x0002D100,
++		0x41E0, 0x00000004,
++		0x41E4, 0x001FFFE0,
++		0x41E8, 0x00000200,
++		0x41EC, 0x1E008000,
++		0x41F0, 0x7F000064,
++		0x41F4, 0x1F7DE75C,
++		0x41F8, 0x7F7F7F7F,
++		0x41FC, 0x7F7F7F7F,
++		0x1830, 0x700B8001,
++		0x1830, 0x700B8001,
++		0x1830, 0x70144001,
++		0x1830, 0x70244001,
++		0x1830, 0x70344001,
++		0x1830, 0x70444001,
++		0x1830, 0x705B8001,
++		0x1830, 0x70644001,
++		0x1830, 0x707B8001,
++		0x1830, 0x708B8001,
++		0x1830, 0x709B8001,
++		0x1830, 0x70AB8001,
++		0x1830, 0x70BB8001,
++		0x1830, 0x70CB8001,
++		0x1830, 0x70DB8001,
++		0x1830, 0x70EB8001,
++		0x1830, 0x70FB8001,
++		0x1830, 0x70FB8001,
++		0x4130, 0x700B8001,
++		0x4130, 0x700B8001,
++		0x4130, 0x70144001,
++		0x4130, 0x70244001,
++		0x4130, 0x70344001,
++		0x4130, 0x70444001,
++		0x4130, 0x705B8001,
++		0x4130, 0x70644001,
++		0x4130, 0x707B8001,
++		0x4130, 0x708B8001,
++		0x4130, 0x709B8001,
++		0x4130, 0x70AB8001,
++		0x4130, 0x70BB8001,
++		0x4130, 0x70CB8001,
++		0x4130, 0x70DB8001,
++		0x4130, 0x70EB8001,
++		0x4130, 0x70FB8001,
++		0x4130, 0x70FB8001,
++		0x1A00, 0x00D047C8,
++		0x1A04, 0xC0000008,
++		0x1A08, 0x88838300,
++		0x1A0C, 0x2E20100F,
++		0x1A10, 0x9500BB78,
++		0x1A14, 0x1114D028,
++		0x1A18, 0x00881117,
++		0x1A1C, 0x89140F00,
++		0x1A20, 0x52840000,
++		0x1A24, 0x3E18FEC8,
++		0x1A28, 0x00150A88,
++		0x1A2C, 0x12988000,
++		0x1A30, 0x10114007,
++		0x1A34, 0x1011C007,
++		0x1A38, 0x00000000,
++		0x1A3C, 0x00000000,
++		0x1A40, 0x00000000,
++		0x1A44, 0x00000000,
++		0x1A48, 0x000C0000,
++		0x1A4C, 0xB00000C0,
++		0x1A50, 0x22040700,
++		0x1A54, 0x09003000,
++		0x1A58, 0x00000881,
++		0x1A5C, 0x00000128,
++		0x1A60, 0x85830000,
++		0x1A64, 0x00000128,
++		0x1A68, 0x00222211,
++		0x1A6C, 0x00000000,
++		0x1A70, 0x07008000,
++		0x1A74, 0x00000148,
++		0x1A78, 0x000089F0,
++		0x1A7C, 0x225B0606,
++		0x1A80, 0x208A7532,
++		0x1A84, 0x85200200,
++		0x1A88, 0x048C0000,
++		0x1A8C, 0x00000000,
++		0x1A90, 0x00000000,
++		0x1A94, 0x00000000,
++		0x1A98, 0xACC4C040,
++		0x1A9C, 0x0016C8B2,
++		0x1AA0, 0x00FAF0DE,
++		0x1AA4, 0x00020000,
++		0x1AA8, 0xBA0F0004,
++		0x1AAC, 0x00122344,
++		0x1AB0, 0x0FFFFFFF,
++		0x1AB4, 0x0F201402,
++		0x1AB8, 0x00000000,
++		0x1ABC, 0xC2008080,
++		0x1AC0, 0x54D0A742,
++		0x1AC4, 0x00000000,
++		0x1AC8, 0x00000808,
++		0x1ACC, 0x00000707,
++		0x1AD0, 0x9D0529F0,
++		0x1AD4, 0x0D9D8452,
++		0x1AD8, 0x08024024,
++		0x1ADC, 0x0011C001,
++		0x1AE0, 0x00600391,
++		0x1AE4, 0x08000080,
++		0x1AE8, 0x00000002,
++		0x1AEC, 0x00000000,
++		0x1AF0, 0x00000000,
++		0x1AF4, 0x00000000,
++		0x1AF8, 0x00000000,
++		0x1AFC, 0x00000000,
++		0x01C, 0x87F6E100,
++		0x0EC, 0x87000000,
++		0x1100, 0x0C000000,
++		0x1044, 0x7CFF7A08,
++		0x1D0C, 0x00400000,
++		0x1D0C, 0x00410000,
++		0x1EE8, 0x00000003,
++		0xC0C, 0x02F1D8BF,
++		0x1D94, 0x40000000,
++		0x1D94, 0x40010000,
++		0x1D94, 0x40020000,
++		0x1D94, 0x40030000,
++		0x1D94, 0x40040000,
++		0x1D94, 0x40050000,
++		0x1D94, 0x40060000,
++		0x1D94, 0x40070000,
++		0x1D94, 0x40080000,
++		0x1D94, 0x40090000,
++		0x1D94, 0x400A0000,
++		0x1D94, 0x400B0000,
++		0x1D94, 0x400C0000,
++		0x1D94, 0x400D0000,
++		0x1D94, 0x400E0000,
++		0x1D94, 0x400F0000,
++		0x1D94, 0x40100000,
++		0x1D94, 0x40110000,
++		0x1D94, 0x40120000,
++		0x1D94, 0x40130000,
++		0x1D94, 0x40140000,
++		0x1D94, 0x40150000,
++		0x1D94, 0x40160000,
++		0x1D94, 0x40170000,
++		0x1D94, 0x40180000,
++		0x1D94, 0x40190000,
++		0x1D94, 0x401A0000,
++		0x1D94, 0x401B0000,
++		0x1D94, 0x401C0000,
++		0x1D94, 0x401D0000,
++		0x1D94, 0x401E0000,
++		0x1D94, 0x401F0000,
++		0x1D94, 0x40200000,
++		0x1D94, 0x40210000,
++		0x1D94, 0x40220000,
++		0x1D94, 0x40230000,
++		0x1D94, 0x40240000,
++		0x1D94, 0x40250000,
++		0x1D94, 0x40260000,
++		0x1D94, 0x40270000,
++		0x1D94, 0x40280000,
++		0x1D94, 0x40290000,
++		0x1D94, 0x402A0000,
++		0x1D94, 0x402B0000,
++		0x1D94, 0x402C0000,
++		0x1D94, 0x402D0000,
++		0x1D94, 0x402E0000,
++		0x1D94, 0x402F0000,
++		0x1D94, 0x40300000,
++		0x1D94, 0x40310000,
++		0x1D94, 0x40320000,
++		0x1D94, 0x40330000,
++		0x1D94, 0x40340000,
++		0x1D94, 0x40350000,
++		0x1D94, 0x40360000,
++		0x1D94, 0x40370000,
++		0x1D94, 0x40380000,
++		0x1D94, 0x40390000,
++		0x1D94, 0x403A0000,
++		0x1D94, 0x403B0000,
++		0x1D94, 0x403C0000,
++		0x1D94, 0x403D0000,
++		0x1D94, 0x403E0000,
++		0x1D94, 0x403F0000,
++		0x1D94, 0x40400000,
++		0x1D94, 0x40410000,
++		0x1D94, 0x40420000,
++		0x1D94, 0x40430000,
++		0x1D94, 0x40440000,
++		0x1D94, 0x40450000,
++		0x1D94, 0x40460000,
++		0x1D94, 0x40470000,
++		0x1D94, 0x40480000,
++		0x1D94, 0x40490000,
++		0x1D94, 0x404A0000,
++		0x1D94, 0x404B0000,
++		0x1D94, 0x404C0000,
++		0x1D94, 0x404D0000,
++		0x1D94, 0x404E0000,
++		0x1D94, 0x404F0000,
++		0x1D94, 0x40500000,
++		0x1D94, 0x40510000,
++		0x1D94, 0x40520000,
++		0x1D94, 0x40530000,
++		0x1D94, 0x40540000,
++		0x1D94, 0x40550000,
++		0x1D94, 0x40560000,
++		0x1D94, 0x40570000,
++		0x1D94, 0x40580000,
++		0x1D94, 0x40590000,
++		0x1D94, 0x405A0000,
++		0x1D94, 0x405B0000,
++		0x1D94, 0x405C0000,
++		0x1D94, 0x405D0000,
++		0x1D94, 0x405E0000,
++		0x1D94, 0x405F0000,
++		0x1D94, 0x40600000,
++		0x1D94, 0x40610000,
++		0x1D94, 0x40620000,
++		0x1D94, 0x40630000,
++		0x1D94, 0x40640000,
++		0x1D94, 0x40650000,
++		0x1D94, 0x40660000,
++		0x1D94, 0x40670000,
++		0x1D94, 0x40680000,
++		0x1D94, 0x40690000,
++		0x1D94, 0x406A0000,
++		0x1D94, 0x406B0000,
++		0x1D94, 0x406C0000,
++		0x1D94, 0x406D0000,
++		0x1D94, 0x406E0000,
++		0x1D94, 0x406F0000,
++		0x1D94, 0x40700000,
++		0x1D94, 0x40710000,
++		0x1D94, 0x40720000,
++		0x1D94, 0x40730000,
++		0x1D94, 0x40740000,
++		0x1D94, 0x40750000,
++		0x1D94, 0x40760000,
++		0x1D94, 0x40770000,
++		0x1D94, 0x40780000,
++		0x1D94, 0x40790000,
++		0x1D94, 0x407A0000,
++		0x1D94, 0x407B0000,
++		0x1D94, 0x407C0000,
++		0x1D94, 0x407D0000,
++		0x1D94, 0x407E0000,
++		0x1D94, 0x407F0000,
++		0x1D94, 0x40800000,
++		0x1D94, 0x40810000,
++		0x1D94, 0x40820000,
++		0x1D94, 0x40830000,
++		0x1D94, 0x40840000,
++		0x1D94, 0x40850000,
++		0x1D94, 0x40860000,
++		0x1D94, 0x40870000,
++		0x1D94, 0x40880000,
++		0x1D94, 0x40890000,
++		0x1D94, 0x408A0000,
++		0x1D94, 0x408B0000,
++		0x1D94, 0x408C0000,
++		0x1D94, 0x408D0000,
++		0x1D94, 0x408E0000,
++		0x1D94, 0x408F0000,
++		0x1D94, 0x40900000,
++		0x1D94, 0x40910000,
++		0x1D94, 0x40920000,
++		0x1D94, 0x40930000,
++		0x1D94, 0x40940000,
++		0x1D94, 0x40950000,
++		0x1D94, 0x40960000,
++		0x1D94, 0x40970000,
++		0x1D94, 0x40980000,
++		0x1D94, 0x40990000,
++		0x1D94, 0x409A0000,
++		0x1D94, 0x409B0000,
++		0x1D94, 0x409C0000,
++		0x1D94, 0x409D0000,
++		0x1D94, 0x409E0000,
++		0x1D94, 0x409F0000,
++		0x1D94, 0x40A00000,
++		0x1D94, 0x40A10000,
++		0x1D94, 0x40A20000,
++		0x1D94, 0x40A30000,
++		0x1D94, 0x40A40000,
++		0x1D94, 0x40A50000,
++		0x1D94, 0x40A60000,
++		0x1D94, 0x40A70000,
++		0x1D94, 0x40A80000,
++		0x1D94, 0x40A90000,
++		0x1D94, 0x40AA0000,
++		0x1D94, 0x40AB0000,
++		0x1D94, 0x40AC0000,
++		0x1D94, 0x40AD0000,
++		0x1D94, 0x40AE0000,
++		0x1D94, 0x40AF0000,
++		0x1D94, 0x40B00000,
++		0x1D94, 0x40B10000,
++		0x1D94, 0x40B20000,
++		0x1D94, 0x40B30000,
++		0x1D94, 0x40B40000,
++		0x1D94, 0x40B50000,
++		0x1D94, 0x40B60000,
++		0x1D94, 0x40B70000,
++		0x1D94, 0x40B80000,
++		0x1D94, 0x40B90000,
++		0x1D94, 0x40BA0000,
++		0x1D94, 0x40BB0000,
++		0x1D94, 0x40BC0000,
++		0x1D94, 0x40BD0000,
++		0x1D94, 0x40BE0000,
++		0x1D94, 0x40BF0000,
++		0x1D94, 0x40C00000,
++		0x1D94, 0x40C10000,
++		0x1D94, 0x40C20000,
++		0x1D94, 0x40C30000,
++		0x1D94, 0x40C40000,
++		0x1D94, 0x40C50000,
++		0x1D94, 0x40C60000,
++		0x1D94, 0x40C70000,
++		0x1D94, 0x40C80000,
++		0x1D94, 0x40C90000,
++		0x1D94, 0x40CA0000,
++		0x1D94, 0x40CB0000,
++		0x1D94, 0x40CC0000,
++		0x1D94, 0x40CD0000,
++		0x1D94, 0x40CE0000,
++		0x1D94, 0x40CF0000,
++		0x1D94, 0x40D00000,
++		0x1D94, 0x40D10000,
++		0x1D94, 0x40D20000,
++		0x1D94, 0x40D30000,
++		0x1D94, 0x40D40000,
++		0x1D94, 0x40D50000,
++		0x1D94, 0x40D60000,
++		0x1D94, 0x40D70000,
++		0x1D94, 0x40D80000,
++		0x1D94, 0x40D90000,
++		0x1D94, 0x40DA0000,
++		0x1D94, 0x40DB0000,
++		0x1D94, 0x40DC0000,
++		0x1D94, 0x40DD0000,
++		0x1D94, 0x40DE0000,
++		0x1D94, 0x40DF0000,
++		0x1D94, 0x40E00000,
++		0x1D94, 0x40E10000,
++		0x1D94, 0x40E20000,
++		0x1D94, 0x40E30000,
++		0x1D94, 0x40E40000,
++		0x1D94, 0x40E50000,
++		0x1D94, 0x40E60000,
++		0x1D94, 0x40E70000,
++		0x1D94, 0x40E80000,
++		0x1D94, 0x40E90000,
++		0x1D94, 0x40EA0000,
++		0x1D94, 0x40EB0000,
++		0x1D94, 0x40EC0000,
++		0x1D94, 0x40ED0000,
++		0x1D94, 0x40EE0000,
++		0x1D94, 0x40EF0000,
++		0x1D94, 0x40F00000,
++		0x1D94, 0x40F10000,
++		0x1D94, 0x40F20000,
++		0x1D94, 0x40F30000,
++		0x1D94, 0x40F40000,
++		0x1D94, 0x40F50000,
++		0x1D94, 0x40F60000,
++		0x1D94, 0x40F70000,
++		0x1D94, 0x40F80000,
++		0x1D94, 0x40F90000,
++		0x1D94, 0x40FA0000,
++		0x1D94, 0x40FB0000,
++		0x1D94, 0x40FC0000,
++		0x1D94, 0x40FD0000,
++		0x1D94, 0x40FE0000,
++		0x1D94, 0x40FF0000,
++		0xC0C, 0x02F1D8B7,
++		0x1EE8, 0x00000000,
 +};
 +
-+static struct rtw_pwr_seq_cmd trans_cardemu_to_carddis_8822c[] = {
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(7), BIT(7)},
-+	{0x0007,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, 0xFF, 0x00},
-+	{0x0067,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(5), 0},
-+	{0x004A,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0081,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(7) | BIT(6), 0},
-+	{0x0090,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(3) | BIT(4), BIT(3)},
-+	{0x0005,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_PCI_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(2), BIT(2)},
-+	{0x0086,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_SDIO_MSK,
-+	 RTW_PWR_ADDR_SDIO,
-+	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0xFFFF,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 0,
-+	 RTW_PWR_CMD_END, 0, 0},
++RTW_DECL_TABLE_PHY_COND(rtw8822c_bb, rtw_phy_cfg_bb);
++
++static const u32 rtw8822c_bb_pg_type0[] = {
++	0, 0, 0, 0x00000c20, 0xffffffff, 0x64687276,
++	0, 0, 0, 0x00000c24, 0xffffffff, 0x72768084,
++	0, 0, 0, 0x00000c28, 0xffffffff, 0x56606468,
++	0, 0, 0, 0x00000c2c, 0xffffffff, 0x68727680,
++	0, 0, 0, 0x00000c30, 0xffffffff, 0x52566064,
++	0, 0, 1, 0x00000c34, 0xffffffff, 0x68727680,
++	0, 0, 1, 0x00000c38, 0xffffffff, 0x52566064,
++	0, 0, 0, 0x00000c3c, 0xffffffff, 0x68727680,
++	0, 0, 0, 0x00000c40, 0xffffffff, 0x52566064,
++	0, 0, 0, 0x00000c44, 0xffffffff, 0x76804448,
++	0, 0, 1, 0x00000c48, 0xffffffff, 0x60646872,
++	0, 0, 1, 0x00000c4c, 0xffffffff, 0x44485256,
++	0, 1, 0, 0x00000e20, 0xffffffff, 0x64687276,
++	0, 1, 0, 0x00000e24, 0xffffffff, 0x72768084,
++	0, 1, 0, 0x00000e28, 0xffffffff, 0x56606468,
++	0, 1, 0, 0x00000e2c, 0xffffffff, 0x68727680,
++	0, 1, 0, 0x00000e30, 0xffffffff, 0x52566064,
++	0, 1, 1, 0x00000e34, 0xffffffff, 0x68727680,
++	0, 1, 1, 0x00000e38, 0xffffffff, 0x52566064,
++	0, 1, 0, 0x00000e3c, 0xffffffff, 0x68727680,
++	0, 1, 0, 0x00000e40, 0xffffffff, 0x52566064,
++	0, 1, 0, 0x00000e44, 0xffffffff, 0x76804448,
++	0, 1, 1, 0x00000e48, 0xffffffff, 0x60646872,
++	0, 1, 1, 0x00000e4c, 0xffffffff, 0x44485256,
++	1, 0, 0, 0x00000c24, 0xffffffff, 0x68727680,
++	1, 0, 0, 0x00000c28, 0xffffffff, 0x52566064,
++	1, 0, 0, 0x00000c2c, 0xffffffff, 0x64687276,
++	1, 0, 0, 0x00000c30, 0xffffffff, 0x48525660,
++	1, 0, 1, 0x00000c34, 0xffffffff, 0x64687276,
++	1, 0, 1, 0x00000c38, 0xffffffff, 0x48525660,
++	1, 0, 0, 0x00000c3c, 0xffffffff, 0x64687276,
++	1, 0, 0, 0x00000c40, 0xffffffff, 0x48525660,
++	1, 0, 0, 0x00000c44, 0xffffffff, 0x72764044,
++	1, 0, 1, 0x00000c48, 0xffffffff, 0x56606468,
++	1, 0, 1, 0x00000c4c, 0xffffffff, 0x40444852,
++	1, 1, 0, 0x00000e24, 0xffffffff, 0x68727680,
++	1, 1, 0, 0x00000e28, 0xffffffff, 0x52566064,
++	1, 1, 0, 0x00000e2c, 0xffffffff, 0x64687276,
++	1, 1, 0, 0x00000e30, 0xffffffff, 0x48525660,
++	1, 1, 1, 0x00000e34, 0xffffffff, 0x64687276,
++	1, 1, 1, 0x00000e38, 0xffffffff, 0x48525660,
++	1, 1, 0, 0x00000e3c, 0xffffffff, 0x64687276,
++	1, 1, 0, 0x00000e40, 0xffffffff, 0x48525660,
++	1, 1, 0, 0x00000e44, 0xffffffff, 0x72764044,
++	1, 1, 1, 0x00000e48, 0xffffffff, 0x56606468,
++	1, 1, 1, 0x00000e4c, 0xffffffff, 0x40444852
 +};
 +
-+static struct rtw_pwr_seq_cmd *card_enable_flow_8822c[] = {
-+	trans_carddis_to_cardemu_8822c,
-+	trans_cardemu_to_act_8822c,
-+	NULL
++RTW_DECL_TABLE_BB_PG(rtw8822c_bb_pg_type0);
++
++static const u32 rtw8822c_rf_a[] = {
++		0x000, 0x00030000,
++		0x018, 0x00013124,
++		0x0DE, 0x00000020,
++		0x08E, 0x000A5540,
++		0x081, 0x0000FC01,
++		0x081, 0x0002FC01,
++		0x081, 0x0003FC01,
++		0x085, 0x0006A06C,
++		0x0EE, 0x00000010,
++		0x033, 0x00000001,
++		0x03F, 0x0000003F,
++		0x033, 0x00000001,
++		0x03F, 0x0000003F,
++		0x033, 0x00000002,
++		0x03F, 0x0000003F,
++		0x0EE, 0x00000000,
++		0x0EF, 0x00010000,
++		0x033, 0x0000000F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000000E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000000D,
++		0x03F, 0x00000380,
++		0x033, 0x0000000C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000000B,
++		0x03F, 0x00000300,
++		0x033, 0x0000000A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000009,
++		0x03F, 0x00000280,
++		0x033, 0x00000008,
++		0x03F, 0x000FF280,
++		0x033, 0x00000007,
++		0x03F, 0x00000200,
++		0x033, 0x00000006,
++		0x03F, 0x000001C0,
++		0x033, 0x00000005,
++		0x03F, 0x00000180,
++		0x033, 0x00000004,
++		0x03F, 0x00000040,
++		0x033, 0x00000003,
++		0x03F, 0x00000000,
++		0x033, 0x0000001F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000001E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000001D,
++		0x03F, 0x00000380,
++		0x033, 0x0000001C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000001B,
++		0x03F, 0x00000300,
++		0x033, 0x0000001A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000019,
++		0x03F, 0x00000280,
++		0x033, 0x00000018,
++		0x03F, 0x000FF280,
++		0x033, 0x00000017,
++		0x03F, 0x00000200,
++		0x033, 0x00000016,
++		0x03F, 0x000001C0,
++		0x033, 0x00000015,
++		0x03F, 0x00000180,
++		0x033, 0x00000014,
++		0x03F, 0x00000040,
++		0x033, 0x00000013,
++		0x03F, 0x00000000,
++		0x033, 0x0000002F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000002E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000002D,
++		0x03F, 0x00000380,
++		0x033, 0x0000002C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000002B,
++		0x03F, 0x00000300,
++		0x033, 0x0000002A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000029,
++		0x03F, 0x00000280,
++		0x033, 0x00000028,
++		0x03F, 0x000FF280,
++		0x033, 0x00000027,
++		0x03F, 0x00000200,
++		0x033, 0x00000026,
++		0x03F, 0x000001C0,
++		0x033, 0x00000025,
++		0x03F, 0x00000180,
++		0x033, 0x00000024,
++		0x03F, 0x00000040,
++		0x033, 0x00000023,
++		0x03F, 0x00000000,
++		0x033, 0x0000003F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000003E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000003D,
++		0x03F, 0x00000380,
++		0x033, 0x0000003C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000003B,
++		0x03F, 0x00000300,
++		0x033, 0x0000003A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000039,
++		0x03F, 0x00000280,
++		0x033, 0x00000038,
++		0x03F, 0x000FF280,
++		0x033, 0x00000037,
++		0x03F, 0x00000200,
++		0x033, 0x00000036,
++		0x03F, 0x000001C0,
++		0x033, 0x00000035,
++		0x03F, 0x00000180,
++		0x033, 0x00000034,
++		0x03F, 0x00000040,
++		0x033, 0x00000033,
++		0x03F, 0x00000000,
++		0x033, 0x0000004F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000004E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000004D,
++		0x03F, 0x00000380,
++		0x033, 0x0000004C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000004B,
++		0x03F, 0x00000300,
++		0x033, 0x0000004A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000049,
++		0x03F, 0x00000280,
++		0x033, 0x00000048,
++		0x03F, 0x000FF280,
++		0x033, 0x00000047,
++		0x03F, 0x00000200,
++		0x033, 0x00000046,
++		0x03F, 0x000001C0,
++		0x033, 0x00000045,
++		0x03F, 0x00000180,
++		0x033, 0x00000044,
++		0x03F, 0x00000040,
++		0x033, 0x00000043,
++		0x03F, 0x00000000,
++		0x033, 0x0000005F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000005E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000005D,
++		0x03F, 0x00000380,
++		0x033, 0x0000005C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000005B,
++		0x03F, 0x00000300,
++		0x033, 0x0000005A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000059,
++		0x03F, 0x00000280,
++		0x033, 0x00000058,
++		0x03F, 0x000FF280,
++		0x033, 0x00000057,
++		0x03F, 0x00000200,
++		0x033, 0x00000056,
++		0x03F, 0x000001C0,
++		0x033, 0x00000055,
++		0x03F, 0x00000180,
++		0x033, 0x00000054,
++		0x03F, 0x00000040,
++		0x033, 0x00000053,
++		0x03F, 0x00000000,
++		0x0EF, 0x00000000,
++		0x08A, 0x000E7DE3,
++		0x08B, 0x0008FE00,
++		0x0EE, 0x00000008,
++		0x033, 0x00000000,
++		0x03F, 0x00000023,
++		0x033, 0x00000001,
++		0x03F, 0x00000023,
++		0x0EE, 0x00000000,
++		0x0EF, 0x00004000,
++		0x033, 0x00000000,
++		0x03F, 0x0000000F,
++		0x033, 0x00000002,
++		0x03F, 0x00000000,
++		0x0EF, 0x00000000,
++		0x0EF, 0x00020000,
++		0x033, 0x00000000,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000001,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x00000002,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x00000003,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x00000004,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x00000005,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x00000006,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x00000007,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000008,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000009,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x0000000A,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x0000000B,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x0000000C,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x0000000D,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x0000000E,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x0000000F,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000010,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000011,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x00000012,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x00000013,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x00000014,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x00000015,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x00000016,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x00000017,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000018,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000019,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x0000001A,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x0000001B,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x0000001C,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x0000001D,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x0000001E,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x0000001F,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000020,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000021,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x00000022,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x00000023,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x00000024,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x00000025,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x00000026,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x00000027,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000028,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000029,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x0000002A,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x0000002B,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x0000002C,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x0000002D,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x0000002E,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x0000002F,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x0EF, 0x00000000,
++		0x061, 0x0000D233,
++		0x062, 0x0004D232,
++		0x063, 0x00000C02,
++		0x0EF, 0x00000200,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x030, 0x00000237,
++		0x030, 0x00001237,
++		0x030, 0x00002237,
++		0x030, 0x00003237,
++		0x030, 0x00004207,
++		0x030, 0x00005237,
++		0x030, 0x00006237,
++		0x030, 0x00007237,
++		0x030, 0x00008207,
++		0x030, 0x00009237,
++		0x030, 0x0000A237,
++		0x030, 0x0000B237,
++		0x030, 0x0000C237,
++		0x030, 0x0000D237,
++		0x030, 0x0000E207,
++		0x030, 0x0000F237,
++		0x030, 0x00010237,
++		0x030, 0x00011237,
++		0x030, 0x00012207,
++		0x030, 0x00013237,
++		0x030, 0x00014237,
++		0x030, 0x00015237,
++		0x030, 0x00016207,
++		0x030, 0x00017237,
++		0x030, 0x00018207,
++		0x030, 0x00019237,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x030, 0x00000237,
++		0x030, 0x00001237,
++		0x030, 0x00002237,
++		0x030, 0x00003237,
++		0x030, 0x00004207,
++		0x030, 0x00005237,
++		0x030, 0x00006237,
++		0x030, 0x00007237,
++		0x030, 0x00008207,
++		0x030, 0x00009237,
++		0x030, 0x0000A237,
++		0x030, 0x0000B237,
++		0x030, 0x0000C237,
++		0x030, 0x0000D237,
++		0x030, 0x0000E207,
++		0x030, 0x0000F237,
++		0x030, 0x00010237,
++		0x030, 0x00011237,
++		0x030, 0x00012207,
++		0x030, 0x00013237,
++		0x030, 0x00014237,
++		0x030, 0x00015237,
++		0x030, 0x00016207,
++		0x030, 0x00017237,
++		0x030, 0x00018207,
++		0x030, 0x00019237,
++	0xA0000000,	0x00000000,
++		0x030, 0x00000233,
++		0x030, 0x00001233,
++		0x030, 0x00002233,
++		0x030, 0x00003233,
++		0x030, 0x00004203,
++		0x030, 0x00005233,
++		0x030, 0x00006233,
++		0x030, 0x00007233,
++		0x030, 0x00008203,
++		0x030, 0x00009233,
++		0x030, 0x0000A233,
++		0x030, 0x0000B233,
++		0x030, 0x0000C233,
++		0x030, 0x0000D233,
++		0x030, 0x0000E203,
++		0x030, 0x0000F233,
++		0x030, 0x00010233,
++		0x030, 0x00011233,
++		0x030, 0x00012203,
++		0x030, 0x00013233,
++		0x030, 0x00014233,
++		0x030, 0x00015233,
++		0x030, 0x00016203,
++		0x030, 0x00017233,
++		0x030, 0x00018203,
++		0x030, 0x00019233,
++	0xB0000000,	0x00000000,
++		0x0EF, 0x00000000,
++		0x0EF, 0x00000080,
++		0x030, 0x00000232,
++		0x030, 0x00001232,
++		0x030, 0x00002232,
++		0x030, 0x00003232,
++		0x030, 0x00004232,
++		0x030, 0x00005232,
++		0x030, 0x00006232,
++		0x030, 0x00007232,
++		0x030, 0x00008232,
++		0x030, 0x00009232,
++		0x030, 0x0000A232,
++		0x030, 0x0000B232,
++		0x0EF, 0x00000000,
++		0x0EF, 0x00000040,
++		0x030, 0x00000770,
++		0x030, 0x00001770,
++		0x030, 0x00002440,
++		0x030, 0x00003440,
++		0x030, 0x00004330,
++		0x030, 0x00005330,
++		0x030, 0x00008770,
++		0x030, 0x0000A440,
++		0x030, 0x0000C330,
++		0x0EF, 0x00000000,
++		0x0EE, 0x00010000,
++		0x033, 0x00000200,
++		0x03F, 0x0000006A,
++		0x033, 0x00000201,
++		0x03F, 0x0000006D,
++		0x033, 0x00000202,
++		0x03F, 0x0000046A,
++		0x033, 0x00000203,
++		0x03F, 0x0000086A,
++		0x033, 0x00000204,
++		0x03F, 0x00000C89,
++		0x033, 0x00000205,
++		0x03F, 0x00000CE8,
++		0x033, 0x00000206,
++		0x03F, 0x00000CEB,
++		0x033, 0x00000207,
++		0x03F, 0x00000CEE,
++		0x033, 0x00000208,
++		0x03F, 0x00000CF1,
++		0x033, 0x00000209,
++		0x03F, 0x00000CF4,
++		0x033, 0x0000020A,
++		0x03F, 0x00000CF7,
++		0x033, 0x00000280,
++		0x03F, 0x0000006A,
++		0x033, 0x00000281,
++		0x03F, 0x0000006D,
++		0x033, 0x00000282,
++		0x03F, 0x0000046A,
++		0x033, 0x00000283,
++		0x03F, 0x0000086A,
++		0x033, 0x00000284,
++		0x03F, 0x00000C89,
++		0x033, 0x00000285,
++		0x03F, 0x00000CE8,
++		0x033, 0x00000286,
++		0x03F, 0x00000CEB,
++		0x033, 0x00000287,
++		0x03F, 0x00000CEE,
++		0x033, 0x00000288,
++		0x03F, 0x00000CF1,
++		0x033, 0x00000289,
++		0x03F, 0x00000CF4,
++		0x033, 0x0000028A,
++		0x03F, 0x00000CF7,
++		0x033, 0x00000300,
++		0x03F, 0x0000006A,
++		0x033, 0x00000301,
++		0x03F, 0x0000006D,
++		0x033, 0x00000302,
++		0x03F, 0x0000046A,
++		0x033, 0x00000303,
++		0x03F, 0x0000086A,
++		0x033, 0x00000304,
++		0x03F, 0x00000C89,
++		0x033, 0x00000305,
++		0x03F, 0x00000CE8,
++		0x033, 0x00000306,
++		0x03F, 0x00000CEB,
++		0x033, 0x00000307,
++		0x03F, 0x00000CEE,
++		0x033, 0x00000308,
++		0x03F, 0x00000CF1,
++		0x033, 0x00000309,
++		0x03F, 0x00000CF4,
++		0x033, 0x0000030A,
++		0x03F, 0x00000CF7,
++		0x0EE, 0x00000000,
++		0x051, 0x0003C800,
++		0x052, 0x000942CA,
++		0x053, 0x000090F9,
++		0x054, 0x00088000,
++		0x057, 0x0004C80A,
++		0x0EF, 0x00000020,
++		0x033, 0x00000000,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000001,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000002,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000003,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000004,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000005,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000006,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000007,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000008,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000009,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000A,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000B,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000C,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000D,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000E,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00010E46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000F,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000010,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000011,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000012,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000013,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000014,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000015,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000016,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000017,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000018,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000019,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001A,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001B,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001C,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001D,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001E,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001F,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000020,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000021,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000022,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000023,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000024,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000025,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000026,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000027,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000028,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000029,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000002A,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0000EA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00002A46,
++	0xB0000000,	0x00000000,
++		0x0EF, 0x00000000,
++		0x0EE, 0x00010000,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x033, 0x00000060,
++		0x03F, 0x00000487,
++		0x033, 0x00000061,
++		0x03F, 0x00000887,
++		0x033, 0x00000062,
++		0x03F, 0x00000947,
++		0x033, 0x00000063,
++		0x03F, 0x00000D48,
++		0x033, 0x00000064,
++		0x03F, 0x00000DE5,
++		0x033, 0x00000065,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000066,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000067,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000068,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000069,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000006A,
++		0x03F, 0x00000DF7,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x033, 0x00000060,
++		0x03F, 0x00000487,
++		0x033, 0x00000061,
++		0x03F, 0x00000887,
++		0x033, 0x00000062,
++		0x03F, 0x00000947,
++		0x033, 0x00000063,
++		0x03F, 0x00000D48,
++		0x033, 0x00000064,
++		0x03F, 0x00000DE5,
++		0x033, 0x00000065,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000066,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000067,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000068,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000069,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000006A,
++		0x03F, 0x00000DF7,
++	0xA0000000,	0x00000000,
++		0x033, 0x00000060,
++		0x03F, 0x00000487,
++		0x033, 0x00000061,
++		0x03F, 0x00000887,
++		0x033, 0x00000062,
++		0x03F, 0x00000947,
++		0x033, 0x00000063,
++		0x03F, 0x00000D48,
++		0x033, 0x00000064,
++		0x03F, 0x00000D88,
++		0x033, 0x00000065,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000066,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000067,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000068,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000069,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000006A,
++		0x03F, 0x00000DF7,
++	0xB0000000,	0x00000000,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x033, 0x00000020,
++		0x03F, 0x00000487,
++		0x033, 0x00000021,
++		0x03F, 0x00000887,
++		0x033, 0x00000022,
++		0x03F, 0x00000947,
++		0x033, 0x00000023,
++		0x03F, 0x00000D48,
++		0x033, 0x00000024,
++		0x03F, 0x00000DE5,
++		0x033, 0x00000025,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000026,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000027,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000028,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000029,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000002A,
++		0x03F, 0x00000DF7,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x033, 0x00000020,
++		0x03F, 0x00000487,
++		0x033, 0x00000021,
++		0x03F, 0x00000887,
++		0x033, 0x00000022,
++		0x03F, 0x00000947,
++		0x033, 0x00000023,
++		0x03F, 0x00000D48,
++		0x033, 0x00000024,
++		0x03F, 0x00000DE5,
++		0x033, 0x00000025,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000026,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000027,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000028,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000029,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000002A,
++		0x03F, 0x00000DF7,
++	0xA0000000,	0x00000000,
++		0x033, 0x00000020,
++		0x03F, 0x00000487,
++		0x033, 0x00000021,
++		0x03F, 0x00000887,
++		0x033, 0x00000022,
++		0x03F, 0x00000947,
++		0x033, 0x00000023,
++		0x03F, 0x00000D48,
++		0x033, 0x00000024,
++		0x03F, 0x00000D88,
++		0x033, 0x00000025,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000026,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000027,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000028,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000029,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000002A,
++		0x03F, 0x00000DF7,
++	0xB0000000,	0x00000000,
++		0x0EE, 0x00000000,
++		0x05C, 0x000FCC00,
++		0x067, 0x0000A505,
++		0x0D3, 0x00000542,
++		0x043, 0x00005000,
++		0x07F, 0x00000000,
++		0x0B0, 0x0001F0FC,
++		0x0B1, 0x0007DBE4,
++		0x0B2, 0x00022400,
++		0x0B3, 0x0007C760,
++		0x0B4, 0x00099D40,
++		0x0B5, 0x0004103F,
++		0x0B6, 0x000187F8,
++		0x0B7, 0x00030018,
++		0x0BC, 0x00000008,
++		0x0D3, 0x00000542,
++		0x0DD, 0x00000500,
++		0x0BB, 0x00040010,
++		0x0B0, 0x0001F0FA,
++		0x0FE, 0x00000000,
++		0x0CA, 0x00080000,
++		0x0CA, 0x00080001,
++		0x0FE, 0x00000000,
++		0x0B0, 0x0001F0F8,
++		0x0B3, 0x0007C700,
++		0x018, 0x0001B124,
++		0xFFE, 0x00000000,
++		0xFFE, 0x00000000,
++		0x0B3, 0x0007C760,
++		0x018, 0x00013124,
++		0x0CC, 0x0000F000,
++		0x0CD, 0x00089600,
++		0x0CC, 0x0004F000,
++		0x018, 0x00013108,
++		0x0FE, 0x00000000,
++		0x0B8, 0x000C0440,
++		0x0BA, 0x000E840D,
++		0x0FE, 0x00000000,
++		0x018, 0x00013124,
++		0x059, 0x000A0000,
++		0x05A, 0x00060000,
++		0x05B, 0x00014000,
++		0x0ED, 0x00000008,
++		0x033, 0x00000001,
++		0x03F, 0x0000000F,
++		0x0ED, 0x00000000,
++		0x0EE, 0x00000002,
++		0x033, 0x00000017,
++		0x03F, 0x0000003F,
++		0x033, 0x00000018,
++		0x03F, 0x0000003F,
++		0x033, 0x00000019,
++		0x03F, 0x00000000,
++		0x033, 0x0000001A,
++		0x03F, 0x0000003F,
++		0x033, 0x0000001B,
++		0x03F, 0x0000003F,
++		0x033, 0x0000001C,
++		0x03F, 0x0000003F,
++		0x0EE, 0x00000000,
++		0x0EE, 0x00000004,
++		0x033, 0x0000000A,
++		0x03F, 0x00000010,
++		0x0EE, 0x00000000,
++		0x0ED, 0x00000200,
++		0x033, 0x00000000,
++		0x03F, 0x000F45A4,
++		0x033, 0x00000001,
++		0x03F, 0x000F49A4,
++		0x033, 0x00000002,
++		0x03F, 0x000F49A4,
++		0x033, 0x00000003,
++		0x03F, 0x000F69A4,
++		0x033, 0x00000004,
++		0x03F, 0x000F69A4,
++		0x033, 0x00000005,
++		0x03F, 0x000F69A4,
++		0x033, 0x00000006,
++		0x03F, 0x000F6DA4,
++		0x033, 0x00000007,
++		0x03F, 0x000F6DA4,
++		0x033, 0x00000008,
++		0x03F, 0x000F6DA4,
++		0x033, 0x00000009,
++		0x03F, 0x000F8DA4,
++		0x033, 0x0000000A,
++		0x03F, 0x000F8DA4,
++		0x033, 0x0000000B,
++		0x03F, 0x000F8DA4,
++		0x033, 0x0000000C,
++		0x03F, 0x000F91A4,
++		0x033, 0x0000000D,
++		0x03F, 0x000F91A4,
++		0x033, 0x0000000E,
++		0x03F, 0x000F91A4,
++		0x033, 0x0000000F,
++		0x03F, 0x000FB1A4,
++		0x033, 0x00000010,
++		0x03F, 0x000FB1A4,
++		0x033, 0x00000011,
++		0x03F, 0x000FB1A4,
++		0x033, 0x00000012,
++		0x03F, 0x000FB5A4,
++		0x033, 0x00000013,
++		0x03F, 0x000FB5A4,
++		0x033, 0x00000014,
++		0x03F, 0x000FD9A4,
++		0x033, 0x00000015,
++		0x03F, 0x000FD9A4,
++		0x033, 0x00000016,
++		0x03F, 0x000FF9A4,
++		0x033, 0x00000017,
++		0x03F, 0x000FF9A4,
++		0x033, 0x00000018,
++		0x03F, 0x000FFDA4,
++		0x033, 0x00000019,
++		0x03F, 0x000FFDA4,
++		0x033, 0x0000001A,
++		0x03F, 0x000FFDA4,
++		0x0ED, 0x00000000,
++		0xFFFF, 0x0000FFFF,
 +};
 +
-+static struct rtw_pwr_seq_cmd *card_disable_flow_8822c[] = {
-+	trans_act_to_cardemu_8822c,
-+	trans_cardemu_to_carddis_8822c,
-+	NULL
++RTW_DECL_TABLE_RF_RADIO(rtw8822c_rf_a, A);
++
++static const u32 rtw8822c_rf_b[] = {
++		0x000, 0x00030000,
++		0x018, 0x00013124,
++		0x0EF, 0x00080000,
++		0x033, 0x00000001,
++		0x03F, 0x00091020,
++		0x0EF, 0x00000000,
++		0x0DE, 0x00000020,
++		0x08E, 0x000A5540,
++		0x081, 0x0000FC01,
++		0x081, 0x0002FC01,
++		0x081, 0x0003FC01,
++		0x085, 0x0006A06C,
++		0x0EE, 0x00000010,
++		0x033, 0x00000001,
++		0x03F, 0x0000003F,
++		0x033, 0x00000001,
++		0x03F, 0x0000003F,
++		0x033, 0x00000002,
++		0x03F, 0x0000003F,
++		0x0EE, 0x00000000,
++		0x0EF, 0x00010000,
++		0x033, 0x0000000F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000000E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000000D,
++		0x03F, 0x00000380,
++		0x033, 0x0000000C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000000B,
++		0x03F, 0x00000300,
++		0x033, 0x0000000A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000009,
++		0x03F, 0x00000280,
++		0x033, 0x00000008,
++		0x03F, 0x000FF280,
++		0x033, 0x00000007,
++		0x03F, 0x00000200,
++		0x033, 0x00000006,
++		0x03F, 0x000001C0,
++		0x033, 0x00000005,
++		0x03F, 0x00000180,
++		0x033, 0x00000004,
++		0x03F, 0x00000040,
++		0x033, 0x00000003,
++		0x03F, 0x00000000,
++		0x033, 0x0000001F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000001E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000001D,
++		0x03F, 0x00000380,
++		0x033, 0x0000001C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000001B,
++		0x03F, 0x00000300,
++		0x033, 0x0000001A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000019,
++		0x03F, 0x00000280,
++		0x033, 0x00000018,
++		0x03F, 0x000FF280,
++		0x033, 0x00000017,
++		0x03F, 0x00000200,
++		0x033, 0x00000016,
++		0x03F, 0x000001C0,
++		0x033, 0x00000015,
++		0x03F, 0x00000180,
++		0x033, 0x00000014,
++		0x03F, 0x00000040,
++		0x033, 0x00000013,
++		0x03F, 0x00000000,
++		0x033, 0x0000002F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000002E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000002D,
++		0x03F, 0x00000380,
++		0x033, 0x0000002C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000002B,
++		0x03F, 0x00000300,
++		0x033, 0x0000002A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000029,
++		0x03F, 0x00000280,
++		0x033, 0x00000028,
++		0x03F, 0x000FF280,
++		0x033, 0x00000027,
++		0x03F, 0x00000200,
++		0x033, 0x00000026,
++		0x03F, 0x000001C0,
++		0x033, 0x00000025,
++		0x03F, 0x00000180,
++		0x033, 0x00000024,
++		0x03F, 0x00000040,
++		0x033, 0x00000023,
++		0x03F, 0x00000000,
++		0x033, 0x0000003F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000003E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000003D,
++		0x03F, 0x00000380,
++		0x033, 0x0000003C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000003B,
++		0x03F, 0x00000300,
++		0x033, 0x0000003A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000039,
++		0x03F, 0x00000280,
++		0x033, 0x00000038,
++		0x03F, 0x000FF280,
++		0x033, 0x00000037,
++		0x03F, 0x00000200,
++		0x033, 0x00000036,
++		0x03F, 0x000001C0,
++		0x033, 0x00000035,
++		0x03F, 0x00000180,
++		0x033, 0x00000034,
++		0x03F, 0x00000040,
++		0x033, 0x00000033,
++		0x03F, 0x00000000,
++		0x033, 0x0000004F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000004E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000004D,
++		0x03F, 0x00000380,
++		0x033, 0x0000004C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000004B,
++		0x03F, 0x00000300,
++		0x033, 0x0000004A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000049,
++		0x03F, 0x00000280,
++		0x033, 0x00000048,
++		0x03F, 0x000FF280,
++		0x033, 0x00000047,
++		0x03F, 0x00000200,
++		0x033, 0x00000046,
++		0x03F, 0x000001C0,
++		0x033, 0x00000045,
++		0x03F, 0x00000180,
++		0x033, 0x00000044,
++		0x03F, 0x00000040,
++		0x033, 0x00000043,
++		0x03F, 0x00000000,
++		0x033, 0x0000005F,
++		0x03F, 0x000773E8,
++		0x033, 0x0000005E,
++		0x03F, 0x000FF3A0,
++		0x033, 0x0000005D,
++		0x03F, 0x00000380,
++		0x033, 0x0000005C,
++		0x03F, 0x000FF380,
++		0x033, 0x0000005B,
++		0x03F, 0x00000300,
++		0x033, 0x0000005A,
++		0x03F, 0x000002A8,
++		0x033, 0x00000059,
++		0x03F, 0x00000280,
++		0x033, 0x00000058,
++		0x03F, 0x000FF280,
++		0x033, 0x00000057,
++		0x03F, 0x00000200,
++		0x033, 0x00000056,
++		0x03F, 0x000001C0,
++		0x033, 0x00000055,
++		0x03F, 0x00000180,
++		0x033, 0x00000054,
++		0x03F, 0x00000040,
++		0x033, 0x00000053,
++		0x03F, 0x00000000,
++		0x0EF, 0x00000000,
++		0x08A, 0x000E7DE3,
++		0x08B, 0x0008FE00,
++		0x0EE, 0x00000008,
++		0x033, 0x00000000,
++		0x03F, 0x00000023,
++		0x033, 0x00000001,
++		0x03F, 0x00000023,
++		0x0EE, 0x00000000,
++		0x0EF, 0x00004000,
++		0x033, 0x00000000,
++		0x03F, 0x0000000F,
++		0x033, 0x00000002,
++		0x03F, 0x00000000,
++		0x0EF, 0x00000000,
++		0x0EF, 0x00020000,
++		0x033, 0x00000000,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000001,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x00000002,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x00000003,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x00000004,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x00000005,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x00000006,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x00000007,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000008,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000009,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x0000000A,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x0000000B,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x0000000C,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x0000000D,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x0000000E,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x0000000F,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000010,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000011,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x00000012,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x00000013,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x00000014,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x00000015,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x00000016,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x00000017,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000018,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000019,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x0000001A,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x0000001B,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x0000001C,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x0000001D,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x0000001E,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x0000001F,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000020,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000021,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x00000022,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x00000023,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x00000024,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x00000025,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x00000026,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x00000027,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x033, 0x00000028,
++		0x03E, 0x00001910,
++		0x03F, 0x00020000,
++		0x033, 0x00000029,
++		0x03E, 0x00001C02,
++		0x03F, 0x00020000,
++		0x033, 0x0000002A,
++		0x03E, 0x00000F02,
++		0x03F, 0x00020000,
++		0x033, 0x0000002B,
++		0x03E, 0x00000F00,
++		0x03F, 0x00020000,
++		0x033, 0x0000002C,
++		0x03E, 0x00000086,
++		0x03F, 0x00020000,
++		0x033, 0x0000002D,
++		0x03E, 0x00000002,
++		0x03F, 0x00020000,
++		0x033, 0x0000002E,
++		0x03E, 0x00000000,
++		0x03F, 0x00020000,
++		0x033, 0x0000002F,
++		0x03E, 0x00000000,
++		0x03F, 0x0002C010,
++		0x0EF, 0x00000000,
++		0x061, 0x0000D233,
++		0x062, 0x0004D232,
++		0x063, 0x00000C02,
++		0x0EF, 0x00000200,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x030, 0x00000237,
++		0x030, 0x00001237,
++		0x030, 0x00002237,
++		0x030, 0x00003237,
++		0x030, 0x00004207,
++		0x030, 0x00005237,
++		0x030, 0x00006237,
++		0x030, 0x00007237,
++		0x030, 0x00008207,
++		0x030, 0x00009237,
++		0x030, 0x0000A237,
++		0x030, 0x0000B237,
++		0x030, 0x0000C237,
++		0x030, 0x0000D237,
++		0x030, 0x0000E207,
++		0x030, 0x0000F237,
++		0x030, 0x00010237,
++		0x030, 0x00011237,
++		0x030, 0x00012207,
++		0x030, 0x00013237,
++		0x030, 0x00014237,
++		0x030, 0x00015237,
++		0x030, 0x00016207,
++		0x030, 0x00017237,
++		0x030, 0x00018207,
++		0x030, 0x00019237,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x030, 0x00000237,
++		0x030, 0x00001237,
++		0x030, 0x00002237,
++		0x030, 0x00003237,
++		0x030, 0x00004207,
++		0x030, 0x00005237,
++		0x030, 0x00006237,
++		0x030, 0x00007237,
++		0x030, 0x00008207,
++		0x030, 0x00009237,
++		0x030, 0x0000A237,
++		0x030, 0x0000B237,
++		0x030, 0x0000C237,
++		0x030, 0x0000D237,
++		0x030, 0x0000E207,
++		0x030, 0x0000F237,
++		0x030, 0x00010237,
++		0x030, 0x00011237,
++		0x030, 0x00012207,
++		0x030, 0x00013237,
++		0x030, 0x00014237,
++		0x030, 0x00015237,
++		0x030, 0x00016207,
++		0x030, 0x00017237,
++		0x030, 0x00018207,
++		0x030, 0x00019237,
++	0xA0000000,	0x00000000,
++		0x030, 0x00000233,
++		0x030, 0x00001233,
++		0x030, 0x00002233,
++		0x030, 0x00003233,
++		0x030, 0x00004203,
++		0x030, 0x00005233,
++		0x030, 0x00006233,
++		0x030, 0x00007233,
++		0x030, 0x00008203,
++		0x030, 0x00009233,
++		0x030, 0x0000A233,
++		0x030, 0x0000B233,
++		0x030, 0x0000C233,
++		0x030, 0x0000D233,
++		0x030, 0x0000E203,
++		0x030, 0x0000F233,
++		0x030, 0x00010233,
++		0x030, 0x00011233,
++		0x030, 0x00012203,
++		0x030, 0x00013233,
++		0x030, 0x00014233,
++		0x030, 0x00015233,
++		0x030, 0x00016203,
++		0x030, 0x00017233,
++		0x030, 0x00018203,
++		0x030, 0x00019233,
++	0xB0000000,	0x00000000,
++		0x0EF, 0x00000000,
++		0x0EF, 0x00000080,
++		0x030, 0x00000232,
++		0x030, 0x00001232,
++		0x030, 0x00002232,
++		0x030, 0x00003232,
++		0x030, 0x00004232,
++		0x030, 0x00005232,
++		0x030, 0x00006232,
++		0x030, 0x00007232,
++		0x030, 0x00008232,
++		0x030, 0x00009232,
++		0x030, 0x0000A232,
++		0x030, 0x0000B232,
++		0x0EF, 0x00000000,
++		0x0EF, 0x00000040,
++		0x030, 0x00000770,
++		0x030, 0x00001770,
++		0x030, 0x00002440,
++		0x030, 0x00003440,
++		0x030, 0x00004330,
++		0x030, 0x00005330,
++		0x030, 0x00008770,
++		0x030, 0x0000A440,
++		0x030, 0x0000C330,
++		0x0EF, 0x00000000,
++		0x0EE, 0x00010000,
++		0x033, 0x00000200,
++		0x03F, 0x0000006A,
++		0x033, 0x00000201,
++		0x03F, 0x0000006D,
++		0x033, 0x00000202,
++		0x03F, 0x0000046A,
++		0x033, 0x00000203,
++		0x03F, 0x0000086A,
++		0x033, 0x00000204,
++		0x03F, 0x00000C89,
++		0x033, 0x00000205,
++		0x03F, 0x00000CE8,
++		0x033, 0x00000206,
++		0x03F, 0x00000CEB,
++		0x033, 0x00000207,
++		0x03F, 0x00000CEE,
++		0x033, 0x00000208,
++		0x03F, 0x00000CF1,
++		0x033, 0x00000209,
++		0x03F, 0x00000CF4,
++		0x033, 0x0000020A,
++		0x03F, 0x00000CF7,
++		0x033, 0x00000280,
++		0x03F, 0x0000006A,
++		0x033, 0x00000281,
++		0x03F, 0x0000006D,
++		0x033, 0x00000282,
++		0x03F, 0x0000046A,
++		0x033, 0x00000283,
++		0x03F, 0x0000086A,
++		0x033, 0x00000284,
++		0x03F, 0x00000C89,
++		0x033, 0x00000285,
++		0x03F, 0x00000CE8,
++		0x033, 0x00000286,
++		0x03F, 0x00000CEB,
++		0x033, 0x00000287,
++		0x03F, 0x00000CEE,
++		0x033, 0x00000288,
++		0x03F, 0x00000CF1,
++		0x033, 0x00000289,
++		0x03F, 0x00000CF4,
++		0x033, 0x0000028A,
++		0x03F, 0x00000CF7,
++		0x033, 0x00000300,
++		0x03F, 0x0000006A,
++		0x033, 0x00000301,
++		0x03F, 0x0000006D,
++		0x033, 0x00000302,
++		0x03F, 0x0000046A,
++		0x033, 0x00000303,
++		0x03F, 0x0000086A,
++		0x033, 0x00000304,
++		0x03F, 0x00000C89,
++		0x033, 0x00000305,
++		0x03F, 0x00000CE8,
++		0x033, 0x00000306,
++		0x03F, 0x00000CEB,
++		0x033, 0x00000307,
++		0x03F, 0x00000CEE,
++		0x033, 0x00000308,
++		0x03F, 0x00000CF1,
++		0x033, 0x00000309,
++		0x03F, 0x00000CF4,
++		0x033, 0x0000030A,
++		0x03F, 0x00000CF7,
++		0x0EE, 0x00000000,
++		0x051, 0x0003C800,
++		0x052, 0x000942C0,
++		0x053, 0x000090F9,
++		0x054, 0x00088000,
++		0x057, 0x0004C80A,
++		0x0EF, 0x00000020,
++		0x033, 0x00000000,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x0000C246,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000001,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x0000C246,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000002,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x0000C246,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000003,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x0000C246,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000004,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x0000C246,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000005,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x0000C246,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000006,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x0000C246,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000007,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x0000C246,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000008,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x0000C246,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000009,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000A,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000B,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000C,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000D,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000E,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000000F,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000010,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000011,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x00024246,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000012,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000013,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000014,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000015,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000016,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000017,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000018,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000019,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001A,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001B,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001C,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001D,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001E,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000001F,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000020,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000021,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000022,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000023,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000024,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000025,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000026,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000027,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000028,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x00000029,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x033, 0x0000002A,
++		0x03E, 0x00000020,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x03F, 0x0001CA46,
++	0xA0000000,	0x00000000,
++		0x03F, 0x00008E46,
++	0xB0000000,	0x00000000,
++		0x0EF, 0x00000000,
++		0x0EE, 0x00010000,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x033, 0x00000060,
++		0x03F, 0x00000487,
++		0x033, 0x00000061,
++		0x03F, 0x00000887,
++		0x033, 0x00000062,
++		0x03F, 0x00000947,
++		0x033, 0x00000063,
++		0x03F, 0x00000D48,
++		0x033, 0x00000064,
++		0x03F, 0x00000DE5,
++		0x033, 0x00000065,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000066,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000067,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000068,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000069,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000006A,
++		0x03F, 0x00000DF7,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x033, 0x00000060,
++		0x03F, 0x00000487,
++		0x033, 0x00000061,
++		0x03F, 0x00000887,
++		0x033, 0x00000062,
++		0x03F, 0x00000947,
++		0x033, 0x00000063,
++		0x03F, 0x00000D48,
++		0x033, 0x00000064,
++		0x03F, 0x00000DE5,
++		0x033, 0x00000065,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000066,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000067,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000068,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000069,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000006A,
++		0x03F, 0x00000DF7,
++	0xA0000000,	0x00000000,
++		0x033, 0x00000060,
++		0x03F, 0x00000487,
++		0x033, 0x00000061,
++		0x03F, 0x00000887,
++		0x033, 0x00000062,
++		0x03F, 0x00000947,
++		0x033, 0x00000063,
++		0x03F, 0x00000D48,
++		0x033, 0x00000064,
++		0x03F, 0x00000D88,
++		0x033, 0x00000065,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000066,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000067,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000068,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000069,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000006A,
++		0x03F, 0x00000DF7,
++	0xB0000000,	0x00000000,
++	0x81000000,	0x00000000,	0x40000000,	0x00000000,
++		0x033, 0x00000020,
++		0x03F, 0x00000487,
++		0x033, 0x00000021,
++		0x03F, 0x00000887,
++		0x033, 0x00000022,
++		0x03F, 0x00000947,
++		0x033, 0x00000023,
++		0x03F, 0x00000D48,
++		0x033, 0x00000024,
++		0x03F, 0x00000DE5,
++		0x033, 0x00000025,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000026,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000027,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000028,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000029,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000002A,
++		0x03F, 0x00000DF7,
++	0x91000001,	0x00000000,	0x40000000,	0x00000000,
++		0x033, 0x00000020,
++		0x03F, 0x00000487,
++		0x033, 0x00000021,
++		0x03F, 0x00000887,
++		0x033, 0x00000022,
++		0x03F, 0x00000947,
++		0x033, 0x00000023,
++		0x03F, 0x00000D48,
++		0x033, 0x00000024,
++		0x03F, 0x00000DE5,
++		0x033, 0x00000025,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000026,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000027,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000028,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000029,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000002A,
++		0x03F, 0x00000DF7,
++	0xA0000000,	0x00000000,
++		0x033, 0x00000020,
++		0x03F, 0x00000487,
++		0x033, 0x00000021,
++		0x03F, 0x00000887,
++		0x033, 0x00000022,
++		0x03F, 0x00000947,
++		0x033, 0x00000023,
++		0x03F, 0x00000D48,
++		0x033, 0x00000024,
++		0x03F, 0x00000D88,
++		0x033, 0x00000025,
++		0x03F, 0x00000DE8,
++		0x033, 0x00000026,
++		0x03F, 0x00000DEB,
++		0x033, 0x00000027,
++		0x03F, 0x00000DEE,
++		0x033, 0x00000028,
++		0x03F, 0x00000DF1,
++		0x033, 0x00000029,
++		0x03F, 0x00000DF4,
++		0x033, 0x0000002A,
++		0x03F, 0x00000DF7,
++	0xB0000000,	0x00000000,
++		0x0EE, 0x00000000,
++		0x05C, 0x000FCC00,
++		0x067, 0x0000A505,
++		0x0D3, 0x00000542,
++		0x043, 0x00005000,
++		0x0CD, 0x00089600,
++		0x059, 0x000A0000,
++		0x05A, 0x00060000,
++		0x05B, 0x00014000,
++		0x001, 0x00040023,
++		0x0EE, 0x00000002,
++		0x033, 0x00000017,
++		0x03F, 0x0000003F,
++		0x033, 0x00000018,
++		0x03F, 0x0000003F,
++		0x033, 0x00000019,
++		0x03F, 0x00000000,
++		0x033, 0x0000001A,
++		0x03F, 0x0000003F,
++		0x033, 0x0000001B,
++		0x03F, 0x0000003F,
++		0x033, 0x0000001C,
++		0x03F, 0x0000003F,
++		0x0EE, 0x00000000,
++		0x0EE, 0x00000004,
++		0x033, 0x0000000A,
++		0x03F, 0x00000010,
++		0x0EE, 0x00000000,
++		0xFFFF, 0x0000FFFF,
 +};
 +
-+static struct rtw_intf_phy_para usb2_param_8822c[] = {
-+	{0xFFFF, 0x00,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_ALL,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
++RTW_DECL_TABLE_RF_RADIO(rtw8822c_rf_b, B);
++
++static const u8 rtw8822c_txpwr_lmt_type0[] = {
++	0, 0, 0, 0, 1, 64, 2, 0, 0, 0, 1, 56, 1, 0, 0, 0, 1, 60,
++	0, 0, 0, 0, 2, 64, 2, 0, 0, 0, 2, 56, 1, 0, 0, 0, 2, 60,
++	0, 0, 0, 0, 3, 64, 2, 0, 0, 0, 3, 56, 1, 0, 0, 0, 3, 60,
++	0, 0, 0, 0, 4, 64, 2, 0, 0, 0, 4, 56, 1, 0, 0, 0, 4, 60,
++	0, 0, 0, 0, 5, 64, 2, 0, 0, 0, 5, 56, 1, 0, 0, 0, 5, 60,
++	0, 0, 0, 0, 6, 64, 2, 0, 0, 0, 6, 56, 1, 0, 0, 0, 6, 60,
++	0, 0, 0, 0, 7, 64, 2, 0, 0, 0, 7, 56, 1, 0, 0, 0, 7, 60,
++	0, 0, 0, 0, 8, 64, 2, 0, 0, 0, 8, 56, 1, 0, 0, 0, 8, 60,
++	0, 0, 0, 0, 9, 64, 2, 0, 0, 0, 9, 56, 1, 0, 0, 0, 9, 60,
++	0, 0, 0, 0, 10, 64, 2, 0, 0, 0, 10, 56, 1, 0, 0, 0, 10, 60,
++	0, 0, 0, 0, 11, 64, 2, 0, 0, 0, 11, 56, 1, 0, 0, 0, 11, 60,
++	0, 0, 0, 0, 12, 52, 2, 0, 0, 0, 12, 56, 1, 0, 0, 0, 12, 60,
++	0, 0, 0, 0, 13, 40, 2, 0, 0, 0, 13, 56, 1, 0, 0, 0, 13, 56,
++	0, 0, 0, 0, 14, 127, 2, 0, 0, 0, 14, 127, 1, 0, 0, 0, 14, 64,
++	0, 0, 0, 1, 1, 52, 2, 0, 0, 1, 1, 60, 1, 0, 0, 1, 1, 68,
++	0, 0, 0, 1, 2, 60, 2, 0, 0, 1, 2, 60, 1, 0, 0, 1, 2, 68,
++	0, 0, 0, 1, 3, 64, 2, 0, 0, 1, 3, 60, 1, 0, 0, 1, 3, 68,
++	0, 0, 0, 1, 4, 68, 2, 0, 0, 1, 4, 60, 1, 0, 0, 1, 4, 68,
++	0, 0, 0, 1, 5, 68, 2, 0, 0, 1, 5, 60, 1, 0, 0, 1, 5, 68,
++	0, 0, 0, 1, 6, 68, 2, 0, 0, 1, 6, 60, 1, 0, 0, 1, 6, 68,
++	0, 0, 0, 1, 7, 68, 2, 0, 0, 1, 7, 60, 1, 0, 0, 1, 7, 68,
++	0, 0, 0, 1, 8, 68, 2, 0, 0, 1, 8, 60, 1, 0, 0, 1, 8, 68,
++	0, 0, 0, 1, 9, 64, 2, 0, 0, 1, 9, 60, 1, 0, 0, 1, 9, 68,
++	0, 0, 0, 1, 10, 60, 2, 0, 0, 1, 10, 60, 1, 0, 0, 1, 10, 68,
++	0, 0, 0, 1, 11, 56, 2, 0, 0, 1, 11, 60, 1, 0, 0, 1, 11, 68,
++	0, 0, 0, 1, 12, 44, 2, 0, 0, 1, 12, 60, 1, 0, 0, 1, 12, 68,
++	0, 0, 0, 1, 13, 28, 2, 0, 0, 1, 13, 60, 1, 0, 0, 1, 13, 68,
++	0, 0, 0, 1, 14, 127, 2, 0, 0, 1, 14, 127, 1, 0, 0, 1, 14, 127,
++	0, 0, 0, 2, 1, 52, 2, 0, 0, 2, 1, 60, 1, 0, 0, 2, 1, 68,
++	0, 0, 0, 2, 2, 60, 2, 0, 0, 2, 2, 60, 1, 0, 0, 2, 2, 68,
++	0, 0, 0, 2, 3, 64, 2, 0, 0, 2, 3, 60, 1, 0, 0, 2, 3, 68,
++	0, 0, 0, 2, 4, 68, 2, 0, 0, 2, 4, 60, 1, 0, 0, 2, 4, 68,
++	0, 0, 0, 2, 5, 68, 2, 0, 0, 2, 5, 60, 1, 0, 0, 2, 5, 68,
++	0, 0, 0, 2, 6, 68, 2, 0, 0, 2, 6, 60, 1, 0, 0, 2, 6, 68,
++	0, 0, 0, 2, 7, 68, 2, 0, 0, 2, 7, 60, 1, 0, 0, 2, 7, 68,
++	0, 0, 0, 2, 8, 68, 2, 0, 0, 2, 8, 60, 1, 0, 0, 2, 8, 68,
++	0, 0, 0, 2, 9, 64, 2, 0, 0, 2, 9, 60, 1, 0, 0, 2, 9, 68,
++	0, 0, 0, 2, 10, 60, 2, 0, 0, 2, 10, 60, 1, 0, 0, 2, 10, 68,
++	0, 0, 0, 2, 11, 52, 2, 0, 0, 2, 11, 60, 1, 0, 0, 2, 11, 68,
++	0, 0, 0, 2, 12, 40, 2, 0, 0, 2, 12, 60, 1, 0, 0, 2, 12, 68,
++	0, 0, 0, 2, 13, 28, 2, 0, 0, 2, 13, 60, 1, 0, 0, 2, 13, 68,
++	0, 0, 0, 2, 14, 127, 2, 0, 0, 2, 14, 127, 1, 0, 0, 2, 14, 127,
++	0, 0, 0, 3, 1, 52, 2, 0, 0, 3, 1, 36, 1, 0, 0, 3, 1, 60,
++	0, 0, 0, 3, 2, 56, 2, 0, 0, 3, 2, 36, 1, 0, 0, 3, 2, 60,
++	0, 0, 0, 3, 3, 60, 2, 0, 0, 3, 3, 36, 1, 0, 0, 3, 3, 60,
++	0, 0, 0, 3, 4, 60, 2, 0, 0, 3, 4, 36, 1, 0, 0, 3, 4, 60,
++	0, 0, 0, 3, 5, 64, 2, 0, 0, 3, 5, 36, 1, 0, 0, 3, 5, 60,
++	0, 0, 0, 3, 6, 64, 2, 0, 0, 3, 6, 36, 1, 0, 0, 3, 6, 60,
++	0, 0, 0, 3, 7, 64, 2, 0, 0, 3, 7, 36, 1, 0, 0, 3, 7, 60,
++	0, 0, 0, 3, 8, 60, 2, 0, 0, 3, 8, 36, 1, 0, 0, 3, 8, 60,
++	0, 0, 0, 3, 9, 60, 2, 0, 0, 3, 9, 36, 1, 0, 0, 3, 9, 60,
++	0, 0, 0, 3, 10, 56, 2, 0, 0, 3, 10, 36, 1, 0, 0, 3, 10, 60,
++	0, 0, 0, 3, 11, 52, 2, 0, 0, 3, 11, 36, 1, 0, 0, 3, 11, 60,
++	0, 0, 0, 3, 12, 40, 2, 0, 0, 3, 12, 36, 1, 0, 0, 3, 12, 60,
++	0, 0, 0, 3, 13, 28, 2, 0, 0, 3, 13, 36, 1, 0, 0, 3, 13, 60,
++	0, 0, 0, 3, 14, 127, 2, 0, 0, 3, 14, 127, 1, 0, 0, 3, 14, 127,
++	0, 0, 1, 2, 1, 127, 2, 0, 1, 2, 1, 127, 1, 0, 1, 2, 1, 127,
++	0, 0, 1, 2, 2, 127, 2, 0, 1, 2, 2, 127, 1, 0, 1, 2, 2, 127,
++	0, 0, 1, 2, 3, 52, 2, 0, 1, 2, 3, 60, 1, 0, 1, 2, 3, 68,
++	0, 0, 1, 2, 4, 52, 2, 0, 1, 2, 4, 60, 1, 0, 1, 2, 4, 68,
++	0, 0, 1, 2, 5, 60, 2, 0, 1, 2, 5, 60, 1, 0, 1, 2, 5, 68,
++	0, 0, 1, 2, 6, 64, 2, 0, 1, 2, 6, 60, 1, 0, 1, 2, 6, 68,
++	0, 0, 1, 2, 7, 60, 2, 0, 1, 2, 7, 60, 1, 0, 1, 2, 7, 68,
++	0, 0, 1, 2, 8, 52, 2, 0, 1, 2, 8, 60, 1, 0, 1, 2, 8, 68,
++	0, 0, 1, 2, 9, 52, 2, 0, 1, 2, 9, 60, 1, 0, 1, 2, 9, 68,
++	0, 0, 1, 2, 10, 40, 2, 0, 1, 2, 10, 60, 1, 0, 1, 2, 10, 68,
++	0, 0, 1, 2, 11, 28, 2, 0, 1, 2, 11, 60, 1, 0, 1, 2, 11, 68,
++	0, 0, 1, 2, 12, 127, 2, 0, 1, 2, 12, 127, 1, 0, 1, 2, 12, 127,
++	0, 0, 1, 2, 13, 127, 2, 0, 1, 2, 13, 127, 1, 0, 1, 2, 13, 127,
++	0, 0, 1, 2, 14, 127, 2, 0, 1, 2, 14, 127, 1, 0, 1, 2, 14, 127,
++	0, 0, 1, 3, 1, 127, 2, 0, 1, 3, 1, 127, 1, 0, 1, 3, 1, 127,
++	0, 0, 1, 3, 2, 127, 2, 0, 1, 3, 2, 127, 1, 0, 1, 3, 2, 127,
++	0, 0, 1, 3, 3, 48, 2, 0, 1, 3, 3, 36, 1, 0, 1, 3, 3, 60,
++	0, 0, 1, 3, 4, 48, 2, 0, 1, 3, 4, 36, 1, 0, 1, 3, 4, 60,
++	0, 0, 1, 3, 5, 52, 2, 0, 1, 3, 5, 36, 1, 0, 1, 3, 5, 60,
++	0, 0, 1, 3, 6, 56, 2, 0, 1, 3, 6, 36, 1, 0, 1, 3, 6, 60,
++	0, 0, 1, 3, 7, 52, 2, 0, 1, 3, 7, 36, 1, 0, 1, 3, 7, 60,
++	0, 0, 1, 3, 8, 52, 2, 0, 1, 3, 8, 36, 1, 0, 1, 3, 8, 60,
++	0, 0, 1, 3, 9, 52, 2, 0, 1, 3, 9, 36, 1, 0, 1, 3, 9, 60,
++	0, 0, 1, 3, 10, 40, 2, 0, 1, 3, 10, 36, 1, 0, 1, 3, 10, 60,
++	0, 0, 1, 3, 11, 28, 2, 0, 1, 3, 11, 36, 1, 0, 1, 3, 11, 60,
++	0, 0, 1, 3, 12, 127, 2, 0, 1, 3, 12, 127, 1, 0, 1, 3, 12, 127,
++	0, 0, 1, 3, 13, 127, 2, 0, 1, 3, 13, 127, 1, 0, 1, 3, 13, 127,
++	0, 0, 1, 3, 14, 127, 2, 0, 1, 3, 14, 127, 1, 0, 1, 3, 14, 127,
++	0, 1, 0, 1, 36, 60, 2, 1, 0, 1, 36, 64, 1, 1, 0, 1, 36, 60,
++	0, 1, 0, 1, 40, 64, 2, 1, 0, 1, 40, 64, 1, 1, 0, 1, 40, 60,
++	0, 1, 0, 1, 44, 64, 2, 1, 0, 1, 44, 64, 1, 1, 0, 1, 44, 60,
++	0, 1, 0, 1, 48, 64, 2, 1, 0, 1, 48, 64, 1, 1, 0, 1, 48, 60,
++	0, 1, 0, 1, 52, 64, 2, 1, 0, 1, 52, 64, 1, 1, 0, 1, 52, 56,
++	0, 1, 0, 1, 56, 64, 2, 1, 0, 1, 56, 64, 1, 1, 0, 1, 56, 56,
++	0, 1, 0, 1, 60, 64, 2, 1, 0, 1, 60, 64, 1, 1, 0, 1, 60, 56,
++	0, 1, 0, 1, 64, 56, 2, 1, 0, 1, 64, 64, 1, 1, 0, 1, 64, 56,
++	0, 1, 0, 1, 100, 52, 2, 1, 0, 1, 100, 64, 1, 1, 0, 1, 100, 64,
++	0, 1, 0, 1, 104, 64, 2, 1, 0, 1, 104, 64, 1, 1, 0, 1, 104, 64,
++	0, 1, 0, 1, 108, 64, 2, 1, 0, 1, 108, 64, 1, 1, 0, 1, 108, 64,
++	0, 1, 0, 1, 112, 64, 2, 1, 0, 1, 112, 64, 1, 1, 0, 1, 112, 64,
++	0, 1, 0, 1, 116, 64, 2, 1, 0, 1, 116, 64, 1, 1, 0, 1, 116, 64,
++	0, 1, 0, 1, 120, 64, 2, 1, 0, 1, 120, 64, 1, 1, 0, 1, 120, 64,
++	0, 1, 0, 1, 124, 64, 2, 1, 0, 1, 124, 64, 1, 1, 0, 1, 124, 64,
++	0, 1, 0, 1, 128, 64, 2, 1, 0, 1, 128, 64, 1, 1, 0, 1, 128, 64,
++	0, 1, 0, 1, 132, 64, 2, 1, 0, 1, 132, 64, 1, 1, 0, 1, 132, 64,
++	0, 1, 0, 1, 136, 64, 2, 1, 0, 1, 136, 64, 1, 1, 0, 1, 136, 64,
++	0, 1, 0, 1, 140, 56, 2, 1, 0, 1, 140, 64, 1, 1, 0, 1, 140, 64,
++	0, 1, 0, 1, 144, 56, 2, 1, 0, 1, 144, 64, 1, 1, 0, 1, 144, 127,
++	0, 1, 0, 1, 149, 64, 2, 1, 0, 1, 149, 127, 1, 1, 0, 1, 149, 127,
++	0, 1, 0, 1, 153, 64, 2, 1, 0, 1, 153, 127, 1, 1, 0, 1, 153, 127,
++	0, 1, 0, 1, 157, 64, 2, 1, 0, 1, 157, 127, 1, 1, 0, 1, 157, 127,
++	0, 1, 0, 1, 161, 64, 2, 1, 0, 1, 161, 127, 1, 1, 0, 1, 161, 127,
++	0, 1, 0, 1, 165, 64, 2, 1, 0, 1, 165, 127, 1, 1, 0, 1, 165, 127,
++	0, 1, 0, 2, 36, 60, 2, 1, 0, 2, 36, 64, 1, 1, 0, 2, 36, 56,
++	0, 1, 0, 2, 40, 64, 2, 1, 0, 2, 40, 64, 1, 1, 0, 2, 40, 56,
++	0, 1, 0, 2, 44, 64, 2, 1, 0, 2, 44, 64, 1, 1, 0, 2, 44, 56,
++	0, 1, 0, 2, 48, 64, 2, 1, 0, 2, 48, 64, 1, 1, 0, 2, 48, 56,
++	0, 1, 0, 2, 52, 64, 2, 1, 0, 2, 52, 64, 1, 1, 0, 2, 52, 56,
++	0, 1, 0, 2, 56, 64, 2, 1, 0, 2, 56, 64, 1, 1, 0, 2, 56, 56,
++	0, 1, 0, 2, 60, 64, 2, 1, 0, 2, 60, 64, 1, 1, 0, 2, 60, 56,
++	0, 1, 0, 2, 64, 56, 2, 1, 0, 2, 64, 64, 1, 1, 0, 2, 64, 56,
++	0, 1, 0, 2, 100, 52, 2, 1, 0, 2, 100, 64, 1, 1, 0, 2, 100, 64,
++	0, 1, 0, 2, 104, 64, 2, 1, 0, 2, 104, 64, 1, 1, 0, 2, 104, 64,
++	0, 1, 0, 2, 108, 64, 2, 1, 0, 2, 108, 64, 1, 1, 0, 2, 108, 64,
++	0, 1, 0, 2, 112, 64, 2, 1, 0, 2, 112, 64, 1, 1, 0, 2, 112, 64,
++	0, 1, 0, 2, 116, 64, 2, 1, 0, 2, 116, 64, 1, 1, 0, 2, 116, 64,
++	0, 1, 0, 2, 120, 64, 2, 1, 0, 2, 120, 64, 1, 1, 0, 2, 120, 64,
++	0, 1, 0, 2, 124, 64, 2, 1, 0, 2, 124, 64, 1, 1, 0, 2, 124, 64,
++	0, 1, 0, 2, 128, 64, 2, 1, 0, 2, 128, 64, 1, 1, 0, 2, 128, 64,
++	0, 1, 0, 2, 132, 64, 2, 1, 0, 2, 132, 64, 1, 1, 0, 2, 132, 64,
++	0, 1, 0, 2, 136, 64, 2, 1, 0, 2, 136, 64, 1, 1, 0, 2, 136, 64,
++	0, 1, 0, 2, 140, 52, 2, 1, 0, 2, 140, 64, 1, 1, 0, 2, 140, 64,
++	0, 1, 0, 2, 144, 52, 2, 1, 0, 2, 144, 127, 1, 1, 0, 2, 144, 127,
++	0, 1, 0, 2, 149, 64, 2, 1, 0, 2, 149, 127, 1, 1, 0, 2, 149, 127,
++	0, 1, 0, 2, 153, 64, 2, 1, 0, 2, 153, 127, 1, 1, 0, 2, 153, 127,
++	0, 1, 0, 2, 157, 64, 2, 1, 0, 2, 157, 127, 1, 1, 0, 2, 157, 127,
++	0, 1, 0, 2, 161, 64, 2, 1, 0, 2, 161, 127, 1, 1, 0, 2, 161, 127,
++	0, 1, 0, 2, 165, 64, 2, 1, 0, 2, 165, 127, 1, 1, 0, 2, 165, 127,
++	0, 1, 0, 3, 36, 56, 2, 1, 0, 3, 36, 40, 1, 1, 0, 3, 36, 44,
++	0, 1, 0, 3, 40, 60, 2, 1, 0, 3, 40, 40, 1, 1, 0, 3, 40, 44,
++	0, 1, 0, 3, 44, 60, 2, 1, 0, 3, 44, 40, 1, 1, 0, 3, 44, 44,
++	0, 1, 0, 3, 48, 60, 2, 1, 0, 3, 48, 40, 1, 1, 0, 3, 48, 44,
++	0, 1, 0, 3, 52, 60, 2, 1, 0, 3, 52, 40, 1, 1, 0, 3, 52, 44,
++	0, 1, 0, 3, 56, 60, 2, 1, 0, 3, 56, 40, 1, 1, 0, 3, 56, 44,
++	0, 1, 0, 3, 60, 60, 2, 1, 0, 3, 60, 40, 1, 1, 0, 3, 60, 44,
++	0, 1, 0, 3, 64, 56, 2, 1, 0, 3, 64, 40, 1, 1, 0, 3, 64, 44,
++	0, 1, 0, 3, 100, 52, 2, 1, 0, 3, 100, 40, 1, 1, 0, 3, 100, 60,
++	0, 1, 0, 3, 104, 60, 2, 1, 0, 3, 104, 40, 1, 1, 0, 3, 104, 60,
++	0, 1, 0, 3, 108, 64, 2, 1, 0, 3, 108, 40, 1, 1, 0, 3, 108, 60,
++	0, 1, 0, 3, 112, 64, 2, 1, 0, 3, 112, 40, 1, 1, 0, 3, 112, 60,
++	0, 1, 0, 3, 116, 64, 2, 1, 0, 3, 116, 40, 1, 1, 0, 3, 116, 60,
++	0, 1, 0, 3, 120, 64, 2, 1, 0, 3, 120, 40, 1, 1, 0, 3, 120, 60,
++	0, 1, 0, 3, 124, 64, 2, 1, 0, 3, 124, 40, 1, 1, 0, 3, 124, 60,
++	0, 1, 0, 3, 128, 64, 2, 1, 0, 3, 128, 40, 1, 1, 0, 3, 128, 60,
++	0, 1, 0, 3, 132, 64, 2, 1, 0, 3, 132, 40, 1, 1, 0, 3, 132, 60,
++	0, 1, 0, 3, 136, 60, 2, 1, 0, 3, 136, 40, 1, 1, 0, 3, 136, 60,
++	0, 1, 0, 3, 140, 52, 2, 1, 0, 3, 140, 40, 1, 1, 0, 3, 140, 60,
++	0, 1, 0, 3, 144, 52, 2, 1, 0, 3, 144, 127, 1, 1, 0, 3, 144, 127,
++	0, 1, 0, 3, 149, 64, 2, 1, 0, 3, 149, 127, 1, 1, 0, 3, 149, 127,
++	0, 1, 0, 3, 153, 64, 2, 1, 0, 3, 153, 127, 1, 1, 0, 3, 153, 127,
++	0, 1, 0, 3, 157, 64, 2, 1, 0, 3, 157, 127, 1, 1, 0, 3, 157, 127,
++	0, 1, 0, 3, 161, 64, 2, 1, 0, 3, 161, 127, 1, 1, 0, 3, 161, 127,
++	0, 1, 0, 3, 165, 64, 2, 1, 0, 3, 165, 127, 1, 1, 0, 3, 165, 127,
++	0, 1, 1, 2, 38, 44, 2, 1, 1, 2, 38, 60, 1, 1, 1, 2, 38, 60,
++	0, 1, 1, 2, 46, 60, 2, 1, 1, 2, 46, 60, 1, 1, 1, 2, 46, 60,
++	0, 1, 1, 2, 54, 60, 2, 1, 1, 2, 54, 60, 1, 1, 1, 2, 54, 60,
++	0, 1, 1, 2, 62, 48, 2, 1, 1, 2, 62, 60, 1, 1, 1, 2, 62, 60,
++	0, 1, 1, 2, 102, 48, 2, 1, 1, 2, 102, 60, 1, 1, 1, 2, 102, 60,
++	0, 1, 1, 2, 110, 60, 2, 1, 1, 2, 110, 60, 1, 1, 1, 2, 110, 60,
++	0, 1, 1, 2, 118, 60, 2, 1, 1, 2, 118, 60, 1, 1, 1, 2, 118, 60,
++	0, 1, 1, 2, 126, 60, 2, 1, 1, 2, 126, 60, 1, 1, 1, 2, 126, 60,
++	0, 1, 1, 2, 134, 60, 2, 1, 1, 2, 134, 60, 1, 1, 1, 2, 134, 60,
++	0, 1, 1, 2, 142, 60, 2, 1, 1, 2, 142, 127, 1, 1, 1, 2, 142, 127,
++	0, 1, 1, 2, 151, 60, 2, 1, 1, 2, 151, 127, 1, 1, 1, 2, 151, 127,
++	0, 1, 1, 2, 159, 60, 2, 1, 1, 2, 159, 127, 1, 1, 1, 2, 159, 127,
++	0, 1, 1, 3, 38, 40, 2, 1, 1, 3, 38, 40, 1, 1, 1, 3, 38, 44,
++	0, 1, 1, 3, 46, 60, 2, 1, 1, 3, 46, 40, 1, 1, 1, 3, 46, 44,
++	0, 1, 1, 3, 54, 60, 2, 1, 1, 3, 54, 40, 1, 1, 1, 3, 54, 44,
++	0, 1, 1, 3, 62, 44, 2, 1, 1, 3, 62, 40, 1, 1, 1, 3, 62, 44,
++	0, 1, 1, 3, 102, 44, 2, 1, 1, 3, 102, 40, 1, 1, 1, 3, 102, 60,
++	0, 1, 1, 3, 110, 60, 2, 1, 1, 3, 110, 40, 1, 1, 1, 3, 110, 60,
++	0, 1, 1, 3, 118, 60, 2, 1, 1, 3, 118, 40, 1, 1, 1, 3, 118, 60,
++	0, 1, 1, 3, 126, 60, 2, 1, 1, 3, 126, 40, 1, 1, 1, 3, 126, 60,
++	0, 1, 1, 3, 134, 60, 2, 1, 1, 3, 134, 40, 1, 1, 1, 3, 134, 60,
++	0, 1, 1, 3, 142, 60, 2, 1, 1, 3, 142, 127, 1, 1, 1, 3, 142, 127,
++	0, 1, 1, 3, 151, 60, 2, 1, 1, 3, 151, 127, 1, 1, 1, 3, 151, 127,
++	0, 1, 1, 3, 159, 60, 2, 1, 1, 3, 159, 127, 1, 1, 1, 3, 159, 127,
++	0, 1, 2, 4, 42, 40, 2, 1, 2, 4, 42, 60, 1, 1, 2, 4, 42, 56,
++	0, 1, 2, 4, 58, 40, 2, 1, 2, 4, 58, 60, 1, 1, 2, 4, 58, 56,
++	0, 1, 2, 4, 106, 40, 2, 1, 2, 4, 106, 60, 1, 1, 2, 4, 106, 60,
++	0, 1, 2, 4, 122, 60, 2, 1, 2, 4, 122, 60, 1, 1, 2, 4, 122, 60,
++	0, 1, 2, 4, 138, 60, 2, 1, 2, 4, 138, 127, 1, 1, 2, 4, 138, 127,
++	0, 1, 2, 4, 155, 60, 2, 1, 2, 4, 155, 127, 1, 1, 2, 4, 155, 127,
++	0, 1, 2, 5, 42, 36, 2, 1, 2, 5, 42, 40, 1, 1, 2, 5, 42, 44,
++	0, 1, 2, 5, 58, 36, 2, 1, 2, 5, 58, 40, 1, 1, 2, 5, 58, 44,
++	0, 1, 2, 5, 106, 40, 2, 1, 2, 5, 106, 40, 1, 1, 2, 5, 106, 60,
++	0, 1, 2, 5, 122, 60, 2, 1, 2, 5, 122, 40, 1, 1, 2, 5, 122, 60,
++	0, 1, 2, 5, 138, 60, 2, 1, 2, 5, 138, 127, 1, 1, 2, 5, 138, 127,
++	0, 1, 2, 5, 155, 60, 2, 1, 2, 5, 155, 127, 1, 1, 2, 5, 155, 127
 +};
 +
-+static struct rtw_intf_phy_para usb3_param_8822c[] = {
-+	{0xFFFF, 0x0000,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_ALL,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+};
-+
-+static struct rtw_intf_phy_para pcie_gen1_param_8822c[] = {
-+	{0xFFFF, 0x0000,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_ALL,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+};
-+
-+static struct rtw_intf_phy_para pcie_gen2_param_8822c[] = {
-+	{0xFFFF, 0x0000,
-+	 RTW_IP_SEL_PHY,
-+	 RTW_INTF_PHY_CUT_ALL,
-+	 RTW_INTF_PHY_PLATFORM_ALL},
-+};
-+
-+static struct rtw_intf_phy_para_table phy_para_table_8822c = {
-+	.usb2_para	= usb2_param_8822c,
-+	.usb3_para	= usb3_param_8822c,
-+	.gen1_para	= pcie_gen1_param_8822c,
-+	.gen2_para	= pcie_gen2_param_8822c,
-+	.n_usb2_para	= ARRAY_SIZE(usb2_param_8822c),
-+	.n_usb3_para	= ARRAY_SIZE(usb2_param_8822c),
-+	.n_gen1_para	= ARRAY_SIZE(pcie_gen1_param_8822c),
-+	.n_gen2_para	= ARRAY_SIZE(pcie_gen2_param_8822c),
-+};
-+
-+static const struct rtw_rfe_def rtw8822c_rfe_defs[] = {
-+	[0] = RTW_DEF_RFE(8822c, 0, 0),
-+};
-+
-+static struct rtw_hw_reg rtw8822c_dig[] = {
-+	[0] = { .addr = 0x1d70, .mask = 0x7f },
-+	[1] = { .addr = 0x1d70, .mask = 0x7f00 },
-+};
-+
-+static struct rtw_page_table page_table_8822c[] = {
-+	{64, 64, 64, 64, 1},
-+	{64, 64, 64, 64, 1},
-+	{64, 64, 0, 0, 1},
-+	{64, 64, 64, 0, 1},
-+	{64, 64, 64, 64, 1},
-+};
-+
-+static struct rtw_rqpn rqpn_table_8822c[] = {
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_HIGH,
-+	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
-+};
-+
-+static struct rtw_chip_ops rtw8822c_ops = {
-+	.phy_set_param		= rtw8822c_phy_set_param,
-+	.read_efuse		= rtw8822c_read_efuse,
-+	.query_rx_desc		= rtw8822c_query_rx_desc,
-+	.set_channel		= rtw8822c_set_channel,
-+	.mac_init		= rtw8822c_mac_init,
-+	.read_rf		= rtw_phy_read_rf,
-+	.write_rf		= rtw_phy_write_rf_reg_mix,
-+	.set_tx_power_index	= rtw8822c_set_tx_power_index,
-+	.cfg_ldo25		= rtw8822c_cfg_ldo25,
-+	.false_alarm_statistics	= rtw8822c_false_alarm_statistics,
-+	.do_iqk			= rtw8822c_do_iqk,
-+};
-+
-+struct rtw_chip_info rtw8822c_hw_spec = {
-+	.ops = &rtw8822c_ops,
-+	.id = RTW_CHIP_TYPE_8822C,
-+	.fw_name = "rtw88/rtw8822c_fw.bin",
-+	.tx_pkt_desc_sz = 48,
-+	.tx_buf_desc_sz = 16,
-+	.rx_pkt_desc_sz = 24,
-+	.rx_buf_desc_sz = 8,
-+	.phy_efuse_size = 1024,
-+	.log_efuse_size = 768,
-+	.ptct_efuse_size = 124,
-+	.txff_size = 262144,
-+	.rxff_size = 24576,
-+	.csi_buf_pg_num = 50,
-+	.band = RTW_BAND_2G | RTW_BAND_5G,
-+	.page_size = 128,
-+	.dig_min = 0x20,
-+	.ht_supported = true,
-+	.vht_supported = true,
-+	.sys_func_en = 0xD8,
-+	.pwr_on_seq = card_enable_flow_8822c,
-+	.pwr_off_seq = card_disable_flow_8822c,
-+	.page_table = page_table_8822c,
-+	.rqpn_table = rqpn_table_8822c,
-+	.intf_table = &phy_para_table_8822c,
-+	.dig = rtw8822c_dig,
-+	.rf_base_addr = {0x3c00, 0x4c00},
-+	.rf_sipi_addr = {0x1808, 0x4108},
-+	.mac_tbl = &rtw8822c_mac_tbl,
-+	.agc_tbl = &rtw8822c_agc_tbl,
-+	.bb_tbl = &rtw8822c_bb_tbl,
-+	.rf_tbl = {&rtw8822c_rf_a_tbl, &rtw8822c_rf_b_tbl},
-+	.rfe_defs = rtw8822c_rfe_defs,
-+	.rfe_defs_size = ARRAY_SIZE(rtw8822c_rfe_defs),
-+};
-+EXPORT_SYMBOL(rtw8822c_hw_spec);
-+
-+MODULE_FIRMWARE("rtw88/rtw8822c_fw.bin");
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-new file mode 100644
-index 0000000..e8abce0
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-@@ -0,0 +1,171 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#ifndef __RTW8822C_H__
-+#define __RTW8822C_H__
-+
-+#include <asm/byteorder.h>
-+
-+struct rtw8822cu_efuse {
-+	u8 res4[4];			/* 0xd0 */
-+	u8 usb_optional_function;
-+	u8 res5[0x1e];
-+	u8 res6[2];
-+	u8 serial[0x0b];		/* 0xf5 */
-+	u8 vid;				/* 0x100 */
-+	u8 res7;
-+	u8 pid;
-+	u8 res8[4];
-+	u8 mac_addr[ETH_ALEN];		/* 0x107 */
-+	u8 res9[2];
-+	u8 vendor_name[0x07];
-+	u8 res10[2];
-+	u8 device_name[0x14];
-+	u8 res11[0xcf];
-+	u8 package_type;		/* 0x1fb */
-+	u8 res12[0x4];
-+};
-+
-+struct rtw8822ce_efuse {
-+	u8 mac_addr[ETH_ALEN];		/* 0xd0 */
-+	u8 vender_id[2];
-+	u8 device_id[2];
-+	u8 sub_vender_id[2];
-+	u8 sub_device_id[2];
-+	u8 pmc[2];
-+	u8 exp_device_cap[2];
-+	u8 msi_cap;
-+	u8 ltr_cap;			/* 0xe3 */
-+	u8 exp_link_control[2];
-+	u8 link_cap[4];
-+	u8 link_control[2];
-+	u8 serial_number[8];
-+	u8 res0:2;			/* 0xf4 */
-+	u8 ltr_en:1;
-+	u8 res1:2;
-+	u8 obff:2;
-+	u8 res2:3;
-+	u8 obff_cap:2;
-+	u8 res3:4;
-+	u8 res4[3];
-+	u8 class_code[3];
-+	u8 pci_pm_L1_2_supp:1;
-+	u8 pci_pm_L1_1_supp:1;
-+	u8 aspm_pm_L1_2_supp:1;
-+	u8 aspm_pm_L1_1_supp:1;
-+	u8 L1_pm_substates_supp:1;
-+	u8 res5:3;
-+	u8 port_common_mode_restore_time;
-+	u8 port_t_power_on_scale:2;
-+	u8 res6:1;
-+	u8 port_t_power_on_value:5;
-+	u8 res7;
-+};
-+
-+struct rtw8822c_efuse {
-+	__le16 rtl_id;
-+	u8 res0[0x0e];
-+
-+	/* power index for four RF paths */
-+	struct rtw_txpwr_idx txpwr_idx_table[4];
-+
-+	u8 channel_plan;		/* 0xb8 */
-+	u8 xtal_k;
-+	u8 thermal_meter;
-+	u8 iqk_lck;
-+	u8 pa_type;			/* 0xbc */
-+	u8 lna_type_2g[2];		/* 0xbd */
-+	u8 lna_type_5g[2];
-+	u8 rf_board_option;
-+	u8 rf_feature_option;
-+	u8 rf_bt_setting;
-+	u8 eeprom_version;
-+	u8 eeprom_customer_id;
-+	u8 tx_bb_swing_setting_2g;
-+	u8 tx_bb_swing_setting_5g;
-+	u8 tx_pwr_calibrate_rate;
-+	u8 rf_antenna_option;		/* 0xc9 */
-+	u8 rfe_option;
-+	u8 country_code[2];
-+	u8 res[3];
-+	union {
-+		struct rtw8822cu_efuse u;
-+		struct rtw8822ce_efuse e;
-+	};
-+};
-+
-+/* phy status page0 */
-+#define GET_PHY_STAT_P0_PWDB_A(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
-+#define GET_PHY_STAT_P0_PWDB_B(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x04), GENMASK(7, 0))
-+#define GET_PHY_STAT_P0_GAIN_A(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(21, 16))
-+#define GET_PHY_STAT_P0_GAIN_B(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x04), GENMASK(29, 24))
-+
-+/* phy status page1 */
-+#define GET_PHY_STAT_P1_PWDB_A(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
-+#define GET_PHY_STAT_P1_PWDB_B(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(23, 16))
-+#define GET_PHY_STAT_P1_L_RXSC(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x01), GENMASK(11, 8))
-+#define GET_PHY_STAT_P1_HT_RXSC(phy_stat)                                      \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x01), GENMASK(15, 12))
-+
-+#define REG_ANAPARLDO_POW_MAC	0x0029
-+#define BIT_LDOE25_PON		BIT(0)
-+
-+#define REG_DFIRBW	0x810
-+#define REG_ANTMAP0	0x820
-+#define REG_ANTMAP	0x824
-+#define REG_DYMPRITH	0x86c
-+#define REG_DYMENTH0	0x870
-+#define REG_DYMENTH	0x874
-+#define REG_DYMTHMIN	0x8a4
-+#define REG_TXBWCTL	0x9b0
-+#define REG_TXCLK	0x9b4
-+#define REG_SCOTRK	0xc30
-+#define REG_MRCM	0xc38
-+#define REG_AGCSWSH	0xc44
-+#define REG_ANTWTPD	0xc54
-+#define REG_ORITXCODE	0x1800
-+#define REG_3WIRE	0x180c
-+#define BIT_3WIRE_TX_EN		BIT(0)
-+#define BIT_3WIRE_RX_EN		BIT(1)
-+#define BIT_3WIRE_PI_ON		BIT(28)
-+#define REG_RXAGCCTL0	0x18ac
-+#define REG_CCKSB	0x1a00
-+#define REG_RXCCKSEL	0x1a04
-+#define REG_PSFGC2	0x1a24
-+#define REG_PSFGC6	0x1a28
-+#define REG_CCANRX	0x1a2c
-+#define BIT_CCK_FA_RST		(BIT(14) | BIT(15))
-+#define BIT_OFDM_FA_RST		(BIT(12) | BIT(13))
-+#define REG_CCK_FACNT	0x1a5c
-+#define REG_CCKTXONLY	0x1a80
-+#define BIT_BB_CCK_CHECK_EN	BIT(18)
-+#define REG_PSFGC	0x1aac
-+#define REG_PCCAWT	0x1ac0
-+#define REG_TXANT	0x1c28
-+#define REG_ENCCK	0x1c3c
-+#define BIT_CCK_BLK_EN		BIT(1)
-+#define BIT_CCK_OFDM_BLK_EN	(BIT(0) | BIT(1))
-+#define REG_CCAMSK	0x1c80
-+#define REG_RXFNCTL	0x1d30
-+#define REG_RXIGI	0x1d70
-+#define REG_ENFN	0x1e24
-+#define REG_TXANTSEG	0x1e28
-+#define REG_TXLGMAP	0x1e2c
-+#define REG_CCKPATH	0x1e5c
-+#define REG_CNT_CTRL	0x1eb4
-+#define BIT_ALL_CNT_RST		BIT(25)
-+#define REG_OFDM_FACNT	0x2d00
-+#define REG_OFDM_TXCNT	0x2de0
-+#define REG_ORITXCODE2	0x4100
-+#define REG_3WIRE2	0x410c
-+#define REG_RXAGCCTL	0x41ac
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c_table.h b/drivers/net/wireless/realtek/rtw88/rtw8822c_table.h
-new file mode 100644
-index 0000000..bb52227
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c_table.h
-@@ -0,0 +1,16 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#ifndef __RTW8822C_TABLE_H__
-+#define __RTW8822C_TABLE_H__
-+
-+extern const struct rtw_table rtw8822c_mac_tbl;
-+extern const struct rtw_table rtw8822c_agc_tbl;
-+extern const struct rtw_table rtw8822c_bb_tbl;
-+extern const struct rtw_table rtw8822c_bb_pg_type0_tbl;
-+extern const struct rtw_table rtw8822c_rf_a_tbl;
-+extern const struct rtw_table rtw8822c_rf_b_tbl;
-+extern const struct rtw_table rtw8822c_txpwr_lmt_type0_tbl;
-+
-+#endif
++RTW_DECL_TABLE_TXPWR_LMT(rtw8822c_txpwr_lmt_type0);
 -- 
 2.7.4
 
