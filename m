@@ -2,85 +2,79 @@ Return-Path: <SRS0=/9EI=QV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE457C10F04
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 15:58:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FD8C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 16:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3843222DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 15:58:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="evLk1DyO"
+	by mail.kernel.org (Postfix) with ESMTP id 6850D222DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 16:50:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1550163038;
+	bh=OBKEOCxiprc2SUDsyJKhAXR7iKvqNALR20mkRQeLFTg=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=2FtWzXTObB3bVDoYTyWEgJV9jpsmhdDQNGdbm84vPuBdJgjo6vEONQhdolRV9GMrg
+	 wjfJvXc0CP8fc7nnt3qFB2tvP9CeYBC5mA/Kd3Sago8k+MgkT7RniwNRt4csOD6BT4
+	 EJDCjG29uvDUgoQuOqYrl58xaaDrgpylOVnQ7JyU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502351AbfBNP6r (ORCPT
+        id S2389628AbfBNQuh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 10:58:47 -0500
-Received: from mail-it1-f195.google.com ([209.85.166.195]:56255 "EHLO
-        mail-it1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407642AbfBNP6q (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 10:58:46 -0500
-Received: by mail-it1-f195.google.com with SMTP id z131so5762505itf.5;
-        Thu, 14 Feb 2019 07:58:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bJ317pROPPauW0d4GYjzsfJxMdqcuOVotsNqo12tNDk=;
-        b=evLk1DyOyEDgzJqKir9LEOXSOFqqRVg0UlTxPPyJBjmiNjX6NQG2xQFus3gcmti6He
-         7xR6iVaypjKFjIXF1dAVmlMBRIV2iIcr1J6Rz2FaWHU2mRGOylJ74CKuBKVenKFYJbN1
-         UuxtdjDvPC+6AZdMp07tjR0oh4qTByBZ7wwn8XLOEFlMgW390yTNpP/CA+Ob5dPTbz9c
-         g7vKrLX9TWvS4qTAYbi/Qy+To2Xu6PCN5Ikayq1md5DkBDj8x6PeLwz1YimKa0QQT9DZ
-         v8i8VfOLYs27VYm4OJLFPd2StV5Ld3R+kF98Oxoicd4TODJq6WpBVVjv4UM7WO+htvef
-         wd5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bJ317pROPPauW0d4GYjzsfJxMdqcuOVotsNqo12tNDk=;
-        b=ZGGgGqzPAkQeudxDcG1V5vfesgG50WVuWU7SQKKwvdiM0yC/9nm9LF+P3uj1KxMcxi
-         l/hoBQlgwJxvdEE+OH4CHYDP16FDBHzvM6athcNoRRCXGkMXfuUe3/InH9RMCjMlCbJe
-         FrdWVvCqEPNzFwhBpwdlII3SGtoduF01k4YfquGuo2VDZaZDJgVdHGV6Id/2StR+SbsZ
-         bw0rh4gs2tlCr9uyBDk/jv9DtJwTfD3K6CJEh2uOTeEL2ozpniX5t+bHPHy9PxJruUGe
-         qshKZg5St9VcVq3M19hkosi6u9fVn5QxrVqnnhKKWA6dmy92fr3BAbxfIZMu894DonV5
-         b7dw==
-X-Gm-Message-State: AHQUAuZ3sRiptbUXuFss7aypyBbpWAGS2BfvDxrMfCAb1CR8gHSumwpp
-        cjqeMAnitgrB4SuqTyaZVYkNCvYJliRVs4WDzXA=
-X-Google-Smtp-Source: AHgI3IY5dzjmcyd+7TGsygqUU0TWHYGau0RgaBbQPAk+bybbnfzEgtgO7V3KR0JUq2UBgEbbGIsrFosZ4SyM306uYS8=
-X-Received: by 2002:a24:2bd3:: with SMTP id h202mr2663387ita.50.1550159925637;
- Thu, 14 Feb 2019 07:58:45 -0800 (PST)
+        Thu, 14 Feb 2019 11:50:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44960 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731118AbfBNQuh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Feb 2019 11:50:37 -0500
+Received: from localhost.localdomain (unknown [151.66.10.5])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 041B921928;
+        Thu, 14 Feb 2019 16:50:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1550163037;
+        bh=OBKEOCxiprc2SUDsyJKhAXR7iKvqNALR20mkRQeLFTg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Te/7nBHRTnxuQ1cArtdr9opSsMUHoI/REc5D3Bkd9EHzwjHDnqFfW3OHiRn7sZHij
+         CRqHt2RZTyuzJ++g8bnr5t+i9AYQuC5AP28QjOs+5QVVnxe14Xz1mc92+WgxSQ84s8
+         DNWggrMEApDld/A5a/4fxwYx3DsHeekRAPo3qCD8=
+From:   lorenzo@kernel.org
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
+        lorenzo.bianconi@redhat.com
+Subject: [PATCH v2 0/2] move dma shared code in mt76 module
+Date:   Thu, 14 Feb 2019 17:50:18 +0100
+Message-Id: <cover.1550162430.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-References: <20190213014917.164506-1-yuehaibing@huawei.com>
-In-Reply-To: <20190213014917.164506-1-yuehaibing@huawei.com>
-From:   Steve deRosier <derosier@gmail.com>
-Date:   Thu, 14 Feb 2019 07:58:07 -0800
-Message-ID: <CALLGbRLa75S_ugu-JwXiUu2rtN-a4DX_Kta2viteEQDTW3ATMw@mail.gmail.com>
-Subject: Re: [PATCH] libertas_tf: remove set but not used variable 'flags'
-To:     YueHaibing <yuehaibing@huawei.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        Colin Ian King <colin.king@canonical.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org,
-        Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Feb 12, 2019 at 5:35 PM YueHaibing <yuehaibing@huawei.com> wrote:
->
-> Fixes gcc '-Wunused-but-set-variable' warning:
->
-> drivers/net/wireless/marvell/libertas_tf/main.c: In function 'lbtf_rx':
-> drivers/net/wireless/marvell/libertas_tf/main.c:554:15: warning:
->  variable 'flags' set but not used [-Wunused-but-set-variable]
->
-> It never used and can be removed.
->
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-Acked-by: Steve deRosier <derosier@cal-sierra.com>
+Move mt76x02/mt7603 dma shared code in mmio.c/dma.c in order to be
+reused adding support for mt7603 driver
+
+Changes since v1:
+- remove mt76_irq_enable/mt76_irq_disable
+- move dma queue initialization in mt76_dma_alloc_queue
+- move mt76_irq_enable call into the driver specific
+  inline functions
+
+Lorenzo Bianconi (2):
+  mt76: mmio: move mt76x02_set_irq_mask in mt76 module
+  mt76: dma: move mt76x02_init_{tx,rx}_queue in mt76 module
+
+ drivers/net/wireless/mediatek/mt76/dma.c      |  9 +++-
+ drivers/net/wireless/mediatek/mt76/mmio.c     | 13 +++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  6 ++-
+ drivers/net/wireless/mediatek/mt76/mt76x02.h  | 37 ++++++++++++--
+ .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 50 -------------------
+ 5 files changed, 60 insertions(+), 55 deletions(-)
+
+-- 
+2.20.1
+
