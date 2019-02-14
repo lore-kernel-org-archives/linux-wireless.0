@@ -2,177 +2,129 @@ Return-Path: <SRS0=/9EI=QV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C8DEC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 23:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 873F7C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 23:35:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD4C021A80
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 23:05:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52FD32175B
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 23:35:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="OOo5UqZF"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="LI5b4Xxl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728718AbfBNXFq (ORCPT
+        id S1729162AbfBNXfF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 18:05:46 -0500
-Received: from mail-it1-f193.google.com ([209.85.166.193]:39608 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726145AbfBNXFq (ORCPT
+        Thu, 14 Feb 2019 18:35:05 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:55586 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729140AbfBNXfE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 18:05:46 -0500
-Received: by mail-it1-f193.google.com with SMTP id l15so6030291iti.4
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2019 15:05:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=oowxwfE9iNWBlDuZOXdO0POI3oFNz+wzdPvE/IcdnRs=;
-        b=OOo5UqZFG4Anx4JxBMDzxCc4hPZbSoqMlgxhHJDUJCDL0Xt5Mpg2+FCSUKoB5+U4uK
-         ZkXiJUw33Cc984aciDmuTxdcRgyu1zHJJVLWVUoYOBq2vhvDZPQRjdqzG3fuC0E+VA8W
-         MlCiluAG0q3tnML60B1PxUPp9JNGtyBEPCFXE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=oowxwfE9iNWBlDuZOXdO0POI3oFNz+wzdPvE/IcdnRs=;
-        b=gH2vycWMnZEQuy5MxvCG/Gj/JWJ94HuYVHO8TpKVnTLM74DgX8lbWGNs7514vosf7t
-         0zuZLZ5O57g9iInAGdoROlxNfIDkGk4zAM/rrfK19EbD4j1waTv1nhqSn/fh/U8we22D
-         hhnOE05SerzWFhm+mncKlIAH2Pvvj5evv1JH5OS1CGuo+YhjySuWHGauZpR//u24ua+z
-         83vEOw4h9hYqFs+Yo9WgFRgBBdL1xYpQxbc+k/nE2NDysAk9ZMrZroed6zRiokPePI8/
-         EvnGJQpMxZhw1Y6w2cnV0UNmBEqQLPIi1bJfTVoUEfQJ2ZfEMSEliX/3wL1Ulm8dCuYR
-         HgMw==
-X-Gm-Message-State: AHQUAuYnbaljfDSOgMcj7tYKZ8ucsxVNFQCWc99+x895we9+B+am85jd
-        MgKEkSyrPtHtmhE95lvtiS1qX3/1wC0R27ll5rMUlg==
-X-Google-Smtp-Source: AHgI3IZk1Yc15BOJHIAm2fZjk87sLApXV76H6GH4ZYG/m0k5W7mYJHJVhR3cKgY2wUmv5/83YB3lgruQJmqBtv267dw=
-X-Received: by 2002:a6b:c402:: with SMTP id y2mr4304432ioa.77.1550185544810;
- Thu, 14 Feb 2019 15:05:44 -0800 (PST)
+        Thu, 14 Feb 2019 18:35:04 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id 046BD40B2CD
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2019 15:35:02 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail2.candelatech.com 046BD40B2CD
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1550187302;
+        bh=AR1UKbTQu3utYFTyyg1ROqXFCCz/3Pgpxkl02j92ujw=;
+        h=To:From:Subject:Date:From;
+        b=LI5b4XxlzbBMv79tZtK3cLAowLW2rcAbSVQc0erSLh70qwExnSnQ2PRcAlDfKbi9V
+         LmWBRjEU+Pcv9DgRqhSZrYK5OTa6S2rQ1oYTiQKYg0UqJc5Cod5d0/qgR4TAEhxOp4
+         PMpHJXlhJSvFvYHu+aFP246z1Fo1t6B8zJV/PhHE=
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From:   Ben Greear <greearb@candelatech.com>
+Subject: WARN-ON in eee80211_vif_release_channel in 4.20.2+, ath10k
+Organization: Candela Technologies
+Message-ID: <f84f7f26-a299-3ae0-25e0-139880480532@candelatech.com>
+Date:   Thu, 14 Feb 2019 15:35:01 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-References: <1548820940-15237-1-git-send-email-yhchuang@realtek.com>
- <1548820940-15237-4-git-send-email-yhchuang@realtek.com> <20190131223609.GA191502@google.com>
-In-Reply-To: <20190131223609.GA191502@google.com>
-From:   Grant Grundler <grundler@chromium.org>
-Date:   Thu, 14 Feb 2019 15:05:33 -0800
-Message-ID: <CANEJEGt4xJ5pTXgqazTVV2MNZy9+SWa6uE+wbE_94aT+FvL-+A@mail.gmail.com>
-Subject: Re: [PATCH v4 03/13] rtw88: hci files
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     yhchuang@realtek.com, Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Larry.Finger@lwfinger.net, pkshih@realtek.com, tehuang@realtek.com,
-        sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Brian - thanks for the relatively thorough review. Well done!
+Hello,
 
-Comments on two of the points you raised. Will trim out the rest.
+I was attempting 6 vap devices on one radio using my hacked ath10k driver and firmware...
 
-On Thu, Jan 31, 2019 at 2:36 PM Brian Norris <briannorris@chromium.org> wrote:
-...
-> On Wed, Jan 30, 2019 at 12:02:10PM +0800, yhchuang@realtek.com wrote:
-...
-> > +err_out:
-> > +     dev_kfree_skb_any(skb);
->
-> Maybe I'm misreading but...shouldn't this line not be here? You properly
-> iterate over the allocated SKBs below, and this looks like you're just
-> going to be double-freeing (or, negative ref-counting).
+I'm using ch 100 to make it even more buggy.
 
-Kernel will panic immediately? The branch to reach err_out only
-happens when skb is NULL.
+It is having issues, and one thing I saw is this WARN_ON hit:
 
-...
-> > +static void rtw_pci_dma_check(struct rtw_dev *rtwdev,
-> > +                           struct rtw_pci_rx_ring *rx_ring,
-> > +                           u32 idx)
-> > +{
-> > +     struct rtw_chip_info *chip = rtwdev->chip;
-> > +     struct rtw_pci_rx_buffer_desc *buf_desc;
-> > +     u32 desc_sz = chip->rx_buf_desc_sz;
-> > +     u16 total_pkt_size;
-> > +     int i;
-> > +
-> > +     buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
-> > +                                                  idx * desc_sz);
-> > +     for (i = 0; i < 20; i++) {
-> > +             total_pkt_size = le16_to_cpu(buf_desc->total_pkt_size);
-> > +             if (total_pkt_size)
-> > +                     return;
-> > +     }
->
->
-> Umm, what are you trying to do here? This is a non-sensical loop. I
-> *imagine* you're trying to do some kind of timeout loop here,
+void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+{
+	WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev));
 
-My guess is this is trying to mitigate a race between the CPU reading
-memory and RTL88* device in updating this word of memory.  This is the
-first function called in the packet processing loop in
-rtw_pci_rx_isr(). This code suggests that the CPU is seeing the
-interrupt before the RTL has finished updating memory via DMA and is
-likely a "Bug" in the RTL device firmware.
+	lockdep_assert_held(&sdata->local->mtx);
 
-I'm suggesting this is a bug for two reasons:
-1) NIC vendors historically have tried to reduce packet handling
-latency by sending the interrupt a few microseconds BEFORE the DMA is
-actually completed. This has always failed in some weird way whenever
-the PCI host controllers were a bit slower or perhaps even coalescing
-DMA writes (or something like that).
+	mutex_lock(&sdata->local->chanctx_mtx);
+	__ieee80211_vif_release_channel(sdata);
+	mutex_unlock(&sdata->local->chanctx_mtx);
+}
 
-2) PCI-Express interrupts are "In band" (MSI or not). This means once
-the interrupt arrives, the corresponding device driver should be able
-to assume all DMA from the device is complete.  This race is only
-possible for "out of band" IRQ lines which are found on other busses
-and historic PCI and PCI-X parallel busses.
+There are no obvious errors in the logs immediately preceeding this, but several
+more similar splats hit lower.
 
-"DMA is complete" doesn't necessarily means data is visible to CPU
-though on Intel X86, it usually is.  The DMA API requires memory
-allocated via pci_[z]alloc_consistent() be visible and cache coherent
-though. So I don't expect CPU to perform any action to make the last
-bits of DMA'd data visible in this case.  "Streaming Data" requires
-pci_unmap* calls or respect dma_sync_to_cpu() (or whatever it's
-called) to guarantee the data is visible - that's not what is being
-accessed in this code though AFAICT.
+[ 3225.690458] WARNING: CPU: 0 PID: 30791 at net/mac80211/chan.c:1760 ieee80211_vif_release_channel+0x18/0x50 [mac80211]
+[ 3225.690460] Modules linked in: ath10k_pci ath10k_core nf_conntrack_netlink nfnetlink iptable_raw xt_CT nf_conntrack bluetooth nf_defrag_ipv6 nf_defrag_ipv4 
+libcrc32c bpfilter vrf 8021q garp mrp stp llc fuse macvlan wanlink(O) pktgen nfsv3 nfs fscache snd_hda_codec_hdmi coretemp snd_hda_intel intel_rapl 
+x86_pkg_temp_thermal snd_hda_codec intel_powerclamp snd_hda_core kvm_intel snd_hwdep iTCO_wdt iTCO_vendor_support snd_seq ath kvm snd_seq_device snd_pcm 
+irqbypass mac80211 joydev snd_timer snd cfg80211 i2c_i801 soundcore intel_pch_thermal mei_wdt acpi_pad pcc_cpufreq nfsd auth_rpcgss nfs_acl lockd grace sunrpc 
+sch_fq_codel igb hwmon serio_raw e1000e dca i915 i2c_algo_bit drm_kms_helper drm i2c_core video ipv6 crc_ccitt [last unloaded: ath10k_core]
+[ 3225.690492] CPU: 0 PID: 30791 Comm: kworker/u8:4 Tainted: G        W  O      4.20.2+ #3
+[ 3225.690493] Hardware name: _ _/, BIOS 5.11 08/26/2016
+[ 3225.690506] Workqueue: phy11 ieee80211_dfs_cac_timer_work [mac80211]
+[ 3225.690517] RIP: 0010:ieee80211_vif_release_channel+0x18/0x50 [mac80211]
+[ 3225.690518] Code: bd ea ff ff ff eb a9 66 66 2e 0f 1f 84 00 00 00 00 00 53 48 8b 87 18 0c 00 00 48 89 fb 48 85 c0 74 0a 48 8b 40 48 a8 04 75 02 <0f> 0b 48 8b 
+83 20 0c 00 00 48 8d b8 b8 20 00 00 e8 13 bd 31 e1 48
+[ 3225.690519] RSP: 0018:ffffc900031e3e60 EFLAGS: 00010246
+[ 3225.690520] RAX: 0000000000000003 RBX: ffff88813be0c940 RCX: ffff88816d824020
+[ 3225.690520] RDX: ffff888135641e40 RSI: ffff88813d0990b0 RDI: ffff88813be0c940
+[ 3225.690521] RBP: ffff88816d824000 R08: 0000000000000000 R09: 0000003131796870
+[ 3225.690521] R10: 8080808080808080 R11: 0000000000000000 R12: ffff88813d03cd00
+[ 3225.690522] R13: 0000000000000000 R14: ffff888169d8fc00 R15: 0ffff88813d03cd2
+[ 3225.690523] FS:  0000000000000000(0000) GS:ffff888172c00000(0000) knlGS:0000000000000000
+[ 3225.690523] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 3225.690524] CR2: 000055714bd5eaf0 CR3: 000000000220a005 CR4: 00000000003606f0
+[ 3225.690525] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 3225.690525] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[ 3225.690526] Call Trace:
+[ 3225.690539]  ieee80211_dfs_cac_timer_work+0x8c/0xb0 [mac80211]
+[ 3225.690542]  process_one_work+0x1f3/0x410
+[ 3225.690544]  worker_thread+0x28/0x3c0
+[ 3225.690546]  ? wq_calc_node_cpumask+0x70/0x70
+[ 3225.690547]  kthread+0x10b/0x130
+[ 3225.690548]  ? kthread_create_on_node+0x60/0x60
+[ 3225.690550]  ret_from_fork+0x1f/0x30
+[ 3225.690552] ---[ end trace b4302d8e8360d501 ]---
 
+Eventually, log is filled with this:
 
-> but since
-> there's nothing telling the compiler that this is anything but normal
-> memory, this loop gets flattened by the compiler into a single check of
-> ->total_pkt_size (I checked; my compiler gets rid of the loop).
+[ 3227.469556] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
+[ 3227.531081] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
+[ 3227.592435] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
+[ 3227.653867] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
+[ 3227.715322] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
+[ 3227.776834] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
+[ 3227.838186] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
+[ 3227.899703] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
+[ 3227.961149] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
 
-This is another bug in the code actually: the code accessing tx
-descriptor rings should be declared volatile since they are updated by
-the device which is not visible to the compiler.  Compiler won't
-optimize (or reorder) volatile code (by "volatile code" I mean code
-that is accessing data marked "volatile").
+Any ideas for places to look for bugs are welcome.
 
-> So, at a minimum, you should just remove the loop. But I'm not sure if
-> this "check" function has any value at all...
+Thanks,
+Ben
 
-If Realtek can't fix what appears to be a bug in the firmware, I
-suspect a polling loop will be required - but add a "udelay(1)" in the
-loop.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
->
-> > +
-> > +     if (i >= 20)
-> > +             rtw_warn(rtwdev, "pci bus timeout, drop packet\n");
->
-> ...BTW, I'm seeing this get triggered quite a bit.
->
-> Do you have some kind of memory mapping/ordering issue or something? I
-> wouldn't think you should expect to just drop packets on the floor so
-> often like this.
-
-Based on the code above, I'm willing to bet you are correct the driver
-has memory ordering issues. Since the descriptor rings aren't declared
-volatile, the compiler is free to reorder accesses to those fields as
-it sees fit. This is a real problem given the device may update the
-fields in the different order than what the compiler emits as memory
-accesses.
-
-cheers,
-grant
