@@ -4,86 +4,171 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 611A7C10F04
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 14:03:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB444C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 14:03:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3136F2229F
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 14:03:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5A9C2229F
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 14:03:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732780AbfBNODc (ORCPT
+        id S2390709AbfBNODh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 09:03:32 -0500
-Received: from orcrist.hmeau.com ([104.223.48.154]:39746 "EHLO
+        Thu, 14 Feb 2019 09:03:37 -0500
+Received: from orcrist.hmeau.com ([104.223.48.154]:39756 "EHLO
         deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728083AbfBNODc (ORCPT
+        with ESMTP id S1728083AbfBNODf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 09:03:32 -0500
+        Thu, 14 Feb 2019 09:03:35 -0500
 Received: from gondobar.mordor.me.apana.org.au ([192.168.128.4] helo=gondobar)
         by deadmen.hmeau.com with esmtps (Exim 4.89 #2 (Debian))
-        id 1guHbp-000377-NU; Thu, 14 Feb 2019 22:03:25 +0800
+        id 1guHbr-00037P-Up; Thu, 14 Feb 2019 22:03:27 +0800
 Received: from herbert by gondobar with local (Exim 4.89)
         (envelope-from <herbert@gondor.apana.org.au>)
-        id 1guHbp-0000Nx-GQ; Thu, 14 Feb 2019 22:03:25 +0800
-Subject: [PATCH 2/4] mac80211: Free mpath object when rhashtable insertion fails
+        id 1guHbr-0000OL-MR; Thu, 14 Feb 2019 22:03:27 +0800
+Subject: [PATCH 4/4] rhashtable: Remove obsolete rhashtable_walk_init function
 References: <20190214140236.omt74prxhkfaasue@gondor.apana.org.au>
 To:     David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi,
         tgraf@suug.ch, johannes.berg@intel.com,
         Julia Lawall <julia.lawall@lip6.fr>
-Message-Id: <E1guHbp-0000Nx-GQ@gondobar>
+Message-Id: <E1guHbr-0000OL-MR@gondobar>
 From:   Herbert Xu <herbert@gondor.apana.org.au>
-Date:   Thu, 14 Feb 2019 22:03:25 +0800
+Date:   Thu, 14 Feb 2019 22:03:27 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When rhashtable insertion fails the mesh table code doesn't free
-the now-orphan mesh path object.  This patch fixes that.
+The rhashtable_walk_init function has been obsolete for more than
+two years.  This patch finally converts its last users over to
+rhashtable_walk_enter and removes it.
 
 Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
 ---
 
- net/mac80211/mesh_pathtbl.c |   17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ include/linux/rhashtable.h |    8 --------
+ lib/rhashtable.c           |    2 +-
+ lib/test_rhashtable.c      |    9 ++-------
+ net/ipv6/ila/ila_xlat.c    |   15 +++------------
+ net/netlink/af_netlink.c   |   10 +---------
+ 5 files changed, 7 insertions(+), 37 deletions(-)
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 884a0d212e8b..c3a7396fb955 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -436,17 +436,15 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
- 	} while (unlikely(ret == -EEXIST && !mpath));
- 	spin_unlock_bh(&tbl->walk_lock);
+diff --git a/include/linux/rhashtable.h b/include/linux/rhashtable.h
+index 20f9c6af7473..ae9c0f71f311 100644
+--- a/include/linux/rhashtable.h
++++ b/include/linux/rhashtable.h
+@@ -1113,14 +1113,6 @@ static inline int rhashtable_replace_fast(
+ 	return err;
+ }
  
--	if (ret && ret != -EEXIST)
--		return ERR_PTR(ret);
+-/* Obsolete function, do not use in new code. */
+-static inline int rhashtable_walk_init(struct rhashtable *ht,
+-				       struct rhashtable_iter *iter, gfp_t gfp)
+-{
+-	rhashtable_walk_enter(ht, iter);
+-	return 0;
+-}
 -
--	/* At this point either new_mpath was added, or we found a
--	 * matching entry already in the table; in the latter case
--	 * free the unnecessary new entry.
--	 */
--	if (ret == -EEXIST) {
-+	if (ret) {
- 		kfree(new_mpath);
-+
-+		if (ret != -EEXIST)
-+			return ERR_PTR(ret);
-+
- 		new_mpath = mpath;
- 	}
-+
- 	sdata->u.mesh.mesh_paths_generation++;
- 	return new_mpath;
- }
-@@ -481,6 +479,9 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
- 		hlist_add_head_rcu(&new_mpath->walk_list, &tbl->walk_head);
- 	spin_unlock_bh(&tbl->walk_lock);
+ /**
+  * rhltable_walk_enter - Initialise an iterator
+  * @hlt:	Table to walk over
+diff --git a/lib/rhashtable.c b/lib/rhashtable.c
+index 852ffa5160f1..0a105d4af166 100644
+--- a/lib/rhashtable.c
++++ b/lib/rhashtable.c
+@@ -682,7 +682,7 @@ EXPORT_SYMBOL_GPL(rhashtable_walk_enter);
+  * rhashtable_walk_exit - Free an iterator
+  * @iter:	Hash table Iterator
+  *
+- * This function frees resources allocated by rhashtable_walk_init.
++ * This function frees resources allocated by rhashtable_walk_enter.
+  */
+ void rhashtable_walk_exit(struct rhashtable_iter *iter)
+ {
+diff --git a/lib/test_rhashtable.c b/lib/test_rhashtable.c
+index 6a8ac7626797..d96962eea942 100644
+--- a/lib/test_rhashtable.c
++++ b/lib/test_rhashtable.c
+@@ -177,16 +177,11 @@ static int __init test_rht_lookup(struct rhashtable *ht, struct test_obj *array,
  
-+	if (ret)
-+		kfree(new_mpath);
-+
- 	sdata->u.mesh.mpp_paths_generation++;
- 	return ret;
+ static void test_bucket_stats(struct rhashtable *ht, unsigned int entries)
+ {
+-	unsigned int err, total = 0, chain_len = 0;
++	unsigned int total = 0, chain_len = 0;
+ 	struct rhashtable_iter hti;
+ 	struct rhash_head *pos;
+ 
+-	err = rhashtable_walk_init(ht, &hti, GFP_KERNEL);
+-	if (err) {
+-		pr_warn("Test failed: allocation error");
+-		return;
+-	}
+-
++	rhashtable_walk_enter(ht, &hti);
+ 	rhashtable_walk_start(&hti);
+ 
+ 	while ((pos = rhashtable_walk_next(&hti))) {
+diff --git a/net/ipv6/ila/ila_xlat.c b/net/ipv6/ila/ila_xlat.c
+index 17c455ff69ff..ae6cd4cef8db 100644
+--- a/net/ipv6/ila/ila_xlat.c
++++ b/net/ipv6/ila/ila_xlat.c
+@@ -385,10 +385,7 @@ int ila_xlat_nl_cmd_flush(struct sk_buff *skb, struct genl_info *info)
+ 	spinlock_t *lock;
+ 	int ret;
+ 
+-	ret = rhashtable_walk_init(&ilan->xlat.rhash_table, &iter, GFP_KERNEL);
+-	if (ret)
+-		goto done;
+-
++	rhashtable_walk_enter(&ilan->xlat.rhash_table, &iter);
+ 	rhashtable_walk_start(&iter);
+ 
+ 	for (;;) {
+@@ -509,23 +506,17 @@ int ila_xlat_nl_dump_start(struct netlink_callback *cb)
+ 	struct net *net = sock_net(cb->skb->sk);
+ 	struct ila_net *ilan = net_generic(net, ila_net_id);
+ 	struct ila_dump_iter *iter;
+-	int ret;
+ 
+ 	iter = kmalloc(sizeof(*iter), GFP_KERNEL);
+ 	if (!iter)
+ 		return -ENOMEM;
+ 
+-	ret = rhashtable_walk_init(&ilan->xlat.rhash_table, &iter->rhiter,
+-				   GFP_KERNEL);
+-	if (ret) {
+-		kfree(iter);
+-		return ret;
+-	}
++	rhashtable_walk_enter(&ilan->xlat.rhash_table, &iter->rhiter);
+ 
+ 	iter->skip = 0;
+ 	cb->args[0] = (long)iter;
+ 
+-	return ret;
++	return 0;
  }
+ 
+ int ila_xlat_nl_dump_done(struct netlink_callback *cb)
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index 3c023d6120f6..f369cc751cea 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -2541,15 +2541,7 @@ struct nl_seq_iter {
+ 
+ static int netlink_walk_start(struct nl_seq_iter *iter)
+ {
+-	int err;
+-
+-	err = rhashtable_walk_init(&nl_table[iter->link].hash, &iter->hti,
+-				   GFP_KERNEL);
+-	if (err) {
+-		iter->link = MAX_LINKS;
+-		return err;
+-	}
+-
++	rhashtable_walk_enter(&nl_table[iter->link].hash, &iter->hti);
+ 	rhashtable_walk_start(&iter->hti);
+ 
+ 	return 0;
