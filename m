@@ -2,100 +2,127 @@ Return-Path: <SRS0=7xxp=QW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4FDBC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 08:37:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C96BC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 08:53:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A82442190B
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 08:37:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAFD121A80
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 08:52:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O2ga5qIK"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ncr6rHh+";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LiWGnQUk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388926AbfBOIhU (ORCPT
+        id S2391620AbfBOIw6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Feb 2019 03:37:20 -0500
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:35941 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726396AbfBOIhU (ORCPT
+        Fri, 15 Feb 2019 03:52:58 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:51304 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727241AbfBOIw5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Feb 2019 03:37:20 -0500
-Received: by mail-yb1-f194.google.com with SMTP id o129so1734862yba.3
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2019 00:37:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=WB2LdFqFgUjQiIV+try3zOjA6Q+F8Q6N0JiH8XtFT+Y=;
-        b=O2ga5qIKoUCQpKhvm49iOxlyUUuzuGPfrly76ECJOD2/2VEe8l6cfs3yJIh9KoxXua
-         Pw9FmDVN7LkxGnozfdzhf87dFM5kDALz20FEq1JEme5DtyPm+bdeDjus+mg+VULldRgc
-         3eXXV2MmXTl1us52dcGqELcsUx88dlP6yvXL24S8TuUlOZmJKwtqztjc4p+UZ/e8rM67
-         NwppbzeRyrz6fNPogdSptVBl/Ze80w398DT1FoTomhziBbGoOlcDJvwX2CnfAeXSTClS
-         I5LnSBG3VXpIQq3kaB8YWMCfJep/jBPJZULjWqr/wuHB8x9QvhAAsGeUgXPSDnCD/9GS
-         owWw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=WB2LdFqFgUjQiIV+try3zOjA6Q+F8Q6N0JiH8XtFT+Y=;
-        b=Qld0FmLjhbq37uD4kVt2TBLHAeE+SW7Q3EnaiMQvesr01QoxuFp+ksCiUBSfD3fVBo
-         HIrDlDmOgTGX7f4CZ+zpAsivbYXEYherPu+2PCmioVsngdiYLeckh7U3Y0Pxy8DHn2ad
-         NTOX4MydWsPE5ceMGn7OB2zLkkX+0Z7xODvsuusddQc9ZpGQNIaqcOnjOEaHpzkRaMN+
-         RIQrcarfTIRHfl30BgLUgF1JXoLapP86v1rFRqxbUVPyGR0tmJrfLEE6YH2tzid+ZYhq
-         sVY6o8PNWh3SfSC0YYI4znvEXiD53595fyOOWRbqQpWFzuRg0nFLh+BRWBUNNhwQ/dTK
-         NurQ==
-X-Gm-Message-State: AHQUAuZOgD9d72146RlHasMBvFIL/3geycbj+Lk3MYnE2JSVXk5ERg2J
-        L06pnKYzL9wkotPltEknzN54nLC7RnoF5vLVvKc=
-X-Google-Smtp-Source: AHgI3IZbnQDaaLS9GtmqKc+3FKljTX9TS0N06sdL5r+UUbk1nY65KX2bYLx5fh9DE/hGEDB6Vmc9+IB98o6vOfkvfbU=
-X-Received: by 2002:a25:cb0b:: with SMTP id b11mr6834683ybg.375.1550219839517;
- Fri, 15 Feb 2019 00:37:19 -0800 (PST)
-MIME-Version: 1.0
-References: <20190214125758.11943-1-zajec5@gmail.com> <20190215064345.11946-1-zajec5@gmail.com>
-In-Reply-To: <20190215064345.11946-1-zajec5@gmail.com>
-From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date:   Fri, 15 Feb 2019 09:37:08 +0100
-Message-ID: <CACna6rwiz=Q=ZYj-q69Ak+VAaJhJmtPhnVB_KQvZc0+NZJoCKQ@mail.gmail.com>
-Subject: Re: [PATCH V3] brcmfmac: use bphy_err() in all wiphy-related code
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-        <brcm80211-dev-list.pdl@broadcom.com>," 
-        <brcm80211-dev-list@cypress.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Fri, 15 Feb 2019 03:52:57 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 4E3B860AD4; Fri, 15 Feb 2019 08:46:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550220772;
+        bh=8uMc//+b3pGm0fSbwJy9xlfOHtzKzrL3aCXgxiRM+0k=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ncr6rHh+18/ZZfOYlFYUudyS9dlBSzGuz6VNAxD4sgkV/YN7LSjfMsM87m+ySdVdR
+         2mPJ6iGpJ2JOAThJ9uf2vsYaxalBrXOKawR9UxGoZfbqOiI2sS4jDS7AKdI7PhkWkc
+         5PhvqP8Jkgi8iPATi8rhj7WwYS3ysFxSs0rBqkV0=
+Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: pillair@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 32E9760AA2;
+        Fri, 15 Feb 2019 08:46:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550220385;
+        bh=8uMc//+b3pGm0fSbwJy9xlfOHtzKzrL3aCXgxiRM+0k=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LiWGnQUkTONyWThYySBhnNpQ3yFlpx2KW0M7lZZQhVy9qj6VPAoM1RmM/zATAHep2
+         LK+T+3ngqfJ4bUMhXQwqLhYIryy8VwcnG3mOHq6ezyX7fZOo6wDVgM/y98xDu+4AIf
+         tfuFCEvz2qT4+e3g70hZgzPr09r7zcetn+LUVrhU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 32E9760AA2
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
+From:   Rakesh Pillai <pillair@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH] mac80211: Restore vif beacon interval if start ap fails
+Date:   Fri, 15 Feb 2019 14:16:02 +0530
+Message-Id: <1550220362-5573-1-git-send-email-pillair@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 15 Feb 2019 at 07:43, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
-ote:
-> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->
-> This recently added macro provides more meaningful error messages thanks
-> to identifying a specific wiphy. It's especially important on systems
-> with few cards supported by the same (brcmfmac) driver.
->
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+The starting of AP interface can fail due to invalid
+beacon interval, which does not match the minimum gcd
+requirement set by the wifi driver. In such case, the
+beacon interval of that interface gets updated with
+that invalid beacon interval.
 
-Arend, let me ask one more question before getting this patch pushed.
-It's quite late (I spent quite some time on this), but maybe still
-better than fixing it later.
+The next time that interface is brought up in AP mode,
+an interface combination check is performed and the
+beacon interval is taken from the previously set value.
 
-It seems the most common struct that is:
-1) Often passed as argument
-2) Often having it's own variable in functions
-3) Used when calling functions from different file
-is struct brcmf_pub.
+In a case where an invalid beacon interval, i.e. a beacon
+interval value which does not satisfy the minimum gcd criteria
+set by the driver, is set, all the subsequent trials to
+bring that interface in AP mode will fail, even if the
+subsequent trials have a valid beacon interval.
 
-Now I started wondering if we really want to have bphy_err() accept
-wiphy. Maybe it would match brcmfmac's design better to have
-bphy_err(struct brcmf_pub, fmt, ...)?
+To avoid this, in case of a failure in bringing up an
+interface in AP mode due to interface combination error,
+the interface beacon interval which is stored in bss
+conf, needs to be restored with the last working value
+of beacon interval.
+
+Tested on ath10k using WCN3990.
+
+Fixes: 0c317a02ca98 ("cfg80211: support virtual interfaces with different beacon intervals")
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+---
+ net/mac80211/cfg.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index d65aa01..09dd1c2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -941,6 +941,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 		      BSS_CHANGED_P2P_PS |
+ 		      BSS_CHANGED_TXPOWER;
+ 	int err;
++	int prev_beacon_int;
+ 
+ 	old = sdata_dereference(sdata->u.ap.beacon, sdata);
+ 	if (old)
+@@ -963,6 +964,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	sdata->needed_rx_chains = sdata->local->rx_chains;
+ 
++	prev_beacon_int = sdata->vif.bss_conf.beacon_int;
+ 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+ 
+ 	if (params->he_cap)
+@@ -974,8 +976,10 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	if (!err)
+ 		ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
+ 	mutex_unlock(&local->mtx);
+-	if (err)
++	if (err) {
++		sdata->vif.bss_conf.beacon_int = prev_beacon_int;
+ 		return err;
++	}
+ 
+ 	/*
+ 	 * Apply control port protocol, this allows us to
+-- 
+2.7.4
+
