@@ -2,77 +2,81 @@ Return-Path: <SRS0=7xxp=QW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2D5BC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 12:37:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E96A5C4360F
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 12:51:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 79B102192B
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 12:37:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2E0B2075C
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 12:51:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728512AbfBOMhz (ORCPT
+        id S2394691AbfBOMvz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Feb 2019 07:37:55 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:40072 "EHLO
+        Fri, 15 Feb 2019 07:51:55 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:40370 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726174AbfBOMhz (ORCPT
+        with ESMTP id S2389229AbfBOMvy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Feb 2019 07:37:55 -0500
+        Fri, 15 Feb 2019 07:51:54 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC5)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1guckZ-0007MC-3Q; Fri, 15 Feb 2019 13:37:51 +0100
-Message-ID: <dd920f575478bee3cc071765c9e848e3d2dfffab.camel@sipsolutions.net>
-Subject: Re: [RFC 2/2] ath10k: Add QCA vendor command/attr support to
- filterneighbor BSS frames
+        id 1gucy8-0007ip-B2; Fri, 15 Feb 2019 13:51:52 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Karthikeyan Periyasamy <periyasa@codeaurora.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Date:   Fri, 15 Feb 2019 13:37:49 +0100
-In-Reply-To: <7212e3a5157ab61d10b8d7184e290593@codeaurora.org>
-References: <1530791512-6915-3-git-send-email-periyasa@codeaurora.org>
-         <20181005060031.BA1EB60BF4@smtp.codeaurora.org>
-         <a28348956ba3fbfded80bc78ba1c0335df7edb75.camel@sipsolutions.net>
-         <c9b16303e344b2dcd4d52cf9c0830846@codeaurora.org>
-         <69a99a7f1b2b7434b70c5c6df1812952928547cc.camel@sipsolutions.net>
-         <7212e3a5157ab61d10b8d7184e290593@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+To:     David Miller <davem@davemloft.net>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2019-02-15
+Date:   Fri, 15 Feb 2019 13:51:45 +0100
+Message-Id: <20190215125146.18856-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.17.2
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2019-01-28 at 10:19 +0530, Karthikeyan Periyasamy wrote:
+Hi Dave,
 
-> > At the same time, what happens today actually? Do all frames from non-
-> > associated clients come up to the host? If so, is this not a problem 
-> > for all APs, not just ath10k?
-> 
-> Today, without this patch. No frames from non-associated clients come up 
-> to the host in AP mode.
+It's clear things are winding down, this is basically just the stuff
+from Herbert that we've been discussing. I threw in a simple error
+path fix, mostly because it's simple :-)
 
-So it's not just _filtering_ but also enabling to see them, right?
+Please pull and let me know if there's any problem.
 
-> > And if they don't come up, what feature requires this? Sorry for the
-> > vague questions, but I'm not really sure what this is all about. If
-> > there's a need for these frames, wouldn't we need a generic way of
-> > enabling receiving them, and perhaps even signalling hostapd with them?
-> 
-> Steering application use this feature in their logical part of client 
-> steering.
-
-But there aren't even any steering applications that are open source or
-anything like that, right?
-
-I don't see why we should include this upstream. Clearly you can use
-this for whatever you like to do with your driver in non-upstream
-builds, and you can open-source this code, but if there are no
-applications that could possibly use it upstream why bother?
-
+Thanks,
 johannes
+
+
+
+The following changes since commit f9bcc9f3ee4fbbe8f11dfec76745476f5780517e:
+
+  net: ethernet: freescale: set FEC ethtool regs version (2019-02-14 12:45:35 -0500)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2019-02-15
+
+for you to fetch changes up to 83e37e0bdd1470bbe6612250b745ad39b1a7b130:
+
+  mac80211: Restore vif beacon interval if start ap fails (2019-02-15 13:30:24 +0100)
+
+----------------------------------------------------------------
+Just a few fixes this time:
+ * mesh rhashtable fixes from Herbert
+ * a small error path fix when starting AP interfaces
+
+----------------------------------------------------------------
+Herbert Xu (2):
+      mac80211: Use linked list instead of rhashtable walk for mesh tables
+      mac80211: Free mpath object when rhashtable insertion fails
+
+Rakesh Pillai (1):
+      mac80211: Restore vif beacon interval if start ap fails
+
+ net/mac80211/cfg.c          |   6 +-
+ net/mac80211/mesh.h         |   6 ++
+ net/mac80211/mesh_pathtbl.c | 155 +++++++++++++-------------------------------
+ 3 files changed, 57 insertions(+), 110 deletions(-)
 
