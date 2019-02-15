@@ -4,53 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B3D4C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:16:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0A0C4360F
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:18:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01E2620643
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:16:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5098020643
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:18:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550197012;
-	bh=Y9o8KsB+a9lG2Xg8g9q5V6wwNEdFY1dlkRFiCB4i6Fs=;
+	s=default; t=1550197108;
+	bh=0hAyba6XbrUd6ptxozHxZ8P07wT8yXnrmMmXLWN1wjs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=1B/PTecmdIm7751w6p78e3+bzh9JUHIEel/8dpAMU4u9HOJVtIP0CdwlcIpGOfJcg
-	 xeMZksXqneqwwECsRH6hQoZt7HWYyPkFCrb7hmpLOqHP2O2RhSjeQycBnwxIqKpRRm
-	 Km4lockKW68rfp6/PdjKMpsDxz9TLOb3oEa3gxUE=
+	b=oWOjQL15cAu6pHUlAz0kUP4mXHWxgUVtZ4zKxuk197rAA2uw7hCIscEMMEGMKpE/f
+	 frANZZbOU+6wDEPJSP/QFHKvitBVXqxBN7ysV0zywGWEOq2we60dGJ4G0x3+AVLADl
+	 1HRuRdJ6OkiGIhiDfOrYn5+7qNfd+FlFXjqadNzs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391077AbfBOCQv (ORCPT
+        id S1732410AbfBOCST (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 21:16:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55612 "EHLO mail.kernel.org"
+        Thu, 14 Feb 2019 21:18:19 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55378 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392197AbfBOCQI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 21:16:08 -0500
+        id S2405911AbfBOCPp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Feb 2019 21:15:45 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E8C0E21934;
-        Fri, 15 Feb 2019 02:16:06 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E002C222D9;
+        Fri, 15 Feb 2019 02:15:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550196967;
-        bh=Y9o8KsB+a9lG2Xg8g9q5V6wwNEdFY1dlkRFiCB4i6Fs=;
+        s=default; t=1550196944;
+        bh=0hAyba6XbrUd6ptxozHxZ8P07wT8yXnrmMmXLWN1wjs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I4v+ubAuhNJ9s7kGmqGe52VFKmsbRaWz6Y3+mKKRNvD6Uc/n7Wbufm2RjS8CkGLb2
-         uhhaFeoIVUElwxhdr1hUYJIJecOUPxw0NCtPlp1UOn0XMYF+d31h3wFRe+5odKB5im
-         mbEJzjQqVb+LuXU40ZL5G5OvKH05U7anJ4lajySk=
+        b=vd8aj4zUVDA0NYqHQ7MQApskddzP1IWe7OeHzd/VAjU24k/CEeeO159OOrnh59iGF
+         K2KwNQktR6PI8ETnOZHLglBTjuqKIXazlCCBs6DHW9+/loH70C5SWZ+ePQc7KTXQld
+         gFpfJ6VZ5LU6ltG/FwzO5HULZYdu6GmeCHl4NFp4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Balaji Pothunoori <bpothuno@codeaurora.org>,
+Cc:     Chaitanya Tata <chaitanya.tata@bluwirelesstechnology.com>,
+        Chaitanya Tata <Chaitanya.Tata@bluwireless.co.uk>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 3.18 14/16] mac80211: don't initiate TDLS connection if station is not associated to AP
-Date:   Thu, 14 Feb 2019 21:15:44 -0500
-Message-Id: <20190215021546.179605-14-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 19/20] cfg80211: extend range deviation for DMG
+Date:   Thu, 14 Feb 2019 21:15:10 -0500
+Message-Id: <20190215021511.179333-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190215021546.179605-1-sashal@kernel.org>
-References: <20190215021546.179605-1-sashal@kernel.org>
+In-Reply-To: <20190215021511.179333-1-sashal@kernel.org>
+References: <20190215021511.179333-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -59,56 +60,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
+From: Chaitanya Tata <chaitanya.tata@bluwirelesstechnology.com>
 
-[ Upstream commit 7ed5285396c257fd4070b1e29e7b2341aae2a1ce ]
+[ Upstream commit 93183bdbe73bbdd03e9566c8dc37c9d06b0d0db6 ]
 
-Following call trace is observed while adding TDLS peer entry in driver
-during TDLS setup.
+Recently, DMG frequency bands have been extended till 71GHz, so extend
+the range check till 20GHz (45-71GHZ), else some channels will be marked
+as disabled.
 
-Call Trace:
-[<c1301476>] dump_stack+0x47/0x61
-[<c10537d2>] __warn+0xe2/0x100
-[<fa22415f>] ? sta_apply_parameters+0x49f/0x550 [mac80211]
-[<c1053895>] warn_slowpath_null+0x25/0x30
-[<fa22415f>] sta_apply_parameters+0x49f/0x550 [mac80211]
-[<fa20ad42>] ? sta_info_alloc+0x1c2/0x450 [mac80211]
-[<fa224623>] ieee80211_add_station+0xe3/0x160 [mac80211]
-[<c1876fe3>] nl80211_new_station+0x273/0x420
-[<c170f6d9>] genl_rcv_msg+0x219/0x3c0
-[<c170f4c0>] ? genl_rcv+0x30/0x30
-[<c170ee7e>] netlink_rcv_skb+0x8e/0xb0
-[<c170f4ac>] genl_rcv+0x1c/0x30
-[<c170e8aa>] netlink_unicast+0x13a/0x1d0
-[<c170ec18>] netlink_sendmsg+0x2d8/0x390
-[<c16c5acd>] sock_sendmsg+0x2d/0x40
-[<c16c6369>] ___sys_sendmsg+0x1d9/0x1e0
-
-Fixing this by allowing TDLS setup request only when we have completed
-association.
-
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+Signed-off-by: Chaitanya Tata <Chaitanya.Tata@bluwireless.co.uk>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/cfg.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/wireless/reg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 6ba5240dd61d..ffe319309d03 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1194,6 +1194,10 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 		sta->sta.tdls = true;
- 	}
- 
-+	if (sta->sta.tdls && sdata->vif.type == NL80211_IFTYPE_STATION &&
-+	    !sdata->u.mgd.associated)
-+		return -EINVAL;
-+
- 	err = sta_apply_parameters(local, sta, params);
- 	if (err) {
- 		sta_info_free(local, sta);
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 50dffd183cc6..429abf421906 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -780,7 +780,7 @@ static bool reg_does_bw_fit(const struct ieee80211_freq_range *freq_range,
+  * definitions (the "2.4 GHz band", the "5 GHz band" and the "60GHz band"),
+  * however it is safe for now to assume that a frequency rule should not be
+  * part of a frequency's band if the start freq or end freq are off by more
+- * than 2 GHz for the 2.4 and 5 GHz bands, and by more than 10 GHz for the
++ * than 2 GHz for the 2.4 and 5 GHz bands, and by more than 20 GHz for the
+  * 60 GHz band.
+  * This resolution can be lowered and should be considered as we add
+  * regulatory rule support for other "bands".
+@@ -795,7 +795,7 @@ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
+ 	 * with the Channel starting frequency above 45 GHz.
+ 	 */
+ 	u32 limit = freq_khz > 45 * ONE_GHZ_IN_KHZ ?
+-			10 * ONE_GHZ_IN_KHZ : 2 * ONE_GHZ_IN_KHZ;
++			20 * ONE_GHZ_IN_KHZ : 2 * ONE_GHZ_IN_KHZ;
+ 	if (abs(freq_khz - freq_range->start_freq_khz) <= limit)
+ 		return true;
+ 	if (abs(freq_khz - freq_range->end_freq_khz) <= limit)
 -- 
 2.19.1
 
