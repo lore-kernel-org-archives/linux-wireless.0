@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B33C4360F
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:36:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB67EC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:40:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D87921927
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:36:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B8502192B
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:40:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550198164;
-	bh=E9ZK8Dte9OCSoUfF8/3j1kFQPkY9l+mmzYlnyaLt0qU=;
+	s=default; t=1550198429;
+	bh=iAu4afID//rMfOpd+oY+tySOsJ+NxK0yLKYuM2dPOwY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=wlAbGwS8rGUL/UwlpcaNlr4o9FiNo8Q1jEN5v5qay1sAgeePgph2Wfc0stilhM+2o
-	 UVOUoNQYiqOpdrSM145cBbtDf5dK99y1i6EoqH1l7asZMvudFz3I4fISzBAzQFUC8s
-	 0+ye6zNKtp4HNfkFwSQ/obIO7q+L0YuIW1y/nmao=
+	b=TTCquqz4lKTfarjUZNzhJL7poRYLtjvSw2C7yEq+L+OKbLv5wawpmV9MbK3tmHwTL
+	 A5grgtyWRACaiSm+k9MOPX/Aa/QHaYrT7RGMw+yG3Oqvh8YVkRa7a04bRBoeEH8gWC
+	 9yt80VmuiveTDl+EWNuT6EQm2u6+CVW450z6Ax9c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728027AbfBOCf5 (ORCPT
+        id S2389733AbfBOCKB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 21:35:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51110 "EHLO mail.kernel.org"
+        Thu, 14 Feb 2019 21:10:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50120 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732069AbfBOCLB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 21:11:01 -0500
+        id S2389658AbfBOCKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Feb 2019 21:10:00 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 056C821B68;
-        Fri, 15 Feb 2019 02:10:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 32913222A1;
+        Fri, 15 Feb 2019 02:09:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550196660;
-        bh=E9ZK8Dte9OCSoUfF8/3j1kFQPkY9l+mmzYlnyaLt0qU=;
+        s=default; t=1550196599;
+        bh=iAu4afID//rMfOpd+oY+tySOsJ+NxK0yLKYuM2dPOwY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=F31mJ0oopQ7Borjpho8NnRF908iCyqcB35X40jcfgQev3s+jTOwqeiNRQMEOrfoLw
-         dPdc90GgERXy7SxtC5sdoaIteqeVPK8U7LvPnxqk98cf/p3vbLVsWI0EsbBV9j5vuM
-         7pviAp4sOaDJ1vlMGYJwOPWPNPNQS4QKdJ74eWVM=
+        b=z+E1qMhu2HN07//PRxBdVPna9KFDRMLlgzuYrWVQ1ZOTBFFrZmNU08t0jjdJSvfwJ
+         1DsRYvsv+b2PRUw9DYa/kDnx03l0roxFn3wtcSdJJXKNE1FL4Jwj2LPWamYXPZZf+E
+         0LSGIv8ST1IExW56gQJsx1IU5POC3rtsChDy8BME=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Balaji Pothunoori <bpothuno@codeaurora.org>,
+Cc:     Bob Copeland <me@bobcopeland.com>,
+        Bob Copeland <bobcopeland@fb.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.20 70/77] mac80211: don't initiate TDLS connection if station is not associated to AP
-Date:   Thu, 14 Feb 2019 21:08:48 -0500
-Message-Id: <20190215020855.176727-70-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 36/77] mac80211: fix miscounting of ttl-dropped frames
+Date:   Thu, 14 Feb 2019 21:08:14 -0500
+Message-Id: <20190215020855.176727-36-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190215020855.176727-1-sashal@kernel.org>
 References: <20190215020855.176727-1-sashal@kernel.org>
@@ -59,56 +60,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
+From: Bob Copeland <me@bobcopeland.com>
 
-[ Upstream commit 7ed5285396c257fd4070b1e29e7b2341aae2a1ce ]
+[ Upstream commit a0dc02039a2ee54fb4ae400e0b755ed30e73e58c ]
 
-Following call trace is observed while adding TDLS peer entry in driver
-during TDLS setup.
+In ieee80211_rx_h_mesh_fwding, we increment the 'dropped_frames_ttl'
+counter when we decrement the ttl to zero.  For unicast frames
+destined for other hosts, we stop processing the frame at that point.
 
-Call Trace:
-[<c1301476>] dump_stack+0x47/0x61
-[<c10537d2>] __warn+0xe2/0x100
-[<fa22415f>] ? sta_apply_parameters+0x49f/0x550 [mac80211]
-[<c1053895>] warn_slowpath_null+0x25/0x30
-[<fa22415f>] sta_apply_parameters+0x49f/0x550 [mac80211]
-[<fa20ad42>] ? sta_info_alloc+0x1c2/0x450 [mac80211]
-[<fa224623>] ieee80211_add_station+0xe3/0x160 [mac80211]
-[<c1876fe3>] nl80211_new_station+0x273/0x420
-[<c170f6d9>] genl_rcv_msg+0x219/0x3c0
-[<c170f4c0>] ? genl_rcv+0x30/0x30
-[<c170ee7e>] netlink_rcv_skb+0x8e/0xb0
-[<c170f4ac>] genl_rcv+0x1c/0x30
-[<c170e8aa>] netlink_unicast+0x13a/0x1d0
-[<c170ec18>] netlink_sendmsg+0x2d8/0x390
-[<c16c5acd>] sock_sendmsg+0x2d/0x40
-[<c16c6369>] ___sys_sendmsg+0x1d9/0x1e0
+For multicast frames, we do not rebroadcast it in this case, but we
+do pass the frame up the stack to process it on this STA.  That
+doesn't match the usual definition of "dropped," so don't count
+those as such.
 
-Fixing this by allowing TDLS setup request only when we have completed
-association.
+With this change, something like `ping6 -i0.2 ff02::1%mesh0` from a
+peer in a ttl=1 network no longer increments the counter rapidly.
 
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+Signed-off-by: Bob Copeland <bobcopeland@fb.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/cfg.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/rx.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 818aa0060349..04337e6be7f0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1490,6 +1490,10 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
- 		sta->sta.tdls = true;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 428f7ad5f9b5..ef215d0e99b0 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2710,7 +2710,9 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	skb_set_queue_mapping(skb, q);
  
-+	if (sta->sta.tdls && sdata->vif.type == NL80211_IFTYPE_STATION &&
-+	    !sdata->u.mgd.associated)
-+		return -EINVAL;
-+
- 	err = sta_apply_parameters(local, sta, params);
- 	if (err) {
- 		sta_info_free(local, sta);
+ 	if (!--mesh_hdr->ttl) {
+-		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_ttl);
++		if (!is_multicast_ether_addr(hdr->addr1))
++			IEEE80211_IFSTA_MESH_CTR_INC(ifmsh,
++						     dropped_frames_ttl);
+ 		goto out;
+ 	}
+ 
 -- 
 2.19.1
 
