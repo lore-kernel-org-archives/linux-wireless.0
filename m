@@ -2,71 +2,86 @@ Return-Path: <SRS0=7xxp=QW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 338B7C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 11:50:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB1BEC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 11:52:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0276821929
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 11:50:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94FE121929
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 11:52:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436701AbfBOLuV (ORCPT
+        id S2436552AbfBOLwQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Feb 2019 06:50:21 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:60578 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2436695AbfBOLuU (ORCPT
+        Fri, 15 Feb 2019 06:52:16 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:38968 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728829AbfBOLwQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Feb 2019 06:50:20 -0500
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1gubzy-0008TN-1E; Fri, 15 Feb 2019 13:49:42 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 15 Feb 2019 13:49:18 +0200
-Message-Id: <20190215114924.2545-15-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190215114924.2545-1-luca@coelho.fi>
-References: <20190215114924.2545-1-luca@coelho.fi>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 14/20] iwlwifi: mvm: Set TX_CMD_FLG_PROT_REQUIRE correctly
+        Fri, 15 Feb 2019 06:52:16 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC5)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1guc2Q-0006Cb-Kl; Fri, 15 Feb 2019 12:52:14 +0100
+Message-ID: <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 15 Feb 2019 12:52:13 +0100
+In-Reply-To: <20190210210620.31181-8-alexander@wetzel-home.de>
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+         <20190210210620.31181-8-alexander@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+On Sun, 2019-02-10 at 22:06 +0100, Alexander Wetzel wrote:
+> This is not ready for merge and has known issues.
+> The patch is only for discussions to sort out how to handle it correctly!
+> 
+> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+> ---
+> 
+> iwlwifi intel cards had two big surprises:
+> 
+> Assuming I did not make some stupid errors it looks like my old
+> "Intel Corporation Centrino Ultimate-N 6300 (rev 3e)" using ucode 
+> 9.221.4.1 build 25532 is perfectly fine with two keys uploaded to
+> harware and honoring the keyid in the MPDUs. For a card launched 2011
+> that's a pleasant surprise:-)
 
-Previously the protection flag wasn't set on multicast frames even if
-the RA is unicast. Fix this by checking addr1 instead.
+:-)
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> A much shorter test with a modern "Intel Corporation Wireless 8265 /
+> 8175 (rev 78)" using ucode version 36.e91976c0.0 shows what seems to be
+> MPDUs decoded with the wrong key at each rekey and therefore a candidate
+> for the COMPAT support only..
+> So the bad news seems to be, that the modern card dropped the support.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 898bfda93029..b82b2f062c95 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -278,7 +278,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	}
- 
- 	if (ieee80211_is_data(fc) && len > mvm->rts_threshold &&
--	    !is_multicast_ether_addr(ieee80211_get_DA(hdr)))
-+	    !is_multicast_ether_addr(hdr->addr1))
- 		tx_flags |= TX_CMD_FLG_PROT_REQUIRE;
- 
- 	if (fw_has_capa(&mvm->fw->ucode_capa,
--- 
-2.20.1
+Probably just a firmware bug.
+
+> It also seems to force us to add some per-card or per-firmware depending
+> check to decide which card can use the Native Extended Key ID support
+> and use the Compat mode for the rest.
+> Is there any way to find out which cards/firmware can be used with
+> Extended Key ID?
+
+No, but if you have a good test case we can check out what the firmware
+bug is and fix it. Perhaps not for all, but for the future at least.
+Maybe we can still figure out where it was introduced and thus see where
+it's good to use native mode.
+
+> I also have tested patch for iwldvm using the Compat mode and I think
+> mvm cards will also work with that.
+
+No they don't, no firmware is available for that.
+
+johannes
 
