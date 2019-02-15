@@ -2,87 +2,199 @@ Return-Path: <SRS0=7xxp=QW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BC62C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 10:54:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCCA7C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 11:06:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2851221900
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 10:54:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BMnnvMb3";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YOBNVMbB"
+	by mail.kernel.org (Postfix) with ESMTP id AC2DE21A80
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 11:06:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405956AbfBOKyJ (ORCPT
+        id S2393845AbfBOLGu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Feb 2019 05:54:09 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:40574 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405807AbfBOKyJ (ORCPT
+        Fri, 15 Feb 2019 06:06:50 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:38188 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2393771AbfBOLGu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Feb 2019 05:54:09 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 752A7608C6; Fri, 15 Feb 2019 10:54:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550228048;
-        bh=tWrlyKdu0eIgK6D6megLq2TalL2nc7PWqFP5py/GkRI=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=BMnnvMb30RUK+aci65p/J6h5snq7jHZuSqJqvnbYlbthgZVNOIECC8ZC3c+8vcSS/
-         vZL8pAbPAvXOjRQceb4LyWnzoVVpUMBuUSGYxawlhfiWgYDP7nEA/A56hm+NQB1z7M
-         dFDKoomIIosCFHUDxIcqhwr26v8O3yNa8lruYvnE=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D804E6053D;
-        Fri, 15 Feb 2019 10:54:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550228047;
-        bh=tWrlyKdu0eIgK6D6megLq2TalL2nc7PWqFP5py/GkRI=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=YOBNVMbBfCfFT495/nmV5LgqeBqRnbzvlXRiGTSxGMMynIJZx5rJqF1tOmvzXBJyQ
-         JpuXGsX5CX1G3Isb12/wkzmdLseOrWLUzuRpi+2NwYZLG2JeIBND0X4MgQPEkcLWCX
-         aYAxsINmfcwu/rmIcfzfxD63j8WryAdlCyllD+lc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D804E6053D
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com
-Subject: Re: [PATCH 0/8] rtlwifi: Remove CamelCase variables from all drivers
-References: <20190214223644.8035-1-Larry.Finger@lwfinger.net>
-Date:   Fri, 15 Feb 2019 12:54:04 +0200
-In-Reply-To: <20190214223644.8035-1-Larry.Finger@lwfinger.net> (Larry Finger's
-        message of "Thu, 14 Feb 2019 16:36:36 -0600")
-Message-ID: <87wom1xqyb.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 15 Feb 2019 06:06:50 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC5)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gubKR-0004rv-Pc; Fri, 15 Feb 2019 12:06:48 +0100
+Message-ID: <f4d8db23bc3804fdc98f2ce7a702215bd82fd4e3.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH v3 03/12] mac80211: IEEE 802.11 Extended Key ID
+ support
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 15 Feb 2019 12:06:46 +0100
+In-Reply-To: <20190210210620.31181-4-alexander@wetzel-home.de>
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+         <20190210210620.31181-4-alexander@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On Sun, 2019-02-10 at 22:06 +0100, Alexander Wetzel wrote:
+> 
+>  - Enforce cipher does not change when replacing a key.
 
-> This set of patches fix all instances of CamelCase for all the drivers.
-> When the symbol refers to a macro, it is converted to upper case. If a
-> variable or a function, then it is converted to lower case.
->
-> As noted in the comments, some of the other checkpatch exceptions are
-> addressed.
+is that actually required somehow?
 
-I wish you had separated the camel case fixes from other cleanups, and
-otherwise tried to simplify the patches, now you made the patchset
-painful to review as all the changes are mixed and the size of patches
-is just too large. Remember that the rule of thumb is one logical change
-per patch. Of course that's not a hard rule, and can be ignored with
-small and trivial patches, but most of the patches here are not small.
+> + * @EXT_SET_KEY: a new key must be set but is only valid for decryption
+> + * @EXT_KEY_RX_TX: a key installed with @EXT_SET_KEY is becoming the
+> + *	designated Rx/Tx key for the station
 
-No need to resend because of this but please take care with the size of
-patches and patchsets in the future.
+Not sure I like the EXT_SET_KEY. There's also no "designated Rx key", is
+there? It's always selected by key ID.
 
--- 
-Kalle Valo
+How about SET_KEY_RXONLY and SET_KEY_TX or something like that?
+
+> +static int ieee80211_set_tx_key(struct ieee80211_sub_if_data *sdata,
+> +				const u8 *mac_addr, u8 key_idx)
+> +{
+> +	struct ieee80211_local *local = sdata->local;
+> +	struct ieee80211_key *key;
+> +	struct sta_info *sta;
+> +	int ret;
+> +
+> +	if (!wiphy_ext_feature_isset(local->hw.wiphy,
+> +				     NL80211_EXT_FEATURE_EXT_KEY_ID))
+> +		return -EINVAL;
+
+You set this, wouldn't it make more sense to check EXT_KEY_ID_NATIVE?
+
+Or maybe this is because of the next patch?
+
+> +	sta = sta_info_get_bss(sdata, mac_addr);
+> +
+> +	if (!sta)
+> +		return -EINVAL;
+> +
+> +	if (sta->ptk_idx == key_idx)
+> +		return 0;
+> +
+> +	mutex_lock(&local->key_mtx);
+> +	key = key_mtx_dereference(local, sta->ptk[key_idx]);
+> +
+> +	if (key && key->flags & KEY_FLAG_RX_ONLY)
+
+do you even need the flag? Isn't it equivalent to checking
+	sta->ptk_idx != key->idx
+or so?
+
+Less data to maintain would be better.
+
+> +	bool ext_native = ieee80211_hw_check(&local->hw, EXT_KEY_ID_NATIVE);
+
+you sort of only need this in the next patch, but I guess it doesn't
+matter that much
+
+> +int ieee80211_key_activate_tx(struct ieee80211_key *key)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = key->sdata;
+> +	struct sta_info *sta = key->sta;
+> +	struct ieee80211_local *local = key->local;
+> +	struct ieee80211_key *old;
+> +	int ret;
+> +
+> +	assert_key_lock(local);
+> +
+> +	key->flags &= ~KEY_FLAG_RX_ONLY;
+> +
+> +	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) ||
+> +	    key->conf.flags & (IEEE80211_KEY_FLAG_GENERATE_MMIC |
+> +			       IEEE80211_KEY_FLAG_PUT_MIC_SPACE |
+> +			       IEEE80211_KEY_FLAG_RESERVE_TAILROOM))
+> +		increment_tailroom_need_count(sdata);
+> +
+> +	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+> +		ret = drv_set_key(local, EXT_KEY_RX_TX, sdata,
+> +				  &sta->sta, &key->conf);
+> +		if (ret) {
+> +			sdata_err(sdata,
+> +				  "failed to activate key for Tx (%d, %pM)\n",
+> +				  key->conf.keyidx, sta->sta.addr);
+> +			return ret;
+
+You've already cleared the RX_ONLY flag, which gets you inconsistent
+data now.
+
+> +		}
+> +	}
+> +
+> +	old = key_mtx_dereference(local, sta->ptk[sta->ptk_idx]);
+> +	sta->ptk_idx = key->conf.keyidx;
+
+but you set this only here.
+
+> -		/* Stop TX till we are on the new key */
+> +		/* Stop Tx till we are on the new key */
+
+Uh, I had to read that three times ... please don't make changes like
+that? :)
+
+>  		old_key->flags |= KEY_FLAG_TAINTED;
+>  		ieee80211_clear_fast_xmit(sta);
+>  
+> -		/* Aggregation sessions during rekey are complicated due to the
+> +		/* Aggregation sessions during rekey are complicated by the
+
+similarly here, please don't make drive-by comment wording issues (also,
+I'm not sure I agree - the old version just treats "complicated" as an
+adjective, you treat it as a verb, but ultimately doesn't really matter?
+
+>  #define NUM_DEFAULT_KEYS 4
+>  #define NUM_DEFAULT_MGMT_KEYS 2
+> +#define INVALID_PTK_KEYIDX 2 /* Existing key slot never used by PTK keys */
+
+We could also use something obviously wrong like 0xff?
+
+> +++ b/net/mac80211/tx.c
+> @@ -3000,23 +3000,15 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+>  		switch (build.key->conf.cipher) {
+>  		case WLAN_CIPHER_SUITE_CCMP:
+>  		case WLAN_CIPHER_SUITE_CCMP_256:
+> -			/* add fixed key ID */
+> -			if (gen_iv) {
+> -				(build.hdr + build.hdr_len)[3] =
+> -					0x20 | (build.key->conf.keyidx << 6);
+> +			if (gen_iv)
+>  				build.pn_offs = build.hdr_len;
+> -			}
+>  			if (gen_iv || iv_spc)
+>  				build.hdr_len += IEEE80211_CCMP_HDR_LEN;
+>  			break;
+>  		case WLAN_CIPHER_SUITE_GCMP:
+>  		case WLAN_CIPHER_SUITE_GCMP_256:
+> -			/* add fixed key ID */
+> -			if (gen_iv) {
+> -				(build.hdr + build.hdr_len)[3] =
+> -					0x20 | (build.key->conf.keyidx << 6);
+> +			if (gen_iv)
+>  				build.pn_offs = build.hdr_len;
+> -			}
+>  			if (gen_iv || iv_spc)
+>  				build.hdr_len += IEEE80211_GCMP_HDR_LEN;
+>  			break;
+> @@ -3383,6 +3375,7 @@ static void ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sdata,
+>  			pn = atomic64_inc_return(&key->conf.tx_pn);
+>  			crypto_hdr[0] = pn;
+>  			crypto_hdr[1] = pn >> 8;
+> +			crypto_hdr[3] = 0x20 | (key->conf.keyidx << 6);
+>  			crypto_hdr[4] = pn >> 16;
+>  			crypto_hdr[5] = pn >> 24;
+>  			crypto_hdr[6] = pn >> 32;
+
+This shouldn't be needed, you do update the fast TX cache when changing
+the key?
+
+johannes
+
