@@ -2,102 +2,151 @@ Return-Path: <SRS0=7xxp=QW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8634EC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:19:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AB96C10F04
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:20:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4D53520643
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:19:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550197185;
-	bh=SmXBI7iMQEyWkL4Evzusl8pnHABh6TPDYORmfqm7lW4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ZyX0EU4sA49/6NCu4R8cyU+bc5Q3lkWbR8bBGfeasSX/IqYV3D0iiWROxd+/5mzKt
-	 IB38UsbrexYd2EVbZ8Y2oQmzkVNA1qZ+T41ZQl7AAMEt91kp/gyfvRIxwmFgtmjTPf
-	 weMyyD12dBydFZzsIv7Y+CWXm59BplvMS6yZBkN8=
+	by mail.kernel.org (Postfix) with ESMTP id 5D6C420643
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:20:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391990AbfBOCPd (ORCPT
+        id S1726858AbfBOCPS convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 21:15:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55218 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405765AbfBOCPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 21:15:32 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 487122229F;
-        Fri, 15 Feb 2019 02:15:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550196932;
-        bh=SmXBI7iMQEyWkL4Evzusl8pnHABh6TPDYORmfqm7lW4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ciWsn5hNExkr5SfxaE+XaY2eWHhbMI1h3S6SkncxQPnfwFBcaBHY9L140FyvmRJhK
-         rAsKXsmQnn0NdxSEwPXLmpu/vlLArUDwaxE+AnkurwPNdVYX3RKK6TCKoC5P+TZOX4
-         9EQVyhKK7O40hEwdgrW679buv++M/fQhIqc9zvC4=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bob Copeland <me@bobcopeland.com>,
-        Bob Copeland <bobcopeland@fb.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 10/20] mac80211: fix miscounting of ttl-dropped frames
-Date:   Thu, 14 Feb 2019 21:15:01 -0500
-Message-Id: <20190215021511.179333-10-sashal@kernel.org>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190215021511.179333-1-sashal@kernel.org>
-References: <20190215021511.179333-1-sashal@kernel.org>
+        Thu, 14 Feb 2019 21:15:18 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:55379 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405593AbfBOCPR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Feb 2019 21:15:17 -0500
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x1F2ElrA010169, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcas11.realtek.com.tw[172.21.6.12])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x1F2ElrA010169
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Fri, 15 Feb 2019 10:14:47 +0800
+Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
+ RTITCAS11.realtek.com.tw ([fe80::7c6d:ced5:c4ff:8297%15]) with mapi id
+ 14.03.0399.000; Fri, 15 Feb 2019 10:14:46 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC:     "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        "briannorris@chromium.org" <briannorris@chromium.org>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>
+Subject: RE: [PATCH v5 00/13] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
+Thread-Topic: [PATCH v5 00/13] rtw88: mac80211 driver for Realtek 802.11ac
+ wireless network chips
+Thread-Index: AQHUxDyEEDxOy7IFh0OKqLgYM4CgU6XgHiow
+Date:   Fri, 15 Feb 2019 02:14:46 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17A6C5B@RTITMBSVM04.realtek.com.tw>
+References: <1550131671-2601-1-git-send-email-yhchuang@realtek.com>
+In-Reply-To: <1550131671-2601-1-git-send-email-yhchuang@realtek.com>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.124]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bob Copeland <me@bobcopeland.com>
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> 
+> This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
+> rtw88 supports 8822BE and 8822CE chips, and will be able to support
+> multi-vif combinations in run-time.
+> 
+> For now, only PCI bus is supported, but rtw88 was originally designed
+> to optionally support three buses includes USB & SDIO. USB & SDIO modules
+> will soon be supported by rtw88, with configurable core module to fit
+> with different bus modules in the same time.
+> 
+> For example, if we choose 8822BE and 8822CU, only PCI & USB modules will
+> be selected, built, loaded into kernel. This is one of the major
+> difference from rtlwifi, which can only support specific combinations.
+> 
+> Another difference from rtlwifi is that rtw88 is designed to support
+> the latest Realtek 802.11ac wireless network chips like 8822B and
+> 8822C series. Compared to the earlier chips supported by rtlwifi like
+> the 802.11n 8192EE chipset or 802.11ac 8821AE/8812AE chips, newer ICs
+> have different MAC & PHY settings, such as new multi-port feature for the
+> MAC layer design and Jaguar2/Jaguar3 PHY layer IPs.
+> 
+> Multi-Port feature is also supported under rtw88's software architecture.
+> rtlwifi can only support one vif in the same time, most because of the
+> hardware limitations for early chips, hence the original design of it
+> also restricts the usage of multi-vif support, so latest chipset seems not
+> take advantages from its new MAC engine.
+> 
+> However, rtw88 can run multiple vifs concurrently by holding them on
+> hardware ports provided by MAC engine, hence can easily start different
+> roles on a single device.
+> 
+> Based on the reasons mentioned before, we implemented rtw88. It had many
+> authors, they are listed here alphabetically:
+> 
+> Ping-Ke Shih <pkshih@realtek.com>
+> Tzu-En Huang <tehuang@realtek.com>
+> Yan-Hsuan Chuang <yhchuang@realtek.com>
+> 
+> 
+> v2
+> 
+>  - add comment for watch dog
+> 
+> 
+> v3
+> 
+>  - change tree location to wireless-next
+> 
+> 
+> v4
+> 
+>  - remove useless "T:" and "W:" lines in MAINTAINERS file, as we don't have
+>    our own tree and wiki page now
+>  - rename patch 13 to "add MAINTAINERS entry"
+>  - use skb_pull to remove tx descriptors before reporting tx status to
+>    mac80211 stack, otherwise mac80211 tx status will always fail to match
+>    addr1/addr2 and will finally trigger to disconnect
+>  - return back to operating channel when we leave IDLE state, as mac80211
+>    stack expected. If we don't, mac80211 will assume we are already at
+>    channel 1 and start to scan. And we will never be able to connect to
+>    APs that are in channel 1. (which is most AP's default channel)
+>  - wait for async firmware load successfully, otherwise some slower platform
+>    might start to download firmware before loaded. And system crashes with a
+>    null pointer accessed.
+>  - fix typo for mac.h __RTW_MAc_H__ -> __RTW_MAC_H__
+> 
+> 
+> v5
+> 
+>  - add rtw_debug_mask for rtw_dbg to control debug messages
+>  - use dev_printk for rtw_dbg to not depend on CONFIG_DYNAMIC_DEBUG
+>  - remove useless rtw_pci_parse_configuration
+>  - keep struct and MODULE_* declaration close
+>  - use macro instead of ugly struct layout with #ifdef __LITTLE_ENDIAN
+>  - simplify efuse logical map parsing function
+>  - remove unused member and whole map dump for efuse
+>  - reduce some usage of magic number
+>  - enable DMA sync to avoid pci bus timeout
+> 
 
-[ Upstream commit a0dc02039a2ee54fb4ae400e0b755ed30e73e58c ]
+I am sorry that I missed some descriptions about v5. Listed below
 
-In ieee80211_rx_h_mesh_fwding, we increment the 'dropped_frames_ttl'
-counter when we decrement the ttl to zero.  For unicast frames
-destined for other hosts, we stop processing the frame at that point.
+ - adjust download firmware sequence to avoid DMA error flag honored
+ - change download firmware prototype for further use, sometimes we may
+   want to download another special purposed firmware
+ - move out rtw_send_rsvd_page_h2c, remove the static
 
-For multicast frames, we do not rebroadcast it in this case, but we
-do pass the frame up the stack to process it on this STA.  That
-doesn't match the usual definition of "dropped," so don't count
-those as such.
 
-With this change, something like `ping6 -i0.2 ff02::1%mesh0` from a
-peer in a ttl=1 network no longer increments the counter rapidly.
+Thanks.
 
-Signed-off-by: Bob Copeland <bobcopeland@fb.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- net/mac80211/rx.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 64f76f88f819..8c587f06414e 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2339,7 +2339,9 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	skb_set_queue_mapping(skb, q);
- 
- 	if (!--mesh_hdr->ttl) {
--		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_ttl);
-+		if (!is_multicast_ether_addr(hdr->addr1))
-+			IEEE80211_IFSTA_MESH_CTR_INC(ifmsh,
-+						     dropped_frames_ttl);
- 		goto out;
- 	}
- 
--- 
-2.19.1
-
+Yan-Hsuan
