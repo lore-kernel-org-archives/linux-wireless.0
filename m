@@ -7,51 +7,50 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0B40C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:33:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 639F4C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:35:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7DA720840
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:33:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2926E21927
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:35:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550197984;
-	bh=OCMBr16ERQc7kvl3wRG4Hj1hV26H8yMFZkg/cCRhyM4=;
+	s=default; t=1550198141;
+	bh=kuE3uAdjVqbT+DieaXi3yRhRQeH16kNdYpAAQVZ6wlg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=T/Uy7B5GZ0w6SHkRAvCrALdNhu6YpqSZz10E9qOiaUqOBzMgCt3lfwImmQ8RTz73/
-	 VC9CeGiNACzcObjPzP+mqLV0xHL8jjvmMyiFIHRoNNBXeuKohQlo4vu+HPaokqTftm
-	 kuHBDinjXGJC0EdST6h+oyE1OVwjuYxbYL3mb3A0=
+	b=WCPigpJuA8wc0vgPi1QlMT9CUYeNkutdl5GgpikSRHFZhb/BmuVJA/LFElm1czq0F
+	 9viF3SXzji3e8olo2rKiVaubdsOI9tIJIkmSRFsUcs0kayDZVzdFRBp/LM/USSdWTJ
+	 Tlf3KC927kEcvtAt0xt4Zqo3LOYzqJ1p3UdcULYc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404086AbfBOCMM (ORCPT
+        id S1729947AbfBOCLD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 21:12:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52188 "EHLO mail.kernel.org"
+        Thu, 14 Feb 2019 21:11:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51138 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404028AbfBOCMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 21:12:10 -0500
+        id S1732078AbfBOCLC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Feb 2019 21:11:02 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A876C206BA;
-        Fri, 15 Feb 2019 02:12:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3992D222A1;
+        Fri, 15 Feb 2019 02:11:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550196729;
-        bh=OCMBr16ERQc7kvl3wRG4Hj1hV26H8yMFZkg/cCRhyM4=;
+        s=default; t=1550196662;
+        bh=kuE3uAdjVqbT+DieaXi3yRhRQeH16kNdYpAAQVZ6wlg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=S/cZ0bOEhroduaC3elZXpEXIbZQqoZUeQzVgAwe2+oKaFZB8lNwmkgJzTT9zlpm26
-         //Ny3/zIL/yqY91MC1gaDjSlIn29gCUmFtSassM++2OawSTKwMYGwATXP/rMIut1/V
-         sKZLzhzGUHLHpNhu+nVb9BUHiZ5hfc9Kf8r5Mt1w=
+        b=z3RfqGt88dcMRRuBQNIKTFsCUNleU6ObL+NwME0u3VmCYjh9i1U6J2bLu/hjy3coB
+         8qfEstZ2LpvdJyXg7MdyXXTqZyndfg9a8/hSCTRfbUCMAJMOobaY3w+He+e83p6rUQ
+         j5zsBbxQI1TVlCA6DO94YFJFBLY8g/M9WFq8Piyw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bob Copeland <me@bobcopeland.com>,
-        Bob Copeland <bobcopeland@fb.com>,
+Cc:     Mathieu Malaterre <malat@debian.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 29/65] mac80211: fix miscounting of ttl-dropped frames
-Date:   Thu, 14 Feb 2019 21:10:45 -0500
-Message-Id: <20190215021121.177674-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 71/77] mac80211: Add attribute aligned(2) to struct 'action'
+Date:   Thu, 14 Feb 2019 21:08:49 -0500
+Message-Id: <20190215020855.176727-71-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190215021121.177674-1-sashal@kernel.org>
-References: <20190215021121.177674-1-sashal@kernel.org>
+In-Reply-To: <20190215020855.176727-1-sashal@kernel.org>
+References: <20190215020855.176727-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -60,44 +59,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bob Copeland <me@bobcopeland.com>
+From: Mathieu Malaterre <malat@debian.org>
 
-[ Upstream commit a0dc02039a2ee54fb4ae400e0b755ed30e73e58c ]
+[ Upstream commit 7c53eb5d87bc21464da4268c3c0c47457b6d9c9b ]
 
-In ieee80211_rx_h_mesh_fwding, we increment the 'dropped_frames_ttl'
-counter when we decrement the ttl to zero.  For unicast frames
-destined for other hosts, we stop processing the frame at that point.
+During refactor in commit 9e478066eae4 ("mac80211: fix MU-MIMO
+follow-MAC mode") a new struct 'action' was declared with packed
+attribute as:
 
-For multicast frames, we do not rebroadcast it in this case, but we
-do pass the frame up the stack to process it on this STA.  That
-doesn't match the usual definition of "dropped," so don't count
-those as such.
+  struct {
+          struct ieee80211_hdr_3addr hdr;
+          u8 category;
+          u8 action_code;
+  } __packed action;
 
-With this change, something like `ping6 -i0.2 ff02::1%mesh0` from a
-peer in a ttl=1 network no longer increments the counter rapidly.
+But since struct 'ieee80211_hdr_3addr' is declared with an aligned
+keyword as:
 
-Signed-off-by: Bob Copeland <bobcopeland@fb.com>
+  struct ieee80211_hdr {
+  	__le16 frame_control;
+  	__le16 duration_id;
+  	u8 addr1[ETH_ALEN];
+  	u8 addr2[ETH_ALEN];
+  	u8 addr3[ETH_ALEN];
+  	__le16 seq_ctrl;
+  	u8 addr4[ETH_ALEN];
+  } __packed __aligned(2);
+
+Solve the ambiguity of placing aligned structure in a packed one by
+adding the aligned(2) attribute to struct 'action'.
+
+This removes the following warning (W=1):
+
+  net/mac80211/rx.c:234:2: warning: alignment 1 of 'struct <anonymous>' is less than 2 [-Wpacked-not-aligned]
+
+Cc: Johannes Berg <johannes.berg@intel.com>
+Suggested-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Mathieu Malaterre <malat@debian.org>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/rx.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/mac80211/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5e2b4a41acf1..77cfa62274f3 100644
+index ef215d0e99b0..40f1a2986048 100644
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -2676,7 +2676,9 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	skb_set_queue_mapping(skb, q);
+@@ -230,7 +230,7 @@ static void ieee80211_handle_mu_mimo_mon(struct ieee80211_sub_if_data *sdata,
+ 		struct ieee80211_hdr_3addr hdr;
+ 		u8 category;
+ 		u8 action_code;
+-	} __packed action;
++	} __packed __aligned(2) action;
  
- 	if (!--mesh_hdr->ttl) {
--		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_ttl);
-+		if (!is_multicast_ether_addr(hdr->addr1))
-+			IEEE80211_IFSTA_MESH_CTR_INC(ifmsh,
-+						     dropped_frames_ttl);
- 		goto out;
- 	}
- 
+ 	if (!sdata)
+ 		return;
 -- 
 2.19.1
 
