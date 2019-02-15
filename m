@@ -2,119 +2,100 @@ Return-Path: <SRS0=7xxp=QW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB5FFC4360F
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 07:49:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4FDBC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 08:37:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9745C21872
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 07:49:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A82442190B
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 08:37:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ef4yWWJM";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E9o3JglA"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O2ga5qIK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390576AbfBOHtG (ORCPT
+        id S2388926AbfBOIhU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Feb 2019 02:49:06 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:33448 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726335AbfBOHtG (ORCPT
+        Fri, 15 Feb 2019 03:37:20 -0500
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:35941 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726396AbfBOIhU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Feb 2019 02:49:06 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id D32686090F; Fri, 15 Feb 2019 07:48:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550216942;
-        bh=Z2EpzF0Lc0xCZ2EFFITN9+be0blzKuz/jFGUqGJfx9M=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ef4yWWJM0ui1hS+Pd9mi+dUpUaF4jfDrC2eZpThy4XXE4RmI1gUuw7BE/Bm0Rctrb
-         aTb+Nf8XW4pMgHfsMRLm5DJyrMRCsKz3fvQRmkUSr4HFVEERXoo6Jxcw9vq5ahrWfX
-         Z8kSwJDhPWMyvNgFHZF7R/ofkyS/pfSDLC/7zSE0=
-Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: pillair@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4B8576020A;
-        Fri, 15 Feb 2019 07:48:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550216909;
-        bh=Z2EpzF0Lc0xCZ2EFFITN9+be0blzKuz/jFGUqGJfx9M=;
-        h=From:To:Cc:Subject:Date:From;
-        b=E9o3JglAJjC/yLBLG6Wv0/nMDPccSJcS5PF/oWdf8zgNB6h55CcEH5Qez+wfCd2oZ
-         xs4kdm/V/caBa4eWCjTy0Xy2/jTJsIJcoFMbp6e9qP7RPnWbgWK7K3em7SawZyBhIA
-         vc268f01wh44bUh03cYHkmwVAu1Y+5wDcbdTsro0=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4B8576020A
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
-From:   Rakesh Pillai <pillair@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH] ath10k: Enhance logging for vdev pdev & peer set param
-Date:   Fri, 15 Feb 2019 13:18:06 +0530
-Message-Id: <1550216886-23045-1-git-send-email-pillair@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Fri, 15 Feb 2019 03:37:20 -0500
+Received: by mail-yb1-f194.google.com with SMTP id o129so1734862yba.3
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2019 00:37:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=WB2LdFqFgUjQiIV+try3zOjA6Q+F8Q6N0JiH8XtFT+Y=;
+        b=O2ga5qIKoUCQpKhvm49iOxlyUUuzuGPfrly76ECJOD2/2VEe8l6cfs3yJIh9KoxXua
+         Pw9FmDVN7LkxGnozfdzhf87dFM5kDALz20FEq1JEme5DtyPm+bdeDjus+mg+VULldRgc
+         3eXXV2MmXTl1us52dcGqELcsUx88dlP6yvXL24S8TuUlOZmJKwtqztjc4p+UZ/e8rM67
+         NwppbzeRyrz6fNPogdSptVBl/Ze80w398DT1FoTomhziBbGoOlcDJvwX2CnfAeXSTClS
+         I5LnSBG3VXpIQq3kaB8YWMCfJep/jBPJZULjWqr/wuHB8x9QvhAAsGeUgXPSDnCD/9GS
+         owWw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=WB2LdFqFgUjQiIV+try3zOjA6Q+F8Q6N0JiH8XtFT+Y=;
+        b=Qld0FmLjhbq37uD4kVt2TBLHAeE+SW7Q3EnaiMQvesr01QoxuFp+ksCiUBSfD3fVBo
+         HIrDlDmOgTGX7f4CZ+zpAsivbYXEYherPu+2PCmioVsngdiYLeckh7U3Y0Pxy8DHn2ad
+         NTOX4MydWsPE5ceMGn7OB2zLkkX+0Z7xODvsuusddQc9ZpGQNIaqcOnjOEaHpzkRaMN+
+         RIQrcarfTIRHfl30BgLUgF1JXoLapP86v1rFRqxbUVPyGR0tmJrfLEE6YH2tzid+ZYhq
+         sVY6o8PNWh3SfSC0YYI4znvEXiD53595fyOOWRbqQpWFzuRg0nFLh+BRWBUNNhwQ/dTK
+         NurQ==
+X-Gm-Message-State: AHQUAuZOgD9d72146RlHasMBvFIL/3geycbj+Lk3MYnE2JSVXk5ERg2J
+        L06pnKYzL9wkotPltEknzN54nLC7RnoF5vLVvKc=
+X-Google-Smtp-Source: AHgI3IZbnQDaaLS9GtmqKc+3FKljTX9TS0N06sdL5r+UUbk1nY65KX2bYLx5fh9DE/hGEDB6Vmc9+IB98o6vOfkvfbU=
+X-Received: by 2002:a25:cb0b:: with SMTP id b11mr6834683ybg.375.1550219839517;
+ Fri, 15 Feb 2019 00:37:19 -0800 (PST)
+MIME-Version: 1.0
+References: <20190214125758.11943-1-zajec5@gmail.com> <20190215064345.11946-1-zajec5@gmail.com>
+In-Reply-To: <20190215064345.11946-1-zajec5@gmail.com>
+From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date:   Fri, 15 Feb 2019 09:37:08 +0100
+Message-ID: <CACna6rwiz=Q=ZYj-q69Ak+VAaJhJmtPhnVB_KQvZc0+NZJoCKQ@mail.gmail.com>
+Subject: Re: [PATCH V3] brcmfmac: use bphy_err() in all wiphy-related code
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+        <brcm80211-dev-list.pdl@broadcom.com>," 
+        <brcm80211-dev-list@cypress.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently after enabling the WMI debug logging,
-there is no detail printed about the param id
-and the param value for the pdev, vdev and
-peer params which are set.
+On Fri, 15 Feb 2019 at 07:43, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
+ote:
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>
+> This recently added macro provides more meaningful error messages thanks
+> to identifying a specific wiphy. It's especially important on systems
+> with few cards supported by the same (brcmfmac) driver.
+>
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Enhance the WMI logging to print the param id
-and the param value for pdev, vdev and peer set
-param wmi commands.
+Arend, let me ask one more question before getting this patch pushed.
+It's quite late (I spent quite some time on this), but maybe still
+better than fixing it later.
 
-Tested HW: WCN3990
-Tested FW: WLAN.HL.2.0-01387-QCAHLSWMTPLZ-1
-		WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
+It seems the most common struct that is:
+1) Often passed as argument
+2) Often having it's own variable in functions
+3) Used when calling functions from different file
+is struct brcmf_pub.
 
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 90617e1..98d8992 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1576,7 +1576,8 @@ ath10k_wmi_tlv_op_gen_pdev_set_param(struct ath10k *ar, u32 param_id,
- 	cmd->param_id = __cpu_to_le32(param_id);
- 	cmd->param_value = __cpu_to_le32(param_value);
- 
--	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv pdev set param\n");
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv pdev set param %d value 0x%x\n",
-+		   param_id, param_value);
- 	return skb;
- }
- 
-@@ -2046,7 +2047,8 @@ ath10k_wmi_tlv_op_gen_vdev_set_param(struct ath10k *ar, u32 vdev_id,
- 	cmd->param_id = __cpu_to_le32(param_id);
- 	cmd->param_value = __cpu_to_le32(param_value);
- 
--	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv vdev set param\n");
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv vdev %d set param %d value 0x%x\n",
-+		   vdev_id, param_id, param_value);
- 	return skb;
- }
- 
-@@ -2360,7 +2362,9 @@ ath10k_wmi_tlv_op_gen_peer_set_param(struct ath10k *ar, u32 vdev_id,
- 	cmd->param_value = __cpu_to_le32(param_value);
- 	ether_addr_copy(cmd->peer_macaddr.addr, peer_addr);
- 
--	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv peer set param\n");
-+	ath10k_dbg(ar, ATH10K_DBG_WMI,
-+		   "wmi tlv vdev %d peer %pM set param %d value 0x%x\n",
-+		   vdev_id, peer_addr, param_id, param_value);
- 	return skb;
- }
- 
--- 
-2.7.4
-
+Now I started wondering if we really want to have bphy_err() accept
+wiphy. Maybe it would match brcmfmac's design better to have
+bphy_err(struct brcmf_pub, fmt, ...)?
