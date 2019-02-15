@@ -2,37 +2,40 @@ Return-Path: <SRS0=7xxp=QW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D875C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 11:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BBF9C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 12:22:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8588206B6
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 11:54:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB3F32192D
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 12:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436757AbfBOLyT (ORCPT
+        id S2436957AbfBOMWE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Feb 2019 06:54:19 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:38994 "EHLO
+        Fri, 15 Feb 2019 07:22:04 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:39664 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404678AbfBOLyS (ORCPT
+        with ESMTP id S1731176AbfBOMWC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Feb 2019 06:54:18 -0500
+        Fri, 15 Feb 2019 07:22:02 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC5)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1guc4O-0006GL-Pl; Fri, 15 Feb 2019 12:54:17 +0100
-Message-ID: <63fecadcf3f38f24b547143d9d53b3454adc417a.camel@sipsolutions.net>
-Subject: Re: [RFC PATCH v3 08/12] iwlwifi: dvm - EXT_KEY_ID A-MPDU API update
+        id 1gucVA-0006xE-Og; Fri, 15 Feb 2019 13:21:56 +0100
+Message-ID: <52bdb66f7e9e26ce9225ae11e37e22766d73694d.camel@sipsolutions.net>
+Subject: Re: [v3 PATCH 0/4] mac80211: Fix incorrect usage of rhashtable walk
+ API
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Alexander Wetzel <alexander@wetzel-home.de>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 15 Feb 2019 12:54:15 +0100
-In-Reply-To: <20190210210620.31181-9-alexander@wetzel-home.de>
-References: <20190210210620.31181-1-alexander@wetzel-home.de>
-         <20190210210620.31181-9-alexander@wetzel-home.de>
+To:     Herbert Xu <herbert@gondor.apana.org.au>,
+        David Miller <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi,
+        tgraf@suug.ch, Julia Lawall <julia.lawall@lip6.fr>
+Date:   Fri, 15 Feb 2019 13:21:55 +0100
+In-Reply-To: <20190214140236.omt74prxhkfaasue@gondor.apana.org.au>
+References: <20190213050551.x3jffq3ipghw6g2m@gondor.apana.org.au>
+         <20190213143853.labj6zdcsoupkris@gondor.apana.org.au>
+         <20190214140236.omt74prxhkfaasue@gondor.apana.org.au>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -42,25 +45,30 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, 2019-02-10 at 22:06 +0100, Alexander Wetzel wrote:
-> When using Extended Key ID mac80211 drops @IEEE80211_TX_CTL_AMPDU for
-> the last packet which can be added to a A-MPDU in preparation.
+> The first two patches in this series are bug fixes and should be
+> backported to stable.
 > 
-> Don't throw a warning and just handle the frame as if
-> @IEEE80211_TX_CTL_AMPDU would have been set.
-> 
-> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
-> ---
-> 
-> I cold not figure out so far how to make sure the card will not mix
-> A-MPDU frames. Looks like that is handled fully in the HW and I didn't
-> find any interface to influence it. (It even may work already, I have
-> some problems to capture A-MPDU frames with A-MPDU information intact
-> and the topic was pretty low on the list so far. After all it works...)
+> They fixes a number of issues with the use of the rhashtable API
+> in mac80211.  First of all it converts the use of rashtable walks over
+> to a simple linked list.  This is because an rhashtable walk is
+> inherently unstable and not meant for uses that require stability,
+> e.g., when you're trying to lookup an object to delete.
 
-You can't really do that, as far as I can tell, unfortunately. So this
-might be better in a "compat on steroids" mode?
+Thanks a lot, Herbert.
+
+Applied those now, I'll send a pull request to Dave with them. Once that
+trickles back into net-next I'll apply the third patch (it doesn't apply
+without the others), and then Dave you can take the rhashtable one.
+
+Let me know if you'd prefer I take the rhashtable one through my tree,
+which really would be only so you don't have to track the dependency.
+
+NB: it'd be easier in patchwork if you tagged all the patches with v3 in
+their own PATCH tag, or put the "v3" tag into the actual subject (not
+the "[PATCH 0/4]" tag because evidently patchwork drops the tags and
+doesn't track them for the *series* just each *patch* ... so with what
+you did nothing is visible in patchwork, even just appending "(v3)" to
+the subject of the cover letter would've fixed that...
 
 johannes
-
 
