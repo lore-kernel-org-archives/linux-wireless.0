@@ -7,48 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0705BC4360F
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:20:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA008C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:21:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFD5720643
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:20:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAADA20643
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:21:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550197257;
-	bh=dwdD38h4KkgreZgBgC3LYdhlE66QIPn6SGb5WqSKF2o=;
+	s=default; t=1550197264;
+	bh=/Vdtwg9o3j2wrnyh4VlJ679PmU4FlAI8+wcvIi43YR4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AXtxwlf/osZkHbkrzBUo23G3wIk6ZfhBYv824NPEQT0nD307gWKVzxE9+e0gPT9lf
-	 v/F21inWZijEBoiLchnNT+Hkc6EWdP7kqNl+ODJcokJsNbPJxIqwICrN8ajoyfb5kJ
-	 JkHpKtALMQ/c3gdP5SnOJOkEpudMfQl9fiuK9KoQ=
+	b=GPFYPenk5vRy5RLDRwz5cMneuRWiZNsIODElcbDIfGrSWgd9PNEZGa7GccCzgMGlC
+	 G+f5gM/jui9Pj+EEYS+pGwubrA+STw2/2AaOT17/SgMXt0NS+3IX/UzlsTleWkJhLd
+	 qZXZhMr4jwFvzclTys0D3/1cweBfTFFivoWf3OSU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732853AbfBOCUu (ORCPT
+        id S2405459AbfBOCPH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 21:20:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54972 "EHLO mail.kernel.org"
+        Thu, 14 Feb 2019 21:15:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54956 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405308AbfBOCPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 21:15:09 -0500
+        id S2390220AbfBOCPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Feb 2019 21:15:06 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CDEAF21B68;
-        Fri, 15 Feb 2019 02:15:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5DB1D21B68;
+        Fri, 15 Feb 2019 02:15:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550196908;
-        bh=dwdD38h4KkgreZgBgC3LYdhlE66QIPn6SGb5WqSKF2o=;
+        s=default; t=1550196906;
+        bh=/Vdtwg9o3j2wrnyh4VlJ679PmU4FlAI8+wcvIi43YR4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=in3xbHTC+ln5Q0t6gNrd4YBfmDkx3a8quFev5pcKIDM/TOUMzqZbUM5XBSVL2GprK
-         wTCSQmv9Mj2GET1thAmnEBGW/5fCNVxwHoJnaoY50yqcEEvQrqJsVNA7ZH69CRVepq
-         bXGjLbia80RVeBGLhCbumLqMDRCXRMd5ThlTzmDA=
+        b=nIVyXCiS6nFRWwdb4vBvmucrqr3ZxHeqaEoB9euQpFgRv4C7WkUUz//77XH1sKvpW
+         euDvWwYbQnjTPjZ6CXvJEPLA/CIbxRkC5aytW78MGCa55yg2vc5yMuZwKmhMOAehPM
+         q8gzhNOcyw5+1xsQZHlZSu666SlLfZb9uXABn/Sc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chaitanya Tata <chaitanya.tata@bluwirelesstechnology.com>,
-        Chaitanya Tata <Chaitanya.Tata@bluwireless.co.uk>,
+Cc:     Balaji Pothunoori <bpothuno@codeaurora.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 25/27] cfg80211: extend range deviation for DMG
-Date:   Thu, 14 Feb 2019 21:14:22 -0500
-Message-Id: <20190215021424.178979-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 23/27] mac80211: don't initiate TDLS connection if station is not associated to AP
+Date:   Thu, 14 Feb 2019 21:14:20 -0500
+Message-Id: <20190215021424.178979-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190215021424.178979-1-sashal@kernel.org>
 References: <20190215021424.178979-1-sashal@kernel.org>
@@ -60,43 +59,56 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chaitanya Tata <chaitanya.tata@bluwirelesstechnology.com>
+From: Balaji Pothunoori <bpothuno@codeaurora.org>
 
-[ Upstream commit 93183bdbe73bbdd03e9566c8dc37c9d06b0d0db6 ]
+[ Upstream commit 7ed5285396c257fd4070b1e29e7b2341aae2a1ce ]
 
-Recently, DMG frequency bands have been extended till 71GHz, so extend
-the range check till 20GHz (45-71GHZ), else some channels will be marked
-as disabled.
+Following call trace is observed while adding TDLS peer entry in driver
+during TDLS setup.
 
-Signed-off-by: Chaitanya Tata <Chaitanya.Tata@bluwireless.co.uk>
+Call Trace:
+[<c1301476>] dump_stack+0x47/0x61
+[<c10537d2>] __warn+0xe2/0x100
+[<fa22415f>] ? sta_apply_parameters+0x49f/0x550 [mac80211]
+[<c1053895>] warn_slowpath_null+0x25/0x30
+[<fa22415f>] sta_apply_parameters+0x49f/0x550 [mac80211]
+[<fa20ad42>] ? sta_info_alloc+0x1c2/0x450 [mac80211]
+[<fa224623>] ieee80211_add_station+0xe3/0x160 [mac80211]
+[<c1876fe3>] nl80211_new_station+0x273/0x420
+[<c170f6d9>] genl_rcv_msg+0x219/0x3c0
+[<c170f4c0>] ? genl_rcv+0x30/0x30
+[<c170ee7e>] netlink_rcv_skb+0x8e/0xb0
+[<c170f4ac>] genl_rcv+0x1c/0x30
+[<c170e8aa>] netlink_unicast+0x13a/0x1d0
+[<c170ec18>] netlink_sendmsg+0x2d8/0x390
+[<c16c5acd>] sock_sendmsg+0x2d/0x40
+[<c16c6369>] ___sys_sendmsg+0x1d9/0x1e0
+
+Fixing this by allowing TDLS setup request only when we have completed
+association.
+
+Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/reg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 36d1d25082e3..7c19d0d2549b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -773,7 +773,7 @@ static bool reg_does_bw_fit(const struct ieee80211_freq_range *freq_range,
-  * definitions (the "2.4 GHz band", the "5 GHz band" and the "60GHz band"),
-  * however it is safe for now to assume that a frequency rule should not be
-  * part of a frequency's band if the start freq or end freq are off by more
-- * than 2 GHz for the 2.4 and 5 GHz bands, and by more than 10 GHz for the
-+ * than 2 GHz for the 2.4 and 5 GHz bands, and by more than 20 GHz for the
-  * 60 GHz band.
-  * This resolution can be lowered and should be considered as we add
-  * regulatory rule support for other "bands".
-@@ -788,7 +788,7 @@ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
- 	 * with the Channel starting frequency above 45 GHz.
- 	 */
- 	u32 limit = freq_khz > 45 * ONE_GHZ_IN_KHZ ?
--			10 * ONE_GHZ_IN_KHZ : 2 * ONE_GHZ_IN_KHZ;
-+			20 * ONE_GHZ_IN_KHZ : 2 * ONE_GHZ_IN_KHZ;
- 	if (abs(freq_khz - freq_range->start_freq_khz) <= limit)
- 		return true;
- 	if (abs(freq_khz - freq_range->end_freq_khz) <= limit)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 6ef9d32c34f1..954315e1661d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1425,6 +1425,10 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
+ 		sta->sta.tdls = true;
+ 
++	if (sta->sta.tdls && sdata->vif.type == NL80211_IFTYPE_STATION &&
++	    !sdata->u.mgd.associated)
++		return -EINVAL;
++
+ 	err = sta_apply_parameters(local, sta, params);
+ 	if (err) {
+ 		sta_info_free(local, sta);
 -- 
 2.19.1
 
