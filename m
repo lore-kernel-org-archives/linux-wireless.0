@@ -1,130 +1,317 @@
-Return-Path: <SRS0=/9EI=QV=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=7xxp=QW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 873F7C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 23:35:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 828A0C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 00:14:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 52FD32175B
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Feb 2019 23:35:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D15D21934
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 00:14:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="LI5b4Xxl"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Exk+lPR6";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jtmw/zJ3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729162AbfBNXfF (ORCPT
+        id S1729670AbfBOAO6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 18:35:05 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:55586 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729140AbfBNXfE (ORCPT
+        Thu, 14 Feb 2019 19:14:58 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:54782 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726130AbfBOAO5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 18:35:04 -0500
-Received: from [192.168.100.195] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Thu, 14 Feb 2019 19:14:57 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 9D5C460770; Fri, 15 Feb 2019 00:14:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550189695;
+        bh=tpOCh8mXc6FBsEXbKmsAxdwZuO1W1Vfqnvqng97KFk8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Exk+lPR6m7Ht9K/b7zE1ZX9iKZmFk9l+l2NYX+CtqA+ki5VK9YWjbOQzZZUQc7A2L
+         nCs6Q++Oa93ZBD9XNN2tpKFEGHYrDREl35oIwrRwYPZZctjOdSMME9kwPzbSDgL1A0
+         pjPdo0rRVCkco+6oCbro+cF78nFdr64uIeLdQrns=
+Received: from jouni.codeaurora.org (37-33-130-87.bb.dnainternet.fi [37.33.130.87])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 046BD40B2CD
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2019 15:35:02 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail2.candelatech.com 046BD40B2CD
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1550187302;
-        bh=AR1UKbTQu3utYFTyyg1ROqXFCCz/3Pgpxkl02j92ujw=;
-        h=To:From:Subject:Date:From;
-        b=LI5b4XxlzbBMv79tZtK3cLAowLW2rcAbSVQc0erSLh70qwExnSnQ2PRcAlDfKbi9V
-         LmWBRjEU+Pcv9DgRqhSZrYK5OTa6S2rQ1oYTiQKYg0UqJc5Cod5d0/qgR4TAEhxOp4
-         PMpHJXlhJSvFvYHu+aFP246z1Fo1t6B8zJV/PhHE=
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From:   Ben Greear <greearb@candelatech.com>
-Subject: WARN-ON in eee80211_vif_release_channel in 4.20.2+, ath10k
-Organization: Candela Technologies
-Message-ID: <f84f7f26-a299-3ae0-25e0-139880480532@candelatech.com>
-Date:   Thu, 14 Feb 2019 15:35:01 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        (Authenticated sender: jouni@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 780E960854;
+        Fri, 15 Feb 2019 00:14:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550189694;
+        bh=tpOCh8mXc6FBsEXbKmsAxdwZuO1W1Vfqnvqng97KFk8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=jtmw/zJ3GeCZwUAeQQIGl6To1CWvECS/Rk0pQhRyRqtEaryo3sVrNUO/5nhTNfh3Q
+         EcqQ6qhVstfqYE5+d8htZ/F/T1ufFSevW4Yrws9AZEPHxf1R+nonoHaY5pptk+11Qp
+         rjcB8lj8gJN0dH+Z87xwnV4e2Tc02mvjsAKvmlQA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 780E960854
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=jouni@codeaurora.org
+From:   Jouni Malinen <jouni@codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        Jouni Malinen <jouni@codeaurora.org>
+Subject: [PATCH v2] cfg80211: Report Association Request frame IEs in association events
+Date:   Fri, 15 Feb 2019 02:14:33 +0200
+Message-Id: <1550189673-16269-1-git-send-email-jouni@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+This extends the NL80211_CMD_ASSOCIATE event case to report
+NL80211_ATTR_REQ_IE similarly to what is already done with the
+NL80211_CMD_CONNECT events if the driver provides this information. In
+practice, this adds (Re)Association Request frame information element
+reporting to mac80211 drivers for the cases where user space SME is
+used.
 
-I was attempting 6 vap devices on one radio using my hacked ath10k driver and firmware...
+This provides more information for user space to figure out which
+capabilities were negotiated for the association. For example, this can
+be used to determine whether HT, VHT, or HE is used.
 
-I'm using ch 100 to make it even more buggy.
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
+---
+v2:
+- fix memory allocation in nl80211_send_mlme_event() to avoid dropping
+  events that include large set of request IEs (e.g., FILS+FT
+  association)
 
-It is having issues, and one thing I saw is this WARN_ON hit:
+ include/net/cfg80211.h     |  7 +++++--
+ net/mac80211/ieee80211_i.h |  6 ++++++
+ net/mac80211/mlme.c        | 14 ++++++++++++--
+ net/wireless/mlme.c        |  8 ++++++--
+ net/wireless/nl80211.c     | 24 +++++++++++++++---------
+ net/wireless/nl80211.h     |  3 ++-
+ 6 files changed, 46 insertions(+), 16 deletions(-)
 
-void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
-{
-	WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev));
-
-	lockdep_assert_held(&sdata->local->mtx);
-
-	mutex_lock(&sdata->local->chanctx_mtx);
-	__ieee80211_vif_release_channel(sdata);
-	mutex_unlock(&sdata->local->chanctx_mtx);
-}
-
-There are no obvious errors in the logs immediately preceeding this, but several
-more similar splats hit lower.
-
-[ 3225.690458] WARNING: CPU: 0 PID: 30791 at net/mac80211/chan.c:1760 ieee80211_vif_release_channel+0x18/0x50 [mac80211]
-[ 3225.690460] Modules linked in: ath10k_pci ath10k_core nf_conntrack_netlink nfnetlink iptable_raw xt_CT nf_conntrack bluetooth nf_defrag_ipv6 nf_defrag_ipv4 
-libcrc32c bpfilter vrf 8021q garp mrp stp llc fuse macvlan wanlink(O) pktgen nfsv3 nfs fscache snd_hda_codec_hdmi coretemp snd_hda_intel intel_rapl 
-x86_pkg_temp_thermal snd_hda_codec intel_powerclamp snd_hda_core kvm_intel snd_hwdep iTCO_wdt iTCO_vendor_support snd_seq ath kvm snd_seq_device snd_pcm 
-irqbypass mac80211 joydev snd_timer snd cfg80211 i2c_i801 soundcore intel_pch_thermal mei_wdt acpi_pad pcc_cpufreq nfsd auth_rpcgss nfs_acl lockd grace sunrpc 
-sch_fq_codel igb hwmon serio_raw e1000e dca i915 i2c_algo_bit drm_kms_helper drm i2c_core video ipv6 crc_ccitt [last unloaded: ath10k_core]
-[ 3225.690492] CPU: 0 PID: 30791 Comm: kworker/u8:4 Tainted: G        W  O      4.20.2+ #3
-[ 3225.690493] Hardware name: _ _/, BIOS 5.11 08/26/2016
-[ 3225.690506] Workqueue: phy11 ieee80211_dfs_cac_timer_work [mac80211]
-[ 3225.690517] RIP: 0010:ieee80211_vif_release_channel+0x18/0x50 [mac80211]
-[ 3225.690518] Code: bd ea ff ff ff eb a9 66 66 2e 0f 1f 84 00 00 00 00 00 53 48 8b 87 18 0c 00 00 48 89 fb 48 85 c0 74 0a 48 8b 40 48 a8 04 75 02 <0f> 0b 48 8b 
-83 20 0c 00 00 48 8d b8 b8 20 00 00 e8 13 bd 31 e1 48
-[ 3225.690519] RSP: 0018:ffffc900031e3e60 EFLAGS: 00010246
-[ 3225.690520] RAX: 0000000000000003 RBX: ffff88813be0c940 RCX: ffff88816d824020
-[ 3225.690520] RDX: ffff888135641e40 RSI: ffff88813d0990b0 RDI: ffff88813be0c940
-[ 3225.690521] RBP: ffff88816d824000 R08: 0000000000000000 R09: 0000003131796870
-[ 3225.690521] R10: 8080808080808080 R11: 0000000000000000 R12: ffff88813d03cd00
-[ 3225.690522] R13: 0000000000000000 R14: ffff888169d8fc00 R15: 0ffff88813d03cd2
-[ 3225.690523] FS:  0000000000000000(0000) GS:ffff888172c00000(0000) knlGS:0000000000000000
-[ 3225.690523] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 3225.690524] CR2: 000055714bd5eaf0 CR3: 000000000220a005 CR4: 00000000003606f0
-[ 3225.690525] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[ 3225.690525] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[ 3225.690526] Call Trace:
-[ 3225.690539]  ieee80211_dfs_cac_timer_work+0x8c/0xb0 [mac80211]
-[ 3225.690542]  process_one_work+0x1f3/0x410
-[ 3225.690544]  worker_thread+0x28/0x3c0
-[ 3225.690546]  ? wq_calc_node_cpumask+0x70/0x70
-[ 3225.690547]  kthread+0x10b/0x130
-[ 3225.690548]  ? kthread_create_on_node+0x60/0x60
-[ 3225.690550]  ret_from_fork+0x1f/0x30
-[ 3225.690552] ---[ end trace b4302d8e8360d501 ]---
-
-Eventually, log is filled with this:
-
-[ 3227.469556] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
-[ 3227.531081] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
-[ 3227.592435] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
-[ 3227.653867] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
-[ 3227.715322] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
-[ 3227.776834] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
-[ 3227.838186] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
-[ 3227.899703] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
-[ 3227.961149] ath10k_pci 0000:04:00.0: could not get mac80211 beacon
-
-Any ideas for places to look for bugs are welcome.
-
-Thanks,
-Ben
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b61b71f..d2d9d48 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5678,10 +5678,12 @@ void cfg80211_auth_timeout(struct net_device *dev, const u8 *addr);
+  * @dev: network device
+  * @bss: the BSS that association was requested with, ownership of the pointer
+  *	moves to cfg80211 in this call
+- * @buf: authentication frame (header + body)
++ * @buf: (Re)Association Response frame (header + body)
+  * @len: length of the frame data
+  * @uapsd_queues: bitmap of queues configured for uapsd. Same format
+  *	as the AC bitmap in the QoS info field
++ * @req_ies: information elements from the (Re)Association Request frame
++ * @req_ies_len: length of req_ies data
+  *
+  * After being asked to associate via cfg80211_ops::assoc() the driver must
+  * call either this function or cfg80211_auth_timeout().
+@@ -5691,7 +5693,8 @@ void cfg80211_auth_timeout(struct net_device *dev, const u8 *addr);
+ void cfg80211_rx_assoc_resp(struct net_device *dev,
+ 			    struct cfg80211_bss *bss,
+ 			    const u8 *buf, size_t len,
+-			    int uapsd_queues);
++			    int uapsd_queues,
++			    const u8 *req_ies, size_t req_ies_len);
+ 
+ /**
+  * cfg80211_assoc_timeout - notification of timed out association
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6a39ad7..b4a2447 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -556,6 +556,12 @@ struct ieee80211_if_managed {
+ 	 * get stuck in a downgraded situation and flush takes forever.
+ 	 */
+ 	struct delayed_work tx_tspec_wk;
++
++	/* Information elements from the last transmitted (Re)Association
++	 * Request frame.
++	 */
++	u8 *assoc_req_ies;
++	size_t assoc_req_ies_len;
+ };
+ 
+ struct ieee80211_if_ibss {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a49fbb3..df5d4b9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -644,7 +644,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_mgd_assoc_data *assoc_data = ifmgd->assoc_data;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+-	u8 *pos, qos_info;
++	u8 *pos, qos_info, *ie_start;
+ 	size_t offset = 0, noffset;
+ 	int i, count, rates_len, supp_rates_len, shift;
+ 	u16 capab;
+@@ -752,6 +752,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 
+ 	/* SSID */
+ 	pos = skb_put(skb, 2 + assoc_data->ssid_len);
++	ie_start = pos;
+ 	*pos++ = WLAN_EID_SSID;
+ 	*pos++ = assoc_data->ssid_len;
+ 	memcpy(pos, assoc_data->ssid, assoc_data->ssid_len);
+@@ -976,6 +977,11 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 		return;
+ 	}
+ 
++	pos = skb_tail_pointer(skb);
++	kfree(ifmgd->assoc_req_ies);
++	ifmgd->assoc_req_ies = kmemdup(ie_start, pos - ie_start, GFP_ATOMIC);
++	ifmgd->assoc_req_ies_len = pos - ie_start;
++
+ 	drv_mgd_prepare_tx(local, sdata, 0);
+ 
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+@@ -3544,7 +3550,8 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 				uapsd_queues |= ieee80211_ac_to_qos_mask[ac];
+ 	}
+ 
+-	cfg80211_rx_assoc_resp(sdata->dev, bss, (u8 *)mgmt, len, uapsd_queues);
++	cfg80211_rx_assoc_resp(sdata->dev, bss, (u8 *)mgmt, len, uapsd_queues,
++			       ifmgd->assoc_req_ies, ifmgd->assoc_req_ies_len);
+ }
+ 
+ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+@@ -5576,6 +5583,9 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 		ifmgd->teardown_skb = NULL;
+ 		ifmgd->orig_teardown_skb = NULL;
+ 	}
++	kfree(ifmgd->assoc_req_ies);
++	ifmgd->assoc_req_ies = NULL;
++	ifmgd->assoc_req_ies_len = 0;
+ 	spin_unlock_bh(&ifmgd->teardown_lock);
+ 	del_timer_sync(&ifmgd->timer);
+ 	sdata_unlock(sdata);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 1615e50..f946201 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -21,7 +21,8 @@
+ 
+ 
+ void cfg80211_rx_assoc_resp(struct net_device *dev, struct cfg80211_bss *bss,
+-			    const u8 *buf, size_t len, int uapsd_queues)
++			    const u8 *buf, size_t len, int uapsd_queues,
++			    const u8 *req_ies, size_t req_ies_len)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct wiphy *wiphy = wdev->wiphy;
+@@ -33,6 +34,8 @@ void cfg80211_rx_assoc_resp(struct net_device *dev, struct cfg80211_bss *bss,
+ 	cr.status = (int)le16_to_cpu(mgmt->u.assoc_resp.status_code);
+ 	cr.bssid = mgmt->bssid;
+ 	cr.bss = bss;
++	cr.req_ie = req_ies;
++	cr.req_ie_len = req_ies_len;
+ 	cr.resp_ie = mgmt->u.assoc_resp.variable;
+ 	cr.resp_ie_len =
+ 		len - offsetof(struct ieee80211_mgmt, u.assoc_resp.variable);
+@@ -52,7 +55,8 @@ void cfg80211_rx_assoc_resp(struct net_device *dev, struct cfg80211_bss *bss,
+ 		return;
+ 	}
+ 
+-	nl80211_send_rx_assoc(rdev, dev, buf, len, GFP_KERNEL, uapsd_queues);
++	nl80211_send_rx_assoc(rdev, dev, buf, len, GFP_KERNEL, uapsd_queues,
++			      req_ies, req_ies_len);
+ 	/* update current_bss etc., consumes the bss reference */
+ 	__cfg80211_connect_result(dev, &cr, cr.status == WLAN_STATUS_SUCCESS);
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 80878b4..d5badbb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -14491,12 +14491,13 @@ static void nl80211_send_mlme_event(struct cfg80211_registered_device *rdev,
+ 				    struct net_device *netdev,
+ 				    const u8 *buf, size_t len,
+ 				    enum nl80211_commands cmd, gfp_t gfp,
+-				    int uapsd_queues)
++				    int uapsd_queues, const u8 *req_ies,
++				    size_t req_ies_len)
+ {
+ 	struct sk_buff *msg;
+ 	void *hdr;
+ 
+-	msg = nlmsg_new(100 + len, gfp);
++	msg = nlmsg_new(100 + len + req_ies_len, gfp);
+ 	if (!msg)
+ 		return;
+ 
+@@ -14508,7 +14509,9 @@ static void nl80211_send_mlme_event(struct cfg80211_registered_device *rdev,
+ 
+ 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+ 	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex) ||
+-	    nla_put(msg, NL80211_ATTR_FRAME, len, buf))
++	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
++	    (req_ies &&
++	     nla_put(msg, NL80211_ATTR_REQ_IE, req_ies_len, req_ies)))
+ 		goto nla_put_failure;
+ 
+ 	if (uapsd_queues >= 0) {
+@@ -14539,15 +14542,17 @@ void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
+ 			  size_t len, gfp_t gfp)
+ {
+ 	nl80211_send_mlme_event(rdev, netdev, buf, len,
+-				NL80211_CMD_AUTHENTICATE, gfp, -1);
++				NL80211_CMD_AUTHENTICATE, gfp, -1, NULL, 0);
+ }
+ 
+ void nl80211_send_rx_assoc(struct cfg80211_registered_device *rdev,
+ 			   struct net_device *netdev, const u8 *buf,
+-			   size_t len, gfp_t gfp, int uapsd_queues)
++			   size_t len, gfp_t gfp, int uapsd_queues,
++			   const u8 *req_ies, size_t req_ies_len)
+ {
+ 	nl80211_send_mlme_event(rdev, netdev, buf, len,
+-				NL80211_CMD_ASSOCIATE, gfp, uapsd_queues);
++				NL80211_CMD_ASSOCIATE, gfp, uapsd_queues,
++				req_ies, req_ies_len);
+ }
+ 
+ void nl80211_send_deauth(struct cfg80211_registered_device *rdev,
+@@ -14555,7 +14560,7 @@ void nl80211_send_deauth(struct cfg80211_registered_device *rdev,
+ 			 size_t len, gfp_t gfp)
+ {
+ 	nl80211_send_mlme_event(rdev, netdev, buf, len,
+-				NL80211_CMD_DEAUTHENTICATE, gfp, -1);
++				NL80211_CMD_DEAUTHENTICATE, gfp, -1, NULL, 0);
+ }
+ 
+ void nl80211_send_disassoc(struct cfg80211_registered_device *rdev,
+@@ -14563,7 +14568,7 @@ void nl80211_send_disassoc(struct cfg80211_registered_device *rdev,
+ 			   size_t len, gfp_t gfp)
+ {
+ 	nl80211_send_mlme_event(rdev, netdev, buf, len,
+-				NL80211_CMD_DISASSOCIATE, gfp, -1);
++				NL80211_CMD_DISASSOCIATE, gfp, -1, NULL, 0);
+ }
+ 
+ void cfg80211_rx_unprot_mlme_mgmt(struct net_device *dev, const u8 *buf,
+@@ -14584,7 +14589,8 @@ void cfg80211_rx_unprot_mlme_mgmt(struct net_device *dev, const u8 *buf,
+ 		cmd = NL80211_CMD_UNPROT_DISASSOCIATE;
+ 
+ 	trace_cfg80211_rx_unprot_mlme_mgmt(dev, buf, len);
+-	nl80211_send_mlme_event(rdev, dev, buf, len, cmd, GFP_ATOMIC, -1);
++	nl80211_send_mlme_event(rdev, dev, buf, len, cmd, GFP_ATOMIC, -1,
++				NULL, 0);
+ }
+ EXPORT_SYMBOL(cfg80211_rx_unprot_mlme_mgmt);
+ 
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 531c82d..a41e94a 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -67,7 +67,8 @@ void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
+ void nl80211_send_rx_assoc(struct cfg80211_registered_device *rdev,
+ 			   struct net_device *netdev,
+ 			   const u8 *buf, size_t len, gfp_t gfp,
+-			   int uapsd_queues);
++			   int uapsd_queues,
++			   const u8 *req_ies, size_t req_ies_len);
+ void nl80211_send_deauth(struct cfg80211_registered_device *rdev,
+ 			 struct net_device *netdev,
+ 			 const u8 *buf, size_t len, gfp_t gfp);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
 
