@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA008C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:21:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE908C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:21:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAADA20643
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:21:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3F1E20643
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Feb 2019 02:21:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550197264;
-	bh=/Vdtwg9o3j2wrnyh4VlJ679PmU4FlAI8+wcvIi43YR4=;
+	s=default; t=1550197266;
+	bh=e0Y7LJADeVMuJ+mO1s/4mB5ItRHgoGsPN8tILdPKlmA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GPFYPenk5vRy5RLDRwz5cMneuRWiZNsIODElcbDIfGrSWgd9PNEZGa7GccCzgMGlC
-	 G+f5gM/jui9Pj+EEYS+pGwubrA+STw2/2AaOT17/SgMXt0NS+3IX/UzlsTleWkJhLd
-	 qZXZhMr4jwFvzclTys0D3/1cweBfTFFivoWf3OSU=
+	b=1xg1kX5+uLt2RWrnd8bhi14v7r8nGsgjC2tG48S67XXWMKyEBZKGWfyFcPQDFZQUb
+	 yuPlWR72IfjQr5NL+BKVdZ53zRiGZmk37rdUQUO+b9fySZqq5TBRzVtj0g9p5Cg1qN
+	 mWereAaKKunxdH0Eg6Ur4swOufQxw23JmvTVN2G8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405459AbfBOCPH (ORCPT
+        id S1732908AbfBOCVE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Feb 2019 21:15:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54956 "EHLO mail.kernel.org"
+        Thu, 14 Feb 2019 21:21:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54964 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390220AbfBOCPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Feb 2019 21:15:06 -0500
+        id S2405453AbfBOCPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Feb 2019 21:15:08 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5DB1D21B68;
-        Fri, 15 Feb 2019 02:15:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 947872229F;
+        Fri, 15 Feb 2019 02:15:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550196906;
-        bh=/Vdtwg9o3j2wrnyh4VlJ679PmU4FlAI8+wcvIi43YR4=;
+        s=default; t=1550196907;
+        bh=e0Y7LJADeVMuJ+mO1s/4mB5ItRHgoGsPN8tILdPKlmA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nIVyXCiS6nFRWwdb4vBvmucrqr3ZxHeqaEoB9euQpFgRv4C7WkUUz//77XH1sKvpW
-         euDvWwYbQnjTPjZ6CXvJEPLA/CIbxRkC5aytW78MGCa55yg2vc5yMuZwKmhMOAehPM
-         q8gzhNOcyw5+1xsQZHlZSu666SlLfZb9uXABn/Sc=
+        b=A8bB2czGxvRjQumT6s8W3uKdIGSBCECmSNesYlx01eEqOEVOo9GL0dyok+2KNQGt9
+         hSnUxXNDbquGOs3s+ip+O5LyXGPedCje6ZdeuUqkOBtKg22asl3kpX2CuMpG9qen7y
+         JM0pbOSZCGyhPsNOqmcZi2BL5nYNRf5boVbpKebg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Balaji Pothunoori <bpothuno@codeaurora.org>,
+Cc:     Mathieu Malaterre <malat@debian.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 23/27] mac80211: don't initiate TDLS connection if station is not associated to AP
-Date:   Thu, 14 Feb 2019 21:14:20 -0500
-Message-Id: <20190215021424.178979-23-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 24/27] mac80211: Add attribute aligned(2) to struct 'action'
+Date:   Thu, 14 Feb 2019 21:14:21 -0500
+Message-Id: <20190215021424.178979-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190215021424.178979-1-sashal@kernel.org>
 References: <20190215021424.178979-1-sashal@kernel.org>
@@ -59,56 +59,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
+From: Mathieu Malaterre <malat@debian.org>
 
-[ Upstream commit 7ed5285396c257fd4070b1e29e7b2341aae2a1ce ]
+[ Upstream commit 7c53eb5d87bc21464da4268c3c0c47457b6d9c9b ]
 
-Following call trace is observed while adding TDLS peer entry in driver
-during TDLS setup.
+During refactor in commit 9e478066eae4 ("mac80211: fix MU-MIMO
+follow-MAC mode") a new struct 'action' was declared with packed
+attribute as:
 
-Call Trace:
-[<c1301476>] dump_stack+0x47/0x61
-[<c10537d2>] __warn+0xe2/0x100
-[<fa22415f>] ? sta_apply_parameters+0x49f/0x550 [mac80211]
-[<c1053895>] warn_slowpath_null+0x25/0x30
-[<fa22415f>] sta_apply_parameters+0x49f/0x550 [mac80211]
-[<fa20ad42>] ? sta_info_alloc+0x1c2/0x450 [mac80211]
-[<fa224623>] ieee80211_add_station+0xe3/0x160 [mac80211]
-[<c1876fe3>] nl80211_new_station+0x273/0x420
-[<c170f6d9>] genl_rcv_msg+0x219/0x3c0
-[<c170f4c0>] ? genl_rcv+0x30/0x30
-[<c170ee7e>] netlink_rcv_skb+0x8e/0xb0
-[<c170f4ac>] genl_rcv+0x1c/0x30
-[<c170e8aa>] netlink_unicast+0x13a/0x1d0
-[<c170ec18>] netlink_sendmsg+0x2d8/0x390
-[<c16c5acd>] sock_sendmsg+0x2d/0x40
-[<c16c6369>] ___sys_sendmsg+0x1d9/0x1e0
+  struct {
+          struct ieee80211_hdr_3addr hdr;
+          u8 category;
+          u8 action_code;
+  } __packed action;
 
-Fixing this by allowing TDLS setup request only when we have completed
-association.
+But since struct 'ieee80211_hdr_3addr' is declared with an aligned
+keyword as:
 
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+  struct ieee80211_hdr {
+  	__le16 frame_control;
+  	__le16 duration_id;
+  	u8 addr1[ETH_ALEN];
+  	u8 addr2[ETH_ALEN];
+  	u8 addr3[ETH_ALEN];
+  	__le16 seq_ctrl;
+  	u8 addr4[ETH_ALEN];
+  } __packed __aligned(2);
+
+Solve the ambiguity of placing aligned structure in a packed one by
+adding the aligned(2) attribute to struct 'action'.
+
+This removes the following warning (W=1):
+
+  net/mac80211/rx.c:234:2: warning: alignment 1 of 'struct <anonymous>' is less than 2 [-Wpacked-not-aligned]
+
+Cc: Johannes Berg <johannes.berg@intel.com>
+Suggested-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Mathieu Malaterre <malat@debian.org>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/cfg.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 6ef9d32c34f1..954315e1661d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1425,6 +1425,10 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
- 		sta->sta.tdls = true;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index fdbfdb04abe8..10e8b85e017f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -216,7 +216,7 @@ static void ieee80211_handle_mu_mimo_mon(struct ieee80211_sub_if_data *sdata,
+ 		struct ieee80211_hdr_3addr hdr;
+ 		u8 category;
+ 		u8 action_code;
+-	} __packed action;
++	} __packed __aligned(2) action;
  
-+	if (sta->sta.tdls && sdata->vif.type == NL80211_IFTYPE_STATION &&
-+	    !sdata->u.mgd.associated)
-+		return -EINVAL;
-+
- 	err = sta_apply_parameters(local, sta, params);
- 	if (err) {
- 		sta_info_free(local, sta);
+ 	if (!sdata)
+ 		return;
 -- 
 2.19.1
 
