@@ -2,207 +2,121 @@ Return-Path: <SRS0=K8Xh=QX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3206C43381
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Feb 2019 17:48:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB8E4C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Feb 2019 19:17:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9696D2192B
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Feb 2019 17:48:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550339295;
-	bh=XgBP/9tKZRDouhd+BwIkaqQ16dzxg8PrNNpkAe8QGFE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IN0mUUjaDmlNcBC2B4InniVFjs/K0mJSCUye6hH7K3tQIea5i9T87XNqUQVK4+KzY
-	 OqlDnCsTzqh27SNU/tNupVxafde2CCZ6CPHZZX80Pg6u5fykRqpwdj4cwaoG3zMayG
-	 h2RnzVpCDZhEL3ZmpRLpoL8KCazrr5x/QZS/JFig=
+	by mail.kernel.org (Postfix) with ESMTP id AF90A2192D
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Feb 2019 19:17:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732252AbfBPRsN (ORCPT
+        id S1732610AbfBPTRU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Feb 2019 12:48:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43556 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726391AbfBPRsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Feb 2019 12:48:13 -0500
-Received: from lore-desk.lan (unknown [151.66.48.245])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BA5CB2192B;
-        Sat, 16 Feb 2019 17:48:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550339292;
-        bh=XgBP/9tKZRDouhd+BwIkaqQ16dzxg8PrNNpkAe8QGFE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iJReyGcYdR2fRudUJWL0w2uRdcVlUz+dR9lf1JOBpRu8u6JKF3j9/FbE8/Y6rbO9s
-         tbnNYyf3qefoeYCp0cxzkoJz8LNf1I5uP2fD+3zlkxyMEzV82Hki1sWD7G88MHNAxH
-         PhXLDwKeMU4fkTutBKamyq2EcvLdHHVXXGO2ZDgQ=
-From:   lorenzo@kernel.org
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        ryder.lee@mediatek.com, roychl666@gmail.com,
-        Lorenzo Bianconi <lorenzo@kernel.org>
-Subject: [PATCH 2/2] mt76: move txq qid dependency in driver specific code
-Date:   Sat, 16 Feb 2019 18:47:34 +0100
-Message-Id: <43e762876cc1d2e3ecca565ec382b1d74772d4cb.1550336347.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1550336347.git.lorenzo@kernel.org>
-References: <cover.1550336347.git.lorenzo@kernel.org>
+        Sat, 16 Feb 2019 14:17:20 -0500
+Received: from mout.kundenserver.de ([212.227.17.10]:40185 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728542AbfBPTRU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Feb 2019 14:17:20 -0500
+Received: from oxbaltgw07.schlund.de ([172.19.246.13]) by
+ mrelayeu.kundenserver.de (mreue107 [213.165.67.113]) with ESMTPSA (Nemesis)
+ id 1Mgw7n-1hY1dr1fGX-00hOOP; Sat, 16 Feb 2019 20:17:10 +0100
+Date:   Sat, 16 Feb 2019 20:17:07 +0100 (CET)
+From:   Stefan Wahren <stefan.wahren@i2se.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Felix Fietkau <nbd@nbd.name>,
+        Doug Anderson <dianders@chromium.org>,
+        Minas Harutyunyan <hminas@synopsys.com>,
+        USB list <linux-usb@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <2009016263.528260.1550344627996@email.ionos.de>
+In-Reply-To: <20190216140739.GA2236@redhat.com>
+References: <20190211173315.GE6292@redhat.com>
+ <Pine.LNX.4.44L0.1902111246410.1543-100000@iolanthe.rowland.org>
+ <CAJ0CqmVFVBXi5E07-ZsYojC7mP4ogpwbcDkDTeebHwX+ayz2DQ@mail.gmail.com>
+ <20190212093035.GB12906@redhat.com>
+ <404607590.373282.1550126997144@email.ionos.de>
+ <20190214092530.GA17273@redhat.com>
+ <878a7160-2e91-d057-6d27-c6b9d85f700e@i2se.com>
+ <20190215071226.GA2372@redhat.com>
+ <1411983628.668277.1550315118443@email.ionos.de>
+ <20190216140739.GA2236@redhat.com>
+Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+Importance: Medium
+X-Mailer: Open-Xchange Mailer v7.8.4-Rev47
+X-Originating-Client: open-xchange-appsuite
+X-Provags-ID: V03:K1:v+SjiJKkDnOiFZHu1o0Royl1v4E3T5vFdbwOZIO5LznAuIKerDR
+ zemJR5yNmURVB0dfZNT24Q/hha3YmF/newYwGA3pEsQLpHj/nZbReK7NJqnPcfBVu6hsPQf
+ Y5Pn6S3RgMPoclJExdZ8ewsw5XWvjdJuibRi3rM9xn0v4UziZdjU/TtI260A4ES+WCjAILA
+ gzl+c+1P/f45UlvU/dPJQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:UnOBHlLoukg=:EkAehpFwVXIeDU1yzh4ZGO
+ h63MI/5l2XXfA61oI+K/cOVwuJw5ZiRnSROuqnpZF5ar8kZRdnsEkTNFsRtnWTkPsk1pPUi9U
+ W7d/YW2ccHG6o4PJJHqvrklTYMcvK+gJV3ELNa2a2eazh2SIH66R7X4KyJ7R7GDFu9BZrkUMB
+ 0xY0PhhsQ2yj6h1RT6R5eSG1Mh4+ISjHdZCz5pv0rlyKk7vS2x77gD7n7m5VMtJy1lBdrQ5Fv
+ bJwuhcT3aUtf+ddko6D4uwfHtR9DvPURzfwX8aKcWm7km2lCOctCRM8kz9T3kVS2dlW/qNTS2
+ XQvNC4A24s8MkOOP9NFqEpiJGzy3Wl7cDdPf+gN4rcN44KogltiI5M0FCYKL3afhe4knaz3d5
+ 5pU182j0tk2DzNWG+d4nCfyAKt3kSKhfyFdAqJspBqCiv61264GCXyiD6sYQbYrvkbsK1LpQJ
+ +i7NHi2cOErFF6F1fq5NbROfu4qRruzVbZZ5QHDRstSYYpKU7jQchYPTyDobM4jNEcbcRPZNt
+ AROQFlh+/oylzABioLHboorGfm2P/W7kPOcIEHCU4eegPRfo7jga15YvDapw8Tq/PGONq3bOq
+ B/a7cZbaoTJZykgCfS/fRoygV0uxqN1ex/oKuNevmY89q7JUtGGTKtCZsl81dbNzqXBTFyzEv
+ pjA1ymwwxPgME097UKEB0XYlYYxbJEH3OCOHpJr05Un7Xg0AJ8YAlu9UIN6EnffsUjDiAjc7H
+ 8g5Tb7ajSRZWP0OHgIhkhlwLDNWJGOUiVd9V450bn5Ft4GEYA8NSTdALs7k=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+Hi Stanislaw,
 
-Move queue id dependency in driver specific tx queue initialization code
-since new chipsets rely on a different tx queue enumeration scheme
-Introduce mt76_sta_init_tx_queue utility routine
+> Stanislaw Gruszka <sgruszka@redhat.com> hat am 16. Februar 2019 um 15:07 geschrieben:
+> 
+> 
+> On Sat, Feb 16, 2019 at 12:05:18PM +0100, Stefan Wahren wrote:
+> > sorry for the delay, but i do this all in my spare time.
+> 
+> Stefan, thanks for sacrifing your spare time for testing this!
+> 
+> > The results for your recent patch series are better (no firmware timeout), but still no working wifi and still a warning:
+> > https://gist.github.com/lategoodbye/c4864e446821717419cbe65df07f8d8d
+> > 
+> > I've identified the reason for the warning in dwc2:
+> > 
+> > /*
+> >  * We assume that DMA is always aligned in non-split
+> >  * case or split out case. Warn if not.
+> >  */
+> > WARN_ON_ONCE(hsotg->params.host_dma && (chan->xfer_dma & 0x3));
+> 
+> I think I understand why that happen, we first allocate 1024 mcu 
+> buffer then standard 4096 rx buffers, that couse 4096 buffers are
+> not contained in single page and need split by dwc2 driver.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c | 27 ++++++++++++-------
- drivers/net/wireless/mediatek/mt76/mt76.h     | 12 ++++++++-
- .../net/wireless/mediatek/mt76/mt76x02_util.c |  2 ++
- drivers/net/wireless/mediatek/mt76/tx.c       | 16 +++--------
- 4 files changed, 34 insertions(+), 23 deletions(-)
+this is a misunderstanding. The warning is about memory alignment to 32 bit addresses, not about page alignment. This is a typical ARM restriction. Maybe we need to make sure in mt76 that the DMA buffer needs to be aligned. But it's also possible that the warning isn't the root cause of our problem.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index c7abf4f54867..3d25b625b8cc 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -644,20 +644,12 @@ void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q,
- }
- EXPORT_SYMBOL_GPL(mt76_rx_poll_complete);
- 
--static int
--mt76_sta_add(struct mt76_dev *dev, struct ieee80211_vif *vif,
--	     struct ieee80211_sta *sta)
-+void mt76_sta_init_tx_queue(struct mt76_dev *dev,
-+			    struct ieee80211_sta *sta)
- {
- 	struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
--	int ret;
- 	int i;
- 
--	mutex_lock(&dev->mutex);
--
--	ret = dev->drv->sta_add(dev, vif, sta);
--	if (ret)
--		goto out;
--
- 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++) {
- 		struct mt76_txq *mtxq;
- 
-@@ -669,6 +661,21 @@ mt76_sta_add(struct mt76_dev *dev, struct ieee80211_vif *vif,
- 
- 		mt76_txq_init(dev, sta->txq[i]);
- 	}
-+}
-+EXPORT_SYMBOL_GPL(mt76_sta_init_tx_queue);
-+
-+static int
-+mt76_sta_add(struct mt76_dev *dev, struct ieee80211_vif *vif,
-+	     struct ieee80211_sta *sta)
-+{
-+	struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
-+	int ret;
-+
-+	mutex_lock(&dev->mutex);
-+
-+	ret = dev->drv->sta_add(dev, vif, sta);
-+	if (ret)
-+		goto out;
- 
- 	ewma_signal_init(&wcid->rssi);
- 	rcu_assign_pointer(dev->wcid[wcid->idx], wcid);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 53b85042b793..f6aab5ee782b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -639,6 +639,17 @@ static inline struct mt76_tx_cb *mt76_tx_skb_cb(struct sk_buff *skb)
- 	return ((void *) IEEE80211_SKB_CB(skb)->status.status_driver_data);
- }
- 
-+void mt76_sta_init_tx_queue(struct mt76_dev *dev,
-+			    struct ieee80211_sta *sta);
-+void __mt76_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq, int qid);
-+static inline void
-+mt76_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq)
-+{
-+	int qid = txq->sta ? txq->ac : MT_TXQ_BE;
-+
-+	return __mt76_txq_init(dev, txq, qid);
-+}
-+
- int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
- 			  struct sk_buff *skb, struct mt76_wcid *wcid,
- 			  struct ieee80211_sta *sta);
-@@ -646,7 +657,6 @@ int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
- void mt76_rx(struct mt76_dev *dev, enum mt76_rxq_id q, struct sk_buff *skb);
- void mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 	     struct mt76_wcid *wcid, struct sk_buff *skb, int qid);
--void mt76_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq);
- void mt76_txq_remove(struct mt76_dev *dev, struct ieee80211_txq *txq);
- void mt76_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *txq);
- void mt76_stop_tx_queues(struct mt76_dev *dev, struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 87ed00768bc7..c3a36519a942 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -251,6 +251,8 @@ int mt76x02_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 	if (vif->type == NL80211_IFTYPE_AP)
- 		set_bit(MT_WCID_FLAG_CHECK_PS, &msta->wcid.flags);
- 
-+	mt76_sta_init_tx_queue(mdev, sta);
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mt76x02_sta_add);
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index 3617de2c1325..142b12877a34 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -82,15 +82,6 @@ void mt76_tx_free(struct mt76_dev *dev)
- 				 DMA_TO_DEVICE);
- }
- 
--static int
--mt76_txq_get_qid(struct ieee80211_txq *txq)
--{
--	if (!txq->sta)
--		return MT_TXQ_BE;
--
--	return txq->ac;
--}
--
- static void
- mt76_check_agg_ssn(struct mt76_txq *mtxq, struct sk_buff *skb)
- {
-@@ -604,16 +595,17 @@ void mt76_txq_remove(struct mt76_dev *dev, struct ieee80211_txq *txq)
- }
- EXPORT_SYMBOL_GPL(mt76_txq_remove);
- 
--void mt76_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq)
-+void __mt76_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq,
-+		     int qid)
- {
- 	struct mt76_txq *mtxq = (struct mt76_txq *) txq->drv_priv;
- 
- 	INIT_LIST_HEAD(&mtxq->list);
- 	skb_queue_head_init(&mtxq->retry_q);
- 
--	mtxq->hwq = &dev->q_tx[mt76_txq_get_qid(txq)];
-+	mtxq->hwq = &dev->q_tx[qid];
- }
--EXPORT_SYMBOL_GPL(mt76_txq_init);
-+EXPORT_SYMBOL_GPL(__mt76_txq_init);
- 
- u8 mt76_ac_to_hwq(u8 ac)
- {
--- 
-2.20.1
+> 
+> Attached patch should fix this, plese test, thanks in advance.
 
+Anyway i tested the following patch combinations against next with the same results as 1,2,3 (no wifi, alignment warning):
+1,3
+1,2,3,4
+
+> 
+> > Btw i can confirm a regression was introduced after 4.19, because in 4.19 there was no firmware timeout but even no working wifi:
+> 
+> You ment 'no working wifi' or 'working wifi'?
+
+Wifi is broken in 4.19, 4.20, 5.0 and next. It only worked with Lorenzo's SG avoid patches so far. Btw the regression (firmware timeout) started in 4.20. I also tested it today.
+
+Thanks
+Stefan
+
+> 
+> Stanislaw
