@@ -2,38 +2,40 @@ Return-Path: <SRS0=F8Dj=QZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF182C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 18:56:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30F68C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:03:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF1C82177E
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 18:56:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3FF9217D7
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:03:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="POGIU1lU"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ffpp0UHg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728023AbfBRS4z (ORCPT
+        id S1728154AbfBRTDo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Feb 2019 13:56:55 -0500
-Received: from nbd.name ([46.4.11.11]:54456 "EHLO nbd.name"
+        Mon, 18 Feb 2019 14:03:44 -0500
+Received: from nbd.name ([46.4.11.11]:54774 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727414AbfBRS4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Feb 2019 13:56:54 -0500
+        id S1726380AbfBRTDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Feb 2019 14:03:43 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:To:Subject:Sender:Reply-To:Cc:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=TwG54dd+zH/C2b/cm+vPUKu7PyeSr+haUzIF4RsazP0=; b=POGIU1lU5R+PNJWqDZfsoqjggC
-        qYObH/bzZzZFePT1YesXlssLSVPk9IiVcLfmACPtHwIHYN2ZoyX6qbhycIi8bDmV0RjrVUFkEuIvb
-        NxyQz5PAkohcN0HF4yQLGe4VeeBSS64skFq0bOtBJ1fGfBfrIWRlUqErrHmHt4Etit/M=;
-Subject: Re: [PATCH RESEND 0/4] do not use sg if not properly supported by usb
- controller
-To:     lorenzo@kernel.org, linux-wireless@vger.kernel.org
-References: <cover.1549977282.git.lorenzo@kernel.org>
+        bh=Nkvfh2wmwC+K3ipmBLhmVZQ7Tva9c11irZjpEvuX7yI=; b=ffpp0UHgTgKewUbN8zCFNIW3xu
+        1afCWIbksEDFfTtiPnNQWpFDLFUh7W0R2VuRDNyS7EmpNc+Hf692OT0ZFrQPC+kkTUHwGAEvfCSOV
+        0GO0g5PPzOpNqEER5Pxq/+CA81tR/7MCDdAbObtmQ0BVK/13Yl8CvnG+nSx1bvjlokBw=;
+Subject: Re: [PATCH] mt76: usb: use dev_err_ratelimited instead of dev_err in
+ mt76u_complete_rx
+To:     lorenzo@kernel.org
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
+References: <cover.1549928358.git.lorenzo@kernel.org>
+ <25bdd32592a9e0e64d202b1a53c4680f0d958423.1549928358.git.lorenzo@kernel.org>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -59,12 +61,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <2db55483-e512-0efb-d98c-38bad2078d36@nbd.name>
-Date:   Mon, 18 Feb 2019 19:56:51 +0100
+Message-ID: <9454c0f9-761d-2669-7063-70b95a839edb@nbd.name>
+Date:   Mon, 18 Feb 2019 20:03:41 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.0
 MIME-Version: 1.0
-In-Reply-To: <cover.1549977282.git.lorenzo@kernel.org>
+In-Reply-To: <25bdd32592a9e0e64d202b1a53c4680f0d958423.1549928358.git.lorenzo@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -73,22 +75,13 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-12 14:42, lorenzo@kernel.org wrote:
+On 2019-02-12 00:45, lorenzo@kernel.org wrote:
 > From: Lorenzo Bianconi <lorenzo@kernel.org>
 > 
-> Use linear fragment and not a single usb scatter-gather buffer in mt76u
-> {tx,rx} datapath if the usb controller has sg data length constraints.
-> Moreover add disable_usb_sg module parameter in order to explicitly
-> disable scatter-gather. SG I/O is not supported by all host drivers and
-> some users have reported sg issues on AMD IOMMU.
-> This series has been tested on AMD IOMMU cpus/motherboards and on rpi3+
+> During device removal the driver can report multiple error messages.
+> Use dev_err_ratelimited instead of dev_err to display urb errors
 > 
-> Changes since RFC:
-> - rebased on top of 'fix multiple issues in mt76u error path'
->   https://patchwork.kernel.org/cover/10804919/
-> 
-> I am resending the series since the first attempt seems to be rejected by
-> the ML
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Applied, thanks.
 
 - Felix
