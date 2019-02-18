@@ -2,87 +2,99 @@ Return-Path: <SRS0=F8Dj=QZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DFFFC43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 17:37:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A266FC43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 18:08:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDD95217F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 17:37:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7650721736
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 18:08:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dDmdOEhY";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dDmdOEhY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731830AbfBRRhg (ORCPT
+        id S2390095AbfBRSI0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Feb 2019 12:37:36 -0500
-Received: from foss.arm.com ([217.140.101.70]:34952 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729728AbfBRRhg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Feb 2019 12:37:36 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E565D80D;
-        Mon, 18 Feb 2019 09:02:22 -0800 (PST)
-Received: from [10.1.196.75] (e110467-lin.cambridge.arm.com [10.1.196.75])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 87C683F675;
-        Mon, 18 Feb 2019 09:02:01 -0800 (PST)
-Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Samuel Sieb <samuel@sieb.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
-        Rosen Penev <rosenp@gmail.com>,
-        Alexander Duyck <alexander.h.duyck@linux.intel.com>
-References: <CAKxU2N9o5WeUwFMUwwXKHaPj7R+oiSKV1c2n8RtXwGNZRtw5Sw@mail.gmail.com>
- <CAJ0CqmVNF83bWgc+LSQ3_i=zfp-sXC5Nf=nKfqB3SWa8r7sKdQ@mail.gmail.com>
- <83A1D243-9073-48D1-9F26-5A2581DCB829@gmail.com>
- <CAJ0CqmUgPWNJtCW4Q__sOtB8w-YtwW+uZy7crxMNrmSgQ6OFyA@mail.gmail.com>
- <1547404075.1582.0@smtp.gmail.com>
- <CAJ0CqmU7k5i26g7dGPxNdts7Gm67W6qNsr4vYuW05ugsEF1ohw@mail.gmail.com>
- <CAKxU2N-+CTaRdJMFVRdozJ5TTpN+_4thiDRBJBFq8gGtuRVYvA@mail.gmail.com>
- <20190114091841.GA23045@localhost.localdomain>
- <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
- <20190115090400.GA2267@localhost.localdomain>
- <20190218143742.GA11872@redhat.com>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <2cc5674a-a3a0-d8fe-65f5-4357da9b85d3@arm.com>
-Date:   Mon, 18 Feb 2019 17:01:59 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        Mon, 18 Feb 2019 13:08:26 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:42446 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387806AbfBRSI0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Feb 2019 13:08:26 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id E4C82608CF; Mon, 18 Feb 2019 18:08:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550513305;
+        bh=xCjBUogtWIOqJZsdmRtXiOBmgDLvp893h57ZpPCX8xw=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=dDmdOEhYTB4RXWskygVmUXPMZ/rPdDYnOA2nlpyw3yQmLZ/zOgW3+9KLRub13wxR4
+         Wkc8atuV3wEHk7OO37OzpZEgujivVZ/qedzl2jkAGR1waUU/dm2pIsqagd5u9WRYwI
+         b5/8cGWxRbLAHA92ZO7C/N78Km9Z676Hyyv42Ewk=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 83FD560388;
+        Mon, 18 Feb 2019 18:08:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550513305;
+        bh=xCjBUogtWIOqJZsdmRtXiOBmgDLvp893h57ZpPCX8xw=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=dDmdOEhYTB4RXWskygVmUXPMZ/rPdDYnOA2nlpyw3yQmLZ/zOgW3+9KLRub13wxR4
+         Wkc8atuV3wEHk7OO37OzpZEgujivVZ/qedzl2jkAGR1waUU/dm2pIsqagd5u9WRYwI
+         b5/8cGWxRbLAHA92ZO7C/N78Km9Z676Hyyv42Ewk=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 83FD560388
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc:     Ingo Molnar <mingo@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Borislav Petkov <bp@alien8.de>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-wireless@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, Felix Fietkau <nbd@nbd.name>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Subject: Re: [PATCH 1/2] wireless: mt76: call hweight8() instead of __sw_hweight8()
+References: <1550469571-25933-1-git-send-email-yamada.masahiro@socionext.com>
+        <1550469571-25933-2-git-send-email-yamada.masahiro@socionext.com>
+Date:   Mon, 18 Feb 2019 20:08:18 +0200
+In-Reply-To: <1550469571-25933-2-git-send-email-yamada.masahiro@socionext.com>
+        (Masahiro Yamada's message of "Mon, 18 Feb 2019 14:59:30 +0900")
+Message-ID: <877edxt1f1.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20190218143742.GA11872@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 18/02/2019 14:37, Stanislaw Gruszka wrote:
-[...]
-> Another issue is that dma_map_sg() & dma_map_page() may require some
-> constraints. I'm not sure about that and I want to clarify that with
-> CCed mm maintainers. I think DMA drivers may expect sg->offset < PAGE_SIZE
-> for both dma_map_sg() and dma_map_page(). Additionally dma_map_page()
-> maight expect that offset & length specify buffer within one page.
+Masahiro Yamada <yamada.masahiro@socionext.com> writes:
 
-Luckily, this came up a while back[1] and we seemed to reach a consensus 
-that sg->offset >= PAGE_SIZE for dma_map_sg() was weird but valid. IIRC 
-it was only the Intel IOMMU code which failed to handle that case 
-appropriately (and which I fixed) - the AMD IOMMU code always looked 
-like it should be OK, but I'm not sure I've ever seen definitive test 
-results (and I don't have hardware to do so myself).
+> __sw_hweight8() is just internal implementation.
+>
+> Drivers should use the common API, hweight8().
+>
+> Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
 
-For dma_map_page(), length >= PAGE_SIZE should be perfectly valid and 
-handled correctly. The offset >= PAGE_SIZE case is a bit harder to 
-justify, but at the same time has less scope for the DMA API backend to 
-get it wrong, so either way is likely to be OK in practice (in 
-particular the AMD IOMMU code looks like it won't have a problem, since 
-its map_page() implementation converts page and offset to a plain 
-physical address before doing anything else).
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 
-Robin.
+> This patch should go to x86 tree along with 2/2.
+>
+> Otherwise, all{yes,mod}config of x86 would be broken.
+>
+> This patch is trivial enough.
+> I want ACK from the net/wireless maintainer
+> so that this can go in via x86 tree.
 
-[1] 
-https://lists.linuxfoundation.org/pipermail/iommu/2017-September/024148.html
+Sounds good to me, feel free to push via the x86 tree.
+
+-- 
+Kalle Valo
