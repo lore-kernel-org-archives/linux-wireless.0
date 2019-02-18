@@ -2,115 +2,108 @@ Return-Path: <SRS0=F8Dj=QZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55197C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:06:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89AA9C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:08:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22B74217D7
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:06:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 594C2217D7
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:08:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iiSz84I6";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="K/mNl1s4"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IGRggmSj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728235AbfBRTGh (ORCPT
+        id S1728372AbfBRTIl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Feb 2019 14:06:37 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:51080 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726380AbfBRTGh (ORCPT
+        Mon, 18 Feb 2019 14:08:41 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:44636 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726380AbfBRTIl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Feb 2019 14:06:37 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 54E30607EF; Mon, 18 Feb 2019 19:06:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550516796;
-        bh=esPdABJBpGSqp931ZQiOXnlVd6J4TnHzDy08pTMrC9A=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=iiSz84I6xLMtcdAZ13csQWbp/x0QENs0bnepTQiwjCv83dGIjaV5qYaVriMWQBJhX
-         q7Jjy1wcCr2tSnAcM6rOmN19+C85frrmyVX9+ERRVBcIylrtzbTa1Z+f1nT7cKe0rA
-         1z3LGnC0BavSN0oZZshLsM9+JMO4vskdGijyI47k=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B4CB260740;
-        Mon, 18 Feb 2019 19:06:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550516795;
-        bh=esPdABJBpGSqp931ZQiOXnlVd6J4TnHzDy08pTMrC9A=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=K/mNl1s4LJP6VfOQwStdcLZfeXVFuB8vMkIAyRaRXUEL2vmspI5JL6+Lwef9AjK6L
-         4XZ83VCR+Y+aVqhi36Jc/X/yml7HrNs8eXD0zmwtGyQscJwG26FdVI0CgWIglMoHXd
-         1vcdrH3sr5bA0AkaoFpouVqVpLlxdjs8dgjLMYHk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B4CB260740
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Masahiro Yamada <yamada.masahiro@socionext.com>
-Cc:     Ingo Molnar <mingo@redhat.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Borislav Petkov <bp@alien8.de>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-wireless@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, Felix Fietkau <nbd@nbd.name>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Subject: Re: [PATCH 1/2] wireless: mt76: call hweight8() instead of __sw_hweight8()
-References: <1550469571-25933-1-git-send-email-yamada.masahiro@socionext.com>
-        <1550469571-25933-2-git-send-email-yamada.masahiro@socionext.com>
-        <877edxt1f1.fsf@kamboji.qca.qualcomm.com>
-Date:   Mon, 18 Feb 2019 21:06:29 +0200
-In-Reply-To: <877edxt1f1.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Mon, 18 Feb 2019 20:08:18 +0200")
-Message-ID: <87tvh0syq2.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Mon, 18 Feb 2019 14:08:41 -0500
+Received: by mail-wr1-f65.google.com with SMTP id w2so4962507wrt.11
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2019 11:08:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=96/giZF0UYtTmMF+I5lRhGWC4N6rrUIK5GwnXlHZleU=;
+        b=IGRggmSjAEMxavdO9NvuVLu147wkJCvlipDunBRCRmilImbafX3EOjWqIGVjVi8jfc
+         pl5hstEDyryFMFN8ibLk0kryXYO/w6K8KCtyn6djhwjzJDVaFax4WQLcpRFQ0/4Diol2
+         BqDQZnvMpItN6uMqdi7/8QAXRIKXEDlguM1Sm4EQzYFIRRZjzsuAeiCo2DnVdfqQ7hB1
+         BEDFZj8069utRtRr+fmGmBIMG29F2bJJwclRgq6eIe/1nndK1+0Zh54yNQV/oNuNohW4
+         6FK1ZJFhrjZnbgcAneBZyOt+tNgOKJVKoTwskQKUMdCncGxxuqTXWNATp/LozTGzzwjq
+         JsGA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=96/giZF0UYtTmMF+I5lRhGWC4N6rrUIK5GwnXlHZleU=;
+        b=fyxeGwtAPiCZ+SOrR4glYLJhKFtiXrx2OFaA7xSho8U4zD2rGNzhPlP9AmPSz//Y1Q
+         idrp5SGeBOBjcWGK4EOwEvU468Yt7Mj0NUoKfm2iFHJfoz3SK55dcZaSlSnexk1QamHi
+         5mc4Y69uzoVTCnhE4MwVqwe8a1Cb41XBBHzmlw+DMjvPNou6iQHBYeAz/dFSyKhax6Qq
+         eFRTGiZyGDccP0PlB21TyzuFC7sLMDD50EEPRtfkRvKP6IGcFgUPnR894BdigjHktdpx
+         WAy/Zyrzvxjj+6GOSXwS7VBr+6CU77RUY/rgjjUC2J4vUEcq+/SuzjkjvJ5PQdahj7mz
+         RehA==
+X-Gm-Message-State: AHQUAua6iHB8XcKIY4QLBStDw5n00LxgT2DYq0fRVtnZVvUtx1HKk5yE
+        1hcAQiP+Uzrp5Yt7c+lh44NEFKXNcdPVcl+dSR3PMGUO
+X-Google-Smtp-Source: AHgI3IbBaa5iTj/Sww0Xr1DIO9taKm7DbK2hEgb8fy25SAkbjejT/UetOactMX1LdiQLg0QEkA2vPT376gfrfqSqf1k=
+X-Received: by 2002:adf:ecc7:: with SMTP id s7mr17521091wro.255.1550516919648;
+ Mon, 18 Feb 2019 11:08:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20190218150952.6889-1-wangxuerui@qiniu.com>
+In-Reply-To: <20190218150952.6889-1-wangxuerui@qiniu.com>
+From:   Jonas Gorski <jonas.gorski@gmail.com>
+Date:   Mon, 18 Feb 2019 20:08:30 +0100
+Message-ID: <CAOiHx=md7Ba=OkbgJTSgYJzwDYDyBA_cyCgenJEGSjPPV7BQ1g@mail.gmail.com>
+Subject: Re: [PATCH] iwlwifi: mvm: fix an unaligned access
+To:     wangxuerui@qiniu.com
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Hi,
 
-> Masahiro Yamada <yamada.masahiro@socionext.com> writes:
+On Mon, 18 Feb 2019 at 19:40, <wangxuerui@qiniu.com> wrote:
 >
->> __sw_hweight8() is just internal implementation.
->>
->> Drivers should use the common API, hweight8().
->>
->> Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+> From: Wang Xuerui <wangxuerui@qiniu.com>
 >
-> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> Tested with a Wireless AC 7265 on a MIPS box, confirmed to fix the
+> unaligned accesses.
 >
->> This patch should go to x86 tree along with 2/2.
->>
->> Otherwise, all{yes,mod}config of x86 would be broken.
->>
->> This patch is trivial enough.
->> I want ACK from the net/wireless maintainer
->> so that this can go in via x86 tree.
+> Signed-off-by: Wang Xuerui <wangxuerui@qiniu.com>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 >
-> Sounds good to me, feel free to push via the x86 tree.
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+> index 6653a238f32e..a155e816262e 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+> @@ -57,6 +57,7 @@
+>   * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+>   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+>   *****************************************************************************/
+> +#include <asm/unaligned.h>
+>  #include <linux/etherdevice.h>
+>  #include <linux/skbuff.h>
+>  #include "iwl-trans.h"
+> @@ -355,8 +356,8 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+>         rx_res = (struct iwl_rx_mpdu_res_start *)pkt->data;
+>         hdr = (struct ieee80211_hdr *)(pkt->data + sizeof(*rx_res));
+>         len = le16_to_cpu(rx_res->byte_count);
+> -       rx_pkt_status = le32_to_cpup((__le32 *)
+> -               (pkt->data + sizeof(*rx_res) + len));
+> +       rx_pkt_status = le32_to_cpu(get_unaligned((__le32 *)
+> +               (pkt->data + sizeof(*rx_res) + len)));
 
-Actually, can you wait a bit? Felix just reminded me that we have a
-similar patch pending from Ben Hutchings:
+There's get_unaligned_le32() for that purpose.
 
-https://patchwork.kernel.org/patch/10808203/
 
-And it seems there are two instances of __sw_hweight8, at least in my
-wireless-drivers-next tree:
-
-drivers/net/wireless/mediatek/mt76/mac80211.c:  int i, nstream = __sw_hweight8(dev->antenna_mask);
-drivers/net/wireless/mediatek/mt76/mac80211.c:  int n_chains = __sw_hweight8(dev->antenna_mask);
-
-So we need to think what to do.
-
--- 
-Kalle Valo
+Regards
+Jonas
