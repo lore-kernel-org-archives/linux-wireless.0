@@ -6,95 +6,158 @@ X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECA18C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 15:03:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5716BC43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 15:15:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1C582173C
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 15:03:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32A13217D9
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 15:15:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730942AbfBRPDJ (ORCPT
+        id S1730599AbfBRPP1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Feb 2019 10:03:09 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:60976 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729905AbfBRPDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Feb 2019 10:03:09 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id AF8A98E6EF;
-        Mon, 18 Feb 2019 15:03:08 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.59])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 742CF600C8;
-        Mon, 18 Feb 2019 15:03:04 +0000 (UTC)
-Date:   Mon, 18 Feb 2019 16:03:03 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     Stefan Wahren <stefan.wahren@i2se.com>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Doug Anderson <dianders@chromium.org>,
-        Minas Harutyunyan <hminas@synopsys.com>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
-Message-ID: <20190218150303.GD9602@redhat.com>
-References: <20190212093035.GB12906@redhat.com>
- <404607590.373282.1550126997144@email.ionos.de>
- <20190214092530.GA17273@redhat.com>
- <878a7160-2e91-d057-6d27-c6b9d85f700e@i2se.com>
- <20190215071226.GA2372@redhat.com>
- <1411983628.668277.1550315118443@email.ionos.de>
- <20190216140739.GA2236@redhat.com>
- <2009016263.528260.1550344627996@email.ionos.de>
- <20190218135247.GA9602@redhat.com>
- <0e29e99a-6ed4-40fe-1f38-30f1b5530a16@nbd.name>
+        Mon, 18 Feb 2019 10:15:27 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:33779 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730509AbfBRPP1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Feb 2019 10:15:27 -0500
+Received: by mail-wm1-f67.google.com with SMTP id h22so9889wmb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2019 07:15:26 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=UHPpJT5oiNNLod+IJDRGWkaQD0QAk6ppGoNG+v3R+44=;
+        b=FXU+LQgpMRqryHceMhyDZc3HrLcfZFNCZnEwwbyy05FV1eLOGyBIyuqXaV5zqzNWef
+         RvqFo1qAxx25v+o1UG1hWjwd6HRSBn36GJMuKza9eStjlDqfJ4yxJFXb9VvAyDgWlbp+
+         jGJagu3QiQ3znCPeKcbcP9BhvldXDk+QIJZ+DDIdBUuwgKtY7Bs9/oPQE6o35mpvztgX
+         LrZRTTc9CJIhkQOxKcPPgNFolNvK1k9QE671iN7CO8lZWhTkif0AgXBGmoK8U+o1AdnV
+         k0ARFxjOqm4KKyYCj4RCcU31EJDHZow0GTmvljsT0fwK3F8ur9luR+A5ngXMfz9KqttV
+         Ksdw==
+X-Gm-Message-State: AHQUAubnHuVn5XY+Rrv870wdRiCn6uN5q10rwNWng214y/bFAaiNtZ9q
+        86QMgUICoWdMwLELFD3bhANKew==
+X-Google-Smtp-Source: AHgI3Ib0T5ZaxEzdKMFpaqEIMeBm80RzQaKocrsq+3wRzwjmD+fvbRzgpX2QU36WjA8ziBF9TxIaTg==
+X-Received: by 2002:a1c:80c4:: with SMTP id b187mr15261442wmd.23.1550502925478;
+        Mon, 18 Feb 2019 07:15:25 -0800 (PST)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id c18sm16373689wre.32.2019.02.18.07.15.24
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 18 Feb 2019 07:15:24 -0800 (PST)
+Date:   Mon, 18 Feb 2019 16:15:22 +0100
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Rosen Penev <rosenp@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Samuel Sieb <samuel@sieb.net>,
+        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+        iommu@lists.linux-foundation.org, Joerg Roedel <joro@8bytes.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
+Message-ID: <20190218151521.GB9283@localhost.localdomain>
+References: <CAJ0CqmVNF83bWgc+LSQ3_i=zfp-sXC5Nf=nKfqB3SWa8r7sKdQ@mail.gmail.com>
+ <83A1D243-9073-48D1-9F26-5A2581DCB829@gmail.com>
+ <CAJ0CqmUgPWNJtCW4Q__sOtB8w-YtwW+uZy7crxMNrmSgQ6OFyA@mail.gmail.com>
+ <1547404075.1582.0@smtp.gmail.com>
+ <CAJ0CqmU7k5i26g7dGPxNdts7Gm67W6qNsr4vYuW05ugsEF1ohw@mail.gmail.com>
+ <CAKxU2N-+CTaRdJMFVRdozJ5TTpN+_4thiDRBJBFq8gGtuRVYvA@mail.gmail.com>
+ <20190114091841.GA23045@localhost.localdomain>
+ <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
+ <20190115090400.GA2267@localhost.localdomain>
+ <20190218143742.GA11872@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0e29e99a-6ed4-40fe-1f38-30f1b5530a16@nbd.name>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Mon, 18 Feb 2019 15:03:09 +0000 (UTC)
+In-Reply-To: <20190218143742.GA11872@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Feb 18, 2019 at 03:43:26PM +0100, Felix Fietkau wrote:
-> On 2019-02-18 14:52, Stanislaw Gruszka wrote:
-> > On Sat, Feb 16, 2019 at 08:17:07PM +0100, Stefan Wahren wrote:
-> >> this is a misunderstanding. The warning is about memory alignment to 32 bit addresses, not about page alignment. This is a typical ARM restriction. Maybe we need to make sure in mt76 that the DMA buffer needs to be aligned. But it's also possible that the warning isn't the root cause of our problem.
-> >> 
+> (cc: IOMMU & page_frag_alloc maintainers)
+> 
+> On Tue, Jan 15, 2019 at 10:04:01AM +0100, Lorenzo Bianconi wrote:
+> > > On Mon, Jan 14, 2019 at 1:18 AM Lorenzo Bianconi
+> > > <lorenzo.bianconi@redhat.com> wrote:
+> > > >
+> > > > > On Sun, Jan 13, 2019 at 11:00 AM Lorenzo Bianconi
+> > > > > <lorenzo.bianconi@redhat.com> wrote:
+> > > > > >
+> > > > > > >
+> > > > > > >
+> > > > > > > On Sun, Jan 13, 2019 at 5:33 AM, Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+> > > > > > >
+> > > > > > > Direct. No VM used. This is the only peripheral causing this issue.
+> > > > > > >
+> > > > > > > Is the device connected to a usb3.0 port? If so, could you please try to connect the dongle to a 2.0 one?
+> > > > > > >
+> > > > > > > I tried through a USB 2.0 port. Shouldn't make a difference as they both use the xhci driver.
+> > > > > > >
+> > > > > >
+> > > > > > mt76x2u supports scatter-gather on usb 3.0 (not on 2.0)
+> > > > > Tried a USB 3 port. Same result.
+> > > > > >
+> > > > > > > Could you please double check if IOMMU is enabled?
+> > > > > > >
+> > > > > >
+> > > > > > Have you tried to disable it? Does it make any difference?
+> > > > > No idea how. UEFI doesn't seem to show anything similar.
+> > > > >
+> > > > > Similar bug report: https://bugzilla.kernel.org/show_bug.cgi?id=202241
+> 
+> FWIW: I provided some patches in the bugzilla, which were reported to
+> solve the problem. But I looking for confirmation if both are needed:
+> 
+> 0001-mt76x02u-use-usb_bulk_msg-to-upload-firmware.patch
+> 0002-mt76usb-do-not-use-compound-head-page-for-SG-I-O.patch
+> 
+> Or problem can be solved by just one of it (either first or second).
+> 
+> Additionally I'm not 100% sure if
+> 
+> 0002-mt76usb-do-not-use-compound-head-page-for-SG-I-O.patch
+> 
+> is correct. So perhaps some IOMMU maintainer could look at it.
+> 
+> > > > You should be able to disable iommu using GRUB_CMDLINE_LINUX in
+> > > > /etc/default/grub (I guess setting iommu=off and reinstalling grub)
+> > > > https://wiki.gentoo.org/wiki/IOMMU_SWIOTLB
+> > > Yep. Working great now. I wonder what mt76 is doing to cause the crash though...
 > > 
-> > I see, it needs 4 bytes alignment . There is already dwc2 code checks
-> > that and allocate new buffer if the alignment is not right:
-> > dwc2_alloc_dma_aligned_buffer(), but it does nothing if urb->sg
-> > is not NULL. I thought mt76usb already provide aligned buffers, but
-> > looks it does not for one TX special case, which are PROBE REQUEST
-> > frames. Other frames are aligned by inserting L2 header pad. One
-> > solution for this would be just submit urb with  NULL sg (same as
-> > Lorenzo's patches do, but still allocating buffers via buf->sg),
-> > but I think, you have right, we should provide 4 bytes aligned buffers
-> > by default as other DMA hardware may require that. I'm attaching yet
-> > another patch to test, which fix up alignment for PROBE REQUEST frames.
-> This approach looks completely wrong to me. MMIO based hardware does not
-> need 4-byte aligned buffers at all, other USB controllers do not need
-> this either.
-> As Lorenzo already pointed out, re-aligning the buffer is *very*
-> expensive, so we should not do this in the driver just to work around
-> quirks in a particular USB host driver.
+> > Thanks for bisecting the issue. 
+> 
+> Lorenzo, what you mean by 'bisecting' here ? Someone did 'git bisect'
+> on this issue?
+> 
 
-I decided to this patch because I thought some other USB & MMIO DMA
-platforms might also require this alignment. But it was never triggered
-in MMIO because on those mt76 is used in AP mode, hence no PROBE
-REQUEST frames (and scan can be passive on STA mode).
+Hi Stanislaw,
 
-> The way I see it, we have two choices.
-> 1. Fix dwc2 to do its alignment quirk for the urb->sg != NULL case
-> 2. Rely on urb->transfer_buffer and keep urb->sg NULL
+I was meaning 'help bisecting' the issue
 
-I agree, if this is only needed for dwc2. Though I would investigate
-if this is not a bug on other platforms as well.
+> > I think amd iommu does not support well usb scatter-gather
+> > (used by default in mt76u). I am working on a series in order to add the possibility to
+> > disable it.
+> 
+> Even if that true that AMD IOMMU does not support 'well' SG (what I think
+> is not true) disabling SG in mt76 driver is not right solution. Right
+> solution would be propagate the issue to AMD IOMMU maintainers
+> (already CCed).
 
-Stanislaw
+I meant that AMD iommu seems to have different constraints respect to Intel
+one.
+
+Regards,
+Lorenzo
+
+> 
+> One problem in mt76 is page_frag_alloc() usage with different sizes.
+> page_frag_alloc() unlike like other allocators do not assure alignment
+> and relay on callers to provide buffers sizes that are aligned.
+> Unaligned buffer might then not be appropriate for DMA.
+> 
+> Another issue is that dma_map_sg() & dma_map_page() may require some 
+> constraints. I'm not sure about that and I want to clarify that with 
+> CCed mm maintainers. I think DMA drivers may expect sg->offset < PAGE_SIZE
+> for both dma_map_sg() and dma_map_page(). Additionally dma_map_page()
+> maight expect that offset & length specify buffer within one page.
+> 
+> Stanislaw
