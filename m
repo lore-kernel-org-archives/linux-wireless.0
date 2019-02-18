@@ -3,36 +3,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA7DDC43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 06:38:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF97C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 07:38:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C4402184E
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 06:38:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EC212184A
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 07:38:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728392AbfBRGij (ORCPT
+        id S1728632AbfBRHiY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Feb 2019 01:38:39 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:3660 "EHLO huawei.com"
+        Mon, 18 Feb 2019 02:38:24 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:3761 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726221AbfBRGij (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Feb 2019 01:38:39 -0500
-Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 6CF24A5F6D002551B248;
-        Mon, 18 Feb 2019 14:38:35 +0800 (CST)
+        id S1725881AbfBRHiY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Feb 2019 02:38:24 -0500
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 633D6209294E127490E3;
+        Mon, 18 Feb 2019 15:38:17 +0800 (CST)
 Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS406-HUB.china.huawei.com (10.3.19.206) with Microsoft SMTP Server id
- 14.3.408.0; Mon, 18 Feb 2019 14:38:28 +0800
-From:   Wei Yongjun <weiyongjun1@huawei.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-CC:     Wei Yongjun <weiyongjun1@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: [PATCH] mac80211: mesh: fix missing unlock on error in table_path_del()
-Date:   Mon, 18 Feb 2019 06:52:16 +0000
-Message-ID: <20190218065216.155259-1-weiyongjun1@huawei.com>
+ DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
+ 14.3.408.0; Mon, 18 Feb 2019 15:38:08 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+CC:     YueHaibing <yuehaibing@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+Subject: [PATCH] rsi: remove set but not used variables 'info, vif'
+Date:   Mon, 18 Feb 2019 07:51:56 +0000
+Message-ID: <20190218075156.183879-1-yuehaibing@huawei.com>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Type:   text/plain; charset=US-ASCII
@@ -44,28 +46,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-spin_lock_bh() is used in table_path_del() but rcu_read_unlock()
-is used for unlocking. Fix it by using spin_unlock_bh() instead
-of rcu_read_unlock() in the error handling case.
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Fixes: b4c3fbe63601 ("mac80211: Use linked list instead of rhashtable walk for mesh tables")
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+drivers/net/wireless/rsi/rsi_91x_main.c: In function 'rsi_prepare_skb':
+drivers/net/wireless/rsi/rsi_91x_main.c:127:24: warning:
+ variable 'vif' set but not used [-Wunused-but-set-variable]
+
+drivers/net/wireless/rsi/rsi_91x_main.c:124:28: warning:
+ variable 'info' set but not used [-Wunused-but-set-variable]
+
+They're not used any more since 160ee2a11ce0 ("rsi: fill rx_params only once.")
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- net/mac80211/mesh_pathtbl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/rsi/rsi_91x_main.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index c3a7396fb955..9bdeac2749e9 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -627,7 +627,7 @@ static int table_path_del(struct mesh_table *tbl,
- 	spin_lock_bh(&tbl->walk_lock);
- 	mpath = rhashtable_lookup_fast(&tbl->rhead, addr, mesh_rht_params);
- 	if (!mpath) {
--		rcu_read_unlock();
-+		spin_unlock_bh(&tbl->walk_lock);
- 		return -ENXIO;
- 	}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index ca3a55ed72e4..29d83049c5f5 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -121,11 +121,8 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
+ 				       u32 pkt_len,
+ 				       u8 extended_desc)
+ {
+-	struct ieee80211_tx_info *info;
+ 	struct sk_buff *skb = NULL;
+ 	u8 payload_offset;
+-	struct ieee80211_vif *vif;
+-	struct ieee80211_hdr *wh;
+ 
+ 	if (WARN(!pkt_len, "%s: Dummy pkt received", __func__))
+ 		return NULL;
+@@ -144,10 +141,7 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
+ 	payload_offset = (extended_desc + FRAME_DESC_SZ);
+ 	skb_put(skb, pkt_len);
+ 	memcpy((skb->data), (buffer + payload_offset), skb->len);
+-	wh = (struct ieee80211_hdr *)skb->data;
+-	vif = rsi_get_vif(common->priv, wh->addr1);
+ 
+-	info = IEEE80211_SKB_CB(skb);
+ 	return skb;
+ }
 
 
 
