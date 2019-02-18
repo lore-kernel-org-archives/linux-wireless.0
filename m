@@ -2,77 +2,71 @@ Return-Path: <SRS0=F8Dj=QZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8EADC10F01
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 10:26:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 397FDC10F01
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 10:29:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 787CB21736
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 10:26:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13040214DA
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 10:29:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729556AbfBRK0G (ORCPT
+        id S1729419AbfBRK3g (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Feb 2019 05:26:06 -0500
-Received: from orcrist.hmeau.com ([104.223.48.154]:58884 "EHLO
-        deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729359AbfBRK0G (ORCPT
+        Mon, 18 Feb 2019 05:29:36 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:52978 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726800AbfBRK3f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Feb 2019 05:26:06 -0500
-Received: from gondobar.mordor.me.apana.org.au ([192.168.128.4] helo=gondobar)
-        by deadmen.hmeau.com with esmtps (Exim 4.89 #2 (Debian))
-        id 1gvg7d-0005au-SE; Mon, 18 Feb 2019 18:26:01 +0800
-Received: from herbert by gondobar with local (Exim 4.89)
-        (envelope-from <herbert@gondor.apana.org.au>)
-        id 1gvg7Y-0005ml-5B; Mon, 18 Feb 2019 18:25:56 +0800
-Date:   Mon, 18 Feb 2019 18:25:56 +0800
-From:   Herbert Xu <herbert@gondor.apana.org.au>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, j@w1.fi, tgraf@suug.ch,
-        Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [v3 PATCH 0/4] mac80211: Fix incorrect usage of rhashtable walk
- API
-Message-ID: <20190218102555.rsybk7ez73k2u6vp@gondor.apana.org.au>
-References: <20190213050551.x3jffq3ipghw6g2m@gondor.apana.org.au>
- <20190213143853.labj6zdcsoupkris@gondor.apana.org.au>
- <20190214140236.omt74prxhkfaasue@gondor.apana.org.au>
- <52bdb66f7e9e26ce9225ae11e37e22766d73694d.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <52bdb66f7e9e26ce9225ae11e37e22766d73694d.camel@sipsolutions.net>
-User-Agent: NeoMutt/20170113 (1.7.2)
+        Mon, 18 Feb 2019 05:29:35 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC5)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gvgB3-0001uj-9j; Mon, 18 Feb 2019 11:29:33 +0100
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     Herbert Xu <herbert@gondor.apana.org.au>,
+        Wei Yongjun <weiyongjun1@huawei.com>
+Subject: [PATCH net] mac80211: mesh: fix missing unlock on error in table_path_del()
+Date:   Mon, 18 Feb 2019 11:29:29 +0100
+Message-Id: <20190218102929.22276-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.17.2
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Feb 15, 2019 at 01:21:55PM +0100, Johannes Berg wrote:
-> 
-> Applied those now, I'll send a pull request to Dave with them. Once that
-> trickles back into net-next I'll apply the third patch (it doesn't apply
-> without the others), and then Dave you can take the rhashtable one.
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-Thanks Johannes.
+spin_lock_bh() is used in table_path_del() but rcu_read_unlock()
+is used for unlocking. Fix it by using spin_unlock_bh() instead
+of rcu_read_unlock() in the error handling case.
 
-> Let me know if you'd prefer I take the rhashtable one through my tree,
-> which really would be only so you don't have to track the dependency.
+Fixes: b4c3fbe63601 ("mac80211: Use linked list instead of rhashtable walk for mesh tables")
+Acked-by: Herbert Xu <herbert@gondor.apana.org.au>
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+Dave, can you take this directly? I see little value in sending a
+pull request for this one patch (but if you prefer can do so.)
+---
+ net/mac80211/mesh_pathtbl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I don't mind.
-
-> NB: it'd be easier in patchwork if you tagged all the patches with v3 in
-> their own PATCH tag, or put the "v3" tag into the actual subject (not
-> the "[PATCH 0/4]" tag because evidently patchwork drops the tags and
-> doesn't track them for the *series* just each *patch* ... so with what
-> you did nothing is visible in patchwork, even just appending "(v3)" to
-> the subject of the cover letter would've fixed that...
-
-Noted.
-
-Cheers,
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index c3a7396fb955..88a6d5e18ccc 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -627,7 +627,7 @@ static int table_path_del(struct mesh_table *tbl,
+ 	spin_lock_bh(&tbl->walk_lock);
+ 	mpath = rhashtable_lookup_fast(&tbl->rhead, addr, mesh_rht_params);
+ 	if (!mpath) {
+-		rcu_read_unlock();
++		spin_unlock_bh(&tbl->walk_lock);
+ 		return -ENXIO;
+ 	}
+ 
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+2.17.2
+
