@@ -4,81 +4,113 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5471C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:03:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55197C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:06:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6E582217D7
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:03:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22B74217D7
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:06:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Kufl8oac"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iiSz84I6";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="K/mNl1s4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728159AbfBRTDy (ORCPT
+        id S1728235AbfBRTGh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Feb 2019 14:03:54 -0500
-Received: from nbd.name ([46.4.11.11]:54784 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726380AbfBRTDy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Feb 2019 14:03:54 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=0zpQjOoiaqxIJPZ9ElUiIJEHryTItzMfVBH5bh4QgcA=; b=Kufl8oacK66P1FqCEfi1pr6G43
-        EME75DJTy3YgnHAspEvkktgpTn3Fn1Qa82nTSiX/1lkBGvhdVr/r/z2RRYRXZl7xRFTpkZ3FB0x1i
-        RCi8SX7yKz5T9j4c/OwtWJ4LDZEfAyScvuHEl+8vVAWLGUjSwZDBuUwwxlWpVtDyDz1k=;
-Subject: Re: [PATCH] mt76x02u: remove bogus check and comment padding
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-References: <1549963482-13523-1-git-send-email-sgruszka@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <9caba588-d3cc-8996-5238-2909a0f2f282@nbd.name>
-Date:   Mon, 18 Feb 2019 20:03:52 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.5.0
+        Mon, 18 Feb 2019 14:06:37 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:51080 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726380AbfBRTGh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Feb 2019 14:06:37 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 54E30607EF; Mon, 18 Feb 2019 19:06:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550516796;
+        bh=esPdABJBpGSqp931ZQiOXnlVd6J4TnHzDy08pTMrC9A=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=iiSz84I6xLMtcdAZ13csQWbp/x0QENs0bnepTQiwjCv83dGIjaV5qYaVriMWQBJhX
+         q7Jjy1wcCr2tSnAcM6rOmN19+C85frrmyVX9+ERRVBcIylrtzbTa1Z+f1nT7cKe0rA
+         1z3LGnC0BavSN0oZZshLsM9+JMO4vskdGijyI47k=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B4CB260740;
+        Mon, 18 Feb 2019 19:06:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550516795;
+        bh=esPdABJBpGSqp931ZQiOXnlVd6J4TnHzDy08pTMrC9A=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=K/mNl1s4LJP6VfOQwStdcLZfeXVFuB8vMkIAyRaRXUEL2vmspI5JL6+Lwef9AjK6L
+         4XZ83VCR+Y+aVqhi36Jc/X/yml7HrNs8eXD0zmwtGyQscJwG26FdVI0CgWIglMoHXd
+         1vcdrH3sr5bA0AkaoFpouVqVpLlxdjs8dgjLMYHk=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B4CB260740
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc:     Ingo Molnar <mingo@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Borislav Petkov <bp@alien8.de>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-wireless@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, Felix Fietkau <nbd@nbd.name>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Subject: Re: [PATCH 1/2] wireless: mt76: call hweight8() instead of __sw_hweight8()
+References: <1550469571-25933-1-git-send-email-yamada.masahiro@socionext.com>
+        <1550469571-25933-2-git-send-email-yamada.masahiro@socionext.com>
+        <877edxt1f1.fsf@kamboji.qca.qualcomm.com>
+Date:   Mon, 18 Feb 2019 21:06:29 +0200
+In-Reply-To: <877edxt1f1.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Mon, 18 Feb 2019 20:08:18 +0200")
+Message-ID: <87tvh0syq2.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <1549963482-13523-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-12 10:24, Stanislaw Gruszka wrote:
-> In mt76x02u_skb_dma_info() pad is always non-zero. Patch removes
-> bogus check and add comments to the function.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Applied, thanks.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-- Felix
+> Masahiro Yamada <yamada.masahiro@socionext.com> writes:
+>
+>> __sw_hweight8() is just internal implementation.
+>>
+>> Drivers should use the common API, hweight8().
+>>
+>> Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+>
+> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+>
+>> This patch should go to x86 tree along with 2/2.
+>>
+>> Otherwise, all{yes,mod}config of x86 would be broken.
+>>
+>> This patch is trivial enough.
+>> I want ACK from the net/wireless maintainer
+>> so that this can go in via x86 tree.
+>
+> Sounds good to me, feel free to push via the x86 tree.
+
+Actually, can you wait a bit? Felix just reminded me that we have a
+similar patch pending from Ben Hutchings:
+
+https://patchwork.kernel.org/patch/10808203/
+
+And it seems there are two instances of __sw_hweight8, at least in my
+wireless-drivers-next tree:
+
+drivers/net/wireless/mediatek/mt76/mac80211.c:  int i, nstream = __sw_hweight8(dev->antenna_mask);
+drivers/net/wireless/mediatek/mt76/mac80211.c:  int n_chains = __sw_hweight8(dev->antenna_mask);
+
+So we need to think what to do.
+
+-- 
+Kalle Valo
