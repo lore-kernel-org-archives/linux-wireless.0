@@ -2,46 +2,44 @@ Return-Path: <SRS0=F8Dj=QZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 001F7C10F01
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 14:44:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B053C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 14:48:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B9DA02070B
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 14:44:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="tF6V3MSW"
+	by mail.kernel.org (Postfix) with ESMTP id 174EC2070B
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 14:48:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733000AbfBROoU (ORCPT
+        id S1732983AbfBROsH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Feb 2019 09:44:20 -0500
-Received: from nbd.name ([46.4.11.11]:43148 "EHLO nbd.name"
+        Mon, 18 Feb 2019 09:48:07 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:34526 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732167AbfBROoU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Feb 2019 09:44:20 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=fyNt3unuHUQwFKHEPeiM2cIir/xnPqS20voST6LEXEU=; b=tF6V3MSW8nbGHLB95HZ/Pp68PS
-        6sYs92MzfNlr5N5XPn5AyXImrN/Z4PTsStEG/sAa7+cOLeG0pZTkJtxo9Ea6yvo1G8/870TeZlngt
-        gdldnQ5ImYau86AVDiC9uaPnLSbFucgpDbi8PXTjPzb2HN4EHSJps/WChRJg/E0P+gIU=;
-Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        Stefan Wahren <stefan.wahren@i2se.com>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        id S1731038AbfBROsF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Feb 2019 09:48:05 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 578838E6EE;
+        Mon, 18 Feb 2019 14:48:04 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.59])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 91DB55D719;
+        Mon, 18 Feb 2019 14:47:57 +0000 (UTC)
+Date:   Mon, 18 Feb 2019 15:47:56 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Stefan Wahren <stefan.wahren@i2se.com>,
         Alan Stern <stern@rowland.harvard.edu>,
+        Felix Fietkau <nbd@nbd.name>,
         Doug Anderson <dianders@chromium.org>,
         Minas Harutyunyan <hminas@synopsys.com>,
         USB list <linux-usb@vger.kernel.org>,
         linux-wireless <linux-wireless@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1902111246410.1543-100000@iolanthe.rowland.org>
- <CAJ0CqmVFVBXi5E07-ZsYojC7mP4ogpwbcDkDTeebHwX+ayz2DQ@mail.gmail.com>
- <20190212093035.GB12906@redhat.com>
+Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
+Message-ID: <20190218144755.GB9602@redhat.com>
+References: <20190212093035.GB12906@redhat.com>
  <404607590.373282.1550126997144@email.ionos.de>
  <20190214092530.GA17273@redhat.com>
  <878a7160-2e91-d057-6d27-c6b9d85f700e@i2se.com>
@@ -50,73 +48,66 @@ References: <Pine.LNX.4.44L0.1902111246410.1543-100000@iolanthe.rowland.org>
  <20190216140739.GA2236@redhat.com>
  <2009016263.528260.1550344627996@email.ionos.de>
  <20190218135247.GA9602@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <0e29e99a-6ed4-40fe-1f38-30f1b5530a16@nbd.name>
-Date:   Mon, 18 Feb 2019 15:43:26 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.5.0
+ <20190218142527.GA9283@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20190218135247.GA9602@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190218142527.GA9283@localhost.localdomain>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Mon, 18 Feb 2019 14:48:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-18 14:52, Stanislaw Gruszka wrote:
-> On Sat, Feb 16, 2019 at 08:17:07PM +0100, Stefan Wahren wrote:
->> this is a misunderstanding. The warning is about memory alignment to 32 bit addresses, not about page alignment. This is a typical ARM restriction. Maybe we need to make sure in mt76 that the DMA buffer needs to be aligned. But it's also possible that the warning isn't the root cause of our problem.
->> 
+On Mon, Feb 18, 2019 at 03:25:28PM +0100, Lorenzo Bianconi wrote:
+> > commit 0d9813319b40399a0d8fd761d2fcfedee5701487
+> > Author: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> > Date:   Fri Sep 7 23:13:12 2018 +0200
 > 
-> I see, it needs 4 bytes alignment . There is already dwc2 code checks
-> that and allocate new buffer if the alignment is not right:
-> dwc2_alloc_dma_aligned_buffer(), but it does nothing if urb->sg
-> is not NULL. I thought mt76usb already provide aligned buffers, but
-> looks it does not for one TX special case, which are PROBE REQUEST
-> frames. Other frames are aligned by inserting L2 header pad. One
-> solution for this would be just submit urb with  NULL sg (same as
-> Lorenzo's patches do, but still allocating buffers via buf->sg),
-> but I think, you have right, we should provide 4 bytes aligned buffers
-> by default as other DMA hardware may require that. I'm attaching yet
-> another patch to test, which fix up alignment for PROBE REQUEST frames.
-This approach looks completely wrong to me. MMIO based hardware does not
-need 4-byte aligned buffers at all, other USB controllers do not need
-this either.
-As Lorenzo already pointed out, re-aligning the buffer is *very*
-expensive, so we should not do this in the driver just to work around
-quirks in a particular USB host driver.
-And I really don't think we can assume that this code path is going to
-be hit for probe requests only.
+> [...]
+> 
+> > diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+> > index 062614ad0d51..08425b1d2c30 100644
+> > --- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+> > +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+> > @@ -550,21 +550,33 @@ void mt76x02_sta_rate_tbl_update(struct ieee80211_hw *hw,
+> >  }
+> >  EXPORT_SYMBOL_GPL(mt76x02_sta_rate_tbl_update);
+> >  
+> > -int mt76x02_insert_hdr_pad(struct sk_buff *skb)
+> > +void mt76x02_align_skb(struct sk_buff *skb)
+> >  {
+> > -	int len = ieee80211_get_hdrlen_from_skb(skb);
+> > +	int align = ((unsigned long) skb->data) & 3;
+> > +	int hdrlen, skblen;
+> >  
+> > -	if (len % 4 == 0)
+> > -		return 0;
+> > +	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+> > +	WARN_ON_ONCE(align == 0 && (hdrlen & 3));
+> > +
+> > +	if (align == 0)
+> > +		return;
+> 
+> Hi Stanislaw,
+> 
+> is it possible that skb->data is 4 byte aligned but hdrlen is not? (e.g 4addr
+> data frames, not qos)?
 
-The way I see it, we have two choices.
-1. Fix dwc2 to do its alignment quirk for the urb->sg != NULL case
-2. Rely on urb->transfer_buffer and keep urb->sg NULL
+It might be possible, so for now I add this 
 
-- Felix
+WARN_ON_ONCE(align == 0 && (hdrlen & 3));
 
+and plan to do some investigation on frame aliment.
+
+> are you sure this is true *only* for probe requests?
+> this could hit performances and it is used even in pci code
+
+I'm not 100% sure, but I haven't seen any other frames with
+that. All other unaligned frames I've seen in my tests had
+unaligned header and adding header pad aligned them.
+But obviously I've haven't tested all possible scenarios.
+
+Stanislaw
