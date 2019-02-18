@@ -6,36 +6,35 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30F68C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5471C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:03:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3FF9217D7
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:03:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E582217D7
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Feb 2019 19:03:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ffpp0UHg"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Kufl8oac"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728154AbfBRTDo (ORCPT
+        id S1728159AbfBRTDy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Feb 2019 14:03:44 -0500
-Received: from nbd.name ([46.4.11.11]:54774 "EHLO nbd.name"
+        Mon, 18 Feb 2019 14:03:54 -0500
+Received: from nbd.name ([46.4.11.11]:54784 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726380AbfBRTDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Feb 2019 14:03:43 -0500
+        id S1726380AbfBRTDy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Feb 2019 14:03:54 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Nkvfh2wmwC+K3ipmBLhmVZQ7Tva9c11irZjpEvuX7yI=; b=ffpp0UHgTgKewUbN8zCFNIW3xu
-        1afCWIbksEDFfTtiPnNQWpFDLFUh7W0R2VuRDNyS7EmpNc+Hf692OT0ZFrQPC+kkTUHwGAEvfCSOV
-        0GO0g5PPzOpNqEER5Pxq/+CA81tR/7MCDdAbObtmQ0BVK/13Yl8CvnG+nSx1bvjlokBw=;
-Subject: Re: [PATCH] mt76: usb: use dev_err_ratelimited instead of dev_err in
- mt76u_complete_rx
-To:     lorenzo@kernel.org
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
-References: <cover.1549928358.git.lorenzo@kernel.org>
- <25bdd32592a9e0e64d202b1a53c4680f0d958423.1549928358.git.lorenzo@kernel.org>
+        bh=0zpQjOoiaqxIJPZ9ElUiIJEHryTItzMfVBH5bh4QgcA=; b=Kufl8oacK66P1FqCEfi1pr6G43
+        EME75DJTy3YgnHAspEvkktgpTn3Fn1Qa82nTSiX/1lkBGvhdVr/r/z2RRYRXZl7xRFTpkZ3FB0x1i
+        RCi8SX7yKz5T9j4c/OwtWJ4LDZEfAyScvuHEl+8vVAWLGUjSwZDBuUwwxlWpVtDyDz1k=;
+Subject: Re: [PATCH] mt76x02u: remove bogus check and comment padding
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <1549963482-13523-1-git-send-email-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -61,12 +60,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <9454c0f9-761d-2669-7063-70b95a839edb@nbd.name>
-Date:   Mon, 18 Feb 2019 20:03:41 +0100
+Message-ID: <9caba588-d3cc-8996-5238-2909a0f2f282@nbd.name>
+Date:   Mon, 18 Feb 2019 20:03:52 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.0
 MIME-Version: 1.0
-In-Reply-To: <25bdd32592a9e0e64d202b1a53c4680f0d958423.1549928358.git.lorenzo@kernel.org>
+In-Reply-To: <1549963482-13523-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -75,13 +74,11 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-12 00:45, lorenzo@kernel.org wrote:
-> From: Lorenzo Bianconi <lorenzo@kernel.org>
+On 2019-02-12 10:24, Stanislaw Gruszka wrote:
+> In mt76x02u_skb_dma_info() pad is always non-zero. Patch removes
+> bogus check and add comments to the function.
 > 
-> During device removal the driver can report multiple error messages.
-> Use dev_err_ratelimited instead of dev_err to display urb errors
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 Applied, thanks.
 
 - Felix
