@@ -6,62 +6,62 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E617C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:10:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E04E1C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:10:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3DE7C21736
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:10:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE7A221738
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:10:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Vmb/rFJs";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OI98hxh4"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gZQ7JEay";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="J9QLFV0J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728264AbfBSPKU (ORCPT
+        id S1728347AbfBSPKr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Feb 2019 10:10:20 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:38280 "EHLO
+        Tue, 19 Feb 2019 10:10:47 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:38476 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725885AbfBSPKU (ORCPT
+        with ESMTP id S1725885AbfBSPKr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Feb 2019 10:10:20 -0500
+        Tue, 19 Feb 2019 10:10:47 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id C0D366071A; Tue, 19 Feb 2019 15:10:19 +0000 (UTC)
+        id 27659608FB; Tue, 19 Feb 2019 15:10:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550589019;
-        bh=iqYquW/jRXJaGP3vvyXdhWzilNINTnMOTiRZn/jZIE8=;
+        s=default; t=1550589046;
+        bh=4/mSjN26wCngu4mmMvQFlx243qMka40OkQJAS1l7Slo=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Vmb/rFJsLHcGDWbRTR7gJg6FCLfdTjrBMO0AvRwWJb6MCBF+sF2aG76HQPdlzdepX
-         TpqletICEs+SoAeaO4Y4YlQnZcYlS0D434GrSPPWcpUfZUPflkARtA6XNSfrRhXmaj
-         NnMwyHBt5yI+PHRC3FQwemsOT6Sh2Xrrqjfkq2Rg=
+        b=gZQ7JEayrPtPMxnQz2IF1xUv9uKCIZWasQw6bD5GJug18nvTayJbrywauXJrjcweD
+         VSwYiuSOGlUgBgdAh1eA27b1nDaa8hLJxA3CUcNvG0GeKRu+WAKwFiuyisZdswYkwD
+         az2CSfiAtmmWMsR1LoQwLiCOQWMTe6+hRrV4U4Ik=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BEFB460791;
-        Tue, 19 Feb 2019 15:10:16 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 89B1A6085F;
+        Tue, 19 Feb 2019 15:10:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550589018;
-        bh=iqYquW/jRXJaGP3vvyXdhWzilNINTnMOTiRZn/jZIE8=;
+        s=default; t=1550589045;
+        bh=4/mSjN26wCngu4mmMvQFlx243qMka40OkQJAS1l7Slo=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=OI98hxh4nrrqD8wL0g+x2rnEAxswA2Eo6rX9CiAaiGwMdPs4GpJJWIfhWgTQC/dep
-         7FBwk7FhmlACISQbv2qKQg2OwtggXaEL+WX6b8oTW4YqzOCfncUdwFdX00kVrrLWSi
-         EkLSqYbKMbkeQKv0CTwZGqtkmhGqFJmC9kUq+6qI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BEFB460791
+        b=J9QLFV0J+PLhMbpB33xZ4Vw6gflaAflo201IsH44gk58pa6NM05J0J9cFY8CAgJmu
+         tE2OH32V6QXkWnLJceSIdWmQYO6IimTQjE9/eNmexTrWfLNSGpY3p4lGy+3WuOel1U
+         9fb5s3wcXqPhYPfnEzAnKTknkmKKA3zFHTgGD1UA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 89B1A6085F
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] libertas_tf: lower the debug level of command trace
+Subject: Re: [PATCH] libertas_tf: don't set URB_ZERO_PACKET on IN USB transfer
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190210194735.17939-1-lkundrak@v3.sk>
-References: <20190210194735.17939-1-lkundrak@v3.sk>
+In-Reply-To: <20190210194749.18135-1-lkundrak@v3.sk>
+References: <20190210194749.18135-1-lkundrak@v3.sk>
 To:     Lubomir Rintel <lkundrak@v3.sk>
 Cc:     "David S. Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lubomir Rintel <lkundrak@v3.sk>
+        Lubomir Rintel <lkundrak@v3.sk>, stable@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190219151019.C0D366071A@smtp.codeaurora.org>
-Date:   Tue, 19 Feb 2019 15:10:19 +0000 (UTC)
+Message-Id: <20190219151046.27659608FB@smtp.codeaurora.org>
+Date:   Tue, 19 Feb 2019 15:10:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -69,18 +69,22 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Lubomir Rintel <lkundrak@v3.sk> wrote:
 
-> Logging each and every command response is way too much for INFO level.
-> Silence this, unless CONFIG_LIBERTAS_THINFIRM_DEBUG has been enabled.
+> It doesn't make sense and the USB core warns on each submit of such
+> URB, easily flooding the message buffer with tracebacks.
 > 
+> Analogous issue was fixed in regular libertas driver in commit 6528d8804780
+> ("libertas: don't set URB_ZERO_PACKET on IN USB transfer").
+> 
+> Cc: stable@vger.kernel.org
 > Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
 > Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-744972b2c4d2 libertas_tf: lower the debug level of command trace
+607076a904c4 libertas_tf: don't set URB_ZERO_PACKET on IN USB transfer
 
 -- 
-https://patchwork.kernel.org/patch/10804873/
+https://patchwork.kernel.org/patch/10804875/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
