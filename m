@@ -2,54 +2,54 @@ Return-Path: <SRS0=cMLu=Q2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B211C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 12:12:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 456E7C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 12:20:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5DD32086A
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 12:12:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07193217D7
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 12:20:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="V+gLsAYV"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="VsRwsTvf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727048AbfBSMMn (ORCPT
+        id S1727276AbfBSMUY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Feb 2019 07:12:43 -0500
-Received: from nbd.name ([46.4.11.11]:46458 "EHLO nbd.name"
+        Tue, 19 Feb 2019 07:20:24 -0500
+Received: from nbd.name ([46.4.11.11]:46788 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725805AbfBSMMm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Feb 2019 07:12:42 -0500
+        id S1726141AbfBSMUX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Feb 2019 07:20:23 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=BZdhEPJkUEuZeNheLdql0sv21dPSeh383dTdPaJQLl8=; b=V+gLsAYVTpj7QMHMNjiPmoCL+K
-        yQIB6FEDxWb60cd5VhVPcXo+ciM3TGDOzGTZWTmgueE1WVlxXCXVe4vYZ6vhtZdvtkbGr2D/IowHq
-        a1JBUubDPavKB8j1NMTI1TIsNF8HC95FxYDJoGtABuUPz5dNETZF5JZMQ/bRLLpjZt+M=;
+        bh=JAkZYl750xAbqR/qGFm6EMVVoCkPCDFci13PFkZvWuM=; b=VsRwsTvfwKPC+Hfxf6tLQy1lV6
+        cTzV+xA8BKYtZnj7JJzn5LP++KSe6vApmPKhJYR033Ej43mGU76z8sHUafYAfYeM22iH6/CYURwUe
+        YtBkooE1jY+SgC4Gcgxi8h/yvunoa7IYbXMAHHIz7kRbmmslEzUtXYVP2YU1MjktsmyM=;
 Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        Stefan Wahren <stefan.wahren@i2se.com>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Stefan Wahren <stefan.wahren@i2se.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Alan Stern <stern@rowland.harvard.edu>,
         Doug Anderson <dianders@chromium.org>,
         Minas Harutyunyan <hminas@synopsys.com>,
         USB list <linux-usb@vger.kernel.org>,
         linux-wireless <linux-wireless@vger.kernel.org>
-References: <20190212093035.GB12906@redhat.com>
- <404607590.373282.1550126997144@email.ionos.de>
- <20190214092530.GA17273@redhat.com>
+References: <20190214092530.GA17273@redhat.com>
  <878a7160-2e91-d057-6d27-c6b9d85f700e@i2se.com>
  <20190215071226.GA2372@redhat.com>
  <1411983628.668277.1550315118443@email.ionos.de>
  <20190216140739.GA2236@redhat.com>
  <2009016263.528260.1550344627996@email.ionos.de>
  <20190218135247.GA9602@redhat.com>
- <1181760295.588129.1550528380134@email.ionos.de>
- <20190219105941.GB22999@redhat.com>
+ <0e29e99a-6ed4-40fe-1f38-30f1b5530a16@nbd.name>
+ <20190218150303.GD9602@redhat.com>
+ <a035966b-99f8-1109-d96f-0c3862d26518@nbd.name>
+ <20190219104208.GA22999@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -75,12 +75,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <92273dd0-8944-fb23-c51b-70fc4c5f730e@nbd.name>
-Date:   Tue, 19 Feb 2019 13:11:45 +0100
+Message-ID: <58097bb1-d726-c48e-2a40-2e12098dfb15@nbd.name>
+Date:   Tue, 19 Feb 2019 13:19:26 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.0
 MIME-Version: 1.0
-In-Reply-To: <20190219105941.GB22999@redhat.com>
+In-Reply-To: <20190219104208.GA22999@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,70 +89,75 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-19 11:59, Stanislaw Gruszka wrote:
-> On Mon, Feb 18, 2019 at 11:19:40PM +0100, Stefan Wahren wrote:
->> Hi,
->> 
->> > Stanislaw Gruszka <sgruszka@redhat.com> hat am 18. Februar 2019 um 14:52 geschrieben:
+On 2019-02-19 11:42, Stanislaw Gruszka wrote:
+> On Mon, Feb 18, 2019 at 07:52:27PM +0100, Felix Fietkau wrote:
+>> On 2019-02-18 16:03, Stanislaw Gruszka wrote:
+>> > On Mon, Feb 18, 2019 at 03:43:26PM +0100, Felix Fietkau wrote:
+>> >> On 2019-02-18 14:52, Stanislaw Gruszka wrote:
+>> >> > On Sat, Feb 16, 2019 at 08:17:07PM +0100, Stefan Wahren wrote:
+>> >> >> this is a misunderstanding. The warning is about memory alignment to 32 bit addresses, not about page alignment. This is a typical ARM restriction. Maybe we need to make sure in mt76 that the DMA buffer needs to be aligned. But it's also possible that the warning isn't the root cause of our problem.
+>> >> >> 
+>> >> > 
+>> >> > I see, it needs 4 bytes alignment . There is already dwc2 code checks
+>> >> > that and allocate new buffer if the alignment is not right:
+>> >> > dwc2_alloc_dma_aligned_buffer(), but it does nothing if urb->sg
+>> >> > is not NULL. I thought mt76usb already provide aligned buffers, but
+>> >> > looks it does not for one TX special case, which are PROBE REQUEST
+>> >> > frames. Other frames are aligned by inserting L2 header pad. One
+>> >> > solution for this would be just submit urb with  NULL sg (same as
+>> >> > Lorenzo's patches do, but still allocating buffers via buf->sg),
+>> >> > but I think, you have right, we should provide 4 bytes aligned buffers
+>> >> > by default as other DMA hardware may require that. I'm attaching yet
+>> >> > another patch to test, which fix up alignment for PROBE REQUEST frames.
+>> >> This approach looks completely wrong to me. MMIO based hardware does not
+>> >> need 4-byte aligned buffers at all, other USB controllers do not need
+>> >> this either.
+>> >> As Lorenzo already pointed out, re-aligning the buffer is *very*
+>> >> expensive, so we should not do this in the driver just to work around
+>> >> quirks in a particular USB host driver.
 >> > 
->> > 
->> > On Sat, Feb 16, 2019 at 08:17:07PM +0100, Stefan Wahren wrote:
->> > > this is a misunderstanding. The warning is about memory alignment to 32 bit addresses, not about page alignment. This is a typical ARM restriction. Maybe we need to make sure in mt76 that the DMA buffer needs to be aligned. But it's also possible that the warning isn't the root cause of our problem.
->> > > 
->> > 
->> > I see, it needs 4 bytes alignment . There is already dwc2 code checks
->> > that and allocate new buffer if the alignment is not right:
->> > dwc2_alloc_dma_aligned_buffer(), but it does nothing if urb->sg
->> > is not NULL. I thought mt76usb already provide aligned buffers, but
->> > looks it does not for one TX special case, which are PROBE REQUEST
->> > frames. Other frames are aligned by inserting L2 header pad. One
->> > solution for this would be just submit urb with  NULL sg (same as
->> > Lorenzo's patches do, but still allocating buffers via buf->sg),
->> > but I think, you have right, we should provide 4 bytes aligned buffers
->> > by default as other DMA hardware may require that. I'm attaching yet
->> > another patch to test, which fix up alignment for PROBE REQUEST frames.
->> > 
->> > > > Attached patch should fix this, plese test, thanks in advance.
->> 
->> i saw Felix decided to use Lorenzo's approach.
->> 
->> The patches 1,3,5 applied on today's next fixed only the warning and wifi is still broken (authentication timeout).
->> 
->> Here are the logs for multi_v7_defconfig:
->> https://gist.github.com/lategoodbye/0a7c5cea7dbf25d0de7944c05d229d79
+>> > I decided to this patch because I thought some other USB & MMIO DMA
+>> > platforms might also require this alignment. But it was never triggered
+>> > in MMIO because on those mt76 is used in AP mode, hence no PROBE
+>> > REQUEST frames (and scan can be passive on STA mode).
+>> mt76 is regularly used and tested in STA and Mesh mode as well.
+>> No DMA alignment related issues there.
 > 
-> It would be interesting why urb->num_sgs = 0 & urb->sg cause
-> the troubles. This is how usb_sg_init() submit urbs for sg_tablesize = 0
-> controllers. So either are there are some requirement on urb->sg
-> mapped via dma_map_page() (which mt76usb does not meet) not needed
-> for urb->transfer_buffer mapped via dma_map_single() or there
-> is something wrong in dwc2 with sg and this driver will not
-> work with urb_sg_init() as well. I don't have hardware to investigate
-> this and don't want to bother you with more patches.
-I think the conditions for skipping the alloc of the DMA aligned buffer
-in dwc2 are a bit quirky:
+> The question is why we need to do 2 bytes header pad ? Is this because
+> ieee802.11 header length for mt76 hardware has to be multiple of 4 or
+> it has to be aligned to 4 bytes? It would be strange if length has
+> to be fixed to 4 bytes and alignment not. However this could be
+> needed on some platforms and not on others. 
+Not sure why it was added in the hardware, but the MAC assumes that the
+header is padded to a multiple of 4 bytes in the buffer after it has
+been copied to device memory via DMA or USB.
+Because of that, it has nothing to do with the alignment of the source
+buffer, so the two should not be mixed up.
 
-    if (urb->num_sgs || urb->sg ||
-        urb->transfer_buffer_length == 0 ||
-        !((uintptr_t)urb->transfer_buffer & (DWC2_USB_DMA_ALIGN - 1)))
-        return 0;
+>> >> The way I see it, we have two choices.
+>> >> 1. Fix dwc2 to do its alignment quirk for the urb->sg != NULL case
+>> >> 2. Rely on urb->transfer_buffer and keep urb->sg NULL
+>> > 
+>> > I agree, if this is only needed for dwc2. Though I would investigate
+>> > if this is not a bug on other platforms as well.
+>> >From what I can see, using Lorenzo's patches seems to be the better
+>> solution, since they avoid these corner cases in dwc2 (and maybe other
+>> drivers as well). I will apply them and then we'll see if we need to do
+>> any further improvements later on.
+> 
+> They work on rpi dwc2, but they do not address root of the problem.
+> There is clearly something wrong how mt76usb handle SG, what is not
+> fixed. And adding disable_usb_sg module parameter for hcd's supporting
+> SG should be red flag.
+I think we're simply dealing with multiple issues here, only some of
+which are fixed by Lorenzo's patches.
+I'm pretty sure it's still wrong for mt76 to try to align its buffers,
+since the Linux USB API supports non-aligned transfer buffers and it
+should be up to the controller driver to deal with that.
+dwc2 tries to do that, but that has limitations which I already pointed
+out and which are properly dealt with by Lorenzo's patches.
 
-It would probably make more sense to write:
-
-    if ((urb->num_sgs && urb->sg &&
-         urb->transfer_buffer_length == 0) ||
-        !((uintptr_t)urb->transfer_buffer & (DWC2_USB_DMA_ALIGN - 1)))
-        return 0;
-
-It would still need some extra code for the urb->num_sgs==1 case though.
-
-That code was originally written for the nvidia tegra host controller
-driver and copied to dwc2. Maybe at the time they just didn't want to
-write extra code dealing with urb->sg because nobody was using it for
-single-buffer transfers, or they didn't have a test case.
-
-Either way, while it might be a good idea to improve dwc2 and tegra, I
-still think avoiding the use of urb->sg in single buffer cases is a good
-idea. One advantage is that less memory needs to be allocated.
+Any other issues with sg should be investigated separately, they are
+probably unrelated to this one.
 
 - Felix
