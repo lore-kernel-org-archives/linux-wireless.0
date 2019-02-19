@@ -6,82 +6,88 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2421BC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:18:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05976C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:19:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC4A120700
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:18:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA1CB2077B
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:19:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LvGHwx7l";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pNkAh7dZ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MzXWLW7s";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="mggjI7E9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727972AbfBSPSd (ORCPT
+        id S1726817AbfBSPTp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Feb 2019 10:18:33 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:45826 "EHLO
+        Tue, 19 Feb 2019 10:19:45 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:46112 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727170AbfBSPSd (ORCPT
+        with ESMTP id S1725911AbfBSPTp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Feb 2019 10:18:33 -0500
+        Tue, 19 Feb 2019 10:19:45 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 77563608CB; Tue, 19 Feb 2019 15:18:31 +0000 (UTC)
+        id D27A46085F; Tue, 19 Feb 2019 15:19:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550589511;
-        bh=qXj6MhjL+2dPTWnaY8P/u98l+FRGmQcFXYxqq1r3Rvw=;
+        s=default; t=1550589584;
+        bh=C+28GfTbzckEHc3YFJhmZ+27A5jDlUS3C0DNdpg6Nx8=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=LvGHwx7lCDqFavQ29PTbGKnCjX0Jphgvz3+7PyUuA2ejx/qmobblYoOH34JLMCU9n
-         Z/iUqsQZoCzj0R6wdTpCqW9aNZVu5mXfXsFUiM82vGqdLxouZGbskC2TB76dm0Rcd8
-         fRnmGe8rAe5Fznec6r2yVImZo/rhCmyjnIXeOMBA=
+        b=MzXWLW7s8gM5gH/veyF+zzSH2AESmGhycb5aOFnG5Jvv8V9ZjxMUU3FTX9pUpFpaT
+         80IQ7AnXeZbvJrxNTaG/gWawukXYELzDUl2iIeag75vVk0T0VQZr0OsOCkBBKPmXxf
+         +63bjkpL8axmwfCd/dyrHbdbXaV1nijRlMGON4wE=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0429660388;
-        Tue, 19 Feb 2019 15:18:29 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3741160740;
+        Tue, 19 Feb 2019 15:19:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550589511;
-        bh=qXj6MhjL+2dPTWnaY8P/u98l+FRGmQcFXYxqq1r3Rvw=;
+        s=default; t=1550589584;
+        bh=C+28GfTbzckEHc3YFJhmZ+27A5jDlUS3C0DNdpg6Nx8=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=pNkAh7dZwMLarh6y8V+H0IoU2paVMm3PgFMQmvkI2KJDIFN2nFqkohb7D57x4in8F
-         TNeuPjp7rIccJrl15ovo9yv9lCp3NVJ0HDqOsnCy1TMxRixTosilhwKiTrosOlanN+
-         ru06zLpppsp7jcTI7qesCZCtN1Jf7NfWhQFi8VX4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0429660388
+        b=mggjI7E9vGkeob7nOrwc57lnI88KQ3c6CRsZBc3qbrBC9jsCURdIZnYng8wF+o2Ej
+         Y0PTtX28qbWMkH4d15YHpUT+pnQqbVGpIRE9ZzOsYcYT84O7kjyqXoqmcya1Gh9kFM
+         QW1VOyxozZKm2qhtHq3aEjC9Ah1wJ4R0n2CitKg4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3741160740
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] carl9170: clean up a clamp() call
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v5 1/5] rt2x00: remove unneeded check
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190218093154.GC7712@kadam>
-References: <20190218093154.GC7712@kadam>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     Christian Lamparter <chunkeey@googlemail.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+In-Reply-To: <1550052556-7158-2-git-send-email-sgruszka@redhat.com>
+References: <1550052556-7158-2-git-send-email-sgruszka@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        =?utf-8?q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190219151831.77563608CB@smtp.codeaurora.org>
-Date:   Tue, 19 Feb 2019 15:18:31 +0000 (UTC)
+Message-Id: <20190219151944.D27A46085F@smtp.codeaurora.org>
+Date:   Tue, 19 Feb 2019 15:19:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-> The parameter order for clamp is supposed to be clamp(value, low, high).
-> When we write it in this order it's equivalent to
-> min(head->plcp[3] & 0x7f, 75) which works in this context where the min
-> is zero.  But it's not a correct use of the API.
+> From: Tomislav Požega <pozega.tomislav@gmail.com>
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Acked-by: Christian Lamparter <chunkeey@gmail.com>
+> Remove band check from rf53xx channel config routine since all chips
+> using it are single band.
+> 
+> Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+5 patches applied to wireless-drivers-next.git, thanks.
 
-dc76bb1e12e9 carl9170: clean up a clamp() call
+17ae2acd1a6f rt2x00: remove unneeded check
+5991a2ecd070 rt2x00: remove confusing AGC register
+9ad3b5565445 rt2800: enable TX_PIN_CFG_LNA_PE_ bits per band
+7aca14885ede rt2800: enable TX_PIN_CFG_RFRX_EN only for MT7620
+c7ff1bfeaf1c rt2800: comment and simplify AGC init for RT6352
 
 -- 
-https://patchwork.kernel.org/patch/10817541/
+https://patchwork.kernel.org/patch/10809543/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
