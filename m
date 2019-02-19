@@ -2,129 +2,102 @@ Return-Path: <SRS0=cMLu=Q2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EE11C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 10:59:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E111EC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 11:09:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40A6C206BB
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 10:59:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA21E21902
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 11:09:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727464AbfBSK7u (ORCPT
+        id S1726539AbfBSLI5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Feb 2019 05:59:50 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:55334 "EHLO mx1.redhat.com"
+        Tue, 19 Feb 2019 06:08:57 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:44036 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725763AbfBSK7u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Feb 2019 05:59:50 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        id S1725805AbfBSLI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Feb 2019 06:08:57 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 76CCC87621;
-        Tue, 19 Feb 2019 10:59:49 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id E2023AD885;
+        Tue, 19 Feb 2019 11:08:56 +0000 (UTC)
 Received: from localhost (unknown [10.43.2.44])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E2D4661B81;
-        Tue, 19 Feb 2019 10:59:43 +0000 (UTC)
-Date:   Tue, 19 Feb 2019 11:59:41 +0100
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 18DFB60BE8;
+        Tue, 19 Feb 2019 11:08:53 +0000 (UTC)
+Date:   Tue, 19 Feb 2019 12:08:52 +0100
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Stefan Wahren <stefan.wahren@i2se.com>
+To:     Robin Murphy <robin.murphy@arm.com>
 Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Felix Fietkau <nbd@nbd.name>,
-        Doug Anderson <dianders@chromium.org>,
-        Minas Harutyunyan <hminas@synopsys.com>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
-Message-ID: <20190219105941.GB22999@redhat.com>
-References: <20190212093035.GB12906@redhat.com>
- <404607590.373282.1550126997144@email.ionos.de>
- <20190214092530.GA17273@redhat.com>
- <878a7160-2e91-d057-6d27-c6b9d85f700e@i2se.com>
- <20190215071226.GA2372@redhat.com>
- <1411983628.668277.1550315118443@email.ionos.de>
- <20190216140739.GA2236@redhat.com>
- <2009016263.528260.1550344627996@email.ionos.de>
- <20190218135247.GA9602@redhat.com>
- <1181760295.588129.1550528380134@email.ionos.de>
+        Samuel Sieb <samuel@sieb.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+        Rosen Penev <rosenp@gmail.com>,
+        Alexander Duyck <alexander.h.duyck@linux.intel.com>
+Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
+Message-ID: <20190219110851.GA23223@redhat.com>
+References: <83A1D243-9073-48D1-9F26-5A2581DCB829@gmail.com>
+ <CAJ0CqmUgPWNJtCW4Q__sOtB8w-YtwW+uZy7crxMNrmSgQ6OFyA@mail.gmail.com>
+ <1547404075.1582.0@smtp.gmail.com>
+ <CAJ0CqmU7k5i26g7dGPxNdts7Gm67W6qNsr4vYuW05ugsEF1ohw@mail.gmail.com>
+ <CAKxU2N-+CTaRdJMFVRdozJ5TTpN+_4thiDRBJBFq8gGtuRVYvA@mail.gmail.com>
+ <20190114091841.GA23045@localhost.localdomain>
+ <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
+ <20190115090400.GA2267@localhost.localdomain>
+ <20190218143742.GA11872@redhat.com>
+ <2cc5674a-a3a0-d8fe-65f5-4357da9b85d3@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1181760295.588129.1550528380134@email.ionos.de>
+In-Reply-To: <2cc5674a-a3a0-d8fe-65f5-4357da9b85d3@arm.com>
 User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Tue, 19 Feb 2019 10:59:49 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Tue, 19 Feb 2019 11:08:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Feb 18, 2019 at 11:19:40PM +0100, Stefan Wahren wrote:
-> Hi,
+On Mon, Feb 18, 2019 at 05:01:59PM +0000, Robin Murphy wrote:
+> On 18/02/2019 14:37, Stanislaw Gruszka wrote:
+> [...]
+> >Another issue is that dma_map_sg() & dma_map_page() may require some
+> >constraints. I'm not sure about that and I want to clarify that with
+> >CCed mm maintainers. I think DMA drivers may expect sg->offset < PAGE_SIZE
+> >for both dma_map_sg() and dma_map_page(). Additionally dma_map_page()
+> >maight expect that offset & length specify buffer within one page.
 > 
-> > Stanislaw Gruszka <sgruszka@redhat.com> hat am 18. Februar 2019 um 14:52 geschrieben:
-> > 
-> > 
-> > On Sat, Feb 16, 2019 at 08:17:07PM +0100, Stefan Wahren wrote:
-> > > this is a misunderstanding. The warning is about memory alignment to 32 bit addresses, not about page alignment. This is a typical ARM restriction. Maybe we need to make sure in mt76 that the DMA buffer needs to be aligned. But it's also possible that the warning isn't the root cause of our problem.
-> > > 
-> > 
-> > I see, it needs 4 bytes alignment . There is already dwc2 code checks
-> > that and allocate new buffer if the alignment is not right:
-> > dwc2_alloc_dma_aligned_buffer(), but it does nothing if urb->sg
-> > is not NULL. I thought mt76usb already provide aligned buffers, but
-> > looks it does not for one TX special case, which are PROBE REQUEST
-> > frames. Other frames are aligned by inserting L2 header pad. One
-> > solution for this would be just submit urb with  NULL sg (same as
-> > Lorenzo's patches do, but still allocating buffers via buf->sg),
-> > but I think, you have right, we should provide 4 bytes aligned buffers
-> > by default as other DMA hardware may require that. I'm attaching yet
-> > another patch to test, which fix up alignment for PROBE REQUEST frames.
-> > 
-> > > > Attached patch should fix this, plese test, thanks in advance.
-> 
-> i saw Felix decided to use Lorenzo's approach.
-> 
-> The patches 1,3,5 applied on today's next fixed only the warning and wifi is still broken (authentication timeout).
-> 
-> Here are the logs for multi_v7_defconfig:
-> https://gist.github.com/lategoodbye/0a7c5cea7dbf25d0de7944c05d229d79
+> Luckily, this came up a while back[1] and we seemed to reach a
+> consensus that sg->offset >= PAGE_SIZE for dma_map_sg() was weird
+> but valid. IIRC it was only the Intel IOMMU code which failed to
+> handle that case appropriately (and which I fixed) - the AMD IOMMU
+> code always looked like it should be OK, but I'm not sure I've ever
+> seen definitive test results (and I don't have hardware to do so
+> myself).
 
-It would be interesting why urb->num_sgs = 0 & urb->sg cause
-the troubles. This is how usb_sg_init() submit urbs for sg_tablesize = 0
-controllers. So either are there are some requirement on urb->sg
-mapped via dma_map_page() (which mt76usb does not meet) not needed
-for urb->transfer_buffer mapped via dma_map_single() or there
-is something wrong in dwc2 with sg and this driver will not
-work with urb_sg_init() as well. I don't have hardware to investigate
-this and don't want to bother you with more patches.
+Funny that we have problems on AMD IOMMU and not with Intel IOMMU.
 
-> > > Anyway i tested the following patch combinations against next with the same results as 1,2,3 (no wifi, alignment warning):
-> > > 1,3
-> > > 1,2,3,4
-> > 
-> > I noticed on my setup that patch 4 can cause troubles, but still
-> > device is workable here on my PC machines.
-> > 
-> > > > > Btw i can confirm a regression was introduced after 4.19, because in 4.19 there was no firmware timeout but even no working wifi:
-> > > > 
-> > > > You ment 'no working wifi' or 'working wifi'?
-> > > 
-> > > Wifi is broken in 4.19, 4.20, 5.0 and next. It only worked with Lorenzo's SG avoid patches so far. Btw the regression (firmware timeout) started in 4.20. I also tested it today.
-> > 
-> > That somewhat strange because 4.19 mt76x0u does not use SG.
-> > On 4.19 there is phy calibration bug fixed in 4.19.5:
-> 
-> Sorry for being inprecise. I was talking about the branches not the exact tags. I tested 4.19.23 without luck.
+> For dma_map_page(), length >= PAGE_SIZE should be perfectly valid
+> and handled correctly. The offset >= PAGE_SIZE case is a bit harder
+> to justify, but at the same time has less scope for the DMA API
+> backend to get it wrong, so either way is likely to be OK in
+> practice (in particular the AMD IOMMU code looks like it won't have
+> a problem, since its map_page() implementation converts page and
+> offset to a plain physical address before doing anything else).
 
-In github link you provided someone report mt76x0u working on 4.19 with
-dwc_otg with disabled FIQ irq, so perhaps this is due to bug in dwc2
-fixed in -next but not backported to 4.19.
+Thanks for clarify this. So my patch which do:
 
-> Many thanks anyway
+-		page = virt_to_head_page(data);
++		page = virt_to_page(data);
+ 		offset = data - page_address(page);
+ 		sg_set_page(&urb->sg[i], page, sglen, offset);
 
-Thanks for testing!
+should not be necessary as IOMMU driver do exactly the same internally.
+
+Are there any alignment requirement for offset for dma_map_{page,sg} ?
+It will work with let say sg->offset=113 or we have make sure it is
+aligned to some boundary. If so, what boundary ?
 
 Stanislaw
