@@ -6,86 +6,95 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C39C4C4360F
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:15:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EBCDC10F00
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:16:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B38B20700
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:15:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F8D620700
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:16:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ICh6tDeZ";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XimmRR4i"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cDl1LD58";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="J27Yo8Th"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728035AbfBSPPh (ORCPT
+        id S1728632AbfBSPQJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Feb 2019 10:15:37 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:42282 "EHLO
+        Tue, 19 Feb 2019 10:16:09 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:42980 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726110AbfBSPPh (ORCPT
+        with ESMTP id S1726565AbfBSPQI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Feb 2019 10:15:37 -0500
+        Tue, 19 Feb 2019 10:16:08 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 87CD260388; Tue, 19 Feb 2019 15:15:36 +0000 (UTC)
+        id 1D51F608CD; Tue, 19 Feb 2019 15:16:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550589336;
-        bh=rTqo6ijt4aNvhEJtPuwadJay20C8UFfUyc7zPBlqTHs=;
+        s=default; t=1550589368;
+        bh=2R1xiwbZYucztUl2xvKDOi9it8KQuHlifEU+ymMwROg=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=ICh6tDeZsIJjTM+L7osaEbAnDCE00pC44JqPBplV/5N7OaVwCkcdK+2cdkDWiossN
-         9uoZARM00yohPE4Qf6eEV1oMoY7IfRFkVK8+tatY090T3Y1piyoUDj9mABjfptCPSK
-         WGYUdaMyAixellFWQU/8WIb2BWoVf8ZckbFbToO0=
+        b=cDl1LD58pA9+mhrX8BFnYlnB4thsBNjlO2RBWGTucRC/XQsNcau8LPKYfiL5958fE
+         pNmc6ns7/dVvsbIFsXqRJzdPeHx5cP5oFzSw0pGNeaO/WwZaCN0KBmqMQiRJPfwDIA
+         aIpAi4hODX14eQoJv/JhbkJu2DMcE5O/r4S7RiaU=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 78F1E60388;
-        Tue, 19 Feb 2019 15:15:34 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6785860779;
+        Tue, 19 Feb 2019 15:16:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550589336;
-        bh=rTqo6ijt4aNvhEJtPuwadJay20C8UFfUyc7zPBlqTHs=;
+        s=default; t=1550589367;
+        bh=2R1xiwbZYucztUl2xvKDOi9it8KQuHlifEU+ymMwROg=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=XimmRR4iAeX02r1AyG7cCRFlGqvC28vIO1jBgZWC7Sc5kdgN7KVLJcSqJEevCFdxQ
-         OUYw0y51QU9fZgbAGG5mbN4r+9Iciu/G83vlsg+imG+ULVg2nxntMXd4tFHnu8Gboj
-         PjqkI1jbwjCRyt78mc4JDSvd55R70esT4QMGAgP0=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 78F1E60388
+        b=J27Yo8Thb4PFytUK2iHrE+e6KyjP2o8Ta+kL3ckE9eIFTesBfgx8foggEurAcbGgu
+         qWgx71hzXLxoj7pzu+O2o7oqyMt/sUd7gT5FqxKLqPDcMIjQEYFvBVYY5ujNdF5Qfg
+         aDWINxRHSavWPd93TsW2WkTej0VE6kZk90f/nUaY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6785860779
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH net] mwifiex: Fix NL80211_TX_POWER_LIMITED
+Subject: Re: [PATCH] mwifiex: don't advertise IBSS features without FW support
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190213135938.13664-1-bunk@kernel.org>
-References: <20190213135938.13664-1-bunk@kernel.org>
-To:     Adrian Bunk <bunk@kernel.org>
-Cc:     netdev@vger.kernel.org, Amitkumar Karwar <amitkarwar@gmail.com>,
+In-Reply-To: <20190215003129.98298-1-briannorris@chromium.org>
+References: <20190215003129.98298-1-briannorris@chromium.org>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     Ganapathi Bhat <gbhat@marvell.com>,
         Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
         Xinming Hu <huxinming820@gmail.com>,
-        linux-wireless@vger.kernel.org
+        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Karthik D A <karthida@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190219151536.87CD260388@smtp.codeaurora.org>
-Date:   Tue, 19 Feb 2019 15:15:36 +0000 (UTC)
+Message-Id: <20190219151608.1D51F608CD@smtp.codeaurora.org>
+Date:   Tue, 19 Feb 2019 15:16:07 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Adrian Bunk <bunk@kernel.org> wrote:
+Brian Norris <briannorris@chromium.org> wrote:
 
-> NL80211_TX_POWER_LIMITED was treated as NL80211_TX_POWER_AUTOMATIC,
-> which is the opposite of what should happen and can cause nasty
-> regulatory problems.
+> As it is, doing something like
 > 
-> if/else converted to a switch without default to make gcc warn
-> on unhandled enum values.
+>   # iw phy phy0 interface add foobar type ibss
 > 
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> on a firmware that doesn't have ad-hoc support just yields failures of
+> HostCmd_CMD_SET_BSS_MODE, which happened to return a '-1' error code
+> (-EPERM? not really right...) and sometimes may even crash the firmware
+> along the way.
+> 
+> Let's parse the firmware capability flag while registering the wiphy, so
+> we don't allow attempting IBSS at all, and we get a proper -EOPNOTSUPP
+> from nl80211 instead.
+> 
+> Fixes: e267e71e68ae ("mwifiex: Disable adhoc feature based on firmware capability")
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-65a576e27309 mwifiex: Fix NL80211_TX_POWER_LIMITED
+6f21ab30469d mwifiex: don't advertise IBSS features without FW support
 
 -- 
-https://patchwork.kernel.org/patch/10810011/
+https://patchwork.kernel.org/patch/10814041/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
