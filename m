@@ -2,110 +2,227 @@ Return-Path: <SRS0=cMLu=Q2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D60FC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 11:29:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03C07C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 12:12:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2BB9B206DD
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 11:29:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB0EB2146E
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 12:12:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UZCEY9B9"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bI+mRUg9";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QmYYTF4R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727496AbfBSL31 (ORCPT
+        id S1728160AbfBSMMG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Feb 2019 06:29:27 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:41082 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725767AbfBSL31 (ORCPT
+        Tue, 19 Feb 2019 07:12:06 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:42634 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727640AbfBSMMG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Feb 2019 06:29:27 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1JBTDIq012560;
-        Tue, 19 Feb 2019 11:29:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=AJ1BvetCefdwPGbBunjdzoYFXF2ZCay35WaiVeVSjP8=;
- b=UZCEY9B9cDl9facXJJVd1+xS1VVZmrfPo4peouKE389tJcg7lsc1tjxapXoD/fVXE4NW
- HPqaFHHpo9FXDDq4+4ndKTjKPvdl8GtqV+zHC48hKt8LslCIqh+B9C2IudRXmECvoz54
- jNmbLnW6a7VTMTxmew5i2JEJc89ZijPufqvYWyw8Z94k6bN0QlEySwudHidg5Y/jedcj
- WPQl2txug/YmNYaXC69Jq4C7qo18md3P6LoA09MOHU52hEStl5yGKo1ejuz3iRh8XjlF
- dG2WI2ZwYmVBuggCeXWeOy9PlVPCtpB7LzICLeZsz7r0feqoM5SOvaO0dCAmGDbeGNiD rA== 
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2qp9xttn1m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 19 Feb 2019 11:29:13 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1JBT46c014390
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 19 Feb 2019 11:29:04 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x1JBT3F5007487;
-        Tue, 19 Feb 2019 11:29:03 GMT
-Received: from kadam (/10.175.25.58)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 19 Feb 2019 03:29:02 -0800
-Date:   Tue, 19 Feb 2019 14:28:53 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Kalle Valo <kvalo@codeaurora.org>, kbuild@01.org, kbuild-all@01.org
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        brcm80211-dev-list@cypress.com
-Subject: Re: [kbuild] [PATCH] brcmfmac: use bphy_err() in all wiphy-related
- code
-Message-ID: <20190219112853.GV2304@kadam>
-References: <20190215061601.GE2304@kadam>
- <87bm3dz7tc.fsf@kamboji.qca.qualcomm.com>
- <20190215103803.GF2304@kadam>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190215103803.GF2304@kadam>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9171 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=965 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1902190086
+        Tue, 19 Feb 2019 07:12:06 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 1CA4B608CD; Tue, 19 Feb 2019 12:12:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550578325;
+        bh=ShU8oTqDzJFSReFywGjL8txrHHes0fab7SxGhJT9+R0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=bI+mRUg9AIId9oKQXeXHOvLRw16GaSCC4c4urqDpYgD4x3x3UXvEXqpIlOHabg0OH
+         LSfGyGo6xIaxi09tX4j8fe6q26JMt3XkUV9qEEcvw91zRjPXIP1f1tcs6XsZVOFyHF
+         RdJqgDf5SzKsFdhXk7poAG530FD+4AA9ygpR6CCA=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D9220608D4;
+        Tue, 19 Feb 2019 12:11:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550578320;
+        bh=ShU8oTqDzJFSReFywGjL8txrHHes0fab7SxGhJT9+R0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=QmYYTF4RirBo00FosgjDti0dn1xeaVPqGqvxX00SODkuQPc6359QsXUQW+cvUtViX
+         yQ2ONM3nukoq53hQB+d4ES79oyEObsW31zHZ/fT9tAY9Ci+Y24rQ3uFZ2gP4koAaMc
+         8jmk1mtL0dgtAl6gukN9HHRA693HnaDwFL+1y/Ac=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D9220608D4
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: change 'unsigned long int' to 'unsigned long'
+Date:   Tue, 19 Feb 2019 14:11:43 +0200
+Message-Id: <1550578303-15962-1-git-send-email-kvalo@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Feb 15, 2019 at 01:38:03PM +0300, Dan Carpenter wrote:
-> On Fri, Feb 15, 2019 at 12:04:31PM +0200, Kalle Valo wrote:
-> > > 3e0a97e1 drivers/net/wireless/brcm80211/brcmfmac/fweh.c Arend van
-> > > Spriel 2012-11-14 108 void *data)
-> > > 3e0a97e1 drivers/net/wireless/brcm80211/brcmfmac/fweh.c Arend van
-> > 
-> > This report is very hard to read as the lines seem to be wrapped.
-> > 
-> 
-> I feel like removing the filenames would make the reports more legible.
-> We can get that information from the git hash if we really need it.
-> 
-> Maybe just put the filename at the start:
-> 
-> drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-> 5c36b99a Arend van Spriel 2012-11-14 104
-> 3e0a97e1 Arend van Spriel 2012-11-14 105 static int brcmf_fweh_call_event_handler(struct brcmf_if *ifp,
+Fixes checkpatch warnings:
 
-These emails are actually from the Intel zero day devs.  I just hit
-forward on them.  They have silently implemented the formatting changes
-we asked for.
+Prefer 'unsigned long' over 'unsigned long int' as the int is unnecessary
 
-:)
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.h        | 16 ++++++++--------
+ drivers/net/wireless/ath/ath10k/debug.h       | 20 ++++++++++----------
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c | 10 +++++-----
+ drivers/net/wireless/ath/ath10k/htt_rx.c      | 16 ++++++++--------
+ drivers/net/wireless/ath/ath10k/snoc.h        |  2 +-
+ 5 files changed, 32 insertions(+), 32 deletions(-)
 
-Thanks so much!
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 2f43600717ec..482e60221ccb 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -448,14 +448,14 @@ enum ath10k_amsdu_subfrm_num {
+ };
+ 
+ struct ath10k_sta_tid_stats {
+-	unsigned long int rx_pkt_from_fw;
+-	unsigned long int rx_pkt_unchained;
+-	unsigned long int rx_pkt_drop_chained;
+-	unsigned long int rx_pkt_drop_filter;
+-	unsigned long int rx_pkt_err[ATH10K_PKT_RX_ERR_MAX];
+-	unsigned long int rx_pkt_queued_for_mac;
+-	unsigned long int rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_MAX];
+-	unsigned long int rx_pkt_amsdu[ATH10K_AMSDU_SUBFRM_NUM_MAX];
++	unsigned long rx_pkt_from_fw;
++	unsigned long rx_pkt_unchained;
++	unsigned long rx_pkt_drop_chained;
++	unsigned long rx_pkt_drop_filter;
++	unsigned long rx_pkt_err[ATH10K_PKT_RX_ERR_MAX];
++	unsigned long rx_pkt_queued_for_mac;
++	unsigned long rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_MAX];
++	unsigned long rx_pkt_amsdu[ATH10K_AMSDU_SUBFRM_NUM_MAX];
+ };
+ 
+ enum ath10k_counter_type {
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 5cf16d690724..eecafdbc873f 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -213,12 +213,12 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ void ath10k_sta_update_rx_duration(struct ath10k *ar,
+ 				   struct ath10k_fw_stats *stats);
+ void ath10k_sta_update_rx_tid_stats(struct ath10k *ar, u8 *first_hdr,
+-				    unsigned long int num_msdus,
++				    unsigned long num_msdus,
+ 				    enum ath10k_pkt_rx_err err,
+-				    unsigned long int unchain_cnt,
+-				    unsigned long int drop_cnt,
+-				    unsigned long int drop_cnt_filter,
+-				    unsigned long int queued_msdus);
++				    unsigned long unchain_cnt,
++				    unsigned long drop_cnt,
++				    unsigned long drop_cnt_filter,
++				    unsigned long queued_msdus);
+ void ath10k_sta_update_rx_tid_stats_ampdu(struct ath10k *ar,
+ 					  u16 peer_id, u8 tid,
+ 					  struct htt_rx_indication_mpdu_range *ranges,
+@@ -232,12 +232,12 @@ void ath10k_sta_update_rx_duration(struct ath10k *ar,
+ 
+ static inline
+ void ath10k_sta_update_rx_tid_stats(struct ath10k *ar, u8 *first_hdr,
+-				    unsigned long int num_msdus,
++				    unsigned long num_msdus,
+ 				    enum ath10k_pkt_rx_err err,
+-				    unsigned long int unchain_cnt,
+-				    unsigned long int drop_cnt,
+-				    unsigned long int drop_cnt_filter,
+-				    unsigned long int queued_msdus)
++				    unsigned long unchain_cnt,
++				    unsigned long drop_cnt,
++				    unsigned long drop_cnt_filter,
++				    unsigned long queued_msdus)
+ {
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 4778a455d81a..ab49793353f4 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -87,12 +87,12 @@ void ath10k_sta_update_rx_tid_stats_ampdu(struct ath10k *ar, u16 peer_id, u8 tid
+ }
+ 
+ void ath10k_sta_update_rx_tid_stats(struct ath10k *ar, u8 *first_hdr,
+-				    unsigned long int num_msdus,
++				    unsigned long num_msdus,
+ 				    enum ath10k_pkt_rx_err err,
+-				    unsigned long int unchain_cnt,
+-				    unsigned long int drop_cnt,
+-				    unsigned long int drop_cnt_filter,
+-				    unsigned long int queued_msdus)
++				    unsigned long unchain_cnt,
++				    unsigned long drop_cnt,
++				    unsigned long drop_cnt_filter,
++				    unsigned long queued_msdus)
+ {
+ 	struct ieee80211_sta *sta;
+ 	struct ath10k_sta *arsta;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index d5c666c2504c..1afaa107024a 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1905,7 +1905,7 @@ static void ath10k_htt_rx_h_enqueue(struct ath10k *ar,
+ }
+ 
+ static int ath10k_unchain_msdu(struct sk_buff_head *amsdu,
+-			       unsigned long int *unchain_cnt)
++			       unsigned long *unchain_cnt)
+ {
+ 	struct sk_buff *skb, *first;
+ 	int space;
+@@ -1954,8 +1954,8 @@ static int ath10k_unchain_msdu(struct sk_buff_head *amsdu,
+ 
+ static void ath10k_htt_rx_h_unchain(struct ath10k *ar,
+ 				    struct sk_buff_head *amsdu,
+-				    unsigned long int *drop_cnt,
+-				    unsigned long int *unchain_cnt)
++				    unsigned long *drop_cnt,
++				    unsigned long *unchain_cnt)
+ {
+ 	struct sk_buff *first;
+ 	struct htt_rx_desc *rxd;
+@@ -2005,7 +2005,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
+ static void ath10k_htt_rx_h_filter(struct ath10k *ar,
+ 				   struct sk_buff_head *amsdu,
+ 				   struct ieee80211_rx_status *rx_status,
+-				   unsigned long int *drop_cnt)
++				   unsigned long *drop_cnt)
+ {
+ 	if (skb_queue_empty(amsdu))
+ 		return;
+@@ -2025,10 +2025,10 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
+ 	struct ieee80211_rx_status *rx_status = &htt->rx_status;
+ 	struct sk_buff_head amsdu;
+ 	int ret;
+-	unsigned long int drop_cnt = 0;
+-	unsigned long int unchain_cnt = 0;
+-	unsigned long int drop_cnt_filter = 0;
+-	unsigned long int msdus_to_queue, num_msdus;
++	unsigned long drop_cnt = 0;
++	unsigned long unchain_cnt = 0;
++	unsigned long drop_cnt_filter = 0;
++	unsigned long msdus_to_queue, num_msdus;
+ 	enum ath10k_pkt_rx_err err = ATH10K_PKT_RX_ERR_MAX;
+ 	u8 first_hdr[RX_HTT_HDR_STATUS_LEN];
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.h b/drivers/net/wireless/ath/ath10k/snoc.h
+index 2b2f23cf7c5d..4e256ae4b3ff 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.h
++++ b/drivers/net/wireless/ath/ath10k/snoc.h
+@@ -90,7 +90,7 @@ struct ath10k_snoc {
+ 	struct ath10k_vreg_info *vreg;
+ 	struct ath10k_clk_info *clk;
+ 	struct ath10k_qmi *qmi;
+-	unsigned long int flags;
++	unsigned long flags;
+ };
+ 
+ static inline struct ath10k_snoc *ath10k_snoc_priv(struct ath10k *ar)
+-- 
+2.7.4
 
