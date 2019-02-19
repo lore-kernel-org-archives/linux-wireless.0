@@ -6,87 +6,86 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77DE3C10F00
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:14:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C39C4C4360F
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:15:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42B1E20700
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:14:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B38B20700
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 15:15:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="j0bKIK9O";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="J9SRBzK5"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ICh6tDeZ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XimmRR4i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728014AbfBSPOv (ORCPT
+        id S1728035AbfBSPPh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Feb 2019 10:14:51 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:42084 "EHLO
+        Tue, 19 Feb 2019 10:15:37 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:42282 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726110AbfBSPOu (ORCPT
+        with ESMTP id S1726110AbfBSPPh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Feb 2019 10:14:50 -0500
+        Tue, 19 Feb 2019 10:15:37 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 2A3F9608D2; Tue, 19 Feb 2019 15:14:50 +0000 (UTC)
+        id 87CD260388; Tue, 19 Feb 2019 15:15:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550589290;
-        bh=b2VAM+NHAC+lDq3xa/K3548LLuLIneGgjBAXH67rTBU=;
+        s=default; t=1550589336;
+        bh=rTqo6ijt4aNvhEJtPuwadJay20C8UFfUyc7zPBlqTHs=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=j0bKIK9OIJDK9ybVrb5/JkoyyCchaAKTCLMnbn4Wt9828yHK9UzEGofp/oT9h2sgk
-         hg0MLY8FWbkHhP3Yza95LcQ6Wa3A3tZPcXIx1cxUogliH6RZoJuUES1RCnASpjF8mk
-         mwgolzP8YilDCDbd+SJbuOAI42tkMVvLI3UERt/g=
+        b=ICh6tDeZsIJjTM+L7osaEbAnDCE00pC44JqPBplV/5N7OaVwCkcdK+2cdkDWiossN
+         9uoZARM00yohPE4Qf6eEV1oMoY7IfRFkVK8+tatY090T3Y1piyoUDj9mABjfptCPSK
+         WGYUdaMyAixellFWQU/8WIb2BWoVf8ZckbFbToO0=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 985C960791;
-        Tue, 19 Feb 2019 15:14:47 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 78F1E60388;
+        Tue, 19 Feb 2019 15:15:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550589289;
-        bh=b2VAM+NHAC+lDq3xa/K3548LLuLIneGgjBAXH67rTBU=;
+        s=default; t=1550589336;
+        bh=rTqo6ijt4aNvhEJtPuwadJay20C8UFfUyc7zPBlqTHs=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=J9SRBzK524N0WsNsVhJC9HiJKOByhSbctLh3O6HqrvbVw2u1sXeV9MTF17C+3VVUr
-         q9PLzh8urTs6MjA0eHM3nstaD5EPaNPVLuZuYU3SgpZVBNJDSYW84GyrZ3RQZe8mrr
-         6AV8YYUwWYHfICvEYbJ00R9PInWuOykjeP+bnL58=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 985C960791
+        b=XimmRR4iAeX02r1AyG7cCRFlGqvC28vIO1jBgZWC7Sc5kdgN7KVLJcSqJEevCFdxQ
+         OUYw0y51QU9fZgbAGG5mbN4r+9Iciu/G83vlsg+imG+ULVg2nxntMXd4tFHnu8Gboj
+         PjqkI1jbwjCRyt78mc4JDSvd55R70esT4QMGAgP0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 78F1E60388
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] libertas_tf: remove set but not used variable 'flags'
+Subject: Re: [PATCH net] mwifiex: Fix NL80211_TX_POWER_LIMITED
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190213014917.164506-1-yuehaibing@huawei.com>
-References: <20190213014917.164506-1-yuehaibing@huawei.com>
-To:     YueHaibing <yuehaibing@huawei.com>
-Cc:     Colin Ian King <colin.king@canonical.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>, <netdev@vger.kernel.org>
+In-Reply-To: <20190213135938.13664-1-bunk@kernel.org>
+References: <20190213135938.13664-1-bunk@kernel.org>
+To:     Adrian Bunk <bunk@kernel.org>
+Cc:     netdev@vger.kernel.org, Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190219151450.2A3F9608D2@smtp.codeaurora.org>
-Date:   Tue, 19 Feb 2019 15:14:50 +0000 (UTC)
+Message-Id: <20190219151536.87CD260388@smtp.codeaurora.org>
+Date:   Tue, 19 Feb 2019 15:15:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+Adrian Bunk <bunk@kernel.org> wrote:
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
+> NL80211_TX_POWER_LIMITED was treated as NL80211_TX_POWER_AUTOMATIC,
+> which is the opposite of what should happen and can cause nasty
+> regulatory problems.
 > 
-> drivers/net/wireless/marvell/libertas_tf/main.c: In function 'lbtf_rx':
-> drivers/net/wireless/marvell/libertas_tf/main.c:554:15: warning:
->  variable 'flags' set but not used [-Wunused-but-set-variable]
+> if/else converted to a switch without default to make gcc warn
+> on unhandled enum values.
 > 
-> It never used and can be removed.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> Acked-by: Steve deRosier <derosier@cal-sierra.com>
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-e97cb6ea71b0 libertas_tf: remove set but not used variable 'flags'
+65a576e27309 mwifiex: Fix NL80211_TX_POWER_LIMITED
 
 -- 
-https://patchwork.kernel.org/patch/10808997/
+https://patchwork.kernel.org/patch/10810011/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
