@@ -2,113 +2,118 @@ Return-Path: <SRS0=cMLu=Q2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D6EAC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 10:01:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E40C2C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 10:43:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07E5C2146F
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 10:01:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="U0U6sNZc";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="U0U6sNZc"
+	by mail.kernel.org (Postfix) with ESMTP id B4A2E21773
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Feb 2019 10:43:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727233AbfBSKBV (ORCPT
+        id S1727822AbfBSKmW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Feb 2019 05:01:21 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:52346 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726385AbfBSKBV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Feb 2019 05:01:21 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 9300960850; Tue, 19 Feb 2019 10:01:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550570479;
-        bh=nDgqUzfo+IDRqFp6PeXCgmeIxqqE8SDfs294he/0LQI=;
-        h=From:To:Cc:Subject:Date:From;
-        b=U0U6sNZcMLxxOoRCOV9tRYC/l57uDVYSizAmzeY3Pue2cYOdW70Hu+1CkQrQZSKYI
-         jvNwZB6e+2X6W49pp8Az0ML3/Th4Wx8k9nNW39nv5+QWyhZDy7F5Y/OBvxJgUwmO9m
-         Q9Hm6Ql6/prYlhEWBh9ZyTsXLFCYK1j81H5RcA/0=
-Received: from aambure-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        Tue, 19 Feb 2019 05:42:22 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:41264 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726969AbfBSKmW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Feb 2019 05:42:22 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: aambure@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BED216034E;
-        Tue, 19 Feb 2019 10:01:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550570479;
-        bh=nDgqUzfo+IDRqFp6PeXCgmeIxqqE8SDfs294he/0LQI=;
-        h=From:To:Cc:Subject:Date:From;
-        b=U0U6sNZcMLxxOoRCOV9tRYC/l57uDVYSizAmzeY3Pue2cYOdW70Hu+1CkQrQZSKYI
-         jvNwZB6e+2X6W49pp8Az0ML3/Th4Wx8k9nNW39nv5+QWyhZDy7F5Y/OBvxJgUwmO9m
-         Q9Hm6Ql6/prYlhEWBh9ZyTsXLFCYK1j81H5RcA/0=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BED216034E
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=aambure@codeaurora.org
-From:   Abhishek Ambure <aambure@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Abhishek Ambure <aambure@codeaurora.org>
-Subject: [PATCH] ath10k: update the max num of peers supported for WCN3990
-Date:   Tue, 19 Feb 2019 15:31:08 +0530
-Message-Id: <1550570468-25869-1-git-send-email-aambure@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+        by mx1.redhat.com (Postfix) with ESMTPS id 14F1DC051684;
+        Tue, 19 Feb 2019 10:42:21 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.44])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 04B0B61B6E;
+        Tue, 19 Feb 2019 10:42:17 +0000 (UTC)
+Date:   Tue, 19 Feb 2019 11:42:15 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     Stefan Wahren <stefan.wahren@i2se.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Doug Anderson <dianders@chromium.org>,
+        Minas Harutyunyan <hminas@synopsys.com>,
+        USB list <linux-usb@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
+Message-ID: <20190219104208.GA22999@redhat.com>
+References: <20190214092530.GA17273@redhat.com>
+ <878a7160-2e91-d057-6d27-c6b9d85f700e@i2se.com>
+ <20190215071226.GA2372@redhat.com>
+ <1411983628.668277.1550315118443@email.ionos.de>
+ <20190216140739.GA2236@redhat.com>
+ <2009016263.528260.1550344627996@email.ionos.de>
+ <20190218135247.GA9602@redhat.com>
+ <0e29e99a-6ed4-40fe-1f38-30f1b5530a16@nbd.name>
+ <20190218150303.GD9602@redhat.com>
+ <a035966b-99f8-1109-d96f-0c3862d26518@nbd.name>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a035966b-99f8-1109-d96f-0c3862d26518@nbd.name>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Tue, 19 Feb 2019 10:42:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-WCN3990 firmware versions WLAN.HL.2.0-01617-QCAHLSWMTPLZ-1 & onwards
-supports maximum 33 peers including self peer. To support maximum peers,
-send updated peer param to firmware during initialization.
+On Mon, Feb 18, 2019 at 07:52:27PM +0100, Felix Fietkau wrote:
+> On 2019-02-18 16:03, Stanislaw Gruszka wrote:
+> > On Mon, Feb 18, 2019 at 03:43:26PM +0100, Felix Fietkau wrote:
+> >> On 2019-02-18 14:52, Stanislaw Gruszka wrote:
+> >> > On Sat, Feb 16, 2019 at 08:17:07PM +0100, Stefan Wahren wrote:
+> >> >> this is a misunderstanding. The warning is about memory alignment to 32 bit addresses, not about page alignment. This is a typical ARM restriction. Maybe we need to make sure in mt76 that the DMA buffer needs to be aligned. But it's also possible that the warning isn't the root cause of our problem.
+> >> >> 
+> >> > 
+> >> > I see, it needs 4 bytes alignment . There is already dwc2 code checks
+> >> > that and allocate new buffer if the alignment is not right:
+> >> > dwc2_alloc_dma_aligned_buffer(), but it does nothing if urb->sg
+> >> > is not NULL. I thought mt76usb already provide aligned buffers, but
+> >> > looks it does not for one TX special case, which are PROBE REQUEST
+> >> > frames. Other frames are aligned by inserting L2 header pad. One
+> >> > solution for this would be just submit urb with  NULL sg (same as
+> >> > Lorenzo's patches do, but still allocating buffers via buf->sg),
+> >> > but I think, you have right, we should provide 4 bytes aligned buffers
+> >> > by default as other DMA hardware may require that. I'm attaching yet
+> >> > another patch to test, which fix up alignment for PROBE REQUEST frames.
+> >> This approach looks completely wrong to me. MMIO based hardware does not
+> >> need 4-byte aligned buffers at all, other USB controllers do not need
+> >> this either.
+> >> As Lorenzo already pointed out, re-aligning the buffer is *very*
+> >> expensive, so we should not do this in the driver just to work around
+> >> quirks in a particular USB host driver.
+> > 
+> > I decided to this patch because I thought some other USB & MMIO DMA
+> > platforms might also require this alignment. But it was never triggered
+> > in MMIO because on those mt76 is used in AP mode, hence no PROBE
+> > REQUEST frames (and scan can be passive on STA mode).
+> mt76 is regularly used and tested in STA and Mesh mode as well.
+> No DMA alignment related issues there.
 
-Tested HW: WCN3990
-Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
-
-Signed-off-by: Abhishek Ambure <aambure@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/core.c | 6 +++---
- drivers/net/wireless/ath/ath10k/hw.h   | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index a1b2aea..336c6a4 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -560,10 +560,10 @@
- 		.sw_decrypt_mcast_mgmt = true,
- 		.hw_ops = &wcn3990_ops,
- 		.decap_align_bytes = 1,
--		.num_peers = TARGET_HL_10_TLV_NUM_PEERS,
-+		.num_peers = TARGET_HL_TLV_NUM_PEERS,
- 		.n_cipher_suites = 11,
--		.ast_skid_limit = TARGET_HL_10_TLV_AST_SKID_LIMIT,
--		.num_wds_entries = TARGET_HL_10_TLV_NUM_WDS_ENTRIES,
-+		.ast_skid_limit = TARGET_HL_TLV_AST_SKID_LIMIT,
-+		.num_wds_entries = TARGET_HL_TLV_NUM_WDS_ENTRIES,
- 		.target_64bit = true,
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL_DUAL_MAC,
- 		.per_ce_irq = true,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index fe6b2ed..67413ae 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -763,9 +763,9 @@ struct ath10k_hw_ops {
- #define TARGET_TLV_MGMT_NUM_MSDU_DESC		(50)
+The question is why we need to do 2 bytes header pad ? Is this because
+ieee802.11 header length for mt76 hardware has to be multiple of 4 or
+it has to be aligned to 4 bytes? It would be strange if length has
+to be fixed to 4 bytes and alignment not. However this could be
+needed on some platforms and not on others. 
  
- /* Target specific defines for WMI-HL-1.0 firmware */
--#define TARGET_HL_10_TLV_NUM_PEERS		14
--#define TARGET_HL_10_TLV_AST_SKID_LIMIT		6
--#define TARGET_HL_10_TLV_NUM_WDS_ENTRIES	2
-+#define TARGET_HL_TLV_NUM_PEERS			33
-+#define TARGET_HL_TLV_AST_SKID_LIMIT		16
-+#define TARGET_HL_TLV_NUM_WDS_ENTRIES		2
- 
- /* Diagnostic Window */
- #define CE_DIAG_PIPE	7
--- 
-1.9.1
+> >> The way I see it, we have two choices.
+> >> 1. Fix dwc2 to do its alignment quirk for the urb->sg != NULL case
+> >> 2. Rely on urb->transfer_buffer and keep urb->sg NULL
+> > 
+> > I agree, if this is only needed for dwc2. Though I would investigate
+> > if this is not a bug on other platforms as well.
+> >From what I can see, using Lorenzo's patches seems to be the better
+> solution, since they avoid these corner cases in dwc2 (and maybe other
+> drivers as well). I will apply them and then we'll see if we need to do
+> any further improvements later on.
 
+They work on rpi dwc2, but they do not address root of the problem.
+There is clearly something wrong how mt76usb handle SG, what is not
+fixed. And adding disable_usb_sg module parameter for hcd's supporting
+SG should be red flag.
+
+Stanislaw
