@@ -2,112 +2,121 @@ Return-Path: <SRS0=0XaW=Q3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E26B1C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 19:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 164BBC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 19:15:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B620E2081B
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 19:08:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF1BB2146E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 19:15:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Zq24ogAk";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PZgd1sn3"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PK+6xrif"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726177AbfBTTIN (ORCPT
+        id S1725851AbfBTTPQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 14:08:13 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:41898 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725822AbfBTTIM (ORCPT
+        Wed, 20 Feb 2019 14:15:16 -0500
+Received: from mail-it1-f194.google.com ([209.85.166.194]:53794 "EHLO
+        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725804AbfBTTPQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 14:08:12 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 2E03360850; Wed, 20 Feb 2019 19:08:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550689692;
-        bh=jkg4LlOrCEJZf8sxNmja8OowEjVSDSnrROPK28PKi7g=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Zq24ogAkAVVdred3Ctowzu0A91dAcRjtz9jaecaeb79fGuEoUMHKsPZVHgX/bhgMB
-         +pcsKnOQuZQUQ+ia5UXO1EPzCyHb+sCeg+An7MWUhnD7id7/LGzhrEBgBrHn0p6/zI
-         4ipwyCq9N/xkwvcpHt+qoXDrvE1bntMXlefQ9lV4=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 91B0D6034E;
-        Wed, 20 Feb 2019 19:08:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550689690;
-        bh=jkg4LlOrCEJZf8sxNmja8OowEjVSDSnrROPK28PKi7g=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=PZgd1sn3tzwe4cEJBVeu3f9zb/soYGgEToF/xDc54RsaZZdv7h2Hz1UfOt3rdh2X2
-         cLlhui00wMXNpWnsPOqzjqVI2HhHNQfHyOanWvasDWUq78EcUsN4JKutGM9XKVq74m
-         KvwdS9a9TOqWZG6q3Ejcal2iR1Fu/H/V0o/cw1yY=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 91B0D6034E
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Subject: Re: pull-request: iwlwifi-next 2019-02-20
-References: <8bf655adcf1e58a5e2fd25404a3ae3693cd9e154.camel@coelho.fi>
-Date:   Wed, 20 Feb 2019 21:08:07 +0200
-In-Reply-To: <8bf655adcf1e58a5e2fd25404a3ae3693cd9e154.camel@coelho.fi> (Luca
-        Coelho's message of "Wed, 20 Feb 2019 20:56:40 +0200")
-Message-ID: <87o976p9bc.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Wed, 20 Feb 2019 14:15:16 -0500
+Received: by mail-it1-f194.google.com with SMTP id x131so17996529itc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2019 11:15:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=kfa2BZv4u3AtUtNVuj9BPsX9/+2G10TMkCpdnuwfGKY=;
+        b=PK+6xrifnav8QHjdRwCYRqqKV07gPO3x5zyDa4idcsmgDA1JSb+9F0n/ByQIZ0DRXx
+         8kzvfLVsUtxOf6dHotzQcSEC92MRG2W/sd5uIU5K1QyOi/E7hcBdfQVTduSA81jUDKZ8
+         OHXh6/ZL5JJi6hnFTuv/gFrI01ueqJ+rN+a4ooNJya/IKJhOBLxRChFrq0ZEocaEzbrn
+         c9+H2RT9APFoV2EThjDyfLpKxhbhz6Ep31CPmE02qytH+U3C5k2I7295LO8nAAVPaPb2
+         44eTtjylmiBel60pJA60HE5aOv4mLqCBJGOuQ8GUYOKmHfaAdAw1vEIPEe5SpdjJpJ7m
+         MvQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=kfa2BZv4u3AtUtNVuj9BPsX9/+2G10TMkCpdnuwfGKY=;
+        b=ISNZgJw9/X7ZBdhkQtrXxPYvBSsStxM60eBNHIq4f1IGuqmhI9AC9mb0noyXReFmBL
+         NYnLAJ1zux+X5NPEJLohPuAXw1Up051IVkQuVmkiY72JH7haWOjKHbYwdz8P8aH/jCmk
+         +er98+BXzV/WcAWuiMsKk58UsBnQ+yYYHvF7kXR774HeX9jIDtKRzyNr1lfYoOR5/fw0
+         o7npwjpm4fFcD9sALnnMb9SaqQOxMQfxNtAL93Bba54NW8eD8kijrxOWi/xd1u6mnF7a
+         U9ZdbwLiCDyDxrbw15xo7RMl4M7ybloUIIVz6c7KSJ0mR/1y0tDjS3UDdEtxp15uWSmq
+         jMkA==
+X-Gm-Message-State: AHQUAuYOUCWkwfNw4WUOXrHCEUF5R6lFCYSf0x6jWNXO05mL+ML5KCuh
+        hycpknyGv8W4FlyaXAENsH6JRAYHAMUBi5lACwMgmg==
+X-Google-Smtp-Source: AHgI3Ib68Ec3W1E+Y4Ku0bD/9neGtrggxVb6ReUnYRDPfmsO10w7Wa/6iOw9J+yPc65Rb5Q3JVJr4fCMSoBFGM6kmNc=
+X-Received: by 2002:a6b:3c17:: with SMTP id k23mr19206276iob.182.1550690115642;
+ Wed, 20 Feb 2019 11:15:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
+ <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk>
+ <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
+ <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
+ <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com>
+ <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk>
+ <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk>
+ <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com> <871sa7ylmi.fsf@toke.dk>
+In-Reply-To: <871sa7ylmi.fsf@toke.dk>
+From:   Grant Grundler <grundler@google.com>
+Date:   Wed, 20 Feb 2019 11:15:02 -0800
+Message-ID: <CANEJEGuBoRMBJBOrFOYyPtiJSMfTahrVgTfxZ2ift6Q5uGazFA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+To:     =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc:     Johannes Berg <johannes@sipsolutions.net>, wgong@qti.qualcomm.com,
+        wgong@codeaurora.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> writes:
+On Thu, Sep 6, 2018 at 3:18 AM Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.=
+dk> wrote:
+>
+> Grant Grundler <grundler@google.com> writes:
+>
+> >> And, well, Grant's data is from a single test in a noisy
+> >> environment where the time series graph shows that throughput is all o=
+ver
+> >> the place for the duration of the test; so it's hard to draw solid
+> >> conclusions from (for instance, for the 5-stream test, the average
+> >> throughput for 6 is 331 and 379 Mbps for the two repetitions, and for =
+7
+> >> it's 326 and 371 Mbps) . Unfortunately I don't have the same hardware
+> >> used in this test, so I can't go verify it myself; so the only thing I
+> >> can do is grumble about it here... :)
+> >
+> > It's a fair complaint and I agree with it. My counter argument is the
+> > opposite is true too: most ideal benchmarks don't measure what most
+> > users see. While the data wgong provided are way more noisy than I
+> > like, my overall "confidence" in the "conclusion" I offered is still
+> > positive.
+>
+> Right. I guess I would just prefer a slightly more comprehensive
+> evaluation to base a 4x increase in buffer size on...
 
-> This is the fifth and last batch of patches intended for v5.1.  This
-> includes the last two patchsets I sent.  Usual development work.  More
-> details about the contents in the tag description.
->
-> As agreed, I'm sending this before kbuildbot finished its tests, but we
-> can fix any problems that may arise.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 6c88e0ce5ebcbac8ac930c0149c217c6aa7ab0a3:
->
->   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2019-02-20 20:01:27 +0200)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2019-02-20
->
-> for you to fetch changes up to 085486de833e383705bce61dbde8d31077f5b8ca:
->
->   iwlwifi: add new cards for 22000 and killer series and change the market name (2019-02-20 20:48:01 +0200)
->
-> ----------------------------------------------------------------
-> Fifth batch of iwlwifi patches intended for v5.1
->
-> * Some small fixes and continued work on the new debugging
->   infrastructure;
-> * Greg's debugfs clean-ups;
-> * Some janitorial patches from the community;
-> * Fix to one false-positive compiler warning;
-> * VHT extended NSS support;
-> * New PCI IDs for 9260 and 22000 series;
-> * Other general bugfixes and cleanups;
->
-> ----------------------------------------------------------------
+Kalle, is this why you didn't accept this patch? Other reasons?
 
-Pulled, thanks.
+Toke, what else would you like to see evaluated?
 
--- 
-Kalle Valo
+I generally want to see three things measured when "benchmarking"
+technologies: throughput, latency, cpu utilization
+We've covered those three I think "reasonably".
+
+What does a "4x increase in memory" mean here?  Wen, how much more
+memory does this cause ath10k to use?
+
+If a "4x increase in memory" means I'm using 1MB instead of 256KB, I'm
+not going worry about that on a system with 2GB-16GB of RAM if it
+doubles the throughput of the WIFI for a given workload.  I expect
+routers with 128-256MB RAM would make that tradeoff as well assuming
+they don't have other RAM-demanding workload.
+
+cheers,
+grant
