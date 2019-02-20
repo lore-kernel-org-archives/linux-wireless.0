@@ -6,45 +6,45 @@ X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 462C3C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 22:35:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B998C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 22:35:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 15CA220836
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 22:35:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C99E20880
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 22:35:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550702133;
-	bh=iIRgo6zTCDL3DG8AFy/FKvY1bxTHAAtf0f1nniZfwqM=;
+	s=default; t=1550702135;
+	bh=C9CTsaSPZ0NPbrhx4VcnGn8KWhGt8eNdR9nlBVJQFYI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=U5khVc4+okmyGbejlyT5k8sUcCEr7ZUUQUwtY8CGyA+e3E32AqBDG+JoZP+X/yWqb
-	 IjV9wac3XbgAMN3OBg+JMnJPC1fZnzx2UhqYI33WDQ/IWSTviA8XFBNkceweg1Lq5F
-	 C2KXfNuZ+uad3m6Gk+8obL0Fr+sb6QzHnS8Txg0c=
+	b=N978o6/lE7ieOGpmQKH69KZrSj8I/gcJVqYKgAcH+vgYfLC8Lm9xYMQfdkGhdYZdp
+	 YNhh7eQZN8ITzzk4aSJu21GWwLC8fukNYjamF1n7M4im+B3RzPdtL+TmkMVFgFpuXQ
+	 3a36bFcFUQbfnGKYM7ZFa4RlSFfWFf/E0DbU5FQI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727326AbfBTWfc (ORCPT
+        id S1727393AbfBTWfe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 17:35:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50410 "EHLO mail.kernel.org"
+        Wed, 20 Feb 2019 17:35:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50420 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726163AbfBTWfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 17:35:32 -0500
+        id S1726163AbfBTWfe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Feb 2019 17:35:34 -0500
 Received: from lore-desk.lan (unknown [151.66.48.245])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5D32B20836;
-        Wed, 20 Feb 2019 22:35:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E1C0220880;
+        Wed, 20 Feb 2019 22:35:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550702130;
-        bh=iIRgo6zTCDL3DG8AFy/FKvY1bxTHAAtf0f1nniZfwqM=;
+        s=default; t=1550702133;
+        bh=C9CTsaSPZ0NPbrhx4VcnGn8KWhGt8eNdR9nlBVJQFYI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GsVWC++U4HDDLn9agx4W3rip9e/Qn7HRStTJ8L/jXFBCH/7ORZ+D7rkA4IQu5nlib
-         1ZvfxKuIRDyeScQFXmDnnbib2eGeBmPNaAUe6n5pXQENpoGQyLPP0SMSBald8LHmwd
-         o4bNIfUobCLleWLu4+YVI/3uHusTbqV/HiYS/exo=
+        b=wIFmGAlIDoUtopKZFG5GJbJgoQLJqWvnqdpZUO5Rns7vG1EARpJZYAdl0f4nmJxDc
+         da+N8OL8XvCnV0RAB5VsddpFSpx4gy1jjzXqq1olDoxC7D+3Kdiw+enhzTDEraIpe/
+         zsksFLLU3nIqhhfSHxrBrl256CzWqX2PRcfQ+9WU=
 From:   lorenzo@kernel.org
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
         lorenzo.bianconi@redhat.com, Lorenzo Bianconi <lorenzo@kernel.org>
-Subject: [PATCH 1/3] mt76: usb: introduce mt76u_fill_bulk_urb routine
-Date:   Wed, 20 Feb 2019 23:35:16 +0100
-Message-Id: <ac3c7d22f1d685515459c78e0ff9b29f071fa987.1550701735.git.lorenzo@kernel.org>
+Subject: [PATCH 2/3] mt76: usb: simplify rx buffer allocation
+Date:   Wed, 20 Feb 2019 23:35:17 +0100
+Message-Id: <313ad2969b0630806683752704de8054c6ab4d0c.1550701735.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <cover.1550701735.git.lorenzo@kernel.org>
 References: <cover.1550701735.git.lorenzo@kernel.org>
@@ -57,107 +57,147 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-Add mt76u_fill_bulk_urb to initialize tx/rx urbs and
-remove duplicate code
+Squash mt76u_buf_alloc_sg and mt76u_buf_alloc and remove duplicated
+code. Reuse mt76u_refill_rx in mt76u_buf_alloc
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/usb.c | 45 ++++++++++++++----------
- 1 file changed, 26 insertions(+), 19 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h |  2 -
+ drivers/net/wireless/mediatek/mt76/usb.c  | 76 ++++++++---------------
+ 2 files changed, 27 insertions(+), 51 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index a689af307a71..3b674228542d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -751,8 +751,6 @@ void mt76u_single_wr(struct mt76_dev *dev, const u8 req,
+ 		     const u16 offset, const u32 val);
+ int mt76u_init(struct mt76_dev *dev, struct usb_interface *intf);
+ void mt76u_deinit(struct mt76_dev *dev);
+-int mt76u_buf_alloc(struct mt76_dev *dev, struct mt76u_buf *buf,
+-		    int len, int data_len, gfp_t gfp);
+ void mt76u_buf_free(struct mt76u_buf *buf);
+ int mt76u_submit_buf(struct mt76_dev *dev, int dir, int index,
+ 		     struct mt76u_buf *buf, gfp_t gfp,
 diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index db2ef648431f..76c952c29c6e 100644
+index 76c952c29c6e..211ef7876de2 100644
 --- a/drivers/net/wireless/mediatek/mt76/usb.c
 +++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -381,9 +381,10 @@ void mt76u_buf_free(struct mt76u_buf *buf)
- }
- EXPORT_SYMBOL_GPL(mt76u_buf_free);
- 
--int mt76u_submit_buf(struct mt76_dev *dev, int dir, int index,
--		     struct mt76u_buf *buf, gfp_t gfp,
--		     usb_complete_t complete_fn, void *context)
-+static void
-+mt76u_fill_bulk_urb(struct mt76_dev *dev, int dir, int index,
-+		    struct mt76u_buf *buf, usb_complete_t complete_fn,
-+		    void *context)
- {
- 	struct usb_interface *intf = to_usb_interface(dev->dev);
- 	struct usb_device *udev = interface_to_usbdev(intf);
-@@ -397,6 +398,14 @@ int mt76u_submit_buf(struct mt76_dev *dev, int dir, int index,
- 
- 	usb_fill_bulk_urb(buf->urb, udev, pipe, data, buf->len,
- 			  complete_fn, context);
-+}
-+
-+int mt76u_submit_buf(struct mt76_dev *dev, int dir, int index,
-+		     struct mt76u_buf *buf, gfp_t gfp,
-+		     usb_complete_t complete_fn, void *context)
-+{
-+	mt76u_fill_bulk_urb(dev, dir, index, buf, complete_fn,
-+			    context);
- 	trace_submit_urb(dev, buf->urb);
- 
- 	return usb_submit_urb(buf->urb, gfp);
-@@ -729,11 +738,16 @@ static void mt76u_complete_tx(struct urb *urb)
+@@ -324,41 +324,41 @@ mt76u_fill_rx_sg(struct mt76_dev *dev, struct mt76u_buf *buf,
  }
  
  static int
--mt76u_tx_build_sg(struct sk_buff *skb, struct urb *urb)
-+mt76u_tx_build_sg(struct mt76_dev *dev, struct sk_buff *skb,
-+		  struct urb *urb)
+-mt76u_buf_alloc_sg(struct mt76_dev *dev, struct mt76u_buf *buf,
+-		   int nsgs, int len, int sglen, gfp_t gfp)
++mt76u_refill_rx(struct mt76_dev *dev, struct mt76_queue *q,
++		struct mt76u_buf *buf, int nsgs, gfp_t gfp)
  {
--	int nsgs = 1 + skb_shinfo(skb)->nr_frags;
- 	struct sk_buff *iter;
-+	int nsgs;
+-	buf->urb = usb_alloc_urb(0, gfp);
+-	if (!buf->urb)
+-		return -ENOMEM;
+-
+-	buf->urb->sg = devm_kcalloc(dev->dev, nsgs, sizeof(*buf->urb->sg),
+-				    gfp);
+-	if (!buf->urb->sg)
+-		return -ENOMEM;
+-
+-	sg_init_table(buf->urb->sg, nsgs);
+-	buf->dev = dev;
+-
+-	return mt76u_fill_rx_sg(dev, buf, nsgs, len, sglen);
++	if (dev->usb.sg_en) {
++		return mt76u_fill_rx_sg(dev, buf, nsgs, q->buf_size,
++					SKB_WITH_OVERHEAD(q->buf_size));
++	} else {
++		buf->buf = page_frag_alloc(&q->rx_page, q->buf_size, gfp);
++		return buf->buf ? 0 : -ENOMEM;
++	}
+ }
+ 
+-int mt76u_buf_alloc(struct mt76_dev *dev, struct mt76u_buf *buf,
+-		    int len, int data_len, gfp_t gfp)
++static int
++mt76u_buf_alloc(struct mt76_dev *dev, struct mt76u_buf *buf)
+ {
+ 	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
+ 
+-	buf->urb = usb_alloc_urb(0, gfp);
++	buf->len = SKB_WITH_OVERHEAD(q->buf_size);
++	buf->dev = dev;
 +
-+	if (!dev->usb.sg_en)
-+		return 0;
++	buf->urb = usb_alloc_urb(0, GFP_KERNEL);
+ 	if (!buf->urb)
+ 		return -ENOMEM;
  
-+	nsgs = 1 + skb_shinfo(skb)->nr_frags;
- 	skb_walk_frags(skb, iter)
- 		nsgs += 1 + skb_shinfo(iter)->nr_frags;
+-	buf->buf = page_frag_alloc(&q->rx_page, len, gfp);
+-	if (!buf->buf)
+-		return -ENOMEM;
++	if (dev->usb.sg_en) {
++		buf->urb->sg = devm_kcalloc(dev->dev, MT_SG_MAX_SIZE,
++					    sizeof(*buf->urb->sg),
++					    GFP_KERNEL);
++		if (!buf->urb->sg)
++			return -ENOMEM;
  
-@@ -751,12 +765,8 @@ mt76u_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
- 		   struct sk_buff *skb, struct mt76_wcid *wcid,
- 		   struct ieee80211_sta *sta)
- {
--	struct usb_interface *intf = to_usb_interface(dev->dev);
--	struct usb_device *udev = interface_to_usbdev(intf);
--	u8 *data = NULL, ep = q2ep(q->hw_idx);
- 	struct mt76u_buf *buf;
- 	u16 idx = q->tail;
--	unsigned int pipe;
- 	int err;
+-	buf->len = data_len;
+-	buf->dev = dev;
++		sg_init_table(buf->urb->sg, MT_SG_MAX_SIZE);
++	}
  
- 	if (q->queued == q->ndesc)
-@@ -768,19 +778,16 @@ mt76u_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
- 		return err;
+-	return 0;
++	return mt76u_refill_rx(dev, q, buf, MT_SG_MAX_SIZE, GFP_KERNEL);
+ }
  
- 	buf = &q->entry[idx].ubuf;
-+	buf->buf = skb->data;
-+	buf->len = skb->len;
- 	buf->done = false;
+ void mt76u_buf_free(struct mt76u_buf *buf)
+@@ -519,20 +519,6 @@ static void mt76u_complete_rx(struct urb *urb)
+ 	spin_unlock_irqrestore(&q->lock, flags);
+ }
  
+-static int
+-mt76u_refill_rx(struct mt76_dev *dev, struct mt76_queue *q,
+-		struct mt76u_buf *buf, int nsgs)
+-{
 -	if (dev->usb.sg_en) {
--		err = mt76u_tx_build_sg(skb, buf->urb);
--		if (err < 0)
--			return err;
+-		return mt76u_fill_rx_sg(dev, buf, nsgs, q->buf_size,
+-					SKB_WITH_OVERHEAD(q->buf_size));
 -	} else {
--		data = skb->data;
+-		buf->buf = page_frag_alloc(&q->rx_page, q->buf_size,
+-					   GFP_ATOMIC);
+-		return buf->buf ? 0 : -ENOMEM;
 -	}
-+	err = mt76u_tx_build_sg(dev, skb, buf->urb);
-+	if (err < 0)
-+		return err;
+-}
+-
+ static void mt76u_rx_tasklet(unsigned long data)
+ {
+ 	struct mt76_dev *dev = (struct mt76_dev *)data;
+@@ -549,7 +535,8 @@ static void mt76u_rx_tasklet(unsigned long data)
  
--	pipe = usb_sndbulkpipe(udev, dev->usb.out_ep[ep]);
--	usb_fill_bulk_urb(buf->urb, udev, pipe, data, skb->len,
--			  mt76u_complete_tx, buf);
-+	mt76u_fill_bulk_urb(dev, USB_DIR_OUT, q2ep(q->hw_idx),
-+			    buf, mt76u_complete_tx, buf);
- 
- 	q->tail = (q->tail + 1) % q->ndesc;
- 	q->entry[idx].skb = skb;
+ 		count = mt76u_process_rx_entry(dev, buf);
+ 		if (count > 0) {
+-			err = mt76u_refill_rx(dev, q, buf, count);
++			err = mt76u_refill_rx(dev, q, buf, count,
++					      GFP_ATOMIC);
+ 			if (err < 0)
+ 				break;
+ 		}
+@@ -605,16 +592,7 @@ static int mt76u_alloc_rx(struct mt76_dev *dev)
+ 	q->buf_size = dev->usb.sg_en ? MT_RX_BUF_SIZE : PAGE_SIZE;
+ 	q->ndesc = MT_NUM_RX_ENTRIES;
+ 	for (i = 0; i < q->ndesc; i++) {
+-		if (dev->usb.sg_en)
+-			err = mt76u_buf_alloc_sg(dev, &q->entry[i].ubuf,
+-					MT_SG_MAX_SIZE, q->buf_size,
+-					SKB_WITH_OVERHEAD(q->buf_size),
+-					GFP_KERNEL);
+-		else
+-			err = mt76u_buf_alloc(dev, &q->entry[i].ubuf,
+-					      q->buf_size,
+-					      SKB_WITH_OVERHEAD(q->buf_size),
+-					      GFP_KERNEL);
++		err = mt76u_buf_alloc(dev, &q->entry[i].ubuf);
+ 		if (err < 0)
+ 			return err;
+ 	}
 -- 
 2.20.1
 
