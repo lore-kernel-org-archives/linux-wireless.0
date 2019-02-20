@@ -2,50 +2,47 @@ Return-Path: <SRS0=0XaW=Q3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58D1EC10F01
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 10:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C629C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 10:59:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3487520685
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 10:59:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D804B20685
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 10:59:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727702AbfBTK7E (ORCPT
+        id S1727656AbfBTK7A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 05:59:04 -0500
-Received: from shell.v3.sk ([90.176.6.54]:59835 "EHLO shell.v3.sk"
+        Wed, 20 Feb 2019 05:59:00 -0500
+Received: from shell.v3.sk ([90.176.6.54]:59828 "EHLO shell.v3.sk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727673AbfBTK7C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 05:59:02 -0500
+        id S1726573AbfBTK67 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Feb 2019 05:58:59 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by zimbra.v3.sk (Postfix) with ESMTP id 71D26101A61;
-        Wed, 20 Feb 2019 11:58:59 +0100 (CET)
+        by zimbra.v3.sk (Postfix) with ESMTP id CBB37101A5C;
+        Wed, 20 Feb 2019 11:58:56 +0100 (CET)
 Received: from shell.v3.sk ([127.0.0.1])
         by localhost (zimbra.v3.sk [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id 5x0oRXKUzbAJ; Wed, 20 Feb 2019 11:58:51 +0100 (CET)
+        with ESMTP id fniW9j40cDwn; Wed, 20 Feb 2019 11:58:50 +0100 (CET)
 Received: from localhost (localhost [127.0.0.1])
-        by zimbra.v3.sk (Postfix) with ESMTP id 33203101A5B;
-        Wed, 20 Feb 2019 11:58:51 +0100 (CET)
+        by zimbra.v3.sk (Postfix) with ESMTP id 5396F101A60;
+        Wed, 20 Feb 2019 11:58:50 +0100 (CET)
 X-Virus-Scanned: amavisd-new at zimbra.v3.sk
 Received: from shell.v3.sk ([127.0.0.1])
         by localhost (zimbra.v3.sk [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id EV9Q8KGgOU5i; Wed, 20 Feb 2019 11:58:49 +0100 (CET)
+        with ESMTP id c6ctJtzczHKn; Wed, 20 Feb 2019 11:58:48 +0100 (CET)
 Received: from belphegor.brq.redhat.com (nat-pool-brq-t.redhat.com [213.175.37.10])
-        by zimbra.v3.sk (Postfix) with ESMTPSA id 08DA2101A5E;
-        Wed, 20 Feb 2019 11:58:49 +0100 (CET)
+        by zimbra.v3.sk (Postfix) with ESMTPSA id 6EBBF101A5B;
+        Wed, 20 Feb 2019 11:58:48 +0100 (CET)
 From:   Lubomir Rintel <lkundrak@v3.sk>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     Steve deRosier <derosier@cal-sierra.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lubomir Rintel <lkundrak@v3.sk>
-Subject: [PATCH v2 3/3] libertas_tf: get the MAC address before registering the device
-Date:   Wed, 20 Feb 2019 11:58:40 +0100
-Message-Id: <20190220105840.793525-4-lkundrak@v3.sk>
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/3] libertas_tf: fix setting the hardware address]
+Date:   Wed, 20 Feb 2019 11:58:37 +0100
+Message-Id: <20190220105840.793525-1-lkundrak@v3.sk>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190220105840.793525-1-lkundrak@v3.sk>
-References: <20190220105840.793525-1-lkundrak@v3.sk>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
@@ -53,109 +50,17 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The start() callback is too late for this: NetworkManager would already
-have seen the hardware, thinking 00:00:00:00:00:00 is its permanent
-address.
+Hi,
 
-Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
-Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
----
- .../net/wireless/marvell/libertas_tf/main.c   | 57 ++++---------------
- 1 file changed, 11 insertions(+), 46 deletions(-)
+this is a second version of a patchset addresses a problem with libertas_=
+tf
+driver, where the driver registers the interface without having the MAC
+address set, only setting it when the interface is brought up.
 
-diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/ne=
-t/wireless/marvell/libertas_tf/main.c
-index d8bf0a4071da..5799e9886d83 100644
---- a/drivers/net/wireless/marvell/libertas_tf/main.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/main.c
-@@ -125,37 +125,6 @@ static void lbtf_cmd_work(struct work_struct *work)
- 	lbtf_deb_leave(LBTF_DEB_CMD);
- }
-=20
--/**
-- *  lbtf_setup_firmware: initialize firmware.
-- *
-- *  @priv    A pointer to struct lbtf_private structure
-- *
-- *  Returns: 0 on success.
-- */
--static int lbtf_setup_firmware(struct lbtf_private *priv)
--{
--	int ret =3D -1;
--
--	lbtf_deb_enter(LBTF_DEB_FW);
--	/*
--	 * Read priv address from HW
--	 */
--	eth_broadcast_addr(priv->current_addr);
--	ret =3D lbtf_update_hw_spec(priv);
--	if (ret) {
--		ret =3D -1;
--		goto done;
--	}
--
--	lbtf_set_mac_control(priv);
--	lbtf_set_radio_control(priv);
--
--	ret =3D 0;
--done:
--	lbtf_deb_leave_args(LBTF_DEB_FW, "ret: %d", ret);
--	return ret;
--}
--
- /**
-  *  This function handles the timeout of command sending.
-  *  It will re-send the same command again.
-@@ -289,30 +258,17 @@ static void lbtf_tx_work(struct work_struct *work)
- static int lbtf_op_start(struct ieee80211_hw *hw)
- {
- 	struct lbtf_private *priv =3D hw->priv;
--	int ret =3D -1;
-=20
- 	lbtf_deb_enter(LBTF_DEB_MACOPS);
-=20
--	/* poke the firmware */
- 	priv->capability =3D WLAN_CAPABILITY_SHORT_PREAMBLE;
- 	priv->radioon =3D RADIO_ON;
- 	priv->mac_control =3D CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
--	ret =3D lbtf_setup_firmware(priv);
--	if (ret)
--		goto err_setup_firmware;
--
--	if ((priv->fwrelease < LBTF_FW_VER_MIN) ||
--	    (priv->fwrelease > LBTF_FW_VER_MAX)) {
--		ret =3D -1;
--		goto err_setup_firmware;
--	}
-+	lbtf_set_mac_control(priv);
-+	lbtf_set_radio_control(priv);
-=20
- 	lbtf_deb_leave(LBTF_DEB_MACOPS);
- 	return 0;
--
--err_setup_firmware:
--	lbtf_deb_leave_args(LBTF_DEB_MACOPS, "fw setup error; ret=3D%d", ret);
--	return ret;
- }
-=20
- static void lbtf_op_stop(struct ieee80211_hw *hw)
-@@ -648,6 +604,15 @@ struct lbtf_private *lbtf_add_card(void *card, struc=
-t device *dmdev,
- 		goto err_init_adapter;
- 	}
-=20
-+	eth_broadcast_addr(priv->current_addr);
-+	if (lbtf_update_hw_spec(priv))
-+		goto err_init_adapter;
-+
-+	if (priv->fwrelease < LBTF_FW_VER_MIN ||
-+	    priv->fwrelease > LBTF_FW_VER_MAX) {
-+		goto err_init_adapter;
-+	}
-+
- 	/* The firmware seems to start with the radio enabled. Turn it
- 	 * off before an actual mac80211 start callback is invoked.
- 	 */
---=20
-2.20.1
+It fixes an embarassing build issue and folds in fixes for things
+pointed up in a review into the patch 2/3.
+
+Cheers,
+Lubo
+
 
