@@ -2,215 +2,378 @@ Return-Path: <SRS0=0XaW=Q3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B09F0C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 10:41:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9699DC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 10:48:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7DBED2087B
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 10:41:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 546A02147C
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 10:48:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NN6MHXME";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FJFlM3h7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727448AbfBTKl5 (ORCPT
+        id S1727556AbfBTKsm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 05:41:57 -0500
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:37258 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726209AbfBTKl5 (ORCPT
+        Wed, 20 Feb 2019 05:48:42 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:47020 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726317AbfBTKsm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 05:41:57 -0500
-Received: by mail-wm1-f67.google.com with SMTP id x10so5857170wmg.2
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2019 02:41:56 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=rb9qNldJOnNvQWHTaMOlGzNHQH9HEdpwbN/0DQR+jSc=;
-        b=d3eMaPzh0cEyX68HA0IqFhu19DpaiFwUk/XvvVDq0+Y4g2NHdCmxywdFWqB4S9bL7d
-         +K1pdfJOlxmqFdxvgKqUjTyUsCcsgk2swrOsoTTrgzKXgMrsc2hwJDv9BqKKwW7oYSHa
-         kALLRgXGX1JaZgQZvqC+ITbbz/leJfdyOfkSFyjaZT1Ufg4gbkxXyb8txcoUSujeUO6D
-         RSoXs8bMrM6s8qApUstKj6IbWUM2Q/L/tEbcuMDLxcDPAxqzb9f2yLbNKIJHGcCCn5vR
-         yMF6vIGm6+06K1KGtGwrqPxMog2bCcnrwS0em+zpIJitc5zvCW9JvyBYcy+WaKSkJF2V
-         IELQ==
-X-Gm-Message-State: AHQUAube5vxymAVnhgZpa+5+129A/0DfRBceo9OiCeADNXGC7sDHhAmb
-        qhcgDj0ApU0SNs5YBen6K/VXUg==
-X-Google-Smtp-Source: AHgI3Iage5U9fVxWzpA90mEyGBdFgMuZRHXXdMG3ekKvgMvhXwi4shOqhNhAx+/N7+0qsfZAO56fAw==
-X-Received: by 2002:a1c:f916:: with SMTP id x22mr6453991wmh.87.1550659315721;
-        Wed, 20 Feb 2019 02:41:55 -0800 (PST)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id v4sm4745496wmg.1.2019.02.20.02.41.54
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 20 Feb 2019 02:41:55 -0800 (PST)
-Date:   Wed, 20 Feb 2019 11:41:53 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] mt76usb: remove usb_mcu.c
-Message-ID: <20190220104152.GD2626@localhost.localdomain>
-References: <1550657565-7263-1-git-send-email-sgruszka@redhat.com>
- <1550657565-7263-3-git-send-email-sgruszka@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1550657565-7263-3-git-send-email-sgruszka@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Wed, 20 Feb 2019 05:48:42 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 5EC9B609D4; Wed, 20 Feb 2019 10:48:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550659720;
+        bh=do2ie30xdJ2svlOMZnUXRGCEqBWV8yTrUsVsbFGxDMc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=NN6MHXMEyUsJDAh3gVYNaVkqeVvw1zxJqbk1j+0kN6O5VRokT16ZVnIQa2FHjJEN/
+         zKfBMfrzO8phCkbzT5JXW1leUcNaO/ZNlflX+UJ28v0mJ3f0zXDSXULu2MAP3OSoRD
+         W0abqq0KRcS23TVa90wHiW7CpKOt6Wr8VhWy9KXU=
+Received: from dasaris-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dasaris@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 96E3B609B4;
+        Wed, 20 Feb 2019 10:48:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550659719;
+        bh=do2ie30xdJ2svlOMZnUXRGCEqBWV8yTrUsVsbFGxDMc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=FJFlM3h7GNSd/as36juhvvXm2hujBeWlBmDGV1zfSMQVEryoMbQSOEbCOXwkIq4BS
+         hRMeA0G2wlw2CV3XWwdNo1qAgMP8dwsKeqC0aEerHO37YBu09nkJ3+17CRp4CV1tQt
+         qryeDm6hU5Dy/1W2YQ07UXF3DItOUdlngElztLpI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 96E3B609B4
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=dasaris@codeaurora.org
+From:   Srinivas Dasari <dasaris@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, Sunil Dutt <usdutt@codeaurora.org>,
+        Liangwei Dong <liangwei@codeaurora.org>,
+        Srinivas Dasari <dasaris@codeaurora.org>
+Subject: [v2] cfg80211/nl80211: Offload OWE processing to user space in AP mode
+Date:   Wed, 20 Feb 2019 16:18:07 +0530
+Message-Id: <1550659687-16677-1-git-send-email-dasaris@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Don't need separate file just for kmalloc/kfree.
-> 
+From: Sunil Dutt <usdutt@codeaurora.org>
 
-same comments here kmalloc() --> devm_kmalloc().
-Maybe this patch can be squashed with 2/3?
+This interface allows the host driver to offload OWE processing
+to user space. This intends to support OWE (Opportunistic Wireless
+Encryption) AKM by the drivers that implement SME but rely on the
+user space for the cryptographic/OWE processing in AP mode. Such
+drivers are not capable of processing/deriving the DH IE.
 
-Regards,
-Lorenzo
+A new NL80211 command - NL80211_CMD_UPDATE_OWE_INFO is introduced
+to send the request/event between the host driver and user space.
 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt76.h          |  2 --
->  drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |  5 ----
->  .../net/wireless/mediatek/mt76/mt76x2/usb_init.c   |  5 ----
->  drivers/net/wireless/mediatek/mt76/usb.c           |  8 +++++
->  drivers/net/wireless/mediatek/mt76/usb_mcu.c       | 34 ----------------------
->  5 files changed, 8 insertions(+), 46 deletions(-)
->  delete mode 100644 drivers/net/wireless/mediatek/mt76/usb_mcu.c
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-> index ce53069461ec..972f0ca7c818 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-> @@ -774,7 +774,5 @@ struct sk_buff *mt76_mcu_get_response(struct mt76_dev *dev,
->  				      unsigned long expires);
->  
->  void mt76u_mcu_complete_urb(struct urb *urb);
-> -int mt76u_mcu_init_rx(struct mt76_dev *dev);
-> -void mt76u_mcu_deinit(struct mt76_dev *dev);
->  
->  #endif
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-> index f0c33890f1a5..91718647da02 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-> @@ -79,7 +79,6 @@ static void mt76x0u_cleanup(struct mt76x02_dev *dev)
->  	clear_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
->  	mt76x0_chip_onoff(dev, false, false);
->  	mt76u_queues_deinit(&dev->mt76);
-> -	mt76u_mcu_deinit(&dev->mt76);
->  }
->  
->  static void mt76x0u_mac_stop(struct mt76x02_dev *dev)
-> @@ -193,10 +192,6 @@ static int mt76x0u_register_device(struct mt76x02_dev *dev)
->  	if (err < 0)
->  		goto out_err;
->  
-> -	err = mt76u_mcu_init_rx(&dev->mt76);
-> -	if (err < 0)
-> -		goto out_err;
-> -
->  	err = mt76x0u_init_hardware(dev);
->  	if (err < 0)
->  		goto out_err;
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-> index 090aaf71b3ef..1da90e58d942 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-> @@ -214,10 +214,6 @@ int mt76x2u_register_device(struct mt76x02_dev *dev)
->  	if (err < 0)
->  		goto fail;
->  
-> -	err = mt76u_mcu_init_rx(&dev->mt76);
-> -	if (err < 0)
-> -		goto fail;
-> -
->  	err = mt76x2u_init_hardware(dev);
->  	if (err < 0)
->  		goto fail;
-> @@ -259,5 +255,4 @@ void mt76x2u_cleanup(struct mt76x02_dev *dev)
->  	mt76x02_mcu_set_radio_state(dev, false);
->  	mt76x2u_stop_hw(dev);
->  	mt76u_queues_deinit(&dev->mt76);
-> -	mt76u_mcu_deinit(&dev->mt76);
->  }
-> diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-> index 5c3b7f735aae..4fe025b92302 100644
-> --- a/drivers/net/wireless/mediatek/mt76/usb.c
-> +++ b/drivers/net/wireless/mediatek/mt76/usb.c
-> @@ -577,9 +577,14 @@ EXPORT_SYMBOL_GPL(mt76u_submit_rx_buffers);
->  
->  static int mt76u_alloc_rx(struct mt76_dev *dev)
->  {
-> +	struct mt76_usb *usb = &dev->usb;
->  	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
->  	int i, err;
->  
-> +	usb->mcu.data = kmalloc(MCU_RESP_URB_SIZE, GFP_KERNEL);
-> +	if (usb->mcu.data)
-> +		return -ENOMEM;
-> +
->  	spin_lock_init(&q->rx_page_lock);
->  	spin_lock_init(&q->lock);
->  	q->entry = devm_kcalloc(dev->dev,
-> @@ -610,6 +615,7 @@ static int mt76u_alloc_rx(struct mt76_dev *dev)
->  
->  static void mt76u_free_rx(struct mt76_dev *dev)
->  {
-> +	struct mt76_usb *usb = &dev->usb;
->  	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
->  	struct page *page;
->  	int i;
-> @@ -626,6 +632,8 @@ static void mt76u_free_rx(struct mt76_dev *dev)
->  	memset(&q->rx_page, 0, sizeof(q->rx_page));
->  out:
->  	spin_unlock_bh(&q->rx_page_lock);
-> +
-> +	kfree(usb->mcu.data);
->  }
->  
->  static void mt76u_stop_rx(struct mt76_dev *dev)
-> diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-> deleted file mode 100644
-> index 747231edc57d..000000000000
-> --- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-> +++ /dev/null
-> @@ -1,34 +0,0 @@
-> -/*
-> - * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-> - *
-> - * Permission to use, copy, modify, and/or distribute this software for any
-> - * purpose with or without fee is hereby granted, provided that the above
-> - * copyright notice and this permission notice appear in all copies.
-> - *
-> - * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> - * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> - * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> - * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> - * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> - * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> - * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> - */
-> -
-> -#include "mt76.h"
-> -
-> -int mt76u_mcu_init_rx(struct mt76_dev *dev)
-> -{
-> -	struct mt76_usb *usb = &dev->usb;
-> -
-> -	usb->mcu.data = kmalloc(MCU_RESP_URB_SIZE, GFP_KERNEL);
-> -	return usb->mcu.data ? 0 : -ENOMEM;
-> -}
-> -EXPORT_SYMBOL_GPL(mt76u_mcu_init_rx);
-> -
-> -void mt76u_mcu_deinit(struct mt76_dev *dev)
-> -{
-> -	struct mt76_usb *usb = &dev->usb;
-> -
-> -	kfree(usb->mcu.data);
-> -}
-> -EXPORT_SYMBOL_GPL(mt76u_mcu_deinit);
-> -- 
-> 2.7.5
-> 
+Driver shall provide the OWE info (MAC address and DH IE) of
+the peer to user space for cryptographic processing of the DH IE
+through the event. Accordingly, the user space shall update the
+OWE info/DH IE to the driver.
+
+Following is the sequence in AP mode for OWE authentication.
+
+Driver passes the OWE info obtained from the peer in the
+Association Request to the user space through the event
+cfg80211_update_owe_info_event. User space shall process the
+OWE info received and generate new OWE info. This OWE info is
+passed to the driver through NL80211_CMD_UPDATE_OWE_INFO
+request. Driver eventually uses this OWE info to send the
+Association Response to the peer.
+
+This OWE info in the command interface carries the IEs that include
+PMKID of the peer if the PMKSA is still valid or an updated DH IE
+for generating a new PMKSA with the peer.
+
+Signed-off-by: Liangwei Dong <liangwei@codeaurora.org>
+Signed-off-by: Sunil Dutt <usdutt@codeaurora.org>
+Signed-off-by: Srinivas Dasari <dasaris@codeaurora.org>
+
+---
+v2:
+Added sanity check on IE length of owe_info.
+---
+ include/net/cfg80211.h       | 42 +++++++++++++++++++++++++
+ include/uapi/linux/nl80211.h |  7 +++++
+ net/wireless/nl80211.c       | 73 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      | 13 ++++++++
+ net/wireless/trace.h         | 38 +++++++++++++++++++++++
+ 5 files changed, 173 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f81677f..9a314ee 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3100,6 +3100,32 @@ struct cfg80211_pmsr_request {
+ };
+ 
+ /**
++ * struct cfg80211_update_owe_info - OWE Information
++ *
++ * This structure provides information needed for the drivers to offload OWE
++ * (Opportunistic Wireless Encryption) processing to the user space.
++ *
++ * Commonly used across update_owe_info request and event interfaces.
++ *
++ * @peer: MAC address of the peer device for which the OWE processing
++ *	has to be done.
++ * @status: status code, %WLAN_STATUS_SUCCESS for successful OWE info
++ *	processing, use %WLAN_STATUS_UNSPECIFIED_FAILURE if user space
++ *	cannot give you the real status code for failures. Used only for
++ *	OWE update request command interface (user space to driver).
++ * @ie: IEs obtained from the peer or constructed by the user space. These are
++ *	the IEs of the remote peer in the event from the host driver and
++ *	the constructed IEs by the user space in the request interface.
++ * @ie_len: Length of IEs in octets.
++ */
++struct cfg80211_update_owe_info {
++	u8 peer[ETH_ALEN] __aligned(2);
++	u16 status;
++	const u8 *ie;
++	size_t ie_len;
++};
++
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -3436,6 +3462,10 @@ struct cfg80211_pmsr_request {
+  *	Statistics should be cumulative, currently no way to reset is provided.
+  * @start_pmsr: start peer measurement (e.g. FTM)
+  * @abort_pmsr: abort peer measurement
++ *
++ * @update_owe_info: Provide updated OWE info to driver. Driver implementing SME
++ *	but offloading OWE processing to the user space will get the updated
++ *	DH IE through this interface.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -3750,6 +3780,8 @@ struct cfg80211_ops {
+ 			      struct cfg80211_pmsr_request *request);
+ 	void	(*abort_pmsr)(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			      struct cfg80211_pmsr_request *request);
++	int	(*update_owe_info)(struct wiphy *wiphy, struct net_device *dev,
++				   struct cfg80211_update_owe_info *owe_info);
+ };
+ 
+ /*
+@@ -7160,4 +7192,14 @@ void cfg80211_pmsr_complete(struct wireless_dev *wdev,
+ #define wiphy_WARN(wiphy, format, args...)			\
+ 	WARN(1, "wiphy: %s\n" format, wiphy_name(wiphy), ##args);
+ 
++/**
++ * cfg80211_update_owe_info_event - Notify the peer's OWE info to user space
++ * @netdev: network device
++ * @owe_info: peer's owe info
++ * @gfp: allocation flags
++ */
++void cfg80211_update_owe_info_event(struct net_device *netdev,
++				    struct cfg80211_update_owe_info *owe_info,
++				    gfp_t gfp);
++
+ #endif /* __NET_CFG80211_H */
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index dd4f86e..26aa319 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1065,6 +1065,11 @@
+  *	indicated by %NL80211_ATTR_WIPHY_FREQ and other attributes
+  *	determining the width and type.
+  *
++ * @NL80211_CMD_UPDATE_OWE_INFO: This interface allows the host driver to
++ *	offload OWE processing to user space. This intends to support
++ *	OWE AKM by the host drivers that implement SME but rely
++ *	on the user space for the cryptographic/DH IE processing in AP mode.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -1285,6 +1290,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_NOTIFY_RADAR,
+ 
++	NL80211_CMD_UPDATE_OWE_INFO,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 80878b4..2dd9bcf 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -13241,6 +13241,31 @@ static int nl80211_get_ftm_responder_stats(struct sk_buff *skb,
+ 	return -ENOBUFS;
+ }
+ 
++static int nl80211_update_owe_info(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct cfg80211_update_owe_info owe_info;
++	struct net_device *dev = info->user_ptr[1];
++
++	if (!rdev->ops->update_owe_info)
++		return -EOPNOTSUPP;
++
++	if (!info->attrs[NL80211_ATTR_STATUS_CODE] ||
++	    !info->attrs[NL80211_ATTR_MAC])
++		return -EINVAL;
++
++	memset(&owe_info, 0, sizeof(owe_info));
++	owe_info.status = nla_get_u16(info->attrs[NL80211_ATTR_STATUS_CODE]);
++	nla_memcpy(owe_info.peer, info->attrs[NL80211_ATTR_MAC], ETH_ALEN);
++
++	if (info->attrs[NL80211_ATTR_IE]) {
++		owe_info.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
++		owe_info.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
++	}
++
++	return rdev_update_owe_info(rdev, dev, &owe_info);
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -14175,6 +14200,14 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_UPDATE_OWE_INFO,
++		.doit = nl80211_update_owe_info,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_family nl80211_fam __ro_after_init = {
+@@ -16340,6 +16373,46 @@ int cfg80211_external_auth_request(struct net_device *dev,
+ }
+ EXPORT_SYMBOL(cfg80211_external_auth_request);
+ 
++void cfg80211_update_owe_info_event(struct net_device *netdev,
++				    struct cfg80211_update_owe_info *owe_info,
++				    gfp_t gfp)
++{
++	struct wiphy *wiphy = netdev->ieee80211_ptr->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++	struct sk_buff *msg;
++	void *hdr;
++
++	trace_cfg80211_update_owe_info_event(wiphy, netdev, owe_info);
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_UPDATE_OWE_INFO);
++	if (!hdr)
++		goto nla_put_failure;
++
++	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
++	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex) ||
++	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, owe_info->peer))
++		goto nla_put_failure;
++
++	if (!owe_info->ie_len ||
++	    nla_put(msg, NL80211_ATTR_IE, owe_info->ie_len, owe_info->ie))
++		goto nla_put_failure;
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
++				NL80211_MCGRP_MLME, gfp);
++	return;
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++EXPORT_SYMBOL(cfg80211_update_owe_info_event);
++
+ /* initialisation/exit functions */
+ 
+ int __init nl80211_init(void)
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 5cb48d1..c1e3210 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -1272,4 +1272,17 @@ static inline int rdev_del_pmk(struct cfg80211_registered_device *rdev,
+ 	trace_rdev_return_void(&rdev->wiphy);
+ }
+ 
++static inline int rdev_update_owe_info(struct cfg80211_registered_device *rdev,
++				       struct net_device *dev,
++				       struct cfg80211_update_owe_info *oweinfo)
++{
++	int ret = -EOPNOTSUPP;
++
++	trace_rdev_update_owe_info(&rdev->wiphy, dev, oweinfo);
++	if (rdev->ops->update_owe_info)
++		ret = rdev->ops->update_owe_info(&rdev->wiphy, dev, oweinfo);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
+ #endif /* __CFG80211_RDEV_OPS */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 44b2ce1..2dda529 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -3362,6 +3362,44 @@
+ 		  WIPHY_PR_ARG, WDEV_PR_ARG,
+ 		  (unsigned long long)__entry->cookie)
+ );
++
++TRACE_EVENT(rdev_update_owe_info,
++	    TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		     struct cfg80211_update_owe_info *owe_info),
++	    TP_ARGS(wiphy, netdev, owe_info),
++	    TP_STRUCT__entry(WIPHY_ENTRY
++			     NETDEV_ENTRY
++			     MAC_ENTRY(peer)
++			     __field(u16, status)
++			     __dynamic_array(u8, ie, owe_info->ie_len)),
++	    TP_fast_assign(WIPHY_ASSIGN;
++			   NETDEV_ASSIGN;
++			   MAC_ASSIGN(peer, owe_info->peer);
++			   __entry->status = owe_info->status;
++			   memcpy(__get_dynamic_array(ie),
++				  owe_info->ie, owe_info->ie_len);),
++	    TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", peer: " MAC_PR_FMT
++		  " status %d", WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer),
++		  __entry->status)
++);
++
++TRACE_EVENT(cfg80211_update_owe_info_event,
++	    TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		     struct cfg80211_update_owe_info *owe_info),
++	    TP_ARGS(wiphy, netdev, owe_info),
++	    TP_STRUCT__entry(WIPHY_ENTRY
++			     NETDEV_ENTRY
++			     MAC_ENTRY(peer)
++			     __dynamic_array(u8, ie, owe_info->ie_len)),
++	    TP_fast_assign(WIPHY_ASSIGN;
++			   NETDEV_ASSIGN;
++			   MAC_ASSIGN(peer, owe_info->peer);
++			   memcpy(__get_dynamic_array(ie), owe_info->ie,
++				  owe_info->ie_len);),
++	    TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", peer: " MAC_PR_FMT,
++		      WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer))
++);
++
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
+-- 
+1.9.1
+
