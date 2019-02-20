@@ -2,191 +2,142 @@ Return-Path: <SRS0=0XaW=Q3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27F16C10F0B
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 16:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58D2CC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 16:22:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 047022146E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 16:15:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35BAB20880
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 16:22:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727486AbfBTQPd (ORCPT
+        id S1725836AbfBTQWY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 11:15:33 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:46124 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725836AbfBTQPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 11:15:32 -0500
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 97951787E8;
-        Wed, 20 Feb 2019 16:15:32 +0000 (UTC)
-Received: from localhost (ovpn-204-136.brq.redhat.com [10.40.204.136])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2D42E2A177;
-        Wed, 20 Feb 2019 16:15:32 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH v3 3/3] mt76usb: remove usb_mcu.c
-Date:   Wed, 20 Feb 2019 17:15:20 +0100
-Message-Id: <1550679320-14343-3-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1550679320-14343-1-git-send-email-sgruszka@redhat.com>
-References: <1550679320-14343-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Wed, 20 Feb 2019 16:15:32 +0000 (UTC)
+        Wed, 20 Feb 2019 11:22:24 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:43812 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726803AbfBTQWY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Feb 2019 11:22:24 -0500
+Received: by mail-wr1-f66.google.com with SMTP id d17so12310715wre.10
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2019 08:22:22 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=QBi4C8IXa+iPmrxHpCuzTRZlMEX14lEXIriTy/12RHM=;
+        b=E4wYfRmKAZrrtcedtMSMQhkVIsB+E0CcP43aZCXh9512eAJWl2AkTOXhz+DiKY0NVc
+         lICyPA6fWP6ZqoOP0Hh7uCUnlsUwKwysBnjTzIf/g9y6C+7n1eHWX+AIKm4qLoRp86Ug
+         BBVO9hDnr9SIB/w1nyt+d40H3QKBpHTUcKaJlmw14yCyR3IZawQyUjEs8heSqyskSqkH
+         t09bWzjrPsWj9xhh15J+cHzPZAKJAGHVCM5cTw+JxXWKIF9m8PnVGRBguo643eaJN1cQ
+         RyIKkCskE0S4XZ+QtXJFz1Ve1eGk0bCTmX59M3gpofj2SsgJhXx6L5FBCB5W7YDpm1Q4
+         BYDw==
+X-Gm-Message-State: AHQUAubSsMbLyI9DgAZxRqeZh44xYIfpBfhUEDychWZmnjod/h40OBWj
+        ANouxZKr2IofT8CwBAHV6g2j3w==
+X-Google-Smtp-Source: AHgI3IbARgpUfOhe3nQ4PQ90YJDmT2HjKUAc4NqL1Ym0+IOy2bDHPOpcOu9omt4iHbrjRl/os56KSg==
+X-Received: by 2002:adf:9e0c:: with SMTP id u12mr24688524wre.216.1550679741998;
+        Wed, 20 Feb 2019 08:22:21 -0800 (PST)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id u8sm10819276wrp.55.2019.02.20.08.22.20
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 20 Feb 2019 08:22:21 -0800 (PST)
+Date:   Wed, 20 Feb 2019 17:22:18 +0100
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Stefan Wahren <stefan.wahren@i2se.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Doug Anderson <dianders@chromium.org>,
+        Minas Harutyunyan <hminas@synopsys.com>,
+        USB list <linux-usb@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] mt76x0u: Probing issues on Raspberry Pi 3 B+
+Message-ID: <20190220162217.GH2626@localhost.localdomain>
+References: <2009016263.528260.1550344627996@email.ionos.de>
+ <20190218135247.GA9602@redhat.com>
+ <0e29e99a-6ed4-40fe-1f38-30f1b5530a16@nbd.name>
+ <20190218150303.GD9602@redhat.com>
+ <a035966b-99f8-1109-d96f-0c3862d26518@nbd.name>
+ <20190219104208.GA22999@redhat.com>
+ <58097bb1-d726-c48e-2a40-2e12098dfb15@nbd.name>
+ <20190220130009.GA2377@redhat.com>
+ <20190220132206.GF2626@localhost.localdomain>
+ <20190220161415.GA14165@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190220161415.GA14165@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Don't need separate file just for kmalloc/kfree.
+> On Wed, Feb 20, 2019 at 02:22:08PM +0100, Lorenzo Bianconi wrote:
+> > > On Tue, Feb 19, 2019 at 01:19:26PM +0100, Felix Fietkau wrote:
+> > > > >> >> The way I see it, we have two choices.
+> > > > >> >> 1. Fix dwc2 to do its alignment quirk for the urb->sg != NULL case
+> > > > >> >> 2. Rely on urb->transfer_buffer and keep urb->sg NULL
+> > > > >> > 
+> > > > >> > I agree, if this is only needed for dwc2. Though I would investigate
+> > > > >> > if this is not a bug on other platforms as well.
+> > > > >> >From what I can see, using Lorenzo's patches seems to be the better
+> > > > >> solution, since they avoid these corner cases in dwc2 (and maybe other
+> > > > >> drivers as well). I will apply them and then we'll see if we need to do
+> > > > >> any further improvements later on.
+> > > > > 
+> > > > > They work on rpi dwc2, but they do not address root of the problem.
+> > > > > There is clearly something wrong how mt76usb handle SG, what is not
+> > > > > fixed. And adding disable_usb_sg module parameter for hcd's supporting
+> > > > > SG should be red flag.
+> > > > I think we're simply dealing with multiple issues here, only some of
+> > > > which are fixed by Lorenzo's patches.
+> > > > I'm pretty sure it's still wrong for mt76 to try to align its buffers,
+> > > > since the Linux USB API supports non-aligned transfer buffers and it
+> > > > should be up to the controller driver to deal with that.
+> > > 
+> > > Agree.
+> > > 
+> > > > dwc2 tries to do that, but that has limitations which I already pointed
+> > > > out and which are properly dealt with by Lorenzo's patches.
+> > > 
+> > > I planed to just accept current solution, but I started to work on patch
+> > > that remove len, sglen arguments from mt76u_buf_alloc() and use
+> > > q->buf_size and SKB_WITH_OVERHEAD(q->buf_size) directly and realized how
+> > > related code is now tangled.
+> > > 
+> > > Would be ok to send this patch with proper changelog as fix for RPI
+> > > against wireless-drivers and cc:stable (assuming it works and really
+> > > fix things on RPI) and revert Lorenzo's patches in -next ?
+> > 
+> > Hi Stanislaw,
+> > 
+> > what is the advantage of doing so?
+> To have small fix proper for -stable to fix the problem in 4.20 and 4.19,
+> and have simpler code.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
-v2: use dev_kmalloc()
-v3: fix Makefile
+merging the series I sent we will have a pretty simple approach, just a
+single routine that allocates the rx buffers in the control path according to
+the operating mode.
 
- drivers/net/wireless/mediatek/mt76/Makefile        |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76.h          |  2 --
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |  5 ----
- .../net/wireless/mediatek/mt76/mt76x2/usb_init.c   |  5 ----
- drivers/net/wireless/mediatek/mt76/usb.c           |  5 ++++
- drivers/net/wireless/mediatek/mt76/usb_mcu.c       | 34 ----------------------
- 6 files changed, 6 insertions(+), 47 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt76/usb_mcu.c
+> 
+> > You have duplicated most of the fields that are
+> > already in the urb data structure and you use transfer_buffer (no SG I/O).
+> URB has plenty of fields, I duplicated 2. If size of mt76u_buf is a concern
+> this can be optimized by packing num_sgs, len, done into fields variable.
+> 
+> > Moreover I have ready a series that removes 99% of the dual allocation code and
+> > maintain it in the control path (instead of the datapath one).
+> > I need just to rebase it ontop of your series. I will post it soon.
+> So I would ask what is the point to adding bunch of code and remove it in very
+> next patch?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index fa7a44edd02d..0d6a76f6e2ba 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -7,7 +7,7 @@ mt76-y := \
- 	mmio.o util.o trace.o dma.o mac80211.o debugfs.o eeprom.o \
- 	tx.o agg-rx.o mcu.o
- 
--mt76-usb-y := usb.o usb_trace.o usb_mcu.o
-+mt76-usb-y := usb.o usb_trace.o
- 
- CFLAGS_trace.o := -I$(src)
- CFLAGS_usb_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index c9b5eb9b0582..a689af307a71 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -771,7 +771,5 @@ struct sk_buff *mt76_mcu_get_response(struct mt76_dev *dev,
- 				      unsigned long expires);
- 
- void mt76u_mcu_complete_urb(struct urb *urb);
--int mt76u_mcu_init_rx(struct mt76_dev *dev);
--void mt76u_mcu_deinit(struct mt76_dev *dev);
- 
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index f0c33890f1a5..91718647da02 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -79,7 +79,6 @@ static void mt76x0u_cleanup(struct mt76x02_dev *dev)
- 	clear_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
- 	mt76x0_chip_onoff(dev, false, false);
- 	mt76u_queues_deinit(&dev->mt76);
--	mt76u_mcu_deinit(&dev->mt76);
- }
- 
- static void mt76x0u_mac_stop(struct mt76x02_dev *dev)
-@@ -193,10 +192,6 @@ static int mt76x0u_register_device(struct mt76x02_dev *dev)
- 	if (err < 0)
- 		goto out_err;
- 
--	err = mt76u_mcu_init_rx(&dev->mt76);
--	if (err < 0)
--		goto out_err;
--
- 	err = mt76x0u_init_hardware(dev);
- 	if (err < 0)
- 		goto out_err;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-index 090aaf71b3ef..1da90e58d942 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-@@ -214,10 +214,6 @@ int mt76x2u_register_device(struct mt76x02_dev *dev)
- 	if (err < 0)
- 		goto fail;
- 
--	err = mt76u_mcu_init_rx(&dev->mt76);
--	if (err < 0)
--		goto fail;
--
- 	err = mt76x2u_init_hardware(dev);
- 	if (err < 0)
- 		goto fail;
-@@ -259,5 +255,4 @@ void mt76x2u_cleanup(struct mt76x02_dev *dev)
- 	mt76x02_mcu_set_radio_state(dev, false);
- 	mt76x2u_stop_hw(dev);
- 	mt76u_queues_deinit(&dev->mt76);
--	mt76u_mcu_deinit(&dev->mt76);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 5c3b7f735aae..792f5012f1b1 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -577,9 +577,14 @@ EXPORT_SYMBOL_GPL(mt76u_submit_rx_buffers);
- 
- static int mt76u_alloc_rx(struct mt76_dev *dev)
- {
-+	struct mt76_usb *usb = &dev->usb;
- 	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
- 	int i, err;
- 
-+	usb->mcu.data = devm_kmalloc(dev->dev, MCU_RESP_URB_SIZE, GFP_KERNEL);
-+	if (!usb->mcu.data)
-+		return -ENOMEM;
-+
- 	spin_lock_init(&q->rx_page_lock);
- 	spin_lock_init(&q->lock);
- 	q->entry = devm_kcalloc(dev->dev,
-diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-deleted file mode 100644
-index 747231edc57d..000000000000
---- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-+++ /dev/null
-@@ -1,34 +0,0 @@
--/*
-- * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#include "mt76.h"
--
--int mt76u_mcu_init_rx(struct mt76_dev *dev)
--{
--	struct mt76_usb *usb = &dev->usb;
--
--	usb->mcu.data = kmalloc(MCU_RESP_URB_SIZE, GFP_KERNEL);
--	return usb->mcu.data ? 0 : -ENOMEM;
--}
--EXPORT_SYMBOL_GPL(mt76u_mcu_init_rx);
--
--void mt76u_mcu_deinit(struct mt76_dev *dev)
--{
--	struct mt76_usb *usb = &dev->usb;
--
--	kfree(usb->mcu.data);
--}
--EXPORT_SYMBOL_GPL(mt76u_mcu_deinit);
--- 
-2.7.5
+In the first series I fixed the issue, in this one I improved the code, I have
+no added any new feature
 
+Regards,
+Lorenzo
+
+> 
+> Stanislaw 
