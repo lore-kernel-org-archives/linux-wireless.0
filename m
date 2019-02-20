@@ -6,102 +6,263 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8DAEC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 16:15:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 401CCC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 16:15:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BCB372146E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 16:15:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1210A2146E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 16:15:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726713AbfBTQP1 (ORCPT
+        id S1727473AbfBTQPc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 11:15:27 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:45982 "EHLO mx1.redhat.com"
+        Wed, 20 Feb 2019 11:15:32 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:48946 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725836AbfBTQP1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 11:15:27 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        id S1725836AbfBTQPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Feb 2019 11:15:32 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 733D4A102F;
-        Wed, 20 Feb 2019 16:15:27 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3B3711487FA;
+        Wed, 20 Feb 2019 16:15:31 +0000 (UTC)
 Received: from localhost (ovpn-204-136.brq.redhat.com [10.40.204.136])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4748E60192;
-        Wed, 20 Feb 2019 16:15:22 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B200C69194;
+        Wed, 20 Feb 2019 16:15:30 +0000 (UTC)
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     Felix Fietkau <nbd@nbd.name>
 Cc:     linux-wireless@vger.kernel.org,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH v3 1/3] mt76usb: allow mt76u_bulk_msg be used for reads
-Date:   Wed, 20 Feb 2019 17:15:18 +0100
-Message-Id: <1550679320-14343-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Wed, 20 Feb 2019 16:15:27 +0000 (UTC)
+Subject: [PATCH v3 2/3] mt76usb: use synchronous msg for mcu command responses
+Date:   Wed, 20 Feb 2019 17:15:19 +0100
+Message-Id: <1550679320-14343-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1550679320-14343-1-git-send-email-sgruszka@redhat.com>
+References: <1550679320-14343-1-git-send-email-sgruszka@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Wed, 20 Feb 2019 16:15:31 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Extend mt76u_bulk_msg() such it can be used for synchronous bulk reads.
+Use usb_bulk_msg for reading MCU command responses. This simplify code
+a lot.
+
+Together with 97a3005759c ("mt76usb: allow mt76u_bulk_msg be used
+for reads") it also fix possible problems with rx data buffers
+not being aligned and contained within single page. After doing
+page_frag_alloc(1024) consecutive page_frag_alloc(PAGE_SIZE) will
+alloc PAGE_SIZE buffer at PAGE_SIZE - 1024 offset.
 
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-v2: pass NULL actual_len to usb_bulk_msg
-
- drivers/net/wireless/mediatek/mt76/mt76.h            | 12 ++++++++----
- drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c |  4 ++--
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h          |  3 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    | 11 --------
+ .../net/wireless/mediatek/mt76/mt76x02_usb_mcu.c   | 32 +++++++---------------
+ drivers/net/wireless/mediatek/mt76/mt76x2/usb.c    | 11 --------
+ drivers/net/wireless/mediatek/mt76/usb.c           |  1 -
+ drivers/net/wireless/mediatek/mt76/usb_mcu.c       | 31 +++------------------
+ 6 files changed, 15 insertions(+), 74 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index f55dc621e060..6092646014c4 100644
+index 6092646014c4..c9b5eb9b0582 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -729,16 +729,20 @@ static inline u8 q2ep(u8 qid)
- }
+@@ -384,8 +384,7 @@ struct mt76_usb {
  
- static inline int
--mt76u_bulk_msg(struct mt76_dev *dev, void *data, int len, int timeout)
-+mt76u_bulk_msg(struct mt76_dev *dev, void *data, int len, int *actual_len,
-+	       int timeout)
+ 	struct mt76u_mcu {
+ 		struct mutex mutex;
+-		struct completion cmpl;
+-		struct mt76u_buf res;
++		u8 *data;
+ 		u32 msg_seq;
+ 
+ 		/* multiple reads */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+index da9d05f6074d..f0c33890f1a5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+@@ -311,13 +311,11 @@ static int __maybe_unused mt76x0_suspend(struct usb_interface *usb_intf,
+ 					 pm_message_t state)
  {
- 	struct usb_interface *intf = to_usb_interface(dev->dev);
- 	struct usb_device *udev = interface_to_usbdev(intf);
- 	struct mt76_usb *usb = &dev->usb;
- 	unsigned int pipe;
--	int sent;
+ 	struct mt76x02_dev *dev = usb_get_intfdata(usb_intf);
+-	struct mt76_usb *usb = &dev->mt76.usb;
  
--	pipe = usb_sndbulkpipe(udev, usb->out_ep[MT_EP_OUT_INBAND_CMD]);
--	return usb_bulk_msg(udev, pipe, data, len, &sent, timeout);
-+	if (actual_len)
-+		pipe = usb_rcvbulkpipe(udev, usb->in_ep[MT_EP_IN_CMD_RESP]);
-+	else
-+		pipe = usb_sndbulkpipe(udev, usb->out_ep[MT_EP_OUT_INBAND_CMD]);
-+
-+	return usb_bulk_msg(udev, pipe, data, len, actual_len, timeout);
+ 	mt76u_stop_queues(&dev->mt76);
+ 	mt76x0u_mac_stop(dev);
+ 	clear_bit(MT76_STATE_MCU_RUNNING, &dev->mt76.state);
+ 	mt76x0_chip_onoff(dev, false, false);
+-	usb_kill_urb(usb->mcu.res.urb);
+ 
+ 	return 0;
  }
+@@ -328,15 +326,6 @@ static int __maybe_unused mt76x0_resume(struct usb_interface *usb_intf)
+ 	struct mt76_usb *usb = &dev->mt76.usb;
+ 	int ret;
  
- int mt76u_vendor_request(struct mt76_dev *dev, u8 req,
+-	reinit_completion(&usb->mcu.cmpl);
+-	ret = mt76u_submit_buf(&dev->mt76, USB_DIR_IN,
+-			       MT_EP_IN_CMD_RESP,
+-			       &usb->mcu.res, GFP_KERNEL,
+-			       mt76u_mcu_complete_urb,
+-			       &usb->mcu.cmpl);
+-	if (ret < 0)
+-		goto err;
+-
+ 	ret = mt76u_submit_rx_buffers(&dev->mt76);
+ 	if (ret < 0)
+ 		goto err;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-index e469e383cb88..f497c8e4332a 100644
+index f497c8e4332a..0cb8751321a1 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-@@ -126,7 +126,7 @@ __mt76x02u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
- 	if (ret)
- 		return ret;
+@@ -61,33 +61,21 @@ mt76x02u_multiple_mcu_reads(struct mt76_dev *dev, u8 *data, int len)
+ static int mt76x02u_mcu_wait_resp(struct mt76_dev *dev, u8 seq)
+ {
+ 	struct mt76_usb *usb = &dev->usb;
+-	struct mt76u_buf *buf = &usb->mcu.res;
+-	struct urb *urb = buf->urb;
+-	u8 *data = buf->buf;
+-	int i, ret;
++	u8 *data = usb->mcu.data;
++	int i, len, ret;
+ 	u32 rxfce;
  
--	ret = mt76u_bulk_msg(dev, skb->data, skb->len, 500);
-+	ret = mt76u_bulk_msg(dev, skb->data, skb->len, NULL, 500);
- 	if (ret)
- 		return ret;
+ 	for (i = 0; i < 5; i++) {
+-		if (!wait_for_completion_timeout(&usb->mcu.cmpl,
+-						 msecs_to_jiffies(300)))
++		ret = mt76u_bulk_msg(dev, data, MCU_RESP_URB_SIZE, &len, 300);
++		if (ret == -ETIMEDOUT)
+ 			continue;
+-
+-		if (urb->status)
+-			return -EIO;
++		if (ret)
++			goto out;
  
-@@ -271,7 +271,7 @@ __mt76x02u_mcu_fw_send_data(struct mt76x02_dev *dev, u8 *data,
+ 		if (usb->mcu.rp)
+-			mt76x02u_multiple_mcu_reads(dev, data + 4,
+-						    urb->actual_length - 8);
++			mt76x02u_multiple_mcu_reads(dev, data + 4, len - 8);
  
- 	data_len = MT_CMD_HDR_LEN + len + sizeof(info);
+ 		rxfce = get_unaligned_le32(data);
+-		ret = mt76u_submit_buf(dev, USB_DIR_IN,
+-				       MT_EP_IN_CMD_RESP,
+-				       buf, GFP_KERNEL,
+-				       mt76u_mcu_complete_urb,
+-				       &usb->mcu.cmpl);
+-		if (ret)
+-			return ret;
+-
+ 		if (seq == FIELD_GET(MT_RX_FCE_INFO_CMD_SEQ, rxfce) &&
+ 		    FIELD_GET(MT_RX_FCE_INFO_EVT_TYPE, rxfce) == EVT_CMD_DONE)
+ 			return 0;
+@@ -96,9 +84,9 @@ static int mt76x02u_mcu_wait_resp(struct mt76_dev *dev, u8 seq)
+ 			FIELD_GET(MT_RX_FCE_INFO_EVT_TYPE, rxfce),
+ 			seq, FIELD_GET(MT_RX_FCE_INFO_CMD_SEQ, rxfce));
+ 	}
+-
+-	dev_err(dev->dev, "error: %s timed out\n", __func__);
+-	return -ETIMEDOUT;
++out:
++	dev_err(dev->dev, "error: %s failed with %d\n", __func__, ret);
++	return ret;
+ }
  
--	err = mt76u_bulk_msg(&dev->mt76, data, data_len, 1000);
-+	err = mt76u_bulk_msg(&dev->mt76, data, data_len, NULL, 1000);
- 	if (err) {
- 		dev_err(dev->mt76.dev, "firmware upload failed: %d\n", err);
- 		return err;
+ static int
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
+index f81a85e96922..ddb6b2c48e01 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
+@@ -100,11 +100,9 @@ static int __maybe_unused mt76x2u_suspend(struct usb_interface *intf,
+ 					  pm_message_t state)
+ {
+ 	struct mt76x02_dev *dev = usb_get_intfdata(intf);
+-	struct mt76_usb *usb = &dev->mt76.usb;
+ 
+ 	mt76u_stop_queues(&dev->mt76);
+ 	mt76x2u_stop_hw(dev);
+-	usb_kill_urb(usb->mcu.res.urb);
+ 
+ 	return 0;
+ }
+@@ -115,15 +113,6 @@ static int __maybe_unused mt76x2u_resume(struct usb_interface *intf)
+ 	struct mt76_usb *usb = &dev->mt76.usb;
+ 	int err;
+ 
+-	reinit_completion(&usb->mcu.cmpl);
+-	err = mt76u_submit_buf(&dev->mt76, USB_DIR_IN,
+-			       MT_EP_IN_CMD_RESP,
+-			       &usb->mcu.res, GFP_KERNEL,
+-			       mt76u_mcu_complete_urb,
+-			       &usb->mcu.cmpl);
+-	if (err < 0)
+-		goto err;
+-
+ 	err = mt76u_submit_rx_buffers(&dev->mt76);
+ 	if (err < 0)
+ 		goto err;
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index 78191968b4fa..5c3b7f735aae 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -933,7 +933,6 @@ int mt76u_init(struct mt76_dev *dev,
+ 	INIT_DELAYED_WORK(&usb->stat_work, mt76u_tx_status_data);
+ 	skb_queue_head_init(&dev->rx_skb[MT_RXQ_MAIN]);
+ 
+-	init_completion(&usb->mcu.cmpl);
+ 	mutex_init(&usb->mcu.mutex);
+ 
+ 	mutex_init(&usb->usb_ctrl_mtx);
+diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
+index 72c8607da4b4..747231edc57d 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
+@@ -16,42 +16,19 @@
+ 
+ #include "mt76.h"
+ 
+-void mt76u_mcu_complete_urb(struct urb *urb)
+-{
+-	struct completion *cmpl = urb->context;
+-
+-	complete(cmpl);
+-}
+-EXPORT_SYMBOL_GPL(mt76u_mcu_complete_urb);
+-
+ int mt76u_mcu_init_rx(struct mt76_dev *dev)
+ {
+ 	struct mt76_usb *usb = &dev->usb;
+-	int err;
+ 
+-	err = mt76u_buf_alloc(dev, &usb->mcu.res, MCU_RESP_URB_SIZE,
+-			      MCU_RESP_URB_SIZE, GFP_KERNEL);
+-	if (err < 0)
+-		return err;
+-
+-	err = mt76u_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
+-			       &usb->mcu.res, GFP_KERNEL,
+-			       mt76u_mcu_complete_urb,
+-			       &usb->mcu.cmpl);
+-	if (err < 0)
+-		mt76u_buf_free(&usb->mcu.res);
+-
+-	return err;
++	usb->mcu.data = kmalloc(MCU_RESP_URB_SIZE, GFP_KERNEL);
++	return usb->mcu.data ? 0 : -ENOMEM;
+ }
+ EXPORT_SYMBOL_GPL(mt76u_mcu_init_rx);
+ 
+ void mt76u_mcu_deinit(struct mt76_dev *dev)
+ {
+-	struct mt76u_buf *buf = &dev->usb.mcu.res;
++	struct mt76_usb *usb = &dev->usb;
+ 
+-	if (buf->urb) {
+-		usb_kill_urb(buf->urb);
+-		mt76u_buf_free(buf);
+-	}
++	kfree(usb->mcu.data);
+ }
+ EXPORT_SYMBOL_GPL(mt76u_mcu_deinit);
 -- 
 2.7.5
 
