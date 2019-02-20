@@ -2,84 +2,133 @@ Return-Path: <SRS0=0XaW=Q3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F974C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 08:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E39AC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 08:54:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B36720685
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 08:34:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NOYzIL9q";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QteB2ntB"
+	by mail.kernel.org (Postfix) with ESMTP id 2932D2147A
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 08:54:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726375AbfBTIei (ORCPT
+        id S1726105AbfBTIyq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 03:34:38 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:51330 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726371AbfBTIeh (ORCPT
+        Wed, 20 Feb 2019 03:54:46 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:34360 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725778AbfBTIyp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 03:34:37 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 441C6607DD; Wed, 20 Feb 2019 08:34:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550651676;
-        bh=LtbbNbjxMiAlqJQqBwVuYiu/w2nhEeulkehA8kbrKP0=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=NOYzIL9qIeNgtGAHTuNXyQmwPYXYax8bn3BSjYtDaRqmG0xZfPshNc0rP1mm1NaDd
-         4K4qqn6iqvuhOMsT2q092ZeLa4052j9RMeRZfzncHAE+cID7NYfJW0O17Le47TDXcc
-         c9witZcb+KTin0KtaCIa8gwrM9g3E3oGt2d3a6U4=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2DFAC60585;
-        Wed, 20 Feb 2019 08:34:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550651676;
-        bh=LtbbNbjxMiAlqJQqBwVuYiu/w2nhEeulkehA8kbrKP0=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=QteB2ntBI5elX0dT7KMFMW4beIVO5h0CPAhxzggDJwWa9mAYpw4Xor+zKlj6Kq0Q9
-         gE4LkX8l+AtALNfiN7HmyjGSzTA2QsLkQAFjky7eY0TyE/Dmy1Y4DoRVlMGejbFIEC
-         gj6v00k5jgiH9yMDlpYjfbaC336lMTf0gQpvUqRs=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2DFAC60585
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Wed, 20 Feb 2019 03:54:45 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gwNeN-0003N8-HV; Wed, 20 Feb 2019 10:54:44 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Wed, 20 Feb 2019 10:54:39 +0200
+Message-Id: <20190220085439.16472-1-luca@coelho.fi>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190215114924.2545-12-luca@coelho.fi>
+References: <20190215114924.2545-12-luca@coelho.fi>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: switch to use SPDX license identifiers
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1550598326-20720-1-git-send-email-kvalo@codeaurora.org>
-References: <1550598326-20720-1-git-send-email-kvalo@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190220083436.441C6607DD@smtp.codeaurora.org>
-Date:   Wed, 20 Feb 2019 08:34:36 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH v2 11/20] iwlwifi: mvm: reject new beacons when in inject mode
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> Use SPDX identifiers everywhere in ath10k.
-> 
-> Makefile was incorrectly marked in commit b24413180f56 ("License cleanup: add
-> SPDX GPL-2.0 license identifier to files with no license"), fix that as well.
-> 
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Verify we do not accept new beacon templates while beacon
+injection is active.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
 
-f0553ca9ceb5 ath10k: switch to use SPDX license identifiers
+In v2:
 
+   * Move definition of beacon_inject_active outside CONFIG_PM;
+
+
+drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  | 7 +++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 5 +++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 1 +
+ 3 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 80b0b2ed69bb..05a6db2db478 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018        Intel Corporation
++ * Copyright(c) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018        Intel Corporation
++ * Copyright(c) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1238,6 +1238,8 @@ static int _iwl_dbgfs_inject_beacon_ie(struct iwl_mvm *mvm, char *bin, int len)
+ 		goto out_err;
+ 	}
+ 
++	mvm->beacon_inject_active = true;
++
+ 	mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	info = IEEE80211_SKB_CB(beacon);
+ 	rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
+@@ -1287,6 +1289,7 @@ static ssize_t iwl_dbgfs_inject_beacon_ie_restore_write(struct iwl_mvm *mvm,
+ 	int ret = _iwl_dbgfs_inject_beacon_ie(mvm, NULL, 0);
+ 
+ 	mvm->hw->extra_beacon_tailroom = 0;
++	mvm->beacon_inject_active = false;
+ 	return ret ?: count;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 9bd4376cad9b..003a20630252 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -1041,6 +1041,11 @@ int iwl_mvm_mac_ctxt_beacon_changed(struct iwl_mvm *mvm,
+ 	if (!beacon)
+ 		return -ENOMEM;
+ 
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++	if (mvm->beacon_inject_active)
++		return -EBUSY;
++#endif
++
+ 	ret = iwl_mvm_mac_ctxt_send_beacon(mvm, vif, beacon);
+ 	dev_kfree_skb(beacon);
+ 	return ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 9993337a2bbd..acb4cca5bdcf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -978,6 +978,7 @@ struct iwl_mvm {
+ 	u32 dbgfs_prph_reg_addr;
+ 	bool disable_power_off;
+ 	bool disable_power_off_d3;
++	bool beacon_inject_active;
+ 
+ 	bool scan_iter_notif_enabled;
+ 
 -- 
-https://patchwork.kernel.org/patch/10820537/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.20.1
 
