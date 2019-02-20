@@ -2,60 +2,92 @@ Return-Path: <SRS0=0XaW=Q3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E9A8C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 12:01:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA459C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 12:04:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64B902083B
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 12:01:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7703E206DD
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 12:04:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726770AbfBTMBx (ORCPT
+        id S1726535AbfBTMEI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 07:01:53 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:10190 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726209AbfBTMBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 07:01:53 -0500
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2D86F811D7;
-        Wed, 20 Feb 2019 12:01:53 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BFC9119C72;
-        Wed, 20 Feb 2019 12:01:50 +0000 (UTC)
-Date:   Wed, 20 Feb 2019 13:01:49 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] mt76usb: allow mt76u_bulk_msg be used for reads
-Message-ID: <20190220120148.GA14654@redhat.com>
-References: <1550657565-7263-1-git-send-email-sgruszka@redhat.com>
- <20190220112837.GE2626@localhost.localdomain>
+        Wed, 20 Feb 2019 07:04:08 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:34492 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726354AbfBTMEI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Feb 2019 07:04:08 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gwQbe-000411-1A; Wed, 20 Feb 2019 14:04:06 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Wed, 20 Feb 2019 14:03:52 +0200
+Message-Id: <20190220120400.8814-1-luca@coelho.fi>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190220112837.GE2626@localhost.localdomain>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Wed, 20 Feb 2019 12:01:53 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 0/8] iwlwifi: updates intended for v5.1 2019-02-20
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Feb 20, 2019 at 12:28:38PM +0100, Lorenzo Bianconi wrote:
-> [    3.476492] mt76x0u: probe of 1-1:1.0 failed with error -12
+From: Luca Coelho <luciano.coelho@intel.com>
 
-During rework of patch 3 I made silly mistake in
+Hi,
 
-+       if (usb->mcu.data)
-+               return -ENOMEM;
+Here's the tenth and final set of patches intended for v5.1.  This one
+is mostly to add some new PCI IDs and to align with an internal
+version we tested.
 
-and seems I did not reload modules properly and only tested previous
-revision of the set.
+The changes are:
 
-Stanislaw
+* New PCI IDs for 9260 and 22000 series;
+* Continued work on the new debugging mechanism;
+
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+
+Ihab Zhaika (2):
+  iwlwifi: add new card for 9260 series
+  iwlwifi: add new cards for 22000 and killer series and change the
+    market name
+
+Shahar S Matityahu (6):
+  iwlwifi: dbg_ini: add print to iwl_dump_ini_mem in case of invalid
+    range
+  iwlwifi: dbg_ini: make memory dump get_size handler include headers
+  iwlwifi: dbg_ini: make fill_range handler accept generic range pointer
+  iwlwifi: dbg_ini: add region to fill_header handler
+  iwlwifi: dbg_ini: implement Tx fifos dump
+  iwlwifi: dbg_ini: implement Rx fifos dump
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |   8 +-
+ .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   |  13 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 490 +++++++++++++++---
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  32 +-
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |   1 +
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  99 ++--
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |   4 +-
+ 8 files changed, 507 insertions(+), 142 deletions(-)
+
+-- 
+2.20.1
+
