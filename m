@@ -3,342 +3,426 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DBDCC4360F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66609C10F01
 	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 12:04:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9179206DD
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 12:04:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 405C3206DD
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 12:04:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727571AbfBTMES (ORCPT
+        id S1727559AbfBTMEQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 07:04:18 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:34558 "EHLO
+        Wed, 20 Feb 2019 07:04:16 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:34530 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727542AbfBTMER (ORCPT
+        with ESMTP id S1727064AbfBTMEO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 07:04:17 -0500
+        Wed, 20 Feb 2019 07:04:14 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gwQbl-000411-Aj; Wed, 20 Feb 2019 14:04:14 +0200
+        id 1gwQbi-000411-Ib; Wed, 20 Feb 2019 14:04:11 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Ihab Zhaika <ihab.zhaika@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Wed, 20 Feb 2019 14:04:00 +0200
-Message-Id: <20190220120400.8814-9-luca@coelho.fi>
+Date:   Wed, 20 Feb 2019 14:03:57 +0200
+Message-Id: <20190220120400.8814-6-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190220120400.8814-1-luca@coelho.fi>
 References: <20190220120400.8814-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 8/8] iwlwifi: add new cards for 22000 and killer series and change the market name
+Subject: [PATCH 5/8] iwlwifi: dbg_ini: implement Tx fifos dump
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ihab Zhaika <ihab.zhaika@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Add a few PCI ID'S for 22000 and killer series in addition to
-chainging the marketing name.
+Implement Tx fifos dump in the new dump mechanism.
 
-Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  8 +-
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 98 +++++++++++--------
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  4 +-
- 4 files changed, 64 insertions(+), 48 deletions(-)
+ .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   |  13 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 189 +++++++++++++++++-
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  29 ++-
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |   1 +
+ 4 files changed, 218 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 2d472a04807f..fdc56f821b5a 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -223,8 +223,8 @@ const struct iwl_cfg iwl22000_2ac_cfg_jf = {
- 	IWL_DEVICE_22500,
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+index 70cc0820e068..33858787817b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+@@ -5,7 +5,7 @@
+  *
+  * GPL LICENSE SUMMARY
+  *
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright (C) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -25,7 +25,7 @@
+  *
+  * BSD LICENSE
+  *
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright (C) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -146,16 +146,17 @@ struct iwl_fw_ini_region_cfg_internal {
  
--const struct iwl_cfg iwl22560_2ax_cfg_hr = {
--	.name = "Intel(R) Wireless-AX 22560",
-+const struct iwl_cfg iwl_ax101_cfg_qu_hr = {
-+	.name = "Intel(R) Wi-Fi 6 AX101",
- 	.fw_name_pre = IWL_22000_QU_B_HR_B_FW_PRE,
- 	IWL_DEVICE_22500,
- 	/*
-@@ -249,7 +249,7 @@ const struct iwl_cfg iwl22260_2ax_cfg = {
- };
+ /**
+  * struct iwl_fw_ini_region_cfg_fifos - meta data of fifos region
+- * @lmac1_id: bit map of lmac1 fifos to include in the region.
+- * @lmac2_id: bit map of lmac2 fifos to include in the region.
++ * @fid1: fifo id 1 - bitmap of lmac tx/rx fifos to include in the region
++ * @fid2: fifo id 2 - bitmap of umac rx fifos to include in the region.
++ *	It is unused for tx.
+  * @num_of_registers: number of prph registers in the region, each register is
+  *	4 bytes size.
+  * @header_only: none zero value indicates that this region does not include
+  *	fifo data and includes only the given registers.
+  */
+ struct iwl_fw_ini_region_cfg_fifos {
+-	__le32 lmac1_id;
+-	__le32 lmac2_id;
++	__le32 fid1;
++	__le32 fid2;
+ 	__le32 num_of_registers;
+ 	__le32 header_only;
+ } __packed; /* FW_DEBUG_TLV_REGION_FIFOS_S */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index c9a63b2c6c9b..744d831b4dbb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1058,7 +1058,7 @@ static int iwl_dump_ini_prph_iter(struct iwl_fw_runtime *fwrt,
+ 		addr = le32_to_cpu(range->start_addr) + i;
+ 		prph_val = iwl_read_prph(fwrt->trans, addr + offset);
+ 		if (prph_val == 0x5a5a5a5a)
+-			return -1;
++			return -EBUSY;
+ 		*val++ = cpu_to_le32(prph_val);
+ 	}
  
- const struct iwl_cfg killer1650x_2ax_cfg = {
--	.name = "Killer(R) Wireless-AX 1650x Wireless Network Adapter (22260NGW)",
-+	.name = "Killer(R) Wireless-AX 1650x Wireless Network Adapter (200NGW)",
- 	.fw_name_pre = IWL_CC_A_FW_PRE,
- 	IWL_DEVICE_22500,
- 	/*
-@@ -262,7 +262,7 @@ const struct iwl_cfg killer1650x_2ax_cfg = {
- };
+@@ -1150,7 +1150,7 @@ iwl_dump_ini_mon_dram_iter(struct iwl_fw_runtime *fwrt,
+ 					    MON_BUFF_BASE_ADDR_VER2);
  
- const struct iwl_cfg killer1650w_2ax_cfg = {
--	.name = "Killer(R) Wireless-AX 1650w Wireless Network Adapter (22260D2W)",
-+	.name = "Killer(R) Wireless-AX 1650w Wireless Network Adapter (200D2W)",
- 	.fw_name_pre = IWL_CC_A_FW_PRE,
- 	IWL_DEVICE_22500,
- 	/*
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 7f2fa5cc8c2c..f5f87773667b 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -548,7 +548,7 @@ extern const struct iwl_cfg iwl9560_killer_s_2ac_cfg_shared_clk;
- extern const struct iwl_cfg iwl22000_2ac_cfg_hr;
- extern const struct iwl_cfg iwl22000_2ac_cfg_hr_cdb;
- extern const struct iwl_cfg iwl22000_2ac_cfg_jf;
--extern const struct iwl_cfg iwl22560_2ax_cfg_hr;
-+extern const struct iwl_cfg iwl_ax101_cfg_qu_hr;
- extern const struct iwl_cfg iwl22000_2ax_cfg_hr;
- extern const struct iwl_cfg iwl22260_2ax_cfg;
- extern const struct iwl_cfg killer1650s_2ax_cfg_qu_b0_hr_b0;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index fb7a0def9355..2b94e4cef56c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -517,6 +517,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x02F0, 0x0034, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x0038, iwl9560_2ac_160_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x003C, iwl9560_2ac_160_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0040, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0044, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x0060, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x0064, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x00A0, iwl9462_2ac_cfg_soc)},
-@@ -525,6 +527,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x02F0, 0x0234, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x0238, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0244, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x0260, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x0264, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x02A0, iwl9462_2ac_cfg_soc)},
-@@ -542,6 +545,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x06F0, 0x0034, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x0038, iwl9560_2ac_160_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x003C, iwl9560_2ac_160_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0040, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0044, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x0060, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x0064, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x00A0, iwl9462_2ac_cfg_soc)},
-@@ -550,6 +555,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x06F0, 0x0234, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x0238, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0244, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x0260, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x0264, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x02A0, iwl9462_2ac_cfg_soc)},
-@@ -615,6 +621,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x2720, 0x0034, iwl9560_2ac_160_cfg)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0038, iwl9560_2ac_160_cfg)},
- 	{IWL_PCI_DEVICE(0x2720, 0x003C, iwl9560_2ac_160_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0044, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0060, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0064, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x2720, 0x00A0, iwl9462_2ac_cfg_soc)},
-@@ -623,6 +630,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x2720, 0x0234, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0238, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2720, 0x023C, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0244, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0260, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0264, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x2720, 0x02A0, iwl9462_2ac_cfg_soc)},
-@@ -700,6 +708,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x34F0, 0x0034, iwl9560_2ac_cfg_qu_b0_jf_b0)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x0038, iwl9560_2ac_160_cfg_qu_b0_jf_b0)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x003C, iwl9560_2ac_160_cfg_qu_b0_jf_b0)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0044, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x0060, iwl9461_2ac_cfg_qu_b0_jf_b0)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x0064, iwl9461_2ac_cfg_qu_b0_jf_b0)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x00A0, iwl9462_2ac_cfg_qu_b0_jf_b0)},
-@@ -708,6 +717,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x34F0, 0x0234, iwl9560_2ac_cfg_qu_b0_jf_b0)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x0238, iwl9560_2ac_cfg_qu_b0_jf_b0)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x023C, iwl9560_2ac_cfg_qu_b0_jf_b0)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0244, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x0260, iwl9461_2ac_cfg_qu_b0_jf_b0)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x0264, iwl9461_2ac_cfg_qu_b0_jf_b0)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x02A0, iwl9462_2ac_cfg_qu_b0_jf_b0)},
-@@ -754,6 +764,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x43F0, 0x0034, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x0038, iwl9560_2ac_160_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x003C, iwl9560_2ac_160_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x43F0, 0x0044, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x0060, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x0064, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x00A0, iwl9462_2ac_cfg_soc)},
-@@ -762,6 +773,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x43F0, 0x0234, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x0238, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x43F0, 0x0244, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x0260, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x0264, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x02A0, iwl9462_2ac_cfg_soc)},
-@@ -821,6 +833,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0xA0F0, 0x0034, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x0038, iwl9560_2ac_160_cfg_soc)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x003C, iwl9560_2ac_160_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x0044, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x0060, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x0064, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x00A0, iwl9462_2ac_cfg_soc)},
-@@ -829,6 +842,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0xA0F0, 0x0234, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x0238, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x0244, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x0260, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x0264, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x02A0, iwl9462_2ac_cfg_soc)},
-@@ -876,73 +890,75 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x2720, 0x0030, iwl9560_2ac_cfg_qnj_jf_b0)},
+ 	if (start_addr == 0x5a5a5a5a)
+-		return -1;
++		return -EBUSY;
  
- /* 22000 Series */
--	{IWL_PCI_DEVICE(0x02F0, 0x0070, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x02F0, 0x0074, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x02F0, 0x0078, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x02F0, 0x007C, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x02F0, 0x0310, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0070, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0074, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0078, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x007C, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0310, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x1651, killer1650s_2ax_cfg_qu_b0_hr_b0)},
- 	{IWL_PCI_DEVICE(0x02F0, 0x1652, killer1650i_2ax_cfg_qu_b0_hr_b0)},
--	{IWL_PCI_DEVICE(0x02F0, 0x4070, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x06F0, 0x0070, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x06F0, 0x0074, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x06F0, 0x0078, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x06F0, 0x007C, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x06F0, 0x0310, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x4070, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0070, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0074, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0078, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x007C, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0310, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x1651, killer1650s_2ax_cfg_qu_b0_hr_b0)},
- 	{IWL_PCI_DEVICE(0x06F0, 0x1652, killer1650i_2ax_cfg_qu_b0_hr_b0)},
--	{IWL_PCI_DEVICE(0x06F0, 0x4070, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x2720, 0x0000, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x2720, 0x0040, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x4070, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0000, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0040, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0070, iwl22000_2ac_cfg_hr_cdb)},
--	{IWL_PCI_DEVICE(0x2720, 0x0074, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x2720, 0x0078, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x2720, 0x007C, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0074, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0078, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x007C, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0090, iwl22000_2ac_cfg_hr_cdb)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0310, iwl22000_2ac_cfg_hr_cdb)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwl22000_2ac_cfg_hr_cdb)},
--	{IWL_PCI_DEVICE(0x2720, 0x1080, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x1080, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x2720, 0x1651, killer1650s_2ax_cfg_qu_b0_hr_b0)},
- 	{IWL_PCI_DEVICE(0x2720, 0x1652, killer1650i_2ax_cfg_qu_b0_hr_b0)},
--	{IWL_PCI_DEVICE(0x2720, 0x4070, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x34F0, 0x0040, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x34F0, 0x0070, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x34F0, 0x0074, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x34F0, 0x0078, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x34F0, 0x007C, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x34F0, 0x0310, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x4070, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0040, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0070, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0074, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0078, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x007C, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0310, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x1651, killer1650s_2ax_cfg_qu_b0_hr_b0)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x1652, killer1650i_2ax_cfg_qu_b0_hr_b0)},
--	{IWL_PCI_DEVICE(0x34F0, 0x4070, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x4070, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x40C0, 0x0000, iwl22560_2ax_cfg_su_cdb)},
- 	{IWL_PCI_DEVICE(0x40C0, 0x0010, iwl22560_2ax_cfg_su_cdb)},
- 	{IWL_PCI_DEVICE(0x40c0, 0x0090, iwl22560_2ax_cfg_su_cdb)},
- 	{IWL_PCI_DEVICE(0x40C0, 0x0310, iwl22560_2ax_cfg_su_cdb)},
- 	{IWL_PCI_DEVICE(0x40C0, 0x0A10, iwl22560_2ax_cfg_su_cdb)},
--	{IWL_PCI_DEVICE(0x43F0, 0x0040, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x43F0, 0x0070, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x43F0, 0x0074, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x43F0, 0x0078, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0x43F0, 0x007C, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x43F0, 0x0040, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x43F0, 0x0070, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x43F0, 0x0074, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x43F0, 0x0078, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0x43F0, 0x007C, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x1651, killer1650s_2ax_cfg_qu_b0_hr_b0)},
- 	{IWL_PCI_DEVICE(0x43F0, 0x1652, killer1650i_2ax_cfg_qu_b0_hr_b0)},
--	{IWL_PCI_DEVICE(0x43F0, 0x4070, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0xA0F0, 0x0000, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0xA0F0, 0x0040, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0xA0F0, 0x0070, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0xA0F0, 0x0074, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0xA0F0, 0x0078, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0xA0F0, 0x007C, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0xA0F0, 0x00B0, iwl22560_2ax_cfg_hr)},
--	{IWL_PCI_DEVICE(0xA0F0, 0x0A10, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x43F0, 0x4070, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x0000, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x0040, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x0070, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x0074, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x0078, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x007C, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x00B0, iwl_ax101_cfg_qu_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x0A10, iwl_ax101_cfg_qu_hr)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x1651, killer1650s_2ax_cfg_qu_b0_hr_b0)},
- 	{IWL_PCI_DEVICE(0xA0F0, 0x1652, killer1650i_2ax_cfg_qu_b0_hr_b0)},
--	{IWL_PCI_DEVICE(0xA0F0, 0x4070, iwl22560_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x4070, iwl_ax101_cfg_qu_hr)},
+ 	range->start_addr = cpu_to_le32(start_addr);
+ 	range->range_data_size = cpu_to_le32(fwrt->trans->fw_mon[idx].size);
+@@ -1161,6 +1161,124 @@ iwl_dump_ini_mon_dram_iter(struct iwl_fw_runtime *fwrt,
+ 	return sizeof(*range) + le32_to_cpu(range->range_data_size);
+ }
  
- 	{IWL_PCI_DEVICE(0x2723, 0x0080, iwl22260_2ax_cfg)},
- 	{IWL_PCI_DEVICE(0x2723, 0x0084, iwl22260_2ax_cfg)},
- 	{IWL_PCI_DEVICE(0x2723, 0x0088, iwl22260_2ax_cfg)},
- 	{IWL_PCI_DEVICE(0x2723, 0x008C, iwl22260_2ax_cfg)},
-+	{IWL_PCI_DEVICE(0x2723, 0x1653, killer1650w_2ax_cfg)},
-+	{IWL_PCI_DEVICE(0x2723, 0x1654, killer1650x_2ax_cfg)},
- 	{IWL_PCI_DEVICE(0x2723, 0x4080, iwl22260_2ax_cfg)},
- 	{IWL_PCI_DEVICE(0x2723, 0x4088, iwl22260_2ax_cfg)},
++struct iwl_ini_txf_iter_data {
++	int fifo;
++	int lmac;
++	u32 fifo_size;
++	bool internal_txf;
++	bool init;
++};
++
++static bool iwl_ini_txf_iter(struct iwl_fw_runtime *fwrt,
++			     struct iwl_fw_ini_region_cfg *reg)
++{
++	struct iwl_ini_txf_iter_data *iter = fwrt->dump.fifo_iter;
++	struct iwl_fwrt_shared_mem_cfg *cfg = &fwrt->smem_cfg;
++	int txf_num = cfg->num_txfifo_entries;
++	int int_txf_num = ARRAY_SIZE(cfg->internal_txfifo_size);
++	u32 lmac_bitmap = le32_to_cpu(reg->fifos.fid1);
++
++	if (!iter)
++		return false;
++
++	if (iter->init) {
++		if (le32_to_cpu(reg->offset) &&
++		    WARN_ONCE(cfg->num_lmacs == 1,
++			      "Invalid lmac offset: 0x%x\n",
++			      le32_to_cpu(reg->offset)))
++			return false;
++
++		iter->init = false;
++		iter->internal_txf = false;
++		iter->fifo_size = 0;
++		iter->fifo = -1;
++		if (le32_to_cpu(reg->offset))
++			iter->lmac = 1;
++		else
++			iter->lmac = 0;
++	}
++
++	if (!iter->internal_txf)
++		for (iter->fifo++; iter->fifo < txf_num; iter->fifo++) {
++			iter->fifo_size =
++				cfg->lmac[iter->lmac].txfifo_size[iter->fifo];
++			if (iter->fifo_size && (lmac_bitmap & BIT(iter->fifo)))
++				return true;
++		}
++
++	iter->internal_txf = true;
++
++	if (!fw_has_capa(&fwrt->fw->ucode_capa,
++			 IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG))
++		return false;
++
++	for (iter->fifo++; iter->fifo < int_txf_num + txf_num; iter->fifo++) {
++		iter->fifo_size =
++			cfg->internal_txfifo_size[iter->fifo - txf_num];
++		if (iter->fifo_size && (lmac_bitmap & BIT(iter->fifo)))
++			return true;
++	}
++
++	return false;
++}
++
++static int iwl_dump_ini_txf_iter(struct iwl_fw_runtime *fwrt,
++				 struct iwl_fw_ini_region_cfg *reg,
++				 void *range_ptr, int idx)
++{
++	struct iwl_fw_ini_fifo_error_dump_range *range = range_ptr;
++	struct iwl_ini_txf_iter_data *iter;
++	u32 offs = le32_to_cpu(reg->offset), addr;
++	u32 registers_size =
++		le32_to_cpu(reg->fifos.num_of_registers) * sizeof(__le32);
++	__le32 *val = range->data;
++	unsigned long flags;
++	int i;
++
++	if (!iwl_ini_txf_iter(fwrt, reg))
++		return -EIO;
++
++	if (!iwl_trans_grab_nic_access(fwrt->trans, &flags))
++		return -EBUSY;
++
++	iter = fwrt->dump.fifo_iter;
++
++	range->fifo_num = cpu_to_le32(iter->fifo);
++	range->num_of_registers = reg->fifos.num_of_registers;
++	range->range_data_size = cpu_to_le32(iter->fifo_size + registers_size);
++
++	iwl_write_prph_no_grab(fwrt->trans, TXF_LARC_NUM + offs, iter->fifo);
++
++	/* read txf registers */
++	for (i = 0; i < le32_to_cpu(reg->fifos.num_of_registers); i++) {
++		addr = le32_to_cpu(reg->start_addr[i]) + offs;
++
++		*val++ = cpu_to_le32(iwl_read_prph_no_grab(fwrt->trans, addr));
++	}
++
++	if (reg->fifos.header_only) {
++		range->range_data_size = cpu_to_le32(registers_size);
++		goto out;
++	}
++
++	/* Set the TXF_READ_MODIFY_ADDR to TXF_WR_PTR */
++	iwl_write_prph_no_grab(fwrt->trans, TXF_READ_MODIFY_ADDR + offs,
++			       TXF_WR_PTR + offs);
++
++	/* Dummy-read to advance the read pointer to the head */
++	iwl_read_prph_no_grab(fwrt->trans, TXF_READ_MODIFY_DATA + offs);
++
++	/* Read FIFO */
++	addr = TXF_READ_MODIFY_DATA + offs;
++	for (i = 0; i < iter->fifo_size; i += sizeof(__le32))
++		*val++ = cpu_to_le32(iwl_read_prph_no_grab(fwrt->trans, addr));
++
++out:
++	iwl_trans_release_nic_access(fwrt->trans, &flags);
++
++	return sizeof(*range) + le32_to_cpu(range->range_data_size);
++}
++
+ static void *iwl_dump_ini_mem_fill_header(struct iwl_fw_runtime *fwrt,
+ 					  struct iwl_fw_ini_region_cfg *reg,
+ 					  void *data)
+@@ -1195,6 +1313,15 @@ static void
+ 	return mon_dump->ranges;
+ }
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index e2579a0bcc25..fe8269d023de 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3540,10 +3540,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_GF)) {
- 			trans->cfg = &iwlax210_2ax_cfg_so_gf_a0;
++static void *iwl_dump_ini_fifo_fill_header(struct iwl_fw_runtime *fwrt,
++					   struct iwl_fw_ini_region_cfg *reg,
++					   void *data)
++{
++	struct iwl_fw_ini_fifo_error_dump *dump = data;
++
++	return dump->ranges;
++}
++
+ static u32 iwl_dump_ini_mem_ranges(struct iwl_fw_runtime *fwrt,
+ 				   struct iwl_fw_ini_region_cfg *reg)
+ {
+@@ -1219,6 +1346,22 @@ static u32 iwl_dump_ini_mon_dram_ranges(struct iwl_fw_runtime *fwrt,
+ 	return 1;
+ }
+ 
++static u32 iwl_dump_ini_txf_ranges(struct iwl_fw_runtime *fwrt,
++				   struct iwl_fw_ini_region_cfg *reg)
++{
++	struct iwl_ini_txf_iter_data iter = { .init = true };
++	void *fifo_iter = fwrt->dump.fifo_iter;
++	u32 num_of_fifos = 0;
++
++	fwrt->dump.fifo_iter = &iter;
++	while (iwl_ini_txf_iter(fwrt, reg))
++		num_of_fifos++;
++
++	fwrt->dump.fifo_iter = fifo_iter;
++
++	return num_of_fifos;
++}
++
+ static u32 iwl_dump_ini_mem_get_size(struct iwl_fw_runtime *fwrt,
+ 				     struct iwl_fw_ini_region_cfg *reg)
+ {
+@@ -1266,6 +1409,30 @@ static u32 iwl_dump_ini_mon_dram_get_size(struct iwl_fw_runtime *fwrt,
+ 	return size;
+ }
+ 
++static u32 iwl_dump_ini_txf_get_size(struct iwl_fw_runtime *fwrt,
++				     struct iwl_fw_ini_region_cfg *reg)
++{
++	struct iwl_ini_txf_iter_data iter = { .init = true };
++	void *fifo_iter = fwrt->dump.fifo_iter;
++	u32 size = 0;
++	u32 fifo_hdr = sizeof(struct iwl_fw_ini_fifo_error_dump_range) +
++		le32_to_cpu(reg->fifos.num_of_registers) * sizeof(__le32);
++
++	fwrt->dump.fifo_iter = &iter;
++	while (iwl_ini_txf_iter(fwrt, reg)) {
++		size += fifo_hdr;
++		if (!reg->fifos.header_only)
++			size += iter.fifo_size;
++	}
++
++	if (size)
++		size += sizeof(struct iwl_fw_ini_fifo_error_dump);
++
++	fwrt->dump.fifo_iter = fifo_iter;
++
++	return size;
++}
++
+ /**
+  * struct iwl_dump_ini_mem_ops - ini memory dump operations
+  * @get_num_of_ranges: returns the number of memory ranges in the region.
+@@ -1273,7 +1440,7 @@ static u32 iwl_dump_ini_mon_dram_get_size(struct iwl_fw_runtime *fwrt,
+  * @fill_mem_hdr: fills region type specific headers and returns pointer to
+  *	the first range or NULL if failed to fill headers.
+  * @fill_range: copies a given memory range into the dump.
+- *	Returns the size of the range or -1 otherwise.
++ *	Returns the size of the range or negative error value otherwise.
+  */
+ struct iwl_dump_ini_mem_ops {
+ 	u32 (*get_num_of_ranges)(struct iwl_fw_runtime *fwrt,
+@@ -1369,7 +1536,7 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
+ 			size += hdr_len + iwl_dump_ini_mem_get_size(fwrt, reg);
+ 			break;
+ 		case IWL_FW_INI_REGION_TXF:
+-			size += iwl_fw_txf_len(fwrt, &fwrt->smem_cfg);
++			size += hdr_len + iwl_dump_ini_txf_get_size(fwrt, reg);
+ 			break;
+ 		case IWL_FW_INI_REGION_RXF:
+ 			size += iwl_fw_rxf_len(fwrt, &fwrt->smem_cfg);
+@@ -1463,9 +1630,19 @@ static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
+ 			iwl_dump_ini_mem(fwrt, type, data, reg, &ops);
+ 			break;
  		}
--	} else if (cfg == &iwl22560_2ax_cfg_hr) {
-+	} else if (cfg == &iwl_ax101_cfg_qu_hr) {
- 		if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
- 		    CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR)) {
--			trans->cfg = &iwl22560_2ax_cfg_hr;
-+			trans->cfg = &iwl_ax101_cfg_qu_hr;
- 		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
- 			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_JF)) {
- 			trans->cfg = &iwl22000_2ax_cfg_jf;
+-		case IWL_FW_INI_REGION_TXF:
+-			iwl_fw_dump_txf(fwrt, data);
++		case IWL_FW_INI_REGION_TXF: {
++			struct iwl_ini_txf_iter_data iter = { .init = true };
++			void *fifo_iter = fwrt->dump.fifo_iter;
++
++			fwrt->dump.fifo_iter = &iter;
++			ops.get_num_of_ranges = iwl_dump_ini_txf_ranges;
++			ops.get_size = iwl_dump_ini_txf_get_size;
++			ops.fill_mem_hdr = iwl_dump_ini_fifo_fill_header;
++			ops.fill_range = iwl_dump_ini_txf_iter;
++			iwl_dump_ini_mem(fwrt, type, data, reg, &ops);
++			fwrt->dump.fifo_iter = fifo_iter;
+ 			break;
++		}
+ 		case IWL_FW_INI_REGION_RXF:
+ 			iwl_fw_dump_rxf(fwrt, data);
+ 			break;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 063f2b925808..2cc4f13d0abb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright (C) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright (C) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -308,6 +308,31 @@ struct iwl_fw_ini_error_dump {
+ 	struct iwl_fw_ini_error_dump_range ranges[];
+ } __packed;
+ 
++/**
++ * struct iwl_fw_ini_fifo_error_dump_range - ini fifo range dump
++ * @fifo_num: the fifo num. In case of rxf and umac rxf, set BIT(31) to
++ *	distinguish between lmac and umac
++ * @num_of_registers: num of registers to dump, dword size each
++ * @range_data_size: the size of the registers and fifo data
++ * @data: fifo data
++ */
++struct iwl_fw_ini_fifo_error_dump_range {
++	__le32 fifo_num;
++	__le32 num_of_registers;
++	__le32 range_data_size;
++	__le32 data[];
++} __packed;
++
++/**
++ * struct iwl_fw_ini_fifo_error_dump - ini fifo region dump
++ * @header: the header of this region
++ * @ranges: the memory ranges of this region
++ */
++struct iwl_fw_ini_fifo_error_dump {
++	struct iwl_fw_ini_error_dump_header header;
++	struct iwl_fw_ini_fifo_error_dump_range ranges[];
++} __packed;
++
+ /**
+  * struct iwl_fw_error_dump_rb - content of an Receive Buffer
+  * @index: the index of the Receive Buffer in the Rx queue
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index 6e843998d1c8..a5fe1a8ca426 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -144,6 +144,7 @@ struct iwl_fw_runtime {
+ 		struct iwl_fw_ini_active_triggers active_trigs[IWL_FW_TRIGGER_ID_NUM];
+ 		u32 lmac_err_id[MAX_NUM_LMAC];
+ 		u32 umac_err_id;
++		void *fifo_iter;
+ 	} dump;
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	struct {
 -- 
 2.20.1
 
