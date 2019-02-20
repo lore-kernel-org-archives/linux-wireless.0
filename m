@@ -2,121 +2,106 @@ Return-Path: <SRS0=0XaW=Q3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BIGNUM_EMAILS,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 164BBC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 19:15:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 027D4C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 20:57:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF1BB2146E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 19:15:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C71712146E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 20:57:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PK+6xrif"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="y8ziMe5I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725851AbfBTTPQ (ORCPT
+        id S1726215AbfBTU5g (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 14:15:16 -0500
-Received: from mail-it1-f194.google.com ([209.85.166.194]:53794 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725804AbfBTTPQ (ORCPT
+        Wed, 20 Feb 2019 15:57:36 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:47228 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726017AbfBTU5g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 14:15:16 -0500
-Received: by mail-it1-f194.google.com with SMTP id x131so17996529itc.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2019 11:15:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=kfa2BZv4u3AtUtNVuj9BPsX9/+2G10TMkCpdnuwfGKY=;
-        b=PK+6xrifnav8QHjdRwCYRqqKV07gPO3x5zyDa4idcsmgDA1JSb+9F0n/ByQIZ0DRXx
-         8kzvfLVsUtxOf6dHotzQcSEC92MRG2W/sd5uIU5K1QyOi/E7hcBdfQVTduSA81jUDKZ8
-         OHXh6/ZL5JJi6hnFTuv/gFrI01ueqJ+rN+a4ooNJya/IKJhOBLxRChFrq0ZEocaEzbrn
-         c9+H2RT9APFoV2EThjDyfLpKxhbhz6Ep31CPmE02qytH+U3C5k2I7295LO8nAAVPaPb2
-         44eTtjylmiBel60pJA60HE5aOv4mLqCBJGOuQ8GUYOKmHfaAdAw1vEIPEe5SpdjJpJ7m
-         MvQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=kfa2BZv4u3AtUtNVuj9BPsX9/+2G10TMkCpdnuwfGKY=;
-        b=ISNZgJw9/X7ZBdhkQtrXxPYvBSsStxM60eBNHIq4f1IGuqmhI9AC9mb0noyXReFmBL
-         NYnLAJ1zux+X5NPEJLohPuAXw1Up051IVkQuVmkiY72JH7haWOjKHbYwdz8P8aH/jCmk
-         +er98+BXzV/WcAWuiMsKk58UsBnQ+yYYHvF7kXR774HeX9jIDtKRzyNr1lfYoOR5/fw0
-         o7npwjpm4fFcD9sALnnMb9SaqQOxMQfxNtAL93Bba54NW8eD8kijrxOWi/xd1u6mnF7a
-         U9ZdbwLiCDyDxrbw15xo7RMl4M7ybloUIIVz6c7KSJ0mR/1y0tDjS3UDdEtxp15uWSmq
-         jMkA==
-X-Gm-Message-State: AHQUAuYOUCWkwfNw4WUOXrHCEUF5R6lFCYSf0x6jWNXO05mL+ML5KCuh
-        hycpknyGv8W4FlyaXAENsH6JRAYHAMUBi5lACwMgmg==
-X-Google-Smtp-Source: AHgI3Ib68Ec3W1E+Y4Ku0bD/9neGtrggxVb6ReUnYRDPfmsO10w7Wa/6iOw9J+yPc65Rb5Q3JVJr4fCMSoBFGM6kmNc=
-X-Received: by 2002:a6b:3c17:: with SMTP id k23mr19206276iob.182.1550690115642;
- Wed, 20 Feb 2019 11:15:15 -0800 (PST)
+        Wed, 20 Feb 2019 15:57:36 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1KKs5bF126342;
+        Wed, 20 Feb 2019 20:57:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2018-07-02;
+ bh=rNihDsI6B+A4KO8vDb0BLzCY7M3tcW+QVQfDwSv+IpA=;
+ b=y8ziMe5IpXqdDOBCDKZoDrckRYRU7912u7HFX1huu8FgCVUZ9cs2w5Yh0v2nXG1owmiA
+ QJUdKcnlXc0rcmjLoTxbHTk6KhRurNUboQWvfHpwxLAidaaY0iALbBUS7EbPOcg0TT93
+ uorjrtNPRVIvrn8lpB+LE4U32B7qUeL6hzz8DyHxH8CbsHaGkns7Sk8067aGSHbfnXK7
+ Pmj8GEMZZF8IG++TJ7WDzuLlEJDwSp5wOeDGIjpizHY5SMqVrYDo9nS2BHjQDc9rfbzm
+ l2ckQSbl3h9txloFqXLGw0nSBzjs3IthagGfwi0bnK+ohUFLQ4mqRcYsKEGVqO+ZoVqH xQ== 
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2120.oracle.com with ESMTP id 2qpb5rm150-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 20 Feb 2019 20:57:27 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1KKvLc2031113
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 20 Feb 2019 20:57:21 GMT
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x1KKvL4j031802;
+        Wed, 20 Feb 2019 20:57:21 GMT
+Received: from kadam (/197.157.0.29)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 20 Feb 2019 12:57:20 -0800
+Date:   Wed, 20 Feb 2019 23:57:13 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     lorenzo.bianconi@redhat.com
+Cc:     linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
+Subject: [bug report] mt76: usb: fix possible memory leak in mt76u_buf_free
+Message-ID: <20190220205713.GA26590@kadam>
 MIME-Version: 1.0
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
- <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk>
- <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
- <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
- <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com>
- <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk>
- <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk>
- <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com> <871sa7ylmi.fsf@toke.dk>
-In-Reply-To: <871sa7ylmi.fsf@toke.dk>
-From:   Grant Grundler <grundler@google.com>
-Date:   Wed, 20 Feb 2019 11:15:02 -0800
-Message-ID: <CANEJEGuBoRMBJBOrFOYyPtiJSMfTahrVgTfxZ2ift6Q5uGazFA@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
-To:     =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc:     Johannes Berg <johannes@sipsolutions.net>, wgong@qti.qualcomm.com,
-        wgong@codeaurora.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9173 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=3 phishscore=0 bulkscore=1 spamscore=0 clxscore=1011
+ lowpriorityscore=1 mlxscore=0 impostorscore=0 mlxlogscore=300 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
+ definitions=main-1902200143
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Sep 6, 2018 at 3:18 AM Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.=
-dk> wrote:
->
-> Grant Grundler <grundler@google.com> writes:
->
-> >> And, well, Grant's data is from a single test in a noisy
-> >> environment where the time series graph shows that throughput is all o=
-ver
-> >> the place for the duration of the test; so it's hard to draw solid
-> >> conclusions from (for instance, for the 5-stream test, the average
-> >> throughput for 6 is 331 and 379 Mbps for the two repetitions, and for =
-7
-> >> it's 326 and 371 Mbps) . Unfortunately I don't have the same hardware
-> >> used in this test, so I can't go verify it myself; so the only thing I
-> >> can do is grumble about it here... :)
-> >
-> > It's a fair complaint and I agree with it. My counter argument is the
-> > opposite is true too: most ideal benchmarks don't measure what most
-> > users see. While the data wgong provided are way more noisy than I
-> > like, my overall "confidence" in the "conclusion" I offered is still
-> > positive.
->
-> Right. I guess I would just prefer a slightly more comprehensive
-> evaluation to base a 4x increase in buffer size on...
+Hello Lorenzo Bianconi,
 
-Kalle, is this why you didn't accept this patch? Other reasons?
+The patch cb83585e1121: "mt76: usb: fix possible memory leak in
+mt76u_buf_free" from Feb 10, 2019, leads to the following static
+checker warning:
 
-Toke, what else would you like to see evaluated?
+	drivers/net/wireless/mediatek/mt76/usb.c:372 mt76u_buf_free()
+	warn: address of 'urb->sg[i]' is non-NULL
 
-I generally want to see three things measured when "benchmarking"
-technologies: throughput, latency, cpu utilization
-We've covered those three I think "reasonably".
+drivers/net/wireless/mediatek/mt76/usb.c
+    362 }
+    363 
+    364 void mt76u_buf_free(struct mt76u_buf *buf)
+    365 {
+    366 	struct urb *urb = buf->urb;
+    367 	struct scatterlist *sg;
+    368 	int i;
+    369 
+    370 	for (i = 0; i < urb->num_sgs; i++) {
+    371 		sg = &urb->sg[i];
+--> 372 		if (!sg)
+                            ^^^
+This address isn't NULL.  Was something else intended?
 
-What does a "4x increase in memory" mean here?  Wen, how much more
-memory does this cause ath10k to use?
+    373 			continue;
+    374 
+    375 		skb_free_frag(sg_virt(sg));
+    376 	}
+    377 	if (buf->buf)
+    378 		skb_free_frag(buf->buf);
+    379 
+    380 	usb_free_urb(buf->urb);
+    381 }
 
-If a "4x increase in memory" means I'm using 1MB instead of 256KB, I'm
-not going worry about that on a system with 2GB-16GB of RAM if it
-doubles the throughput of the WIFI for a given workload.  I expect
-routers with 128-256MB RAM would make that tradeoff as well assuming
-they don't have other RAM-demanding workload.
-
-cheers,
-grant
+regards,
+dan carpenter
