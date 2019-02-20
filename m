@@ -2,335 +2,139 @@ Return-Path: <SRS0=0XaW=Q3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 535CAC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 14:30:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCB35C4360F
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 14:40:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DC412085A
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 14:30:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="On4Obn6y";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="glkzMh9Y"
+	by mail.kernel.org (Postfix) with ESMTP id A4AB520880
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Feb 2019 14:40:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726467AbfBTOaR (ORCPT
+        id S1726279AbfBTOkL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 09:30:17 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:48360 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725865AbfBTOaR (ORCPT
+        Wed, 20 Feb 2019 09:40:11 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:55615 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725853AbfBTOkL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 09:30:17 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id C2EE160716; Wed, 20 Feb 2019 14:30:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550673015;
-        bh=c8Pp0w8nIotxrKvu8n4jRYEJ5cFdEHsms6SaU0lYS1g=;
-        h=From:To:Cc:Subject:Date:From;
-        b=On4Obn6ySgo6XjdNaISU4b/ygN82gJe1O0Eneo4c+QYI/FfLmIV43kzXHyYiNniWC
-         +fotyQczC8sorHroeA5anlLscAi8MjVFlRh17vNhfozrArtt1m0Q4Cjl4/77NEW0t+
-         cMAUd0FRKhnTgJKAZuEPunJ8U8btZloX0ryDEIyk=
-Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: pillair@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 78FD6607EF;
-        Wed, 20 Feb 2019 14:30:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550673014;
-        bh=c8Pp0w8nIotxrKvu8n4jRYEJ5cFdEHsms6SaU0lYS1g=;
-        h=From:To:Cc:Subject:Date:From;
-        b=glkzMh9Y7YHFEZfNKOh1hSw36dWKHLbzHiOu57prjvAmfa01RBMNGhRkPywMYtNKA
-         +HN8SPuqCsKKfKrWN7BfOqQPOoZUzHaJFzmV4VoR626mNHQeZorCGG9J7WSxqh1UMr
-         vv4y5ezdWP4AG+8J+xujxDCO6Oyf2/JdnvCsRvKo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 78FD6607EF
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
-From:   Rakesh Pillai <pillair@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Dundi Raviteja <dundi@codeaurora.org>,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH] ath10k: Add peer delete response event
-Date:   Wed, 20 Feb 2019 20:00:01 +0530
-Message-Id: <1550673001-8779-1-git-send-email-pillair@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Wed, 20 Feb 2019 09:40:11 -0500
+Received: from 1.general.cking.uk.vpn ([10.172.193.212])
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <colin.king@canonical.com>)
+        id 1gwT2e-0000xg-Tt; Wed, 20 Feb 2019 14:40:08 +0000
+To:     Sara Sharon <sara.sharon@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        netdev@vger.kernel.org
+From:   Colin Ian King <colin.king@canonical.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=colin.king@canonical.com; prefer-encrypt=mutual; keydata=
+ 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
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: bug report: iwlwifi: mvm: support mac80211 TXQs model
+Message-ID: <427786ae-159a-a7d1-2334-46656d3f2b51@canonical.com>
+Date:   Wed, 20 Feb 2019 14:40:08 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dundi Raviteja <dundi@codeaurora.org>
+Hi,
 
-Peer creation in firmware fails if last peer deletion is still
-in progress.
+Static analysis by CoverityScan has detected an uninitialized variable
+error in drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
 
-The firmware sends a peer delete response event if it advertises
-the service WMI_SERVICE_SYNC_DELETE_CMDS. This peer delete response
-event is used to synchronize the peer deletion.
+Variable used_hw_queues in iwl_mvm_mac_ctxt_init() is no longer being
+assigned an initial value, causing garbage to be found when calling
+find_first_zero_bit() on used_hw_queues.
 
-Add peer delete response event and wait for the event after
-deleting every peer from host driver to synchronize with firmware.
+CoverityScan reports this as follows:
 
-Tested HW: WCN3990
-Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+363        for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+   CID 1477001 (#1 of 1): Uninitialized scalar variable (UNINIT)
+uninit_use_in_call: Using uninitialized value used_hw_queues when
+calling find_first_zero_bit.
 
-Signed-off-by: Dundi Raviteja <dundi@codeaurora.org>
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/core.c    |  3 ++-
- drivers/net/wireless/ath/ath10k/core.h    |  3 ++-
- drivers/net/wireless/ath/ath10k/mac.c     | 41 +++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 23 ++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  6 ++++-
- drivers/net/wireless/ath/ath10k/wmi.h     |  9 ++++++-
- 6 files changed, 78 insertions(+), 7 deletions(-)
+364                u8 queue = find_first_zero_bit(&used_hw_queues,
+queue_limit);
+365
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index a1b2aea..21f60cd 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1,7 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-- * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -3105,6 +3105,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 	init_completion(&ar->vdev_setup_done);
- 	init_completion(&ar->thermal.wmi_sync);
- 	init_completion(&ar->bss_survey_done);
-+	init_completion(&ar->peer_delete_done);
- 
- 	INIT_DELAYED_WORK(&ar->scan.timeout, ath10k_scan_timeout_work);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 2f43600..99951ed 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -1,7 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-- * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -1197,6 +1197,7 @@ struct ath10k {
- 	struct ath10k_radar_found_info last_radar_info;
- 	struct work_struct radar_confirmation_work;
- 	struct ath10k_bus_params bus_param;
-+	struct completion peer_delete_done;
- 
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 795446d..a9a2448 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -704,6 +704,26 @@ ath10k_mac_get_any_chandef_iter(struct ieee80211_hw *hw,
- 	*def = &conf->def;
- }
- 
-+static void ath10k_wait_for_peer_delete_done(struct ath10k *ar, u32 vdev_id,
-+					     const u8 *addr)
-+{
-+	unsigned long time_left;
-+	int ret;
-+
-+	if (test_bit(WMI_SERVICE_SYNC_DELETE_CMDS, ar->wmi.svc_map)) {
-+		ret = ath10k_wait_for_peer_deleted(ar, vdev_id, addr);
-+		if (ret) {
-+			ath10k_warn(ar, "failed wait for peer deleted");
-+			return;
-+		}
-+
-+		time_left = wait_for_completion_timeout(&ar->peer_delete_done,
-+							5 * HZ);
-+		if (!time_left)
-+			ath10k_warn(ar, "Timeout in receiving peer delete response\n");
-+	}
-+}
-+
- static int ath10k_peer_create(struct ath10k *ar,
- 			      struct ieee80211_vif *vif,
- 			      struct ieee80211_sta *sta,
-@@ -748,7 +768,7 @@ static int ath10k_peer_create(struct ath10k *ar,
- 		spin_unlock_bh(&ar->data_lock);
- 		ath10k_warn(ar, "failed to find peer %pM on vdev %i after creation\n",
- 			    addr, vdev_id);
--		ath10k_wmi_peer_delete(ar, vdev_id, addr);
-+		ath10k_wait_for_peer_delete_done(ar, vdev_id, addr);
- 		return -ENOENT;
- 	}
- 
-@@ -830,6 +850,18 @@ static int ath10k_peer_delete(struct ath10k *ar, u32 vdev_id, const u8 *addr)
- 	if (ret)
- 		return ret;
- 
-+	if (test_bit(WMI_SERVICE_SYNC_DELETE_CMDS, ar->wmi.svc_map)) {
-+		unsigned long time_left;
-+
-+		time_left = wait_for_completion_timeout
-+			    (&ar->peer_delete_done, 5 * HZ);
-+
-+		if (!time_left) {
-+			ath10k_warn(ar, "Timeout in receiving peer delete response\n");
-+			return -ETIMEDOUT;
-+		}
-+	}
-+
- 	ar->num_peers--;
- 
- 	return 0;
-@@ -5426,8 +5458,11 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 
- err_peer_delete:
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP ||
--	    arvif->vdev_type == WMI_VDEV_TYPE_IBSS)
-+	    arvif->vdev_type == WMI_VDEV_TYPE_IBSS) {
- 		ath10k_wmi_peer_delete(ar, arvif->vdev_id, vif->addr);
-+		ath10k_wait_for_peer_delete_done(ar, arvif->vdev_id,
-+						 vif->addr);
-+	}
- 
- err_vdev_delete:
- 	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
-@@ -5492,6 +5527,8 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 			ath10k_warn(ar, "failed to submit AP/IBSS self-peer removal on vdev %i: %d\n",
- 				    arvif->vdev_id, ret);
- 
-+		ath10k_wait_for_peer_delete_done(ar, arvif->vdev_id,
-+						 vif->addr);
- 		kfree(arvif->u.ap.noa_data);
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 5d05bff..143eb88 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1,7 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-- * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -468,6 +468,24 @@ static void ath10k_wmi_event_tdls_peer(struct ath10k *ar, struct sk_buff *skb)
- 	kfree(tb);
- }
- 
-+static int ath10k_wmi_tlv_event_peer_delete_resp(struct ath10k *ar,
-+						 struct sk_buff *skb)
-+{
-+	struct wmi_peer_delete_resp_ev_arg *arg;
-+	struct wmi_tlv *tlv_hdr;
-+
-+	tlv_hdr = (struct wmi_tlv *)skb->data;
-+	arg = (struct wmi_peer_delete_resp_ev_arg *)tlv_hdr->value;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "vdev id %d", arg->vdev_id);
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "peer mac addr %pM", &arg->peer_addr);
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv peer delete response\n");
-+
-+	complete(&ar->peer_delete_done);
-+
-+	return 0;
-+}
-+
- /***********/
- /* TLV ops */
- /***********/
-@@ -617,6 +635,9 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_TLV_TDLS_PEER_EVENTID:
- 		ath10k_wmi_event_tdls_peer(ar, skb);
- 		break;
-+	case WMI_TLV_PEER_DELETE_RESP_EVENTID:
-+		ath10k_wmi_tlv_event_peer_delete_resp(ar, skb);
-+		break;
- 	case WMI_TLV_MGMT_TX_COMPLETION_EVENTID:
- 		ath10k_wmi_event_mgmt_tx_compl(ar, skb);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 4fba581..9e3335f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1,7 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-- * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -315,6 +315,8 @@ enum wmi_tlv_event_id {
- 	WMI_TLV_PEER_TX_FAIL_CNT_THR_EVENTID,
- 	WMI_TLV_PEER_ESTIMATED_LINKSPEED_EVENTID,
- 	WMI_TLV_PEER_STATE_EVENTID,
-+	WMI_TLV_PEER_ASSOC_CONF_EVENTID,
-+	WMI_TLV_PEER_DELETE_RESP_EVENTID,
- 	WMI_TLV_MGMT_RX_EVENTID = WMI_TLV_EV(WMI_TLV_GRP_MGMT),
- 	WMI_TLV_HOST_SWBA_EVENTID,
- 	WMI_TLV_TBTTOFFSET_UPDATE_EVENTID,
-@@ -1557,6 +1559,8 @@ wmi_tlv_svc_map(const __le32 *in, unsigned long *out, size_t len)
- 	       WMI_SERVICE_SAP_AUTH_OFFLOAD, len);
- 	SVCMAP(WMI_TLV_SERVICE_MGMT_TX_WMI,
- 	       WMI_SERVICE_MGMT_TX_WMI, len);
-+	SVCMAP(WMI_TLV_SERVICE_SYNC_DELETE_CMDS,
-+	       WMI_SERVICE_SYNC_DELETE_CMDS, len);
- }
- 
- static inline void
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 0e27878..5d1a17e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -1,7 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-- * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -211,6 +211,7 @@ enum wmi_service {
- 	WMI_SERVICE_RTT_RESPONDER_ROLE,
- 	WMI_SERVICE_PER_PACKET_SW_ENCRYPT,
- 	WMI_SERVICE_REPORT_AIRTIME,
-+	WMI_SERVICE_SYNC_DELETE_CMDS,
- 
- 	/* Remember to add the new value to wmi_service_name()! */
- 
-@@ -502,6 +503,7 @@ static inline char *wmi_service_name(enum wmi_service service_id)
- 	SVCSTR(WMI_SERVICE_RTT_RESPONDER_ROLE);
- 	SVCSTR(WMI_SERVICE_PER_PACKET_SW_ENCRYPT);
- 	SVCSTR(WMI_SERVICE_REPORT_AIRTIME);
-+	SVCSTR(WMI_SERVICE_SYNC_DELETE_CMDS);
- 
- 	case WMI_SERVICE_MAX:
- 		return NULL;
-@@ -6748,6 +6750,11 @@ struct wmi_tlv_mgmt_tx_bundle_compl_ev_arg {
- 	const __le32 *status;
- };
- 
-+struct wmi_peer_delete_resp_ev_arg {
-+	__le32 vdev_id;
-+	struct wmi_mac_addr peer_addr;
-+};
-+
- struct wmi_mgmt_rx_ev_arg {
- 	__le32 channel;
- 	__le32 snr;
--- 
-2.7.4
+This issue was caused by the following commit:
 
+cfbc6c4c5b91c7725ef14465b98ac347d31f2334 ("iwlwifi: mvm: support
+mac80211 TXQs model")
+
+..when the used_hw_queues initialization was removed:
+
+@@ -360,8 +300,6 @@ int iwl_mvm_mac_ctxt_init(struct iwl_mvm *mvm,
+struct ieee80211_vif *vif)
+                mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
+                iwl_mvm_mac_iface_iterator, &data);
+
+-       used_hw_queues = iwl_mvm_get_used_hw_queues(mvm, vif);
+-
+        /*
+         * In the case we're getting here during resume, it's similar to
+         * firmware restart, and with RESUME_ALL the iterator will find
+
+
+I'm not 100% sure if the right thing to do is just to now initialize
+used_hw_queues to zero; it's not entirely clear what the initial value
+should be now.
+
+Colin
