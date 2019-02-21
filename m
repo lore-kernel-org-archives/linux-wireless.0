@@ -2,112 +2,150 @@ Return-Path: <SRS0=z+ld=Q4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FEF0C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 16:22:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1750AC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 16:22:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F357520836
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 16:22:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE6CA20836
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 16:22:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XljIhkc+";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MPixtv6e"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="S5DaXEK9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726874AbfBUQWN (ORCPT
+        id S1727257AbfBUQWS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Feb 2019 11:22:13 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:59302 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725943AbfBUQWN (ORCPT
+        Thu, 21 Feb 2019 11:22:18 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:58974 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725943AbfBUQWR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Feb 2019 11:22:13 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 31D7360F5C; Thu, 21 Feb 2019 16:22:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550766132;
-        bh=+GwZXD4xWjUcnuWSVQ8CBcuz6yezp42EyM9DZzoPnvs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XljIhkc+0apbBVRE6btTvT33O9ooURdN7Ye677T3V+m7zPvjBAC25ao3jjP0XjuGd
-         SQRl1LgLk+DfHaPsnveWe3SMtmG9Oef4kJ7NRNVHolsjww18vp5dG9xrTk2FWUImbu
-         CHFfrntPLnjV6xneuRdu0iN8Dw0NusXY771J2U3M=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        Thu, 21 Feb 2019 11:22:17 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1167260F40;
-        Thu, 21 Feb 2019 16:22:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550766129;
-        bh=+GwZXD4xWjUcnuWSVQ8CBcuz6yezp42EyM9DZzoPnvs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MPixtv6eGoZffmefN73kbozXby6PABiUcU4GEJZYmLf2WbCMN0dSiZOwl0h9cAqlc
-         CUQ7qYHZWPhQt+J0D5MX2fMYy1EmIE37Ptmv0oTnIYvNa9kIgdEbE+7icCCjl/NZxQ
-         bJga742SVLmEjMsliRa+xjYBUD2Aoyb6ofPjCqWI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1167260F40
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Alagu Sankar <alagusankar@silex-india.com>,
-        Wen Gong <wgong@codeaurora.org>
-Subject: [PATCH 4/4] ath10k: don't report unset rssi values to mac80211
-Date:   Thu, 21 Feb 2019 18:21:58 +0200
-Message-Id: <1550766118-31703-5-git-send-email-kvalo@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1550766118-31703-1-git-send-email-kvalo@codeaurora.org>
-References: <1550766118-31703-1-git-send-email-kvalo@codeaurora.org>
+        by mail2.candelatech.com (Postfix) with ESMTPSA id D5C1340B2C6;
+        Thu, 21 Feb 2019 08:22:14 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail2.candelatech.com D5C1340B2C6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1550766135;
+        bh=Hl+BiyDx9OxnMaHUe9vkjaEnUeOmx+ykC7aBxuszHn8=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=S5DaXEK9wkjMmuSzm2ECpSUnhjJtl3ynmTk7u22lOCT/WjT1atTxpQYa8PCHGqyUP
+         uKremJRb0pgPsrVNWloVOXQ9rNFQaRB9B333sJLaGbGJhwVkh3xkqsTqtLtTa86eAH
+         wq9XA1/b0fxG4uAAN5AcIPRuQXkNmIV68XWwr/cU=
+Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi
+ chips
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rg?= =?UTF-8?Q?ensen?= 
+        <toke@toke.dk>
+Cc:     Grant Grundler <grundler@google.com>, Kan Yan <kyan@google.com>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        wgong@qti.qualcomm.com, ath10k@lists.infradead.org,
+        wgong@codeaurora.org
+References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
+ <1533724802-30944-3-git-send-email-wgong@codeaurora.org>
+ <87sh3pdtpg.fsf@toke.dk>
+ <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
+ <87mutue4y8.fsf@toke.dk>
+ <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
+ <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com>
+ <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk>
+ <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk>
+ <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com>
+ <871sa7ylmi.fsf@toke.dk>
+ <CANEJEGuBoRMBJBOrFOYyPtiJSMfTahrVgTfxZ2ift6Q5uGazFA@mail.gmail.com>
+ <87r2c1i1vj.fsf@toke.dk> <871s41nmvx.fsf@kamboji.qca.qualcomm.com>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <ecc20e01-1515-d227-62d8-377f3c35e449@candelatech.com>
+Date:   Thu, 21 Feb 2019 08:22:14 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
+MIME-Version: 1.0
+In-Reply-To: <871s41nmvx.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+On 2/21/19 8:10 AM, Kalle Valo wrote:
+> Toke Høiland-Jørgensen <toke@toke.dk> writes:
+> 
+>> Grant Grundler <grundler@google.com> writes:
+>>
+>>> On Thu, Sep 6, 2018 at 3:18 AM Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+>>>>
+>>>> Grant Grundler <grundler@google.com> writes:
+>>>>
+>>>>>> And, well, Grant's data is from a single test in a noisy
+>>>>>> environment where the time series graph shows that throughput is all over
+>>>>>> the place for the duration of the test; so it's hard to draw solid
+>>>>>> conclusions from (for instance, for the 5-stream test, the average
+>>>>>> throughput for 6 is 331 and 379 Mbps for the two repetitions, and for 7
+>>>>>> it's 326 and 371 Mbps) . Unfortunately I don't have the same hardware
+>>>>>> used in this test, so I can't go verify it myself; so the only thing I
+>>>>>> can do is grumble about it here... :)
+>>>>>
+>>>>> It's a fair complaint and I agree with it. My counter argument is the
+>>>>> opposite is true too: most ideal benchmarks don't measure what most
+>>>>> users see. While the data wgong provided are way more noisy than I
+>>>>> like, my overall "confidence" in the "conclusion" I offered is still
+>>>>> positive.
+>>>>
+>>>> Right. I guess I would just prefer a slightly more comprehensive
+>>>> evaluation to base a 4x increase in buffer size on...
+>>>
+>>> Kalle, is this why you didn't accept this patch? Other reasons?
+>>>
+>>> Toke, what else would you like to see evaluated?
+>>>
+>>> I generally want to see three things measured when "benchmarking"
+>>> technologies: throughput, latency, cpu utilization
+>>> We've covered those three I think "reasonably".
+>>
+>> Hmm, going back and looking at this (I'd completely forgotten about this
+>> patch), I think I had two main concerns:
+>>
+>> 1. What happens in a degraded signal situation, where the throughput is
+>>     limited by the signal conditions, or by contention with other devices.
+>>     Both of these happen regularly, and I worry that latency will be
+>>     badly affected under those conditions.
+>>
+>> 2. What happens with old hardware that has worse buffer management in
+>>     the driver->firmware path (especially drivers without push/pull mode
+>>     support)? For these, the lower-level queueing structure is less
+>>     effective at controlling queueing latency.
+> 
+> Do note that this patch changes behaviour _only_ for QCA6174 and QCA9377
+> PCI devices, which IIRC do not even support push/pull mode. All the
+> rest, including QCA988X and QCA9984 are unaffected.
 
-The SDIO firmware does not provide RSSI value to the host, it's only set to
-zero. In that case don't report the value to mac80211. One risk here is that
-value zero might be a valid value with other firmware, currently there's no way
-to detect that.
+Just as a note, at least kernels such as 4.14.whatever perform poorly when
+running ath10k on 9984 when acting as TCP endpoints.  This makes them not
+really usable for stuff like serving video to lots of clients.
 
-Without the fix, the rssi value indicated by iw changes between the actual
-value and -95.
+Tweaking TCP (I do it a bit differently, but either way) can significantly
+improve performance.
 
-Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00005-QCARMSWP-1.
+Recently I helped a user that could get barely 70 stations streaming at 1Mbps
+on stock kernel (using one wave1 on 2.4, one wave-2 on 5Ghz),
+and we got 110 working with a tweaked TCP stack.  These were /n stations too.
 
-Co-developed-by: Wen Gong <wgong@codeaurora.org>
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+I think it is lame that it _still_ requires out of tree patches to make TCP work
+well on ath10k...even if you want to default to current behaviour, you should
+allow users to tweak it to work with their use case.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 4fc885617de1..62479b037210 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2119,9 +2119,15 @@ static bool ath10k_htt_rx_proc_rx_ind_hl(struct ath10k_htt *htt,
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	rx_status = IEEE80211_SKB_RXCB(skb);
- 	rx_status->chains |= BIT(0);
--	rx_status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
--			    rx->ppdu.combined_rssi;
--	rx_status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
-+	if (rx->ppdu.combined_rssi == 0) {
-+		/* SDIO firmware does not provide signal */
-+		rx_status->signal = 0;
-+		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
-+	} else {
-+		rx_status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
-+			rx->ppdu.combined_rssi;
-+		rx_status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
-+	}
- 
- 	spin_lock_bh(&ar->data_lock);
- 	ch = ar->scan_channel;
+Thanks,
+Ben
+
+
 -- 
-2.7.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
