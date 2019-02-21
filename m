@@ -2,121 +2,104 @@ Return-Path: <SRS0=z+ld=Q4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12851C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 10:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C842C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 10:33:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEEB220880
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 10:31:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07EB120880
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 10:33:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YjBahqov"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p82Txakj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727148AbfBUKbB (ORCPT
+        id S1725891AbfBUKdd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Feb 2019 05:31:01 -0500
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:34909 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725932AbfBUKbA (ORCPT
+        Thu, 21 Feb 2019 05:33:33 -0500
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:34140 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725814AbfBUKdd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Feb 2019 05:31:00 -0500
-Received: by mail-yb1-f195.google.com with SMTP id n84so6982768yba.2
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2019 02:30:59 -0800 (PST)
+        Thu, 21 Feb 2019 05:33:33 -0500
+Received: by mail-lj1-f193.google.com with SMTP id l5so20132813lje.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2019 02:33:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=gFY671WqJZVp7oRwSiO8pbWq2UGsLwDdtMRJL6V6TQk=;
-        b=YjBahqovSudlW9E2st9CXfpjtaD5vhrorpKvcxzlSSO2gyS3B5tqi2jKRhMgZQ0ALO
-         EUGgW1kjlwlyDAPwWaNpMjFCtMY7WsVs4N7yKKHCiYiJULrsz0sEKOWDjMo0uFH2I4Zk
-         Cj0ZVw5BVZ1O8Ek7Dj2b1HsgVH2NFA4kFhmpE=
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=J3wkq8BVOiG+cWlYBh4iPXQxstMyGutzZ1BTisCisPI=;
+        b=p82TxakjNJjFmnyYB3RHZz+zgZaBaxugqqS5BqO2HX7UpNvK/eRHxsvLkJYQJQiVSx
+         /mGBzblwsoJlWvpeyb7uVQHjwh8pZHY0/lWQC0rjkuGQZiDeSLgPs+lzeEu5Qq2C8i86
+         y4o2iLpPy+Ct++Xn4DPiwEHW67E2yuW+8x3uE3roB7v4jRU4FhgszxSKnz0GRCDO730w
+         f0SzdTHHVaan7f9vQFUzpBaXctNSN1CRc18F7UrcKdc/kj7Jbp4EcuCtWyVNs1Nn2wZI
+         karb9KBodrV3AbeGL3LEKRblDUhCHpKb01C4maLNUPucyfH6I+4eHu55y6fwRZSYHeUS
+         zt2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=gFY671WqJZVp7oRwSiO8pbWq2UGsLwDdtMRJL6V6TQk=;
-        b=q9fOBx1Mog5ceLdb6Hbwmw3A0bY8qWv1J6h+oL+EuUkc2XLD6WQ24hSebcyK/DLpQQ
-         MZUgxxznfUYN9dWobx+qrIhp7vcrv8/Pz9uYb2NuLqvBJmd0kumn6KkuaerQCX6tbwNj
-         IW/xcFXBSptUlUi9i+NLJVnxAZQdi/Qkq8HPPFyl6Ry6PG0p+gmYJAO0gAwLDm8uu3nT
-         V/j7/3jco8+J57DjeCb7ylIT4Rwqse2WySsQn0XRDSeiyfCFVjiN9IwoOwi906wescZM
-         N7bm1YgLtuQVhddBd/dAcu2tWifkD1FLhNFydEbJmxlEJ/jGztL+O4Ok9Sdi2YRta1He
-         7H1A==
-X-Gm-Message-State: AHQUAuYq2MMxbys/XfRzeg22O6tOFu/PsI4Jpr0LKK1it+v4OPoWjtAv
-        xlJAHXakoDzws+OIkHWnpfr3pg==
-X-Google-Smtp-Source: AHgI3IbRK33gsYP7TZw+NDCrHNL8eZUuj1mIDb7knMYNthCyi1kaFVH1SSEwJegW3MdYcrpPDGzE5w==
-X-Received: by 2002:a25:582:: with SMTP id 124mr25043952ybf.118.1550745059233;
-        Thu, 21 Feb 2019 02:30:59 -0800 (PST)
-Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id z186sm2706740ywf.17.2019.02.21.02.30.57
+        bh=J3wkq8BVOiG+cWlYBh4iPXQxstMyGutzZ1BTisCisPI=;
+        b=ck0/Mc+NTYeXG76AqNgxji3iunZaMAXY4qC6F0jrbM0GnX0nxeP7Lpm2UuK+uL1mt0
+         z4Nkl9e9Zx3avAumx6KZWJOLncCDmA6R6Y9sVJvhJnQib7eHnzaP87VIEvtQlwVaDEbF
+         tfbpWevNsp1snSzu1xd/sgzy/PzI2t2ffzVl30HHUZFLv3/OVlsUm1humHR52PKp40UY
+         xUQ8XBXr+HYCRBKrqMnSB60krEZOLTRniQyGqcSh5v/9fFO1huS/5oqn60zcrqNPx0Dh
+         HA4/ZWLBh5V9bkletnn5CxjOIVq/D/YikyhZPPmCHzn9E0iookHjvqbsGQU5PaizmxCy
+         HTRw==
+X-Gm-Message-State: AHQUAuYKp/RC3YZHvSjTYv8Tw5BFtDIpcmn8d4oxbnIVCHvWgbf2+Gy7
+        NeySSJovBUM7OYR/Cx+wWBY=
+X-Google-Smtp-Source: AHgI3IZ+EeKV1/OG6NFnKY7DDRepNafjSFWa5HObAmzhKKDsYjIZnCqsmIYypcLj2TkXkS+dlxSkCg==
+X-Received: by 2002:a2e:6c04:: with SMTP id h4-v6mr23543819ljc.92.1550745210722;
+        Thu, 21 Feb 2019 02:33:30 -0800 (PST)
+Received: from elitebook.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
+        by smtp.gmail.com with ESMTPSA id j14sm6059064lfc.28.2019.02.21.02.33.29
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 21 Feb 2019 02:30:58 -0800 (PST)
-Subject: Re: [PATCH wireless-drivers-next] brcmfmac: add basic validation of
- shared RAM address
-To:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
+        Thu, 21 Feb 2019 02:33:30 -0800 (PST)
+From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-References: <20190220103047.8960-1-zajec5@gmail.com>
- <CACna6rwwDN6svzWMGbxYXDp5CN8C=A=fV224QcfoLcACQQgLDA@mail.gmail.com>
- <92e8bf1e-3be9-96f2-93e9-ac504a609929@broadcom.com>
- <CACna6rxXJWwysJTauSKAb6rLeaXi1CBZSGcFNA5Nxn0ncQnG4Q@mail.gmail.com>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <48bb6db6-31c0-65e6-551f-69bbd056df93@broadcom.com>
-Date:   Thu, 21 Feb 2019 11:30:56 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.0
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH wireless-drivers-next 1/2] brcmfmac: fix size of the struct msgbuf_ring_status
+Date:   Thu, 21 Feb 2019 11:33:24 +0100
+Message-Id: <20190221103325.28228-1-zajec5@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-In-Reply-To: <CACna6rxXJWwysJTauSKAb6rLeaXi1CBZSGcFNA5Nxn0ncQnG4Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/21/2019 10:27 AM, Rafał Miłecki wrote:
-> On Thu, 21 Feb 2019 at 09:59, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 2/21/2019 9:01 AM, Rafał Miłecki wrote:
->>> On Wed, 20 Feb 2019 at 11:31, Rafał Miłecki <zajec5@gmail.com> wrote:
->>>> From: Rafał Miłecki <rafal@milecki.pl>
->>>>
->>>> While experimenting with firmware loading I ended up in a state of
->>>> firmware reporting shared RAM address 0x04000001. It was causing:
->>>> [   94.448015] Unable to handle kernel paging request at virtual address cd680001
->>>> due to reading out of the mapped memory.
->>>>
->>>> This patch adds some basic validation to avoid kernel crashes due to the
->>>> unexpected firmware behavior.
->>>
->>> For a reference for the further hackers. That has been caused by a
->>> BCMA_CORE_SYS_MEM core on my BCM4366/4 not being up.
->>
->> Thanks, Rafał
->>
->> Does that happen all the time or in some specific scenario. Anyway, it
->> seems like we need to add a check in brcmf_chip_sysmem_ramsize() and
->> bringup the core if needed. Although, I am curious in what the state the
->> other cores are at that time. Might need a chip-wide reset.
-> 
-> It happens after brcmf_pcie_reset_device() which is probably a 100%
-> expected case ;)
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Did not check what that function exactly does, but could be expected.
+This updates host struct to match the in-firmawre definition. It's a
+cosmetic change as it only applies to the reserved struct space.
 
-> Normally brcmfmac does not call brcmf_pcie_reset_device() between
-> brcmf_chip_sysmem_ramsize() and the brcmf_pcie_download_fw_nvram() so
-> it was only my hacking that caused that issue for me.
+Fixes: c988b78244df ("brcmfmac: print firmware reported ring status errors")
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ah. Can only wish you happy hacking then ;-)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index aef2d4092872..d711dc8ed606 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@ -139,7 +139,7 @@ struct msgbuf_ring_status {
+ 	struct msgbuf_common_hdr	msg;
+ 	struct msgbuf_completion_hdr	compl_hdr;
+ 	__le16				write_idx;
+-	__le32				rsvd0[5];
++	__le16				rsvd0[5];
+ };
+ 
+ struct msgbuf_rx_event {
+-- 
+2.20.1
 
-Gr. AvS
