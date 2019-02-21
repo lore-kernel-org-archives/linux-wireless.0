@@ -2,114 +2,121 @@ Return-Path: <SRS0=z+ld=Q4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D769BC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 09:28:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12851C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 10:31:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7925214AF
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 09:28:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEEB220880
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 10:31:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qq62CN09"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YjBahqov"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726514AbfBUJ2G (ORCPT
+        id S1727148AbfBUKbB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Feb 2019 04:28:06 -0500
-Received: from mail-yw1-f66.google.com ([209.85.161.66]:32962 "EHLO
-        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725814AbfBUJ2G (ORCPT
+        Thu, 21 Feb 2019 05:31:01 -0500
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:34909 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725932AbfBUKbA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Feb 2019 04:28:06 -0500
-Received: by mail-yw1-f66.google.com with SMTP id p17so10402305ywg.0
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2019 01:28:05 -0800 (PST)
+        Thu, 21 Feb 2019 05:31:00 -0500
+Received: by mail-yb1-f195.google.com with SMTP id n84so6982768yba.2
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2019 02:30:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=lHw8NmRPUzP1Fxn6HThFfT9aSXYqBdEC1kjk1RDIdJ4=;
-        b=qq62CN09IheYXntHB61NwuSZPHz0Ypexl97/XVVdOTmrKYGmfgJ0IFeCHmS5bad1Um
-         JXFP2+GxobsZS70RSOaVOoErKyea0i0XNsEM/NkPiMf14/X/INa+8GojgxFJQEzi2UYN
-         JiJRCAhsmMjZ8raGH6Lf0FyBDFKZ7q63r00aXnZgduYQJpr9ADa4TqGw+IO7cYvWSwb2
-         /cdxKta8Vy4mu0VzU5fa8DUcw4mYElWFIq3fQ9N6jh1Gj7AlytKVfYwna6INIOqda+TQ
-         wEmCxETTxY+ibFcBHj9pxzQ6hdch5IJTerru3J5PIjdOGeu15lDeHcYOTpWzZ67P0CFk
-         nQdQ==
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=gFY671WqJZVp7oRwSiO8pbWq2UGsLwDdtMRJL6V6TQk=;
+        b=YjBahqovSudlW9E2st9CXfpjtaD5vhrorpKvcxzlSSO2gyS3B5tqi2jKRhMgZQ0ALO
+         EUGgW1kjlwlyDAPwWaNpMjFCtMY7WsVs4N7yKKHCiYiJULrsz0sEKOWDjMo0uFH2I4Zk
+         Cj0ZVw5BVZ1O8Ek7Dj2b1HsgVH2NFA4kFhmpE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=lHw8NmRPUzP1Fxn6HThFfT9aSXYqBdEC1kjk1RDIdJ4=;
-        b=haal2+WyxEEi7JWhAsG6Ecax1ewo8J1AvMHBd7YbYCcWqUQ5+BQ7tym8VfV5CMC+Qb
-         G3JSFR0m40PCclAwS3fACMbodsxRAahJc53exV7z+JsslncpRAeDBH/0Wc+wzoReNxoy
-         w7mzp2VnuUTmHynZBZP1CV3XgepSca38CwrEkEwyfeVXBt56s3EZGlJskDo4ZofxInQv
-         8UpRWmxHRtXHH9qPCVFsPAQ+WY0eehN5ys08RujeH69epOdoc2PRDg8MyN8OVmJne7Sb
-         SzmtzC9E4tV28dmydzhrhg6g7ceq7i5JrWGjYREqp/JZfHB0k93SHV9wE+d/a2iL1iH/
-         aTJQ==
-X-Gm-Message-State: AHQUAuZvT7304tRudWk+jdhcgpnjoONuOPpsn7L8NWSGBklgPTSNTTou
-        /vc6UbovXc/F+vqS0kAF9Yi9BZJSzZcCsbHOWuv3CzWJNPk=
-X-Google-Smtp-Source: AHgI3IaKM94SbZXeL+BoQqiX0iv6Hegyj1Gb+83vBfmHCoPwWbHGaj69mDivwfrpqD9rGGXQDvtjTx72eZNrtR5XK18=
-X-Received: by 2002:a81:25d7:: with SMTP id l206mr32152289ywl.253.1550741285153;
- Thu, 21 Feb 2019 01:28:05 -0800 (PST)
-MIME-Version: 1.0
-References: <20190220103047.8960-1-zajec5@gmail.com> <CACna6rwwDN6svzWMGbxYXDp5CN8C=A=fV224QcfoLcACQQgLDA@mail.gmail.com>
- <92e8bf1e-3be9-96f2-93e9-ac504a609929@broadcom.com>
-In-Reply-To: <92e8bf1e-3be9-96f2-93e9-ac504a609929@broadcom.com>
-From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date:   Thu, 21 Feb 2019 10:27:53 +0100
-Message-ID: <CACna6rxXJWwysJTauSKAb6rLeaXi1CBZSGcFNA5Nxn0ncQnG4Q@mail.gmail.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=gFY671WqJZVp7oRwSiO8pbWq2UGsLwDdtMRJL6V6TQk=;
+        b=q9fOBx1Mog5ceLdb6Hbwmw3A0bY8qWv1J6h+oL+EuUkc2XLD6WQ24hSebcyK/DLpQQ
+         MZUgxxznfUYN9dWobx+qrIhp7vcrv8/Pz9uYb2NuLqvBJmd0kumn6KkuaerQCX6tbwNj
+         IW/xcFXBSptUlUi9i+NLJVnxAZQdi/Qkq8HPPFyl6Ry6PG0p+gmYJAO0gAwLDm8uu3nT
+         V/j7/3jco8+J57DjeCb7ylIT4Rwqse2WySsQn0XRDSeiyfCFVjiN9IwoOwi906wescZM
+         N7bm1YgLtuQVhddBd/dAcu2tWifkD1FLhNFydEbJmxlEJ/jGztL+O4Ok9Sdi2YRta1He
+         7H1A==
+X-Gm-Message-State: AHQUAuYq2MMxbys/XfRzeg22O6tOFu/PsI4Jpr0LKK1it+v4OPoWjtAv
+        xlJAHXakoDzws+OIkHWnpfr3pg==
+X-Google-Smtp-Source: AHgI3IbRK33gsYP7TZw+NDCrHNL8eZUuj1mIDb7knMYNthCyi1kaFVH1SSEwJegW3MdYcrpPDGzE5w==
+X-Received: by 2002:a25:582:: with SMTP id 124mr25043952ybf.118.1550745059233;
+        Thu, 21 Feb 2019 02:30:59 -0800 (PST)
+Received: from [10.176.68.125] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id z186sm2706740ywf.17.2019.02.21.02.30.57
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 21 Feb 2019 02:30:58 -0800 (PST)
 Subject: Re: [PATCH wireless-drivers-next] brcmfmac: add basic validation of
  shared RAM address
-To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
+To:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
         "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
         <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-        <brcm80211-dev-list.pdl@broadcom.com>," 
-        <brcm80211-dev-list@cypress.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com,
         =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+References: <20190220103047.8960-1-zajec5@gmail.com>
+ <CACna6rwwDN6svzWMGbxYXDp5CN8C=A=fV224QcfoLcACQQgLDA@mail.gmail.com>
+ <92e8bf1e-3be9-96f2-93e9-ac504a609929@broadcom.com>
+ <CACna6rxXJWwysJTauSKAb6rLeaXi1CBZSGcFNA5Nxn0ncQnG4Q@mail.gmail.com>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <48bb6db6-31c0-65e6-551f-69bbd056df93@broadcom.com>
+Date:   Thu, 21 Feb 2019 11:30:56 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.0
+MIME-Version: 1.0
+In-Reply-To: <CACna6rxXJWwysJTauSKAb6rLeaXi1CBZSGcFNA5Nxn0ncQnG4Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 21 Feb 2019 at 09:59, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 2/21/2019 9:01 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> > On Wed, 20 Feb 2019 at 11:31, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
-> wrote:
-> >> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
-> >>
-> >> While experimenting with firmware loading I ended up in a state of
-> >> firmware reporting shared RAM address 0x04000001. It was causing:
-> >> [   94.448015] Unable to handle kernel paging request at virtual addre=
-ss cd680001
-> >> due to reading out of the mapped memory.
-> >>
-> >> This patch adds some basic validation to avoid kernel crashes due to t=
-he
-> >> unexpected firmware behavior.
-> >
-> > For a reference for the further hackers. That has been caused by a
-> > BCMA_CORE_SYS_MEM core on my BCM4366/4 not being up.
->
-> Thanks, Rafa=C5=82
->
-> Does that happen all the time or in some specific scenario. Anyway, it
-> seems like we need to add a check in brcmf_chip_sysmem_ramsize() and
-> bringup the core if needed. Although, I am curious in what the state the
-> other cores are at that time. Might need a chip-wide reset.
+On 2/21/2019 10:27 AM, Rafał Miłecki wrote:
+> On Thu, 21 Feb 2019 at 09:59, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 2/21/2019 9:01 AM, Rafał Miłecki wrote:
+>>> On Wed, 20 Feb 2019 at 11:31, Rafał Miłecki <zajec5@gmail.com> wrote:
+>>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>>
+>>>> While experimenting with firmware loading I ended up in a state of
+>>>> firmware reporting shared RAM address 0x04000001. It was causing:
+>>>> [   94.448015] Unable to handle kernel paging request at virtual address cd680001
+>>>> due to reading out of the mapped memory.
+>>>>
+>>>> This patch adds some basic validation to avoid kernel crashes due to the
+>>>> unexpected firmware behavior.
+>>>
+>>> For a reference for the further hackers. That has been caused by a
+>>> BCMA_CORE_SYS_MEM core on my BCM4366/4 not being up.
+>>
+>> Thanks, Rafał
+>>
+>> Does that happen all the time or in some specific scenario. Anyway, it
+>> seems like we need to add a check in brcmf_chip_sysmem_ramsize() and
+>> bringup the core if needed. Although, I am curious in what the state the
+>> other cores are at that time. Might need a chip-wide reset.
+> 
+> It happens after brcmf_pcie_reset_device() which is probably a 100%
+> expected case ;)
 
-It happens after brcmf_pcie_reset_device() which is probably a 100%
-expected case ;)
+Did not check what that function exactly does, but could be expected.
 
-Normally brcmfmac does not call brcmf_pcie_reset_device() between
-brcmf_chip_sysmem_ramsize() and the brcmf_pcie_download_fw_nvram() so
-it was only my hacking that caused that issue for me.
+> Normally brcmfmac does not call brcmf_pcie_reset_device() between
+> brcmf_chip_sysmem_ramsize() and the brcmf_pcie_download_fw_nvram() so
+> it was only my hacking that caused that issue for me.
 
---=20
-Rafa=C5=82
+Ah. Can only wish you happy hacking then ;-)
+
+Gr. AvS
