@@ -6,97 +6,80 @@ X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1750AC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 16:22:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14ABCC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 16:28:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE6CA20836
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 16:22:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D271020818
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 16:28:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="S5DaXEK9"
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="U+USLZ49"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727257AbfBUQWS (ORCPT
+        id S1726443AbfBUQ2Q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Feb 2019 11:22:18 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:58974 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725943AbfBUQWR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Feb 2019 11:22:17 -0500
-Received: from [192.168.100.195] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id D5C1340B2C6;
-        Thu, 21 Feb 2019 08:22:14 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail2.candelatech.com D5C1340B2C6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1550766135;
-        bh=Hl+BiyDx9OxnMaHUe9vkjaEnUeOmx+ykC7aBxuszHn8=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=S5DaXEK9wkjMmuSzm2ECpSUnhjJtl3ynmTk7u22lOCT/WjT1atTxpQYa8PCHGqyUP
-         uKremJRb0pgPsrVNWloVOXQ9rNFQaRB9B333sJLaGbGJhwVkh3xkqsTqtLtTa86eAH
-         wq9XA1/b0fxG4uAAN5AcIPRuQXkNmIV68XWwr/cU=
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi
- chips
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rg?= =?UTF-8?Q?ensen?= 
-        <toke@toke.dk>
+        Thu, 21 Feb 2019 11:28:16 -0500
+Received: from mail.toke.dk ([52.28.52.200]:33599 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726074AbfBUQ2P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Feb 2019 11:28:15 -0500
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1550766493; bh=iDVF5lk1zkMLaLHGvFxpP6V8/4NmnIFHAlfcQBjNGD8=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=U+USLZ49I1EclHBRee+H5I3iQoVNyFPIATiPZDJYhL+zlUfqeiM7jdVNEmMDx01DW
+         OTCO68DsTrY6oC2IyN9rQ57UaEJzZJXo5FUs8Sxdn5uMGHYyFJ68ED4TXafA2fsG0s
+         0fnIfeF97q040Y7r5ZSHQLNBiyuNblCrMHldkpsB0VvKUL7Vim9swtCvVrxZCCNg40
+         eF4pix3JpTQunrlVNHNyjo5a5D2ZXxazS25aVgkegJ8Yoq3Y7OCck1obwNTrw/gF08
+         thGJcuuY24uPmFGw8BfQPe8IrOn7Lge6G4StFE5PxacXLMERQJfCi/GUg2hvMy6rES
+         PyFT8DiLj/UHw==
+To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     Grant Grundler <grundler@google.com>, Kan Yan <kyan@google.com>,
         linux-wireless@vger.kernel.org,
         Johannes Berg <johannes@sipsolutions.net>,
         wgong@qti.qualcomm.com, ath10k@lists.infradead.org,
         wgong@codeaurora.org
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
- <1533724802-30944-3-git-send-email-wgong@codeaurora.org>
- <87sh3pdtpg.fsf@toke.dk>
- <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
- <87mutue4y8.fsf@toke.dk>
- <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
- <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com>
- <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk>
- <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk>
- <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com>
- <871sa7ylmi.fsf@toke.dk>
- <CANEJEGuBoRMBJBOrFOYyPtiJSMfTahrVgTfxZ2ift6Q5uGazFA@mail.gmail.com>
- <87r2c1i1vj.fsf@toke.dk> <871s41nmvx.fsf@kamboji.qca.qualcomm.com>
-From:   Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-Message-ID: <ecc20e01-1515-d227-62d8-377f3c35e449@candelatech.com>
-Date:   Thu, 21 Feb 2019 08:22:14 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
+Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
 In-Reply-To: <871s41nmvx.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk> <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com> <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com> <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com> <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk> <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk> <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com> <871sa7ylmi.fsf@toke.dk> <CANEJEGuBoRMBJBOrFOYyPtiJSMfTahrVgTfxZ2ift6Q5uGazFA@mail.gmail.com> <87r2c1i1vj.fsf@toke.dk> <871s41nmvx.fsf@kamboji.qca.qualcomm.com>
+Date:   Thu, 21 Feb 2019 17:28:13 +0100
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87h8cxhzs2.fsf@toke.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/21/19 8:10 AM, Kalle Valo wrote:
-> Toke Høiland-Jørgensen <toke@toke.dk> writes:
-> 
+Kalle Valo <kvalo@codeaurora.org> writes:
+
+> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+>
 >> Grant Grundler <grundler@google.com> writes:
 >>
->>> On Thu, Sep 6, 2018 at 3:18 AM Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+>>> On Thu, Sep 6, 2018 at 3:18 AM Toke H=C3=B8iland-J=C3=B8rgensen <toke@t=
+oke.dk> wrote:
 >>>>
 >>>> Grant Grundler <grundler@google.com> writes:
 >>>>
->>>>>> And, well, Grant's data is from a single test in a noisy
->>>>>> environment where the time series graph shows that throughput is all over
->>>>>> the place for the duration of the test; so it's hard to draw solid
->>>>>> conclusions from (for instance, for the 5-stream test, the average
->>>>>> throughput for 6 is 331 and 379 Mbps for the two repetitions, and for 7
->>>>>> it's 326 and 371 Mbps) . Unfortunately I don't have the same hardware
->>>>>> used in this test, so I can't go verify it myself; so the only thing I
->>>>>> can do is grumble about it here... :)
->>>>>
->>>>> It's a fair complaint and I agree with it. My counter argument is the
->>>>> opposite is true too: most ideal benchmarks don't measure what most
->>>>> users see. While the data wgong provided are way more noisy than I
->>>>> like, my overall "confidence" in the "conclusion" I offered is still
->>>>> positive.
+>>>> >> And, well, Grant's data is from a single test in a noisy
+>>>> >> environment where the time series graph shows that throughput is al=
+l over
+>>>> >> the place for the duration of the test; so it's hard to draw solid
+>>>> >> conclusions from (for instance, for the 5-stream test, the average
+>>>> >> throughput for 6 is 331 and 379 Mbps for the two repetitions, and f=
+or 7
+>>>> >> it's 326 and 371 Mbps) . Unfortunately I don't have the same hardwa=
+re
+>>>> >> used in this test, so I can't go verify it myself; so the only thin=
+g I
+>>>> >> can do is grumble about it here... :)
+>>>> >
+>>>> > It's a fair complaint and I agree with it. My counter argument is the
+>>>> > opposite is true too: most ideal benchmarks don't measure what most
+>>>> > users see. While the data wgong provided are way more noisy than I
+>>>> > like, my overall "confidence" in the "conclusion" I offered is still
+>>>> > positive.
 >>>>
 >>>> Right. I guess I would just prefer a slightly more comprehensive
 >>>> evaluation to base a 4x increase in buffer size on...
@@ -113,39 +96,23 @@ On 2/21/19 8:10 AM, Kalle Valo wrote:
 >> patch), I think I had two main concerns:
 >>
 >> 1. What happens in a degraded signal situation, where the throughput is
->>     limited by the signal conditions, or by contention with other devices.
->>     Both of these happen regularly, and I worry that latency will be
->>     badly affected under those conditions.
+>>    limited by the signal conditions, or by contention with other devices.
+>>    Both of these happen regularly, and I worry that latency will be
+>>    badly affected under those conditions.
 >>
 >> 2. What happens with old hardware that has worse buffer management in
->>     the driver->firmware path (especially drivers without push/pull mode
->>     support)? For these, the lower-level queueing structure is less
->>     effective at controlling queueing latency.
-> 
+>>    the driver->firmware path (especially drivers without push/pull mode
+>>    support)? For these, the lower-level queueing structure is less
+>>    effective at controlling queueing latency.
+>
 > Do note that this patch changes behaviour _only_ for QCA6174 and QCA9377
 > PCI devices, which IIRC do not even support push/pull mode. All the
 > rest, including QCA988X and QCA9984 are unaffected.
 
-Just as a note, at least kernels such as 4.14.whatever perform poorly when
-running ath10k on 9984 when acting as TCP endpoints.  This makes them not
-really usable for stuff like serving video to lots of clients.
+Ah, right; I did not go all the way back and look at the actual patch,
+so missed that :)
 
-Tweaking TCP (I do it a bit differently, but either way) can significantly
-improve performance.
+But in that case, why are the latency results that low? Were these tests
+done with the ChromeOS queue limit patches?
 
-Recently I helped a user that could get barely 70 stations streaming at 1Mbps
-on stock kernel (using one wave1 on 2.4, one wave-2 on 5Ghz),
-and we got 110 working with a tweaked TCP stack.  These were /n stations too.
-
-I think it is lame that it _still_ requires out of tree patches to make TCP work
-well on ath10k...even if you want to default to current behaviour, you should
-allow users to tweak it to work with their use case.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+-Toke
