@@ -2,97 +2,115 @@ Return-Path: <SRS0=z+ld=Q4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D3DBC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 18:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D556C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 19:31:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E15D220818
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 18:29:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F8232077B
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 19:31:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="A4d7DnBT"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dfDuSO7d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728876AbfBUS3U (ORCPT
+        id S1726429AbfBUTbW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Feb 2019 13:29:20 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:60664 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728872AbfBUS3U (ORCPT
+        Thu, 21 Feb 2019 14:31:22 -0500
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:41733 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726050AbfBUTbV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Feb 2019 13:29:20 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1LINfnh006958;
-        Thu, 21 Feb 2019 18:29:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2018-07-02;
- bh=quhVMXRzpB6fLGW5rHl+VUvJpSl/cLWp+xBanzZgyXA=;
- b=A4d7DnBTtXCOSj/ig7TfG03AAY3/NZ+DqaNWsITozJ5W2S3nv9QUAOvvsuuwOqMTsq4C
- NdBci7D7n3F67k//DjGqB1uPDiGL2xgXrjUanYBh6Dks5jGajiv4IGXECn7G3X3LL55S
- R9C9KAgyDDH4Kr11037/a9YXvQzowXeK8Ntk6o2kpS/5/g1PbJQ0vuZbbP4/k0NkU+Zm
- eHVTDaDl64a3j3jdQZQ9X7qiP5/vsjl+w76Hnrvq08ouv9plL+iSMgaPIGEYDnV3Birn
- 2HRqlxo3xEbgdeBSsIGBczMMECekSTmIEb6jRX4xlAGcZ+fece5iuiSFpqWiYtlId+G/ CQ== 
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2qpb5rst54-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 21 Feb 2019 18:29:15 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x1LITA6x002629
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 21 Feb 2019 18:29:10 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x1LIT9Tp021054;
-        Thu, 21 Feb 2019 18:29:10 GMT
-Received: from kadam (/197.157.0.34)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 21 Feb 2019 10:29:09 -0800
-Date:   Thu, 21 Feb 2019 21:29:02 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     lkundrak@v3.sk
-Cc:     linux-wireless@vger.kernel.org
-Subject: [bug report] libertas_tf: don't defer firmware loading until start()
-Message-ID: <20190221182900.GA26432@kadam>
+        Thu, 21 Feb 2019 14:31:21 -0500
+Received: by mail-ot1-f68.google.com with SMTP id t7so29523544otk.8
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2019 11:31:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=7xZbuB5BarjT2Un+Im7Lpx4ojwB91hzJEgvFQInOxKk=;
+        b=dfDuSO7dKHJ8TWwww5uga5TKCPe1sOKtlrxQj8Y62lEmcXlAEFXNgFObx9yDVYxYIi
+         aX8XGT4OdXGcsC5KsmiwWBHoQqIC7Lc+G9YvyMMenrovy/WGecNIVCQN5dKvfue+L4wO
+         Gj7R2VMTwMaOhZzj+NZlCE/UcriIzjgHwdydv9gd5kYmfqXWaSugjOYbMrxnW4kK+fJi
+         KsotBU+t4BgFKSA2xyl2hnO/C6cseMcM0f5LcxmRtESemPJ/5tYNKwJydl5HM3/4D9ER
+         6dA/wJrHhVR1hmqj7aGt31nDLuVsJVeLQpHn0RMOPuAHc9JhrLVcomfIbESbUnkfI9Fg
+         2mvw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
+         :mime-version:content-transfer-encoding;
+        bh=7xZbuB5BarjT2Un+Im7Lpx4ojwB91hzJEgvFQInOxKk=;
+        b=gqveVYl+VGPOV67uQ7tAvAUfvGoPF9oh388d+f5fH9FRcy7kDHbbWayqf5yx2Xi4tK
+         IkR0s5+RotCqx5iX27eDhApObO2mMSwdoz1C+jxb2MZRBFDv3VFY0shTlwUG35vol1FB
+         oP4g3t82/6X/syCdsv+jhvnreFRUnketFyhL/x7ngP0oBUE/bYwd/EBQQkqrin2QrZ+U
+         TxRJcNLZGey1cek5/OkIFLVaYXldpmmOGdxNNzUB9YdABAwwXWYI1lkY1/L2fF+CBq+a
+         tv9wNEfJi5rPpWHNntp4/yIzGYV5TQ/QTZFP+IS4G0hEGeYgBGM7uNHRhFvbXnGWAMWc
+         KVJA==
+X-Gm-Message-State: AHQUAuYOzaHywuQUSEzwXo+94rVJxWlCjl2WhzhtYSnV7hRQTo2zKR+a
+        2qHOFR4AhBZ1A34VvhJNLF4=
+X-Google-Smtp-Source: AHgI3IYO6xHBNXt+C1Qv21PYnuH7ZJKLDT+HP0yI9ZpH5mlNmknHWT9VH9h/WLB9TUuzdBeNU6IXaw==
+X-Received: by 2002:a05:6830:15c3:: with SMTP id j3mr83572otr.347.1550777480473;
+        Thu, 21 Feb 2019 11:31:20 -0800 (PST)
+Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id o16sm9495500otl.22.2019.02.21.11.31.18
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 21 Feb 2019 11:31:19 -0800 (PST)
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 0/8] rtlwifi: Fix some cosmetic errors
+Date:   Thu, 21 Feb 2019 13:31:07 -0600
+Message-Id: <20190221193115.30848-1-Larry.Finger@lwfinger.net>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9174 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=778 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1902210129
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Lubomir Rintel,
+This set of patches fix some of the cosmetic checks, errors, or
+warnings reported by checkpatch.pl. None of these affect the
+generated code.
 
-This is a semi-automatic email about new static checker warnings.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-The patch baa0280f08c7: "libertas_tf: don't defer firmware loading 
-until start()" from Feb 20, 2019, leads to the following Smatch 
-complaint:
+Larry Finger (8):
+  rtlwifi: Fix errors in spacing in wifi.h
+  rtlwifi: Fix problems with block comments in wifi.h
+  rtlwifi: Fix alignment errors in wifi.h
+  rtlwifi: Fix blank line errors in main header files
+  rtlwifi: Fix all blank line irregularities in main code files
+  rtlwifi: rtl8192ce: Fix missing blank lines
+  rtlwifi: rtl8192cu: Fix problems with blank lines
+  rtlwifi: rtl8192com: Fix blank line problems
 
-    drivers/net/wireless/marvell/libertas_tf/if_usb.c:256 if_usb_disconnect()
-    warn: variable dereferenced before check 'priv' (see line 254)
+ drivers/net/wireless/realtek/rtlwifi/base.c   |   7 +-
+ drivers/net/wireless/realtek/rtlwifi/core.c   |   8 +
+ drivers/net/wireless/realtek/rtlwifi/efuse.c  |   8 +-
+ drivers/net/wireless/realtek/rtlwifi/ps.c     |   1 +
+ drivers/net/wireless/realtek/rtlwifi/rc.c     |   2 +
+ drivers/net/wireless/realtek/rtlwifi/regd.c   |   1 -
+ .../realtek/rtlwifi/rtl8192c/dm_common.c      |   6 +-
+ .../realtek/rtlwifi/rtl8192c/fw_common.c      |   5 +-
+ .../wireless/realtek/rtlwifi/rtl8192c/main.c  |   1 -
+ .../realtek/rtlwifi/rtl8192c/phy_common.c     |   1 +
+ .../wireless/realtek/rtlwifi/rtl8192ce/hw.c   |   7 +-
+ .../wireless/realtek/rtlwifi/rtl8192ce/phy.c  |   1 +
+ .../realtek/rtlwifi/rtl8192ce/table.c         |   1 -
+ .../wireless/realtek/rtlwifi/rtl8192ce/trx.c  |   8 +
+ .../wireless/realtek/rtlwifi/rtl8192cu/hw.c   |   9 +-
+ .../wireless/realtek/rtlwifi/rtl8192cu/hw.h   |   4 -
+ .../wireless/realtek/rtlwifi/rtl8192cu/mac.c  |   8 +-
+ .../wireless/realtek/rtlwifi/rtl8192cu/mac.h  |   3 -
+ .../wireless/realtek/rtlwifi/rtl8192cu/trx.c  |   7 +
+ .../wireless/realtek/rtlwifi/rtl8192cu/trx.h  |   2 -
+ drivers/net/wireless/realtek/rtlwifi/usb.c    |   3 +
+ drivers/net/wireless/realtek/rtlwifi/usb.h    |   5 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h   | 351 +++++++++---------
+ 23 files changed, 245 insertions(+), 204 deletions(-)
 
-drivers/net/wireless/marvell/libertas_tf/if_usb.c
-   253	
-   254		if_usb_reset_device(priv);
-                                    ^^^^^
-The patch introduces a new dereference (inside the function).
+-- 
+2.20.1
 
-   255	
-   256		if (priv)
-                    ^^^^
-Old code assumes "priv" could be NULL.
-
-   257			lbtf_remove_card(priv);
-   258	
-
-regards,
-dan carpenter
