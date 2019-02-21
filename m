@@ -2,125 +2,93 @@ Return-Path: <SRS0=z+ld=Q4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 334EBC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 04:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4301EC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 05:06:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC8E32148D
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 04:39:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 041072086C
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Feb 2019 05:06:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KVltXBZg";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LVhXjlYp"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BI3kvEW2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726234AbfBUEjw (ORCPT
+        id S1725858AbfBUFGO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Feb 2019 23:39:52 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:39812 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726080AbfBUEjv (ORCPT
+        Thu, 21 Feb 2019 00:06:14 -0500
+Received: from mail-yb1-f193.google.com ([209.85.219.193]:35654 "EHLO
+        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725648AbfBUFGN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Feb 2019 23:39:51 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id B82AA608FB; Thu, 21 Feb 2019 04:39:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550723990;
-        bh=ziBRonHZubtJ/YGdZVpTd1BLIdHGV2jWG7r5H2Ec+Cs=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=KVltXBZgvWqfHXtLoAVkfG44/zQUu40vCFGgnyRTxJkLzbmoxkQx2/XqwCV1tFzgJ
-         9FHcEW2MQYOI9392LCfC+qw1sgAf4Rag6ae7GGzYteY2T47d9gEQWiMKquzLsgCJjN
-         W38h9hgVFuzxlynxV6WeaS+c+VuniXvYQDIZhMuw=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1E375605FC;
-        Thu, 21 Feb 2019 04:39:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550723979;
-        bh=ziBRonHZubtJ/YGdZVpTd1BLIdHGV2jWG7r5H2Ec+Cs=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=LVhXjlYpIHs5izlScGxFoYPfEuRJcrsg45jcmZhFaLdQgZcl2ZNetTJURZ19pxsVx
-         BAx1BmuYiPCcloHe9JeTC22vbmF9Z5ngEOpPxCqX5czIuagkIDCETuWI4UwEAItMSw
-         LQbfHRpMEmgABPC5Pn8ewfy0LJ17ag6y5sYy3a0k=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1E375605FC
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Grant Grundler <grundler@google.com>
-Cc:     Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        wgong@qti.qualcomm.com, ath10k@lists.infradead.org,
-        wgong@codeaurora.org
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
-        <1533724802-30944-3-git-send-email-wgong@codeaurora.org>
-        <87sh3pdtpg.fsf@toke.dk>
-        <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
-        <87mutue4y8.fsf@toke.dk>
-        <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
-        <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com>
-        <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk>
-        <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk>
-        <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com>
-        <871sa7ylmi.fsf@toke.dk>
-        <CANEJEGuBoRMBJBOrFOYyPtiJSMfTahrVgTfxZ2ift6Q5uGazFA@mail.gmail.com>
-Date:   Thu, 21 Feb 2019 06:39:35 +0200
-In-Reply-To: <CANEJEGuBoRMBJBOrFOYyPtiJSMfTahrVgTfxZ2ift6Q5uGazFA@mail.gmail.com>
-        (Grant Grundler's message of "Wed, 20 Feb 2019 11:15:02 -0800")
-Message-ID: <87ftshpxfc.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Thu, 21 Feb 2019 00:06:13 -0500
+Received: by mail-yb1-f193.google.com with SMTP id n84so6711971yba.2
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2019 21:06:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=XpPY2iqZnYH295Z7oF9vJ6cXJT9FWifD/NJcNvGBaBc=;
+        b=BI3kvEW2tpKOgr9GUlpskNDkRbCZYSFt+9EwiK8GC/eiqKZxWxlcj9CAct9nop0BEr
+         ulA6VgNyISouxm9vRzYqcgHveCEJyHIyrRsnqhTy1sii/1pFgXwxlvktRSo3PfbKXoZu
+         jxkm7sxzd/OaCR1gsbO604pcopK//ypqGvafYU4tdqBOsH7uuKLV7GDp1LxFb1gTZuM1
+         CJVE/GREqBN6wM5w66N76UDCQ7grEn468CAYobKmkq6ixnlHpqa+bx9nUfkzvCAFNSes
+         HQDjqd2g9x/TmaQxPPbJI0d4eih5UOfer0L+fE6t6BoqGC1+3dMvkOihIQ7P0I//pWlc
+         KJXA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=XpPY2iqZnYH295Z7oF9vJ6cXJT9FWifD/NJcNvGBaBc=;
+        b=cn4bWurOWWQ0qW0+4fanrz9VDQs3Lde8no8qlyBgtbTcjKCFFAwCmGJUbsQ1GS/f2a
+         SIht7p7dEX7NgL1hQeE6iwTPlBYoauKgqvQZDpkKC1zBT7cZMX1jOkAwXOzlgkSSJLtq
+         mVLOxdHuQOva7Ih4R+V+Xz0BK+X8sdQnZvzjcWhV5oTyFCtF88rDlw8PsE1ZHOSdEdag
+         ZzS+MYd2+gc3gDGM4Fng2Fuudr55C9X5HzFskJuaDV+F74F1qn+y2i22P6ghqKip1UH8
+         sOm/5KcyKWbfi3wHkICbrKZGvd8A3ob8WLhBsQnhKxUnmPqsB4piMrsDg4y9b/b72eo2
+         MYJw==
+X-Gm-Message-State: AHQUAub7XvV6XBhakNpsXclKA1mcLR52sLMDsVahpXQRrZ7jjI4kus59
+        Gf2XvYJ5to9JtEQdWH31V5XkWyZxISgDhxMmUrfGonGsAw==
+X-Google-Smtp-Source: AHgI3IbY5zadu6xlNOmHeT+xNLLfOpNquOHaTqVcbBxouXuV92qil104hn7/Q9drjDKnSoLHcv/SUnvIQCYQr+hM99A=
+X-Received: by 2002:a25:c1c6:: with SMTP id r189mr31657059ybf.109.1550725572702;
+ Wed, 20 Feb 2019 21:06:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+From:   Turritopsis Dohrnii Teo En Ming <tdteoenming@gmail.com>
+Date:   Thu, 21 Feb 2019 13:05:43 +0800
+Message-ID: <CANnei0E3kjvSEz2_7AxNhMVBfqEy76=3o05j9ogLvvj-04MCww@mail.gmail.com>
+Subject: Does Linux Kernel 5.0-rc7 Support High Efficiency Wireless IEEE
+ 802.11ax and IEEE 802.11ay (Wi-Fi Alliance Wi-Fi 6)?
+To:     linux-wireless@vger.kernel.org
+Cc:     Turritopsis Dohrnii Teo En Ming <tdteoenming@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Grant Grundler <grundler@google.com> writes:
+Good afternoon from Singapore,
 
-> On Thu, Sep 6, 2018 at 3:18 AM Toke H=C3=B8iland-J=C3=B8rgensen <toke@tok=
-e.dk> wrote:
->>
->> Grant Grundler <grundler@google.com> writes:
->>
->> >> And, well, Grant's data is from a single test in a noisy
->> >> environment where the time series graph shows that throughput is all =
-over
->> >> the place for the duration of the test; so it's hard to draw solid
->> >> conclusions from (for instance, for the 5-stream test, the average
->> >> throughput for 6 is 331 and 379 Mbps for the two repetitions, and for=
- 7
->> >> it's 326 and 371 Mbps) . Unfortunately I don't have the same hardware
->> >> used in this test, so I can't go verify it myself; so the only thing I
->> >> can do is grumble about it here... :)
->> >
->> > It's a fair complaint and I agree with it. My counter argument is the
->> > opposite is true too: most ideal benchmarks don't measure what most
->> > users see. While the data wgong provided are way more noisy than I
->> > like, my overall "confidence" in the "conclusion" I offered is still
->> > positive.
->>
->> Right. I guess I would just prefer a slightly more comprehensive
->> evaluation to base a 4x increase in buffer size on...
->
-> Kalle, is this why you didn't accept this patch? Other reasons?
+Does Linux Kernel 5.0-rc7 Support High Efficiency Wireless IEEE
+802.11ax and IEEE 802.11ay (Wi-Fi Alliance Wi-Fi 6)?
 
-Just for reference, here are patchwork links:
+Thank you.
 
-https://patchwork.kernel.org/cover/10559729/
-https://patchwork.kernel.org/patch/10559731/
-https://patchwork.kernel.org/patch/10559733/
+===BEGIN EMAIL SIGNATURE===
 
-The mac80211 patch is accepted and the ath10k patch is deferred. IIRC I
-put it deferred as I didn't see a real consensus about the patch and was
-supposed to look at it later, but haven't done yet. I don't have any
-issues with the patch, except maybe removing the duplicate define for
-9377 (which I can easily fix in the pending branch).
+The Gospel for all Targeted Individuals (TIs):
 
---=20
-Kalle Valo
+[The New York Times] Microwave Weapons Are Prime Suspect in Ills of
+U.S. Embassy Workers
+
+Link: https://www.nytimes.com/2018/09/01/science/sonic-attack-cuba-microwave.html
+
+********************************************************************************************
+
+Singaporean Mr. Turritopsis Dohrnii Teo En Ming's Academic
+Qualifications as at 14 Feb 2019
+
+[1] https://tdtemcerts.wordpress.com/
+
+[2] https://tdtemcerts.blogspot.sg/
+
+[3] https://www.scribd.com/user/270125049/Teo-En-Ming
+
+===END EMAIL SIGNATURE===
