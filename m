@@ -2,299 +2,110 @@ Return-Path: <SRS0=FR9J=Q5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF6E6C10F00
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 09:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2B29C10F00
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 10:39:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5E602081B
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 09:53:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91225206B7
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 10:39:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QmkpmZUi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725915AbfBVJxZ (ORCPT
+        id S1726908AbfBVKjJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Feb 2019 04:53:25 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:37536 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725860AbfBVJxZ (ORCPT
+        Fri, 22 Feb 2019 05:39:09 -0500
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:34908 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726154AbfBVKjI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Feb 2019 04:53:25 -0500
-Received: by mail-wr1-f65.google.com with SMTP id c8so1664821wrs.4
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2019 01:53:23 -0800 (PST)
+        Fri, 22 Feb 2019 05:39:08 -0500
+Received: by mail-qt1-f196.google.com with SMTP id p48so1938868qtk.2
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2019 02:39:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=6Ycd7F6cSiLogdbx9zRwsP3cV/l35t97ZLFFQbqW0ZY=;
+        b=QmkpmZUiBTbZ9js+DH1S5VXOUAULuAZLuoblV0v5GDDP8QKc/2qBF5QRoA0o/FFWAz
+         3bL3NDQsR6+GvMRWf6Ie4uXz7E6nFW8STIGANrpojGfO9FMKmvc/m8QYfPkArk7o+/RO
+         VV6PeDdL4GccW0ZhsrpKl1UARJCLKHkrZr4/79GXkEKLKfhBiiRIkqmhC/BYdA8jaPJT
+         /x8seq3Z19RbpG2VQiMSJTaFzBvjBUa9g8emCTfnkLbhAD7VmBgCRT31WTgqiYNLSRzx
+         LJwPCe4snAZD57HLfztU41cAiqw45/onngw+tJKzTBe4zr1VM2wLyKbxho96GCtqdnwc
+         snIw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=X6oFS89asnDPVgFS/dsXI3XVkEiX4FEhkH47JkliIHE=;
-        b=ObBVv2cW47G7bxpmjFKjoUL5YkbvaJsq7tkEKPb3deF4ce9BH+s6U3Oz4NCHNWqVHe
-         L/Y9MJKCI0ygwlYYb8wwkPCeqXu+alamj0M2IQXNhlCV9FE/tVeYgKwWmZjzvVkYzrs5
-         SF5QGbSIgpHUGU+xFuBBTxcaTPcILx0J6kQ1vIj8GvOpnAvPlVJ6mbbII9CJU1Vlk7qu
-         p2iMISRcQrGxcrZ1suuYVcUoRoLjpW7Vl8txV604Tqmy1Z0gLClBEpzMkz2wWaZ2flE5
-         jcSkinjsRfeVerANPt6sVgygTh6Gi3MTLT5nM/6ycnGDwWUyuLQfOdYBh12KEC2135vN
-         oiuw==
-X-Gm-Message-State: AHQUAubeeZ46VchjmghngN9N6QQxgiGdSN2/AXqXMz/KeUI+AJjrOfqu
-        JbQ07vUWo2kMEOQaFz5LaV1Kxg==
-X-Google-Smtp-Source: AHgI3IbhFVTDwGXAYKTfXWWKN38+AW9J4mlFPpsPqjjUY380DUlXQKIevcWQd2sCcC0/OgSl0oh9Uw==
-X-Received: by 2002:adf:fa0d:: with SMTP id m13mr2224860wrr.93.1550829202805;
-        Fri, 22 Feb 2019 01:53:22 -0800 (PST)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id x22sm482291wmc.19.2019.02.22.01.53.21
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 22 Feb 2019 01:53:22 -0800 (PST)
-Date:   Fri, 22 Feb 2019 10:53:19 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 2/3] mt76usb: use synchronous msg for mcu command
- responses
-Message-ID: <20190222095318.GA14269@localhost.localdomain>
-References: <1550679320-14343-1-git-send-email-sgruszka@redhat.com>
- <1550679320-14343-2-git-send-email-sgruszka@redhat.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=6Ycd7F6cSiLogdbx9zRwsP3cV/l35t97ZLFFQbqW0ZY=;
+        b=OCqRlT/7XVnOSntIx0/+pOjmOQtC3yGqcBcWjD698j2VhP8lsKXoTCMBHC0yXIFeRU
+         q+9k4bPCWeZxYlB1+iBTREMMWFJX2H5nV55AdWJkZfD2Z/dEEYHg7TMiSLVtXRZSI3W+
+         91/+TqeCSpMvMX/f2GQcKaHI1ztmFJk6S1aJwzxtTiKc2HRwgmicbS8AJdsdAYyHFTgy
+         cQbBPjLsQ7jV99y9NCQrl8ZVPgaXLmlqbZi4xjHmIGPvcdAd7mvrTIDqvgdzldhZqJU1
+         3gIO9V1eLXeD+f3Y4Mqg8qCoI4D6RzcNTOrecVaqhTB+8oCudIf+nChhv71JI+m8fGS7
+         4tPA==
+X-Gm-Message-State: AHQUAub4YUyU22jJb8Y8FMICq1jnqUVNaiJqGnFljwAE5SRAkx4mmyd0
+        BXRQTOerVQwB7MJul1UmEs0nczINzPSte5cFaWK6mA==
+X-Google-Smtp-Source: AHgI3IYPBeQReZrHfmtjIx01G+WbY+Szt8b2nB4hFiiHfak6YeCCIGdM8WMPfhyRAx41LlrRr8ETqmxczH1Ks6eGhQ4=
+X-Received: by 2002:ac8:1bf7:: with SMTP id m52mr2568003qtk.200.1550831947420;
+ Fri, 22 Feb 2019 02:39:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1550679320-14343-2-git-send-email-sgruszka@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <1550819742-32155-1-git-send-email-wen.yang99@zte.com.cn>
+In-Reply-To: <1550819742-32155-1-git-send-email-wen.yang99@zte.com.cn>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Fri, 22 Feb 2019 11:38:53 +0100
+Message-ID: <CACRpkdYwkNrLk-GuV7gaOKYFOeBd0=DLN1wsgrYxeXOHuwtz+A@mail.gmail.com>
+Subject: Re: [PATCH 1/5] net: dsa: fix a leaked reference by adding a missing of_node_put
+To:     Wen Yang <wen.yang99@zte.com.cn>
+Cc:     Andrew Lunn <andrew@lunn.ch>,
+        Vivien Didelot <vivien.didelot@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        netdev <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        UNGLinuxDriver@microchip.com, Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>, anirudh@xilinx.com,
+        John Linn <John.Linn@xilinx.com>,
+        Michal Simek <michal.simek@xilinx.com>, wang.yi59@zte.com.cn
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Use usb_bulk_msg for reading MCU command responses. This simplify code
-> a lot.
-> 
-> Together with 97a3005759c ("mt76usb: allow mt76u_bulk_msg be used
-> for reads") it also fix possible problems with rx data buffers
-> not being aligned and contained within single page. After doing
-> page_frag_alloc(1024) consecutive page_frag_alloc(PAGE_SIZE) will
-> alloc PAGE_SIZE buffer at PAGE_SIZE - 1024 offset.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt76.h          |  3 +-
->  drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    | 11 --------
->  .../net/wireless/mediatek/mt76/mt76x02_usb_mcu.c   | 32 +++++++---------------
->  drivers/net/wireless/mediatek/mt76/mt76x2/usb.c    | 11 --------
->  drivers/net/wireless/mediatek/mt76/usb.c           |  1 -
->  drivers/net/wireless/mediatek/mt76/usb_mcu.c       | 31 +++------------------
->  6 files changed, 15 insertions(+), 74 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-> index 6092646014c4..c9b5eb9b0582 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-> @@ -384,8 +384,7 @@ struct mt76_usb {
->  
->  	struct mt76u_mcu {
->  		struct mutex mutex;
-> -		struct completion cmpl;
+On Fri, Feb 22, 2019 at 8:15 AM Wen Yang <wen.yang99@zte.com.cn> wrote:
 
-Hi Stanislaw,
+> The call to of_get_child_by_name returns a node pointer with refcount
+> incremented thus it must be explicitly decremented after the last
+> usage.
+>
+> Detected by coccinelle with the following warnings:
+> ./drivers/net/dsa/rtl8366rb.c:510:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 501, but without a corresponding object release within this function.
+> ./drivers/net/dsa/rtl8366rb.c:518:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 501, but without a corresponding object release within this function.
+> ./drivers/net/dsa/rtl8366rb.c:540:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 501, but without a corresponding object release within this function.
+> ./drivers/net/dsa/rtl8366rb.c:548:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 501, but without a corresponding object release within this function.
+> ./drivers/net/dsa/rtl8366rb.c:556:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 501, but without a corresponding object release within this function.
+> ./drivers/net/dsa/rtl8366rb.c:561:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 501, but without a corresponding object release within this function.
+>
+> Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+> Cc: Linus Walleij <linus.walleij@linaro.org>
+> Cc: Andrew Lunn <andrew@lunn.ch>
+> Cc: Vivien Didelot <vivien.didelot@gmail.com>
+> Cc: Florian Fainelli <f.fainelli@gmail.com>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: netdev@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
 
-I was reviewing this approach and I guess it is a little bit racey since now we
-are not sure that when the device is removed or suspended the pending mcu commands
-are terminated and we do not have any api to stop usb transactions.
-Are we sure when we access mt76x02_dev/mt76_dev structure it has not been
-already removed?
-Maybe we need to maintain the completion in mt76u_mcu and use it to wait the mcu
-commands are terminated.
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
-Regards,
-Lorenzo
-
-> -		struct mt76u_buf res;
-> +		u8 *data;
->  		u32 msg_seq;
->  
->  		/* multiple reads */
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-> index da9d05f6074d..f0c33890f1a5 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-> @@ -311,13 +311,11 @@ static int __maybe_unused mt76x0_suspend(struct usb_interface *usb_intf,
->  					 pm_message_t state)
->  {
->  	struct mt76x02_dev *dev = usb_get_intfdata(usb_intf);
-> -	struct mt76_usb *usb = &dev->mt76.usb;
->  
->  	mt76u_stop_queues(&dev->mt76);
->  	mt76x0u_mac_stop(dev);
->  	clear_bit(MT76_STATE_MCU_RUNNING, &dev->mt76.state);
->  	mt76x0_chip_onoff(dev, false, false);
-> -	usb_kill_urb(usb->mcu.res.urb);
->  
->  	return 0;
->  }
-> @@ -328,15 +326,6 @@ static int __maybe_unused mt76x0_resume(struct usb_interface *usb_intf)
->  	struct mt76_usb *usb = &dev->mt76.usb;
->  	int ret;
->  
-> -	reinit_completion(&usb->mcu.cmpl);
-> -	ret = mt76u_submit_buf(&dev->mt76, USB_DIR_IN,
-> -			       MT_EP_IN_CMD_RESP,
-> -			       &usb->mcu.res, GFP_KERNEL,
-> -			       mt76u_mcu_complete_urb,
-> -			       &usb->mcu.cmpl);
-> -	if (ret < 0)
-> -		goto err;
-> -
->  	ret = mt76u_submit_rx_buffers(&dev->mt76);
->  	if (ret < 0)
->  		goto err;
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-> index f497c8e4332a..0cb8751321a1 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-> @@ -61,33 +61,21 @@ mt76x02u_multiple_mcu_reads(struct mt76_dev *dev, u8 *data, int len)
->  static int mt76x02u_mcu_wait_resp(struct mt76_dev *dev, u8 seq)
->  {
->  	struct mt76_usb *usb = &dev->usb;
-> -	struct mt76u_buf *buf = &usb->mcu.res;
-> -	struct urb *urb = buf->urb;
-> -	u8 *data = buf->buf;
-> -	int i, ret;
-> +	u8 *data = usb->mcu.data;
-> +	int i, len, ret;
->  	u32 rxfce;
->  
->  	for (i = 0; i < 5; i++) {
-> -		if (!wait_for_completion_timeout(&usb->mcu.cmpl,
-> -						 msecs_to_jiffies(300)))
-> +		ret = mt76u_bulk_msg(dev, data, MCU_RESP_URB_SIZE, &len, 300);
-> +		if (ret == -ETIMEDOUT)
->  			continue;
-> -
-> -		if (urb->status)
-> -			return -EIO;
-> +		if (ret)
-> +			goto out;
->  
->  		if (usb->mcu.rp)
-> -			mt76x02u_multiple_mcu_reads(dev, data + 4,
-> -						    urb->actual_length - 8);
-> +			mt76x02u_multiple_mcu_reads(dev, data + 4, len - 8);
->  
->  		rxfce = get_unaligned_le32(data);
-> -		ret = mt76u_submit_buf(dev, USB_DIR_IN,
-> -				       MT_EP_IN_CMD_RESP,
-> -				       buf, GFP_KERNEL,
-> -				       mt76u_mcu_complete_urb,
-> -				       &usb->mcu.cmpl);
-> -		if (ret)
-> -			return ret;
-> -
->  		if (seq == FIELD_GET(MT_RX_FCE_INFO_CMD_SEQ, rxfce) &&
->  		    FIELD_GET(MT_RX_FCE_INFO_EVT_TYPE, rxfce) == EVT_CMD_DONE)
->  			return 0;
-> @@ -96,9 +84,9 @@ static int mt76x02u_mcu_wait_resp(struct mt76_dev *dev, u8 seq)
->  			FIELD_GET(MT_RX_FCE_INFO_EVT_TYPE, rxfce),
->  			seq, FIELD_GET(MT_RX_FCE_INFO_CMD_SEQ, rxfce));
->  	}
-> -
-> -	dev_err(dev->dev, "error: %s timed out\n", __func__);
-> -	return -ETIMEDOUT;
-> +out:
-> +	dev_err(dev->dev, "error: %s failed with %d\n", __func__, ret);
-> +	return ret;
->  }
->  
->  static int
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
-> index f81a85e96922..ddb6b2c48e01 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
-> @@ -100,11 +100,9 @@ static int __maybe_unused mt76x2u_suspend(struct usb_interface *intf,
->  					  pm_message_t state)
->  {
->  	struct mt76x02_dev *dev = usb_get_intfdata(intf);
-> -	struct mt76_usb *usb = &dev->mt76.usb;
->  
->  	mt76u_stop_queues(&dev->mt76);
->  	mt76x2u_stop_hw(dev);
-> -	usb_kill_urb(usb->mcu.res.urb);
->  
->  	return 0;
->  }
-> @@ -115,15 +113,6 @@ static int __maybe_unused mt76x2u_resume(struct usb_interface *intf)
->  	struct mt76_usb *usb = &dev->mt76.usb;
->  	int err;
->  
-> -	reinit_completion(&usb->mcu.cmpl);
-> -	err = mt76u_submit_buf(&dev->mt76, USB_DIR_IN,
-> -			       MT_EP_IN_CMD_RESP,
-> -			       &usb->mcu.res, GFP_KERNEL,
-> -			       mt76u_mcu_complete_urb,
-> -			       &usb->mcu.cmpl);
-> -	if (err < 0)
-> -		goto err;
-> -
->  	err = mt76u_submit_rx_buffers(&dev->mt76);
->  	if (err < 0)
->  		goto err;
-> diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-> index 78191968b4fa..5c3b7f735aae 100644
-> --- a/drivers/net/wireless/mediatek/mt76/usb.c
-> +++ b/drivers/net/wireless/mediatek/mt76/usb.c
-> @@ -933,7 +933,6 @@ int mt76u_init(struct mt76_dev *dev,
->  	INIT_DELAYED_WORK(&usb->stat_work, mt76u_tx_status_data);
->  	skb_queue_head_init(&dev->rx_skb[MT_RXQ_MAIN]);
->  
-> -	init_completion(&usb->mcu.cmpl);
->  	mutex_init(&usb->mcu.mutex);
->  
->  	mutex_init(&usb->usb_ctrl_mtx);
-> diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-> index 72c8607da4b4..747231edc57d 100644
-> --- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-> +++ b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-> @@ -16,42 +16,19 @@
->  
->  #include "mt76.h"
->  
-> -void mt76u_mcu_complete_urb(struct urb *urb)
-> -{
-> -	struct completion *cmpl = urb->context;
-> -
-> -	complete(cmpl);
-> -}
-> -EXPORT_SYMBOL_GPL(mt76u_mcu_complete_urb);
-> -
->  int mt76u_mcu_init_rx(struct mt76_dev *dev)
->  {
->  	struct mt76_usb *usb = &dev->usb;
-> -	int err;
->  
-> -	err = mt76u_buf_alloc(dev, &usb->mcu.res, MCU_RESP_URB_SIZE,
-> -			      MCU_RESP_URB_SIZE, GFP_KERNEL);
-> -	if (err < 0)
-> -		return err;
-> -
-> -	err = mt76u_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
-> -			       &usb->mcu.res, GFP_KERNEL,
-> -			       mt76u_mcu_complete_urb,
-> -			       &usb->mcu.cmpl);
-> -	if (err < 0)
-> -		mt76u_buf_free(&usb->mcu.res);
-> -
-> -	return err;
-> +	usb->mcu.data = kmalloc(MCU_RESP_URB_SIZE, GFP_KERNEL);
-> +	return usb->mcu.data ? 0 : -ENOMEM;
->  }
->  EXPORT_SYMBOL_GPL(mt76u_mcu_init_rx);
->  
->  void mt76u_mcu_deinit(struct mt76_dev *dev)
->  {
-> -	struct mt76u_buf *buf = &dev->usb.mcu.res;
-> +	struct mt76_usb *usb = &dev->usb;
->  
-> -	if (buf->urb) {
-> -		usb_kill_urb(buf->urb);
-> -		mt76u_buf_free(buf);
-> -	}
-> +	kfree(usb->mcu.data);
->  }
->  EXPORT_SYMBOL_GPL(mt76u_mcu_deinit);
-> -- 
-> 2.7.5
-> 
+Yours,
+Linus Walleij
