@@ -2,106 +2,155 @@ Return-Path: <SRS0=FR9J=Q5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 725BCC10F00
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 07:45:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22732C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 08:30:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41E3E207E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 07:45:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0AF020700
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 08:30:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726281AbfBVHp0 (ORCPT
+        id S1726272AbfBVIa0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Feb 2019 02:45:26 -0500
-Received: from mga12.intel.com ([192.55.52.136]:4525 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725855AbfBVHpZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Feb 2019 02:45:25 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 21 Feb 2019 23:45:25 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,398,1544515200"; 
-   d="scan'208";a="126355752"
-Received: from njmartin-mobl2.ger.corp.intel.com ([10.252.28.185])
-  by fmsmga008.fm.intel.com with ESMTP; 21 Feb 2019 23:45:22 -0800
-Message-ID: <0ce6097e3c1a6b76610df9a4fb912dd0cb8941ee.camel@intel.com>
-Subject: Re: [PATCH v2] iwlwifi: mvm: Use div_s64 instead of do_div in
- iwl_mvm_debug_range_resp
-From:   Luciano Coelho <luciano.coelho@intel.com>
-To:     Nick Desaulniers <ndesaulniers@google.com>,
-        Nathan Chancellor <natechancellor@gmail.com>
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>
-Date:   Fri, 22 Feb 2019 09:45:21 +0200
-In-Reply-To: <CAKwvOdmCeHxiGPkXXzjwnTtgzEDDjYRE1QBdu7BHeuzCE4YtRA@mail.gmail.com>
-References: <20190219182105.19933-1-natechancellor@gmail.com>
-         <20190221080617.2795-1-natechancellor@gmail.com>
-         <CAKwvOdmCeHxiGPkXXzjwnTtgzEDDjYRE1QBdu7BHeuzCE4YtRA@mail.gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+        Fri, 22 Feb 2019 03:30:26 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:33246 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725905AbfBVIaZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Feb 2019 03:30:25 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC5)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gx6Dv-0005Yz-4O; Fri, 22 Feb 2019 09:30:23 +0100
+Message-ID: <7377d6a44d9238e90f9bde55bc96cdecb3a4e25a.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH v3 02/12] nl80211/cfg80211: Extended Key ID support
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 22 Feb 2019 09:30:20 +0100
+In-Reply-To: <a0e99ac4-4c10-55e6-3ded-5bb5a3ddfb78@wetzel-home.de>
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+         <20190210210620.31181-3-alexander@wetzel-home.de>
+         <790f69239a9635c62c9349323c069e4ac9ad51c9.camel@sipsolutions.net>
+         <a0e99ac4-4c10-55e6-3ded-5bb5a3ddfb78@wetzel-home.de>
 Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5-1 
-MIME-Version: 1.0
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-02-21 at 16:13 -0800, Nick Desaulniers wrote:
-> On Thu, Feb 21, 2019 at 12:08 AM Nathan Chancellor
-> <natechancellor@gmail.com> wrote:
-> > Clang warns:
-> > 
-> > drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c:465:2:
-> > warning:
-> > comparison of distinct pointer types ('typeof ((rtt_avg)) *' (aka
-> > 'long
-> > long *') and 'uint64_t *' (aka 'unsigned long long *'))
-> > [-Wcompare-distinct-pointer-types]
-> >         do_div(rtt_avg, 6666);
-> >         ^~~~~~~~~~~~~~~~~~~~~
-> > include/asm-generic/div64.h:222:28: note: expanded from macro
-> > 'do_div'
-> >         (void)(((typeof((n)) *)0) == ((uint64_t *)0));  \
-> >                ~~~~~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~~
-> > 1 warning generated.
-> > 
-> > do_div expects an unsigned dividend. Use div_s64, which expects a
-> > signed
-> > dividend.
-> > 
-> > Fixes: 937b10c0de68 ("iwlwifi: mvm: add debug prints for FTM")
-> > Link: https://github.com/ClangBuiltLinux/linux/issues/372
-> > Suggested-by: Arnd Bergmann <arnd@arndb.de>
-> > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> > ---
-> > 
-> > v1 -> v2:
-> > 
-> > * Fix logic (as the return value of div{,64}_s64 must be used),
-> > thanks
-> >   to Arnd for the review.
+On Sun, 2019-02-17 at 20:19 +0100, Alexander Wetzel wrote:
+
+> I don't see the problem but I may simply be to set on my way to see 
+> it... So I'll just give an outline what's required of the API and how 
+> this implementation meets those. Hoping that answers your question or 
+> allowing you to pinpoint our differences in understanding. (I've added a 
+>   more than really required, it may be useful for other discussions to 
+> have that outlined in one piece, too.)
+
+:-)
+
+> Extended Key ID has only two requirements for the kernel API:
+> 1) Allow a key to be used for decryption first and switch it to a 
+> "normal" Rx/Tx key with a second call
 > 
-> oh boy, sorry I missed that in the initial code review, thanks Arnd
-> for the sharp eye!
-> Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+> 2) Allow pairwise keys to use keyids 0 and 1 instead only 0.
 
-Thanks, guys, I really didn't pay much attention when I applied the
-previous versions either.
+Right.
 
-I have applied this in our internal tree and will send it out instead
-of the previous one as part of our upstreaming process.
+> "Legacy" key installs are using NL80211_CMD_NEW_KEY to install a new key 
+> and are allow to mark a key for WEP or management  default usages via 
+> NL80211_CMD_SET_KEY later.
 
---
-Cheers,
-Luca.
+Right.
+
+> With Extended Key ID we stick to a similar approach: NL80211_CMD_NEW_KEY 
+> is called to install the new key and nl80211_key_install_mode allows to 
+> select between a "legacy" or "extended" key install: NL80211_KEY_RX_TX 
+> for "legacy" or NL80211_KEY_RX_ONLY for "extended".
+
+Ah. That's where the "EXT" came from in the mac80211 names :-) FWIW, I'm
+not sure that makes sense. Yes, we think of it as an "extension" or
+being "extended" now while we work on it, but ultimately it'll be a
+simple part of the API. But I digress.
+
+> NL80211_KEY_SWITCH_TX is only allowed with NL80211_CMD_SET_KEY and is 
+> the only Extended Key ID action allowed for that function.
+
+Yes, but what does it *do*? Your documentation said:
+
+	Switch Tx to a Rx only, referenced by sta mac and idx.
+
+but that seems backwards to me based on the above requirement:
+	Allow a key to be used for decryption first and switch it to a
+	"normal" Rx/Tx key with a second call.
+
+IOW, you said we need to have the ability to first install RX-only, and
+then switch the key to RX & TX. I'd have called this "ENABLE_TX" or
+something like that. Or perhaps SWITCH_(ON_)TX if you're so inclined,
+but the documentation should then say
+
+	Switch key from RX-only to TX/RX, referenced by ...
+
+no? That's what I meant by "the other way around".
+
+> Any non-pairwise keys can only use NL80211_KEY_RX_TX which is of course 
+> always the default and also allowed for "legacy" pairwise keys.
+
+Right.
+
+> A Extended Key Install will:
+> 1) call NL80211_CMD_NEW_KEY with all the usual parameters of a new key 
+> install plus the flag NL80211_KEY_RX_ONLY set.
+
+So far makes sense.
+
+> 2) Once ready will call NL80211_CMD_SET_KEY with flag 
+> NL80211_KEY_SWITCH_TX to activate a specific key.
+
+Also makes sense, but the documentation doesn't.
+
+I think we should rename these perhaps
+
+	NL80211_KEY_RX_TX - install key and enable RX/TX (default)
+	NL80211_KEY_RX_ONLY - install unicast key for RX only
+	NL80211_KEY_ENABLE_TX - enable TX for a previously installed 
+				RX_ONLY key
+
+I think?
+
+About the ENABLE_TX vs. SWITCH_TX - we don't allow to switch TX *off*
+again, only *on*, so I think "enable" makes more sense than "switch".
+
+Anyway, my whole comment was only about the documentation text which
+seemed backward or at least unclear to me.
+
+> ok, I'll remove all the drive-by comment "cleanups".
+> It (often) looks kind of untidy and not really worth separate patches 
+> and I'm kind of responsible for (most) of them.. I see why you don't 
+> want to see those fixed drive-by...
+> 
+> My understanding is now that we prefer to not change those and I'll 
+> leave them alone.
+
+I have no objection to even the most trivial cleanup patches going in
+separately, and if you like multiple in a bigger "clean up this area"
+patch, but here I think it detracts from the patch.
+
+> Yes. Extended Key ID only allows to use Key ID 1 on top of the 
+> established ID 0. See "IEEE 802.11 - 2016 9.4.2.25.4 RSN capabilities":
+> 
+> Bit 13: Extended Key ID for Individually Addressed Frames. This subfield 
+> is set to 1 to indicate that the STA supports Key ID values in the range 
+> 0 to 1 for a PTKSA and STKSA when the cipher suite is CCMP or GCMP. A 
+> value of 0 indicates that the STA only supports Key ID 0 for a PTKSA and
+> STKSA.
+
+OK :)
+
+johannes
 
