@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ADB9C10F00
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 14:21:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64981C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 14:21:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C0A020700
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 14:21:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EFA920700
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 14:21:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727145AbfBVOVk (ORCPT
+        id S1727128AbfBVOVi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Feb 2019 09:21:40 -0500
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:22290 "EHLO
+        Fri, 22 Feb 2019 09:21:38 -0500
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:46067 "EHLO
         alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727122AbfBVOVj (ORCPT
+        by vger.kernel.org with ESMTP id S1727093AbfBVOVi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Feb 2019 09:21:39 -0500
+        Fri, 22 Feb 2019 09:21:38 -0500
 X-IronPort-AV: E=Sophos;i="5.58,400,1544482800"; 
-   d="scan'208";a="2017388"
+   d="scan'208";a="2017385"
 Received: from ironmsg02-ams.qualcomm.com ([10.251.56.3])
-  by alexa-out-ams-01.qualcomm.com with ESMTP; 22 Feb 2019 15:21:34 +0100
-X-IronPort-AV: E=McAfee;i="5900,7806,9174"; a="7285594"
+  by alexa-out-ams-01.qualcomm.com with ESMTP; 22 Feb 2019 15:21:33 +0100
+X-IronPort-AV: E=McAfee;i="5900,7806,9174"; a="7285591"
 Received: from lx-merez1.mea.qualcomm.com ([10.18.173.103])
-  by ironmsg02-ams.qualcomm.com with ESMTP; 22 Feb 2019 15:21:34 +0100
+  by ironmsg02-ams.qualcomm.com with ESMTP; 22 Feb 2019 15:21:32 +0100
 From:   Maya Erez <merez@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
         wil6210@qti.qualcomm.com
-Subject: [PATCH 21/21] wil6210: print error in FW and board files load failures
-Date:   Fri, 22 Feb 2019 16:21:19 +0200
-Message-Id: <1550845279-16103-22-git-send-email-merez@codeaurora.org>
+Subject: [PATCH 18/21] wil6210: prevent access to RGF_CAF_ICR in Talyn
+Date:   Fri, 22 Feb 2019 16:21:16 +0200
+Message-Id: <1550845279-16103-19-git-send-email-merez@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1550845279-16103-1-git-send-email-merez@codeaurora.org>
 References: <1550845279-16103-1-git-send-email-merez@codeaurora.org>
@@ -42,45 +42,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add an error print-out in case FW and board files load fails,
-as such an error is not printed on all failures and user may
-not understand why the interface up operations didn't succeed.
+Due to access control RGF_CAF_ICR cannot be accessed by host.
+Such an access will cause device AHB logger to halt and it will not
+capture future AHB fault if there is any.
 
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/fw_inc.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/main.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
-index 388b3d4..3ec0f2f 100644
---- a/drivers/net/wireless/ath/wil6210/fw_inc.c
-+++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2014-2017 Qualcomm Atheros, Inc.
-- * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -647,6 +647,8 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
- 
- out:
- 	release_firmware(fw);
-+	if (rc)
-+		wil_err_fw(wil, "Loading <%s> failed, rc %d\n", name, rc);
- 	return rc;
- }
- 
-@@ -741,6 +743,8 @@ int wil_request_board(struct wil6210_priv *wil, const char *name)
- 
- out:
- 	release_firmware(brd);
-+	if (rc)
-+		wil_err_fw(wil, "Loading <%s> failed, rc %d\n", name, rc);
- 	return rc;
- }
- 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index b69d9a2..9b9c9ec 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1532,11 +1532,6 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
+ 	if (wil->hw_version < HW_VER_TALYN_MB) {
+ 		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
+ 		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
+-	} else {
+-		wil_s(wil,
+-		      RGF_CAF_ICR_TALYN_MB + offsetof(struct RGF_ICR, ICR), 0);
+-		wil_w(wil, RGF_CAF_ICR_TALYN_MB +
+-		      offsetof(struct RGF_ICR, IMV), ~0);
+ 	}
+ 	/* clear PAL_UNIT_ICR (potential D0->D3 leftover)
+ 	 * In Talyn-MB host cannot access this register due to
 -- 
 1.9.1
 
