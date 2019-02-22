@@ -3,57 +3,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59B8AC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 19:10:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96D5EC10F00
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 20:51:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D791206BB
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 19:10:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B7BD206BB
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 20:51:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726313AbfBVTKK (ORCPT
+        id S1726374AbfBVUvq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Feb 2019 14:10:10 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:51280 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725990AbfBVTKK (ORCPT
+        Fri, 22 Feb 2019 15:51:46 -0500
+Received: from shards.monkeyblade.net ([23.128.96.9]:57932 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725980AbfBVUvp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Feb 2019 14:10:10 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92-RC5)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gxGD0-00040d-P1; Fri, 22 Feb 2019 20:10:06 +0100
-Message-ID: <44add7675ef89dd61fcea9da6b55804c498a2d24.camel@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Change default tx_sk_pacing_shift to 7
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc:     linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>,
-        Grant Grundler <grundler@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>, wgong@qti.qualcomm.com,
-        ath10k@lists.infradead.org, wgong@codeaurora.org,
-        Kan Yan <kyan@google.com>
-Date:   Fri, 22 Feb 2019 20:10:05 +0100
-In-Reply-To: <87imxcvt4z.fsf@toke.dk>
-References: <20190221172936.21816-1-toke@redhat.com>
-         <E1gx9x3-0002j0-1J@sipsolutions.net> <87lg28vup0.fsf@toke.dk>
-         <a5151441bdfe02cb11043aa0786185b8ee3c3ee9.camel@sipsolutions.net>
-         <87imxcvt4z.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+        Fri, 22 Feb 2019 15:51:45 -0500
+Received: from localhost (unknown [IPv6:2601:601:9f80:35cd::bf5])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 3C13C14AA9F01;
+        Fri, 22 Feb 2019 12:51:45 -0800 (PST)
+Date:   Fri, 22 Feb 2019 12:51:42 -0800 (PST)
+Message-Id: <20190222.125142.1058144222174096766.davem@davemloft.net>
+To:     johannes@sipsolutions.net
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2019-02-22
+From:   David Miller <davem@davemloft.net>
+In-Reply-To: <20190222131052.28249-1-johannes@sipsolutions.net>
+References: <20190222131052.28249-1-johannes@sipsolutions.net>
+X-Mailer: Mew version 6.8 on Emacs 26.1
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Fri, 22 Feb 2019 12:51:45 -0800 (PST)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-02-22 at 14:40 +0100, Toke Høiland-Jørgensen wrote:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 22 Feb 2019 14:10:51 +0100
+
+> So ... I thought there weren't going to be any more patches
+> when I asked you to apply that mac80211 one, but now a few
+> days later I still ended up with three that are current and
+> possibly even stable material.
 > 
-> And send it directly to stable, or does it need to go through you?
+> Please pull and let me know if there's any problem.
 
-I added a Cc: stable tag. So all you really need to do is wait for the
-emails telling you it failed to apply, and handle accordingly :)
-
-johannes
-
+Pulled, thanks Johannes.
