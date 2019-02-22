@@ -6,55 +6,56 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12369C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 06:35:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 791F1C10F00
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 06:37:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C63EC20818
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 06:35:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45A5A20818
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 06:37:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="D7nzxH8p";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oQkUYOv/"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jnBMGaMw";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jTEqg4mR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725894AbfBVGfo (ORCPT
+        id S1726169AbfBVGhQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Feb 2019 01:35:44 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:57030 "EHLO
+        Fri, 22 Feb 2019 01:37:16 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:58596 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725848AbfBVGfn (ORCPT
+        with ESMTP id S1725854AbfBVGhQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Feb 2019 01:35:43 -0500
+        Fri, 22 Feb 2019 01:37:16 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6BFDB60A05; Fri, 22 Feb 2019 06:35:42 +0000 (UTC)
+        id 21B6F608CB; Fri, 22 Feb 2019 06:37:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550817342;
-        bh=yJc+q3s8nwhVCkL8kqt5suEK8j4iVdIA3gcVEH0CSL8=;
+        s=default; t=1550817435;
+        bh=Ry32DROTzdFqHTWMvCBx+mmPBllmVw2pWjQXkWcQQpI=;
         h=From:To:Cc:Subject:Date:From;
-        b=D7nzxH8pZN3lD/oGmT61XNePuRSVUdh5FZ84mCdUfd02ZdxfKcjmYcSJNAANm+3lm
-         4FSBJNuyATe7Os/WxcJKYR9ClwbKKmSdx+NwcpAPS2A07l+iyzyLfyqCli+GS5zaEQ
-         Ng2xB1VTlV9E3xWeMjn49y/nq048gKTaX1Awt6tw=
+        b=jnBMGaMw3FUFtM69v2S2NMg3xEOpzvDDD2Xss/mlatoFyHqIhfA54Vo7VAPBPuDEQ
+         V73cpwElC1cl8YZZ9cHpOE/UvaV4XMqG1v7rd9RbIC+t/65sx9agaQJcNioZZvsCDD
+         hAkgh2z93e/SmyfPbjeni2jZV0/mNw1f37SIuZEM=
 Received: from checstex0244823-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: bpothuno@codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5E7D2609F2;
-        Fri, 22 Feb 2019 06:35:40 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A51CB6071B;
+        Fri, 22 Feb 2019 06:37:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550817341;
-        bh=yJc+q3s8nwhVCkL8kqt5suEK8j4iVdIA3gcVEH0CSL8=;
+        s=default; t=1550817434;
+        bh=Ry32DROTzdFqHTWMvCBx+mmPBllmVw2pWjQXkWcQQpI=;
         h=From:To:Cc:Subject:Date:From;
-        b=oQkUYOv/Oikfo6cymT3J1EpbF82oaDRWBwva6mw4d+cEsdjPw3lGWiHOXKJ4DlErq
-         +hBhQ6NG2AZSnxt+OW4ohxJu20/m7NxSWYPl/S0uA8wLzWDGdZRCqtxu7UejqiOd51
-         W4WvnHoe1PRnyC6ec96ULQXDqYPUvlHY2c6R/MhA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5E7D2609F2
+        b=jTEqg4mRoZeUFrZPdlITQlwuXypSnHiFYNTSdUfSH+wltWbuczawuat7ha9n3/ODn
+         QSmKcsu242bFk0U+sZA1+J4V7OpVRhHiGzkt8k6bhjFVVhE1kmThEk8JNztggTbl/W
+         PS0PeGUXygf5SUDNkUXHb3mLz73NGw4KPf6AY2Vo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A51CB6071B
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bpothuno@codeaurora.org
 From:   Balaji Pothunoori <bpothuno@codeaurora.org>
-To:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc:     Ashok Raj Nagarajan <arnagara@codeaurora.org>,
+To:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc:     ath10k@lists.infradead.org,
+        Ashok Raj Nagarajan <arnagara@codeaurora.org>,
         Balaji Pothunoori <bpothuno@codeaurora.org>
-Subject: [PATCH v3 3/3] ath10k: add support for controlling tx power to a station
-Date:   Fri, 22 Feb 2019 12:05:35 +0530
-Message-Id: <1550817335-18661-1-git-send-email-bpothuno@codeaurora.org>
+Subject: [PATCH v3] iw: Add support for controlling tx power for per station
+Date:   Fri, 22 Feb 2019 12:07:05 +0530
+Message-Id: <1550817425-18803-1-git-send-email-bpothuno@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -63,155 +64,121 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
 
-This patch will add the support to control the transmit power for traffic
-to a station associated with the AP.
+This patch allows userspace to set transmit power,
+in dBm units, to a station associated to the AP.
 
-Underlying firmware will enforce that the maximum tx power will be based
-on the regulatory requirements. If the user given transmit power is greater
-than the allowed tx power in the given channel, then the firmware will use
-the maximum tx power in the same channel.
+To set a limit tx power of 20 dBm:
+iw wlan0 station set <mac-addr> txpwr limit 20
 
-When 0 is sent to the firmware as tx power, it will revert to the default
-tx power for the station.
-
-Tested Hardware : QCA9984
-Tested Firmware : 10.4-3.9.0.1-00013
+To revert the user defined tx power for a station:
+iw wlan0 station set <mac-addr> txpwr auto
 
 Co-developed-by: Balaji Pothunoori <bpothuno@codeaurora.org>
 Signed-off-by: Ashok Raj Nagarajan <arnagara@codeaurora.org>
 Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
 ---
-v2: removed mBm to dBm conversion
-v3: rebased wmi.h changes
+v2: modified user configured units to dBm from mBm
+v3: no changes, rebased
 
- drivers/net/wireless/ath/ath10k/debug.h |  3 +++
- drivers/net/wireless/ath/ath10k/mac.c   | 39 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h   |  6 +++++
- 3 files changed, 48 insertions(+)
+ station.c | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 71 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index db78e85..2e43d8d 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -71,6 +71,9 @@ struct ath10k_pktlog_hdr {
- /* FIXME: How to calculate the buffer size sanely? */
- #define ATH10K_FW_STATS_BUF_SIZE (1024 * 1024)
+diff --git a/station.c b/station.c
+index e1477ef..8e0e852 100644
+--- a/station.c
++++ b/station.c
+@@ -651,6 +651,7 @@ COMMAND(station, del, "<MAC address> [subtype <subtype>] [reason-code <code>]",
+ static const struct cmd *station_set_plink;
+ static const struct cmd *station_set_vlan;
+ static const struct cmd *station_set_mesh_power_mode;
++static const struct cmd *station_set_txpwr;
  
-+#define ATH10K_TX_POWER_MAX_VAL 70
-+#define ATH10K_TX_POWER_MIN_VAL 0
-+
- extern unsigned int ath10k_debug_mask;
- 
- __printf(2, 3) void ath10k_info(struct ath10k *ar, const char *fmt, ...);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b73c23d..d6ed452 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6350,6 +6350,41 @@ static void ath10k_mac_dec_num_stations(struct ath10k_vif *arvif,
- 	ar->num_stations--;
+ static const struct cmd *select_station_cmd(int argc, char **argv)
+ {
+@@ -662,6 +663,8 @@ static const struct cmd *select_station_cmd(int argc, char **argv)
+ 		return station_set_vlan;
+ 	if (strcmp(argv[1], "mesh_power_mode") == 0)
+ 		return station_set_mesh_power_mode;
++	if (strcmp(argv[1], "txpwr") == 0)
++		return station_set_txpwr;
+ 	return NULL;
  }
  
-+static int ath10k_sta_set_txpwr(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta)
+@@ -813,6 +816,74 @@ COMMAND_ALIAS(station, set, "<MAC address> mesh_power_mode "
+ 	"Set link-specific mesh power mode for this station",
+ 	select_station_cmd, station_set_mesh_power_mode);
+ 
++static int handle_station_set_txpwr(struct nl80211_state *state,
++				    struct nl_msg *msg,
++				    int argc, char **argv,
++				    enum id_input id)
 +{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_vif *arvif = (void *)vif->drv_priv;
-+	int ret = 0;
-+	s16 txpwr;
++	enum nl80211_tx_power_setting type;
++	unsigned char mac_addr[ETH_ALEN];
++	int sta_txpwr = 0;
++	char *err = NULL;
 +
-+	if (sta->txpwr.type == NL80211_TX_POWER_AUTOMATIC) {
-+		txpwr = 0;
-+	} else {
-+		txpwr = sta->txpwr.power;
-+		if (!txpwr)
-+			return -EINVAL;
++	if (argc != 3 && argc != 4)
++		return 1;
++
++	if (mac_addr_a2n(mac_addr, argv[0])) {
++		fprintf(stderr, "invalid mac address\n");
++		return 2;
 +	}
 +
-+	if (txpwr > ATH10K_TX_POWER_MAX_VAL || txpwr < ATH10K_TX_POWER_MIN_VAL)
-+		return -EINVAL;
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
++	argc--;
++	argv++;
 +
-+	mutex_lock(&ar->conf_mutex);
++	if (strcmp("txpwr", argv[0]) != 0)
++		return 1;
++	argc--;
++	argv++;
 +
-+	ret = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
-+					WMI_PEER_USE_FIXED_PWR, txpwr);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set tx power for station ret: %d\n",
-+			    ret);
-+		goto out;
++	if (!strcmp(argv[0], "auto"))
++		type = NL80211_TX_POWER_AUTOMATIC;
++	else if (!strcmp(argv[0], "limit"))
++		type = NL80211_TX_POWER_LIMITED;
++	else {
++		printf("Invalid parameter: %s\n", argv[0]);
++		return 2;
 +	}
 +
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
++	NLA_PUT_U8(msg, NL80211_ATTR_STA_TX_POWER_SETTING, type);
++
++	if (type != NL80211_TX_POWER_AUTOMATIC) {
++		if (argc != 2) {
++			printf("Missing TX power level argument.\n");
++			return 2;
++		}
++
++		argc--;
++		argv++;
++
++		sta_txpwr = strtoul(argv[0], &err, 0);
++
++		if (sta_txpwr)
++			NLA_PUT_U16(msg, NL80211_ATTR_STA_TX_POWER, sta_txpwr);
++	}
++
++	argc--;
++	argv++;
++
++	if (argc)
++		return 1;
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
 +}
++COMMAND_ALIAS(station, set, "<MAC address> txpwr <auto|limit> [<tx power dBm>]",
++	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_txpwr,
++	"Set Tx power for this station.",
++	select_station_cmd, station_set_txpwr);
 +
- static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta,
-@@ -8007,6 +8042,7 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.set_key			= ath10k_set_key,
- 	.set_default_unicast_key        = ath10k_set_default_unicast_key,
- 	.sta_state			= ath10k_sta_state,
-+	.sta_set_txpwr			= ath10k_sta_set_txpwr,
- 	.conf_tx			= ath10k_conf_tx,
- 	.remain_on_channel		= ath10k_remain_on_channel,
- 	.cancel_remain_on_channel	= ath10k_cancel_remain_on_channel,
-@@ -8695,6 +8731,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 		wiphy_ext_feature_set(ar->hw->wiphy,
- 				      NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER);
- 
-+	if (test_bit(WMI_SERVICE_TX_PWR_PER_PEER, ar->wmi.svc_map))
-+		wiphy_ext_feature_set(ar->hw->wiphy,
-+				      NL80211_EXT_FEATURE_STA_TX_PWR);
- 	/*
- 	 * on LL hardware queues are managed entirely by the FW
- 	 * so we only advertise to mac we can do the queues thing
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index d9b646f..1557253 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -200,6 +200,7 @@ enum wmi_service {
- 	WMI_SERVICE_RTT_RESPONDER_ROLE,
- 	WMI_SERVICE_PER_PACKET_SW_ENCRYPT,
- 	WMI_SERVICE_REPORT_AIRTIME,
-+	WMI_SERVICE_TX_PWR_PER_PEER,
- 
- 	/* Remember to add the new value to wmi_service_name()! */
- 
-@@ -367,6 +368,7 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_RTT_RESPONDER_ROLE,
- 	WMI_10_4_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT,
- 	WMI_10_4_SERVICE_REPORT_AIRTIME,
-+	WMI_10_4_SERVICE_TX_PWR_PER_PEER,
- };
- 
- static inline char *wmi_service_name(enum wmi_service service_id)
-@@ -491,6 +493,7 @@ static inline char *wmi_service_name(enum wmi_service service_id)
- 	SVCSTR(WMI_SERVICE_RTT_RESPONDER_ROLE);
- 	SVCSTR(WMI_SERVICE_PER_PACKET_SW_ENCRYPT);
- 	SVCSTR(WMI_SERVICE_REPORT_AIRTIME);
-+	SVCSTR(WMI_SERVICE_TX_PWR_PER_PEER);
- 
- 	case WMI_SERVICE_MAX:
- 		return NULL;
-@@ -818,6 +821,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_PER_PACKET_SW_ENCRYPT, len);
- 	SVCMAP(WMI_10_4_SERVICE_REPORT_AIRTIME,
- 	       WMI_SERVICE_REPORT_AIRTIME, len);
-+	SVCMAP(WMI_10_4_SERVICE_TX_PWR_PER_PEER,
-+	       WMI_SERVICE_TX_PWR_PER_PEER, len);
- }
- 
- #undef SVCMAP
-@@ -6253,6 +6258,7 @@ enum wmi_peer_param {
- 	WMI_PEER_USE_4ADDR  = 0x6,
- 	WMI_PEER_DEBUG      = 0xa,
- 	WMI_PEER_PHYMODE    = 0xd,
-+	WMI_PEER_USE_FIXED_PWR = 0x8,
- 	WMI_PEER_DUMMY_VAR  = 0xff, /* dummy parameter for STA PS workaround */
- };
- 
+ static int handle_station_dump(struct nl80211_state *state,
+ 			       struct nl_msg *msg,
+ 			       int argc, char **argv,
 -- 
 2.7.4
 
