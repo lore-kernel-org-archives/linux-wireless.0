@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 191E7C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 05:34:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 707FFC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 05:34:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D35E7207E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 05:34:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34F5D207E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 05:34:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eQ1SChKA";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VOmVzckg"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LLRMt0U4";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WmG8iZR0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725937AbfBVFeY (ORCPT
+        id S1725992AbfBVFe1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Feb 2019 00:34:24 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:48386 "EHLO
+        Fri, 22 Feb 2019 00:34:27 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:48584 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725873AbfBVFeY (ORCPT
+        with ESMTP id S1725873AbfBVFe1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Feb 2019 00:34:24 -0500
+        Fri, 22 Feb 2019 00:34:27 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id C094A60985; Fri, 22 Feb 2019 05:34:22 +0000 (UTC)
+        id ADFBE6098C; Fri, 22 Feb 2019 05:34:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550813662;
-        bh=l7Hghx4x8LF/w7l5dia/Rv1EGmLHjY8UXO3o4nbrphw=;
+        s=default; t=1550813665;
+        bh=ORQcyt9VZmjvF9lfbAx56QatEhXt2kgUL9PCULWcm+k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eQ1SChKAd4W1TXIvjd2OMJOdX1OTsNs/f5hS7/Tm6hLAoWoZPFoLsiAiWXC8tjAmW
-         zVLe4wj6tj8mxj0qm2Fe3SYOTwQaMF9O9x14hDDSjaQ4xQbAGGs1EdIiFCjR61ndtK
-         7hlw2ArDT47EeB6foMvotnWkjAmjUH9xcsQf/8JU=
+        b=LLRMt0U4bDE+2YSxkR9rT1bAZYRCNCjpB4ee91lk+8px2DcTSfXbsK+UVyQHUDPkY
+         god6PLhz2qv9c2NNBYfNu9x9q1qvf48iNoaZB92pAiOtNtdCapTrkNHf5YPWRPsJNl
+         u8XcXWxASmUCf5g9/rPjn+LF8dyKzUI3sSo7K+pE=
 Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: tamizhr@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 699A560954;
-        Fri, 22 Feb 2019 05:34:20 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7B642608CB;
+        Fri, 22 Feb 2019 05:34:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550813661;
-        bh=l7Hghx4x8LF/w7l5dia/Rv1EGmLHjY8UXO3o4nbrphw=;
+        s=default; t=1550813664;
+        bh=ORQcyt9VZmjvF9lfbAx56QatEhXt2kgUL9PCULWcm+k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VOmVzckgWOvdICz8U97wfawftPCdi6VSTaRbHYpFCA5l6QpucA34eP7bYST3jpbOx
-         p8rZI7t4o7YKm5QZdnZXbynI75XlGcjq3B7drR07kdSQLuPupuM0VuxLCCMTwxoHJs
-         PKEFIqj06l9gchtHdcnimmHbUCU/yFLM90Z+Mi48=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 699A560954
+        b=WmG8iZR0KeyWLcgwiOsHr7/bhH0huStl2FePGu9SCgFD4MMGv9FErFjOsHFgzeE+x
+         7JkUG6pxLlsHlSnLnZ1whKNJA6DkT1wqh9ajHhH32Fq2TkCtfJVxZwrMKyB9NIfkpA
+         Wa2GRrdHxNMxzdhz2o1xkLaBaO7qY++8gdLTq5/c=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7B642608CB
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
 From:   Tamizh chelvam <tamizhr@codeaurora.org>
 To:     johannes@sipsolutions.net, ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv2 3/9] nl80211: Add netlink attribute for AMPDU aggregation enable/disable
-Date:   Fri, 22 Feb 2019 11:02:28 +0530
-Message-Id: <1550813554-11581-4-git-send-email-tamizhr@codeaurora.org>
+Subject: [PATCHv2 4/9] nl80211: Add netlink attribute to enable/disable RTS_CTS
+Date:   Fri, 22 Feb 2019 11:02:29 +0530
+Message-Id: <1550813554-11581-5-git-send-email-tamizhr@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1550813554-11581-1-git-send-email-tamizhr@codeaurora.org>
 References: <1550813554-11581-1-git-send-email-tamizhr@codeaurora.org>
@@ -64,138 +64,140 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce NL80211_ATTR_TID_CONFIG_AMPDU_CTRL in nl80211_attr_tid_config
-to accept TID specific AMPDU aggregation enable/disable configuration
+Introduce NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL in nl80211_attr_tid_config
+to accept TID specific RTS_CTS enable/disable configuration
 through NL80211_CMD_SET_TID_CONFIG command. TID for which the
-aggregation control configuration is to be applied is passed in
+RTS_CTS control configuration is to be applied is passed in
 NL80211_ATTR_TID_CONFIG_TID attribute. When the user-space wants this
 configuration peer specific rather than being applied for all the
 connected stations, MAC address of the peer can be passed in
 NL80211_ATTR_MAC attribute.
 
 Driver supporting this feature should advertise
-NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL and supporting per-STA data TID
-ampdu configuration should advertise NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL.
+NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL and supporting per-STA data TID
+RTS_CTS configuration should advertise NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL.
 
 Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
 ---
  include/net/cfg80211.h       |  3 +++
  include/uapi/linux/nl80211.h | 22 ++++++++++++++++++++++
- net/wireless/nl80211.c       | 15 +++++++++++++++
- 3 files changed, 40 insertions(+)
+ net/wireless/nl80211.c       | 17 +++++++++++++++++
+ 3 files changed, 42 insertions(+)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 55c4ddf..fcf33c9 100644
+index fcf33c9..cf4a3f0 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -512,6 +512,7 @@ struct cfg80211_chan_def {
- enum ieee80211_tid_conf_mask {
+@@ -513,6 +513,7 @@ enum ieee80211_tid_conf_mask {
  	IEEE80211_TID_CONF_NOACK	= BIT(0),
  	IEEE80211_TID_CONF_RETRY	= BIT(1),
-+	IEEE80211_TID_CONF_AMPDU	= BIT(2),
+ 	IEEE80211_TID_CONF_AMPDU	= BIT(2),
++	IEEE80211_TID_CONF_RTSCTS	= BIT(3),
  };
  
  /**
-@@ -522,6 +523,7 @@ enum ieee80211_tid_conf_mask {
-  * @noack: noack configuration value for the TID
+@@ -524,6 +525,7 @@ enum ieee80211_tid_conf_mask {
   * @retry_long: retry count value
   * @retry_short: retry count value
-+ * @ampdu: Enable/Disable aggregation
+  * @ampdu: Enable/Disable aggregation
++ * @rtscts: Enable/Disable RTS/CTS
   */
  struct ieee80211_tid_cfg {
  	u8 tid;
-@@ -529,6 +531,7 @@ struct ieee80211_tid_cfg {
- 	u8 noack;
+@@ -532,6 +534,7 @@ struct ieee80211_tid_cfg {
  	int retry_long;
  	int retry_short;
-+	u8 ampdu;
+ 	u8 ampdu;
++	u8 rtscts;
  };
  
  /**
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f2ce845..f94651d 100644
+index f94651d..996b4d4 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
-@@ -4615,6 +4615,21 @@ enum nl80211_tid_config {
-  *	the max value should be advertised by the driver through
-  *	max_data_retry_count. when this attribute is not present, the driver
-  *	would use the default configuration.
-+ * @NL80211_ATTR_TID_CONFIG_AMPDU_CTRL: Enable/Disable aggregation for the TID
-+ *	specified in %%NL80211_ATTR_TID_CONFIG_TID. Its type is u8,
-+ *	if the peer MAC address	is passed in %NL80211_ATTR_MAC, the aggregation
-+ *	configuration is applied
-+ *	to the data frame for the tid to that connected station.
-+ *	Station specific aggregation configuration is valid only for STA's
+@@ -4630,6 +4630,21 @@ enum nl80211_tid_config {
+  *	NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL and supporting per station
+  *	aggregation configuration should advertise
+  *	NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL.
++ * @NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL: Enable/Disable RTS_CTS for the TID
++ *	specified in %%NL80211_ATTR_TID_CONFIG_TID. It is u8 type, if the
++ *	peer MAC address is passed in %NL80211_ATTR_MAC, then this
++ *	configuration is applied to the data frame for the tid to that
++ *	connected station.
++ *	Station specific RTS_CTS configuration is valid only for STA's
 + *	current connection. i.e. the configuration will be reset to default when
 + *	the station connects back after disconnection/roaming.
 + *	when user-space does not include %NL80211_ATTR_MAC, this configuration
 + *	should be treated as per-netdev configuration. This configuration will
 + *	be cleared when the interface goes down and on the disconnection from a
 + *	BSS. Driver supporting this feature should advertise
-+ *	NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL and supporting per station
-+ *	aggregation configuration should advertise
-+ *	NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL.
++ *	NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL and supporting per station
++ *	RTS_CTS configuration should advertise
++ *	NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL.
   */
  enum nl80211_attr_tid_config {
  	__NL80211_ATTR_TID_INVALID,
-@@ -4623,6 +4638,7 @@ enum nl80211_attr_tid_config {
- 	NL80211_ATTR_TID_CONFIG_RETRY,
+@@ -4639,6 +4654,7 @@ enum nl80211_attr_tid_config {
  	NL80211_ATTR_TID_CONFIG_RETRY_SHORT,
  	NL80211_ATTR_TID_CONFIG_RETRY_LONG,
-+	NL80211_ATTR_TID_CONFIG_AMPDU_CTRL,
+ 	NL80211_ATTR_TID_CONFIG_AMPDU_CTRL,
++	NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL,
  
  	/* keep last */
  	__NL80211_ATTR_TID_CONFIG_AFTER_LAST,
-@@ -5437,6 +5453,10 @@ enum nl80211_feature_flags {
-  *	count functionality.
-  * @NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG: Driver supports STA specific
-  *	data retry count functionality.
-+ * @NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL: Driver supports TID specific
-+ *	aggregation control(enable/disable).
-+ * @NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL: Driver supports per STA
-+ *	specific TID aggregation control(enable/disable).
+@@ -5457,6 +5473,10 @@ enum nl80211_feature_flags {
+  *	aggregation control(enable/disable).
+  * @NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL: Driver supports per STA
+  *	specific TID aggregation control(enable/disable).
++ * @NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL: Driver supports TID specific
++ *	RTS_CTS control(enable/disable).
++ * @NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL: Driver supports STA specific
++ *	RTS_CTS control(enable/disable).
   *
   * @NUM_NL80211_EXT_FEATURES: number of extended features.
   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -5483,6 +5503,8 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_PER_STA_NOACK_CONFIG,
- 	NL80211_EXT_FEATURE_PER_TID_RETRY_CONFIG,
+@@ -5505,6 +5525,8 @@ enum nl80211_ext_feature_index {
  	NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG,
-+	NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL,
-+	NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL,
+ 	NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL,
+ 	NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL,
++	NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL,
++	NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL,
  
  	/* add new features before the definition below */
  	NUM_NL80211_EXT_FEATURES,
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 998c9dc..d4a88fa 100644
+index d4a88fa..cd1e1e8 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -288,6 +288,8 @@ static int validate_ie_attr(const struct nlattr *attr,
- 	[NL80211_ATTR_TID_CONFIG_RETRY] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_TID_CONFIG_RETRY_SHORT] = NLA_POLICY_MIN(NLA_U8, 1),
+@@ -290,6 +290,8 @@ static int validate_ie_attr(const struct nlattr *attr,
  	[NL80211_ATTR_TID_CONFIG_RETRY_LONG] = NLA_POLICY_MIN(NLA_U8, 1),
-+	[NL80211_ATTR_TID_CONFIG_AMPDU_CTRL] =
+ 	[NL80211_ATTR_TID_CONFIG_AMPDU_CTRL] =
+ 			NLA_POLICY_MAX(NLA_U8, NL80211_TID_CONFIG_DISABLE),
++	[NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL] =
 +			NLA_POLICY_MAX(NLA_U8, NL80211_TID_CONFIG_DISABLE),
  };
  
  const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
-@@ -13304,6 +13306,19 @@ static int parse_tid_conf(struct cfg80211_registered_device *rdev,
- 		}
+@@ -13319,6 +13321,21 @@ static int parse_tid_conf(struct cfg80211_registered_device *rdev,
+ 		tid_conf->ampdu =
+ 			nla_get_u8(attrs[NL80211_ATTR_TID_CONFIG_AMPDU_CTRL]);
  	}
- 
-+	if (attrs[NL80211_ATTR_TID_CONFIG_AMPDU_CTRL]) {
++
++	if (attrs[NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL]) {
 +		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+				NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL))
++				NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL))
 +			return -ENOTSUPP;
 +
 +		if (peer && !wiphy_ext_feature_isset(&rdev->wiphy,
-+				NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL))
++				NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL))
 +			return -ENOTSUPP;
 +
-+		tid_conf->tid_conf_mask |= IEEE80211_TID_CONF_AMPDU;
-+		tid_conf->ampdu =
-+			nla_get_u8(attrs[NL80211_ATTR_TID_CONFIG_AMPDU_CTRL]);
++		tid_conf->tid_conf_mask |= IEEE80211_TID_CONF_RTSCTS;
++		tid_conf->rtscts =
++			nla_get_u8(attrs[NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL]);
 +	}
++
  	return 0;
  }
  
