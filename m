@@ -3,38 +3,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 815FFC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 12:41:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4A0AC4360F
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 13:00:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B5D82075A
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 12:41:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC2E1207E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 13:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726599AbfBVMl3 (ORCPT
+        id S1726762AbfBVNAQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Feb 2019 07:41:29 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:37908 "EHLO
+        Fri, 22 Feb 2019 08:00:16 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:38340 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725944AbfBVMl3 (ORCPT
+        with ESMTP id S1725926AbfBVNAQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Feb 2019 07:41:29 -0500
+        Fri, 22 Feb 2019 08:00:16 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC5)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gxA8r-00030s-4F; Fri, 22 Feb 2019 13:41:25 +0100
-Message-ID: <b4a8237564db96d0be471ea93bf32e321adf6d72.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] cfg80211: Include the PMK and PMKID in
- NL80211_CMD_EXTERNAL_AUTH
+        id 1gxAR1-0003Qd-Gs; Fri, 22 Feb 2019 14:00:11 +0100
+Message-ID: <40cf31d7cdd64e27225e959088248924a46ed641.camel@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: reg: Fix use-after-free in call_crda
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 22 Feb 2019 13:41:23 +0100
-In-Reply-To: <20190206080234.15750-1-luca@coelho.fi>
-References: <ffc4c9e611784b1367e187d092b846381a4cfdc0.camel@sipsolutions.net>
-         <20190206080234.15750-1-luca@coelho.fi>
+To:     Yue Haibing <yuehaibing@huawei.com>, davem@davemloft.net
+Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Date:   Fri, 22 Feb 2019 14:00:08 +0100
+In-Reply-To: <20190222094233.21556-1-yuehaibing@huawei.com>
+References: <20190222094233.21556-1-yuehaibing@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -44,20 +42,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Hi,
 
-> +++ b/net/wireless/nl80211.c
-> @@ -13098,6 +13098,12 @@ static int nl80211_external_auth(struct sk_buff *skb, struct genl_info *info)
->  	if (!info->attrs[NL80211_ATTR_STATUS_CODE])
->  		return -EINVAL;
->  
-> +	if ((info->attrs[NL80211_ATTR_PMK] &&
-> +	     !info->attrs[NL80211_ATTR_PMKID]) ||
-> +	    (info->attrs[NL80211_ATTR_PMKID] &&
-> +	     !info->attrs[NL80211_ATTR_PMK]))
-> +		return -EINVAL;
+> In function reg_query_database, query_regdb_file call
+> request_firmware_nowait to do request_firmware asynchronously,
+> which need the caller hold the reference of dev, otherwise it will
+> do put_device freeing '&reg_pdev->dev'. After that, call_crda access
+> the dev will trigger use-after-free bug.
 
-This constitutes a netlink API change, so no, can't be right? PMKID was
-perfectly reasonable to pass by itself before.
+So ... OK, but how does that then only fix the firmware file loading,
+rather than CRDA calling?
+
+> This patch fix this by holding a reference of dev in regulatory_init
+> after platform_device_register_simple registered successly, which
+> releasing in platform_device_unregister.
+
+This doesn't make sense? You just add a new reference and don't release
+it? If there was a bug then just loading & unloading would trigger an
+underflow now?
+
+platform_device_register_full() (to which _simple is a wrapper) will
+evidently return the pdev with a reference held, because it does
+platform_device_put() in the error path?
 
 johannes
+
 
