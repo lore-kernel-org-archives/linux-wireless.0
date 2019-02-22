@@ -2,183 +2,122 @@ Return-Path: <SRS0=FR9J=Q5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 791F1C10F00
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 06:37:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D24E0C4360F
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 07:15:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45A5A20818
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 06:37:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jnBMGaMw";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jTEqg4mR"
+	by mail.kernel.org (Postfix) with ESMTP id A8E2920818
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 07:15:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726169AbfBVGhQ (ORCPT
+        id S1726368AbfBVHPr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Feb 2019 01:37:16 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:58596 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725854AbfBVGhQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Feb 2019 01:37:16 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 21B6F608CB; Fri, 22 Feb 2019 06:37:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550817435;
-        bh=Ry32DROTzdFqHTWMvCBx+mmPBllmVw2pWjQXkWcQQpI=;
-        h=From:To:Cc:Subject:Date:From;
-        b=jnBMGaMw3FUFtM69v2S2NMg3xEOpzvDDD2Xss/mlatoFyHqIhfA54Vo7VAPBPuDEQ
-         V73cpwElC1cl8YZZ9cHpOE/UvaV4XMqG1v7rd9RbIC+t/65sx9agaQJcNioZZvsCDD
-         hAkgh2z93e/SmyfPbjeni2jZV0/mNw1f37SIuZEM=
-Received: from checstex0244823-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: bpothuno@codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A51CB6071B;
-        Fri, 22 Feb 2019 06:37:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1550817434;
-        bh=Ry32DROTzdFqHTWMvCBx+mmPBllmVw2pWjQXkWcQQpI=;
-        h=From:To:Cc:Subject:Date:From;
-        b=jTEqg4mRoZeUFrZPdlITQlwuXypSnHiFYNTSdUfSH+wltWbuczawuat7ha9n3/ODn
-         QSmKcsu242bFk0U+sZA1+J4V7OpVRhHiGzkt8k6bhjFVVhE1kmThEk8JNztggTbl/W
-         PS0PeGUXygf5SUDNkUXHb3mLz73NGw4KPf6AY2Vo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A51CB6071B
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bpothuno@codeaurora.org
-From:   Balaji Pothunoori <bpothuno@codeaurora.org>
-To:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc:     ath10k@lists.infradead.org,
-        Ashok Raj Nagarajan <arnagara@codeaurora.org>,
-        Balaji Pothunoori <bpothuno@codeaurora.org>
-Subject: [PATCH v3] iw: Add support for controlling tx power for per station
-Date:   Fri, 22 Feb 2019 12:07:05 +0530
-Message-Id: <1550817425-18803-1-git-send-email-bpothuno@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Fri, 22 Feb 2019 02:15:47 -0500
+Received: from mxhk.zte.com.cn ([63.217.80.70]:63546 "EHLO mxhk.zte.com.cn"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725864AbfBVHPp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Feb 2019 02:15:45 -0500
+Received: from mse01.zte.com.cn (unknown [10.30.3.20])
+        by Forcepoint Email with ESMTPS id 0775689F7E63BE8FA48E;
+        Fri, 22 Feb 2019 15:15:43 +0800 (CST)
+Received: from notes_smtp.zte.com.cn ([10.30.1.239])
+        by mse01.zte.com.cn with ESMTP id x1M7FONF037279;
+        Fri, 22 Feb 2019 15:15:24 +0800 (GMT-8)
+        (envelope-from wen.yang99@zte.com.cn)
+Received: from fox-host8.localdomain ([10.74.120.8])
+          by szsmtp06.zte.com.cn (Lotus Domino Release 8.5.3FP6)
+          with ESMTP id 2019022215160221-1228878 ;
+          Fri, 22 Feb 2019 15:16:02 +0800 
+From:   Wen Yang <wen.yang99@zte.com.cn>
+To:     linus.walleij@linaro.org
+Cc:     andrew@lunn.ch, vivien.didelot@gmail.com, f.fainelli@gmail.com,
+        davem@davemloft.net, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alexandre.belloni@bootlin.com,
+        UNGLinuxDriver@microchip.com, nbd@nbd.name,
+        lorenzo.bianconi83@gmail.com, kvalo@codeaurora.org,
+        matthias.bgg@gmail.com, linux-wireless@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, anirudh@xilinx.com,
+        John.Linn@xilinx.com, michal.simek@xilinx.com,
+        wang.yi59@zte.com.cn, Wen Yang <wen.yang99@zte.com.cn>
+Subject: [PATCH 2/5] net: mscc: ocelot: fix a leaked reference by adding a missing of_node_put
+Date:   Fri, 22 Feb 2019 15:15:39 +0800
+Message-Id: <1550819742-32155-2-git-send-email-wen.yang99@zte.com.cn>
+X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1550819742-32155-1-git-send-email-wen.yang99@zte.com.cn>
+References: <1550819742-32155-1-git-send-email-wen.yang99@zte.com.cn>
+X-MIMETrack: Itemize by SMTP Server on SZSMTP06/server/zte_ltd(Release 8.5.3FP6|November
+ 21, 2013) at 2019-02-22 15:16:02,
+        Serialize by Router on notes_smtp/zte_ltd(Release 9.0.1FP7|August  17, 2016) at
+ 2019-02-22 15:15:08,
+        Serialize complete at 2019-02-22 15:15:08
+X-MAIL: mse01.zte.com.cn x1M7FONF037279
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+The call to of_parse_phandle returns a node pointer with refcount
+incremented thus it must be explicitly decremented after the last
+usage.
 
-This patch allows userspace to set transmit power,
-in dBm units, to a station associated to the AP.
+Detected by coccinelle with the following warnings:
+./drivers/net/ethernet/mscc/ocelot_board.c:293:3-9: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 249, but without a corresponding object release within this function.
+./drivers/net/ethernet/mscc/ocelot_board.c:312:3-9: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 249, but without a corresponding object release within this function.
+./drivers/net/ethernet/mscc/ocelot_board.c:336:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 249, but without a corresponding object release within this function.
+./drivers/net/ethernet/mscc/ocelot_board.c:339:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 249, but without a corresponding object release within this function.
 
-To set a limit tx power of 20 dBm:
-iw wlan0 station set <mac-addr> txpwr limit 20
-
-To revert the user defined tx power for a station:
-iw wlan0 station set <mac-addr> txpwr auto
-
-Co-developed-by: Balaji Pothunoori <bpothuno@codeaurora.org>
-Signed-off-by: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Cc: Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
-v2: modified user configured units to dBm from mBm
-v3: no changes, rebased
+ drivers/net/ethernet/mscc/ocelot_board.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
- station.c | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 71 insertions(+)
-
-diff --git a/station.c b/station.c
-index e1477ef..8e0e852 100644
---- a/station.c
-+++ b/station.c
-@@ -651,6 +651,7 @@ COMMAND(station, del, "<MAC address> [subtype <subtype>] [reason-code <code>]",
- static const struct cmd *station_set_plink;
- static const struct cmd *station_set_vlan;
- static const struct cmd *station_set_mesh_power_mode;
-+static const struct cmd *station_set_txpwr;
+diff --git a/drivers/net/ethernet/mscc/ocelot_board.c b/drivers/net/ethernet/mscc/ocelot_board.c
+index ca3ea2f..f1485a6 100644
+--- a/drivers/net/ethernet/mscc/ocelot_board.c
++++ b/drivers/net/ethernet/mscc/ocelot_board.c
+@@ -290,7 +290,7 @@ static int mscc_ocelot_probe(struct platform_device *pdev)
  
- static const struct cmd *select_station_cmd(int argc, char **argv)
- {
-@@ -662,6 +663,8 @@ static const struct cmd *select_station_cmd(int argc, char **argv)
- 		return station_set_vlan;
- 	if (strcmp(argv[1], "mesh_power_mode") == 0)
- 		return station_set_mesh_power_mode;
-+	if (strcmp(argv[1], "txpwr") == 0)
-+		return station_set_txpwr;
- 	return NULL;
+ 		err = ocelot_probe_port(ocelot, port, regs, phy);
+ 		if (err)
+-			return err;
++			goto err_probe_ports;
+ 
+ 		err = of_get_phy_mode(portnp);
+ 		if (err < 0)
+@@ -309,7 +309,8 @@ static int mscc_ocelot_probe(struct platform_device *pdev)
+ 			dev_err(ocelot->dev,
+ 				"invalid phy mode for port%d, (Q)SGMII only\n",
+ 				port);
+-			return -EINVAL;
++			err = -EINVAL;
++			goto err_probe_ports;
+ 		}
+ 
+ 		serdes = devm_of_phy_get(ocelot->dev, portnp, NULL);
+@@ -328,6 +329,7 @@ static int mscc_ocelot_probe(struct platform_device *pdev)
+ 		ocelot->ports[port]->serdes = serdes;
+ 	}
+ 
++	of_node_put(ports);
+ 	register_netdevice_notifier(&ocelot_netdevice_nb);
+ 	register_switchdev_blocking_notifier(&ocelot_switchdev_blocking_nb);
+ 
+@@ -336,6 +338,7 @@ static int mscc_ocelot_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ err_probe_ports:
++	of_node_put(ports);
+ 	return err;
  }
  
-@@ -813,6 +816,74 @@ COMMAND_ALIAS(station, set, "<MAC address> mesh_power_mode "
- 	"Set link-specific mesh power mode for this station",
- 	select_station_cmd, station_set_mesh_power_mode);
- 
-+static int handle_station_set_txpwr(struct nl80211_state *state,
-+				    struct nl_msg *msg,
-+				    int argc, char **argv,
-+				    enum id_input id)
-+{
-+	enum nl80211_tx_power_setting type;
-+	unsigned char mac_addr[ETH_ALEN];
-+	int sta_txpwr = 0;
-+	char *err = NULL;
-+
-+	if (argc != 3 && argc != 4)
-+		return 1;
-+
-+	if (mac_addr_a2n(mac_addr, argv[0])) {
-+		fprintf(stderr, "invalid mac address\n");
-+		return 2;
-+	}
-+
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-+	argc--;
-+	argv++;
-+
-+	if (strcmp("txpwr", argv[0]) != 0)
-+		return 1;
-+	argc--;
-+	argv++;
-+
-+	if (!strcmp(argv[0], "auto"))
-+		type = NL80211_TX_POWER_AUTOMATIC;
-+	else if (!strcmp(argv[0], "limit"))
-+		type = NL80211_TX_POWER_LIMITED;
-+	else {
-+		printf("Invalid parameter: %s\n", argv[0]);
-+		return 2;
-+	}
-+
-+	NLA_PUT_U8(msg, NL80211_ATTR_STA_TX_POWER_SETTING, type);
-+
-+	if (type != NL80211_TX_POWER_AUTOMATIC) {
-+		if (argc != 2) {
-+			printf("Missing TX power level argument.\n");
-+			return 2;
-+		}
-+
-+		argc--;
-+		argv++;
-+
-+		sta_txpwr = strtoul(argv[0], &err, 0);
-+
-+		if (sta_txpwr)
-+			NLA_PUT_U16(msg, NL80211_ATTR_STA_TX_POWER, sta_txpwr);
-+	}
-+
-+	argc--;
-+	argv++;
-+
-+	if (argc)
-+		return 1;
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND_ALIAS(station, set, "<MAC address> txpwr <auto|limit> [<tx power dBm>]",
-+	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_txpwr,
-+	"Set Tx power for this station.",
-+	select_station_cmd, station_set_txpwr);
-+
- static int handle_station_dump(struct nl80211_state *state,
- 			       struct nl_msg *msg,
- 			       int argc, char **argv,
 -- 
-2.7.4
+2.9.5
 
