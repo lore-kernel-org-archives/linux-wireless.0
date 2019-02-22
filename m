@@ -2,105 +2,121 @@ Return-Path: <SRS0=FR9J=Q5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEDCCC4360F
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 14:21:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CBBDC10F00
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 14:29:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 897E920700
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 14:21:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD22C2075C
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 14:29:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jPqJSHRZ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="i9AYArlz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727180AbfBVOVq (ORCPT
+        id S1726331AbfBVO34 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Feb 2019 09:21:46 -0500
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:46067 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726808AbfBVOVb (ORCPT
+        Fri, 22 Feb 2019 09:29:56 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:54852 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725942AbfBVO34 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Feb 2019 09:21:31 -0500
-X-IronPort-AV: E=Sophos;i="5.58,400,1544482800"; 
-   d="scan'208";a="2017373"
-Received: from ironmsg02-ams.qualcomm.com ([10.251.56.3])
-  by alexa-out-ams-01.qualcomm.com with ESMTP; 22 Feb 2019 15:21:26 +0100
-X-IronPort-AV: E=McAfee;i="5900,7806,9174"; a="7285580"
-Received: from lx-merez1.mea.qualcomm.com ([10.18.173.103])
-  by ironmsg02-ams.qualcomm.com with ESMTP; 22 Feb 2019 15:21:26 +0100
-From:   Maya Erez <merez@codeaurora.org>
+        Fri, 22 Feb 2019 09:29:56 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 102E4608CD; Fri, 22 Feb 2019 14:29:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550845795;
+        bh=ujVBz2VVgWFlXBilPBCL603UyF8mEDHzaSvNz5iBVwg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=jPqJSHRZydC4FeO9/FR41y3LXBNc8R3/d4XeIylGrHLNtB4cEIfUTrqnFvJOQRPg6
+         TZm4vLP6ua+1QYk24RIToccsjvbpymPzsjGf2eTXOC98gAza1T506lxAtCyGIfNaNx
+         tuw0977AOPg2WwwELBZeNB2OxqHbkbnAcz5lalGk=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 91C8D60247;
+        Fri, 22 Feb 2019 14:29:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550845794;
+        bh=ujVBz2VVgWFlXBilPBCL603UyF8mEDHzaSvNz5iBVwg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=i9AYArlzM3czo5qHmHA7cC9PsR9bBg1F0JLKzBC07E8SLKvixxz1ZMoHoOxeU2PYh
+         5hv08pUrwW61PNqlP4ZEGKMOklF4fUT8RMduGIplonIMezid7oX+3oTlANwtJp6imr
+         PaRc+3u9dsb7BdYnbSHvOhvcfhs+83QBfBAnGPsM=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 22 Feb 2019 16:29:54 +0200
+From:   merez@codeaurora.org
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 07/21] wil6210: check null pointer in _wil_cfg80211_merge_extra_ies
-Date:   Fri, 22 Feb 2019 16:21:05 +0200
-Message-Id: <1550845279-16103-8-git-send-email-merez@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1550845279-16103-1-git-send-email-merez@codeaurora.org>
-References: <1550845279-16103-1-git-send-email-merez@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH v2 00/12] wil6210 patches
+In-Reply-To: <1548689786-23288-1-git-send-email-merez@codeaurora.org>
+References: <1548689786-23288-1-git-send-email-merez@codeaurora.org>
+Message-ID: <c63a47c2625b92ffdbfbb13187c43888@codeaurora.org>
+X-Sender: merez@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+On 2019-01-28 17:36, Maya Erez wrote:
+> Changes from V1:
+> - Update copyright year to 2019.
+> - Change bool usage in structures to u8.
+> 
+> The following set of patches include:
+> - Use platform specific configuration instead of wil6210 module 
+> parameters
+> - Various wil6210 fixes.
+> 
+> Ahmad Masri (5):
+>   wil6210: support ndo_select_queue in net_device_ops
+>   wil6210: add support for AC queues per station
+>   wil6210: support up to 20 stations in AP mode
+>   wil6210: accessing 802.3 addresses via utility functions
+>   wil6210: prevent device memory access while in reset or suspend
+> 
+> Alexei Avshalom Lazar (2):
+>   wil6210: check null pointer in _wil_cfg80211_merge_extra_ies
+>   wil6210: align to latest auto generated wmi.h
+> 
+> Dedy Lansky (2):
+>   wil6210: add option to drop Tx packets when tx ring is full
+>   wil6210: fix invalid sta statistics update
+> 
+> Maya Erez (3):
+>   wil6210: remove rtap_include_phy_info module param
+>   wil6210: use platform specific configuration
+>   wil6210: ignore HALP ICR if already handled
+> 
+>  drivers/net/wireless/ath/wil6210/cfg80211.c       |  43 ++-
+>  drivers/net/wireless/ath/wil6210/debugfs.c        |  48 ++-
+>  drivers/net/wireless/ath/wil6210/interrupt.c      |  12 +-
+>  drivers/net/wireless/ath/wil6210/main.c           | 162 +++++----
+>  drivers/net/wireless/ath/wil6210/netdev.c         |  77 +++-
+>  drivers/net/wireless/ath/wil6210/pcie_bus.c       |  33 +-
+>  drivers/net/wireless/ath/wil6210/pm.c             |  31 +-
+>  drivers/net/wireless/ath/wil6210/rx_reorder.c     |  10 +-
+>  drivers/net/wireless/ath/wil6210/trace.h          |   3 +-
+>  drivers/net/wireless/ath/wil6210/txrx.c           | 407 
+> +++++++++++++++-------
+>  drivers/net/wireless/ath/wil6210/txrx.h           |  51 ++-
+>  drivers/net/wireless/ath/wil6210/txrx_edma.c      |  14 +-
+>  drivers/net/wireless/ath/wil6210/wil6210.h        |  70 ++--
+>  drivers/net/wireless/ath/wil6210/wil_crash_dump.c |  18 +-
+>  drivers/net/wireless/ath/wil6210/wil_platform.h   |  29 ++
+>  drivers/net/wireless/ath/wil6210/wmi.c            | 111 ++++--
+>  drivers/net/wireless/ath/wil6210/wmi.h            |  48 ++-
+>  17 files changed, 809 insertions(+), 358 deletions(-)
 
-ies1 or ies2 might be null when code inside
-_wil_cfg80211_merge_extra_ies access them.
-Add explicit check for null and make sure ies1/ies2 are not
-accessed in such a case.
+Please drop this set of patches.
+I upstreamed a new set of patches.
 
-spos might be null and be accessed inside
-_wil_cfg80211_merge_extra_ies.
-Add explicit check for null in the while condition statement
-and make sure spos is not accessed in such a case.
-
-Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 9a9d55b..a1e226652 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1580,6 +1580,12 @@ static int _wil_cfg80211_merge_extra_ies(const u8 *ies1, u16 ies1_len,
- 	u8 *buf, *dpos;
- 	const u8 *spos;
- 
-+	if (!ies1)
-+		ies1_len = 0;
-+
-+	if (!ies2)
-+		ies2_len = 0;
-+
- 	if (ies1_len == 0 && ies2_len == 0) {
- 		*merged_ies = NULL;
- 		*merged_len = 0;
-@@ -1589,17 +1595,19 @@ static int _wil_cfg80211_merge_extra_ies(const u8 *ies1, u16 ies1_len,
- 	buf = kmalloc(ies1_len + ies2_len, GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
--	memcpy(buf, ies1, ies1_len);
-+	if (ies1)
-+		memcpy(buf, ies1, ies1_len);
- 	dpos = buf + ies1_len;
- 	spos = ies2;
--	while (spos + 1 < ies2 + ies2_len) {
-+	while (spos && (spos + 1 < ies2 + ies2_len)) {
- 		/* IE tag at offset 0, length at offset 1 */
- 		u16 ielen = 2 + spos[1];
- 
- 		if (spos + ielen > ies2 + ies2_len)
- 			break;
- 		if (spos[0] == WLAN_EID_VENDOR_SPECIFIC &&
--		    !_wil_cfg80211_find_ie(ies1, ies1_len, spos, ielen)) {
-+		    (!ies1 || !_wil_cfg80211_find_ie(ies1, ies1_len,
-+						     spos, ielen))) {
- 			memcpy(dpos, spos, ielen);
- 			dpos += ielen;
- 		}
 -- 
-1.9.1
-
+Maya Erez
+Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
