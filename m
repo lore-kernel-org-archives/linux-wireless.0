@@ -2,165 +2,111 @@ Return-Path: <SRS0=FR9J=Q5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD3ECC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 00:14:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 867EDC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 05:34:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A67F20700
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 00:14:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BD14207E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Feb 2019 05:34:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="topm4irO"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Vj+ZxWKl";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Vj+ZxWKl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726360AbfBVANz (ORCPT
+        id S1725864AbfBVFeM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Feb 2019 19:13:55 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:43001 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725961AbfBVANz (ORCPT
+        Fri, 22 Feb 2019 00:34:12 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:48010 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725710AbfBVFeL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Feb 2019 19:13:55 -0500
-Received: by mail-pf1-f193.google.com with SMTP id n74so208538pfi.9
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2019 16:13:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=UOeop6k/ATulTYc9RAA3FktE0iQO8Zmhg7BcbfC17+s=;
-        b=topm4irOQodKCaINTjIWW97FAbzlP77GPGjuIMW2HEHmBr3rqKgdrf1xWrwdeY0HKq
-         j4gLhBH2IV+qH2D52joEGlYps+sk10jlr5YfYZ8hFXDBIyRyA0N5gtO6mLqwLVp8cnPo
-         JWPt2D6Lq1NR4yvWVa6LTVl+uQgGAeDdY92ywe8yxdHefUOLmipK+61MqNXGJWIj3RVD
-         8zelQLOPdUnsIYepU2S3bP6uagnlX5az0z82hsVYoyGwgPPqtNjlT0qhlMJrtv0zo8NW
-         33ujfM1HwbypmyKnUQwrSUwW7HCCMfeSSpEhkCpQ7UgpJAViNllpgr9z7h0wJASVM3MM
-         iszw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=UOeop6k/ATulTYc9RAA3FktE0iQO8Zmhg7BcbfC17+s=;
-        b=AekN6xwyVrBZmINTrLMxbEXuNcuUJ1zGV9OXr07hpEU/KhX3IsJCoRMJ6B7FQRMLn9
-         QKv81EzQ3z3ehVbh8nC80fx6WfMTKeKUQqwSmZKlOxjXvbc6Iw1WZ3/No/AO0naVvqUA
-         bF7k3ULo9LcBZKr9XI3IbifDHfSK0xyQ3pA+W04NX65lKLP7j/pkI+ap7yGAGbmbGd2s
-         Qw3ALpdijJQ8/hdzdYYIlMzDtl2CraPwrWoNPzqx0qsBGCGYc/IfC1rkGWNiYfilAD5l
-         x35Ul74UEOUJ9CZHKeL4+s6kZv54KX+AQ/OXrH3nKAh3aPY8PCBdN0VHN6gSnvsFm56g
-         3q1g==
-X-Gm-Message-State: AHQUAuY8y0FTSL9rzOiPm1gs5dFdaT7ZSNUOblBD4ZJTv40rAMGxJDBM
-        Sf73SaByUsXuWr2Uxuxig7reAmUa1G5sgvGGlFRBeA==
-X-Google-Smtp-Source: AHgI3IYsdCZ1+hEt521ZrnBxs9BJAGbS+dbLYW5bZdW9dvpg3l4cR5HyWhwcYrqlIuZqq2htkp/EJup40zBLnd2hEus=
-X-Received: by 2002:a63:f544:: with SMTP id e4mr1161430pgk.145.1550794433844;
- Thu, 21 Feb 2019 16:13:53 -0800 (PST)
-MIME-Version: 1.0
-References: <20190219182105.19933-1-natechancellor@gmail.com> <20190221080617.2795-1-natechancellor@gmail.com>
-In-Reply-To: <20190221080617.2795-1-natechancellor@gmail.com>
-From:   Nick Desaulniers <ndesaulniers@google.com>
-Date:   Thu, 21 Feb 2019 16:13:42 -0800
-Message-ID: <CAKwvOdmCeHxiGPkXXzjwnTtgzEDDjYRE1QBdu7BHeuzCE4YtRA@mail.gmail.com>
-Subject: Re: [PATCH v2] iwlwifi: mvm: Use div_s64 instead of do_div in iwl_mvm_debug_range_resp
-To:     Nathan Chancellor <natechancellor@gmail.com>
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 22 Feb 2019 00:34:11 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 7FE24608EA; Fri, 22 Feb 2019 05:34:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550813650;
+        bh=vhUThzfvakDKoVdazlPhZOoDeNW3mWoI+wDiycCkREc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Vj+ZxWKlsqZeqDnnaFiETRhyva/fOI4gN0r1zk2ja6PMKQzABM2HPZfoAPI8ImpQK
+         8/bD/TdnM67Qxk7vwp+8fcpMHKuKipnzbdiAs3vVJ7ptqEv9k5t6IjfhHBxmbtkyVF
+         /x1dfwKSEZdADmRX8QM2kXKde+sYpSLnc2QwE2g8=
+Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: tamizhr@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A9BA960860;
+        Fri, 22 Feb 2019 05:34:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1550813650;
+        bh=vhUThzfvakDKoVdazlPhZOoDeNW3mWoI+wDiycCkREc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Vj+ZxWKlsqZeqDnnaFiETRhyva/fOI4gN0r1zk2ja6PMKQzABM2HPZfoAPI8ImpQK
+         8/bD/TdnM67Qxk7vwp+8fcpMHKuKipnzbdiAs3vVJ7ptqEv9k5t6IjfhHBxmbtkyVF
+         /x1dfwKSEZdADmRX8QM2kXKde+sYpSLnc2QwE2g8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A9BA960860
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
+From:   Tamizh chelvam <tamizhr@codeaurora.org>
+To:     johannes@sipsolutions.net, ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCHv2 0/9] cfg80211/mac80211: Add support for TID specific configuration
+Date:   Fri, 22 Feb 2019 11:02:25 +0530
+Message-Id: <1550813554-11581-1-git-send-email-tamizhr@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Feb 21, 2019 at 12:08 AM Nathan Chancellor
-<natechancellor@gmail.com> wrote:
->
-> Clang warns:
->
-> drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c:465:2: warning:
-> comparison of distinct pointer types ('typeof ((rtt_avg)) *' (aka 'long
-> long *') and 'uint64_t *' (aka 'unsigned long long *'))
-> [-Wcompare-distinct-pointer-types]
->         do_div(rtt_avg, 6666);
->         ^~~~~~~~~~~~~~~~~~~~~
-> include/asm-generic/div64.h:222:28: note: expanded from macro 'do_div'
->         (void)(((typeof((n)) *)0) == ((uint64_t *)0));  \
->                ~~~~~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~~
-> 1 warning generated.
->
-> do_div expects an unsigned dividend. Use div_s64, which expects a signed
-> dividend.
->
-> Fixes: 937b10c0de68 ("iwlwifi: mvm: add debug prints for FTM")
-> Link: https://github.com/ClangBuiltLinux/linux/issues/372
-> Suggested-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> ---
->
-> v1 -> v2:
->
-> * Fix logic (as the return value of div{,64}_s64 must be used), thanks
->   to Arnd for the review.
+Add infrastructure to support per TID configurations like noack policy,
+retry count, AMPDU control(disable/enable), RTSCTS control(enable/disable)
+and TX rate mask configurations.
+This will be useful for the driver which can supports data TID
+specific configuration rather than phy level configurations.
+Here NL80211_CMD_SET_TID_CONFIG added to support this operation by
+accepting TID configuration.
+This command can accept STA mac addreess to make the configuration
+station specific rather than applying to all the connected stations
+to the netdev.
+And this nested command configuration can accept multiple number of
+data TID specific configuration in a single command,
+enum ieee80211_tid_conf_mask used to notify the driver that which
+configuration got modified for the TID.
 
-oh boy, sorry I missed that in the initial code review, thanks Arnd
-for the sharp eye!
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+Tamizh chelvam (9):
+  nl80211: New netlink command for TID specific configuration
+  nl80211: Add new netlink attribute for TID speicific retry count
+  nl80211: Add netlink attribute for AMPDU aggregation enable/disable
+  nl80211: Add netlink attribute to enable/disable RTS_CTS
+  nl80211: Add netlink attribute to configure TID specific tx rate
+  mac80211: Add api to support configuring TID specific configuration
+  ath10k: Add wmi command support for station specific TID config
+  ath10k: Add new api to support TID specific configuration
+  ath10k: Add extended TID configuration support
 
-Side tangent: we see this kind of difference in APIs a lot (modifying
-the parameter vs returning a new value or making a copy then modifying
-that) in C++ when a call site isn't passing the explicit address of
-some variable or an identifier that's clearly a pointer. Ex.
+v2:
+  * Added support to accept multiple TID configuration
+  * Added support to configure TX rate and RTSCTS control
 
-int foo;
-bar(foo);
-
-Doesn't tell you whether bar mutates foo or not without looking at the
-definition of bar, as it could be:
-void bar(int x);
-or
-void bar(int& x);
-
-I miss the convention in Ruby of using `!` suffixes on methods to
-differentiate between such cases. ex:
-
-"hello".capitalize
-vs
-"hello".capitalize!
-
-both return the same value, but the one with the ! mutates the
-existing object, while the one without creates a new object.  And
-that's a very standard convention throughout the standard library.
-Whether or not people follow that convention is always another story.
-
-One thing I'm curious about, is "why does do_div exist?" When should I
-use do_div vs div_u64 (not div_s64 as is used in this patch)?
-
->
->  drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-> index e9822a3ec373..94132cfd1f56 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-> @@ -460,9 +460,7 @@ static int iwl_mvm_ftm_range_resp_valid(struct iwl_mvm *mvm, u8 request_id,
->  static void iwl_mvm_debug_range_resp(struct iwl_mvm *mvm, u8 index,
->                                      struct cfg80211_pmsr_result *res)
->  {
-> -       s64 rtt_avg = res->ftm.rtt_avg * 100;
-> -
-> -       do_div(rtt_avg, 6666);
-> +       s64 rtt_avg = div_s64(res->ftm.rtt_avg * 100, 6666);
->
->         IWL_DEBUG_INFO(mvm, "entry %d\n", index);
->         IWL_DEBUG_INFO(mvm, "\tstatus: %d\n", res->status);
-> --
-> 2.21.0.rc1
->
-
+ drivers/net/wireless/ath/ath10k/core.c    |   4 +
+ drivers/net/wireless/ath/ath10k/core.h    |   7 +
+ drivers/net/wireless/ath/ath10k/mac.c     | 650 ++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  19 +
+ drivers/net/wireless/ath/ath10k/wmi.c     |  33 ++
+ drivers/net/wireless/ath/ath10k/wmi.h     |  72 ++++
+ include/net/cfg80211.h                    |  57 +++
+ include/net/mac80211.h                    |  35 ++
+ include/uapi/linux/nl80211.h              | 181 +++++++++
+ net/mac80211/cfg.c                        |  28 ++
+ net/mac80211/driver-ops.h                 |  15 +
+ net/wireless/nl80211.c                    | 205 ++++++++++
+ net/wireless/rdev-ops.h                   |  11 +
+ net/wireless/trace.h                      |  18 +
+ 14 files changed, 1255 insertions(+), 80 deletions(-)
 
 -- 
-Thanks,
-~Nick Desaulniers
+1.9.1
+
