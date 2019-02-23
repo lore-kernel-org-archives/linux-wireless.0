@@ -3,64 +3,125 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61DB0C43381
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 11:50:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65F99C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 17:26:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E58A20850
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 11:50:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C48EE20663
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 17:26:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="RxPj5v4g"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="c4/lq3eu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727096AbfBWLuC (ORCPT
+        id S1726089AbfBWR0T (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 23 Feb 2019 06:50:02 -0500
-Received: from mail.toke.dk ([52.28.52.200]:50931 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726326AbfBWLuB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Feb 2019 06:50:01 -0500
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1550922599; bh=QNrDEdMdycbcQNCifwf0LmANy1ACZijCXl+8BgfAoEg=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=RxPj5v4gmyl7dcodlW/C53sZGXN+5dSzgFVTGPpYaXcY4EQHs7YGXE6VLUiW8G8Ls
-         cvfhcnINGMH3Kj9WV08V4/omOq6+Ij9R9SRrXqPuFtfkTZKgM3GjVYYqE1IPuOQnzU
-         pGtpRYDRZrTQq1bovzr13V8NmgY5JHsNmcjUmVj/TiVizqUzv7j+vd3HUpr3XsikW3
-         hyH8fH8G24M3A79gBoXvlzNc4Hpw9Nx0XoeAaY1AhDDFz4/grDv9PO8uTc/ohB/4FU
-         BP41EbBgfKELao0a9h6hmMuTXxOrpc9kkFYBfkq1Wck3vOTlb7Ciz5Q41gjqwoDZjX
-         4Kj9MZkf/Gnig==
+        Sat, 23 Feb 2019 12:26:19 -0500
+Received: from 19.mo1.mail-out.ovh.net ([178.32.97.206]:39863 "EHLO
+        19.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725936AbfBWR0S (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 23 Feb 2019 12:26:18 -0500
+Received: from player157.ha.ovh.net (unknown [10.109.159.68])
+        by mo1.mail-out.ovh.net (Postfix) with ESMTP id EF6B115C960
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Feb 2019 18:26:14 +0100 (CET)
+Received: from awhome.eu (p57B7E5A0.dip0.t-ipconnect.de [87.183.229.160])
+        (Authenticated sender: postmaster@awhome.eu)
+        by player157.ha.ovh.net (Postfix) with ESMTPSA id A7D2F2F31B6E;
+        Sat, 23 Feb 2019 17:26:13 +0000 (UTC)
+Subject: Re: [RFC PATCH v3 03/12] mac80211: IEEE 802.11 Extended Key ID
+ support
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+        s=wetzel-home; t=1550942772;
+        bh=6PovUQmVEqrjUJvi8LSYN8iFSU00aX4PJzFby63WhK0=;
+        h=Subject:From:To:Cc:References:Date:In-Reply-To;
+        b=c4/lq3euVhlQXMId+I4qsNU/tiQcEFH3z/4ZHUPArpRc0ovo6V3VqiicWvQ5a4Lnz
+         KD4flOcGCRbrDNEUpIS5K6CuWatpsltwQ8sML4SviqHakeM+g/K+2Z3erDy/+s/n9N
+         ytlHXayxnQrk/9yVwa8zvTsRpjNf/oahBVyty0UQ=
+From:   Alexander Wetzel <alexander@wetzel-home.de>
 To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>,
-        Grant Grundler <grundler@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>, wgong@qti.qualcomm.com,
-        ath10k@lists.infradead.org, wgong@codeaurora.org,
-        Kan Yan <kyan@google.com>
-Subject: Re: [PATCH] mac80211: Change default tx_sk_pacing_shift to 7
-In-Reply-To: <44add7675ef89dd61fcea9da6b55804c498a2d24.camel@sipsolutions.net>
-References: <20190221172936.21816-1-toke@redhat.com> <E1gx9x3-0002j0-1J@sipsolutions.net> <87lg28vup0.fsf@toke.dk> <a5151441bdfe02cb11043aa0786185b8ee3c3ee9.camel@sipsolutions.net> <87imxcvt4z.fsf@toke.dk> <44add7675ef89dd61fcea9da6b55804c498a2d24.camel@sipsolutions.net>
-Date:   Sat, 23 Feb 2019 12:49:58 +0100
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87d0niwwpl.fsf@toke.dk>
+Cc:     linux-wireless@vger.kernel.org
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+ <20190210210620.31181-4-alexander@wetzel-home.de>
+ <f4d8db23bc3804fdc98f2ce7a702215bd82fd4e3.camel@sipsolutions.net>
+ <e27bffe8-4c75-34d9-b326-39ffb05b73eb@wetzel-home.de>
+ <171d2db4-7639-4738-2a6d-c899f0247aee@wetzel-home.de>
+Message-ID: <f3c2a4ad-0019-60c7-be09-d52a8b137efa@wetzel-home.de>
+Date:   Sat, 23 Feb 2019 18:26:09 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <171d2db4-7639-4738-2a6d-c899f0247aee@wetzel-home.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Ovh-Tracer-Id: 9382686877008796871
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedutddruddvgddutddvucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> On Fri, 2019-02-22 at 14:40 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>=20
->> And send it directly to stable, or does it need to go through you?
->
-> I added a Cc: stable tag. So all you really need to do is wait for the
-> emails telling you it failed to apply, and handle accordingly :)
+>>>
+>>>> +    sta = sta_info_get_bss(sdata, mac_addr);
+>>>> +
+>>>> +    if (!sta)
+>>>> +        return -EINVAL;
+>>>> +
+>>>> +    if (sta->ptk_idx == key_idx)
+>>>> +        return 0;
+>>>> +
+>>>> +    mutex_lock(&local->key_mtx);
+>>>> +    key = key_mtx_dereference(local, sta->ptk[key_idx]);
+>>>> +
+>>>> +    if (key && key->flags & KEY_FLAG_RX_ONLY)
+>>>
+>>> do you even need the flag? Isn't it equivalent to checking
+>>>     sta->ptk_idx != key->idx
+>>> or so?
+>>>
+>>> Less data to maintain would be better.
+>>
+>> I have to look at that again. It will change some assumptions for sure 
+>> but still could work out with some slight differences. I'll have to 
+>> look deeper into that since I remember two moments where I was sure 
+>> needing the flag. That may well be outdated, but at a first glance it 
+>> would at least open the door to first install two key in legacy mode 
+>> and then switch between them. (Which should be no problem, of course)
+>> I'll follow up on that separately, but that may take some time. When 
+>> it works you'll get a new RFC.
 
-Cool, that I can do; thanks! :)
+I gave that a closer look today and tried to get rid of 
+KEY_FLAG_RX_ONLY. It looks like it could work, but only with a 
+(pointless looking) trade off:
 
--Toke
+The problem is the initial key install. Normal and Extended Key Installs 
+both call ieee80211_add_key() and the function has to "mark" either the 
+key or the sta to be using Extended Key ID so we later know if we have 
+to activate Tx for the key or not.
+
+Without that ptk_idx will still be set to INVALID_PTK_KEYIDX in either 
+case and therefore useless. ieee80211_key_replace() will then have no 
+way to figure out if it must set ptk_idx and activate the key for TX or 
+not.
+
+Both checking a key Flag (for RX only) or a station flag (for Extended 
+Key ID being used) would solve the problem but I do not see an good way 
+to do it without one or the other.
+
+Now we could of course use some other existing variable like setting 
+ptk_idx to INVALID_PTK_KEYIDX+1 in ieee80211_add_key(). But it still 
+would be some kind of flag, only stored where nobody would expect it...
+
+Storing the information with the key simplifies the delay tailroom 
+handling a bit but I think I can get that operational with a station 
+flag for Extended Key ID also. But for me that trade off looks pointless..
+
+I can of course go ahead if you see some benefit or other way ahead...
+But I would pull the plug on the plan to get rid of RX_Only Key flag 
+with that.
+
+Alexander
