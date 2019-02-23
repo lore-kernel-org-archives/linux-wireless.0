@@ -2,90 +2,65 @@ Return-Path: <SRS0=o7U+=Q6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 336F0C43381
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 08:36:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61DB0C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 11:50:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03B09206A3
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 08:36:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E58A20850
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 11:50:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="RxPj5v4g"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726202AbfBWIgx (ORCPT
+        id S1727096AbfBWLuC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 23 Feb 2019 03:36:53 -0500
-Received: from smtpbg65.qq.com ([103.7.28.233]:45839 "EHLO smtpbg65.qq.com"
+        Sat, 23 Feb 2019 06:50:02 -0500
+Received: from mail.toke.dk ([52.28.52.200]:50931 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725868AbfBWIgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Feb 2019 03:36:52 -0500
-X-QQ-mid: bizesmtp3t1550911007tviwzfxl0
-Received: from localhost.localdomain (unknown [116.236.177.50])
-        by esmtp4.qq.com (ESMTP) with 
-        id ; Sat, 23 Feb 2019 16:36:22 +0800 (CST)
-X-QQ-SSF: 01400000002000C0EF82B00A0000000
-X-QQ-FEAT: tMyt+NWEO8hiEvvOMb5S74F6dAY3XyMAxv1Po3ti/OB47cjPnyPgYrTI65Iof
-        UT2bDB21ByK/KwFN6QR1R+eUrjnUrLSerICXe8HVMuIG80cZpHEdo6E+cN0JUI9kvFxuOyq
-        6AWuF2m1Z8IAbv7nCKot6Ki+dpJD1SNFM+HASZSU4Rhh6zGDXnx/B62tio0wPWPn/q0ZRt4
-        A2OaD4m+2YVmCtS4vD+PJo+riIpNk+Nt8/zOqEARvBOKb0FltHfoD8UvpjGkv7LsDVL2cGB
-        4xjuOR7JzeE6QtcKxbz8n0xnBx0JOxEMbvRw==
-X-QQ-GoodBg: 2
-From:   Wang Xuerui <wangxuerui@qiniu.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Wang Xuerui <wangxuerui@qiniu.com>
-Subject: [PATCH] iwlwifi: mvm: fix unaligned read of rx_pkt_status
-Date:   Sat, 23 Feb 2019 16:35:43 +0800
-Message-Id: <20190223083543.6009-2-wangxuerui@qiniu.com>
-X-Mailer: git-send-email 2.16.1
-In-Reply-To: <20190223083543.6009-1-wangxuerui@qiniu.com>
-References: <20190218150952.6889-1-wangxuerui@qiniu.com>
- <20190223083543.6009-1-wangxuerui@qiniu.com>
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:qiniu.com:qybgforeign:qybgforeign4
-X-QQ-Bgrelay: 1
+        id S1726326AbfBWLuB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 23 Feb 2019 06:50:01 -0500
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1550922599; bh=QNrDEdMdycbcQNCifwf0LmANy1ACZijCXl+8BgfAoEg=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=RxPj5v4gmyl7dcodlW/C53sZGXN+5dSzgFVTGPpYaXcY4EQHs7YGXE6VLUiW8G8Ls
+         cvfhcnINGMH3Kj9WV08V4/omOq6+Ij9R9SRrXqPuFtfkTZKgM3GjVYYqE1IPuOQnzU
+         pGtpRYDRZrTQq1bovzr13V8NmgY5JHsNmcjUmVj/TiVizqUzv7j+vd3HUpr3XsikW3
+         hyH8fH8G24M3A79gBoXvlzNc4Hpw9Nx0XoeAaY1AhDDFz4/grDv9PO8uTc/ohB/4FU
+         BP41EbBgfKELao0a9h6hmMuTXxOrpc9kkFYBfkq1Wck3vOTlb7Ciz5Q41gjqwoDZjX
+         4Kj9MZkf/Gnig==
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        Ben Greear <greearb@candelatech.com>,
+        Grant Grundler <grundler@google.com>,
+        Kalle Valo <kvalo@codeaurora.org>, wgong@qti.qualcomm.com,
+        ath10k@lists.infradead.org, wgong@codeaurora.org,
+        Kan Yan <kyan@google.com>
+Subject: Re: [PATCH] mac80211: Change default tx_sk_pacing_shift to 7
+In-Reply-To: <44add7675ef89dd61fcea9da6b55804c498a2d24.camel@sipsolutions.net>
+References: <20190221172936.21816-1-toke@redhat.com> <E1gx9x3-0002j0-1J@sipsolutions.net> <87lg28vup0.fsf@toke.dk> <a5151441bdfe02cb11043aa0786185b8ee3c3ee9.camel@sipsolutions.net> <87imxcvt4z.fsf@toke.dk> <44add7675ef89dd61fcea9da6b55804c498a2d24.camel@sipsolutions.net>
+Date:   Sat, 23 Feb 2019 12:49:58 +0100
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87d0niwwpl.fsf@toke.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is present since the introduction of iwlmvm.
-Example stack trace on MIPS:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-[<ffffffffc0789328>] iwl_mvm_rx_rx_mpdu+0xa8/0xb88 [iwlmvm]
-[<ffffffffc0632b40>] iwl_pcie_rx_handle+0x420/0xc48 [iwlwifi]
+> On Fri, 2019-02-22 at 14:40 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>>=20
+>> And send it directly to stable, or does it need to go through you?
+>
+> I added a Cc: stable tag. So all you really need to do is wait for the
+> emails telling you it failed to apply, and handle accordingly :)
 
-Tested with a Wireless AC 7265 for ~6 months, confirmed to fix the
-problem. No other unaligned accesses are spotted yet.
+Cool, that I can do; thanks! :)
 
-Signed-off-by: Wang Xuerui <wangxuerui@qiniu.com>
-Tested-by: Wang Xuerui <wangxuerui@qiniu.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 6653a238f32e..a9f35799e532 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -57,6 +57,7 @@
-  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *****************************************************************************/
-+#include <asm/unaligned.h>
- #include <linux/etherdevice.h>
- #include <linux/skbuff.h>
- #include "iwl-trans.h"
-@@ -355,7 +356,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	rx_res = (struct iwl_rx_mpdu_res_start *)pkt->data;
- 	hdr = (struct ieee80211_hdr *)(pkt->data + sizeof(*rx_res));
- 	len = le16_to_cpu(rx_res->byte_count);
--	rx_pkt_status = le32_to_cpup((__le32 *)
-+	rx_pkt_status = get_unaligned_le32((__le32 *)
- 		(pkt->data + sizeof(*rx_res) + len));
- 
- 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
--- 
-2.16.1
-
-
-
+-Toke
