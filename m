@@ -2,81 +2,53 @@ Return-Path: <SRS0=o7U+=Q6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F54DC10F07
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 05:31:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EE99C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 08:36:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E11420850
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 05:31:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04BF7206A3
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Feb 2019 08:36:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725934AbfBWFbA (ORCPT
+        id S1726146AbfBWIg2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 23 Feb 2019 00:31:00 -0500
-Received: from orcrist.hmeau.com ([104.223.48.154]:60710 "EHLO
-        deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725773AbfBWFbA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Feb 2019 00:31:00 -0500
-Received: from gondobar.mordor.me.apana.org.au ([192.168.128.4] helo=gondobar)
-        by deadmen.hmeau.com with esmtps (Exim 4.89 #2 (Debian))
-        id 1gxPtl-0001c1-QG; Sat, 23 Feb 2019 13:30:53 +0800
-Received: from herbert by gondobar with local (Exim 4.89)
-        (envelope-from <herbert@gondor.apana.org.au>)
-        id 1gxPtf-0000qU-JS; Sat, 23 Feb 2019 13:30:47 +0800
-Date:   Sat, 23 Feb 2019 13:30:47 +0800
-From:   Herbert Xu <herbert@gondor.apana.org.au>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     kbuild@01.org, kbuild-all@01.org, linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>, netdev@vger.kernel.org
-Subject: [PATCH] ila: Fix uninitialised return value in ila_xlat_nl_cmd_flush
-Message-ID: <20190223053047.tiwcuvs6tcg2htie@gondor.apana.org.au>
-References: <20190223042747.GK1711@kadam>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190223042747.GK1711@kadam>
-User-Agent: NeoMutt/20170113 (1.7.2)
+        Sat, 23 Feb 2019 03:36:28 -0500
+Received: from smtpbg202.qq.com ([184.105.206.29]:57444 "EHLO smtpbg202.qq.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725868AbfBWIg2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 23 Feb 2019 03:36:28 -0500
+X-QQ-mid: bizesmtp3t1550910981tfjb6n09y
+Received: from localhost.localdomain (unknown [116.236.177.50])
+        by esmtp4.qq.com (ESMTP) with SMTP id 0
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Feb 2019 16:35:55 +0800 (CST)
+X-QQ-SSF: 01400000002000C0EF82B00A0000000
+X-QQ-FEAT: 8GRh8dgRWfcuemsQYUv2L/skPJTdnUx8utOADJk0Gzdi/zRbAYvmoZZFfo9+E
+        JskHEPAY5UdeQ6gcbgByLL8RiBGlEolhhAROPMSWWiEnplkANlUnzRgTyjsPdc9EtTNZIFL
+        cDXgssCrqzPy75JMCuf+uS7pCYM6i3POJb0kx2K2530SbhDa6RCZKpOEMBd3Tbsa1OQheml
+        DLmekxQh5/frNNVqpH3T3A9yquiluf77nMEZEIxjtOG3gBJhVo1+CtEe389N6kpAbhOn+Xl
+        23lihfW6NMwAgm
+X-QQ-GoodBg: 2
+From:   Wang Xuerui <wangxuerui@qiniu.com>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH v2] iwlwifi: mvm: fix unaligned read of rx_pkt_status
+Date:   Sat, 23 Feb 2019 16:35:42 +0800
+Message-Id: <20190223083543.6009-1-wangxuerui@qiniu.com>
+X-Mailer: git-send-email 2.16.1
+In-Reply-To: <20190218150952.6889-1-wangxuerui@qiniu.com>
+References: <20190218150952.6889-1-wangxuerui@qiniu.com>
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:qiniu.com:qybgforeign:qybgforeign1
+X-QQ-Bgrelay: 1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Feb 23, 2019 at 07:27:47AM +0300, Dan Carpenter wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-> head:   db0342b20f32f584aedff27c9c09e0a4bbe5beff
-> commit: 6c4128f658571b2dc7e01058ad09a8e947bc0159 [25/27] rhashtable: Remove obsolete rhashtable_walk_init function
-> 
-> smatch warnings:
-> net/ipv6/ila/ila_xlat.c:420 ila_xlat_nl_cmd_flush() error: uninitialized symbol 'ret'.
+Fixed redundant calls per review.
 
-Thanks for catching this.
+Sorry for the delay; I inadvertently broke my test box and it took some
+time to fix.
 
----8<---
-This patch fixes an uninitialised return value error in
-ila_xlat_nl_cmd_flush.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Fixes: 6c4128f65857 ("rhashtable: Remove obsolete...")
-Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
-
-diff --git a/net/ipv6/ila/ila_xlat.c b/net/ipv6/ila/ila_xlat.c
-index ae6cd4cef8db..79d2e43c05c5 100644
---- a/net/ipv6/ila/ila_xlat.c
-+++ b/net/ipv6/ila/ila_xlat.c
-@@ -383,7 +383,7 @@ int ila_xlat_nl_cmd_flush(struct sk_buff *skb, struct genl_info *info)
- 	struct rhashtable_iter iter;
- 	struct ila_map *ila;
- 	spinlock_t *lock;
--	int ret;
-+	int ret = 0;
- 
- 	rhashtable_walk_enter(&ilan->xlat.rhash_table, &iter);
- 	rhashtable_walk_start(&iter);
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
