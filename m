@@ -2,94 +2,90 @@ Return-Path: <SRS0=l+aR=RA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99E40C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 10:15:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0583C4360F
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 10:49:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 671592087C
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 10:15:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MMwkBi99";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Bv1xhCmP"
+	by mail.kernel.org (Postfix) with ESMTP id 80BB620842
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 10:49:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726671AbfBYKPs (ORCPT
+        id S1726777AbfBYKtZ convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Feb 2019 05:15:48 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:60778 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726664AbfBYKPs (ORCPT
+        Mon, 25 Feb 2019 05:49:25 -0500
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:37573 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726574AbfBYKtY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Feb 2019 05:15:48 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6873460A43; Mon, 25 Feb 2019 10:15:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551089747;
-        bh=9R+y37WsJIEMvqaK2psU+0P+b+vC4FaXG+zGDnKeHro=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=MMwkBi99WJXZiLPSqbQjnbo2lKaoSecSklPzx7GNOsUAA5awchjvF6hTJPD6bouts
-         8cuaFFW1sJTUF4FuhTurVm6Zet+WHmgZOnTKaOc41gDsLodR9iXCIpoXQ2/VcZ7R1X
-         qPawCHVQhBidbbs7A5TggHacv3SE7bGP2wTvdAiE=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EF120609EF;
-        Mon, 25 Feb 2019 10:15:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551089746;
-        bh=9R+y37WsJIEMvqaK2psU+0P+b+vC4FaXG+zGDnKeHro=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Bv1xhCmPGAxIFEkW7KbwMC+XAgdzqRJ4Wlo0RggCxa+YwCjINdlX6UpmN4AFIg6JE
-         i9iEmu/gzFxeHW2qaTw/LmT9Ic4l8vK+y7/lhShujYO3LRfaQ9oA30F+/W67Zm3sLh
-         rbZnl+2bZXhQCqH51+fIcXec5DRnyVetP5IWShVA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EF120609EF
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Rakesh Pillai <pillair@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Add peer param map for tlv and non-tlv
-References: <1550556576-19803-1-git-send-email-pillair@codeaurora.org>
-Date:   Mon, 25 Feb 2019 12:15:43 +0200
-In-Reply-To: <1550556576-19803-1-git-send-email-pillair@codeaurora.org>
-        (Rakesh Pillai's message of "Tue, 19 Feb 2019 11:39:36 +0530")
-Message-ID: <87bm30mawg.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Mon, 25 Feb 2019 05:49:24 -0500
+Received: by mail-ed1-f67.google.com with SMTP id m12so7147545edv.4
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2019 02:49:23 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=ySnZJQb8HYXWHTXrW1Gz70w6DQKTKHNRsl/h8Oj7Kyw=;
+        b=q11eBfsIpOKUfv0HgwWaVWJXlQEaZBF2jHzk/CYOrgVbTHoDblE8khQ8o/f/G6WKDB
+         3iRnQf+3h9uip4uKM0jSnDATa1/R76Ma5w0UH9VgugGDj5sgS+wKoetKfhKWrTR9wKmu
+         jXHHrBsoW7TngoQWmc/5nP2f/fXsFt6rZa3dmIG72LRI6rfp1fiC79bX0bZA6M2BZXAc
+         O02cQK/iWBHMN/M92eFCtI8+zDET3yBEG2RoUeQFl6tSNea4p28aM+8DR7M0ub+D27N3
+         pqpY48J+fW0Rm3hxm81MvYZczMucGeTnpC/IAAZ14dFRXx/Bqn7ytFXSOAwdX/VWvpgP
+         xBVg==
+X-Gm-Message-State: AHQUAuZrbDZINMW0bySbKOaSOu1cCVjXpbRC4GHwryFYoRdedZHoj/Ru
+        LHR/Ky0lL8C9ZqKaSEysNTRIHw==
+X-Google-Smtp-Source: AHgI3IYN9NdD01FAx3OiiqV/fPnqkNZIbaJ5/NdrK68+8R/WTDd6m7Nlv86gu8CXVarYywuFrKTVRQ==
+X-Received: by 2002:aa7:d685:: with SMTP id d5mr13852294edr.203.1551091762875;
+        Mon, 25 Feb 2019 02:49:22 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk (alrua-x1.vpn.toke.dk. [2a00:7660:6da:10::2])
+        by smtp.gmail.com with ESMTPSA id b29sm2620611eda.48.2019.02.25.02.49.21
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 25 Feb 2019 02:49:21 -0800 (PST)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 1D4B118350A; Mon, 25 Feb 2019 11:49:21 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     YueHaibing <yuehaibing@huawei.com>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] ath9k: remove set but not used variable 'acq'
+In-Reply-To: <87ftscmbh7.fsf@kamboji.qca.qualcomm.com>
+References: <20190225033246.127410-1-yuehaibing@huawei.com> <87lg24urgq.fsf@toke.dk> <87ftscmbh7.fsf@kamboji.qca.qualcomm.com>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Mon, 25 Feb 2019 11:49:21 +0100
+Message-ID: <87imx8uor2.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rakesh Pillai <pillair@codeaurora.org> writes:
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-> The peer param id for PEER_PARAM_USE_FIXED_PWR
-> is different for tlv and non-tlv firmware. This
-> causes incorrect peer param to be set by the driver
-> to the firmware(tlv/non-tlv).
+> Toke Høiland-Jørgensen <toke@redhat.com> writes:
 >
-> Create seperate peer param map for tlv and non-tlv
-> firmware and attach the peer param id based on the
-> firmware type during the init.
+>> YueHaibing <yuehaibing@huawei.com> writes:
+>>
+>>> Fixes gcc '-Wunused-but-set-variable' warning:
+>>>
+>>> drivers/net/wireless/ath/ath9k/recv.c: In function 'ath_rx_count_airtime':
+>>> drivers/net/wireless/ath/ath9k/recv.c:1010:18: warning:
+>>>  variable 'acq' set but not used [-Wunused-but-set-variable]
+>>>
+>>> It's not used after 89cea7493a34 ("ath9k: Switch to mac80211 TXQ scheduling
+>>> and airtime APIs"). Also remove related variables.
+>>
+>> Ah, right, seems I forgot to clean that up. I wonder why I didn't get a
+>> compiler warning for it.
 >
-> Tested HW: WCN3990
-> Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
->
-> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-> ---
-> This change is dependent on the below patchset
-> ath10k: add support for controlling tx power to a station (https://patchwork.kernel.org/patch/9562405/)
+> I think the warning is not enabled by default and you need to use W=1
+> Makefile variable to enable it.
 
-You got me really confused, that patch is two years old :) But I think
-you mean this v3 patch (oddly the one submitted in 2017 was also v3?):
+Hmm, right, thanks! Guess I should get into the habit of compiling with
+warnings enabled before submitting patches :)
 
-[v3,3/3] ath10k: add support for controlling tx power to a station
-
-https://patchwork.kernel.org/patch/10825293/
-
--- 
-Kalle Valo
+-Toke
