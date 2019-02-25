@@ -2,186 +2,203 @@ Return-Path: <SRS0=l+aR=RA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46844C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 12:45:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CDA2C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 12:49:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A6AF213A2
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 12:45:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53CA2213A2
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 12:49:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ez+MQFHH"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AJrcYIkQ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AJrcYIkQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727017AbfBYMpt (ORCPT
+        id S1726965AbfBYMs7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Feb 2019 07:45:49 -0500
-Received: from mail-it1-f195.google.com ([209.85.166.195]:34842 "EHLO
-        mail-it1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726965AbfBYMps (ORCPT
+        Mon, 25 Feb 2019 07:48:59 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:54316 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726475AbfBYMs7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Feb 2019 07:45:48 -0500
-Received: by mail-it1-f195.google.com with SMTP id 188so4262149itb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2019 04:45:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=4KXQ9HO//j0UqoHOiUcn4d+1Ubg3RJ4gXZuCK74ZFi0=;
-        b=ez+MQFHHdYLTFUFrLTc5VI4BsgQC/CMQ+tIUisrIup3Uz1r2u4pq/t6FiyqlUsCmI7
-         VO+PAC+vUZoSOgD6lnwn1glp25OBgcBkAOhLh1UtEhQcEjDi8uwdsLU96b+ds50qLsNU
-         qa3iJrvu/lYcZI9aDVoJ9fjWCFPSnXGyhE/+aBCzbg37UFi+aN0ztTcWVV8aE05VbXTC
-         Gi3ZspMaGd7cZxOF7LNloSlkI3wpk1rSkMm2zc+aV+z7vepSjJm2mMVsOEVJwT7UPPtR
-         WRVd3fbMnjILfZoEHJDI2Y0Kj/D+vGKDGaaW2c2T/xOl9/Am8td5ikYEHYmmscXdsveR
-         vwDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=4KXQ9HO//j0UqoHOiUcn4d+1Ubg3RJ4gXZuCK74ZFi0=;
-        b=Avs68KX1xiDQmS/WHkQNOpbBL115BTJX1L0XiOP3OT0n4WdvsahSIE5P0TBcGbp6Ap
-         /+QdWEU/WXy666bueFmD8vN/S5ww+OcxNisEFdzmzM1zsxPJ7NuQT9OxngtSSV0DpAkN
-         ggCOm6p/8nsGCgllUR5wh7yrDZeQBCbgMxcQKlVhcDgTWDXmpDhe6uqAYwLQ6sx7tL0m
-         InlOIOrRWMyE8WnvoUAmxRBeA0aW47Ybn6O/1C0MObpurtfysyECdirKqtVh0VmzlXtk
-         sEI0OB4ah8UGiuRtzN/BPB/ZH2pCgleMNxOPio9FEvVb4NsoiwfCToYZ42cSKEk8TpVx
-         6ZuA==
-X-Gm-Message-State: AHQUAuaH1IKmAncexHv6HzV3Jp1CwhZyGdpJwoAHyTJa6+50Yw+LdcbA
-        JFHm0/WAhpo7swRr9uA0mwhfzLcwvjxL/ynS1iPJpA==
-X-Google-Smtp-Source: AHgI3IYQ730YhGSZ7pIqyrTvnx4t566FdShll61m+zSktM4mDid7OWIt1bh4kHxKJTj+eu94nYnwtgpT2yTsyNwJRqQ=
-X-Received: by 2002:a02:3342:: with SMTP id k2mr8974724jak.62.1551098747400;
- Mon, 25 Feb 2019 04:45:47 -0800 (PST)
-MIME-Version: 1.0
-References: <20190224140426.3267-1-marc.zyngier@arm.com>
-In-Reply-To: <20190224140426.3267-1-marc.zyngier@arm.com>
-From:   Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date:   Mon, 25 Feb 2019 13:45:35 +0100
-Message-ID: <CAKv+Gu9OOzOxx0rTAZqM8r4q_hRmOp3b=KP7fwgNeiu67FCApA@mail.gmail.com>
-Subject: Re: [PATCH 0/4] mwifiex PCI/wake-up interrupt fixes
-To:     Marc Zyngier <marc.zyngier@arm.com>
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Devicetree List <devicetree@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-rockchip@lists.infradead.org,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 25 Feb 2019 07:48:59 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id EA3B160E42; Mon, 25 Feb 2019 12:48:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1551098937;
+        bh=sgkC9RmEHXgwuleBlR/6W6b87sbIwFCwM21+SGterJQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=AJrcYIkQCMakLjt793qcSq4EptH8xhNKRhJM2CEXzLd9AmNzYlyTWYQKDDsovXMOl
+         33UfpX+dJjuUyQqJGcp0lOivs3pxC1u3YcRN4U5xge5U7fVXPJvJ04JmvCSHXXp4ex
+         02ftVkhCgO0mVfqW7DdSRccPo2iy+pPc1yiq/vRY=
+Received: from svishnoi-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: svishnoi@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4212D60AA2;
+        Mon, 25 Feb 2019 12:48:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1551098937;
+        bh=sgkC9RmEHXgwuleBlR/6W6b87sbIwFCwM21+SGterJQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=AJrcYIkQCMakLjt793qcSq4EptH8xhNKRhJM2CEXzLd9AmNzYlyTWYQKDDsovXMOl
+         33UfpX+dJjuUyQqJGcp0lOivs3pxC1u3YcRN4U5xge5U7fVXPJvJ04JmvCSHXXp4ex
+         02ftVkhCgO0mVfqW7DdSRccPo2iy+pPc1yiq/vRY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4212D60AA2
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=svishnoi@codeaurora.org
+From:   Surabhi Vishnoi <svishnoi@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Surabhi Vishnoi <svishnoi@codeaurora.org>
+Subject: [PATCH v3] ath10k: Add support to provide higher range mem chunks in wmi init command
+Date:   Mon, 25 Feb 2019 18:18:46 +0530
+Message-Id: <1551098926-24644-1-git-send-email-svishnoi@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, 24 Feb 2019 at 15:08, Marc Zyngier <marc.zyngier@arm.com> wrote:
->
-> For quite some time, I wondered why the PCI mwifiex device built in my
-> Chromebook was unable to use the good old legacy interrupts. But as MSIs
-> were working fine, I never really bothered investigating. I finally had a
-> look, and the result isn't very pretty.
->
-> On this machine (rk3399-based kevin), the wake-up interrupt is described as
-> such:
->
-> &pci_rootport {
->         mvl_wifi: wifi@0,0 {
->                 compatible = "pci1b4b,2b42";
->                 reg = <0x83010000 0x0 0x00000000 0x0 0x00100000
->                        0x83010000 0x0 0x00100000 0x0 0x00100000>;
->                 interrupt-parent = <&gpio0>;
->                 interrupts = <8 IRQ_TYPE_LEVEL_LOW>;
->                 pinctrl-names = "default";
->                 pinctrl-0 = <&wlan_host_wake_l>;
->                 wakeup-source;
->         };
-> };
->
-> Note how the interrupt is part of the properties directly attached to the
-> PCI node. And yet, this interrupt has nothing to do with a PCI legacy
-> interrupt, as it is attached to the wake-up widget that bypasses the PCIe RC
-> altogether (Yay for the broken design!). This is in total violation of the
-> IEEE Std 1275-1994 spec[1], which clearly documents that such interrupt
-> specifiers describe the PCI device interrupts, and must obey the
-> INT-{A,B,C,D} mapping. Oops!
->
+With the current implementation of wmi init command,
+there is no provision for the host driver to provide mem
+chunks addresses with more than 32-bit, to the firmware.
+WCN3990 is a 35-bit target and can accept mem chunks addresses
+which are above 32-bit.
 
-The mapping of legacy PCIe INTx interrupts onto wired system
-interrupts is a property of the PCIe host controller, not of a
-particular PCIe device. So I would argue that the code is broken here
-as well: it should never attempt to interpret 'interrupt' properties
-at the PCI device level as having any bearing on how legacy interrupts
-are routed.
+If firmware supports address range more than 32 bit, it
+advertises the support by setting the WMI_SERVICE_EXTEND_ADDRESS
+service. Based on this service fill the upper bits of paddr while
+providing the mem chunks in the wmi init command.
 
-> The net effect of the above is that Linux tries to do something vaguely
-> sensible, and uses the same interrupt for both the wake-up widget and the
-> PCI device. This doesn't work for two reasons: (1) the wake-up widget grabs
-> the interrupt in exclusive mode, and (2) the PCI interrupt is still routed
-> to the RC, leading to a screaming interrupt. This simply cannot work.
->
-> To sort out this mess, we need to lift the confusion between the two
-> interrupts. This is done by extending the DT binding to allow the wake-up
-> interrupt to be described in a 'wake-up' subnode, sidestepping the issue
-> completely. On my Chromebook, it now looks like this:
->
-> &pci_rootport {
->         mvl_wifi: wifi@0,0 {
->                 compatible = "pci1b4b,2b42";
->                 reg = <0x83010000 0x0 0x00000000 0x0 0x00100000
->                        0x83010000 0x0 0x00100000 0x0 0x00100000>;
->                 pinctrl-names = "default";
->                 pinctrl-0 = <&wlan_host_wake_l>;
->                 wake-up {
->                         interrupt-parent = <&gpio0>;
->                         interrupts = <8 IRQ_TYPE_LEVEL_LOW>;
->                         wakeup-source;
->                 };
->         };
-> };
->
-> The driver is then updated to look for this subnode first, and fallback to
-> the original, broken behaviour (spitting out a warning in the offending
-> configuration).
->
-> For good measure, there are two additional patches:
->
-> - The wake-up interrupt requesting is horribly racy, and could lead to
->   unpredictable behaviours. Let's fix that properly.
->
-> - A final patch implementing the above transformation for the whole
->   RK3399-based Chromebook range, which all use the same broken
->   configuration.
->
-> With all that, I finally have PCI legacy interrupts working with the mwifiex
-> driver on my Chromebook.
->
-> [1] http://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
->
-> Marc Zyngier (4):
->   dt-bindings/marvell-8xxx: Allow wake-up interrupt to be placed in a
->     separate node
->   mwifiex: Fetch wake-up interrupt from 'wake-up' subnode when it exists
->   mwifiex: Flag wake-up interrupt as IRQ_NOAUTOEN rather than disabling
->     it too late
->   arm64: dts: rockchip: gru: Move wifi wake-up interrupt into its own
->     subnode
->
->  .../bindings/net/wireless/marvell-8xxx.txt    | 23 ++++++++++++++++++-
->  .../dts/rockchip/rk3399-gru-chromebook.dtsi   |  8 ++++---
->  drivers/net/wireless/marvell/mwifiex/main.c   | 13 +++++++++--
->  3 files changed, 38 insertions(+), 6 deletions(-)
->
-> --
-> 2.20.1
->
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Tested HW: WCN3990
+Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
+
+Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
+---
+This patch is dependent on following patch:
+ath10k: correct the format of host memory chunks in wmi init command (https://patchwork.kernel.org/patch/10811669/)
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 10 ++++++--
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 42 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |  1 +
+ 3 files changed, 51 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 554000c..4978299 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1572,7 +1572,7 @@ static enum wmi_txbf_conf ath10k_wmi_tlv_txbf_conf_scheme(struct ath10k *ar)
+ static void
+ ath10k_wmi_tlv_put_host_mem_chunks(struct ath10k *ar, void *host_mem_chunks)
+ {
+-	struct host_memory_chunk *chunk;
++	struct host_memory_chunk_tlv *chunk;
+ 	struct wmi_tlv *tlv;
+ 	int i;
+ 	__le16 tlv_len, tlv_tag;
+@@ -1589,6 +1589,12 @@ static enum wmi_txbf_conf ath10k_wmi_tlv_txbf_conf_scheme(struct ath10k *ar)
+ 		chunk->size = __cpu_to_le32(ar->wmi.mem_chunks[i].len);
+ 		chunk->req_id = __cpu_to_le32(ar->wmi.mem_chunks[i].req_id);
+ 
++		if (test_bit(WMI_SERVICE_SUPPORT_EXTEND_ADDRESS,
++			     ar->wmi.svc_map))
++			chunk->ptr_high = __cpu_to_le32
++					 (upper_32_bits
++					 (ar->wmi.mem_chunks[i].paddr));
++
+ 		ath10k_dbg(ar, ATH10K_DBG_WMI,
+ 			   "wmi-tlv chunk %d len %d, addr 0x%llx, id 0x%x\n",
+ 			   i,
+@@ -1612,7 +1618,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	void *ptr;
+ 
+ 	chunks_len = ar->wmi.num_mem_chunks *
+-		     (sizeof(struct host_memory_chunk) + sizeof(*tlv));
++		     (sizeof(struct host_memory_chunk_tlv) + sizeof(*tlv));
+ 	len = (sizeof(*tlv) + sizeof(*cmd)) +
+ 	      (sizeof(*tlv) + sizeof(*cfg)) +
+ 	      (sizeof(*tlv) + chunks_len);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index af4cb0e..b57522b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1384,6 +1384,30 @@ enum wmi_tlv_service {
+ 	WMI_TLV_SERVICE_AP_TWT = 153,
+ 	WMI_TLV_SERVICE_GMAC_OFFLOAD_SUPPORT = 154,
+ 	WMI_TLV_SERVICE_SPOOF_MAC_SUPPORT = 155,
++	WMI_TLV_SERVICE_PEER_TID_CONFIGS_SUPPORT = 156,
++	WMI_TLV_SERVICE_VDEV_SWRETRY_PER_AC_CONFIG_SUPPORT = 157,
++	WMI_TLV_SERVICE_DUAL_BEACON_ON_SINGLE_MAC_SCC_SUPPORT = 158,
++	WMI_TLV_SERVICE_DUAL_BEACON_ON_SINGLE_MAC_MCC_SUPPORT = 159,
++	WMI_TLV_SERVICE_MOTION_DET = 160,
++	WMI_TLV_SERVICE_INFRA_MBSSID = 161,
++	WMI_TLV_SERVICE_OBSS_SPATIAL_REUSE = 162,
++	WMI_TLV_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT = 163,
++	WMI_TLV_SERVICE_NAN_DBS_SUPPORT = 164,
++	WMI_TLV_SERVICE_NDI_DBS_SUPPORT = 165,
++	WMI_TLV_SERVICE_NAN_SAP_SUPPORT = 166,
++	WMI_TLV_SERVICE_NDI_SAP_SUPPORT = 167,
++	WMI_TLV_SERVICE_CFR_CAPTURE_SUPPORT = 168,
++	WMI_TLV_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_1 = 169,
++	WMI_TLV_SERVICE_ESP_SUPPORT = 170,
++	WMI_TLV_SERVICE_PEER_CHWIDTH_CHANGE = 171,
++	WMI_TLV_SERVICE_WLAN_HPCS_PULSE = 172,
++	WMI_TLV_SERVICE_PER_VDEV_CHAINMASK_CONFIG_SUPPORT = 173,
++	WMI_TLV_SERVICE_TX_DATA_MGMT_ACK_RSSI = 174,
++	WMI_TLV_SERVICE_NAN_DISABLE_SUPPORT = 175,
++	WMI_TLV_SERVICE_HTT_H2T_NO_HTC_HDR_LEN_IN_MSG_LEN = 176,
++	WMI_TLV_SERVICE_COEX_SUPPORT_UNEQUAL_ISOLATION = 177,
++	WMI_TLV_SERVICE_HW_DB2DBM_CONVERSION_SUPPORT = 178,
++	WMI_TLV_SERVICE_SUPPORT_EXTEND_ADDRESS = 179,
+ 
+ 	WMI_TLV_MAX_EXT_SERVICE = 256,
+ };
+@@ -1557,6 +1581,9 @@ enum wmi_tlv_service {
+ 	SVCMAP(WMI_TLV_SERVICE_THERM_THROT,
+ 	       WMI_SERVICE_THERM_THROT,
+ 	       WMI_TLV_MAX_SERVICE);
++	SVCMAP(WMI_TLV_SERVICE_SUPPORT_EXTEND_ADDRESS,
++	       WMI_SERVICE_SUPPORT_EXTEND_ADDRESS,
++	       WMI_TLV_MAX_SERVICE);
+ }
+ 
+ #undef SVCMAP
+@@ -1694,6 +1721,21 @@ struct wmi_tlv_resource_config {
+ 	__le32 host_capab;
+ } __packed;
+ 
++/* structure describing host memory chunk. */
++struct host_memory_chunk_tlv {
++	/* id of the request that is passed up in service ready */
++	__le32 req_id;
++
++	/* the physical address the memory chunk */
++	__le32 ptr;
++
++	/* size of the chunk */
++	__le32 size;
++
++	/* the upper 32 bit address valid only for more than 32 bit target */
++	__le32 ptr_high;
++} __packed;
++
+ struct wmi_tlv_init_cmd {
+ 	struct wmi_tlv_abi_version abi;
+ 	__le32 num_host_mem_chunks;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index d9b646f..6277511 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -200,6 +200,7 @@ enum wmi_service {
+ 	WMI_SERVICE_RTT_RESPONDER_ROLE,
+ 	WMI_SERVICE_PER_PACKET_SW_ENCRYPT,
+ 	WMI_SERVICE_REPORT_AIRTIME,
++	WMI_SERVICE_SUPPORT_EXTEND_ADDRESS,
+ 
+ 	/* Remember to add the new value to wmi_service_name()! */
+ 
+-- 
+1.9.1
+
