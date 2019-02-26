@@ -6,101 +6,146 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 409CFC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 09:28:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB79C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 09:29:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A8B02147C
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 09:28:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 156372147C
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 09:29:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="mI+YMtGe";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bET0Tt90"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="lb68gvkr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727631AbfBZJ20 (ORCPT
+        id S1727647AbfBZJ3s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Feb 2019 04:28:26 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:43462 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725941AbfBZJ20 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Feb 2019 04:28:26 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 505E36119D; Tue, 26 Feb 2019 09:28:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551173305;
-        bh=DTgSUigAa+16wNRwYpKJnzAJHhs31S5eJ+7IIDYgJe8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mI+YMtGe0cI9bTrA7yd0qbP/NkTIixPeATj7YCWYwO5TSKnILot9X6pxEN0QX2n/h
-         HBYPZhb8hpMSq3LPSrHa7rBhm4a3jYNLD32d9tj8nwwBUMvJDzwi9F5EGED7JxKl4U
-         9Ev9aw6UgotcSmkVnnI0vEW451aM+TmBqYkIWZ00=
-Received: from svishnoi-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: svishnoi@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B87A460FEE;
-        Tue, 26 Feb 2019 09:28:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551173303;
-        bh=DTgSUigAa+16wNRwYpKJnzAJHhs31S5eJ+7IIDYgJe8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bET0Tt901f++gZgKg/BOQM/WpmerLeCRBLBnpKJ09T3FOGXla3wQFr4SjW3PUuA5i
-         41GInr/re4q0O9J81EwLzaCm7fc3FZJFkWU1DQtC7yMYTB59OxYR4NiEaBMdSdU2Yn
-         yYyR99w+NvkZkh34IBi0kZD9EAibOL8DyTNLkZ3I=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B87A460FEE
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=svishnoi@codeaurora.org
-From:   Surabhi Vishnoi <svishnoi@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Surabhi Vishnoi <svishnoi@codeaurora.org>
-Subject: [PATCH v2 4/4] ath10k: Fix the wrong calculation ht_idx and idx of rate table for tx_stats
-Date:   Tue, 26 Feb 2019 14:57:58 +0530
-Message-Id: <1551173278-20926-5-git-send-email-svishnoi@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1551173278-20926-1-git-send-email-svishnoi@codeaurora.org>
-References: <1551173278-20926-1-git-send-email-svishnoi@codeaurora.org>
+        Tue, 26 Feb 2019 04:29:48 -0500
+Received: from nbd.name ([46.4.11.11]:60900 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727565AbfBZJ3r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Feb 2019 04:29:47 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
+        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=QIbCWuHND1tfWXkAFn4p2fPi/dEsc/u2KiZWEC/MWn8=; b=lb68gvkrJTxDzpqsinfI+vbde6
+        MvhiiK6RHMRc9eHtD0ZgR1UYzkeiW5XpzzJxCWClusDbAOrjMmy3ydtpZSjGrY+26fzS+kqwdK6Er
+        f69yaZVOR3K4FfhYpf6gMaM1Xp3y1VF5AvSE7qusuKnkaEniuud+rHVIdxempnBIm8ns=;
+Received: by maeck.lan (Postfix, from userid 501)
+        id B76765047CF3; Tue, 26 Feb 2019 10:29:45 +0100 (CET)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 7/8] mt76: mt76x2: unify mt76x2[u]_mac_resume
+Date:   Tue, 26 Feb 2019 10:29:44 +0100
+Message-Id: <20190226092945.54738-7-nbd@nbd.name>
+X-Mailer: git-send-email 2.17.0
+In-Reply-To: <20190226092945.54738-1-nbd@nbd.name>
+References: <20190226092945.54738-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ht_idx (ht rate index) and idx (rate table index) are calculated based on
-mcs index. This mcs index used in the above calculation should be 0-9 for
-getting the correct ht_idx and idx.
+They are now the same and short enough to be turned into an inline function
 
-Currently the mcs index used for the above calculations is mcs index which
-can be 0-31 (in case of HT), leading to incorrect rate index and ht index values.
-
-Fix the issue by obtaining mcs value from the ratecode reported by firmware
-and use it for calculating ht_idx and idx (rate-table index).
-
-Tested HW: WCN3990
-Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
-
-Fixes: e88975ca37d1 ("ath10k: dump tx stats in rate table format")
-Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2/mac.h      | 8 +++++++-
+ drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h  | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c | 7 -------
+ drivers/net/wireless/mediatek/mt76/mt76x2/usb_mac.c  | 7 -------
+ drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c  | 2 +-
+ 6 files changed, 9 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 2394a47..d34c76f 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2921,11 +2921,11 @@ static inline s8 ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
- 	tx_stats = arsta->tx_stats;
- 	flags = txrate->flags;
- 	gi = test_bit(ATH10K_RATE_INFO_FLAGS_SGI_BIT, &flags);
--	ht_idx = txrate->mcs + txrate->nss * 8;
--	mcs = txrate->mcs;
-+	mcs = ATH10K_HW_MCS_RATE(pstats->ratecode);
- 	bw = txrate->bw;
- 	nss = txrate->nss;
--	idx = mcs * 8 + 8 * 10 * nss;
-+	ht_idx = mcs + (nss - 1) * 8;
-+	idx = mcs * 8 + 8 * 10 * (nss - 1);
- 	idx += bw * 2 + gi;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2/mac.h
+index 4c8e20bce920..42ff221d7706 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mac.h
+@@ -25,6 +25,12 @@ struct mt76x02_vif;
  
- #define STATS_OP_FMT(name) tx_stats->stats[ATH10K_STATS_TYPE_##name]
+ int mt76x2_mac_start(struct mt76x02_dev *dev);
+ void mt76x2_mac_stop(struct mt76x02_dev *dev, bool force);
+-void mt76x2_mac_resume(struct mt76x02_dev *dev);
++
++static inline void mt76x2_mac_resume(struct mt76x02_dev *dev)
++{
++	mt76_wr(dev, MT_MAC_SYS_CTRL,
++		MT_MAC_SYS_CTRL_ENABLE_TX |
++		MT_MAC_SYS_CTRL_ENABLE_RX);
++}
+ 
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h
+index 787cdfdf5db5..76cb1f84eff5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h
+@@ -35,7 +35,6 @@ void mt76x2u_cleanup(struct mt76x02_dev *dev);
+ void mt76x2u_stop_hw(struct mt76x02_dev *dev);
+ 
+ int mt76x2u_mac_reset(struct mt76x02_dev *dev);
+-void mt76x2u_mac_resume(struct mt76x02_dev *dev);
+ int mt76x2u_mac_start(struct mt76x02_dev *dev);
+ int mt76x2u_mac_stop(struct mt76x02_dev *dev);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
+index d4e3d7c11d74..984d9c4c2e1a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
+@@ -173,13 +173,6 @@ int mt76x2_mac_start(struct mt76x02_dev *dev)
+ 	return 0;
+ }
+ 
+-void mt76x2_mac_resume(struct mt76x02_dev *dev)
+-{
+-	mt76_wr(dev, MT_MAC_SYS_CTRL,
+-		MT_MAC_SYS_CTRL_ENABLE_TX |
+-		MT_MAC_SYS_CTRL_ENABLE_RX);
+-}
+-
+ static void
+ mt76x2_power_on_rf_patch(struct mt76x02_dev *dev)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mac.c
+index 361eb4fb979d..5e84b4535cb1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mac.c
+@@ -211,10 +211,3 @@ int mt76x2u_mac_stop(struct mt76x02_dev *dev)
+ 
+ 	return 0;
+ }
+-
+-void mt76x2u_mac_resume(struct mt76x02_dev *dev)
+-{
+-	mt76_wr(dev, MT_MAC_SYS_CTRL,
+-		MT_MAC_SYS_CTRL_ENABLE_TX |
+-		MT_MAC_SYS_CTRL_ENABLE_RX);
+-}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
+index 9b438adfc56c..2ac78e4dc41a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
+@@ -61,7 +61,7 @@ mt76x2u_set_channel(struct mt76x02_dev *dev,
+ 
+ 	err = mt76x2u_phy_set_channel(dev, chandef);
+ 
+-	mt76x2u_mac_resume(dev);
++	mt76x2_mac_resume(dev);
+ 	mt76x02_edcca_init(dev, true);
+ 
+ 	clear_bit(MT76_RESET, &dev->mt76.state);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
+index c8b4a17302da..07f67cb6854c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
+@@ -43,7 +43,7 @@ mt76x2u_phy_channel_calibrate(struct mt76x02_dev *dev, bool mac_stopped)
+ 	mt76x02_mcu_calibrate(dev, MCU_CAL_TX_SHAPING, 0);
+ 
+ 	if (!mac_stopped)
+-		mt76x2u_mac_resume(dev);
++		mt76x2_mac_resume(dev);
+ 	mt76x2_apply_gain_adj(dev);
+ 	mt76x02_edcca_init(dev, true);
+ 
 -- 
-1.9.1
+2.17.0
 
