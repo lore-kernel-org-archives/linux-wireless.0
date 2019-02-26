@@ -1,102 +1,107 @@
-Return-Path: <SRS0=l+aR=RA=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=BviI=RB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F390C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 20:10:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AD63C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 03:28:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D04682087C
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Feb 2019 20:10:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 575CF2147C
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 03:28:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="Cax4RQI5"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MooY1OHe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727319AbfBYUKk (ORCPT
+        id S1726401AbfBZD2c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Feb 2019 15:10:40 -0500
-Received: from narfation.org ([79.140.41.39]:48580 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726740AbfBYUKk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Feb 2019 15:10:40 -0500
-X-Greylist: delayed 597 seconds by postgrey-1.27 at vger.kernel.org; Mon, 25 Feb 2019 15:10:39 EST
-Received: from bentobox.localnet (unknown [IPv6:2001:16b8:556a:d9ea::788])
-        by v3-1039.vlinux.de (Postfix) with ESMTPSA id 349B811004F;
-        Mon, 25 Feb 2019 21:00:41 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=narfation.org;
-        s=20121; t=1551124841;
-        bh=36gWksIvBe8fYNSw6HZj3ZYsOMDFAXmT42HmaJKZRXg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Cax4RQI55ecQiEoHnhNfo/qIhO3aiBIxJfKM1oxbe152jbKdQSFSKxXu/Cmuurube
-         PQzJoGIYJWPMJTfPHVynPjeCvJX3WO8mxxUS+39Pnm6+P+4icM2f/drxlGxxU3cMu4
-         myvMG6ViqND2Nr8A5VzYkPZwj3fdNSSnMoh0ZkmQ=
-From:   Sven Eckelmann <sven@narfation.org>
-To:     ath10k@lists.infradead.org
-Cc:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Zhi Chen <zhichen@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: fix incorrect multicast/broadcast rate setting
-Date:   Mon, 25 Feb 2019 21:00:38 +0100
-Message-ID: <2172036.sbaLp6LFFn@bentobox>
-In-Reply-To: <1544504171-19810-1-git-send-email-pradeepc@codeaurora.org>
-References: <1544504171-19810-1-git-send-email-pradeepc@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1608350.tWY5D5mM8n"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+        Mon, 25 Feb 2019 22:28:32 -0500
+Received: from mail-yw1-f66.google.com ([209.85.161.66]:44674 "EHLO
+        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726320AbfBZD2b (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Feb 2019 22:28:31 -0500
+Received: by mail-yw1-f66.google.com with SMTP id x21so4551195ywx.11;
+        Mon, 25 Feb 2019 19:28:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=NxYjjTGqpZBjFr+8DOd2n5OIX7erXps59h4H0sSEweY=;
+        b=MooY1OHe/0pqHOJDj963G7CSE+4komMoooChYrAPc9yK7vPNQKXMo8zgAORTBMTgUg
+         RuSmhFqBnDoqwVFiynXRO1tiStKE3FBCZLVBH+zeTiCRu1nJWmKcl4+OlO9vDQidaA38
+         BZWhDKGmn/zwXYxBw4CzobRR5agO/nYaFFURT/b2CcTfN48cIzHkPZZyGw2xTnsUCL+t
+         gy+JrY5B30cYCIG1ByDVkIepoiOLTsgwIuOg2+cyZ345sDwCnzn45POx/uMiop1JhUWt
+         ywYFN7PQEvd2Uiq0l7Q7kHZjLp7oxBN05wIPoiHwz4h/+O/9LioTutB8d+V4u0ik3FDe
+         MmnQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=NxYjjTGqpZBjFr+8DOd2n5OIX7erXps59h4H0sSEweY=;
+        b=irP7OVI4su6nqEYw7oAa0fTHFVUieoIfsYpxuEmXthjL+e3fXx13XX71JdQfiKhTVM
+         0lelP3O0GoXtkHzrvfQZFr3+v7Qg8FvneLTGEkXvzaicu3io743knTUcpvnnp4gs3Rjw
+         0R2y3a+fmQw0W5Uky8P0TF+KjLFU1sbl4KwjOTIzwLZCzNnYiGZmnP6fCXQ1uHUfOZFC
+         UkAwz48pcYds+9CYH4tZSkBdunbBU/9uByFBh02I2jMSFNk0S+rotcNerpYS+4v3zzTo
+         dcNxbB0WhenVrv/eTE74J2QOH5/NamLu+oLZlM6Z74kI+9l9DCULwoTQMvkbymfJFdQi
+         pLNw==
+X-Gm-Message-State: AHQUAuYH6sDL0YrrfvYaA5ofM3eP6p5SNMUGDAXYWj87ZH2gJEy2T3yb
+        SNzr6XAQOpDGzg0Inn4d9mY=
+X-Google-Smtp-Source: AHgI3IYHU38QYRC295FR2tMWD5wBO8uuPAMEZt31uJHeQqsRbHGjSJHdmISpLwSekHvrnOscC/XI7Q==
+X-Received: by 2002:a81:25d7:: with SMTP id l206mr16888875ywl.253.1551151711037;
+        Mon, 25 Feb 2019 19:28:31 -0800 (PST)
+Received: from localhost.localdomain ([191.101.9.198])
+        by smtp.gmail.com with ESMTPSA id l144sm1983733ywb.75.2019.02.25.19.28.29
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 25 Feb 2019 19:28:30 -0800 (PST)
+From:   Bo YU <tsu.yubo@gmail.com>
+To:     adham.abozaeid@microchip.com, ajay.kathat@microchip.com,
+        gregkh@linuxfoundation.org
+Cc:     Bo YU <tsu.yubo@gmail.com>, linux-wireless@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        yuzibode@126.com
+Subject: [PATCH] staging: wilc1000: Fix incorrent type in assignment
+Date:   Mon, 25 Feb 2019 22:28:25 -0500
+Message-Id: <20190226032825.26171-1-tsu.yubo@gmail.com>
+X-Mailer: git-send-email 2.11.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---nextPart1608350.tWY5D5mM8n
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+The patch fixes following sparse warning:
 
-On Tuesday, 11 December 2018 05:56:11 CET Pradeep Kumar Chitrapu wrote:
-> From: Pradeep kumar Chitrapu <pradeepc@codeaurora.org>
-> 
-> Invalid rate code is sent to firmware when multicast rate value of 0 is
-> sent to driver indicating disabled case, causing broken mesh path.
-> so fix that.
-> 
-> Tested on QCA9984 with firmware 10.4-3.6.1-00827
-> 
-> Fixes: cd93b83ad92 ("ath10k: support for multicast rate control")
-> Co-developed-by: Zhi Chen <zhichen@codeaurora.org>
-> Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
-> Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+drivers/staging/wilc1000/host_interface.c:450:30: warning: incorrect type in assignment (different base types)
+drivers/staging/wilc1000/host_interface.c:450:30:    expected restricted __le16 [usertype] beacon_period
+drivers/staging/wilc1000/host_interface.c:450:30:    got unsigned short [usertype] beacon_interval
+drivers/staging/wilc1000/host_interface.c:451:25: warning: incorrect type in assignment (different base types)
+drivers/staging/wilc1000/host_interface.c:451:25:    expected restricted __le16 [usertype] cap_info
+drivers/staging/wilc1000/host_interface.c:451:25:    got unsigned short [usertype] capability
 
-Tested-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Bo YU <tsu.yubo@gmail.com>
+---
+I have no hardware to test it and just to compile it
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Was tested on QCA988X with 10.2.4-1.0-00041
-
-Kind regards,
-	Sven
-
---nextPart1608350.tWY5D5mM8n
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlx0SWYACgkQXYcKB8Em
-e0YnWQ/+P/Haq1uzyOVtvM0YlanARqSIj8TUYC6IDGZm+XA2hHb8O5oYZgvb7vMV
-uviv4QKs5HGfK252jmjdUAHbMiMBMU84YIzIyeEFZq0DB3InZequMFB9RpOfo20a
-CeJTyfPwqrYeSAebTsEXi1TKvHI7AFdD7Sv7flQODMVyBDWJcNXLRDa5G557qxy9
-9GuPX8kwGQ7mMTxQcDQbBZYtwrN4O22UK7AZao/Vy0q7TaTecfJ832nVTHELLVC8
-FsJQthU7jxXu48BQ1MRzeMaAdlZJNcWYKYxz4WIY3XbBmq7QTJoyMcrKftGRqxPm
-HCJipsb4kcNgV8geOXPG/PYWdV0bz2mzf248ofM5byEWY8UbDZCHWhLhbZJI83iG
-VEghE+Dq8J6RzQqvRG3lav8gAaF+BYfFO+lZ9K3j4+97PNosstPB06Jxb+/fZBWI
-sEDBHkqlY/w7iW85MpqCxYsWQYXfpokTVz9zqX5DCHnbo83K17OjSq1qzaqrcVNC
-Zk2DRQJwHcnmWQtzVom0957j3dPNA3Vihp8iFxOzINbOP8OC0hCPjUTddpn9KHXr
-OVd1nHXym+RcowTnpWrwgFo/47DRFoXYNMvlpsw7Y9m2kPKfosWJtSjCu66/0tcu
-oIiunrUnrgnXn4gQzZYYgf6T1jjouqAUBlp9VcFLV8c+2p5LnGE=
-=fqSU
------END PGP SIGNATURE-----
-
---nextPart1608350.tWY5D5mM8n--
-
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 50dc2dd942f5..cdcb52aec779 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -106,10 +106,10 @@ struct wilc_join_bss_param {
+ 	u8 ssid_terminator;
+ 	u8 bss_type;
+ 	u8 ch;
+-	__le16 cap_info;
++	u16 cap_info;
+ 	u8 sa[ETH_ALEN];
+ 	u8 bssid[ETH_ALEN];
+-	__le16 beacon_period;
++	u16 beacon_period;
+ 	u8 dtim_period;
+ 	u8 supp_rates[WILC_MAX_RATES_SUPPORTED + 1];
+ 	u8 wmm_cap;
+-- 
+2.11.0
 
