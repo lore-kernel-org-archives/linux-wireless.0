@@ -6,90 +6,90 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C205C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 12:58:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6299DC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 12:59:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA2CC2087C
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 12:58:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31B842087C
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 12:59:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DePpT9Q5";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VgX4+huU"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="D+1XrRPO";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IC5MENSZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726397AbfBZM6x (ORCPT
+        id S1726353AbfBZM7q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Feb 2019 07:58:53 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:34160 "EHLO
+        Tue, 26 Feb 2019 07:59:46 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:34898 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725954AbfBZM6w (ORCPT
+        with ESMTP id S1725954AbfBZM7p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Feb 2019 07:58:52 -0500
+        Tue, 26 Feb 2019 07:59:45 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 29E9660FEB; Tue, 26 Feb 2019 12:58:52 +0000 (UTC)
+        id E995161340; Tue, 26 Feb 2019 12:59:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551185932;
-        bh=7eMYse5VkKq52FJrSggS0QfDHMQO7UHad0RlWA1A214=;
+        s=default; t=1551185985;
+        bh=4GpR06qlW7htMJUDQbiXKejOvHN4TFt8U/QyvyLB554=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=DePpT9Q5pC1Q40DVT7qU5PavYPjxnX1lWVLFQOJM5SCPJuwnbcpfveVuOIsQsU2FQ
-         W40u+CQy2u8+EPkZZj0ZPMCeX0f3G6FqLfni7BY+8WnyKNDq6ABC+BsrE+s1HKwf3U
-         Uk34vY4ZPGQHGPlMVZ2gQSvVma98B1TOEZrcRayU=
+        b=D+1XrRPOL948LeL6x5LxlBbTVdQuKpp4PBbMYplAbhPZQon6iMS99WPQJsKUBlErQ
+         AYThXL1tQUhB2N+9hnWckXwJnrvmgRQ2PuCpQQF9NtiSOCbhDUu/LQsqKsDaKknbhh
+         hY4mPRWI7VxHcNUgQF0y/RzhcSdbemRf7NMDn1B4=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 663EC60FEB;
-        Tue, 26 Feb 2019 12:58:49 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3271860909;
+        Tue, 26 Feb 2019 12:59:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551185930;
-        bh=7eMYse5VkKq52FJrSggS0QfDHMQO7UHad0RlWA1A214=;
+        s=default; t=1551185983;
+        bh=4GpR06qlW7htMJUDQbiXKejOvHN4TFt8U/QyvyLB554=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=VgX4+huUawN41RLbr89x1Kg6VkkeHzZhURxbHzv7XakcfD5becgDzf6El4UMoyl27
-         4lU8POfHUwPXW17tccA72T/sAtrOW+tgIytyCDvTpGg9eXyadfVcfMXZrYm6bS64ja
-         UgnWUNpKSPi45k7Qy6EZJe9J+CCwbmTc3mZaTG0c=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 663EC60FEB
+        b=IC5MENSZjfm7cfcQfjz+jUb5ugaS7RYHpo4/DtO+CsvhgX9BdPwrQjcu43EOz5qUx
+         RnxOizWcHxAltVchz0n1nkxeM7Q38JaJfIfoGui3PAMSpgiZBYqMfxsvTii36BW2EA
+         0OhHT9JzAt3D9X6O/8gPBkSQlU7jkQNhxrpUJIjo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3271860909
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3 1/2] ath10k: Add support for ack rssi value of
- management tx packets
+Subject: Re: [PATCH] ath10k: Enhance logging for vdev pdev & peer set param
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1550055839-24454-2-git-send-email-aambure@codeaurora.org>
-References: <1550055839-24454-2-git-send-email-aambure@codeaurora.org>
-To:     Abhishek Ambure <aambure@codeaurora.org>
+In-Reply-To: <1550216886-23045-1-git-send-email-pillair@codeaurora.org>
+References: <1550216886-23045-1-git-send-email-pillair@codeaurora.org>
+To:     Rakesh Pillai <pillair@codeaurora.org>
 Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Abhishek Ambure <aambure@codeaurora.org>
+        Rakesh Pillai <pillair@codeaurora.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190226125852.29E9660FEB@smtp.codeaurora.org>
-Date:   Tue, 26 Feb 2019 12:58:52 +0000 (UTC)
+Message-Id: <20190226125944.E995161340@smtp.codeaurora.org>
+Date:   Tue, 26 Feb 2019 12:59:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Abhishek Ambure <aambure@codeaurora.org> wrote:
+Rakesh Pillai <pillair@codeaurora.org> wrote:
 
-> In WCN3990, WMI_TLV_SERVICE_TX_DATA_MGMT_ACK_RSSI service Indicates that
-> the firmware has the capability to send the RSSI value of the ACK for all
-> data and management packets transmitted.
+> Currently after enabling the WMI debug logging,
+> there is no detail printed about the param id
+> and the param value for the pdev, vdev and
+> peer params which are set.
 > 
-> If WMI_RSRC_CFG_FLAG_TX_ACK_RSSI is set in host capability then firmware
-> sends RSSI value in "management" tx completion event. Host extracts ack
-> rssi values of management packets from their tx completion event.
+> Enhance the WMI logging to print the param id
+> and the param value for pdev, vdev and peer set
+> param wmi commands.
 > 
 > Tested HW: WCN3990
-> Tested FW: WLAN.HL.2.0-01617-QCAHLSWMTPLZ-1
+> Tested FW: WLAN.HL.2.0-01387-QCAHLSWMTPLZ-1
+> 		WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
 > 
-> Signed-off-by: Abhishek Ambure <aambure@codeaurora.org>
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-2 patches applied to ath-next branch of ath.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-4b816f170b1f ath10k: add support for ack rssi value of management tx packets
-6ddc3860a566 ath10k: add support for ack rssi value of data tx packets
+1c136e41fb77 ath10k: enhance logging for vdev pdev & peer set param
 
 -- 
-https://patchwork.kernel.org/patch/10809625/
+https://patchwork.kernel.org/patch/10814285/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
