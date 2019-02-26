@@ -5,58 +5,57 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D80E8C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:12:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C83CDC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:12:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6D3820651
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:12:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7ADD520651
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:12:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BA6p9a7I"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AgiYDJpE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727465AbfBZNL7 (ORCPT
+        id S1727497AbfBZNMB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Feb 2019 08:11:59 -0500
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:37337 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726084AbfBZNL6 (ORCPT
+        Tue, 26 Feb 2019 08:12:01 -0500
+Received: from mail-lj1-f194.google.com ([209.85.208.194]:45292 "EHLO
+        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726995AbfBZNMB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Feb 2019 08:11:58 -0500
-Received: by mail-lf1-f66.google.com with SMTP id z196so8891377lff.4
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2019 05:11:56 -0800 (PST)
+        Tue, 26 Feb 2019 08:12:01 -0500
+Received: by mail-lj1-f194.google.com with SMTP id d24so10430760ljc.12
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2019 05:11:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=jng1uOZNBVq9j3PPM2U2Wcz60YlWQy6CcHxqFFVm1is=;
-        b=BA6p9a7IDuq6xHPZ99C2YH4Sybfu4xhki6IgP5dDXnYHQdOB1sVkUpEuobU1b/OfBf
-         PRRt+fE66wuJ/qwBnJKt0nnwxkwZUTxPib2X5e25qQOeC/6iQ33FSBaYpcWAXwkVkQUR
-         SIJPvDNgjS7yr2QPTo7pz9REVK7H4a4IThiWMdXKuAAok9IvDTrtl3vSiCzjjd/BQc+z
-         KSglo9e1fNc12RGl73bn39ImLHAI71vhGpypvg63KdXjDsYZZcrEzIeqAkTkJ5+r84F2
-         0QlrFa7W+aV6vzRAiFn+To9NOYhfXLxcwWZ8GI1zcemXRDv6lMdVGGHSyQ2c6w0kUikc
-         jeZA==
+        bh=kcVv+XhwhadZvdGYXvwV+SiX4KJ1bsdNrTTyWe5H02A=;
+        b=AgiYDJpElwGAuvnhTl8vgT+y2bfa/3V4MJeBeghmwyBILlo1+gMkZ66+xWT/L1LtUx
+         4Np2qEDzBS5s1FDlxr3PbeK1TeqJo/OzQQBOYna1MroaxSlprdCBPZU557S6eIJnCdb5
+         olLmv3QagqFH+mHhOLiSq93fm0Uh0rVu9I4UxIa8LXfoFPAkZi39u6oPfnbtI4crbERR
+         Ff9bAHJ8G2/kjJ7Y3+5iOhEFMiw/W8v8dNThLyzjw/miPWcPYawmCiSu2KIFWP97qr0l
+         FDcT5r9I0EFEBIg1qoa2vtPZYNcnrmtvKMee/Wak/qdUuMzpRoOC0uDwHG8ysEHpR63s
+         It9g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=jng1uOZNBVq9j3PPM2U2Wcz60YlWQy6CcHxqFFVm1is=;
-        b=fva7iGzmQGXl8NPxGPmJ4xuzg3Mmnz8kISejzsyQscxUMa1mxkKDFC7R9u2XRMB+Ay
-         SJvIZttMcznKNCXSTrJ2ClWo9iIR9bQI/dwMjfDZuSXLgue4jktzpBzfXfTSYm3JFHld
-         XlPf+ivRfvC5dXxUvWlSAL6qRx6SHipUeAVR1kgSllAcPCONRhvkIS7jjnodOuYDO/XQ
-         tuGTQ9wT6K2qZLvZM+ziiULm1Kpt0NXigjfUv7sBIEJ+QD7ONTl/fw6w8g9Fisx0KTId
-         7tbPamdL31A46zUNNdV0Ogr2jO3Lw1naZOACnSec/DMt2GHVRib8MfwXhKdbWEjSDFbJ
-         OwWw==
-X-Gm-Message-State: AHQUAuZeRj7eu+R5Nnw3q9ldMYPcDQXnif/fNjGveqIpaM5ceo6qRjxP
-        jIMT77mfs8GmKaWzR40Ik1A=
-X-Google-Smtp-Source: AHgI3IZ0k1NfOGmtKf5ecCfoxUnlLLb4yVIXI7uoAuKgNQBp4jMw184aeiztB26FKw0BUTv8965E0A==
-X-Received: by 2002:a19:c616:: with SMTP id w22mr12775515lff.31.1551186716079;
-        Tue, 26 Feb 2019 05:11:56 -0800 (PST)
+        bh=kcVv+XhwhadZvdGYXvwV+SiX4KJ1bsdNrTTyWe5H02A=;
+        b=sZEf7VgMG7w3xl52unlDhU3DENGLYHGv97PNn9nEb+oH5gDTNnW1Od7VkVRvZOWChU
+         81kifLXr9iALmcJnlVBNSpAaEWQpxS2nPj4E+ulW09BY2nAqJM/ceP5yFmy8lgCj9kw5
+         /6kvy15XHneT3WalyJZfZb/tjSK/IVIipWycj4VYYftwBAqHOMjGbpelWIMvwvLZyIzJ
+         2Y03P6FjhWVFKD1nseqRrEvV2A3QceCT8j7KODQg/Q09RJDBi9mqJ1uGunvlZG2o27pf
+         pD9pU58tQ/thLEDdAy467y5b2JKqml13k/T+K3gl1U7Uh9UlOnxHPCM4Wo+Zv8w+DtWw
+         JHyw==
+X-Gm-Message-State: AHQUAuY9GTqa5QDov92ckvHWaL84gqXUOgYTqeSanw8wnf7t0etB7+F5
+        G3H/ON26OmUqEd+iB6RRg4g=
+X-Google-Smtp-Source: AHgI3Ia6OCG7oOrK0hNHXpxkFJ4MTa1v28XXad2gtyDiqrSZkHlBif5RIEV8bC/SkmvIvQPtXQE6fA==
+X-Received: by 2002:a2e:9a55:: with SMTP id k21mr13226480ljj.191.1551186718216;
+        Tue, 26 Feb 2019 05:11:58 -0800 (PST)
 Received: from elitebook.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
-        by smtp.gmail.com with ESMTPSA id f16-v6sm2952518lji.88.2019.02.26.05.11.54
+        by smtp.gmail.com with ESMTPSA id f16-v6sm2952518lji.88.2019.02.26.05.11.56
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 26 Feb 2019 05:11:55 -0800 (PST)
+        Tue, 26 Feb 2019 05:11:57 -0800 (PST)
 From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
@@ -64,9 +63,9 @@ Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com,
         =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 3/4] brcmfmac: add a function designated for handling firmware fails
-Date:   Tue, 26 Feb 2019 14:11:18 +0100
-Message-Id: <20190226131119.7907-4-zajec5@gmail.com>
+Subject: [PATCH 4/4] brcmfmac: reset PCIe bus on a firmware crash
+Date:   Tue, 26 Feb 2019 14:11:19 +0100
+Message-Id: <20190226131119.7907-5-zajec5@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190226131119.7907-1-zajec5@gmail.com>
 References: <20190226131119.7907-1-zajec5@gmail.com>
@@ -80,82 +79,157 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Rafał Miłecki <rafal@milecki.pl>
 
-This improves handling PCIe firmware halts by printing a clear error
-message and replaces a similar code in the SDIO bus support.
+This includes bus reset & reloading a firmware. It should be sufficient
+for a user space to (setup and) use a wireless device again.
 
-It will also allow further improvements like trying to recover from a
-firmware crash.
+Support for reset on USB & SDIO can be added later.
 
 Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  2 ++
- .../net/wireless/broadcom/brcm80211/brcmfmac/core.c    | 10 ++++++++++
- .../net/wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  4 ++--
- 4 files changed, 15 insertions(+), 3 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/bus.h         | 10 ++++++
+ .../broadcom/brcm80211/brcmfmac/core.c        | 12 +++++++
+ .../broadcom/brcm80211/brcmfmac/core.h        |  2 ++
+ .../broadcom/brcm80211/brcmfmac/pcie.c        | 35 +++++++++++++++++++
+ 4 files changed, 59 insertions(+)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index 3d441c5c745c..801106583ae7 100644
+index 801106583ae7..2fe167eae22c 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -262,6 +262,8 @@ void brcmf_detach(struct device *dev);
- void brcmf_dev_reset(struct device *dev);
- /* Request from bus module to initiate a coredump */
- void brcmf_dev_coredump(struct device *dev);
-+/* Indication that firmware has halted or crashed */
-+void brcmf_fw_crashed(struct device *dev);
+@@ -91,6 +91,7 @@ struct brcmf_bus_ops {
+ 	int (*get_fwname)(struct device *dev, const char *ext,
+ 			  unsigned char *fw_name);
+ 	void (*debugfs_create)(struct device *dev);
++	int (*reset)(struct device *dev);
+ };
  
- /* Configure the "global" bus state used by upper layers */
- void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 4fbe8791f674..7f4d9356b79e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1273,6 +1273,16 @@ void brcmf_dev_coredump(struct device *dev)
- 		brcmf_dbg(TRACE, "failed to create coredump\n");
+ 
+@@ -245,6 +246,15 @@ void brcmf_bus_debugfs_create(struct brcmf_bus *bus)
+ 	return bus->ops->debugfs_create(bus->dev);
  }
  
-+void brcmf_fw_crashed(struct device *dev)
++static inline
++int brcmf_bus_reset(struct brcmf_bus *bus)
 +{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pub *drvr = bus_if->drvr;
++	if (!bus->ops->reset)
++		return -EOPNOTSUPP;
 +
-+	bphy_err(drvr, "Firmware has halted or crashed\n");
-+
-+	brcmf_dev_coredump(dev);
++	return bus->ops->reset(bus->dev);
 +}
 +
- void brcmf_detach(struct device *dev)
- {
- 	s32 i;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 39f6421885f6..cfa34672315f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -730,7 +730,7 @@ static void brcmf_pcie_handle_mb_data(struct brcmf_pciedev_info *devinfo)
- 	}
- 	if (dtoh_mb_data & BRCMF_D2H_DEV_FWHALT) {
- 		brcmf_dbg(PCIE, "D2H_MB_DATA: FW HALT\n");
--		brcmf_dev_coredump(&devinfo->pdev->dev);
-+		brcmf_fw_crashed(&devinfo->pdev->dev);
- 	}
+ /*
+  * interface functions from common layer
+  */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 7f4d9356b79e..5f3548b13639 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1084,6 +1084,14 @@ static int brcmf_revinfo_read(struct seq_file *s, void *data)
+ 	return 0;
  }
  
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 4d104ab80fd8..a06af0cd4a7f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1090,8 +1090,8 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
++static void brcmf_core_bus_reset(struct work_struct *work)
++{
++	struct brcmf_pub *drvr = container_of(work, struct brcmf_pub,
++					      bus_reset);
++
++	brcmf_bus_reset(drvr->bus_if);
++}
++
+ static int brcmf_bus_started(struct brcmf_pub *drvr, struct cfg80211_ops *ops)
+ {
+ 	int ret = -1;
+@@ -1155,6 +1163,8 @@ static int brcmf_bus_started(struct brcmf_pub *drvr, struct cfg80211_ops *ops)
+ #endif
+ #endif /* CONFIG_INET */
  
- 	/* dongle indicates the firmware has halted/crashed */
- 	if (hmb_data & HMB_DATA_FWHALT) {
--		brcmf_err("mailbox indicates firmware halted\n");
--		brcmf_dev_coredump(&sdiod->func1->dev);
-+		brcmf_dbg(SDIO, "mailbox indicates firmware halted\n");
-+		brcmf_fw_crashed(&sdiod->func1->dev);
- 	}
++	INIT_WORK(&drvr->bus_reset, brcmf_core_bus_reset);
++
+ 	/* populate debugfs */
+ 	brcmf_debugfs_add_entry(drvr, "revinfo", brcmf_revinfo_read);
+ 	brcmf_feat_debugfs_create(drvr);
+@@ -1281,6 +1291,8 @@ void brcmf_fw_crashed(struct device *dev)
+ 	bphy_err(drvr, "Firmware has halted or crashed\n");
  
- 	/* Dongle recomposed rx frames, accept them again */
+ 	brcmf_dev_coredump(dev);
++
++	schedule_work(&drvr->bus_reset);
+ }
+ 
+ void brcmf_detach(struct device *dev)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index d8085ce579f4..9f09aa31eeda 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -143,6 +143,8 @@ struct brcmf_pub {
+ 	struct notifier_block inet6addr_notifier;
+ 	struct brcmf_mp_device *settings;
+ 
++	struct work_struct bus_reset;
++
+ 	u8 clmver[BRCMF_DCMD_SMLEN];
+ };
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index cfa34672315f..e941039ee1c3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -345,6 +345,10 @@ static const u32 brcmf_ring_itemsize[BRCMF_NROF_COMMON_MSGRINGS] = {
+ 	BRCMF_D2H_MSGRING_RX_COMPLETE_ITEMSIZE
+ };
+ 
++static void brcmf_pcie_setup(struct device *dev, int ret,
++			     struct brcmf_fw_request *fwreq);
++static struct brcmf_fw_request *
++brcmf_pcie_prepare_fw_request(struct brcmf_pciedev_info *devinfo);
+ 
+ static u32
+ brcmf_pcie_read_reg32(struct brcmf_pciedev_info *devinfo, u32 reg_offset)
+@@ -1409,6 +1413,36 @@ int brcmf_pcie_get_fwname(struct device *dev, const char *ext, u8 *fw_name)
+ 	return 0;
+ }
+ 
++static int brcmf_pcie_reset(struct device *dev)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_pciedev *buspub = bus_if->bus_priv.pcie;
++	struct brcmf_pciedev_info *devinfo = buspub->devinfo;
++	struct brcmf_fw_request *fwreq;
++	int err;
++
++	brcmf_detach(dev);
++
++	brcmf_pcie_release_irq(devinfo);
++	brcmf_pcie_release_scratchbuffers(devinfo);
++	brcmf_pcie_release_ringbuffers(devinfo);
++	brcmf_pcie_reset_device(devinfo);
++
++	fwreq = brcmf_pcie_prepare_fw_request(devinfo);
++	if (!fwreq) {
++		dev_err(dev, "Failed to prepare FW request\n");
++		return -ENOMEM;
++	}
++
++	err = brcmf_fw_get_firmwares(dev, fwreq, brcmf_pcie_setup);
++	if (err) {
++		dev_err(dev, "Failed to prepare FW request\n");
++		kfree(fwreq);
++	}
++
++	return err;
++}
++
+ static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
+ 	.txdata = brcmf_pcie_tx,
+ 	.stop = brcmf_pcie_down,
+@@ -1418,6 +1452,7 @@ static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
+ 	.get_ramsize = brcmf_pcie_get_ramsize,
+ 	.get_memdump = brcmf_pcie_get_memdump,
+ 	.get_fwname = brcmf_pcie_get_fwname,
++	.reset = brcmf_pcie_reset,
+ };
+ 
+ 
 -- 
 2.20.1
 
