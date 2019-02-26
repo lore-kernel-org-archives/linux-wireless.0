@@ -2,73 +2,85 @@ Return-Path: <SRS0=BviI=RB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD18C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 10:05:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DD62C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 10:08:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4F0E2173C
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 10:05:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3B5F2173C
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 10:08:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="MNshRAkI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727732AbfBZKFj (ORCPT
+        id S1727883AbfBZKIM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Feb 2019 05:05:39 -0500
-Received: from 8bytes.org ([81.169.241.247]:41314 "EHLO theia.8bytes.org"
+        Tue, 26 Feb 2019 05:08:12 -0500
+Received: from nbd.name ([46.4.11.11]:34280 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727662AbfBZKFj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Feb 2019 05:05:39 -0500
-Received: by theia.8bytes.org (Postfix, from userid 1000)
-        id 0381441A; Tue, 26 Feb 2019 11:05:37 +0100 (CET)
-Date:   Tue, 26 Feb 2019 11:05:36 +0100
-From:   Joerg Roedel <joro@8bytes.org>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Rosen Penev <rosenp@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Samuel Sieb <samuel@sieb.net>,
-        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
-Message-ID: <20190226100535.GA20740@8bytes.org>
-References: <CAJ0CqmVNF83bWgc+LSQ3_i=zfp-sXC5Nf=nKfqB3SWa8r7sKdQ@mail.gmail.com>
- <83A1D243-9073-48D1-9F26-5A2581DCB829@gmail.com>
- <CAJ0CqmUgPWNJtCW4Q__sOtB8w-YtwW+uZy7crxMNrmSgQ6OFyA@mail.gmail.com>
- <1547404075.1582.0@smtp.gmail.com>
- <CAJ0CqmU7k5i26g7dGPxNdts7Gm67W6qNsr4vYuW05ugsEF1ohw@mail.gmail.com>
- <CAKxU2N-+CTaRdJMFVRdozJ5TTpN+_4thiDRBJBFq8gGtuRVYvA@mail.gmail.com>
- <20190114091841.GA23045@localhost.localdomain>
- <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
- <20190115090400.GA2267@localhost.localdomain>
- <20190218143742.GA11872@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190218143742.GA11872@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1725940AbfBZKIM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Feb 2019 05:08:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
+        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=ivLvaUvcs040H+iD3nl+BkmWaUKzkShlQuVeftPa2EM=; b=MNshRAkIyuboNplrylUEaP/xs8
+        hwnOQY7+dE9BveiKmnMHfPGAF5LsTSSG7vRxTVEJUf5gelkkVg1xgTTdLaKNjq27nNzsV56tUfYUP
+        4UCHquGpLxx5I+SeRf8VoZyXFAir/i4QWm54Q+cGuvzr8y4+CT7f/sIj72K65F83PGs0=;
+Received: by maeck.lan (Postfix, from userid 501)
+        id 0405D5049A31; Tue, 26 Feb 2019 11:08:09 +0100 (CET)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH v2 1/3] mt76: add driver callback for when a sta is associated
+Date:   Tue, 26 Feb 2019 11:08:07 +0100
+Message-Id: <20190226100809.62105-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.17.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Feb 18, 2019 at 03:37:48PM +0100, Stanislaw Gruszka wrote:
-> 0001-mt76x02u-use-usb_bulk_msg-to-upload-firmware.patch
-> 0002-mt76usb-do-not-use-compound-head-page-for-SG-I-O.patch
-> 
-> Or problem can be solved by just one of it (either first or second).
-> 
-> Additionally I'm not 100% sure if
-> 
-> 0002-mt76usb-do-not-use-compound-head-page-for-SG-I-O.patch
-> 
-> is correct. So perhaps some IOMMU maintainer could look at it.
+MT7603 needs this to update the HT/VHT capabilities
 
-The patch looks good, but I don't understand why it is needed. The AMD
-IOMMU driver should handle sg->offset > PAGE_SIZE just fine. Can you
-verify that this is the problem? I will look into that again if it turns
-out there is bug in the IOMMU driver.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 5 +++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     | 3 +++
+ 2 files changed, 8 insertions(+)
 
-Regards,
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 82e9f78ef328..a033745adb2f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -714,6 +714,11 @@ int mt76_sta_state(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	    new_state == IEEE80211_STA_NONE)
+ 		return mt76_sta_add(dev, vif, sta);
+ 
++	if (old_state == IEEE80211_STA_AUTH &&
++	    new_state == IEEE80211_STA_ASSOC &&
++	    dev->drv->sta_assoc)
++		dev->drv->sta_assoc(dev, vif, sta);
++
+ 	if (old_state == IEEE80211_STA_NONE &&
+ 		 new_state == IEEE80211_STA_NOTEXIST)
+ 		mt76_sta_remove(dev, vif, sta);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 3b674228542d..3555ed931dd0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -304,6 +304,9 @@ struct mt76_driver_ops {
+ 	int (*sta_add)(struct mt76_dev *dev, struct ieee80211_vif *vif,
+ 		       struct ieee80211_sta *sta);
+ 
++	void (*sta_assoc)(struct mt76_dev *dev, struct ieee80211_vif *vif,
++			  struct ieee80211_sta *sta);
++
+ 	void (*sta_remove)(struct mt76_dev *dev, struct ieee80211_vif *vif,
+ 			   struct ieee80211_sta *sta);
+ };
+-- 
+2.17.0
 
-	Joerg
