@@ -6,81 +6,88 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DD62C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 10:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A3DEC10F0B
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 10:08:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3B5F2173C
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 10:08:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E25492173C
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 10:08:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="MNshRAkI"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="H97nV8/u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727883AbfBZKIM (ORCPT
+        id S1727845AbfBZKIM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 26 Feb 2019 05:08:12 -0500
-Received: from nbd.name ([46.4.11.11]:34280 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:34276 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725940AbfBZKIM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1725970AbfBZKIM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 26 Feb 2019 05:08:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
+        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=ivLvaUvcs040H+iD3nl+BkmWaUKzkShlQuVeftPa2EM=; b=MNshRAkIyuboNplrylUEaP/xs8
-        hwnOQY7+dE9BveiKmnMHfPGAF5LsTSSG7vRxTVEJUf5gelkkVg1xgTTdLaKNjq27nNzsV56tUfYUP
-        4UCHquGpLxx5I+SeRf8VoZyXFAir/i4QWm54Q+cGuvzr8y4+CT7f/sIj72K65F83PGs0=;
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=LbC79d5tbhP+8f9g5Ws46o8BXnvFkjEytmtd5yhge7A=; b=H97nV8/uRb3rGxPKsmTvIJZ89N
+        EVaMwVDClBkYb6jzLnPvsl5R8SSQ7cl2yzDy4z1KA3/ivej7dtIDlPNiQudYeUNrvTL5PaWkSrEp8
+        yTiC33g7Iu1Zu690cEjrl6XQEUqleZnp9sASV3AGE4hgiRz4fte+hWxoqbJ9TaeID8n8=;
 Received: by maeck.lan (Postfix, from userid 501)
-        id 0405D5049A31; Tue, 26 Feb 2019 11:08:09 +0100 (CET)
+        id 045A65049A32; Tue, 26 Feb 2019 11:08:09 +0100 (CET)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/3] mt76: add driver callback for when a sta is associated
-Date:   Tue, 26 Feb 2019 11:08:07 +0100
-Message-Id: <20190226100809.62105-1-nbd@nbd.name>
+Subject: [PATCH v2 2/3] dt-bindings: net: mt76: update binding for mt7603 driver
+Date:   Tue, 26 Feb 2019 11:08:08 +0100
+Message-Id: <20190226100809.62105-2-nbd@nbd.name>
 X-Mailer: git-send-email 2.17.0
+In-Reply-To: <20190226100809.62105-1-nbd@nbd.name>
+References: <20190226100809.62105-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-MT7603 needs this to update the HT/VHT capabilities
+In addition to MT7603E PCI devices, the driver supports the WLAN core on
+MT7628/MT7688, which needs to be defined in DT.
 
+Reviewed-by: Rob Herring <robh@kernel.org>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c | 5 +++++
- drivers/net/wireless/mediatek/mt76/mt76.h     | 3 +++
- 2 files changed, 8 insertions(+)
+ .../bindings/net/wireless/mediatek,mt76.txt   | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 82e9f78ef328..a033745adb2f 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -714,6 +714,11 @@ int mt76_sta_state(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	    new_state == IEEE80211_STA_NONE)
- 		return mt76_sta_add(dev, vif, sta);
+diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+index 0c17a0ec9b7b..7b9a776230c0 100644
+--- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
++++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+@@ -4,6 +4,13 @@ This node provides properties for configuring the MediaTek mt76xx wireless
+ device. The node is expected to be specified as a child node of the PCI
+ controller to which the wireless chip is connected.
  
-+	if (old_state == IEEE80211_STA_AUTH &&
-+	    new_state == IEEE80211_STA_ASSOC &&
-+	    dev->drv->sta_assoc)
-+		dev->drv->sta_assoc(dev, vif, sta);
++Alternatively, it can specify the wireless part of the MT7628/MT7688 SoC.
++For SoC, use the compatible string "mediatek,mt7628-wmac" and the following
++properties:
 +
- 	if (old_state == IEEE80211_STA_NONE &&
- 		 new_state == IEEE80211_STA_NOTEXIST)
- 		mt76_sta_remove(dev, vif, sta);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 3b674228542d..3555ed931dd0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -304,6 +304,9 @@ struct mt76_driver_ops {
- 	int (*sta_add)(struct mt76_dev *dev, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta);
++- reg: Address and length of the register set for the device.
++- interrupts: Main device interrupt
++
+ Optional properties:
  
-+	void (*sta_assoc)(struct mt76_dev *dev, struct ieee80211_vif *vif,
-+			  struct ieee80211_sta *sta);
-+
- 	void (*sta_remove)(struct mt76_dev *dev, struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta);
+ - mac-address: See ethernet.txt in the parent directory
+@@ -30,3 +37,15 @@ Optional nodes:
+ 		};
+ 	};
  };
++
++MT7628 example:
++
++wmac: wmac@10300000 {
++	compatible = "mediatek,mt7628-wmac";
++	reg = <0x10300000 0x100000>;
++
++	interrupt-parent = <&cpuintc>;
++	interrupts = <6>;
++
++	mediatek,mtd-eeprom = <&factory 0x0000>;
++};
 -- 
 2.17.0
 
