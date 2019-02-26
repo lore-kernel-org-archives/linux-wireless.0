@@ -2,40 +2,38 @@ Return-Path: <SRS0=BviI=RB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A6AC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 22:01:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6049C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 22:34:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD4E3218A2
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 22:01:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A29712186A
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 22:34:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729030AbfBZWBw (ORCPT
+        id S1729115AbfBZWeM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Feb 2019 17:01:52 -0500
-Received: from mx2.mailbox.org ([80.241.60.215]:40948 "EHLO mx2.mailbox.org"
+        Tue, 26 Feb 2019 17:34:12 -0500
+Received: from mx2.mailbox.org ([80.241.60.215]:34802 "EHLO mx2.mailbox.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728766AbfBZWBw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Feb 2019 17:01:52 -0500
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [80.241.60.241])
+        id S1728766AbfBZWeM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Feb 2019 17:34:12 -0500
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [80.241.60.240])
         (using TLSv1.2 with cipher ECDHE-RSA-CHACHA20-POLY1305 (256/256 bits))
         (No client certificate requested)
-        by mx2.mailbox.org (Postfix) with ESMTPS id 0FDBEA1134;
-        Tue, 26 Feb 2019 23:01:50 +0100 (CET)
+        by mx2.mailbox.org (Postfix) with ESMTPS id 2122BA11E6;
+        Tue, 26 Feb 2019 23:34:10 +0100 (CET)
 X-Virus-Scanned: amavisd-new at heinlein-support.de
-Received: from smtp2.mailbox.org ([80.241.60.241])
-        by spamfilter03.heinlein-hosting.de (spamfilter03.heinlein-hosting.de [80.241.56.117]) (amavisd-new, port 10030)
-        with ESMTP id EzYSXfmMk-jU; Tue, 26 Feb 2019 23:01:46 +0100 (CET)
-Subject: Re: [PATCH] {nl,mac}80211: allow 4addr AP operation on crypto
- controlled devices
-To:     Manikanta Pubbisetty <mpubbise@codeaurora.org>,
-        johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Stefan Lippers-Hollmann <s.l-h@gmx.de>
-References: <1542798228-3293-1-git-send-email-mpubbise@codeaurora.org>
+Received: from smtp1.mailbox.org ([80.241.60.240])
+        by spamfilter01.heinlein-hosting.de (spamfilter01.heinlein-hosting.de [80.241.56.115]) (amavisd-new, port 10030)
+        with ESMTP id uvMin2hjXpz8; Tue, 26 Feb 2019 23:34:07 +0100 (CET)
+Subject: Re: iw 5.0.1 broken when compiled with lto
 From:   Hauke Mehrtens <hauke@hauke-m.de>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, stijn@linux-ipv6.be,
+        fercerpav@gmail.com, Mantas Pucka <mantas@8devices.com>
+References: <c450c890-a2f6-d598-c81c-8428144cf41a@hauke-m.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hauke@hauke-m.de; keydata=
  mQGiBEWJZUkRBAC48oPYbmaubFVnlVaS9QgBqB3EkR3IDClD3fANBTXRxyrrABvSDkEu1bH7
@@ -102,10 +100,10 @@ Autocrypt: addr=hauke@hauke-m.de; keydata=
  UUL3X7g3uy4nVTupFmZInuG+RPfj73KZPjtZtREDG6087p6kVeZuaxmUIe7Lzv36prdmT1mq
  QGASuDYHfqQUJhBSGTuFilX8Ndng6L0tdJT2CUkMAKCFNXb8L2yO6h0c5erfkcMmFtCUKwCe
  IXp4PqR6piQM6Rfbx1enZzFmXVg=
-Message-ID: <479f8872-86fe-4976-6005-c590e84a4bf4@hauke-m.de>
-Date:   Tue, 26 Feb 2019 23:01:45 +0100
+Message-ID: <b398e5e4-45f7-e680-b43e-ae3440ba568f@hauke-m.de>
+Date:   Tue, 26 Feb 2019 23:34:06 +0100
 MIME-Version: 1.0
-In-Reply-To: <1542798228-3293-1-git-send-email-mpubbise@codeaurora.org>
+In-Reply-To: <c450c890-a2f6-d598-c81c-8428144cf41a@hauke-m.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -114,47 +112,64 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/21/18 12:03 PM, Manikanta Pubbisetty wrote:
-> As per the current design, for sw crypto controlled devices, it is
-> the device which has to advertise the support for AP/VLAN iftype
-> based on it's capability to tranmsit packets encrypted in software
-> (In VLAN functionality, group traffic generated for a specific
-> VLAN group is always encrypted in software). Commit db3bdcb9c3ff
-> ("mac80211: allow AP_VLAN operation on crypto controlled devices")
-> has introduced this change.
+On 2/26/19 9:59 PM, Hauke Mehrtens wrote:
+> Hi Johannes,
 > 
-> Since 4addr AP operation also uses AP/VLAN iftype, this conditional
-> way of advertising AP/VLAN support has broken 4addr AP mode operation on
-> crypto controlled devices which do not support VLAN functionality.
+> When I compile iw 5.0.1 with link time optimization for MIPS32r2 big
+> endian all commands are removed, it looks like this:
+> ------------------------------------------------------------------------
+> root@OpenWrt:/# iw
+> Usage:  iw [options] command
+> Options:
+>         --debug         enable netlink debugging
+>         --version       show version (5.0.1)
+> Commands:
 > 
-> For example:
-> In the case of ath10k driver, not all firmwares have support for VLAN
-> functionality but all can support 4addr AP operation. Because AP/VLAN
-> support is not advertised for these devices, 4addr AP operations are
-> also blocked.
+> Commands that use the netdev ('dev') can also be given the
+> 'wdev' instead to identify the device.
 > 
-> Fix this by allowing 4addr opertion on devices which do not advertise
-> AP/VLAN iftype but which can support 4addr operation (the desicion is
-> taken based on the wiphy flag WIPHY_FLAG_4ADDR_AP).
+> You can omit the 'phy' or 'dev' if the identification is unique,
+> e.g. "iw wlan0 info" or "iw phy0 info". (Don't when scripting.)
 > 
-> Fixes: Commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on
-> crypto controlled devices")
-> Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-> ---
->  include/net/cfg80211.h |  3 ++-
->  net/mac80211/util.c    |  4 +++-
->  net/wireless/core.c    |  9 +++++++--
->  net/wireless/nl80211.c | 10 ++++++++--
->  4 files changed, 20 insertions(+), 6 deletions(-)
+> Do NOT screenscrape this tool, we don't consider its output stable.
 > 
-Hi Manikanta,
+> root@OpenWrt:/#
+> ------------------------------------------------------------------------
+> 
+> When I compile it without LTO it works like expected.
+> This was seen in OpenWrt in the iw-full version and when I remove all
+> the OpenWrt specific patches to iw. The iw-tiny version from OpenWrt
+> works like expected. iw 4.14 also works in both versions.
+> 
+> This was report to OpenWrt here:
+> https://github.com/openwrt/openwrt/pull/1865
+> http://lists.infradead.org/pipermail/openwrt-devel/2018-October/014220.html
+> 
+> With GCC 8.2 this also happens with iw 4.14.
+> 
+> 
+> The binary with lto is even bigger and they have the same number of
+> functions starting with __cmd:
+> 
+> $ ls -al iw-full-*
+> -rwxr-xr-x 1 hauke hauke 180164 Feb 26 21:55 iw-full-lto
+> -rwxr-xr-x 1 hauke hauke 179016 Feb 26 21:57 iw-full-wo-lto
+> $ nm iw-full-lto |fgrep __cmd |wc
+>      96     288    7259
+> $ nm iw-full-wo-lto |fgrep __cmd |wc
+>      96     288    7259
+> 
+> Hauke
 
-Will you send an updated version of this patch to mainline?
+Paul Fertser did some further analysis of this problem and we can now
+reproduce it also on normal x86 systems when the binary is compiled like
+this:
+CFLAGS=" -Os -flto" LDFLAGS=" -flto" make
 
-Multiple people ran into this problem in OpenWrt and it would be nice if
-such a fix would be included in upstream kernel.
+-O3 or -Os and link time optimization is needed to see this problem.
 
-See here a pull request:
-https://github.com/openwrt/openwrt/pull/1640
+With LTO the compiler randomly reorders the __section_* variables
+including __section_set and __section_get and that leads to wrong offset
+used to traverse the __cmd section.
 
 Hauke
