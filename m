@@ -2,114 +2,79 @@ Return-Path: <SRS0=BviI=RB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DB6AC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 11:53:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 132ABC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 12:10:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0ED4F217F9
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 11:53:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D512D217F9
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 12:10:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Sz54XW2G";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E2VFBKcW"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="e/+Qdk+K";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RMHlIlQA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726516AbfBZLxm (ORCPT
+        id S1726618AbfBZMKj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Feb 2019 06:53:42 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:42364 "EHLO
+        Tue, 26 Feb 2019 07:10:39 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:42178 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726082AbfBZLxm (ORCPT
+        with ESMTP id S1726510AbfBZMKj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Feb 2019 06:53:42 -0500
+        Tue, 26 Feb 2019 07:10:39 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 302726141B; Tue, 26 Feb 2019 11:53:41 +0000 (UTC)
+        id 80EC7621F3; Tue, 26 Feb 2019 12:10:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551182021;
-        bh=zKwskB8P4NX1xF6Yyp2wV5B7ErKmEzoHdzPTfypcKP0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Sz54XW2G0ixOkleJV/UE1Wn7duImof8sFrAGfA47AUMYZ4TwFuRCRevPdilJe5g8H
-         R+/obQwJcssqbbs3UXtF7XmE0O/vry812d0Ot6Z3iDVPN5yi4v+tKnktejNnylbIaC
-         nmPm/fkreAN6IKwQE1TJhlhhnjN4saCSoCwrfhMM=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 7F64161515;
-        Tue, 26 Feb 2019 11:53:40 +0000 (UTC)
+        s=default; t=1551183038;
+        bh=/dNIoyupdkHSiiw6jdd6ZU3yyT0otJWKYGQvgkzQ/aw=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=e/+Qdk+K3LMfIMzwOkTixaMIoc1My3miLpvNZ2ByNBLq6Ka+VJ8jsb83/qSzxC5hb
+         NbZttTf1aEIm/HI163cZwF1V4NUnV0rUcvnvaac/vKK/xftfIG0zqYSr1NIKRYj9xi
+         TJPfRd0fIgAs98BR6/QF3NoPMcClGzNQiWO4qtus=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 577F561F29;
+        Tue, 26 Feb 2019 12:09:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551182020;
-        bh=zKwskB8P4NX1xF6Yyp2wV5B7ErKmEzoHdzPTfypcKP0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=E2VFBKcWDQWi5jQDFVRpidzXi24YxLZZQndXXg5A/yNeGU1Srnk4AZ/2SrZUN+5e/
-         HUIkVppF/MFFLT9QWYgvynneAXG7p4APK7FC6z9fHy5TTXvNkTQH/6P7PLGvVSQ2XD
-         yiqZjxxPrNcGUAyZPRQn2TqYhJ6/Jl5Kqtox5IFk=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 26 Feb 2019 17:23:40 +0530
-From:   Surabhi Vishnoi <svishnoi@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
+        s=default; t=1551182998;
+        bh=/dNIoyupdkHSiiw6jdd6ZU3yyT0otJWKYGQvgkzQ/aw=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=RMHlIlQAtaCKidqOOur2hlObendQYnpiA6ysFlqsJuoPySjKd1QIF0nNRNJERqDr7
+         abPZL/UKLKk1pIdUAJwvk173nNrDAg/nbYGsRHkLyJa5lgMeD1oKubs8/B+Ur/7UbO
+         XigZblG2gFfLPP/YJNuZB+LohAeKzdqX9F2rD4Vo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 577F561F29
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Surabhi Vishnoi <svishnoi@codeaurora.org>
 Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Fill rx duration for each peer in fw_stats for
- WCN3990
-In-Reply-To: <20190225171756.9632C609F3@smtp.codeaurora.org>
+Subject: Re: [PATCH] ath10k: Fill rx duration for each peer in fw_stats for WCN3990
 References: <1550570110-32010-1-git-send-email-svishnoi@codeaurora.org>
- <20190225171756.9632C609F3@smtp.codeaurora.org>
-Message-ID: <558f033a71573862be59867f22c75294@codeaurora.org>
-X-Sender: svishnoi@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+        <20190225171756.9632C609F3@smtp.codeaurora.org>
+        <558f033a71573862be59867f22c75294@codeaurora.org>
+Date:   Tue, 26 Feb 2019 14:09:54 +0200
+In-Reply-To: <558f033a71573862be59867f22c75294@codeaurora.org> (Surabhi
+        Vishnoi's message of "Tue, 26 Feb 2019 17:23:40 +0530")
+Message-ID: <87ftsalpil.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Surabhi Vishnoi <svishnoi@codeaurora.org> writes:
 
-Hi Kalle,
+> I have uploaded the v2 patch which fixes the warning.
+> https://patchwork.kernel.org/patch/10829811/
 
-I have uploaded the v2 patch which fixes the warning.
-https://patchwork.kernel.org/patch/10829811/
+Thanks, but PLEASE do not top post. It's really annoying.
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#do_not_top_post_and_edit_your_quotes
 
-Thanks,
-Surabhi Vishnoi
-
-
-On 2019-02-25 22:47, Kalle Valo wrote:
-> Surabhi Vishnoi <svishnoi@codeaurora.org> wrote:
-> 
->> Currently, rx_duration for each peer is not getting populated in
->> fw_stats debugfs entry for WCN3990.
->> 
->> WCN3990 firmware sends rx duration for each peer as part of
->> peer_extd_stats in WMI_UPDATE_STATS_EVENT. To enable peer_extd_stats,
->> firmware expects host to send fw_stats_req_mask with flag
->> WMI_TLV_PEER_STATS_EXTD set in WMI_REQUEST_STATS_CMD.
->> 
->> Send fw_stats_req_mask with flag WMI_TLV_PEER_STATS_EXTD set in
->> WMI_REQUEST_STATS_CMD and parse the peer_extd_stats in
->> WMI_UPDATE_STATS_EVENT to populate the rx_duration of each peer
->> in fw_stats debugfs entry.
->> 
->> Currently the driver handles 32-bit rx_duration, but the rx_duration
->> for WCN3990 can be upto 63 bit. The firmware sends rx_duration split
->> into two 32-bit fields, with the upper 32-bits being valid only if its
->> MSB is set. This change handles the 63-bit rx_duration obtained from
->> WCN3990 and maintain the backward compatibility.
->> 
->> To get the rx_duration of each connected peer :
->> cat /sys/kernel/debug/ieee80211/phyX/ath10k/fw_stats
->> 
->> Tested HW: WCN3990
->> Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
->> 
->> Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
->> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-> 
-> Kbuild bot reported a warning:
-> 
->    drivers/net/wireless/ath/ath10k/wmi-tlv.c: In function
-> 'ath10k_wmi_tlv_op_pull_fw_stats':
->>> drivers/net/wireless/ath/ath10k/wmi-tlv.c:1423:42: warning: left 
->>> shift count >= width of type [-Wshift-count-overflow]
->         dst->rx_duration |= rx_duration_high <<
->                                              ^~
+-- 
+Kalle Valo
