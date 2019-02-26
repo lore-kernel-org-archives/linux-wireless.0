@@ -2,93 +2,111 @@ Return-Path: <SRS0=BviI=RB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB1BAC10F0B
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:09:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5642DC10F0B
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:11:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78EA2217F9
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:09:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27A8421841
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:11:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cfRyFWYZ";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JjD7dcM+"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cWrFseDW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727073AbfBZNJ3 (ORCPT
+        id S1727465AbfBZNLw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Feb 2019 08:09:29 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:52764 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725954AbfBZNJ3 (ORCPT
+        Tue, 26 Feb 2019 08:11:52 -0500
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:45281 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726908AbfBZNLv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Feb 2019 08:09:29 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 447C361156; Tue, 26 Feb 2019 13:09:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551186568;
-        bh=YJZkOYn6T8Vs7Gwvdz9JHF12m/erK1s3M/SHigVV1+8=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=cfRyFWYZUoopgvE7Opr/YEjfJn6ABxuStt6BfT9C706+M8BO5AK2KftslmXpyzIXx
-         odMvDHc8UWPBX8g/4zT/fhBaRRk0uXf8d2pfc2Q/0fSmBYwKJfjgoId+dHwQ8sBHLj
-         fjTEUVIwm+zi0H1fajFN2tq5TBvK/jBSoVUokD6I=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3905F61156;
-        Tue, 26 Feb 2019 13:09:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551186566;
-        bh=YJZkOYn6T8Vs7Gwvdz9JHF12m/erK1s3M/SHigVV1+8=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=JjD7dcM+aW+RQCTVsvQgwaJIy6saDhvANYlhcwEYTTZY/AGFfLcZ4DSbdALLUGvMw
-         BTH7GD86QUHMGTXVU1v/SOUFk1zhWRT5+6EnnsDSREWM8qF4OOkp9YvQscfebyDNnx
-         KoQAUkly/m3o/jylRUiOEblfrRJAQAPXKs5tnUsg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3905F61156
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Tue, 26 Feb 2019 08:11:51 -0500
+Received: by mail-lj1-f195.google.com with SMTP id d24so10430339ljc.12
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2019 05:11:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=hVm3wogQM2Z2xpUildeCjXSxgthvr2hgr9u40pT4C5U=;
+        b=cWrFseDWldp5QGft68HbIvo+vJPFfep40pKCIK7HE1WXpetWbfJgcPWsSV9LxEJgRg
+         XtsGhYpJwyn27VH8c0oGPGULV6lIxYEXG2O5OZFM24VvlcT90HNh+Cucc2Onm2YlWGvy
+         lLkwjx9BSov0UkakaQbkHwrCxd0Fs7MCbb/650YA19FnWqvf2Jzl60gDPK7Cdf0QlUfc
+         50XDU7fHpqcnp/xYTtBwFtKbltWDx6mWCebyL3OHjP7y40RWFtIY/Xl3uIGri69WMWPc
+         FitCjXYnN9+wh/uFkN8zE41ZYbhs0LzgdePJPZg7FjqtR6zgLqfrrBiWnDGJSpsAjAOS
+         34Pw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=hVm3wogQM2Z2xpUildeCjXSxgthvr2hgr9u40pT4C5U=;
+        b=DRwP9iQLPUMolmGe5TBhMJZlxpHQK5/ERdXs+qqBTRrf+PFa+r8JuZKcfRXctbeEdq
+         kDnbO2uzPd854+CeI9xpCtP45ej9C7Kh8IbKapeNwWIqkStQ30ZmROICjmkrEgZGpKzu
+         8iaSQR0FoFncC7lLq1y3nl8/V1DkT56kZ5WAoq/dy9NJu3fe6Ll9LCTsIMNHlYdV3GHI
+         NFF5z+XSlqDx+2uQpekQlHuYhOAstWBka+iyXF7VSrxi0HjaEE4VOZ5BQjJ8FkM0Q9HS
+         iaVy5zS/H1I13owxnbshyVplsG6wmal6Gt6a3H6z7Tecwyb7kFP1roR0ewEDaqrJP6YN
+         zSdA==
+X-Gm-Message-State: AHQUAuZFVSUSpACG9o2FGW0/bz6lzha91TzRYt9fQKQmXWT1N2G/M8VK
+        D3P+eCoh1gJshIO4K5JAoW8=
+X-Google-Smtp-Source: AHgI3IbYZfySk/6lG3Hl/G3EGyqWJruoabWOCISA+4hVqu/TwUxQ7+rz8AzZivU5htBHvdlwn66STg==
+X-Received: by 2002:a2e:92ce:: with SMTP id k14-v6mr13501699ljh.154.1551186708900;
+        Tue, 26 Feb 2019 05:11:48 -0800 (PST)
+Received: from elitebook.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
+        by smtp.gmail.com with ESMTPSA id f16-v6sm2952518lji.88.2019.02.26.05.11.47
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 26 Feb 2019 05:11:48 -0800 (PST)
+From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 0/4] brcmfmac: recover PCIe devices from firmware crashes
+Date:   Tue, 26 Feb 2019 14:11:15 +0100
+Message-Id: <20190226131119.7907-1-zajec5@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] ath9k: remove set but not used variable 'acq'
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190225033246.127410-1-yuehaibing@huawei.com>
-References: <20190225033246.127410-1-yuehaibing@huawei.com>
-To:     YueHaibing <yuehaibing@huawei.com>
-Cc:     QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190226130928.447C361156@smtp.codeaurora.org>
-Date:   Tue, 26 Feb 2019 13:09:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/ath/ath9k/recv.c: In function 'ath_rx_count_airtime':
-> drivers/net/wireless/ath/ath9k/recv.c:1010:18: warning:
->  variable 'acq' set but not used [-Wunused-but-set-variable]
-> 
-> It's not used after 89cea7493a34 ("ath9k: Switch to mac80211 TXQ scheduling
-> and airtime APIs"). Also remove related variables.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> Acked-by: Toke Høiland-Jørgensen <toke@redhat.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+So far PCIe firmware halts / crashes were resulting in massive timeouts
+and running out of resources (e.g. slots). There wasn't even a clear
+message indicating the problem source.
 
-Patch applied to ath-next branch of ath.git, thanks.
+This patches improves it by:
+1) Printing an error
+2) Reloading a firmware
 
-03af21d6ba35 ath9k: remove set but not used variable 'acq'
+After that user can setup interface(s) & use a wireless card again. It
+should be much more convenient than reloading a module manually thanks
+to:
+1) Automation
+2) Not affecting other (working) wireless cards
+
+Rafał Miłecki (4):
+  brcmfmac: support multiple brcmf_fw_alloc_request() calls
+  brcmfmac: get RAM info right before downloading PCIe firmware
+  brcmfmac: add function designated for handling firmware failures
+  brcmfmac: reset PCIe bus on firmware crash
+
+ .../broadcom/brcm80211/brcmfmac/bus.h         | 12 ++++++
+ .../broadcom/brcm80211/brcmfmac/chip.c        |  6 ++-
+ .../broadcom/brcm80211/brcmfmac/chip.h        |  1 +
+ .../broadcom/brcm80211/brcmfmac/core.c        | 22 ++++++++++
+ .../broadcom/brcm80211/brcmfmac/core.h        |  2 +
+ .../broadcom/brcm80211/brcmfmac/firmware.c    |  1 +
+ .../broadcom/brcm80211/brcmfmac/pcie.c        | 43 ++++++++++++++++++-
+ .../broadcom/brcm80211/brcmfmac/sdio.c        |  4 +-
+ 8 files changed, 86 insertions(+), 5 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/10828153/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.20.1
 
