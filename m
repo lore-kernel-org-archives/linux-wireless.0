@@ -4,88 +4,84 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68DE2C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:07:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2C65C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:08:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 357A220651
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:07:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65ACB20651
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Feb 2019 13:08:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gLzeUkRm";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MECo782l"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ai9dWu+a";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IIJAwomM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726940AbfBZNHy (ORCPT
+        id S1726524AbfBZNIp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Feb 2019 08:07:54 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:50754 "EHLO
+        Tue, 26 Feb 2019 08:08:45 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:51310 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726018AbfBZNHy (ORCPT
+        with ESMTP id S1726018AbfBZNIp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Feb 2019 08:07:54 -0500
+        Tue, 26 Feb 2019 08:08:45 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 2B80F60FE9; Tue, 26 Feb 2019 13:07:52 +0000 (UTC)
+        id 99F3E60F3C; Tue, 26 Feb 2019 13:08:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551186473;
-        bh=kHtRnYdwFaT9aJ0xp+ceyUdL7YB50HhzOJGiLGDMN3w=;
+        s=default; t=1551186524;
+        bh=/AhjIOPfFsoa3ObJX8miPTNLDMiFUyCPvwouJsiJU/I=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=gLzeUkRmt3CJFYZC7H9K4gVK0ZdDR9HlowTe+abpLKhdEW2KTDGAPJJFXp6lfYizA
-         zDgQGLpPY93AkCNIPXY91hftHMEFiNvtVqYy/XJLiuK97Thc742GPSXSVVxxpRFEEA
-         x+cWe/H3TPykeO3o0TAawpHK34yu1N7qXPPjT5Y0=
+        b=ai9dWu+avz6iHs5SnPkOWpiKcssZIGltnqOCPsgKnLs7qGNJ37Y0uhBDyfo8SDXM3
+         L5GYXLeiFPkOLv5EMzf38U9zBJeGsP+UXvHtke/Ahn/rVXNCgdvarVlUqyJzaSEGaX
+         sqhGScN7b61V04KNDNk+tXHmY+OGz8Aj1pKXTbqo=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6011C60247;
-        Tue, 26 Feb 2019 13:07:51 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E486160247;
+        Tue, 26 Feb 2019 13:08:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551186472;
-        bh=kHtRnYdwFaT9aJ0xp+ceyUdL7YB50HhzOJGiLGDMN3w=;
+        s=default; t=1551186523;
+        bh=/AhjIOPfFsoa3ObJX8miPTNLDMiFUyCPvwouJsiJU/I=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=MECo782lbx0b14MewE72ceW4e/8/auAccs4pBFfkh2VhvFIP5Zn14AOYi/R5XJOyP
-         nfrI994p/1AZF2EYTwg4cQXPDUXTmGAaCyb+wSWdvc7L0ocaJLOCa2jn9SXn2Zl+ni
-         Kw9nndkLZSawolDK5kI27xFsiQvSdL/flTtnQIbs=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6011C60247
+        b=IIJAwomMcSLdzqPoHbx9Itn/fM2oIJSpa3gclgGK3zqoMtbfVT763ZvQ+TSz1VWqh
+         TlEAs5SjLuOGfffBkxlr1IaQ4hwRAMoAWvOPL+5u/DLSssIU4Jf1EccXR8L4sIO2ac
+         op2wmMuTEsBaG9C/zgGOBwxXN2/qpKlRj3TIKRyI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E486160247
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] ath9k: Make sure to zero status.tx_time before reporting
- TX status
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 2/2] ath9K: debugfs: Fix SPUR-DOWN field
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190215164855.30666-1-toke@redhat.com>
-References: <20190215164855.30666-1-toke@redhat.com>
-To:     =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-Cc:     make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org,
-        =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+In-Reply-To: <20190221231257.6221-1-andrea.greco.gapmilano@gmail.com>
+References: <20190221231257.6221-1-andrea.greco.gapmilano@gmail.com>
+To:     Andrea Greco <a.greco@4sigma.it>
+Cc:     johannes.berg@intel.com, Andrea Greco <a.greco@4sigma.it>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190226130753.2B80F60FE9@smtp.codeaurora.org>
-Date:   Tue, 26 Feb 2019 13:07:52 +0000 (UTC)
+Message-Id: <20190226130844.99F3E60F3C@smtp.codeaurora.org>
+Date:   Tue, 26 Feb 2019 13:08:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Toke Høiland-Jørgensen wrote:
+Andrea Greco <a.greco@4sigma.it> wrote:
 
-> Since ath9k reports airtime usage directly using the
-> ieee80211_report_airtime() callback, it shouldn't also report it using the
-> tx_time in status. Make sure the field is zeroed before TX status is
-> reported to avoid spurious airtime being accounted by bits being left over
-> from earlier uses of the cb.
+> SPUR DOWN field returns spurup instead of spurdown.
 > 
-> Fixes: 89cea7493a34 ("ath9k: Switch to mac80211 TXQ scheduling and airtime APIs")
-> Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
+> Signed-off-by: Andrea Greco <a.greco@4sigma.it>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-cc591d77aba1 ath9k: Make sure to zero status.tx_time before reporting TX status
+d0480d4326e2 ath9k: debugfs: Fix SPUR-DOWN field
 
 -- 
-https://patchwork.kernel.org/patch/10815445/
+https://patchwork.kernel.org/patch/10824837/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
