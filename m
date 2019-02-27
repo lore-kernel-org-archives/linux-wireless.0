@@ -3,32 +3,31 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D212C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Feb 2019 09:27:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08FCBC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Feb 2019 10:02:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D45362133F
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Feb 2019 09:27:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB5D9205F4
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Feb 2019 10:02:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727053AbfB0J1g (ORCPT
+        id S1729784AbfB0KCX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Feb 2019 04:27:36 -0500
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:59260 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725993AbfB0J1f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Feb 2019 04:27:35 -0500
+        Wed, 27 Feb 2019 05:02:23 -0500
+Received: from foss.arm.com ([217.140.101.70]:59826 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728462AbfB0KCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Feb 2019 05:02:23 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9F6A71596;
-        Wed, 27 Feb 2019 01:27:34 -0800 (PST)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E1C421596;
+        Wed, 27 Feb 2019 02:02:22 -0800 (PST)
 Received: from [10.1.196.62] (usa-sjc-imap-foss1.foss.arm.com [10.72.51.249])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 6A5753F575;
-        Wed, 27 Feb 2019 01:27:30 -0800 (PST)
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3C4133F575;
+        Wed, 27 Feb 2019 02:02:18 -0800 (PST)
 Subject: Re: [PATCH 0/4] mwifiex PCI/wake-up interrupt fixes
 To:     Brian Norris <briannorris@chromium.org>
-Cc:     Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
         Enric Balletbo i Serra <enric.balletbo@collabora.com>,
         Ganapathi Bhat <gbhat@marvell.com>,
         Heiko Stuebner <heiko@sntech.de>,
@@ -36,21 +35,16 @@ Cc:     Ard Biesheuvel <ard.biesheuvel@linaro.org>,
         Nishant Sarmukadam <nishants@marvell.com>,
         Rob Herring <robh+dt@kernel.org>,
         Xinming Hu <huxinming820@gmail.com>,
-        Devicetree List <devicetree@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-rockchip@lists.infradead.org,
         "David S. Miller" <davem@davemloft.net>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pm@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tony Lindgren <tony@atomide.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
 References: <20190224140426.3267-1-marc.zyngier@arm.com>
- <CAKv+Gu9OOzOxx0rTAZqM8r4q_hRmOp3b=KP7fwgNeiu67FCApA@mail.gmail.com>
- <5310b73b-4821-6dff-b9c0-34c59fb7fd72@arm.com>
- <CAKv+Gu_=bQyVZqgUnJm9moCcaCcpDrag6NWGEpaR65=pMiTFJQ@mail.gmail.com>
- <0c433a70-27f6-76ad-c46c-6015de1ffaa4@arm.com>
- <20190226234422.GD174696@google.com>
+ <20190226232822.GA174696@google.com>
 From:   Marc Zyngier <marc.zyngier@arm.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=marc.zyngier@arm.com; prefer-encrypt=mutual; keydata=
@@ -96,12 +90,12 @@ Autocrypt: addr=marc.zyngier@arm.com; prefer-encrypt=mutual; keydata=
  hApihi08gwvP5G9fNGKQyRETePEtEAWt0b7dOqMzYBYGRVr7uS4uT6WP7fzOwAJC4lU7ZYWZ
  yVshCa0IvTtp1085RtT3qhh9mobkcZ+7cQOY+Tx2RGXS9WeOh2jZjdoWUv6CevXNQyOUXMM=
 Organization: ARM Ltd
-Message-ID: <abbee52f-39ce-6e8f-af3c-f6f8d1a39020@arm.com>
-Date:   Wed, 27 Feb 2019 09:27:28 +0000
+Message-ID: <d67512fe-42b4-513f-d27a-fed85c19e9c2@arm.com>
+Date:   Wed, 27 Feb 2019 10:02:16 +0000
 User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.0
 MIME-Version: 1.0
-In-Reply-To: <20190226234422.GD174696@google.com>
+In-Reply-To: <20190226232822.GA174696@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -110,69 +104,123 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 26/02/2019 23:44, Brian Norris wrote:
-> Hi,
++ Lorenzo
+
+Hi Brian,
+
+On 26/02/2019 23:28, Brian Norris wrote:
+> + others
 > 
-> On Tue, Feb 26, 2019 at 05:14:00PM +0000, Marc Zyngier wrote:
->> On 26/02/2019 16:21, Ard Biesheuvel wrote:
->>> On Mon, 25 Feb 2019 at 15:53, Marc Zyngier <marc.zyngier@arm.com> wrote:
->>>> It outlines one thing: If you have to interpret per-device PCI
->>>> properties from DT, you're in for serious trouble. I should get some
->>>> better HW.
->>>>
->>>
->>> Yeah, it obviously makes no sense at all for the interrupt parent of a
->>> PCI device to deviate from the host bridge's interrupt parent, and
->>> it's quite unfortunate that we can't simply ban it now that the cat is
->>> out of the bag already.
->>>
->>> Arguably, the wake up widget is not part of the PCI device, but I have
->>> no opinion as to whether it is better modeling it as a sub device as
->>> you are proposing or as an entirely separate device referenced via a
->>> phandle.
+> Hi Marc,
+> 
+> Thanks for the series. I have a few bits of history to add to this, and
+> some comments.
+> 
+> On Sun, Feb 24, 2019 at 02:04:22PM +0000, Marc Zyngier wrote:
+>> For quite some time, I wondered why the PCI mwifiex device built in my
+>> Chromebook was unable to use the good old legacy interrupts. But as MSIs
+>> were working fine, I never really bothered investigating. I finally had a
+>> look, and the result isn't very pretty.
 >>
->> It is not that clear. The widget seems to be an integral part of the
->> device, as it is the same basic IP that is used for SDIO and USB.
+>> On this machine (rk3399-based kevin), the wake-up interrupt is described as
+>> such:
+>>
+>> &pci_rootport {
+>> 	mvl_wifi: wifi@0,0 {
+>> 		compatible = "pci1b4b,2b42";
+>> 		reg = <0x83010000 0x0 0x00000000 0x0 0x00100000
+>> 		       0x83010000 0x0 0x00100000 0x0 0x00100000>;
+>> 		interrupt-parent = <&gpio0>;
+>> 		interrupts = <8 IRQ_TYPE_LEVEL_LOW>;
+>> 		pinctrl-names = "default";
+>> 		pinctrl-0 = <&wlan_host_wake_l>;
+>> 		wakeup-source;
+>> 	};
+>> };
+>>
+>> Note how the interrupt is part of the properties directly attached to the
+>> PCI node. And yet, this interrupt has nothing to do with a PCI legacy
+>> interrupt, as it is attached to the wake-up widget that bypasses the PCIe RC
+>> altogether (Yay for the broken design!). This is in total violation of the
+>> IEEE Std 1275-1994 spec[1], which clearly documents that such interrupt
+>> specifiers describe the PCI device interrupts, and must obey the
+>> INT-{A,B,C,D} mapping. Oops!
 > 
-> It's not really a widget specific to this IP. It's just a GPIO. It so
-> happens that both SDIO and PCIe designs have wanted to use a GPIO for
-> wakeup, as many other devices do. (Note: it's not just cheap ARM
-> devices; pulling up some Intel Chromebook designs, I see the exact same
-> WAKE# GPIO on their PCIe WiFi as well.)
+> You're not the first person to notice this. All the motivations are not
+> necessarily painted clearly in their cover letter, but here are some
+> previous attempts at solving this problem:
+> 
+> [RFC PATCH v11 0/5] PCI: rockchip: Move PCIe WAKE# handling into pci core
+> https://lkml.kernel.org/lkml/20171225114742.18920-1-jeffy.chen@rock-chips.com/
+> http://lkml.kernel.org/lkml/20171226023646.17722-1-jeffy.chen@rock-chips.com/
+> 
+> As you can see by the 12th iteration, it wasn't left unsolved for lack
+> of trying...
 
-Arghh! If I can't even point people to an Intel design as an example of
-something done halfway right, we're screwed! ;-)
+I wasn't aware of this. That's definitely a better approach than my
+hack, and I would really like this to be revived.
 
 > 
->> It looks like the good old pre-PCI-2.2 days, where you had to have a
->> separate cable between your network card and the base-board for the
->> wake-up interrupt to be delivered. Starting with PCI-2.2, the bus can
->> carry the signal just fine. With PCIe, it should just be an interrupt
->> TLP sent to the RC, but that's obviously not within the capabilities of
->> the HW.
+> Frankly, if a proper DT replacement to the admittedly bad binding isn't
+> agreed upon quickly, I'd be very happy to just have WAKE# support
+> removed from the DTS for now, and the existing mwifiex binding should
+> just be removed. (Wake-on-WiFi was never properly vetted on these
+> platforms anyway.) It mostly serves to just cause problems like you've
+> noticed.
+
+Agreed. If there is no actual use for this, and that we can build a case
+for a better solution, let's remove the wakeup support from the Gru DT
+(it is invalid anyway), and bring it back if and when we get the right
+level of support.
+
+[...]
+
+> One problem Rockchip authors were also trying to resolve here is that
+> PCIe WAKE# handling should not really be something the PCI device driver
+> has to handle directly. Despite your complaints about not using in-band
+> TLP wakeup, a separate WAKE# pin is in fact a documented part of the
+> PCIe standard, and it so happens that the Rockchip RC does not support
+> handling TLPs in S3, if you want to have decent power consumption. (Your
+> "bad hardware" complaints could justifiably fall here, I suppose.)
 > 
-> You should search the PCI Express specification for WAKE#. There is a
-> clearly-documented "side-band wake" feature that is part of the
-> standard, as an alternative to in-band TLP wakeup. While you claim this
-> is an ancient thing, it in fact still in use on many systems -- it's
-> just usually abstracted better by ACPI firmware, whereas the dirty
-> laundry is aired a bit more on a Device Tree system. And we got it
-> wrong.
+> Additionally, I've had pushback from PCI driver authors/maintainers on
+> adding more special handling for this sort of interrupt property (not
+> the binding specifically, but just the concept of handling WAKE# in the
+> driver), as they claim this should be handled by the system firmware,
+> when they set the appropriate wakeup flags, which filter down to
+> __pci_enable_wake() -> platform_pci_set_wakeup(). That's how x86 systems
+> do it (note: I know for a fact that many have a very similar
+> architecture -- WAKE# is not routed to the RC, because, why does it need
+> to? and they *don't* use TLP wakeup either -- they just hide it in
+> firmware better), and it Just Works.
 
-I stand corrected. I was really hoping for these side-band wires to be a
-thing of the past, but clearly the world hasn't moved as quickly as I hoped.
+Even on an arm64 platform, there is no reason why a wakeup interrupt
+couldn't be handled by FW rather than the OS. It just need to be wired
+to the right spot (so that it generates a secure interrupt that can be
+handled by FW).
 
->> Anyway, it'd be good if the Marvell people could chime in and let us
->> know how they'd prefer to handle this.
-> 
-> I'm not sure this is really a Marvell-specific problem. (Well, except
-> for the marvell,wakeup-pin silliness, which is somewhat orthogonal.) In
-> fact, if we cared a little more about Wake-on-WiFi, we'd be trying to
-> support the same (out-of-band WAKE#) with other WiFi drivers.
+> So, we basically concluded that we should standardize on a way to
+> describe WAKE# interrupts such that PCI drivers don't have to deal with
+> it at all, and the PCI core can do it for us. 12 revisions later
+> and...we still never agreed on a good device tree binding for this.
 
-I'd definitely like to see this standardized. It would give us more
-coverage, and prevent everyone from doing their own thing. But as you
-mention, WoW doesn't seem to get much traction.
+Is the DT binding the only problem? Do we have an agreement for the core
+code?
+
+> IOW, maybe your wake-up sub-node is the best way to side-step the
+> problems of conflicting with the OF PCI spec. But I'd still really like
+> to avoid parsing it in mwifiex, if at all possible.
+
+Honestly, my solution is just a terrible hack. I wasn't aware that this
+was a more general problem, and I'd love it to be addressed in the core
+PCI code.
+
+> (We'd still be left with the marvell,wakeup-pin propery to parse
+> specifically in mwifiex, which sadly has to exist because....well,
+> Samsung decided to do chip-on-board, and then they failed to use the
+> correct pin on Marvell's side when wiring up WAKE#. Sigh.)
+
+Oh well...
 
 Thanks,
 
