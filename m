@@ -6,47 +6,47 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D99FC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 07:33:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A00C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 07:34:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 26ED42054F
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 07:33:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D467205C9
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 07:34:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=comcastmailservice.net header.i=@comcastmailservice.net header.b="Rmd9oFEA"
+	dkim=pass (2048-bit key) header.d=comcastmailservice.net header.i=@comcastmailservice.net header.b="RQDFl8GD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731711AbfB1Hdw (ORCPT
+        id S1730749AbfB1HeZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 02:33:52 -0500
+        Thu, 28 Feb 2019 02:34:25 -0500
 Received: from resqmta-po-11v.sys.comcast.net ([96.114.154.170]:52112 "EHLO
         resqmta-po-11v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730865AbfB1Hds (ORCPT
+        by vger.kernel.org with ESMTP id S1725958AbfB1HeZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 02:33:48 -0500
+        Thu, 28 Feb 2019 02:34:25 -0500
 X-Greylist: delayed 450 seconds by postgrey-1.27 at vger.kernel.org; Thu, 28 Feb 2019 02:33:47 EST
-Received: from resomta-po-12v.sys.comcast.net ([96.114.154.236])
+Received: from resomta-po-16v.sys.comcast.net ([96.114.154.240])
         by resqmta-po-11v.sys.comcast.net with ESMTP
-        id zG9mg5TmmgNePzGCRg8uCx; Thu, 28 Feb 2019 07:33:47 +0000
+        id zG28g5TZ8gNePzG5Bg8tzx; Thu, 28 Feb 2019 07:26:17 +0000
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=comcastmailservice.net; s=20180828_2048; t=1551339227;
-        bh=WTPi1E7szHqwOg8WvB49HMuyQPIYHj602tNIS+eUMBo=;
+        d=comcastmailservice.net; s=20180828_2048; t=1551338777;
+        bh=480B1d3tdk/7PDBpVm8LtAFJ2ZDc8QNEvSZvBClwgKg=;
         h=Received:Received:To:From:Subject:Message-ID:Date:MIME-Version:
          Content-Type;
-        b=Rmd9oFEAAwFyGDVH4R6by8TIu0R1YuccGNkN7LdGL/UbCeuhETgtPI5zzqWB6XJeA
-         XMs77deoeuqmjXKGn6hscwvwdagnffa1pnoYTe7yvbjIUX1ohEQqlflj908G4OmWXP
-         KCk754D1hRymbRi/tKVaDn4GDXGNv49OnMCc4ew6d681td183OmYJkuJLobBBFsOVU
-         SmgdeeH71qri8y7SeXdWSIpryoMAC6Fx01wtkp60HVV5w0p4QlVtWZhZJrMfrn0TKL
-         AKDRhxBtTXFyOgXrBvczpA0xdb0e4wLH7A0P86cP2nDVoovdIwXJU63bKq1hHZKRWA
-         4HrHpNli5bbfw==
+        b=RQDFl8GD0mth9EI0hsV5wLQobXRf8vimAdfC7nh1Ra+2fTt0cIrbCKBeTukCM7Qud
+         0QYLI/7fXpzROugJfI+HbbCbuP9N//2yvKo/9myYcy8kTdRQaxuDKAsSr03X7XwTaD
+         DE9INJ0ciGaYv1+UUXoiFi4AH3rbhSqfcxW6UjztaGP66xjrU1tXMbs88CseBzNORD
+         7m0R3Ak4zRrJdZcEN0TpPAFG2NTBpLy8VJfGFGZkh+0lE2ZxyxO6UeFXV19AnIorS/
+         RjULM3b/CLwLnvV43kDrpD7tnDnDKqkxQSueOdadavG+rpgfifijkI1ojGDUnFdFeK
+         374ym1DduKHjw==
 Received: from touchy.whiterc.com ([73.109.211.103])
-        by resomta-po-12v.sys.comcast.net with ESMTPSA
-        id zGCRgUTqEGsLvzGCRgkeEX; Thu, 28 Feb 2019 07:33:47 +0000
-X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedutddrvddvgddutdehucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedttdenucenucfjughrpefvhffukffffgggtgfgsehtjeertddtfeejnecuhfhrohhmpeftohgsvghrthcuhghhihhtvgcuoehrfihhihhtvgesphhosghogidrtghomheqnecuffhomhgrihhnpeifhhhithgvrhgtrdgtohhmnecukfhppeejfedruddtledrvdduuddruddtfeenucfrrghrrghmpehhvghlohepthhouhgthhihrdifhhhithgvrhgtrdgtohhmpdhinhgvthepjeefrddutdelrddvuddurddutdefpdhmrghilhhfrhhomheprhifhhhithgvsehpohgsohigrdgtohhmpdhrtghpthhtoheplhhinhhugidqfihirhgvlhgvshhssehvghgvrhdrkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivgeptd
+        by resomta-po-16v.sys.comcast.net with ESMTPSA
+        id zG5AgDuqxKP4pzG5AgYiBl; Thu, 28 Feb 2019 07:26:17 +0000
+X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedutddrvddvgddutdegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedttdenucenucfjughrpefvhffukffffgggtgfgsehtjeertddtfeejnecuhfhrohhmpeftohgsvghrthcuhghhihhtvgcuoehrfihhihhtvgesphhosghogidrtghomheqnecuffhomhgrihhnpeifhhhithgvrhgtrdgtohhmnecukfhppeejfedruddtledrvdduuddruddtfeenucfrrghrrghmpehhvghlohepthhouhgthhihrdifhhhithgvrhgtrdgtohhmpdhinhgvthepjeefrddutdelrddvuddurddutdefpdhmrghilhhfrhhomheprhifhhhithgvsehpohgsohigrdgtohhmpdhrtghpthhtoheplhhinhhugidqfihirhgvlhgvshhssehvghgvrhdrkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivgeptd
 X-Xfinity-VMeta: sc=??;st=legit
 To:     linux-wireless@vger.kernel.org
 From:   Robert White <rwhite@pobox.com>
 Subject: long startup delay ath10k_pci known issue?
-Message-ID: <53b7cbe9-f419-24c7-0f51-37f92e11df1d@pobox.com>
-Date:   Thu, 28 Feb 2019 07:33:46 +0000
+Message-ID: <76303a09-744e-dbc2-01c2-92b0f2c1a266@pobox.com>
+Date:   Thu, 28 Feb 2019 07:26:16 +0000
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.1
 MIME-Version: 1.0
@@ -57,7 +57,6 @@ Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
-
 
 I recently switched from an ath9k to an ath10k on my (gentoo based) 
 home-build router, and there is about a two minute delay between the 
