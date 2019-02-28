@@ -2,159 +2,145 @@ Return-Path: <SRS0=yJNj=RD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D697AC10F00
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 09:06:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEA7FC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 09:17:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD7BC21850
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 09:06:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B66A2184A
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 09:17:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Vv8MySr3";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jDQoAnsu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732105AbfB1JGU convert rfc822-to-8bit (ORCPT
+        id S1732032AbfB1JR2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 04:06:20 -0500
-Received: from mout.gmx.net ([212.227.17.22]:38599 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731013AbfB1JGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 04:06:20 -0500
-Received: from w210-65-v4.eduroam.dynamic.rbg.tum.de ([131.159.210.221]) by
- mail.gmx.com (mrgmx103 [212.227.17.168]) with ESMTPSA (Nemesis) id
- 0MBWIM-1gonVD06Gk-00AWdK; Thu, 28 Feb 2019 10:05:41 +0100
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH RFC] mac80211: Use IFF_ECHO to force delivery of tx_status
- frames
-From:   Julius Niedworok <julius.n@gmx.net>
-In-Reply-To: <550ff2ac45c891a3fcf3dd8a454f9732d8aa1b70.camel@sipsolutions.net>
-Date:   Thu, 28 Feb 2019 10:05:37 +0100
-Cc:     Oliver Hartkopp <socketcan@hartkopp.net>,
-        linux-wireless@vger.kernel.org, ga58taw@mytum.de,
-        David Hildenbrand <david@redhat.com>, nc@net.in.tum.de,
-        "David S. Miller" <davem@davemloft.net>,
-        Edward Cree <ecree@solarflare.com>,
-        Jiri Pirko <jiri@mellanox.com>,
-        Ido Schimmel <idosch@mellanox.com>,
-        Petr Machata <petrm@mellanox.com>,
-        Kirill Tkhai <ktkhai@virtuozzo.com>,
-        Alexander Duyck <alexander.h.duyck@intel.com>,
-        Amritha Nambiar <amritha.nambiar@intel.com>,
-        Li RongQing <lirongqing@baidu.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Julius Niedworok <julius.n@gmx.net>
-Content-Transfer-Encoding: 8BIT
-Message-Id: <AD1F7A49-B3F3-4033-8B0A-D1F8C2C6C834@gmx.net>
-References: <20190226094104.35192-1-julius.n@gmx.net>
- <c522f2e0-1bef-8679-45f7-707854918820@hartkopp.net>
- <6A213CBE-0B6A-466A-B721-E6A728D4888D@gmx.net>
- <550ff2ac45c891a3fcf3dd8a454f9732d8aa1b70.camel@sipsolutions.net>
-To:     Johannes Berg <johannes@sipsolutions.net>
-X-Mailer: Apple Mail (2.3273)
-X-Provags-ID: V03:K1:ri6uU9ZiuVS+8u+wCZiSdVJEeAyW1a0KbHvpNqxz2ePIlD97jMU
- 0KaKQClYtekqYhSLZ73QePjj2I+5Fr3PQaLAFLNm+r+VBCzUR2ORf4MZZThF5VRUlYRdS7d
- m0/68fqVLJVRjU3ZRjlWXWCeeXB5AeyOEM+5HEXZBoAQS+AUX07LCp4nfKsorfsZDbbSGx9
- dYZo09VZGW4jWMONZizMg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:XMkL79729MU=:v6/wDinId4gnUjaj+H1zVZ
- VIEBcsnWURVgyJBDe5QtUjemKZn5/KdfxcGhH3RQCoiIorLkXkHwa2um761Z6lKy8IxbRErfg
- O1QtnQf6gKta1mx3JzLPdTdwIXzlqZ7bi0JWEARA0DNQX5z+GZ7WXAOASzvXIXJBeWk0hkEN0
- EFsUBYP2fgSSgbhHmq7q4IvTaaq31EsdUBP0c0lPZPeU/CJ4ao1zoe/T+LXRiW7Rpj52Y+DAD
- 1zijYBb0YmTvD4kXKFo7VimyihLwFjo/ZqXThSy9Ct504gMKcXS8Lkg/JB+Te79WfaMhivsmZ
- IFc1ur39haMwS+TSrWhEshccJM6TrNJ0UQXKIT0PW3Y9g7Kx6Jl00WaEzZRmvlmSLW4eLhPsG
- TI/q28x7eZwobDWFPeyMMiT/mY8Zvg9fMxDO3WnaSKXd4YrvhwGpp+vG59zr+4g0qpkhunU2H
- Nn+FnpXelb/2BlK5yQ/RWbvrelIWvLhfJQpUJoEyfTmXcNP+M9iy519OJou6ApHvf7sge8pgI
- YQc/z81o2a/g3+XKO7CVpHHuck7U2TAJ/A21317izOTmmSMhRZfVrifQqmVGGRSFRWOHL4zqG
- aMBC+OamoYVwU2WZxklpYU4/V8PifNeVhYxpieYziUbnqlh5XfH7pWJzUgsGvUOX9DRkD9N+d
- xkxpcZtFBH7He1OjPt5vasGtaXdyLMuAb7MjTrH6fHmRBzHeaWm6QOH5lGq0VBLWvjQuzTeiw
- VANqtZGrwGkvyk5lEK+VBItoUSxE6koz+5rDpsfa8jlnCTvvIwTH5TbDBmFz1YPmkiizxuckt
- 2dwAX1JmDA9/2cEAx3F3F7MUDS3R5/iI5wsAUat6Yym6bgPTeAJvhc04yCxVSXFbC9aLTNHa2
- 8EGEq3pYXD9u1xs/4LlOP+QRsJieCrzpj739e4+lomWgadd+DnPcLjJh8gIZPPGe0b+XFnQpr
- buhn01YMxMw==
+        Thu, 28 Feb 2019 04:17:28 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:37438 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731994AbfB1JR2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Feb 2019 04:17:28 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id F264A60CED; Thu, 28 Feb 2019 09:17:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1551345447;
+        bh=AL/CTvFjknhZ0CwQdK7PbYJvwhZhLl5KAJgEm3gzgy8=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Vv8MySr3mgiv7KD8Mm6Ygx+HcLall65kIwtreP/e6GDIWeWihlUh3VJBdRCtVnjkL
+         t8vnCVdxF1URBhCwy8gAQPBwR+HIn6f+WjNFQatuV7LJ19YxYA1xuN1AGogPX1bGnr
+         T2OuqcpL0Usz+Me6N1WCVCb4s7T/inkNiVH6zAkI=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BC2BF602FC;
+        Thu, 28 Feb 2019 09:17:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1551345446;
+        bh=AL/CTvFjknhZ0CwQdK7PbYJvwhZhLl5KAJgEm3gzgy8=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=jDQoAnsur7MV/SKAT2gobnxzgeRHrZw40WOoVKUPjkidHAkHFlLeX0+gejpnA1H21
+         exjIxf5aoL2cMohed9/BgXH2OJ1porEbSY6wxtGZOZDGjf1Hw+t8zC8SXElDN7v1Rx
+         Twu+jnGcP1ybNStmgiOlJ0nmfOo9O8739KneODcw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BC2BF602FC
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Maya Erez <merez@codeaurora.org>
+Cc:     Ahmad Masri <amasri@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
+Subject: Re: [PATCH 03/21] wil6210: support up to 20 stations in AP mode
+References: <1550845279-16103-1-git-send-email-merez@codeaurora.org>
+        <1550845279-16103-4-git-send-email-merez@codeaurora.org>
+Date:   Thu, 28 Feb 2019 11:17:23 +0200
+In-Reply-To: <1550845279-16103-4-git-send-email-merez@codeaurora.org> (Maya
+        Erez's message of "Fri, 22 Feb 2019 16:21:01 +0200")
+Message-ID: <87va14z2zg.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Maya Erez <merez@codeaurora.org> writes:
 
-> On 26.02.2019 14:33 Johannes Berg wrote
-> 
-> You're proposing to add this to the *monitor* interfaces and you really
-> should have made the flag conditional on that to make that clear.
-> 
-> However, even on monitor interfaces, you typically *already* see the
-> frames you transmitted there (as raw frames, which is the only thing you
-> can do).
-> 
-Thanks for your prompt reply and thoughts on our patch.
+> From: Ahmad Masri <amasri@codeaurora.org>
+>
+> New FW added support for upto 20 clients in AP mode. Change the driver
+> to support this as well. FW reports it's max supported associations in
+> WMI_READY_EVENT. Some WMI commands/events use cidxtid field which is
+> limited to 16 cids. Use new cid/tid fields instead.
+>
+> For Rx packets cid from rx descriptor is limited to 3 bits (0..7),
+> to find the real cid, compare transmitter address with the stored
+> stations mac address in the driver sta array.
+>
+> EDMA FW still supports 8 stations. Extending the support to 20
+> stations will come later.
+>
+> Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
+> Signed-off-by: Maya Erez <merez@codeaurora.org>
 
-Let us briefly describe our test setup to ensure everyone on this mailing
-list is one the same page.
+[...]
 
-Our general setup looks like this:
-1 $ iw wlp1s0 info
-Interface wlp1s0
-      ifindex 5
-      wdev 0x1
-      addr 4c:5e:0c:11:43:ac
-      type managed
-      wiphy 0
-      txpower 30.00 dBm
-1 $ iw phy phy0 interface add mon0 type monitor
-1 $ iw phy phy0 interface add mon1 type monitor
 
-When we send (raw) packets on mon0 using packetspammer [1] and listen on
-the _other_ monitor mode interface mon1, we receive frames that were sent
-on the first one:
-1 $ packetspammer mon0
-2 $ tcpdump -i mon1 'wlan addr2 13:22:33:44:55:66'
+> --- a/drivers/net/wireless/ath/wil6210/wmi.c
+> +++ b/drivers/net/wireless/ath/wil6210/wmi.c
+> @@ -24,8 +24,9 @@
+>  #include "wmi.h"
+>  #include "trace.h"
+>  
+> -static uint max_assoc_sta = WIL6210_MAX_CID;
+> -module_param(max_assoc_sta, uint, 0644);
+> +/* set the default max assoc sta to max supported by driver */
+> +uint max_assoc_sta = WIL6210_MAX_CID;
+> +module_param(max_assoc_sta, uint, 0444);
+>  MODULE_PARM_DESC(max_assoc_sta, " Max number of stations associated to the AP");
+>  
+>  int agg_wsize; /* = 0; */
+> @@ -770,6 +771,7 @@ static void wmi_evt_ready(struct wil6210_vif *vif, int id, void *d, int len)
+>  	struct wil6210_priv *wil = vif_to_wil(vif);
+>  	struct wiphy *wiphy = wil_to_wiphy(wil);
+>  	struct wmi_ready_event *evt = d;
+> +	u8 fw_max_assoc_sta;
+>  
+>  	wil_info(wil, "FW ver. %s(SW %d); MAC %pM; %d MID's\n",
+>  		 wil->fw_version, le32_to_cpu(evt->sw_version),
+> @@ -787,6 +789,25 @@ static void wmi_evt_ready(struct wil6210_vif *vif, int id, void *d, int len)
+>  			    evt->rfc_read_calib_result);
+>  		wil->fw_calib_result = evt->rfc_read_calib_result;
+>  	}
+> +
+> +	fw_max_assoc_sta = WIL6210_RX_DESC_MAX_CID;
+> +	if (len > offsetof(struct wmi_ready_event, max_assoc_sta) &&
+> +	    evt->max_assoc_sta > 0) {
+> +		fw_max_assoc_sta = evt->max_assoc_sta;
+> +		wil_dbg_wmi(wil, "fw reported max assoc sta %d\n",
+> +			    fw_max_assoc_sta);
+> +
+> +		if (fw_max_assoc_sta > WIL6210_MAX_CID) {
+> +			wil_dbg_wmi(wil,
+> +				    "fw max assoc sta %d exceeds max driver supported %d\n",
+> +				    fw_max_assoc_sta, WIL6210_MAX_CID);
+> +			fw_max_assoc_sta = WIL6210_MAX_CID;
+> +		}
+> +	}
+> +
+> +	max_assoc_sta = min_t(uint, max_assoc_sta, fw_max_assoc_sta);
 
-This is due to the fact that frames sent on mon0 are echoed back as TX
-status frames, because REQ_TX_STATUS is always set for frames sent from
-monitor mode interfaces.
+You shouldn't modify max_assoc_sta like this. If you have two wil6210
+devices on the same host they will share that variable and there's a
+race condition. Sure, I guess currently they will use the same firmware
+so the values will be the same, but still this is a bug. I think you
+should have wil->max_assoc_sta to make this device specific value.
 
-But when we replace mon0 with an interface in managed mode (wlp1s0), the
-receipt of frames stops, because in managed mode REQ_TX_STATUS is cleared
-in most frames:
-1 $ ifup wlp1s0
-1 $ ping -I wlp1s0 192.168.254.1 # this address is not assigned to any host
-2 $ tcpdump -i mon1 ‚wlan addr2 4c:5e:0c:11:43:ac‘
+I'll apply this anyway as it breaks all other patches if I remove this
+patch. But please fix this in a follow up patch.
 
-> What you're proposing is to use IFF_ECHO to show frames transmitted
-> through *other* interfaces on the monitor interface.
-> 
-> I don’t think the IFF_ECHO semantics really match this.
-> 
-What we propose is to use IFF_ECHO to force REQ_TX_STATUS being set for all
-frames sent on the interface. But you are right: The goal is that frames
-transmitted through the other interface show up on the monitor interface
-(but only after passing the driver). However, this is exactly how we
-understand the semantics of IFF_ECHO in the kernel documentation.
-> 
-> Additionally, drivers are sort of free to ignore the REQ_TX_STATUS, or
-> we could in the future add ways of using the _noskb to feed back TX
-> status to the state machines where needed, so I'm not really sure I even
-> _want_ this to be set in stone in such an API.
-> 
-As far as we know, drivers must return a TX status frame, if REQ_TX_STATUS
-is set, but can do whatever they want, if it is clear. This is no problem for our
-functionality, because we force the delivery of TX status frames by
-permanently setting REQ_TX_STATUS. As long as the semantics of
-REQ_TX_STATUS remains like it is now, the functionality will always be
-as expected from our API.
-
-> Now, I can also see how this can be useful for debugging, but it feels
-> to me like this should be a driver (debug) option?
-> 
-We could also achieve the functionality by modifying the drivers but this
-would mean that we had to add this functionality to every driver.
-Moreover, the feature of TX status frames, how it is implemented currently
-for monitor mode interfaces, is part of the mac80211 implementation. The
-decision to force TX status frames for monitor mode interfaces is made in
-the common mac80211 implementation.
-
-> johannes
-> 
-Once again, thanks for your comments. We appreciate your response.
-
-Julius and Charlie
-
-[1] https://warmcat.com/git/packetspammer
+-- 
+Kalle Valo
