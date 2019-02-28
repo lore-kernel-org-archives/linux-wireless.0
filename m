@@ -3,104 +3,111 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45F4FC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 12:19:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B1DEC4360F
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 12:32:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EA30214D8
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 12:19:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 752272171F
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 12:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731126AbfB1MTx (ORCPT
+        id S1732491AbfB1Mb7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 07:19:53 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:35896 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726066AbfB1MTx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 07:19:53 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 46C4112E517;
-        Thu, 28 Feb 2019 12:19:53 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.55])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BECC618379;
-        Thu, 28 Feb 2019 12:19:50 +0000 (UTC)
-Date:   Thu, 28 Feb 2019 13:19:48 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Joerg Roedel <joro@8bytes.org>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Rosen Penev <rosenp@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Samuel Sieb <samuel@sieb.net>,
-        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
-Message-ID: <20190228121948.GD6072@redhat.com>
-References: <20190114091841.GA23045@localhost.localdomain>
- <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
- <20190115090400.GA2267@localhost.localdomain>
- <20190218143742.GA11872@redhat.com>
- <20190226100535.GA20740@8bytes.org>
- <20190226103450.GA2989@redhat.com>
- <20190226104413.GH20740@8bytes.org>
- <20190226112407.GB2989@redhat.com>
- <20190228090411.GA24938@redhat.com>
- <20190228104223.GA2749@redhat.com>
+        Thu, 28 Feb 2019 07:31:59 -0500
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:53225 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726534AbfB1Mb6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Feb 2019 07:31:58 -0500
+Received: by mail-wm1-f66.google.com with SMTP id m1so9100272wml.2
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2019 04:31:57 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=dBantj8TjJg7wm8MkuJPsbPKarEAn3NbErUVvDZyMQM=;
+        b=YHgJfLvyttlYY8MIuXLnrnOGhg3d3MOdzICAYj3aoX7H+EwKKQPHukzC4z4+0QE8cM
+         GK9G8T5P9at4MUSaI7RLe0Eo9xP1nJHdwZDbRVf1JI/bw30kPXLuEHKx+XuKbIMMhZsY
+         af9hyE2o7W/TaEcQgCymNza4PotU7NlN4YQT9oOqSYnUwEoCsbd8uPguDm8dMw+mQnNc
+         eH6EZzGwnlPHuxlD3Pv/kkZHWkMdwNLxVw8ps2ar7OwZuRL1mhb1gGiz06jNzQ42r1tj
+         27ODPPg9oG5XTDCeYkMbTeQrvFoNWzx2wsWV7jVHUQTe8IBbWUOh6i4NtJ8DFXpgC3uN
+         qRjg==
+X-Gm-Message-State: AHQUAuZUhVld4RJn/wT9KUUe/7FTknwjy4W1Sq0TYLFbPmKv0dqxRRz3
+        GWXCGCLA4diVKtcxKrycUnulYg==
+X-Google-Smtp-Source: APXvYqxvAh+VqrjZqtWrjSIKAv2ms+FfpUcv8jBYQUqmDz70+BRH4h2jNl5c8vbDepV8tXnjZVm+Qg==
+X-Received: by 2002:a1c:4884:: with SMTP id v126mr2846108wma.118.1551357116672;
+        Thu, 28 Feb 2019 04:31:56 -0800 (PST)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id q135sm9104889wme.43.2019.02.28.04.31.55
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 28 Feb 2019 04:31:56 -0800 (PST)
+Date:   Thu, 28 Feb 2019 13:31:52 +0100
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt76: introduce q->stopped parameter
+Message-ID: <20190228123151.GD2768@localhost.localdomain>
+References: <cover.1551301983.git.lorenzo@kernel.org>
+ <ec189b4ec030646d4dbfd0b7c41944ab383edc4e.1551301983.git.lorenzo@kernel.org>
+ <20190228114551.GB6072@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="vni90+aGYgRvsTuO"
 Content-Disposition: inline
-In-Reply-To: <20190228104223.GA2749@redhat.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Thu, 28 Feb 2019 12:19:53 +0000 (UTC)
+In-Reply-To: <20190228114551.GB6072@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Feb 28, 2019 at 11:42:24AM +0100, Stanislaw Gruszka wrote:
-> On Thu, Feb 28, 2019 at 10:04:12AM +0100, Stanislaw Gruszka wrote:
-> > On Tue, Feb 26, 2019 at 12:24:08PM +0100, Stanislaw Gruszka wrote:
-> > > On Tue, Feb 26, 2019 at 11:44:13AM +0100, Joerg Roedel wrote:
-> > > > On Tue, Feb 26, 2019 at 11:34:51AM +0100, Stanislaw Gruszka wrote:
-> > > > > On Tue, Feb 26, 2019 at 11:05:36AM +0100, Joerg Roedel wrote:
-> > > > > If sg->offset > PAGE_SIZE is fine then most likely we have problem with
-> > > > > alignment.
-> > > > 
-> > > > The map_sg implementation in the AMD IOMMU driver uses sg_phys() which
-> > > > handles the sg->page + sg->offset calculation fine.
-> > > > 
-> > > > > Note hat issue is with dma_map_sg(), switching to dma_map_single()
-> > > > > by using urb->transfer_buffer instead of urb->sg make things work
-> > > > > on AMD IOMMU.
-> > > > 
-> > > > On the other hand this points to a bug in the driver, I'll look further
-> > > > if I can spot something there.
-> > > 
-> > > I think so too. And I have done some changes that avoid strange allocation
-> > > scheme and use usb synchronous messages instead of allocating buffers
-> > > with unaligned sizes. However things work ok on Intel IOMMU and 
-> > > there is no documentation what are dma_map_sg() requirement versus
-> > > dma_map_single() which works. I think there are some unwritten
-> > > requirements and things can work on some platforms and fails on others
-> > > (different IOMMUs, no-IOMMU on some ARCHes)  
-> > 
-> > For the record: we have another bug report with this issue:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=202673
-> > 
-> > I provided there patch that change alignment for page_frag_alloc() and
-> > it did not fixed the problem. So this is not alignment issue.
-> > Now I think it could be page->refcount issue ...
-> 
-> I looked at the map_sg() in amd_iommu.c code and one line looks suspicious
-> to me, seems we can use not correctly initialized s->dma_address (should be 0,
-> but I think can be non-zero if SG was reused). The code also seems do
-> not do correct thing if there is more than one SG with multiple pages
-> on individual segments. Something like in below patch seems to be more
-> appropriate to me (not tested nor compiled).
 
-Nevermind, the patch is wrong, s->dma_address is initalized in sg_num_pages().
+--vni90+aGYgRvsTuO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Stanislaw
+> On Wed, Feb 27, 2019 at 10:40:41PM +0100, Lorenzo Bianconi wrote:
+> > @@ -289,9 +290,14 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta=
+ *sta,
+> >  	dev->queue_ops->tx_queue_skb(dev, q, skb, wcid, sta);
+> >  	dev->queue_ops->kick(dev, q);
+> > =20
+> > -	if (q->queued > q->ndesc - 8)
+> > -		ieee80211_stop_queue(dev->hw, skb_get_queue_mapping(skb));
+> > +	stop =3D q->queued > q->ndesc - 8 && !q->stopped;
+> > +	if (stop)
+> > +		q->stopped =3D true;
+> > +
+> >  	spin_unlock_bh(&q->lock);
+> > +
+> > +	if (stop)
+> > +		ieee80211_stop_queue(dev->hw, skb_get_queue_mapping(skb));
+>=20
+> I don't think taking this outside of spin_lock section is beneficial.
+> Actually is better to do this faster than slower to prevent enqueue
+> frames by mac80211 and then dropped them due to lack of space in
+> mt76 queue.
+
+ack, I will send a v2 moving it back.
+
+Regards,
+Lorenzo
+
+>=20
+> Stanislaw
+
+--vni90+aGYgRvsTuO
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXHfUswAKCRA6cBh0uS2t
+rNayAQC4ottbpej4Gda56pJ0mdzmiNroM+GUdJaLHiPhhP80fgD/cmcqQI49fzgj
+4T4NzpyJu1FtBJgofT6g8TZDrYnYZAo=
+=9Hl+
+-----END PGP SIGNATURE-----
+
+--vni90+aGYgRvsTuO--
