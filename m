@@ -2,137 +2,63 @@ Return-Path: <SRS0=yJNj=RD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2AD0C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 13:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CE49C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 13:40:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9FE512171F
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 13:31:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1551360715;
-	bh=4stRft3fyQPpb5FscZSGuqs7JngWycMvFqiF3omDnik=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=m765hRqYUUZKoOq1AOt7W/d9JIyhvHXo+BLTXmHuzJcaT7bzpxxAUG3fwKv+Hzl4G
-	 UvkKxi9TXs9RAXH9lkvtshuu8HLhxuvntsUNfbNbLlXaIunl2vUbXeLQaGWnOe0vUJ
-	 jkADxAHiOmvkupeCS+JUhTrSCns/DuwV/FxYMjuo=
+	by mail.kernel.org (Postfix) with ESMTP id 239EB2171F
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 13:40:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727864AbfB1Nby (ORCPT
+        id S1730929AbfB1Nkc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 08:31:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36390 "EHLO mail.kernel.org"
+        Thu, 28 Feb 2019 08:40:32 -0500
+Received: from 8bytes.org ([81.169.241.247]:55958 "EHLO theia.8bytes.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726918AbfB1Nby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 08:31:54 -0500
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com [149.6.153.186])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A584420830;
-        Thu, 28 Feb 2019 13:31:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1551360713;
-        bh=4stRft3fyQPpb5FscZSGuqs7JngWycMvFqiF3omDnik=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1SqbA9B1ZNF/2xVZauPaWUwR9mXSPm3gf2NlGfQcS6CaXoWQAzrfPZ8fs4TIeJSTo
-         Z+aiJRS/Sa5uingVHI9zVXPWfmjAd6eTYszNI7Gvsf8a/ihby8zy2tg8bB1Ok2a6IN
-         7WzNhRjrhCPx6/uzPCh82AQx6Vdpya8oEKxzCGPA=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        lorenzo.bianconi@redhat.com
-Subject: [PATCH v2] mt76: introduce q->stopped parameter
-Date:   Thu, 28 Feb 2019 14:31:31 +0100
-Message-Id: <803f9e01a21ef024ce66d1fda96debe278b0a398.1551360035.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1551360035.git.lorenzo@kernel.org>
-References: <cover.1551360035.git.lorenzo@kernel.org>
+        id S1726806AbfB1Nkc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Feb 2019 08:40:32 -0500
+Received: by theia.8bytes.org (Postfix, from userid 1000)
+        id DE3524A3; Thu, 28 Feb 2019 14:40:29 +0100 (CET)
+Date:   Thu, 28 Feb 2019 14:40:29 +0100
+From:   Joerg Roedel <joro@8bytes.org>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Rosen Penev <rosenp@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Samuel Sieb <samuel@sieb.net>,
+        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
+Message-ID: <20190228134029.GC1594@8bytes.org>
+References: <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
+ <20190115090400.GA2267@localhost.localdomain>
+ <20190218143742.GA11872@redhat.com>
+ <20190226100535.GA20740@8bytes.org>
+ <20190226103450.GA2989@redhat.com>
+ <20190226104413.GH20740@8bytes.org>
+ <20190226112407.GB2989@redhat.com>
+ <20190228090411.GA24938@redhat.com>
+ <20190228104223.GA2749@redhat.com>
+ <20190228121948.GD6072@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190228121948.GD6072@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce mt76_queue stopped parameter in order to run
-ieee80211_wake_queue only when mac80211 queues have been
-previously stopped and avoid to disable interrupts when
-it is not necessary
+On Thu, Feb 28, 2019 at 01:19:48PM +0100, Stanislaw Gruszka wrote:
+> Nevermind, the patch is wrong, s->dma_address is initalized in sg_num_pages().
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
-Changes since v1:
-- move back ieee80211_stop_queue() inside q->lock critical section
----
- drivers/net/wireless/mediatek/mt76/dma.c  | 5 ++++-
- drivers/net/wireless/mediatek/mt76/mt76.h | 1 +
- drivers/net/wireless/mediatek/mt76/tx.c   | 5 ++++-
- drivers/net/wireless/mediatek/mt76/usb.c  | 6 +++++-
- 4 files changed, 14 insertions(+), 3 deletions(-)
+Yes, it is. In sg_num_pages() the offset into the IOMMU mapping is
+stored in s->dma_address, taking also the segment boundary mask into
+account. map_sg() later only adds the base-address to that.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 6eedc0ec7661..99e341cb1f92 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -180,7 +180,10 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
- 	else
- 		mt76_dma_sync_idx(dev, q);
- 
--	wake = wake && qid < IEEE80211_NUM_ACS && q->queued < q->ndesc - 8;
-+	wake = wake && q->stopped &&
-+	       qid < IEEE80211_NUM_ACS && q->queued < q->ndesc - 8;
-+	if (wake)
-+		q->stopped = false;
- 
- 	if (!q->queued)
- 		wake_up(&dev->tx_wait);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 5dfb0601f101..3152b8c73c4a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -126,6 +126,7 @@ struct mt76_queue {
- 	int ndesc;
- 	int queued;
- 	int buf_size;
-+	bool stopped;
- 
- 	u8 buf_offset;
- 	u8 hw_idx;
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index 5a349fe3e576..4d38a54014e8 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -289,8 +289,11 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 	dev->queue_ops->tx_queue_skb(dev, q, skb, wcid, sta);
- 	dev->queue_ops->kick(dev, q);
- 
--	if (q->queued > q->ndesc - 8)
-+	if (q->queued > q->ndesc - 8 && !q->stopped) {
- 		ieee80211_stop_queue(dev->hw, skb_get_queue_mapping(skb));
-+		q->stopped = true;
-+	}
-+
- 	spin_unlock_bh(&q->lock);
- }
- EXPORT_SYMBOL_GPL(mt76_tx);
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index ae6ada370597..4c1abd492405 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -655,7 +655,11 @@ static void mt76u_tx_tasklet(unsigned long data)
- 			spin_lock_bh(&q->lock);
- 		}
- 		mt76_txq_schedule(dev, q);
--		wake = i < IEEE80211_NUM_ACS && q->queued < q->ndesc - 8;
-+
-+		wake = q->stopped && q->queued < q->ndesc - 8;
-+		if (wake)
-+			q->stopped = false;
-+
- 		if (!q->queued)
- 			wake_up(&dev->tx_wait);
- 
--- 
-2.20.1
+Regards,
 
+	Joerg
