@@ -2,157 +2,278 @@ Return-Path: <SRS0=yJNj=RD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59A05C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 15:55:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03667C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 15:58:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B75C218AE
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 15:55:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABF692184A
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 15:58:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="yEq5ba+R";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="mcbWXBcb"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="DstmsSw8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729880AbfB1Pz3 (ORCPT
+        id S1732485AbfB1P62 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 10:55:29 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:3897 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726986AbfB1Pz2 (ORCPT
+        Thu, 28 Feb 2019 10:58:28 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:59880 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732388AbfB1P62 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 10:55:28 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x1SFt3VB014856;
-        Thu, 28 Feb 2019 07:55:26 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : content-type : content-transfer-encoding :
- mime-version; s=pfpt0818; bh=/bQeDrmz3EHPcsHCOf8kGVDLsAJfPYKMvndxr41JNJI=;
- b=yEq5ba+RGS0ey49bNTMXZ274vRk9q8euZCLj4rBriZbpHzKReE0MLtZTfRFQvju7+Beq
- bOU1FS8qsMF0XI5lKM9Exs5AsaWQZJTZqpFS7xMhgn2cRzGnRub+rjLUGx4Z/3wNe6w+
- Vwcz4aiw0OAiAl2ZjfDkFw5i/FQolvpjp/pwpLzlXdcIzEZgsnJ0OJ+NvODFLb/mvKOQ
- AcZ6p7dhZ1NQ2Tx0qXOO86dzPD8SK16XfEJ0XNi/7ayz4VsFM8uDa7koU3T6KJgrzPCD
- traY6hNUas5U7C1G2hoqqWjWYivLRsCZMEarTLpW9JIhk/f9T9NcoSxyUgoM8AExiv+D qg== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2qx4kmt87a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 28 Feb 2019 07:55:26 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 28 Feb
- 2019 07:55:25 -0800
-Received: from NAM04-BN3-obe.outbound.protection.outlook.com (104.47.46.54) by
- SC-EXCH01.marvell.com (10.93.176.81) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Thu, 28 Feb 2019 07:55:25 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/bQeDrmz3EHPcsHCOf8kGVDLsAJfPYKMvndxr41JNJI=;
- b=mcbWXBcbnD7FTQ9cAlCods5x5ZR0YKEONnq8OYBpEUgf+3jdegfVdGjTL0rl3IW04/VMRWvI93arVkmqdb1MccVMpjXTwkjwOWgoJO4oa/0xp6qeIC9IYON3HuQJsRAkUJfw7L04aif97Rs9oNpYx0CL3iysSZiKssRxKnDep/U=
-Received: from CY4PR18MB1237.namprd18.prod.outlook.com (10.172.177.140) by
- CY4PR18MB1016.namprd18.prod.outlook.com (10.173.182.142) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1643.15; Thu, 28 Feb 2019 15:55:24 +0000
-Received: from CY4PR18MB1237.namprd18.prod.outlook.com
- ([fe80::a11f:1535:50c1:a310]) by CY4PR18MB1237.namprd18.prod.outlook.com
- ([fe80::a11f:1535:50c1:a310%10]) with mapi id 15.20.1643.022; Thu, 28 Feb
- 2019 15:55:24 +0000
-From:   Ganapathi Bhat <gbhat@marvell.com>
-To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>, James Cao <jcao@marvell.com>,
-        Rakesh Parmar <rakeshp@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>
-Subject: pull-request mwifiex-firmware 2019-02-28
-Thread-Topic: pull-request mwifiex-firmware 2019-02-28
-Thread-Index: AQHUz3389IKQ5g790k2DU7NOO09Yug==
-Date:   Thu, 28 Feb 2019 15:55:24 +0000
-Message-ID: <CY4PR18MB1237089CC3822DBF13CDB86BA0750@CY4PR18MB1237.namprd18.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [182.72.17.59]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: b3abf541-31f1-4221-522c-08d69d95268f
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:CY4PR18MB1016;
-x-ms-traffictypediagnostic: CY4PR18MB1016:
-x-microsoft-exchange-diagnostics: =?iso-8859-1?Q?1;CY4PR18MB1016;23:cL8PwGdHo7TBMam9pnc0oHx1FbbJ7GpKAAeK3D1?=
- =?iso-8859-1?Q?Pn7zq6dc4C+m7tp8eE/Pb+qAl2YWl/icrL1UAfnwIk73wF5i/4XZNMpVYC?=
- =?iso-8859-1?Q?UvLV6cc6YE1QZlqEUcp7y/GKvIKIFwEX23/yYPOm4NodaQ6IT+RwzuqGwz?=
- =?iso-8859-1?Q?s8U+GTfp1+oIskkrKcNkFDg5FB/ODOpAZdG3xMvGmfzgKjkf3CB/v7Ym6C?=
- =?iso-8859-1?Q?JRFoOzr4tOhObFE5urBFfH2gTJspx8yMcVsp4EVXERM1OVeHnyvKqCBTCh?=
- =?iso-8859-1?Q?BCDy8jzIJ6f+tCVHxyaVLWVZgV77cEVp56cji+izCK4O+xd7+T5mzf8PRq?=
- =?iso-8859-1?Q?ov1bArDYXwKNVeTpvZEKtXiOJllcO+cPSDb1+74CuAfIh1nj2ntH6rMF1G?=
- =?iso-8859-1?Q?HDPruDevF1Eo9hVYo+Rqc6aS4TjmB1OTqSNM+zTRo/EMMB9UDjco1WGlcq?=
- =?iso-8859-1?Q?OpoJbWopfOcyeSmsaPwcVvuERpCHjJ89+WYtOxna52iuHrh/CaIZehV8K3?=
- =?iso-8859-1?Q?VCqHoXbfjWd/rqN952pK2TfSxRcHY52h9eEZoJtL8PK2iMROYzWKJLfti6?=
- =?iso-8859-1?Q?5BhI2glfzzlJWt66bmK+m2Dmv+rEFwpCv3sCVqsuxpfAdd8bfm/Qswh7Oq?=
- =?iso-8859-1?Q?xy6mr76JHF5xRGBdBaaVQTeqTXIdGfSAQQPHyFPzuMgdsG9lUMmwVpK8L7?=
- =?iso-8859-1?Q?1I3IUPX3OH7q7pJ4AvPCd1+AIKlMh0/WzTrfY0Fkp/PIxMYRtMtjMYm4gr?=
- =?iso-8859-1?Q?Xop4b+HN0ki98qxVqtJu9wl7o5DBAJ7KamxLBNGlhrJKy0rsDkuKecIlfa?=
- =?iso-8859-1?Q?E+ENw2baY4FH3xVMuPKAImZkyxwgB52GmXgvsVRbh6kbITbcz4e8JdNJ6m?=
- =?iso-8859-1?Q?wdNk4kjyXQ+Yi4vDQohU+MRLCHWwcyyQ3/4d8NwBcarxkD9glqEaT4q+m6?=
- =?iso-8859-1?Q?POoZUGud4CvmeQQBqG7Tb04ocABYvsZRWrAHgoidhCGK9qFa2o/J44Mszd?=
- =?iso-8859-1?Q?3psmHKlh5XBDcbBDoCqoBMdDlUkVG+c6ws0ICOBygPeDmOrNTb0Nr1vESR?=
- =?iso-8859-1?Q?46h5GVRb3/H7zV2XUOMnuLrrkYLyjebhGjMzfnXZ15YnykBUGk8OAdNz+M?=
- =?iso-8859-1?Q?e0FzsJJFnUuGbcztR8wH0XACJxkslF4ZZwC5PkjmFC/W4vejnOsUj5ZQG9?=
- =?iso-8859-1?Q?CKMn6p43OZQ/DfTIcAmrg07203jGyWSGILbbRMDmeUoScY+uk29zsZgsEr?=
- =?iso-8859-1?Q?JSL4Op885Yluge6vgjhc46Af8KmlUpIc/4M9VqV29wNgYenDw9F+6gfCZD?=
- =?iso-8859-1?Q?e81ogxNlWVdHVSZqOZs02mAhnvKe2ilai/XO3Pe9vZuoA=3D=3D?=
-x-microsoft-antispam-prvs: <CY4PR18MB10168DDDB6E1B319A6B1C27AA0750@CY4PR18MB1016.namprd18.prod.outlook.com>
-x-forefront-prvs: 0962D394D2
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(366004)(376002)(396003)(346002)(39860400002)(199004)(189003)(5660300002)(81156014)(25786009)(107886003)(6436002)(8936002)(7736002)(81166006)(55016002)(9686003)(66066001)(78486014)(4744005)(5640700003)(2906002)(53936002)(256004)(54906003)(33656002)(316002)(71200400001)(71190400001)(6916009)(14444005)(8676002)(68736007)(4326008)(106356001)(7696005)(2501003)(486006)(14454004)(74316002)(97736004)(476003)(26005)(99286004)(52536013)(3846002)(6116002)(105586002)(186003)(86362001)(478600001)(2351001)(55236004)(6506007)(102836004)(305945005);DIR:OUT;SFP:1101;SCL:1;SRVR:CY4PR18MB1016;H:CY4PR18MB1237.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 4rI90cU3QsQtn9Tza97JJqVy+NLTRH049sf/v5+5VI4KJTxS/kIzTqnJWiZuiX5dGXdFsLAbPcA5QkVZ62QWdJtokWGipZYJv8WvVAUKzIFr3GzhT50uYtwkfjzsEeOjNqTENUhLiBjuaeRKfL8tvg139P29CW8+AOOp3PMDDS607uVDcIipofYUfz2n4ULQtEZbDQp4OQ+6cNuEw/PmGFb/X8PeXNWA8cO4tkySqiYmQiElYvCocn+ySO4o5NLbU5PFKV8jZ4VNP74QttQnnZp3SG5/bqwnYEAzW4I9vnHzhA+XdGtdvsVm/G0TvQ+KfWepDKg7zVoxnzebc7Wzj0RWqXFwFq8OLu1gQYWZmx3zy0/3mURBObz5Aw2adzwCJepd9Ysne+JiVK3C/HcGz5tP65u9d6MXoJNgLrQKLN0=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        Thu, 28 Feb 2019 10:58:28 -0500
+Received: from ben-dt4.candelatech.com (firewall.candelatech.com [50.251.239.81])
+        by mail2.candelatech.com (Postfix) with ESMTP id B778140A959;
+        Thu, 28 Feb 2019 07:58:25 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail2.candelatech.com B778140A959
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1551369505;
+        bh=4tvZN3qZ4F36kWPG1qijRWIf/Ey7Do5nXSh44HvMrzc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=DstmsSw84jQK5waNOPQxrJ16B5X3UxgbMY9KUBup2pUEMOmsrU+nutiCQ59edJ8Oo
+         STDQzOVA9cUGiUNhDCggRB44dScVCpwVrX6yH6QKcVdtVsysuNGJf0hdL2yDydOzDG
+         T2YZ0M/5l4zjoQ1LSOcQTAVdUwrWZaBq79zKw9/U=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [RFC] ath10k:  Fix DMA errors related to beacons (CT FW only)
+Date:   Thu, 28 Feb 2019 07:58:23 -0800
+Message-Id: <20190228155823.24749-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: b3abf541-31f1-4221-522c-08d69d95268f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Feb 2019 15:55:24.1408
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR18MB1016
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-02-28_08:,,
- signatures=0
-X-Proofpoint-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=767 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1902280108
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The following changes since commit bd72387b8e49b1b7268ee60c97a131419284fb39=
-:
+From: Ben Greear <greearb@candelatech.com>
 
-  linux-firmware: update Marvell PCIe-USB8997 firmware image (2019-02-12 11=
-:42:24 +0530)
+I often saw the ath10k-ct wave-1 firmware spit DMA errors and
+hang the entire system, requiring a hard power-cycle to revoer.
 
-are available in the git repository at:
+It appears the issue is that there is no beacon-tx callback in
+stock firmware, so the driver can delete the beacon DMA buffer
+while firmware is still trying to access it.
 
-  git://git.marvell.com/mwifiex-firmware.git
+So, wave-1 ath10k-ct firmware now sends a beacon-tx-complete
+wmi message and that allows the driver to safely know when it
+can clean up the buffer.
 
-for you to fetch changes up to 1a5773c0c89ee44cee51a285d5c7c1063cdb0891:
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-  linux-firmware: update Marvell 8897/8997 firmware images (2019-02-28 21:1=
-1:26 +0530)
+NOTE:  This will not apply or work in upstream kernels since the
+rest of the CT fw support will not be accepted.  But, I'd appreciate
+any technical feedback on this in case I missed any corner cases
+on locking or similar.
 
-----------------------------------------------------------------
-Ganapathi Bhat (1):
-      linux-firmware: update Marvell 8897/8997 firmware images
+ drivers/net/wireless/ath/ath10k/core.c    |  1 +
+ drivers/net/wireless/ath/ath10k/core.h    |  6 ++++
+ drivers/net/wireless/ath/ath10k/mac.c     | 14 +++++++++
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 12 +++++--
+ drivers/net/wireless/ath/ath10k/wmi.c     | 38 +++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h     |  8 +++++
+ 6 files changed, 75 insertions(+), 4 deletions(-)
 
- WHENCE                       |   6 +++---
- mrvl/pcie8897_uapsta.bin     | Bin 843828 -> 723540 bytes
- mrvl/pcie8997_wlan_v4.bin    | Bin 428788 -> 456488 bytes
- mrvl/usbusb8997_combo_v4.bin | Bin 604536 -> 610252 bytes
- 4 files changed, 3 insertions(+), 3 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e6664131fdee..929e0c059adc 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -623,6 +623,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_RETRY_GT2_CT] = "retry-gt2-CT",
+ 	[ATH10K_FW_FEATURE_CT_STA] = "CT-STA",
+ 	[ATH10K_FW_FEATURE_TXRATE2_CT] = "txrate2-CT",
++	[ATH10K_FW_FEATURE_BEACON_TX_CB_CT] = "beacon-cb-CT",
+ };
+ 
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 15621a2af557..a70771170007 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -563,6 +563,7 @@ enum ath10k_beacon_state {
+ 
+ struct ath10k_vif {
+ 	struct list_head list;
++	struct completion beacon_tx_done;
+ 
+ 	u32 vdev_id;
+ 	u16 peer_id;
+@@ -944,6 +945,11 @@ enum ath10k_fw_features {
+ 	/* TX-Rate v2 is reported. */
+ 	ATH10K_FW_FEATURE_TXRATE2_CT = 49,
+ 
++	/* Firmware will send a beacon-tx-callback message so driver knows when
++	 * beacon buffer can be released.
++	 */
++	ATH10K_FW_FEATURE_BEACON_TX_CB_CT = 50,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 154dcdabc48a..02a8efa2e783 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5811,6 +5811,10 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	arvif->ar = ar;
+ 	arvif->vif = vif;
+ 
++	init_completion(&arvif->beacon_tx_done);
++	/* start completed since we have not sent any beacons yet */
++	complete(&arvif->beacon_tx_done);
++
+ 	INIT_LIST_HEAD(&arvif->list);
+ 	INIT_WORK(&arvif->ap_csa_work, ath10k_mac_vif_ap_csa_work);
+ 	INIT_DELAYED_WORK(&arvif->connection_loss_work,
+@@ -6147,6 +6151,16 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 		ath10k_warn(ar, "failed to stop spectral for vdev %i: %d\n",
+ 			    arvif->vdev_id, ret);
+ 
++	if (test_bit(ATH10K_FW_FEATURE_BEACON_TX_CB_CT,
++		      ar->running_fw->fw_file.fw_features)) {
++		int time_left;
++
++		time_left = wait_for_completion_timeout(&arvif->beacon_tx_done, (3 * HZ));
++		if (!time_left)
++			ath10k_warn(ar, "WARNING: failed to wait for beacon tx callback for vdev %i: %d\n",
++				    arvif->vdev_id, ret);
++	}
++
+ 	ar->free_vdev_map |= 1LL << arvif->vdev_id;
+ 	spin_lock_bh(&ar->data_lock);
+ 	list_del(&arvif->list);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 6c6f7db5b20b..dcba53575dfc 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -1000,25 +1000,33 @@ ath10k_wmi_peer_assoc(struct ath10k *ar,
+ }
+ 
+ static inline int
+-ath10k_wmi_beacon_send_ref_nowait(struct ath10k *ar, u32 vdev_id,
++ath10k_wmi_beacon_send_ref_nowait(struct ath10k_vif *arvif,
+ 				  const void *bcn, size_t bcn_len,
+ 				  u32 bcn_paddr, bool dtim_zero,
+ 				  bool deliver_cab)
+ {
+ 	struct sk_buff *skb;
+ 	int ret;
++	struct ath10k *ar = arvif->ar;
+ 
+ 	if (!ar->wmi.ops->gen_beacon_dma)
+ 		return -EOPNOTSUPP;
+ 
+-	skb = ar->wmi.ops->gen_beacon_dma(ar, vdev_id, bcn, bcn_len, bcn_paddr,
++	skb = ar->wmi.ops->gen_beacon_dma(ar, arvif->vdev_id, bcn, bcn_len, bcn_paddr,
+ 					  dtim_zero, deliver_cab);
+ 	if (IS_ERR(skb))
+ 		return PTR_ERR(skb);
+ 
++	spin_lock_bh(&ar->data_lock);
++	reinit_completion(&arvif->beacon_tx_done);
++	spin_unlock_bh(&ar->data_lock);
++	
+ 	ret = ath10k_wmi_cmd_send_nowait(ar, skb,
+ 					 ar->wmi.cmd->pdev_send_bcn_cmdid);
+ 	if (ret) {
++		spin_lock_bh(&ar->data_lock);
++		complete(&arvif->beacon_tx_done);
++		spin_unlock_bh(&ar->data_lock);
+ 		dev_kfree_skb(skb);
+ 		return ret;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 5d89482ffca8..6e9705d3a967 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1846,8 +1846,7 @@ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
+ 
+ 		dtim_zero = !!(cb->flags & ATH10K_SKB_F_DTIM_ZERO);
+ 		deliver_cab = !!(cb->flags & ATH10K_SKB_F_DELIVER_CAB);
+-		ret = ath10k_wmi_beacon_send_ref_nowait(arvif->ar,
+-							arvif->vdev_id,
++		ret = ath10k_wmi_beacon_send_ref_nowait(arvif,
+ 							bcn->data, bcn->len,
+ 							cb->paddr,
+ 							dtim_zero,
+@@ -5941,6 +5940,38 @@ static int ath10k_wmi_event_temperature(struct ath10k *ar, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
++static void ath10k_wmi_event_beacon_tx(struct ath10k *ar, struct sk_buff *skb)
++{
++	struct ath10k_vif *arvif;
++	const struct wmi_beacon_tx_event *ev;
++	u32 vdev_id;
++
++	spin_lock_bh(&ar->data_lock);
++
++	ev = (struct wmi_beacon_tx_event *)skb->data;
++
++	if (WARN_ON_ONCE(skb->len < sizeof(*ev)))
++		goto exit;
++
++	vdev_id = __le32_to_cpu(ev->vdev_id);
++
++	/*ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi event beacon-tx-complete, vdev-id: %u  completion-status: 0x%x\n",
++		   vdev_id, __le32_to_cpu(ev->tx_status));*/
++
++	arvif = ath10k_get_arvif(ar, vdev_id);
++	if (!arvif) {
++		ath10k_warn(ar, "wmi-event-beacon-tx, could not find vdev for id: %u\n",
++			    vdev_id);
++		goto exit;
++	}
++
++	complete(&arvif->beacon_tx_done);
++
++exit:
++	spin_unlock_bh(&ar->data_lock);
++}
++
+ static int ath10k_wmi_event_pdev_bss_chan_info(struct ath10k *ar,
+ 					       struct sk_buff *skb)
+ {
+@@ -6269,6 +6300,9 @@ static void ath10k_wmi_10_1_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_10_1_PDEV_BSS_CHAN_INFO_EVENTID: /* Newer CT firmware supports this */
+ 		ath10k_wmi_event_pdev_bss_chan_info(ar, skb);
+ 		break;
++	case WMI_10_1_BEACON_TX_EVENTID: /* Feb 28, 2019 CT firmware supports this */
++		ath10k_wmi_event_beacon_tx(ar, skb);
++		break;
+ 	default:
+ 		ath10k_warn(ar, "Unknown (10.1) eventid: %d\n", id);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 49466123b8fe..96066cc57f83 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1533,6 +1533,7 @@ enum wmi_10x_event_id {
+ 
+ 	WMI_10_1_PDEV_TEMPERATURE_EVENTID = 36898, /* Newer CT firmware */
+ 	WMI_10_1_PDEV_BSS_CHAN_INFO_EVENTID = 36900, /* Newer CT firmware */
++	WMI_10_1_BEACON_TX_EVENTID = WMI_10X_END_EVENTID - 4, /* CT FW, beacon tx completed */
+ 	WMI_10X_PDEV_UTF_EVENTID = WMI_10X_END_EVENTID - 1,
+ };
+ 
+@@ -6223,6 +6224,13 @@ struct wmi_bcn_info {
+ 	struct wmi_p2p_noa_info p2p_noa_info;
+ } __packed;
+ 
++/* CT FW only */
++struct wmi_beacon_tx_event {
++	__le32 vdev_id;
++	__le32 tx_status;
++	__le32 future[4];
++};
++
+ struct wmi_host_swba_event {
+ 	__le32 vdev_map;
+ 	struct wmi_bcn_info bcn_info[0];
+-- 
+2.20.1
 
