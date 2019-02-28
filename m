@@ -2,106 +2,91 @@ Return-Path: <SRS0=yJNj=RD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F45FC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 08:04:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9432AC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 08:28:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 17C542171F
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 08:04:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61BE32184A
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 08:28:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ha5xgjIj";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NzJF9+SF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731510AbfB1IEl (ORCPT
+        id S1731447AbfB1I2V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 03:04:41 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:42996 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730263AbfB1IEl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 03:04:41 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Thu, 28 Feb 2019 03:28:21 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:33352 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730832AbfB1I2V (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Feb 2019 03:28:21 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 4DCCB608CE; Thu, 28 Feb 2019 08:28:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1551342500;
+        bh=2qfEPljDzI0n+ylUz10NpciA4v9LxT8JMRniW8lovyQ=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=ha5xgjIjCzlPLR6mMdJ5ccKykfjAktFA6P71IyVl9gRlkVhuzfqm5sO3T3WByzst/
+         /hyCWOelcTighgKiGEpO1Ek84IgTBu3t55iabZWuGGk0RmUsiDGMOjrlao8IyI9QoR
+         n/icXYCqFCtLCQYTf96eApKhQGWfqS5ZMdlO29fA=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1FFF330B9F4E;
-        Thu, 28 Feb 2019 08:04:41 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.30])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5C36617B66;
-        Thu, 28 Feb 2019 08:04:37 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [RFC 12/12] mt76x02: remove set_tim
-Date:   Thu, 28 Feb 2019 09:03:33 +0100
-Message-Id: <1551341013-24519-13-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1551341013-24519-1-git-send-email-sgruszka@redhat.com>
-References: <1551341013-24519-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.47]); Thu, 28 Feb 2019 08:04:41 +0000 (UTC)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0EDDB60128;
+        Thu, 28 Feb 2019 08:28:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1551342499;
+        bh=2qfEPljDzI0n+ylUz10NpciA4v9LxT8JMRniW8lovyQ=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=NzJF9+SFkeVmA0RZsNErdngkfh7LbP5T/7UDQ6jbNvBSxT3Za8E17H4pOehEWfOci
+         cCQQKMjeK+7ddvZLdAk/oicTxvUTHCXQvoFaS6h+uG6beAPvx6JjqaKP+unucxqym7
+         vpEYWNqy5C7aYK+GZdkIqOWPL2iZHn3I4owsfcqo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0EDDB60128
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH wireless-drivers-next 1/2] brcmfmac: fix size of the
+ struct msgbuf_ring_status
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190221103325.28228-1-zajec5@gmail.com>
+References: <20190221103325.28228-1-zajec5@gmail.com>
+To:     =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190228082820.4DCCB608CE@smtp.codeaurora.org>
+Date:   Thu, 28 Feb 2019 08:28:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-set_tim callback is not used by mac80211 if AP_LINK_PS hw flag is set.
+Rafał Miłecki wrote:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/pci.c      | 8 --------
- drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c | 7 -------
- 2 files changed, 15 deletions(-)
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> This updates host struct to match the in-firmawre definition. It's a
+> cosmetic change as it only applies to the reserved struct space.
+> 
+> Fixes: c988b78244df ("brcmfmac: print firmware reported ring status errors")
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index fafe57653ac0..68d44929dafa 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -74,13 +74,6 @@ mt76x0e_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- }
- 
--static int
--mt76x0e_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
--		bool set)
--{
--	return 0;
--}
--
- static const struct ieee80211_ops mt76x0e_ops = {
- 	.tx = mt76x02_tx,
- 	.start = mt76x0e_start,
-@@ -101,7 +94,6 @@ static const struct ieee80211_ops mt76x0e_ops = {
- 	.get_survey = mt76_get_survey,
- 	.get_txpower = mt76_get_txpower,
- 	.flush = mt76x0e_flush,
--	.set_tim = mt76x0e_set_tim,
- 	.release_buffered_frames = mt76_release_buffered_frames,
- 	.set_coverage_class = mt76x02_set_coverage_class,
- 	.set_rts_threshold = mt76x02_set_rts_threshold,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-index 878ce92405ed..f45847f48920 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-@@ -135,12 +135,6 @@ mt76x2_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- }
- 
--static int
--mt76x2_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta, bool set)
--{
--	return 0;
--}
--
- static int mt76x2_set_antenna(struct ieee80211_hw *hw, u32 tx_ant,
- 			      u32 rx_ant)
- {
-@@ -197,7 +191,6 @@ const struct ieee80211_ops mt76x2_ops = {
- 	.release_buffered_frames = mt76_release_buffered_frames,
- 	.set_coverage_class = mt76x02_set_coverage_class,
- 	.get_survey = mt76_get_survey,
--	.set_tim = mt76x2_set_tim,
- 	.set_antenna = mt76x2_set_antenna,
- 	.get_antenna = mt76x2_get_antenna,
- 	.set_rts_threshold = mt76x02_set_rts_threshold,
+2 patches applied to wireless-drivers-next.git, thanks.
+
+0c7051610c57 brcmfmac: fix size of the struct msgbuf_ring_status
+c91377495192 brcmfmac: print firmware reported general status errors
+
 -- 
-2.20.1
+https://patchwork.kernel.org/patch/10823623/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
