@@ -2,107 +2,94 @@ Return-Path: <SRS0=yJNj=RD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9529CC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 08:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E3D9C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 09:04:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6221F2171F
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 08:48:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="L67yfRlL";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cjapq2lK"
+	by mail.kernel.org (Postfix) with ESMTP id E659B21850
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 09:04:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730930AbfB1Iss (ORCPT
+        id S1732056AbfB1JEU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 03:48:48 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:36334 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726038AbfB1Iss (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 03:48:48 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 755FE60A43; Thu, 28 Feb 2019 08:48:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551343727;
-        bh=Ot+4lhWEbcTAZxRE2gq91Xz3k+t6kK5HDKEltXI4Qw4=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=L67yfRlLrKCExTs3d3ldP4vy0+ziyQuPvbHrpkThHNwLt/s4hIf6swdZoeYnEmMuD
-         QW35huVvACM1wQo9hQvd+DwvrPNF2xGwC7rh9n1KMQoXSlurPpZJgxriD8bDJzg+rl
-         ICbBtfZf2EHKiKMwgRHxqkgYthesVRpvy7axq04k=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Thu, 28 Feb 2019 04:04:20 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:60808 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732054AbfB1JET (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Feb 2019 04:04:19 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E7BA560909;
-        Thu, 28 Feb 2019 08:48:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551343726;
-        bh=Ot+4lhWEbcTAZxRE2gq91Xz3k+t6kK5HDKEltXI4Qw4=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=cjapq2lKnm7DnithTBs0gGUuf4WuXu2y/pyyrTlV89PMiApPtLkwJdAZg8jRj8+r3
-         IOgYI7GMr4VH2k6GkFeTed6vfD9LPOr69XH78zJbi0TULH1C8ddRbANv+ugP9crEML
-         hZgB2VgigSIE74leqFglGsYzAsqNnR9cFeb4ltAk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E7BA560909
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        by mx1.redhat.com (Postfix) with ESMTPS id 334BA8AE40;
+        Thu, 28 Feb 2019 09:04:19 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.30])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 389B161355;
+        Thu, 28 Feb 2019 09:04:13 +0000 (UTC)
+Date:   Thu, 28 Feb 2019 10:04:12 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Joerg Roedel <joro@8bytes.org>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Rosen Penev <rosenp@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Samuel Sieb <samuel@sieb.net>,
+        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
+Message-ID: <20190228090411.GA24938@redhat.com>
+References: <CAJ0CqmU7k5i26g7dGPxNdts7Gm67W6qNsr4vYuW05ugsEF1ohw@mail.gmail.com>
+ <CAKxU2N-+CTaRdJMFVRdozJ5TTpN+_4thiDRBJBFq8gGtuRVYvA@mail.gmail.com>
+ <20190114091841.GA23045@localhost.localdomain>
+ <CAKxU2N8ioMszBCyQcH7CVhgBdW4aj7yZ+kYQe14DCV5OSAnxrg@mail.gmail.com>
+ <20190115090400.GA2267@localhost.localdomain>
+ <20190218143742.GA11872@redhat.com>
+ <20190226100535.GA20740@8bytes.org>
+ <20190226103450.GA2989@redhat.com>
+ <20190226104413.GH20740@8bytes.org>
+ <20190226112407.GB2989@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] ath10k: Fill rx duration for each peer in fw_stats for
- WCN3990
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1551174796-25264-1-git-send-email-svishnoi@codeaurora.org>
-References: <1551174796-25264-1-git-send-email-svishnoi@codeaurora.org>
-To:     Surabhi Vishnoi <svishnoi@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Surabhi Vishnoi <svishnoi@codeaurora.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190228084847.755FE60A43@smtp.codeaurora.org>
-Date:   Thu, 28 Feb 2019 08:48:47 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190226112407.GB2989@redhat.com>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Thu, 28 Feb 2019 09:04:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Surabhi Vishnoi <svishnoi@codeaurora.org> wrote:
-
-> Currently, rx_duration for each peer is not getting populated in
-> fw_stats debugfs entry for WCN3990.
+On Tue, Feb 26, 2019 at 12:24:08PM +0100, Stanislaw Gruszka wrote:
+> On Tue, Feb 26, 2019 at 11:44:13AM +0100, Joerg Roedel wrote:
+> > On Tue, Feb 26, 2019 at 11:34:51AM +0100, Stanislaw Gruszka wrote:
+> > > On Tue, Feb 26, 2019 at 11:05:36AM +0100, Joerg Roedel wrote:
+> > > If sg->offset > PAGE_SIZE is fine then most likely we have problem with
+> > > alignment.
+> > 
+> > The map_sg implementation in the AMD IOMMU driver uses sg_phys() which
+> > handles the sg->page + sg->offset calculation fine.
+> > 
+> > > Note hat issue is with dma_map_sg(), switching to dma_map_single()
+> > > by using urb->transfer_buffer instead of urb->sg make things work
+> > > on AMD IOMMU.
+> > 
+> > On the other hand this points to a bug in the driver, I'll look further
+> > if I can spot something there.
 > 
-> WCN3990 firmware sends rx duration for each peer as part of
-> peer_extd_stats in WMI_UPDATE_STATS_EVENT. To enable peer_extd_stats,
-> firmware expects host to send fw_stats_req_mask with flag
-> WMI_TLV_PEER_STATS_EXTD set in WMI_REQUEST_STATS_CMD.
-> 
-> Send fw_stats_req_mask with flag WMI_TLV_PEER_STATS_EXTD set in
-> WMI_REQUEST_STATS_CMD and parse the peer_extd_stats in
-> WMI_UPDATE_STATS_EVENT to populate the rx_duration of each peer
-> in fw_stats debugfs entry.
-> 
-> Currently the driver handles 32-bit rx_duration, but the rx_duration
-> for WCN3990 can be upto 63 bit. The firmware sends rx_duration split
-> into two 32-bit fields, with the upper 32-bits being valid only if its
-> MSB is set. This change handles the 63-bit rx_duration obtained from
-> WCN3990 and maintain the backward compatibility.
-> 
-> To get the rx_duration of each connected peer :
-> cat /sys/kernel/debug/ieee80211/phyX/ath10k/fw_stats
-> 
-> Tested HW: WCN3990
-> Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
-> 
-> Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> I think so too. And I have done some changes that avoid strange allocation
+> scheme and use usb synchronous messages instead of allocating buffers
+> with unaligned sizes. However things work ok on Intel IOMMU and 
+> there is no documentation what are dma_map_sg() requirement versus
+> dma_map_single() which works. I think there are some unwritten
+> requirements and things can work on some platforms and fails on others
+> (different IOMMUs, no-IOMMU on some ARCHes)  
 
-Patch applied to ath-next branch of ath.git, thanks.
+For the record: we have another bug report with this issue:
+https://bugzilla.kernel.org/show_bug.cgi?id=202673
 
-f40a307eb92c ath10k: Fill rx duration for each peer in fw_stats for WCN3990
+I provided there patch that change alignment for page_frag_alloc() and
+it did not fixed the problem. So this is not alignment issue.
+Now I think it could be page->refcount issue ...
 
--- 
-https://patchwork.kernel.org/patch/10829811/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Stanislaw
