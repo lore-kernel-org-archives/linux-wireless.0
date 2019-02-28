@@ -6,45 +6,45 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1BA8C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 16:55:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07168C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 16:55:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 91F2F218CD
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 16:55:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA5142184A
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 16:55:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1551372904;
-	bh=W08IkfhDT15bzvT82MWOQNwyxW3QivedE/T3S2379cM=;
+	s=default; t=1551372907;
+	bh=BbvWRlZgC24hzp53/nSTwwUB/CmEd7A7R+wEpFLpUDs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Sq6NlucBShMAv8AFLO3pRTk68IWccPWePtyNCErQPCS3ygDh/BkUrKakaiM/KZroO
-	 k8fSVF7cp+Oma0v4inKcxRsRyd+kDy58icy9jvzk/M2eFJYZwvCdnmiR68tocEdcVC
-	 HUgIhVg5lqvPNZqzBNTCzvZ4EB4txfSP2BvdHRJk=
+	b=wkEzHGXRi7ydqocOUIxIR4MZSXkFnO910ULQIDd2zLuGoHnx86fBRzWGno6ElpnJn
+	 gHTM5Hu2hvs99lbA01NrRDAuEqybd4xYfcouOfBNOFsoDjx7jxsliKOpLBf/MXdjXn
+	 dzdBYNPcRTkO6jEtX+MoOiu7Ejoy2aSCFIbr2f08=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732327AbfB1QzD (ORCPT
+        id S1732659AbfB1QzH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 11:55:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53718 "EHLO mail.kernel.org"
+        Thu, 28 Feb 2019 11:55:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53726 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730732AbfB1QzD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 11:55:03 -0500
+        id S1730732AbfB1QzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Feb 2019 11:55:07 -0500
 Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com [149.6.153.186])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DC4B22184A;
-        Thu, 28 Feb 2019 16:55:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 72BF52184A;
+        Thu, 28 Feb 2019 16:55:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1551372902;
-        bh=W08IkfhDT15bzvT82MWOQNwyxW3QivedE/T3S2379cM=;
+        s=default; t=1551372905;
+        bh=BbvWRlZgC24hzp53/nSTwwUB/CmEd7A7R+wEpFLpUDs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d4YN7RAGUM2gL0K74ARJXMIEGJWRfKKmHBEU5Y8FD5Z3XsFZ5T4SvIOAG0187GAWi
-         WZQUDuWWp2lu6CiUsrwU21Zh6t83JIGTC7h+TWP8kNUMEf/RsvIt3GJXRpxm3efv1W
-         Rxug13jTimrN0+376+gM/jmZ6Qc7Vr12sIwsdjcs=
+        b=y/3nu9zqWZDJwgzuoSp07CtOagFHGOuO7UZ1n7pOsktoPbX44XaV1JB1T6/6Ufaf+
+         fEBWd4r4UOBKOK8pCEp60paWF3qChHZw3QDxsAiN3Yt0fAprDVOtSZlvLGMSp/yDV9
+         e2eYSsyu2nW4fa9edggee4YEYmb8ejATT3orM5dY=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
         lorenzo.bianconi@redhat.com
-Subject: [PATCH v3 1/2] mt76: mmio: move mt76x02_set_irq_mask in mt76 module
-Date:   Thu, 28 Feb 2019 17:54:31 +0100
-Message-Id: <dcfd268b4fa194f8b532bb85d88ec79b4392c864.1551370209.git.lorenzo@kernel.org>
+Subject: [PATCH v3 2/2] mt76: dma: move mt76x02_init_{tx,rx}_queue in mt76 module
+Date:   Thu, 28 Feb 2019 17:54:32 +0100
+Message-Id: <17f57fcb847f495bfc015137de32944bd7a500c8.1551370209.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <cover.1551370209.git.lorenzo@kernel.org>
 References: <cover.1551370209.git.lorenzo@kernel.org>
@@ -55,149 +55,154 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move mt76x02_set_irq_mask in mt76 module in order to be reused
-adding support for mt7603 driver and remove duplicated code
+Move mt76x02_init_tx_queue and mt76x02_init_rx_queue in mt76
+module in order to be reused adding support for mt7603 driver
+and remove duplicated code.
+Squash mt76x02_init_tx_queue and mt76x02_init_rx_queue in
+mt76_dma_alloc_queue
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mmio.c          | 13 +++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76.h          |  2 ++
- drivers/net/wireless/mediatek/mt76/mt7603/core.c   | 11 -----------
- drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h |  6 ++----
- drivers/net/wireless/mediatek/mt76/mt76x02.h       |  5 ++---
- drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c  | 12 ------------
- 6 files changed, 19 insertions(+), 30 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c      |  9 ++++++-
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  4 ++-
+ .../net/wireless/mediatek/mt76/mt7603/dma.c   | 26 +++++++------------
+ .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 26 +++++++------------
+ 4 files changed, 31 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mmio.c b/drivers/net/wireless/mediatek/mt76/mmio.c
-index 1d6bbce76041..059f13bf9dff 100644
---- a/drivers/net/wireless/mediatek/mt76/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mmio.c
-@@ -70,6 +70,19 @@ static int mt76_mmio_rd_rp(struct mt76_dev *dev, u32 base,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 6eedc0ec7661..d2b7fa2c76d1 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -21,7 +21,9 @@
+ #define DMA_DUMMY_TXWI	((void *) ~0)
  
-+void mt76_set_irq_mask(struct mt76_dev *dev, u32 addr,
-+		       u32 clear, u32 set)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&dev->mmio.irq_lock, flags);
-+	dev->mmio.irqmask &= ~clear;
-+	dev->mmio.irqmask |= set;
-+	mt76_mmio_wr(dev, addr, dev->mmio.irqmask);
-+	spin_unlock_irqrestore(&dev->mmio.irq_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(mt76_set_irq_mask);
-+
- void mt76_mmio_init(struct mt76_dev *dev, void __iomem *regs)
+ static int
+-mt76_dma_alloc_queue(struct mt76_dev *dev, struct mt76_queue *q)
++mt76_dma_alloc_queue(struct mt76_dev *dev, struct mt76_queue *q,
++		     int idx, int n_desc, int bufsize,
++		     u32 ring_base)
  {
- 	static const struct mt76_bus_ops mt76_mmio_ops = {
+ 	int size;
+ 	int i;
+@@ -29,6 +31,11 @@ mt76_dma_alloc_queue(struct mt76_dev *dev, struct mt76_queue *q)
+ 	spin_lock_init(&q->lock);
+ 	INIT_LIST_HEAD(&q->swq);
+ 
++	q->regs = dev->mmio.regs + ring_base + idx * MT_RING_SIZE;
++	q->ndesc = n_desc;
++	q->buf_size = bufsize;
++	q->hw_idx = idx;
++
+ 	size = q->ndesc * sizeof(struct mt76_desc);
+ 	q->desc = dmam_alloc_coherent(dev->dev, size, &q->desc_dma, GFP_KERNEL);
+ 	if (!q->desc)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 5dfb0601f101..6376592e3cfd 100644
+index 6376592e3cfd..29409f0871b7 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -766,4 +766,6 @@ void mt76_mcu_rx_event(struct mt76_dev *dev, struct sk_buff *skb);
- struct sk_buff *mt76_mcu_get_response(struct mt76_dev *dev,
- 				      unsigned long expires);
+@@ -148,7 +148,9 @@ struct mt76_mcu_ops {
+ struct mt76_queue_ops {
+ 	int (*init)(struct mt76_dev *dev);
  
-+void mt76_set_irq_mask(struct mt76_dev *dev, u32 addr, u32 clear, u32 set);
-+
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/core.c b/drivers/net/wireless/mediatek/mt76/mt7603/core.c
-index 1086dcd376a0..e32a16f2ebe8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/core.c
-@@ -2,17 +2,6 @@
+-	int (*alloc)(struct mt76_dev *dev, struct mt76_queue *q);
++	int (*alloc)(struct mt76_dev *dev, struct mt76_queue *q,
++		     int idx, int n_desc, int bufsize,
++		     u32 ring_base);
  
- #include "mt7603.h"
- 
--void mt7603_set_irq_mask(struct mt7603_dev *dev, u32 clear, u32 set)
--{
--	unsigned long flags;
+ 	int (*add_buf)(struct mt76_dev *dev, struct mt76_queue *q,
+ 		       struct mt76_queue_buf *buf, int nbufs, u32 info,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+index d69e82c66ab2..5067c49142f7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+@@ -8,15 +8,12 @@ static int
+ mt7603_init_tx_queue(struct mt7603_dev *dev, struct mt76_queue *q,
+ 		     int idx, int n_desc)
+ {
+-	int ret;
 -
--	spin_lock_irqsave(&dev->mt76.mmio.irq_lock, flags);
--	dev->mt76.mmio.irqmask &= ~clear;
--	dev->mt76.mmio.irqmask |= set;
--	mt76_wr(dev, MT_INT_MASK_CSR, dev->mt76.mmio.irqmask);
--	spin_unlock_irqrestore(&dev->mt76.mmio.irq_lock, flags);
--}
+-	q->hw_idx = idx;
+-	q->regs = dev->mt76.mmio.regs + MT_TX_RING_BASE + idx * MT_RING_SIZE;
+-	q->ndesc = n_desc;
++	int err;
+ 
+-	ret = mt76_queue_alloc(dev, q);
+-	if (ret)
+-		return ret;
++	err = mt76_queue_alloc(dev, q, idx, n_desc, 0,
++			       MT_TX_RING_BASE);
++	if (err < 0)
++		return err;
+ 
+ 	mt7603_irq_enable(dev, MT_INT_TX_DONE(idx));
+ 
+@@ -106,15 +103,12 @@ static int
+ mt7603_init_rx_queue(struct mt7603_dev *dev, struct mt76_queue *q,
+ 		     int idx, int n_desc, int bufsize)
+ {
+-	int ret;
 -
- void mt7603_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q)
- {
- 	struct mt7603_dev *dev = container_of(mdev, struct mt7603_dev, mt76);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-index 79f332429432..dc9f2e9b20f6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-@@ -179,16 +179,14 @@ void mt7603_dma_cleanup(struct mt7603_dev *dev);
- int mt7603_mcu_init(struct mt7603_dev *dev);
- void mt7603_init_debugfs(struct mt7603_dev *dev);
+-	q->regs = dev->mt76.mmio.regs + MT_RX_RING_BASE + idx * MT_RING_SIZE;
+-	q->ndesc = n_desc;
+-	q->buf_size = bufsize;
++	int err;
  
--void mt7603_set_irq_mask(struct mt7603_dev *dev, u32 clear, u32 set);
--
- static inline void mt7603_irq_enable(struct mt7603_dev *dev, u32 mask)
- {
--	mt7603_set_irq_mask(dev, 0, mask);
-+	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, 0, mask);
- }
+-	ret = mt76_queue_alloc(dev, q);
+-	if (ret)
+-		return ret;
++	err = mt76_queue_alloc(dev, q, idx, n_desc, bufsize,
++			       MT_RX_RING_BASE);
++	if (err < 0)
++		return err;
  
- static inline void mt7603_irq_disable(struct mt7603_dev *dev, u32 mask)
- {
--	mt7603_set_irq_mask(dev, mask, 0);
-+	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, mask, 0);
- }
+ 	mt7603_irq_enable(dev, MT_INT_RX_DONE(idx));
  
- void mt7603_mac_dma_start(struct mt7603_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index 6915cce5def9..3d93017c3227 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -183,7 +183,6 @@ void mt76x02_bss_info_changed(struct ieee80211_hw *hw,
- 
- extern const u16 mt76x02_beacon_offsets[16];
- void mt76x02_init_beacon_config(struct mt76x02_dev *dev);
--void mt76x02_set_irq_mask(struct mt76x02_dev *dev, u32 clear, u32 set);
- void mt76x02_mac_start(struct mt76x02_dev *dev);
- 
- void mt76x02_init_debugfs(struct mt76x02_dev *dev);
-@@ -197,12 +196,12 @@ static inline bool is_mt76x2(struct mt76x02_dev *dev)
- 
- static inline void mt76x02_irq_enable(struct mt76x02_dev *dev, u32 mask)
- {
--	mt76x02_set_irq_mask(dev, 0, mask);
-+	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, 0, mask);
- }
- 
- static inline void mt76x02_irq_disable(struct mt76x02_dev *dev, u32 mask)
- {
--	mt76x02_set_irq_mask(dev, mask, 0);
-+	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, mask, 0);
- }
- 
- static inline bool
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index 1229f19f2b02..507f368ed3f7 100644
+index 507f368ed3f7..1a7926de1dec 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -335,18 +335,6 @@ irqreturn_t mt76x02_irq_handler(int irq, void *dev_instance)
- }
- EXPORT_SYMBOL_GPL(mt76x02_irq_handler);
- 
--void mt76x02_set_irq_mask(struct mt76x02_dev *dev, u32 clear, u32 set)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&dev->mt76.mmio.irq_lock, flags);
--	dev->mt76.mmio.irqmask &= ~clear;
--	dev->mt76.mmio.irqmask |= set;
--	mt76_wr(dev, MT_INT_MASK_CSR, dev->mt76.mmio.irqmask);
--	spin_unlock_irqrestore(&dev->mt76.mmio.irq_lock, flags);
--}
--EXPORT_SYMBOL_GPL(mt76x02_set_irq_mask);
--
- static void mt76x02_dma_enable(struct mt76x02_dev *dev)
+@@ -155,15 +155,12 @@ static int
+ mt76x02_init_tx_queue(struct mt76x02_dev *dev, struct mt76_queue *q,
+ 		      int idx, int n_desc)
  {
- 	u32 val;
+-	int ret;
++	int err;
+ 
+-	q->regs = dev->mt76.mmio.regs + MT_TX_RING_BASE + idx * MT_RING_SIZE;
+-	q->ndesc = n_desc;
+-	q->hw_idx = idx;
+-
+-	ret = mt76_queue_alloc(dev, q);
+-	if (ret)
+-		return ret;
++	err = mt76_queue_alloc(dev, q, idx, n_desc, 0,
++			       MT_TX_RING_BASE);
++	if (err < 0)
++		return err;
+ 
+ 	mt76x02_irq_enable(dev, MT_INT_TX_DONE(idx));
+ 
+@@ -174,15 +171,12 @@ static int
+ mt76x02_init_rx_queue(struct mt76x02_dev *dev, struct mt76_queue *q,
+ 		      int idx, int n_desc, int bufsize)
+ {
+-	int ret;
++	int err;
+ 
+-	q->regs = dev->mt76.mmio.regs + MT_RX_RING_BASE + idx * MT_RING_SIZE;
+-	q->ndesc = n_desc;
+-	q->buf_size = bufsize;
+-
+-	ret = mt76_queue_alloc(dev, q);
+-	if (ret)
+-		return ret;
++	err = mt76_queue_alloc(dev, q, idx, n_desc, bufsize,
++			       MT_RX_RING_BASE);
++	if (err < 0)
++		return err;
+ 
+ 	mt76x02_irq_enable(dev, MT_INT_RX_DONE(idx));
+ 
 -- 
 2.20.1
 
