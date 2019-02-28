@@ -2,180 +2,181 @@ Return-Path: <SRS0=yJNj=RD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 496B6C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 18:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 985BCC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 18:54:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FDAD204FD
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 18:13:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C83B218B0
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 18:54:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="eeQ/EF3y";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="KrCQwoJg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Rq29J2ZZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388584AbfB1SNM (ORCPT
+        id S1732660AbfB1Syd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 13:13:12 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50790 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725955AbfB1SNL (ORCPT
+        Thu, 28 Feb 2019 13:54:33 -0500
+Received: from mail-qk1-f196.google.com ([209.85.222.196]:33337 "EHLO
+        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726093AbfB1Syd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 13:13:11 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x1SIBWdR000772;
-        Thu, 28 Feb 2019 10:13:08 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0818;
- bh=rwBgQy9Zs0w2kOQ5KmlTJAa9aLiv/EFpiuwMK7t+C2w=;
- b=eeQ/EF3yPnZzNU5aBCAgLA6i1gypnnT08fFQeJfSFZgUlWI2VwmT99BmqvPLbwhQRYtY
- FiyTXtxRvt8BlOPlavFkFbj2/egFFSV7aEsyzRhoCYW6oaEVwsm7vkr9dpJO8DdylJit
- BYn+qziutPE7wfdrWhghRBzlcFuE0SwwsvoskljnsrYfyTOcenqD0PL771brlPhxRrvg
- +VV9TG4IZMLu1Kttj3RFLWjbRVZEmP5olHs7RUvZh/YGFbgDX2ZwGATTw0kJaND/Hiz/
- H1LuLaqonX1cnacKQ9OYcFJoHY9j3GnYp5zPrhmmvZha/Ll6Phh9T8EJVEDgoDDdm87q 7Q== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2qxce61c58-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 28 Feb 2019 10:13:08 -0800
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 28 Feb
- 2019 10:13:07 -0800
-Received: from NAM03-DM3-obe.outbound.protection.outlook.com (104.47.41.51) by
- SC-EXCH03.marvell.com (10.93.176.83) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Thu, 28 Feb 2019 10:13:07 -0800
+        Thu, 28 Feb 2019 13:54:33 -0500
+Received: by mail-qk1-f196.google.com with SMTP id x9so12768079qkf.0
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2019 10:54:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rwBgQy9Zs0w2kOQ5KmlTJAa9aLiv/EFpiuwMK7t+C2w=;
- b=KrCQwoJg0ejdBU1HUPvUmAu/McZlAgk/6RjlIqw8kFJtQ1vmB5DvDJgZs66MCTz2SlvKpPc+NCDuKVs4AvJoj17FXtX4AipcIsL+sBGwEvpkJyJaLjiuO9u1J74q57yRlTphDeLf/LqGLqpbuXzpZJKJsSZfR4vEhUfQFJtK2JM=
-Received: from CY4PR18MB1237.namprd18.prod.outlook.com (10.172.177.140) by
- CY4PR18MB1125.namprd18.prod.outlook.com (10.173.184.143) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1665.16; Thu, 28 Feb 2019 18:13:06 +0000
-Received: from CY4PR18MB1237.namprd18.prod.outlook.com
- ([fe80::a11f:1535:50c1:a310]) by CY4PR18MB1237.namprd18.prod.outlook.com
- ([fe80::a11f:1535:50c1:a310%10]) with mapi id 15.20.1643.022; Thu, 28 Feb
- 2019 18:13:06 +0000
-From:   Ganapathi Bhat <gbhat@marvell.com>
-To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "James Cao" <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Rakesh Parmar <rakeshp@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>
-Subject: RE: pull-request mwifiex-firmware 2019-02-28
-Thread-Topic: pull-request mwifiex-firmware 2019-02-28
-Thread-Index: AQHUz4wxEhF42vNC0k6HTcJC2uOREqX1g0Iw
-Date:   Thu, 28 Feb 2019 18:13:06 +0000
-Message-ID: <CY4PR18MB12370DB22630E10334A5601AA0750@CY4PR18MB1237.namprd18.prod.outlook.com>
-References: <CY4PR18MB1237F8ABB98E9DACA5C5EE97A0750@CY4PR18MB1237.namprd18.prod.outlook.com>
-In-Reply-To: <CY4PR18MB1237F8ABB98E9DACA5C5EE97A0750@CY4PR18MB1237.namprd18.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [182.72.17.59]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 09d657b6-5954-45a0-0e48-08d69da8631d
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:CY4PR18MB1125;
-x-ms-traffictypediagnostic: CY4PR18MB1125:
-x-microsoft-exchange-diagnostics: =?us-ascii?Q?1;CY4PR18MB1125;23:i2ErOflUGeQbIHP28haY2vBGBUXLIV7DQdpQGTaNb?=
- =?us-ascii?Q?KrAlnYQPm2TV3Yv3ClCd09FqiHK8cBm/HXz3phhSW3usqj2URJ0UPQng7/tq?=
- =?us-ascii?Q?c8KVsxvn8LUYP9EYLO9Qlk9M4fqqptrBlY7SYPXv4Eg3ij+Sy9OYpr3aMtuU?=
- =?us-ascii?Q?9OQ4ILuOvp3khnZDWaAmbcx2dKAfnwjoaCqbXfcA3qz11+7660el+8yRbH1W?=
- =?us-ascii?Q?GwO6115NYD0LnR+d0oVucKYJijpuTDF1+aQlF1ml/TeWwX9krJFQOW1j+u+O?=
- =?us-ascii?Q?JxazX5SIjryLCCzlUbN68wMbsUQgr6gBVJ4P/20Wgh7+3KG1/dbvM1O2Jocm?=
- =?us-ascii?Q?2CDMrSFDlxw/ujF8hfipjSaXkSz8hYvTTsCZ91eYnpROw7mcTo4HYx7z73c6?=
- =?us-ascii?Q?XIkSQZiodB9KMTdq/UFeFAQQaSAz8IpS6h9Yi+sv0N6trrgWq6MsmpVW9MUX?=
- =?us-ascii?Q?d/mJI0wJejxWO4sv+LeNxh/cMOoEMnwBw2pByVR427APOvZ8TXmA73tZOViy?=
- =?us-ascii?Q?7+FB4aLbqhAeseLYupLQlahWxr3R9B9GTf9T6Cu9vEGo0YNtg1rejvL+KcpR?=
- =?us-ascii?Q?FRdvGnFM8fG5uyhEco5bUQgTQHp4421LWFJ/v7li8a671+v2BhX8wZjORDrk?=
- =?us-ascii?Q?ihGIg5YTTlg2yqdQvt7S8zHOLnalogTmOIyU96c3sEQRclfw3yKiIU0LOep8?=
- =?us-ascii?Q?3bu62hHi/ErXwBRWmckuAAdBma20eXgwaYCuyHNIxtQrWO16AzXTKn34pfY0?=
- =?us-ascii?Q?LyURErSI8goC3n7u6kGPzuyvcUZT9YILoZu1GN7ZJw80b14tssrfvi8rn8ip?=
- =?us-ascii?Q?6ynX1eOHDjlTaKhevaA4Z8wmqbah/EuPQ6aLqwYpSlc4EuQkNsRnjF1uS/sJ?=
- =?us-ascii?Q?djMxpZa6S14Lscl2+HNkJuH902QyaK+hUUnivvjO5/heCBdsLR3HsF6RFH9A?=
- =?us-ascii?Q?HOl+DheYhFkorWdnFsvUuO7IO04NuDHze5aCAyVI+WCzWSF0LBx2W2End7Ou?=
- =?us-ascii?Q?1JZTajpXhIW6STLfiMUGoPR2mzB7VrAoYIkCgX7PQJYgDC1CJeP5MecU7Ojd?=
- =?us-ascii?Q?8DI/S1Dws0O0TMqAqauL11LEVoLEHPyc1N8rWPSUVYOZbRBcoBVBB84KZGfT?=
- =?us-ascii?Q?BxWUKvYPMTdjph47gM1XnJkaYQwPIY1tgEcHj2F/UNrqw7lQLWvMxuPw4b16?=
- =?us-ascii?Q?ucsHshWNpl2ohFWUA4sCgQGpvYgA0OhdF328BLZWQvTikzykR4o2QkM6sYd+?=
- =?us-ascii?Q?9u8sIEHWF+wVrMQZl2M2eRnRZa5YJDQ7g4P0ZoYk1fmrdhzsMdne7qy2XMXl?=
- =?us-ascii?Q?PT54cUIHFzML248ASryQxMkfUyEnOmxj6j+piT8MHpuqEuN80BihAP1JNYkt?=
- =?us-ascii?Q?f/Wf06kv5WgkygSFE4+NK+fx97hXYKgzpCKc2LrpBFz0T2Wxy8fDIVh6gSoy?=
- =?us-ascii?Q?eGkJLEBZRjWyNdDYBJOkEKJNzq2Vzd/8g+mSyOA0DgsmupNx361?=
-x-microsoft-antispam-prvs: <CY4PR18MB1125E5ECD5F3A7001B7BC866A0750@CY4PR18MB1125.namprd18.prod.outlook.com>
-x-forefront-prvs: 0962D394D2
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(136003)(366004)(396003)(376002)(346002)(199004)(189003)(13464003)(186003)(8676002)(74316002)(99286004)(26005)(81166006)(81156014)(8936002)(2906002)(5660300002)(14444005)(256004)(305945005)(55236004)(6436002)(102836004)(7736002)(316002)(7696005)(6916009)(2940100002)(86362001)(97736004)(78486014)(569044001)(71200400001)(3846002)(52536013)(71190400001)(6116002)(2501003)(93156006)(33656002)(25786009)(4326008)(14454004)(107886003)(6246003)(478600001)(55016002)(53546011)(6506007)(76176011)(5640700003)(54906003)(9686003)(229853002)(476003)(11346002)(486006)(446003)(53936002)(68736007)(66066001)(106356001)(105586002)(2351001);DIR:OUT;SFP:1101;SCL:1;SRVR:CY4PR18MB1125;H:CY4PR18MB1237.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: eEJLFTRJPDluhMsZevwlPj3UIwES4ViIhurJnmSCQ9s3XobIJUhUkI0GAC4VpQo4tzDUV4sVOaI0X4mDjadNS2873olMQEHDi5UnzDeWV/9mX7mN88kVThNugChnw8Ofqn37vYskTfUWnPd4HiB4yRrQCMDFYQAKjG8ZMR2Pm+GCezbHGhGKQJXLz1R7c8j5c3mSyt8k/Z7/m/nXLUurqvDjg35e5iLpsrJuJFs7BhK4R80yV6BCaHSgezxPFWBnKQw4k8DqkmFm6SYXx5tbfM2zPwjyq6PTZXnRZuk9ljSdOSke2xepg93MqupIcAo8gcrdkcrapJcBX00M7g+HfH0+eLb23BWoxqZ2AT67sBoJMjm0apCS605YgnZI1B1CswhkTAsHwrLI1fM6hJE9BhzQ62nWCtEEROZFL86noTk=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=PO6VIOuLRkiVuxuTMkQjgBZrtLQmdO5V0JmDv66pSOs=;
+        b=Rq29J2ZZURzODFj5DylwwwM4Jc2EsdrOfEeo64e4vfKZxlNYMtSHNgh3p/geDt349n
+         LuQQJSDplithlXwvXZkjXSwkDCL5z3eskPjxK1Xdg8YZEa4SmrgKw6FjpUWbPnfiBX/4
+         8BfzNnlbA823XTeWQYb7sT9u+oNABETmLDX9lkUoLrh6ywLOUDuTd3z8pUW7XdEu7viG
+         WueH//sYB8Gte21W/PwXFR42B6HDYPs8rNGTQYSsp+78juYysaRIWbyofAth9X88BGd6
+         boUIirqJeO4Upd72NsO2qbjZKw9uWUh9jSAzssH6mg8OQEjtml40dWkL/pznTOlYvZ2h
+         47aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=PO6VIOuLRkiVuxuTMkQjgBZrtLQmdO5V0JmDv66pSOs=;
+        b=d8bpum2uI3qUwXTpFGXQgaFftJiO/DgnfDVsiuZlTpSvHfqMK+c/LEHoKR3BIqAOg1
+         EMN9ztk6uhnjxnnDSW1kiiYOVQI8JOhogCcEvZCk3Sqw0AeGrRfD+116ToMS5OFbrcwP
+         1SCb2INQTVZ/C5tzgtL78vx1UhWfzkd2OcBxacO7vd7FH4bt02phdXtspoFSEigGVshK
+         hrRlcmI2g0g54BVLn+rk4nnpjzHA9ZBjcr9AgVRCZQGGCKIoCM1EYaD2csLEX4OW+G5f
+         g3YOhuRgkkVUpEB4biSbBUyPipRdRUqzOXEidZXTA/diiQHV0Bau4iAwqjQO/fRk3Tr9
+         u5rQ==
+X-Gm-Message-State: APjAAAXQj8Hjq+stCo8qce1yOb4H+vRjmFlpmzotQCsV2YJNWfQfTAXP
+        TKH8AMe4P28oP3S4YQf+XU5LxRPRjSMmGcLTWcwbBjkN
+X-Google-Smtp-Source: APXvYqxefFVKIniQfLfnDocZ+FGuMY2udgbqExyR3o/3RhHkdraXnzF5+DVvUlGmmdvgZv24JlSvhmPZnfySX+EHa/w=
+X-Received: by 2002:ae9:efcb:: with SMTP id d194mr814018qkg.156.1551380071908;
+ Thu, 28 Feb 2019 10:54:31 -0800 (PST)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 09d657b6-5954-45a0-0e48-08d69da8631d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Feb 2019 18:13:06.1518
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR18MB1125
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-02-28_10:,,
- signatures=0
-X-Proofpoint-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=863 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1902280123
+References: <20190228155823.24749-1-greearb@candelatech.com>
+In-Reply-To: <20190228155823.24749-1-greearb@candelatech.com>
+From:   =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+Date:   Thu, 28 Feb 2019 19:54:19 +0100
+Message-ID: <CABvG-CUTn3aHAUUvQ6P+BtaWPtrBeeO8b3vfm5w=hB753_+g0g@mail.gmail.com>
+Subject: Re: [RFC] ath10k: Fix DMA errors related to beacons (CT FW only)
+To:     Ben Greear <greearb@candelatech.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kindly ignore this; I have sent a new request(and it is final)
+On Thu, 28 Feb 2019 at 16:59, <greearb@candelatech.com> wrote:
+>
+> From: Ben Greear <greearb@candelatech.com>
+>
+> I often saw the ath10k-ct wave-1 firmware spit DMA errors and
+> hang the entire system, requiring a hard power-cycle to revoer.
+>
+> It appears the issue is that there is no beacon-tx callback in
+> stock firmware, so the driver can delete the beacon DMA buffer
+> while firmware is still trying to access it.
+>
+> So, wave-1 ath10k-ct firmware now sends a beacon-tx-complete
+> wmi message and that allows the driver to safely know when it
+> can clean up the buffer.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>
+> NOTE:  This will not apply or work in upstream kernels since the
+> rest of the CT fw support will not be accepted.  But, I'd appreciate
+> any technical feedback on this in case I missed any corner cases
+> on locking or similar.
 
-Regards,
-Ganapathi
+For the record this patch seems to be based on code with "ath10k: Free
+beacon buf later in vdev teardown" included.
 
-> -----Original Message-----
-> From: Ganapathi Bhat
-> Sent: Thursday, February 28, 2019 11:07 PM
-> To: linux-firmware@kernel.org
-> Cc: linux-wireless@vger.kernel.org; James Cao <jcao@marvell.com>; Cathy
-> Luo <cluo@marvell.com>; Rakesh Parmar <rakeshp@marvell.com>; Zhiyuan
-> Yang <yangzy@marvell.com>
-> Subject: pull-request mwifiex-firmware 2019-02-28
->=20
-> The following changes since commit
-> bd72387b8e49b1b7268ee60c97a131419284fb39:
->=20
->   linux-firmware: update Marvell PCIe-USB8997 firmware image (2019-02-12
-> 11:42:24 +0530)
->=20
-> are available in the git repository at:
->=20
->   git://git.marvell.com/mwifiex-firmware.git
->=20
-> for you to fetch changes up to
-> f0f63ed58fd49c42d06e05d1a6a8a1bd8e8b861c:
->=20
->   linux-firmware: update Marvell 8801/8887 firmware images (2019-02-28
-> 23:02:36 +0530)
->=20
-> ----------------------------------------------------------------
-> Ganapathi Bhat (2):
->       linux-firmware: update Marvell 8897/8997 firmware images
->       linux-firmware: update Marvell 8801/8887 firmware images
->=20
->  WHENCE                       |  10 +++++-----
->  mrvl/pcie8897_uapsta.bin     | Bin 843828 -> 723540 bytes
->  mrvl/pcie8997_wlan_v4.bin    | Bin 428788 -> 456488 bytes
->  mrvl/sd8801_uapsta.bin       | Bin 258680 -> 255988 bytes
->  mrvl/sd8887_uapsta.bin       | Bin 695532 -> 616840 bytes
->  mrvl/usbusb8997_combo_v4.bin | Bin 604536 -> 610252 bytes
->  6 files changed, 5 insertions(+), 5 deletions(-)
 
+[...]
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless=
+/ath/ath10k/mac.c
+> index 154dcdabc48a..02a8efa2e783 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+[...]
+> @@ -6147,6 +6151,16 @@ static void ath10k_remove_interface(struct ieee802=
+11_hw *hw,
+>                 ath10k_warn(ar, "failed to stop spectral for vdev %i: %d\=
+n",
+>                             arvif->vdev_id, ret);
+>
+> +       if (test_bit(ATH10K_FW_FEATURE_BEACON_TX_CB_CT,
+> +                     ar->running_fw->fw_file.fw_features)) {
+> +               int time_left;
+> +
+> +               time_left =3D wait_for_completion_timeout(&arvif->beacon_=
+tx_done, (3 * HZ));
+> +               if (!time_left)
+> +                       ath10k_warn(ar, "WARNING: failed to wait for beac=
+on tx callback for vdev %i: %d\n",
+> +                                   arvif->vdev_id, ret);
+> +       }
+
+I think this can race against wmi tx credits replenishment and maybe
+other wmi commands if they get issued (not many of them I suppose
+though). The ordering would need to be something like this:
+
+cpu0                   cpu1
+                       ath10k_wmi_op_ep_tx_credits
+                       ieee80211_iterate_active_interfaces_atomic
+                       ath10k_wmi_beacon_send_ref_nowait
+                       # preempted
+ieee80211_do_stop
+clear sdata running
+drv_remove_interface
+wait_for_completion_timeout
+ath10k_mac_vif_beacon_cleanup
+free/unmap
+                       gen_beacon_dma(bcn->xxx)
+                       reinit_completion()
+                       ath10k_wmi_cmd_send_nowait()
+
+Interestingly, this also shows it has been a possible use-after-free
+without your patch. This is probably a unlikely scenario because
+there's a disproportionate amount of code between these flows for this
+to happen.
+
+There's also a memory leak because ath10k_mac_vif_beacon_free() exits
+without freeing arvif->beacon if beacon_state is SENDING, which it
+will be in in the above race case.
+
+With the per-skb beaconing case (which is dead code by the way it
+seems..) iommu wouldn't be happy either because we'd hand over an
+unmapped paddr to ath10k_wmi_cmd_send_nowait(). That's assuming kernel
+didn't crash due to use-after-free on arvif->beacon (stored in `bcn`
+on stack) before that.
+
+This feels like a candidate for rcu if you wanted to have it fixed
+neatly. It would fix both use-after-free and the locking conundrum -
+ath10k_remove_interface() could NULL the pointer, call_rcu() and
+wait_for_completion() in that call handler, and when its called back
+unmap/free the beacon. This would require a refactor to how beacon
+stuff is stored/maintained - a helper structure that would need carry
+the beacon stuff + rcu_head, and this structure would be allocated and
+assigned with rcu_assign_pointer() to a pointer in ath10k_vif. But I
+feel like it's asking for unbound allocations or other bugs,
+especially since I'm...
+
+Not sure if it makes any sense. I would probably just rip out the
+arvif->beacon code completely instead and keep arvif->beacon_buf only
+(memcpy on swba and immediatelly free the skbuff). No point in fixing
+dead code, is there?
+
+Since you have beacon tx completion you can consider preventing beacon
+corruption, similar to how disabled vsync causes frame tearing, by
+avoiding memcpy() if completion for previous one didn't come. Not sure
+how relevant that is though because if fw/hw are having hard time
+transmitting a beacon then the RF condition must be really harsh and
+unusably bad anyway.
+
+
+
+Micha=C5=82
