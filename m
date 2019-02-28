@@ -2,119 +2,135 @@ Return-Path: <SRS0=yJNj=RD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94AF1C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 14:23:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 115DBC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 15:26:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 604342171F
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 14:23:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E03h9cSc";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E03h9cSc"
+	by mail.kernel.org (Postfix) with ESMTP id D52F520C01
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Feb 2019 15:26:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1551367618;
+	bh=9fjNvQiPeQyd4K0FkeQ+YimG+qYmhIbif4GLc5Gu10A=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=MOpYwW7U4izG+JdRvAUE1TVvX0OOulO5tiVgWcErgvyr5QKIDYeNdMCc94MuBdxYJ
+	 YgCOBbZFrya+Q4DWIXdvbHbYLA/GhQuolkrn4mYCjfMsrtmbIQcHmse/JfBYfwu6Nw
+	 cTGJdnaR5go4tdBljlOgkzAXiVRPbLvVM/oNNmTA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732742AbfB1OXo (ORCPT
+        id S2387988AbfB1PL2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 09:23:44 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:51910 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727789AbfB1OXo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 09:23:44 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id E3C4E60907; Thu, 28 Feb 2019 14:23:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551363822;
-        bh=riIc+Njp80QQ24g/rukS7BDkGPZxPm+GJL+zb2NLL4A=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=E03h9cScCkDW304PSwKrCcLjONiHJiqW70fEwJv69IA/x2lT1H01RKUaHWrCew/2j
-         Epdd5our13fRNKhi1dtBM/4Bh1M8YF3zeOneMX4AlCkDaY0PaFTeZlDwd2tmHpGmb6
-         XAVRmNQuuJIYWaaTzr3LmTdzZwXjlWsHsybJbKwQ=
-Received: from x230.qca.qualcomm.com (85-76-47-1-nat.elisa-mobile.fi [85.76.47.1])
+        Thu, 28 Feb 2019 10:11:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44612 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732712AbfB1PL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Feb 2019 10:11:27 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4E7C46013C;
-        Thu, 28 Feb 2019 14:23:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551363822;
-        bh=riIc+Njp80QQ24g/rukS7BDkGPZxPm+GJL+zb2NLL4A=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=E03h9cScCkDW304PSwKrCcLjONiHJiqW70fEwJv69IA/x2lT1H01RKUaHWrCew/2j
-         Epdd5our13fRNKhi1dtBM/4Bh1M8YF3zeOneMX4AlCkDaY0PaFTeZlDwd2tmHpGmb6
-         XAVRmNQuuJIYWaaTzr3LmTdzZwXjlWsHsybJbKwQ=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4E7C46013C
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 07/12] mt76x02: fix hdr pointer in write txwi for USB
-References: <1551341013-24519-1-git-send-email-sgruszka@redhat.com>
-        <1551341013-24519-8-git-send-email-sgruszka@redhat.com>
-        <20190228093819.GA2768@localhost.localdomain>
-        <20190228135208.GA8852@redhat.com>
-Date:   Thu, 28 Feb 2019 16:23:38 +0200
-In-Reply-To: <20190228135208.GA8852@redhat.com> (Stanislaw Gruszka's message
-        of "Thu, 28 Feb 2019 14:52:09 +0100")
-Message-ID: <87lg20at5h.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mail.kernel.org (Postfix) with ESMTPSA id E7703218C3;
+        Thu, 28 Feb 2019 15:11:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1551366686;
+        bh=9fjNvQiPeQyd4K0FkeQ+YimG+qYmhIbif4GLc5Gu10A=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ROvgzuyVL5d8w7lkxmgj97tPPT9LpTbGpYisLsMTL9vKgHXsTBp2kjf+r26wCTRLt
+         BcIivXt5s9n2MKToOa57g21PSekZxWEOCve1aHFjgnu6gCPP3f4fZHLTBSY5EVvDaY
+         zABGfaUUXZZ2hLpvJTCbElyMokDEnP5MCRrrt5R8=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 12/64] wlcore: sdio: Fixup power on/off sequence
+Date:   Thu, 28 Feb 2019 10:10:13 -0500
+Message-Id: <20190228151105.11277-12-sashal@kernel.org>
+X-Mailer: git-send-email 2.19.1
+In-Reply-To: <20190228151105.11277-1-sashal@kernel.org>
+References: <20190228151105.11277-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+From: Ulf Hansson <ulf.hansson@linaro.org>
 
-> On Thu, Feb 28, 2019 at 10:38:20AM +0100, Lorenzo Bianconi wrote:
->> > Since we add txwi at the begining of skb->data, it no longer point
->> > to ieee80211_hdr. This breaks settings TS bit for probe response and
->> > beacons.
->> > 
->> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->> > ---
->> >  drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c | 3 ++-
->> >  1 file changed, 2 insertions(+), 1 deletion(-)
->> > 
->> > diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
->> > index fdd6a021914d..bcf3126efda9 100644
->> > --- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
->> > +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
->> > @@ -85,8 +85,9 @@ int mt76x02u_tx_prepare_skb(struct mt76_dev *mdev, void *data,
->> >  
->> >  	mt76x02_insert_hdr_pad(skb);
->> >  
->> > -	txwi = skb_push(skb, sizeof(struct mt76x02_txwi));
->> > +	txwi = (struct mt76x02_txwi *)(skb->data - sizeof(struct mt76x02_txwi));
->> >  	mt76x02_mac_write_txwi(dev, txwi, skb, wcid, sta, len);
->> > +	skb_push(skb, sizeof(struct mt76x02_txwi));
->> >  
->> >  	pid = mt76_tx_status_skb_add(mdev, wcid, skb);
->> >  	txwi->pktid = pid;
->> > -- 
->> > 2.20.1
->> > 
->> 
->> Good catch :)
->> I think we should post it ontop of wireless-drivers since sw encryption is not
->> working now.
->> 
->> Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
->
-> I can send it against 5.0, if Kalle will accept it, however
-> I do not have practical bug associated with this. Maybe we
-> sometimes can send ordinal frame with TS bit in txwi and it
-> is then malformed by HW, but I'm not sure. IBSS work with
-> this bug, not sure about MESH.
+[ Upstream commit 13e62626c578d9889ebbda7c521be5adff9bef8e ]
 
-Too late for 5.0 as Linus will most likely release it on Sunday. I
-recommend sending it to wireless-drivers-next so that I can queue it for
-5.1.
+During "wlan-up", we are programming the FW into the WiFi-chip. However,
+re-programming the FW doesn't work, unless a power cycle of the WiFi-chip
+is made in-between the programmings.
 
+To conform to this requirement and to fix the regression in a simple way,
+let's start by allowing that the SDIO card (WiFi-chip) may stay powered on
+(runtime resumed) when wl12xx_sdio_power_off() returns. The intent with the
+current code is to treat this scenario as an error, but unfortunate this
+doesn't work as expected, so let's fix this.
+
+The other part is to guarantee that a power cycle of the SDIO card has been
+completed when wl12xx_sdio_power_on() returns, as to allow the FW
+programming to succeed. However, relying solely on runtime PM to deal with
+this isn't sufficient. For example, userspace may prevent runtime suspend
+via sysfs for the device that represents the SDIO card, leading to that the
+mmc core also keeps it powered on. For this reason, let's instead do a
+brute force power cycle in wl12xx_sdio_power_on().
+
+Fixes: 728a9dc61f13 ("wlcore: sdio: Fix flakey SDIO runtime PM handling")
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Tested-by: Tony Lindgren <tony@atomide.com>
+Tested-by: Anders Roxell <anders.roxell@linaro.org>
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/ti/wlcore/sdio.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 750bea3574ee4..627df164b7b6d 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -164,6 +164,12 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
+ 	}
+ 
+ 	sdio_claim_host(func);
++	/*
++	 * To guarantee that the SDIO card is power cycled, as required to make
++	 * the FW programming to succeed, let's do a brute force HW reset.
++	 */
++	mmc_hw_reset(card->host);
++
+ 	sdio_enable_func(func);
+ 	sdio_release_host(func);
+ 
+@@ -174,20 +180,13 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
+ 	struct mmc_card *card = func->card;
+-	int error;
+ 
+ 	sdio_claim_host(func);
+ 	sdio_disable_func(func);
+ 	sdio_release_host(func);
+ 
+ 	/* Let runtime PM know the card is powered off */
+-	error = pm_runtime_put(&card->dev);
+-	if (error < 0 && error != -EBUSY) {
+-		dev_err(&card->dev, "%s failed: %i\n", __func__, error);
+-
+-		return error;
+-	}
+-
++	pm_runtime_put(&card->dev);
+ 	return 0;
+ }
+ 
 -- 
-Kalle Valo
+2.19.1
+
