@@ -2,167 +2,185 @@ Return-Path: <SRS0=sb9s=RE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7439FC43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 22:26:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69502C10F03
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 22:48:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F5082083D
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 22:26:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l+8e6FLl"
+	by mail.kernel.org (Postfix) with ESMTP id 3DB7620840
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 22:48:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727125AbfCAW0G (ORCPT
+        id S1727025AbfCAWsl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Mar 2019 17:26:06 -0500
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:40985 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726244AbfCAW0G (ORCPT
+        Fri, 1 Mar 2019 17:48:41 -0500
+Received: from Galois.linutronix.de ([146.0.238.70]:33409 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726337AbfCAWsk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Mar 2019 17:26:06 -0500
-Received: by mail-qt1-f195.google.com with SMTP id v10so29705381qtp.8;
-        Fri, 01 Mar 2019 14:26:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:openpgp:autocrypt:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=31CcFo6PJH+HjzrgnYp3DXEx991nRCYWmYaRbvo0qkg=;
-        b=l+8e6FLl7JM8uFNlQPy7tlRy718ly9R+mITt8T5iWlPqeBFGHf2skZAMETmOOEcrj2
-         Ugwp6IZa6rqCf8uY4pldpny307TpylVEKFDRKKrtO3em06PlcJe4V3dzuN77D5bfSnlB
-         V43dkAZ3QFiFTbIJJ46MkII2IDmrKBjxKhmpYTm1c1oBQWqe5W6k6gkU+eRpUuaxVcBI
-         fQLgM6J4SNzhlhiRozopjl1AdzHP10+7F/vjkhsNq+YeEkjvcGsfpE7vmbWgW6FeVQyY
-         9uvHgkCe45f5VXa4ur+/9lmLu6tlKQhW1Cje+YdV5vrZYiGh2bYxP8TEdN/vyympbfgz
-         enZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:openpgp:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-transfer-encoding:content-language;
-        bh=31CcFo6PJH+HjzrgnYp3DXEx991nRCYWmYaRbvo0qkg=;
-        b=IWvv7aqycPGTt+7U7qVsZprHjLjq4cFim+tpwQW1CQW14K2izblPc5ADx6tA941y4q
-         V/Lv0enb5Xvk8caTtRukGOHMMKjcpZWAnxR71P6Lw2aSSr5cdRHeDi3t5p42FM5RaZcy
-         X39QFRWXYblkE1mVnvdIOx/wWfyFLYqpQNWyUdtEUZoxZyXh86siVa9jIPncDrXVNp4D
-         rM7/eUVngOfHXO+Ev8guw3J2cozO4acTfiH9ZvFYHO2EUgiAC7cqIKHAauUrZ9uofHwc
-         oyguUaLKFSSnqNVNvJSTAgXj+0SDWZ4Cxjrv94XU511zt2yribjSlX1nevh0foJsxnUB
-         CXCw==
-X-Gm-Message-State: APjAAAWS8ALTyw8hr2eDIBHJ/Cd1v2mHLKhziBdNjQB1i5U0WUompv7o
-        Tb9FjtT02s8KfAlq8ani8P5cMy6PchU=
-X-Google-Smtp-Source: APXvYqzvrn/1LSGq3DHp8uuXLECay5W/0DaTWJKkS3xnHf/RSDXY0LZEZ6Riz4/AzfkzZ5/iheu2pA==
-X-Received: by 2002:ac8:28a8:: with SMTP id i37mr6057624qti.215.1551479164001;
-        Fri, 01 Mar 2019 14:26:04 -0800 (PST)
-Received: from [192.168.1.199] (pool-108-28-156-19.washdc.fios.verizon.net. [108.28.156.19])
-        by smtp.gmail.com with ESMTPSA id 55sm15771352qtq.25.2019.03.01.14.26.03
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 Mar 2019 14:26:03 -0800 (PST)
-Subject: Re: Realtek r8822be kernel module does not negotiate 802.11ac
- connection
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Tony Chuang <yhchuang@realtek.com>
-Cc:     Pkshih <pkshih@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <51d62a31-7cde-e815-bdee-4ef5433007aa@gmail.com>
- <F7CD281DE3E379468C6D07993EA72F84D17AF74C@RTITMBSVM04.realtek.com.tw>
- <b0518665-d5ca-7c94-9808-7cc0cf565814@gmail.com>
- <e68c6aae-8d71-266a-81fe-d078ac1ef38c@lwfinger.net>
-From:   "David R. Bergstein" <david.r.bergstein@gmail.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=david.r.bergstein@gmail.com; keydata=
- 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
- cZPytJop3jxjNbB2ZRfwBXX3FsGBkJ4S2SKQyQ==
-Message-ID: <6eb7af74-b1a8-d112-e027-6c14252af994@gmail.com>
-Date:   Fri, 1 Mar 2019 17:26:02 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        Fri, 1 Mar 2019 17:48:40 -0500
+Received: from localhost ([127.0.0.1] helo=flow.W.breakpoint.cc)
+        by Galois.linutronix.de with esmtp (Exim 4.80)
+        (envelope-from <bigeasy@linutronix.de>)
+        id 1gzqxH-0005fb-KU; Fri, 01 Mar 2019 23:48:35 +0100
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     netdev@vger.kernel.org
+Cc:     "David S. Miller" <davem@davemloft.net>, tglx@linutronix.de,
+        Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH 1/3] mac80211_hwsim: Replace hrtimer tasklet with softirq hrtimer
+Date:   Fri,  1 Mar 2019 23:48:19 +0100
+Message-Id: <20190301224821.29843-2-bigeasy@linutronix.de>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190301224821.29843-1-bigeasy@linutronix.de>
+References: <20190301224821.29843-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <e68c6aae-8d71-266a-81fe-d078ac1ef38c@lwfinger.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Larry,
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Thanks for the response and detailed instructions, which allowed me to
-build and install the rtw88 kernel module.=C2=A0 I cannot however seem to=
- get
-my system to actually use the module.=C2=A0 Just to recap this is an HP O=
-men
-laptop with secure boot disabled.=C2=A0 Upon boot-up both the new rtw88 a=
-nd
-old r8822be modules are loaded.=C2=A0 If I unload the r8822be module the =
-wifi
-network connection gets terminated, even if I unload/reload the rtw88
-module.
+Switch the timer to HRTIMER_MODE_REL_SOFT, which executed the timer callback in
+softirq context and remove the hrtimer_tasklet.
 
-Is there something else I should be doing prior to invoking rtw88, e.g.,
-blacklisting the old module?
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 46 ++++++++++++---------------
+ 1 file changed, 21 insertions(+), 25 deletions(-)
 
-Sincerely,
-
-David R. Bergstein
-
-On 3/1/19 12:28 PM, Larry Finger wrote:
-> On 2/28/19 8:32 PM, David R. Bergstein wrote:
->> Tony,
->>
->> Thanks for your response.=C2=A0 Can you advise as to the availability =
-of the
->> new rtw88 driver?=C2=A0 As it appears to be under development, I could=
- not
->> locate a copy of the code for local compilation.
->
-> David,
->
-> Use the command 'git clone http://github.com/lwfinger/rtlwifi_new.git
-> -b rtw88' to get a copy of the new driver for RTL8822BE and RTL8822CE
-> in a stand-alone form. All that is needed is 'cd rtlwifi_new && make
-> && sudo make install'. This version will build on kernels v4.4 and
-> newer. As I have time, I will be backporting to kernels at least as
-> old as 4.0.
->
-> I would appreciate your comments and bug reports.
->
-> Larry
->
->
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 6359053bd0c78..f46999a9e8ca5 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -521,7 +521,7 @@ struct mac80211_hwsim_data {
+ 	unsigned int rx_filter;
+ 	bool started, idle, scanning;
+ 	struct mutex mutex;
+-	struct tasklet_hrtimer beacon_timer;
++	struct hrtimer beacon_timer;
+ 	enum ps_mode {
+ 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
+ 	} ps;
+@@ -1458,7 +1458,7 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
+ {
+ 	struct mac80211_hwsim_data *data = hw->priv;
+ 	data->started = false;
+-	tasklet_hrtimer_cancel(&data->beacon_timer);
++	hrtimer_cancel(&data->beacon_timer);
+ 	wiphy_dbg(hw->wiphy, "%s\n", __func__);
+ }
+ 
+@@ -1581,14 +1581,12 @@ static enum hrtimer_restart
+ mac80211_hwsim_beacon(struct hrtimer *timer)
+ {
+ 	struct mac80211_hwsim_data *data =
+-		container_of(timer, struct mac80211_hwsim_data,
+-			     beacon_timer.timer);
++		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
+ 	struct ieee80211_hw *hw = data->hw;
+ 	u64 bcn_int = data->beacon_int;
+-	ktime_t next_bcn;
+ 
+ 	if (!data->started)
+-		goto out;
++		return HRTIMER_NORESTART;
+ 
+ 	ieee80211_iterate_active_interfaces_atomic(
+ 		hw, IEEE80211_IFACE_ITER_NORMAL,
+@@ -1599,12 +1597,9 @@ mac80211_hwsim_beacon(struct hrtimer *timer)
+ 		bcn_int -= data->bcn_delta;
+ 		data->bcn_delta = 0;
+ 	}
+-
+-	next_bcn = ktime_add(hrtimer_get_expires(timer),
+-			     ns_to_ktime(bcn_int * 1000));
+-	tasklet_hrtimer_start(&data->beacon_timer, next_bcn, HRTIMER_MODE_ABS);
+-out:
+-	return HRTIMER_NORESTART;
++	hrtimer_forward(&data->beacon_timer, hrtimer_get_expires(timer),
++			ns_to_ktime(bcn_int * NSEC_PER_USEC));
++	return HRTIMER_RESTART;
+ }
+ 
+ static const char * const hwsim_chanwidths[] = {
+@@ -1678,15 +1673,15 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_unlock(&data->mutex);
+ 
+ 	if (!data->started || !data->beacon_int)
+-		tasklet_hrtimer_cancel(&data->beacon_timer);
+-	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
++		hrtimer_cancel(&data->beacon_timer);
++	else if (!hrtimer_is_queued(&data->beacon_timer)) {
+ 		u64 tsf = mac80211_hwsim_get_tsf(hw, NULL);
+ 		u32 bcn_int = data->beacon_int;
+ 		u64 until_tbtt = bcn_int - do_div(tsf, bcn_int);
+ 
+-		tasklet_hrtimer_start(&data->beacon_timer,
+-				      ns_to_ktime(until_tbtt * 1000),
+-				      HRTIMER_MODE_REL);
++		hrtimer_start(&data->beacon_timer,
++			      ns_to_ktime(until_tbtt * NSEC_PER_USEC),
++			      HRTIMER_MODE_REL_SOFT);
+ 	}
+ 
+ 	return 0;
+@@ -1749,7 +1744,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 			  info->enable_beacon, info->beacon_int);
+ 		vp->bcn_en = info->enable_beacon;
+ 		if (data->started &&
+-		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
++		    !hrtimer_is_queued(&data->beacon_timer) &&
+ 		    info->enable_beacon) {
+ 			u64 tsf, until_tbtt;
+ 			u32 bcn_int;
+@@ -1757,9 +1752,10 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 			tsf = mac80211_hwsim_get_tsf(hw, vif);
+ 			bcn_int = data->beacon_int;
+ 			until_tbtt = bcn_int - do_div(tsf, bcn_int);
+-			tasklet_hrtimer_start(&data->beacon_timer,
+-					      ns_to_ktime(until_tbtt * 1000),
+-					      HRTIMER_MODE_REL);
++
++			hrtimer_start(&data->beacon_timer,
++				      ns_to_ktime(until_tbtt * NSEC_PER_USEC),
++				      HRTIMER_MODE_REL_SOFT);
+ 		} else if (!info->enable_beacon) {
+ 			unsigned int count = 0;
+ 			ieee80211_iterate_active_interfaces_atomic(
+@@ -1768,7 +1764,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 			wiphy_dbg(hw->wiphy, "  beaconing vifs remaining: %u",
+ 				  count);
+ 			if (count == 0) {
+-				tasklet_hrtimer_cancel(&data->beacon_timer);
++				hrtimer_cancel(&data->beacon_timer);
+ 				data->beacon_int = 0;
+ 			}
+ 		}
+@@ -2919,9 +2915,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 
+ 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+ 
+-	tasklet_hrtimer_init(&data->beacon_timer,
+-			     mac80211_hwsim_beacon,
+-			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
++	hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
++		     HRTIMER_MODE_ABS_SOFT);
++	data->beacon_timer.function = mac80211_hwsim_beacon;
+ 
+ 	err = ieee80211_register_hw(hw);
+ 	if (err < 0) {
+-- 
+2.20.1
 
