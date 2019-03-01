@@ -3,41 +3,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD1FC10F03
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 16:06:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1830EC43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 16:13:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD0772085A
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 16:06:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D71392083D
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 16:13:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="WoNQ+cHn"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="L51Fa9jH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388855AbfCAQGw (ORCPT
+        id S1728469AbfCAQNv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Mar 2019 11:06:52 -0500
-Received: from nbd.name ([46.4.11.11]:57018 "EHLO nbd.name"
+        Fri, 1 Mar 2019 11:13:51 -0500
+Received: from nbd.name ([46.4.11.11]:57426 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727952AbfCAQGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Mar 2019 11:06:52 -0500
+        id S1725966AbfCAQNu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Mar 2019 11:13:50 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        MIME-Version:Date:Message-ID:References:Cc:To:From:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=K8jR4Oq+8wTX075lC3UXO9BAEiKpnRH1hK/RY23mxU4=; b=WoNQ+cHnj+pPHQpUVjZlyKTV3n
-        Req0KYnY8c11HMmOJYJLolgA+d+befl7GCAl2WLStV7gbZzklD5CPw+M/KS9D77Ve22O4SrPhzwVL
-        fi6yCccrofQI1TjXXrH1tpwmfhuDllNu6rMEY629RLyjQgYL91/O/lZZB4bsBrvgbKLw=;
+        bh=/tGV03htnL7A/Oa00TYq5yFhxm0oscaD1SbJBxOBsZE=; b=L51Fa9jHxe03XEayGYCwbb0CYg
+        l5nsbEsCrvfUlTU1iTo4wJ7zP0n5hbeZkEQimO6j01XHzfeY+1kzxbUP0wNGRQ+FRInikOOigYAFU
+        4XB17HBSbE85PyOZhlho8bx6Nxo+4iqANAb1T+z6oPS8JQySBixenNCmy+yjiQHEhOkk=;
 Subject: Re: [PATCH] mac80211: do not call driver wake_tx_queue op during
  reconfig
+From:   Felix Fietkau <nbd@nbd.name>
 To:     Ben Greear <greearb@candelatech.com>,
         linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net, stable@vger.kernel.org
+Cc:     johannes@sipsolutions.net
 References: <20190301134837.88087-1-nbd@nbd.name>
  <09a12ed0-dd86-2077-9ecb-c62a52186952@candelatech.com>
-From:   Felix Fietkau <nbd@nbd.name>
+ <c39a8e18-4a6b-a4db-3b25-c7d9d417d247@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
@@ -62,12 +63,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <c39a8e18-4a6b-a4db-3b25-c7d9d417d247@nbd.name>
-Date:   Fri, 1 Mar 2019 17:06:48 +0100
+Message-ID: <3bc506d5-8432-56d4-8588-afe7dea2eba3@nbd.name>
+Date:   Fri, 1 Mar 2019 17:13:48 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <09a12ed0-dd86-2077-9ecb-c62a52186952@candelatech.com>
+In-Reply-To: <c39a8e18-4a6b-a4db-3b25-c7d9d417d247@nbd.name>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -76,35 +77,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-03-01 16:29, Ben Greear wrote:
-> On 3/1/19 5:48 AM, Felix Fietkau wrote:
->> There are several scenarios in which mac80211 can call drv_wake_tx_queue
->> after ieee80211_restart_hw has been called and has not yet completed.
->> Driver private structs are considered uninitialized until mac80211 has
->> uploaded the vifs, stations and keys again, so using private tx queue
->> data during that time is not safe.
+On 2019-03-01 17:06, Felix Fietkau wrote:
+> On 2019-03-01 16:29, Ben Greear wrote:
+>> On 3/1/19 5:48 AM, Felix Fietkau wrote:
+>>> There are several scenarios in which mac80211 can call drv_wake_tx_queue
+>>> after ieee80211_restart_hw has been called and has not yet completed.
+>>> Driver private structs are considered uninitialized until mac80211 has
+>>> uploaded the vifs, stations and keys again, so using private tx queue
+>>> data during that time is not safe.
+>>> 
+>>> The driver can also not rely on drv_reconfig_complete to figure out when
+>>> it is safe to accept drv_wake_tx_queue calls again, because it is only
+>>> called after all tx queues are woken again.
+>>> 
+>>> To fix this, bail out early in drv_wake_tx_queue if local->in_reconfig
+>>> is set.
 >> 
->> The driver can also not rely on drv_reconfig_complete to figure out when
->> it is safe to accept drv_wake_tx_queue calls again, because it is only
->> called after all tx queues are woken again.
+>> This reminded me of a patch I posted back in 2016.  The discussion just sort of
+>> ended on it, but curious if you have a new opinion on it after debugging the
+>> issue in this patch:
 >> 
->> To fix this, bail out early in drv_wake_tx_queue if local->in_reconfig
->> is set.
-> 
-> This reminded me of a patch I posted back in 2016.  The discussion just sort of
-> ended on it, but curious if you have a new opinion on it after debugging the
-> issue in this patch:
-> 
-> https://patchwork.kernel.org/patch/9457709/
-> 
-> For what its worth, I've been using the patch above since I posted it, and
-> it seems to work well for ath9k and ath10k.
-I agree with what Johannes wrote about that patch. Fixing this could
-likely be as simple as clearing IEEE80211_SDATA_IN_DRIVER on all
-interfaces before bringing any of them back up. That way the normal
-interface add logic applies without nasty special cases.
-The reconfig code checks for ieee80211_sdata_running (which is
-unaffected), so I don't think we need to save the previous value of that
-flag.
+>> https://patchwork.kernel.org/patch/9457709/
+>> 
+>> For what its worth, I've been using the patch above since I posted it, and
+>> it seems to work well for ath9k and ath10k.
+> I agree with what Johannes wrote about that patch. Fixing this could
+> likely be as simple as clearing IEEE80211_SDATA_IN_DRIVER on all
+> interfaces before bringing any of them back up. That way the normal
+> interface add logic applies without nasty special cases.
+> The reconfig code checks for ieee80211_sdata_running (which is
+> unaffected), so I don't think we need to save the previous value of that
+> flag.
+How about this? (untested)
+---
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1956,7 +1956,6 @@ static void ieee80211_flush_completed_scan(struct ieee80211_local *local,
+ 
+ static void ieee80211_handle_reconfig_failure(struct ieee80211_local *local)
+ {
+-	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_chanctx *ctx;
+ 
+ 	/*
+@@ -1980,9 +1979,6 @@ static void ieee80211_handle_reconfig_failure(struct ieee80211_local *local)
+ 	 */
+ 	ieee80211_sched_scan_end(local);
+ 
+-	list_for_each_entry(sdata, &local->interfaces, list)
+-		sdata->flags &= ~IEEE80211_SDATA_IN_DRIVER;
+-
+ 	/* Mark channel contexts as not being in the driver any more to avoid
+ 	 * removing them from the driver during the shutdown process...
+ 	 */
+@@ -2135,6 +2131,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 
+ 	local->started = false;
+ 
++	list_for_each_entry(sdata, &local->interfaces, list)
++		sdata->flags &= ~IEEE80211_SDATA_IN_DRIVER;
++
+ 	/*
+ 	 * Upon resume hardware can sometimes be goofy due to
+ 	 * various platform / driver / bus issues, so restarting
 
-- Felix
