@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 210CFC43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 14:22:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01200C43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 14:23:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E2FC92084F
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 14:22:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF84C2084F
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 14:23:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="X6C+7x+o"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="C74FjCJS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388416AbfCAOWW (ORCPT
+        id S2387943AbfCAOXg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Mar 2019 09:22:22 -0500
-Received: from nbd.name ([46.4.11.11]:50462 "EHLO nbd.name"
+        Fri, 1 Mar 2019 09:23:36 -0500
+Received: from nbd.name ([46.4.11.11]:50516 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728395AbfCAOWV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Mar 2019 09:22:21 -0500
+        id S2387536AbfCAOXf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Mar 2019 09:23:35 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=RlMZT5vkpM7bJ9I3qBunrao3dAKQRY5eNvYyV6iQgb8=; b=X6C+7x+orhqouZ6d7uhRJese6R
-        Dmy0p9WaDq2r6o/1+R8nhBI/LWKmAHIi0k4V5PySoQjlGYBy4dZJE/viri2c/2FJFCLdIZdD+BrgV
-        CB3HSCiPXlJWl6mAp+E7CQdBw66JLYiqSVHIngW7xZVd50hOirr+FOMQPF8H0gT6ToWQ=;
-Subject: Re: [PATCH v2] mt76: introduce q->stopped parameter
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        lorenzo.bianconi@redhat.com
-References: <cover.1551360035.git.lorenzo@kernel.org>
- <803f9e01a21ef024ce66d1fda96debe278b0a398.1551360035.git.lorenzo@kernel.org>
+        bh=6331Yg5K3DEKhtyYZPjR/82ILmOsSVoK7EKnFOIdZ5Q=; b=C74FjCJSCKovDBjmnX/GhsN0I5
+        gd8PMnroqPilcvkKfrBmhhLCXsLCExYAZP9xOrHa83cxeePeMm+i0Juk5pxwhtuWoldrn9uP49ZNt
+        FQzBD5mRchWGnR1r8jijP0g8iOztJ9m0XMVt1SEIr/EoLJ9dN1sJGWTL3PRANUBmTF+4=;
+Subject: Re: [PATCH] mt76x02: fix hdr pointer in write txwi for USB
+To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <1551366666-28477-1-git-send-email-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -61,12 +61,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <e2c2c2cf-28d8-3290-0ce9-e3aaf86ca441@nbd.name>
-Date:   Fri, 1 Mar 2019 15:22:19 +0100
+Message-ID: <5bc3e655-5148-7bb6-9e4e-a16672b2aa83@nbd.name>
+Date:   Fri, 1 Mar 2019 15:23:33 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <803f9e01a21ef024ce66d1fda96debe278b0a398.1551360035.git.lorenzo@kernel.org>
+In-Reply-To: <1551366666-28477-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -75,13 +75,13 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-02-28 14:31, Lorenzo Bianconi wrote:
-> Introduce mt76_queue stopped parameter in order to run
-> ieee80211_wake_queue only when mac80211 queues have been
-> previously stopped and avoid to disable interrupts when
-> it is not necessary
+On 2019-02-28 16:11, Stanislaw Gruszka wrote:
+> Since we add txwi at the begining of skb->data, it no longer point
+> to ieee80211_hdr. This breaks settings TS bit for probe response and
+> beacons.
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 Applied, thanks.
 
 - Felix
