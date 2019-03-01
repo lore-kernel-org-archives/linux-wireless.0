@@ -2,103 +2,76 @@ Return-Path: <SRS0=sb9s=RE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1185CC43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 17:28:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2812C43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 20:10:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D160220818
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 17:28:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T0Xjuktk"
+	by mail.kernel.org (Postfix) with ESMTP id B54D920848
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 20:10:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388041AbfCAR2I (ORCPT
+        id S1726041AbfCAUKX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Mar 2019 12:28:08 -0500
-Received: from mail-ot1-f46.google.com ([209.85.210.46]:34019 "EHLO
-        mail-ot1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728274AbfCAR2I (ORCPT
+        Fri, 1 Mar 2019 15:10:23 -0500
+Received: from mout.kundenserver.de ([212.227.126.134]:50779 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725934AbfCAUKW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Mar 2019 12:28:08 -0500
-Received: by mail-ot1-f46.google.com with SMTP id 98so21684891oty.1;
-        Fri, 01 Mar 2019 09:28:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=d8r6807PpZ/TrsR3U6y8O/oH0JFdHC7CmGaGmHjEVpI=;
-        b=T0XjuktkrikDrLTLkcCCbiWcnwmlt+e2gANDJHiMllCpSSwvHrj28+WkNCpXGkc1Qn
-         TnUEw5m2KOcWlEBZRcsZciCwrwSWMHewYOiO0iSzLTOWf/2bY8rlYLoH2C7gnOP6uXce
-         MTwLbHz6uM/ado2gcRkUmas82nYu5E7r8Gi+T5rCMyoItk1J9ci9VPX+eo0E+HAYxnri
-         BMPQbjhs8XIqkUOtxjzQYSGOsQr9lLI6nDXmYcK6vRHbaVxbpFhbFUZgY0LcGhRploJJ
-         AY3ddapJbaZO2pSmptDcOysw8WGifvnMi37hlS3nfLZMho0TD4XkyhArXGQlwFeJTUWO
-         SHMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=d8r6807PpZ/TrsR3U6y8O/oH0JFdHC7CmGaGmHjEVpI=;
-        b=JV0i0m7l6frbbRGpLTNMUSJmP67YyifYoAXnmW7pHVGR8KFVg49/3EcWlBXcykWxEo
-         KBDkk9jdVDcd441jkeR5XYjXV9QfMXP03JEtlgG5jDt4aOL4uH8DKIedXS2Gv39XaloJ
-         NDYrukHHT98ej00ex5Wm1Nka3esdn488P8Qv+1+8ae9wyhkJbDo127VtrfaoXnFLW2ic
-         pLfNvNnJgoq/JIoLi4cmKqlEPvSMD2t3DQ53Dw92HPrZtbvATpUx521vINMD/qKKDb5a
-         UmPXf4X2Nvdoxa+Pip5YGgDIPUlfGSIVzXd1YgaG2/GqzOohzncL7zjF15fdebBEHuvw
-         2TPw==
-X-Gm-Message-State: APjAAAVLoqeWKPzjX6i4xmDUeyG+uNZYsEXbsKYEl6JXC0IMoa2bxtN6
-        cxZMEEUKIo1Y1z07a71igB+GjlQO
-X-Google-Smtp-Source: APXvYqyPRpFfpzhLuJUqA3CUY2x3YUwBHwpPGarQsf+tzdpzr/nVLFJekZugYflZNU4478KEEq87rg==
-X-Received: by 2002:a9d:6d0c:: with SMTP id o12mr4263183otp.256.1551461287138;
-        Fri, 01 Mar 2019 09:28:07 -0800 (PST)
-Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id l64sm9263092oif.44.2019.03.01.09.28.05
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 Mar 2019 09:28:05 -0800 (PST)
-Subject: Re: Realtek r8822be kernel module does not negotiate 802.11ac
- connection
-To:     "David R. Bergstein" <david.r.bergstein@gmail.com>,
-        Tony Chuang <yhchuang@realtek.com>
-Cc:     Pkshih <pkshih@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <51d62a31-7cde-e815-bdee-4ef5433007aa@gmail.com>
- <F7CD281DE3E379468C6D07993EA72F84D17AF74C@RTITMBSVM04.realtek.com.tw>
- <b0518665-d5ca-7c94-9808-7cc0cf565814@gmail.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <e68c6aae-8d71-266a-81fe-d078ac1ef38c@lwfinger.net>
-Date:   Fri, 1 Mar 2019 11:28:04 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.0
+        Fri, 1 Mar 2019 15:10:22 -0500
+Received: from oxbaltgw67.schlund.de ([172.19.246.154]) by
+ mrelayeu.kundenserver.de (mreue009 [213.165.67.97]) with ESMTPSA (Nemesis) id
+ 1MvsN5-1hIiuj03JX-00sx5f; Fri, 01 Mar 2019 21:10:18 +0100
+Date:   Fri, 1 Mar 2019 21:10:17 +0100 (CET)
+From:   Stefan Wahren <stefan.wahren@i2se.com>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <1125416917.128310.1551471017839@email.ionos.de>
+Subject: brcmfmac: bogus error messages during module unload
 MIME-Version: 1.0
-In-Reply-To: <b0518665-d5ca-7c94-9808-7cc0cf565814@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+Importance: Medium
+X-Mailer: Open-Xchange Mailer v7.8.4-Rev51
+X-Originating-Client: open-xchange-appsuite
+X-Provags-ID: V03:K1:7SgQ9dz5AZ4iwav/NkPpJ0K9uMldcNl/tzRw+zSNXHCikpAHH6R
+ hNGA4Di9dYwBkfWlw+euovcl7llSzdAB7V1wU4Kvw2ydGP6CwDRbYoNKIcAnysj14MadUtI
+ DwLtRw0Qq7FKOiSIfT9DieUiVKVO/wnLudbRRXP2v0zm7ysqNYBhg/d8BMfMbhF8kAsrlbd
+ RK2c1fydo0DSPAbN0kqEw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Zy2s5kVinQU=:UXZwIFz9UZpkhhQzyQnecj
+ zLqd8dWIcHBSP+8zAw7O+//XBHMOfk7ZQUX+u9tfAMMJfKL0WOf0cgMFkof86R4g8GJ4UkyMT
+ 9ta/1ig6GlJuG4hOdc9GLAPA4tZ+ziw8zbMz8RlIvB8CPoPuGUcqO3LeIYWsfd090Ok9sfQ7n
+ gOJh2MIudJJdk4HqZYxIebTIXsMIzY3xOTMgSotU/ImyDBdzTIr3A6UawatGF6/TJjJlMvVDs
+ 0jRxcN2PFlC4FXs23qGc/LQRd5WGBIXYCtwv1RwjRksAEzm1Lsr/LA1RUr2JeSbla02gBu33y
+ OJrWQzis8ZJYsl86YUSxw8uwg2l0gx/tYtMTVtm+MKoO9X8tFsqFehmQknhsEWuugS3s9MmN1
+ ooI4x2F3gCyppszgkOVgeJXUNjgpzEECjyoVdGtyGDPRIaXNUJHFaiyr2UZXhg8/X5hh8bjeW
+ 7KOJ6Y1mFmBtCxh3TkyujWVtX4rSIyA9uszXQMOvBDqzTWqk/qErjkvNpZy7i0sE/NL/uppp3
+ Nzm+wbTlvV2huO0L7cOhxmygpymknloNlbjriCPMCFU/bBqXLJY6YStU9C2kakb2CTtai+xME
+ u5IA42TrZwhmHNIPrWHQ69GQqdjG6pG95u882ebJ3uFryu8DgKpib2ihgomPUBf0kGheUS3Mr
+ NN+L8Ux2rUh5BCVVXolUvo+yvP7dgXrPhYoqmW1VNhh3abJj3bletZ7rqcvq18RIaNZ6zF/Ai
+ CL/LqA2gLw2dQv5CA4NVoNO+G1QmiRAZKL/YsGv2NP1P/wPM5fzaQRPLE/U=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/28/19 8:32 PM, David R. Bergstein wrote:
-> Tony,
-> 
-> Thanks for your response.  Can you advise as to the availability of the
-> new rtw88 driver?  As it appears to be under development, I could not
-> locate a copy of the code for local compilation.
+Hi,
 
-David,
+this is some kind of older issue with brcmfmac. Everytime i unload the kernel module (e.g. v5.0-rc8 or next-20190301) on a Raspberry Pi 3 (multi_v7_defconfig / arm64_defconfig) after the driver has successful probed, i'm getting such bogus error messages in the kernel log:
 
-Use the command 'git clone http://github.com/lwfinger/rtlwifi_new.git -b rtw88' 
-to get a copy of the new driver for RTL8822BE and RTL8822CE in a stand-alone 
-form. All that is needed is 'cd rtlwifi_new && make && sudo make install'. This 
-version will build on kernels v4.4 and newer. As I have time, I will be 
-backporting to kernels at least as old as 4.0.
+[  870.477114] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg failed w/status -5
+[  870.477122] brcmfmac: brcmf_cfg80211_get_tx_power: error (-5)
+[  871.057074] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[  871.057153] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[  871.057870] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing to do.
+[  871.057878] brcmfmac: brcmf_cfg80211_get_channel: chanspec failed (-5)
 
-I would appreciate your comments and bug reports.
+Is there a chance to remove or at least reduce them?
 
-Larry
-
-
+Thanks
+Stefan
