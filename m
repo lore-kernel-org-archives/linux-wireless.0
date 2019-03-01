@@ -2,84 +2,94 @@ Return-Path: <SRS0=sb9s=RE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B466C43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 11:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3237C43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 11:59:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A80D2085A
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 11:23:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D0C720818
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 11:59:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="fgC17XZJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732302AbfCALXU convert rfc822-to-8bit (ORCPT
+        id S1732784AbfCAL7t (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Mar 2019 06:23:20 -0500
-Received: from mail-ed1-f43.google.com ([209.85.208.43]:39708 "EHLO
-        mail-ed1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727932AbfCALXT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Mar 2019 06:23:19 -0500
-Received: by mail-ed1-f43.google.com with SMTP id p27so19702727edc.6
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2019 03:23:18 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=MZUlK3pYX2rGCzENZccGo4CkZJ/KyYZPcSlksgvEVHQ=;
-        b=ZVa7kquXX6r3gPvBQspMSDyl9Vf4C7V5qx1EXjC39u4RJLBgRHb4KkWPpFLV1Vp+57
-         twXn9Gq6A7TEyA0Zu4jdn4/mazj62dsQb4aQOtwIQtLVT63asMGsjomZLk/Se6Prv7wS
-         PJAzo1cUJDAFd4CD4HSD6J4AbK7Gfx6yVyHKi52GgZqYpJuatEt+5j5sHqMnxS760l8w
-         d9MfIYO/i2uqNFKO+wO3XGOQycB1lzaoCJp7WJjPV19UUTlcpqAFh1QX1+xG90bwGM8J
-         5o/uhUeUhxd5xr/N0ZsObcnAG0Bpz8rfqshyl90DKHTrhervbhgSr//v3ml2tYq2pF6Z
-         uxMQ==
-X-Gm-Message-State: APjAAAW93Q5t8HS6COEZY4N1mM3BCLgPro6wUv1FzD2dmRX2A75QZGE5
-        GaiuPIpTMJ4SkEfSlR5IIWcRbA==
-X-Google-Smtp-Source: APXvYqyyAbz59AsAKcxOM6bSEUDP+FchsRoSeCWma6xjwugOhXyb4HEbCZCgmsw0WrWWHS8hydUbOg==
-X-Received: by 2002:a17:906:7210:: with SMTP id m16mr2746108ejk.171.1551439397827;
-        Fri, 01 Mar 2019 03:23:17 -0800 (PST)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id o23sm1218972ejg.28.2019.03.01.03.23.16
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 01 Mar 2019 03:23:16 -0800 (PST)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 74500183BB9; Fri,  1 Mar 2019 12:23:16 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: wireless workshop coming soon :-)
-In-Reply-To: <5d26367411cf2b50d4cf237640598d1952f17673.camel@sipsolutions.net>
-References: <f90f210372b8c7f7efae0c43ab3ae925c334bc0e.camel@sipsolutions.net> <871s3qn91h.fsf@toke.dk> <5d26367411cf2b50d4cf237640598d1952f17673.camel@sipsolutions.net>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Fri, 01 Mar 2019 12:23:16 +0100
-Message-ID: <87y35ylty3.fsf@toke.dk>
+        Fri, 1 Mar 2019 06:59:49 -0500
+Received: from nbd.name ([46.4.11.11]:41620 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727199AbfCAL7s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Mar 2019 06:59:48 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=kApEH9PJFusHUCNKBjQrCiNvevDcvd6RHvD3SvskAnY=; b=fgC17XZJYCjIR9aQgakoD/XChW
+        gAunYRWexzB5bXwBsyDE/So4eUOzl5SGCO7H8Y620eTWN9kAsgUj2AXMCYBv65e+8EwPgJ4d2PKiE
+        J7D13/L25SkUZfcxMhtN+ezo5P/264EELaw27SF4+a963gbSsMepXCxpvaeS8W4QPmwM=;
+Subject: Re: [PATCH v3 0/2] move dma shared code in mt76 module
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
+        lorenzo.bianconi@redhat.com
+References: <cover.1551370209.git.lorenzo@kernel.org>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <e9ed5676-70ef-abf3-7d70-12ed1955446f@nbd.name>
+Date:   Fri, 1 Mar 2019 12:59:46 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.5.1
 MIME-Version: 1.0
+In-Reply-To: <cover.1551370209.git.lorenzo@kernel.org>
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On 2019-02-28 17:54, Lorenzo Bianconi wrote:
+> Move mt76x02/mt7603 dma shared code in mmio.c/dma.c in order to be
+> reused adding support for mt7603 driver
+> 
+> Changes since v2:
+> - squash mt7603 changes
+> 
+> Changes since v1:
+> - remove mt76_irq_enable/mt76_irq_disable
+> - move dma queue initialization in mt76_dma_alloc_queue
+> - move mt76_irq_enable call into the driver specific
+>   inline functions
+> 
+> Lorenzo Bianconi (2):
+>   mt76: mmio: move mt76x02_set_irq_mask in mt76 module
+>   mt76: dma: move mt76x02_init_{tx,rx}_queue in mt76 module
+Applied, thanks.
 
-> On Fri, 2019-03-01 at 12:11 +0100, Toke Høiland-Jørgensen wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->> 
->> > Please add your favourite topics to
->> > 
->> > https://wireless.wiki.kernel.org/en/developers/summits/prague-2019
->> > 
->> > I've added a few I think we should discuss at this stage, so also see if
->> > you have an opinion on those :-)
->> 
->> Cool! Could we schedule the scheduling and airtime fairness topics after
->> 10:30? Have a tutorial to run in the morning and would obviously like to
->> participate in those discussions ;)
->
-> Yeah, I'm aware. I also have a conflict with the netlink workshop, so
-> Kalle will have to take over for me some of the time :-)
-
-Great! Thought you probably were, just wanted an explicit ACK ;)
-
--Toke
+- Felix
