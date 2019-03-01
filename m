@@ -2,154 +2,177 @@ Return-Path: <SRS0=sb9s=RE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A68C43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 02:32:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C44B2C43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 08:32:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D40D20863
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 02:32:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VkSW9mqI"
+	by mail.kernel.org (Postfix) with ESMTP id 9D5512085A
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 08:32:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728508AbfCACcH (ORCPT
+        id S1728891AbfCAIcm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Feb 2019 21:32:07 -0500
-Received: from mail-qt1-f196.google.com ([209.85.160.196]:39607 "EHLO
-        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725896AbfCACcG (ORCPT
+        Fri, 1 Mar 2019 03:32:42 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:45016 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726066AbfCAIcm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Feb 2019 21:32:06 -0500
-Received: by mail-qt1-f196.google.com with SMTP id o6so26115628qtk.6;
-        Thu, 28 Feb 2019 18:32:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:openpgp:autocrypt:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=QzaYYWLTLgwZqUkJIcAQxjTqSbN5ZFiQxz0iJmOQdrE=;
-        b=VkSW9mqI4twONOA8CdLJMsS/ZIFjsgpjDiOrRshoH3epZbgZMn5A+RfO3BgjZ8WroT
-         zEJibQTmBmoa1WE4CEBA+eLzRCKAF3WRjgR666Z7gLq9U6wnQI1fNkBn5TMPrlnEjhUW
-         D1kUzcsqyUcjuKiNkAiQBmUR+I4cbbzGjb24vNyUAR6nEUjQf2KMIwtYpFfUuzYE8b+c
-         7VMNQnN5GlBehhQjDTx1RB3aaiAsgmsWJPmP+JxSCcOi8jg8JFd2wgh6HaFcC1/Q1GBh
-         SsAog0eNaJs7wGPOlc4BBKqiCQ1KpCOi1KkmVxiJxB/9PzWuVoWLCXN8UA3kV2o6JkQ6
-         R/nQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:openpgp:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-transfer-encoding:content-language;
-        bh=QzaYYWLTLgwZqUkJIcAQxjTqSbN5ZFiQxz0iJmOQdrE=;
-        b=hHfaC13lNnWXsS2X7Rg8LVO/t963ndZqJxdWlQ+iJVm40mMSWTwWppRQ/k6YAM3K1g
-         rN9Vb5IrNUnA4jvSj8Q/+fSANTmvZVaY6lZqke1C0MbMH5yAwgMLplXNvNNRS1fFVrhb
-         68nv4qUpewraTyRmsrKCRTCM12PVZLTqCkdk6XbgVgavtc0mpZWXYgUT4LC5M0tNuAye
-         rIoNj5d1SjE7495WesfaQa6FxewvEvORWSBS4+D6ruNdWy4/ltBJFsO4q9ntKDthU26I
-         9y25Eh1nQDn9htX7tndglCCIUP6oNyrwhyDFHevRolFIx1cSv5QxWQJsyaARgtAa1z23
-         rnRg==
-X-Gm-Message-State: APjAAAUBQ8+NJwKiOfFbZEsOQj9LzUlsOeqXWTRcBChx8tVdLDEoy0pX
-        Ipwii4I3fWF+j29df1PK/1glLsxT
-X-Google-Smtp-Source: APXvYqzOBMGGMJEMCthkKYw6CbsnamjTssjVC/35RVLml0M/wyc3RIqnVLjbadB2IAcj+4nh2XYy1Q==
-X-Received: by 2002:a0c:b98f:: with SMTP id v15mr1971132qvf.60.1551407525015;
-        Thu, 28 Feb 2019 18:32:05 -0800 (PST)
-Received: from [192.168.1.199] (pool-108-28-156-19.washdc.fios.verizon.net. [108.28.156.19])
-        by smtp.gmail.com with ESMTPSA id m128sm11767097qkf.53.2019.02.28.18.32.03
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 28 Feb 2019 18:32:04 -0800 (PST)
-Subject: Re: Realtek r8822be kernel module does not negotiate 802.11ac
- connection
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     Pkshih <pkshih@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <51d62a31-7cde-e815-bdee-4ef5433007aa@gmail.com>
- <F7CD281DE3E379468C6D07993EA72F84D17AF74C@RTITMBSVM04.realtek.com.tw>
-From:   "David R. Bergstein" <david.r.bergstein@gmail.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=david.r.bergstein@gmail.com; keydata=
- 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
- cZPytJop3jxjNbB2ZRfwBXX3FsGBkJ4S2SKQyQ==
-Message-ID: <b0518665-d5ca-7c94-9808-7cc0cf565814@gmail.com>
-Date:   Thu, 28 Feb 2019 21:32:03 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
-MIME-Version: 1.0
-In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17AF74C@RTITMBSVM04.realtek.com.tw>
-Content-Type: text/plain; charset=utf-8
+        Fri, 1 Mar 2019 03:32:42 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC5)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gzdae-0007qz-1l; Fri, 01 Mar 2019 09:32:20 +0100
+Message-ID: <e20962001ee10a0f90f8e2f1f8baafcf3b70e9dd.camel@sipsolutions.net>
+Subject: Re: [PATCH RFC] mac80211: Use IFF_ECHO to force delivery of
+ tx_status frames
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Julius Niedworok <julius.n@gmx.net>
+Cc:     Oliver Hartkopp <socketcan@hartkopp.net>,
+        linux-wireless@vger.kernel.org, ga58taw@mytum.de,
+        David Hildenbrand <david@redhat.com>, nc@net.in.tum.de,
+        "David S. Miller" <davem@davemloft.net>,
+        Edward Cree <ecree@solarflare.com>,
+        Jiri Pirko <jiri@mellanox.com>,
+        Ido Schimmel <idosch@mellanox.com>,
+        Petr Machata <petrm@mellanox.com>,
+        Kirill Tkhai <ktkhai@virtuozzo.com>,
+        Alexander Duyck <alexander.h.duyck@intel.com>,
+        Amritha Nambiar <amritha.nambiar@intel.com>,
+        Li RongQing <lirongqing@baidu.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date:   Fri, 01 Mar 2019 09:32:18 +0100
+In-Reply-To: <AD1F7A49-B3F3-4033-8B0A-D1F8C2C6C834@gmx.net> (sfid-20190228_100617_950752_7E2B5208)
+References: <20190226094104.35192-1-julius.n@gmx.net>
+         <c522f2e0-1bef-8679-45f7-707854918820@hartkopp.net>
+         <6A213CBE-0B6A-466A-B721-E6A728D4888D@gmx.net>
+         <550ff2ac45c891a3fcf3dd8a454f9732d8aa1b70.camel@sipsolutions.net>
+         <AD1F7A49-B3F3-4033-8B0A-D1F8C2C6C834@gmx.net>
+         (sfid-20190228_100617_950752_7E2B5208)
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Tony,
+> Let us briefly describe our test setup to ensure everyone on this mailing
+> list is one the same page.
+> 
+> Our general setup looks like this:
+> 1 $ iw wlp1s0 info
+> Interface wlp1s0
+>       ifindex 5
+>       wdev 0x1
+>       addr 4c:5e:0c:11:43:ac
+>       type managed
+>       wiphy 0
+>       txpower 30.00 dBm
+> 1 $ iw phy phy0 interface add mon0 type monitor
+> 1 $ iw phy phy0 interface add mon1 type monitor
+> 
+> When we send (raw) packets on mon0 using packetspammer [1] and listen on
+> the _other_ monitor mode interface mon1, we receive frames that were sent
+> on the first one:
+> 1 $ packetspammer mon0
+> 2 $ tcpdump -i mon1 'wlan addr2 13:22:33:44:55:66'
+> 
+> This is due to the fact that frames sent on mon0 are echoed back as TX
+> status frames, because REQ_TX_STATUS is always set for frames sent from
+> monitor mode interfaces.
 
-Thanks for your response.  Can you advise as to the availability of the
-new rtw88 driver?  As it appears to be under development, I could not
-locate a copy of the code for local compilation.
+Yes, I understand :-)
 
-Sincerely,
+> But when we replace mon0 with an interface in managed mode (wlp1s0), the
+> receipt of frames stops, because in managed mode REQ_TX_STATUS is cleared
+> in most frames:
+> 1 $ ifup wlp1s0
+> 1 $ ping -I wlp1s0 192.168.254.1 # this address is not assigned to any host
+> 2 $ tcpdump -i mon1 ‚wlan addr2 4c:5e:0c:11:43:ac‘
 
-David R. Bergstein
+Yes, also understand.
 
-On 2/27/19 5:23 AM, Tony Chuang wrote:
->> This message is in regard to a bug I have open on bugs.launchpad.net, 1813372,
->> linked below.  This issue, originally identified in an Ubuntu kernel, has been
->> duplicated in the most current mainline kernel, 5.0-rc8, and is in regard to
->> problems attaining a wireless connection at 802.11ac speeds.
->>
->> https://bugs.launchpad.net/bugs/1813372
->>
->> At your earliest convenience, please see the bug report above, and advise if a fix
->> will be available for the r8822be kernel module.
->>
->> Sincerely,
->>
->> David R. Bergstein
->>
-> Hi,
->
-> If it's possible I will suggest that you can use the new driver "rtw88" being
-> reviewed now. rtw88 is better supported by Realtek and has significant
-> improvement in contrast to r8822be. And also it is aim to better support
-> 802.11ac series ICs, so it may help resolve your problem about 802.11ac
-> connection speeds.
-> Thanks!
->
-> Yan-Hsuan
->
+> > What you're proposing is to use IFF_ECHO to show frames transmitted
+> > through *other* interfaces on the monitor interface.
+> > 
+> > I don’t think the IFF_ECHO semantics really match this.
+> 
+> What we propose is to use IFF_ECHO to force REQ_TX_STATUS being set for all
+> frames sent on the interface. But you are right: The goal is that frames
+> transmitted through the other interface show up on the monitor interface
+> (but only after passing the driver). However, this is exactly how we
+> understand the semantics of IFF_ECHO in the kernel documentation.
+
+I disagree.
+
+First of all, IFF_ECHO is only documented/used *inside* the kernel, and
+cannot be set by userspace today. It's documented by CAN as such:
+
+Documentation/networking/can.rst:
+
+   Local Loopback of Sent Frames
+   -----------------------------
+
+   As described in :ref:`socketcan-local-loopback1` the CAN network
+   device driver should
+   support a local loopback functionality similar to the local echo
+   e.g. of tty devices. In this case the driver flag IFF_ECHO has to be
+   set to prevent the PF_CAN core from locally echoing sent frames
+   (aka loopback) as fallback solution::
+
+       dev->flags = (IFF_NOARP | IFF_ECHO);
+
+   Note that everything here is specific to a single interface.
+
+   Also note that it's a signal from the *driver* to the *stack* to not do
+   the loopback itself, because the driver will do it.
+
+   I think in the case of all other sockets/interfaces, the stack will do
+   the echo anyway, for tcpdump etc. purposes.
+
+   The documentation in the uapi just states:
+     @IFF_ECHO: echo sent packets. Volatile.
+   and makes no representation about which interface, but I'd argue that
+   all the flags are specific to a single interface and thus you'd expect
+   this to also be.
+
+
+   Thus, I don't think this was ever intended for any cross-interface
+   behaviour, even if it may be on the same physical NIC.
+
+
+   > As far as we know, drivers must return a TX status frame, if REQ_TX_STATUS
+> is set, but can do whatever they want, if it is clear.
+
+Not all drivers can and do this, I believe. Some things don't work very
+well if they don't do it, but I _think_ you've just been lucky and used
+hardware that does in fact support it.
+
+Also note that for some hardware that does support this, there's
+sometimes significant overhead - not just the performance overhead of
+actually reporting the frames, but sometimes also overhead in how the
+hardware is programmed and used, and how TX status is extracted.
+
+> This is no problem for our
+> functionality, because we force the delivery of TX status frames by
+> permanently setting REQ_TX_STATUS. As long as the semantics of
+> REQ_TX_STATUS remains like it is now, the functionality will always be
+> as expected from our API.
+
+Sure, for now, for your specific case of ath9k :-)
+
+> We could also achieve the functionality by modifying the drivers but this
+> would mean that we had to add this functionality to every driver.
+> Moreover, the feature of TX status frames, how it is implemented currently
+> for monitor mode interfaces, is part of the mac80211 implementation. The
+> decision to force TX status frames for monitor mode interfaces is made in
+> the common mac80211 implementation.
+
+I suppose it could be in mac80211 (perhaps debugfs?) too. I just really
+don't think IFF_ECHO is the right approach.
+
+johannes
+
