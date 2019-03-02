@@ -2,174 +2,108 @@ Return-Path: <SRS0=UNZO=RF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCFD2C43381
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 05:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D99B0C43381
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 07:05:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC20120838
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 05:06:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A10FA2083D
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 07:05:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FFHdaJfC";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HaMsOdmA"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="P8XdJQbP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726943AbfCBFGt (ORCPT
+        id S1727248AbfCBHFU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Mar 2019 00:06:49 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:36554 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726734AbfCBFGs (ORCPT
+        Sat, 2 Mar 2019 02:05:20 -0500
+Received: from mail-ed1-f45.google.com ([209.85.208.45]:36013 "EHLO
+        mail-ed1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726049AbfCBHFT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Mar 2019 00:06:48 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1C2CF60F3F; Sat,  2 Mar 2019 05:06:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551503207;
-        bh=3R2YWU9ekmHlcpn8ouqeU0AA0Y4avXlO8wQnL7TUdGU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FFHdaJfCRYsQYoVJRugrXw84862lf9fikEooiydmPBiGTIXVp6CTEBn8ozLf5fm42
-         nnLYE6aI2EqlbyBLdGo1Kwon4tSx1/vK1zhVXCPHsx1+d5vnCKQHrWBG5mUYgEUMHn
-         i9OIY2mo4ZQNkteLOsJxMMphWhibNf4Kj5U/uyAc=
-Received: from govinds-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: govinds@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1448A60E7A;
-        Sat,  2 Mar 2019 05:06:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551503206;
-        bh=3R2YWU9ekmHlcpn8ouqeU0AA0Y4avXlO8wQnL7TUdGU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HaMsOdmACjOQtxK9vXJe7EhrX0vsRtXCZ5Lw9Mx875rTJt53kTDtoTBDLc9aI8HgO
-         8hJDfNALcCbT08rDiT2kd5kLuy2TX60CRT0qBaqXPtF6w62dkTxsmUOugKuuzI9JER
-         0mEA7zdSJ53PXncJJOqHQiqyjwcRUk4hX49RvQV8=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1448A60E7A
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=govinds@codeaurora.org
-From:   Govind Singh <govinds@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 2/2] ath10k: Add xo calibration support for wifi rf clock
-Date:   Sat,  2 Mar 2019 10:36:35 +0530
-Message-Id: <20190302050635.17694-3-govinds@codeaurora.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190302050635.17694-1-govinds@codeaurora.org>
-References: <20190302050635.17694-1-govinds@codeaurora.org>
+        Sat, 2 Mar 2019 02:05:19 -0500
+Received: by mail-ed1-f45.google.com with SMTP id g9so179893eds.3
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2019 23:05:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:date:message-id:in-reply-to:references:user-agent
+         :subject:mime-version:content-transfer-encoding;
+        bh=8+pX3UapbALM/AMmltCrRnunELlgW/yfXpcJezo8cX4=;
+        b=P8XdJQbPsNcjEjXSmZo9t1P8P4MU3v0x5Q8UmOx+gmeeOLIh+O1PdRhKkq1lphxGnt
+         3+tK7prsp4Kr92i90pLD8Vk+JJENxqYC0vhJBBO4pjKh9hss3bAJnq7ieiVMJwt65E+E
+         F9p14KEEOSIpSc77vuKGx0Fb6UxlPk8/r8Ba4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:date:message-id:in-reply-to
+         :references:user-agent:subject:mime-version
+         :content-transfer-encoding;
+        bh=8+pX3UapbALM/AMmltCrRnunELlgW/yfXpcJezo8cX4=;
+        b=FHiVDQ5bIuI73XJ/BO8OgT2/c3RrjdpFwKNEnsYuJW/lSdYqJfiap0AJADYreyyklY
+         8CkZefQForRxzpI+Wza7liPFbEoE1rjkUZQ1TB//NwbWMzICKRuPxYIK57pKe2zUMgE3
+         bldYcgsuZVc7M2nE+TQMT/9nPSe57rKicSFl9WJz6/OtUyD3qw9RRAe6459IWfk9J9KL
+         VRfe27NspCmu8kX32LSuqWoUN2cek0Eh5B3XZSijs8yogT+8/wFEbestrwDNJJ/M/duB
+         gcO7i0KQ8ru01yJjQN6JLHG3OvR1quDjZKgUeuM8c7oCCfYqIisV16UgGg7W/WO1xvtD
+         rF1g==
+X-Gm-Message-State: APjAAAWHP7m2kCNClYmNU0rQaUtVZ4l1ixM5VeE7CaAA8VInaiEY/LQl
+        kneAATEoWk5Nx5YzHhfTsjxZ1Q==
+X-Google-Smtp-Source: APXvYqx9Kz5udEUWucBTcPaLp3S+wgu/yjzmNOuC6S2WHO1W5w1smTb0Lq6p995w5WTXoNh831TsAQ==
+X-Received: by 2002:a50:92cb:: with SMTP id l11mr7067969eda.25.1551510317784;
+        Fri, 01 Mar 2019 23:05:17 -0800 (PST)
+Received: from [192.168.178.17] (f140230.upc-f.chello.nl. [80.56.140.230])
+        by smtp.gmail.com with ESMTPSA id r1sm108298eds.39.2019.03.01.23.05.16
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Fri, 01 Mar 2019 23:05:17 -0800 (PST)
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+To:     Stefan Wahren <stefan.wahren@i2se.com>,
+        "Chi-Hsien Lin" <chi-hsien.lin@cypress.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>
+CC:     "linux-wireless" <linux-wireless@vger.kernel.org>
+Date:   Sat, 02 Mar 2019 08:05:15 +0100
+Message-ID: <1693d389ff8.278a.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+In-Reply-To: <1125416917.128310.1551471017839@email.ionos.de>
+References: <1125416917.128310.1551471017839@email.ionos.de>
+User-Agent: AquaMail/1.18.2-1413 (build: 101800200)
+Subject: Re: brcmfmac: bogus error messages during module unload
 MIME-Version: 1.0
+Content-Type: text/plain; format=flowed; charset="us-ascii"
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-PMIC XO is the clock source for wifi rf clock in integrated wifi
-chipset ex: WCN3990. Due to board layout errors XO frequency drifts
-can cause wifi rf clock inaccuracy.
-XO calibration test tree in Factory Test Mode is used to find the
-best frequency offset(for example +/-2KHz )by programming XO trim
-register. This ensure system clock stays within required 20 ppm
-WLAN rf clock.
+Op 1 maart 2019 21:10:18 schreef Stefan Wahren <stefan.wahren@i2se.com>:
 
-Retrieve the xo trim offset via system firmware (e.g., device tree),
-especially in the case where the device doesn't have a useful EEPROM
-on which to store the calibrated XO offset (e.g., for integrated Wifi).
-Calibrated XO offset is sent to fw, which compensate the clock drift
-by programing the XO trim register.
+> Hi,
+>
+> this is some kind of older issue with brcmfmac. Everytime i unload the 
+> kernel module (e.g. v5.0-rc8 or next-20190301) on a Raspberry Pi 3 
+> (multi_v7_defconfig / arm64_defconfig) after the driver has successful 
+> probed, i'm getting such bogus error messages in the kernel log:
+>
+> [  870.477114] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg 
+> failed w/status -5
+> [  870.477122] brcmfmac: brcmf_cfg80211_get_tx_power: error (-5)
+> [  871.057074] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing 
+> to do.
+> [  871.057153] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing 
+> to do.
+> [  871.057870] brcmfmac: brcmf_fil_cmd_data: bus is down. we have nothing 
+> to do.
+> [  871.057878] brcmfmac: brcmf_cfg80211_get_channel: chanspec failed (-5)
+>
+> Is there a chance to remove or at least reduce them?
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/qmi.c  | 12 ++++++++++++
- drivers/net/wireless/ath/ath10k/snoc.c | 10 ++++++++++
- drivers/net/wireless/ath/ath10k/snoc.h |  2 ++
- 3 files changed, 24 insertions(+)
+These are triggered by user-space. Upon remove we can not communicate with 
+the device, but have not yet removed the network interfaces. So when 
+user-space does a request we fail. I will have a look at it.
 
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-index 37b3bd629f48..99c140a6628d 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.c
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -302,10 +302,16 @@ static int ath10k_qmi_send_cal_report_req(struct ath10k_qmi *qmi)
- 	struct wlfw_cal_report_resp_msg_v01 resp = {};
- 	struct wlfw_cal_report_req_msg_v01 req = {};
- 	struct ath10k *ar = qmi->ar;
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
- 	struct qmi_txn txn;
- 	int i, j = 0;
- 	int ret;
- 
-+	if (ar_snoc->xo_cal_supported) {
-+		req.xo_cal_data_valid = 1;
-+		req.xo_cal_data = ar_snoc->xo_cal_data;
-+	}
-+
- 	ret = qmi_txn_init(&qmi->qmi_hdl, &txn, wlfw_cal_report_resp_msg_v01_ei,
- 			   &resp);
- 	if (ret < 0)
-@@ -636,6 +642,7 @@ ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
- 	struct wlfw_ind_register_resp_msg_v01 resp = {};
- 	struct wlfw_ind_register_req_msg_v01 req = {};
- 	struct ath10k *ar = qmi->ar;
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
- 	struct qmi_txn txn;
- 	int ret;
- 
-@@ -646,6 +653,11 @@ ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
- 	req.msa_ready_enable_valid = 1;
- 	req.msa_ready_enable = 1;
- 
-+	if (ar_snoc->xo_cal_supported) {
-+		req.xo_cal_enable_valid = 1;
-+		req.xo_cal_enable = 1;
-+	}
-+
- 	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
- 			   wlfw_ind_register_resp_msg_v01_ei, &resp);
- 	if (ret < 0)
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 54efe6be8f1d..7fa0f5c1d070 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -20,6 +20,7 @@
- #include <linux/of.h>
- #include <linux/of_device.h>
- #include <linux/platform_device.h>
-+#include <linux/property.h>
- #include <linux/regulator/consumer.h>
- 
- #include "ce.h"
-@@ -1189,6 +1190,15 @@ static int ath10k_snoc_resource_init(struct ath10k *ar)
- 		ar_snoc->ce_irqs[i].irq_line = res->start;
- 	}
- 
-+	ret = device_property_read_u32(&pdev->dev, "xo-cal-data",
-+				       &ar_snoc->xo_cal_data);
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc xo-cal-data return %d\n", ret);
-+	if (ret == 0) {
-+		ar_snoc->xo_cal_supported = true;
-+		ath10k_dbg(ar, ATH10K_DBG_SNOC, "xo cal data %x\n",
-+			   ar_snoc->xo_cal_data);
-+	}
-+
- out:
- 	return ret;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.h b/drivers/net/wireless/ath/ath10k/snoc.h
-index 2b2f23cf7c5d..25383de8f17d 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.h
-+++ b/drivers/net/wireless/ath/ath10k/snoc.h
-@@ -91,6 +91,8 @@ struct ath10k_snoc {
- 	struct ath10k_clk_info *clk;
- 	struct ath10k_qmi *qmi;
- 	unsigned long int flags;
-+	bool xo_cal_supported;
-+	u32 xo_cal_data;
- };
- 
- static inline struct ath10k_snoc *ath10k_snoc_priv(struct ath10k *ar)
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Regards,
+Arend
+
+Verzonden met AquaMail voor Android
+https://www.mobisystems.com/aqua-mail
+
 
