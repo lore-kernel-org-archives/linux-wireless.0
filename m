@@ -2,63 +2,65 @@ Return-Path: <SRS0=UNZO=RF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FF6BC4360F
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 01:46:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E3BCC43381
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 02:55:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E101620815
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 01:46:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 330DD2075B
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 02:55:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZLdnBn+9"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k6im72mt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726738AbfCBBql (ORCPT
+        id S1727914AbfCBCzN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Mar 2019 20:46:41 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:45076 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726007AbfCBBqk (ORCPT
+        Fri, 1 Mar 2019 21:55:13 -0500
+Received: from mail-qt1-f195.google.com ([209.85.160.195]:32829 "EHLO
+        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727382AbfCBCzN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Mar 2019 20:46:40 -0500
-Received: by mail-ot1-f66.google.com with SMTP id i12so1517289otp.12;
-        Fri, 01 Mar 2019 17:46:40 -0800 (PST)
+        Fri, 1 Mar 2019 21:55:13 -0500
+Received: by mail-qt1-f195.google.com with SMTP id z39so30257884qtz.0;
+        Fri, 01 Mar 2019 18:55:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=0EOKD+tge+5GZtEzmSYbhOX+UjfkXXhiwhiyqi8FI50=;
-        b=ZLdnBn+9LH49v8so8G5C0cWGIxDgYsoK63qn5ENNKEl1eNOIiTh0rmnhFo44D24MFL
-         rnYGpItG5QSUOyLUpaCSqWt4wRXb1T8DjauZdChcc1OZJoYBV9reW5R6X99WGMde+vLy
-         Z1RE7istzUuIfQeY5idRv3cxMu8b1MFS2Jwz22UciExU36oNPcE76LxnK6XfRD7539e/
-         oazuPQMR29gn+UrGt/96GIZ+I/me3Sj9Hcrq09EeVztd6WQq3a9UewWBmUKxn8CDRngT
-         pKt9M3wQ21YoWpHFkj6pXXOQcz3nU8XYVe+uhTFe5RW3kuQomp5zCbKw+Z3V1dvsF1df
-         hZZw==
+        h=subject:to:cc:references:from:openpgp:autocrypt:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=Km68r/9NC235UC4PibvhRC9HlVBg7ll49L+EeMzdqWE=;
+        b=k6im72mtSM08RhupXf1kwktMsa0rybuVEJoJd6kZEtOGEhvtuQArHfQBnAk1FfnMnF
+         ggYX4ON9pES8o3VakpWzVspuy9VS1n4L2jikS/gDdPY9t3HpHpyqwrvLGKCZJA8q3qCr
+         kBFGWsv1dyfQvxvEGgwV3Txu5qZIMg77XkHqR2l2x33ZXHH+WMGeLWqr5xoYrhEpwBx/
+         9l+UEH4oOdh3PJ9+BQ29851FPH8AnuX1eI0vyuHo6jmTyDkWtzAOOM0D7Fg/EwZDWfS2
+         o0kFYxkrBmPBOzxqoJ2wtyuOmTI+Fi9cpdxWt7ZdiRqxMqo6u/JrVHgL5H8vjG9GPe2h
+         KScg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=0EOKD+tge+5GZtEzmSYbhOX+UjfkXXhiwhiyqi8FI50=;
-        b=mP5Te8FSk0WBEYwIqiY4acoGJfKiE7M2I7gb0182Le0fRIajFnXE8n3e2Q3D4gjgpg
-         cJNtjpvdESO9bzobzLQ2rgiZBdyYTL29+LBC8d6bboMJWZpHXcw4ZCpb2rP7pBRi+pAI
-         gSBttDE4cAaJLKac1BVfvXST6i09mzUWGuc7KepBN3e2IdXx3QcTvzn1SgUoaD6S0wml
-         3jxLiIYA9hf+DzgjROubijbxdJVfRYBYdFLG+iKjjNUCc14GkzhxWqCfW0HtnMAJ3kU3
-         6ieDZyxEE51i7BXPtzU7tp1KIyJAcU0Vum90/FRPMSQ9g0OPLAN+C7UJjSB4fr6dfm5F
-         g/vQ==
-X-Gm-Message-State: APjAAAXT6ECwkQg8d3SGeG958HNCF65dniAik31sEtkRjfpi3GV5khqB
-        nc/6nV27grwjiIiksJwfyDA0VID2
-X-Google-Smtp-Source: APXvYqyi9Pf1RpXCIuqhvRGyanVvF4aSLv+9DGsO10StBESNkd2DtJs1GP4+JKu0bPo6nJd7kM9ZlQ==
-X-Received: by 2002:a9d:6945:: with SMTP id p5mr5551409oto.40.1551491199710;
-        Fri, 01 Mar 2019 17:46:39 -0800 (PST)
-Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id c131sm9679943oif.3.2019.03.01.17.46.37
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-transfer-encoding:content-language;
+        bh=Km68r/9NC235UC4PibvhRC9HlVBg7ll49L+EeMzdqWE=;
+        b=obds9xcLLcwKCReMihEBr01+S/Awo2a+VrTHlcT9bPiZehPbxTONvDT0GdT7224qnF
+         S+bCFfm28wA3BY60NUytaqn5cH835CZfIZH2zODrnGoANn9eHDBANvfyl8wjcga9WUaW
+         0adZuvA/s5/G/hItEycZsepPAR4dV23hPuFrEQBbDYpMs041/klPY8yI0L70UJqFKCEB
+         XXaRdpeAcFZHmYW69XAW8kt48urR1kU5YJqjAimOP1a4I2h234MnNYAVJbT1oTreDDDi
+         3XlxXeFMNkGjrgFQcU3PonPj39foEdyELug9nt492pGGCvUCOsf3BwiYfIFwVbyNrxwy
+         IJ3A==
+X-Gm-Message-State: APjAAAXhyg2DR72Yx8iSpSXL+CFI78l8rE6ZawQ9uJQIEuY7Six9ktIf
+        t8CA5RgmNc6NfjfKH1iLuzrYth0BALs=
+X-Google-Smtp-Source: APXvYqwoXHox8ebvwf05EvBu5z5FjgawQLxmE54lnK7+MgVgzYcBsO+evrsOfUFzP4vXTcSBIzASDw==
+X-Received: by 2002:ac8:1b98:: with SMTP id z24mr6432692qtj.204.1551495312181;
+        Fri, 01 Mar 2019 18:55:12 -0800 (PST)
+Received: from [192.168.1.199] (pool-108-28-156-19.washdc.fios.verizon.net. [108.28.156.19])
+        by smtp.gmail.com with ESMTPSA id w1sm14123714qtc.75.2019.03.01.18.55.11
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 Mar 2019 17:46:38 -0800 (PST)
+        Fri, 01 Mar 2019 18:55:11 -0800 (PST)
 Subject: Re: Realtek r8822be kernel module does not negotiate 802.11ac
  connection
-To:     "David R. Bergstein" <david.r.bergstein@gmail.com>,
+To:     Larry Finger <Larry.Finger@lwfinger.net>,
         Tony Chuang <yhchuang@realtek.com>
 Cc:     Pkshih <pkshih@realtek.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
@@ -69,37 +71,98 @@ References: <51d62a31-7cde-e815-bdee-4ef5433007aa@gmail.com>
  <b0518665-d5ca-7c94-9808-7cc0cf565814@gmail.com>
  <e68c6aae-8d71-266a-81fe-d078ac1ef38c@lwfinger.net>
  <6eb7af74-b1a8-d112-e027-6c14252af994@gmail.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <487c350c-c455-b490-8de5-1d68760aa3dc@lwfinger.net>
-Date:   Fri, 1 Mar 2019 19:46:37 -0600
+ <487c350c-c455-b490-8de5-1d68760aa3dc@lwfinger.net>
+From:   "David R. Bergstein" <david.r.bergstein@gmail.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=david.r.bergstein@gmail.com; keydata=
+ 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
+ cZPytJop3jxjNbB2ZRfwBXX3FsGBkJ4S2SKQyQ==
+Message-ID: <2e39892d-d206-e87f-c802-d427c54277cf@gmail.com>
+Date:   Fri, 1 Mar 2019 21:55:10 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <6eb7af74-b1a8-d112-e027-6c14252af994@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+In-Reply-To: <487c350c-c455-b490-8de5-1d68760aa3dc@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/1/19 4:26 PM, David R. Bergstein wrote:
-> Larry,
-> 
-> Thanks for the response and detailed instructions, which allowed me to
-> build and install the rtw88 kernel module.  I cannot however seem to get
-> my system to actually use the module.  Just to recap this is an HP Omen
-> laptop with secure boot disabled.  Upon boot-up both the new rtw88 and
-> old r8822be modules are loaded.  If I unload the r8822be module the wifi
-> network connection gets terminated, even if I unload/reload the rtw88
+Larry,
+
+Following up to your last reply, I blacklisted the r8822be module,
+rebooted and was unable to bring up the wireless interface via rtw88. 
+Below are some errors recorded in my system log:
+
+ 
+[  267.509818] rtw_pci 0000:3d:00.0: Direct firmware load for
+rtw88/rtw8822b_fw.bin failed with error -2
+[  267.509821] rtw_pci 0000:3d:00.0: failed to request firmware
+[  267.511068] rtw_pci 0000:3d:00.0: mac power on failed
+[  267.511072] rtw_pci 0000:3d:00.0: failed to power on mac
+[  267.511073] rtw_pci 0000:3d:00.0: failed to setup chip efuse info
+[  267.511075] rtw_pci 0000:3d:00.0: failed to setup chip information
+[  267.512817] rtw_pci: probe of 0000:3d:00.0 failed with error -114
+
+As directed, I used the rtwpci module to perform load/unload the rtw88
+module before I saw the errors above.  Do I still need to install firmware?
+
+Sincerely,
+
+David R. Bergstein
+
+On 3/1/19 8:46 PM, Larry Finger wrote:
+> On 3/1/19 4:26 PM, David R. Bergstein wrote:
+>> Larry,
+>>
+>> Thanks for the response and detailed instructions, which allowed me to
+>> build and install the rtw88 kernel module.  I cannot however seem to get
+>> my system to actually use the module.  Just to recap this is an HP Omen
+>> laptop with secure boot disabled.  Upon boot-up both the new rtw88 and
+>> old r8822be modules are loaded.  If I unload the r8822be module the wifi
+>> network connection gets terminated, even if I unload/reload the rtw88
+>> module.
+>>
+>> Is there something else I should be doing prior to invoking rtw88, e.g.,
+>> blacklisting the old module?
+>
+> Yes, r8822be must be blacklisted. Use the lsmod command to see what
+> modules are actually loaded. You load/unload rtw88 using the rtwpci
 > module.
-> 
-> Is there something else I should be doing prior to invoking rtw88, e.g.,
-> blacklisting the old module?
-
-Yes, r8822be must be blacklisted. Use the lsmod command to see what modules are 
-actually loaded. You load/unload rtw88 using the rtwpci module.
-
-Larry
-
+>
+> Larry
+>
