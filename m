@@ -7,59 +7,60 @@ X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E3BCC43381
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 02:55:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B87C43381
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 03:16:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 330DD2075B
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 02:55:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A876B20823
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 03:16:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k6im72mt"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ks+kYPap"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727914AbfCBCzN (ORCPT
+        id S1727736AbfCBDQY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Mar 2019 21:55:13 -0500
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:32829 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727382AbfCBCzN (ORCPT
+        Fri, 1 Mar 2019 22:16:24 -0500
+Received: from mail-qt1-f194.google.com ([209.85.160.194]:41644 "EHLO
+        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727492AbfCBDQY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Mar 2019 21:55:13 -0500
-Received: by mail-qt1-f195.google.com with SMTP id z39so30257884qtz.0;
-        Fri, 01 Mar 2019 18:55:12 -0800 (PST)
+        Fri, 1 Mar 2019 22:16:24 -0500
+Received: by mail-qt1-f194.google.com with SMTP id v10so30244079qtp.8;
+        Fri, 01 Mar 2019 19:16:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:openpgp:autocrypt:message-id:date
+        h=subject:from:to:cc:references:openpgp:autocrypt:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding
          :content-language;
-        bh=Km68r/9NC235UC4PibvhRC9HlVBg7ll49L+EeMzdqWE=;
-        b=k6im72mtSM08RhupXf1kwktMsa0rybuVEJoJd6kZEtOGEhvtuQArHfQBnAk1FfnMnF
-         ggYX4ON9pES8o3VakpWzVspuy9VS1n4L2jikS/gDdPY9t3HpHpyqwrvLGKCZJA8q3qCr
-         kBFGWsv1dyfQvxvEGgwV3Txu5qZIMg77XkHqR2l2x33ZXHH+WMGeLWqr5xoYrhEpwBx/
-         9l+UEH4oOdh3PJ9+BQ29851FPH8AnuX1eI0vyuHo6jmTyDkWtzAOOM0D7Fg/EwZDWfS2
-         o0kFYxkrBmPBOzxqoJ2wtyuOmTI+Fi9cpdxWt7ZdiRqxMqo6u/JrVHgL5H8vjG9GPe2h
-         KScg==
+        bh=iCrMRx3hb630A2wxwPkLxj7aOIlGrD8Tg5ChwcKkYO4=;
+        b=Ks+kYPapu+B0XeR7EMSb2dKHDrBxcUipO5V2rQ24QI/Zhpe2lynQABAiU/hst/2GQJ
+         H2hIJ9zFqm1HYRRmMzn2KnNqGvsPzsei9A/cGMdGNx3v76xz/MBDF7U/EZ1GbGwvGd6Z
+         r7eEEpgxoASC6WGXAZXajZYPveKyh9M2DGZJbeItUIKobWmjx6Ii6w6Iw/skkdAABeln
+         uJ/7WRVGCmaZJYtD6Uk88R7oijaavjXrBBtoCc0Q7hQWQhSSja3rR+rbpoXr2t/JTy7f
+         5aoQns/6ImI9OLkQV1pTWTiEqXkH6tHAoHOmY+WU7ESUrDIpAIjsFhD9DcqJF8iOGhvQ
+         GtEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:openpgp:autocrypt
+        h=x-gm-message-state:subject:from:to:cc:references:openpgp:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-transfer-encoding:content-language;
-        bh=Km68r/9NC235UC4PibvhRC9HlVBg7ll49L+EeMzdqWE=;
-        b=obds9xcLLcwKCReMihEBr01+S/Awo2a+VrTHlcT9bPiZehPbxTONvDT0GdT7224qnF
-         S+bCFfm28wA3BY60NUytaqn5cH835CZfIZH2zODrnGoANn9eHDBANvfyl8wjcga9WUaW
-         0adZuvA/s5/G/hItEycZsepPAR4dV23hPuFrEQBbDYpMs041/klPY8yI0L70UJqFKCEB
-         XXaRdpeAcFZHmYW69XAW8kt48urR1kU5YJqjAimOP1a4I2h234MnNYAVJbT1oTreDDDi
-         3XlxXeFMNkGjrgFQcU3PonPj39foEdyELug9nt492pGGCvUCOsf3BwiYfIFwVbyNrxwy
-         IJ3A==
-X-Gm-Message-State: APjAAAXhyg2DR72Yx8iSpSXL+CFI78l8rE6ZawQ9uJQIEuY7Six9ktIf
-        t8CA5RgmNc6NfjfKH1iLuzrYth0BALs=
-X-Google-Smtp-Source: APXvYqwoXHox8ebvwf05EvBu5z5FjgawQLxmE54lnK7+MgVgzYcBsO+evrsOfUFzP4vXTcSBIzASDw==
-X-Received: by 2002:ac8:1b98:: with SMTP id z24mr6432692qtj.204.1551495312181;
-        Fri, 01 Mar 2019 18:55:12 -0800 (PST)
+        bh=iCrMRx3hb630A2wxwPkLxj7aOIlGrD8Tg5ChwcKkYO4=;
+        b=MaV0WgRtj/pn4U57SajsEjoiqvgVCjAP1qomeKabSco44wSqn/lm0EHOlrEDa+KirM
+         10GS+wsRD2Zzf/ngXCH3RkoNcQmrJrfvu7+t7OXppQtPergBuhxPmRNGLiJyyOFrdAAr
+         YtnrVeZ/upOPUvHXdPhmuJvzJn6fOb0aE1kULSACcOVYoYpcChnlWHXIE05lapQrPtsF
+         ypQu9s43uWC8TcVCkqFU8ss6uqc11HJmIazTDAub9ZiMOBJB7Mi510RNpN9iO0Ppvu7s
+         J5DeXbHsBLiffSAPjpxb95mnZdLk2ItVnYj2vNY8C5jaCawEid7VxMYubMkwIGNaW1zA
+         i5Xw==
+X-Gm-Message-State: APjAAAWyYIOWUo/XbqrwTpXKNYqzqQQROYJPLu5efvEiRWURJc1NekaQ
+        HN9ziJwhlxgQ81GTo+EQZLVtGpvg
+X-Google-Smtp-Source: APXvYqyhRNoxntc+A+exTR7Bd5jU+LRT98O8GnoGqyD11cBzBY/V/d5qIzcx/jn5+yyznwWEH+5jbw==
+X-Received: by 2002:a0c:f2d3:: with SMTP id c19mr6285836qvm.230.1551496582332;
+        Fri, 01 Mar 2019 19:16:22 -0800 (PST)
 Received: from [192.168.1.199] (pool-108-28-156-19.washdc.fios.verizon.net. [108.28.156.19])
-        by smtp.gmail.com with ESMTPSA id w1sm14123714qtc.75.2019.03.01.18.55.11
+        by smtp.gmail.com with ESMTPSA id a68sm15056212qkj.82.2019.03.01.19.16.21
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 Mar 2019 18:55:11 -0800 (PST)
+        Fri, 01 Mar 2019 19:16:21 -0800 (PST)
 Subject: Re: Realtek r8822be kernel module does not negotiate 802.11ac
  connection
+From:   "David R. Bergstein" <david.r.bergstein@gmail.com>
 To:     Larry Finger <Larry.Finger@lwfinger.net>,
         Tony Chuang <yhchuang@realtek.com>
 Cc:     Pkshih <pkshih@realtek.com>,
@@ -72,7 +73,7 @@ References: <51d62a31-7cde-e815-bdee-4ef5433007aa@gmail.com>
  <e68c6aae-8d71-266a-81fe-d078ac1ef38c@lwfinger.net>
  <6eb7af74-b1a8-d112-e027-6c14252af994@gmail.com>
  <487c350c-c455-b490-8de5-1d68760aa3dc@lwfinger.net>
-From:   "David R. Bergstein" <david.r.bergstein@gmail.com>
+ <2e39892d-d206-e87f-c802-d427c54277cf@gmail.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=david.r.bergstein@gmail.com; keydata=
  mQGNBFuOpRoBDADZ5R/eYIWhqqdgyJWcNf/wRM38UOQIH+ef+S1aeedsMciGiboMQiu7AZf2
@@ -108,12 +109,12 @@ Autocrypt: addr=david.r.bergstein@gmail.com; keydata=
  tDnFcUya7QZqP+edCK1BI3rvfZT07nMTOI88Ddd9Ha76ndUOjW4lrIwqq08N6pI4/EHaqrkA
  6BD6T0TrECEVfeFzudib/2M2KQo04fitQWH7fK8eGo8XmcgtnMH3tKcBwBBs3Zg0XjhSXr8K
  cZPytJop3jxjNbB2ZRfwBXX3FsGBkJ4S2SKQyQ==
-Message-ID: <2e39892d-d206-e87f-c802-d427c54277cf@gmail.com>
-Date:   Fri, 1 Mar 2019 21:55:10 -0500
+Message-ID: <8706d34c-1fac-84ba-759d-18d96750636b@gmail.com>
+Date:   Fri, 1 Mar 2019 22:16:21 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <487c350c-c455-b490-8de5-1d68760aa3dc@lwfinger.net>
+In-Reply-To: <2e39892d-d206-e87f-c802-d427c54277cf@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -124,45 +125,56 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Larry,
 
-Following up to your last reply, I blacklisted the r8822be module,
-rebooted and was unable to bring up the wireless interface via rtw88. 
-Below are some errors recorded in my system log:
-
- 
-[  267.509818] rtw_pci 0000:3d:00.0: Direct firmware load for
-rtw88/rtw8822b_fw.bin failed with error -2
-[  267.509821] rtw_pci 0000:3d:00.0: failed to request firmware
-[  267.511068] rtw_pci 0000:3d:00.0: mac power on failed
-[  267.511072] rtw_pci 0000:3d:00.0: failed to power on mac
-[  267.511073] rtw_pci 0000:3d:00.0: failed to setup chip efuse info
-[  267.511075] rtw_pci 0000:3d:00.0: failed to setup chip information
-[  267.512817] rtw_pci: probe of 0000:3d:00.0 failed with error -114
-
-As directed, I used the rtwpci module to perform load/unload the rtw88
-module before I saw the errors above.  Do I still need to install firmware?
+Please disregard my last message.  The firmware is now installed and the
+rtw88 module is working with my wireless router.  The next hurdle
+appears to be setting the speed to 802.11ac as it is currently
+connecting as an 802.11n client.
 
 Sincerely,
 
 David R. Bergstein
 
-On 3/1/19 8:46 PM, Larry Finger wrote:
-> On 3/1/19 4:26 PM, David R. Bergstein wrote:
->> Larry,
->>
->> Thanks for the response and detailed instructions, which allowed me to
->> build and install the rtw88 kernel module.  I cannot however seem to get
->> my system to actually use the module.  Just to recap this is an HP Omen
->> laptop with secure boot disabled.  Upon boot-up both the new rtw88 and
->> old r8822be modules are loaded.  If I unload the r8822be module the wifi
->> network connection gets terminated, even if I unload/reload the rtw88
+On 3/1/19 9:55 PM, David R. Bergstein wrote:
+> Larry,
+>
+> Following up to your last reply, I blacklisted the r8822be module,
+> rebooted and was unable to bring up the wireless interface via rtw88. 
+> Below are some errors recorded in my system log:
+>
+>  
+> [  267.509818] rtw_pci 0000:3d:00.0: Direct firmware load for
+> rtw88/rtw8822b_fw.bin failed with error -2
+> [  267.509821] rtw_pci 0000:3d:00.0: failed to request firmware
+> [  267.511068] rtw_pci 0000:3d:00.0: mac power on failed
+> [  267.511072] rtw_pci 0000:3d:00.0: failed to power on mac
+> [  267.511073] rtw_pci 0000:3d:00.0: failed to setup chip efuse info
+> [  267.511075] rtw_pci 0000:3d:00.0: failed to setup chip information
+> [  267.512817] rtw_pci: probe of 0000:3d:00.0 failed with error -114
+>
+> As directed, I used the rtwpci module to perform load/unload the rtw88
+> module before I saw the errors above.  Do I still need to install firmware?
+>
+> Sincerely,
+>
+> David R. Bergstein
+>
+> On 3/1/19 8:46 PM, Larry Finger wrote:
+>> On 3/1/19 4:26 PM, David R. Bergstein wrote:
+>>> Larry,
+>>>
+>>> Thanks for the response and detailed instructions, which allowed me to
+>>> build and install the rtw88 kernel module.  I cannot however seem to get
+>>> my system to actually use the module.  Just to recap this is an HP Omen
+>>> laptop with secure boot disabled.  Upon boot-up both the new rtw88 and
+>>> old r8822be modules are loaded.  If I unload the r8822be module the wifi
+>>> network connection gets terminated, even if I unload/reload the rtw88
+>>> module.
+>>>
+>>> Is there something else I should be doing prior to invoking rtw88, e.g.,
+>>> blacklisting the old module?
+>> Yes, r8822be must be blacklisted. Use the lsmod command to see what
+>> modules are actually loaded. You load/unload rtw88 using the rtwpci
 >> module.
 >>
->> Is there something else I should be doing prior to invoking rtw88, e.g.,
->> blacklisting the old module?
->
-> Yes, r8822be must be blacklisted. Use the lsmod command to see what
-> modules are actually loaded. You load/unload rtw88 using the rtwpci
-> module.
->
-> Larry
->
+>> Larry
+>>
