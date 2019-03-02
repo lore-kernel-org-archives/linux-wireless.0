@@ -2,123 +2,127 @@ Return-Path: <SRS0=UNZO=RF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D250C43381
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 20:30:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0143C00319
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 20:39:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 02201206B6
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 20:30:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DB10206B6
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 20:39:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="aMRu4mL3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726611AbfCBUaK (ORCPT
+        id S1726734AbfCBUjA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Mar 2019 15:30:10 -0500
-Received: from smtprelay0242.hostedemail.com ([216.40.44.242]:49156 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726497AbfCBUaK (ORCPT
+        Sat, 2 Mar 2019 15:39:00 -0500
+Received: from mta-p6.oit.umn.edu ([134.84.196.206]:48910 "EHLO
+        mta-p6.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726529AbfCBUjA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Mar 2019 15:30:10 -0500
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay06.hostedemail.com (Postfix) with ESMTP id 7C7D218224B84;
-        Sat,  2 Mar 2019 20:30:08 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: sound41_58672b60c155a
-X-Filterd-Recvd-Size: 3040
-Received: from XPS-9350.home (unknown [47.151.153.53])
-        (Authenticated sender: joe@perches.com)
-        by omf10.hostedemail.com (Postfix) with ESMTPA;
-        Sat,  2 Mar 2019 20:30:07 +0000 (UTC)
-Message-ID: <c422bd435e6172424ac2c27f673a64316576e819.camel@perches.com>
-Subject: Re: [PATCH] mt76: usb: reduce code indentation in mt76u_alloc_tx
-From:   Joe Perches <joe@perches.com>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        lorenzo.bianconi@redhat.com
-Date:   Sat, 02 Mar 2019 12:30:06 -0800
-In-Reply-To: <2ead6e0fc3222faa772a37d55736c03041c90a1f.1551534029.git.lorenzo@kernel.org>
-References: <cover.1551534029.git.lorenzo@kernel.org>
-         <2ead6e0fc3222faa772a37d55736c03041c90a1f.1551534029.git.lorenzo@kernel.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.30.1-1build1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Sat, 2 Mar 2019 15:39:00 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-p6.oit.umn.edu (Postfix) with ESMTP id 32FACE00
+        for <linux-wireless@vger.kernel.org>; Sat,  2 Mar 2019 20:31:33 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at umn.edu
+Received: from mta-p6.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p6.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 2aH-A7ywCgB3 for <linux-wireless@vger.kernel.org>;
+        Sat,  2 Mar 2019 14:31:33 -0600 (CST)
+Received: from mail-it1-f199.google.com (mail-it1-f199.google.com [209.85.166.199])
+        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mta-p6.oit.umn.edu (Postfix) with ESMTPS id 05B70CEE
+        for <linux-wireless@vger.kernel.org>; Sat,  2 Mar 2019 14:31:33 -0600 (CST)
+Received: by mail-it1-f199.google.com with SMTP id v12so1594242itv.9
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Mar 2019 12:31:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=umn.edu; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=ZtO3KVKZ6PJf0yc97/RDd9q8ExnseZtD6Ih5Vi4KdUY=;
+        b=aMRu4mL3DsgrswlVo8Wl/bfR3ts3md+xOHx/x4uklLEpIgJ93FuxF0oG57tNInVsB5
+         4js1I7O2tBhQkOg03fMkXGptMCs7J2UUGGLr0kvWkDOT7ewDPz6UMYANrohTRji+nssp
+         bTDTnnXvjiZCdSu/pvjvFvJnxRb0QTVqyj4jAL+/qzqYSbfPS0LpTBXoK26O/GRfldY7
+         ipCRh/Oo2Vaetzy8sf3fbbz3hWtGG3i8I8NPiRlEmutPrbtz5N+UW55a3Nxr0zC1UUvh
+         un3D9c20hUAg/d+uJH5u0stlUKdHXxoHzdIhecnu7bfuzktPb+O1zTT3hCAD9uXIpJdZ
+         rwzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ZtO3KVKZ6PJf0yc97/RDd9q8ExnseZtD6Ih5Vi4KdUY=;
+        b=nPg3zKTrnw0JHhYSTNtoGrjlwypMNE6KCeFgqXki7tlQYTIqDLh1iDowHT7uuv14oR
+         RelM7uVTWM25RxdjMbaB4lOTg9MhEuyVMuxC7aREP1JptoyVUgSclW2jcVx3VbzcnOuP
+         KfHTAMdlnWDv7MWIVCvyAMeC0IkLrfy6MVVKVqJoXhGDVIWDs1tBSfvf+vq9SXcs7MgF
+         pRntnW0N9I6U5LnEDmsB6Uvz/SqrkSX6FDdlh6jk7IgoH0iLtcdwlxI4E/TQ/IpkODiB
+         KHH8RLUAE69Q7ENkR+x5yNINSWmMVTFywYN2OtC5yCOsAfUrqB72Z+082CS/N1eCnmcB
+         ajew==
+X-Gm-Message-State: APjAAAVpNboPf80qcbnxp1ypieZSj6Qc720PwzieGaj8A3ft5ltJ8ZaC
+        v3Qr1JOL7OFb/MM4ZdGBgoBBmIsbWda9LTT65z6yyRq85e60xdnppRRIGJ6hy09MZ49xhhFbYWw
+        w61VnP6/w4K/YypapmIbdqTF6LMQxtNA=
+X-Received: by 2002:a5d:8893:: with SMTP id d19mr5811307ioo.277.1551558692636;
+        Sat, 02 Mar 2019 12:31:32 -0800 (PST)
+X-Google-Smtp-Source: APXvYqxzDofBlKkimOF1FcnHMLT1rFVFPkx+EPGv64bVeGitGB+iyfi4i7+n5aoAPh6Q3Oow0ePySQ==
+X-Received: by 2002:a5d:8893:: with SMTP id d19mr5811293ioo.277.1551558692438;
+        Sat, 02 Mar 2019 12:31:32 -0800 (PST)
+Received: from cs-u-syssec1.dtc.umn.edu (cs-u-syssec1.cs.umn.edu. [128.101.106.66])
+        by smtp.gmail.com with ESMTPSA id 81sm606358iou.78.2019.03.02.12.31.31
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 02 Mar 2019 12:31:32 -0800 (PST)
+From:   Aditya Pakki <pakki001@umn.edu>
+To:     pakki001@umn.edu
+Cc:     kjlu@umn.edu, Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] rsi: Fix NULL pointer dereference in kmalloc
+Date:   Sat,  2 Mar 2019 14:31:22 -0600
+Message-Id: <20190302203123.9182-1-pakki001@umn.edu>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 2019-03-02 at 14:50 +0100, Lorenzo Bianconi wrote:
-> Improve code readability reducing code indentation in
-> mt76u_alloc_tx
+kmalloc can fail in rsi_register_rates_channels but memcpy still attempts
+to write to channels. The patch checks and avoids such a situation.
 
-Trivial note below:
-
-> diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-[]
-> @@ -787,6 +787,7 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
->  {
->  	struct mt76u_buf *buf;
->  	struct mt76_queue *q;
-> +	size_t size;
->  	int i, j;
->  
->  	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-> @@ -810,15 +811,15 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
->  			if (!buf->urb)
->  				return -ENOMEM;
->  
-> -			if (dev->usb.sg_en) {
-> -				size_t size = MT_SG_MAX_SIZE *
-> -					      sizeof(struct scatterlist);
-> +			if (!dev->usb.sg_en)
-> +				continue;
->  
-> -				buf->urb->sg = devm_kzalloc(dev->dev, size,
-> -							    GFP_KERNEL);
-> -				if (!buf->urb->sg)
-> -					return -ENOMEM;
-> -			}
-> +			size = MT_SG_MAX_SIZE * sizeof(struct scatterlist);
-> +
-> +			buf->urb->sg = devm_kzalloc(dev->dev, size,
-> +						    GFP_KERNEL);
-
-Perhaps eliminate size and use devm_kcalloc instead like
-the allocation immediately above this.
+Signed-off-by: Aditya Pakki <pakki001@umn.edu>
 ---
- drivers/net/wireless/mediatek/mt76/usb.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index ae6ada370597..fc87ae223f8d 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -806,15 +806,15 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
- 			if (!buf->urb)
- 				return -ENOMEM;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index e56fc83faf0e..59eb1f533d0e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -197,6 +197,11 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
  
--			if (dev->usb.sg_en) {
--				size_t size = MT_SG_MAX_SIZE *
--					      sizeof(struct scatterlist);
--
--				buf->urb->sg = devm_kzalloc(dev->dev, size,
--							    GFP_KERNEL);
--				if (!buf->urb->sg)
--					return -ENOMEM;
--			}
-+			if (!dev->usb.sg_en)
-+				continue;
+ 	if (band == NL80211_BAND_2GHZ) {
+ 		channels = kmalloc(sizeof(rsi_2ghz_channels), GFP_KERNEL);
++		if (!channels) {
++			rsi_dbg(ERR_ZONE, "Failed to allocate memory\n");
++			return;
++		}
 +
-+			buf->urb->sg = devm_kcalloc(dev->dev,
-+						    MT_SG_MAX_SIZE,
-+						    sizeof(*buf->urb->sg),
-+						    GFP_KERNEL);
-+			if (!buf->urb->sg)
-+				return -ENOMEM;
- 		}
- 	}
- 	return 0;
-
+ 		memcpy(channels,
+ 		       rsi_2ghz_channels,
+ 		       sizeof(rsi_2ghz_channels));
+@@ -206,6 +211,11 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+ 		sbands->n_bitrates = ARRAY_SIZE(rsi_rates);
+ 	} else {
+ 		channels = kmalloc(sizeof(rsi_5ghz_channels), GFP_KERNEL);
++		if (!channels) {
++			rsi_dbg(ERR_ZONE, "Failed to allocate memory\n");
++			return;
++		}
++
+ 		memcpy(channels,
+ 		       rsi_5ghz_channels,
+ 		       sizeof(rsi_5ghz_channels));
+-- 
+2.17.1
 
