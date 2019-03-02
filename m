@@ -1,186 +1,105 @@
-Return-Path: <SRS0=sb9s=RE=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=UNZO=RF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69502C10F03
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 22:48:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FF6BC4360F
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 01:46:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3DB7620840
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Mar 2019 22:48:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E101620815
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Mar 2019 01:46:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZLdnBn+9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727025AbfCAWsl (ORCPT
+        id S1726738AbfCBBql (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Mar 2019 17:48:41 -0500
-Received: from Galois.linutronix.de ([146.0.238.70]:33409 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726337AbfCAWsk (ORCPT
+        Fri, 1 Mar 2019 20:46:41 -0500
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:45076 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726007AbfCBBqk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Mar 2019 17:48:40 -0500
-Received: from localhost ([127.0.0.1] helo=flow.W.breakpoint.cc)
-        by Galois.linutronix.de with esmtp (Exim 4.80)
-        (envelope-from <bigeasy@linutronix.de>)
-        id 1gzqxH-0005fb-KU; Fri, 01 Mar 2019 23:48:35 +0100
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     netdev@vger.kernel.org
-Cc:     "David S. Miller" <davem@davemloft.net>, tglx@linutronix.de,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 1/3] mac80211_hwsim: Replace hrtimer tasklet with softirq hrtimer
-Date:   Fri,  1 Mar 2019 23:48:19 +0100
-Message-Id: <20190301224821.29843-2-bigeasy@linutronix.de>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190301224821.29843-1-bigeasy@linutronix.de>
-References: <20190301224821.29843-1-bigeasy@linutronix.de>
+        Fri, 1 Mar 2019 20:46:40 -0500
+Received: by mail-ot1-f66.google.com with SMTP id i12so1517289otp.12;
+        Fri, 01 Mar 2019 17:46:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=0EOKD+tge+5GZtEzmSYbhOX+UjfkXXhiwhiyqi8FI50=;
+        b=ZLdnBn+9LH49v8so8G5C0cWGIxDgYsoK63qn5ENNKEl1eNOIiTh0rmnhFo44D24MFL
+         rnYGpItG5QSUOyLUpaCSqWt4wRXb1T8DjauZdChcc1OZJoYBV9reW5R6X99WGMde+vLy
+         Z1RE7istzUuIfQeY5idRv3cxMu8b1MFS2Jwz22UciExU36oNPcE76LxnK6XfRD7539e/
+         oazuPQMR29gn+UrGt/96GIZ+I/me3Sj9Hcrq09EeVztd6WQq3a9UewWBmUKxn8CDRngT
+         pKt9M3wQ21YoWpHFkj6pXXOQcz3nU8XYVe+uhTFe5RW3kuQomp5zCbKw+Z3V1dvsF1df
+         hZZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=0EOKD+tge+5GZtEzmSYbhOX+UjfkXXhiwhiyqi8FI50=;
+        b=mP5Te8FSk0WBEYwIqiY4acoGJfKiE7M2I7gb0182Le0fRIajFnXE8n3e2Q3D4gjgpg
+         cJNtjpvdESO9bzobzLQ2rgiZBdyYTL29+LBC8d6bboMJWZpHXcw4ZCpb2rP7pBRi+pAI
+         gSBttDE4cAaJLKac1BVfvXST6i09mzUWGuc7KepBN3e2IdXx3QcTvzn1SgUoaD6S0wml
+         3jxLiIYA9hf+DzgjROubijbxdJVfRYBYdFLG+iKjjNUCc14GkzhxWqCfW0HtnMAJ3kU3
+         6ieDZyxEE51i7BXPtzU7tp1KIyJAcU0Vum90/FRPMSQ9g0OPLAN+C7UJjSB4fr6dfm5F
+         g/vQ==
+X-Gm-Message-State: APjAAAXT6ECwkQg8d3SGeG958HNCF65dniAik31sEtkRjfpi3GV5khqB
+        nc/6nV27grwjiIiksJwfyDA0VID2
+X-Google-Smtp-Source: APXvYqyi9Pf1RpXCIuqhvRGyanVvF4aSLv+9DGsO10StBESNkd2DtJs1GP4+JKu0bPo6nJd7kM9ZlQ==
+X-Received: by 2002:a9d:6945:: with SMTP id p5mr5551409oto.40.1551491199710;
+        Fri, 01 Mar 2019 17:46:39 -0800 (PST)
+Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id c131sm9679943oif.3.2019.03.01.17.46.37
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 01 Mar 2019 17:46:38 -0800 (PST)
+Subject: Re: Realtek r8822be kernel module does not negotiate 802.11ac
+ connection
+To:     "David R. Bergstein" <david.r.bergstein@gmail.com>,
+        Tony Chuang <yhchuang@realtek.com>
+Cc:     Pkshih <pkshih@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <51d62a31-7cde-e815-bdee-4ef5433007aa@gmail.com>
+ <F7CD281DE3E379468C6D07993EA72F84D17AF74C@RTITMBSVM04.realtek.com.tw>
+ <b0518665-d5ca-7c94-9808-7cc0cf565814@gmail.com>
+ <e68c6aae-8d71-266a-81fe-d078ac1ef38c@lwfinger.net>
+ <6eb7af74-b1a8-d112-e027-6c14252af994@gmail.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <487c350c-c455-b490-8de5-1d68760aa3dc@lwfinger.net>
+Date:   Fri, 1 Mar 2019 19:46:37 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
+In-Reply-To: <6eb7af74-b1a8-d112-e027-6c14252af994@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On 3/1/19 4:26 PM, David R. Bergstein wrote:
+> Larry,
+> 
+> Thanks for the response and detailed instructions, which allowed me to
+> build and install the rtw88 kernel module.  I cannot however seem to get
+> my system to actually use the module.  Just to recap this is an HP Omen
+> laptop with secure boot disabled.  Upon boot-up both the new rtw88 and
+> old r8822be modules are loaded.  If I unload the r8822be module the wifi
+> network connection gets terminated, even if I unload/reload the rtw88
+> module.
+> 
+> Is there something else I should be doing prior to invoking rtw88, e.g.,
+> blacklisting the old module?
 
-Switch the timer to HRTIMER_MODE_REL_SOFT, which executed the timer callback in
-softirq context and remove the hrtimer_tasklet.
+Yes, r8822be must be blacklisted. Use the lsmod command to see what modules are 
+actually loaded. You load/unload rtw88 using the rtwpci module.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 46 ++++++++++++---------------
- 1 file changed, 21 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 6359053bd0c78..f46999a9e8ca5 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -521,7 +521,7 @@ struct mac80211_hwsim_data {
- 	unsigned int rx_filter;
- 	bool started, idle, scanning;
- 	struct mutex mutex;
--	struct tasklet_hrtimer beacon_timer;
-+	struct hrtimer beacon_timer;
- 	enum ps_mode {
- 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
- 	} ps;
-@@ -1458,7 +1458,7 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
- {
- 	struct mac80211_hwsim_data *data = hw->priv;
- 	data->started = false;
--	tasklet_hrtimer_cancel(&data->beacon_timer);
-+	hrtimer_cancel(&data->beacon_timer);
- 	wiphy_dbg(hw->wiphy, "%s\n", __func__);
- }
- 
-@@ -1581,14 +1581,12 @@ static enum hrtimer_restart
- mac80211_hwsim_beacon(struct hrtimer *timer)
- {
- 	struct mac80211_hwsim_data *data =
--		container_of(timer, struct mac80211_hwsim_data,
--			     beacon_timer.timer);
-+		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
- 	struct ieee80211_hw *hw = data->hw;
- 	u64 bcn_int = data->beacon_int;
--	ktime_t next_bcn;
- 
- 	if (!data->started)
--		goto out;
-+		return HRTIMER_NORESTART;
- 
- 	ieee80211_iterate_active_interfaces_atomic(
- 		hw, IEEE80211_IFACE_ITER_NORMAL,
-@@ -1599,12 +1597,9 @@ mac80211_hwsim_beacon(struct hrtimer *timer)
- 		bcn_int -= data->bcn_delta;
- 		data->bcn_delta = 0;
- 	}
--
--	next_bcn = ktime_add(hrtimer_get_expires(timer),
--			     ns_to_ktime(bcn_int * 1000));
--	tasklet_hrtimer_start(&data->beacon_timer, next_bcn, HRTIMER_MODE_ABS);
--out:
--	return HRTIMER_NORESTART;
-+	hrtimer_forward(&data->beacon_timer, hrtimer_get_expires(timer),
-+			ns_to_ktime(bcn_int * NSEC_PER_USEC));
-+	return HRTIMER_RESTART;
- }
- 
- static const char * const hwsim_chanwidths[] = {
-@@ -1678,15 +1673,15 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 	mutex_unlock(&data->mutex);
- 
- 	if (!data->started || !data->beacon_int)
--		tasklet_hrtimer_cancel(&data->beacon_timer);
--	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
-+		hrtimer_cancel(&data->beacon_timer);
-+	else if (!hrtimer_is_queued(&data->beacon_timer)) {
- 		u64 tsf = mac80211_hwsim_get_tsf(hw, NULL);
- 		u32 bcn_int = data->beacon_int;
- 		u64 until_tbtt = bcn_int - do_div(tsf, bcn_int);
- 
--		tasklet_hrtimer_start(&data->beacon_timer,
--				      ns_to_ktime(until_tbtt * 1000),
--				      HRTIMER_MODE_REL);
-+		hrtimer_start(&data->beacon_timer,
-+			      ns_to_ktime(until_tbtt * NSEC_PER_USEC),
-+			      HRTIMER_MODE_REL_SOFT);
- 	}
- 
- 	return 0;
-@@ -1749,7 +1744,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 			  info->enable_beacon, info->beacon_int);
- 		vp->bcn_en = info->enable_beacon;
- 		if (data->started &&
--		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
-+		    !hrtimer_is_queued(&data->beacon_timer) &&
- 		    info->enable_beacon) {
- 			u64 tsf, until_tbtt;
- 			u32 bcn_int;
-@@ -1757,9 +1752,10 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 			tsf = mac80211_hwsim_get_tsf(hw, vif);
- 			bcn_int = data->beacon_int;
- 			until_tbtt = bcn_int - do_div(tsf, bcn_int);
--			tasklet_hrtimer_start(&data->beacon_timer,
--					      ns_to_ktime(until_tbtt * 1000),
--					      HRTIMER_MODE_REL);
-+
-+			hrtimer_start(&data->beacon_timer,
-+				      ns_to_ktime(until_tbtt * NSEC_PER_USEC),
-+				      HRTIMER_MODE_REL_SOFT);
- 		} else if (!info->enable_beacon) {
- 			unsigned int count = 0;
- 			ieee80211_iterate_active_interfaces_atomic(
-@@ -1768,7 +1764,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 			wiphy_dbg(hw->wiphy, "  beaconing vifs remaining: %u",
- 				  count);
- 			if (count == 0) {
--				tasklet_hrtimer_cancel(&data->beacon_timer);
-+				hrtimer_cancel(&data->beacon_timer);
- 				data->beacon_int = 0;
- 			}
- 		}
-@@ -2919,9 +2915,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 
- 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
- 
--	tasklet_hrtimer_init(&data->beacon_timer,
--			     mac80211_hwsim_beacon,
--			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
-+	hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
-+		     HRTIMER_MODE_ABS_SOFT);
-+	data->beacon_timer.function = mac80211_hwsim_beacon;
- 
- 	err = ieee80211_register_hw(hw);
- 	if (err < 0) {
--- 
-2.20.1
+Larry
 
