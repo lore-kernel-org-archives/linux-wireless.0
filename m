@@ -2,99 +2,91 @@ Return-Path: <SRS0=K+dv=RH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8422BC10F03
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 20:39:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CF3FC43381
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 21:59:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C07820823
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 20:39:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9F7B206DD
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 21:59:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l+F9NWI8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726659AbfCDUjl (ORCPT
+        id S1726069AbfCDV7r (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Mar 2019 15:39:41 -0500
-Received: from mout.kundenserver.de ([212.227.126.135]:37963 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726101AbfCDUjl (ORCPT
+        Mon, 4 Mar 2019 16:59:47 -0500
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:35275 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726038AbfCDV7r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Mar 2019 15:39:41 -0500
-Received: from wuerfel.lan ([109.192.41.194]) by mrelayeu.kundenserver.de
- (mreue012 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1N2jO8-1h6MTk0psC-01343O; Mon, 04 Mar 2019 21:39:28 +0100
-From:   Arnd Bergmann <arnd@arndb.de>
-To:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: fix 64-bit division
-Date:   Mon,  4 Mar 2019 21:38:42 +0100
-Message-Id: <20190304203924.2111146-1-arnd@arndb.de>
-X-Mailer: git-send-email 2.20.0
+        Mon, 4 Mar 2019 16:59:47 -0500
+Received: by mail-ot1-f68.google.com with SMTP id z19so5624402otm.2
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2019 13:59:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=g8gWUCjj3dTVmremvd9LrRPXxxoTmyeREfFq05iZY9I=;
+        b=l+F9NWI8KW5N6MRBgz2Sv67mQqeGrQLd6gkLUJGRHcjR6djkWVmmCk9dDr9zCv0FiX
+         xCDT2bQA18ffO59GTMbc3bVpUy+D12wwBvBnvdCfoHySKLjGTR5i5WZa66BVl9RCVVDn
+         x4Gt21jqWEV5/h3T0pOtKVtZZ59NeVDYAl+9IA+v9icn1ihlL+aufIAhhvYvq4H3Hrzf
+         xYh50RUqyMxmiC7F/uCico9SO+7/dXKboOMv5/mI8l7RMctzHGUhCB/FQgTD7PE11BtH
+         hEO38VmrfiVlvrQFZzkQhIdVYJrEGhWx333NGRApupjQZ25veyY8k+56WxPoah+TeUbu
+         8yNA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
+         :mime-version:content-transfer-encoding;
+        bh=g8gWUCjj3dTVmremvd9LrRPXxxoTmyeREfFq05iZY9I=;
+        b=G9+pq6gS9FSp4boUATiX8giC/aAQrjcP8qpw+cOpgzU7h8kQ1qSXKrI2NVNhE8xNLf
+         lK6QqO+hDbntdqGRf6dGVAEzttrte6AhWv2rDWlBMiSu8F+1wpTYNUOLb1ParI45EKZj
+         YytvZAF+CYzSlCTcyxyMECPgA7g97kLukiHIiGtFFwxocCoSUD4MSq+r6J1p3vdY4sOQ
+         ojnHEwrNCbYrk+opVlKIWmV4+QCbhgvmusSFVIA/Q851H1LYGwwtoZf3ht4e05462T85
+         ZuZ9mbH7ogl9RU6lCwhPE/Bvrmf5fNpvKMyuCMAOo0eyd7psBeqjLim6rJtT81DT6Wj6
+         XFKw==
+X-Gm-Message-State: APjAAAVaS3WU69Ol8WHuDGGjeIfCgVfkgepBj7cER1vQp0kheYYf4Li7
+        XdezoiQ5on7HVooGyNFo4Vc=
+X-Google-Smtp-Source: APXvYqziqcz5bsfwroAFZ+F4EMhGlH07HGYoatwpi3/9R2oxKxecn1opSNLa1SBXPn+5x0CaEO3Sbw==
+X-Received: by 2002:a9d:6496:: with SMTP id g22mr13433867otl.47.1551736786604;
+        Mon, 04 Mar 2019 13:59:46 -0800 (PST)
+Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id e125sm2923744oia.18.2019.03.04.13.59.44
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 04 Mar 2019 13:59:44 -0800 (PST)
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 0/2]  Modify the handling of the reason for a wakeup
+Date:   Mon,  4 Mar 2019 15:59:38 -0600
+Message-Id: <20190304215940.2608-1-Larry.Finger@lwfinger.net>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:13EZ5ioXLeca3oDvMvnCC57FRaccHP0KkoFmR49OnkNxuNVJvQc
- 41NyjHrRl/9BY5rDFB2nJPGdb1UBSbFSt2I75lD+xL+v5fFZipAXUaSt4xb9nCl82Qd+4JO
- aQiQQNPxErP6jawROrzHXPYSP7HSSvrDM4NzNGFakNCcfO0JbTXvApA6knoFSkCTzVeVLEP
- wvWwscEI8I6R3EGPVptew==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:GIf2ikZWptk=:KKmIE00iaWcF6F9QVVLJq7
- 6kIsUPRoGhR/C4fBzu3QZRrcS9jRDVmGsq9lUyGgXBZtLLL6xjDgrn1X1OW/eVSfaHpYR5YBR
- g2tyP2c8rEggz9/fkAwbMQ9HJv1p/hx4c5CpfqBqOlio++yce8PHiA3SnXIc/79A5AVWiKIF6
- ph/f67wwzq0qNdL4+K6Jr39TBKfOdODYG2jISqvg7mi0qUaB8xvy5q8rNBW6afmeIXPb9iifo
- 8YkziKT8tzFZilVWzEJ2t45be7yJay86mpzRakq46e/BZE+5jvj79wSlk6FI9iZMJYQuiBD3D
- s4OVXPlJ4iXpK6ZQi+yEJgGsVBc4+z4L8Z4zW7jv4/C9s+yipd2eeMqZeLspCYALLBDIQtsTD
- NwYYKYreD5Wl+/KX3dLB4k28lABedVkHhEndMOoHTd3mjjB/7WiP2oaGdX/W8Mzyz2CiTOpyo
- i4AMM38AxofZzQon3dNvq1mHWynZe5733LSXsgyq+qgfTkm0Nk8i5yeDCJQCrGqJFAQqsEVJ2
- lPj1arY5w265+TWzkxaaAzIJnJA9nLabchbn5W1toJvBFvippkcUank9HImSNocGku9f+8p/Q
- i1wEg7lx901Pjtgw7D8YOi5pxhL8/5J1az0Qa4bhl5meGnKKO+6Yym6mLEvZMA4C9D/c1+VPf
- cqmUtFblvJuBH6oW4Hzvp1CySY8Owoy95eVO85MzHh0BDJXbKGz5O+FRiQGSvmwQ7DqyJIr1K
- 4KA1lEPM41f3Yarbnx6gZAekQABJZNm80TOvsA==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-do_div() expects unsigned operands and otherwise triggers a warning like:
+Some of the drivers test the wrong bit in an RX descriptor. That is
+fixed. In a second patch, that variable is moved out of a struct and
+made local to the routine that uses it.
 
-drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c:465:2: error: comparison of distinct pointer types ('typeof ((rtt_avg)) *' (aka 'long long *') and 'uint64_t *' (aka 'unsigned long long *')) [-Werror,-Wcompare-distinct-pointer-types]
-        do_div(rtt_avg, 6666);
-        ^~~~~~~~~~~~~~~~~~~~~
-include/asm-generic/div64.h:222:28: note: expanded from macro 'do_div'
-        (void)(((typeof((n)) *)0) == ((uint64_t *)0));  \
-               ~~~~~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~~
-1 error generated.
-
-Change the do_div() to the simpler div_s64() that can handle
-negative inputs correctly.
-
-Fixes: 937b10c0de68 ("iwlwifi: mvm: add debug prints for FTM")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Larry Finger (2):
+  rtlwifi: Fix duplicate tests of one of the RX descriptors
+  rtlwifi: Convert the wake_match variable to local
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index e9822a3ec373..94132cfd1f56 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -460,9 +460,7 @@ static int iwl_mvm_ftm_range_resp_valid(struct iwl_mvm *mvm, u8 request_id,
- static void iwl_mvm_debug_range_resp(struct iwl_mvm *mvm, u8 index,
- 				     struct cfg80211_pmsr_result *res)
- {
--	s64 rtt_avg = res->ftm.rtt_avg * 100;
--
--	do_div(rtt_avg, 6666);
-+	s64 rtt_avg = div_s64(res->ftm.rtt_avg * 100, 6666);
- 
- 	IWL_DEBUG_INFO(mvm, "entry %d\n", index);
- 	IWL_DEBUG_INFO(mvm, "\tstatus: %d\n", res->status);
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.c | 15 ++++++++-------
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c | 15 ++++++++-------
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c | 16 ++++++++--------
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c | 14 +++++++-------
+ drivers/net/wireless/realtek/rtlwifi/wifi.h      |  1 -
+ 5 files changed, 31 insertions(+), 30 deletions(-)
+
 -- 
-2.20.0
+2.21.0
 
