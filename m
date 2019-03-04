@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 894CDC43381
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 15:42:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D89C43381
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 15:42:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 434DE206B8
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 15:42:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2449C206B8
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 15:42:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=camlinlimited.onmicrosoft.com header.i=@camlinlimited.onmicrosoft.com header.b="SPNRRYsn"
+	dkim=pass (1024-bit key) header.d=camlinlimited.onmicrosoft.com header.i=@camlinlimited.onmicrosoft.com header.b="rHlNn3JC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727150AbfCDPmy (ORCPT
+        id S1727153AbfCDPm5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Mar 2019 10:42:54 -0500
+        Mon, 4 Mar 2019 10:42:57 -0500
 Received: from mail-eopbgr110064.outbound.protection.outlook.com ([40.107.11.64]:51468
         "EHLO GBR01-CWL-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726649AbfCDPmy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Mar 2019 10:42:54 -0500
+        id S1727131AbfCDPm5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Mar 2019 10:42:57 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=camlinlimited.onmicrosoft.com; s=selector1-camlintechnologies-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KeBkBIoJ0xcRIIebnCpNXC0/r7pHkR01Ickw6aHGLcY=;
- b=SPNRRYsniCz1EUO8MwWl44Nvv/D9A3cqy2nlVcIgDpss5fyeNf53GM93ft/1VKDSVXn5awoKhojcLIVIw5bak+oz/CPl7SY+6TLuKwNlYZeZ4opJoofBkmpE/XhhEKk8OOtmNNnXBselXg5UX5aIU+atBytR1rp2JF5HSHhe8kk=
+ bh=RQQlUjm39eDCenOuJsgfaRC2NvISi93yhNW1N2tMX6M=;
+ b=rHlNn3JCFFNcYzkt6quVyucFVhaKAOQH6PX3MvtAxxneoOpHmLMyrx8Iy69/lKujdNiK4MnNJXWDDZFJlULZ5F1/VSH2xxMNeMmeM+rURUcYrnHZ2ZTfQUCRke2BcfRmwgSFeT2VKNuIZk9GIlUVoHf4qifCI1eesNlC8JIu8h0=
 Received: from LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM (20.179.129.83) by
  LNXP123MB2060.GBRP123.PROD.OUTLOOK.COM (20.179.128.207) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1665.18; Mon, 4 Mar 2019 15:42:49 +0000
+ 15.20.1665.18; Mon, 4 Mar 2019 15:42:52 +0000
 Received: from LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM
  ([fe80::396a:e27e:d5dd:6bf0]) by LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM
  ([fe80::396a:e27e:d5dd:6bf0%4]) with mapi id 15.20.1665.019; Mon, 4 Mar 2019
- 15:42:49 +0000
+ 15:42:52 +0000
 From:   Piotr Figiel <p.figiel@camlintechnologies.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
@@ -46,13 +46,13 @@ CC:     "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
         "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
         "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
         Piotr Figiel <p.figiel@camlintechnologies.com>
-Subject: [PATCH 1/2] brcmfmac: fix WARNING during USB disconnect in case of
- unempty psq
-Thread-Topic: [PATCH 1/2] brcmfmac: fix WARNING during USB disconnect in case
- of unempty psq
-Thread-Index: AQHU0qDr2CPRNnexZUaswBHrAuJLFg==
-Date:   Mon, 4 Mar 2019 15:42:49 +0000
-Message-ID: <1551714128-27412-2-git-send-email-p.figiel@camlintechnologies.com>
+Subject: [PATCH 2/2] brcmfmac: fix NULL pointer derefence during USB
+ disconnect
+Thread-Topic: [PATCH 2/2] brcmfmac: fix NULL pointer derefence during USB
+ disconnect
+Thread-Index: AQHU0qDtaqcUu08ooEm5bJXHqZNFxg==
+Date:   Mon, 4 Mar 2019 15:42:52 +0000
+Message-ID: <1551714128-27412-3-git-send-email-p.figiel@camlintechnologies.com>
 References: <1551714128-27412-1-git-send-email-p.figiel@camlintechnologies.com>
 In-Reply-To: <1551714128-27412-1-git-send-email-p.figiel@camlintechnologies.com>
 Accept-Language: en-US
@@ -68,46 +68,46 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.7.4
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 1d368949-1fc7-48eb-fef7-08d6a0b80e24
+x-ms-office365-filtering-correlation-id: 353c6456-6f82-4502-003d-08d6a0b80fdc
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:LNXP123MB2060;
 x-ms-traffictypediagnostic: LNXP123MB2060:
-x-microsoft-exchange-diagnostics: =?iso-8859-1?Q?1;LNXP123MB2060;23:gONTvdbws59AUMP3DhJ/mL1EA/rlICyOsZAOxLo?=
- =?iso-8859-1?Q?MhVoWbz7kmU5wu+lpugjDJtmH5b634/tdEOPpQ+7koIR0dm9pOtLuA3wdK?=
- =?iso-8859-1?Q?wTTOkwF6ouB2R79EN/JtyBczmYdRqWJQ/HkjSaSOv7m52udiYr5gvDWkVg?=
- =?iso-8859-1?Q?eZ4Crdoo1RM42LEMRAtuNOtRjFAZRalF0vSM2lvvhsHdnTZzcTToVlJw3W?=
- =?iso-8859-1?Q?hdPMpatmm8LS3NWa5oyLPD/WHgs14YvyISPCawS39Iwsh8efGsGeMuX0uI?=
- =?iso-8859-1?Q?tV6ljQUqaVa0d1tF7uwO/5WsNeFmds9R4XvdVSOEf/tx9L5QQBPqVh9lZ+?=
- =?iso-8859-1?Q?N26sj79TY/J7WtCMzJ20oOY3wYhINOJg7ffuWq/480KTBu7LBYtvNgVTP6?=
- =?iso-8859-1?Q?jMJhxxuilAYLDbGvlDwcgYJ8npvk3FW94TcHjiAcg51BDauGZHv1X1LyKS?=
- =?iso-8859-1?Q?ItjrnDDJJpGtMRur52e+KgXnd3MrvGSIg7LawNFTnmdNgZT0KTmS4VS3jZ?=
- =?iso-8859-1?Q?k+Th5qH0vPCkEOam1pgJdMrZ/aZWFWSVJT/mQgNXvwXjiCPY2ZDYInXx0N?=
- =?iso-8859-1?Q?q4+ldmJRvSb1Dg6KJypns6yPd6ITdi/XnLEa0uuvfvFAaSkRhtIGy0qKSu?=
- =?iso-8859-1?Q?UqoT12pUYlPlwYYKnq+C8+7zwjhELgrPqqGRsWrIahCqRZYbgQLixLzbOs?=
- =?iso-8859-1?Q?ZWOXOf9/aY6C4vfmC0EUavMshhiQRZQVfklvcJm+3J7JPzMNSAJxjmqkX6?=
- =?iso-8859-1?Q?Onc7p9lF5eI4TSlnDnFSoekPrpYXJRkvr0qj1dBbJHbLjjmPV43odfB9pf?=
- =?iso-8859-1?Q?cfTeqXVOPc9AkH0jLCQAqgBQAU9epwDaB4qgZSYU2Z26IYGFyON18k01fI?=
- =?iso-8859-1?Q?4kqDq2KpFUl+tvIGnQIYMZgyVdTdyQ+nLF77ZJginM2Vi+NlwgDGJgmGcD?=
- =?iso-8859-1?Q?L04P2T/TTsbHqMEh+Jj8YI0JpvJzoA867utsaFxL5c1DqRE6uCCjMH5i+N?=
- =?iso-8859-1?Q?syXSD2Z/Opfa1DcHFmgsc4jjkvD79cSkyJ7wHuFuRHe/dDTvMi6MyshlFH?=
- =?iso-8859-1?Q?Pl7ijauIjt4SHdDx5IF87nqaqBtWY4tHvHPJYBvAdJnF7xBlOUMeLvrU3N?=
- =?iso-8859-1?Q?4bQIGl7A7yPlayCCRVLY3f15pQdNMn7ZrWE5Z3ns7Ve8TIkv1FOw3+mQRb?=
- =?iso-8859-1?Q?NvJzo6yMYXgf3dGpdRUtDjAJ4V44tL7icLMOoTrEnxSgCz97DCodkwLcu1?=
- =?iso-8859-1?Q?Xhgmqsy33+qcAfS6OOys+vSmwWntaNpvl6rrxxT/kNXFYJBZLLx13kjKl/?=
- =?iso-8859-1?Q?oV9f3XM7yP0W3Rffw89kjCqmwX/PlvVSiNsBGmBmCJMH0lFP8FxtVjPXbl?=
- =?iso-8859-1?Q?RwFvCIrwEwCK4q6aX4AXBvOIY0rae?=
-x-microsoft-antispam-prvs: <LNXP123MB20601CF8AB9039E0AC4BC640E7710@LNXP123MB2060.GBRP123.PROD.OUTLOOK.COM>
+x-microsoft-exchange-diagnostics: =?iso-8859-1?Q?1;LNXP123MB2060;23:/DxkLzxQZNEJX4b0cy7gu2Ge7m8o+3vTv1SKU2/?=
+ =?iso-8859-1?Q?Uj0X6jG8yQzj3JouUgfwJC+e+ZRHcPLJVwLT8IFvRK7fI0UpVd7NS4AN/h?=
+ =?iso-8859-1?Q?/VaDXQ3ahyqW0vlk+C7Rz82Bf3lergq4S+zLj/xV+hKYyrO7+rxz8e9vbG?=
+ =?iso-8859-1?Q?7Fte7/2kZNEY2jW/+VqMSS/a+3k3admTvmEkiI2MRu7CSiXzviEcpromCq?=
+ =?iso-8859-1?Q?G2WSAFFlz9q4LJdrLk9eDGcAqq1mMtubw7+B/KK2cf7YJpMLPXLQL1jMpa?=
+ =?iso-8859-1?Q?b3m/3ZPwpjj/DizAXM+l9TJ6MCyrNoRFok8BZJDtEbPcHoX6wDTmErdvSK?=
+ =?iso-8859-1?Q?w4RqmYV/a2iCJQO4ZPs80hbXyLrgJe7mj4/rTZg/kiExSIyLrHN5VMNQYa?=
+ =?iso-8859-1?Q?reX7BEiT+oPu01DpaWm7uWfSJFC7d6Yg8DV2beayyhs9xuO9PaQjQZIeKO?=
+ =?iso-8859-1?Q?YcyJEWywqxpw2SQpOaLuEvRyzw5GD7My0cOwdpvAi9Zncb6n0Az5nKGaJb?=
+ =?iso-8859-1?Q?K5GKS9WCKOnEcPTDHsa7GMOF+9cQRFINeZeyHWDVHkMTJrNRNbgXKuKaGp?=
+ =?iso-8859-1?Q?m2IR8A6jSkUm1cUaiWPrncW/6Cm3wtPDrfjBHqRrVBNefWk8O0wODAU/Sx?=
+ =?iso-8859-1?Q?mUZNmY+V+v5apBwKNcued1wtdjWKqyTUeSmeXOQoCro1dnmnKPeiqDreIe?=
+ =?iso-8859-1?Q?EGJjMGNCEA4TiA/mA9WoiQzvq1GlLSrT7OJXnOgOAOLSu2oP/JLvSDYHqn?=
+ =?iso-8859-1?Q?lc7GAepcuJUQtfJ/cV0fRKm0DDLFfuTHC+tiLSZMXNUt5SkMJRqMNXKl6N?=
+ =?iso-8859-1?Q?W4Qmwd3ZcAuuOf0TxmSNk/xucnRnqphxo0dOEbO+feFqFNUIJDta5f4gw5?=
+ =?iso-8859-1?Q?1v3PRejow5cTPjETZrwEwcY9tDAwWWxpRohcf4HPCbZF3x+CrHvylKruV3?=
+ =?iso-8859-1?Q?FpiniK5QZpiENTH5m306iL9AToNecBk8lK9JoCLfVRE8vZkzV1h0BMDM1M?=
+ =?iso-8859-1?Q?a0jxTfe+ptK3wqFQ0uiP5HuOD8UknDevP7pbQEyIDdwdnsw6sHhijUhHRk?=
+ =?iso-8859-1?Q?kaydHhks+HNQxOHRKmmObakVfEnaCNGmszJkuMY81Y3DgyDsh3Lu85I5h7?=
+ =?iso-8859-1?Q?5wxZfz2JstUz4Sno5lj53KLXs6aVkt0OvuWQ9dPN6Y8qjYFIF7p9Gza40B?=
+ =?iso-8859-1?Q?5CJX9/wjnFnR1cFu8Mkjs+lf9R2O+gV0h09w7izGGw3ybaTd5k0qefS++f?=
+ =?iso-8859-1?Q?P7tnOVWY1qR+PHETRAticZ1XGH3T6B6dsRLoUZxTFc1zJxe3Z1Ze0Wolnj?=
+ =?iso-8859-1?Q?nB9qIFfY9vEHd7s9d7JZh+KcgiNNb5nkfbxk19x0qsVuvxRMfey0IkmP0Y?=
+ =?iso-8859-1?Q?GWUbbjPxMZDuaxvfmYdcMUZCSaBneADE5KYdRi9Y8Z7XwsKxpSA=3D=3D?=
+x-microsoft-antispam-prvs: <LNXP123MB206074C5B19F4134AF74CE05E7710@LNXP123MB2060.GBRP123.PROD.OUTLOOK.COM>
 x-forefront-prvs: 09669DB681
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(39850400004)(136003)(396003)(366004)(376002)(51234002)(189003)(199004)(478600001)(71190400001)(71200400001)(8936002)(107886003)(50226002)(54906003)(106356001)(105586002)(86362001)(14444005)(256004)(6486002)(81166006)(81156014)(5660300002)(4326008)(6436002)(53936002)(316002)(8676002)(36756003)(6512007)(14454004)(5640700003)(66066001)(97736004)(76176011)(99286004)(6916009)(3846002)(68736007)(446003)(11346002)(7736002)(25786009)(102836004)(52116002)(305945005)(2616005)(386003)(6506007)(45080400002)(486006)(2906002)(2501003)(476003)(6116002)(26005)(2351001)(186003);DIR:OUT;SFP:1101;SCL:1;SRVR:LNXP123MB2060;H:LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(39850400004)(136003)(396003)(366004)(376002)(51234002)(189003)(199004)(478600001)(71190400001)(71200400001)(8936002)(107886003)(50226002)(54906003)(106356001)(105586002)(86362001)(5024004)(14444005)(256004)(6486002)(81166006)(81156014)(5660300002)(4326008)(6436002)(53936002)(316002)(8676002)(36756003)(6512007)(14454004)(5640700003)(66066001)(97736004)(76176011)(99286004)(6916009)(3846002)(68736007)(446003)(11346002)(7736002)(25786009)(102836004)(52116002)(305945005)(2616005)(386003)(6506007)(45080400002)(486006)(2906002)(2501003)(476003)(6116002)(26005)(2351001)(186003);DIR:OUT;SFP:1101;SCL:1;SRVR:LNXP123MB2060;H:LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: camlintechnologies.com does not
  designate permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: JguDLbctaTnj7d5ehE1dJIRN3ZEBEmD4zIkFJi5m08Dcow5p4N1ydxvOtc7cJNTJrsq5GKfvw8b2qhTbAHfcTmaPYbOLEA49KEQ7Oz8vSkSh/RZnzRUJriEpfMaxhn79Ee/52f7IvntwWAKMOuAeG1gZlASdAnnIxmQ94Fi/jKJ84QSoqhWaAAdSyP1ZbX/uI2+OXwiJVcwhMLa4kHPVDpARuBAf37nAhAXgFEQ9FskMjWQkIWu06BYSdl+C/JOG77B30yycXD0bh/3+S0JYWKiwOCfNzzEu9YNZZ+KCBtIMEPG0ndwQC+Tvq1bjPGdswzM38F5Rbm1alzY8MvhKTS58zUGWckl5L3DjMiMGajU+e+D5RoyJy5rygWwjcGkgfkm/4febMvPUKORu2dgueNuoFWGoDQkHxl4RKFYVuSA=
+x-microsoft-antispam-message-info: 9jnT1AMHv3YjyJ64pBHNJPMci+EMQvC1jaJHPbIxoHRqKGjcwwwxkMyHJPyx1Y0qY7XgQv8dNPHyKcSRISiad/POiG6lNDGaCo1T1IFIJ8R9OK93xJ8r7+q13+7DSHMRvPg122jd+HfVoeVVA0zmBdB66QKH/PCeeCVcZM0dRAH2GrFTaLi1kSUFdyEIrLgv3UscHq8DKj4MlpZHdcvSJt7aBxbCopc2avirFt1AHRoL5UYa1sEOxjFBcC4mxkvVYKiFHQk+QEy/TNAWY85F/HRicyu8kGaHFkXLC33P0AaVgcEfU5X5yK4zi/8UnM8Ug/8F0PdksHxyRHuUJQsXaLCPo9URijrzznly4bY+R2wbcS1t+85k13kIfKPnGWgdv1zPt86B/+a3A1lOseThP/kyDiUSeaFV+/DS8RytWRc=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: camlintechnologies.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1d368949-1fc7-48eb-fef7-08d6a0b80e24
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Mar 2019 15:42:49.3727
+X-MS-Exchange-CrossTenant-Network-Message-Id: 353c6456-6f82-4502-003d-08d6a0b80fdc
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Mar 2019 15:42:52.3249
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: fd4b1729-b18d-46d2-9ba0-2717b852b252
@@ -118,149 +118,259 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-brcmu_pkt_buf_free_skb emits WARNING when attempting to free a sk_buff
-which is part of any queue. After USB disconnect this may have happened
-when brcmf_fws_hanger_cleanup() is called as per-interface psq was never
-cleaned when removing the interface.
-Change brcmf_fws_macdesc_cleanup() in a way that it removes the
-corresponding packets from hanger table (to avoid double-free when
-brcmf_fws_hanger_cleanup() is called) and add a call to clean-up the
-interface specific packet queue.
+In case USB disconnect happens at the moment transmitting workqueue is in
+progress the underlying interface may be gone causing a NULL pointer
+dereference. Add synchronization of the workqueue destruction with the
+detach implementation in core so that the transmitting workqueue is stopped
+during detach before the interfaces are removed.
 
-Below is a WARNING during USB disconnect with Raspberry Pi WiFi dongle
-running in AP mode. This was reproducible when the interface was
-transmitting during the disconnect and is fixed with this commit.
+Fix following Oops:
 
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 1171 at drivers/net/wireless/broadcom/brcm80211/brcmut=
-il/utils.c:49 brcmu_pkt_buf_free_skb+0x3c/0x40
-Modules linked in: nf_log_ipv4 nf_log_common xt_LOG xt_limit iptable_mangle=
- xt_connmark xt_tcpudp xt_conntrack nf_conntrack nf_defrag_ipv6 nf_defrag_i=
-pv4 iptable_filter ip_tables x_tables usb_f_mass_storage usb_f_rndis u_ethe=
-r cdc_acm smsc95xx usbnet ci_hdrc_imx ci_hdrc ulpi usbmisc_imx 8250_exar 82=
-50_pci 8250 8250_base libcomposite configfs udc_core
-CPU: 0 PID: 1171 Comm: kworker/0:0 Not tainted 4.19.23-00075-gde33ed8 #99
+Unable to handle kernel NULL pointer dereference at virtual address 0000000=
+8
+pgd =3D 9e6a802d
+[00000008] *pgd=3D00000000
+Internal error: Oops: 5 [#1] PREEMPT SMP ARM
+Modules linked in: nf_log_ipv4 nf_log_common xt_LOG xt_limit iptable_mangle
+xt_connmark xt_tcpudp xt_conntrack nf_conntrack nf_defrag_ipv6 nf_defrag_ip=
+v4
+iptable_filter ip_tables x_tables usb_f_mass_storage usb_f_rndis u_ether
+usb_serial_simple usbserial cdc_acm brcmfmac brcmutil smsc95xx usbnet
+ci_hdrc_imx ci_hdrc ulpi usbmisc_imx 8250_exar 8250_pci 8250 8250_base
+libcomposite configfs udc_core
+CPU: 0 PID: 7 Comm: kworker/u8:0 Not tainted 4.19.23-00076-g03740aa-dirty #=
+102
 Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
-Workqueue: usb_hub_wq hub_event
-[<8010ff84>] (unwind_backtrace) from [<8010bb64>] (show_stack+0x10/0x14)
-[<8010bb64>] (show_stack) from [<80840278>] (dump_stack+0x88/0x9c)
-[<80840278>] (dump_stack) from [<8011f5ec>] (__warn+0xfc/0x114)
-[<8011f5ec>] (__warn) from [<8011f71c>] (warn_slowpath_null+0x40/0x48)
-[<8011f71c>] (warn_slowpath_null) from [<805a476c>] (brcmu_pkt_buf_free_skb=
-+0x3c/0x40)
-[<805a476c>] (brcmu_pkt_buf_free_skb) from [<805bb6c4>] (brcmf_fws_cleanup+=
-0x1e4/0x22c)
-[<805bb6c4>] (brcmf_fws_cleanup) from [<805bc854>] (brcmf_fws_del_interface=
-+0x58/0x68)
-[<805bc854>] (brcmf_fws_del_interface) from [<805b66ac>] (brcmf_remove_inte=
-rface+0x40/0x150)
-[<805b66ac>] (brcmf_remove_interface) from [<805b6870>] (brcmf_detach+0x6c/=
-0xb0)
-[<805b6870>] (brcmf_detach) from [<805bdbb8>] (brcmf_usb_disconnect+0x30/0x=
-4c)
-[<805bdbb8>] (brcmf_usb_disconnect) from [<805e5d64>] (usb_unbind_interface=
-+0x5c/0x1e0)
-[<805e5d64>] (usb_unbind_interface) from [<804aab10>] (device_release_drive=
-r_internal+0x154/0x1ec)
-[<804aab10>] (device_release_driver_internal) from [<804a97f4>] (bus_remove=
-_device+0xcc/0xf8)
-[<804a97f4>] (bus_remove_device) from [<804a6fc0>] (device_del+0x118/0x308)
-[<804a6fc0>] (device_del) from [<805e488c>] (usb_disable_device+0xa0/0x1c8)
-[<805e488c>] (usb_disable_device) from [<805dcf98>] (usb_disconnect+0x70/0x=
-1d8)
-[<805dcf98>] (usb_disconnect) from [<805ddd84>] (hub_event+0x464/0xf50)
-[<805ddd84>] (hub_event) from [<80135a70>] (process_one_work+0x138/0x3f8)
+Workqueue: brcmf_fws_wq brcmf_fws_dequeue_worker [brcmfmac]
+PC is at brcmf_txfinalize+0x34/0x90 [brcmfmac]
+LR is at brcmf_fws_dequeue_worker+0x218/0x33c [brcmfmac]
+pc : [<7f0dee64>]    lr : [<7f0e4140>]    psr: 60010093
+sp : ee8abef0  ip : 00000000  fp : edf38000
+r10: ffffffed  r9 : edf38970  r8 : edf38004
+r7 : edf3e970  r6 : 00000000  r5 : ede69000  r4 : 00000000
+r3 : 00000a97  r2 : 00000000  r1 : 0000888e  r0 : ede69000
+Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment none
+Control: 10c5387d  Table: 7d03c04a  DAC: 00000051
+Process kworker/u8:0 (pid: 7, stack limit =3D 0x24ec3e04)
+Stack: (0xee8abef0 to 0xee8ac000)
+bee0:                                     ede69000 00000000 ed56c3e0 7f0e41=
+40
+bf00: 00000001 00000000 edf38004 edf3e99c ed56c3e0 80d03d00 edfea43a edf3e9=
+70
+bf20: ee809880 ee804200 ee971100 00000000 edf3e974 00000000 ee804200 80135a=
+70
+bf40: 80d03d00 ee804218 ee809880 ee809894 ee804200 80d03d00 ee804218 ee8aa0=
+00
+bf60: 00000088 80135d5c 00000000 ee829f00 ee829dc0 00000000 ee809880 80135d=
+30
+bf80: ee829f1c ee873eac 00000000 8013b1a0 ee829dc0 8013b07c 00000000 000000=
+00
+bfa0: 00000000 00000000 00000000 801010e8 00000000 00000000 00000000 000000=
+00
+bfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 000000=
+00
+bfe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 000000=
+00
+[<7f0dee64>] (brcmf_txfinalize [brcmfmac]) from [<7f0e4140>] (brcmf_fws_deq=
+ueue_worker+0x218/0x33c [brcmfmac])
+[<7f0e4140>] (brcmf_fws_dequeue_worker [brcmfmac]) from [<80135a70>] (proce=
+ss_one_work+0x138/0x3f8)
 [<80135a70>] (process_one_work) from [<80135d5c>] (worker_thread+0x2c/0x554=
 )
 [<80135d5c>] (worker_thread) from [<8013b1a0>] (kthread+0x124/0x154)
 [<8013b1a0>] (kthread) from [<801010e8>] (ret_from_fork+0x14/0x2c)
-Exception stack(0xecf8dfb0 to 0xecf8dff8)
-dfa0:                                     00000000 00000000 00000000 000000=
+Exception stack(0xee8abfb0 to 0xee8abff8)
+bfa0:                                     00000000 00000000 00000000 000000=
 00
-dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 000000=
+bfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 000000=
 00
-dfe0: 00000000 00000000 00000000 00000000 00000013 00000000
----[ end trace 38d234018e9e2a90 ]---
-------------[ cut here ]------------
+bfe0: 00000000 00000000 00000000 00000000 00000013 00000000
+Code: e1530001 0a000007 e3560000 e1a00005 (05942008)
+---[ end trace 079239dd31c86e90 ]---
 
 Signed-off-by: Piotr Figiel <p.figiel@camlintechnologies.com>
 ---
- .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 42 ++++++++++++------=
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c  | 11 +++++++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.h  |  6 ++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c  |  4 +++-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c  | 16 ++++++++++++=
 ----
- 1 file changed, 24 insertions(+), 18 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h  |  3 ++-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c | 10 ++++++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h |  3 ++-
+ 7 files changed, 40 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/driv=
+ers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+index 73d3c1a..98b1687 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+@@ -490,11 +490,18 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
+ 	return -ENOMEM;
+ }
+=20
+-void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr)
++void brcmf_proto_bcdc_detach_pre_delif(struct brcmf_pub *drvr)
++{
++	struct brcmf_bcdc *bcdc =3D drvr->proto->pd;
++
++	brcmf_fws_detach_pre_delif(bcdc->fws);
++}
++
++void brcmf_proto_bcdc_detach_post_delif(struct brcmf_pub *drvr)
+ {
+ 	struct brcmf_bcdc *bcdc =3D drvr->proto->pd;
+=20
+ 	drvr->proto->pd =3D NULL;
+-	brcmf_fws_detach(bcdc->fws);
++	brcmf_fws_detach_post_delif(bcdc->fws);
+ 	kfree(bcdc);
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.h b/driv=
+ers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.h
+index 3b0e9ef..4bc5224 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.h
+@@ -18,14 +18,16 @@
+=20
+ #ifdef CONFIG_BRCMFMAC_PROTO_BCDC
+ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr);
+-void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr);
++void brcmf_proto_bcdc_detach_pre_delif(struct brcmf_pub *drvr);
++void brcmf_proto_bcdc_detach_post_delif(struct brcmf_pub *drvr);
+ void brcmf_proto_bcdc_txflowblock(struct device *dev, bool state);
+ void brcmf_proto_bcdc_txcomplete(struct device *dev, struct sk_buff *txp,
+ 				 bool success);
+ struct brcmf_fws_info *drvr_to_fws(struct brcmf_pub *drvr);
+ #else
+ static inline int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr) { return=
+ 0; }
+-static inline void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr) {}
++static void brcmf_proto_bcdc_detach_pre_delif(struct brcmf_pub *drvr) {};
++static inline void brcmf_proto_bcdc_detach_post_delif(struct brcmf_pub *dr=
+vr) {}
+ #endif
+=20
+ #endif /* BRCMFMAC_BCDC_H */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/driv=
+ers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 4fbe879..00e8947 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1299,6 +1299,8 @@ void brcmf_detach(struct device *dev)
+=20
+ 	brcmf_bus_change_state(bus_if, BRCMF_BUS_DOWN);
+=20
++	brcmf_proto_detach_pre_delif(drvr);
++
+ 	/* make sure primary interface removed last */
+ 	for (i =3D BRCMF_MAX_IFS-1; i > -1; i--)
+ 		brcmf_remove_interface(drvr->iflist[i], false);
+@@ -1308,7 +1310,7 @@ void brcmf_detach(struct device *dev)
+=20
+ 	brcmf_bus_stop(drvr->bus_if);
+=20
+-	brcmf_proto_detach(drvr);
++	brcmf_proto_detach_post_delif(drvr);
+=20
+ 	bus_if->drvr =3D NULL;
+ 	wiphy_free(drvr->wiphy);
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/=
 drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index abeb305..d48b8b2 100644
+index d48b8b2..c22c49a 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -580,24 +580,6 @@ static bool brcmf_fws_ifidx_match(struct sk_buff *skb,=
- void *arg)
- 	return ifidx =3D=3D *(int *)arg;
+@@ -2443,17 +2443,25 @@ struct brcmf_fws_info *brcmf_fws_attach(struct brcm=
+f_pub *drvr)
+ 	return fws;
+=20
+ fail:
+-	brcmf_fws_detach(fws);
++	brcmf_fws_detach_pre_delif(fws);
++	brcmf_fws_detach_post_delif(fws);
+ 	return ERR_PTR(rc);
  }
 =20
--static void brcmf_fws_psq_flush(struct brcmf_fws_info *fws, struct pktq *q=
-,
--				int ifidx)
--{
--	bool (*matchfn)(struct sk_buff *, void *) =3D NULL;
--	struct sk_buff *skb;
--	int prec;
--
--	if (ifidx !=3D -1)
--		matchfn =3D brcmf_fws_ifidx_match;
--	for (prec =3D 0; prec < q->num_prec; prec++) {
--		skb =3D brcmu_pktq_pdeq_match(q, prec, matchfn, &ifidx);
--		while (skb) {
--			brcmu_pkt_buf_free_skb(skb);
--			skb =3D brcmu_pktq_pdeq_match(q, prec, matchfn, &ifidx);
--		}
--	}
--}
--
- static void brcmf_fws_hanger_init(struct brcmf_fws_hanger *hanger)
+-void brcmf_fws_detach(struct brcmf_fws_info *fws)
++void brcmf_fws_detach_pre_delif(struct brcmf_fws_info *fws)
  {
- 	int i;
-@@ -669,6 +651,28 @@ static inline int brcmf_fws_hanger_poppkt(struct brcmf=
-_fws_hanger *h,
- 	return 0;
- }
-=20
-+static void brcmf_fws_psq_flush(struct brcmf_fws_info *fws, struct pktq *q=
-,
-+				int ifidx)
-+{
-+	bool (*matchfn)(struct sk_buff *, void *) =3D NULL;
-+	struct sk_buff *skb;
-+	int prec;
-+	u32 hslot;
-+
-+	if (ifidx !=3D -1)
-+		matchfn =3D brcmf_fws_ifidx_match;
-+	for (prec =3D 0; prec < q->num_prec; prec++) {
-+		skb =3D brcmu_pktq_pdeq_match(q, prec, matchfn, &ifidx);
-+		while (skb) {
-+			hslot =3D brcmf_skb_htod_tag_get_field(skb, HSLOT);
-+			brcmf_fws_hanger_poppkt(&fws->hanger, hslot, &skb,
-+						true);
-+			brcmu_pkt_buf_free_skb(skb);
-+			skb =3D brcmu_pktq_pdeq_match(q, prec, matchfn, &ifidx);
-+		}
+ 	if (!fws)
+ 		return;
+-
+-	if (fws->fws_wq)
++	if (fws->fws_wq) {
+ 		destroy_workqueue(fws->fws_wq);
++		fws->fws_wq =3D NULL;
 +	}
 +}
 +
- static int brcmf_fws_hanger_mark_suppressed(struct brcmf_fws_hanger *h,
- 					    u32 slot_id)
- {
-@@ -2200,6 +2204,8 @@ void brcmf_fws_del_interface(struct brcmf_if *ifp)
++void brcmf_fws_detach_post_delif(struct brcmf_fws_info *fws)
++{
++	if (!fws)
++		return;
+=20
+ 	/* cleanup */
  	brcmf_fws_lock(fws);
- 	ifp->fws_desc =3D NULL;
- 	brcmf_dbg(TRACE, "deleting %s\n", entry->name);
-+	brcmf_fws_macdesc_cleanup(fws, &fws->desc.iface[ifp->ifidx],
-+				  ifp->ifidx);
- 	brcmf_fws_macdesc_deinit(entry);
- 	brcmf_fws_cleanup(fws, ifp->ifidx);
- 	brcmf_fws_unlock(fws);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/=
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+index 4e68357..749c06d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+@@ -19,7 +19,8 @@
+ #define FWSIGNAL_H_
+=20
+ struct brcmf_fws_info *brcmf_fws_attach(struct brcmf_pub *drvr);
+-void brcmf_fws_detach(struct brcmf_fws_info *fws);
++void brcmf_fws_detach_pre_delif(struct brcmf_fws_info *fws);
++void brcmf_fws_detach_post_delif(struct brcmf_fws_info *fws);
+ void brcmf_fws_debugfs_create(struct brcmf_pub *drvr);
+ bool brcmf_fws_queue_skbs(struct brcmf_fws_info *fws);
+ bool brcmf_fws_fc_active(struct brcmf_fws_info *fws);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c b/dri=
+vers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
+index 024c643..c7964cc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
+@@ -67,16 +67,22 @@ int brcmf_proto_attach(struct brcmf_pub *drvr)
+ 	return -ENOMEM;
+ }
+=20
+-void brcmf_proto_detach(struct brcmf_pub *drvr)
++void brcmf_proto_detach_post_delif(struct brcmf_pub *drvr)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+=20
+ 	if (drvr->proto) {
+ 		if (drvr->bus_if->proto_type =3D=3D BRCMF_PROTO_BCDC)
+-			brcmf_proto_bcdc_detach(drvr);
++			brcmf_proto_bcdc_detach_post_delif(drvr);
+ 		else if (drvr->bus_if->proto_type =3D=3D BRCMF_PROTO_MSGBUF)
+ 			brcmf_proto_msgbuf_detach(drvr);
+ 		kfree(drvr->proto);
+ 		drvr->proto =3D NULL;
+ 	}
+ }
++
++void brcmf_proto_detach_pre_delif(struct brcmf_pub *drvr)
++{
++	if (drvr->proto && drvr->bus_if->proto_type =3D=3D BRCMF_PROTO_BCDC)
++		brcmf_proto_bcdc_detach_pre_delif(drvr);
++}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h b/dri=
+vers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+index d3c3b9a..72355ae 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+@@ -54,7 +54,8 @@ struct brcmf_proto {
+=20
+=20
+ int brcmf_proto_attach(struct brcmf_pub *drvr);
+-void brcmf_proto_detach(struct brcmf_pub *drvr);
++void brcmf_proto_detach_pre_delif(struct brcmf_pub *drvr);
++void brcmf_proto_detach_post_delif(struct brcmf_pub *drvr);
+=20
+ static inline int brcmf_proto_hdrpull(struct brcmf_pub *drvr, bool do_fws,
+ 				      struct sk_buff *skb,
 --=20
 2.7.4
 
