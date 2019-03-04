@@ -2,98 +2,119 @@ Return-Path: <SRS0=K+dv=RH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E76C2C43381
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 13:00:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 917CDC43381
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 14:47:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF9C520835
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 13:00:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1551704406;
-	bh=L30hQIbLwt9oWznlITAJ8HcQTffhpCXnWKp4fFVOaKw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FtQ71clZN50dCMKJbBZljDai+fuXBtoE2eI5wPvjSZ7HeoMS/RDcMRAyQeVHdSEUA
-	 zPkOiGFF10Ln6kmiCkFLUxTQpl4M83FjTSHoC5oGCYKys8EwZGuZV7BldZ0y0MoxU7
-	 tl7Bz3xFGlehS9ohQ/KzDTYBVwphPa2yyC5cT0/8=
+	by mail.kernel.org (Postfix) with ESMTP id 54D6420815
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 14:47:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=jrdltd-co-uk.20150623.gappssmtp.com header.i=@jrdltd-co-uk.20150623.gappssmtp.com header.b="mxNahLWp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726685AbfCDNAG (ORCPT
+        id S1726626AbfCDOrb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Mar 2019 08:00:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33910 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726055AbfCDNAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Mar 2019 08:00:05 -0500
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com [149.6.153.186])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2096E2075B;
-        Mon,  4 Mar 2019 13:00:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1551704405;
-        bh=L30hQIbLwt9oWznlITAJ8HcQTffhpCXnWKp4fFVOaKw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WA+VOg/JHdV89vsWC5e4zlz2P+xxpU+bB8QY/r2VWQSkkZJTxxgNAYt0vw9Byq7yI
-         iJjyi4zu64mEg2lSrQpqYg/BV35ggTbDIjQANKXLqW0A+0bqjNVaWsY3ovSDeYVZ3z
-         xHjF0RjvF6zBUkuMSBzGDwlBVv65swepK2E65b4c=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, joe@perches.com,
-        lorenzo.bianconi@redhat.com
-Subject: [PATCH v2] mt76: usb: reduce code indentation in mt76u_alloc_tx
-Date:   Mon,  4 Mar 2019 13:59:49 +0100
-Message-Id: <f17ee2ae87708b9e70cea5116d8fa41852adbcff.1551703530.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1551703530.git.lorenzo@kernel.org>
-References: <cover.1551703530.git.lorenzo@kernel.org>
+        Mon, 4 Mar 2019 09:47:31 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:41401 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726161AbfCDOrb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Mar 2019 09:47:31 -0500
+Received: by mail-ot1-f65.google.com with SMTP id t7so4391864otk.8
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2019 06:47:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=jrdltd-co-uk.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=8VEj3a+Jn92HlNTa2/Yj/sHDn9NmGVViZx5M0l34fXc=;
+        b=mxNahLWpSrX0nuGeScqD20ROoZAnNothesaqH3gcamLFeVpnv44xj+Uz3ZJt/8ONUW
+         OzN7CsQ+VojG6Lk6poZGeFXRW2nQkOAZqCPHkBx025+5oeu7xJYU3ufE7PTAvFYponW9
+         anmTmtEmWnRBeBRf80iqEsNSPoYtd8kmLD3M3caltYPkJeiftgiyDoddG3JxCotfrKdT
+         AAJssyBQtnbLGmquR0p94Wfa7Wc/pWVsrsZBFv4GxALmCjs82KOHQnW60B+JvBdezyDX
+         NkK1o62LpgVFBkJ8m1dVoJ7QL5kJvrdpp1I24MvOjEdj+Y0APqUJ53lPxX+7KJjn18O1
+         P7mg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=8VEj3a+Jn92HlNTa2/Yj/sHDn9NmGVViZx5M0l34fXc=;
+        b=omNDXEM0mmPsQPUPWFCfunLYJyz0hTw741I9/5YQa4kTD9hlr/lBpyI2kJIchgI6k5
+         Aek6+z290m0DIAC6TJVLjZ8pZJ3lrhDrByoQ6Jt+jFRfPLa1esA9PZXIn3dgkb6mA91m
+         Pq7NQvVzblWbtqcCfT2+OwVUVro5JTEC6iKwvGptmBuqoAirVitm6YoFIN9ICJ0bGY0t
+         vV/Qe4rIIMwqJeEJlrf6zCkZmqvLbdU9ayLwEz60I2mwmCqypJBA7FPD/PhIrKKBqzsF
+         IslyQcBhfsPT/vZvk2Rv/2CoUNgFe5Z/4cyGZXGTb+UMZ2FQPql/7L+lVLKz75Q/8LFs
+         e1KQ==
+X-Gm-Message-State: APjAAAXsfEiNmBG1azNgyUpt0dANNVYW02iM3UPIehYyWgl9XPh3Xf8f
+        j6ODHKTUI/TYUtXa0891s7dLeLDlo46eHF+vCZ7j2A==
+X-Google-Smtp-Source: APXvYqxzcD97ZTpbyoCY7Rlf+fcG7gyNOOR3O4ZpoVe10RghU/8GEYGFr7d6oF5S3Zo3yWTReugiwgssSCxG8wUxXZM=
+X-Received: by 2002:a9d:6f97:: with SMTP id h23mr13237440otq.26.1551710849899;
+ Mon, 04 Mar 2019 06:47:29 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAAUgxQLVXy4X-h+dLK0WrU5_cvbx0+mxvyFRFuNkYkybP4f_1g@mail.gmail.com>
+ <CAAUgxQ+PU4Z5Nhj8K5r3ijKm87-GvTg9QffSjOenHWDRDauZSg@mail.gmail.com> <CACna6rx6GFWMDmcTN5CvOta3QDe8UT8gKFNCEf_gjuXBRoWyHg@mail.gmail.com>
+In-Reply-To: <CACna6rx6GFWMDmcTN5CvOta3QDe8UT8gKFNCEf_gjuXBRoWyHg@mail.gmail.com>
+From:   Krzysiek Rosinski <krzysiek@jrdltd.co.uk>
+Date:   Mon, 4 Mar 2019 15:47:18 +0100
+Message-ID: <CAAUgxQJX2UWzHaxm=6119qVxmCfdBAYzFkvjDJHkGQXK8wx03Q@mail.gmail.com>
+Subject: Re: brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+To:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Improve code readability reducing code indentation in
-mt76u_alloc_tx
+Hi,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
-Changes since v1:
-- use devm_kcalloc instead of devm_kzalloc and get rid of size
----
- drivers/net/wireless/mediatek/mt76/usb.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+On Sun, Mar 3, 2019 at 10:03 PM Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> =
+wrote:
+>
+> On Sun, 3 Mar 2019 at 20:06, Krzysiek Rosinski <krzysiek@jrdltd.co.uk> wr=
+ote:
+> > On Sun, Mar 3, 2019 at 10:22 AM Krzysiek Rosinski <krzysiek@jrdltd.co.u=
+k> wrote:
+> > > I'm working on a custom board with cyw4343 connected to osd3358-sm (T=
+I
+> > > am3358), when I load the brcmfmac driver I get 'HT Avail timeout'
+> > > error. The same combination of driver+firmware works fine on Raspberr=
+y
+> > > Pi Zero W.
+> > >
+> > > I've tried to gather as much information I can from both; the custom
+> > > board and pi. This is available here:
+> > >
+> > > https://www.dropbox.com/s/vqejyrixbxx1z8d/logs.tar.gz?dl=3D0
+> > >
+> > > I have a custom board with cyw4343 chip fitted and also flyleded
+> > > Murata 1DX to the PocketBeagle, both give the same error code.
+> > >
+> > > My setup is as follows:
+> > >
+> > > osd335x-sm (TI am3348), cyw4343, 37.4 MHz xtal.
+> > > Linux beaglebone 4.14.93-bone17.1 #1 PREEMPT Mon Feb 25 16:27:58 UTC
+> > > 2019 armv7l GNU/Linux
+> > > brcmfmac: cypress v4.14.52-backports
+> > > brcm43430-sdio.bin: Version: 7.45.98.38
+> > >
+> > > Is there something obvious which I'm doing wrong? Can you give me a
+> > > hint on how to move with this further, please?
+>
+> You have to find new enough bcmdevs.h.
+>
+> Try Googling BFL3_FEMCTRL_SUB and you should find many BFL3_* defines eas=
+ily.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 4c1abd492405..508931101178 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -810,15 +810,14 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
- 			if (!buf->urb)
- 				return -ENOMEM;
- 
--			if (dev->usb.sg_en) {
--				size_t size = MT_SG_MAX_SIZE *
--					      sizeof(struct scatterlist);
--
--				buf->urb->sg = devm_kzalloc(dev->dev, size,
--							    GFP_KERNEL);
--				if (!buf->urb->sg)
--					return -ENOMEM;
--			}
-+			if (!dev->usb.sg_en)
-+				continue;
-+
-+			buf->urb->sg = devm_kcalloc(dev->dev, MT_SG_MAX_SIZE,
-+						    sizeof(struct scatterlist),
-+						    GFP_KERNEL);
-+			if (!buf->urb->sg)
-+				return -ENOMEM;
- 		}
- 	}
- 	return 0;
--- 
-2.20.1
+Thanks, it seems that "0xc000000" isn't described there or I can't
+find this. LPO is described here:
 
+https://developer.electricimp.com/hardware/nvramimageguide
+
+Cypress released recently a lot of documentation regarding these
+chips. Hopefully, this part will be available soon too :-)
+
+Kind regards,
+Krzysztof
