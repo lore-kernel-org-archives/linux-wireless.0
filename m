@@ -2,164 +2,85 @@ Return-Path: <SRS0=K+dv=RH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE63C43381
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 11:41:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3860FC43381
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 12:45:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A990820643
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 11:41:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0831620815
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 12:45:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726418AbfCDLlS (ORCPT
+        id S1726561AbfCDMpW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Mar 2019 06:41:18 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:37091 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726090AbfCDLlS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Mar 2019 06:41:18 -0500
-Received: by mail-wm1-f68.google.com with SMTP id x10so4338243wmg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2019 03:41:17 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=uCGNHQ20hGcSS+886YRZpPLBR45LzrwZ9hMz1YQdeCk=;
-        b=h/BLwAqs2TEaHvt3UtshPM2Rash6Mc0fGj66D6vFFL2YA2o1OA9JseovDPmakva1JT
-         pbE+4DCUQ19G5ohEjV962VOfrdBPdNF9PUBfB3aciDXZ/5Hka3KLpiFMFHwl0H19jlCS
-         2f8h9CakUp9e48g49U24YmFsebMQYj0xiq1AOkVNuqaHThyR08QsRo6aQsGlLEa17qyc
-         HUs71YopWBE2qRluSMxXjWF+ysekihK64NPbJJGlFTaOuLm+eRO/2LLLxp6n42dpHzCS
-         sywO56upNBzXtXYh1gy/ZUqLlYuNQurS1NhfUuMDE5qE8hrQzGso2Bv2ESGzRzCKACjs
-         6oXw==
-X-Gm-Message-State: APjAAAV85oGsxyfvzrZbnIZbKnUKCVUPY4iM2asZtCsEQuPeq5u2gu8I
-        Ghqcvk85/7yRWrwy095hEmSX56OLqsc=
-X-Google-Smtp-Source: AHgI3IaZTtoDXPNEDXsuQxvOB6dOJEIoH21Ht1pXCuGcEG4s1XYGzB84Q2vDgS67sfXv7j11hUYJaQ==
-X-Received: by 2002:a05:600c:210b:: with SMTP id u11mr10927080wml.11.1551699676414;
-        Mon, 04 Mar 2019 03:41:16 -0800 (PST)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id p12sm4755489wrt.4.2019.03.04.03.41.15
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 04 Mar 2019 03:41:15 -0800 (PST)
-Date:   Mon, 4 Mar 2019 12:41:12 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Joe Perches <joe@perches.com>
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
-        linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: Re: [PATCH] mt76: usb: reduce code indentation in mt76u_alloc_tx
-Message-ID: <20190304114111.GD3073@localhost.localdomain>
-References: <cover.1551534029.git.lorenzo@kernel.org>
- <2ead6e0fc3222faa772a37d55736c03041c90a1f.1551534029.git.lorenzo@kernel.org>
- <c422bd435e6172424ac2c27f673a64316576e819.camel@perches.com>
+        Mon, 4 Mar 2019 07:45:22 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:50894 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726101AbfCDMpW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Mar 2019 07:45:22 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 038223082E71;
+        Mon,  4 Mar 2019 12:45:22 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.92])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9C81F5D9CA;
+        Mon,  4 Mar 2019 12:45:19 +0000 (UTC)
+Date:   Mon, 4 Mar 2019 13:45:08 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 11/11] mt76x02: enable AP mode for USB
+Message-ID: <20190304124507.GA11047@redhat.com>
+References: <1551692896-7062-1-git-send-email-sgruszka@redhat.com>
+ <1551692896-7062-12-git-send-email-sgruszka@redhat.com>
+ <20190304105506.GB3073@localhost.localdomain>
+ <20190304110427.GA2008@redhat.com>
+ <20190304110847.GC3073@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="g7w8+K/95kPelPD2"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c422bd435e6172424ac2c27f673a64316576e819.camel@perches.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190304110847.GC3073@localhost.localdomain>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.46]); Mon, 04 Mar 2019 12:45:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Mon, Mar 04, 2019 at 12:08:48PM +0100, Lorenzo Bianconi wrote:
+> > How this should be done ? Is sufficient to check IEEE80211_CHAN_RADAR
+> > and mt76_is_usb() on set channel end return -EINVAL error ? Or different
+> > way ?
+> 
+> Re-reading my email I was not so clear, sorry. I mean we need to clear
+> radar_detect_widths for mt76_usb or as suggested by Felix to have a new
+> iface_combinations for mt76_usb where we do not set radar_detect_widths
 
---g7w8+K/95kPelPD2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This seems to be already handled by mac80211 if we do not set
+iface combinations. On channels like this:
 
-> On Sat, 2019-03-02 at 14:50 +0100, Lorenzo Bianconi wrote:
-> > Improve code readability reducing code indentation in
-> > mt76u_alloc_tx
->=20
-> Trivial note below:
->=20
-> > diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wir=
-eless/mediatek/mt76/usb.c
-> []
-> > @@ -787,6 +787,7 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
-> >  {
-> >  	struct mt76u_buf *buf;
-> >  	struct mt76_queue *q;
-> > +	size_t size;
-> >  	int i, j;
-> > =20
-> >  	for (i =3D 0; i < IEEE80211_NUM_ACS; i++) {
-> > @@ -810,15 +811,15 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
-> >  			if (!buf->urb)
-> >  				return -ENOMEM;
-> > =20
-> > -			if (dev->usb.sg_en) {
-> > -				size_t size =3D MT_SG_MAX_SIZE *
-> > -					      sizeof(struct scatterlist);
-> > +			if (!dev->usb.sg_en)
-> > +				continue;
-> > =20
-> > -				buf->urb->sg =3D devm_kzalloc(dev->dev, size,
-> > -							    GFP_KERNEL);
-> > -				if (!buf->urb->sg)
-> > -					return -ENOMEM;
-> > -			}
-> > +			size =3D MT_SG_MAX_SIZE * sizeof(struct scatterlist);
-> > +
-> > +			buf->urb->sg =3D devm_kzalloc(dev->dev, size,
-> > +						    GFP_KERNEL);
->=20
-> Perhaps eliminate size and use devm_kcalloc instead like
-> the allocation immediately above this.
-> ---
->  drivers/net/wireless/mediatek/mt76/usb.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wirel=
-ess/mediatek/mt76/usb.c
-> index ae6ada370597..fc87ae223f8d 100644
-> --- a/drivers/net/wireless/mediatek/mt76/usb.c
-> +++ b/drivers/net/wireless/mediatek/mt76/usb.c
-> @@ -806,15 +806,15 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
->  			if (!buf->urb)
->  				return -ENOMEM;
-> =20
-> -			if (dev->usb.sg_en) {
-> -				size_t size =3D MT_SG_MAX_SIZE *
-> -					      sizeof(struct scatterlist);
-> -
-> -				buf->urb->sg =3D devm_kzalloc(dev->dev, size,
-> -							    GFP_KERNEL);
-> -				if (!buf->urb->sg)
-> -					return -ENOMEM;
-> -			}
-> +			if (!dev->usb.sg_en)
-> +				continue;
-> +
-> +			buf->urb->sg =3D devm_kcalloc(dev->dev,
-> +						    MT_SG_MAX_SIZE,
-> +						    sizeof(*buf->urb->sg),
-> +						    GFP_KERNEL);
-> +			if (!buf->urb->sg)
-> +				return -ENOMEM;
->  		}
->  	}
->  	return 0;
->=20
+		Frequencies:
+			* 5180 MHz [36] (23.0 dBm)
+			* 5200 MHz [40] (23.0 dBm)
+			* 5220 MHz [44] (23.0 dBm)
+			* 5240 MHz [48] (23.0 dBm)
+			* 5260 MHz [52] (23.0 dBm) (radar detection)
+			  DFS state: usable (for 37 sec)
+			* 5280 MHz [56] (23.0 dBm) (radar detection)
+			  DFS state: usable (for 37 sec)
+			* 5300 MHz [60] (23.0 dBm) (radar detection)
+			  DFS state: usable (for 37 sec)
+			* 5320 MHz [64] (23.0 dBm) (radar detection)
 
-ack, I will post a v2, thx
 
-Regards,
-Lorenzo
+Hostap fails on channel=52 with error:
 
->=20
+Mar 04 13:39:33 dhcp-27-155.brq.redhat.com hostapd[10902]: wlan0: IEEE 802.11 Configured channel (52) not found from the channel list of current mode (2) IEEE 802.11a
+Mar 04 13:39:33 dhcp-27-155.brq.redhat.com hostapd[10902]: channel [4] (52) is disabled for use in AP mode, flags: 0x79 RADAR
 
---g7w8+K/95kPelPD2
-Content-Type: application/pgp-signature; name="signature.asc"
+On channel=36 hostapd succeed to start.
 
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXH0O1AAKCRA6cBh0uS2t
-rN6dAQDP8wCjSS0mtaQSaekWinhzpmdrdnK6cyzmvz6DVktbEgEAnHnZh/0ZT66M
-yNPomHY8KnYqdVjhITamyV8+vV5meQs=
-=lIgX
------END PGP SIGNATURE-----
-
---g7w8+K/95kPelPD2--
+Stanislaw 
