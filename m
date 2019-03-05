@@ -1,252 +1,93 @@
-Return-Path: <SRS0=K+dv=RH=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=e8Py=RI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58054C43381
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 21:59:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13E12C43381
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Mar 2019 06:44:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1650A206DD
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Mar 2019 21:59:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hS7tSX0A"
+	by mail.kernel.org (Postfix) with ESMTP id D75772075B
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Mar 2019 06:44:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726172AbfCDV7u (ORCPT
+        id S1726888AbfCEGn6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Mar 2019 16:59:50 -0500
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:36269 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726038AbfCDV7t (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Mar 2019 16:59:49 -0500
-Received: by mail-ot1-f68.google.com with SMTP id v62so5623806otb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2019 13:59:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=mjmA6sZgyo6rTWkTe2w0LDRQ8dD8aOc+nSmJuVhtbc4=;
-        b=hS7tSX0Ah9I9Hn4FV/8QH/D/JJhGZBpIFI65YkSX3CHlp19w7g6NQc21ikYXz1UaSp
-         YhOeL+dtf9uU3EdnUAKssZbZCKK9XykzRr/2poZHSl76ljpXKS+FVKeJnKtdLCOwrPNn
-         ky/i5298OQLXI5jj/cV47tphfvIrBJaEweMRVKe28tsJRP8c2oHoEImbtnXIHwu0LG3p
-         0Lwm+7uc8KU2TuegT/eUktDJqwVw4tdtmUXJKis9K5ErMnIxs8jx1TtTC27mdZxPCKYZ
-         VD6Xvv1mePsuwxZjjlBQUjPWgiFkWEZZpB5dn+nC7X66nMNjmhrc6NjOwH1CjzccS/Fc
-         +yww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
-         :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=mjmA6sZgyo6rTWkTe2w0LDRQ8dD8aOc+nSmJuVhtbc4=;
-        b=NnILdDPAy58RahArzdPBOcd9ArlP+ZDm35T8Rpog9+Eruc3dAsXA6HDe/Xee4eHVZy
-         22q2QpOPYmtsARaCwudjWwimkUxVOgsqs1TTFLAI0YDqN7DSZfeleKDSLaEUiJ1j0ogH
-         4B0MP7CaGhg68esArKrV7EJxJf9te+DdHm5dYseRcpF5m0/L9FlxIrxOwalrzb24f/Ri
-         jIfwOXifEWSu4sotUea9JvWM/CDy35bMvzY1w+MPT3kU824nvk0Ib1pxdA7lW5l1XapA
-         6YXE7bwzaSyLnXqO+qKLHY843QZKcOLJzC3xUEE3SHpZesRZYLQknfSORG5rJ4eqXGga
-         HPXQ==
-X-Gm-Message-State: APjAAAW0f3u8Myh0Zw7skJk9ANFwHlTwPGO8WgKNbFTw4dIhn80ioUpA
-        G+aSiNsQK6rsyCgyKY1jlZk=
-X-Google-Smtp-Source: APXvYqwaB+ijQ43XtDHHFpy4qtJG1gytdhsoDDZtVm4L7QbLV/NgfF0ygs0UKKvAdE/wwUMYxIoUXQ==
-X-Received: by 2002:a9d:630b:: with SMTP id q11mr14050154otk.14.1551736788610;
-        Mon, 04 Mar 2019 13:59:48 -0800 (PST)
-Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id e125sm2923744oia.18.2019.03.04.13.59.47
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 04 Mar 2019 13:59:48 -0800 (PST)
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 2/2] rtlwifi: Convert the wake_match variable to local
-Date:   Mon,  4 Mar 2019 15:59:40 -0600
-Message-Id: <20190304215940.2608-3-Larry.Finger@lwfinger.net>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190304215940.2608-1-Larry.Finger@lwfinger.net>
-References: <20190304215940.2608-1-Larry.Finger@lwfinger.net>
+        Tue, 5 Mar 2019 01:43:58 -0500
+Received: from mga09.intel.com ([134.134.136.24]:48974 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726088AbfCEGn6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Mar 2019 01:43:58 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 04 Mar 2019 22:43:57 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.58,443,1544515200"; 
+   d="scan'208";a="139188762"
+Received: from kphartnx-mobl1.ger.corp.intel.com ([10.252.28.244])
+  by orsmga002.jf.intel.com with ESMTP; 04 Mar 2019 22:43:54 -0800
+Message-ID: <ec4e92fa787a7db1caf39920a62c3721849baee9.camel@intel.com>
+Subject: Re: [PATCH] iwlwifi: fix 64-bit division
+From:   Luciano Coelho <luciano.coelho@intel.com>
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc:     Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date:   Tue, 05 Mar 2019 08:43:53 +0200
+In-Reply-To: <20190304203924.2111146-1-arnd@arndb.de>
+References: <20190304203924.2111146-1-arnd@arndb.de>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5-1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In five of the drivers, the contents of bits 29-31 of one of the RX
-descriptors is used to set bits in a variable that is used to save the
-wakeup condition for output in a debugging statement. The resulting
-variable is not used anywhere else even though it is stored in a struct
-and could be available in other routines. This variable is changed to be
-local.
+Hi Arnd,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.c   | 13 +++++++------
- .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   | 13 +++++++------
- .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   | 14 +++++++-------
- .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   | 14 +++++++-------
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  1 -
- 5 files changed, 28 insertions(+), 27 deletions(-)
+On Mon, 2019-03-04 at 21:38 +0100, Arnd Bergmann wrote:
+> do_div() expects unsigned operands and otherwise triggers a warning
+> like:
+> 
+> drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c:465:2: error:
+> comparison of distinct pointer types ('typeof ((rtt_avg)) *' (aka
+> 'long long *') and 'uint64_t *' (aka 'unsigned long long *')) [-
+> Werror,-Wcompare-distinct-pointer-types]
+>         do_div(rtt_avg, 6666);
+>         ^~~~~~~~~~~~~~~~~~~~~
+> include/asm-generic/div64.h:222:28: note: expanded from macro
+> 'do_div'
+>         (void)(((typeof((n)) *)0) == ((uint64_t *)0));  \
+>                ~~~~~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~~
+> 1 error generated.
+> 
+> Change the do_div() to the simpler div_s64() that can handle
+> negative inputs correctly.
+> 
+> Fixes: 937b10c0de68 ("iwlwifi: mvm: add debug prints for FTM")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-index 3a70be92a77c..e5729dc5c832 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-@@ -373,6 +373,7 @@ bool rtl88ee_rx_query_desc(struct ieee80211_hw *hw,
- 	struct rx_fwinfo_88e *p_drvinfo;
- 	struct ieee80211_hdr *hdr;
- 	u32 phystatus = GET_RX_DESC_PHYST(pdesc);
-+	u8 wake_match;
- 
- 	status->packet_report_type = (u8)GET_RX_STATUS_DESC_RPT_SEL(pdesc);
- 	if (status->packet_report_type == TX_REPORT2)
-@@ -400,17 +401,17 @@ bool rtl88ee_rx_query_desc(struct ieee80211_hw *hw,
- 
- 	status->macid = GET_RX_DESC_MACID(pdesc);
- 	if (GET_RX_STATUS_DESC_PATTERN_MATCH(pdesc))
--		status->wake_match = BIT(2);
-+		wake_match = BIT(2);
- 	else if (GET_RX_STATUS_DESC_MAGIC_MATCH(pdesc))
--		status->wake_match = BIT(1);
-+		wake_match = BIT(1);
- 	else if (GET_RX_STATUS_DESC_UNICAST_MATCH(pdesc))
--		status->wake_match = BIT(0);
-+		wake_match = BIT(0);
- 	else
--		status->wake_match = 0;
--	if (status->wake_match)
-+		wake_match = 0;
-+	if (wake_match)
- 		RT_TRACE(rtlpriv, COMP_RXDESC, DBG_LOUD,
- 		"GGGGGGGGGGGGGet Wakeup Packet!! WakeMatch=%d\n",
--		status->wake_match);
-+		wake_match);
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
- 	rx_status->band = hw->conf.chandef.chan->band;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-index 49a4c84d193a..d297cfc0fd2b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-@@ -331,6 +331,7 @@ bool rtl92ee_rx_query_desc(struct ieee80211_hw *hw,
- 	struct rx_fwinfo *p_drvinfo;
- 	struct ieee80211_hdr *hdr;
- 	u32 phystatus = GET_RX_DESC_PHYST(pdesc);
-+	u8 wake_match;
- 
- 	if (GET_RX_STATUS_DESC_RPT_SEL(pdesc) == 0)
- 		status->packet_report_type = NORMAL_RX;
-@@ -351,17 +352,17 @@ bool rtl92ee_rx_query_desc(struct ieee80211_hw *hw,
- 
- 	status->macid = GET_RX_DESC_MACID(pdesc);
- 	if (GET_RX_STATUS_DESC_PATTERN_MATCH(pdesc))
--		status->wake_match = BIT(2);
-+		wake_match = BIT(2);
- 	else if (GET_RX_STATUS_DESC_MAGIC_MATCH(pdesc))
--		status->wake_match = BIT(1);
-+		wake_match = BIT(1);
- 	else if (GET_RX_STATUS_DESC_UNICAST_MATCH(pdesc))
--		status->wake_match = BIT(0);
-+		wake_match = BIT(0);
- 	else
--		status->wake_match = 0;
--	if (status->wake_match)
-+		wake_match = 0;
-+	if (wake_match)
- 		RT_TRACE(rtlpriv, COMP_RXDESC, DBG_LOUD,
- 			 "GGGGGGGGGGGGGet Wakeup Packet!! WakeMatch=%d\n",
--			 status->wake_match);
-+			 wake_match);
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
- 	rx_status->band = hw->conf.chandef.chan->band;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-index a382cdc668ed..d87ba03fe78f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-@@ -300,7 +300,7 @@ bool rtl8723be_rx_query_desc(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rx_fwinfo_8723be *p_drvinfo;
- 	struct ieee80211_hdr *hdr;
--
-+	u8 wake_match;
- 	u32 phystatus = GET_RX_DESC_PHYST(pdesc);
- 
- 	status->length = (u16)GET_RX_DESC_PKT_LEN(pdesc);
-@@ -330,17 +330,17 @@ bool rtl8723be_rx_query_desc(struct ieee80211_hw *hw,
- 
- 
- 	if (GET_RX_STATUS_DESC_PATTERN_MATCH(pdesc))
--		status->wake_match = BIT(2);
-+		wake_match = BIT(2);
- 	else if (GET_RX_STATUS_DESC_MAGIC_MATCH(pdesc))
--		status->wake_match = BIT(1);
-+		wake_match = BIT(1);
- 	else if (GET_RX_STATUS_DESC_UNICAST_MATCH(pdesc))
--		status->wake_match = BIT(0);
-+		wake_match = BIT(0);
- 	else
--		status->wake_match = 0;
--	if (status->wake_match)
-+		wake_match = 0;
-+	if (wake_match)
- 		RT_TRACE(rtlpriv, COMP_RXDESC, DBG_LOUD,
- 		"GGGGGGGGGGGGGet Wakeup Packet!! WakeMatch=%d\n",
--		status->wake_match);
-+		wake_match);
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
- 	rx_status->band = hw->conf.chandef.chan->band;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-index db5e628b17ed..7b6faf38e09c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-@@ -436,7 +436,7 @@ bool rtl8821ae_rx_query_desc(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rx_fwinfo_8821ae *p_drvinfo;
- 	struct ieee80211_hdr *hdr;
--
-+	u8 wake_match;
- 	u32 phystatus = GET_RX_DESC_PHYST(pdesc);
- 
- 	status->length = (u16)GET_RX_DESC_PKT_LEN(pdesc);
-@@ -473,18 +473,18 @@ bool rtl8821ae_rx_query_desc(struct ieee80211_hw *hw,
- 		status->packet_report_type = NORMAL_RX;
- 
- 	if (GET_RX_STATUS_DESC_PATTERN_MATCH(pdesc))
--		status->wake_match = BIT(2);
-+		wake_match = BIT(2);
- 	else if (GET_RX_STATUS_DESC_MAGIC_MATCH(pdesc))
--		status->wake_match = BIT(1);
-+		wake_match = BIT(1);
- 	else if (GET_RX_STATUS_DESC_UNICAST_MATCH(pdesc))
--		status->wake_match = BIT(0);
-+		wake_match = BIT(0);
- 	else
--		status->wake_match = 0;
-+		wake_match = 0;
- 
--	if (status->wake_match)
-+	if (wake_match)
- 		RT_TRACE(rtlpriv, COMP_RXDESC, DBG_LOUD,
- 			 "GGGGGGGGGGGGGet Wakeup Packet!! WakeMatch=%d\n",
--			 status->wake_match);
-+			 wake_match);
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
- 	rx_status->band = hw->conf.chandef.chan->band;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index e32e9ffa3192..518aaa875361 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2138,7 +2138,6 @@ struct rtl_stats {
- 	u8 packet_report_type;
- 
- 	u32 macid;
--	u8 wake_match;
- 	u32 bt_rx_rssi_percentage;
- 	u32 macid_valid_entry[2];
- };
--- 
-2.21.0
+This was already fixed with this patch:
+
+https://patchwork.kernel.org/patch/10823267/
+
+...but it hasn't reached the mainline yet.
+
+I'm planning to send it to the v5.1-rc series as soon as the merge
+window closes.  Is that quick enough for you?
+
+--
+Cheers,
+Luca.
 
