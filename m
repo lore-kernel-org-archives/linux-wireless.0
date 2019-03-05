@@ -3,85 +3,100 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BA47C43381
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Mar 2019 11:46:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEBB0C43381
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Mar 2019 15:45:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A440206DD
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Mar 2019 11:46:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C849A20684
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Mar 2019 15:45:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727645AbfCELqg (ORCPT
+        id S1728603AbfCEPpv convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Mar 2019 06:46:36 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:40552 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726150AbfCELqg (ORCPT
+        Tue, 5 Mar 2019 10:45:51 -0500
+Received: from mail-ed1-f43.google.com ([209.85.208.43]:35401 "EHLO
+        mail-ed1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728590AbfCEPpu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Mar 2019 06:46:36 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1h18Wi-00050B-Tw; Tue, 05 Mar 2019 13:46:29 +0200
-Message-ID: <2213e2f0199d8165efcbb9a9ee14b99b2e0f5fc5.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     Kalle Valo <kvalo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Tue, 05 Mar 2019 13:46:27 +0200
-In-Reply-To: <87a7i9fuef.fsf@kamboji.qca.qualcomm.com>
-References: <20190304203924.2111146-1-arnd@arndb.de>
-         <87a7i9fuef.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5-1 
+        Tue, 5 Mar 2019 10:45:50 -0500
+Received: by mail-ed1-f43.google.com with SMTP id g19so7624517edp.2
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2019 07:45:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=rxj+mSh+wWBLvZbSVbS2ycCqaXjf5XQapmLLhn9oNTQ=;
+        b=BtruA1gBvzY+bwq4d8NygabznpTRbwah/L2oSKIxZnICBRI9FUtHxpeVruHdTScNWI
+         5revreWALdlbSt0zzl20l/e5Do+uo138g9d4EvfRZK/5sSd/UkRNL1ukhvDjipeTr16y
+         myywEGIDgPBscAD4rFe62c+SK33YPgVlsNg37seeVMNVWClry5LTXBDaO8ngcL45Ce5q
+         4alYK2QbQpQC0TWCkbvYlebsF8nBndRZoDinLGhn6aV1EsrIz7v7fXIsIH4SMd0YuJA7
+         29ALcvPuv2T7a2lHjPAAw3gJ8LidMX6zgBTx2a4g9Jj4fc6e158UoRf2aDPbWsG+Lr+j
+         QuTQ==
+X-Gm-Message-State: APjAAAXTqK+7HcOxfGmNvBCcKwCr7s4lM1dqXFGFC5k4Yv1D4/b0CJw4
+        yz6pBDucS7NXLis+QJu1lRNO+g==
+X-Google-Smtp-Source: APXvYqytgs6Ajs2s0x0Q/WS1LAVHHs16rTlbXSA7hos38jXNuJkoRRDz/Wot08VO0csTRyV7jaNQaA==
+X-Received: by 2002:a05:6402:1495:: with SMTP id e21mr19772510edv.52.1551800749364;
+        Tue, 05 Mar 2019 07:45:49 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk (alrua-x1.vpn.toke.dk. [2a00:7660:6da:10::2])
+        by smtp.gmail.com with ESMTPSA id i20sm1474686ejv.26.2019.03.05.07.45.48
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 05 Mar 2019 07:45:48 -0800 (PST)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 3F5C4182F35; Tue,  5 Mar 2019 16:45:48 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>
+Subject: Re: [RFC/RFT] mac80211: Switch to a virtual time-based airtime scheduler
+In-Reply-To: <20190215170512.31512-1-toke@redhat.com>
+References: <20190215170512.31512-1-toke@redhat.com>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Tue, 05 Mar 2019 16:45:48 +0100
+Message-ID: <87va0x1g0j.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] iwlwifi: fix 64-bit division
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2019-03-05 at 13:11 +0200, Kalle Valo wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
-> 
-> > do_div() expects unsigned operands and otherwise triggers a warning
-> > like:
-> > 
-> > drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c:465:2:
-> > error: comparison of distinct pointer types ('typeof ((rtt_avg)) *'
-> > (aka 'long long *') and 'uint64_t *' (aka 'unsigned long long *'))
-> > [-Werror,-Wcompare-distinct-pointer-types]
-> >         do_div(rtt_avg, 6666);
-> >         ^~~~~~~~~~~~~~~~~~~~~
-> > include/asm-generic/div64.h:222:28: note: expanded from macro
-> > 'do_div'
-> >         (void)(((typeof((n)) *)0) == ((uint64_t *)0));  \
-> >                ~~~~~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~~
-> > 1 error generated.
-> > 
-> > Change the do_div() to the simpler div_s64() that can handle
-> > negative inputs correctly.
-> > 
-> > Fixes: 937b10c0de68 ("iwlwifi: mvm: add debug prints for FTM")
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> Luca, can I take this directly?
+Toke Høiland-Jørgensen <toke@redhat.com> writes:
 
-Yeah, I guess to make things simpler, and since you're planning to send
-fixes to 5.1 already anyway, you can just take this one.  I'll assign
-it to you in patchwork.
+> This switches the airtime scheduler in mac80211 to use a virtual time-based
+> scheduler instead of the round-robin scheduler used before. This has a
+> couple of advantages:
+>
+> - No need to sync up the round-robin scheduler in firmware/hardware with
+>   the round-robin airtime scheduler.
+>
+> - If several stations are eligible for transmission we can schedule both of
+>   them; no need to hard-block the scheduling rotation until the head of the
+>   queue has used up its quantum.
+>
+> - The check of whether a station is eligible for transmission becomes
+>   simpler (in ieee80211_txq_may_transmit()).
+>
+> The drawback is that scheduling becomes slightly more expensive, as we need
+> to maintain an rbtree of TXQs sorted by virtual time. This means that
+> ieee80211_register_airtime() becomes O(logN) in the number of currently
+> scheduled TXQs. However, hopefully this number rarely grows too big (it's
+> only TXQs currently backlogged, not all associated stations), so it
+> shouldn't be too big of an issue.
+>
+> Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
+> ---
+> This is basically the idea I mentioned earlier for a different way to
+> handle the airtime scheduling.
+>
+> I've tested it on ath9k, where it achieves the same fairness and
+> weighing properties as the old scheduler. It would be good if you could
+> test it on your ath10k setup, Rajkumar; and all of you please comment on
+> whether you agree that this is better from an API point of view.
 
-Arnd, this way you'll get it earlier. ;)
+So no one has any comments on this? :)
 
---
-Cheers,
-Luca.
-
+-Toke
