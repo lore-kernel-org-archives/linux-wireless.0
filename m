@@ -2,100 +2,124 @@ Return-Path: <SRS0=PZxT=RJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1191C43381
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Mar 2019 17:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAE05C43381
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Mar 2019 18:02:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3D04206DD
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Mar 2019 17:38:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0ABF20652
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Mar 2019 18:02:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wil08v4y";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wil08v4y"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZucuYmf/";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZucuYmf/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727157AbfCFRiI (ORCPT
+        id S1730564AbfCFSC4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Mar 2019 12:38:08 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:33676 "EHLO
+        Wed, 6 Mar 2019 13:02:56 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:52786 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726180AbfCFRiI (ORCPT
+        with ESMTP id S1726275AbfCFSC4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Mar 2019 12:38:08 -0500
+        Wed, 6 Mar 2019 13:02:56 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id CC70F606DB; Wed,  6 Mar 2019 17:38:07 +0000 (UTC)
+        id D3C8460397; Wed,  6 Mar 2019 18:02:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551893887;
-        bh=oxfyvz53D/OwmLxxx0L2okTfTNQ8JCNo+R6VZ9bnlaM=;
+        s=default; t=1551895375;
+        bh=hotPhEYYXS5lMmAY7F9ToDt7Rm/w7rZJ1fMKuAszbr0=;
         h=From:To:Cc:Subject:Date:From;
-        b=Wil08v4y/ISsH5nltah/hI3CMKmL3HRLckSbePEkvS9ovqp6tc1EggC0ueQjXNmFR
-         ul9zluJnghzDl25ySkr3wUnm6ia+REtxsUF76cb+Uomm2ccN5lonHZKUWAM4dJjlJW
-         +KjWH87rTioLst0pujBjDMQN3AJJ17lqNX8Wuq3M=
+        b=ZucuYmf/rnrsGRPIwWXDSw7GfJ7cZqx9z2jsSE4E7Fcf9nc2HYuHuFmogkdYwXY7K
+         zELOXg/8p6kbw4MrGUMvi+msRGt9nDcz5cVUwCv+LxH/kiWVfTvGDy53jJlQzSsOsJ
+         Og2DgN/Q/A+piT2Ir2ILTCflQXAgM9l/YEAoUv+E=
 Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: tamizhr@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2D8746072E;
-        Wed,  6 Mar 2019 17:38:05 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B14DF60364;
+        Wed,  6 Mar 2019 18:02:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551893887;
-        bh=oxfyvz53D/OwmLxxx0L2okTfTNQ8JCNo+R6VZ9bnlaM=;
+        s=default; t=1551895375;
+        bh=hotPhEYYXS5lMmAY7F9ToDt7Rm/w7rZJ1fMKuAszbr0=;
         h=From:To:Cc:Subject:Date:From;
-        b=Wil08v4y/ISsH5nltah/hI3CMKmL3HRLckSbePEkvS9ovqp6tc1EggC0ueQjXNmFR
-         ul9zluJnghzDl25ySkr3wUnm6ia+REtxsUF76cb+Uomm2ccN5lonHZKUWAM4dJjlJW
-         +KjWH87rTioLst0pujBjDMQN3AJJ17lqNX8Wuq3M=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2D8746072E
+        b=ZucuYmf/rnrsGRPIwWXDSw7GfJ7cZqx9z2jsSE4E7Fcf9nc2HYuHuFmogkdYwXY7K
+         zELOXg/8p6kbw4MrGUMvi+msRGt9nDcz5cVUwCv+LxH/kiWVfTvGDy53jJlQzSsOsJ
+         Og2DgN/Q/A+piT2Ir2ILTCflQXAgM9l/YEAoUv+E=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B14DF60364
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
 From:   Tamizh chelvam <tamizhr@codeaurora.org>
-To:     ath10k@lists.infradead.org
+To:     johannes@sipsolutions.net, ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
-        Anilkumar Kolli <akolli@codeaurora.org>,
         Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH] ath: DFS JP domain W56 fixed pulse type 3 RADAR detection
-Date:   Wed,  6 Mar 2019 23:06:11 +0530
-Message-Id: <1551893771-22485-1-git-send-email-tamizhr@codeaurora.org>
+Subject: [PATCHv3 0/9] cfg80211/mac80211: Add support for TID specific configuration
+Date:   Wed,  6 Mar 2019 23:30:42 +0530
+Message-Id: <1551895251-22941-1-git-send-email-tamizhr@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Anilkumar Kolli <akolli@codeaurora.org>
 
-Increase pulse width range from 1-2usec to 0-4usec.
-During data traffic HW occasionally fails detecting radar pulses,
-so that SW cannot get enough radar reports to achieve the success rate.
+Add infrastructure to support per TID configurations like noack policy,
+retry count, AMPDU control(disable/enable), RTSCTS control(enable/disable)
+and TX rate mask configurations.
+This will be useful for the driver which can supports data TID
+specific configuration rather than phy level configurations.
+Here NL80211_CMD_SET_TID_CONFIG added to support this operation by
+accepting TID configuration.
+This command can accept STA mac addreess to make the configuration
+station specific rather than applying to all the connected stations
+to the netdev.
+And this nested command configuration can accept multiple number of
+data TID specific configuration in a single command,
+enum ieee80211_tid_conf_mask used to notify the driver that which
+configuration got modified for the TID.
 
-Tested ath10k hw and fw:
-	* QCA9888(10.4-3.5.1-00052)
-	* QCA4019(10.4-3.2.1.1-00017)
-	* QCA9984(10.4-3.6-00104)
-	* QCA988X(10.2.4-1.0-00041)
+Tamizh chelvam (9):
+  nl80211: New netlink command for TID specific configuration
+  nl80211: Add new netlink attribute for TID speicific retry count
+  nl80211: Add netlink attribute for AMPDU aggregation enable/disable
+  nl80211: Add netlink attribute to enable/disable RTS_CTS
+  nl80211: Add netlink attribute to configure TID specific tx rate
+  mac80211: Add api to support configuring TID specific configuration
+  ath10k: Add wmi command support for station specific TID config
+  ath10k: Add new api to support TID specific configuration
+  ath10k: Add extended TID configuration support
 
-Tested ath9k hw: AR9300
+v3:
+  * Modified "nl80211: Add netlink attribute to configure TID specific tx rate" patch
+    to accept multiple TX rate configuration at a time.
+  * Modified noack and ampdu variable data type to int in
+    "mac80211: Add api to support configuring TID specific configuration" patch to store
+    default configuration.
+  * Modified "ath10k: Add new api to support TID specific configuration" patch to handle
+    default values for noack and ampdu. And added sta pointer sanity check in
+    ath10k_mac_tid_bitrate_config function.
+  * Fixed "ath10k: Add extended TID configuration support" wmi command parameters
+    assigned part.
 
-Tested-by: Tamizh chelvam <tamizhr@codeaurora.org>
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
----
- drivers/net/wireless/ath/dfs_pattern_detector.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2:
+  * Added support to accept multiple TID configuration
+  * Added support to configure TX rate and RTSCTS control
 
-diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
-index d52b31b..a274eb0 100644
---- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-@@ -111,7 +111,7 @@ struct radar_types {
- 	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 29, false),
- 	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 29, false),
- 	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, 50, false),
--	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, 50, false),
-+	JP_PATTERN(3, 0, 4, 4000, 4000, 1, 18, 50, false),
- 	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
- 	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, 50, false),
- 	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, 50, false),
+ drivers/net/wireless/ath/ath10k/core.c    |   4 +
+ drivers/net/wireless/ath/ath10k/core.h    |   6 +
+ drivers/net/wireless/ath/ath10k/mac.c     | 679 ++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  19 +
+ drivers/net/wireless/ath/ath10k/wmi.c     |  35 ++
+ drivers/net/wireless/ath/ath10k/wmi.h     |  72 ++++
+ include/net/cfg80211.h                    |  57 +++
+ include/net/mac80211.h                    |  35 ++
+ include/uapi/linux/nl80211.h              | 182 ++++++++
+ net/mac80211/cfg.c                        |  28 ++
+ net/mac80211/driver-ops.h                 |  15 +
+ net/wireless/nl80211.c                    | 253 ++++++++++-
+ net/wireless/rdev-ops.h                   |  11 +
+ net/wireless/trace.h                      |  18 +
+ 14 files changed, 1316 insertions(+), 98 deletions(-)
+
 -- 
 1.9.1
 
