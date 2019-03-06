@@ -6,55 +6,55 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ED0FC43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D455CC10F00
 	for <linux-wireless@archiver.kernel.org>; Wed,  6 Mar 2019 18:03:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0963320652
+	by mail.kernel.org (Postfix) with ESMTP id 9132720652
 	for <linux-wireless@archiver.kernel.org>; Wed,  6 Mar 2019 18:03:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HpfPwy/q";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jtK9KlRd"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="b4zIrxyP";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Pklenj8I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730672AbfCFSDG (ORCPT
+        id S1730670AbfCFSDF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Mar 2019 13:03:06 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:53190 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730666AbfCFSDF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 6 Mar 2019 13:03:05 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:52932 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730644AbfCFSDB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Mar 2019 13:03:01 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 61B9660DA8; Wed,  6 Mar 2019 18:03:04 +0000 (UTC)
+        id 0623660DAD; Wed,  6 Mar 2019 18:03:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551895384;
-        bh=X13+dhR+IAcjsvPWkJ5R0a1DS+xV5cnnOJBDbILwgek=;
+        s=default; t=1551895380;
+        bh=pNe+sO+3oZARXS8hjmWhKZxAxaSljsShWb+AwVtDzYc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HpfPwy/q0GCrKZMUzp4HYOAH5kGEIt9oHmtItY5RBr6OlcSkFan5sY2j8ruJPNxRt
-         yczR2L6s3eXWO+Ls86Nf5HxWMPW73WtB15ENC8W+fsbDFAFnt2Irvj3T78Gni1e2Xj
-         lfBHTtN/c/6SAiJXs164GZgzURFm0l/SeVys722I=
+        b=b4zIrxyPZ6SqUEuQVuVZbZcvTlIKvcYJ1VALLyLjpBIbfR04BYusjPaTnHZW6jheo
+         VW3SDHyW86RLMYMjvdpfALKMRopDadKOjBo2A2wNhQtc90DSjXdnZ1wjmOK5aUT4O5
+         zwYlIysaGk2DwVdd1bUXavNOMa3810lYF4pDKsYc=
 Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: tamizhr@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F2D9860E5D;
-        Wed,  6 Mar 2019 18:03:01 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D98EC60A43;
+        Wed,  6 Mar 2019 18:02:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1551895383;
-        bh=X13+dhR+IAcjsvPWkJ5R0a1DS+xV5cnnOJBDbILwgek=;
+        s=default; t=1551895379;
+        bh=pNe+sO+3oZARXS8hjmWhKZxAxaSljsShWb+AwVtDzYc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jtK9KlRdtf3gbMDEzCz/iATZ4jQz8Lss6+WyqqfIaXt1dyZLhud9pGinm/wKRQK/o
-         KmU2xwKHj4q5LAcgP3sqKGRiqUiFR4N0AI/xwtZeQFmIrtlPmv6jdLnKB+WNkLv87z
-         ZRPw1tS8Gfzcrddc32HNWHKHhPZl8BuZJbQmQRZI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F2D9860E5D
+        b=Pklenj8I+Z6AVPYwEiDcxaY26A3Ttcea1/QJ4624XcgHztcF3gGQTJU9dcep3NGf+
+         k+FttI4gIGVxrM4F5pY3kt7XL8OQmn+5Sz4kRq7bqE4eY/U7nr2SFDFL7Y2YH3bte6
+         zf8rviCqTrymWr96deyamOQ07/mhjVbfucbo73fY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D98EC60A43
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
 From:   Tamizh chelvam <tamizhr@codeaurora.org>
 To:     johannes@sipsolutions.net, ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv3 4/9] nl80211: Add netlink attribute to enable/disable RTS_CTS
-Date:   Wed,  6 Mar 2019 23:30:46 +0530
-Message-Id: <1551895251-22941-5-git-send-email-tamizhr@codeaurora.org>
+Subject: [PATCHv3 2/9] nl80211: Add new netlink attribute for TID speicific retry count
+Date:   Wed,  6 Mar 2019 23:30:44 +0530
+Message-Id: <1551895251-22941-3-git-send-email-tamizhr@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1551895251-22941-1-git-send-email-tamizhr@codeaurora.org>
 References: <1551895251-22941-1-git-send-email-tamizhr@codeaurora.org>
@@ -63,138 +63,239 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL in nl80211_attr_tid_config
-to accept TID specific RTS_CTS enable/disable configuration
-through NL80211_CMD_SET_TID_CONFIG command. TID for which the
-RTS_CTS control configuration is to be applied is passed in
-NL80211_ATTR_TID_CONFIG_TID attribute. When the user-space wants this
-configuration peer specific rather than being applied for all the
-connected stations, MAC address of the peer can be passed in
-NL80211_ATTR_MAC attribute.
+This patch introduced below NL attributes to add support for
+configuring data TID specific retry count
 
-Driver supporting this feature should advertise
-NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL and supporting per-STA data TID
-RTS_CTS configuration should advertise NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL.
+NL80211_ATTR_TID_CONFIG_RETRY
+NL80211_ATTR_TID_CONFIG_RETRY_LONG
+NL80211_ATTR_TID_CONFIG_RETRY_SHORT
+
+These attributes are added in NL80211_ATTR_TID_CONFIG nested attribute.
+This will be useful for the driver which supports data TID specific retry
+count configuration rather using phy level retry configuration.
+This TID specific retry configuration will have more precedence than
+phy level configuration. This configuration can be applied for a
+specific peer. To apply this configuration specific to a peer
+rather than being applied for all the connected stations,
+MAC address of the peer can be passed in NL80211_ATTR_MAC attribute.
+
+Driver should advertise WIPHY_FLAG_HAS_MAX_DATA_RETRY_COUNT and
+max_data_retry_count value to notify user space to avoid of passing
+greater than the allowed limit.
+
+Driver supporting TID specific retry configuration should advertise
+NL80211_EXT_FEATURE_PER_TID_RETRY_CONFIG and per STA specific
+data TID retry configuration should advertise
+NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG.
 
 Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
 ---
- include/net/cfg80211.h       |  3 +++
- include/uapi/linux/nl80211.h | 22 ++++++++++++++++++++++
- net/wireless/nl80211.c       | 17 +++++++++++++++++
- 3 files changed, 42 insertions(+)
+ include/net/cfg80211.h       | 11 ++++++++++
+ include/uapi/linux/nl80211.h | 48 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c       | 34 +++++++++++++++++++++++++++++++
+ 3 files changed, 93 insertions(+)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index aa0f44c..86dee3d 100644
+index c606e78..888de00 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -513,6 +513,7 @@ enum ieee80211_tid_conf_mask {
+@@ -511,6 +511,7 @@ struct cfg80211_chan_def {
+ 
+ enum ieee80211_tid_conf_mask {
  	IEEE80211_TID_CONF_NOACK	= BIT(0),
- 	IEEE80211_TID_CONF_RETRY	= BIT(1),
- 	IEEE80211_TID_CONF_AMPDU	= BIT(2),
-+	IEEE80211_TID_CONF_RTSCTS	= BIT(3),
++	IEEE80211_TID_CONF_RETRY	= BIT(1),
  };
  
  /**
-@@ -524,6 +525,7 @@ enum ieee80211_tid_conf_mask {
-  * @retry_long: retry count value
-  * @retry_short: retry count value
-  * @ampdu: Enable/Disable aggregation
-+ * @rtscts: Enable/Disable RTS/CTS
+@@ -519,11 +520,15 @@ enum ieee80211_tid_conf_mask {
+  * @tid_conf_mask: bitmap indicating which parameter changed
+  *	see %enum ieee80211_tid_conf_mask
+  * @noack: noack configuration value for the TID
++ * @retry_long: retry count value
++ * @retry_short: retry count value
   */
  struct ieee80211_tid_cfg {
  	u8 tid;
-@@ -532,6 +534,7 @@ struct ieee80211_tid_cfg {
- 	int retry_long;
- 	int retry_short;
- 	u8 ampdu;
-+	u8 rtscts;
+ 	enum ieee80211_tid_conf_mask tid_conf_mask;
+ 	u8 noack;
++	int retry_long;
++	int retry_short;
  };
  
  /**
+@@ -3832,6 +3837,7 @@ struct cfg80211_ops {
+  *	beaconing mode (AP, IBSS, Mesh, ...).
+  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
+  *	before connection.
++ * @WIPHY_FLAG_HAS_MAX_DATA_RETRY_COUNT: Device supports data retry count call.
+  */
+ enum wiphy_flags {
+ 	/* use hole at 0 */
+@@ -3858,6 +3864,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
+ 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
+ 	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
++	WIPHY_FLAG_HAS_MAX_DATA_RETRY_COUNT	= BIT(25),
+ };
+ 
+ /**
+@@ -4365,6 +4372,8 @@ struct cfg80211_pmsr_capabilities {
+  *	@support_mbssid must be set for this to have any effect.
+  *
+  * @pmsr_capa: peer measurement capabilities
++ * @max_data_retry_count: Maximum limit can be configured as retry count
++ *	for a TID.
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -4509,6 +4518,8 @@ struct wiphy {
+ 
+ 	const struct cfg80211_pmsr_capabilities *pmsr_capa;
+ 
++	u8 max_data_retry_count;
++
+ 	char priv[0] __aligned(NETDEV_ALIGN);
+ };
+ 
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f94651d..996b4d4 100644
+index c901a48..f2ce845 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
-@@ -4630,6 +4630,21 @@ enum nl80211_tid_config {
-  *	NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL and supporting per station
-  *	aggregation configuration should advertise
-  *	NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL.
-+ * @NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL: Enable/Disable RTS_CTS for the TID
-+ *	specified in %%NL80211_ATTR_TID_CONFIG_TID. It is u8 type, if the
-+ *	peer MAC address is passed in %NL80211_ATTR_MAC, then this
+@@ -2316,6 +2316,8 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_TID_CONFIG: TID specific configuration in a
+  *	nested attribute with %NL80211_ATTR_TID_* sub-attributes.
++ * @NL80211_ATTR_MAX_RETRY_COUNT: The upper limit for the retry count
++ *	configuration that the driver can accept.
+  *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+@@ -2769,6 +2771,7 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_AIRTIME_WEIGHT,
+ 
+ 	NL80211_ATTR_TID_CONFIG,
++	NL80211_ATTR_MAX_RETRY_COUNT,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+@@ -4576,11 +4579,50 @@ enum nl80211_tid_config {
+  *	advertise NL80211_EXT_FEATURE_PER_TID_NOACK_CONFIG and
+  *	NL80211_EXT_FEATURE_PER_STA_NOACK_CONFIG for supporting  per sta
+  *	configuration.
++ * @NL80211_ATTR_TID_CONFIG_RETRY: Data TID retry count should be applied
++ *	with the value passed through %NL80211_ATTR_TID_CONFIG_RETRY_LONG
++ *	and/or %NL80211_ATTR_TID_CONFIG_RETRY_SHORT. This configuration
++ *	is per-TID, and the TID is specified with %NL80211_ATTR_TID_CONFIG_TID.
++ *	If the peer MAC address is passed in %NL80211_ATTR_MAC, the retry
 + *	configuration is applied to the data frame for the tid to that
 + *	connected station.
-+ *	Station specific RTS_CTS configuration is valid only for STA's
++ *	This attribute will be useful to notfiy the driver to apply default
++ *	retry values for the connected station (%NL80211_ATTR_MAC), when the
++ *	command received without %NL80211_ATTR_RETRY_LONG and/or
++ *	%NL80211_ATTR_RETRY_SHORT.
++ *	Station specific retry configuration is valid only for STA's
 + *	current connection. i.e. the configuration will be reset to default when
 + *	the station connects back after disconnection/roaming.
 + *	when user-space does not include %NL80211_ATTR_MAC, this configuration
 + *	should be treated as per-netdev configuration. This configuration will
 + *	be cleared when the interface goes down and on the disconnection from a
-+ *	BSS. Driver supporting this feature should advertise
-+ *	NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL and supporting per station
-+ *	RTS_CTS configuration should advertise
-+ *	NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL.
++ *	BSS. When retry count has never been configured using this command, the
++ *	other available radio level retry configuration
++ *	(%NL80211_ATTR_WIPHY_RETRY_SHORT and %NL80211_ATTR_WIPHY_RETRY_LONG)
++ *	should be used. Driver supporting this feature should advertise
++ *	NL80211_EXT_FEATURE_PER_TID_RETRY_CONFIG and supporting per station
++ *	retry count configuration should advertise
++ *	NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG.
++ * @NL80211_ATTR_TID_CONFIG_RETRY_SHORT: Number of retries used with data frame
++ *	transmission, user-space sets this configuration in
++ *	&NL80211_CMD_SET_TID_CONFIG. It is u8 type, min value is 1 and
++ *	the max value should be advertised by the driver through
++ *	max_data_retry_count. when this attribute is not present, the driver
++ *	would use the default configuration.
++ * @NL80211_ATTR_TID_CONFIG_RETRY_LONG: Number of retries used with data frame
++ *	transmission, user-space sets this configuration in
++ *	&NL80211_CMD_SET_TID_CONFIG. Its type is u8, min value is 1 and
++ *	the max value should be advertised by the driver through
++ *	max_data_retry_count. when this attribute is not present, the driver
++ *	would use the default configuration.
   */
  enum nl80211_attr_tid_config {
  	__NL80211_ATTR_TID_INVALID,
-@@ -4639,6 +4654,7 @@ enum nl80211_attr_tid_config {
- 	NL80211_ATTR_TID_CONFIG_RETRY_SHORT,
- 	NL80211_ATTR_TID_CONFIG_RETRY_LONG,
- 	NL80211_ATTR_TID_CONFIG_AMPDU_CTRL,
-+	NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL,
+ 	NL80211_ATTR_TID_CONFIG_TID,
+ 	NL80211_ATTR_TID_CONFIG_NOACK,
++	NL80211_ATTR_TID_CONFIG_RETRY,
++	NL80211_ATTR_TID_CONFIG_RETRY_SHORT,
++	NL80211_ATTR_TID_CONFIG_RETRY_LONG,
  
  	/* keep last */
  	__NL80211_ATTR_TID_CONFIG_AFTER_LAST,
-@@ -5457,6 +5473,10 @@ enum nl80211_feature_flags {
-  *	aggregation control(enable/disable).
-  * @NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL: Driver supports per STA
-  *	specific TID aggregation control(enable/disable).
-+ * @NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL: Driver supports TID specific
-+ *	RTS_CTS control(enable/disable).
-+ * @NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL: Driver supports STA specific
-+ *	RTS_CTS control(enable/disable).
+@@ -5391,6 +5433,10 @@ enum nl80211_feature_flags {
+  *	policy functionality.
+  * @NL80211_EXT_FEATURE_PER_STA_NOACK_CONFIG: Driver supports STA specific NoAck
+  *	policy functionality.
++ * @NL80211_EXT_FEATURE_PER_TID_RETRY_CONFIG: Driver supports per TID data retry
++ *	count functionality.
++ * @NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG: Driver supports STA specific
++ *	data retry count functionality.
   *
   * @NUM_NL80211_EXT_FEATURES: number of extended features.
   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -5505,6 +5525,8 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG,
- 	NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL,
- 	NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL,
-+	NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL,
-+	NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL,
+@@ -5435,6 +5481,8 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_AP_PMKSA_CACHING,
+ 	NL80211_EXT_FEATURE_PER_TID_NOACK_CONFIG,
+ 	NL80211_EXT_FEATURE_PER_STA_NOACK_CONFIG,
++	NL80211_EXT_FEATURE_PER_TID_RETRY_CONFIG,
++	NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG,
  
  	/* add new features before the definition below */
  	NUM_NL80211_EXT_FEATURES,
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1a001d0..47bfc62 100644
+index f0e44ee..d53eb40 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -290,6 +290,8 @@ static int validate_ie_attr(const struct nlattr *attr,
- 	[NL80211_ATTR_TID_CONFIG_RETRY_LONG] = NLA_POLICY_MIN(NLA_U8, 1),
- 	[NL80211_ATTR_TID_CONFIG_AMPDU_CTRL] =
+@@ -285,6 +285,9 @@ static int validate_ie_attr(const struct nlattr *attr,
+ 	[NL80211_ATTR_TID_CONFIG_TID] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_TID_CONFIG_NOACK] =
  			NLA_POLICY_MAX(NLA_U8, NL80211_TID_CONFIG_DISABLE),
-+	[NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL] =
-+			NLA_POLICY_MAX(NLA_U8, NL80211_TID_CONFIG_DISABLE),
++	[NL80211_ATTR_TID_CONFIG_RETRY] = { .type = NLA_FLAG },
++	[NL80211_ATTR_TID_CONFIG_RETRY_SHORT] = NLA_POLICY_MIN(NLA_U8, 1),
++	[NL80211_ATTR_TID_CONFIG_RETRY_LONG] = NLA_POLICY_MIN(NLA_U8, 1),
  };
  
  const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
-@@ -13337,6 +13339,21 @@ static int parse_tid_conf(struct cfg80211_registered_device *rdev,
- 		tid_conf->ampdu =
- 			nla_get_u8(attrs[NL80211_ATTR_TID_CONFIG_AMPDU_CTRL]);
+@@ -13288,6 +13291,37 @@ static int parse_tid_conf(struct cfg80211_registered_device *rdev,
+ 			nla_get_u8(attrs[NL80211_ATTR_TID_CONFIG_NOACK]);
  	}
-+
-+	if (attrs[NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL]) {
+ 
++	if (nla_get_flag(attrs[NL80211_ATTR_TID_CONFIG_RETRY])) {
 +		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+				NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL))
++				NL80211_EXT_FEATURE_PER_TID_RETRY_CONFIG))
 +			return -ENOTSUPP;
 +
 +		if (peer && !wiphy_ext_feature_isset(&rdev->wiphy,
-+				NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL))
++				NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG))
 +			return -ENOTSUPP;
 +
-+		tid_conf->tid_conf_mask |= IEEE80211_TID_CONF_RTSCTS;
-+		tid_conf->rtscts =
-+			nla_get_u8(attrs[NL80211_ATTR_TID_CONFIG_RTSCTS_CTRL]);
++		tid_conf->tid_conf_mask |= IEEE80211_TID_CONF_RETRY;
++		if (attrs[NL80211_ATTR_TID_CONFIG_RETRY_SHORT]) {
++			tid_conf->retry_short =
++			nla_get_u8(attrs[NL80211_ATTR_TID_CONFIG_RETRY_SHORT]);
++			if (tid_conf->retry_short >
++					rdev->wiphy.max_data_retry_count)
++				return -EINVAL;
++		} else {
++			tid_conf->retry_short = -1;
++		}
++
++		if (attrs[NL80211_ATTR_TID_CONFIG_RETRY_LONG]) {
++			tid_conf->retry_long =
++			nla_get_u8(attrs[NL80211_ATTR_TID_CONFIG_RETRY_LONG]);
++			if (tid_conf->retry_long >
++					rdev->wiphy.max_data_retry_count)
++				return -EINVAL;
++		} else {
++			tid_conf->retry_long = -1;
++		}
 +	}
 +
  	return 0;
