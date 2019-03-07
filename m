@@ -2,115 +2,105 @@ Return-Path: <SRS0=M0/e=RK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75C62C43381
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 18:40:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E792DC43381
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 19:38:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38E5E20840
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 18:40:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C016220840
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 19:38:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726294AbfCGSkN (ORCPT
+        id S1726598AbfCGTiA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Mar 2019 13:40:13 -0500
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:41268 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726161AbfCGSkM (ORCPT
+        Thu, 7 Mar 2019 14:38:00 -0500
+Received: from postout1.mail.lrz.de ([129.187.255.137]:50784 "EHLO
+        postout1.mail.lrz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726298AbfCGTiA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Mar 2019 13:40:12 -0500
-Received: by mail-ed1-f66.google.com with SMTP id x7so14333909eds.8
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2019 10:40:11 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=nH3IbHzkEfQ+hjK2opupB8aSF8Da3hNlaO590Ec/k6A=;
-        b=ZWiZ9HKZqEq/zahJy9geLXAi+OULV610sOO6ZTDmZq+5qOQsdIcH100noJtWmaKZVP
-         l3XQjYaRacFZGKcJj9gFQdV0lue2QkmeU3oaS49lsxacGxEpPzeuBXvcSC42t+PeYkT2
-         4DwM15+8gftfz02zogD7a7AoFq2gERkmw2aH3yhC0Qr5jzNC/VIFC9iiMAL75r0HTJ7m
-         2hlmT044gvNo3SBZU4nTTcqlKIoliHzH397V+ptRd8f/rxYG284Zni8pkZgz533l82nJ
-         /bKvqZLyW0SfveTfaS8DRq7zVb9EWiKDeOAhN81T+DAhy39jHwJC0LILQWmw4oRWb+Bk
-         GqwQ==
-X-Gm-Message-State: APjAAAUMKOi/wf1BqhWa939MjGZ6VjwiSxKBG82agHRRV0Owq9o8nI4z
-        T6DnRQtCsijvLCIkTpUsUqq42Q==
-X-Google-Smtp-Source: APXvYqw7+gcbpcmJnUCpUx6aAphCrsljUHwiqyohTOHSkrn6OLgwjIqQAuudQt/Hv8x4UDkRfir0HA==
-X-Received: by 2002:a17:906:940d:: with SMTP id q13mr8771287ejx.160.1551984010813;
-        Thu, 07 Mar 2019 10:40:10 -0800 (PST)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id ca14sm1018347ejb.70.2019.03.07.10.40.10
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 07 Mar 2019 10:40:10 -0800 (PST)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id C2532182F5B; Thu,  7 Mar 2019 19:40:08 +0100 (CET)
-From:   =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
-        Miguel Catalan Cid <miguel.catalan@i2cat.net>
-Subject: [PATCH] ath9k: Don't trust TX status TID number when reporting airtime
-Date:   Thu,  7 Mar 2019 19:39:44 +0100
-Message-Id: <20190307183944.11190-1-toke@redhat.com>
-X-Mailer: git-send-email 2.21.0
+        Thu, 7 Mar 2019 14:38:00 -0500
+X-Greylist: delayed 418 seconds by postgrey-1.27 at vger.kernel.org; Thu, 07 Mar 2019 14:37:57 EST
+Received: from lxmhs51.srv.lrz.de (localhost [127.0.0.1])
+        by postout1.mail.lrz.de (Postfix) with ESMTP id 44Fghw5SVGzycg;
+        Thu,  7 Mar 2019 20:30:56 +0100 (CET)
+X-Virus-Scanned: by amavisd-new at lrz.de in lxmhs51.srv.lrz.de
+Received: from postout1.mail.lrz.de ([127.0.0.1])
+        by lxmhs51.srv.lrz.de (lxmhs51.srv.lrz.de [127.0.0.1]) (amavisd-new, port 20024)
+        with LMTP id nXS6D6YloggW; Thu,  7 Mar 2019 20:30:56 +0100 (CET)
+Received: from mission-control (unknown [207.180.219.206])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by postout1.mail.lrz.de (Postfix) with ESMTPSA id 44Fghv1tzczycf;
+        Thu,  7 Mar 2019 20:30:55 +0100 (CET)
+Date:   Thu, 7 Mar 2019 20:30:45 +0100
+From:   ga58taw@mytum.de
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Julius Niedworok <julius.n@gmx.net>,
+        linux-wireless@vger.kernel.org, ga58taw@mytum.de, david@redhat.com,
+        nc@net.in.tum.de, Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC v2] mac80211: debugfs option to force TX status frames
+Message-ID: <20190307193045.a7awwn6mycloccq5@mission-control>
+References: <e20962001ee10a0f90f8e2f1f8baafcf3b70e9dd.camel@sipsolutions.net>
+ <20190306200206.60916-1-julius.n@gmx.net>
+ <87k1hazo6r.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <87k1hazo6r.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-As already noted a comment in ath_tx_complete_aggr(), the hardware will
-occasionally send a TX status with the wrong tid number. If we trust the
-value, airtime usage will be reported to the wrong AC, which can cause the
-deficit on that AC to become very low, blocking subsequent attempts to
-transmit.
+On Thu, Mar 07, 2019 at 05:42:04PM +0200, Kalle Valo wrote:
+> > +   len = scnprintf(buf, sizeof(buf), "%d\n", (int)local->force_tx_status);
+>
+> I wonder about the cast, is it guaranteed that a bool is always of the
+> same size as an int?
 
-To fix this, account airtime usage to the TID number from the original skb,
-instead of the one in the hardware TX status report.
+Why is this a problem? If a bool is smaller than an int, the compiler
+emits code that will prepend the value of force_tx_status with zeros. If
+it is larger than an int the compiler emits code that will truncate
+force_tx_status to sizeof(int) bytes. So it doesn't matter how large bool
+and/or int are, the code always prints '0' or '1' depending on the value
+of force_tx_status.
 
-Reported-by: Miguel Catalan Cid <miguel.catalan@i2cat.net>
-Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
----
-I haven't been able to confirm that this also affects the old in-driver
-airtime scheduler, but I suspect it does, so I'll send a follow-up patch
-to stable once this has been merged.
+> > --- a/net/mac80211/tx.c
+> > +++ b/net/mac80211/tx.c
+> > @@ -2463,6 +2463,11 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+> >     if (IS_ERR(sta))
+> >             sta = NULL;
+> >
+> > +#ifdef CONFIG_MAC80211_DEBUGFS
+> > +           if (local->force_tx_status)
+> > +                   info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+> > +#endif
+> > +
+> >     /* convert Ethernet header to proper 802.11 header (based on
+> >      * operation mode) */
+> >     ethertype = (skb->data[12] << 8) | skb->data[13];
+> > @@ -3468,6 +3473,11 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+> >                   (tid_tx ? IEEE80211_TX_CTL_AMPDU : 0);
+> >     info->control.flags = IEEE80211_TX_CTRL_FAST_XMIT;
+> >
+> > +#ifdef CONFIG_MAC80211_DEBUGFS
+> > +           if (local->force_tx_status)
+> > +                   info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+> > +#endif
+>
+> IMHO the ifdefs look pointless just to save four bytes. I would move
+> force_tx_status outside of ifdef in the struct so that the actual code
+> doesn't have ugly ifdefs.
 
- drivers/net/wireless/ath/ath9k/xmit.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+I don't think ifdefs are ugly in this case. They clearly indicate that the
+code belongs to the debugfs implementation of mac80211. In addition, when
+we remove the ifdefs, code that only belongs to the debugfs implementation
+of mac80211 is always included in the kernel (even when the config
+option is turned off!) which, I think, is much more ugly than the ifdefs.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 773d428ff1b0..1c91eda0ba51 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -668,7 +668,8 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
- static void ath_tx_count_airtime(struct ath_softc *sc,
- 				 struct ieee80211_sta *sta,
- 				 struct ath_buf *bf,
--				 struct ath_tx_status *ts)
-+				 struct ath_tx_status *ts,
-+				 u8 tid)
- {
- 	u32 airtime = 0;
- 	int i;
-@@ -679,7 +680,7 @@ static void ath_tx_count_airtime(struct ath_softc *sc,
- 		airtime += rate_dur * bf->rates[i].count;
- 	}
- 
--	ieee80211_sta_register_airtime(sta, ts->tid, airtime, 0);
-+	ieee80211_sta_register_airtime(sta, tid, airtime, 0);
- }
- 
- static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
-@@ -709,7 +710,7 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
- 	if (sta) {
- 		struct ath_node *an = (struct ath_node *)sta->drv_priv;
- 		tid = ath_get_skb_tid(sc, an, bf->bf_mpdu);
--		ath_tx_count_airtime(sc, sta, bf, ts);
-+		ath_tx_count_airtime(sc, sta, bf, ts, tid->tidno);
- 		if (ts->ts_status & (ATH9K_TXERR_FILT | ATH9K_TXERR_XRETRY))
- 			tid->clear_ps_filter = true;
- 	}
--- 
-2.21.0
+Thanks for your comments and ideas.
 
+Charlie
