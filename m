@@ -2,126 +2,86 @@ Return-Path: <SRS0=M0/e=RK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37C76C43381
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 10:25:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6329C43381
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 11:56:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E4F720675
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 10:25:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 859CE2081B
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 11:56:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ZOtaYHwo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726324AbfCGKZc (ORCPT
+        id S1726274AbfCGL4m (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Mar 2019 05:25:32 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:33714 "EHLO mx1.redhat.com"
+        Thu, 7 Mar 2019 06:56:42 -0500
+Received: from nbd.name ([46.4.11.11]:43452 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726308AbfCGKZc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Mar 2019 05:25:32 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id DD78CC057EC3;
-        Thu,  7 Mar 2019 10:25:31 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.192])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1C0EC413B;
-        Thu,  7 Mar 2019 10:25:23 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Xose Vazquez Perez <xose.vazquez@gmail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] mt76x02u: check chip version on probe
-Date:   Thu,  7 Mar 2019 11:25:16 +0100
-Message-Id: <1551954316-18985-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Thu, 07 Mar 2019 10:25:31 +0000 (UTC)
+        id S1726134AbfCGL4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Mar 2019 06:56:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=e79TDlBAsn80Oga2zbJGwVVPaKJJHohqmtAoKnxMpo4=; b=ZOtaYHwowXNTXYNHrvA3Z6p8fA
+        xn1DBkADnZKPgvjAUNVI6OA5XXI4nigYrzK4PO0UdkNVRnebP6ZI3OEAEbxiJa+R+ej1Yi06ncHC8
+        rzOMdFaXKhUrilYSWhn+PLtLMQxDxw7a0HVfdtepmUCaD2FJH1PD9piFbZ/AU071Qfhs=;
+Subject: Re: [PATCH] mt76x2u: remove duplicated entry in mt76x2u_device_table
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     rosenp@gmail.com, linux-wireless@vger.kernel.org,
+        xose.vazquez@gmail.com, sgruszka@redhat.com,
+        lorenzo.bianconi@redhat.com
+References: <cover.1551865527.git.lorenzo@kernel.org>
+ <34f3c8babc8192a2392f8e5b49c3cf405d306bc7.1551865527.git.lorenzo@kernel.org>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <ef443cbb-5d3c-27e9-0817-06f17e0ba24e@nbd.name>
+Date:   Thu, 7 Mar 2019 12:56:39 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.5.3
+MIME-Version: 1.0
+In-Reply-To: <34f3c8babc8192a2392f8e5b49c3cf405d306bc7.1551865527.git.lorenzo@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Since some USB device IDs are duplicated between mt76x0u, mt7601u
-and mt76x2u device, check chip version on probe and return error if
-not match the driver.
+On 2019-03-06 10:51, Lorenzo Bianconi wrote:
+> Remove duplicated entry in mt76x2u_device_table since Alfa AWUS036ACM
+> and Aukey USB-AC1200 have the same ids
+> 
+> Fixes: 62a25dc56990a ("mt76x2u: Add support for Alfa AWUS036ACM")
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Applied, thanks.
 
-Don't think this is serious issue, probe most likely will fail at
-some other point for wrong device, but we do not have to configure
-it if we know is not our device.
-
-Reported-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c | 10 +++++++---
- drivers/net/wireless/mediatek/mt76/mt76x02.h    |  7 +++++++
- drivers/net/wireless/mediatek/mt76/mt76x2/usb.c |  4 ++++
- 3 files changed, 18 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index cf97bbd89485..a565fe766efd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -231,7 +231,7 @@ static int mt76x0u_probe(struct usb_interface *usb_intf,
- 	struct usb_device *usb_dev = interface_to_usbdev(usb_intf);
- 	struct mt76x02_dev *dev;
- 	struct mt76_dev *mdev;
--	u32 asic_rev, mac_rev;
-+	u32 mac_rev;
- 	int ret;
- 
- 	mdev = mt76_alloc_device(&usb_intf->dev, sizeof(*dev), &mt76x0u_ops,
-@@ -264,10 +264,14 @@ static int mt76x0u_probe(struct usb_interface *usb_intf,
- 		goto err;
- 	}
- 
--	asic_rev = mt76_rr(dev, MT_ASIC_VERSION);
-+	mdev->rev = mt76_rr(dev, MT_ASIC_VERSION);
- 	mac_rev = mt76_rr(dev, MT_MAC_CSR0);
- 	dev_info(mdev->dev, "ASIC revision: %08x MAC revision: %08x\n",
--		 asic_rev, mac_rev);
-+		 mdev->rev, mac_rev);
-+	if (!is_mt76x0(dev)) {
-+		ret = -EINVAL;
-+		goto err;
-+	}
- 
- 	/* Note: vendor driver skips this check for MT76X0U */
- 	if (!(mt76_rr(dev, MT_EFUSE_CTRL) & MT_EFUSE_CTRL_SEL))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index 9099ec77fd86..81d8dd325cc3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -209,6 +209,13 @@ void mt76x02_enqueue_buffered_bc(struct mt76x02_dev *dev,
- 
- void mt76x02_init_debugfs(struct mt76x02_dev *dev);
- 
-+static inline bool is_mt76x0(struct mt76x02_dev *dev)
-+{
-+	return mt76_chip(&dev->mt76) == 0x7610 ||
-+	       mt76_chip(&dev->mt76) == 0x7630 ||
-+	       mt76_chip(&dev->mt76) == 0x7650;
-+}
-+
- static inline bool is_mt76x2(struct mt76x02_dev *dev)
- {
- 	return mt76_chip(&dev->mt76) == 0x7612 ||
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
-index 03cd744bb89d..f22a132f07dd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
-@@ -67,6 +67,10 @@ static int mt76x2u_probe(struct usb_interface *intf,
- 
- 	mdev->rev = mt76_rr(dev, MT_ASIC_VERSION);
- 	dev_info(mdev->dev, "ASIC revision: %08x\n", mdev->rev);
-+	if (!is_mt76x2(dev)) {
-+		err = -EINVAL;
-+		goto err;
-+	}
- 
- 	err = mt76x2u_register_device(dev);
- 	if (err < 0)
--- 
-1.9.3
-
+- Felix
