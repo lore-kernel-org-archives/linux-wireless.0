@@ -2,105 +2,77 @@ Return-Path: <SRS0=M0/e=RK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E792DC43381
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 19:38:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC673C10F03
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 21:49:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C016220840
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 19:38:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3EF220851
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 21:49:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726598AbfCGTiA (ORCPT
+        id S1726278AbfCGVs4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Mar 2019 14:38:00 -0500
-Received: from postout1.mail.lrz.de ([129.187.255.137]:50784 "EHLO
-        postout1.mail.lrz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726298AbfCGTiA (ORCPT
+        Thu, 7 Mar 2019 16:48:56 -0500
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:58534 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726217AbfCGVs4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Mar 2019 14:38:00 -0500
-X-Greylist: delayed 418 seconds by postgrey-1.27 at vger.kernel.org; Thu, 07 Mar 2019 14:37:57 EST
-Received: from lxmhs51.srv.lrz.de (localhost [127.0.0.1])
-        by postout1.mail.lrz.de (Postfix) with ESMTP id 44Fghw5SVGzycg;
-        Thu,  7 Mar 2019 20:30:56 +0100 (CET)
-X-Virus-Scanned: by amavisd-new at lrz.de in lxmhs51.srv.lrz.de
-Received: from postout1.mail.lrz.de ([127.0.0.1])
-        by lxmhs51.srv.lrz.de (lxmhs51.srv.lrz.de [127.0.0.1]) (amavisd-new, port 20024)
-        with LMTP id nXS6D6YloggW; Thu,  7 Mar 2019 20:30:56 +0100 (CET)
-Received: from mission-control (unknown [207.180.219.206])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by postout1.mail.lrz.de (Postfix) with ESMTPSA id 44Fghv1tzczycf;
-        Thu,  7 Mar 2019 20:30:55 +0100 (CET)
-Date:   Thu, 7 Mar 2019 20:30:45 +0100
-From:   ga58taw@mytum.de
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Julius Niedworok <julius.n@gmx.net>,
-        linux-wireless@vger.kernel.org, ga58taw@mytum.de, david@redhat.com,
-        nc@net.in.tum.de, Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC v2] mac80211: debugfs option to force TX status frames
-Message-ID: <20190307193045.a7awwn6mycloccq5@mission-control>
-References: <e20962001ee10a0f90f8e2f1f8baafcf3b70e9dd.camel@sipsolutions.net>
- <20190306200206.60916-1-julius.n@gmx.net>
- <87k1hazo6r.fsf@purkki.adurom.net>
+        Thu, 7 Mar 2019 16:48:56 -0500
+X-IronPort-AV: E=Sophos;i="5.58,453,1544482800"; 
+   d="scan'208";a="372414944"
+Received: from abo-58-107-68.mrs.modulonet.fr (HELO hadrien) ([85.68.107.58])
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Mar 2019 22:48:53 +0100
+Date:   Thu, 7 Mar 2019 22:48:53 +0100 (CET)
+From:   Julia Lawall <julia.lawall@lip6.fr>
+X-X-Sender: jll@hadrien
+To:     Venkateswara Naralasetty <vnaralas@codeaurora.org>
+cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath10k@lists.infradead.org, kbuild-all@01.org
+Subject: [PATCH] ath11k: fix bugon.cocci warnings
+Message-ID: <alpine.DEB.2.21.1903072247110.2558@hadrien>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <87k1hazo6r.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Mar 07, 2019 at 05:42:04PM +0200, Kalle Valo wrote:
-> > +   len = scnprintf(buf, sizeof(buf), "%d\n", (int)local->force_tx_status);
->
-> I wonder about the cast, is it guaranteed that a bool is always of the
-> same size as an int?
+From: kbuild test robot <lkp@intel.com>
 
-Why is this a problem? If a bool is smaller than an int, the compiler
-emits code that will prepend the value of force_tx_status with zeros. If
-it is larger than an int the compiler emits code that will truncate
-force_tx_status to sizeof(int) bytes. So it doesn't matter how large bool
-and/or int are, the code always prints '0' or '1' depending on the value
-of force_tx_status.
+Use BUG_ON instead of if condition followed by BUG.
 
-> > --- a/net/mac80211/tx.c
-> > +++ b/net/mac80211/tx.c
-> > @@ -2463,6 +2463,11 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
-> >     if (IS_ERR(sta))
-> >             sta = NULL;
-> >
-> > +#ifdef CONFIG_MAC80211_DEBUGFS
-> > +           if (local->force_tx_status)
-> > +                   info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
-> > +#endif
-> > +
-> >     /* convert Ethernet header to proper 802.11 header (based on
-> >      * operation mode) */
-> >     ethertype = (skb->data[12] << 8) | skb->data[13];
-> > @@ -3468,6 +3473,11 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
-> >                   (tid_tx ? IEEE80211_TX_CTL_AMPDU : 0);
-> >     info->control.flags = IEEE80211_TX_CTRL_FAST_XMIT;
-> >
-> > +#ifdef CONFIG_MAC80211_DEBUGFS
-> > +           if (local->force_tx_status)
-> > +                   info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
-> > +#endif
->
-> IMHO the ifdefs look pointless just to save four bytes. I would move
-> force_tx_status outside of ifdef in the struct so that the actual code
-> doesn't have ugly ifdefs.
+Generated by: scripts/coccinelle/misc/bugon.cocci
 
-I don't think ifdefs are ugly in this case. They clearly indicate that the
-code belongs to the debugfs implementation of mac80211. In addition, when
-we remove the ifdefs, code that only belongs to the debugfs implementation
-of mac80211 is always included in the kernel (even when the config
-option is turned off!) which, I think, is much more ugly than the ifdefs.
+Fixes: c105b7abf400 ("ath11k: collect DDR dump after fw crash")
+CC: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Signed-off-by: kbuild test robot <lkp@intel.com>
+Signed-off-by: Julia Lawall <julia.lawall@lip6.fr>
+---
 
-Thanks for your comments and ideas.
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git ath11k-bringup
+head:   e7daa3ec639f390e383dae0db9e6b143bcc7b5bc
+commit: c105b7abf400972ee661efe18b4ca11adfd137cd [28/42] ath11k: collect DDR dump after fw crash
+:::::: branch date: 5 hours ago
+:::::: commit date: 5 hours ago
 
-Charlie
+Please take the patch only if it's a positive warning. Thanks!
+
+ ahb.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -954,8 +954,7 @@ static int ath11k_subsys_notifier_cb(str
+ 		sc->target_restarted = 0;
+ 		break;
+ 	case SUBSYS_BEFORE_POWERUP:
+-		if (sc->target_restarted)
+-			BUG();
++		BUG_ON(sc->target_restarted);
+ 		break;
+ 	default:
+ 		return NOTIFY_OK;
