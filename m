@@ -2,144 +2,92 @@ Return-Path: <SRS0=M0/e=RK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E290CC43381
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 09:46:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06216C43381
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 10:21:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC75820675
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 09:46:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA00C20675
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Mar 2019 10:21:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726296AbfCGJqU convert rfc822-to-8bit (ORCPT
+        id S1726156AbfCGKVa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Mar 2019 04:46:20 -0500
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:44103 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725795AbfCGJqU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Mar 2019 04:46:20 -0500
-Received: by mail-ed1-f67.google.com with SMTP id b20so12853898edw.11
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2019 01:46:19 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=BtfS1JxvO5l5x76oAhH/IioKddwHqs1WM3Ak4UG8Dsc=;
-        b=Y+pKob0UX9vJDMjqkqP0VOSRu3pt54RiUzRWDtdaBUBfmCoxxNefRHUeJOf7Hzk6mm
-         zRo11YXDbcR5P3/ewiuJlSMiQLWmD/JySkb8SyMBRdx0DK/ziwPJu9vXwN/9rjjCdVNF
-         ED5PcXBNC9FLdRfxIK8tmXJ3V3o2dPiP67LDO3CEALSPjbedIh+IEdD9sVH0PiX61F4P
-         Ocgzh+CZfcRWOa226SJv0Tv2UGYezCe7icVgTdl+2G1V3AWe5ln4lFgsskSc9c9NWvy7
-         IJEJp3C3FHW0K2emIhJA9lvpvJWDfxwpQf1XuZfL4e/AWV1vzdN9K8nwmyDrXdMCVdJ0
-         U9OA==
-X-Gm-Message-State: APjAAAX2a6afV/6z3IgdvKVXw4bIBXEiizyTDOwMLKnk8OCy8ZIYatFq
-        Bi/SQpmGkJlebVkjcdmmUfI42g==
-X-Google-Smtp-Source: APXvYqwHATPpAvubJGDzL0BAkCUHrZ8ZsSgPKqjkZCmnnmJ+Y3fnN1qAevFZtYYN3B3Eriqz4qzbsw==
-X-Received: by 2002:a17:906:3fd1:: with SMTP id k17mr7137803ejj.87.1551951978473;
-        Thu, 07 Mar 2019 01:46:18 -0800 (PST)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id t25sm790381ejr.30.2019.03.07.01.46.17
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 07 Mar 2019 01:46:17 -0800 (PST)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 6E886182F5B; Thu,  7 Mar 2019 10:46:17 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc:     make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC/RFT] mac80211: Switch to a virtual time-based airtime scheduler
-In-Reply-To: <69d22b9e3ea08a81fea8b8742cb697c5@codeaurora.org>
-References: <20190215170512.31512-1-toke@redhat.com> <87va0x1g0j.fsf@toke.dk> <69d22b9e3ea08a81fea8b8742cb697c5@codeaurora.org>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Thu, 07 Mar 2019 10:46:17 +0100
-Message-ID: <87wolbyq3a.fsf@toke.dk>
+        Thu, 7 Mar 2019 05:21:30 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:57952 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725795AbfCGKV3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Mar 2019 05:21:29 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 667AB318A61F;
+        Thu,  7 Mar 2019 10:21:29 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.192])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 18EE2413B;
+        Thu,  7 Mar 2019 10:21:25 +0000 (UTC)
+Date:   Thu, 7 Mar 2019 11:21:22 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Jakub Kicinski <kubakici@wp.pl>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Xose Vazquez Perez <xose.vazquez@gmail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>
+Subject: Re: mediatek: duplicate usb devices
+Message-ID: <20190307102120.GA18424@redhat.com>
+References: <11161578-bb42-168b-1459-f22a98f5c6bb@gmail.com>
+ <20190306075053.GA12946@redhat.com>
+ <CAA2SeN+V_ug2JPNQ++ZTj4hYh-YDOkNhiyP_dsaYnpddXDb6PA@mail.gmail.com>
+ <20190306110329.GD12946@redhat.com>
+ <20190306104240.64a26c51@cakuba.hsd1.ca.comcast.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190306104240.64a26c51@cakuba.hsd1.ca.comcast.net>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Thu, 07 Mar 2019 10:21:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+On Wed, Mar 06, 2019 at 10:42:40AM -0800, Jakub Kicinski wrote:
+> On Wed, 6 Mar 2019 12:03:30 +0100, Stanislaw Gruszka wrote:
+> > On Wed, Mar 06, 2019 at 11:09:12AM +0100, Lorenzo Bianconi wrote:
+> > > >
+> > > > On Tue, Mar 05, 2019 at 07:33:51PM +0100, Xose Vazquez Perez wrote:  
+> > > > > There a three duplicate devices at:
+> > > > >
+> > > > > mt76/mt76x2/usb.c:      { USB_DEVICE(0x0e8d, 0x7612) }, /* Alfa AWUS036ACM */
+> > > > > mt76/mt76x2/usb.c:      { USB_DEVICE(0x0e8d, 0x7612) }, /* Aukey USB-AC1200 */  
+> > > > One duplicated entry should be removed.
+> > > >  
+> > > > > mt76/mt76x0/usb.c:      { USB_DEVICE(0x148f, 0x760a) }, /* TP-Link unknown */
+> > > > > mt7601u/usb.c:          { USB_DEVICE(0x148f, 0x760a) },  
+> > > 
+> > > IIUC this is not in the mt7601u driver available on mtk website.  
+> > 
+> > The same apply to mt7610u. Vendor driver have only IDs for some
+> > reference devices. Both mt7601u and mt7610u drivers do not include
+> > 0x7610.
+> > 
+> > For mt76x0u ids were provided by Hans 
+> > https://lore.kernel.org/linux-wireless/alpine.LNX.2.00.1804092042320.8369@T420s/
+> > I'm not sure where they came from.
+> 
+> The ones in mt7601u came from Xose, the GitHub repo has fuller history:
+> 
+> https://github.com/kuba-moo/mt7601u/commit/5e6b565301d9882aab9af46b396a5cf489db6c78
+> 
+> I don't really mind which one stays :)
 
-> On 2019-03-05 07:45, Toke Høiland-Jørgensen wrote:
->> Toke Høiland-Jørgensen <toke@redhat.com> writes:
->> 
->>> This switches the airtime scheduler in mac80211 to use a virtual 
->>> time-based
->>> scheduler instead of the round-robin scheduler used before. This has a
->>> couple of advantages:
->>> 
->>> - No need to sync up the round-robin scheduler in firmware/hardware 
->>> with
->>>   the round-robin airtime scheduler.
->>> 
->>> - If several stations are eligible for transmission we can schedule 
->>> both of
->>>   them; no need to hard-block the scheduling rotation until the head 
->>> of the
->>>   queue has used up its quantum.
->>> 
->>> - The check of whether a station is eligible for transmission becomes
->>>   simpler (in ieee80211_txq_may_transmit()).
->>> 
->>> The drawback is that scheduling becomes slightly more expensive, as we 
->>> need
->>> to maintain an rbtree of TXQs sorted by virtual time. This means that
->>> ieee80211_register_airtime() becomes O(logN) in the number of 
->>> currently
->>> scheduled TXQs. However, hopefully this number rarely grows too big 
->>> (it's
->>> only TXQs currently backlogged, not all associated stations), so it
->>> shouldn't be too big of an issue.
->>> 
->>> Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
->>> ---
->>> This is basically the idea I mentioned earlier for a different way to
->>> handle the airtime scheduling.
->>> 
->>> I've tested it on ath9k, where it achieves the same fairness and
->>> weighing properties as the old scheduler. It would be good if you 
->>> could
->>> test it on your ath10k setup, Rajkumar; and all of you please comment 
->>> on
->>> whether you agree that this is better from an API point of view.
->> 
->> So no one has any comments on this? :)
->> 
-> Toke,
->
-> This is kind of design change. ;)
+I think this is same case as with duplicated id's for mt76x0u and
+mt76x2u. We should not remove the IDs. I will just post patches that
+will check chip version. 
 
-Yup, that was kinda the point ;)
-
-> FMU w.r.t ath10k, earlier deficit adjustment and list rotation happens
-> at next_txq and may_transmit. Now it seems the rbtree adjustment
-> happens upon new txq insertion through wake_txq and whenever driver
-> reports airtime by register_airtime. Am I right?
-
-Yes. This change was, in part, motivated by the discussions we had
-around your patches to ath10k, and the need to make the round-robin
-schedulers sync up. I consider that a bit of a hack which this approach
-avoids.
-
-> We are using pretty old kernel (3.14, 4.4). It definitely needs backport 
-> of rbtree.
-
-Well I wasn't necessarily planning for this to be backported. It doesn't
-change the driver API, and *in theory the aggregate fairness behaviour
-should be the same between the two scheduling approaches (famous last
-words). Verifying that this is actually the case is why I'm asking for
-testing.
-
-Also, isn't rbtree pretty old? A git blame on rbtree.c suggests it goes
-all the way back to the 2.6 era...
-
-> Have you used *Wrt image or validation on x86?
-
-I have only tested this on x86 with a mac80211-next-based kernel...
-
--Toke
+Stanislaw
+ 
