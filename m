@@ -2,43 +2,46 @@ Return-Path: <SRS0=wltO=RL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA844C43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 13:56:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3985FC10F09
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 13:56:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8AA8920661
+	by mail.kernel.org (Postfix) with ESMTP id F1E9F20661
 	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 13:56:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726847AbfCHN4k (ORCPT
+        id S1726845AbfCHN4i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Mar 2019 08:56:40 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:60415 "EHLO
+        Fri, 8 Mar 2019 08:56:38 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:60402 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726815AbfCHN4j (ORCPT
+        with ESMTP id S1726787AbfCHN4c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Mar 2019 08:56:39 -0500
+        Fri, 8 Mar 2019 08:56:32 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x28Dtx95025107, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x28Du5SP025152, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x28Dtx95025107
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x28Du5SP025152
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Fri, 8 Mar 2019 21:55:59 +0800
+        Fri, 8 Mar 2019 21:56:05 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 8 Mar 2019 21:55:59 +0800
+ 14.3.408.0; Fri, 8 Mar 2019 21:56:04 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
         <gregkh@linuxfoundation.org>
 CC:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
         <sgruszka@redhat.com>, <pkshih@realtek.com>, <tehuang@realtek.com>,
         <briannorris@chromium.org>
-Subject: [PATCH v6 00/14] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
-Date:   Fri, 8 Mar 2019 21:55:29 +0800
-Message-ID: <1552053343-6513-1-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v6 07/14] rtw88: phy files
+Date:   Fri, 8 Mar 2019 21:55:36 +0800
+Message-ID: <1552053343-6513-8-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1552053343-6513-1-git-send-email-yhchuang@realtek.com>
+References: <1552053343-6513-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.126]
@@ -49,563 +52,1871 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
-rtw88 now supports RTL8822BE/RTL8822CE now, with basic station mode
-functionalities. The firmware for both can be found at linux-fimware.
+phy files for Realtek 802.11ac wireless network chips
 
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
-For RTL8822BE: rtw88/rtw8822b_fw.bin
-For RTL8822CE: rtw88/rtw8822c_fw.bin
-
-And for now, only PCI buses (RTL8xxxE) are supported. We will add support
-for USB and SDIO in the future. The bus interface abstraction can be seen
-in this driver such as hci.h. Most of the hardware setting are the same
-except for some TRX path or probing setup should be separated.
-
-Supported:
-
- * Basic STA/AP/ADHOC mode, and TDLS (STA is well tested)
-
-Missing feature:
-
- * WOW/PNO
- * USB & SDIO bus (such as RTL8xxxU/RTL8xxxS)
- * BT coexistence (8822B/8822C are combo ICs)
- * Multiple interfaces (for now single STA is better supported)
- * Dynamic hardware calibrations (to improve/stabilize performance)
-
-Potential problems:
-
- * static calibration spends too much time, and it is painful for
-   driver to leave IDLE state. And slows down associate process.
-   But reload function are under development, will be added soon!
- * TRX statictics misleading, as we are not reporting status correctly,
-   or say, not reporting for "every" packet.
-
-
-The next patch set should have BT coexistence code since RTL8822B/C are
-combo ICs, and the driver for BT can be found after Linux Kernel v4.20.
-So it is better to add it first to make WiFi + BT work concurrently.
-
-Although now rtw88 is simple but we are developing more features for it.
-Even we want to add support for more chips such as RTL8821C/RTL8814B.
-
-Finally, rtw88 has many authors, listed alphabetically:
-
-Ping-Ke Shih <pkshih@realtek.com>
-Tzu-En Huang <tehuang@realtek.com>
-Yan-Hsuan Chuang <yhchuang@realtek.com>
-
-
-v2
-
- - add comment for watch dog
-
-
-v3
-
- - change tree location to wireless-next
-
-
-v4
-
- - remove useless "T:" and "W:" lines in MAINTAINERS file, as we don't have
-   our own tree and wiki page now
- - rename patch 13 to "add MAINTAINERS entry"
- - use skb_pull to remove tx descriptors before reporting tx status to
-   mac80211 stack, otherwise mac80211 tx status will always fail to match
-   addr1/addr2 and will finally trigger to disconnect
- - return back to operating channel when we leave IDLE state, as mac80211
-   stack expected. If we don't, mac80211 will assume we are already at
-   channel 1 and start to scan. And we will never be able to connect to
-   APs that are in channel 1. (which is most AP's default channel)
- - wait for async firmware load successfully, otherwise some slower platform
-   might start to download firmware before loaded. And system crashes with a
-   null pointer accessed.
- - fix typo for mac.h __RTW_MAc_H__ -> __RTW_MAC_H__
-
-
-v5
-
- - add rtw_debug_mask for rtw_dbg to control debug messages
- - use dev_printk for rtw_dbg to not depend on CONFIG_DYNAMIC_DEBUG
- - remove useless rtw_pci_parse_configuration
- - keep struct and MODULE_* declaration close
- - use macro instead of ugly struct layout with #ifdef __LITTLE_ENDIAN
- - simplify efuse logical map parsing function
- - remove unused member and whole map dump for efuse
- - reduce some usage of magic number
- - enable DMA sync to avoid pci bus timeout
- - adjust download firmware sequence to avoid DMA error flag honored
- - change download firmware prototype for further use, sometimes we may
-   want to download another special purposed firmware
- - move out rtw_send_rsvd_page_h2c, remove the static
-
-
-v6
- - merge two patchsets
- - removal of staging/rtlwifi as it is conflicting with rtw88
-
-
-Yan-Hsuan Chuang (14):
-  rtw88: main files
-  rtw88: core files
-  rtw88: hci files
-  rtw88: trx files
-  rtw88: mac files
-  rtw88: fw and efuse files
-  rtw88: phy files
-  rtw88: debug files
-  rtw88: chip files
-  rtw88: 8822B init table
-  rtw88: 8822C init table
-  rtw88: Kconfig & Makefile
-  rtw88: add MAINTAINERS entry
-  staging: rtlwifi: remove staging rtlwifi driver
-
- MAINTAINERS                                        |     6 +
- drivers/net/wireless/realtek/Kconfig               |     1 +
- drivers/net/wireless/realtek/Makefile              |     1 +
- drivers/net/wireless/realtek/rtw88/Kconfig         |    55 +
- drivers/net/wireless/realtek/rtw88/Makefile        |    20 +
- drivers/net/wireless/realtek/rtw88/debug.c         |   637 +
- drivers/net/wireless/realtek/rtw88/debug.h         |    52 +
- drivers/net/wireless/realtek/rtw88/efuse.c         |   160 +
- drivers/net/wireless/realtek/rtw88/efuse.h         |    26 +
- drivers/net/wireless/realtek/rtw88/fw.c            |   633 +
- drivers/net/wireless/realtek/rtw88/fw.h            |   222 +
- drivers/net/wireless/realtek/rtw88/hci.h           |   211 +
- drivers/net/wireless/realtek/rtw88/mac.c           |   965 +
- drivers/net/wireless/realtek/rtw88/mac.h           |    35 +
- drivers/net/wireless/realtek/rtw88/mac80211.c      |   481 +
- drivers/net/wireless/realtek/rtw88/main.c          |  1211 ++
- drivers/net/wireless/realtek/rtw88/main.h          |  1104 +
- drivers/net/wireless/realtek/rtw88/pci.c           |  1211 ++
- drivers/net/wireless/realtek/rtw88/pci.h           |   237 +
- drivers/net/wireless/realtek/rtw88/phy.c           |  1709 ++
- drivers/net/wireless/realtek/rtw88/phy.h           |   134 +
- drivers/net/wireless/realtek/rtw88/ps.c            |   166 +
- drivers/net/wireless/realtek/rtw88/ps.h            |    20 +
- drivers/net/wireless/realtek/rtw88/reg.h           |   421 +
- drivers/net/wireless/realtek/rtw88/regd.c          |   391 +
- drivers/net/wireless/realtek/rtw88/regd.h          |    67 +
- drivers/net/wireless/realtek/rtw88/rtw8822b.c      |  1594 ++
- drivers/net/wireless/realtek/rtw88/rtw8822b.h      |   170 +
- .../net/wireless/realtek/rtw88/rtw8822b_table.c    | 20783 +++++++++++++++++++
- .../net/wireless/realtek/rtw88/rtw8822b_table.h    |    18 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c      |  1890 ++
- drivers/net/wireless/realtek/rtw88/rtw8822c.h      |   186 +
- .../net/wireless/realtek/rtw88/rtw8822c_table.c    | 11753 +++++++++++
- .../net/wireless/realtek/rtw88/rtw8822c_table.h    |    17 +
- drivers/net/wireless/realtek/rtw88/rx.c            |   151 +
- drivers/net/wireless/realtek/rtw88/rx.h            |    41 +
- drivers/net/wireless/realtek/rtw88/sec.c           |   120 +
- drivers/net/wireless/realtek/rtw88/sec.h           |    39 +
- drivers/net/wireless/realtek/rtw88/tx.c            |   367 +
- drivers/net/wireless/realtek/rtw88/tx.h            |    89 +
- drivers/staging/Kconfig                            |     2 -
- drivers/staging/Makefile                           |     1 -
- drivers/staging/rtlwifi/Kconfig                    |    12 -
- drivers/staging/rtlwifi/Makefile                   |    70 -
- drivers/staging/rtlwifi/TODO                       |    11 -
- drivers/staging/rtlwifi/base.c                     |  2815 ---
- drivers/staging/rtlwifi/base.h                     |   175 -
- drivers/staging/rtlwifi/btcoexist/Makefile         |     8 -
- drivers/staging/rtlwifi/btcoexist/halbt_precomp.h  |    74 -
- .../staging/rtlwifi/btcoexist/halbtc8822b1ant.c    |  5233 -----
- .../staging/rtlwifi/btcoexist/halbtc8822b1ant.h    |   433 -
- .../staging/rtlwifi/btcoexist/halbtc8822b2ant.c    |  5210 -----
- .../staging/rtlwifi/btcoexist/halbtc8822b2ant.h    |   487 -
- .../rtlwifi/btcoexist/halbtc8822bwifionly.c        |    54 -
- .../rtlwifi/btcoexist/halbtc8822bwifionly.h        |    24 -
- drivers/staging/rtlwifi/btcoexist/halbtcoutsrc.c   |  1837 --
- drivers/staging/rtlwifi/btcoexist/halbtcoutsrc.h   |   791 -
- drivers/staging/rtlwifi/btcoexist/rtl_btc.c        |   517 -
- drivers/staging/rtlwifi/btcoexist/rtl_btc.h        |    64 -
- drivers/staging/rtlwifi/cam.c                      |   315 -
- drivers/staging/rtlwifi/cam.h                      |    39 -
- drivers/staging/rtlwifi/core.c                     |  1996 --
- drivers/staging/rtlwifi/core.h                     |    71 -
- drivers/staging/rtlwifi/debug.c                    |   624 -
- drivers/staging/rtlwifi/debug.h                    |   223 -
- drivers/staging/rtlwifi/efuse.c                    |  1331 --
- drivers/staging/rtlwifi/efuse.h                    |   109 -
- drivers/staging/rtlwifi/halmac/halmac_2_platform.h |    41 -
- .../halmac_88xx/halmac_8822b/halmac_8822b_cfg.h    |   121 -
- .../halmac_88xx/halmac_8822b/halmac_8822b_phy.c    |    95 -
- .../halmac_8822b/halmac_8822b_pwr_seq.c            |   552 -
- .../halmac_8822b/halmac_8822b_pwr_seq.h            |    29 -
- .../halmac_88xx/halmac_8822b/halmac_api_8822b.c    |   332 -
- .../halmac_88xx/halmac_8822b/halmac_api_8822b.h    |    33 -
- .../halmac_8822b/halmac_api_8822b_pcie.c           |   312 -
- .../halmac_8822b/halmac_api_8822b_pcie.h           |    42 -
- .../halmac_8822b/halmac_api_8822b_sdio.c           |   173 -
- .../halmac_8822b/halmac_api_8822b_sdio.h           |    31 -
- .../halmac_8822b/halmac_api_8822b_usb.c            |   174 -
- .../halmac_8822b/halmac_api_8822b_usb.h            |    34 -
- .../halmac_88xx/halmac_8822b/halmac_func_8822b.c   |   403 -
- .../halmac_88xx/halmac_8822b/halmac_func_8822b.h   |    27 -
- .../rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h   |   160 -
- .../rtlwifi/halmac/halmac_88xx/halmac_api_88xx.c   |  5970 ------
- .../rtlwifi/halmac/halmac_88xx/halmac_api_88xx.h   |   385 -
- .../halmac/halmac_88xx/halmac_api_88xx_pcie.c      |   318 -
- .../halmac/halmac_88xx/halmac_api_88xx_pcie.h      |    60 -
- .../halmac/halmac_88xx/halmac_api_88xx_sdio.c      |   963 -
- .../halmac/halmac_88xx/halmac_api_88xx_sdio.h      |    73 -
- .../halmac/halmac_88xx/halmac_api_88xx_usb.c       |   543 -
- .../halmac/halmac_88xx/halmac_api_88xx_usb.h       |    62 -
- .../rtlwifi/halmac/halmac_88xx/halmac_func_88xx.c  |  4462 ----
- .../rtlwifi/halmac/halmac_88xx/halmac_func_88xx.h  |   310 -
- drivers/staging/rtlwifi/halmac/halmac_api.c        |   415 -
- drivers/staging/rtlwifi/halmac/halmac_api.h        |    70 -
- drivers/staging/rtlwifi/halmac/halmac_bit2.h       | 13396 ------------
- drivers/staging/rtlwifi/halmac/halmac_bit_8822b.h  | 12092 -----------
- drivers/staging/rtlwifi/halmac/halmac_fw_info.h    |   111 -
- .../rtlwifi/halmac/halmac_fw_offload_c2h_nic.h     |   173 -
- .../rtlwifi/halmac/halmac_fw_offload_h2c_nic.h     |   504 -
- .../rtlwifi/halmac/halmac_h2c_extra_info_nic.h     |   104 -
- .../staging/rtlwifi/halmac/halmac_intf_phy_cmd.h   |    43 -
- .../rtlwifi/halmac/halmac_original_c2h_nic.h       |   392 -
- .../rtlwifi/halmac/halmac_original_h2c_nic.h       |  1000 -
- .../staging/rtlwifi/halmac/halmac_pwr_seq_cmd.h    |   105 -
- drivers/staging/rtlwifi/halmac/halmac_reg2.h       |  1121 -
- drivers/staging/rtlwifi/halmac/halmac_reg_8822b.h  |   717 -
- drivers/staging/rtlwifi/halmac/halmac_rx_bd_chip.h |    37 -
- drivers/staging/rtlwifi/halmac/halmac_rx_bd_nic.h  |    37 -
- .../staging/rtlwifi/halmac/halmac_rx_desc_chip.h   |   107 -
- .../staging/rtlwifi/halmac/halmac_rx_desc_nic.h    |   122 -
- drivers/staging/rtlwifi/halmac/halmac_sdio_reg.h   |    51 -
- drivers/staging/rtlwifi/halmac/halmac_tx_bd_chip.h |   107 -
- drivers/staging/rtlwifi/halmac/halmac_tx_bd_nic.h  |   112 -
- .../staging/rtlwifi/halmac/halmac_tx_desc_chip.h   |   433 -
- .../staging/rtlwifi/halmac/halmac_tx_desc_nic.h    |   495 -
- drivers/staging/rtlwifi/halmac/halmac_type.h       |  1923 --
- drivers/staging/rtlwifi/halmac/halmac_usb_reg.h    |    17 -
- drivers/staging/rtlwifi/halmac/rtl_halmac.c        |  1373 --
- drivers/staging/rtlwifi/halmac/rtl_halmac.h        |    83 -
- drivers/staging/rtlwifi/pci.c                      |  2496 ---
- drivers/staging/rtlwifi/pci.h                      |   318 -
- drivers/staging/rtlwifi/phydm/halphyrf_ce.c        |   954 -
- drivers/staging/rtlwifi/phydm/halphyrf_ce.h        |    74 -
- drivers/staging/rtlwifi/phydm/mp_precomp.h         |    13 -
- drivers/staging/rtlwifi/phydm/phydm.c              |  1975 --
- drivers/staging/rtlwifi/phydm/phydm.h              |   935 -
- drivers/staging/rtlwifi/phydm/phydm_acs.c          |   189 -
- drivers/staging/rtlwifi/phydm/phydm_acs.h          |    46 -
- drivers/staging/rtlwifi/phydm/phydm_adaptivity.c   |   930 -
- drivers/staging/rtlwifi/phydm/phydm_adaptivity.h   |   108 -
- drivers/staging/rtlwifi/phydm/phydm_adc_sampling.c |   616 -
- drivers/staging/rtlwifi/phydm/phydm_adc_sampling.h |    85 -
- drivers/staging/rtlwifi/phydm/phydm_antdiv.c       |    72 -
- drivers/staging/rtlwifi/phydm/phydm_antdiv.h       |   290 -
- drivers/staging/rtlwifi/phydm/phydm_beamforming.h  |    37 -
- drivers/staging/rtlwifi/phydm/phydm_ccx.c          |   447 -
- drivers/staging/rtlwifi/phydm/phydm_ccx.h          |    72 -
- drivers/staging/rtlwifi/phydm/phydm_cfotracking.c  |   332 -
- drivers/staging/rtlwifi/phydm/phydm_cfotracking.h  |    49 -
- drivers/staging/rtlwifi/phydm/phydm_debug.c        |  2888 ---
- drivers/staging/rtlwifi/phydm/phydm_debug.h        |   164 -
- drivers/staging/rtlwifi/phydm/phydm_dfs.h          |    48 -
- drivers/staging/rtlwifi/phydm/phydm_dig.c          |  1521 --
- drivers/staging/rtlwifi/phydm/phydm_dig.h          |   230 -
- .../staging/rtlwifi/phydm/phydm_dynamic_rx_path.h  |    26 -
- .../rtlwifi/phydm/phydm_dynamicbbpowersaving.c     |   118 -
- .../rtlwifi/phydm/phydm_dynamicbbpowersaving.h     |    39 -
- .../staging/rtlwifi/phydm/phydm_dynamictxpower.c   |    91 -
- .../staging/rtlwifi/phydm/phydm_dynamictxpower.h   |    53 -
- .../staging/rtlwifi/phydm/phydm_edcaturbocheck.c   |   128 -
- .../staging/rtlwifi/phydm/phydm_edcaturbocheck.h   |    33 -
- drivers/staging/rtlwifi/phydm/phydm_features.h     |    22 -
- drivers/staging/rtlwifi/phydm/phydm_hwconfig.c     |  1848 --
- drivers/staging/rtlwifi/phydm/phydm_hwconfig.h     |   487 -
- drivers/staging/rtlwifi/phydm/phydm_interface.c    |   307 -
- drivers/staging/rtlwifi/phydm/phydm_interface.h    |   183 -
- drivers/staging/rtlwifi/phydm/phydm_iqk.h          |    65 -
- drivers/staging/rtlwifi/phydm/phydm_kfree.c        |   217 -
- drivers/staging/rtlwifi/phydm/phydm_kfree.h        |    31 -
- drivers/staging/rtlwifi/phydm/phydm_noisemonitor.c |   319 -
- drivers/staging/rtlwifi/phydm/phydm_noisemonitor.h |    35 -
- .../staging/rtlwifi/phydm/phydm_powertracking_ce.c |   633 -
- .../staging/rtlwifi/phydm/phydm_powertracking_ce.h |   282 -
- drivers/staging/rtlwifi/phydm/phydm_pre_define.h   |   602 -
- drivers/staging/rtlwifi/phydm/phydm_precomp.h      |    74 -
- drivers/staging/rtlwifi/phydm/phydm_psd.c          |   406 -
- drivers/staging/rtlwifi/phydm/phydm_psd.h          |    56 -
- drivers/staging/rtlwifi/phydm/phydm_rainfo.c       |  1196 --
- drivers/staging/rtlwifi/phydm/phydm_rainfo.h       |   258 -
- drivers/staging/rtlwifi/phydm/phydm_reg.h          |   140 -
- .../staging/rtlwifi/phydm/phydm_regdefine11ac.h    |    83 -
- drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h |   202 -
- drivers/staging/rtlwifi/phydm/phydm_types.h        |   119 -
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_bb.c      |  1956 --
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_bb.h      |    43 -
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_mac.c     |   211 -
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_mac.h     |    27 -
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_rf.c      |  4730 -----
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_rf.h      |   118 -
- .../rtlwifi/phydm/rtl8822b/halphyrf_8822b.c        |   340 -
- .../rtlwifi/phydm/rtl8822b/halphyrf_8822b.h        |    34 -
- .../rtlwifi/phydm/rtl8822b/phydm_hal_api8822b.c    |  1804 --
- .../rtlwifi/phydm/rtl8822b/phydm_hal_api8822b.h    |    73 -
- .../rtlwifi/phydm/rtl8822b/phydm_iqk_8822b.c       |  1399 --
- .../rtlwifi/phydm/rtl8822b/phydm_iqk_8822b.h       |    37 -
- .../rtlwifi/phydm/rtl8822b/phydm_regconfig8822b.c  |   157 -
- .../rtlwifi/phydm/rtl8822b/phydm_regconfig8822b.h  |    43 -
- .../rtlwifi/phydm/rtl8822b/phydm_rtl8822b.c        |   214 -
- .../rtlwifi/phydm/rtl8822b/phydm_rtl8822b.h        |    19 -
- .../rtlwifi/phydm/rtl8822b/version_rtl8822b.h      |    23 -
- drivers/staging/rtlwifi/phydm/rtl_phydm.c          |   863 -
- drivers/staging/rtlwifi/phydm/rtl_phydm.h          |    34 -
- drivers/staging/rtlwifi/phydm/txbf/halcomtxbf.h    |    56 -
- drivers/staging/rtlwifi/phydm/txbf/haltxbf8822b.h  |    28 -
- .../staging/rtlwifi/phydm/txbf/haltxbfinterface.h  |    27 -
- drivers/staging/rtlwifi/phydm/txbf/haltxbfjaguar.h |    25 -
- .../rtlwifi/phydm/txbf/phydm_hal_txbf_api.h        |    30 -
- drivers/staging/rtlwifi/ps.c                       |   996 -
- drivers/staging/rtlwifi/ps.h                       |    39 -
- drivers/staging/rtlwifi/pwrseqcmd.h                |    83 -
- drivers/staging/rtlwifi/rc.c                       |   309 -
- drivers/staging/rtlwifi/rc.h                       |    38 -
- drivers/staging/rtlwifi/regd.c                     |   458 -
- drivers/staging/rtlwifi/regd.h                     |    52 -
- drivers/staging/rtlwifi/rtl8822be/Makefile         |     7 -
- drivers/staging/rtlwifi/rtl8822be/def.h            |    71 -
- drivers/staging/rtlwifi/rtl8822be/fw.c             |   960 -
- drivers/staging/rtlwifi/rtl8822be/fw.h             |   187 -
- drivers/staging/rtlwifi/rtl8822be/hw.c             |  2430 ---
- drivers/staging/rtlwifi/rtl8822be/hw.h             |    55 -
- drivers/staging/rtlwifi/rtl8822be/led.c            |   116 -
- drivers/staging/rtlwifi/rtl8822be/led.h            |    23 -
- drivers/staging/rtlwifi/rtl8822be/phy.c            |  2223 --
- drivers/staging/rtlwifi/rtl8822be/phy.h            |   134 -
- drivers/staging/rtlwifi/rtl8822be/reg.h            |  1642 --
- drivers/staging/rtlwifi/rtl8822be/sw.c             |   470 -
- drivers/staging/rtlwifi/rtl8822be/sw.h             |    21 -
- drivers/staging/rtlwifi/rtl8822be/trx.c            |  1004 -
- drivers/staging/rtlwifi/rtl8822be/trx.h            |   154 -
- drivers/staging/rtlwifi/stats.c                    |   249 -
- drivers/staging/rtlwifi/stats.h                    |    31 -
- drivers/staging/rtlwifi/wifi.h                     |  3362 ---
- 223 files changed, 47394 insertions(+), 123718 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/Kconfig
- create mode 100644 drivers/net/wireless/realtek/rtw88/Makefile
- create mode 100644 drivers/net/wireless/realtek/rtw88/debug.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/debug.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/fw.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/fw.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/hci.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/mac.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/mac.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/mac80211.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/main.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/main.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/pci.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/pci.h
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/phy.c | 1709 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/phy.h |  134 +++
+ 2 files changed, 1843 insertions(+)
  create mode 100644 drivers/net/wireless/realtek/rtw88/phy.c
  create mode 100644 drivers/net/wireless/realtek/rtw88/phy.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/ps.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/ps.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/reg.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/regd.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/regd.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b_table.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b_table.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rx.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rx.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/sec.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/sec.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/tx.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/tx.h
- delete mode 100644 drivers/staging/rtlwifi/Kconfig
- delete mode 100644 drivers/staging/rtlwifi/Makefile
- delete mode 100644 drivers/staging/rtlwifi/TODO
- delete mode 100644 drivers/staging/rtlwifi/base.c
- delete mode 100644 drivers/staging/rtlwifi/base.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/Makefile
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbt_precomp.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822b1ant.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822b1ant.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822b2ant.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822b2ant.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822bwifionly.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822bwifionly.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtcoutsrc.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtcoutsrc.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/rtl_btc.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/rtl_btc.h
- delete mode 100644 drivers/staging/rtlwifi/cam.c
- delete mode 100644 drivers/staging/rtlwifi/cam.h
- delete mode 100644 drivers/staging/rtlwifi/core.c
- delete mode 100644 drivers/staging/rtlwifi/core.h
- delete mode 100644 drivers/staging/rtlwifi/debug.c
- delete mode 100644 drivers/staging/rtlwifi/debug.h
- delete mode 100644 drivers/staging/rtlwifi/efuse.c
- delete mode 100644 drivers/staging/rtlwifi/efuse.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_2_platform.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_phy.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_pwr_seq.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_pwr_seq.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_pcie.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_pcie.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_sdio.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_sdio.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_usb.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_usb.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_func_8822b.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_func_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_pcie.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_pcie.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_sdio.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_sdio.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_usb.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_usb.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_func_88xx.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_func_88xx.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_api.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_api.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_bit2.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_bit_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_fw_info.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_fw_offload_c2h_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_fw_offload_h2c_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_h2c_extra_info_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_intf_phy_cmd.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_original_c2h_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_original_h2c_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_pwr_seq_cmd.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_reg2.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_reg_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_rx_bd_chip.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_rx_bd_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_rx_desc_chip.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_rx_desc_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_sdio_reg.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_tx_bd_chip.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_tx_bd_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_tx_desc_chip.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_tx_desc_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_type.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_usb_reg.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/rtl_halmac.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/rtl_halmac.h
- delete mode 100644 drivers/staging/rtlwifi/pci.c
- delete mode 100644 drivers/staging/rtlwifi/pci.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/halphyrf_ce.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/halphyrf_ce.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/mp_precomp.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_acs.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_acs.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_adaptivity.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_adaptivity.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_adc_sampling.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_adc_sampling.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_antdiv.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_antdiv.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_beamforming.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_ccx.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_ccx.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_cfotracking.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_cfotracking.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_debug.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_debug.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dfs.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dig.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dig.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamic_rx_path.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamicbbpowersaving.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamicbbpowersaving.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamictxpower.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamictxpower.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_edcaturbocheck.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_edcaturbocheck.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_features.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_hwconfig.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_hwconfig.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_interface.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_interface.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_iqk.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_kfree.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_kfree.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_noisemonitor.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_noisemonitor.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_powertracking_ce.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_powertracking_ce.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_pre_define.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_precomp.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_psd.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_psd.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_rainfo.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_rainfo.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_reg.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_regdefine11ac.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_types.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_bb.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_bb.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_mac.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_mac.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_rf.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_rf.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halphyrf_8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halphyrf_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_hal_api8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_hal_api8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_iqk_8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_iqk_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_regconfig8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_regconfig8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_rtl8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_rtl8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/version_rtl8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl_phydm.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl_phydm.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/halcomtxbf.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/haltxbf8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/haltxbfinterface.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/haltxbfjaguar.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/phydm_hal_txbf_api.h
- delete mode 100644 drivers/staging/rtlwifi/ps.c
- delete mode 100644 drivers/staging/rtlwifi/ps.h
- delete mode 100644 drivers/staging/rtlwifi/pwrseqcmd.h
- delete mode 100644 drivers/staging/rtlwifi/rc.c
- delete mode 100644 drivers/staging/rtlwifi/rc.h
- delete mode 100644 drivers/staging/rtlwifi/regd.c
- delete mode 100644 drivers/staging/rtlwifi/regd.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/Makefile
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/def.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/fw.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/fw.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/hw.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/hw.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/led.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/led.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/phy.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/phy.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/reg.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/sw.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/sw.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/trx.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/trx.h
- delete mode 100644 drivers/staging/rtlwifi/stats.c
- delete mode 100644 drivers/staging/rtlwifi/stats.h
- delete mode 100644 drivers/staging/rtlwifi/wifi.h
 
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+new file mode 100644
+index 0000000..9b5b8bf
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -0,0 +1,1709 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#include <linux/bcd.h>
++
++#include "main.h"
++#include "reg.h"
++#include "fw.h"
++#include "phy.h"
++#include "debug.h"
++
++struct phy_cfg_pair {
++	u32 addr;
++	u32 data;
++};
++
++union phy_table_tile {
++	struct rtw_phy_cond cond;
++	struct phy_cfg_pair cfg;
++};
++
++struct phy_pg_cfg_pair {
++	u32 band;
++	u32 rf_path;
++	u32 tx_num;
++	u32 addr;
++	u32 bitmask;
++	u32 data;
++};
++
++struct txpwr_lmt_cfg_pair {
++	u8 regd;
++	u8 band;
++	u8 bw;
++	u8 rs;
++	u8 ch;
++	s8 txpwr_lmt;
++};
++
++static const u32 db_invert_table[12][8] = {
++	{10,		13,		16,		20,
++	 25,		32,		40,		50},
++	{64,		80,		101,		128,
++	 160,		201,		256,		318},
++	{401,		505,		635,		800,
++	 1007,		1268,		1596,		2010},
++	{316,		398,		501,		631,
++	 794,		1000,		1259,		1585},
++	{1995,		2512,		3162,		3981,
++	 5012,		6310,		7943,		10000},
++	{12589,		15849,		19953,		25119,
++	 31623,		39811,		50119,		63098},
++	{79433,		100000,		125893,		158489,
++	 199526,	251189,		316228,		398107},
++	{501187,	630957,		794328,		1000000,
++	 1258925,	1584893,	1995262,	2511886},
++	{3162278,	3981072,	5011872,	6309573,
++	 7943282,	1000000,	12589254,	15848932},
++	{19952623,	25118864,	31622777,	39810717,
++	 50118723,	63095734,	79432823,	100000000},
++	{125892541,	158489319,	199526232,	251188643,
++	 316227766,	398107171,	501187234,	630957345},
++	{794328235,	1000000000,	1258925412,	1584893192,
++	 1995262315,	2511886432U,	3162277660U,	3981071706U}
++};
++
++enum rtw_phy_band_type {
++	PHY_BAND_2G	= 0,
++	PHY_BAND_5G	= 1,
++};
++
++void rtw_phy_init(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u32 addr, mask;
++
++	dm_info->fa_history[3] = 0;
++	dm_info->fa_history[2] = 0;
++	dm_info->fa_history[1] = 0;
++	dm_info->fa_history[0] = 0;
++	dm_info->igi_bitmap = 0;
++	dm_info->igi_history[3] = 0;
++	dm_info->igi_history[2] = 0;
++	dm_info->igi_history[1] = 0;
++
++	addr = chip->dig[0].addr;
++	mask = chip->dig[0].mask;
++	dm_info->igi_history[0] = rtw_read32_mask(rtwdev, addr, mask);
++}
++
++void rtw_phy_dig_write(struct rtw_dev *rtwdev, u8 igi)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u32 addr, mask;
++	u8 path;
++
++	for (path = 0; path < hal->rf_path_num; path++) {
++		addr = chip->dig[path].addr;
++		mask = chip->dig[path].mask;
++		rtw_write32_mask(rtwdev, addr, mask, igi);
++	}
++}
++
++static void rtw_phy_stat_false_alarm(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++
++	chip->ops->false_alarm_statistics(rtwdev);
++}
++
++#define RA_FLOOR_TABLE_SIZE	7
++#define RA_FLOOR_UP_GAP		3
++
++static u8 rtw_phy_get_rssi_level(u8 old_level, u8 rssi)
++{
++	u8 table[RA_FLOOR_TABLE_SIZE] = {20, 34, 38, 42, 46, 50, 100};
++	u8 new_level = 0;
++	int i;
++
++	for (i = 0; i < RA_FLOOR_TABLE_SIZE; i++)
++		if (i >= old_level)
++			table[i] += RA_FLOOR_UP_GAP;
++
++	for (i = 0; i < RA_FLOOR_TABLE_SIZE; i++) {
++		if (rssi < table[i]) {
++			new_level = i;
++			break;
++		}
++	}
++
++	return new_level;
++}
++
++struct rtw_phy_stat_iter_data {
++	struct rtw_dev *rtwdev;
++	u8 min_rssi;
++};
++
++static void rtw_phy_stat_rssi_iter(void *data, struct ieee80211_sta *sta)
++{
++	struct rtw_phy_stat_iter_data *iter_data = data;
++	struct rtw_dev *rtwdev = iter_data->rtwdev;
++	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
++	u8 rssi, rssi_level;
++
++	rssi = ewma_rssi_read(&si->avg_rssi);
++	rssi_level = rtw_phy_get_rssi_level(si->rssi_level, rssi);
++
++	rtw_fw_send_rssi_info(rtwdev, si);
++
++	iter_data->min_rssi = min_t(u8, rssi, iter_data->min_rssi);
++}
++
++static void rtw_phy_stat_rssi(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_phy_stat_iter_data data = {};
++
++	data.rtwdev = rtwdev;
++	data.min_rssi = U8_MAX;
++	rtw_iterate_stas_atomic(rtwdev, rtw_phy_stat_rssi_iter, &data);
++
++	dm_info->pre_min_rssi = dm_info->min_rssi;
++	dm_info->min_rssi = data.min_rssi;
++}
++
++static void rtw_phy_statistics(struct rtw_dev *rtwdev)
++{
++	rtw_phy_stat_rssi(rtwdev);
++	rtw_phy_stat_false_alarm(rtwdev);
++}
++
++#define DIG_PERF_FA_TH_LOW			250
++#define DIG_PERF_FA_TH_HIGH			500
++#define DIG_PERF_FA_TH_EXTRA_HIGH		750
++#define DIG_PERF_MAX				0x5a
++#define DIG_PERF_MID				0x40
++#define DIG_CVRG_FA_TH_LOW			2000
++#define DIG_CVRG_FA_TH_HIGH			4000
++#define DIG_CVRG_FA_TH_EXTRA_HIGH		5000
++#define DIG_CVRG_MAX				0x2a
++#define DIG_CVRG_MID				0x26
++#define DIG_CVRG_MIN				0x1c
++#define DIG_RSSI_GAIN_OFFSET			15
++
++static bool
++rtw_phy_dig_check_damping(struct rtw_dm_info *dm_info)
++{
++	u16 fa_lo = DIG_PERF_FA_TH_LOW;
++	u16 fa_hi = DIG_PERF_FA_TH_HIGH;
++	u16 *fa_history;
++	u8 *igi_history;
++	u8 damping_rssi;
++	u8 min_rssi;
++	u8 diff;
++	u8 igi_bitmap;
++	bool damping = false;
++
++	min_rssi = dm_info->min_rssi;
++	if (dm_info->damping) {
++		damping_rssi = dm_info->damping_rssi;
++		diff = min_rssi > damping_rssi ? min_rssi - damping_rssi :
++						 damping_rssi - min_rssi;
++		if (diff > 3 || dm_info->damping_cnt++ > 20) {
++			dm_info->damping = false;
++			return false;
++		}
++
++		return true;
++	}
++
++	igi_history = dm_info->igi_history;
++	fa_history = dm_info->fa_history;
++	igi_bitmap = dm_info->igi_bitmap & 0xf;
++	switch (igi_bitmap) {
++	case 5:
++		/* down -> up -> down -> up */
++		if (igi_history[0] > igi_history[1] &&
++		    igi_history[2] > igi_history[3] &&
++		    igi_history[0] - igi_history[1] >= 2 &&
++		    igi_history[2] - igi_history[3] >= 2 &&
++		    fa_history[0] > fa_hi && fa_history[1] < fa_lo &&
++		    fa_history[2] > fa_hi && fa_history[3] < fa_lo)
++			damping = true;
++		break;
++	case 9:
++		/* up -> down -> down -> up */
++		if (igi_history[0] > igi_history[1] &&
++		    igi_history[3] > igi_history[2] &&
++		    igi_history[0] - igi_history[1] >= 4 &&
++		    igi_history[3] - igi_history[2] >= 2 &&
++		    fa_history[0] > fa_hi && fa_history[1] < fa_lo &&
++		    fa_history[2] < fa_lo && fa_history[3] > fa_hi)
++			damping = true;
++		break;
++	default:
++		return false;
++	}
++
++	if (damping) {
++		dm_info->damping = true;
++		dm_info->damping_cnt = 0;
++		dm_info->damping_rssi = min_rssi;
++	}
++
++	return damping;
++}
++
++static void rtw_phy_dig_get_boundary(struct rtw_dm_info *dm_info,
++				     u8 *upper, u8 *lower, bool linked)
++{
++	u8 dig_max, dig_min, dig_mid;
++	u8 min_rssi;
++
++	if (linked) {
++		dig_max = DIG_PERF_MAX;
++		dig_mid = DIG_PERF_MID;
++		/* 22B=0x1c, 22C=0x20 */
++		dig_min = 0x1c;
++		min_rssi = max_t(u8, dm_info->min_rssi, dig_min);
++	} else {
++		dig_max = DIG_CVRG_MAX;
++		dig_mid = DIG_CVRG_MID;
++		dig_min = DIG_CVRG_MIN;
++		min_rssi = dig_min;
++	}
++
++	/* DIG MAX should be bounded by minimum RSSI with offset +15 */
++	dig_max = min_t(u8, dig_max, min_rssi + DIG_RSSI_GAIN_OFFSET);
++
++	*lower = clamp_t(u8, min_rssi, dig_min, dig_mid);
++	*upper = clamp_t(u8, *lower + DIG_RSSI_GAIN_OFFSET, dig_min, dig_max);
++}
++
++static void rtw_phy_dig_get_threshold(struct rtw_dm_info *dm_info,
++				      u16 *fa_th, u8 *step, bool linked)
++{
++	u8 min_rssi, pre_min_rssi;
++
++	min_rssi = dm_info->min_rssi;
++	pre_min_rssi = dm_info->pre_min_rssi;
++	step[0] = 4;
++	step[1] = 3;
++	step[2] = 2;
++
++	if (linked) {
++		fa_th[0] = DIG_PERF_FA_TH_EXTRA_HIGH;
++		fa_th[1] = DIG_PERF_FA_TH_HIGH;
++		fa_th[2] = DIG_PERF_FA_TH_LOW;
++		if (pre_min_rssi > min_rssi) {
++			step[0] = 6;
++			step[1] = 4;
++			step[2] = 2;
++		}
++	} else {
++		fa_th[0] = DIG_CVRG_FA_TH_EXTRA_HIGH;
++		fa_th[1] = DIG_CVRG_FA_TH_HIGH;
++		fa_th[2] = DIG_CVRG_FA_TH_LOW;
++	}
++}
++
++static void rtw_phy_dig_recorder(struct rtw_dm_info *dm_info, u8 igi, u16 fa)
++{
++	u8 *igi_history;
++	u16 *fa_history;
++	u8 igi_bitmap;
++	bool up;
++
++	igi_bitmap = dm_info->igi_bitmap << 1 & 0xfe;
++	igi_history = dm_info->igi_history;
++	fa_history = dm_info->fa_history;
++
++	up = igi > igi_history[0];
++	igi_bitmap |= up;
++
++	igi_history[3] = igi_history[2];
++	igi_history[2] = igi_history[1];
++	igi_history[1] = igi_history[0];
++	igi_history[0] = igi;
++
++	fa_history[3] = fa_history[2];
++	fa_history[2] = fa_history[1];
++	fa_history[1] = fa_history[0];
++	fa_history[0] = fa;
++
++	dm_info->igi_bitmap = igi_bitmap;
++}
++
++static void rtw_phy_dig(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u8 upper_bound, lower_bound;
++	u8 pre_igi, cur_igi;
++	u16 fa_th[3], fa_cnt;
++	u8 level;
++	u8 step[3];
++	bool linked;
++
++	if (rtw_flag_check(rtwdev, RTW_FLAG_DIG_DISABLE))
++		return;
++
++	if (rtw_phy_dig_check_damping(dm_info))
++		return;
++
++	linked = !!rtwdev->sta_cnt;
++
++	fa_cnt = dm_info->total_fa_cnt;
++	pre_igi = dm_info->igi_history[0];
++
++	rtw_phy_dig_get_threshold(dm_info, fa_th, step, linked);
++
++	/* test the false alarm count from the highest threshold level first,
++	 * and increase it by corresponding step size
++	 *
++	 * note that the step size is offset by -2, compensate it afterall
++	 */
++	cur_igi = pre_igi;
++	for (level = 0; level < 3; level++) {
++		if (fa_cnt > fa_th[level]) {
++			cur_igi += step[level];
++			break;
++		}
++	}
++	cur_igi -= 2;
++
++	/* calculate the upper/lower bound by the minimum rssi we have among
++	 * the peers connected with us, meanwhile make sure the igi value does
++	 * not beyond the hardware limitation
++	 */
++	rtw_phy_dig_get_boundary(dm_info, &upper_bound, &lower_bound, linked);
++	cur_igi = clamp_t(u8, cur_igi, lower_bound, upper_bound);
++
++	/* record current igi value and false alarm statistics for further
++	 * damping checks, and record the trend of igi values
++	 */
++	rtw_phy_dig_recorder(dm_info, cur_igi, fa_cnt);
++
++	if (cur_igi != pre_igi)
++		rtw_phy_dig_write(rtwdev, cur_igi);
++}
++
++static void rtw_phy_ra_info_update_iter(void *data, struct ieee80211_sta *sta)
++{
++	struct rtw_dev *rtwdev = data;
++	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
++
++	rtw_update_sta_info(rtwdev, si);
++}
++
++static void rtw_phy_ra_info_update(struct rtw_dev *rtwdev)
++{
++	if (rtwdev->watch_dog_cnt & 0x3)
++		return;
++
++	rtw_iterate_stas_atomic(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
++}
++
++void rtw_phy_dynamic_mechanism(struct rtw_dev *rtwdev)
++{
++	/* for further calculation */
++	rtw_phy_statistics(rtwdev);
++	rtw_phy_dig(rtwdev);
++	rtw_phy_ra_info_update(rtwdev);
++}
++
++#define FRAC_BITS 3
++
++static u8 rtw_phy_power_2_db(s8 power)
++{
++	if (power <= -100 || power >= 20)
++		return 0;
++	else if (power >= 0)
++		return 100;
++	else
++		return 100 + power;
++}
++
++static u64 rtw_phy_db_2_linear(u8 power_db)
++{
++	u8 i, j;
++	u64 linear;
++
++	/* 1dB ~ 96dB */
++	i = (power_db - 1) >> 3;
++	j = (power_db - 1) - (i << 3);
++
++	linear = db_invert_table[i][j];
++	linear = i > 2 ? linear << FRAC_BITS : linear;
++
++	return linear;
++}
++
++static u8 rtw_phy_linear_2_db(u64 linear)
++{
++	u8 i;
++	u8 j;
++	u32 dB;
++
++	if (linear >= db_invert_table[11][7])
++		return 96; /* maximum 96 dB */
++
++	for (i = 0; i < 12; i++) {
++		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][7])
++			break;
++		else if (i > 2 && linear <= db_invert_table[i][7])
++			break;
++	}
++
++	for (j = 0; j < 8; j++) {
++		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
++			break;
++		else if (i > 2 && linear <= db_invert_table[i][j])
++			break;
++	}
++
++	if (j == 0 && i == 0)
++		goto end;
++
++	if (j == 0) {
++		if (i != 3) {
++			if (db_invert_table[i][0] - linear >
++			    linear - db_invert_table[i - 1][7]) {
++				i = i - 1;
++				j = 7;
++			}
++		} else {
++			if (db_invert_table[3][0] - linear >
++			    linear - db_invert_table[2][7]) {
++				i = 2;
++				j = 7;
++			}
++		}
++	} else {
++		if (db_invert_table[i][j] - linear >
++		    linear - db_invert_table[i][j - 1]) {
++			j = j - 1;
++		}
++	}
++end:
++	dB = (i << 3) + j + 1;
++
++	return dB;
++}
++
++u8 rtw_phy_rf_power_2_rssi(s8 *rf_power, u8 path_num)
++{
++	s8 power;
++	u8 power_db;
++	u64 linear;
++	u64 sum = 0;
++	u8 path;
++
++	for (path = 0; path < path_num; path++) {
++		power = rf_power[path];
++		power_db = rtw_phy_power_2_db(power);
++		linear = rtw_phy_db_2_linear(power_db);
++		sum += linear;
++	}
++
++	sum = (sum + (1 << (FRAC_BITS - 1))) >> FRAC_BITS;
++	switch (path_num) {
++	case 2:
++		sum >>= 1;
++		break;
++	case 3:
++		sum = ((sum) + ((sum) << 1) + ((sum) << 3)) >> 5;
++		break;
++	case 4:
++		sum >>= 2;
++		break;
++	default:
++		break;
++	}
++
++	return rtw_phy_linear_2_db(sum);
++}
++
++u32 rtw_phy_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++		    u32 addr, u32 mask)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	const u32 *base_addr = chip->rf_base_addr;
++	u32 val, direct_addr;
++
++	if (rf_path >= hal->rf_path_num) {
++		rtw_err(rtwdev, "unsupported rf path (%d)\n", rf_path);
++		return INV_RF_DATA;
++	}
++
++	addr &= 0xff;
++	direct_addr = base_addr[rf_path] + (addr << 2);
++	mask &= RFREG_MASK;
++
++	val = rtw_read32_mask(rtwdev, direct_addr, mask);
++
++	return val;
++}
++
++bool rtw_phy_write_rf_reg_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			       u32 addr, u32 mask, u32 data)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u32 *sipi_addr = chip->rf_sipi_addr;
++	u32 data_and_addr;
++	u32 old_data = 0;
++	u32 shift;
++
++	if (rf_path >= hal->rf_path_num) {
++		rtw_err(rtwdev, "unsupported rf path (%d)\n", rf_path);
++		return false;
++	}
++
++	addr &= 0xff;
++	mask &= RFREG_MASK;
++
++	if (mask != RFREG_MASK) {
++		old_data = rtw_phy_read_rf(rtwdev, rf_path, addr, RFREG_MASK);
++
++		if (old_data == INV_RF_DATA) {
++			rtw_err(rtwdev, "Write fail, rf is disabled\n");
++			return false;
++		}
++
++		shift = __ffs(mask);
++		data = ((old_data) & (~mask)) | (data << shift);
++	}
++
++	data_and_addr = ((addr << 20) | (data & 0x000fffff)) & 0x0fffffff;
++
++	rtw_write32(rtwdev, sipi_addr[rf_path], data_and_addr);
++
++	udelay(13);
++
++	return true;
++}
++
++bool rtw_phy_write_rf_reg(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			  u32 addr, u32 mask, u32 data)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	const u32 *base_addr = chip->rf_base_addr;
++	u32 direct_addr;
++
++	if (rf_path >= hal->rf_path_num) {
++		rtw_err(rtwdev, "unsupported rf path (%d)\n", rf_path);
++		return false;
++	}
++
++	addr &= 0xff;
++	direct_addr = base_addr[rf_path] + (addr << 2);
++	mask &= RFREG_MASK;
++
++	rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, DISABLE_PI);
++	rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, DISABLE_PI);
++	rtw_write32_mask(rtwdev, direct_addr, mask, data);
++
++	udelay(1);
++
++	rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, ENABLE_PI);
++	rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, ENABLE_PI);
++
++	return true;
++}
++
++bool rtw_phy_write_rf_reg_mix(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			      u32 addr, u32 mask, u32 data)
++{
++	if (addr != 0x00)
++		return rtw_phy_write_rf_reg(rtwdev, rf_path, addr, mask, data);
++
++	return rtw_phy_write_rf_reg_sipi(rtwdev, rf_path, addr, mask, data);
++}
++
++void rtw_phy_setup_phy_cond(struct rtw_dev *rtwdev, u32 pkg)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	struct rtw_phy_cond cond = {0};
++
++	cond.cut = hal->cut_version ? hal->cut_version : 15;
++	cond.pkg = pkg ? pkg : 15;
++	cond.plat = 0x04;
++	cond.rfe = efuse->rfe_option;
++
++	switch (rtw_hci_type(rtwdev)) {
++	case RTW_HCI_TYPE_USB:
++		cond.intf = INTF_USB;
++		break;
++	case RTW_HCI_TYPE_SDIO:
++		cond.intf = INTF_SDIO;
++		break;
++	case RTW_HCI_TYPE_PCIE:
++	default:
++		cond.intf = INTF_PCIE;
++		break;
++	}
++
++	hal->phy_cond = cond;
++
++	rtw_dbg(rtwdev, RTW_DBG_PHY, "phy cond=0x%08x\n", *((u32 *)&hal->phy_cond));
++}
++
++static bool check_positive(struct rtw_dev *rtwdev, struct rtw_phy_cond cond)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_phy_cond drv_cond = hal->phy_cond;
++
++	if (cond.cut && cond.cut != drv_cond.cut)
++		return false;
++
++	if (cond.pkg && cond.pkg != drv_cond.pkg)
++		return false;
++
++	if (cond.intf && cond.intf != drv_cond.intf)
++		return false;
++
++	if (cond.rfe != drv_cond.rfe)
++		return false;
++
++	return true;
++}
++
++void rtw_parse_tbl_phy_cond(struct rtw_dev *rtwdev, const struct rtw_table *tbl)
++{
++	const union phy_table_tile *p = tbl->data;
++	const union phy_table_tile *end = p + tbl->size / 2;
++	struct rtw_phy_cond pos_cond = {0};
++	bool is_matched = true, is_skipped = false;
++
++	BUILD_BUG_ON(sizeof(union phy_table_tile) != sizeof(struct phy_cfg_pair));
++
++	for (; p < end; p++) {
++		if (p->cond.pos) {
++			switch (p->cond.branch) {
++			case BRANCH_ENDIF:
++				is_matched = true;
++				is_skipped = false;
++				break;
++			case BRANCH_ELSE:
++				is_matched = is_skipped ? false : true;
++				break;
++			case BRANCH_IF:
++			case BRANCH_ELIF:
++			default:
++				pos_cond = p->cond;
++				break;
++			}
++		} else if (p->cond.neg) {
++			if (!is_skipped) {
++				if (check_positive(rtwdev, pos_cond)) {
++					is_matched = true;
++					is_skipped = true;
++				} else {
++					is_matched = false;
++					is_skipped = false;
++				}
++			} else {
++				is_matched = false;
++			}
++		} else if (is_matched) {
++			(*tbl->do_cfg)(rtwdev, tbl, p->cfg.addr, p->cfg.data);
++		}
++	}
++}
++
++void rtw_parse_tbl_bb_pg(struct rtw_dev *rtwdev, const struct rtw_table *tbl)
++{
++	const struct phy_pg_cfg_pair *p = tbl->data;
++	const struct phy_pg_cfg_pair *end = p + tbl->size / 6;
++
++	BUILD_BUG_ON(sizeof(struct phy_pg_cfg_pair) != sizeof(u32) * 6);
++
++	for (; p < end; p++) {
++		if (p->addr == 0xfe || p->addr == 0xffe) {
++			msleep(50);
++			continue;
++		}
++		phy_store_tx_power_by_rate(rtwdev, p->band, p->rf_path,
++					   p->tx_num, p->addr, p->bitmask,
++					   p->data);
++	}
++}
++
++void rtw_parse_tbl_txpwr_lmt(struct rtw_dev *rtwdev,
++			     const struct rtw_table *tbl)
++{
++	const struct txpwr_lmt_cfg_pair *p = tbl->data;
++	const struct txpwr_lmt_cfg_pair *end = p + tbl->size / 6;
++
++	BUILD_BUG_ON(sizeof(struct txpwr_lmt_cfg_pair) != sizeof(u8) * 6);
++
++	for (; p < end; p++) {
++		phy_set_tx_power_limit(rtwdev, p->regd, p->band,
++				       p->bw, p->rs,
++				       p->ch, p->txpwr_lmt);
++	}
++}
++
++void rtw_phy_cfg_mac(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		     u32 addr, u32 data)
++{
++	rtw_write8(rtwdev, addr, data);
++}
++
++void rtw_phy_cfg_agc(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		     u32 addr, u32 data)
++{
++	rtw_write32(rtwdev, addr, data);
++}
++
++void rtw_phy_cfg_bb(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		    u32 addr, u32 data)
++{
++	if (addr == 0xfe)
++		msleep(50);
++	else if (addr == 0xfd)
++		mdelay(5);
++	else if (addr == 0xfc)
++		mdelay(1);
++	else if (addr == 0xfb)
++		usleep_range(50, 60);
++	else if (addr == 0xfa)
++		udelay(5);
++	else if (addr == 0xf9)
++		udelay(1);
++	else
++		rtw_write32(rtwdev, addr, data);
++}
++
++void rtw_phy_cfg_rf(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		    u32 addr, u32 data)
++{
++	if (addr == 0xffe) {
++		msleep(50);
++	} else if (addr == 0xfe) {
++		usleep_range(100, 110);
++	} else {
++		rtw_write_rf(rtwdev, tbl->rf_path, addr, RFREG_MASK, data);
++		udelay(1);
++	}
++}
++
++static void rtw_load_rfk_table(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++
++	if (!chip->rfk_init_tbl)
++		return;
++
++	rtw_load_table(rtwdev, chip->rfk_init_tbl);
++}
++
++void rtw_phy_load_tables(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u8 rf_path;
++
++	rtw_load_table(rtwdev, chip->mac_tbl);
++	rtw_load_table(rtwdev, chip->bb_tbl);
++	rtw_load_table(rtwdev, chip->agc_tbl);
++	rtw_load_rfk_table(rtwdev);
++
++	for (rf_path = 0; rf_path < rtwdev->hal.rf_path_num; rf_path++) {
++		const struct rtw_table *tbl;
++
++		tbl = chip->rf_tbl[rf_path];
++		rtw_load_table(rtwdev, tbl);
++	}
++}
++
++#define bcd_to_dec_pwr_by_rate(val, i) bcd2bin(val >> (i * 8))
++
++#define RTW_MAX_POWER_INDEX		0x3F
++
++u8 cck_rates[] = {DESC_RATE1M, DESC_RATE2M, DESC_RATE5_5M, DESC_RATE11M};
++u8 ofdm_rates[] = {DESC_RATE6M,  DESC_RATE9M,  DESC_RATE12M,
++		   DESC_RATE18M, DESC_RATE24M, DESC_RATE36M,
++		   DESC_RATE48M, DESC_RATE54M};
++u8 ht_1s_rates[] = {DESC_RATEMCS0, DESC_RATEMCS1, DESC_RATEMCS2,
++		    DESC_RATEMCS3, DESC_RATEMCS4, DESC_RATEMCS5,
++		    DESC_RATEMCS6, DESC_RATEMCS7};
++u8 ht_2s_rates[] = {DESC_RATEMCS8,  DESC_RATEMCS9,  DESC_RATEMCS10,
++		    DESC_RATEMCS11, DESC_RATEMCS12, DESC_RATEMCS13,
++		    DESC_RATEMCS14, DESC_RATEMCS15};
++u8 vht_1s_rates[] = {DESC_RATEVHT1SS_MCS0, DESC_RATEVHT1SS_MCS1,
++		     DESC_RATEVHT1SS_MCS2, DESC_RATEVHT1SS_MCS3,
++		     DESC_RATEVHT1SS_MCS4, DESC_RATEVHT1SS_MCS5,
++		     DESC_RATEVHT1SS_MCS6, DESC_RATEVHT1SS_MCS7,
++		     DESC_RATEVHT1SS_MCS8, DESC_RATEVHT1SS_MCS9};
++u8 vht_2s_rates[] = {DESC_RATEVHT2SS_MCS0, DESC_RATEVHT2SS_MCS1,
++		     DESC_RATEVHT2SS_MCS2, DESC_RATEVHT2SS_MCS3,
++		     DESC_RATEVHT2SS_MCS4, DESC_RATEVHT2SS_MCS5,
++		     DESC_RATEVHT2SS_MCS6, DESC_RATEVHT2SS_MCS7,
++		     DESC_RATEVHT2SS_MCS8, DESC_RATEVHT2SS_MCS9};
++u8 cck_size = ARRAY_SIZE(cck_rates);
++u8 ofdm_size = ARRAY_SIZE(ofdm_rates);
++u8 ht_1s_size = ARRAY_SIZE(ht_1s_rates);
++u8 ht_2s_size = ARRAY_SIZE(ht_2s_rates);
++u8 vht_1s_size = ARRAY_SIZE(vht_1s_rates);
++u8 vht_2s_size = ARRAY_SIZE(vht_2s_rates);
++u8 *rate_section[RTW_RATE_SECTION_MAX] = {cck_rates, ofdm_rates,
++					  ht_1s_rates, ht_2s_rates,
++					  vht_1s_rates, vht_2s_rates};
++u8 rate_size[RTW_RATE_SECTION_MAX] = {ARRAY_SIZE(cck_rates),
++				      ARRAY_SIZE(ofdm_rates),
++				      ARRAY_SIZE(ht_1s_rates),
++				      ARRAY_SIZE(ht_2s_rates),
++				      ARRAY_SIZE(vht_1s_rates),
++				      ARRAY_SIZE(vht_2s_rates)};
++static const u8 rtw_channel_idx_5g[RTW_MAX_CHANNEL_NUM_5G] = {
++	36,  38,  40,  42,  44,  46,  48, /* Band 1 */
++	52,  54,  56,  58,  60,  62,  64, /* Band 2 */
++	100, 102, 104, 106, 108, 110, 112, /* Band 3 */
++	116, 118, 120, 122, 124, 126, 128, /* Band 3 */
++	132, 134, 136, 138, 140, 142, 144, /* Band 3 */
++	149, 151, 153, 155, 157, 159, 161, /* Band 4 */
++	165, 167, 169, 171, 173, 175, 177}; /* Band 4 */
++
++static int rtw_channel_to_idx(u8 band, u8 channel)
++{
++	int ch_idx;
++	u8 n_channel;
++
++	if (band == PHY_BAND_2G) {
++		ch_idx = channel - 1;
++		n_channel = RTW_MAX_CHANNEL_NUM_2G;
++	} else if (band == PHY_BAND_5G) {
++		n_channel = RTW_MAX_CHANNEL_NUM_5G;
++		for (ch_idx = 0; ch_idx < n_channel; ch_idx++)
++			if (rtw_channel_idx_5g[ch_idx] == channel)
++				break;
++	} else {
++		return -1;
++	}
++
++	if (ch_idx >= n_channel)
++		return -1;
++
++	return ch_idx;
++}
++
++static u8 rtw_get_channel_group(u8 channel)
++{
++	switch (channel) {
++	default:
++		WARN_ON(1);
++	case 1:
++	case 2:
++	case 36:
++	case 38:
++	case 40:
++	case 42:
++		return 0;
++	case 3:
++	case 4:
++	case 5:
++	case 44:
++	case 46:
++	case 48:
++	case 50:
++		return 1;
++	case 6:
++	case 7:
++	case 8:
++	case 52:
++	case 54:
++	case 56:
++	case 58:
++		return 2;
++	case 9:
++	case 10:
++	case 11:
++	case 60:
++	case 62:
++	case 64:
++		return 3;
++	case 12:
++	case 13:
++	case 100:
++	case 102:
++	case 104:
++	case 106:
++		return 4;
++	case 14:
++	case 108:
++	case 110:
++	case 112:
++	case 114:
++		return 5;
++	case 116:
++	case 118:
++	case 120:
++	case 122:
++		return 6;
++	case 124:
++	case 126:
++	case 128:
++	case 130:
++		return 7;
++	case 132:
++	case 134:
++	case 136:
++	case 138:
++		return 8;
++	case 140:
++	case 142:
++	case 144:
++		return 9;
++	case 149:
++	case 151:
++	case 153:
++	case 155:
++		return 10;
++	case 157:
++	case 159:
++	case 161:
++		return 11;
++	case 165:
++	case 167:
++	case 169:
++	case 171:
++		return 12;
++	case 173:
++	case 175:
++	case 177:
++		return 13;
++	}
++}
++
++static u8 phy_get_2g_tx_power_index(struct rtw_dev *rtwdev,
++				    struct rtw_2g_txpwr_idx *pwr_idx_2g,
++				    enum rtw_bandwidth bandwidth,
++				    u8 rate, u8 group)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u8 tx_power;
++	bool mcs_rate;
++	bool above_2ss;
++	u8 factor = chip->txgi_factor;
++
++	if (rate <= DESC_RATE11M)
++		tx_power = pwr_idx_2g->cck_base[group];
++	else
++		tx_power = pwr_idx_2g->bw40_base[group];
++
++	if (rate >= DESC_RATE6M && rate <= DESC_RATE54M)
++		tx_power += pwr_idx_2g->ht_1s_diff.ofdm * factor;
++
++	mcs_rate = (rate >= DESC_RATEMCS0 && rate <= DESC_RATEMCS15) ||
++		   (rate >= DESC_RATEVHT1SS_MCS0 &&
++		    rate <= DESC_RATEVHT2SS_MCS9);
++	above_2ss = (rate >= DESC_RATEMCS8 && rate <= DESC_RATEMCS15) ||
++		    (rate >= DESC_RATEVHT2SS_MCS0);
++
++	if (!mcs_rate)
++		return tx_power;
++
++	switch (bandwidth) {
++	default:
++		WARN_ON(1);
++	case RTW_CHANNEL_WIDTH_20:
++		tx_power += pwr_idx_2g->ht_1s_diff.bw20 * factor;
++		if (above_2ss)
++			tx_power += pwr_idx_2g->ht_2s_diff.bw20 * factor;
++		break;
++	case RTW_CHANNEL_WIDTH_40:
++		/* bw40 is the base power */
++		if (above_2ss)
++			tx_power += pwr_idx_2g->ht_2s_diff.bw40 * factor;
++		break;
++	}
++
++	return tx_power;
++}
++
++static u8 phy_get_5g_tx_power_index(struct rtw_dev *rtwdev,
++				    struct rtw_5g_txpwr_idx *pwr_idx_5g,
++				    enum rtw_bandwidth bandwidth,
++				    u8 rate, u8 group)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u8 tx_power;
++	u8 upper, lower;
++	bool mcs_rate;
++	bool above_2ss;
++	u8 factor = chip->txgi_factor;
++
++	tx_power = pwr_idx_5g->bw40_base[group];
++
++	mcs_rate = (rate >= DESC_RATEMCS0 && rate <= DESC_RATEMCS15) ||
++		   (rate >= DESC_RATEVHT1SS_MCS0 &&
++		    rate <= DESC_RATEVHT2SS_MCS9);
++	above_2ss = (rate >= DESC_RATEMCS8 && rate <= DESC_RATEMCS15) ||
++		    (rate >= DESC_RATEVHT2SS_MCS0);
++
++	if (!mcs_rate) {
++		tx_power += pwr_idx_5g->ht_1s_diff.ofdm * factor;
++		return tx_power;
++	}
++
++	switch (bandwidth) {
++	default:
++		WARN_ON(1);
++	case RTW_CHANNEL_WIDTH_20:
++		tx_power += pwr_idx_5g->ht_1s_diff.bw20 * factor;
++		if (above_2ss)
++			tx_power += pwr_idx_5g->ht_2s_diff.bw20 * factor;
++		break;
++	case RTW_CHANNEL_WIDTH_40:
++		/* bw40 is the base power */
++		if (above_2ss)
++			tx_power += pwr_idx_5g->ht_2s_diff.bw40 * factor;
++		break;
++	case RTW_CHANNEL_WIDTH_80:
++		/* the base idx of bw80 is the average of bw40+/bw40- */
++		lower = pwr_idx_5g->bw40_base[group];
++		upper = pwr_idx_5g->bw40_base[group + 1];
++
++		tx_power = (lower + upper) / 2;
++		tx_power += pwr_idx_5g->vht_1s_diff.bw80 * factor;
++		if (above_2ss)
++			tx_power += pwr_idx_5g->vht_2s_diff.bw80 * factor;
++		break;
++	}
++
++	return tx_power;
++}
++
++/* set tx power level by path for each rates, note that the order of the rates
++ * are *very* important, bacause 8822B/8821C combines every four bytes of tx
++ * power index into a four-byte power index register, and calls set_tx_agc to
++ * write these values into hardware
++ */
++static
++void phy_set_tx_power_level_by_path(struct rtw_dev *rtwdev, u8 ch, u8 path)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	u8 rs;
++
++	/* do not need cck rates if we are not in 2.4G */
++	if (hal->current_band_type == RTW_BAND_2G)
++		rs = RTW_RATE_SECTION_CCK;
++	else
++		rs = RTW_RATE_SECTION_OFDM;
++
++	for (; rs < RTW_RATE_SECTION_MAX; rs++)
++		phy_set_tx_power_index_by_rs(rtwdev, ch, path, rs);
++}
++
++void rtw_phy_set_tx_power_level(struct rtw_dev *rtwdev, u8 channel)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u8 path;
++
++	mutex_lock(&hal->tx_power_mutex);
++
++	for (path = 0; path < hal->rf_path_num; path++)
++		phy_set_tx_power_level_by_path(rtwdev, channel, path);
++
++	chip->ops->set_tx_power_index(rtwdev);
++	mutex_unlock(&hal->tx_power_mutex);
++}
++
++s8 phy_get_tx_power_limit(struct rtw_dev *rtwdev, u8 band,
++			  enum rtw_bandwidth bandwidth, u8 rf_path,
++			  u8 rate, u8 channel, u8 regd);
++
++static
++u8 phy_get_tx_power_index(void *adapter, u8 rf_path, u8 rate,
++			  enum rtw_bandwidth bandwidth, u8 channel, u8 regd)
++{
++	struct rtw_dev *rtwdev = adapter;
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_txpwr_idx *pwr_idx;
++	u8 tx_power;
++	u8 group;
++	u8 band;
++	s8 offset, limit;
++
++	pwr_idx = &rtwdev->efuse.txpwr_idx_table[rf_path];
++	group = rtw_get_channel_group(channel);
++
++	/* base power index for 2.4G/5G */
++	if (channel <= 14) {
++		band = PHY_BAND_2G;
++		tx_power = phy_get_2g_tx_power_index(rtwdev,
++						     &pwr_idx->pwr_idx_2g,
++						     bandwidth, rate, group);
++		offset = hal->tx_pwr_by_rate_offset_2g[rf_path][rate];
++	} else {
++		band = PHY_BAND_5G;
++		tx_power = phy_get_5g_tx_power_index(rtwdev,
++						     &pwr_idx->pwr_idx_5g,
++						     bandwidth, rate, group);
++		offset = hal->tx_pwr_by_rate_offset_5g[rf_path][rate];
++	}
++
++	limit = phy_get_tx_power_limit(rtwdev, band, bandwidth, rf_path,
++				       rate, channel, regd);
++
++	if (offset > limit)
++		offset = limit;
++
++	tx_power += offset;
++
++	if (tx_power > rtwdev->chip->max_power_index)
++		tx_power = rtwdev->chip->max_power_index;
++
++	return tx_power;
++}
++
++void phy_set_tx_power_index_by_rs(void *adapter, u8 ch, u8 path, u8 rs)
++{
++	struct rtw_dev *rtwdev = adapter;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u8 regd = rtwdev->regd.txpwr_regd;
++	u8 *rates;
++	u8 size;
++	u8 rate;
++	u8 pwr_idx;
++	u8 bw;
++	int i;
++
++	if (rs >= RTW_RATE_SECTION_MAX)
++		return;
++
++	rates = rate_section[rs];
++	size = rate_size[rs];
++	bw = hal->current_band_width;
++	for (i = 0; i < size; i++) {
++		rate = rates[i];
++		pwr_idx = phy_get_tx_power_index(adapter, path, rate, bw, ch,
++						 regd);
++		hal->tx_pwr_tbl[path][rate] = pwr_idx;
++	}
++}
++
++static u8 tbl_to_dec_pwr_by_rate(struct rtw_dev *rtwdev, u32 hex, u8 i)
++{
++	if (rtwdev->chip->is_pwr_by_rate_dec)
++		return bcd_to_dec_pwr_by_rate(hex, i);
++	else
++		return (hex >> (i * 8)) & 0xFF;
++}
++
++static void phy_get_rate_values_of_txpwr_by_rate(struct rtw_dev *rtwdev,
++						 u32 addr, u32 mask,
++						 u32 val, u8 *rate,
++						 u8 *pwr_by_rate, u8 *rate_num)
++{
++	int i;
++
++	switch (addr) {
++	case 0xE00:
++	case 0x830:
++		rate[0] = DESC_RATE6M;
++		rate[1] = DESC_RATE9M;
++		rate[2] = DESC_RATE12M;
++		rate[3] = DESC_RATE18M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xE04:
++	case 0x834:
++		rate[0] = DESC_RATE24M;
++		rate[1] = DESC_RATE36M;
++		rate[2] = DESC_RATE48M;
++		rate[3] = DESC_RATE54M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xE08:
++		rate[0] = DESC_RATE1M;
++		pwr_by_rate[0] = bcd_to_dec_pwr_by_rate(val, 1);
++		*rate_num = 1;
++		break;
++	case 0x86C:
++		if (mask == 0xffffff00) {
++			rate[0] = DESC_RATE2M;
++			rate[1] = DESC_RATE5_5M;
++			rate[2] = DESC_RATE11M;
++			for (i = 1; i < 4; ++i)
++				pwr_by_rate[i - 1] =
++					tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++			*rate_num = 3;
++		} else if (mask == 0x000000ff) {
++			rate[0] = DESC_RATE11M;
++			pwr_by_rate[0] = bcd_to_dec_pwr_by_rate(val, 0);
++			*rate_num = 1;
++		}
++		break;
++	case 0xE10:
++	case 0x83C:
++		rate[0] = DESC_RATEMCS0;
++		rate[1] = DESC_RATEMCS1;
++		rate[2] = DESC_RATEMCS2;
++		rate[3] = DESC_RATEMCS3;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xE14:
++	case 0x848:
++		rate[0] = DESC_RATEMCS4;
++		rate[1] = DESC_RATEMCS5;
++		rate[2] = DESC_RATEMCS6;
++		rate[3] = DESC_RATEMCS7;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xE18:
++	case 0x84C:
++		rate[0] = DESC_RATEMCS8;
++		rate[1] = DESC_RATEMCS9;
++		rate[2] = DESC_RATEMCS10;
++		rate[3] = DESC_RATEMCS11;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xE1C:
++	case 0x868:
++		rate[0] = DESC_RATEMCS12;
++		rate[1] = DESC_RATEMCS13;
++		rate[2] = DESC_RATEMCS14;
++		rate[3] = DESC_RATEMCS15;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++
++		break;
++	case 0x838:
++		rate[0] = DESC_RATE1M;
++		rate[1] = DESC_RATE2M;
++		rate[2] = DESC_RATE5_5M;
++		for (i = 1; i < 4; ++i)
++			pwr_by_rate[i - 1] = tbl_to_dec_pwr_by_rate(rtwdev,
++								    val, i);
++		*rate_num = 3;
++		break;
++	case 0xC20:
++	case 0xE20:
++	case 0x1820:
++	case 0x1A20:
++		rate[0] = DESC_RATE1M;
++		rate[1] = DESC_RATE2M;
++		rate[2] = DESC_RATE5_5M;
++		rate[3] = DESC_RATE11M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC24:
++	case 0xE24:
++	case 0x1824:
++	case 0x1A24:
++		rate[0] = DESC_RATE6M;
++		rate[1] = DESC_RATE9M;
++		rate[2] = DESC_RATE12M;
++		rate[3] = DESC_RATE18M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC28:
++	case 0xE28:
++	case 0x1828:
++	case 0x1A28:
++		rate[0] = DESC_RATE24M;
++		rate[1] = DESC_RATE36M;
++		rate[2] = DESC_RATE48M;
++		rate[3] = DESC_RATE54M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC2C:
++	case 0xE2C:
++	case 0x182C:
++	case 0x1A2C:
++		rate[0] = DESC_RATEMCS0;
++		rate[1] = DESC_RATEMCS1;
++		rate[2] = DESC_RATEMCS2;
++		rate[3] = DESC_RATEMCS3;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC30:
++	case 0xE30:
++	case 0x1830:
++	case 0x1A30:
++		rate[0] = DESC_RATEMCS4;
++		rate[1] = DESC_RATEMCS5;
++		rate[2] = DESC_RATEMCS6;
++		rate[3] = DESC_RATEMCS7;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC34:
++	case 0xE34:
++	case 0x1834:
++	case 0x1A34:
++		rate[0] = DESC_RATEMCS8;
++		rate[1] = DESC_RATEMCS9;
++		rate[2] = DESC_RATEMCS10;
++		rate[3] = DESC_RATEMCS11;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC38:
++	case 0xE38:
++	case 0x1838:
++	case 0x1A38:
++		rate[0] = DESC_RATEMCS12;
++		rate[1] = DESC_RATEMCS13;
++		rate[2] = DESC_RATEMCS14;
++		rate[3] = DESC_RATEMCS15;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC3C:
++	case 0xE3C:
++	case 0x183C:
++	case 0x1A3C:
++		rate[0] = DESC_RATEVHT1SS_MCS0;
++		rate[1] = DESC_RATEVHT1SS_MCS1;
++		rate[2] = DESC_RATEVHT1SS_MCS2;
++		rate[3] = DESC_RATEVHT1SS_MCS3;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC40:
++	case 0xE40:
++	case 0x1840:
++	case 0x1A40:
++		rate[0] = DESC_RATEVHT1SS_MCS4;
++		rate[1] = DESC_RATEVHT1SS_MCS5;
++		rate[2] = DESC_RATEVHT1SS_MCS6;
++		rate[3] = DESC_RATEVHT1SS_MCS7;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC44:
++	case 0xE44:
++	case 0x1844:
++	case 0x1A44:
++		rate[0] = DESC_RATEVHT1SS_MCS8;
++		rate[1] = DESC_RATEVHT1SS_MCS9;
++		rate[2] = DESC_RATEVHT2SS_MCS0;
++		rate[3] = DESC_RATEVHT2SS_MCS1;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC48:
++	case 0xE48:
++	case 0x1848:
++	case 0x1A48:
++		rate[0] = DESC_RATEVHT2SS_MCS2;
++		rate[1] = DESC_RATEVHT2SS_MCS3;
++		rate[2] = DESC_RATEVHT2SS_MCS4;
++		rate[3] = DESC_RATEVHT2SS_MCS5;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xC4C:
++	case 0xE4C:
++	case 0x184C:
++	case 0x1A4C:
++		rate[0] = DESC_RATEVHT2SS_MCS6;
++		rate[1] = DESC_RATEVHT2SS_MCS7;
++		rate[2] = DESC_RATEVHT2SS_MCS8;
++		rate[3] = DESC_RATEVHT2SS_MCS9;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xCD8:
++	case 0xED8:
++	case 0x18D8:
++	case 0x1AD8:
++		rate[0] = DESC_RATEMCS16;
++		rate[1] = DESC_RATEMCS17;
++		rate[2] = DESC_RATEMCS18;
++		rate[3] = DESC_RATEMCS19;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xCDC:
++	case 0xEDC:
++	case 0x18DC:
++	case 0x1ADC:
++		rate[0] = DESC_RATEMCS20;
++		rate[1] = DESC_RATEMCS21;
++		rate[2] = DESC_RATEMCS22;
++		rate[3] = DESC_RATEMCS23;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xCE0:
++	case 0xEE0:
++	case 0x18E0:
++	case 0x1AE0:
++		rate[0] = DESC_RATEVHT3SS_MCS0;
++		rate[1] = DESC_RATEVHT3SS_MCS1;
++		rate[2] = DESC_RATEVHT3SS_MCS2;
++		rate[3] = DESC_RATEVHT3SS_MCS3;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xCE4:
++	case 0xEE4:
++	case 0x18E4:
++	case 0x1AE4:
++		rate[0] = DESC_RATEVHT3SS_MCS4;
++		rate[1] = DESC_RATEVHT3SS_MCS5;
++		rate[2] = DESC_RATEVHT3SS_MCS6;
++		rate[3] = DESC_RATEVHT3SS_MCS7;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 4;
++		break;
++	case 0xCE8:
++	case 0xEE8:
++	case 0x18E8:
++	case 0x1AE8:
++		rate[0] = DESC_RATEVHT3SS_MCS8;
++		rate[1] = DESC_RATEVHT3SS_MCS9;
++		for (i = 0; i < 2; ++i)
++			pwr_by_rate[i] = tbl_to_dec_pwr_by_rate(rtwdev, val, i);
++		*rate_num = 2;
++		break;
++	default:
++		rtw_warn(rtwdev, "invalid tx power index addr 0x%08x\n", addr);
++		break;
++	}
++}
++
++void phy_store_tx_power_by_rate(void *adapter, u32 band, u32 rfpath, u32 txnum,
++				u32 regaddr, u32 bitmask, u32 data)
++{
++	struct rtw_dev *rtwdev = adapter;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u8 rate_num = 0;
++	u8 rate;
++	u8 rates[RTW_RF_PATH_MAX] = {0};
++	s8 offset;
++	s8 pwr_by_rate[RTW_RF_PATH_MAX] = {0};
++	int i;
++
++	phy_get_rate_values_of_txpwr_by_rate(rtwdev, regaddr, bitmask, data,
++					     rates, pwr_by_rate, &rate_num);
++
++	if (WARN_ON(rfpath >= RTW_RF_PATH_MAX ||
++		    (band != PHY_BAND_2G && band != PHY_BAND_5G) ||
++		    rate_num > RTW_RF_PATH_MAX))
++		return;
++
++	for (i = 0; i < rate_num; i++) {
++		offset = pwr_by_rate[i];
++		rate = rates[i];
++		if (band == PHY_BAND_2G)
++			hal->tx_pwr_by_rate_offset_2g[rfpath][rate] = offset;
++		else if (band == PHY_BAND_5G)
++			hal->tx_pwr_by_rate_offset_5g[rfpath][rate] = offset;
++		else
++			continue;
++	}
++}
++
++static
++void phy_tx_power_by_rate_config_by_path(struct rtw_hal *hal, u8 path,
++					 u8 rs, u8 size, u8 *rates)
++{
++	u8 rate;
++	u8 base_idx, rate_idx;
++	s8 base_2g, base_5g;
++
++	if (rs >= RTW_RATE_SECTION_VHT_1S)
++		base_idx = rates[size - 3];
++	else
++		base_idx = rates[size - 1];
++	base_2g = hal->tx_pwr_by_rate_offset_2g[path][base_idx];
++	base_5g = hal->tx_pwr_by_rate_offset_5g[path][base_idx];
++	hal->tx_pwr_by_rate_base_2g[path][rs] = base_2g;
++	hal->tx_pwr_by_rate_base_5g[path][rs] = base_5g;
++	for (rate = 0; rate < size; rate++) {
++		rate_idx = rates[rate];
++		hal->tx_pwr_by_rate_offset_2g[path][rate_idx] -= base_2g;
++		hal->tx_pwr_by_rate_offset_5g[path][rate_idx] -= base_5g;
++	}
++}
++
++void rtw_phy_tx_power_by_rate_config(struct rtw_hal *hal)
++{
++	u8 path;
++
++	for (path = 0; path < RTW_RF_PATH_MAX; path++) {
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_CCK,
++						    cck_size, cck_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_OFDM,
++						    ofdm_size, ofdm_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_HT_1S,
++						    ht_1s_size, ht_1s_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_HT_2S,
++						    ht_2s_size, ht_2s_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_VHT_1S,
++						    vht_1s_size, vht_1s_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_VHT_2S,
++						    vht_2s_size, vht_2s_rates);
++	}
++}
++
++static void
++phy_tx_power_limit_config(struct rtw_hal *hal, u8 regd, u8 bw, u8 rs)
++{
++	s8 base, orig;
++	u8 ch;
++
++	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_2G; ch++) {
++		base = hal->tx_pwr_by_rate_base_2g[0][rs];
++		orig = hal->tx_pwr_limit_2g[regd][bw][rs][ch];
++		hal->tx_pwr_limit_2g[regd][bw][rs][ch] -= base;
++	}
++
++	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_5G; ch++) {
++		base = hal->tx_pwr_by_rate_base_5g[0][rs];
++		hal->tx_pwr_limit_5g[regd][bw][rs][ch] -= base;
++	}
++}
++
++void rtw_phy_tx_power_limit_config(struct rtw_hal *hal)
++{
++	u8 regd, bw, rs;
++
++	for (regd = 0; regd < RTW_REGD_MAX; regd++)
++		for (bw = 0; bw < RTW_CHANNEL_WIDTH_MAX; bw++)
++			for (rs = 0; rs < RTW_RATE_SECTION_MAX; rs++)
++				phy_tx_power_limit_config(hal, regd, bw, rs);
++}
++
++static s8 get_tx_power_limit(struct rtw_hal *hal, u8 bw, u8 rs, u8 ch, u8 regd)
++{
++	if (regd > RTW_REGD_WW)
++		return RTW_MAX_POWER_INDEX;
++
++	return hal->tx_pwr_limit_2g[regd][bw][rs][ch];
++}
++
++s8 phy_get_tx_power_limit(struct rtw_dev *rtwdev, u8 band,
++			  enum rtw_bandwidth bw, u8 rf_path,
++			  u8 rate, u8 channel, u8 regd)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	s8 power_limit;
++	u8 rs;
++	int ch_idx;
++
++	if (rate >= DESC_RATE1M && rate <= DESC_RATE11M)
++		rs = RTW_RATE_SECTION_CCK;
++	else if (rate >= DESC_RATE6M && rate <= DESC_RATE54M)
++		rs = RTW_RATE_SECTION_OFDM;
++	else if (rate >= DESC_RATEMCS0 && rate <= DESC_RATEMCS7)
++		rs = RTW_RATE_SECTION_HT_1S;
++	else if (rate >= DESC_RATEMCS8 && rate <= DESC_RATEMCS15)
++		rs = RTW_RATE_SECTION_HT_2S;
++	else if (rate >= DESC_RATEVHT1SS_MCS0 && rate <= DESC_RATEVHT1SS_MCS9)
++		rs = RTW_RATE_SECTION_VHT_1S;
++	else if (rate >= DESC_RATEVHT2SS_MCS0 && rate <= DESC_RATEVHT2SS_MCS9)
++		rs = RTW_RATE_SECTION_VHT_2S;
++	else
++		goto err;
++
++	ch_idx = rtw_channel_to_idx(band, channel);
++	if (ch_idx < 0)
++		goto err;
++
++	power_limit = get_tx_power_limit(hal, bw, rs, ch_idx, regd);
++
++	return power_limit;
++
++err:
++	WARN(1, "invalid arguments, band=%d, bw=%d, path=%d, rate=%d, ch=%d\n",
++	     band, bw, rf_path, rate, channel);
++	return RTW_MAX_POWER_INDEX;
++}
++
++void phy_set_tx_power_limit(struct rtw_dev *rtwdev, u8 regd, u8 band,
++			    u8 bw, u8 rs, u8 ch, s8 pwr_limit)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	int ch_idx;
++
++	pwr_limit = clamp_t(s8, pwr_limit,
++			    -RTW_MAX_POWER_INDEX, RTW_MAX_POWER_INDEX);
++	ch_idx = rtw_channel_to_idx(band, ch);
++
++	if (regd >= RTW_REGD_MAX || bw >= RTW_CHANNEL_WIDTH_MAX ||
++	    rs >= RTW_RATE_SECTION_MAX || ch_idx < 0) {
++		WARN(1,
++		     "wrong txpwr_lmt regd=%u, band=%u bw=%u, rs=%u, ch_idx=%u, pwr_limit=%d\n",
++		     regd, band, bw, rs, ch_idx, pwr_limit);
++		return;
++	}
++
++	if (band == PHY_BAND_2G)
++		hal->tx_pwr_limit_2g[regd][bw][rs][ch_idx] = pwr_limit;
++	else if (band == PHY_BAND_5G)
++		hal->tx_pwr_limit_5g[regd][bw][rs][ch_idx] = pwr_limit;
++}
++
++static
++void rtw_hw_tx_power_limit_init(struct rtw_hal *hal, u8 regd, u8 bw, u8 rs)
++{
++	u8 ch;
++
++	/* 2.4G channels */
++	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_2G; ch++)
++		hal->tx_pwr_limit_2g[regd][bw][rs][ch] = RTW_MAX_POWER_INDEX;
++
++	/* 5G channels */
++	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_5G; ch++)
++		hal->tx_pwr_limit_5g[regd][bw][rs][ch] = RTW_MAX_POWER_INDEX;
++}
++
++void rtw_hw_init_tx_power(struct rtw_hal *hal)
++{
++	u8 regd, path, rate, rs, bw;
++
++	/* init tx power by rate offset */
++	for (path = 0; path < RTW_RF_PATH_MAX; path++) {
++		for (rate = 0; rate < DESC_RATE_MAX; rate++) {
++			hal->tx_pwr_by_rate_offset_2g[path][rate] = 0;
++			hal->tx_pwr_by_rate_offset_5g[path][rate] = 0;
++		}
++	}
++
++	/* init tx power limit */
++	for (regd = 0; regd < RTW_REGD_MAX; regd++)
++		for (bw = 0; bw < RTW_CHANNEL_WIDTH_MAX; bw++)
++			for (rs = 0; rs < RTW_RATE_SECTION_MAX; rs++)
++				rtw_hw_tx_power_limit_init(hal, regd, bw, rs);
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
+new file mode 100644
+index 0000000..8dfbb4b
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/phy.h
+@@ -0,0 +1,134 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_PHY_H_
++#define __RTW_PHY_H_
++
++#include "debug.h"
++
++extern u8 cck_rates[];
++extern u8 ofdm_rates[];
++extern u8 ht_1s_rates[];
++extern u8 ht_2s_rates[];
++extern u8 vht_1s_rates[];
++extern u8 vht_2s_rates[];
++extern u8 *rate_section[];
++extern u8 rate_size[];
++
++void rtw_phy_init(struct rtw_dev *rtwdev);
++void rtw_phy_dynamic_mechanism(struct rtw_dev *rtwdev);
++u8 rtw_phy_rf_power_2_rssi(s8 *rf_power, u8 path_num);
++u32 rtw_phy_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++		    u32 addr, u32 mask);
++bool rtw_phy_write_rf_reg_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			       u32 addr, u32 mask, u32 data);
++bool rtw_phy_write_rf_reg(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			  u32 addr, u32 mask, u32 data);
++bool rtw_phy_write_rf_reg_mix(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			      u32 addr, u32 mask, u32 data);
++void phy_store_tx_power_by_rate(void *adapter, u32 band, u32 rfpath, u32 txnum,
++				u32 regaddr, u32 bitmask, u32 data);
++void phy_set_tx_power_limit(struct rtw_dev *rtwdev, u8 regd, u8 band,
++			    u8 bw, u8 rs, u8 ch, s8 pwr_limit);
++void phy_set_tx_power_index_by_rs(void *adapter, u8 ch, u8 path, u8 rs);
++void rtw_phy_setup_phy_cond(struct rtw_dev *rtwdev, u32 pkg);
++void rtw_parse_tbl_phy_cond(struct rtw_dev *rtwdev, const struct rtw_table *tbl);
++void rtw_parse_tbl_bb_pg(struct rtw_dev *rtwdev, const struct rtw_table *tbl);
++void rtw_parse_tbl_txpwr_lmt(struct rtw_dev *rtwdev, const struct rtw_table *tbl);
++void rtw_phy_cfg_mac(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		     u32 addr, u32 data);
++void rtw_phy_cfg_agc(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		     u32 addr, u32 data);
++void rtw_phy_cfg_bb(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		    u32 addr, u32 data);
++void rtw_phy_cfg_rf(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		    u32 addr, u32 data);
++void rtw_hw_init_tx_power(struct rtw_hal *hal);
++void rtw_phy_load_tables(struct rtw_dev *rtwdev);
++void rtw_phy_set_tx_power_level(struct rtw_dev *rtwdev, u8 channel);
++void rtw_phy_tx_power_by_rate_config(struct rtw_hal *hal);
++void rtw_phy_tx_power_limit_config(struct rtw_hal *hal);
++
++#define RTW_DECL_TABLE_PHY_COND_CORE(name, cfg, path)	\
++const struct rtw_table name ## _tbl = {			\
++	.data = name,					\
++	.size = ARRAY_SIZE(name),			\
++	.parse = rtw_parse_tbl_phy_cond,		\
++	.do_cfg = cfg,					\
++	.rf_path = path,				\
++}
++
++#define RTW_DECL_TABLE_PHY_COND(name, cfg)		\
++	RTW_DECL_TABLE_PHY_COND_CORE(name, cfg, 0)
++
++#define RTW_DECL_TABLE_RF_RADIO(name, path)		\
++	RTW_DECL_TABLE_PHY_COND_CORE(name, rtw_phy_cfg_rf, RF_PATH_ ## path)
++
++#define RTW_DECL_TABLE_BB_PG(name)			\
++const struct rtw_table name ## _tbl = {			\
++	.data = name,					\
++	.size = ARRAY_SIZE(name),			\
++	.parse = rtw_parse_tbl_bb_pg,			\
++}
++
++#define RTW_DECL_TABLE_TXPWR_LMT(name)			\
++const struct rtw_table name ## _tbl = {			\
++	.data = name,					\
++	.size = ARRAY_SIZE(name),			\
++	.parse = rtw_parse_tbl_txpwr_lmt,		\
++}
++
++static inline const struct rtw_rfe_def *rtw_get_rfe_def(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	const struct rtw_rfe_def *rfe_def = NULL;
++
++	if (chip->rfe_defs_size == 0)
++		return NULL;
++
++	if (efuse->rfe_option < chip->rfe_defs_size)
++		rfe_def = &chip->rfe_defs[efuse->rfe_option];
++
++	rtw_dbg(rtwdev, RTW_DBG_PHY, "use rfe_def[%d]\n", efuse->rfe_option);
++	return rfe_def;
++}
++
++static inline int rtw_check_supported_rfe(struct rtw_dev *rtwdev)
++{
++	const struct rtw_rfe_def *rfe_def = rtw_get_rfe_def(rtwdev);
++
++	if (!rfe_def || !rfe_def->phy_pg_tbl || !rfe_def->txpwr_lmt_tbl) {
++		rtw_err(rtwdev, "rfe %d isn't supported\n",
++			rtwdev->efuse.rfe_option);
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
++void rtw_phy_dig_write(struct rtw_dev *rtwdev, u8 igi);
++
++#define	MASKBYTE0		0xff
++#define	MASKBYTE1		0xff00
++#define	MASKBYTE2		0xff0000
++#define	MASKBYTE3		0xff000000
++#define	MASKHWORD		0xffff0000
++#define	MASKLWORD		0x0000ffff
++#define	MASKDWORD		0xffffffff
++#define RFREG_MASK		0xfffff
++
++#define	MASK7BITS		0x7f
++#define	MASK12BITS		0xfff
++#define	MASKH4BITS		0xf0000000
++#define	MASK20BITS		0xfffff
++#define	MASK24BITS		0xffffff
++
++#define MASKH3BYTES		0xffffff00
++#define MASKL3BYTES		0x00ffffff
++#define MASKBYTE2HIGHNIBBLE	0x00f00000
++#define MASKBYTE3LOWNIBBLE	0x0f000000
++#define	MASKL3BYTES		0x00ffffff
++
++#endif
 -- 
 2.7.4
 
