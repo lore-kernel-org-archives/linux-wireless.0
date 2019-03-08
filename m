@@ -2,201 +2,154 @@ Return-Path: <SRS0=wltO=RL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C680C43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 11:05:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A23CCC43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 11:26:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC62B20851
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 11:05:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B64A20684
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 11:26:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="G5+MSPhc";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HLLD3R05"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726279AbfCHLFJ convert rfc822-to-8bit (ORCPT
+        id S1726286AbfCHL0R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Mar 2019 06:05:09 -0500
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:46705 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725789AbfCHLFJ (ORCPT
+        Fri, 8 Mar 2019 06:26:17 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:39792 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725975AbfCHL0R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Mar 2019 06:05:09 -0500
-Received: by mail-ed1-f66.google.com with SMTP id f2so16050601edy.13
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Mar 2019 03:05:07 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=ABca4EoLzrJgYdMirNp2lP/sA/gVHBZHoR9KRUIIm0s=;
-        b=Ob42Yvs17GT5x33GVfOIDYMWbUCBw5e2qd9GdlOWp8lnc44GMkhyd4AF9IB+wd6FmD
-         FDXOOUomPsdhv9rGtwjP+ZNGl3g1HWl5amKCyI6KqlSz/5vC8q0eqkFpaNtv+5EAkP5l
-         tCXFzGUDdwRkO4X6tIU0Euq9apf0HHapzhZM7JwoAsdSolDjinp1y2MrVWIsDpBjd8q/
-         Nv7WjV094Q5wNeuYZXoVwR6V4m/4zrn824hyCJ9YbphtlfvrW7j7t+pX/QtR0NoZHnNC
-         Kb7ORFn4+Wf8oBeI3Xz23+RH8kayRf35GSRGqtyGsBNVAj4kJ7+GMwIXCzVumfvibr0H
-         5qCA==
-X-Gm-Message-State: APjAAAWmT8iK+7vlj7Kv0jFjK6eV01xvvPionS7bpz2CWCGBs8pGcZF6
-        6V4Laym6PnYpbz1k2+Zmoe0BdA==
-X-Google-Smtp-Source: APXvYqwOROezSumd74yZbKtbF4LypI4LK7W7T6hNaCbaWo6Oz57AmLkyEUlyiwASipEtSKQLD5MiCw==
-X-Received: by 2002:a17:906:5583:: with SMTP id y3mr11392084ejp.42.1552043106570;
-        Fri, 08 Mar 2019 03:05:06 -0800 (PST)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id c20sm1356251ejm.58.2019.03.08.03.05.05
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 08 Mar 2019 03:05:05 -0800 (PST)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 2AFEB180454; Fri,  8 Mar 2019 12:05:05 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>, make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kan Yan <kyan@google.com>
-Subject: Re: [RFC/RFT] mac80211: Switch to a virtual time-based airtime scheduler
-In-Reply-To: <f6c5bc25-a8b3-bac3-8d62-d41347a6c070@nbd.name>
-References: <20190215170512.31512-1-toke@redhat.com> <f6c5bc25-a8b3-bac3-8d62-d41347a6c070@nbd.name>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Fri, 08 Mar 2019 12:05:05 +0100
-Message-ID: <874l8d7hjy.fsf@toke.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+        Fri, 8 Mar 2019 06:26:17 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id AE3096044E; Fri,  8 Mar 2019 11:26:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552044375;
+        bh=YCNFAnzFzyW65UY8uuOijnL6zUe7bftiF7DSyzA3QW8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=G5+MSPhcu5rXPvYy+Eu3FUhjI+h+9QHBZmocSMRR5rJYtqjOT9uGVbq2Dp3bNfXUu
+         9Sm7NoKLR9VrZ3hk4XqVKlkzxKXkhg/LFUw6Eqje3nooCNwSMIgcl1GyLl2FzEiwop
+         yq5NhkNAF7GqpGO9Cg5B9qoYESiwOEAAy1UpdNUo=
+Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: pillair@codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B7E996029B;
+        Fri,  8 Mar 2019 11:26:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552044374;
+        bh=YCNFAnzFzyW65UY8uuOijnL6zUe7bftiF7DSyzA3QW8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=HLLD3R05MT8pLliB3zLoHGyIQ/c9pOSD75y8dytGiIt5Ax6Kk4y7v8JetyQVeMgUm
+         fZNGkfa8OHRvf8YINg6sY0ybSVWK3f0jt1P2XWvSNKRklNVkcWS3w4h7qQJ3fctTRa
+         hge0AkAX5AaR8+8hggdnCPgWnFeTu6eoSLNcCwkc=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B7E996029B
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
+From:   Rakesh Pillai <pillair@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH] ath10k: Fix channel info parsing for non tlv target
+Date:   Fri,  8 Mar 2019 16:56:06 +0530
+Message-Id: <1552044366-9186-1-git-send-email-pillair@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
+The tlv targets such as WCN3990 send more data in
+the chan info event, which is not sent by the non tlv
+targets. There is a minimum size check in the wmi event for
+non-tlv targets and hence we cannot update the common
+channel info structure.
 
-> On 2019-02-15 18:05, Toke Høiland-Jørgensen wrote:
->> This switches the airtime scheduler in mac80211 to use a virtual time-based
->> scheduler instead of the round-robin scheduler used before. This has a
->> couple of advantages:
->> 
->> - No need to sync up the round-robin scheduler in firmware/hardware with
->>   the round-robin airtime scheduler.
->> 
->> - If several stations are eligible for transmission we can schedule both of
->>   them; no need to hard-block the scheduling rotation until the head of the
->>   queue has used up its quantum.
->> 
->> - The check of whether a station is eligible for transmission becomes
->>   simpler (in ieee80211_txq_may_transmit()).
->> 
->> The drawback is that scheduling becomes slightly more expensive, as we need
->> to maintain an rbtree of TXQs sorted by virtual time. This means that
->> ieee80211_register_airtime() becomes O(logN) in the number of currently
->> scheduled TXQs. However, hopefully this number rarely grows too big (it's
->> only TXQs currently backlogged, not all associated stations), so it
->> shouldn't be too big of an issue.
->> 
->> Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
-> The approach looks good to me, but I haven't really reviewed it very
-> carefully yet. Just some points that I noticed below:
+If the common channel info structure is updated, the
+size check for chan info event for non-tlv targets
+will fail and return -EPROTO and we see the below
+error messages
 
-Cool!
+   ath10k_pci 0000:01:00.0: failed to parse chan info event: -71
 
->> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
->> index 11f058987a54..9d01fdd86e2d 100644
->> --- a/net/mac80211/sta_info.c
->> +++ b/net/mac80211/sta_info.c
->> @@ -389,7 +389,6 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
->>  	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
->>  		skb_queue_head_init(&sta->ps_tx_buf[i]);
->>  		skb_queue_head_init(&sta->tx_filtered[i]);
->> -		sta->airtime[i].deficit = sta->airtime_weight;
->>  	}
->>  
->>  	for (i = 0; i < IEEE80211_NUM_TIDS; i++)
->> @@ -1831,18 +1830,32 @@ void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
->>  {
->>  	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
->>  	struct ieee80211_local *local = sta->sdata->local;
->> +	struct ieee80211_txq *txq = sta->sta.txq[tid];
->>  	u8 ac = ieee80211_ac_from_tid(tid);
->> -	u32 airtime = 0;
->> +	u64 airtime = 0, weight_sum;
->> +
->> +	if (!txq)
->> +		return;
->>  
->>  	if (sta->local->airtime_flags & AIRTIME_USE_TX)
->>  		airtime += tx_airtime;
->>  	if (sta->local->airtime_flags & AIRTIME_USE_RX)
->>  		airtime += rx_airtime;
->>  
->> +	/* Weights scale so the unit weight is 256 */
->> +	airtime <<= 8;
->> +
->>  	spin_lock_bh(&local->active_txq_lock[ac]);
->> +
->>  	sta->airtime[ac].tx_airtime += tx_airtime;
->>  	sta->airtime[ac].rx_airtime += rx_airtime;
->> -	sta->airtime[ac].deficit -= airtime;
->> +
->> +	weight_sum = local->airtime_weight_sum[ac] ?: sta->airtime_weight;
->> +
->> +	local->airtime_v_t[ac] += airtime / weight_sum;
->> +	sta->airtime[ac].v_t += airtime / sta->airtime_weight;
->> +	ieee80211_resort_txq(&local->hw, txq);
-> These divisions could be a bit expensive, any way to change the
-> calculation to avoid them?
+Add tlv specific channel info structure and restore the
+original size of the common channel info structure to
+mitigate this issue.
 
-Yeah, given that the denominators are constant from the PoV of the fast
-path, we can pre-compute reciprocals and turn these divides into
-multiplications. Will incorporate that...
+Tested HW: WCN3990
+	   QCA9887
+Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
+	   10.2.4-1.0-00037
 
->> --- a/net/mac80211/tx.c
->> +++ b/net/mac80211/tx.c
->> -void ieee80211_return_txq(struct ieee80211_hw *hw,
->> +static void __ieee80211_insert_txq(struct rb_root_cached *root,
->> +				   struct txq_info *txqi, u8 ac)
->> +{
->> +	struct rb_node **new = &root->rb_root.rb_node;
->> +	struct rb_node *parent = NULL;
->> +	struct txq_info *__txqi;
->> +	bool leftmost = true;
->> +
->> +	while (*new) {
->> +		parent = *new;
->> +		__txqi = rb_entry(parent, struct txq_info, schedule_order);
->> +
->> +		if (!txqi->txq.sta) {
->> +			/* new txqi has no sta - insert to the left */
->> +			new = &parent->rb_left;
->> +		} else if (!__txqi->txq.sta) {
->> +			/* existing txqi has no sta - insert to the right */
->> +			new = &parent->rb_right;
->> +			leftmost = false;
->> +		} else {
->> +			struct sta_info *old_sta = container_of(__txqi->txq.sta,
->> +								struct sta_info,
->> +								sta);
->> +			struct sta_info *new_sta = container_of(txqi->txq.sta,
->> +								struct sta_info,
->> +								sta);
->> +
->> +			if (new_sta->airtime[ac].v_t <= old_sta->airtime[ac].v_t)
->> +				new = &parent->rb_left;
->> +			else {
->> +				new = &parent->rb_right;
->> +				leftmost = false;
->> +			}
->> +
->> +		}
->> +	}
->> +
->> +	rb_link_node(&txqi->schedule_order, parent, new);
->> +	rb_insert_color_cached(&txqi->schedule_order, root, leftmost);
->> +}
-> I'm a bit worried about this part. Does that mean that vif txqs always
-> have priority over sta txqs?
+Fixes: 13104929d2ec ("ath10k: fill the channel survey results for WCN3990 correctly")
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  2 +-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 16 ++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |  8 --------
+ 3 files changed, 17 insertions(+), 9 deletions(-)
 
-Yeah, it does. This sort of mirrors what the existing airtime scheduler
-does (because VIFs don't have an airtime deficit), but because it's a
-round-robin scheduler the effect is less severe as long as there are
-stations able to transmit.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 582fb11..a826acb 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -810,7 +810,7 @@ static int ath10k_wmi_tlv_op_pull_ch_info_ev(struct ath10k *ar,
+ 					     struct wmi_ch_info_ev_arg *arg)
+ {
+ 	const void **tb;
+-	const struct wmi_chan_info_event *ev;
++	const struct wmi_tlv_chan_info_event *ev;
+ 	int ret;
+ 
+ 	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index 65e6aa5..4bdd655 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1607,6 +1607,22 @@ struct chan_info_params {
+ 
+ #define WMI_TLV_FLAG_MGMT_BUNDLE_TX_COMPL	BIT(9)
+ 
++struct wmi_tlv_chan_info_event {
++	__le32 err_code;
++	__le32 freq;
++	__le32 cmd_flags;
++	__le32 noise_floor;
++	__le32 rx_clear_count;
++	__le32 cycle_count;
++	__le32 chan_tx_pwr_range;
++	__le32 chan_tx_pwr_tp;
++	__le32 rx_frame_count;
++	__le32 my_bss_rx_cycle_count;
++	__le32 rx_11b_mode_data_duration;
++	__le32 tx_frame_cnt;
++	__le32 mac_clk_mhz;
++} __packed;
++
+ struct wmi_tlv_mgmt_tx_compl_ev {
+ 	__le32 desc_id;
+ 	__le32 status;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index e1c40bb..d188a2c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6523,14 +6523,6 @@ struct wmi_chan_info_event {
+ 	__le32 noise_floor;
+ 	__le32 rx_clear_count;
+ 	__le32 cycle_count;
+-	__le32 chan_tx_pwr_range;
+-	__le32 chan_tx_pwr_tp;
+-	__le32 rx_frame_count;
+-	__le32 my_bss_rx_cycle_count;
+-	__le32 rx_11b_mode_data_duration;
+-	__le32 tx_frame_cnt;
+-	__le32 mac_clk_mhz;
+-
+ } __packed;
+ 
+ struct wmi_10_4_chan_info_event {
+-- 
+2.7.4
 
-I guess the obvious fix is to start accounting airtime usage for the VIF
-as well? We may want to do that in any case, as that would also give
-users a convenient way to set policy for multicast traffic. Any
-objections to this?
-
--Toke
