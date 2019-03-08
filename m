@@ -2,81 +2,86 @@ Return-Path: <SRS0=wltO=RL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1844C43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 12:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0E2CC43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 12:49:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 74DF62085A
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 12:39:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7924120684
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 12:49:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="j97iEpOM";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="am9lCNA3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726471AbfCHMjR convert rfc822-to-8bit (ORCPT
+        id S1726465AbfCHMth (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Mar 2019 07:39:17 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:54631 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726249AbfCHMjR (ORCPT
+        Fri, 8 Mar 2019 07:49:37 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:54428 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726258AbfCHMth (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Mar 2019 07:39:17 -0500
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x28CcnY1005816, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv02.realtek.com.tw[172.21.6.19])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x28CcnY1005816
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Fri, 8 Mar 2019 20:38:49 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCASV02.realtek.com.tw ([::1]) with mapi id 14.03.0439.000; Fri, 8 Mar
- 2019 20:38:49 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "briannorris@chromium.org" <briannorris@chromium.org>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>
-Subject: RE: [PATCH v2 00/24] rtw88: major fixes for 8822c to have stable functionalities
-Thread-Topic: [PATCH v2 00/24] rtw88: major fixes for 8822c to have stable
- functionalities
-Thread-Index: AQHU1ZtIhYim7tsxxEKEtK5d1ye116YBq0Rg
-Date:   Fri, 8 Mar 2019 12:38:48 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17BC3EB@RTITMBSVM04.realtek.com.tw>
-References: <1550134743-17443-1-git-send-email-yhchuang@realtek.com>
-        <F7CD281DE3E379468C6D07993EA72F84D17AE4FD@RTITMBSVM04.realtek.com.tw>
- <87a7i58xag.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87a7i58xag.fsf@kamboji.qca.qualcomm.com>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.124]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Fri, 8 Mar 2019 07:49:37 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id CDB30611FC; Fri,  8 Mar 2019 12:49:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552049375;
+        bh=G2hjLxWOoRxClomK7/BcNb0j0s28LQcLYNmZsDnePxs=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=j97iEpOMuKeHWlYpAAx/oo80LZ/jF8pmq/nNHGeD/+sCgIAafZxosXPTF6QbOglaT
+         rn+O2AMGsoTuGXXliJU0rKi8DbwHBDq4Pgr/3y4FlXouDknlfIBKg0a5Km63zcurKc
+         odsEisAp3NYbvO1AYgzfbDRBsNllrLjMCKRLatwI=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 313676055A;
+        Fri,  8 Mar 2019 12:49:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552049373;
+        bh=G2hjLxWOoRxClomK7/BcNb0j0s28LQcLYNmZsDnePxs=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=am9lCNA3CPrAHtAddhi/bNbN3JtdN5DJ3n2WFxcFXiBlLH4q8Qs/c7d7/U8MlxuiP
+         8x/D6dZ9b7bzFIJT4DZIsXF9yNSwumLEpgg9tE0lK5JXN8ufmKY3QwrvpKRC3NK/wQ
+         s8k2ZOzRMJkDs++wqT+8jeiWFltrxeg51TKFanVE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 313676055A
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Julia Lawall <julia.lawall@lip6.fr>
+Cc:     Venkateswara Naralasetty <vnaralas@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
+        kbuild-all@01.org
+Subject: Re: [PATCH] ath11k: fix bugon.cocci warnings
+References: <alpine.DEB.2.21.1903072247110.2558@hadrien>
+Date:   Fri, 08 Mar 2019 14:49:28 +0200
+In-Reply-To: <alpine.DEB.2.21.1903072247110.2558@hadrien> (Julia Lawall's
+        message of "Thu, 7 Mar 2019 22:48:53 +0100 (CET)")
+Message-ID: <874l8d7cpz.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> 
-> Also in another thread I saw something about this driver conflicting
-> with a staging driver, is that true? That should be solved before the
-> driver is accepted as I don't think two drivers should race for the same
-> hardware and the driver is randomly chosen.
-> 
+Julia Lawall <julia.lawall@lip6.fr> writes:
 
-I think this could be fixed by removing the staging driver via
-wireless-drivers-next as you said before. Can you help me coordinate
-this with Greg? Or should I send the patch that removes the staging
-driver to you.
+> From: kbuild test robot <lkp@intel.com>
+>
+> Use BUG_ON instead of if condition followed by BUG.
+>
+> Generated by: scripts/coccinelle/misc/bugon.cocci
+>
+> Fixes: c105b7abf400 ("ath11k: collect DDR dump after fw crash")
+> CC: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+> Signed-off-by: kbuild test robot <lkp@intel.com>
+> Signed-off-by: Julia Lawall <julia.lawall@lip6.fr>
 
-Thanks
+Applied, thanks.
 
-> 
-> --
-> Kalle Valo
-
-
-Yan-Hsuan
+-- 
+Kalle Valo
