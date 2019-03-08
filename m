@@ -6,301 +6,144 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F653C4360F
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 10:09:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B99DAC43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 10:09:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22A5020854
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 10:09:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9081D20854
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 10:09:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726344AbfCHKJC (ORCPT
+        id S1726357AbfCHKJD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Mar 2019 05:09:02 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:41390 "EHLO
+        Fri, 8 Mar 2019 05:09:03 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:41398 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726249AbfCHKJB (ORCPT
+        with ESMTP id S1725975AbfCHKJD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Mar 2019 05:09:01 -0500
+        Fri, 8 Mar 2019 05:09:03 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1h2CR1-0006tZ-7z; Fri, 08 Mar 2019 12:09:00 +0200
+        id 1h2CR2-0006tZ-BL; Fri, 08 Mar 2019 12:09:00 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri,  8 Mar 2019 12:08:42 +0200
-Message-Id: <20190308100848.13188-2-luca@coelho.fi>
+Date:   Fri,  8 Mar 2019 12:08:43 +0200
+Message-Id: <20190308100848.13188-3-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190308100848.13188-1-luca@coelho.fi>
 References: <20190308100848.13188-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 1/7] iwlwifi: mvm: fix TX crypto on 22560+ devices
+Subject: [PATCH 2/7] iwlwifi: add sync_nmi to trans ops
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-In the old days, we could transmit with HW crypto with an arbitrary
-key by filling it into TX_CMD. This was broken first with the advent
-of CCMP/GCMP-256 keys which don't fit there.
+Allow modules from outside pcie to call sync_nmi.
 
-This was broken *again* with the newer TX_CMD format on 22560+,
-where we simply cannot pass key material anymore. However, we forgot
-to update all the cases when we get a key from mac80211 and don't
-program it into the hardware but still return 0 for HW crypto on TX.
-
-In AP mode with WEP, we tried to fix this by programming the keys
-separately for each station later, but this ultimately turns out to
-be buggy, for example now it leaks memory when we have more than one
-WEP key.
-
-Fix this by simply using only SW crypto for WEP in newer devices by
-returning -EOPNOTSUPP instead of trying to program WEP keys later.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 64 +++++--------------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  1 -
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 41 +-----------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h  |  7 +-
- 4 files changed, 19 insertions(+), 94 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     | 7 +++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 5 +++--
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 2 +-
+ 5 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 3a92c09d4692..eeaeb8475666 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2714,9 +2714,6 @@ static void iwl_mvm_stop_ap_ibss(struct ieee80211_hw *hw,
- 
- 	iwl_mvm_mac_ctxt_remove(mvm, vif);
- 
--	kfree(mvmvif->ap_wep_key);
--	mvmvif->ap_wep_key = NULL;
--
- 	mutex_unlock(&mvm->mutex);
- }
- 
-@@ -3183,24 +3180,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 		ret = iwl_mvm_update_sta(mvm, vif, sta);
- 	} else if (old_state == IEEE80211_STA_ASSOC &&
- 		   new_state == IEEE80211_STA_AUTHORIZED) {
--		/* if wep is used, need to set the key for the station now */
--		if (vif->type == NL80211_IFTYPE_AP && mvmvif->ap_wep_key) {
--			mvm_sta->wep_key =
--				kmemdup(mvmvif->ap_wep_key,
--					sizeof(*mvmvif->ap_wep_key) +
--					mvmvif->ap_wep_key->keylen,
--					GFP_KERNEL);
--			if (!mvm_sta->wep_key) {
--				ret = -ENOMEM;
--				goto out_unlock;
--			}
--
--			ret = iwl_mvm_set_sta_key(mvm, vif, sta,
--						  mvm_sta->wep_key,
--						  STA_KEY_IDX_INVALID);
--		} else {
--			ret = 0;
--		}
-+		ret = 0;
- 
- 		/* we don't support TDLS during DCM */
- 		if (iwl_mvm_phy_ctx_count(mvm) > 1)
-@@ -3242,17 +3222,6 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 						   NL80211_TDLS_DISABLE_LINK);
- 		}
- 
--		/* Remove STA key if this is an AP using WEP */
--		if (vif->type == NL80211_IFTYPE_AP && mvmvif->ap_wep_key) {
--			int rm_ret = iwl_mvm_remove_sta_key(mvm, vif, sta,
--							    mvm_sta->wep_key);
--
--			if (!ret)
--				ret = rm_ret;
--			kfree(mvm_sta->wep_key);
--			mvm_sta->wep_key = NULL;
--		}
--
- 		if (unlikely(ret &&
- 			     test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
- 				      &mvm->status)))
-@@ -3439,20 +3408,12 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 		break;
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
--		if (vif->type == NL80211_IFTYPE_AP) {
--			struct iwl_mvm_vif *mvmvif =
--				iwl_mvm_vif_from_mac80211(vif);
--
--			mvmvif->ap_wep_key = kmemdup(key,
--						     sizeof(*key) + key->keylen,
--						     GFP_KERNEL);
--			if (!mvmvif->ap_wep_key)
--				return -ENOMEM;
--		}
--
--		if (vif->type != NL80211_IFTYPE_STATION)
--			return 0;
--		break;
-+		if (vif->type == NL80211_IFTYPE_STATION)
-+			break;
-+		if (iwl_mvm_has_new_tx_api(mvm))
-+			return -EOPNOTSUPP;
-+		/* support HW crypto on TX */
-+		return 0;
- 	default:
- 		/* currently FW supports only one optional cipher scheme */
- 		if (hw->n_cipher_schemes &&
-@@ -3540,12 +3501,17 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 		ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, key_offset);
- 		if (ret) {
- 			IWL_WARN(mvm, "set key failed\n");
-+			key->hw_key_idx = STA_KEY_IDX_INVALID;
- 			/*
- 			 * can't add key for RX, but we don't need it
--			 * in the device for TX so still return 0
-+			 * in the device for TX so still return 0,
-+			 * unless we have new TX API where we cannot
-+			 * put key material into the TX_CMD
- 			 */
--			key->hw_key_idx = STA_KEY_IDX_INVALID;
--			ret = 0;
-+			if (iwl_mvm_has_new_tx_api(mvm))
-+				ret = -EOPNOTSUPP;
-+			else
-+				ret = 0;
- 		}
- 
- 		break;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index bca6f6b536d9..a50dc53df086 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -498,7 +498,6 @@ struct iwl_mvm_vif {
- 	netdev_features_t features;
- 
- 	struct iwl_probe_resp_data __rcu *probe_resp_data;
--	struct ieee80211_key_conf *ap_wep_key;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index bbebbf3efd57..fa750711d889 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -618,6 +618,7 @@ struct iwl_trans_ops {
+ 	struct iwl_trans_dump_data *(*dump_data)(struct iwl_trans *trans,
+ 						 u32 dump_mask);
+ 	void (*debugfs_cleanup)(struct iwl_trans *trans);
++	void (*sync_nmi)(struct iwl_trans *trans);
  };
  
- static inline struct iwl_mvm_vif *
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 498c315291cf..db26f0041a81 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -8,7 +8,7 @@
-  * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -31,7 +31,7 @@
-  * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -2333,21 +2333,6 @@ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		iwl_mvm_enable_txq(mvm, NULL, mvmvif->cab_queue, 0, &cfg,
- 				   timeout);
+ /**
+@@ -1245,6 +1246,12 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
  
--	if (mvmvif->ap_wep_key) {
--		u8 key_offset = iwl_mvm_set_fw_key_idx(mvm);
--
--		__set_bit(key_offset, mvm->fw_key_table);
--
--		if (key_offset == STA_KEY_IDX_INVALID)
--			return -ENOSPC;
--
--		ret = iwl_mvm_send_sta_key(mvm, mvmvif->mcast_sta.sta_id,
--					   mvmvif->ap_wep_key, true, 0, NULL, 0,
--					   key_offset, 0);
--		if (ret)
--			return ret;
--	}
--
- 	return 0;
  }
  
-@@ -2419,28 +2404,6 @@ int iwl_mvm_rm_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++static inline void iwl_trans_sync_nmi(struct iwl_trans *trans)
++{
++	if (trans->ops->sync_nmi)
++		trans->ops->sync_nmi(trans);
++}
++
+ /*****************************************************
+  * transport helper functions
+  *****************************************************/
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index bf8b61a476c5..59213164f35e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -1043,7 +1043,7 @@ static inline bool iwl_pcie_dbg_on(struct iwl_trans *trans)
  
- 	iwl_mvm_disable_txq(mvm, NULL, mvmvif->cab_queue, 0, 0);
+ void iwl_trans_pcie_rf_kill(struct iwl_trans *trans, bool state);
+ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans);
+-void iwl_trans_sync_nmi(struct iwl_trans *trans);
++void iwl_trans_pcie_sync_nmi(struct iwl_trans *trans);
  
--	if (mvmvif->ap_wep_key) {
--		int i;
--
--		if (!__test_and_clear_bit(mvmvif->ap_wep_key->hw_key_idx,
--					  mvm->fw_key_table)) {
--			IWL_ERR(mvm, "offset %d not used in fw key table.\n",
--				mvmvif->ap_wep_key->hw_key_idx);
--			return -ENOENT;
--		}
--
--		/* track which key was deleted last */
--		for (i = 0; i < STA_KEY_MAX_NUM; i++) {
--			if (mvm->fw_key_deleted[i] < U8_MAX)
--				mvm->fw_key_deleted[i]++;
--		}
--		mvm->fw_key_deleted[mvmvif->ap_wep_key->hw_key_idx] = 0;
--		ret = __iwl_mvm_remove_sta_key(mvm, mvmvif->mcast_sta.sta_id,
--					       mvmvif->ap_wep_key, true);
--		if (ret)
--			return ret;
--	}
--
- 	ret = iwl_mvm_rm_sta_common(mvm, mvmvif->mcast_sta.sta_id);
- 	if (ret)
- 		IWL_WARN(mvm, "Failed sending remove station\n");
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 79700c7310a1..b4d4071b865d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -8,7 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -31,7 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -394,7 +394,6 @@ struct iwl_mvm_rxq_dup_data {
-  *	the BA window. To be used for UAPSD only.
-  * @ptk_pn: per-queue PTK PN data structures
-  * @dup_data: per queue duplicate packet detection data
-- * @wep_key: used in AP mode. Is a duplicate of the WEP key.
-  * @deferred_traffic_tid_map: indication bitmap of deferred traffic per-TID
-  * @tx_ant: the index of the antenna to use for data tx to this station. Only
-  *	used during connection establishment (e.g. for the 4 way handshake
-@@ -426,8 +425,6 @@ struct iwl_mvm_sta {
- 	struct iwl_mvm_key_pn __rcu *ptk_pn[4];
- 	struct iwl_mvm_rxq_dup_data *dup_data;
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index fe8269d023de..28d6ae8c9336 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3318,7 +3318,8 @@ static void iwl_trans_pcie_resume(struct iwl_trans *trans)
+ 	.unref = iwl_trans_pcie_unref,					\
+ 	.dump_data = iwl_trans_pcie_dump_data,				\
+ 	.d3_suspend = iwl_trans_pcie_d3_suspend,			\
+-	.d3_resume = iwl_trans_pcie_d3_resume
++	.d3_resume = iwl_trans_pcie_d3_resume,				\
++	.sync_nmi = iwl_trans_pcie_sync_nmi
  
--	struct ieee80211_key_conf *wep_key;
--
- 	u8 reserved_queue;
+ #ifdef CONFIG_PM_SLEEP
+ #define IWL_TRANS_PM_OPS						\
+@@ -3637,7 +3638,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	return ERR_PTR(ret);
+ }
  
- 	/* Temporary, until the new TLC will control the Tx protection */
+-void iwl_trans_sync_nmi(struct iwl_trans *trans)
++void iwl_trans_pcie_sync_nmi(struct iwl_trans *trans)
+ {
+ 	unsigned long timeout = jiffies + IWL_TRANS_NMI_TIMEOUT;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 88530d9f4a54..38d110338987 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -965,7 +965,7 @@ static int iwl_pcie_gen2_send_hcmd_sync(struct iwl_trans *trans,
+ 			       cmd_str);
+ 		ret = -ETIMEDOUT;
+ 
+-		iwl_trans_sync_nmi(trans);
++		iwl_trans_pcie_sync_nmi(trans);
+ 		goto cancel;
+ 	}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 9fbd37d23e85..7be73e2c4681 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1960,7 +1960,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
+ 			       iwl_get_cmd_string(trans, cmd->id));
+ 		ret = -ETIMEDOUT;
+ 
+-		iwl_trans_sync_nmi(trans);
++		iwl_trans_pcie_sync_nmi(trans);
+ 		goto cancel;
+ 	}
+ 
 -- 
 2.20.1
 
