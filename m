@@ -5,70 +5,78 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79B52C43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 11:26:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1844C43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 12:39:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B65320684
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 11:26:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74DF62085A
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 12:39:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726297AbfCHL0k (ORCPT
+        id S1726471AbfCHMjR convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Mar 2019 06:26:40 -0500
-Received: from mga17.intel.com ([192.55.52.151]:34398 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725975AbfCHL0k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Mar 2019 06:26:40 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 08 Mar 2019 03:26:39 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,455,1544515200"; 
-   d="scan'208";a="140236648"
-Received: from kphartnx-mobl1.ger.corp.intel.com ([10.252.28.244])
-  by orsmga002.jf.intel.com with ESMTP; 08 Mar 2019 03:26:38 -0800
-Message-ID: <c2962648d413efe4c8f08499707f15c6c9bde2a3.camel@intel.com>
-Subject: Re: [PATCH v2] cfg80211: Include the PMK and PMKID in
- NL80211_CMD_EXTERNAL_AUTH
-From:   Luciano Coelho <luciano.coelho@intel.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date:   Fri, 08 Mar 2019 13:26:37 +0200
-In-Reply-To: <b4a8237564db96d0be471ea93bf32e321adf6d72.camel@sipsolutions.net>
-References: <ffc4c9e611784b1367e187d092b846381a4cfdc0.camel@sipsolutions.net>
-         <20190206080234.15750-1-luca@coelho.fi>
-         <b4a8237564db96d0be471ea93bf32e321adf6d72.camel@sipsolutions.net>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5-1 
+        Fri, 8 Mar 2019 07:39:17 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:54631 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726249AbfCHMjR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Mar 2019 07:39:17 -0500
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x28CcnY1005816, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv02.realtek.com.tw[172.21.6.19])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x28CcnY1005816
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Fri, 8 Mar 2019 20:38:49 +0800
+Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
+ RTITCASV02.realtek.com.tw ([::1]) with mapi id 14.03.0439.000; Fri, 8 Mar
+ 2019 20:38:49 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        "briannorris@chromium.org" <briannorris@chromium.org>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>
+Subject: RE: [PATCH v2 00/24] rtw88: major fixes for 8822c to have stable functionalities
+Thread-Topic: [PATCH v2 00/24] rtw88: major fixes for 8822c to have stable
+ functionalities
+Thread-Index: AQHU1ZtIhYim7tsxxEKEtK5d1ye116YBq0Rg
+Date:   Fri, 8 Mar 2019 12:38:48 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17BC3EB@RTITMBSVM04.realtek.com.tw>
+References: <1550134743-17443-1-git-send-email-yhchuang@realtek.com>
+        <F7CD281DE3E379468C6D07993EA72F84D17AE4FD@RTITMBSVM04.realtek.com.tw>
+ <87a7i58xag.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87a7i58xag.fsf@kamboji.qca.qualcomm.com>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.124]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-02-22 at 13:41 +0100, Johannes Berg wrote:
-> > +++ b/net/wireless/nl80211.c
-> > @@ -13098,6 +13098,12 @@ static int nl80211_external_auth(struct
-> > sk_buff *skb, struct genl_info *info)
-> >  	if (!info->attrs[NL80211_ATTR_STATUS_CODE])
-> >  		return -EINVAL;
-> >  
-> > +	if ((info->attrs[NL80211_ATTR_PMK] &&
-> > +	     !info->attrs[NL80211_ATTR_PMKID]) ||
-> > +	    (info->attrs[NL80211_ATTR_PMKID] &&
-> > +	     !info->attrs[NL80211_ATTR_PMK]))
-> > +		return -EINVAL;
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
 > 
-> This constitutes a netlink API change, so no, can't be right? PMKID
-> was
-> perfectly reasonable to pass by itself before.
+> Also in another thread I saw something about this driver conflicting
+> with a staging driver, is that true? That should be solved before the
+> driver is accepted as I don't think two drivers should race for the same
+> hardware and the driver is randomly chosen.
+> 
 
-Good point.  Andrei, can you fix this? This can easily be changed to
-accept PMKID alone but still do what you want when both are included.
+I think this could be fixed by removing the staging driver via
+wireless-drivers-next as you said before. Can you help me coordinate
+this with Greg? Or should I send the patch that removes the staging
+driver to you.
 
---
-Luca.
+Thanks
 
+> 
+> --
+> Kalle Valo
+
+
+Yan-Hsuan
