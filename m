@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 591D4C43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 15:25:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEBF4C43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 15:25:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2332320868
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 15:25:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94DE520868
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 15:25:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=camlinlimited.onmicrosoft.com header.i=@camlinlimited.onmicrosoft.com header.b="SP1k+Odn"
+	dkim=pass (1024-bit key) header.d=camlinlimited.onmicrosoft.com header.i=@camlinlimited.onmicrosoft.com header.b="jfdos3D9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726412AbfCHPZr (ORCPT
+        id S1726429AbfCHPZt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Mar 2019 10:25:47 -0500
-Received: from mail-eopbgr100054.outbound.protection.outlook.com ([40.107.10.54]:14944
+        Fri, 8 Mar 2019 10:25:49 -0500
+Received: from mail-eopbgr100066.outbound.protection.outlook.com ([40.107.10.66]:11645
         "EHLO GBR01-LO2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726279AbfCHPZq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Mar 2019 10:25:46 -0500
+        id S1726424AbfCHPZt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Mar 2019 10:25:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=camlinlimited.onmicrosoft.com; s=selector1-camlintechnologies-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iSog5YJ+q6BjwGhcnwT9lbkTmoNuFHhHL8RnzcTNavw=;
- b=SP1k+OdnN9MKcYRr/8AoEigTJck2RhESnY491FAE81bPpwFtQC6vMmAN8/D5W5p4YmlhEkLKH5NDDEX8sqeUEExLZ8SDhQVqjidN/gbexgqnrPxKBumbB61plUqapXjxCJcCv2IwzbdBVMbp1ywGCrrw8ASb51id3+tUqb+Mxqc=
+ bh=L8uXgU1/4In7BiyADkKVZAoGe1wiiQHWXMWbjJDSDWI=;
+ b=jfdos3D9sEXkxxC2EVRR4x/GxcGLro51kYZdvOJTdXKnbLnJmew5eVGo2ZFZiNKOxgc027lJHZbRpCffPLh9KJ6Ah7nTGpLCxMwqLmFAzMaP1zofpzF74sD3yNE2zO+F68/ekSeX/adVYmwm31hx1yNOid1CKSMIhOudlHvfXlk=
 Received: from LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM (20.179.129.83) by
  LNXP123MB2106.GBRP123.PROD.OUTLOOK.COM (20.179.129.11) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1686.18; Fri, 8 Mar 2019 15:25:09 +0000
+ 15.20.1686.18; Fri, 8 Mar 2019 15:25:07 +0000
 Received: from LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM
  ([fe80::396a:e27e:d5dd:6bf0]) by LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM
  ([fe80::396a:e27e:d5dd:6bf0%5]) with mapi id 15.20.1686.018; Fri, 8 Mar 2019
- 15:25:09 +0000
+ 15:25:07 +0000
 From:   Piotr Figiel <p.figiel@camlintechnologies.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
         "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
@@ -50,12 +50,12 @@ CC:     "franky.lin@broadcom.com" <franky.lin@broadcom.com>,
         =?iso-8859-2?Q?Krzysztof_Drobi=F1ski?= 
         <k.drobinski@camlintechnologies.com>,
         Piotr Figiel <p.figiel@camlintechnologies.com>
-Subject: [PATCH 3/3] brcmfmac: remove unused variable i from brcmf_usb_free_q
-Thread-Topic: [PATCH 3/3] brcmfmac: remove unused variable i from
+Subject: [PATCH 2/3] brcmfmac: remove pending parameter from brcmf_usb_free_q
+Thread-Topic: [PATCH 2/3] brcmfmac: remove pending parameter from
  brcmf_usb_free_q
-Thread-Index: AQHU1cMd5vOYZC5mAU2ccGUUUcGOeg==
-Date:   Fri, 8 Mar 2019 15:25:09 +0000
-Message-ID: <1552058658-23250-4-git-send-email-p.figiel@camlintechnologies.com>
+Thread-Index: AQHU1cMcob53qBcu4EepzJ+soxNvRA==
+Date:   Fri, 8 Mar 2019 15:25:06 +0000
+Message-ID: <1552058658-23250-3-git-send-email-p.figiel@camlintechnologies.com>
 References: <1552058658-23250-1-git-send-email-p.figiel@camlintechnologies.com>
 In-Reply-To: <1552058658-23250-1-git-send-email-p.figiel@camlintechnologies.com>
 Accept-Language: en-US
@@ -71,45 +71,45 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.7.4
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 7882a4d4-5f90-4408-6a9e-08d6a3da402f
+x-ms-office365-filtering-correlation-id: d9c6c8d7-a664-4286-6029-08d6a3da3e92
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:LNXP123MB2106;
 x-ms-traffictypediagnostic: LNXP123MB2106:
-x-microsoft-exchange-diagnostics: =?iso-8859-2?Q?1;LNXP123MB2106;23:axFqT5Cq98r8h8zWMg9dIXizT4oG1d4UH/ny+Xx?=
- =?iso-8859-2?Q?nkZL3gtvys6MhV/X9hVmEqEcAAiWymCWR/B6+RuUOLAbZRF+QPihcFtFLG?=
- =?iso-8859-2?Q?Y4zznV/IrRzbrbNVVIYhflRdtz0pnKqXHNP4/hnnBOGgsK3StRPqtctBFq?=
- =?iso-8859-2?Q?z/+N7X2srvgef69CrHn/tH8K3K2HWDATWFd/BD/5xTTQEpxf1gu7LP4D7Q?=
- =?iso-8859-2?Q?TPmB0OpIOB2V1ecOkcukk66425zB42rfbmm/wL6py+kwqtcUdNhmLqrfNf?=
- =?iso-8859-2?Q?v1ohmoZXsGkZRi8cakfXozUWUl7Av3vsPuZSmvvJ5ryVaOtskhQMXfS0Fm?=
- =?iso-8859-2?Q?OJH7nnTte3F8bD7YHz93EKGsYikefLvAqgxUAeaJbmkegjRuWhesjY2UKM?=
- =?iso-8859-2?Q?u99rKJj/HtO/Ec7iGOf2OjGK8iMxWkhyPB1Nu0L/0gXVVd+i1usCkrPfy3?=
- =?iso-8859-2?Q?46z1sCxuX6WHe+xj0hP1LoJGI9AxNaKv5LeMRgGE1CZO7thmFgtZMOjfPB?=
- =?iso-8859-2?Q?Y8MxfRrDs64ZVDik1ID1FJ08Fu0bk01HmPbXPyZpTVFUTSZGajDH8XE2CJ?=
- =?iso-8859-2?Q?AwmRLdiacGl7IBRRr0Hjq0fEaDnKASgii6B4mPpr9kWNndUqW/7R1zPbl0?=
- =?iso-8859-2?Q?+zAvSbz6y+op8Ow4I70uTAYhQYbFQGXsUHYXAH8zMHpBHT0JoSblGaEahV?=
- =?iso-8859-2?Q?JcdMButQE4CZfd+3RsQrOuKRFAQfYP+w5P8mHR5rVQRYlXqYS21fBtXmCU?=
- =?iso-8859-2?Q?0hMNVURntMhlgMgswcCy9lDZPGXhSIwOkAmQNXfb/Gmo87CK176Eo26ubX?=
- =?iso-8859-2?Q?u450KQAbb72P5ShW17K5gQig2igXqJVuGL8NVJGL/XH2o3bM0B5JH+j9uh?=
- =?iso-8859-2?Q?domVCJnVJ+r3uri/zUguRAcLn7HKTzkPovcc57DZsNB0VJ5acs+lmqhnkk?=
- =?iso-8859-2?Q?mdFmcge/TPm9lKLnDCOjgoPyDWcAAfY9MdIatmaF7hmAu8+SQ1Vi5deBR5?=
- =?iso-8859-2?Q?ZrU4aVHqc3hYS9JIzCRUDcAEnKdmwkTEabD+42YFwhMeGvowD9hglG4OAe?=
- =?iso-8859-2?Q?1pfKMLpFoMdExtXcfMxQCle9k3pqEW8BDv/7rLwU2aQWRceSOrIjEmjx43?=
- =?iso-8859-2?Q?ZSd4hYCysj5moBDg10kGUIa91lgtqA94LhK6gLzB5HO3veu0mHLpXnG6NC?=
- =?iso-8859-2?Q?dPou7jk0qqceJEIJu5DYDeOXdsL5Aop+nv43002P/bYMf+f5RXbxQKquAf?=
- =?iso-8859-2?Q?yWGlw3T1Lw28ZtyHCtNCBlMNgf4NfrN9JAJSXUM1qFMmJVEWbxYNOehG8e?=
- =?iso-8859-2?Q?1lr8auPUYU0or0WIkzJ1fWY?=
-x-microsoft-antispam-prvs: <LNXP123MB21061B27589BB2079ACD1D7AE74D0@LNXP123MB2106.GBRP123.PROD.OUTLOOK.COM>
+x-microsoft-exchange-diagnostics: =?iso-8859-2?Q?1;LNXP123MB2106;23:tELjxLtU+8XRWf404igN51MQaqlfWr6wey/Vpc5?=
+ =?iso-8859-2?Q?dBZTZ9P7g/YXcQLEWj4ob6Z4x0ZNH3LXBVmAPlRDF+sFKzKNrltc7UZkiB?=
+ =?iso-8859-2?Q?6gdVv3TxdJgPUGMzFTXJJbFwWgWSlTVP8ccAxBQf2/LsGa+SE1YdFu39TL?=
+ =?iso-8859-2?Q?F4D8sApjabbi+pzQShn+UdBXb7fHZluxaWIXM4ZjxPzDhjyXqvwwWwIYa7?=
+ =?iso-8859-2?Q?nRW8wXif3cXPFRsVoPXcWPURyaaV+ozMWZifCgsUHs+xDxNq4sAMYzF5zT?=
+ =?iso-8859-2?Q?8FpnIPPmqFsqfEse26P5lRuhEyP3yH89PE9RFA4PdpWyN6tlIc1OnDZU54?=
+ =?iso-8859-2?Q?C6MBUvHEUBecSS7JDSd4ie4zhFMCvd9UYGFBE3lrqAhhjVZj6VUOOCQ4+k?=
+ =?iso-8859-2?Q?887SNtOM19KYBO+x6VHomqVruJNsLktlPL61G3AM4X10LZU7vEjUk4FNCr?=
+ =?iso-8859-2?Q?Rosq5n/xwddjkSfFCCSDGZ89vUR4E/AAh7MI5Td7T7OoRW0VEy8F5gw26R?=
+ =?iso-8859-2?Q?Pkt3uUsK5Dvb0gJ57cxUvXipKGgjVKDBSVud+Hh4/N9B8Zm7OLWBhs7FAM?=
+ =?iso-8859-2?Q?gF4hI+lLeyBgo/BvsMWsg3RnCr5GLnTMEIQRPNQI9nRvnrXOlWGmbTl+Sf?=
+ =?iso-8859-2?Q?2Z0c8rIJwKa1Q+L04dVaS4PLsbYzY4hrrBRVrnwQ6vH08Qu69B6PDJ5V0p?=
+ =?iso-8859-2?Q?rSa03II+XfS4tJMZzDpRsLZPwUdSroGLB2YzuxBokElmjNW5DaOJ7kWKeY?=
+ =?iso-8859-2?Q?YE4mhEfISiscjOTYdHUy8LU/rNq9cFW77qj3RRZZpyqbdhwNP08hSVIufX?=
+ =?iso-8859-2?Q?0Mk8PgWv4u7smzcspxBuUj8SJ+5CJqwMaO7tdP9CTLCqu2emuGida9wJbq?=
+ =?iso-8859-2?Q?a4E7JPK4JklzeLYQT+BI/VbjGHUbgGnbjTOwK/LIKeOKDFZKP/0SYOddlL?=
+ =?iso-8859-2?Q?DZTOLxQ5RsNgy9sfp+Yk6b8q/D1RLQn4TGhbBk6SprIwpRJg4CYukz4i1H?=
+ =?iso-8859-2?Q?oBlQG9aLgtP9DXDyUAuQMbzE66111iv/maBfwsMhHccib4IYky9eY/7Vd7?=
+ =?iso-8859-2?Q?6s5TWaiij8Zne0gO3Xq3TJHNN+otklJ0D8obkFJn1w+tHoHN6gYvBcgfVo?=
+ =?iso-8859-2?Q?Ti4Mn+Gn6x8psOk5lcGl5PtpQMey+CzBvx9y+4ACVhR3rK+4QLxeSqOc5W?=
+ =?iso-8859-2?Q?cw2GOBfImF6ZsErIkx9OAMLda92JqjQMRBk+Dui1OFQbW1zUXcsHyAhy/w?=
+ =?iso-8859-2?Q?qXcw29Uwga42kDy0GPZlFn03mIznyG09HTITYzKHI/pytmY08YKYd8XloX?=
+ =?iso-8859-2?Q?OGEKzPbV2AwH0SOnsNrCzC2?=
+x-microsoft-antispam-prvs: <LNXP123MB21066EC548FD02A49FBAF79FE74D0@LNXP123MB2106.GBRP123.PROD.OUTLOOK.COM>
 x-forefront-prvs: 0970508454
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(136003)(346002)(396003)(366004)(39850400004)(189003)(199004)(8676002)(305945005)(97736004)(105586002)(486006)(99286004)(81166006)(3846002)(14454004)(81156014)(6116002)(476003)(106356001)(102836004)(6506007)(66066001)(186003)(6512007)(36756003)(26005)(110136005)(54906003)(6486002)(5660300002)(52116002)(4744005)(446003)(2616005)(11346002)(386003)(2906002)(53936002)(107886003)(76176011)(71190400001)(71200400001)(86362001)(2201001)(50226002)(6436002)(316002)(4326008)(68736007)(256004)(25786009)(7736002)(2501003)(8936002)(478600001);DIR:OUT;SFP:1101;SCL:1;SRVR:LNXP123MB2106;H:LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(136003)(346002)(396003)(366004)(39850400004)(189003)(199004)(8676002)(305945005)(97736004)(105586002)(486006)(99286004)(81166006)(3846002)(14454004)(81156014)(6116002)(476003)(106356001)(102836004)(6506007)(66066001)(186003)(6512007)(36756003)(26005)(110136005)(54906003)(6486002)(5660300002)(52116002)(446003)(2616005)(11346002)(386003)(2906002)(53936002)(107886003)(76176011)(71190400001)(71200400001)(86362001)(2201001)(50226002)(6436002)(316002)(4326008)(68736007)(14444005)(256004)(25786009)(7736002)(2501003)(8936002)(478600001);DIR:OUT;SFP:1101;SCL:1;SRVR:LNXP123MB2106;H:LNXP123MB2185.GBRP123.PROD.OUTLOOK.COM;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: camlintechnologies.com does not
  designate permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: fBFhNPbfK2TUz+HT1/eKyTjOHtuJrH2d0PSFja2aBfPZtS45mW5+mjFKBjA0N8AnXIa/O3OQyprqZIQDeffuIzoqKA4yA6MBkjGBY/j+n+8+7WuCeNHL9OBUEW/l/cQEUA2cuCR9tbLwEO/SvfOsBjTMuXNWmpyU6nUZc4qow5TPBwiwD+c7Mj5P9fOIJEH+pOdaN78wwX3m35udeyyENQfxsHPU1S48oibhn8wuBDOzBqxiXXqkOAZ59aTVypgrLYdhMo7lAZgG/Kq87SCjEwmHOjCV2H5RDjAYZxdAe/AfJzgFHAPGvdp8rK5AR0M/R5lXPA9QDvxB33QeC4KMwrClrag2Cwv6iboRbW+sQsPAZXmE0TB9bOi+PzTRrrK5Nrh0kiEKWbNbKtL1cyNS0mEsmA6OFf9KUnjKUL9x5Fs=
+x-microsoft-antispam-message-info: A3iI4jQrIcGPh2xhV92KC5cbfMvNlTXyzJmkiI4cl/FWO/3i6O/fHEoo4NWHQiQ/bIZddsSDManV9wYQ7sMWRWQZQggp8R6ztURvfdvGDOzqq2KSb/i7FUWsmByh7SeqK3NbG2E5kktXhtpCW/47E0B3GpGiP0LKSbHr51jzF017jY10DxWyuZ1LNiSY6YJg9yWPEFlJ4VH9Z2tUtIHtt5s/9Ih7BV95oejAdX38EoVKoeue0gvXPmOh+NC2p0ImcuLjF/I7iEG4gdeXEktu/BubyTJ8/kYqKDlRePLQ7F79qqT90BfxVcoh037A7SN4zURYpjI1IZt32oJrXAJEeBLGaAd2u/9YR/wB5uQf88KnFkon5W34QCj3mPz3+Sr2OcypMuyEK+6KCKYBDjFJCB7IA9WuvHO0X9I1cYgi7CI=
 Content-Type: text/plain; charset="iso-8859-2"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: camlintechnologies.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7882a4d4-5f90-4408-6a9e-08d6a3da402f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Mar 2019 15:25:09.8013
+X-MS-Exchange-CrossTenant-Network-Message-Id: d9c6c8d7-a664-4286-6029-08d6a3da3e92
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Mar 2019 15:25:06.9883
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: fd4b1729-b18d-46d2-9ba0-2717b852b252
@@ -120,32 +120,60 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Variable i is not used so remove it.
+brcmf_usb_free_q is no longer called with pending=3Dtrue thus this boolean
+parameter is no longer needed.
 
 Signed-off-by: Piotr Figiel <p.figiel@camlintechnologies.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 15 ++++++--------=
+-
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drive=
 rs/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 5ab397d..c00b9fd 100644
+index a775409..5ab397d 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -449,13 +449,11 @@ static void brcmf_usb_free_q(struct list_head *q)
+@@ -445,9 +445,10 @@ brcmf_usbdev_qinit(struct list_head *q, int qsize)
+=20
+ }
+=20
+-static void brcmf_usb_free_q(struct list_head *q, bool pending)
++static void brcmf_usb_free_q(struct list_head *q)
  {
  	struct brcmf_usbreq *req, *next;
-=20
--	int i =3D 0;
++
+ 	int i =3D 0;
  	list_for_each_entry_safe(req, next, q, list) {
  		if (!req->urb) {
- 			brcmf_err("bad req\n");
+@@ -455,12 +456,8 @@ static void brcmf_usb_free_q(struct list_head *q, bool=
+ pending)
  			break;
  		}
--		i++;
- 		usb_free_urb(req->urb);
- 		list_del_init(&req->list);
+ 		i++;
+-		if (pending) {
+-			usb_kill_urb(req->urb);
+-		} else {
+-			usb_free_urb(req->urb);
+-			list_del_init(&req->list);
+-		}
++		usb_free_urb(req->urb);
++		list_del_init(&req->list);
  	}
+ }
+=20
+@@ -1029,8 +1026,8 @@ static void brcmf_usb_detach(struct brcmf_usbdev_info=
+ *devinfo)
+ 	brcmf_dbg(USB, "Enter, devinfo %p\n", devinfo);
+=20
+ 	/* free the URBS */
+-	brcmf_usb_free_q(&devinfo->rx_freeq, false);
+-	brcmf_usb_free_q(&devinfo->tx_freeq, false);
++	brcmf_usb_free_q(&devinfo->rx_freeq);
++	brcmf_usb_free_q(&devinfo->tx_freeq);
+=20
+ 	usb_free_urb(devinfo->ctl_urb);
+ 	usb_free_urb(devinfo->bulk_urb);
 --=20
 2.7.4
 
