@@ -2,163 +2,201 @@ Return-Path: <SRS0=wltO=RL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0988CC43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 10:40:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C680C43381
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 11:05:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C840F20684
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 10:39:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="X1uvhbAR";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cwCe722b"
+	by mail.kernel.org (Postfix) with ESMTP id EC62B20851
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 11:05:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726334AbfCHKj7 (ORCPT
+        id S1726279AbfCHLFJ convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Mar 2019 05:39:59 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:45782 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725789AbfCHKj6 (ORCPT
+        Fri, 8 Mar 2019 06:05:09 -0500
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:46705 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725789AbfCHLFJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Mar 2019 05:39:58 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id A01CE60312; Fri,  8 Mar 2019 10:39:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1552041597;
-        bh=ggZBrKEq+50k2hn5pLbZAF3jrNu7bSg9rHOcUUJ0T5o=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=X1uvhbAR1MaMVL7vw61jIQiRr3qimBmAaKnj8pn//sH8XkVxvCITNpkkwXiZ1208l
-         HaClGcwrqhRkpwI2BO+CZIAg8lQKgfycqDFxLaLPg1rv2bKkf1KtAxHeCSRG3JJaBu
-         s1fQX6Z78+bucDvU5oWWqrD31eVBFSQ3UDMvMFRc=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 84BD56016D;
-        Fri,  8 Mar 2019 10:39:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1552041596;
-        bh=ggZBrKEq+50k2hn5pLbZAF3jrNu7bSg9rHOcUUJ0T5o=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=cwCe722bR3wPA3GHfDZzSCq2MHx0uZocGxM0GMxBZn5AqKEapxHK5glNTmwCByWHG
-         P/o/jF9y9aFCKsQlrAFXa/Qz8gDXPyrwNJLdPHFEaS10ehfvVUgqwk0cuhAs+n/raI
-         nqLkURoGUjvzCxRr6BcR6ZupWvfBIoBl++sxc8rk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 84BD56016D
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     "johannes\@sipsolutions.net" <johannes@sipsolutions.net>,
-        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "briannorris\@chromium.org" <briannorris@chromium.org>,
-        "sgruszka\@redhat.com" <sgruszka@redhat.com>
-Subject: Re: [PATCH v2 00/24] rtw88: major fixes for 8822c to have stable functionalities
-References: <1550134743-17443-1-git-send-email-yhchuang@realtek.com>
-        <F7CD281DE3E379468C6D07993EA72F84D17AE4FD@RTITMBSVM04.realtek.com.tw>
-Date:   Fri, 08 Mar 2019 12:39:51 +0200
-In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17AE4FD@RTITMBSVM04.realtek.com.tw>
-        (Tony Chuang's message of "Tue, 26 Feb 2019 08:20:33 +0000")
-Message-ID: <87a7i58xag.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Fri, 8 Mar 2019 06:05:09 -0500
+Received: by mail-ed1-f66.google.com with SMTP id f2so16050601edy.13
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Mar 2019 03:05:07 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=ABca4EoLzrJgYdMirNp2lP/sA/gVHBZHoR9KRUIIm0s=;
+        b=Ob42Yvs17GT5x33GVfOIDYMWbUCBw5e2qd9GdlOWp8lnc44GMkhyd4AF9IB+wd6FmD
+         FDXOOUomPsdhv9rGtwjP+ZNGl3g1HWl5amKCyI6KqlSz/5vC8q0eqkFpaNtv+5EAkP5l
+         tCXFzGUDdwRkO4X6tIU0Euq9apf0HHapzhZM7JwoAsdSolDjinp1y2MrVWIsDpBjd8q/
+         Nv7WjV094Q5wNeuYZXoVwR6V4m/4zrn824hyCJ9YbphtlfvrW7j7t+pX/QtR0NoZHnNC
+         Kb7ORFn4+Wf8oBeI3Xz23+RH8kayRf35GSRGqtyGsBNVAj4kJ7+GMwIXCzVumfvibr0H
+         5qCA==
+X-Gm-Message-State: APjAAAWmT8iK+7vlj7Kv0jFjK6eV01xvvPionS7bpz2CWCGBs8pGcZF6
+        6V4Laym6PnYpbz1k2+Zmoe0BdA==
+X-Google-Smtp-Source: APXvYqwOROezSumd74yZbKtbF4LypI4LK7W7T6hNaCbaWo6Oz57AmLkyEUlyiwASipEtSKQLD5MiCw==
+X-Received: by 2002:a17:906:5583:: with SMTP id y3mr11392084ejp.42.1552043106570;
+        Fri, 08 Mar 2019 03:05:06 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
+        by smtp.gmail.com with ESMTPSA id c20sm1356251ejm.58.2019.03.08.03.05.05
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 08 Mar 2019 03:05:05 -0800 (PST)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 2AFEB180454; Fri,  8 Mar 2019 12:05:05 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>, make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>
+Subject: Re: [RFC/RFT] mac80211: Switch to a virtual time-based airtime scheduler
+In-Reply-To: <f6c5bc25-a8b3-bac3-8d62-d41347a6c070@nbd.name>
+References: <20190215170512.31512-1-toke@redhat.com> <f6c5bc25-a8b3-bac3-8d62-d41347a6c070@nbd.name>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Fri, 08 Mar 2019 12:05:05 +0100
+Message-ID: <874l8d7hjy.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Tony Chuang <yhchuang@realtek.com> writes:
+Felix Fietkau <nbd@nbd.name> writes:
 
->> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> On 2019-02-15 18:05, Toke Høiland-Jørgensen wrote:
+>> This switches the airtime scheduler in mac80211 to use a virtual time-based
+>> scheduler instead of the round-robin scheduler used before. This has a
+>> couple of advantages:
 >> 
->> Note this patch set is based on patch set "rtw88: mac80211 driver for
->> Realtek 802.11ac wireless network chips". For reference:
->> https://patchwork.kernel.org/cover/10811967/
->> https://lkml.kernel.org/linux-wireless/1550131671-2601-1-git-send-email-yhch
->> uang@realtek.com/
+>> - No need to sync up the round-robin scheduler in firmware/hardware with
+>>   the round-robin airtime scheduler.
 >> 
->> These patches are mean to make sure 8822c chip to operate normal for most
->> of the basic functionalities, such as power on, switch channel, scan,
->> connection establish and connection monitor.
+>> - If several stations are eligible for transmission we can schedule both of
+>>   them; no need to hard-block the scheduling rotation until the head of the
+>>   queue has used up its quantum.
 >> 
->> As the original patch set was sent 3 months ago, progress has been made
->> by Realtek during the past months. Now we have tested on more chips and
->> released tables and parameters for them. Also the chips are all
->> programed with efuse map released for 8822c.
+>> - The check of whether a station is eligible for transmission becomes
+>>   simpler (in ieee80211_txq_may_transmit()).
 >> 
->> Most of the changes are about BB and RF, both control the tx/rx path.
->> PHY parameters/seq and efuse info make sure the hardware is powered on
->> correctly. And channel setting updates help driver to switch to target
->> channel accurately. Then trx mode setting and DACK will make hardware to
->> have stable performance to tx/rx to connect to AP.
+>> The drawback is that scheduling becomes slightly more expensive, as we need
+>> to maintain an rbtree of TXQs sorted by virtual time. This means that
+>> ieee80211_register_airtime() becomes O(logN) in the number of currently
+>> scheduled TXQs. However, hopefully this number rarely grows too big (it's
+>> only TXQs currently backlogged, not all associated stations), so it
+>> shouldn't be too big of an issue.
 >> 
->> Here tx power control is also required to transmit with a precise power.
->> Otherwise if the power is too high or too low, the peer might not be able
->> to receive the signal.
->> 
->> Finally, we need to report correct tx status for mac80211's connection
->> monitor system, this requires firmware's C2H of tx status report. After
->> this, users can use 8822c chips for more stable wireless communication.
->> 
->> 
->> v2
->> 
->> This v2 is sent for that https://patchwork.kernel.org/cover/10811967/
->> has many modifications and the original patch set would not apply.
->> Also with a few changes in this one. Listed below
->> 
->>  - report ACK for tx frames not have IEEE80211_TX_CTL_REQ_TX_STATUS,
->>    otherwise they will be marked as "drop"
->>  - add more rf register write protection for patch "rtw88: add a delay
->>    after writing a rf register"
->> 
->
-> Can I ask that when will this patch set probably be applied into your tree?
+>> Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
+> The approach looks good to me, but I haven't really reviewed it very
+> carefully yet. Just some points that I noticed below:
 
-Once everyone are happy about the driver, at least it needs a review
-from Johannes and me but reviews from others is more than welcome. I
-also saw that Brian gave good comments but not sure if he thinks the
-driver is ready for upstream?
+Cool!
 
-An ideal schedule is to apply the driver just after the -rc1 is release,
-so within two weeks time. That way we have maximum time to fix any
-problems which might arise.
+>> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+>> index 11f058987a54..9d01fdd86e2d 100644
+>> --- a/net/mac80211/sta_info.c
+>> +++ b/net/mac80211/sta_info.c
+>> @@ -389,7 +389,6 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+>>  	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+>>  		skb_queue_head_init(&sta->ps_tx_buf[i]);
+>>  		skb_queue_head_init(&sta->tx_filtered[i]);
+>> -		sta->airtime[i].deficit = sta->airtime_weight;
+>>  	}
+>>  
+>>  	for (i = 0; i < IEEE80211_NUM_TIDS; i++)
+>> @@ -1831,18 +1830,32 @@ void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
+>>  {
+>>  	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+>>  	struct ieee80211_local *local = sta->sdata->local;
+>> +	struct ieee80211_txq *txq = sta->sta.txq[tid];
+>>  	u8 ac = ieee80211_ac_from_tid(tid);
+>> -	u32 airtime = 0;
+>> +	u64 airtime = 0, weight_sum;
+>> +
+>> +	if (!txq)
+>> +		return;
+>>  
+>>  	if (sta->local->airtime_flags & AIRTIME_USE_TX)
+>>  		airtime += tx_airtime;
+>>  	if (sta->local->airtime_flags & AIRTIME_USE_RX)
+>>  		airtime += rx_airtime;
+>>  
+>> +	/* Weights scale so the unit weight is 256 */
+>> +	airtime <<= 8;
+>> +
+>>  	spin_lock_bh(&local->active_txq_lock[ac]);
+>> +
+>>  	sta->airtime[ac].tx_airtime += tx_airtime;
+>>  	sta->airtime[ac].rx_airtime += rx_airtime;
+>> -	sta->airtime[ac].deficit -= airtime;
+>> +
+>> +	weight_sum = local->airtime_weight_sum[ac] ?: sta->airtime_weight;
+>> +
+>> +	local->airtime_v_t[ac] += airtime / weight_sum;
+>> +	sta->airtime[ac].v_t += airtime / sta->airtime_weight;
+>> +	ieee80211_resort_txq(&local->hw, txq);
+> These divisions could be a bit expensive, any way to change the
+> calculation to avoid them?
 
-Did Stanislaw already review this driver? I don't see any mentioning of
-that in the cover letter[1].
+Yeah, given that the denominators are constant from the PoV of the fast
+path, we can pre-compute reciprocals and turn these divides into
+multiplications. Will incorporate that...
 
-For now freeze please the developement on the driver to make the review
-easier. So don't do any changes unless asked by Johannes or me. You can
-of course do development on a separate branch and submit fixes after the
-driver is accepted upstream.
+>> --- a/net/mac80211/tx.c
+>> +++ b/net/mac80211/tx.c
+>> -void ieee80211_return_txq(struct ieee80211_hw *hw,
+>> +static void __ieee80211_insert_txq(struct rb_root_cached *root,
+>> +				   struct txq_info *txqi, u8 ac)
+>> +{
+>> +	struct rb_node **new = &root->rb_root.rb_node;
+>> +	struct rb_node *parent = NULL;
+>> +	struct txq_info *__txqi;
+>> +	bool leftmost = true;
+>> +
+>> +	while (*new) {
+>> +		parent = *new;
+>> +		__txqi = rb_entry(parent, struct txq_info, schedule_order);
+>> +
+>> +		if (!txqi->txq.sta) {
+>> +			/* new txqi has no sta - insert to the left */
+>> +			new = &parent->rb_left;
+>> +		} else if (!__txqi->txq.sta) {
+>> +			/* existing txqi has no sta - insert to the right */
+>> +			new = &parent->rb_right;
+>> +			leftmost = false;
+>> +		} else {
+>> +			struct sta_info *old_sta = container_of(__txqi->txq.sta,
+>> +								struct sta_info,
+>> +								sta);
+>> +			struct sta_info *new_sta = container_of(txqi->txq.sta,
+>> +								struct sta_info,
+>> +								sta);
+>> +
+>> +			if (new_sta->airtime[ac].v_t <= old_sta->airtime[ac].v_t)
+>> +				new = &parent->rb_left;
+>> +			else {
+>> +				new = &parent->rb_right;
+>> +				leftmost = false;
+>> +			}
+>> +
+>> +		}
+>> +	}
+>> +
+>> +	rb_link_node(&txqi->schedule_order, parent, new);
+>> +	rb_insert_color_cached(&txqi->schedule_order, root, leftmost);
+>> +}
+> I'm a bit worried about this part. Does that mean that vif txqs always
+> have priority over sta txqs?
 
-The cover letter mentions nothing about what features are supported,
-that's the first thing I would like to see when I start reviewing a
-driver. Also a list of missing features, problematic areas and major
-bugs would be very helpful to understand the state of the driver.
+Yeah, it does. This sort of mirrors what the existing airtime scheduler
+does (because VIFs don't have an airtime deficit), but because it's a
+round-robin scheduler the effect is less severe as long as there are
+stations able to transmit.
 
-I don't see any mention about firmware availability in the cover letter,
-please add that.
+I guess the obvious fix is to start accounting airtime usage for the VIF
+as well? We may want to do that in any case, as that would also give
+users a convenient way to set policy for multicast traffic. Any
+objections to this?
 
-Also in another thread I saw something about this driver conflicting
-with a staging driver, is that true? That should be solved before the
-driver is accepted as I don't think two drivers should race for the same
-hardware and the driver is randomly chosen.
-
-And in v6 please fold the fixes from this patchset to the original
-patchset[1] adding the driver (using the one patch per file format).
-That way there's one set of patches to review.
-
-I have now applied both patchsets to the pending patch for build testing
-and easier review:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/log/?h=pending
-
-[1] https://patchwork.kernel.org/cover/10811967/
-
--- 
-Kalle Valo
+-Toke
