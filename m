@@ -2,43 +2,42 @@ Return-Path: <SRS0=wltO=RL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F0DBC43381
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 13:56:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2C8EC4360F
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 13:56:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4C96520661
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 13:56:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0656720661
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Mar 2019 13:56:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726814AbfCHN4b (ORCPT
+        id S1726798AbfCHN4e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Mar 2019 08:56:31 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:60396 "EHLO
+        Fri, 8 Mar 2019 08:56:34 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:60400 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726741AbfCHN4a (ORCPT
+        with ESMTP id S1726775AbfCHN4d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Mar 2019 08:56:30 -0500
+        Fri, 8 Mar 2019 08:56:33 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x28Du1EQ025123, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x28Du0AM025111, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x28Du1EQ025123
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x28Du0AM025111
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Fri, 8 Mar 2019 21:56:01 +0800
+        Fri, 8 Mar 2019 21:56:00 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 8 Mar 2019 21:56:01 +0800
+ 14.3.408.0; Fri, 8 Mar 2019 21:55:59 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
         <gregkh@linuxfoundation.org>
 CC:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
         <sgruszka@redhat.com>, <pkshih@realtek.com>, <tehuang@realtek.com>,
         <briannorris@chromium.org>
-Subject: [PATCH v6 03/14] rtw88: hci files
-Date:   Fri, 8 Mar 2019 21:55:32 +0800
-Message-ID: <1552053343-6513-4-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v6 01/14] rtw88: main files
+Date:   Fri, 8 Mar 2019 21:55:30 +0800
+Message-ID: <1552053343-6513-2-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1552053343-6513-1-git-send-email-yhchuang@realtek.com>
 References: <1552053343-6513-1-git-send-email-yhchuang@realtek.com>
@@ -52,1696 +51,3259 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-hci files for Realtek 802.11ac wireless network chips
-
-For now there is only PCI bus supported by rtwlan, in the future it
-will also have USB/SDIO
+main files for Realtek 802.11ac wireless network chips
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/hci.h |  211 ++++++
- drivers/net/wireless/realtek/rtw88/pci.c | 1211 ++++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/pci.h |  237 ++++++
- 3 files changed, 1659 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/hci.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/pci.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/pci.h
+ drivers/net/wireless/realtek/rtw88/mac80211.c |  481 ++++++++++
+ drivers/net/wireless/realtek/rtw88/main.c     | 1211 +++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/main.h     | 1104 ++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/reg.h      |  421 +++++++++
+ 4 files changed, 3217 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/mac80211.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/main.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/main.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/reg.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/hci.h b/drivers/net/wireless/realtek/rtw88/hci.h
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
 new file mode 100644
-index 0000000..91b15ef
+index 0000000..66b2b02
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/hci.h
-@@ -0,0 +1,211 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -0,0 +1,481 @@
++// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#ifndef	__RTW_HCI_H__
-+#define __RTW_HCI_H__
++#include "main.h"
++#include "sec.h"
++#include "tx.h"
++#include "fw.h"
++#include "mac.h"
++#include "ps.h"
++#include "reg.h"
++#include "debug.h"
 +
-+/* ops for PCI, USB and SDIO */
-+struct rtw_hci_ops {
-+	int (*tx)(struct rtw_dev *rtwdev,
-+		  struct rtw_tx_pkt_info *pkt_info,
-+		  struct sk_buff *skb);
-+	int (*setup)(struct rtw_dev *rtwdev);
-+	int (*start)(struct rtw_dev *rtwdev);
-+	void (*stop)(struct rtw_dev *rtwdev);
-+
-+	int (*write_data_rsvd_page)(struct rtw_dev *rtwdev, u8 *buf, u32 size);
-+	int (*write_data_h2c)(struct rtw_dev *rtwdev, u8 *buf, u32 size);
-+
-+	u8 (*read8)(struct rtw_dev *rtwdev, u32 addr);
-+	u16 (*read16)(struct rtw_dev *rtwdev, u32 addr);
-+	u32 (*read32)(struct rtw_dev *rtwdev, u32 addr);
-+	void (*write8)(struct rtw_dev *rtwdev, u32 addr, u8 val);
-+	void (*write16)(struct rtw_dev *rtwdev, u32 addr, u16 val);
-+	void (*write32)(struct rtw_dev *rtwdev, u32 addr, u32 val);
-+};
-+
-+static inline int rtw_hci_tx(struct rtw_dev *rtwdev,
-+			     struct rtw_tx_pkt_info *pkt_info,
-+			     struct sk_buff *skb)
++static void rtw_ops_tx(struct ieee80211_hw *hw,
++		       struct ieee80211_tx_control *control,
++		       struct sk_buff *skb)
 +{
-+	return rtwdev->hci.ops->tx(rtwdev, pkt_info, skb);
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_tx_pkt_info pkt_info = {0};
++
++	if (!rtw_flag_check(rtwdev, RTW_FLAG_RUNNING))
++		goto out;
++
++	rtw_tx_pkt_info_update(rtwdev, &pkt_info, control, skb);
++	if (rtw_hci_tx(rtwdev, &pkt_info, skb))
++		goto out;
++
++	return;
++
++out:
++	ieee80211_free_txskb(hw, skb);
 +}
 +
-+static inline int rtw_hci_setup(struct rtw_dev *rtwdev)
++static int rtw_ops_start(struct ieee80211_hw *hw)
 +{
-+	return rtwdev->hci.ops->setup(rtwdev);
-+}
++	struct rtw_dev *rtwdev = hw->priv;
++	int ret;
 +
-+static inline int rtw_hci_start(struct rtw_dev *rtwdev)
-+{
-+	return rtwdev->hci.ops->start(rtwdev);
-+}
-+
-+static inline void rtw_hci_stop(struct rtw_dev *rtwdev)
-+{
-+	rtwdev->hci.ops->stop(rtwdev);
-+}
-+
-+static inline int
-+rtw_hci_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf, u32 size)
-+{
-+	return rtwdev->hci.ops->write_data_rsvd_page(rtwdev, buf, size);
-+}
-+
-+static inline int
-+rtw_hci_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
-+{
-+	return rtwdev->hci.ops->write_data_h2c(rtwdev, buf, size);
-+}
-+
-+static inline u8 rtw_read8(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	return rtwdev->hci.ops->read8(rtwdev, addr);
-+}
-+
-+static inline u16 rtw_read16(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	return rtwdev->hci.ops->read16(rtwdev, addr);
-+}
-+
-+static inline u32 rtw_read32(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	return rtwdev->hci.ops->read32(rtwdev, addr);
-+}
-+
-+static inline void rtw_write8(struct rtw_dev *rtwdev, u32 addr, u8 val)
-+{
-+	rtwdev->hci.ops->write8(rtwdev, addr, val);
-+}
-+
-+static inline void rtw_write16(struct rtw_dev *rtwdev, u32 addr, u16 val)
-+{
-+	rtwdev->hci.ops->write16(rtwdev, addr, val);
-+}
-+
-+static inline void rtw_write32(struct rtw_dev *rtwdev, u32 addr, u32 val)
-+{
-+	rtwdev->hci.ops->write32(rtwdev, addr, val);
-+}
-+
-+static inline void rtw_write8_set(struct rtw_dev *rtwdev, u32 addr, u8 bit)
-+{
-+	u8 val;
-+
-+	val = rtw_read8(rtwdev, addr);
-+	rtw_write8(rtwdev, addr, val | bit);
-+}
-+
-+static inline void rtw_writ16_set(struct rtw_dev *rtwdev, u32 addr, u16 bit)
-+{
-+	u16 val;
-+
-+	val = rtw_read16(rtwdev, addr);
-+	rtw_write16(rtwdev, addr, val | bit);
-+}
-+
-+static inline void rtw_write32_set(struct rtw_dev *rtwdev, u32 addr, u32 bit)
-+{
-+	u32 val;
-+
-+	val = rtw_read32(rtwdev, addr);
-+	rtw_write32(rtwdev, addr, val | bit);
-+}
-+
-+static inline void rtw_write8_clr(struct rtw_dev *rtwdev, u32 addr, u8 bit)
-+{
-+	u8 val;
-+
-+	val = rtw_read8(rtwdev, addr);
-+	rtw_write8(rtwdev, addr, val & ~bit);
-+}
-+
-+static inline void rtw_write16_clr(struct rtw_dev *rtwdev, u32 addr, u16 bit)
-+{
-+	u16 val;
-+
-+	val = rtw_read16(rtwdev, addr);
-+	rtw_write16(rtwdev, addr, val & ~bit);
-+}
-+
-+static inline void rtw_write32_clr(struct rtw_dev *rtwdev, u32 addr, u32 bit)
-+{
-+	u32 val;
-+
-+	val = rtw_read32(rtwdev, addr);
-+	rtw_write32(rtwdev, addr, val & ~bit);
-+}
-+
-+static inline u32
-+rtw_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
-+	    u32 addr, u32 mask)
-+{
-+	unsigned long flags;
-+	u32 val;
-+
-+	spin_lock_irqsave(&rtwdev->rf_lock, flags);
-+	val = rtwdev->chip->ops->read_rf(rtwdev, rf_path, addr, mask);
-+	spin_unlock_irqrestore(&rtwdev->rf_lock, flags);
-+
-+	return val;
-+}
-+
-+static inline void
-+rtw_write_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
-+	     u32 addr, u32 mask, u32 data)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&rtwdev->rf_lock, flags);
-+	rtwdev->chip->ops->write_rf(rtwdev, rf_path, addr, mask, data);
-+	spin_unlock_irqrestore(&rtwdev->rf_lock, flags);
-+}
-+
-+static inline u32
-+rtw_read32_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask)
-+{
-+	u32 shift = __ffs(mask);
-+	u32 orig;
-+	u32 ret;
-+
-+	orig = rtw_read32(rtwdev, addr);
-+	ret = (orig & mask) >> shift;
++	mutex_lock(&rtwdev->mutex);
++	ret = rtw_core_start(rtwdev);
++	mutex_unlock(&rtwdev->mutex);
 +
 +	return ret;
 +}
 +
-+static inline void
-+rtw_write32_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
++static void rtw_ops_stop(struct ieee80211_hw *hw)
 +{
-+	u32 shift = __ffs(mask);
-+	u32 orig;
-+	u32 set;
++	struct rtw_dev *rtwdev = hw->priv;
 +
-+	WARN(addr & 0x3, "should be 4-byte aligned, addr = 0x%08x\n", addr);
-+
-+	orig = rtw_read32(rtwdev, addr);
-+	set = (orig & ~mask) | ((data << shift) & mask);
-+	rtw_write32(rtwdev, addr, set);
++	mutex_lock(&rtwdev->mutex);
++	rtw_core_stop(rtwdev);
++	mutex_unlock(&rtwdev->mutex);
 +}
 +
-+static inline void
-+rtw_write8_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u8 data)
++static int rtw_ops_config(struct ieee80211_hw *hw, u32 changed)
 +{
-+	u32 shift;
-+	u8 orig, set;
++	struct rtw_dev *rtwdev = hw->priv;
++	int ret = 0;
 +
-+	mask &= 0xff;
-+	shift = __ffs(mask);
++	mutex_lock(&rtwdev->mutex);
 +
-+	orig = rtw_read8(rtwdev, addr);
-+	set = (orig & ~mask) | ((data << shift) & mask);
-+	rtw_write8(rtwdev, addr, set);
++	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
++		if (hw->conf.flags & IEEE80211_CONF_IDLE) {
++			rtw_enter_ips(rtwdev);
++		} else {
++			ret = rtw_leave_ips(rtwdev);
++			if (ret) {
++				rtw_err(rtwdev, "failed to leave idle state\n");
++				goto out;
++			}
++		}
++	}
++
++	if (changed & IEEE80211_CONF_CHANGE_CHANNEL)
++		rtw_set_channel(rtwdev);
++
++out:
++	mutex_unlock(&rtwdev->mutex);
++	return ret;
 +}
 +
-+static inline enum rtw_hci_type rtw_hci_type(struct rtw_dev *rtwdev)
++static const struct rtw_vif_port rtw_vif_port[] = {
++	[0] = {
++		.mac_addr	= {.addr = 0x0610},
++		.bssid		= {.addr = 0x0618},
++		.net_type	= {.addr = 0x0100, .mask = 0x30000},
++		.aid		= {.addr = 0x06a8, .mask = 0x7ff},
++	},
++	[1] = {
++		.mac_addr	= {.addr = 0x0700},
++		.bssid		= {.addr = 0x0708},
++		.net_type	= {.addr = 0x0100, .mask = 0xc0000},
++		.aid		= {.addr = 0x0710, .mask = 0x7ff},
++	},
++	[2] = {
++		.mac_addr	= {.addr = 0x1620},
++		.bssid		= {.addr = 0x1628},
++		.net_type	= {.addr = 0x1100, .mask = 0x3},
++		.aid		= {.addr = 0x1600, .mask = 0x7ff},
++	},
++	[3] = {
++		.mac_addr	= {.addr = 0x1630},
++		.bssid		= {.addr = 0x1638},
++		.net_type	= {.addr = 0x1100, .mask = 0xc},
++		.aid		= {.addr = 0x1604, .mask = 0x7ff},
++	},
++	[4] = {
++		.mac_addr	= {.addr = 0x1640},
++		.bssid		= {.addr = 0x1648},
++		.net_type	= {.addr = 0x1100, .mask = 0x30},
++		.aid		= {.addr = 0x1608, .mask = 0x7ff},
++	},
++};
++
++static int rtw_ops_add_interface(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif)
 +{
-+	return rtwdev->hci.type;
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++	enum rtw_net_type net_type;
++	u32 config = 0;
++	u8 port = 0;
++
++	rtwvif->port = port;
++	rtwvif->vif = vif;
++	rtwvif->stats.tx_unicast = 0;
++	rtwvif->stats.rx_unicast = 0;
++	rtwvif->stats.tx_cnt = 0;
++	rtwvif->stats.rx_cnt = 0;
++	rtwvif->in_lps = false;
++	rtwvif->conf = &rtw_vif_port[port];
++
++	mutex_lock(&rtwdev->mutex);
++
++	switch (vif->type) {
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_MESH_POINT:
++		net_type = RTW_NET_AP_MODE;
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		net_type = RTW_NET_AD_HOC;
++		break;
++	case NL80211_IFTYPE_STATION:
++	default:
++		net_type = RTW_NET_NO_LINK;
++		break;
++	}
++
++	ether_addr_copy(rtwvif->mac_addr, vif->addr);
++	config |= PORT_SET_MAC_ADDR;
++	rtwvif->net_type = net_type;
++	config |= PORT_SET_NET_TYPE;
++	rtw_vif_port_config(rtwdev, rtwvif, config);
++
++	mutex_unlock(&rtwdev->mutex);
++
++	rtw_info(rtwdev, "start vif %pM on port %d\n", vif->addr, rtwvif->port);
++	return 0;
 +}
 +
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
++static void rtw_ops_remove_interface(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif)
++{
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++	u32 config = 0;
++
++	rtw_info(rtwdev, "stop vif %pM on port %d\n", vif->addr, rtwvif->port);
++
++	mutex_lock(&rtwdev->mutex);
++
++	eth_zero_addr(rtwvif->mac_addr);
++	config |= PORT_SET_MAC_ADDR;
++	rtwvif->net_type = RTW_NET_NO_LINK;
++	config |= PORT_SET_NET_TYPE;
++	rtw_vif_port_config(rtwdev, rtwvif, config);
++
++	mutex_unlock(&rtwdev->mutex);
++}
++
++static void rtw_ops_configure_filter(struct ieee80211_hw *hw,
++				     unsigned int changed_flags,
++				     unsigned int *new_flags,
++				     u64 multicast)
++{
++	struct rtw_dev *rtwdev = hw->priv;
++
++	*new_flags &= FIF_ALLMULTI | FIF_OTHER_BSS | FIF_FCSFAIL |
++		      FIF_BCN_PRBRESP_PROMISC;
++
++	mutex_lock(&rtwdev->mutex);
++
++	if (changed_flags & FIF_ALLMULTI) {
++		if (*new_flags & FIF_ALLMULTI)
++			rtwdev->hal.rcr |= BIT_AM | BIT_AB;
++		else
++			rtwdev->hal.rcr &= ~(BIT_AM | BIT_AB);
++	}
++	if (changed_flags & FIF_FCSFAIL) {
++		if (*new_flags & FIF_FCSFAIL)
++			rtwdev->hal.rcr |= BIT_ACRC32;
++		else
++			rtwdev->hal.rcr &= ~(BIT_ACRC32);
++	}
++	if (changed_flags & FIF_OTHER_BSS) {
++		if (*new_flags & FIF_OTHER_BSS)
++			rtwdev->hal.rcr |= BIT_AAP;
++		else
++			rtwdev->hal.rcr &= ~(BIT_AAP);
++	}
++	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
++		if (*new_flags & FIF_BCN_PRBRESP_PROMISC)
++			rtwdev->hal.rcr &= ~(BIT_CBSSID_BCN | BIT_CBSSID_DATA);
++		else
++			rtwdev->hal.rcr |= BIT_CBSSID_BCN;
++	}
++
++	rtw_dbg(rtwdev, RTW_DBG_RX,
++		"config rx filter, changed=0x%08x, new=0x%08x, rcr=0x%08x\n",
++		changed_flags, *new_flags, rtwdev->hal.rcr);
++
++	rtw_write32(rtwdev, REG_RCR, rtwdev->hal.rcr);
++
++	mutex_unlock(&rtwdev->mutex);
++}
++
++static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_bss_conf *conf,
++				     u32 changed)
++{
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++	u32 config = 0;
++
++	mutex_lock(&rtwdev->mutex);
++
++	if (changed & BSS_CHANGED_ASSOC) {
++		struct rtw_chip_info *chip = rtwdev->chip;
++		enum rtw_net_type net_type;
++
++		if (conf->assoc) {
++			net_type = RTW_NET_MGD_LINKED;
++			chip->ops->do_iqk(rtwdev);
++
++			rtwvif->aid = conf->aid;
++			rtw_add_rsvd_page(rtwdev, RSVD_PS_POLL, true);
++			rtw_add_rsvd_page(rtwdev, RSVD_QOS_NULL, true);
++			rtw_add_rsvd_page(rtwdev, RSVD_NULL, true);
++			rtw_fw_download_rsvd_page(rtwdev, vif);
++			rtw_send_rsvd_page_h2c(rtwdev);
++		} else {
++			net_type = RTW_NET_NO_LINK;
++			rtwvif->aid = 0;
++			rtw_reset_rsvd_page(rtwdev);
++		}
++
++		rtwvif->net_type = net_type;
++		config |= PORT_SET_NET_TYPE;
++		config |= PORT_SET_AID;
++	}
++
++	if (changed & BSS_CHANGED_BSSID) {
++		ether_addr_copy(rtwvif->bssid, conf->bssid);
++		config |= PORT_SET_BSSID;
++	}
++
++	if (changed & BSS_CHANGED_BEACON)
++		rtw_fw_download_rsvd_page(rtwdev, vif);
++
++	rtw_vif_port_config(rtwdev, rtwvif, config);
++
++	mutex_unlock(&rtwdev->mutex);
++}
++
++static u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
++{
++	unsigned long mac_id;
++
++	mac_id = find_first_zero_bit(rtwdev->mac_id_map, RTW_MAX_MAC_ID_NUM);
++	if (mac_id < RTW_MAX_MAC_ID_NUM)
++		set_bit(mac_id, rtwdev->mac_id_map);
++
++	return mac_id;
++}
++
++static void rtw_release_macid(struct rtw_dev *rtwdev, u8 mac_id)
++{
++	clear_bit(mac_id, rtwdev->mac_id_map);
++}
++
++static int rtw_ops_sta_add(struct ieee80211_hw *hw,
++			   struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta)
++{
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
++	int ret = 0;
++
++	mutex_lock(&rtwdev->mutex);
++
++	si->mac_id = rtw_acquire_macid(rtwdev);
++	if (si->mac_id >= RTW_MAX_MAC_ID_NUM) {
++		ret = -ENOSPC;
++		goto out;
++	}
++
++	si->sta = sta;
++	si->vif = vif;
++	si->init_ra_lv = 1;
++	ewma_rssi_init(&si->avg_rssi);
++
++	rtw_update_sta_info(rtwdev, si);
++	rtw_fw_media_status_report(rtwdev, si->mac_id, true);
++
++	rtwdev->sta_cnt++;
++
++	rtw_info(rtwdev, "sta %pM joined with macid %d\n",
++		 sta->addr, si->mac_id);
++
++out:
++	mutex_unlock(&rtwdev->mutex);
++	return ret;
++}
++
++static int rtw_ops_sta_remove(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct ieee80211_sta *sta)
++{
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
++
++	mutex_lock(&rtwdev->mutex);
++
++	rtw_release_macid(rtwdev, si->mac_id);
++	rtw_fw_media_status_report(rtwdev, si->mac_id, false);
++
++	rtwdev->sta_cnt--;
++
++	rtw_info(rtwdev, "sta %pM with macid %d left\n",
++		 sta->addr, si->mac_id);
++
++	mutex_unlock(&rtwdev->mutex);
++	return 0;
++}
++
++static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
++			   struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++			   struct ieee80211_key_conf *key)
++{
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_sec_desc *sec = &rtwdev->sec;
++	u8 hw_key_type;
++	u8 hw_key_idx;
++	int ret = 0;
++
++	switch (key->cipher) {
++	case WLAN_CIPHER_SUITE_WEP40:
++		hw_key_type = RTW_CAM_WEP40;
++		break;
++	case WLAN_CIPHER_SUITE_WEP104:
++		hw_key_type = RTW_CAM_WEP104;
++		break;
++	case WLAN_CIPHER_SUITE_TKIP:
++		hw_key_type = RTW_CAM_TKIP;
++		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
++		break;
++	case WLAN_CIPHER_SUITE_CCMP:
++		hw_key_type = RTW_CAM_AES;
++		key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
++		break;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
++	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++		/* suppress error messages */
++		return -EOPNOTSUPP;
++	default:
++		return -ENOTSUPP;
++	}
++
++	mutex_lock(&rtwdev->mutex);
++
++	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE) {
++		hw_key_idx = rtw_sec_get_free_cam(sec);
++	} else {
++		/* multiple interfaces? */
++		hw_key_idx = key->keyidx;
++	}
++
++	if (hw_key_idx > sec->total_cam_num) {
++		ret = -ENOSPC;
++		goto out;
++	}
++
++	switch (cmd) {
++	case SET_KEY:
++		/* need sw generated IV */
++		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++		key->hw_key_idx = hw_key_idx;
++		rtw_sec_write_cam(rtwdev, sec, sta, key,
++				  hw_key_type, hw_key_idx);
++		break;
++	case DISABLE_KEY:
++		rtw_sec_clear_cam(rtwdev, sec, key->hw_key_idx);
++		break;
++	}
++
++out:
++	mutex_unlock(&rtwdev->mutex);
++
++	return ret;
++}
++
++static int rtw_ops_ampdu_action(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ieee80211_ampdu_params *params)
++{
++	struct ieee80211_sta *sta = params->sta;
++	u16 tid = params->tid;
++
++	switch (params->action) {
++	case IEEE80211_AMPDU_TX_START:
++		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
++		break;
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
++		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
++		break;
++	case IEEE80211_AMPDU_TX_OPERATIONAL:
++	case IEEE80211_AMPDU_RX_START:
++	case IEEE80211_AMPDU_RX_STOP:
++		break;
++	default:
++		WARN_ON(1);
++		return -ENOTSUPP;
++	}
++
++	return 0;
++}
++
++static void rtw_ops_sw_scan_start(struct ieee80211_hw *hw,
++				  struct ieee80211_vif *vif,
++				  const u8 *mac_addr)
++{
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++
++	rtw_leave_lps(rtwdev, rtwvif);
++
++	rtw_flag_set(rtwdev, RTW_FLAG_DIG_DISABLE);
++	rtw_flag_set(rtwdev, RTW_FLAG_SCANNING);
++}
++
++static void rtw_ops_sw_scan_complete(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif)
++{
++	struct rtw_dev *rtwdev = hw->priv;
++
++	rtw_flag_clear(rtwdev, RTW_FLAG_SCANNING);
++	rtw_flag_clear(rtwdev, RTW_FLAG_DIG_DISABLE);
++}
++
++const struct ieee80211_ops rtw_ops = {
++	.tx			= rtw_ops_tx,
++	.start			= rtw_ops_start,
++	.stop			= rtw_ops_stop,
++	.config			= rtw_ops_config,
++	.add_interface		= rtw_ops_add_interface,
++	.remove_interface	= rtw_ops_remove_interface,
++	.configure_filter	= rtw_ops_configure_filter,
++	.bss_info_changed	= rtw_ops_bss_info_changed,
++	.sta_add		= rtw_ops_sta_add,
++	.sta_remove		= rtw_ops_sta_remove,
++	.set_key		= rtw_ops_set_key,
++	.ampdu_action		= rtw_ops_ampdu_action,
++	.sw_scan_start		= rtw_ops_sw_scan_start,
++	.sw_scan_complete	= rtw_ops_sw_scan_complete,
++};
++EXPORT_SYMBOL(rtw_ops);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
 new file mode 100644
-index 0000000..cf3bffb
+index 0000000..1016f98
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
 @@ -0,0 +1,1211 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#include <linux/module.h>
-+#include <linux/pci.h>
 +#include "main.h"
-+#include "pci.h"
-+#include "tx.h"
-+#include "rx.h"
++#include "regd.h"
++#include "fw.h"
++#include "ps.h"
++#include "sec.h"
++#include "mac.h"
++#include "phy.h"
++#include "reg.h"
++#include "efuse.h"
 +#include "debug.h"
 +
-+static u32 rtw_pci_tx_queue_idx_addr[] = {
-+	[RTW_TX_QUEUE_BK]	= RTK_PCI_TXBD_IDX_BKQ,
-+	[RTW_TX_QUEUE_BE]	= RTK_PCI_TXBD_IDX_BEQ,
-+	[RTW_TX_QUEUE_VI]	= RTK_PCI_TXBD_IDX_VIQ,
-+	[RTW_TX_QUEUE_VO]	= RTK_PCI_TXBD_IDX_VOQ,
-+	[RTW_TX_QUEUE_MGMT]	= RTK_PCI_TXBD_IDX_MGMTQ,
-+	[RTW_TX_QUEUE_HI0]	= RTK_PCI_TXBD_IDX_HI0Q,
-+	[RTW_TX_QUEUE_H2C]	= RTK_PCI_TXBD_IDX_H2CQ,
++static bool rtw_fw_support_lps;
++unsigned int rtw_debug_mask;
++EXPORT_SYMBOL(rtw_debug_mask);
++
++module_param_named(support_lps, rtw_fw_support_lps, bool, 0644);
++module_param_named(debug_mask, rtw_debug_mask, uint, 0644);
++
++MODULE_PARM_DESC(support_lps, "Set Y to enable LPS support");
++MODULE_PARM_DESC(debug_mask, "Debugging mask");
++
++static struct ieee80211_channel rtw_channeltable_2g[] = {
++	{.center_freq = 2412, .hw_value = 1,},
++	{.center_freq = 2417, .hw_value = 2,},
++	{.center_freq = 2422, .hw_value = 3,},
++	{.center_freq = 2427, .hw_value = 4,},
++	{.center_freq = 2432, .hw_value = 5,},
++	{.center_freq = 2437, .hw_value = 6,},
++	{.center_freq = 2442, .hw_value = 7,},
++	{.center_freq = 2447, .hw_value = 8,},
++	{.center_freq = 2452, .hw_value = 9,},
++	{.center_freq = 2457, .hw_value = 10,},
++	{.center_freq = 2462, .hw_value = 11,},
++	{.center_freq = 2467, .hw_value = 12,},
++	{.center_freq = 2472, .hw_value = 13,},
++	{.center_freq = 2484, .hw_value = 14,},
 +};
 +
-+static u8 rtw_pci_get_tx_qsel(struct sk_buff *skb, u8 queue)
-+{
-+	switch (queue) {
-+	case RTW_TX_QUEUE_BCN:
-+		return TX_DESC_QSEL_BEACON;
-+	case RTW_TX_QUEUE_H2C:
-+		return TX_DESC_QSEL_H2C;
-+	case RTW_TX_QUEUE_MGMT:
-+		return TX_DESC_QSEL_MGMT;
-+	case RTW_TX_QUEUE_HI0:
-+		return TX_DESC_QSEL_HIGH;
-+	default:
-+		return skb->priority;
-+	}
++static struct ieee80211_channel rtw_channeltable_5g[] = {
++	{.center_freq = 5180, .hw_value = 36,},
++	{.center_freq = 5200, .hw_value = 40,},
++	{.center_freq = 5220, .hw_value = 44,},
++	{.center_freq = 5240, .hw_value = 48,},
++	{.center_freq = 5260, .hw_value = 52,},
++	{.center_freq = 5280, .hw_value = 56,},
++	{.center_freq = 5300, .hw_value = 60,},
++	{.center_freq = 5320, .hw_value = 64,},
++	{.center_freq = 5500, .hw_value = 100,},
++	{.center_freq = 5520, .hw_value = 104,},
++	{.center_freq = 5540, .hw_value = 108,},
++	{.center_freq = 5560, .hw_value = 112,},
++	{.center_freq = 5580, .hw_value = 116,},
++	{.center_freq = 5600, .hw_value = 120,},
++	{.center_freq = 5620, .hw_value = 124,},
++	{.center_freq = 5640, .hw_value = 128,},
++	{.center_freq = 5660, .hw_value = 132,},
++	{.center_freq = 5680, .hw_value = 136,},
++	{.center_freq = 5700, .hw_value = 140,},
++	{.center_freq = 5745, .hw_value = 149,},
++	{.center_freq = 5765, .hw_value = 153,},
++	{.center_freq = 5785, .hw_value = 157,},
++	{.center_freq = 5805, .hw_value = 161,},
++	{.center_freq = 5825, .hw_value = 165,
++	 .flags = IEEE80211_CHAN_NO_HT40MINUS},
 +};
 +
-+static u8 rtw_pci_read8(struct rtw_dev *rtwdev, u32 addr)
++static struct ieee80211_rate rtw_ratetable[] = {
++	{.bitrate = 10, .hw_value = 0x00,},
++	{.bitrate = 20, .hw_value = 0x01,},
++	{.bitrate = 55, .hw_value = 0x02,},
++	{.bitrate = 110, .hw_value = 0x03,},
++	{.bitrate = 60, .hw_value = 0x04,},
++	{.bitrate = 90, .hw_value = 0x05,},
++	{.bitrate = 120, .hw_value = 0x06,},
++	{.bitrate = 180, .hw_value = 0x07,},
++	{.bitrate = 240, .hw_value = 0x08,},
++	{.bitrate = 360, .hw_value = 0x09,},
++	{.bitrate = 480, .hw_value = 0x0a,},
++	{.bitrate = 540, .hw_value = 0x0b,},
++};
++
++static struct ieee80211_supported_band rtw_band_2ghz = {
++	.band = NL80211_BAND_2GHZ,
++
++	.channels = rtw_channeltable_2g,
++	.n_channels = ARRAY_SIZE(rtw_channeltable_2g),
++
++	.bitrates = rtw_ratetable,
++	.n_bitrates = ARRAY_SIZE(rtw_ratetable),
++
++	.ht_cap = {0},
++	.vht_cap = {0},
++};
++
++static struct ieee80211_supported_band rtw_band_5ghz = {
++	.band = NL80211_BAND_5GHZ,
++
++	.channels = rtw_channeltable_5g,
++	.n_channels = ARRAY_SIZE(rtw_channeltable_5g),
++
++	/* 5G has no CCK rates */
++	.bitrates = rtw_ratetable + 4,
++	.n_bitrates = ARRAY_SIZE(rtw_ratetable) - 4,
++
++	.ht_cap = {0},
++	.vht_cap = {0},
++};
++
++struct rtw_watch_dog_iter_data {
++	struct rtw_vif *rtwvif;
++	bool active;
++	u8 assoc_cnt;
++};
++
++static void rtw_vif_watch_dog_iter(void *data, u8 *mac,
++				   struct ieee80211_vif *vif)
 +{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	struct rtw_watch_dog_iter_data *iter_data = data;
++	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
 +
-+	return readb(rtwpci->mmap + addr);
-+}
-+
-+static u16 rtw_pci_read16(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	return readw(rtwpci->mmap + addr);
-+}
-+
-+static u32 rtw_pci_read32(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	return readl(rtwpci->mmap + addr);
-+}
-+
-+static void rtw_pci_write8(struct rtw_dev *rtwdev, u32 addr, u8 val)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	writeb(val, rtwpci->mmap + addr);
-+}
-+
-+static void rtw_pci_write16(struct rtw_dev *rtwdev, u32 addr, u16 val)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	writew(val, rtwpci->mmap + addr);
-+}
-+
-+static void rtw_pci_write32(struct rtw_dev *rtwdev, u32 addr, u32 val)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	writel(val, rtwpci->mmap + addr);
-+}
-+
-+static inline void *rtw_pci_get_tx_desc(struct rtw_pci_tx_ring *tx_ring, u8 idx)
-+{
-+	int offset = tx_ring->r.desc_size * idx;
-+
-+	return tx_ring->r.head + offset;
-+}
-+
-+static void rtw_pci_free_tx_ring(struct rtw_dev *rtwdev,
-+				 struct rtw_pci_tx_ring *tx_ring)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	struct rtw_pci_tx_data *tx_data;
-+	struct sk_buff *skb, *tmp;
-+	dma_addr_t dma;
-+	u8 *head = tx_ring->r.head;
-+	u32 len = tx_ring->r.len;
-+	int ring_sz = len * tx_ring->r.desc_size;
-+
-+	/* free every skb remained in tx list */
-+	skb_queue_walk_safe(&tx_ring->queue, skb, tmp) {
-+		__skb_unlink(skb, &tx_ring->queue);
-+		tx_data = rtw_pci_get_tx_data(skb);
-+		dma = tx_data->dma;
-+
-+		pci_unmap_single(pdev, dma, skb->len, PCI_DMA_TODEVICE);
-+		dev_kfree_skb_any(skb);
-+	}
-+
-+	/* free the ring itself */
-+	pci_free_consistent(pdev, ring_sz, head, tx_ring->r.dma);
-+	tx_ring->r.head = NULL;
-+}
-+
-+static void rtw_pci_free_rx_ring(struct rtw_dev *rtwdev,
-+				 struct rtw_pci_rx_ring *rx_ring)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	struct sk_buff *skb;
-+	dma_addr_t dma;
-+	u8 *head = rx_ring->r.head;
-+	int buf_sz = RTK_PCI_RX_BUF_SIZE;
-+	int ring_sz = rx_ring->r.desc_size * rx_ring->r.len;
-+	int i;
-+
-+	for (i = 0; i < rx_ring->r.len; i++) {
-+		skb = rx_ring->buf[i];
-+		if (!skb)
-+			continue;
-+
-+		dma = *((dma_addr_t *)skb->cb);
-+		pci_unmap_single(pdev, dma, buf_sz, PCI_DMA_FROMDEVICE);
-+		dev_kfree_skb(skb);
-+		rx_ring->buf[i] = NULL;
-+	}
-+
-+	pci_free_consistent(pdev, ring_sz, head, rx_ring->r.dma);
-+}
-+
-+static void rtw_pci_free_trx_ring(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct rtw_pci_tx_ring *tx_ring;
-+	struct rtw_pci_rx_ring *rx_ring;
-+	int i;
-+
-+	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
-+		tx_ring = &rtwpci->tx_rings[i];
-+		rtw_pci_free_tx_ring(rtwdev, tx_ring);
-+	}
-+
-+	for (i = 0; i < RTK_MAX_RX_QUEUE_NUM; i++) {
-+		rx_ring = &rtwpci->rx_rings[i];
-+		rtw_pci_free_rx_ring(rtwdev, rx_ring);
-+	}
-+}
-+
-+static int rtw_pci_init_tx_ring(struct rtw_dev *rtwdev,
-+				struct rtw_pci_tx_ring *tx_ring,
-+				u8 desc_size, u32 len)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	int ring_sz = desc_size * len;
-+	dma_addr_t dma;
-+	u8 *head;
-+
-+	head = pci_zalloc_consistent(pdev, ring_sz, &dma);
-+	if (!head) {
-+		rtw_err(rtwdev, "failed to allocate tx ring\n");
-+		return -ENOMEM;
-+	}
-+
-+	skb_queue_head_init(&tx_ring->queue);
-+	tx_ring->r.head = head;
-+	tx_ring->r.dma = dma;
-+	tx_ring->r.len = len;
-+	tx_ring->r.desc_size = desc_size;
-+	tx_ring->r.wp = 0;
-+	tx_ring->r.rp = 0;
-+
-+	return 0;
-+}
-+
-+static int rtw_pci_reset_rx_desc(struct rtw_dev *rtwdev, struct sk_buff *skb,
-+				 struct rtw_pci_rx_ring *rx_ring,
-+				 u32 idx, u32 desc_sz)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	struct rtw_pci_rx_buffer_desc *buf_desc;
-+	int buf_sz = RTK_PCI_RX_BUF_SIZE;
-+	dma_addr_t dma;
-+
-+	if (!skb)
-+		return -EINVAL;
-+
-+	dma = pci_map_single(pdev, skb->data, buf_sz, PCI_DMA_FROMDEVICE);
-+	if (pci_dma_mapping_error(pdev, dma))
-+		return -EBUSY;
-+
-+	*((dma_addr_t *)skb->cb) = dma;
-+	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
-+						     idx * desc_sz);
-+	memset(buf_desc, 0, sizeof(*buf_desc));
-+	buf_desc->buf_size = cpu_to_le16(RTK_PCI_RX_BUF_SIZE);
-+	buf_desc->dma = cpu_to_le32(dma);
-+
-+	return 0;
-+}
-+
-+static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
-+				struct rtw_pci_rx_ring *rx_ring,
-+				u8 desc_size, u32 len)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	struct sk_buff *skb = NULL;
-+	dma_addr_t dma;
-+	u8 *head;
-+	int ring_sz = desc_size * len;
-+	int buf_sz = RTK_PCI_RX_BUF_SIZE;
-+	int i, allocated;
-+	int ret = 0;
-+
-+	head = pci_zalloc_consistent(pdev, ring_sz, &dma);
-+	if (!head) {
-+		rtw_err(rtwdev, "failed to allocate rx ring\n");
-+		return -ENOMEM;
-+	}
-+	rx_ring->r.head = head;
-+
-+	for (i = 0; i < len; i++) {
-+		skb = dev_alloc_skb(buf_sz);
-+		if (!skb) {
-+			allocated = i;
-+			ret = -ENOMEM;
-+			goto err_out;
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		if (vif->bss_conf.assoc) {
++			iter_data->assoc_cnt++;
++			iter_data->rtwvif = rtwvif;
 +		}
-+
-+		memset(skb->data, 0, buf_sz);
-+		rx_ring->buf[i] = skb;
-+		ret = rtw_pci_reset_rx_desc(rtwdev, skb, rx_ring, i, desc_size);
-+		if (ret) {
-+			allocated = i;
-+			dev_kfree_skb_any(skb);
-+			goto err_out;
-+		}
++		if (rtwvif->stats.tx_cnt > RTW_LPS_THRESHOLD ||
++		    rtwvif->stats.rx_cnt > RTW_LPS_THRESHOLD)
++			iter_data->active = true;
++	} else {
++		/* only STATION mode can enter lps */
++		iter_data->active = true;
 +	}
 +
-+	rx_ring->r.dma = dma;
-+	rx_ring->r.len = len;
-+	rx_ring->r.desc_size = desc_size;
-+	rx_ring->r.wp = 0;
-+	rx_ring->r.rp = 0;
-+
-+	return 0;
-+
-+err_out:
-+	for (i = 0; i < allocated; i++) {
-+		skb = rx_ring->buf[i];
-+		if (!skb)
-+			continue;
-+		dma = *((dma_addr_t *)skb->cb);
-+		pci_unmap_single(pdev, dma, buf_sz, PCI_DMA_FROMDEVICE);
-+		dev_kfree_skb_any(skb);
-+		rx_ring->buf[i] = NULL;
-+	}
-+	pci_free_consistent(pdev, ring_sz, head, dma);
-+
-+	rtw_err(rtwdev, "failed to init rx buffer\n");
-+
-+	return ret;
++	rtwvif->stats.tx_unicast = 0;
++	rtwvif->stats.rx_unicast = 0;
++	rtwvif->stats.tx_cnt = 0;
++	rtwvif->stats.rx_cnt = 0;
 +}
 +
-+static int rtw_pci_init_trx_ring(struct rtw_dev *rtwdev)
++/* process TX/RX statistics periodically for hardware,
++ * the information helps hardware to enhance performance
++ */
++static void rtw_watch_dog_work(struct work_struct *work)
 +{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct rtw_pci_tx_ring *tx_ring;
-+	struct rtw_pci_rx_ring *rx_ring;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	int i = 0, j = 0, tx_alloced = 0, rx_alloced = 0;
-+	int tx_desc_size, rx_desc_size;
-+	u32 len;
-+	int ret;
++	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
++					      watch_dog_work.work);
++	struct rtw_watch_dog_iter_data data = {};
 +
-+	tx_desc_size = chip->tx_buf_desc_sz;
-+
-+	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
-+		tx_ring = &rtwpci->tx_rings[i];
-+		len = max_num_of_tx_queue(i);
-+		ret = rtw_pci_init_tx_ring(rtwdev, tx_ring, tx_desc_size, len);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	rx_desc_size = chip->rx_buf_desc_sz;
-+
-+	for (j = 0; j < RTK_MAX_RX_QUEUE_NUM; j++) {
-+		rx_ring = &rtwpci->rx_rings[j];
-+		ret = rtw_pci_init_rx_ring(rtwdev, rx_ring, rx_desc_size,
-+					   RTK_MAX_RX_DESC_NUM);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	return 0;
-+
-+out:
-+	tx_alloced = i;
-+	for (i = 0; i < tx_alloced; i++) {
-+		tx_ring = &rtwpci->tx_rings[i];
-+		rtw_pci_free_tx_ring(rtwdev, tx_ring);
-+	}
-+
-+	rx_alloced = j;
-+	for (j = 0; j < rx_alloced; j++) {
-+		rx_ring = &rtwpci->rx_rings[j];
-+		rtw_pci_free_rx_ring(rtwdev, rx_ring);
-+	}
-+
-+	return ret;
-+}
-+
-+static void rtw_pci_deinit(struct rtw_dev *rtwdev)
-+{
-+	rtw_pci_free_trx_ring(rtwdev);
-+}
-+
-+static int rtw_pci_init(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	int ret = 0;
-+
-+	rtwpci->irq_mask[0] = IMR_HIGHDOK |
-+			      IMR_MGNTDOK |
-+			      IMR_BKDOK |
-+			      IMR_BEDOK |
-+			      IMR_VIDOK |
-+			      IMR_VODOK |
-+			      IMR_ROK |
-+			      IMR_BCNDMAINT_E |
-+			      0;
-+	rtwpci->irq_mask[1] = IMR_TXFOVW |
-+			      0;
-+	rtwpci->irq_mask[3] = IMR_H2CDOK |
-+			      0;
-+	spin_lock_init(&rtwpci->irq_lock);
-+	ret = rtw_pci_init_trx_ring(rtwdev);
-+
-+	return ret;
-+}
-+
-+static void rtw_pci_reset_buf_desc(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	u32 len;
-+	u8 tmp;
-+	dma_addr_t dma;
-+
-+	tmp = rtw_read8(rtwdev, RTK_PCI_CTRL + 3);
-+	rtw_write8(rtwdev, RTK_PCI_CTRL + 3, tmp | 0xf7);
-+
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_BCN].r.dma;
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_BCNQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_H2CQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_H2CQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_BKQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_BKQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_BEQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_BEQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_VOQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_VOQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_VIQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_VIQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_MGMTQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_MGMTQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_HI0Q, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_HI0Q, dma);
-+
-+	len = rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.len;
-+	dma = rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.dma;
-+	rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.rp = 0;
-+	rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_RXBD_NUM_MPDUQ, len & 0xfff);
-+	rtw_write32(rtwdev, RTK_PCI_RXBD_DESA_MPDUQ, dma);
-+
-+	/* reset read/write point */
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_RWPTR_CLR, 0xffffffff);
-+
-+	/* rest H2C Queue index */
-+	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HOST_IDX);
-+	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HW_IDX);
-+}
-+
-+static void rtw_pci_reset_trx_ring(struct rtw_dev *rtwdev)
-+{
-+	rtw_pci_reset_buf_desc(rtwdev);
-+}
-+
-+static void rtw_pci_enable_interrupt(struct rtw_dev *rtwdev,
-+				     struct rtw_pci *rtwpci)
-+{
-+	rtw_write32(rtwdev, RTK_PCI_HIMR0, rtwpci->irq_mask[0]);
-+	rtw_write32(rtwdev, RTK_PCI_HIMR1, rtwpci->irq_mask[1]);
-+	rtw_write32(rtwdev, RTK_PCI_HIMR3, rtwpci->irq_mask[3]);
-+	rtwpci->irq_enabled = true;
-+}
-+
-+static void rtw_pci_disable_interrupt(struct rtw_dev *rtwdev,
-+				      struct rtw_pci *rtwpci)
-+{
-+	rtw_write32(rtwdev, RTK_PCI_HIMR0, 0);
-+	rtw_write32(rtwdev, RTK_PCI_HIMR1, 0);
-+	rtw_write32(rtwdev, RTK_PCI_HIMR3, 0);
-+	rtwpci->irq_enabled = false;
-+}
-+
-+static int rtw_pci_setup(struct rtw_dev *rtwdev)
-+{
-+	rtw_pci_reset_trx_ring(rtwdev);
-+
-+	return 0;
-+}
-+
-+static void rtw_pci_dma_reset(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
-+{
-+	/* reset dma and rx tag */
-+	rtw_write32_set(rtwdev, RTK_PCI_CTRL,
-+			BIT_RST_TRXDMA_INTF | BIT_RX_TAG_EN);
-+	rtwpci->rx_tag = 0;
-+}
-+
-+static int rtw_pci_start(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	unsigned long flags;
-+
-+	rtw_pci_dma_reset(rtwdev, rtwpci);
-+
-+	spin_lock_irqsave(&rtwpci->irq_lock, flags);
-+	rtw_pci_enable_interrupt(rtwdev, rtwpci);
-+	spin_unlock_irqrestore(&rtwpci->irq_lock, flags);
-+
-+	return 0;
-+}
-+
-+static void rtw_pci_stop(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&rtwpci->irq_lock, flags);
-+	rtw_pci_disable_interrupt(rtwdev, rtwpci);
-+	spin_unlock_irqrestore(&rtwpci->irq_lock, flags);
-+}
-+
-+static u8 ac_to_hwq[] = {
-+	[0] = RTW_TX_QUEUE_VO,
-+	[1] = RTW_TX_QUEUE_VI,
-+	[2] = RTW_TX_QUEUE_BE,
-+	[3] = RTW_TX_QUEUE_BK,
-+};
-+
-+static u8 rtw_hw_queue_mapping(struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	__le16 fc = hdr->frame_control;
-+	u8 q_mapping = skb_get_queue_mapping(skb);
-+	u8 queue;
-+
-+	if (unlikely(ieee80211_is_beacon(fc)))
-+		queue = RTW_TX_QUEUE_BCN;
-+	else if (unlikely(ieee80211_is_mgmt(fc) || ieee80211_is_ctl(fc)))
-+		queue = RTW_TX_QUEUE_MGMT;
-+	else
-+		queue = ac_to_hwq[q_mapping];
-+
-+	return queue;
-+}
-+
-+static void rtw_pci_release_rsvd_page(struct rtw_pci *rtwpci,
-+				      struct rtw_pci_tx_ring *ring)
-+{
-+	struct sk_buff *prev = skb_dequeue(&ring->queue);
-+	struct rtw_pci_tx_data *tx_data;
-+	dma_addr_t dma;
-+
-+	if (!prev)
++	if (!rtw_flag_check(rtwdev, RTW_FLAG_RUNNING))
 +		return;
 +
-+	tx_data = rtw_pci_get_tx_data(prev);
-+	dma = tx_data->dma;
-+	pci_unmap_single(rtwpci->pdev, dma, prev->len,
-+			 PCI_DMA_TODEVICE);
-+	dev_kfree_skb_any(prev);
++	ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->watch_dog_work,
++				     RTW_WATCH_DOG_DELAY_TIME);
++
++	/* reset tx/rx statictics */
++	rtwdev->stats.tx_unicast = 0;
++	rtwdev->stats.rx_unicast = 0;
++	rtwdev->stats.tx_cnt = 0;
++	rtwdev->stats.rx_cnt = 0;
++
++	rtw_iterate_vifs(rtwdev, rtw_vif_watch_dog_iter, &data);
++
++	/* fw supports only one station associated to enter lps, if there are
++	 * more than two stations associated to the AP, then we can not enter
++	 * lps, because fw does not handle the overlapped beacon interval
++	 */
++	if (rtw_fw_support_lps &&
++	    data.rtwvif && !data.active && data.assoc_cnt == 1)
++		rtw_enter_lps(rtwdev, data.rtwvif);
++
++	if (rtw_flag_check(rtwdev, RTW_FLAG_SCANNING))
++		return;
++
++	rtw_phy_dynamic_mechanism(rtwdev);
++
++	rtwdev->watch_dog_cnt++;
 +}
 +
-+static void rtw_pci_dma_check(struct rtw_dev *rtwdev,
-+			      struct rtw_pci_rx_ring *rx_ring,
-+			      u32 idx)
++static void rtw_c2h_work(struct work_struct *work)
 +{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_pci_rx_buffer_desc *buf_desc;
-+	u32 desc_sz = chip->rx_buf_desc_sz;
-+	u16 total_pkt_size;
++	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev, c2h_work);
++	struct sk_buff *skb, *tmp;
 +
-+	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
-+						     idx * desc_sz);
-+	total_pkt_size = le16_to_cpu(buf_desc->total_pkt_size);
-+
-+	/* rx tag mismatch, throw a warning */
-+	if (total_pkt_size != rtwpci->rx_tag)
-+		rtw_warn(rtwdev, "pci bus timeout, check dma status\n");
-+
-+	rtwpci->rx_tag = (rtwpci->rx_tag + 1) % RX_TAG_MAX;
++	skb_queue_walk_safe(&rtwdev->c2h_queue, skb, tmp) {
++		skb_unlink(skb, &rtwdev->c2h_queue);
++		rtw_fw_c2h_cmd_handle(rtwdev, skb);
++		dev_kfree_skb_any(skb);
++	}
 +}
 +
-+static int rtw_pci_xmit(struct rtw_dev *rtwdev,
-+			struct rtw_tx_pkt_info *pkt_info,
-+			struct sk_buff *skb, u8 queue)
++void rtw_get_channel_params(struct cfg80211_chan_def *chandef,
++			    struct rtw_channel_params *chan_params)
 +{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	struct ieee80211_channel *channel = chandef->chan;
++	enum nl80211_chan_width width = chandef->width;
++	u32 primary_freq, center_freq;
++	u8 center_chan;
++	u8 bandwidth = RTW_CHANNEL_WIDTH_20;
++	u8 primary_chan_idx = 0;
++
++	center_chan = channel->hw_value;
++	primary_freq = channel->center_freq;
++	center_freq = chandef->center_freq1;
++
++	switch (width) {
++	case NL80211_CHAN_WIDTH_20_NOHT:
++	case NL80211_CHAN_WIDTH_20:
++		bandwidth = RTW_CHANNEL_WIDTH_20;
++		primary_chan_idx = 0;
++		break;
++	case NL80211_CHAN_WIDTH_40:
++		bandwidth = RTW_CHANNEL_WIDTH_40;
++		if (primary_freq > center_freq) {
++			primary_chan_idx = 1;
++			center_chan -= 2;
++		} else {
++			primary_chan_idx = 2;
++			center_chan += 2;
++		}
++		break;
++	case NL80211_CHAN_WIDTH_80:
++		bandwidth = RTW_CHANNEL_WIDTH_80;
++		if (primary_freq > center_freq) {
++			if (primary_freq - center_freq == 10) {
++				primary_chan_idx = 1;
++				center_chan -= 2;
++			} else {
++				primary_chan_idx = 3;
++				center_chan -= 6;
++			}
++		} else {
++			if (center_freq - primary_freq == 10) {
++				primary_chan_idx = 2;
++				center_chan += 2;
++			} else {
++				primary_chan_idx = 4;
++				center_chan += 6;
++			}
++		}
++		break;
++	default:
++		center_chan = 0;
++		break;
++	}
++
++	chan_params->center_chan = center_chan;
++	chan_params->bandwidth = bandwidth;
++	chan_params->primary_chan_idx = primary_chan_idx;
++}
++
++void rtw_set_channel(struct rtw_dev *rtwdev)
++{
++	struct ieee80211_hw *hw = rtwdev->hw;
++	struct rtw_hal *hal = &rtwdev->hal;
 +	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_pci_tx_ring *ring;
-+	struct rtw_pci_tx_data *tx_data;
-+	dma_addr_t dma;
-+	u32 tx_pkt_desc_sz = chip->tx_pkt_desc_sz;
-+	u32 tx_buf_desc_sz = chip->tx_buf_desc_sz;
-+	u32 size;
-+	u32 psb_len;
-+	u8 *pkt_desc;
-+	struct rtw_pci_tx_buffer_desc *buf_desc;
-+	u32 bd_idx;
++	struct rtw_channel_params ch_param;
++	u8 center_chan, bandwidth, primary_chan_idx;
 +
-+	ring = &rtwpci->tx_rings[queue];
++	rtw_get_channel_params(&hw->conf.chandef, &ch_param);
++	if (WARN(ch_param.center_chan == 0, "Invalid channel\n"))
++		return;
 +
-+	size = skb->len;
++	center_chan = ch_param.center_chan;
++	bandwidth = ch_param.bandwidth;
++	primary_chan_idx = ch_param.primary_chan_idx;
 +
-+	if (queue == RTW_TX_QUEUE_BCN)
-+		rtw_pci_release_rsvd_page(rtwpci, ring);
-+	else if (!avail_desc(ring->r.wp, ring->r.rp, ring->r.len))
-+		return -ENOSPC;
++	hal->current_band_width = bandwidth;
++	hal->current_channel = center_chan;
++	hal->current_band_type = center_chan > 14 ? RTW_BAND_5G : RTW_BAND_2G;
++	chip->ops->set_channel(rtwdev, center_chan, bandwidth, primary_chan_idx);
 +
-+	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
-+	memset(pkt_desc, 0, tx_pkt_desc_sz);
-+	pkt_info->qsel = rtw_pci_get_tx_qsel(skb, queue);
-+	rtw_tx_fill_tx_desc(pkt_info, skb);
-+	dma = pci_map_single(rtwpci->pdev, skb->data, skb->len,
-+			     PCI_DMA_TODEVICE);
-+	if (pci_dma_mapping_error(rtwpci->pdev, dma))
-+		return -EBUSY;
++	rtw_phy_set_tx_power_level(rtwdev, center_chan);
++}
 +
-+	/* after this we got dma mapped, there is no way back */
-+	buf_desc = get_tx_buffer_desc(ring, tx_buf_desc_sz);
-+	memset(buf_desc, 0, tx_buf_desc_sz);
-+	psb_len = (skb->len - 1) / 128 + 1;
-+	if (queue == RTW_TX_QUEUE_BCN)
-+		psb_len |= 1 << RTK_PCI_TXBD_OWN_OFFSET;
++static void rtw_vif_write_addr(struct rtw_dev *rtwdev, u32 start, u8 *addr)
++{
++	int i;
 +
-+	buf_desc[0].psb_len = cpu_to_le16(psb_len);
-+	buf_desc[0].buf_size = cpu_to_le16(tx_pkt_desc_sz);
-+	buf_desc[0].dma = cpu_to_le32(dma);
-+	buf_desc[1].buf_size = cpu_to_le16(size);
-+	buf_desc[1].dma = cpu_to_le32(dma + tx_pkt_desc_sz);
++	for (i = 0; i < ETH_ALEN; i++)
++		rtw_write8(rtwdev, start + i, addr[i]);
++}
 +
-+	tx_data = rtw_pci_get_tx_data(skb);
-+	tx_data->dma = dma;
-+	tx_data->sn = pkt_info->sn;
-+	skb_queue_tail(&ring->queue, skb);
++void rtw_vif_port_config(struct rtw_dev *rtwdev,
++			 struct rtw_vif *rtwvif,
++			 u32 config)
++{
++	u32 addr, mask;
 +
-+	/* kick off tx queue */
-+	if (queue != RTW_TX_QUEUE_BCN) {
-+		if (++ring->r.wp >= ring->r.len)
-+			ring->r.wp = 0;
-+		bd_idx = rtw_pci_tx_queue_idx_addr[queue];
-+		rtw_write16(rtwdev, bd_idx, ring->r.wp & 0xfff);
++	if (config & PORT_SET_MAC_ADDR) {
++		addr = rtwvif->conf->mac_addr.addr;
++		rtw_vif_write_addr(rtwdev, addr, rtwvif->mac_addr);
++	}
++	if (config & PORT_SET_BSSID) {
++		addr = rtwvif->conf->bssid.addr;
++		rtw_vif_write_addr(rtwdev, addr, rtwvif->bssid);
++	}
++	if (config & PORT_SET_NET_TYPE) {
++		addr = rtwvif->conf->net_type.addr;
++		mask = rtwvif->conf->net_type.mask;
++		rtw_write32_mask(rtwdev, addr, mask, rtwvif->net_type);
++	}
++	if (config & PORT_SET_AID) {
++		addr = rtwvif->conf->aid.addr;
++		mask = rtwvif->conf->aid.mask;
++		rtw_write32_mask(rtwdev, addr, mask, rtwvif->aid);
++	}
++}
++
++static u8 hw_bw_cap_to_bitamp(u8 bw_cap)
++{
++	u8 bw = 0;
++
++	switch (bw_cap) {
++	case EFUSE_HW_CAP_IGNORE:
++	case EFUSE_HW_CAP_SUPP_BW80:
++		bw |= BIT(RTW_CHANNEL_WIDTH_80);
++		/* fall through */
++	case EFUSE_HW_CAP_SUPP_BW40:
++		bw |= BIT(RTW_CHANNEL_WIDTH_40);
++		/* fall through */
++	default:
++		bw |= BIT(RTW_CHANNEL_WIDTH_20);
++		break;
++	}
++
++	return bw;
++}
++
++static void rtw_hw_config_rf_ant_num(struct rtw_dev *rtwdev, u8 hw_ant_num)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++
++	if (hw_ant_num == EFUSE_HW_CAP_IGNORE ||
++	    hw_ant_num >= hal->rf_path_num)
++		return;
++
++	switch (hw_ant_num) {
++	case 1:
++		hal->rf_type = RF_1T1R;
++		hal->rf_path_num = 1;
++		hal->antenna_tx = BB_PATH_A;
++		hal->antenna_rx = BB_PATH_A;
++		break;
++	default:
++		WARN(1, "invalid hw configuration from efuse\n");
++		break;
++	}
++}
++
++static u64 get_vht_ra_mask(struct ieee80211_sta *sta)
++{
++	u64 ra_mask = 0;
++	u16 mcs_map = le16_to_cpu(sta->vht_cap.vht_mcs.rx_mcs_map);
++	u8 vht_mcs_cap;
++	int i, nss;
++
++	/* 4SS, every two bits for MCS7/8/9 */
++	for (i = 0, nss = 12; i < 4; i++, mcs_map >>= 2, nss += 10) {
++		vht_mcs_cap = mcs_map & 0x3;
++		switch (vht_mcs_cap) {
++		case 2: /* MCS9 */
++			ra_mask |= 0x3ff << nss;
++			break;
++		case 1: /* MCS8 */
++			ra_mask |= 0x1ff << nss;
++			break;
++		case 0: /* MCS7 */
++			ra_mask |= 0x0ff << nss;
++			break;
++		default:
++			break;
++		}
++	}
++
++	return ra_mask;
++}
++
++static u8 get_rate_id(u8 wireless_set, enum rtw_bandwidth bw_mode, u8 tx_num)
++{
++	u8 rate_id = 0;
++
++	switch (wireless_set) {
++	case WIRELESS_CCK:
++		rate_id = RTW_RATEID_B_20M;
++		break;
++	case WIRELESS_OFDM:
++		rate_id = RTW_RATEID_G;
++		break;
++	case WIRELESS_CCK | WIRELESS_OFDM:
++		rate_id = RTW_RATEID_BG;
++		break;
++	case WIRELESS_OFDM | WIRELESS_HT:
++		if (tx_num == 1)
++			rate_id = RTW_RATEID_GN_N1SS;
++		else if (tx_num == 2)
++			rate_id = RTW_RATEID_GN_N2SS;
++		else if (tx_num == 3)
++			rate_id = RTW_RATEID_ARFR5_N_3SS;
++		break;
++	case WIRELESS_CCK | WIRELESS_OFDM | WIRELESS_HT:
++		if (bw_mode == RTW_CHANNEL_WIDTH_40) {
++			if (tx_num == 1)
++				rate_id = RTW_RATEID_BGN_40M_1SS;
++			else if (tx_num == 2)
++				rate_id = RTW_RATEID_BGN_40M_2SS;
++			else if (tx_num == 3)
++				rate_id = RTW_RATEID_ARFR5_N_3SS;
++			else if (tx_num == 4)
++				rate_id = RTW_RATEID_ARFR7_N_4SS;
++		} else {
++			if (tx_num == 1)
++				rate_id = RTW_RATEID_BGN_20M_1SS;
++			else if (tx_num == 2)
++				rate_id = RTW_RATEID_BGN_20M_2SS;
++			else if (tx_num == 3)
++				rate_id = RTW_RATEID_ARFR5_N_3SS;
++			else if (tx_num == 4)
++				rate_id = RTW_RATEID_ARFR7_N_4SS;
++		}
++		break;
++	case WIRELESS_OFDM | WIRELESS_VHT:
++		if (tx_num == 1)
++			rate_id = RTW_RATEID_ARFR1_AC_1SS;
++		else if (tx_num == 2)
++			rate_id = RTW_RATEID_ARFR0_AC_2SS;
++		else if (tx_num == 3)
++			rate_id = RTW_RATEID_ARFR4_AC_3SS;
++		else if (tx_num == 4)
++			rate_id = RTW_RATEID_ARFR6_AC_4SS;
++		break;
++	case WIRELESS_CCK | WIRELESS_OFDM | WIRELESS_VHT:
++		if (bw_mode >= RTW_CHANNEL_WIDTH_80) {
++			if (tx_num == 1)
++				rate_id = RTW_RATEID_ARFR1_AC_1SS;
++			else if (tx_num == 2)
++				rate_id = RTW_RATEID_ARFR0_AC_2SS;
++			else if (tx_num == 3)
++				rate_id = RTW_RATEID_ARFR4_AC_3SS;
++			else if (tx_num == 4)
++				rate_id = RTW_RATEID_ARFR6_AC_4SS;
++		} else {
++			if (tx_num == 1)
++				rate_id = RTW_RATEID_ARFR2_AC_2G_1SS;
++			else if (tx_num == 2)
++				rate_id = RTW_RATEID_ARFR3_AC_2G_2SS;
++			else if (tx_num == 3)
++				rate_id = RTW_RATEID_ARFR4_AC_3SS;
++			else if (tx_num == 4)
++				rate_id = RTW_RATEID_ARFR6_AC_4SS;
++		}
++		break;
++	default:
++		break;
++	}
++
++	return rate_id;
++}
++
++#define RA_MASK_CCK_RATES	0x0000f
++#define RA_MASK_OFDM_RATES	0x00ff0
++#define RA_MASK_HT_RATES_1SS	(0xff000 << 0)
++#define RA_MASK_HT_RATES_2SS	(0xff000 << 8)
++#define RA_MASK_HT_RATES_3SS	(0xff000 << 16)
++#define RA_MASK_HT_RATES	(RA_MASK_HT_RATES_1SS | \
++				 RA_MASK_HT_RATES_2SS | \
++				 RA_MASK_HT_RATES_3SS)
++#define RA_MASK_VHT_RATES_1SS	(0x3ff000 << 0)
++#define RA_MASK_VHT_RATES_2SS	(0x3ff000 << 10)
++#define RA_MASK_VHT_RATES_3SS	(0x3ff000 << 20)
++#define RA_MASK_VHT_RATES	(RA_MASK_VHT_RATES_1SS | \
++				 RA_MASK_VHT_RATES_2SS | \
++				 RA_MASK_VHT_RATES_3SS)
++#define RA_MASK_CCK_IN_HT	0x00005
++#define RA_MASK_CCK_IN_VHT	0x00005
++#define RA_MASK_OFDM_IN_VHT	0x00010
++#define RA_MASK_OFDM_IN_HT_2G	0x00010
++#define RA_MASK_OFDM_IN_HT_5G	0x00030
++
++void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
++{
++	struct ieee80211_sta *sta = si->sta;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u8 rssi_level;
++	u8 wireless_set;
++	u8 bw_mode;
++	u8 rate_id;
++	u8 rf_type = RF_1T1R;
++	u8 stbc_en = 0;
++	u8 ldpc_en = 0;
++	u8 tx_num = 1;
++	u64 ra_mask = 0;
++	bool is_vht_enable = false;
++	bool is_support_sgi = false;
++
++	if (sta->vht_cap.vht_supported) {
++		is_vht_enable = true;
++		ra_mask |= get_vht_ra_mask(sta);
++		if (sta->vht_cap.cap & IEEE80211_VHT_CAP_RXSTBC_MASK)
++			stbc_en = VHT_STBC_EN;
++		if (sta->vht_cap.cap & IEEE80211_VHT_CAP_RXLDPC)
++			ldpc_en = VHT_LDPC_EN;
++		if (sta->vht_cap.cap & IEEE80211_VHT_CAP_SHORT_GI_80)
++			is_support_sgi = true;
++	} else if (sta->ht_cap.ht_supported) {
++		ra_mask |= (sta->ht_cap.mcs.rx_mask[NL80211_BAND_5GHZ] << 20) |
++			   (sta->ht_cap.mcs.rx_mask[NL80211_BAND_2GHZ] << 12);
++		if (sta->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC)
++			stbc_en = HT_STBC_EN;
++		if (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING)
++			ldpc_en = HT_LDPC_EN;
++		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20 ||
++		    sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40)
++			is_support_sgi = true;
++	}
++
++	if (hal->current_band_type == RTW_BAND_5G) {
++		ra_mask |= (u64)sta->supp_rates[NL80211_BAND_5GHZ] << 4;
++		if (sta->vht_cap.vht_supported) {
++			ra_mask &= RA_MASK_VHT_RATES | RA_MASK_OFDM_IN_VHT;
++			wireless_set = WIRELESS_OFDM | WIRELESS_VHT;
++		} else if (sta->ht_cap.ht_supported) {
++			ra_mask &= RA_MASK_HT_RATES | RA_MASK_OFDM_IN_HT_5G;
++			wireless_set = WIRELESS_OFDM | WIRELESS_HT;
++		} else {
++			wireless_set = WIRELESS_OFDM;
++		}
++	} else if (hal->current_band_type == RTW_BAND_2G) {
++		ra_mask |= sta->supp_rates[NL80211_BAND_2GHZ];
++		if (sta->vht_cap.vht_supported) {
++			ra_mask &= RA_MASK_VHT_RATES | RA_MASK_CCK_IN_VHT |
++				   RA_MASK_OFDM_IN_VHT;
++			wireless_set = WIRELESS_CCK | WIRELESS_OFDM |
++				       WIRELESS_HT | WIRELESS_VHT;
++		} else if (sta->ht_cap.ht_supported) {
++			ra_mask &= RA_MASK_HT_RATES | RA_MASK_CCK_IN_HT |
++				   RA_MASK_OFDM_IN_HT_2G;
++			wireless_set = WIRELESS_CCK | WIRELESS_OFDM |
++				       WIRELESS_HT;
++		} else if (sta->supp_rates[0] <= 0xf) {
++			wireless_set = WIRELESS_CCK;
++		} else {
++			wireless_set = WIRELESS_CCK | WIRELESS_OFDM;
++		}
 +	} else {
-+		u32 reg_bcn_work;
++		rtw_err(rtwdev, "Unknown band type\n");
++		wireless_set = 0;
++	}
 +
-+		reg_bcn_work = rtw_read8(rtwdev, RTK_PCI_TXBD_BCN_WORK);
-+		reg_bcn_work |= BIT_PCI_BCNQ_FLAG;
-+		rtw_write8(rtwdev, RTK_PCI_TXBD_BCN_WORK, reg_bcn_work);
++	if (efuse->hw_cap.nss == 1) {
++		ra_mask &= RA_MASK_VHT_RATES_1SS;
++		ra_mask &= RA_MASK_HT_RATES_1SS;
++	}
++
++	switch (sta->bandwidth) {
++	case IEEE80211_STA_RX_BW_80:
++		bw_mode = RTW_CHANNEL_WIDTH_80;
++		break;
++	case IEEE80211_STA_RX_BW_40:
++		bw_mode = RTW_CHANNEL_WIDTH_40;
++		break;
++	default:
++		bw_mode = RTW_CHANNEL_WIDTH_20;
++		break;
++	}
++
++	if (sta->vht_cap.vht_supported && ra_mask & 0xffc00000) {
++		tx_num = 2;
++		rf_type = RF_2T2R;
++	} else if (sta->ht_cap.ht_supported && ra_mask & 0xfff00000) {
++		tx_num = 2;
++		rf_type = RF_2T2R;
++	}
++
++	rate_id = get_rate_id(wireless_set, bw_mode, tx_num);
++
++	if (wireless_set != WIRELESS_CCK) {
++		rssi_level = si->rssi_level;
++		if (rssi_level == 0)
++			ra_mask &= 0xffffffffffffffffULL;
++		else if (rssi_level == 1)
++			ra_mask &= 0xfffffffffffffff0ULL;
++		else if (rssi_level == 2)
++			ra_mask &= 0xffffffffffffefe0ULL;
++		else if (rssi_level == 3)
++			ra_mask &= 0xffffffffffffcfc0ULL;
++		else if (rssi_level == 4)
++			ra_mask &= 0xffffffffffff8f80ULL;
++		else if (rssi_level >= 5)
++			ra_mask &= 0xffffffffffff0f00ULL;
++	}
++
++	si->bw_mode = bw_mode;
++	si->stbc_en = stbc_en;
++	si->ldpc_en = ldpc_en;
++	si->rf_type = rf_type;
++	si->wireless_set = wireless_set;
++	si->sgi_enable = is_support_sgi;
++	si->vht_enable = is_vht_enable;
++	si->ra_mask = ra_mask;
++	si->rate_id = rate_id;
++
++	rtw_fw_send_ra_info(rtwdev, si);
++}
++
++static int rtw_power_on(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_fw_state *fw = &rtwdev->fw;
++	int ret;
++
++	ret = rtw_hci_setup(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to setup hci\n");
++		goto err;
++	}
++
++	/* power on MAC before firmware downloaded */
++	ret = rtw_mac_power_on(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to power on mac\n");
++		goto err;
++	}
++
++	wait_for_completion(&fw->completion);
++	if (!fw->firmware) {
++		ret = -EINVAL;
++		rtw_err(rtwdev, "failed to load firmware\n");
++		goto err;
++	}
++
++	ret = rtw_download_firmware(rtwdev, fw);
++	if (ret) {
++		rtw_err(rtwdev, "failed to download firmware\n");
++		goto err_off;
++	}
++
++	/* config mac after firmware downloaded */
++	ret = rtw_mac_init(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to configure mac\n");
++		goto err_off;
++	}
++
++	chip->ops->phy_set_param(rtwdev);
++
++	ret = rtw_hci_start(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to start hci\n");
++		goto err_off;
 +	}
 +
 +	return 0;
++
++err_off:
++	rtw_mac_power_off(rtwdev);
++
++err:
++	return ret;
 +}
 +
-+static int rtw_pci_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf,
-+					u32 size)
++int rtw_core_start(struct rtw_dev *rtwdev)
 +{
-+	struct sk_buff *skb;
-+	struct rtw_tx_pkt_info pkt_info;
-+	u32 tx_pkt_desc_sz;
-+	u32 length;
-+
-+	tx_pkt_desc_sz = rtwdev->chip->tx_pkt_desc_sz;
-+	length = size + tx_pkt_desc_sz;
-+	skb = dev_alloc_skb(length);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb, tx_pkt_desc_sz);
-+	memcpy((u8 *)skb_put(skb, size), buf, size);
-+	memset(&pkt_info, 0, sizeof(pkt_info));
-+	pkt_info.tx_pkt_size = size;
-+	pkt_info.offset = tx_pkt_desc_sz;
-+
-+	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_BCN);
-+}
-+
-+static int rtw_pci_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
-+{
-+	struct sk_buff *skb;
-+	struct rtw_tx_pkt_info pkt_info;
-+	u32 tx_pkt_desc_sz;
-+	u32 length;
-+
-+	tx_pkt_desc_sz = rtwdev->chip->tx_pkt_desc_sz;
-+	length = size + tx_pkt_desc_sz;
-+	skb = dev_alloc_skb(length);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb, tx_pkt_desc_sz);
-+	memcpy((u8 *)skb_put(skb, size), buf, size);
-+	memset(&pkt_info, 0, sizeof(pkt_info));
-+	pkt_info.tx_pkt_size = size;
-+
-+	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_H2C);
-+}
-+
-+static int rtw_pci_tx(struct rtw_dev *rtwdev,
-+		      struct rtw_tx_pkt_info *pkt_info,
-+		      struct sk_buff *skb)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct rtw_pci_tx_ring *ring;
-+	u8 queue = rtw_hw_queue_mapping(skb);
 +	int ret;
 +
-+	ret = rtw_pci_xmit(rtwdev, pkt_info, skb, queue);
++	ret = rtw_power_on(rtwdev);
 +	if (ret)
 +		return ret;
 +
-+	ring = &rtwpci->tx_rings[queue];
-+	if (avail_desc(ring->r.wp, ring->r.rp, ring->r.len) < 2) {
-+		ieee80211_stop_queue(rtwdev->hw, skb_get_queue_mapping(skb));
-+		ring->queue_stopped = true;
-+	}
++	rtw_sec_enable_sec_engine(rtwdev);
++
++	/* rcr reset after powered on */
++	rtw_write32(rtwdev, REG_RCR, rtwdev->hal.rcr);
++
++	ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->watch_dog_work,
++				     RTW_WATCH_DOG_DELAY_TIME);
++
++	rtw_flag_set(rtwdev, RTW_FLAG_RUNNING);
 +
 +	return 0;
 +}
 +
-+static void rtw_pci_tx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
-+			   u8 hw_queue)
++static void rtw_power_off(struct rtw_dev *rtwdev)
 +{
-+	struct ieee80211_hw *hw = rtwdev->hw;
-+	struct ieee80211_tx_info *info;
-+	struct rtw_pci_tx_ring *ring;
-+	struct rtw_pci_tx_data *tx_data;
-+	struct sk_buff *skb;
-+	u32 count;
-+	u32 bd_idx_addr;
-+	u32 bd_idx, cur_rp;
-+	u16 q_map;
++	rtwdev->hci.ops->stop(rtwdev);
++	rtw_mac_power_off(rtwdev);
++}
 +
-+	ring = &rtwpci->tx_rings[hw_queue];
++void rtw_core_stop(struct rtw_dev *rtwdev)
++{
++	rtw_flag_clear(rtwdev, RTW_FLAG_RUNNING);
++	rtw_flag_clear(rtwdev, RTW_FLAG_FW_RUNNING);
 +
-+	bd_idx_addr = rtw_pci_tx_queue_idx_addr[hw_queue];
-+	bd_idx = rtw_read32(rtwdev, bd_idx_addr);
-+	cur_rp = bd_idx >> 16;
-+	cur_rp &= 0xfff;
-+	if (cur_rp >= ring->r.rp)
-+		count = cur_rp - ring->r.rp;
-+	else
-+		count = ring->r.len - (ring->r.rp - cur_rp);
++	cancel_delayed_work_sync(&rtwdev->watch_dog_work);
 +
-+	while (count--) {
-+		skb = skb_dequeue(&ring->queue);
-+		tx_data = rtw_pci_get_tx_data(skb);
-+		pci_unmap_single(rtwpci->pdev, tx_data->dma, skb->len,
-+				 PCI_DMA_TODEVICE);
++	rtw_power_off(rtwdev);
++}
 +
-+		/* just free command packets from host to card */
-+		if (hw_queue == RTW_TX_QUEUE_H2C) {
-+			dev_kfree_skb_irq(skb);
-+			continue;
-+		}
++static void rtw_init_ht_cap(struct rtw_dev *rtwdev,
++			    struct ieee80211_sta_ht_cap *ht_cap)
++{
++	struct rtw_efuse *efuse = &rtwdev->efuse;
 +
-+		if (ring->queue_stopped &&
-+		    avail_desc(ring->r.wp, ring->r.rp, ring->r.len) > 4) {
-+			q_map = skb_get_queue_mapping(skb);
-+			ieee80211_wake_queue(hw, q_map);
-+			ring->queue_stopped = false;
-+		}
++	ht_cap->ht_supported = true;
++	ht_cap->cap = 0;
++	ht_cap->cap |= IEEE80211_HT_CAP_SGI_20 |
++			IEEE80211_HT_CAP_MAX_AMSDU |
++			IEEE80211_HT_CAP_LDPC_CODING |
++			(1 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
++	if (efuse->hw_cap.bw & BIT(RTW_CHANNEL_WIDTH_40))
++		ht_cap->cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
++				IEEE80211_HT_CAP_DSSSCCK40 |
++				IEEE80211_HT_CAP_SGI_40;
++	ht_cap->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
++	ht_cap->ampdu_density = IEEE80211_HT_MPDU_DENSITY_16;
++	ht_cap->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
++	if (efuse->hw_cap.nss > 1) {
++		ht_cap->mcs.rx_mask[0] = 0xFF;
++		ht_cap->mcs.rx_mask[1] = 0xFF;
++		ht_cap->mcs.rx_mask[4] = 0x01;
++		ht_cap->mcs.rx_highest = cpu_to_le16(300);
++	} else {
++		ht_cap->mcs.rx_mask[0] = 0xFF;
++		ht_cap->mcs.rx_mask[1] = 0x00;
++		ht_cap->mcs.rx_mask[4] = 0x01;
++		ht_cap->mcs.rx_highest = cpu_to_le16(150);
++	}
++}
 +
-+		skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
++static void rtw_init_vht_cap(struct rtw_dev *rtwdev,
++			     struct ieee80211_sta_vht_cap *vht_cap)
++{
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	u16 mcs_map;
++	__le16 highest;
 +
-+		info = IEEE80211_SKB_CB(skb);
++	if (efuse->hw_cap.ptcl != EFUSE_HW_CAP_IGNORE &&
++	    efuse->hw_cap.ptcl != EFUSE_HW_CAP_PTCL_VHT)
++		return;
 +
-+		/* enqueue to wait for tx report */
-+		if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
-+			rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
-+			continue;
-+		}
-+
-+		/* always ACK for others, then they won't be marked as drop */
-+		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
-+			info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+		else
-+			info->flags |= IEEE80211_TX_STAT_ACK;
-+
-+		ieee80211_tx_info_clear_status(info);
-+		ieee80211_tx_status_irqsafe(hw, skb);
++	vht_cap->vht_supported = true;
++	vht_cap->cap = IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
++		       IEEE80211_VHT_CAP_RXLDPC |
++		       IEEE80211_VHT_CAP_SHORT_GI_80 |
++		       IEEE80211_VHT_CAP_TXSTBC |
++		       IEEE80211_VHT_CAP_RXSTBC_1 |
++		       IEEE80211_VHT_CAP_HTC_VHT |
++		       IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK |
++		       0;
++	mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 |
++		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 4 |
++		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 6 |
++		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 8 |
++		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 10 |
++		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
++		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 14;
++	if (efuse->hw_cap.nss > 1) {
++		highest = cpu_to_le16(780);
++		mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << 2;
++	} else {
++		highest = cpu_to_le16(390);
++		mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << 2;
 +	}
 +
-+	ring->r.rp = cur_rp;
++	vht_cap->vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
++	vht_cap->vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
++	vht_cap->vht_mcs.rx_highest = highest;
++	vht_cap->vht_mcs.tx_highest = highest;
 +}
 +
-+static void rtw_pci_rx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
-+			   u8 hw_queue)
++static void rtw_set_supported_band(struct ieee80211_hw *hw,
++				   struct rtw_chip_info *chip)
 +{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_pci_rx_ring *ring;
-+	struct rtw_rx_pkt_stat pkt_stat;
-+	struct ieee80211_rx_status rx_status;
-+	struct sk_buff *skb, *new;
-+	u32 cur_wp, cur_rp, tmp;
-+	u32 count;
-+	u32 pkt_offset;
-+	u32 pkt_desc_sz = chip->rx_pkt_desc_sz;
-+	u32 buf_desc_sz = chip->rx_buf_desc_sz;
-+	u8 *rx_desc;
-+	dma_addr_t dma;
++	struct rtw_dev *rtwdev = hw->priv;
++	struct ieee80211_supported_band *sband;
 +
-+	ring = &rtwpci->rx_rings[RTW_RX_QUEUE_MPDU];
-+
-+	tmp = rtw_read32(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ);
-+	cur_wp = tmp >> 16;
-+	cur_wp &= 0xfff;
-+	if (cur_wp >= ring->r.wp)
-+		count = cur_wp - ring->r.wp;
-+	else
-+		count = ring->r.len - (ring->r.wp - cur_wp);
-+
-+	cur_rp = ring->r.rp;
-+	while (count--) {
-+		rtw_pci_dma_check(rtwdev, ring, cur_rp);
-+		skb = ring->buf[cur_rp];
-+		dma = *((dma_addr_t *)skb->cb);
-+		pci_unmap_single(rtwpci->pdev, dma, RTK_PCI_RX_BUF_SIZE,
-+				 PCI_DMA_FROMDEVICE);
-+		rx_desc = skb->data;
-+		chip->ops->query_rx_desc(rtwdev, rx_desc, &pkt_stat, &rx_status);
-+
-+		/* offset from rx_desc to payload */
-+		pkt_offset = pkt_desc_sz + pkt_stat.drv_info_sz +
-+			     pkt_stat.shift;
-+
-+		if (pkt_stat.is_c2h) {
-+			/* keep rx_desc, halmac needs it */
-+			skb_put(skb, pkt_stat.pkt_len + pkt_offset);
-+
-+			/* pass offset for further operation */
-+			*((u32 *)skb->cb) = pkt_offset;
-+			skb_queue_tail(&rtwdev->c2h_queue, skb);
-+			ieee80211_queue_work(rtwdev->hw, &rtwdev->c2h_work);
-+		} else {
-+			/* remove rx_desc, maybe use skb_pull? */
-+			skb_put(skb, pkt_stat.pkt_len);
-+			skb_reserve(skb, pkt_offset);
-+
-+			/* alloc a smaller skb to mac80211 */
-+			new = dev_alloc_skb(pkt_stat.pkt_len);
-+			if (!new) {
-+				new = skb;
-+			} else {
-+				skb_put_data(new, skb->data, skb->len);
-+				dev_kfree_skb_any(skb);
-+			}
-+			/* TODO: merge into rx.c */
-+			rtw_rx_stats(rtwdev, pkt_stat.vif, skb);
-+			memcpy(new->cb, &rx_status, sizeof(rx_status));
-+			ieee80211_rx_irqsafe(rtwdev->hw, new);
-+		}
-+
-+		/* skb delivered to mac80211, alloc a new one in rx ring */
-+		new = dev_alloc_skb(RTK_PCI_RX_BUF_SIZE);
-+		if (WARN(!new, "rx routine starvation\n"))
-+			return;
-+
-+		ring->buf[cur_rp] = new;
-+		rtw_pci_reset_rx_desc(rtwdev, new, ring, cur_rp, buf_desc_sz);
-+
-+		/* host read next element in ring */
-+		if (++cur_rp >= ring->r.len)
-+			cur_rp = 0;
++	if (chip->band & RTW_BAND_2G) {
++		sband = kmemdup(&rtw_band_2ghz, sizeof(*sband), GFP_KERNEL);
++		if (!sband)
++			goto err_out;
++		if (chip->ht_supported)
++			rtw_init_ht_cap(rtwdev, &sband->ht_cap);
++		hw->wiphy->bands[NL80211_BAND_2GHZ] = sband;
 +	}
 +
-+	ring->r.rp = cur_rp;
-+	ring->r.wp = cur_wp;
-+	rtw_write16(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ, ring->r.rp);
++	if (chip->band & RTW_BAND_5G) {
++		sband = kmemdup(&rtw_band_5ghz, sizeof(*sband), GFP_KERNEL);
++		if (!sband)
++			goto err_out;
++		if (chip->ht_supported)
++			rtw_init_ht_cap(rtwdev, &sband->ht_cap);
++		if (chip->vht_supported)
++			rtw_init_vht_cap(rtwdev, &sband->vht_cap);
++		hw->wiphy->bands[NL80211_BAND_5GHZ] = sband;
++	}
++
++	return;
++
++err_out:
++	rtw_err(rtwdev, "failed to set supported band\n");
++	kfree(sband);
 +}
 +
-+static void rtw_pci_irq_recognized(struct rtw_dev *rtwdev,
-+				   struct rtw_pci *rtwpci, u32 *irq_status)
++static void rtw_unset_supported_band(struct ieee80211_hw *hw,
++				     struct rtw_chip_info *chip)
 +{
-+	irq_status[0] = rtw_read32(rtwdev, RTK_PCI_HISR0);
-+	irq_status[1] = rtw_read32(rtwdev, RTK_PCI_HISR1);
-+	irq_status[3] = rtw_read32(rtwdev, RTK_PCI_HISR3);
-+	irq_status[0] &= rtwpci->irq_mask[0];
-+	irq_status[1] &= rtwpci->irq_mask[1];
-+	irq_status[3] &= rtwpci->irq_mask[3];
-+	rtw_write32(rtwdev, RTK_PCI_HISR0, irq_status[0]);
-+	rtw_write32(rtwdev, RTK_PCI_HISR1, irq_status[1]);
-+	rtw_write32(rtwdev, RTK_PCI_HISR3, irq_status[3]);
++	kfree(hw->wiphy->bands[NL80211_BAND_2GHZ]);
++	kfree(hw->wiphy->bands[NL80211_BAND_5GHZ]);
 +}
 +
-+static irqreturn_t rtw_pci_interrupt_handler(int irq, void *dev)
++static void rtw_load_firmware_cb(const struct firmware *firmware, void *context)
 +{
-+	struct rtw_dev *rtwdev = dev;
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	u32 irq_status[4];
++	struct rtw_dev *rtwdev = context;
++	struct rtw_fw_state *fw = &rtwdev->fw;
 +
-+	spin_lock(&rtwpci->irq_lock);
-+	if (!rtwpci->irq_enabled)
-+		goto out;
++	if (!firmware)
++		rtw_err(rtwdev, "failed to request firmware\n");
 +
-+	rtw_pci_irq_recognized(rtwdev, rtwpci, irq_status);
-+
-+	if (irq_status[0] & IMR_MGNTDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_MGMT);
-+	if (irq_status[0] & IMR_HIGHDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_HI0);
-+	if (irq_status[0] & IMR_BEDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BE);
-+	if (irq_status[0] & IMR_BKDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BK);
-+	if (irq_status[0] & IMR_VODOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VO);
-+	if (irq_status[0] & IMR_VIDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VI);
-+	if (irq_status[3] & IMR_H2CDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_H2C);
-+	if (irq_status[0] & IMR_ROK)
-+		rtw_pci_rx_isr(rtwdev, rtwpci, RTW_RX_QUEUE_MPDU);
-+
-+out:
-+	spin_unlock(&rtwpci->irq_lock);
-+
-+	return IRQ_HANDLED;
++	fw->firmware = firmware;
++	complete_all(&fw->completion);
 +}
 +
-+static int rtw_pci_io_mapping(struct rtw_dev *rtwdev,
-+			      struct pci_dev *pdev)
++static int rtw_load_firmware(struct rtw_dev *rtwdev, const char *fw_name)
 +{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	unsigned long len;
-+	u8 bar_id = 2;
++	struct rtw_fw_state *fw = &rtwdev->fw;
 +	int ret;
 +
-+	ret = pci_request_regions(pdev, KBUILD_MODNAME);
++	init_completion(&fw->completion);
++
++	ret = request_firmware_nowait(THIS_MODULE, true, fw_name, rtwdev->dev,
++				      GFP_KERNEL, rtwdev, rtw_load_firmware_cb);
 +	if (ret) {
-+		rtw_err(rtwdev, "failed to request pci regions\n");
++		rtw_err(rtwdev, "async firmware request failed\n");
 +		return ret;
 +	}
 +
-+	len = pci_resource_len(pdev, bar_id);
-+	rtwpci->mmap = pci_iomap(pdev, bar_id, len);
-+	if (!rtwpci->mmap) {
-+		rtw_err(rtwdev, "failed to map pci memory\n");
-+		return -ENOMEM;
-+	}
-+
 +	return 0;
 +}
 +
-+static void rtw_pci_io_unmapping(struct rtw_dev *rtwdev,
-+				 struct pci_dev *pdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	if (rtwpci->mmap) {
-+		pci_iounmap(pdev, rtwpci->mmap);
-+		pci_release_regions(pdev);
-+	}
-+}
-+
-+static void rtw_dbi_write8(struct rtw_dev *rtwdev, u16 addr, u8 data)
-+{
-+	u16 write_addr;
-+	u16 remainder = addr & 0x3;
-+	u8 flag;
-+	u8 cnt = 20;
-+
-+	write_addr = ((addr & 0x0ffc) | (BIT(0) << (remainder + 12)));
-+	rtw_write8(rtwdev, REG_DBI_WDATA_V1 + remainder, data);
-+	rtw_write16(rtwdev, REG_DBI_FLAG_V1, write_addr);
-+	rtw_write8(rtwdev, REG_DBI_FLAG_V1 + 2, 0x01);
-+
-+	flag = rtw_read8(rtwdev, REG_DBI_FLAG_V1 + 2);
-+	while (flag && (cnt != 0)) {
-+		udelay(10);
-+		flag = rtw_read8(rtwdev, REG_DBI_FLAG_V1 + 2);
-+		cnt--;
-+	}
-+
-+	WARN(flag, "DBI write fail\n");
-+}
-+
-+static void rtw_mdio_write(struct rtw_dev *rtwdev, u8 addr, u16 data, bool g1)
-+{
-+	u8 page;
-+	u8 wflag;
-+	u8 cnt;
-+
-+	rtw_write16(rtwdev, REG_MDIO_V1, data);
-+
-+	page = addr < 0x20 ? 0 : 1;
-+	page += g1 ? 0 : 2;
-+	rtw_write8(rtwdev, REG_PCIE_MIX_CFG, addr & 0x1f);
-+	rtw_write8(rtwdev, REG_PCIE_MIX_CFG + 3, page);
-+
-+	rtw_write32_mask(rtwdev, REG_PCIE_MIX_CFG, BIT_MDIO_WFLAG_V1, 1);
-+	wflag = rtw_read32_mask(rtwdev, REG_PCIE_MIX_CFG, BIT_MDIO_WFLAG_V1);
-+
-+	cnt = 20;
-+	while (wflag && (cnt != 0)) {
-+		udelay(10);
-+		wflag = rtw_read32_mask(rtwdev, REG_PCIE_MIX_CFG,
-+					BIT_MDIO_WFLAG_V1);
-+		cnt--;
-+	}
-+
-+	WARN(wflag, "MDIO write fail\n");
-+}
-+
-+static void rtw_pci_phy_cfg(struct rtw_dev *rtwdev)
++static int rtw_chip_parameter_setup(struct rtw_dev *rtwdev)
 +{
 +	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_intf_phy_para *para;
-+	u16 cut;
-+	u16 value;
-+	u16 offset;
-+	u16 ip_sel;
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	u32 wl_bt_pwr_ctrl;
++	int ret = 0;
++
++	switch (rtw_hci_type(rtwdev)) {
++	case RTW_HCI_TYPE_PCIE:
++		rtwdev->hci.rpwm_addr = 0x03d9;
++		break;
++	default:
++		rtw_err(rtwdev, "unsupported hci type\n");
++		return -EINVAL;
++	}
++
++	wl_bt_pwr_ctrl = rtw_read32(rtwdev, REG_WL_BT_PWR_CTRL);
++	if (wl_bt_pwr_ctrl & BIT_BT_FUNC_EN)
++		rtwdev->efuse.btcoex = true;
++	hal->chip_version = rtw_read32(rtwdev, REG_SYS_CFG1);
++	hal->fab_version = BIT_GET_VENDOR_ID(hal->chip_version) >> 2;
++	hal->cut_version = BIT_GET_CHIP_VER(hal->chip_version);
++	hal->mp_chip = (hal->chip_version & BIT_RTL_ID) ? 0 : 1;
++	if (hal->chip_version & BIT_RF_TYPE_ID) {
++		hal->rf_type = RF_2T2R;
++		hal->rf_path_num = 2;
++		hal->antenna_tx = BB_PATH_AB;
++		hal->antenna_rx = BB_PATH_AB;
++	} else {
++		hal->rf_type = RF_1T1R;
++		hal->rf_path_num = 1;
++		hal->antenna_tx = BB_PATH_A;
++		hal->antenna_rx = BB_PATH_A;
++	}
++
++	if (hal->fab_version == 2)
++		hal->fab_version = 1;
++	else if (hal->fab_version == 1)
++		hal->fab_version = 2;
++
++	efuse->physical_size = chip->phy_efuse_size;
++	efuse->logical_size = chip->log_efuse_size;
++	efuse->protect_size = chip->ptct_efuse_size;
++
++	/* default use ack */
++	rtwdev->hal.rcr |= BIT_VHT_DACK;
++
++	return ret;
++}
++
++static int rtw_chip_efuse_enable(struct rtw_dev *rtwdev)
++{
++	struct rtw_fw_state *fw = &rtwdev->fw;
++	int ret;
++
++	ret = rtw_hci_setup(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to setup hci\n");
++		goto err;
++	}
++
++	ret = rtw_mac_power_on(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to power on mac\n");
++		goto err;
++	}
++
++	rtw_write8(rtwdev, REG_C2HEVT, C2H_HW_FEATURE_DUMP);
++
++	wait_for_completion(&fw->completion);
++	if (!fw->firmware) {
++		ret = -EINVAL;
++		rtw_err(rtwdev, "failed to load firmware\n");
++		goto err;
++	}
++
++	ret = rtw_download_firmware(rtwdev, fw);
++	if (ret) {
++		rtw_err(rtwdev, "failed to download firmware\n");
++		goto err_off;
++	}
++
++	return 0;
++
++err_off:
++	rtw_mac_power_off(rtwdev);
++
++err:
++	return ret;
++}
++
++static int rtw_dump_hw_feature(struct rtw_dev *rtwdev)
++{
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	u8 hw_feature[HW_FEATURE_LEN];
++	u8 id;
++	u8 bw;
 +	int i;
 +
-+	cut = BIT(0) << rtwdev->hal.cut_version;
-+
-+	for (i = 0; i < chip->intf_table->n_gen1_para; i++) {
-+		para = &chip->intf_table->gen1_para[i];
-+		if (!(para->cut_mask & cut))
-+			continue;
-+		if (para->offset == 0xffff)
-+			break;
-+		offset = para->offset;
-+		value = para->value;
-+		ip_sel = para->ip_sel;
-+		if (para->ip_sel == RTW_IP_SEL_PHY)
-+			rtw_mdio_write(rtwdev, offset, value, true);
-+		else
-+			rtw_dbi_write8(rtwdev, offset, value);
++	id = rtw_read8(rtwdev, REG_C2HEVT);
++	if (id != C2H_HW_FEATURE_REPORT) {
++		rtw_err(rtwdev, "failed to read hw feature report\n");
++		return -EBUSY;
 +	}
 +
-+	for (i = 0; i < chip->intf_table->n_gen2_para; i++) {
-+		para = &chip->intf_table->gen2_para[i];
-+		if (!(para->cut_mask & cut))
-+			continue;
-+		if (para->offset == 0xffff)
-+			break;
-+		offset = para->offset;
-+		value = para->value;
-+		ip_sel = para->ip_sel;
-+		if (para->ip_sel == RTW_IP_SEL_PHY)
-+			rtw_mdio_write(rtwdev, offset, value, false);
-+		else
-+			rtw_dbi_write8(rtwdev, offset, value);
-+	}
-+}
++	for (i = 0; i < HW_FEATURE_LEN; i++)
++		hw_feature[i] = rtw_read8(rtwdev, REG_C2HEVT + 2 + i);
 +
-+static int rtw_pci_claim(struct rtw_dev *rtwdev, struct pci_dev *pdev)
-+{
-+	int ret;
++	rtw_write8(rtwdev, REG_C2HEVT, 0);
 +
-+	ret = pci_enable_device(pdev);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to enable pci device\n");
-+		return ret;
-+	}
++	bw = GET_EFUSE_HW_CAP_BW(hw_feature);
++	efuse->hw_cap.bw = hw_bw_cap_to_bitamp(bw);
++	efuse->hw_cap.hci = GET_EFUSE_HW_CAP_HCI(hw_feature);
++	efuse->hw_cap.nss = GET_EFUSE_HW_CAP_NSS(hw_feature);
++	efuse->hw_cap.ptcl = GET_EFUSE_HW_CAP_PTCL(hw_feature);
++	efuse->hw_cap.ant_num = GET_EFUSE_HW_CAP_ANT_NUM(hw_feature);
 +
-+	pci_set_master(pdev);
-+	pci_set_drvdata(pdev, rtwdev->hw);
-+	SET_IEEE80211_DEV(rtwdev->hw, &pdev->dev);
++	rtw_hw_config_rf_ant_num(rtwdev, efuse->hw_cap.ant_num);
++
++	if (efuse->hw_cap.nss == EFUSE_HW_CAP_IGNORE)
++		efuse->hw_cap.nss = rtwdev->hal.rf_path_num;
++
++	rtw_dbg(rtwdev, RTW_DBG_EFUSE,
++		"hw cap: hci=0x%02x, bw=0x%02x, ptcl=0x%02x, ant_num=%d, nss=%d\n",
++		efuse->hw_cap.hci, efuse->hw_cap.bw, efuse->hw_cap.ptcl,
++		efuse->hw_cap.ant_num, efuse->hw_cap.nss);
 +
 +	return 0;
 +}
 +
-+static void rtw_pci_declaim(struct rtw_dev *rtwdev, struct pci_dev *pdev)
++static void rtw_chip_efuse_disable(struct rtw_dev *rtwdev)
 +{
-+	pci_clear_master(pdev);
-+	pci_disable_device(pdev);
++	rtw_hci_stop(rtwdev);
++	rtw_mac_power_off(rtwdev);
 +}
 +
-+static int rtw_pci_setup_resource(struct rtw_dev *rtwdev, struct pci_dev *pdev)
++static int rtw_chip_efuse_info_setup(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_pci *rtwpci;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
 +	int ret;
 +
-+	rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	rtwpci->pdev = pdev;
++	mutex_lock(&rtwdev->mutex);
 +
-+	/* after this driver can access to hw registers */
-+	ret = rtw_pci_io_mapping(rtwdev, pdev);
++	/* power on mac to read efuse */
++	ret = rtw_chip_efuse_enable(rtwdev);
++	if (ret)
++		goto out;
++
++	ret = rtw_parse_efuse_map(rtwdev);
++	if (ret)
++		goto out;
++
++	ret = rtw_dump_hw_feature(rtwdev);
++	if (ret)
++		goto out;
++
++	ret = rtw_check_supported_rfe(rtwdev);
++	if (ret)
++		goto out;
++
++	if (efuse->crystal_cap == 0xff)
++		efuse->crystal_cap = 0;
++	if (efuse->pa_type_2g == 0xff)
++		efuse->pa_type_2g = 0;
++	if (efuse->pa_type_5g == 0xff)
++		efuse->pa_type_5g = 0;
++	if (efuse->lna_type_2g == 0xff)
++		efuse->lna_type_2g = 0;
++	if (efuse->lna_type_5g == 0xff)
++		efuse->lna_type_5g = 0;
++	if (efuse->channel_plan == 0xff)
++		efuse->channel_plan = 0x7f;
++	if (efuse->bt_setting & BIT(0))
++		efuse->share_ant = true;
++	if (efuse->regd == 0xff)
++		efuse->regd = 0;
++
++	efuse->ext_pa_2g = efuse->pa_type_2g & BIT(4) ? 1 : 0;
++	efuse->ext_lna_2g = efuse->lna_type_2g & BIT(3) ? 1 : 0;
++	efuse->ext_pa_5g = efuse->pa_type_5g & BIT(0) ? 1 : 0;
++	efuse->ext_lna_2g = efuse->lna_type_5g & BIT(3) ? 1 : 0;
++
++	rtw_chip_efuse_disable(rtwdev);
++
++out:
++	mutex_unlock(&rtwdev->mutex);
++	return ret;
++}
++
++static int rtw_chip_board_info_setup(struct rtw_dev *rtwdev)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	const struct rtw_rfe_def *rfe_def = rtw_get_rfe_def(rtwdev);
++
++	if (!rfe_def)
++		return -ENODEV;
++
++	rtw_phy_setup_phy_cond(rtwdev, 0);
++
++	rtw_hw_init_tx_power(hal);
++	rtw_load_table(rtwdev, rfe_def->phy_pg_tbl);
++	rtw_load_table(rtwdev, rfe_def->txpwr_lmt_tbl);
++	rtw_phy_tx_power_by_rate_config(hal);
++	rtw_phy_tx_power_limit_config(hal);
++
++	return 0;
++}
++
++int rtw_chip_info_setup(struct rtw_dev *rtwdev)
++{
++	int ret;
++
++	ret = rtw_chip_parameter_setup(rtwdev);
 +	if (ret) {
-+		rtw_err(rtwdev, "failed to request pci io region\n");
++		rtw_err(rtwdev, "failed to setup chip parameters\n");
 +		goto err_out;
 +	}
 +
-+	ret = rtw_pci_init(rtwdev);
++	ret = rtw_chip_efuse_info_setup(rtwdev);
 +	if (ret) {
-+		rtw_err(rtwdev, "failed to allocate pci resources\n");
-+		goto err_io_unmap;
++		rtw_err(rtwdev, "failed to setup chip efuse info\n");
++		goto err_out;
 +	}
 +
-+	rtw_pci_phy_cfg(rtwdev);
++	ret = rtw_chip_board_info_setup(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to setup chip board info\n");
++		goto err_out;
++	}
 +
 +	return 0;
-+
-+err_io_unmap:
-+	rtw_pci_io_unmapping(rtwdev, pdev);
 +
 +err_out:
 +	return ret;
 +}
++EXPORT_SYMBOL(rtw_chip_info_setup);
 +
-+static void rtw_pci_destroy(struct rtw_dev *rtwdev, struct pci_dev *pdev)
++int rtw_core_init(struct rtw_dev *rtwdev)
 +{
-+	rtw_pci_deinit(rtwdev);
-+	rtw_pci_io_unmapping(rtwdev, pdev);
-+}
-+
-+static struct rtw_hci_ops rtw_pci_ops = {
-+	.tx = rtw_pci_tx,
-+	.setup = rtw_pci_setup,
-+	.start = rtw_pci_start,
-+	.stop = rtw_pci_stop,
-+
-+	.read8 = rtw_pci_read8,
-+	.read16 = rtw_pci_read16,
-+	.read32 = rtw_pci_read32,
-+	.write8 = rtw_pci_write8,
-+	.write16 = rtw_pci_write16,
-+	.write32 = rtw_pci_write32,
-+	.write_data_rsvd_page = rtw_pci_write_data_rsvd_page,
-+	.write_data_h2c = rtw_pci_write_data_h2c,
-+};
-+
-+static int rtw_pci_probe(struct pci_dev *pdev,
-+			 const struct pci_device_id *id)
-+{
-+	struct ieee80211_hw *hw;
-+	struct rtw_dev *rtwdev;
-+	int drv_data_size;
 +	int ret;
 +
-+	drv_data_size = sizeof(struct rtw_dev) + sizeof(struct rtw_pci);
-+	hw = ieee80211_alloc_hw(drv_data_size, &rtw_ops);
-+	if (!hw) {
-+		dev_err(&pdev->dev, "failed to allocate hw\n");
-+		return -ENOMEM;
-+	}
++	INIT_LIST_HEAD(&rtwdev->rsvd_page_list);
 +
-+	rtwdev = hw->priv;
-+	rtwdev->hw = hw;
-+	rtwdev->dev = &pdev->dev;
-+	rtwdev->chip = (struct rtw_chip_info *)id->driver_data;
-+	rtwdev->hci.ops = &rtw_pci_ops;
-+	rtwdev->hci.type = RTW_HCI_TYPE_PCIE;
++	timer_setup(&rtwdev->tx_report.purge_timer,
++		    rtw_tx_report_purge_timer, 0);
 +
-+	ret = rtw_core_init(rtwdev);
-+	if (ret)
-+		goto err_release_hw;
++	INIT_DELAYED_WORK(&rtwdev->watch_dog_work, rtw_watch_dog_work);
++	INIT_DELAYED_WORK(&rtwdev->lps_work, rtw_lps_work);
++	INIT_WORK(&rtwdev->c2h_work, rtw_c2h_work);
++	skb_queue_head_init(&rtwdev->c2h_queue);
++	skb_queue_head_init(&rtwdev->tx_report.queue);
 +
-+	rtw_dbg(rtwdev, RTW_DBG_PCI,
-+		"rtw88 pci probe: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
-+		pdev->vendor, pdev->device, pdev->revision);
++	spin_lock_init(&rtwdev->dm_lock);
++	spin_lock_init(&rtwdev->rf_lock);
++	spin_lock_init(&rtwdev->h2c.lock);
++	spin_lock_init(&rtwdev->tx_report.q_lock);
 +
-+	ret = rtw_pci_claim(rtwdev, pdev);
++	mutex_init(&rtwdev->mutex);
++	mutex_init(&rtwdev->hal.tx_power_mutex);
++
++	rtwdev->sec.total_cam_num = 32;
++	rtwdev->hal.current_channel = 1;
++	set_bit(RTW_BC_MC_MACID, rtwdev->mac_id_map);
++
++	mutex_lock(&rtwdev->mutex);
++	rtw_add_rsvd_page(rtwdev, RSVD_BEACON, false);
++	mutex_unlock(&rtwdev->mutex);
++
++	/* default rx filter setting */
++	rtwdev->hal.rcr = BIT_APP_FCS | BIT_APP_MIC | BIT_APP_ICV |
++			  BIT_HTC_LOC_CTRL | BIT_APP_PHYSTS |
++			  BIT_AB | BIT_AM | BIT_APM;
++
++	ret = rtw_load_firmware(rtwdev, rtwdev->chip->fw_name);
 +	if (ret) {
-+		rtw_err(rtwdev, "failed to claim pci device\n");
-+		goto err_deinit_core;
-+	}
-+
-+	ret = rtw_pci_setup_resource(rtwdev, pdev);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to setup pci resources\n");
-+		goto err_pci_declaim;
-+	}
-+
-+	ret = rtw_chip_info_setup(rtwdev);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to setup chip information\n");
-+		goto err_destroy_pci;
-+	}
-+
-+	ret = rtw_register_hw(rtwdev, hw);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to register hw\n");
-+		goto err_destroy_pci;
-+	}
-+
-+	ret = request_irq(pdev->irq, &rtw_pci_interrupt_handler,
-+			  IRQF_SHARED, KBUILD_MODNAME, rtwdev);
-+	if (ret) {
-+		ieee80211_unregister_hw(hw);
-+		goto err_destroy_pci;
++		rtw_warn(rtwdev, "no firmware loaded\n");
++		return ret;
 +	}
 +
 +	return 0;
-+
-+err_destroy_pci:
-+	rtw_pci_destroy(rtwdev, pdev);
-+
-+err_pci_declaim:
-+	rtw_pci_declaim(rtwdev, pdev);
-+
-+err_deinit_core:
-+	rtw_core_deinit(rtwdev);
-+
-+err_release_hw:
-+	ieee80211_free_hw(hw);
-+
-+	return ret;
 +}
++EXPORT_SYMBOL(rtw_core_init);
 +
-+static void rtw_pci_remove(struct pci_dev *pdev)
++void rtw_core_deinit(struct rtw_dev *rtwdev)
 +{
-+	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
-+	struct rtw_dev *rtwdev;
-+	struct rtw_pci *rtwpci;
++	struct rtw_fw_state *fw = &rtwdev->fw;
++	struct rtw_rsvd_page *rsvd_pkt, *tmp;
++	unsigned long flags;
 +
-+	if (!hw)
-+		return;
++	if (fw->firmware)
++		release_firmware(fw->firmware);
 +
-+	rtwdev = hw->priv;
-+	rtwpci = (struct rtw_pci *)rtwdev->priv;
++	spin_lock_irqsave(&rtwdev->tx_report.q_lock, flags);
++	skb_queue_purge(&rtwdev->tx_report.queue);
++	spin_unlock_irqrestore(&rtwdev->tx_report.q_lock, flags);
 +
-+	rtw_unregister_hw(rtwdev, hw);
-+	rtw_pci_disable_interrupt(rtwdev, rtwpci);
-+	rtw_pci_destroy(rtwdev, pdev);
-+	rtw_pci_declaim(rtwdev, pdev);
-+	free_irq(rtwpci->pdev->irq, rtwdev);
-+	rtw_core_deinit(rtwdev);
-+	ieee80211_free_hw(hw);
++	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list, list) {
++		list_del(&rsvd_pkt->list);
++		kfree(rsvd_pkt);
++	}
++
++	mutex_destroy(&rtwdev->mutex);
++	mutex_destroy(&rtwdev->hal.tx_power_mutex);
 +}
++EXPORT_SYMBOL(rtw_core_deinit);
 +
-+static const struct pci_device_id rtw_pci_id_table[] = {
-+#ifdef CONFIG_RTW88_8822BE
-+	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xB822, rtw8822b_hw_spec) },
-+#endif
-+#ifdef CONFIG_RTW88_8822CE
-+	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xC822, rtw8822c_hw_spec) },
-+#endif
-+	{},
-+};
-+MODULE_DEVICE_TABLE(pci, rtw_pci_id_table);
++int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
++{
++	int max_tx_headroom = 0;
++	int ret;
 +
-+static struct pci_driver rtw_pci_driver = {
-+	.name = "rtw_pci",
-+	.id_table = rtw_pci_id_table,
-+	.probe = rtw_pci_probe,
-+	.remove = rtw_pci_remove,
-+};
-+module_pci_driver(rtw_pci_driver);
++	/* TODO: USB & SDIO may need extra room? */
++	max_tx_headroom = rtwdev->chip->tx_pkt_desc_sz;
++
++	hw->extra_tx_headroom = max_tx_headroom;
++	hw->queues = IEEE80211_NUM_ACS;
++	hw->sta_data_size = sizeof(struct rtw_sta_info);
++	hw->vif_data_size = sizeof(struct rtw_vif);
++
++	ieee80211_hw_set(hw, SIGNAL_DBM);
++	ieee80211_hw_set(hw, RX_INCLUDES_FCS);
++	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
++	ieee80211_hw_set(hw, MFP_CAPABLE);
++	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
++	ieee80211_hw_set(hw, SUPPORTS_PS);
++	ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
++
++	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
++				     BIT(NL80211_IFTYPE_AP) |
++				     BIT(NL80211_IFTYPE_ADHOC) |
++				     BIT(NL80211_IFTYPE_MESH_POINT);
++
++	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
++			    WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
++
++	rtw_set_supported_band(hw, rtwdev->chip);
++	SET_IEEE80211_PERM_ADDR(hw, rtwdev->efuse.addr);
++
++	rtw_regd_init(rtwdev, rtw_regd_notifier);
++
++	ret = ieee80211_register_hw(hw);
++	if (ret) {
++		rtw_err(rtwdev, "failed to register hw\n");
++		return ret;
++	}
++
++	if (regulatory_hint(hw->wiphy, rtwdev->regd.alpha2))
++		rtw_err(rtwdev, "regulatory_hint fail\n");
++
++	rtw_debugfs_init(rtwdev);
++
++	return 0;
++}
++EXPORT_SYMBOL(rtw_register_hw);
++
++void rtw_unregister_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++
++	ieee80211_unregister_hw(hw);
++	rtw_unset_supported_band(hw, chip);
++}
++EXPORT_SYMBOL(rtw_unregister_hw);
 +
 +MODULE_AUTHOR("Realtek Corporation");
-+MODULE_DESCRIPTION("Realtek 802.11ac wireless PCI driver");
++MODULE_DESCRIPTION("Realtek 802.11ac wireless core module");
 +MODULE_LICENSE("GPL");
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
 new file mode 100644
-index 0000000..48bb927
+index 0000000..e091a87
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/pci.h
-@@ -0,0 +1,237 @@
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -0,0 +1,1104 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#ifndef __RTK_PCI_H_
-+#define __RTK_PCI_H_
++#ifndef __RTK_MAIN_H_
++#define __RTK_MAIN_H_
 +
-+#define RTK_PCI_DEVICE(vend, dev, hw_config)	\
-+	PCI_DEVICE(vend, dev),			\
-+	.driver_data = (kernel_ulong_t)&(hw_config),
++#include <net/mac80211.h>
++#include <linux/vmalloc.h>
++#include <linux/firmware.h>
++#include <linux/average.h>
++#include <linux/bitops.h>
++#include <linux/bitfield.h>
 +
-+#define RTK_DEFAULT_TX_DESC_NUM 128
-+#define RTK_BEQ_TX_DESC_NUM	256
++#include "util.h"
 +
-+#define RTK_MAX_RX_DESC_NUM	512
-+/* 8K + rx desc size */
-+#define RTK_PCI_RX_BUF_SIZE	(8192 + 24)
++#define RTW_MAX_MAC_ID_NUM		32
++#define RTW_MAX_SEC_CAM_NUM		32
 +
-+#define RTK_PCI_CTRL		0x300
-+#define BIT_RST_TRXDMA_INTF	BIT(20)
-+#define BIT_RX_TAG_EN		BIT(15)
-+#define REG_DBI_WDATA_V1	0x03E8
-+#define REG_DBI_FLAG_V1		0x03F0
-+#define REG_MDIO_V1		0x03F4
-+#define REG_PCIE_MIX_CFG	0x03F8
-+#define BIT_MDIO_WFLAG_V1	BIT(5)
++#define RTW_WATCH_DOG_DELAY_TIME	round_jiffies_relative(HZ * 2)
 +
-+#define BIT_PCI_BCNQ_FLAG	BIT(4)
-+#define RTK_PCI_TXBD_DESA_BCNQ	0x308
-+#define RTK_PCI_TXBD_DESA_H2CQ	0x1320
-+#define RTK_PCI_TXBD_DESA_MGMTQ	0x310
-+#define RTK_PCI_TXBD_DESA_BKQ	0x330
-+#define RTK_PCI_TXBD_DESA_BEQ	0x328
-+#define RTK_PCI_TXBD_DESA_VIQ	0x320
-+#define RTK_PCI_TXBD_DESA_VOQ	0x318
-+#define RTK_PCI_TXBD_DESA_HI0Q	0x340
-+#define RTK_PCI_RXBD_DESA_MPDUQ	0x338
++#define RFREG_MASK			0xfffff
++#define INV_RF_DATA			0xffffffff
++#define TX_PAGE_SIZE_SHIFT		7
 +
-+/* BCNQ is specialized for rsvd page, does not need to specify a number */
-+#define RTK_PCI_TXBD_NUM_H2CQ	0x1328
-+#define RTK_PCI_TXBD_NUM_MGMTQ	0x380
-+#define RTK_PCI_TXBD_NUM_BKQ	0x38A
-+#define RTK_PCI_TXBD_NUM_BEQ	0x388
-+#define RTK_PCI_TXBD_NUM_VIQ	0x386
-+#define RTK_PCI_TXBD_NUM_VOQ	0x384
-+#define RTK_PCI_TXBD_NUM_HI0Q	0x38C
-+#define RTK_PCI_RXBD_NUM_MPDUQ	0x382
-+#define RTK_PCI_TXBD_IDX_H2CQ	0x132C
-+#define RTK_PCI_TXBD_IDX_MGMTQ	0x3B0
-+#define RTK_PCI_TXBD_IDX_BKQ	0x3AC
-+#define RTK_PCI_TXBD_IDX_BEQ	0x3A8
-+#define RTK_PCI_TXBD_IDX_VIQ	0x3A4
-+#define RTK_PCI_TXBD_IDX_VOQ	0x3A0
-+#define RTK_PCI_TXBD_IDX_HI0Q	0x3B8
-+#define RTK_PCI_RXBD_IDX_MPDUQ	0x3B4
++#define RTW_CHANNEL_WIDTH_MAX		3
++#define RTW_RF_PATH_MAX			4
++#define HW_FEATURE_LEN			13
 +
-+#define RTK_PCI_TXBD_RWPTR_CLR	0x39C
-+#define RTK_PCI_TXBD_H2CQ_CSR	0x1330
++extern unsigned int rtw_debug_mask;
++extern const struct ieee80211_ops rtw_ops;
++extern struct rtw_chip_info rtw8822b_hw_spec;
++extern struct rtw_chip_info rtw8822c_hw_spec;
 +
-+#define BIT_CLR_H2CQ_HOST_IDX	BIT(16)
-+#define BIT_CLR_H2CQ_HW_IDX	BIT(8)
++#define RTW_MAX_CHANNEL_NUM_2G 14
++#define RTW_MAX_CHANNEL_NUM_5G 49
 +
-+#define RTK_PCI_HIMR0		0x0B0
-+#define RTK_PCI_HISR0		0x0B4
-+#define RTK_PCI_HIMR1		0x0B8
-+#define RTK_PCI_HISR1		0x0BC
-+#define RTK_PCI_HIMR2		0x10B0
-+#define RTK_PCI_HISR2		0x10B4
-+#define RTK_PCI_HIMR3		0x10B8
-+#define RTK_PCI_HISR3		0x10BC
-+/* IMR 0 */
-+#define IMR_TIMER2		BIT(31)
-+#define IMR_TIMER1		BIT(30)
-+#define IMR_PSTIMEOUT		BIT(29)
-+#define IMR_GTINT4		BIT(28)
-+#define IMR_GTINT3		BIT(27)
-+#define IMR_TBDER		BIT(26)
-+#define IMR_TBDOK		BIT(25)
-+#define IMR_TSF_BIT32_TOGGLE	BIT(24)
-+#define IMR_BCNDMAINT0		BIT(20)
-+#define IMR_BCNDOK0		BIT(16)
-+#define IMR_HSISR_IND_ON_INT	BIT(15)
-+#define IMR_BCNDMAINT_E		BIT(14)
-+#define IMR_ATIMEND		BIT(12)
-+#define IMR_HISR1_IND_INT	BIT(11)
-+#define IMR_C2HCMD		BIT(10)
-+#define IMR_CPWM2		BIT(9)
-+#define IMR_CPWM		BIT(8)
-+#define IMR_HIGHDOK		BIT(7)
-+#define IMR_MGNTDOK		BIT(6)
-+#define IMR_BKDOK		BIT(5)
-+#define IMR_BEDOK		BIT(4)
-+#define IMR_VIDOK		BIT(3)
-+#define IMR_VODOK		BIT(2)
-+#define IMR_RDU			BIT(1)
-+#define IMR_ROK			BIT(0)
-+/* IMR 1 */
-+#define IMR_TXFIFO_TH_INT	BIT(30)
-+#define IMR_BTON_STS_UPDATE	BIT(29)
-+#define IMR_MCUERR		BIT(28)
-+#define IMR_BCNDMAINT7		BIT(27)
-+#define IMR_BCNDMAINT6		BIT(26)
-+#define IMR_BCNDMAINT5		BIT(25)
-+#define IMR_BCNDMAINT4		BIT(24)
-+#define IMR_BCNDMAINT3		BIT(23)
-+#define IMR_BCNDMAINT2		BIT(22)
-+#define IMR_BCNDMAINT1		BIT(21)
-+#define IMR_BCNDOK7		BIT(20)
-+#define IMR_BCNDOK6		BIT(19)
-+#define IMR_BCNDOK5		BIT(18)
-+#define IMR_BCNDOK4		BIT(17)
-+#define IMR_BCNDOK3		BIT(16)
-+#define IMR_BCNDOK2		BIT(15)
-+#define IMR_BCNDOK1		BIT(14)
-+#define IMR_ATIMEND_E		BIT(13)
-+#define IMR_ATIMEND		BIT(12)
-+#define IMR_TXERR		BIT(11)
-+#define IMR_RXERR		BIT(10)
-+#define IMR_TXFOVW		BIT(9)
-+#define IMR_RXFOVW		BIT(8)
-+#define IMR_CPU_MGQ_TXDONE	BIT(5)
-+#define IMR_PS_TIMER_C		BIT(4)
-+#define IMR_PS_TIMER_B		BIT(3)
-+#define IMR_PS_TIMER_A		BIT(2)
-+#define IMR_CPUMGQ_TX_TIMER	BIT(1)
-+/* IMR 3 */
-+#define IMR_H2CDOK		BIT(16)
++struct rtw_dev;
 +
-+/* one element is reserved to know if the ring is closed */
-+static inline int avail_desc(u32 wp, u32 rp, u32 len)
++enum rtw_hci_type {
++	RTW_HCI_TYPE_PCIE,
++	RTW_HCI_TYPE_USB,
++	RTW_HCI_TYPE_SDIO,
++
++	RTW_HCI_TYPE_UNDEFINE,
++};
++
++struct rtw_hci {
++	struct rtw_hci_ops *ops;
++	enum rtw_hci_type type;
++
++	u32 rpwm_addr;
++
++	u8 bulkout_num;
++};
++
++enum rtw_supported_band {
++	RTW_BAND_2G = 1 << 0,
++	RTW_BAND_5G = 1 << 1,
++	RTW_BAND_60G = 1 << 2,
++
++	RTW_BAND_MAX,
++};
++
++enum rtw_bandwidth {
++	RTW_CHANNEL_WIDTH_20	= 0,
++	RTW_CHANNEL_WIDTH_40	= 1,
++	RTW_CHANNEL_WIDTH_80	= 2,
++	RTW_CHANNEL_WIDTH_160	= 3,
++	RTW_CHANNEL_WIDTH_80_80	= 4,
++	RTW_CHANNEL_WIDTH_5	= 5,
++	RTW_CHANNEL_WIDTH_10	= 6,
++};
++
++enum rtw_net_type {
++	RTW_NET_NO_LINK		= 0,
++	RTW_NET_AD_HOC		= 1,
++	RTW_NET_MGD_LINKED	= 2,
++	RTW_NET_AP_MODE		= 3,
++};
++
++enum rtw_rf_type {
++	RF_1T1R			= 0,
++	RF_1T2R			= 1,
++	RF_2T2R			= 2,
++	RF_2T3R			= 3,
++	RF_2T4R			= 4,
++	RF_3T3R			= 5,
++	RF_3T4R			= 6,
++	RF_4T4R			= 7,
++	RF_TYPE_MAX,
++};
++
++enum rtw_rf_path {
++	RF_PATH_A = 0,
++	RF_PATH_B = 1,
++	RF_PATH_C = 2,
++	RF_PATH_D = 3,
++};
++
++enum rtw_bb_path {
++	BB_PATH_A = BIT(0),
++	BB_PATH_B = BIT(1),
++	BB_PATH_C = BIT(2),
++	BB_PATH_D = BIT(3),
++
++	BB_PATH_AB = (BB_PATH_A | BB_PATH_B),
++	BB_PATH_AC = (BB_PATH_A | BB_PATH_C),
++	BB_PATH_AD = (BB_PATH_A | BB_PATH_D),
++	BB_PATH_BC = (BB_PATH_B | BB_PATH_C),
++	BB_PATH_BD = (BB_PATH_B | BB_PATH_D),
++	BB_PATH_CD = (BB_PATH_C | BB_PATH_D),
++
++	BB_PATH_ABC = (BB_PATH_A | BB_PATH_B | BB_PATH_C),
++	BB_PATH_ABD = (BB_PATH_A | BB_PATH_B | BB_PATH_D),
++	BB_PATH_ACD = (BB_PATH_A | BB_PATH_C | BB_PATH_D),
++	BB_PATH_BCD = (BB_PATH_B | BB_PATH_C | BB_PATH_D),
++
++	BB_PATH_ABCD = (BB_PATH_A | BB_PATH_B | BB_PATH_C | BB_PATH_D),
++};
++
++enum rtw_rate_section {
++	RTW_RATE_SECTION_CCK = 0,
++	RTW_RATE_SECTION_OFDM,
++	RTW_RATE_SECTION_HT_1S,
++	RTW_RATE_SECTION_HT_2S,
++	RTW_RATE_SECTION_VHT_1S,
++	RTW_RATE_SECTION_VHT_2S,
++
++	/* keep last */
++	RTW_RATE_SECTION_MAX,
++};
++
++enum rtw_wireless_set {
++	WIRELESS_CCK	= 0x00000001,
++	WIRELESS_OFDM	= 0x00000002,
++	WIRELESS_HT	= 0x00000004,
++	WIRELESS_VHT	= 0x00000008,
++};
++
++#define HT_STBC_EN	BIT(0)
++#define VHT_STBC_EN	BIT(1)
++#define HT_LDPC_EN	BIT(0)
++#define VHT_LDPC_EN	BIT(1)
++
++enum rtw_chip_type {
++	RTW_CHIP_TYPE_8822B,
++	RTW_CHIP_TYPE_8822C,
++};
++
++enum rtw_tx_queue_type {
++	/* the order of AC queues matters */
++	RTW_TX_QUEUE_BK = 0x0,
++	RTW_TX_QUEUE_BE = 0x1,
++	RTW_TX_QUEUE_VI = 0x2,
++	RTW_TX_QUEUE_VO = 0x3,
++
++	RTW_TX_QUEUE_BCN = 0x4,
++	RTW_TX_QUEUE_MGMT = 0x5,
++	RTW_TX_QUEUE_HI0 = 0x6,
++	RTW_TX_QUEUE_H2C = 0x7,
++	/* keep it last */
++	RTK_MAX_TX_QUEUE_NUM
++};
++
++enum rtw_rx_queue_type {
++	RTW_RX_QUEUE_MPDU = 0x0,
++	RTW_RX_QUEUE_C2H = 0x1,
++	/* keep it last */
++	RTK_MAX_RX_QUEUE_NUM
++};
++
++enum rtw_rate_index {
++	RTW_RATEID_BGN_40M_2SS	= 0,
++	RTW_RATEID_BGN_40M_1SS	= 1,
++	RTW_RATEID_BGN_20M_2SS	= 2,
++	RTW_RATEID_BGN_20M_1SS	= 3,
++	RTW_RATEID_GN_N2SS	= 4,
++	RTW_RATEID_GN_N1SS	= 5,
++	RTW_RATEID_BG		= 6,
++	RTW_RATEID_G		= 7,
++	RTW_RATEID_B_20M	= 8,
++	RTW_RATEID_ARFR0_AC_2SS	= 9,
++	RTW_RATEID_ARFR1_AC_1SS	= 10,
++	RTW_RATEID_ARFR2_AC_2G_1SS = 11,
++	RTW_RATEID_ARFR3_AC_2G_2SS = 12,
++	RTW_RATEID_ARFR4_AC_3SS	= 13,
++	RTW_RATEID_ARFR5_N_3SS	= 14,
++	RTW_RATEID_ARFR7_N_4SS	= 15,
++	RTW_RATEID_ARFR6_AC_4SS	= 16
++};
++
++enum rtw_trx_desc_rate {
++	DESC_RATE1M	= 0x00,
++	DESC_RATE2M	= 0x01,
++	DESC_RATE5_5M	= 0x02,
++	DESC_RATE11M	= 0x03,
++
++	DESC_RATE6M	= 0x04,
++	DESC_RATE9M	= 0x05,
++	DESC_RATE12M	= 0x06,
++	DESC_RATE18M	= 0x07,
++	DESC_RATE24M	= 0x08,
++	DESC_RATE36M	= 0x09,
++	DESC_RATE48M	= 0x0a,
++	DESC_RATE54M	= 0x0b,
++
++	DESC_RATEMCS0	= 0x0c,
++	DESC_RATEMCS1	= 0x0d,
++	DESC_RATEMCS2	= 0x0e,
++	DESC_RATEMCS3	= 0x0f,
++	DESC_RATEMCS4	= 0x10,
++	DESC_RATEMCS5	= 0x11,
++	DESC_RATEMCS6	= 0x12,
++	DESC_RATEMCS7	= 0x13,
++	DESC_RATEMCS8	= 0x14,
++	DESC_RATEMCS9	= 0x15,
++	DESC_RATEMCS10	= 0x16,
++	DESC_RATEMCS11	= 0x17,
++	DESC_RATEMCS12	= 0x18,
++	DESC_RATEMCS13	= 0x19,
++	DESC_RATEMCS14	= 0x1a,
++	DESC_RATEMCS15	= 0x1b,
++	DESC_RATEMCS16	= 0x1c,
++	DESC_RATEMCS17	= 0x1d,
++	DESC_RATEMCS18	= 0x1e,
++	DESC_RATEMCS19	= 0x1f,
++	DESC_RATEMCS20	= 0x20,
++	DESC_RATEMCS21	= 0x21,
++	DESC_RATEMCS22	= 0x22,
++	DESC_RATEMCS23	= 0x23,
++	DESC_RATEMCS24	= 0x24,
++	DESC_RATEMCS25	= 0x25,
++	DESC_RATEMCS26	= 0x26,
++	DESC_RATEMCS27	= 0x27,
++	DESC_RATEMCS28	= 0x28,
++	DESC_RATEMCS29	= 0x29,
++	DESC_RATEMCS30	= 0x2a,
++	DESC_RATEMCS31	= 0x2b,
++
++	DESC_RATEVHT1SS_MCS0	= 0x2c,
++	DESC_RATEVHT1SS_MCS1	= 0x2d,
++	DESC_RATEVHT1SS_MCS2	= 0x2e,
++	DESC_RATEVHT1SS_MCS3	= 0x2f,
++	DESC_RATEVHT1SS_MCS4	= 0x30,
++	DESC_RATEVHT1SS_MCS5	= 0x31,
++	DESC_RATEVHT1SS_MCS6	= 0x32,
++	DESC_RATEVHT1SS_MCS7	= 0x33,
++	DESC_RATEVHT1SS_MCS8	= 0x34,
++	DESC_RATEVHT1SS_MCS9	= 0x35,
++
++	DESC_RATEVHT2SS_MCS0	= 0x36,
++	DESC_RATEVHT2SS_MCS1	= 0x37,
++	DESC_RATEVHT2SS_MCS2	= 0x38,
++	DESC_RATEVHT2SS_MCS3	= 0x39,
++	DESC_RATEVHT2SS_MCS4	= 0x3a,
++	DESC_RATEVHT2SS_MCS5	= 0x3b,
++	DESC_RATEVHT2SS_MCS6	= 0x3c,
++	DESC_RATEVHT2SS_MCS7	= 0x3d,
++	DESC_RATEVHT2SS_MCS8	= 0x3e,
++	DESC_RATEVHT2SS_MCS9	= 0x3f,
++
++	DESC_RATEVHT3SS_MCS0	= 0x40,
++	DESC_RATEVHT3SS_MCS1	= 0x41,
++	DESC_RATEVHT3SS_MCS2	= 0x42,
++	DESC_RATEVHT3SS_MCS3	= 0x43,
++	DESC_RATEVHT3SS_MCS4	= 0x44,
++	DESC_RATEVHT3SS_MCS5	= 0x45,
++	DESC_RATEVHT3SS_MCS6	= 0x46,
++	DESC_RATEVHT3SS_MCS7	= 0x47,
++	DESC_RATEVHT3SS_MCS8	= 0x48,
++	DESC_RATEVHT3SS_MCS9	= 0x49,
++
++	DESC_RATEVHT4SS_MCS0	= 0x4a,
++	DESC_RATEVHT4SS_MCS1	= 0x4b,
++	DESC_RATEVHT4SS_MCS2	= 0x4c,
++	DESC_RATEVHT4SS_MCS3	= 0x4d,
++	DESC_RATEVHT4SS_MCS4	= 0x4e,
++	DESC_RATEVHT4SS_MCS5	= 0x4f,
++	DESC_RATEVHT4SS_MCS6	= 0x50,
++	DESC_RATEVHT4SS_MCS7	= 0x51,
++	DESC_RATEVHT4SS_MCS8	= 0x52,
++	DESC_RATEVHT4SS_MCS9	= 0x53,
++
++	DESC_RATE_MAX,
++};
++
++enum rtw_regulatory_domains {
++	RTW_REGD_FCC	= 0,
++	RTW_REGD_MKK	= 1,
++	RTW_REGD_ETSI	= 2,
++	RTW_REGD_WW	= 3,
++
++	RTW_REGD_MAX
++};
++
++enum rtw_flags {
++	RTW_FLAG_RUNNING,
++	RTW_FLAG_FW_RUNNING,
++	RTW_FLAG_SCANNING,
++	RTW_FLAG_INACTIVE_PS,
++	RTW_FLAG_LEISURE_PS,
++	RTW_FLAG_DIG_DISABLE,
++
++	NUM_OF_RTW_FLAGS,
++};
++
++/* the power index is represented by differences, which cck-1s & ht40-1s are
++ * the base values, so for 1s's differences, there are only ht20 & ofdm
++ */
++struct rtw_2g_1s_pwr_idx_diff {
++#ifdef __LITTLE_ENDIAN
++	s8 ofdm:4;
++	s8 bw20:4;
++#else
++	s8 bw20:4;
++	s8 ofdm:4;
++#endif
++} __packed;
++
++struct rtw_2g_ns_pwr_idx_diff {
++#ifdef __LITTLE_ENDIAN
++	s8 bw20:4;
++	s8 bw40:4;
++	s8 cck:4;
++	s8 ofdm:4;
++#else
++	s8 ofdm:4;
++	s8 cck:4;
++	s8 bw40:4;
++	s8 bw20:4;
++#endif
++} __packed;
++
++struct rtw_2g_txpwr_idx {
++	u8 cck_base[6];
++	u8 bw40_base[5];
++	struct rtw_2g_1s_pwr_idx_diff ht_1s_diff;
++	struct rtw_2g_ns_pwr_idx_diff ht_2s_diff;
++	struct rtw_2g_ns_pwr_idx_diff ht_3s_diff;
++	struct rtw_2g_ns_pwr_idx_diff ht_4s_diff;
++};
++
++struct rtw_5g_ht_1s_pwr_idx_diff {
++#ifdef __LITTLE_ENDIAN
++	s8 ofdm:4;
++	s8 bw20:4;
++#else
++	s8 bw20:4;
++	s8 ofdm:4;
++#endif
++} __packed;
++
++struct rtw_5g_ht_ns_pwr_idx_diff {
++#ifdef __LITTLE_ENDIAN
++	s8 bw20:4;
++	s8 bw40:4;
++#else
++	s8 bw40:4;
++	s8 bw20:4;
++#endif
++} __packed;
++
++struct rtw_5g_ofdm_ns_pwr_idx_diff {
++#ifdef __LITTLE_ENDIAN
++	s8 ofdm_3s:4;
++	s8 ofdm_2s:4;
++	s8 ofdm_4s:4;
++	s8 res:4;
++#else
++	s8 res:4;
++	s8 ofdm_4s:4;
++	s8 ofdm_2s:4;
++	s8 ofdm_3s:4;
++#endif
++} __packed;
++
++struct rtw_5g_vht_ns_pwr_idx_diff {
++#ifdef __LITTLE_ENDIAN
++	s8 bw160:4;
++	s8 bw80:4;
++#else
++	s8 bw80:4;
++	s8 bw160:4;
++#endif
++} __packed;
++
++struct rtw_5g_txpwr_idx {
++	u8 bw40_base[14];
++	struct rtw_5g_ht_1s_pwr_idx_diff ht_1s_diff;
++	struct rtw_5g_ht_ns_pwr_idx_diff ht_2s_diff;
++	struct rtw_5g_ht_ns_pwr_idx_diff ht_3s_diff;
++	struct rtw_5g_ht_ns_pwr_idx_diff ht_4s_diff;
++	struct rtw_5g_ofdm_ns_pwr_idx_diff ofdm_diff;
++	struct rtw_5g_vht_ns_pwr_idx_diff vht_1s_diff;
++	struct rtw_5g_vht_ns_pwr_idx_diff vht_2s_diff;
++	struct rtw_5g_vht_ns_pwr_idx_diff vht_3s_diff;
++	struct rtw_5g_vht_ns_pwr_idx_diff vht_4s_diff;
++};
++
++struct rtw_txpwr_idx {
++	struct rtw_2g_txpwr_idx pwr_idx_2g;
++	struct rtw_5g_txpwr_idx pwr_idx_5g;
++};
++
++struct rtw_timer_list {
++	struct timer_list timer;
++	void (*function)(void *data);
++	void *args;
++};
++
++struct rtw_channel_params {
++	u8 center_chan;
++	u8 bandwidth;
++	u8 primary_chan_idx;
++};
++
++struct rtw_hw_reg {
++	u32 addr;
++	u32 mask;
++};
++
++struct rtw_backup_info {
++	u8 len;
++	u32 reg;
++	u32 val;
++};
++
++enum rtw_vif_port_set {
++	PORT_SET_MAC_ADDR	= BIT(0),
++	PORT_SET_BSSID		= BIT(1),
++	PORT_SET_NET_TYPE	= BIT(2),
++	PORT_SET_AID		= BIT(3),
++};
++
++struct rtw_vif_port {
++	struct rtw_hw_reg mac_addr;
++	struct rtw_hw_reg bssid;
++	struct rtw_hw_reg net_type;
++	struct rtw_hw_reg aid;
++};
++
++struct rtw_tx_pkt_info {
++	u32 tx_pkt_size;
++	u8 offset;
++	u8 pkt_offset;
++	u8 mac_id;
++	u8 rate_id;
++	u8 rate;
++	u8 qsel;
++	u8 bw;
++	u8 sec_type;
++	u8 sn;
++	bool ampdu_en;
++	u8 ampdu_factor;
++	u8 ampdu_density;
++	u16 seq;
++	bool stbc;
++	bool ldpc;
++	bool dis_rate_fallback;
++	bool bmc;
++	bool use_rate;
++	bool ls;
++	bool fs;
++	bool short_gi;
++	bool report;
++};
++
++struct rtw_rx_pkt_stat {
++	bool phy_status;
++	bool icv_err;
++	bool crc_err;
++	bool decrypted;
++	bool is_c2h;
++
++	s32 signal_power;
++	u16 pkt_len;
++	u8 bw;
++	u8 drv_info_sz;
++	u8 shift;
++	u8 rate;
++	u8 mac_id;
++	u8 cam_id;
++	u8 ppdu_cnt;
++	u32 tsf_low;
++	s8 rx_power[RTW_RF_PATH_MAX];
++	u8 rssi;
++	u8 rxsc;
++	struct rtw_sta_info *si;
++	struct ieee80211_vif *vif;
++};
++
++struct rtw_traffic_stats {
++	/* units in bytes */
++	u64 tx_unicast;
++	u64 rx_unicast;
++
++	/* count for packets */
++	u64 tx_cnt;
++	u64 rx_cnt;
++
++	/* units in Mbps */
++	u32 tx_throughput;
++	u32 rx_throughput;
++};
++
++enum rtw_lps_mode {
++	RTW_MODE_ACTIVE	= 0,
++	RTW_MODE_LPS	= 1,
++	RTW_MODE_WMM_PS	= 2,
++};
++
++enum rtw_pwr_state {
++	RTW_RF_OFF	= 0x0,
++	RTW_RF_ON	= 0x4,
++	RTW_ALL_ON	= 0xc,
++};
++
++struct rtw_lps_conf {
++	/* the interface to enter lps */
++	struct rtw_vif *rtwvif;
++	enum rtw_lps_mode mode;
++	enum rtw_pwr_state state;
++	u8 awake_interval;
++	u8 rlbm;
++	u8 smart_ps;
++	u8 port_id;
++};
++
++enum rtw_hw_key_type {
++	RTW_CAM_NONE	= 0,
++	RTW_CAM_WEP40	= 1,
++	RTW_CAM_TKIP	= 2,
++	RTW_CAM_AES	= 4,
++	RTW_CAM_WEP104	= 5,
++};
++
++struct rtw_cam_entry {
++	bool valid;
++	bool group;
++	u8 addr[ETH_ALEN];
++	u8 hw_key_type;
++	struct ieee80211_key_conf *key;
++};
++
++struct rtw_sec_desc {
++	/* search strategy */
++	bool default_key_search;
++
++	u32 total_cam_num;
++	struct rtw_cam_entry cam_table[RTW_MAX_SEC_CAM_NUM];
++	DECLARE_BITMAP(cam_map, RTW_MAX_SEC_CAM_NUM);
++};
++
++struct rtw_tx_report {
++	/* protect the tx report queue */
++	spinlock_t q_lock;
++	struct sk_buff_head queue;
++	atomic_t sn;
++	struct timer_list purge_timer;
++};
++
++#define RTW_BC_MC_MACID 1
++DECLARE_EWMA(rssi, 10, 16);
++
++struct rtw_sta_info {
++	struct ieee80211_sta *sta;
++	struct ieee80211_vif *vif;
++
++	struct ewma_rssi avg_rssi;
++	u8 rssi_level;
++
++	u8 mac_id;
++	u8 rate_id;
++	enum rtw_bandwidth bw_mode;
++	enum rtw_rf_type rf_type;
++	enum rtw_wireless_set wireless_set;
++	u8 stbc_en:2;
++	u8 ldpc_en:2;
++	bool sgi_enable;
++	bool vht_enable;
++	bool updated;
++	u8 init_ra_lv;
++	u64 ra_mask;
++};
++
++struct rtw_vif {
++	struct ieee80211_vif *vif;
++	enum rtw_net_type net_type;
++	u16 aid;
++	u8 mac_addr[ETH_ALEN];
++	u8 bssid[ETH_ALEN];
++	u8 port;
++	const struct rtw_vif_port *conf;
++
++	struct rtw_traffic_stats stats;
++	bool in_lps;
++};
++
++struct rtw_regulatory {
++	char alpha2[2];
++	u8 chplan;
++	u8 txpwr_regd;
++};
++
++struct rtw_chip_ops {
++	int (*mac_init)(struct rtw_dev *rtwdev);
++	int (*read_efuse)(struct rtw_dev *rtwdev, u8 *map);
++	void (*phy_set_param)(struct rtw_dev *rtwdev);
++	void (*set_channel)(struct rtw_dev *rtwdev, u8 channel,
++			    u8 bandwidth, u8 primary_chan_idx);
++	void (*query_rx_desc)(struct rtw_dev *rtwdev, u8 *rx_desc,
++			      struct rtw_rx_pkt_stat *pkt_stat,
++			      struct ieee80211_rx_status *rx_status);
++	u32 (*read_rf)(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++		       u32 addr, u32 mask);
++	bool (*write_rf)(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			 u32 addr, u32 mask, u32 data);
++	void (*set_tx_power_index)(struct rtw_dev *rtwdev);
++	int (*rsvd_page_dump)(struct rtw_dev *rtwdev, u8 *buf, u32 offset,
++			      u32 size);
++	void (*set_antenna)(struct rtw_dev *rtwdev, u8 antenna_tx,
++			    u8 antenna_rx);
++	void (*cfg_ldo25)(struct rtw_dev *rtwdev, bool enable);
++	void (*false_alarm_statistics)(struct rtw_dev *rtwdev);
++	void (*do_iqk)(struct rtw_dev *rtwdev);
++};
++
++#define RTW_PWR_POLLING_CNT	20000
++
++#define RTW_PWR_CMD_READ	0x00
++#define RTW_PWR_CMD_WRITE	0x01
++#define RTW_PWR_CMD_POLLING	0x02
++#define RTW_PWR_CMD_DELAY	0x03
++#define RTW_PWR_CMD_END		0x04
++
++/* define the base address of each block */
++#define RTW_PWR_ADDR_MAC	0x00
++#define RTW_PWR_ADDR_USB	0x01
++#define RTW_PWR_ADDR_PCIE	0x02
++#define RTW_PWR_ADDR_SDIO	0x03
++
++#define RTW_PWR_INTF_SDIO_MSK	BIT(0)
++#define RTW_PWR_INTF_USB_MSK	BIT(1)
++#define RTW_PWR_INTF_PCI_MSK	BIT(2)
++#define RTW_PWR_INTF_ALL_MSK	(BIT(0) | BIT(1) | BIT(2) | BIT(3))
++
++#define RTW_PWR_CUT_A_MSK	BIT(1)
++#define RTW_PWR_CUT_B_MSK	BIT(2)
++#define RTW_PWR_CUT_C_MSK	BIT(3)
++#define RTW_PWR_CUT_D_MSK	BIT(4)
++#define RTW_PWR_CUT_E_MSK	BIT(5)
++#define RTW_PWR_CUT_F_MSK	BIT(6)
++#define RTW_PWR_CUT_G_MSK	BIT(7)
++#define RTW_PWR_CUT_ALL_MSK	0xFF
++
++enum rtw_pwr_seq_cmd_delay_unit {
++	RTW_PWR_DELAY_US,
++	RTW_PWR_DELAY_MS,
++};
++
++struct rtw_pwr_seq_cmd {
++	u16 offset;
++	u8 cut_mask;
++	u8 intf_mask;
++	u8 base:4;
++	u8 cmd:4;
++	u8 mask;
++	u8 value;
++};
++
++enum rtw_chip_ver {
++	RTW_CHIP_VER_CUT_A = 0x00,
++	RTW_CHIP_VER_CUT_B = 0x01,
++	RTW_CHIP_VER_CUT_C = 0x02,
++	RTW_CHIP_VER_CUT_D = 0x03,
++	RTW_CHIP_VER_CUT_E = 0x04,
++	RTW_CHIP_VER_CUT_F = 0x05,
++	RTW_CHIP_VER_CUT_G = 0x06,
++};
++
++#define RTW_INTF_PHY_PLATFORM_ALL 0
++
++enum rtw_intf_phy_cut {
++	RTW_INTF_PHY_CUT_A = BIT(0),
++	RTW_INTF_PHY_CUT_B = BIT(1),
++	RTW_INTF_PHY_CUT_C = BIT(2),
++	RTW_INTF_PHY_CUT_D = BIT(3),
++	RTW_INTF_PHY_CUT_E = BIT(4),
++	RTW_INTF_PHY_CUT_F = BIT(5),
++	RTW_INTF_PHY_CUT_G = BIT(6),
++	RTW_INTF_PHY_CUT_ALL = 0xFFFF,
++};
++
++enum rtw_ip_sel {
++	RTW_IP_SEL_PHY = 0,
++	RTW_IP_SEL_MAC = 1,
++	RTW_IP_SEL_DBI = 2,
++
++	RTW_IP_SEL_UNDEF = 0xFFFF
++};
++
++enum rtw_pq_map_id {
++	RTW_PQ_MAP_VO = 0x0,
++	RTW_PQ_MAP_VI = 0x1,
++	RTW_PQ_MAP_BE = 0x2,
++	RTW_PQ_MAP_BK = 0x3,
++	RTW_PQ_MAP_MG = 0x4,
++	RTW_PQ_MAP_HI = 0x5,
++	RTW_PQ_MAP_NUM = 0x6,
++
++	RTW_PQ_MAP_UNDEF,
++};
++
++enum rtw_dma_mapping {
++	RTW_DMA_MAPPING_EXTRA	= 0,
++	RTW_DMA_MAPPING_LOW	= 1,
++	RTW_DMA_MAPPING_NORMAL	= 2,
++	RTW_DMA_MAPPING_HIGH	= 3,
++
++	RTW_DMA_MAPPING_UNDEF,
++};
++
++struct rtw_rqpn {
++	enum rtw_dma_mapping dma_map_vo;
++	enum rtw_dma_mapping dma_map_vi;
++	enum rtw_dma_mapping dma_map_be;
++	enum rtw_dma_mapping dma_map_bk;
++	enum rtw_dma_mapping dma_map_mg;
++	enum rtw_dma_mapping dma_map_hi;
++};
++
++struct rtw_page_table {
++	u16 hq_num;
++	u16 nq_num;
++	u16 lq_num;
++	u16 exq_num;
++	u16 gapq_num;
++};
++
++struct rtw_intf_phy_para {
++	u16 offset;
++	u16 value;
++	u16 ip_sel;
++	u16 cut_mask;
++	u16 platform;
++};
++
++struct rtw_intf_phy_para_table {
++	struct rtw_intf_phy_para *usb2_para;
++	struct rtw_intf_phy_para *usb3_para;
++	struct rtw_intf_phy_para *gen1_para;
++	struct rtw_intf_phy_para *gen2_para;
++	u8 n_usb2_para;
++	u8 n_usb3_para;
++	u8 n_gen1_para;
++	u8 n_gen2_para;
++};
++
++struct rtw_table {
++	const void *data;
++	const u32 size;
++	void (*parse)(struct rtw_dev *rtwdev, const struct rtw_table *tbl);
++	void (*do_cfg)(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		       u32 addr, u32 data);
++	enum rtw_rf_path rf_path;
++};
++
++static inline void rtw_load_table(struct rtw_dev *rtwdev,
++				  const struct rtw_table *tbl)
 +{
-+	if (rp > wp)
-+		return rp - wp - 1;
-+	else
-+		return len - wp + rp - 1;
++	(*tbl->parse)(rtwdev, tbl);
 +}
 +
-+#define RTK_PCI_TXBD_OWN_OFFSET 15
-+#define RTK_PCI_TXBD_BCN_WORK	0x383
-+
-+struct rtw_pci_tx_buffer_desc {
-+	__le16 buf_size;
-+	__le16 psb_len;
-+	__le32 dma;
++enum rtw_rfe_fem {
++	RTW_RFE_IFEM,
++	RTW_RFE_EFEM,
++	RTW_RFE_IFEM2G_EFEM5G,
++	RTW_RFE_NUM,
 +};
 +
-+struct rtw_pci_tx_data {
-+	dma_addr_t dma;
-+	u8 sn;
++struct rtw_rfe_def {
++	const struct rtw_table *phy_pg_tbl;
++	const struct rtw_table *txpwr_lmt_tbl;
 +};
 +
-+struct rtw_pci_ring {
-+	u8 *head;
-+	dma_addr_t dma;
-+
-+	u8 desc_size;
-+
-+	u32 len;
-+	u32 wp;
-+	u32 rp;
-+};
-+
-+struct rtw_pci_tx_ring {
-+	struct rtw_pci_ring r;
-+	struct sk_buff_head queue;
-+	bool queue_stopped;
-+};
-+
-+struct rtw_pci_rx_buffer_desc {
-+	__le16 buf_size;
-+	__le16 total_pkt_size;
-+	__le32 dma;
-+};
-+
-+struct rtw_pci_rx_ring {
-+	struct rtw_pci_ring r;
-+	struct sk_buff *buf[RTK_MAX_RX_DESC_NUM];
-+};
-+
-+#define RX_TAG_MAX	8192
-+
-+struct rtw_pci {
-+	struct pci_dev *pdev;
-+
-+	/* used for pci interrupt */
-+	spinlock_t irq_lock;
-+	u32 irq_mask[4];
-+	bool irq_enabled;
-+
-+	u16 rx_tag;
-+	struct rtw_pci_tx_ring tx_rings[RTK_MAX_TX_QUEUE_NUM];
-+	struct rtw_pci_rx_ring rx_rings[RTK_MAX_RX_QUEUE_NUM];
-+
-+	void __iomem *mmap;
-+};
-+
-+static u32 max_num_of_tx_queue(u8 queue)
-+{
-+	u32 max_num;
-+
-+	switch (queue) {
-+	case RTW_TX_QUEUE_BE:
-+		max_num = RTK_BEQ_TX_DESC_NUM;
-+		break;
-+	case RTW_TX_QUEUE_BCN:
-+		max_num = 1;
-+		break;
-+	default:
-+		max_num = RTK_DEFAULT_TX_DESC_NUM;
-+		break;
++#define RTW_DEF_RFE(chip, bb_pg, pwrlmt) {				  \
++	.phy_pg_tbl = &rtw ## chip ## _bb_pg_type ## bb_pg ## _tbl,	  \
++	.txpwr_lmt_tbl = &rtw ## chip ## _txpwr_lmt_type ## pwrlmt ## _tbl, \
 +	}
 +
-+	return max_num;
-+}
++/* hardware configuration for each IC */
++struct rtw_chip_info {
++	struct rtw_chip_ops *ops;
++	u8 id;
 +
-+static inline struct
-+rtw_pci_tx_data *rtw_pci_get_tx_data(struct sk_buff *skb)
++	const char *fw_name;
++	u8 tx_pkt_desc_sz;
++	u8 tx_buf_desc_sz;
++	u8 rx_pkt_desc_sz;
++	u8 rx_buf_desc_sz;
++	u32 phy_efuse_size;
++	u32 log_efuse_size;
++	u32 ptct_efuse_size;
++	u32 txff_size;
++	u32 rxff_size;
++	u8 band;
++	u8 page_size;
++	u8 csi_buf_pg_num;
++	u8 dig_max;
++	u8 dig_min;
++	u8 txgi_factor;
++	bool is_pwr_by_rate_dec;
++	u8 max_power_index;
++
++	bool ht_supported;
++	bool vht_supported;
++
++	/* init values */
++	u8 sys_func_en;
++	struct rtw_pwr_seq_cmd **pwr_on_seq;
++	struct rtw_pwr_seq_cmd **pwr_off_seq;
++	struct rtw_rqpn *rqpn_table;
++	struct rtw_page_table *page_table;
++	struct rtw_intf_phy_para_table *intf_table;
++
++	struct rtw_hw_reg *dig;
++	u32 rf_base_addr[2];
++	u32 rf_sipi_addr[2];
++
++	const struct rtw_table *mac_tbl;
++	const struct rtw_table *agc_tbl;
++	const struct rtw_table *bb_tbl;
++	const struct rtw_table *rf_tbl[RTW_RF_PATH_MAX];
++	const struct rtw_table *rfk_init_tbl;
++
++	const struct rtw_rfe_def *rfe_defs;
++	u32 rfe_defs_size;
++};
++
++struct rtw_dm_info {
++	u32 cck_fa_cnt;
++	u32 ofdm_fa_cnt;
++	u32 total_fa_cnt;
++	u8 min_rssi;
++	u8 pre_min_rssi;
++	u16 fa_history[4];
++	u8 igi_history[4];
++	u8 igi_bitmap;
++	bool damping;
++	u8 damping_cnt;
++	u8 damping_rssi;
++
++	u8 cck_gi_u_bnd;
++	u8 cck_gi_l_bnd;
++};
++
++struct rtw_efuse {
++	u32 size;
++	u32 physical_size;
++	u32 logical_size;
++	u32 protect_size;
++
++	u8 addr[ETH_ALEN];
++	u8 channel_plan;
++	u8 country_code[2];
++	u8 rfe_option;
++	u8 thermal_meter;
++	u8 crystal_cap;
++	u8 ant_div_cfg;
++	u8 ant_div_type;
++	u8 regd;
++
++	u8 lna_type_2g;
++	u8 lna_type_5g;
++	u8 glna_type;
++	u8 alna_type;
++	bool ext_lna_2g;
++	bool ext_lna_5g;
++	u8 pa_type_2g;
++	u8 pa_type_5g;
++	u8 gpa_type;
++	u8 apa_type;
++	bool ext_pa_2g;
++	bool ext_pa_5g;
++
++	bool btcoex;
++	/* bt share antenna with wifi */
++	bool share_ant;
++	u8 bt_setting;
++
++	struct {
++		u8 hci;
++		u8 bw;
++		u8 ptcl;
++		u8 nss;
++		u8 ant_num;
++	} hw_cap;
++
++	struct rtw_txpwr_idx txpwr_idx_table[4];
++};
++
++struct rtw_phy_cond {
++#ifdef __LITTLE_ENDIAN
++	u32 rfe:8;
++	u32 intf:4;
++	u32 pkg:4;
++	u32 plat:4;
++	u32 intf_rsvd:4;
++	u32 cut:4;
++	u32 branch:2;
++	u32 neg:1;
++	u32 pos:1;
++#else
++	u32 pos:1;
++	u32 neg:1;
++	u32 branch:2;
++	u32 cut:4;
++	u32 intf_rsvd:4;
++	u32 plat:4;
++	u32 pkg:4;
++	u32 intf:4;
++	u32 rfe:8;
++#endif
++	/* for intf:4 */
++	#define INTF_PCIE	BIT(0)
++	#define INTF_USB	BIT(1)
++	#define INTF_SDIO	BIT(2)
++	/* for branch:2 */
++	#define BRANCH_IF	0
++	#define BRANCH_ELIF	1
++	#define BRANCH_ELSE	2
++	#define BRANCH_ENDIF	3
++};
++
++struct rtw_fifo_conf {
++	/* tx fifo information */
++	u16 rsvd_boundary;
++	u16 rsvd_pg_num;
++	u16 rsvd_drv_pg_num;
++	u16 txff_pg_num;
++	u16 acq_pg_num;
++	u16 rsvd_drv_addr;
++	u16 rsvd_h2c_info_addr;
++	u16 rsvd_h2c_sta_info_addr;
++	u16 rsvd_h2cq_addr;
++	u16 rsvd_cpu_instr_addr;
++	u16 rsvd_fw_txbuf_addr;
++	u16 rsvd_csibuf_addr;
++	enum rtw_dma_mapping pq_map[RTW_PQ_MAP_NUM];
++};
++
++struct rtw_fw_state {
++	const struct firmware *firmware;
++	struct completion completion;
++	u16 version;
++	u8 sub_version;
++	u8 sub_index;
++	u16 h2c_version;
++};
++
++struct rtw_hal {
++	u32 rcr;
++
++	u32 chip_version;
++	u8 fab_version;
++	u8 cut_version;
++	u8 mp_chip;
++	u8 oem_id;
++	struct rtw_phy_cond phy_cond;
++
++	u8 ps_mode;
++	u8 current_channel;
++	u8 current_band_width;
++	u8 current_band_type;
++	u8 sec_ch_offset;
++	u8 rf_type;
++	u8 rf_path_num;
++	u8 antenna_tx;
++	u8 antenna_rx;
++
++	/* protect tx power section */
++	struct mutex tx_power_mutex;
++	s8 tx_pwr_by_rate_offset_2g[RTW_RF_PATH_MAX]
++				   [DESC_RATE_MAX];
++	s8 tx_pwr_by_rate_offset_5g[RTW_RF_PATH_MAX]
++				   [DESC_RATE_MAX];
++	s8 tx_pwr_by_rate_base_2g[RTW_RF_PATH_MAX]
++				 [RTW_RATE_SECTION_MAX];
++	s8 tx_pwr_by_rate_base_5g[RTW_RF_PATH_MAX]
++				 [RTW_RATE_SECTION_MAX];
++	s8 tx_pwr_limit_2g[RTW_REGD_MAX]
++			  [RTW_CHANNEL_WIDTH_MAX]
++			  [RTW_RATE_SECTION_MAX]
++			  [RTW_MAX_CHANNEL_NUM_2G];
++	s8 tx_pwr_limit_5g[RTW_REGD_MAX]
++			  [RTW_CHANNEL_WIDTH_MAX]
++			  [RTW_RATE_SECTION_MAX]
++			  [RTW_MAX_CHANNEL_NUM_5G];
++	s8 tx_pwr_tbl[RTW_RF_PATH_MAX]
++		     [DESC_RATE_MAX];
++};
++
++struct rtw_dev {
++	struct ieee80211_hw *hw;
++	struct device *dev;
++
++	struct rtw_hci hci;
++
++	struct rtw_chip_info *chip;
++	struct rtw_hal hal;
++	struct rtw_fifo_conf fifo;
++	struct rtw_fw_state fw;
++	struct rtw_efuse efuse;
++	struct rtw_sec_desc sec;
++	struct rtw_traffic_stats stats;
++	struct rtw_regulatory regd;
++
++	struct rtw_dm_info dm_info;
++
++	/* ensures exclusive access from mac80211 callbacks */
++	struct mutex mutex;
++
++	/* lock for dm to use */
++	spinlock_t dm_lock;
++
++	/* read/write rf register */
++	spinlock_t rf_lock;
++
++	/* watch dog every 2 sec */
++	struct delayed_work watch_dog_work;
++	u32 watch_dog_cnt;
++
++	struct list_head rsvd_page_list;
++
++	/* c2h cmd queue & handler work */
++	struct sk_buff_head c2h_queue;
++	struct work_struct c2h_work;
++
++	struct rtw_tx_report tx_report;
++
++	struct {
++		/* incicate the mail box to use with fw */
++		u8 last_box_num;
++		/* protect to send h2c to fw */
++		spinlock_t lock;
++		u32 seq;
++	} h2c;
++
++	/* lps power state & handler work */
++	struct rtw_lps_conf lps_conf;
++	struct delayed_work lps_work;
++
++	struct dentry *debugfs;
++
++	u8 sta_cnt;
++
++	DECLARE_BITMAP(mac_id_map, RTW_MAX_MAC_ID_NUM);
++	DECLARE_BITMAP(flags, NUM_OF_RTW_FLAGS);
++
++	u8 mp_mode;
++
++	/* hci related data, must be last */
++	u8 priv[0] __aligned(sizeof(void *));
++};
++
++#include "hci.h"
++
++static inline bool rtw_flag_check(struct rtw_dev *rtwdev, enum rtw_flags flag)
 +{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	BUILD_BUG_ON(sizeof(struct rtw_pci_tx_data) >
-+		     sizeof(info->status.status_driver_data));
-+
-+	return (struct rtw_pci_tx_data *)info->status.status_driver_data;
++	return test_bit(flag, rtwdev->flags);
 +}
 +
-+static inline
-+struct rtw_pci_tx_buffer_desc *get_tx_buffer_desc(struct rtw_pci_tx_ring *ring,
-+						  u32 size)
++static inline void rtw_flag_clear(struct rtw_dev *rtwdev, enum rtw_flags flag)
 +{
-+	u8 *buf_desc;
-+
-+	buf_desc = ring->r.head + ring->r.wp * size;
-+	return (struct rtw_pci_tx_buffer_desc *)buf_desc;
++	clear_bit(flag, rtwdev->flags);
 +}
++
++static inline void rtw_flag_set(struct rtw_dev *rtwdev, enum rtw_flags flag)
++{
++	set_bit(flag, rtwdev->flags);
++}
++
++void rtw_get_channel_params(struct cfg80211_chan_def *chandef,
++			    struct rtw_channel_params *ch_param);
++bool check_hw_ready(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 target);
++bool ltecoex_read_reg(struct rtw_dev *rtwdev, u16 offset, u32 *val);
++bool ltecoex_reg_write(struct rtw_dev *rtwdev, u16 offset, u32 value);
++void rtw_restore_reg(struct rtw_dev *rtwdev,
++		     struct rtw_backup_info *bckp, u32 num);
++void rtw_set_channel(struct rtw_dev *rtwdev);
++void rtw_vif_port_config(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif,
++			 u32 config);
++void rtw_tx_report_purge_timer(struct timer_list *t);
++void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
++int rtw_core_start(struct rtw_dev *rtwdev);
++void rtw_core_stop(struct rtw_dev *rtwdev);
++int rtw_chip_info_setup(struct rtw_dev *rtwdev);
++int rtw_core_init(struct rtw_dev *rtwdev);
++void rtw_core_deinit(struct rtw_dev *rtwdev);
++int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw);
++void rtw_unregister_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw);
++
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+new file mode 100644
+index 0000000..97bcd90
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -0,0 +1,421 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_REG_DEF_H__
++#define __RTW_REG_DEF_H__
++
++#define REG_SYS_FUNC_EN		0x0002
++#define BIT_FEN_CPUEN		BIT(2)
++#define BIT_FEN_BB_GLB_RST	BIT(1)
++#define BIT_FEN_BB_RSTB		BIT(0)
++#define REG_SYS_PW_CTRL		0x0004
++#define REG_SYS_CLK_CTRL	0x0008
++#define BIT_CPU_CLK_EN		BIT(14)
++
++#define REG_RSV_CTRL		0x001C
++#define DISABLE_PI		0x3
++#define ENABLE_PI		0x2
++#define BITS_RFC_DIRECT		(BIT(31) | BIT(30))
++#define BIT_WLMCU_IOIF		BIT(0)
++#define REG_RF_CTRL		0x001F
++#define BIT_RF_SDM_RSTB		BIT(2)
++#define BIT_RF_RSTB		BIT(1)
++#define BIT_RF_EN		BIT(0)
++
++#define REG_AFE_CTRL1		0x0024
++#define BIT_MAC_CLK_SEL		(BIT(20) | BIT(21))
++#define REG_EFUSE_CTRL		0x0030
++#define BIT_EF_FLAG		BIT(31)
++#define BIT_SHIFT_EF_ADDR	8
++#define BIT_MASK_EF_ADDR	0x3ff
++#define BIT_MASK_EF_DATA	0xff
++#define BITS_EF_ADDR		(BIT_MASK_EF_ADDR << BIT_SHIFT_EF_ADDR)
++
++#define REG_LDO_EFUSE_CTRL	0x0034
++#define BIT_MASK_EFUSE_BANK_SEL	(BIT(8) | BIT(9))
++
++#define REG_GPIO_MUXCFG		0x0040
++#define BIT_FSPI_EN		BIT(19)
++#define BIT_WLRFE_4_5_EN	BIT(2)
++
++#define REG_LED_CFG		0x004C
++#define BIT_LNAON_SEL_EN	BIT(26)
++#define BIT_PAPE_SEL_EN		BIT(25)
++#define REG_PAD_CTRL1		0x0064
++#define BIT_PAPE_WLBT_SEL	BIT(29)
++#define BIT_LNAON_WLBT_SEL	BIT(28)
++#define REG_WL_BT_PWR_CTRL	0x0068
++#define BIT_BT_FUNC_EN		BIT(18)
++#define BIT_BT_DIG_CLK_EN	BIT(8)
++#define REG_HCI_OPT_CTRL	0x0074
++
++#define REG_MCUFW_CTRL		0x0080
++#define BIT_ANA_PORT_EN		BIT(22)
++#define BIT_MAC_PORT_EN		BIT(21)
++#define BIT_BOOT_FSPI_EN	BIT(20)
++#define BIT_FW_INIT_RDY		BIT(15)
++#define BIT_FW_DW_RDY		BIT(14)
++#define BIT_RPWM_TOGGLE		BIT(7)
++#define BIT_DMEM_CHKSUM_OK	BIT(6)
++#define BIT_DMEM_DW_OK		BIT(5)
++#define BIT_IMEM_CHKSUM_OK	BIT(4)
++#define BIT_IMEM_DW_OK		BIT(3)
++#define BIT_IMEM_BOOT_LOAD_CHECKSUM_OK BIT(2)
++#define BIT_MCUFWDL_EN		BIT(0)
++#define BIT_CHECK_SUM_OK	(BIT(4) | BIT(6))
++#define FW_READY		(BIT_FW_INIT_RDY | BIT_FW_DW_RDY |             \
++				 BIT_IMEM_DW_OK | BIT_DMEM_DW_OK |             \
++				 BIT_CHECK_SUM_OK)
++#define FW_READY_MASK		0xffff
++
++#define REG_WLRF1		0x00EC
++#define REG_SYS_CFG1		0x00F0
++#define	BIT_RTL_ID		BIT(23)
++#define BIT_RF_TYPE_ID		BIT(27)
++#define BIT_SHIFT_VENDOR_ID	16
++#define BIT_MASK_VENDOR_ID	0xf
++#define BIT_VENDOR_ID(x) (((x) & BIT_MASK_VENDOR_ID) << BIT_SHIFT_VENDOR_ID)
++#define BITS_VENDOR_ID		(BIT_MASK_VENDOR_ID << BIT_SHIFT_VENDOR_ID)
++#define BIT_CLEAR_VENDOR_ID(x)	((x) & (~BITS_VENDOR_ID))
++#define BIT_GET_VENDOR_ID(x) (((x) >> BIT_SHIFT_VENDOR_ID) & BIT_MASK_VENDOR_ID)
++#define BIT_SHIFT_CHIP_VER	12
++#define BIT_MASK_CHIP_VER	0xf
++#define BIT_CHIP_VER(x)	 (((x) & BIT_MASK_CHIP_VER) << BIT_SHIFT_CHIP_VER)
++#define BITS_CHIP_VER		(BIT_MASK_CHIP_VER << BIT_SHIFT_CHIP_VER)
++#define BIT_CLEAR_CHIP_VER(x)	((x) & (~BITS_CHIP_VER))
++#define BIT_GET_CHIP_VER(x) (((x) >> BIT_SHIFT_CHIP_VER) & BIT_MASK_CHIP_VER)
++#define REG_SYS_STATUS1		0x00F4
++#define REG_SYS_STATUS2		0x00F8
++#define REG_SYS_CFG2		0x00FC
++#define REG_WLRF1		0x00EC
++#define BIT_WLRF1_BBRF_EN	(BIT(24) | BIT(25) | BIT(26))
++#define REG_CR			0x0100
++#define BIT_32K_CAL_TMR_EN	BIT(10)
++#define BIT_MAC_SEC_EN		BIT(9)
++#define BIT_ENSWBCN		BIT(8)
++#define BIT_MACRXEN		BIT(7)
++#define BIT_MACTXEN		BIT(6)
++#define BIT_SCHEDULE_EN		BIT(5)
++#define BIT_PROTOCOL_EN		BIT(4)
++#define BIT_RXDMA_EN		BIT(3)
++#define BIT_TXDMA_EN		BIT(2)
++#define BIT_HCI_RXDMA_EN	BIT(1)
++#define BIT_HCI_TXDMA_EN	BIT(0)
++#define MAC_TRX_ENABLE	(BIT_HCI_TXDMA_EN | BIT_HCI_RXDMA_EN | BIT_TXDMA_EN | \
++			BIT_RXDMA_EN | BIT_PROTOCOL_EN | BIT_SCHEDULE_EN | \
++			BIT_MACTXEN | BIT_MACRXEN)
++#define BIT_SHIFT_TXDMA_VOQ_MAP	4
++#define BIT_MASK_TXDMA_VOQ_MAP	0x3
++#define BIT_TXDMA_VOQ_MAP(x)                                                   \
++	(((x) & BIT_MASK_TXDMA_VOQ_MAP) << BIT_SHIFT_TXDMA_VOQ_MAP)
++#define BIT_SHIFT_TXDMA_VIQ_MAP	6
++#define BIT_MASK_TXDMA_VIQ_MAP	0x3
++#define BIT_TXDMA_VIQ_MAP(x)                                                   \
++	(((x) & BIT_MASK_TXDMA_VIQ_MAP) << BIT_SHIFT_TXDMA_VIQ_MAP)
++#define REG_TXDMA_PQ_MAP	0x010C
++#define BIT_SHIFT_TXDMA_BEQ_MAP	8
++#define BIT_MASK_TXDMA_BEQ_MAP	0x3
++#define BIT_TXDMA_BEQ_MAP(x)                                                   \
++	(((x) & BIT_MASK_TXDMA_BEQ_MAP) << BIT_SHIFT_TXDMA_BEQ_MAP)
++#define BIT_SHIFT_TXDMA_BKQ_MAP	10
++#define BIT_MASK_TXDMA_BKQ_MAP	0x3
++#define BIT_TXDMA_BKQ_MAP(x)                                                   \
++	(((x) & BIT_MASK_TXDMA_BKQ_MAP) << BIT_SHIFT_TXDMA_BKQ_MAP)
++#define BIT_SHIFT_TXDMA_MGQ_MAP	12
++#define BIT_MASK_TXDMA_MGQ_MAP	0x3
++#define BIT_TXDMA_MGQ_MAP(x)                                                   \
++	(((x) & BIT_MASK_TXDMA_MGQ_MAP) << BIT_SHIFT_TXDMA_MGQ_MAP)
++#define BIT_SHIFT_TXDMA_HIQ_MAP	14
++#define BIT_MASK_TXDMA_HIQ_MAP	0x3
++#define BIT_TXDMA_HIQ_MAP(x)                                                   \
++	(((x) & BIT_MASK_TXDMA_HIQ_MAP) << BIT_SHIFT_TXDMA_HIQ_MAP)
++#define BIT_SHIFT_TXSC_40M	4
++#define BIT_MASK_TXSC_40M	0xf
++#define BIT_TXSC_40M(x)							       \
++	(((x) & BIT_MASK_TXSC_40M) << BIT_SHIFT_TXSC_40M)
++#define BIT_SHIFT_TXSC_20M	0
++#define BIT_MASK_TXSC_20M	0xf
++#define BIT_TXSC_20M(x)							       \
++	(((x) & BIT_MASK_TXSC_20M) << BIT_SHIFT_TXSC_20M)
++#define BIT_SHIFT_MAC_CLK_SEL	20
++#define MAC_CLK_HW_DEF_80M	0
++#define MAC_CLK_HW_DEF_40M	1
++#define MAC_CLK_HW_DEF_20M	2
++#define MAC_CLK_SPEED		80
++
++#define REG_CR			0x0100
++#define REG_TRXFF_BNDY		0x0114
++#define REG_RXFF_BNDY		0x011C
++#define REG_PKTBUF_DBG_CTRL	0x0140
++#define REG_C2HEVT		0x01A0
++#define REG_HMETFR		0x01CC
++#define REG_HMEBOX0		0x01D0
++#define REG_HMEBOX1		0x01D4
++#define REG_HMEBOX2		0x01D8
++#define REG_HMEBOX3		0x01DC
++#define REG_HMEBOX0_EX		0x01F0
++#define REG_HMEBOX1_EX		0x01F4
++#define REG_HMEBOX2_EX		0x01F8
++#define REG_HMEBOX3_EX		0x01FC
++
++#define REG_FIFOPAGE_CTRL_2	0x0204
++#define BIT_BCN_VALID_V1	BIT(15)
++#define BIT_MASK_BCN_HEAD_1_V1	0xfff
++#define REG_AUTO_LLT_V1		0x0208
++#define BIT_AUTO_INIT_LLT_V1	BIT(0)
++#define REG_TXDMA_OFFSET_CHK	0x020C
++#define REG_TXDMA_STATUS	0x0210
++#define BTI_PAGE_OVF		BIT(2)
++#define REG_RQPN_CTRL_1		0x0228
++#define REG_RQPN_CTRL_2		0x022C
++#define BIT_LD_RQPN		BIT(31)
++#define REG_FIFOPAGE_INFO_1	0x0230
++#define REG_FIFOPAGE_INFO_2	0x0234
++#define REG_FIFOPAGE_INFO_3	0x0238
++#define REG_FIFOPAGE_INFO_4	0x023C
++#define REG_FIFOPAGE_INFO_5	0x0240
++#define REG_H2C_HEAD		0x0244
++#define REG_H2C_TAIL		0x0248
++#define REG_H2C_READ_ADDR	0x024C
++#define REG_H2C_INFO		0x0254
++
++#define REG_FWHW_TXQ_CTRL	0x0420
++#define BIT_EN_BCNQ_DL		BIT(22)
++#define BIT_EN_WR_FREE_TAIL	BIT(20)
++#define REG_BCNQ_BDNY_V1	0x0424
++#define REG_LIFETIME_EN		0x0426
++#define BIT_BA_PARSER_EN	BIT(5)
++#define REG_SPEC_SIFS		0x0428
++#define REG_DARFRC		0x0430
++#define REG_DARFRCH		0x0434
++#define REG_RARFRCH		0x043C
++#define REG_ARFR0		0x0444
++#define REG_ARFRH0		0x0448
++#define REG_ARFR1_V1		0x044C
++#define REG_ARFRH1_V1		0x0450
++#define REG_CCK_CHECK		0x0454
++#define BIT_CHECK_CCK_EN	BIT(7)
++#define REG_AMPDU_MAX_TIME_V1	0x0455
++#define REG_BCNQ1_BDNY_V1	0x0456
++#define REG_TX_HANG_CTRL	0x045E
++#define BIT_EN_EOF_V1		BIT(2)
++#define REG_DATA_SC		0x0483
++#define REG_ARFR4		0x049C
++#define REG_ARFRH4		0x04A0
++#define REG_ARFR5		0x04A4
++#define REG_ARFRH5		0x04A8
++#define REG_SW_AMPDU_BURST_MODE_CTRL 0x04BC
++#define BIT_PRE_TX_CMD		BIT(6)
++#define REG_PROT_MODE_CTRL	0x04C8
++#define REG_BAR_MODE_CTRL	0x04CC
++#define REG_PRECNT_CTRL		0x04E5
++#define BIT_EN_PRECNT		BIT(11)
++
++#define REG_EDCA_VO_PARAM	0x0500
++#define REG_EDCA_VI_PARAM	0x0504
++#define REG_EDCA_BE_PARAM	0x0508
++#define REG_EDCA_BK_PARAM	0x050C
++#define REG_PIFS		0x0512
++#define REG_SIFS		0x0514
++#define BIT_SHIFT_SIFS_OFDM_CTX	8
++#define BIT_SHIFT_SIFS_CCK_TRX	16
++#define BIT_SHIFT_SIFS_OFDM_TRX	24
++#define REG_SLOT		0x051B
++#define REG_TX_PTCL_CTRL	0x0520
++#define BIT_SIFS_BK_EN		BIT(12)
++#define REG_TXPAUSE		0x0522
++#define REG_RD_CTRL		0x0524
++#define BIT_DIS_TXOP_CFE	BIT(10)
++#define BIT_DIS_LSIG_CFE	BIT(9)
++#define BIT_DIS_STBC_CFE	BIT(8)
++#define REG_TBTT_PROHIBIT	0x0540
++#define BIT_SHIFT_TBTT_HOLD_TIME_AP 8
++#define REG_RD_NAV_NXT		0x0544
++#define REG_BCN_CTRL		0x0550
++#define BIT_DIS_TSF_UDT		BIT(4)
++#define BIT_EN_BCN_FUNCTION	BIT(3)
++#define REG_BCN_CTRL_CLINT0	0x0551
++#define REG_DRVERLYINT		0x0558
++#define REG_BCNDMATIM		0x0559
++#define REG_USTIME_TSF		0x055C
++#define REG_BCN_MAX_ERR		0x055D
++#define REG_RXTSF_OFFSET_CCK	0x055E
++#define REG_MISC_CTRL		0x0577
++#define BIT_EN_FREE_CNT		BIT(3)
++#define BIT_DIS_SECOND_CCA	(BIT(0) | BIT(1))
++#define REG_TIMER0_SRC_SEL	0x05B4
++#define BIT_TSFT_SEL_TIMER0	(BIT(4) | BIT(5) | BIT(6))
++
++#define REG_TCR			0x0604
++#define REG_RCR			0x0608
++#define BIT_APP_FCS		BIT(31)
++#define BIT_APP_MIC		BIT(30)
++#define BIT_APP_ICV		BIT(29)
++#define BIT_APP_PHYSTS		BIT(28)
++#define BIT_APP_BASSN		BIT(27)
++#define BIT_VHT_DACK		BIT(26)
++#define BIT_TCPOFLD_EN		BIT(25)
++#define BIT_ENMBID		BIT(24)
++#define BIT_LSIGEN		BIT(23)
++#define BIT_MFBEN		BIT(22)
++#define BIT_DISCHKPPDLLEN	BIT(21)
++#define BIT_PKTCTL_DLEN		BIT(20)
++#define BIT_TIM_PARSER_EN	BIT(18)
++#define BIT_BC_MD_EN		BIT(17)
++#define BIT_UC_MD_EN		BIT(16)
++#define BIT_RXSK_PERPKT		BIT(15)
++#define BIT_HTC_LOC_CTRL	BIT(14)
++#define BIT_RPFM_CAM_ENABLE	BIT(12)
++#define BIT_TA_BCN		BIT(11)
++#define BIT_DISDECMYPKT		BIT(10)
++#define BIT_AICV		BIT(9)
++#define BIT_ACRC32		BIT(8)
++#define BIT_CBSSID_BCN		BIT(7)
++#define BIT_CBSSID_DATA		BIT(6)
++#define BIT_APWRMGT		BIT(5)
++#define BIT_ADD3		BIT(4)
++#define BIT_AB			BIT(3)
++#define BIT_AM			BIT(2)
++#define BIT_APM			BIT(1)
++#define BIT_AAP			BIT(0)
++#define REG_RX_PKT_LIMIT	0x060C
++#define REG_RX_DRVINFO_SZ	0x060F
++#define BIT_APP_PHYSTS		BIT(28)
++#define REG_USTIME_EDCA		0x0638
++#define REG_ACKTO_CCK		0x0639
++#define REG_RESP_SIFS_CCK	0x063C
++#define REG_RESP_SIFS_OFDM	0x063E
++#define REG_ACKTO		0x0640
++#define REG_EIFS		0x0642
++#define REG_NAV_CTRL		0x0650
++#define REG_WMAC_TRXPTCL_CTL	0x0668
++#define BIT_RFMOD		(BIT(7) | BIT(8))
++#define BIT_RFMOD_80M		BIT(8)
++#define BIT_RFMOD_40M		BIT(7)
++#define REG_WMAC_TRXPTCL_CTL_H	0x066C
++#define REG_RXFLTMAP0		0x06A0
++#define REG_RXFLTMAP1		0x06A2
++#define REG_RXFLTMAP2		0x06A4
++#define REG_BBPSF_CTRL		0x06DC
++
++#define REG_WMAC_OPTION_FUNCTION 0x07D0
++#define REG_WMAC_OPTION_FUNCTION_1 0x07D4
++
++#define REG_ANAPAR_XTAL_0	0x1040
++#define REG_CPU_DMEM_CON	0x1080
++#define BIT_WL_PLATFORM_RST	BIT(16)
++#define BIT_WL_SECURITY_CLK	BIT(15)
++#define BIT_DDMA_EN		BIT(8)
++
++#define REG_H2C_PKT_READADDR	0x10D0
++#define REG_H2C_PKT_WRITEADDR	0x10D4
++#define REG_FW_DBG7		0x10FC
++#define FW_KEY_MASK		0xffffff00
++
++#define REG_CR_EXT		0x1100
++
++#define REG_DDMA_CH0SA		0x1200
++#define REG_DDMA_CH0DA		0x1204
++#define REG_DDMA_CH0CTRL	0x1208
++#define BIT_DDMACH0_OWN		BIT(31)
++#define BIT_DDMACH0_CHKSUM_EN	BIT(29)
++#define BIT_DDMACH0_CHKSUM_STS	BIT(27)
++#define BIT_DDMACH0_RESET_CHKSUM_STS BIT(25)
++#define BIT_DDMACH0_CHKSUM_CONT	BIT(24)
++#define BIT_MASK_DDMACH0_DLEN	0x3ffff
++
++#define REG_H2CQ_CSR		0x1330
++#define BIT_H2CQ_FULL		BIT(31)
++#define REG_FAST_EDCA_VOVI_SETTING 0x1448
++#define REG_FAST_EDCA_BEBK_SETTING 0x144C
++
++#define REG_RXPSF_CTRL		0x1610
++#define BIT_RXGCK_FIFOTHR_EN	BIT(28)
++
++#define BIT_SHIFT_RXGCK_VHT_FIFOTHR 26
++#define BIT_MASK_RXGCK_VHT_FIFOTHR 0x3
++#define BIT_RXGCK_VHT_FIFOTHR(x)                                               \
++	(((x) & BIT_MASK_RXGCK_VHT_FIFOTHR) << BIT_SHIFT_RXGCK_VHT_FIFOTHR)
++#define BITS_RXGCK_VHT_FIFOTHR                                                 \
++	(BIT_MASK_RXGCK_VHT_FIFOTHR << BIT_SHIFT_RXGCK_VHT_FIFOTHR)
++
++#define BIT_SHIFT_RXGCK_HT_FIFOTHR 24
++#define BIT_MASK_RXGCK_HT_FIFOTHR 0x3
++#define BIT_RXGCK_HT_FIFOTHR(x)                                                \
++	(((x) & BIT_MASK_RXGCK_HT_FIFOTHR) << BIT_SHIFT_RXGCK_HT_FIFOTHR)
++#define BITS_RXGCK_HT_FIFOTHR                                                  \
++	(BIT_MASK_RXGCK_HT_FIFOTHR << BIT_SHIFT_RXGCK_HT_FIFOTHR)
++
++#define BIT_SHIFT_RXGCK_OFDM_FIFOTHR 22
++#define BIT_MASK_RXGCK_OFDM_FIFOTHR 0x3
++#define BIT_RXGCK_OFDM_FIFOTHR(x)                                              \
++	(((x) & BIT_MASK_RXGCK_OFDM_FIFOTHR) << BIT_SHIFT_RXGCK_OFDM_FIFOTHR)
++#define BITS_RXGCK_OFDM_FIFOTHR                                                \
++	(BIT_MASK_RXGCK_OFDM_FIFOTHR << BIT_SHIFT_RXGCK_OFDM_FIFOTHR)
++
++#define BIT_SHIFT_RXGCK_CCK_FIFOTHR 20
++#define BIT_MASK_RXGCK_CCK_FIFOTHR 0x3
++#define BIT_RXGCK_CCK_FIFOTHR(x)                                               \
++	(((x) & BIT_MASK_RXGCK_CCK_FIFOTHR) << BIT_SHIFT_RXGCK_CCK_FIFOTHR)
++#define BITS_RXGCK_CCK_FIFOTHR                                                 \
++	(BIT_MASK_RXGCK_CCK_FIFOTHR << BIT_SHIFT_RXGCK_CCK_FIFOTHR)
++
++#define BIT_RXGCK_OFDMCCA_EN BIT(16)
++
++#define BIT_SHIFT_RXPSF_PKTLENTHR 13
++#define BIT_MASK_RXPSF_PKTLENTHR 0x7
++#define BIT_RXPSF_PKTLENTHR(x)                                                 \
++	(((x) & BIT_MASK_RXPSF_PKTLENTHR) << BIT_SHIFT_RXPSF_PKTLENTHR)
++#define BITS_RXPSF_PKTLENTHR                                                   \
++	(BIT_MASK_RXPSF_PKTLENTHR << BIT_SHIFT_RXPSF_PKTLENTHR)
++#define BIT_CLEAR_RXPSF_PKTLENTHR(x) ((x) & (~BITS_RXPSF_PKTLENTHR))
++#define BIT_SET_RXPSF_PKTLENTHR(x, v)                                          \
++	(BIT_CLEAR_RXPSF_PKTLENTHR(x) | BIT_RXPSF_PKTLENTHR(v))
++
++#define BIT_RXPSF_CTRLEN	BIT(12)
++#define BIT_RXPSF_VHTCHKEN	BIT(11)
++#define BIT_RXPSF_HTCHKEN	BIT(10)
++#define BIT_RXPSF_OFDMCHKEN	BIT(9)
++#define BIT_RXPSF_CCKCHKEN	BIT(8)
++#define BIT_RXPSF_OFDMRST	BIT(7)
++#define BIT_RXPSF_CCKRST	BIT(6)
++#define BIT_RXPSF_MHCHKEN	BIT(5)
++#define BIT_RXPSF_CONT_ERRCHKEN	BIT(4)
++#define BIT_RXPSF_ALL_ERRCHKEN	BIT(3)
++
++#define BIT_SHIFT_RXPSF_ERRTHR 0
++#define BIT_MASK_RXPSF_ERRTHR 0x7
++#define BIT_RXPSF_ERRTHR(x)                                                    \
++	(((x) & BIT_MASK_RXPSF_ERRTHR) << BIT_SHIFT_RXPSF_ERRTHR)
++#define BITS_RXPSF_ERRTHR (BIT_MASK_RXPSF_ERRTHR << BIT_SHIFT_RXPSF_ERRTHR)
++#define BIT_CLEAR_RXPSF_ERRTHR(x) ((x) & (~BITS_RXPSF_ERRTHR))
++#define BIT_GET_RXPSF_ERRTHR(x)                                                \
++	(((x) >> BIT_SHIFT_RXPSF_ERRTHR) & BIT_MASK_RXPSF_ERRTHR)
++#define BIT_SET_RXPSF_ERRTHR(x, v)                                             \
++	(BIT_CLEAR_RXPSF_ERRTHR(x) | BIT_RXPSF_ERRTHR(v))
++
++#define REG_RXPSF_TYPE_CTRL	0x1614
++#define REG_GENERAL_OPTION	0x1664
++#define BIT_DUMMY_FCS_READY_MASK_EN BIT(9)
++
++#define REG_WL2LTECOEX_INDIRECT_ACCESS_CTRL_V1		0x1700
++#define REG_WL2LTECOEX_INDIRECT_ACCESS_WRITE_DATA_V1	0x1704
++#define REG_WL2LTECOEX_INDIRECT_ACCESS_READ_DATA_V1	0x1708
++#define LTECOEX_READY		BIT(29)
++#define LTECOEX_ACCESS_CTRL REG_WL2LTECOEX_INDIRECT_ACCESS_CTRL_V1
++#define LTECOEX_WRITE_DATA REG_WL2LTECOEX_INDIRECT_ACCESS_WRITE_DATA_V1
++#define LTECOEX_READ_DATA REG_WL2LTECOEX_INDIRECT_ACCESS_READ_DATA_V1
++
++#define RF_DTXLOK	0x08
++#define RF_CFGCH	0x18
++#define RF_LUTWA	0x33
++#define RF_LUTWD1	0x3e
++#define RF_LUTWD0	0x3f
++#define RF_XTALX2	0xb8
++#define RF_MALSEL	0xbe
++#define RF_LUTDBG	0xdf
++#define RF_LUTWE2	0xee
++#define RF_LUTWE	0xef
 +
 +#endif
 -- 
