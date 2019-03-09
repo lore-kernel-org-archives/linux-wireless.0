@@ -2,43 +2,42 @@ Return-Path: <SRS0=krUy=RM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65AE8C10F0E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9A10C10F0F
 	for <linux-wireless@archiver.kernel.org>; Sat,  9 Mar 2019 13:49:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3651120851
+	by mail.kernel.org (Postfix) with ESMTP id C2CA9207E0
 	for <linux-wireless@archiver.kernel.org>; Sat,  9 Mar 2019 13:49:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726450AbfCINtK (ORCPT
+        id S1726465AbfCINtL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Mar 2019 08:49:10 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:40672 "EHLO
+        Sat, 9 Mar 2019 08:49:11 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:40678 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726286AbfCINtJ (ORCPT
+        with ESMTP id S1726358AbfCINtK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Mar 2019 08:49:09 -0500
+        Sat, 9 Mar 2019 08:49:10 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x29DmgJO020424, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x29Dmke9020436, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x29DmgJO020424
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x29Dmke9020436
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Sat, 9 Mar 2019 21:48:42 +0800
+        Sat, 9 Mar 2019 21:48:46 +0800
 Received: from localhost.localdomain (1.168.42.219) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Sat, 9 Mar 2019 21:48:42 +0800
+ 14.3.408.0; Sat, 9 Mar 2019 21:48:45 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
         <gregkh@linuxfoundation.org>
 CC:     <linux-wireless@vger.kernel.org>, <Larry.Finger@lwfinger.net>,
         <sgruszka@redhat.com>, <pkshih@realtek.com>, <tehuang@realtek.com>,
         <briannorris@chromium.org>
-Subject: [PATCH v7 03/14] rtw88: hci files
-Date:   Sat, 9 Mar 2019 21:48:11 +0800
-Message-ID: <1552139302-20476-4-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v7 06/14] rtw88: fw and efuse files
+Date:   Sat, 9 Mar 2019 21:48:14 +0800
+Message-ID: <1552139302-20476-7-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1552139302-20476-1-git-send-email-yhchuang@realtek.com>
 References: <1552139302-20476-1-git-send-email-yhchuang@realtek.com>
@@ -52,1697 +51,1084 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-hci files for Realtek 802.11ac wireless network chips
-
-For now there is only PCI bus supported by rtwlan, in the future it
-will also have USB/SDIO
+fw and efuse files for Realtek 802.11ac wireless network chips
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/hci.h |  211 ++++++
- drivers/net/wireless/realtek/rtw88/pci.c | 1211 ++++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/pci.h |  237 ++++++
- 3 files changed, 1659 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/hci.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/pci.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/pci.h
+ drivers/net/wireless/realtek/rtw88/efuse.c | 160 ++++++++
+ drivers/net/wireless/realtek/rtw88/efuse.h |  26 ++
+ drivers/net/wireless/realtek/rtw88/fw.c    | 633 +++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/fw.h    | 222 ++++++++++
+ 4 files changed, 1041 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/fw.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/fw.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/hci.h b/drivers/net/wireless/realtek/rtw88/hci.h
+diff --git a/drivers/net/wireless/realtek/rtw88/efuse.c b/drivers/net/wireless/realtek/rtw88/efuse.c
 new file mode 100644
-index 0000000..91b15ef
+index 0000000..d41072c
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/hci.h
-@@ -0,0 +1,211 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#ifndef	__RTW_HCI_H__
-+#define __RTW_HCI_H__
-+
-+/* ops for PCI, USB and SDIO */
-+struct rtw_hci_ops {
-+	int (*tx)(struct rtw_dev *rtwdev,
-+		  struct rtw_tx_pkt_info *pkt_info,
-+		  struct sk_buff *skb);
-+	int (*setup)(struct rtw_dev *rtwdev);
-+	int (*start)(struct rtw_dev *rtwdev);
-+	void (*stop)(struct rtw_dev *rtwdev);
-+
-+	int (*write_data_rsvd_page)(struct rtw_dev *rtwdev, u8 *buf, u32 size);
-+	int (*write_data_h2c)(struct rtw_dev *rtwdev, u8 *buf, u32 size);
-+
-+	u8 (*read8)(struct rtw_dev *rtwdev, u32 addr);
-+	u16 (*read16)(struct rtw_dev *rtwdev, u32 addr);
-+	u32 (*read32)(struct rtw_dev *rtwdev, u32 addr);
-+	void (*write8)(struct rtw_dev *rtwdev, u32 addr, u8 val);
-+	void (*write16)(struct rtw_dev *rtwdev, u32 addr, u16 val);
-+	void (*write32)(struct rtw_dev *rtwdev, u32 addr, u32 val);
-+};
-+
-+static inline int rtw_hci_tx(struct rtw_dev *rtwdev,
-+			     struct rtw_tx_pkt_info *pkt_info,
-+			     struct sk_buff *skb)
-+{
-+	return rtwdev->hci.ops->tx(rtwdev, pkt_info, skb);
-+}
-+
-+static inline int rtw_hci_setup(struct rtw_dev *rtwdev)
-+{
-+	return rtwdev->hci.ops->setup(rtwdev);
-+}
-+
-+static inline int rtw_hci_start(struct rtw_dev *rtwdev)
-+{
-+	return rtwdev->hci.ops->start(rtwdev);
-+}
-+
-+static inline void rtw_hci_stop(struct rtw_dev *rtwdev)
-+{
-+	rtwdev->hci.ops->stop(rtwdev);
-+}
-+
-+static inline int
-+rtw_hci_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf, u32 size)
-+{
-+	return rtwdev->hci.ops->write_data_rsvd_page(rtwdev, buf, size);
-+}
-+
-+static inline int
-+rtw_hci_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
-+{
-+	return rtwdev->hci.ops->write_data_h2c(rtwdev, buf, size);
-+}
-+
-+static inline u8 rtw_read8(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	return rtwdev->hci.ops->read8(rtwdev, addr);
-+}
-+
-+static inline u16 rtw_read16(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	return rtwdev->hci.ops->read16(rtwdev, addr);
-+}
-+
-+static inline u32 rtw_read32(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	return rtwdev->hci.ops->read32(rtwdev, addr);
-+}
-+
-+static inline void rtw_write8(struct rtw_dev *rtwdev, u32 addr, u8 val)
-+{
-+	rtwdev->hci.ops->write8(rtwdev, addr, val);
-+}
-+
-+static inline void rtw_write16(struct rtw_dev *rtwdev, u32 addr, u16 val)
-+{
-+	rtwdev->hci.ops->write16(rtwdev, addr, val);
-+}
-+
-+static inline void rtw_write32(struct rtw_dev *rtwdev, u32 addr, u32 val)
-+{
-+	rtwdev->hci.ops->write32(rtwdev, addr, val);
-+}
-+
-+static inline void rtw_write8_set(struct rtw_dev *rtwdev, u32 addr, u8 bit)
-+{
-+	u8 val;
-+
-+	val = rtw_read8(rtwdev, addr);
-+	rtw_write8(rtwdev, addr, val | bit);
-+}
-+
-+static inline void rtw_writ16_set(struct rtw_dev *rtwdev, u32 addr, u16 bit)
-+{
-+	u16 val;
-+
-+	val = rtw_read16(rtwdev, addr);
-+	rtw_write16(rtwdev, addr, val | bit);
-+}
-+
-+static inline void rtw_write32_set(struct rtw_dev *rtwdev, u32 addr, u32 bit)
-+{
-+	u32 val;
-+
-+	val = rtw_read32(rtwdev, addr);
-+	rtw_write32(rtwdev, addr, val | bit);
-+}
-+
-+static inline void rtw_write8_clr(struct rtw_dev *rtwdev, u32 addr, u8 bit)
-+{
-+	u8 val;
-+
-+	val = rtw_read8(rtwdev, addr);
-+	rtw_write8(rtwdev, addr, val & ~bit);
-+}
-+
-+static inline void rtw_write16_clr(struct rtw_dev *rtwdev, u32 addr, u16 bit)
-+{
-+	u16 val;
-+
-+	val = rtw_read16(rtwdev, addr);
-+	rtw_write16(rtwdev, addr, val & ~bit);
-+}
-+
-+static inline void rtw_write32_clr(struct rtw_dev *rtwdev, u32 addr, u32 bit)
-+{
-+	u32 val;
-+
-+	val = rtw_read32(rtwdev, addr);
-+	rtw_write32(rtwdev, addr, val & ~bit);
-+}
-+
-+static inline u32
-+rtw_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
-+	    u32 addr, u32 mask)
-+{
-+	unsigned long flags;
-+	u32 val;
-+
-+	spin_lock_irqsave(&rtwdev->rf_lock, flags);
-+	val = rtwdev->chip->ops->read_rf(rtwdev, rf_path, addr, mask);
-+	spin_unlock_irqrestore(&rtwdev->rf_lock, flags);
-+
-+	return val;
-+}
-+
-+static inline void
-+rtw_write_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
-+	     u32 addr, u32 mask, u32 data)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&rtwdev->rf_lock, flags);
-+	rtwdev->chip->ops->write_rf(rtwdev, rf_path, addr, mask, data);
-+	spin_unlock_irqrestore(&rtwdev->rf_lock, flags);
-+}
-+
-+static inline u32
-+rtw_read32_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask)
-+{
-+	u32 shift = __ffs(mask);
-+	u32 orig;
-+	u32 ret;
-+
-+	orig = rtw_read32(rtwdev, addr);
-+	ret = (orig & mask) >> shift;
-+
-+	return ret;
-+}
-+
-+static inline void
-+rtw_write32_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
-+{
-+	u32 shift = __ffs(mask);
-+	u32 orig;
-+	u32 set;
-+
-+	WARN(addr & 0x3, "should be 4-byte aligned, addr = 0x%08x\n", addr);
-+
-+	orig = rtw_read32(rtwdev, addr);
-+	set = (orig & ~mask) | ((data << shift) & mask);
-+	rtw_write32(rtwdev, addr, set);
-+}
-+
-+static inline void
-+rtw_write8_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u8 data)
-+{
-+	u32 shift;
-+	u8 orig, set;
-+
-+	mask &= 0xff;
-+	shift = __ffs(mask);
-+
-+	orig = rtw_read8(rtwdev, addr);
-+	set = (orig & ~mask) | ((data << shift) & mask);
-+	rtw_write8(rtwdev, addr, set);
-+}
-+
-+static inline enum rtw_hci_type rtw_hci_type(struct rtw_dev *rtwdev)
-+{
-+	return rtwdev->hci.type;
-+}
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-new file mode 100644
-index 0000000..cf3bffb
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -0,0 +1,1211 @@
++++ b/drivers/net/wireless/realtek/rtw88/efuse.c
+@@ -0,0 +1,160 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#include <linux/module.h>
-+#include <linux/pci.h>
 +#include "main.h"
-+#include "pci.h"
-+#include "tx.h"
-+#include "rx.h"
++#include "efuse.h"
++#include "reg.h"
 +#include "debug.h"
 +
-+static u32 rtw_pci_tx_queue_idx_addr[] = {
-+	[RTW_TX_QUEUE_BK]	= RTK_PCI_TXBD_IDX_BKQ,
-+	[RTW_TX_QUEUE_BE]	= RTK_PCI_TXBD_IDX_BEQ,
-+	[RTW_TX_QUEUE_VI]	= RTK_PCI_TXBD_IDX_VIQ,
-+	[RTW_TX_QUEUE_VO]	= RTK_PCI_TXBD_IDX_VOQ,
-+	[RTW_TX_QUEUE_MGMT]	= RTK_PCI_TXBD_IDX_MGMTQ,
-+	[RTW_TX_QUEUE_HI0]	= RTK_PCI_TXBD_IDX_HI0Q,
-+	[RTW_TX_QUEUE_H2C]	= RTK_PCI_TXBD_IDX_H2CQ,
-+};
++#define RTW_EFUSE_BANK_WIFI		0x0
 +
-+static u8 rtw_pci_get_tx_qsel(struct sk_buff *skb, u8 queue)
++static void switch_efuse_bank(struct rtw_dev *rtwdev)
 +{
-+	switch (queue) {
-+	case RTW_TX_QUEUE_BCN:
-+		return TX_DESC_QSEL_BEACON;
-+	case RTW_TX_QUEUE_H2C:
-+		return TX_DESC_QSEL_H2C;
-+	case RTW_TX_QUEUE_MGMT:
-+		return TX_DESC_QSEL_MGMT;
-+	case RTW_TX_QUEUE_HI0:
-+		return TX_DESC_QSEL_HIGH;
-+	default:
-+		return skb->priority;
-+	}
-+};
-+
-+static u8 rtw_pci_read8(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	return readb(rtwpci->mmap + addr);
++	rtw_write32_mask(rtwdev, REG_LDO_EFUSE_CTRL, BIT_MASK_EFUSE_BANK_SEL,
++			 RTW_EFUSE_BANK_WIFI);
 +}
 +
-+static u16 rtw_pci_read16(struct rtw_dev *rtwdev, u32 addr)
++#define invalid_efuse_header(hdr1, hdr2) \
++	((hdr1) == 0xff || (((hdr1) & 0x1f) == 0xf && (hdr2) == 0xff))
++#define invalid_efuse_content(word_en, i) \
++	(((word_en) & BIT(i)) != 0x0)
++#define get_efuse_blk_idx_2_byte(hdr1, hdr2) \
++	((((hdr2) & 0xf0) >> 1) | (((hdr1) >> 5) & 0x07))
++#define get_efuse_blk_idx_1_byte(hdr1) \
++	(((hdr1) & 0xf0) >> 4)
++#define block_idx_to_logical_idx(blk_idx, i) \
++	(((blk_idx) << 3) + ((i) << 1))
++
++/* efuse header format
++ *
++ * | 7        5   4    0 | 7        4   3          0 | 15  8  7   0 |
++ *   block[2:0]   0 1111   block[6:3]   word_en[3:0]   byte0  byte1
++ * | header 1 (optional) |          header 2         |    word N    |
++ *
++ * word_en: 4 bits each word. 0 -> write; 1 -> not write
++ * N: 1~4, depends on word_en
++ */
++static int rtw_dump_logical_efuse_map(struct rtw_dev *rtwdev, u8 *phy_map,
++				      u8 *log_map)
 +{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	return readw(rtwpci->mmap + addr);
-+}
-+
-+static u32 rtw_pci_read32(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	return readl(rtwpci->mmap + addr);
-+}
-+
-+static void rtw_pci_write8(struct rtw_dev *rtwdev, u32 addr, u8 val)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	writeb(val, rtwpci->mmap + addr);
-+}
-+
-+static void rtw_pci_write16(struct rtw_dev *rtwdev, u32 addr, u16 val)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	writew(val, rtwpci->mmap + addr);
-+}
-+
-+static void rtw_pci_write32(struct rtw_dev *rtwdev, u32 addr, u32 val)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	writel(val, rtwpci->mmap + addr);
-+}
-+
-+static inline void *rtw_pci_get_tx_desc(struct rtw_pci_tx_ring *tx_ring, u8 idx)
-+{
-+	int offset = tx_ring->r.desc_size * idx;
-+
-+	return tx_ring->r.head + offset;
-+}
-+
-+static void rtw_pci_free_tx_ring(struct rtw_dev *rtwdev,
-+				 struct rtw_pci_tx_ring *tx_ring)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	struct rtw_pci_tx_data *tx_data;
-+	struct sk_buff *skb, *tmp;
-+	dma_addr_t dma;
-+	u8 *head = tx_ring->r.head;
-+	u32 len = tx_ring->r.len;
-+	int ring_sz = len * tx_ring->r.desc_size;
-+
-+	/* free every skb remained in tx list */
-+	skb_queue_walk_safe(&tx_ring->queue, skb, tmp) {
-+		__skb_unlink(skb, &tx_ring->queue);
-+		tx_data = rtw_pci_get_tx_data(skb);
-+		dma = tx_data->dma;
-+
-+		pci_unmap_single(pdev, dma, skb->len, PCI_DMA_TODEVICE);
-+		dev_kfree_skb_any(skb);
-+	}
-+
-+	/* free the ring itself */
-+	pci_free_consistent(pdev, ring_sz, head, tx_ring->r.dma);
-+	tx_ring->r.head = NULL;
-+}
-+
-+static void rtw_pci_free_rx_ring(struct rtw_dev *rtwdev,
-+				 struct rtw_pci_rx_ring *rx_ring)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	struct sk_buff *skb;
-+	dma_addr_t dma;
-+	u8 *head = rx_ring->r.head;
-+	int buf_sz = RTK_PCI_RX_BUF_SIZE;
-+	int ring_sz = rx_ring->r.desc_size * rx_ring->r.len;
++	u32 physical_size = rtwdev->efuse.physical_size;
++	u32 protect_size = rtwdev->efuse.protect_size;
++	u32 logical_size = rtwdev->efuse.logical_size;
++	u32 phy_idx, log_idx;
++	u8 hdr1, hdr2;
++	u8 blk_idx;
++	u8 word_en;
 +	int i;
 +
-+	for (i = 0; i < rx_ring->r.len; i++) {
-+		skb = rx_ring->buf[i];
-+		if (!skb)
-+			continue;
-+
-+		dma = *((dma_addr_t *)skb->cb);
-+		pci_unmap_single(pdev, dma, buf_sz, PCI_DMA_FROMDEVICE);
-+		dev_kfree_skb(skb);
-+		rx_ring->buf[i] = NULL;
-+	}
-+
-+	pci_free_consistent(pdev, ring_sz, head, rx_ring->r.dma);
-+}
-+
-+static void rtw_pci_free_trx_ring(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct rtw_pci_tx_ring *tx_ring;
-+	struct rtw_pci_rx_ring *rx_ring;
-+	int i;
-+
-+	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
-+		tx_ring = &rtwpci->tx_rings[i];
-+		rtw_pci_free_tx_ring(rtwdev, tx_ring);
-+	}
-+
-+	for (i = 0; i < RTK_MAX_RX_QUEUE_NUM; i++) {
-+		rx_ring = &rtwpci->rx_rings[i];
-+		rtw_pci_free_rx_ring(rtwdev, rx_ring);
-+	}
-+}
-+
-+static int rtw_pci_init_tx_ring(struct rtw_dev *rtwdev,
-+				struct rtw_pci_tx_ring *tx_ring,
-+				u8 desc_size, u32 len)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	int ring_sz = desc_size * len;
-+	dma_addr_t dma;
-+	u8 *head;
-+
-+	head = pci_zalloc_consistent(pdev, ring_sz, &dma);
-+	if (!head) {
-+		rtw_err(rtwdev, "failed to allocate tx ring\n");
-+		return -ENOMEM;
-+	}
-+
-+	skb_queue_head_init(&tx_ring->queue);
-+	tx_ring->r.head = head;
-+	tx_ring->r.dma = dma;
-+	tx_ring->r.len = len;
-+	tx_ring->r.desc_size = desc_size;
-+	tx_ring->r.wp = 0;
-+	tx_ring->r.rp = 0;
-+
-+	return 0;
-+}
-+
-+static int rtw_pci_reset_rx_desc(struct rtw_dev *rtwdev, struct sk_buff *skb,
-+				 struct rtw_pci_rx_ring *rx_ring,
-+				 u32 idx, u32 desc_sz)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	struct rtw_pci_rx_buffer_desc *buf_desc;
-+	int buf_sz = RTK_PCI_RX_BUF_SIZE;
-+	dma_addr_t dma;
-+
-+	if (!skb)
-+		return -EINVAL;
-+
-+	dma = pci_map_single(pdev, skb->data, buf_sz, PCI_DMA_FROMDEVICE);
-+	if (pci_dma_mapping_error(pdev, dma))
-+		return -EBUSY;
-+
-+	*((dma_addr_t *)skb->cb) = dma;
-+	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
-+						     idx * desc_sz);
-+	memset(buf_desc, 0, sizeof(*buf_desc));
-+	buf_desc->buf_size = cpu_to_le16(RTK_PCI_RX_BUF_SIZE);
-+	buf_desc->dma = cpu_to_le32(dma);
-+
-+	return 0;
-+}
-+
-+static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
-+				struct rtw_pci_rx_ring *rx_ring,
-+				u8 desc_size, u32 len)
-+{
-+	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
-+	struct sk_buff *skb = NULL;
-+	dma_addr_t dma;
-+	u8 *head;
-+	int ring_sz = desc_size * len;
-+	int buf_sz = RTK_PCI_RX_BUF_SIZE;
-+	int i, allocated;
-+	int ret = 0;
-+
-+	head = pci_zalloc_consistent(pdev, ring_sz, &dma);
-+	if (!head) {
-+		rtw_err(rtwdev, "failed to allocate rx ring\n");
-+		return -ENOMEM;
-+	}
-+	rx_ring->r.head = head;
-+
-+	for (i = 0; i < len; i++) {
-+		skb = dev_alloc_skb(buf_sz);
-+		if (!skb) {
-+			allocated = i;
-+			ret = -ENOMEM;
-+			goto err_out;
-+		}
-+
-+		memset(skb->data, 0, buf_sz);
-+		rx_ring->buf[i] = skb;
-+		ret = rtw_pci_reset_rx_desc(rtwdev, skb, rx_ring, i, desc_size);
-+		if (ret) {
-+			allocated = i;
-+			dev_kfree_skb_any(skb);
-+			goto err_out;
-+		}
-+	}
-+
-+	rx_ring->r.dma = dma;
-+	rx_ring->r.len = len;
-+	rx_ring->r.desc_size = desc_size;
-+	rx_ring->r.wp = 0;
-+	rx_ring->r.rp = 0;
-+
-+	return 0;
-+
-+err_out:
-+	for (i = 0; i < allocated; i++) {
-+		skb = rx_ring->buf[i];
-+		if (!skb)
-+			continue;
-+		dma = *((dma_addr_t *)skb->cb);
-+		pci_unmap_single(pdev, dma, buf_sz, PCI_DMA_FROMDEVICE);
-+		dev_kfree_skb_any(skb);
-+		rx_ring->buf[i] = NULL;
-+	}
-+	pci_free_consistent(pdev, ring_sz, head, dma);
-+
-+	rtw_err(rtwdev, "failed to init rx buffer\n");
-+
-+	return ret;
-+}
-+
-+static int rtw_pci_init_trx_ring(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct rtw_pci_tx_ring *tx_ring;
-+	struct rtw_pci_rx_ring *rx_ring;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	int i = 0, j = 0, tx_alloced = 0, rx_alloced = 0;
-+	int tx_desc_size, rx_desc_size;
-+	u32 len;
-+	int ret;
-+
-+	tx_desc_size = chip->tx_buf_desc_sz;
-+
-+	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
-+		tx_ring = &rtwpci->tx_rings[i];
-+		len = max_num_of_tx_queue(i);
-+		ret = rtw_pci_init_tx_ring(rtwdev, tx_ring, tx_desc_size, len);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	rx_desc_size = chip->rx_buf_desc_sz;
-+
-+	for (j = 0; j < RTK_MAX_RX_QUEUE_NUM; j++) {
-+		rx_ring = &rtwpci->rx_rings[j];
-+		ret = rtw_pci_init_rx_ring(rtwdev, rx_ring, rx_desc_size,
-+					   RTK_MAX_RX_DESC_NUM);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	return 0;
-+
-+out:
-+	tx_alloced = i;
-+	for (i = 0; i < tx_alloced; i++) {
-+		tx_ring = &rtwpci->tx_rings[i];
-+		rtw_pci_free_tx_ring(rtwdev, tx_ring);
-+	}
-+
-+	rx_alloced = j;
-+	for (j = 0; j < rx_alloced; j++) {
-+		rx_ring = &rtwpci->rx_rings[j];
-+		rtw_pci_free_rx_ring(rtwdev, rx_ring);
-+	}
-+
-+	return ret;
-+}
-+
-+static void rtw_pci_deinit(struct rtw_dev *rtwdev)
-+{
-+	rtw_pci_free_trx_ring(rtwdev);
-+}
-+
-+static int rtw_pci_init(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	int ret = 0;
-+
-+	rtwpci->irq_mask[0] = IMR_HIGHDOK |
-+			      IMR_MGNTDOK |
-+			      IMR_BKDOK |
-+			      IMR_BEDOK |
-+			      IMR_VIDOK |
-+			      IMR_VODOK |
-+			      IMR_ROK |
-+			      IMR_BCNDMAINT_E |
-+			      0;
-+	rtwpci->irq_mask[1] = IMR_TXFOVW |
-+			      0;
-+	rtwpci->irq_mask[3] = IMR_H2CDOK |
-+			      0;
-+	spin_lock_init(&rtwpci->irq_lock);
-+	ret = rtw_pci_init_trx_ring(rtwdev);
-+
-+	return ret;
-+}
-+
-+static void rtw_pci_reset_buf_desc(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	u32 len;
-+	u8 tmp;
-+	dma_addr_t dma;
-+
-+	tmp = rtw_read8(rtwdev, RTK_PCI_CTRL + 3);
-+	rtw_write8(rtwdev, RTK_PCI_CTRL + 3, tmp | 0xf7);
-+
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_BCN].r.dma;
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_BCNQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_H2CQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_H2CQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_BKQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_BKQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_BEQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_BEQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_VOQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_VOQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_VIQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_VIQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_MGMTQ, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_MGMTQ, dma);
-+
-+	len = rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.len;
-+	dma = rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.dma;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.rp = 0;
-+	rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_HI0Q, len);
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_HI0Q, dma);
-+
-+	len = rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.len;
-+	dma = rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.dma;
-+	rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.rp = 0;
-+	rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.wp = 0;
-+	rtw_write16(rtwdev, RTK_PCI_RXBD_NUM_MPDUQ, len & 0xfff);
-+	rtw_write32(rtwdev, RTK_PCI_RXBD_DESA_MPDUQ, dma);
-+
-+	/* reset read/write point */
-+	rtw_write32(rtwdev, RTK_PCI_TXBD_RWPTR_CLR, 0xffffffff);
-+
-+	/* rest H2C Queue index */
-+	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HOST_IDX);
-+	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HW_IDX);
-+}
-+
-+static void rtw_pci_reset_trx_ring(struct rtw_dev *rtwdev)
-+{
-+	rtw_pci_reset_buf_desc(rtwdev);
-+}
-+
-+static void rtw_pci_enable_interrupt(struct rtw_dev *rtwdev,
-+				     struct rtw_pci *rtwpci)
-+{
-+	rtw_write32(rtwdev, RTK_PCI_HIMR0, rtwpci->irq_mask[0]);
-+	rtw_write32(rtwdev, RTK_PCI_HIMR1, rtwpci->irq_mask[1]);
-+	rtw_write32(rtwdev, RTK_PCI_HIMR3, rtwpci->irq_mask[3]);
-+	rtwpci->irq_enabled = true;
-+}
-+
-+static void rtw_pci_disable_interrupt(struct rtw_dev *rtwdev,
-+				      struct rtw_pci *rtwpci)
-+{
-+	rtw_write32(rtwdev, RTK_PCI_HIMR0, 0);
-+	rtw_write32(rtwdev, RTK_PCI_HIMR1, 0);
-+	rtw_write32(rtwdev, RTK_PCI_HIMR3, 0);
-+	rtwpci->irq_enabled = false;
-+}
-+
-+static int rtw_pci_setup(struct rtw_dev *rtwdev)
-+{
-+	rtw_pci_reset_trx_ring(rtwdev);
-+
-+	return 0;
-+}
-+
-+static void rtw_pci_dma_reset(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
-+{
-+	/* reset dma and rx tag */
-+	rtw_write32_set(rtwdev, RTK_PCI_CTRL,
-+			BIT_RST_TRXDMA_INTF | BIT_RX_TAG_EN);
-+	rtwpci->rx_tag = 0;
-+}
-+
-+static int rtw_pci_start(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	unsigned long flags;
-+
-+	rtw_pci_dma_reset(rtwdev, rtwpci);
-+
-+	spin_lock_irqsave(&rtwpci->irq_lock, flags);
-+	rtw_pci_enable_interrupt(rtwdev, rtwpci);
-+	spin_unlock_irqrestore(&rtwpci->irq_lock, flags);
-+
-+	return 0;
-+}
-+
-+static void rtw_pci_stop(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&rtwpci->irq_lock, flags);
-+	rtw_pci_disable_interrupt(rtwdev, rtwpci);
-+	spin_unlock_irqrestore(&rtwpci->irq_lock, flags);
-+}
-+
-+static u8 ac_to_hwq[] = {
-+	[0] = RTW_TX_QUEUE_VO,
-+	[1] = RTW_TX_QUEUE_VI,
-+	[2] = RTW_TX_QUEUE_BE,
-+	[3] = RTW_TX_QUEUE_BK,
-+};
-+
-+static u8 rtw_hw_queue_mapping(struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	__le16 fc = hdr->frame_control;
-+	u8 q_mapping = skb_get_queue_mapping(skb);
-+	u8 queue;
-+
-+	if (unlikely(ieee80211_is_beacon(fc)))
-+		queue = RTW_TX_QUEUE_BCN;
-+	else if (unlikely(ieee80211_is_mgmt(fc) || ieee80211_is_ctl(fc)))
-+		queue = RTW_TX_QUEUE_MGMT;
-+	else
-+		queue = ac_to_hwq[q_mapping];
-+
-+	return queue;
-+}
-+
-+static void rtw_pci_release_rsvd_page(struct rtw_pci *rtwpci,
-+				      struct rtw_pci_tx_ring *ring)
-+{
-+	struct sk_buff *prev = skb_dequeue(&ring->queue);
-+	struct rtw_pci_tx_data *tx_data;
-+	dma_addr_t dma;
-+
-+	if (!prev)
-+		return;
-+
-+	tx_data = rtw_pci_get_tx_data(prev);
-+	dma = tx_data->dma;
-+	pci_unmap_single(rtwpci->pdev, dma, prev->len,
-+			 PCI_DMA_TODEVICE);
-+	dev_kfree_skb_any(prev);
-+}
-+
-+static void rtw_pci_dma_check(struct rtw_dev *rtwdev,
-+			      struct rtw_pci_rx_ring *rx_ring,
-+			      u32 idx)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_pci_rx_buffer_desc *buf_desc;
-+	u32 desc_sz = chip->rx_buf_desc_sz;
-+	u16 total_pkt_size;
-+
-+	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
-+						     idx * desc_sz);
-+	total_pkt_size = le16_to_cpu(buf_desc->total_pkt_size);
-+
-+	/* rx tag mismatch, throw a warning */
-+	if (total_pkt_size != rtwpci->rx_tag)
-+		rtw_warn(rtwdev, "pci bus timeout, check dma status\n");
-+
-+	rtwpci->rx_tag = (rtwpci->rx_tag + 1) % RX_TAG_MAX;
-+}
-+
-+static int rtw_pci_xmit(struct rtw_dev *rtwdev,
-+			struct rtw_tx_pkt_info *pkt_info,
-+			struct sk_buff *skb, u8 queue)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_pci_tx_ring *ring;
-+	struct rtw_pci_tx_data *tx_data;
-+	dma_addr_t dma;
-+	u32 tx_pkt_desc_sz = chip->tx_pkt_desc_sz;
-+	u32 tx_buf_desc_sz = chip->tx_buf_desc_sz;
-+	u32 size;
-+	u32 psb_len;
-+	u8 *pkt_desc;
-+	struct rtw_pci_tx_buffer_desc *buf_desc;
-+	u32 bd_idx;
-+
-+	ring = &rtwpci->tx_rings[queue];
-+
-+	size = skb->len;
-+
-+	if (queue == RTW_TX_QUEUE_BCN)
-+		rtw_pci_release_rsvd_page(rtwpci, ring);
-+	else if (!avail_desc(ring->r.wp, ring->r.rp, ring->r.len))
-+		return -ENOSPC;
-+
-+	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
-+	memset(pkt_desc, 0, tx_pkt_desc_sz);
-+	pkt_info->qsel = rtw_pci_get_tx_qsel(skb, queue);
-+	rtw_tx_fill_tx_desc(pkt_info, skb);
-+	dma = pci_map_single(rtwpci->pdev, skb->data, skb->len,
-+			     PCI_DMA_TODEVICE);
-+	if (pci_dma_mapping_error(rtwpci->pdev, dma))
-+		return -EBUSY;
-+
-+	/* after this we got dma mapped, there is no way back */
-+	buf_desc = get_tx_buffer_desc(ring, tx_buf_desc_sz);
-+	memset(buf_desc, 0, tx_buf_desc_sz);
-+	psb_len = (skb->len - 1) / 128 + 1;
-+	if (queue == RTW_TX_QUEUE_BCN)
-+		psb_len |= 1 << RTK_PCI_TXBD_OWN_OFFSET;
-+
-+	buf_desc[0].psb_len = cpu_to_le16(psb_len);
-+	buf_desc[0].buf_size = cpu_to_le16(tx_pkt_desc_sz);
-+	buf_desc[0].dma = cpu_to_le32(dma);
-+	buf_desc[1].buf_size = cpu_to_le16(size);
-+	buf_desc[1].dma = cpu_to_le32(dma + tx_pkt_desc_sz);
-+
-+	tx_data = rtw_pci_get_tx_data(skb);
-+	tx_data->dma = dma;
-+	tx_data->sn = pkt_info->sn;
-+	skb_queue_tail(&ring->queue, skb);
-+
-+	/* kick off tx queue */
-+	if (queue != RTW_TX_QUEUE_BCN) {
-+		if (++ring->r.wp >= ring->r.len)
-+			ring->r.wp = 0;
-+		bd_idx = rtw_pci_tx_queue_idx_addr[queue];
-+		rtw_write16(rtwdev, bd_idx, ring->r.wp & 0xfff);
-+	} else {
-+		u32 reg_bcn_work;
-+
-+		reg_bcn_work = rtw_read8(rtwdev, RTK_PCI_TXBD_BCN_WORK);
-+		reg_bcn_work |= BIT_PCI_BCNQ_FLAG;
-+		rtw_write8(rtwdev, RTK_PCI_TXBD_BCN_WORK, reg_bcn_work);
-+	}
-+
-+	return 0;
-+}
-+
-+static int rtw_pci_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf,
-+					u32 size)
-+{
-+	struct sk_buff *skb;
-+	struct rtw_tx_pkt_info pkt_info;
-+	u32 tx_pkt_desc_sz;
-+	u32 length;
-+
-+	tx_pkt_desc_sz = rtwdev->chip->tx_pkt_desc_sz;
-+	length = size + tx_pkt_desc_sz;
-+	skb = dev_alloc_skb(length);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb, tx_pkt_desc_sz);
-+	memcpy((u8 *)skb_put(skb, size), buf, size);
-+	memset(&pkt_info, 0, sizeof(pkt_info));
-+	pkt_info.tx_pkt_size = size;
-+	pkt_info.offset = tx_pkt_desc_sz;
-+
-+	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_BCN);
-+}
-+
-+static int rtw_pci_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
-+{
-+	struct sk_buff *skb;
-+	struct rtw_tx_pkt_info pkt_info;
-+	u32 tx_pkt_desc_sz;
-+	u32 length;
-+
-+	tx_pkt_desc_sz = rtwdev->chip->tx_pkt_desc_sz;
-+	length = size + tx_pkt_desc_sz;
-+	skb = dev_alloc_skb(length);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb, tx_pkt_desc_sz);
-+	memcpy((u8 *)skb_put(skb, size), buf, size);
-+	memset(&pkt_info, 0, sizeof(pkt_info));
-+	pkt_info.tx_pkt_size = size;
-+
-+	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_H2C);
-+}
-+
-+static int rtw_pci_tx(struct rtw_dev *rtwdev,
-+		      struct rtw_tx_pkt_info *pkt_info,
-+		      struct sk_buff *skb)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	struct rtw_pci_tx_ring *ring;
-+	u8 queue = rtw_hw_queue_mapping(skb);
-+	int ret;
-+
-+	ret = rtw_pci_xmit(rtwdev, pkt_info, skb, queue);
-+	if (ret)
-+		return ret;
-+
-+	ring = &rtwpci->tx_rings[queue];
-+	if (avail_desc(ring->r.wp, ring->r.rp, ring->r.len) < 2) {
-+		ieee80211_stop_queue(rtwdev->hw, skb_get_queue_mapping(skb));
-+		ring->queue_stopped = true;
-+	}
-+
-+	return 0;
-+}
-+
-+static void rtw_pci_tx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
-+			   u8 hw_queue)
-+{
-+	struct ieee80211_hw *hw = rtwdev->hw;
-+	struct ieee80211_tx_info *info;
-+	struct rtw_pci_tx_ring *ring;
-+	struct rtw_pci_tx_data *tx_data;
-+	struct sk_buff *skb;
-+	u32 count;
-+	u32 bd_idx_addr;
-+	u32 bd_idx, cur_rp;
-+	u16 q_map;
-+
-+	ring = &rtwpci->tx_rings[hw_queue];
-+
-+	bd_idx_addr = rtw_pci_tx_queue_idx_addr[hw_queue];
-+	bd_idx = rtw_read32(rtwdev, bd_idx_addr);
-+	cur_rp = bd_idx >> 16;
-+	cur_rp &= 0xfff;
-+	if (cur_rp >= ring->r.rp)
-+		count = cur_rp - ring->r.rp;
-+	else
-+		count = ring->r.len - (ring->r.rp - cur_rp);
-+
-+	while (count--) {
-+		skb = skb_dequeue(&ring->queue);
-+		tx_data = rtw_pci_get_tx_data(skb);
-+		pci_unmap_single(rtwpci->pdev, tx_data->dma, skb->len,
-+				 PCI_DMA_TODEVICE);
-+
-+		/* just free command packets from host to card */
-+		if (hw_queue == RTW_TX_QUEUE_H2C) {
-+			dev_kfree_skb_irq(skb);
-+			continue;
-+		}
-+
-+		if (ring->queue_stopped &&
-+		    avail_desc(ring->r.wp, ring->r.rp, ring->r.len) > 4) {
-+			q_map = skb_get_queue_mapping(skb);
-+			ieee80211_wake_queue(hw, q_map);
-+			ring->queue_stopped = false;
-+		}
-+
-+		skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
-+
-+		info = IEEE80211_SKB_CB(skb);
-+
-+		/* enqueue to wait for tx report */
-+		if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
-+			rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
-+			continue;
-+		}
-+
-+		/* always ACK for others, then they won't be marked as drop */
-+		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
-+			info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+		else
-+			info->flags |= IEEE80211_TX_STAT_ACK;
-+
-+		ieee80211_tx_info_clear_status(info);
-+		ieee80211_tx_status_irqsafe(hw, skb);
-+	}
-+
-+	ring->r.rp = cur_rp;
-+}
-+
-+static void rtw_pci_rx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
-+			   u8 hw_queue)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_pci_rx_ring *ring;
-+	struct rtw_rx_pkt_stat pkt_stat;
-+	struct ieee80211_rx_status rx_status;
-+	struct sk_buff *skb, *new;
-+	u32 cur_wp, cur_rp, tmp;
-+	u32 count;
-+	u32 pkt_offset;
-+	u32 pkt_desc_sz = chip->rx_pkt_desc_sz;
-+	u32 buf_desc_sz = chip->rx_buf_desc_sz;
-+	u8 *rx_desc;
-+	dma_addr_t dma;
-+
-+	ring = &rtwpci->rx_rings[RTW_RX_QUEUE_MPDU];
-+
-+	tmp = rtw_read32(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ);
-+	cur_wp = tmp >> 16;
-+	cur_wp &= 0xfff;
-+	if (cur_wp >= ring->r.wp)
-+		count = cur_wp - ring->r.wp;
-+	else
-+		count = ring->r.len - (ring->r.wp - cur_wp);
-+
-+	cur_rp = ring->r.rp;
-+	while (count--) {
-+		rtw_pci_dma_check(rtwdev, ring, cur_rp);
-+		skb = ring->buf[cur_rp];
-+		dma = *((dma_addr_t *)skb->cb);
-+		pci_unmap_single(rtwpci->pdev, dma, RTK_PCI_RX_BUF_SIZE,
-+				 PCI_DMA_FROMDEVICE);
-+		rx_desc = skb->data;
-+		chip->ops->query_rx_desc(rtwdev, rx_desc, &pkt_stat, &rx_status);
-+
-+		/* offset from rx_desc to payload */
-+		pkt_offset = pkt_desc_sz + pkt_stat.drv_info_sz +
-+			     pkt_stat.shift;
-+
-+		if (pkt_stat.is_c2h) {
-+			/* keep rx_desc, halmac needs it */
-+			skb_put(skb, pkt_stat.pkt_len + pkt_offset);
-+
-+			/* pass offset for further operation */
-+			*((u32 *)skb->cb) = pkt_offset;
-+			skb_queue_tail(&rtwdev->c2h_queue, skb);
-+			ieee80211_queue_work(rtwdev->hw, &rtwdev->c2h_work);
++	for (phy_idx = 0; phy_idx < physical_size - protect_size;) {
++		hdr1 = phy_map[phy_idx];
++		hdr2 = phy_map[phy_idx + 1];
++		if (invalid_efuse_header(hdr1, hdr2))
++			break;
++
++		if ((hdr1 & 0x1f) == 0xf) {
++			/* 2-byte header format */
++			blk_idx = get_efuse_blk_idx_2_byte(hdr1, hdr2);
++			word_en = hdr2 & 0xf;
++			phy_idx += 2;
 +		} else {
-+			/* remove rx_desc, maybe use skb_pull? */
-+			skb_put(skb, pkt_stat.pkt_len);
-+			skb_reserve(skb, pkt_offset);
-+
-+			/* alloc a smaller skb to mac80211 */
-+			new = dev_alloc_skb(pkt_stat.pkt_len);
-+			if (!new) {
-+				new = skb;
-+			} else {
-+				skb_put_data(new, skb->data, skb->len);
-+				dev_kfree_skb_any(skb);
-+			}
-+			/* TODO: merge into rx.c */
-+			rtw_rx_stats(rtwdev, pkt_stat.vif, skb);
-+			memcpy(new->cb, &rx_status, sizeof(rx_status));
-+			ieee80211_rx_irqsafe(rtwdev->hw, new);
++			/* 1-byte header format */
++			blk_idx = get_efuse_blk_idx_1_byte(hdr1);
++			word_en = hdr1 & 0xf;
++			phy_idx += 1;
 +		}
 +
-+		/* skb delivered to mac80211, alloc a new one in rx ring */
-+		new = dev_alloc_skb(RTK_PCI_RX_BUF_SIZE);
-+		if (WARN(!new, "rx routine starvation\n"))
-+			return;
++		for (i = 0; i < 4; i++) {
++			if (invalid_efuse_content(word_en, i))
++				continue;
 +
-+		ring->buf[cur_rp] = new;
-+		rtw_pci_reset_rx_desc(rtwdev, new, ring, cur_rp, buf_desc_sz);
++			log_idx = block_idx_to_logical_idx(blk_idx, i);
++			if (phy_idx + 1 > physical_size - protect_size ||
++			    log_idx + 1 > logical_size)
++				return -EINVAL;
 +
-+		/* host read next element in ring */
-+		if (++cur_rp >= ring->r.len)
-+			cur_rp = 0;
++			log_map[log_idx] = phy_map[phy_idx];
++			log_map[log_idx + 1] = phy_map[phy_idx + 1];
++			phy_idx += 2;
++		}
 +	}
-+
-+	ring->r.rp = cur_rp;
-+	ring->r.wp = cur_wp;
-+	rtw_write16(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ, ring->r.rp);
-+}
-+
-+static void rtw_pci_irq_recognized(struct rtw_dev *rtwdev,
-+				   struct rtw_pci *rtwpci, u32 *irq_status)
-+{
-+	irq_status[0] = rtw_read32(rtwdev, RTK_PCI_HISR0);
-+	irq_status[1] = rtw_read32(rtwdev, RTK_PCI_HISR1);
-+	irq_status[3] = rtw_read32(rtwdev, RTK_PCI_HISR3);
-+	irq_status[0] &= rtwpci->irq_mask[0];
-+	irq_status[1] &= rtwpci->irq_mask[1];
-+	irq_status[3] &= rtwpci->irq_mask[3];
-+	rtw_write32(rtwdev, RTK_PCI_HISR0, irq_status[0]);
-+	rtw_write32(rtwdev, RTK_PCI_HISR1, irq_status[1]);
-+	rtw_write32(rtwdev, RTK_PCI_HISR3, irq_status[3]);
-+}
-+
-+static irqreturn_t rtw_pci_interrupt_handler(int irq, void *dev)
-+{
-+	struct rtw_dev *rtwdev = dev;
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	u32 irq_status[4];
-+
-+	spin_lock(&rtwpci->irq_lock);
-+	if (!rtwpci->irq_enabled)
-+		goto out;
-+
-+	rtw_pci_irq_recognized(rtwdev, rtwpci, irq_status);
-+
-+	if (irq_status[0] & IMR_MGNTDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_MGMT);
-+	if (irq_status[0] & IMR_HIGHDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_HI0);
-+	if (irq_status[0] & IMR_BEDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BE);
-+	if (irq_status[0] & IMR_BKDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BK);
-+	if (irq_status[0] & IMR_VODOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VO);
-+	if (irq_status[0] & IMR_VIDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VI);
-+	if (irq_status[3] & IMR_H2CDOK)
-+		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_H2C);
-+	if (irq_status[0] & IMR_ROK)
-+		rtw_pci_rx_isr(rtwdev, rtwpci, RTW_RX_QUEUE_MPDU);
-+
-+out:
-+	spin_unlock(&rtwpci->irq_lock);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int rtw_pci_io_mapping(struct rtw_dev *rtwdev,
-+			      struct pci_dev *pdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	unsigned long len;
-+	u8 bar_id = 2;
-+	int ret;
-+
-+	ret = pci_request_regions(pdev, KBUILD_MODNAME);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to request pci regions\n");
-+		return ret;
-+	}
-+
-+	len = pci_resource_len(pdev, bar_id);
-+	rtwpci->mmap = pci_iomap(pdev, bar_id, len);
-+	if (!rtwpci->mmap) {
-+		rtw_err(rtwdev, "failed to map pci memory\n");
-+		return -ENOMEM;
-+	}
-+
 +	return 0;
 +}
 +
-+static void rtw_pci_io_unmapping(struct rtw_dev *rtwdev,
-+				 struct pci_dev *pdev)
-+{
-+	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	if (rtwpci->mmap) {
-+		pci_iounmap(pdev, rtwpci->mmap);
-+		pci_release_regions(pdev);
-+	}
-+}
-+
-+static void rtw_dbi_write8(struct rtw_dev *rtwdev, u16 addr, u8 data)
-+{
-+	u16 write_addr;
-+	u16 remainder = addr & 0x3;
-+	u8 flag;
-+	u8 cnt = 20;
-+
-+	write_addr = ((addr & 0x0ffc) | (BIT(0) << (remainder + 12)));
-+	rtw_write8(rtwdev, REG_DBI_WDATA_V1 + remainder, data);
-+	rtw_write16(rtwdev, REG_DBI_FLAG_V1, write_addr);
-+	rtw_write8(rtwdev, REG_DBI_FLAG_V1 + 2, 0x01);
-+
-+	flag = rtw_read8(rtwdev, REG_DBI_FLAG_V1 + 2);
-+	while (flag && (cnt != 0)) {
-+		udelay(10);
-+		flag = rtw_read8(rtwdev, REG_DBI_FLAG_V1 + 2);
-+		cnt--;
-+	}
-+
-+	WARN(flag, "DBI write fail\n");
-+}
-+
-+static void rtw_mdio_write(struct rtw_dev *rtwdev, u8 addr, u16 data, bool g1)
-+{
-+	u8 page;
-+	u8 wflag;
-+	u8 cnt;
-+
-+	rtw_write16(rtwdev, REG_MDIO_V1, data);
-+
-+	page = addr < 0x20 ? 0 : 1;
-+	page += g1 ? 0 : 2;
-+	rtw_write8(rtwdev, REG_PCIE_MIX_CFG, addr & 0x1f);
-+	rtw_write8(rtwdev, REG_PCIE_MIX_CFG + 3, page);
-+
-+	rtw_write32_mask(rtwdev, REG_PCIE_MIX_CFG, BIT_MDIO_WFLAG_V1, 1);
-+	wflag = rtw_read32_mask(rtwdev, REG_PCIE_MIX_CFG, BIT_MDIO_WFLAG_V1);
-+
-+	cnt = 20;
-+	while (wflag && (cnt != 0)) {
-+		udelay(10);
-+		wflag = rtw_read32_mask(rtwdev, REG_PCIE_MIX_CFG,
-+					BIT_MDIO_WFLAG_V1);
-+		cnt--;
-+	}
-+
-+	WARN(wflag, "MDIO write fail\n");
-+}
-+
-+static void rtw_pci_phy_cfg(struct rtw_dev *rtwdev)
++static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
 +{
 +	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_intf_phy_para *para;
-+	u16 cut;
-+	u16 value;
-+	u16 offset;
-+	u16 ip_sel;
-+	int i;
++	u32 size = rtwdev->efuse.physical_size;
++	u32 efuse_ctl;
++	u32 addr;
++	u32 cnt;
 +
-+	cut = BIT(0) << rtwdev->hal.cut_version;
++	switch_efuse_bank(rtwdev);
 +
-+	for (i = 0; i < chip->intf_table->n_gen1_para; i++) {
-+		para = &chip->intf_table->gen1_para[i];
-+		if (!(para->cut_mask & cut))
-+			continue;
-+		if (para->offset == 0xffff)
-+			break;
-+		offset = para->offset;
-+		value = para->value;
-+		ip_sel = para->ip_sel;
-+		if (para->ip_sel == RTW_IP_SEL_PHY)
-+			rtw_mdio_write(rtwdev, offset, value, true);
-+		else
-+			rtw_dbi_write8(rtwdev, offset, value);
-+	}
++	/* disable 2.5V LDO */
++	chip->ops->cfg_ldo25(rtwdev, false);
 +
-+	for (i = 0; i < chip->intf_table->n_gen2_para; i++) {
-+		para = &chip->intf_table->gen2_para[i];
-+		if (!(para->cut_mask & cut))
-+			continue;
-+		if (para->offset == 0xffff)
-+			break;
-+		offset = para->offset;
-+		value = para->value;
-+		ip_sel = para->ip_sel;
-+		if (para->ip_sel == RTW_IP_SEL_PHY)
-+			rtw_mdio_write(rtwdev, offset, value, false);
-+		else
-+			rtw_dbi_write8(rtwdev, offset, value);
-+	}
-+}
++	efuse_ctl = rtw_read32(rtwdev, REG_EFUSE_CTRL);
 +
-+static int rtw_pci_claim(struct rtw_dev *rtwdev, struct pci_dev *pdev)
-+{
-+	int ret;
++	for (addr = 0; addr < size; addr++) {
++		efuse_ctl &= ~(BIT_MASK_EF_DATA | BITS_EF_ADDR);
++		efuse_ctl |= (addr & BIT_MASK_EF_ADDR) << BIT_SHIFT_EF_ADDR;
++		rtw_write32(rtwdev, REG_EFUSE_CTRL, efuse_ctl & (~BIT_EF_FLAG));
 +
-+	ret = pci_enable_device(pdev);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to enable pci device\n");
-+		return ret;
-+	}
++		cnt = 1000000;
++		do {
++			udelay(1);
++			efuse_ctl = rtw_read32(rtwdev, REG_EFUSE_CTRL);
++			if (--cnt == 0)
++				return -EBUSY;
++		} while (!(efuse_ctl & BIT_EF_FLAG));
 +
-+	pci_set_master(pdev);
-+	pci_set_drvdata(pdev, rtwdev->hw);
-+	SET_IEEE80211_DEV(rtwdev->hw, &pdev->dev);
-+
-+	return 0;
-+}
-+
-+static void rtw_pci_declaim(struct rtw_dev *rtwdev, struct pci_dev *pdev)
-+{
-+	pci_clear_master(pdev);
-+	pci_disable_device(pdev);
-+}
-+
-+static int rtw_pci_setup_resource(struct rtw_dev *rtwdev, struct pci_dev *pdev)
-+{
-+	struct rtw_pci *rtwpci;
-+	int ret;
-+
-+	rtwpci = (struct rtw_pci *)rtwdev->priv;
-+	rtwpci->pdev = pdev;
-+
-+	/* after this driver can access to hw registers */
-+	ret = rtw_pci_io_mapping(rtwdev, pdev);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to request pci io region\n");
-+		goto err_out;
-+	}
-+
-+	ret = rtw_pci_init(rtwdev);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to allocate pci resources\n");
-+		goto err_io_unmap;
-+	}
-+
-+	rtw_pci_phy_cfg(rtwdev);
-+
-+	return 0;
-+
-+err_io_unmap:
-+	rtw_pci_io_unmapping(rtwdev, pdev);
-+
-+err_out:
-+	return ret;
-+}
-+
-+static void rtw_pci_destroy(struct rtw_dev *rtwdev, struct pci_dev *pdev)
-+{
-+	rtw_pci_deinit(rtwdev);
-+	rtw_pci_io_unmapping(rtwdev, pdev);
-+}
-+
-+static struct rtw_hci_ops rtw_pci_ops = {
-+	.tx = rtw_pci_tx,
-+	.setup = rtw_pci_setup,
-+	.start = rtw_pci_start,
-+	.stop = rtw_pci_stop,
-+
-+	.read8 = rtw_pci_read8,
-+	.read16 = rtw_pci_read16,
-+	.read32 = rtw_pci_read32,
-+	.write8 = rtw_pci_write8,
-+	.write16 = rtw_pci_write16,
-+	.write32 = rtw_pci_write32,
-+	.write_data_rsvd_page = rtw_pci_write_data_rsvd_page,
-+	.write_data_h2c = rtw_pci_write_data_h2c,
-+};
-+
-+static int rtw_pci_probe(struct pci_dev *pdev,
-+			 const struct pci_device_id *id)
-+{
-+	struct ieee80211_hw *hw;
-+	struct rtw_dev *rtwdev;
-+	int drv_data_size;
-+	int ret;
-+
-+	drv_data_size = sizeof(struct rtw_dev) + sizeof(struct rtw_pci);
-+	hw = ieee80211_alloc_hw(drv_data_size, &rtw_ops);
-+	if (!hw) {
-+		dev_err(&pdev->dev, "failed to allocate hw\n");
-+		return -ENOMEM;
-+	}
-+
-+	rtwdev = hw->priv;
-+	rtwdev->hw = hw;
-+	rtwdev->dev = &pdev->dev;
-+	rtwdev->chip = (struct rtw_chip_info *)id->driver_data;
-+	rtwdev->hci.ops = &rtw_pci_ops;
-+	rtwdev->hci.type = RTW_HCI_TYPE_PCIE;
-+
-+	ret = rtw_core_init(rtwdev);
-+	if (ret)
-+		goto err_release_hw;
-+
-+	rtw_dbg(rtwdev, RTW_DBG_PCI,
-+		"rtw88 pci probe: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
-+		pdev->vendor, pdev->device, pdev->revision);
-+
-+	ret = rtw_pci_claim(rtwdev, pdev);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to claim pci device\n");
-+		goto err_deinit_core;
-+	}
-+
-+	ret = rtw_pci_setup_resource(rtwdev, pdev);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to setup pci resources\n");
-+		goto err_pci_declaim;
-+	}
-+
-+	ret = rtw_chip_info_setup(rtwdev);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to setup chip information\n");
-+		goto err_destroy_pci;
-+	}
-+
-+	ret = rtw_register_hw(rtwdev, hw);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to register hw\n");
-+		goto err_destroy_pci;
-+	}
-+
-+	ret = request_irq(pdev->irq, &rtw_pci_interrupt_handler,
-+			  IRQF_SHARED, KBUILD_MODNAME, rtwdev);
-+	if (ret) {
-+		ieee80211_unregister_hw(hw);
-+		goto err_destroy_pci;
++		*(map + addr) = (u8)(efuse_ctl & BIT_MASK_EF_DATA);
 +	}
 +
 +	return 0;
++}
 +
-+err_destroy_pci:
-+	rtw_pci_destroy(rtwdev, pdev);
++int rtw_parse_efuse_map(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	u32 phy_size = efuse->physical_size;
++	u32 log_size = efuse->logical_size;
++	u8 *phy_map = NULL;
++	u8 *log_map = NULL;
++	int ret = 0;
 +
-+err_pci_declaim:
-+	rtw_pci_declaim(rtwdev, pdev);
++	phy_map = kmalloc(phy_size, GFP_KERNEL);
++	log_map = kmalloc(log_size, GFP_KERNEL);
++	if (!phy_map || !log_map) {
++		ret = -ENOMEM;
++		goto out_free;
++	}
 +
-+err_deinit_core:
-+	rtw_core_deinit(rtwdev);
++	ret = rtw_dump_physical_efuse_map(rtwdev, phy_map);
++	if (ret) {
++		rtw_err(rtwdev, "failed to dump efuse physical map\n");
++		goto out_free;
++	}
 +
-+err_release_hw:
-+	ieee80211_free_hw(hw);
++	memset(log_map, 0xff, log_size);
++	ret = rtw_dump_logical_efuse_map(rtwdev, phy_map, log_map);
++	if (ret) {
++		rtw_err(rtwdev, "failed to dump efuse logical map\n");
++		goto out_free;
++	}
++
++	ret = chip->ops->read_efuse(rtwdev, log_map);
++	if (ret) {
++		rtw_err(rtwdev, "failed to read efuse map\n");
++		goto out_free;
++	}
++
++out_free:
++	kfree(log_map);
++	kfree(phy_map);
 +
 +	return ret;
 +}
-+
-+static void rtw_pci_remove(struct pci_dev *pdev)
-+{
-+	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
-+	struct rtw_dev *rtwdev;
-+	struct rtw_pci *rtwpci;
-+
-+	if (!hw)
-+		return;
-+
-+	rtwdev = hw->priv;
-+	rtwpci = (struct rtw_pci *)rtwdev->priv;
-+
-+	rtw_unregister_hw(rtwdev, hw);
-+	rtw_pci_disable_interrupt(rtwdev, rtwpci);
-+	rtw_pci_destroy(rtwdev, pdev);
-+	rtw_pci_declaim(rtwdev, pdev);
-+	free_irq(rtwpci->pdev->irq, rtwdev);
-+	rtw_core_deinit(rtwdev);
-+	ieee80211_free_hw(hw);
-+}
-+
-+static const struct pci_device_id rtw_pci_id_table[] = {
-+#ifdef CONFIG_RTW88_8822BE
-+	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xB822, rtw8822b_hw_spec) },
-+#endif
-+#ifdef CONFIG_RTW88_8822CE
-+	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xC822, rtw8822c_hw_spec) },
-+#endif
-+	{},
-+};
-+MODULE_DEVICE_TABLE(pci, rtw_pci_id_table);
-+
-+static struct pci_driver rtw_pci_driver = {
-+	.name = "rtw_pci",
-+	.id_table = rtw_pci_id_table,
-+	.probe = rtw_pci_probe,
-+	.remove = rtw_pci_remove,
-+};
-+module_pci_driver(rtw_pci_driver);
-+
-+MODULE_AUTHOR("Realtek Corporation");
-+MODULE_DESCRIPTION("Realtek 802.11ac wireless PCI driver");
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
+diff --git a/drivers/net/wireless/realtek/rtw88/efuse.h b/drivers/net/wireless/realtek/rtw88/efuse.h
 new file mode 100644
-index 0000000..48bb927
+index 0000000..c33e899
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/pci.h
-@@ -0,0 +1,237 @@
++++ b/drivers/net/wireless/realtek/rtw88/efuse.h
+@@ -0,0 +1,26 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#ifndef __RTK_PCI_H_
-+#define __RTK_PCI_H_
++#ifndef __RTW_EFUSE_H__
++#define __RTW_EFUSE_H__
 +
-+#define RTK_PCI_DEVICE(vend, dev, hw_config)	\
-+	PCI_DEVICE(vend, dev),			\
-+	.driver_data = (kernel_ulong_t)&(hw_config),
++#define EFUSE_HW_CAP_IGNORE		0
++#define EFUSE_HW_CAP_PTCL_VHT		3
++#define EFUSE_HW_CAP_SUPP_BW80		7
++#define EFUSE_HW_CAP_SUPP_BW40		6
 +
-+#define RTK_DEFAULT_TX_DESC_NUM 128
-+#define RTK_BEQ_TX_DESC_NUM	256
++#define GET_EFUSE_HW_CAP_HCI(hw_cap)					       \
++	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(3, 0))
++#define GET_EFUSE_HW_CAP_BW(hw_cap)					       \
++	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(18, 16))
++#define GET_EFUSE_HW_CAP_NSS(hw_cap)					       \
++	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(20, 19))
++#define GET_EFUSE_HW_CAP_ANT_NUM(hw_cap)				       \
++	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(23, 21))
++#define GET_EFUSE_HW_CAP_PTCL(hw_cap)					       \
++	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(27, 26))
 +
-+#define RTK_MAX_RX_DESC_NUM	512
-+/* 8K + rx desc size */
-+#define RTK_PCI_RX_BUF_SIZE	(8192 + 24)
++int rtw_parse_efuse_map(struct rtw_dev *rtwdev);
 +
-+#define RTK_PCI_CTRL		0x300
-+#define BIT_RST_TRXDMA_INTF	BIT(20)
-+#define BIT_RX_TAG_EN		BIT(15)
-+#define REG_DBI_WDATA_V1	0x03E8
-+#define REG_DBI_FLAG_V1		0x03F0
-+#define REG_MDIO_V1		0x03F4
-+#define REG_PCIE_MIX_CFG	0x03F8
-+#define BIT_MDIO_WFLAG_V1	BIT(5)
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+new file mode 100644
+index 0000000..12c4de8
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -0,0 +1,633 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
 +
-+#define BIT_PCI_BCNQ_FLAG	BIT(4)
-+#define RTK_PCI_TXBD_DESA_BCNQ	0x308
-+#define RTK_PCI_TXBD_DESA_H2CQ	0x1320
-+#define RTK_PCI_TXBD_DESA_MGMTQ	0x310
-+#define RTK_PCI_TXBD_DESA_BKQ	0x330
-+#define RTK_PCI_TXBD_DESA_BEQ	0x328
-+#define RTK_PCI_TXBD_DESA_VIQ	0x320
-+#define RTK_PCI_TXBD_DESA_VOQ	0x318
-+#define RTK_PCI_TXBD_DESA_HI0Q	0x340
-+#define RTK_PCI_RXBD_DESA_MPDUQ	0x338
++#include "main.h"
++#include "fw.h"
++#include "tx.h"
++#include "reg.h"
++#include "debug.h"
 +
-+/* BCNQ is specialized for rsvd page, does not need to specify a number */
-+#define RTK_PCI_TXBD_NUM_H2CQ	0x1328
-+#define RTK_PCI_TXBD_NUM_MGMTQ	0x380
-+#define RTK_PCI_TXBD_NUM_BKQ	0x38A
-+#define RTK_PCI_TXBD_NUM_BEQ	0x388
-+#define RTK_PCI_TXBD_NUM_VIQ	0x386
-+#define RTK_PCI_TXBD_NUM_VOQ	0x384
-+#define RTK_PCI_TXBD_NUM_HI0Q	0x38C
-+#define RTK_PCI_RXBD_NUM_MPDUQ	0x382
-+#define RTK_PCI_TXBD_IDX_H2CQ	0x132C
-+#define RTK_PCI_TXBD_IDX_MGMTQ	0x3B0
-+#define RTK_PCI_TXBD_IDX_BKQ	0x3AC
-+#define RTK_PCI_TXBD_IDX_BEQ	0x3A8
-+#define RTK_PCI_TXBD_IDX_VIQ	0x3A4
-+#define RTK_PCI_TXBD_IDX_VOQ	0x3A0
-+#define RTK_PCI_TXBD_IDX_HI0Q	0x3B8
-+#define RTK_PCI_RXBD_IDX_MPDUQ	0x3B4
-+
-+#define RTK_PCI_TXBD_RWPTR_CLR	0x39C
-+#define RTK_PCI_TXBD_H2CQ_CSR	0x1330
-+
-+#define BIT_CLR_H2CQ_HOST_IDX	BIT(16)
-+#define BIT_CLR_H2CQ_HW_IDX	BIT(8)
-+
-+#define RTK_PCI_HIMR0		0x0B0
-+#define RTK_PCI_HISR0		0x0B4
-+#define RTK_PCI_HIMR1		0x0B8
-+#define RTK_PCI_HISR1		0x0BC
-+#define RTK_PCI_HIMR2		0x10B0
-+#define RTK_PCI_HISR2		0x10B4
-+#define RTK_PCI_HIMR3		0x10B8
-+#define RTK_PCI_HISR3		0x10BC
-+/* IMR 0 */
-+#define IMR_TIMER2		BIT(31)
-+#define IMR_TIMER1		BIT(30)
-+#define IMR_PSTIMEOUT		BIT(29)
-+#define IMR_GTINT4		BIT(28)
-+#define IMR_GTINT3		BIT(27)
-+#define IMR_TBDER		BIT(26)
-+#define IMR_TBDOK		BIT(25)
-+#define IMR_TSF_BIT32_TOGGLE	BIT(24)
-+#define IMR_BCNDMAINT0		BIT(20)
-+#define IMR_BCNDOK0		BIT(16)
-+#define IMR_HSISR_IND_ON_INT	BIT(15)
-+#define IMR_BCNDMAINT_E		BIT(14)
-+#define IMR_ATIMEND		BIT(12)
-+#define IMR_HISR1_IND_INT	BIT(11)
-+#define IMR_C2HCMD		BIT(10)
-+#define IMR_CPWM2		BIT(9)
-+#define IMR_CPWM		BIT(8)
-+#define IMR_HIGHDOK		BIT(7)
-+#define IMR_MGNTDOK		BIT(6)
-+#define IMR_BKDOK		BIT(5)
-+#define IMR_BEDOK		BIT(4)
-+#define IMR_VIDOK		BIT(3)
-+#define IMR_VODOK		BIT(2)
-+#define IMR_RDU			BIT(1)
-+#define IMR_ROK			BIT(0)
-+/* IMR 1 */
-+#define IMR_TXFIFO_TH_INT	BIT(30)
-+#define IMR_BTON_STS_UPDATE	BIT(29)
-+#define IMR_MCUERR		BIT(28)
-+#define IMR_BCNDMAINT7		BIT(27)
-+#define IMR_BCNDMAINT6		BIT(26)
-+#define IMR_BCNDMAINT5		BIT(25)
-+#define IMR_BCNDMAINT4		BIT(24)
-+#define IMR_BCNDMAINT3		BIT(23)
-+#define IMR_BCNDMAINT2		BIT(22)
-+#define IMR_BCNDMAINT1		BIT(21)
-+#define IMR_BCNDOK7		BIT(20)
-+#define IMR_BCNDOK6		BIT(19)
-+#define IMR_BCNDOK5		BIT(18)
-+#define IMR_BCNDOK4		BIT(17)
-+#define IMR_BCNDOK3		BIT(16)
-+#define IMR_BCNDOK2		BIT(15)
-+#define IMR_BCNDOK1		BIT(14)
-+#define IMR_ATIMEND_E		BIT(13)
-+#define IMR_ATIMEND		BIT(12)
-+#define IMR_TXERR		BIT(11)
-+#define IMR_RXERR		BIT(10)
-+#define IMR_TXFOVW		BIT(9)
-+#define IMR_RXFOVW		BIT(8)
-+#define IMR_CPU_MGQ_TXDONE	BIT(5)
-+#define IMR_PS_TIMER_C		BIT(4)
-+#define IMR_PS_TIMER_B		BIT(3)
-+#define IMR_PS_TIMER_A		BIT(2)
-+#define IMR_CPUMGQ_TX_TIMER	BIT(1)
-+/* IMR 3 */
-+#define IMR_H2CDOK		BIT(16)
-+
-+/* one element is reserved to know if the ring is closed */
-+static inline int avail_desc(u32 wp, u32 rp, u32 len)
++void rtw_fw_c2h_cmd_handle_ext(struct rtw_dev *rtwdev, struct sk_buff *skb)
 +{
-+	if (rp > wp)
-+		return rp - wp - 1;
-+	else
-+		return len - wp + rp - 1;
-+}
++	struct rtw_c2h_cmd *c2h;
++	u8 sub_cmd_id;
 +
-+#define RTK_PCI_TXBD_OWN_OFFSET 15
-+#define RTK_PCI_TXBD_BCN_WORK	0x383
++	c2h = get_c2h_from_skb(skb);
++	sub_cmd_id = c2h->payload[0];
 +
-+struct rtw_pci_tx_buffer_desc {
-+	__le16 buf_size;
-+	__le16 psb_len;
-+	__le32 dma;
-+};
-+
-+struct rtw_pci_tx_data {
-+	dma_addr_t dma;
-+	u8 sn;
-+};
-+
-+struct rtw_pci_ring {
-+	u8 *head;
-+	dma_addr_t dma;
-+
-+	u8 desc_size;
-+
-+	u32 len;
-+	u32 wp;
-+	u32 rp;
-+};
-+
-+struct rtw_pci_tx_ring {
-+	struct rtw_pci_ring r;
-+	struct sk_buff_head queue;
-+	bool queue_stopped;
-+};
-+
-+struct rtw_pci_rx_buffer_desc {
-+	__le16 buf_size;
-+	__le16 total_pkt_size;
-+	__le32 dma;
-+};
-+
-+struct rtw_pci_rx_ring {
-+	struct rtw_pci_ring r;
-+	struct sk_buff *buf[RTK_MAX_RX_DESC_NUM];
-+};
-+
-+#define RX_TAG_MAX	8192
-+
-+struct rtw_pci {
-+	struct pci_dev *pdev;
-+
-+	/* used for pci interrupt */
-+	spinlock_t irq_lock;
-+	u32 irq_mask[4];
-+	bool irq_enabled;
-+
-+	u16 rx_tag;
-+	struct rtw_pci_tx_ring tx_rings[RTK_MAX_TX_QUEUE_NUM];
-+	struct rtw_pci_rx_ring rx_rings[RTK_MAX_RX_QUEUE_NUM];
-+
-+	void __iomem *mmap;
-+};
-+
-+static u32 max_num_of_tx_queue(u8 queue)
-+{
-+	u32 max_num;
-+
-+	switch (queue) {
-+	case RTW_TX_QUEUE_BE:
-+		max_num = RTK_BEQ_TX_DESC_NUM;
-+		break;
-+	case RTW_TX_QUEUE_BCN:
-+		max_num = 1;
++	switch (sub_cmd_id) {
++	case C2H_CCX_RPT:
++		rtw_tx_report_handle(rtwdev, skb);
 +		break;
 +	default:
-+		max_num = RTK_DEFAULT_TX_DESC_NUM;
 +		break;
 +	}
-+
-+	return max_num;
 +}
 +
-+static inline struct
-+rtw_pci_tx_data *rtw_pci_get_tx_data(struct sk_buff *skb)
++void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
 +{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct rtw_c2h_cmd *c2h;
++	u32 pkt_offset;
++	u8 len;
 +
-+	BUILD_BUG_ON(sizeof(struct rtw_pci_tx_data) >
-+		     sizeof(info->status.status_driver_data));
++	pkt_offset = *((u32 *)skb->cb);
++	c2h = (struct rtw_c2h_cmd *)(skb->data + pkt_offset);
++	len = skb->len - pkt_offset - 2;
 +
-+	return (struct rtw_pci_tx_data *)info->status.status_driver_data;
++	rtw_dbg(rtwdev, RTW_DBG_FW, "recv C2H, id=0x%02x, seq=0x%02x, len=%d\n",
++		c2h->id, c2h->seq, len);
++
++	switch (c2h->id) {
++	case C2H_HALMAC:
++		rtw_fw_c2h_cmd_handle_ext(rtwdev, skb);
++		break;
++	default:
++		break;
++	}
 +}
 +
-+static inline
-+struct rtw_pci_tx_buffer_desc *get_tx_buffer_desc(struct rtw_pci_tx_ring *ring,
-+						  u32 size)
++void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev, u8 *h2c)
 +{
-+	u8 *buf_desc;
++	u8 box;
++	u8 box_state;
++	u32 box_reg, box_ex_reg;
++	u32 h2c_wait;
++	int idx;
 +
-+	buf_desc = ring->r.head + ring->r.wp * size;
-+	return (struct rtw_pci_tx_buffer_desc *)buf_desc;
++	rtw_dbg(rtwdev, RTW_DBG_FW,
++		"send H2C content %02x%02x%02x%02x %02x%02x%02x%02x\n",
++		h2c[3], h2c[2], h2c[1], h2c[0],
++		h2c[7], h2c[6], h2c[5], h2c[4]);
++
++	spin_lock(&rtwdev->h2c.lock);
++
++	box = rtwdev->h2c.last_box_num;
++	switch (box) {
++	case 0:
++		box_reg = REG_HMEBOX0;
++		box_ex_reg = REG_HMEBOX0_EX;
++		break;
++	case 1:
++		box_reg = REG_HMEBOX1;
++		box_ex_reg = REG_HMEBOX1_EX;
++		break;
++	case 2:
++		box_reg = REG_HMEBOX2;
++		box_ex_reg = REG_HMEBOX2_EX;
++		break;
++	case 3:
++		box_reg = REG_HMEBOX3;
++		box_ex_reg = REG_HMEBOX3_EX;
++		break;
++	default:
++		WARN(1, "invalid h2c mail box number\n");
++		goto out;
++	}
++
++	h2c_wait = 20;
++	do {
++		box_state = rtw_read8(rtwdev, REG_HMETFR);
++	} while ((box_state >> box) & 0x1 && --h2c_wait > 0);
++
++	if (!h2c_wait) {
++		rtw_err(rtwdev, "failed to send h2c command\n");
++		goto out;
++	}
++
++	for (idx = 0; idx < 4; idx++)
++		rtw_write8(rtwdev, box_reg + idx, h2c[idx]);
++	for (idx = 0; idx < 4; idx++)
++		rtw_write8(rtwdev, box_ex_reg + idx, h2c[idx + 4]);
++
++	if (++rtwdev->h2c.last_box_num >= 4)
++		rtwdev->h2c.last_box_num = 0;
++
++out:
++	spin_unlock(&rtwdev->h2c.lock);
 +}
 +
++static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
++{
++	int ret;
++
++	spin_lock(&rtwdev->h2c.lock);
++
++	FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, rtwdev->h2c.seq);
++	ret = rtw_hci_write_data_h2c(rtwdev, h2c_pkt, H2C_PKT_SIZE);
++	if (ret)
++		rtw_err(rtwdev, "failed to send h2c packet\n");
++	rtwdev->h2c.seq++;
++
++	spin_unlock(&rtwdev->h2c.lock);
++}
++
++void
++rtw_fw_send_general_info(struct rtw_dev *rtwdev)
++{
++	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
++	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
++	u16 total_size = H2C_PKT_HDR_SIZE + 4;
++
++	rtw_h2c_pkt_set_header(h2c_pkt, H2C_PKT_GENERAL_INFO);
++
++	SET_PKT_H2C_TOTAL_LEN(h2c_pkt, total_size);
++
++	GENERAL_INFO_SET_FW_TX_BOUNDARY(h2c_pkt,
++					fifo->rsvd_fw_txbuf_addr -
++					fifo->rsvd_boundary);
++
++	rtw_fw_send_h2c_packet(rtwdev, h2c_pkt);
++}
++
++void
++rtw_fw_send_phydm_info(struct rtw_dev *rtwdev)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
++	u16 total_size = H2C_PKT_HDR_SIZE + 8;
++	u8 fw_rf_type = 0;
++
++	if (hal->rf_type == RF_1T1R)
++		fw_rf_type = FW_RF_1T1R;
++	else if (hal->rf_type == RF_2T2R)
++		fw_rf_type = FW_RF_2T2R;
++
++	rtw_h2c_pkt_set_header(h2c_pkt, H2C_PKT_PHYDM_INFO);
++
++	SET_PKT_H2C_TOTAL_LEN(h2c_pkt, total_size);
++	PHYDM_INFO_SET_REF_TYPE(h2c_pkt, efuse->rfe_option);
++	PHYDM_INFO_SET_RF_TYPE(h2c_pkt, fw_rf_type);
++	PHYDM_INFO_SET_CUT_VER(h2c_pkt, hal->cut_version);
++	PHYDM_INFO_SET_RX_ANT_STATUS(h2c_pkt, hal->antenna_tx);
++	PHYDM_INFO_SET_TX_ANT_STATUS(h2c_pkt, hal->antenna_rx);
++
++	rtw_fw_send_h2c_packet(rtwdev, h2c_pkt);
++}
++
++void rtw_fw_do_iqk(struct rtw_dev *rtwdev, struct rtw_iqk_para *para)
++{
++	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
++	u16 total_size = H2C_PKT_HDR_SIZE + 1;
++
++	rtw_h2c_pkt_set_header(h2c_pkt, H2C_PKT_IQK);
++	SET_PKT_H2C_TOTAL_LEN(h2c_pkt, total_size);
++	IQK_SET_CLEAR(h2c_pkt, para->clear);
++	IQK_SET_SEGMENT_IQK(h2c_pkt, para->segment_iqk);
++
++	rtw_fw_send_h2c_packet(rtwdev, h2c_pkt);
++}
++
++void rtw_fw_send_rssi_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
++{
++	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
++	u8 rssi = ewma_rssi_read(&si->avg_rssi);
++	bool stbc_en = si->stbc_en ? true : false;
++
++	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RSSI_MONITOR);
++
++	SET_RSSI_INFO_MACID(h2c_pkt, si->mac_id);
++	SET_RSSI_INFO_RSSI(h2c_pkt, rssi);
++	SET_RSSI_INFO_STBC(h2c_pkt, stbc_en);
++
++	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
++}
++
++void rtw_fw_send_ra_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
++{
++	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
++	bool no_update = si->updated;
++	bool disable_pt = true;
++
++	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RA_INFO);
++
++	SET_RA_INFO_MACID(h2c_pkt, si->mac_id);
++	SET_RA_INFO_RATE_ID(h2c_pkt, si->rate_id);
++	SET_RA_INFO_INIT_RA_LVL(h2c_pkt, si->init_ra_lv);
++	SET_RA_INFO_SGI_EN(h2c_pkt, si->sgi_enable);
++	SET_RA_INFO_BW_MODE(h2c_pkt, si->bw_mode);
++	SET_RA_INFO_LDPC(h2c_pkt, si->ldpc_en);
++	SET_RA_INFO_NO_UPDATE(h2c_pkt, no_update);
++	SET_RA_INFO_VHT_EN(h2c_pkt, si->vht_enable);
++	SET_RA_INFO_DIS_PT(h2c_pkt, disable_pt);
++	SET_RA_INFO_RA_MASK0(h2c_pkt, (si->ra_mask & 0xff));
++	SET_RA_INFO_RA_MASK1(h2c_pkt, (si->ra_mask & 0xff00) >> 8);
++	SET_RA_INFO_RA_MASK2(h2c_pkt, (si->ra_mask & 0xff0000) >> 16);
++	SET_RA_INFO_RA_MASK3(h2c_pkt, (si->ra_mask & 0xff000000) >> 24);
++
++	si->init_ra_lv = 0;
++	si->updated = true;
++
++	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
++}
++
++void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool connect)
++{
++	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
++
++	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_MEDIA_STATUS_RPT);
++	MEDIA_STATUS_RPT_SET_OP_MODE(h2c_pkt, connect);
++	MEDIA_STATUS_RPT_SET_MACID(h2c_pkt, mac_id);
++
++	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
++}
++
++void rtw_fw_set_pwr_mode(struct rtw_dev *rtwdev)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
++
++	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_SET_PWR_MODE);
++
++	SET_PWR_MODE_SET_MODE(h2c_pkt, conf->mode);
++	SET_PWR_MODE_SET_RLBM(h2c_pkt, conf->rlbm);
++	SET_PWR_MODE_SET_SMART_PS(h2c_pkt, conf->smart_ps);
++	SET_PWR_MODE_SET_AWAKE_INTERVAL(h2c_pkt, conf->awake_interval);
++	SET_PWR_MODE_SET_PORT_ID(h2c_pkt, conf->port_id);
++	SET_PWR_MODE_SET_PWR_STATE(h2c_pkt, conf->state);
++
++	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
++}
++
++static u8 rtw_get_rsvd_page_location(struct rtw_dev *rtwdev,
++				     enum rtw_rsvd_packet_type type)
++{
++	struct rtw_rsvd_page *rsvd_pkt;
++	u8 location = 0;
++
++	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
++		if (type == rsvd_pkt->type)
++			location = rsvd_pkt->page;
++	}
++
++	return location;
++}
++
++void rtw_send_rsvd_page_h2c(struct rtw_dev *rtwdev)
++{
++	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
++	u8 location = 0;
++
++	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RSVD_PAGE);
++
++	location = rtw_get_rsvd_page_location(rtwdev, RSVD_PROBE_RESP);
++	*(h2c_pkt + 1) = location;
++	rtw_dbg(rtwdev, RTW_DBG_FW, "RSVD_PROBE_RESP loc: %d\n", location);
++
++	location = rtw_get_rsvd_page_location(rtwdev, RSVD_PS_POLL);
++	*(h2c_pkt + 2) = location;
++	rtw_dbg(rtwdev, RTW_DBG_FW, "RSVD_PS_POLL loc: %d\n", location);
++
++	location = rtw_get_rsvd_page_location(rtwdev, RSVD_NULL);
++	*(h2c_pkt + 3) = location;
++	rtw_dbg(rtwdev, RTW_DBG_FW, "RSVD_NULL loc: %d\n", location);
++
++	location = rtw_get_rsvd_page_location(rtwdev, RSVD_QOS_NULL);
++	*(h2c_pkt + 4) = location;
++	rtw_dbg(rtwdev, RTW_DBG_FW, "RSVD_QOS_NULL loc: %d\n", location);
++
++	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
++}
++
++static struct sk_buff *
++rtw_beacon_get(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
++{
++	struct sk_buff *skb_new;
++
++	if (vif->type != NL80211_IFTYPE_AP &&
++	    vif->type != NL80211_IFTYPE_ADHOC &&
++	    !ieee80211_vif_is_mesh(vif)) {
++		skb_new = alloc_skb(1, GFP_KERNEL);
++		if (!skb_new)
++			return NULL;
++		skb_put(skb_new, 1);
++	} else {
++		skb_new = ieee80211_beacon_get(hw, vif);
++	}
++
++	return skb_new;
++}
++
++static struct sk_buff *rtw_get_rsvd_page_skb(struct ieee80211_hw *hw,
++					     struct ieee80211_vif *vif,
++					     enum rtw_rsvd_packet_type type)
++{
++	struct sk_buff *skb_new;
++
++	switch (type) {
++	case RSVD_BEACON:
++		skb_new = rtw_beacon_get(hw, vif);
++		break;
++	case RSVD_PS_POLL:
++		skb_new = ieee80211_pspoll_get(hw, vif);
++		break;
++	case RSVD_PROBE_RESP:
++		skb_new = ieee80211_proberesp_get(hw, vif);
++		break;
++	case RSVD_NULL:
++		skb_new = ieee80211_nullfunc_get(hw, vif, false);
++		break;
++	case RSVD_QOS_NULL:
++		skb_new = ieee80211_nullfunc_get(hw, vif, true);
++		break;
++	default:
++		return NULL;
++	}
++
++	if (!skb_new)
++		return NULL;
++
++	return skb_new;
++}
++
++static void rtw_fill_rsvd_page_desc(struct rtw_dev *rtwdev, struct sk_buff *skb)
++{
++	struct rtw_tx_pkt_info pkt_info;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u8 *pkt_desc;
++
++	memset(&pkt_info, 0, sizeof(pkt_info));
++	rtw_rsvd_page_pkt_info_update(rtwdev, &pkt_info, skb);
++	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
++	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
++	rtw_tx_fill_tx_desc(&pkt_info, skb);
++}
++
++static inline u8 rtw_len_to_page(unsigned int len, u8 page_size)
++{
++	return DIV_ROUND_UP(len, page_size);
++}
++
++static void rtw_rsvd_page_list_to_buf(struct rtw_dev *rtwdev, u8 page_size,
++				      u8 page_margin, u32 page, u8 *buf,
++				      struct rtw_rsvd_page *rsvd_pkt)
++{
++	struct sk_buff *skb = rsvd_pkt->skb;
++
++	if (rsvd_pkt->add_txdesc)
++		rtw_fill_rsvd_page_desc(rtwdev, skb);
++
++	if (page >= 1)
++		memcpy(buf + page_margin + page_size * (page - 1),
++		       skb->data, skb->len);
++	else
++		memcpy(buf, skb->data, skb->len);
++}
++
++void rtw_add_rsvd_page(struct rtw_dev *rtwdev, enum rtw_rsvd_packet_type type,
++		       bool txdesc)
++{
++	struct rtw_rsvd_page *rsvd_pkt;
++
++	lockdep_assert_held(&rtwdev->mutex);
++
++	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
++		if (rsvd_pkt->type == type)
++			return;
++	}
++
++	rsvd_pkt = kmalloc(sizeof(*rsvd_pkt), GFP_KERNEL);
++	if (!rsvd_pkt)
++		return;
++
++	rsvd_pkt->type = type;
++	rsvd_pkt->add_txdesc = txdesc;
++	list_add_tail(&rsvd_pkt->list, &rtwdev->rsvd_page_list);
++}
++
++void rtw_reset_rsvd_page(struct rtw_dev *rtwdev)
++{
++	struct rtw_rsvd_page *rsvd_pkt, *tmp;
++
++	lockdep_assert_held(&rtwdev->mutex);
++
++	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list, list) {
++		if (rsvd_pkt->type == RSVD_BEACON)
++			continue;
++		list_del(&rsvd_pkt->list);
++		kfree(rsvd_pkt);
++	}
++}
++
++int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
++				u8 *buf, u32 size)
++{
++	u8 bckp[2];
++	u8 val;
++	u16 rsvd_pg_head;
++	int ret;
++
++	lockdep_assert_held(&rtwdev->mutex);
++
++	if (!size)
++		return -EINVAL;
++
++	pg_addr &= BIT_MASK_BCN_HEAD_1_V1;
++	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2, pg_addr | BIT_BCN_VALID_V1);
++
++	val = rtw_read8(rtwdev, REG_CR + 1);
++	bckp[0] = val;
++	val |= BIT_ENSWBCN >> 8;
++	rtw_write8(rtwdev, REG_CR + 1, val);
++
++	val = rtw_read8(rtwdev, REG_FWHW_TXQ_CTRL + 2);
++	bckp[1] = val;
++	val &= ~(BIT_EN_BCNQ_DL >> 16);
++	rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 2, val);
++
++	ret = rtw_hci_write_data_rsvd_page(rtwdev, buf, size);
++	if (ret) {
++		rtw_err(rtwdev, "failed to write data to rsvd page\n");
++		goto restore;
++	}
++
++	if (!check_hw_ready(rtwdev, REG_FIFOPAGE_CTRL_2, BIT_BCN_VALID_V1, 1)) {
++		rtw_err(rtwdev, "error beacon valid\n");
++		ret = -EBUSY;
++	}
++
++restore:
++	rsvd_pg_head = rtwdev->fifo.rsvd_boundary;
++	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2,
++		    rsvd_pg_head | BIT_BCN_VALID_V1);
++	rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 2, bckp[1]);
++	rtw_write8(rtwdev, REG_CR + 1, bckp[0]);
++
++	return ret;
++}
++
++static int rtw_download_drv_rsvd_page(struct rtw_dev *rtwdev, u8 *buf, u32 size)
++{
++	u32 pg_size;
++	u32 pg_num = 0;
++	u16 pg_addr = 0;
++
++	pg_size = rtwdev->chip->page_size;
++	pg_num = size / pg_size + ((size & (pg_size - 1)) ? 1 : 0);
++	if (pg_num > rtwdev->fifo.rsvd_drv_pg_num)
++		return -ENOMEM;
++
++	pg_addr = rtwdev->fifo.rsvd_drv_addr;
++
++	return rtw_fw_write_data_rsvd_page(rtwdev, pg_addr, buf, size);
++}
++
++static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
++			       struct ieee80211_vif *vif, u32 *size)
++{
++	struct ieee80211_hw *hw = rtwdev->hw;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct sk_buff *iter;
++	struct rtw_rsvd_page *rsvd_pkt;
++	u32 page = 0;
++	u8 total_page = 0;
++	u8 page_size, page_margin, tx_desc_sz;
++	u8 *buf;
++
++	page_size = chip->page_size;
++	tx_desc_sz = chip->tx_pkt_desc_sz;
++	page_margin = page_size - tx_desc_sz;
++
++	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
++		iter = rtw_get_rsvd_page_skb(hw, vif, rsvd_pkt->type);
++		if (!iter) {
++			rtw_err(rtwdev, "fail to build rsvd packet\n");
++			goto release_skb;
++		}
++		rsvd_pkt->skb = iter;
++		rsvd_pkt->page = total_page;
++		if (rsvd_pkt->add_txdesc)
++			total_page += rtw_len_to_page(iter->len + tx_desc_sz,
++						      page_size);
++		else
++			total_page += rtw_len_to_page(iter->len, page_size);
++	}
++
++	if (total_page > rtwdev->fifo.rsvd_drv_pg_num) {
++		rtw_err(rtwdev, "rsvd page over size: %d\n", total_page);
++		goto release_skb;
++	}
++
++	*size = (total_page - 1) * page_size + page_margin;
++	buf = kzalloc(*size, GFP_KERNEL);
++	if (!buf)
++		goto release_skb;
++
++	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
++		rtw_rsvd_page_list_to_buf(rtwdev, page_size, page_margin,
++					  page, buf, rsvd_pkt);
++		page += rtw_len_to_page(rsvd_pkt->skb->len, page_size);
++	}
++	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list)
++		kfree_skb(rsvd_pkt->skb);
++
++	return buf;
++
++release_skb:
++	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list)
++		kfree_skb(rsvd_pkt->skb);
++
++	return NULL;
++}
++
++static int
++rtw_download_beacon(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
++{
++	struct ieee80211_hw *hw = rtwdev->hw;
++	struct sk_buff *skb;
++	int ret = 0;
++
++	skb = rtw_beacon_get(hw, vif);
++	if (!skb) {
++		rtw_err(rtwdev, "failed to get beacon skb\n");
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	ret = rtw_download_drv_rsvd_page(rtwdev, skb->data, skb->len);
++	if (ret)
++		rtw_err(rtwdev, "failed to download drv rsvd page\n");
++
++	dev_kfree_skb(skb);
++
++out:
++	return ret;
++}
++
++int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
++{
++	u8 *buf;
++	u32 size;
++	int ret;
++
++	buf = rtw_build_rsvd_page(rtwdev, vif, &size);
++	if (!buf) {
++		rtw_err(rtwdev, "failed to build rsvd page pkt\n");
++		return -ENOMEM;
++	}
++
++	ret = rtw_download_drv_rsvd_page(rtwdev, buf, size);
++	if (ret) {
++		rtw_err(rtwdev, "failed to download drv rsvd page\n");
++		goto free;
++	}
++
++	ret = rtw_download_beacon(rtwdev, vif);
++	if (ret) {
++		rtw_err(rtwdev, "failed to download beacon\n");
++		goto free;
++	}
++
++free:
++	kfree(buf);
++
++	return ret;
++}
++
++int rtw_dump_drv_rsvd_page(struct rtw_dev *rtwdev,
++			   u32 offset, u32 size, u32 *buf)
++{
++	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
++	u32 residue, i;
++	u16 start_pg;
++	u16 idx = 0;
++	u16 ctl;
++	u8 rcr;
++
++	if (size & 0x3) {
++		rtw_warn(rtwdev, "should be 4-byte aligned\n");
++		return -EINVAL;
++	}
++
++	offset += fifo->rsvd_boundary << TX_PAGE_SIZE_SHIFT;
++	residue = offset & (FIFO_PAGE_SIZE - 1);
++	start_pg = offset >> FIFO_PAGE_SIZE_SHIFT;
++	start_pg += RSVD_PAGE_START_ADDR;
++
++	rcr = rtw_read8(rtwdev, REG_RCR + 2);
++	ctl = rtw_read16(rtwdev, REG_PKTBUF_DBG_CTRL) & 0xf000;
++
++	/* disable rx clock gate */
++	rtw_write8(rtwdev, REG_RCR, rcr | BIT(3));
++
++	do {
++		rtw_write16(rtwdev, REG_PKTBUF_DBG_CTRL, start_pg | ctl);
++
++		for (i = FIFO_DUMP_ADDR + residue;
++		     i < FIFO_DUMP_ADDR + FIFO_PAGE_SIZE; i += 4) {
++			buf[idx++] = rtw_read32(rtwdev, i);
++			size -= 4;
++			if (size == 0)
++				goto out;
++		}
++
++		residue = 0;
++		start_pg++;
++	} while (size);
++
++out:
++	rtw_write16(rtwdev, REG_PKTBUF_DBG_CTRL, ctl);
++	rtw_write8(rtwdev, REG_RCR + 2, rcr);
++	return 0;
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
+new file mode 100644
+index 0000000..86d9c86
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/fw.h
+@@ -0,0 +1,222 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_FW_H_
++#define __RTW_FW_H_
++
++#define H2C_PKT_SIZE		32
++#define H2C_PKT_HDR_SIZE	8
++
++/* FW bin information */
++#define FW_HDR_SIZE			64
++#define FW_HDR_CHKSUM_SIZE		8
++#define FW_HDR_VERSION			4
++#define FW_HDR_SUBVERSION		6
++#define FW_HDR_SUBINDEX			7
++#define FW_HDR_MONTH			16
++#define FW_HDR_DATE			17
++#define FW_HDR_HOUR			18
++#define FW_HDR_MIN			19
++#define FW_HDR_YEAR			20
++#define FW_HDR_MEM_USAGE		24
++#define FW_HDR_H2C_FMT_VER		28
++#define FW_HDR_DMEM_ADDR		32
++#define FW_HDR_DMEM_SIZE		36
++#define FW_HDR_IMEM_SIZE		48
++#define FW_HDR_EMEM_SIZE		52
++#define FW_HDR_EMEM_ADDR		56
++#define FW_HDR_IMEM_ADDR		60
++
++#define FIFO_PAGE_SIZE_SHIFT		12
++#define FIFO_PAGE_SIZE			4096
++#define RSVD_PAGE_START_ADDR		0x780
++#define FIFO_DUMP_ADDR			0x8000
++
++enum rtw_c2h_cmd_id {
++	C2H_BT_INFO = 0x09,
++	C2H_HW_FEATURE_REPORT = 0x19,
++	C2H_HW_FEATURE_DUMP = 0xfd,
++	C2H_HALMAC = 0xff,
++};
++
++enum rtw_c2h_cmd_id_ext {
++	C2H_CCX_RPT = 0x0f,
++};
++
++struct rtw_c2h_cmd {
++	u8 id;
++	u8 seq;
++	u8 payload[0];
++} __packed;
++
++enum rtw_rsvd_packet_type {
++	RSVD_BEACON,
++	RSVD_PS_POLL,
++	RSVD_PROBE_RESP,
++	RSVD_NULL,
++	RSVD_QOS_NULL,
++};
++
++enum rtw_fw_rf_type {
++	FW_RF_1T2R = 0,
++	FW_RF_2T4R = 1,
++	FW_RF_2T2R = 2,
++	FW_RF_2T3R = 3,
++	FW_RF_1T1R = 4,
++	FW_RF_2T2R_GREEN = 5,
++	FW_RF_3T3R = 6,
++	FW_RF_3T4R = 7,
++	FW_RF_4T4R = 8,
++	FW_RF_MAX_TYPE = 0xF,
++};
++
++struct rtw_iqk_para {
++	u8 clear;
++	u8 segment_iqk;
++};
++
++struct rtw_rsvd_page {
++	struct list_head list;
++	struct sk_buff *skb;
++	enum rtw_rsvd_packet_type type;
++	u8 page;
++	bool add_txdesc;
++};
++
++/* C2H */
++#define GET_CCX_REPORT_SEQNUM(c2h_payload)	(c2h_payload[8] & 0xfc)
++#define GET_CCX_REPORT_STATUS(c2h_payload)	(c2h_payload[9] & 0xc0)
++
++/* PKT H2C */
++#define H2C_PKT_CMD_ID 0xFF
++#define H2C_PKT_CATEGORY 0x01
++
++#define H2C_PKT_GENERAL_INFO 0x0D
++#define H2C_PKT_PHYDM_INFO 0x11
++#define H2C_PKT_IQK 0x0E
++
++#define SET_PKT_H2C_CATEGORY(h2c_pkt, value)                                   \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(6, 0))
++#define SET_PKT_H2C_CMD_ID(h2c_pkt, value)                                     \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
++#define SET_PKT_H2C_SUB_CMD_ID(h2c_pkt, value)                                 \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(31, 16))
++#define SET_PKT_H2C_TOTAL_LEN(h2c_pkt, value)                                  \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(15, 0))
++
++static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
++{
++	SET_PKT_H2C_CATEGORY(h2c_pkt, H2C_PKT_CATEGORY);
++	SET_PKT_H2C_CMD_ID(h2c_pkt, H2C_PKT_CMD_ID);
++	SET_PKT_H2C_SUB_CMD_ID(h2c_pkt, sub_id);
++}
++
++#define FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, value)                             \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(31, 16))
++#define GENERAL_INFO_SET_FW_TX_BOUNDARY(h2c_pkt, value)                        \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(23, 16))
++
++#define PHYDM_INFO_SET_REF_TYPE(h2c_pkt, value)                                \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(7, 0))
++#define PHYDM_INFO_SET_RF_TYPE(h2c_pkt, value)                                 \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(15, 8))
++#define PHYDM_INFO_SET_CUT_VER(h2c_pkt, value)                                 \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(23, 16))
++#define PHYDM_INFO_SET_RX_ANT_STATUS(h2c_pkt, value)                           \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(27, 24))
++#define PHYDM_INFO_SET_TX_ANT_STATUS(h2c_pkt, value)                           \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(31, 28))
++#define IQK_SET_CLEAR(h2c_pkt, value)                                          \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, BIT(0))
++#define IQK_SET_SEGMENT_IQK(h2c_pkt, value)                                    \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, BIT(1))
++
++/* Command H2C */
++#define H2C_CMD_RSVD_PAGE		0x0
++#define H2C_CMD_MEDIA_STATUS_RPT	0x01
++#define H2C_CMD_SET_PWR_MODE		0x20
++#define H2C_CMD_RA_INFO			0x40
++#define H2C_CMD_RSSI_MONITOR		0x42
++
++#define SET_H2C_CMD_ID_CLASS(h2c_pkt, value)				       \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(7, 0))
++
++#define MEDIA_STATUS_RPT_SET_OP_MODE(h2c_pkt, value)                           \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(8))
++#define MEDIA_STATUS_RPT_SET_MACID(h2c_pkt, value)                             \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(23, 16))
++
++#define SET_PWR_MODE_SET_MODE(h2c_pkt, value)                                  \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(14, 8))
++#define SET_PWR_MODE_SET_RLBM(h2c_pkt, value)                                  \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(19, 16))
++#define SET_PWR_MODE_SET_SMART_PS(h2c_pkt, value)                              \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(23, 20))
++#define SET_PWR_MODE_SET_AWAKE_INTERVAL(h2c_pkt, value)                        \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(31, 24))
++#define SET_PWR_MODE_SET_PORT_ID(h2c_pkt, value)                               \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(7, 5))
++#define SET_PWR_MODE_SET_PWR_STATE(h2c_pkt, value)                             \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(15, 8))
++#define SET_RSSI_INFO_MACID(h2c_pkt, value)                                    \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
++#define SET_RSSI_INFO_RSSI(h2c_pkt, value)                                     \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(31, 24))
++#define SET_RSSI_INFO_STBC(h2c_pkt, value)                                     \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, BIT(1))
++#define SET_RA_INFO_MACID(h2c_pkt, value)                                      \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
++#define SET_RA_INFO_RATE_ID(h2c_pkt, value)                                    \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(20, 16))
++#define SET_RA_INFO_INIT_RA_LVL(h2c_pkt, value)                                \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(22, 21))
++#define SET_RA_INFO_SGI_EN(h2c_pkt, value)                                     \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(23))
++#define SET_RA_INFO_BW_MODE(h2c_pkt, value)                                    \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(25, 24))
++#define SET_RA_INFO_LDPC(h2c_pkt, value)                                       \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(26))
++#define SET_RA_INFO_NO_UPDATE(h2c_pkt, value)                                  \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(27))
++#define SET_RA_INFO_VHT_EN(h2c_pkt, value)                                     \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(29, 28))
++#define SET_RA_INFO_DIS_PT(h2c_pkt, value)                                     \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(30))
++#define SET_RA_INFO_RA_MASK0(h2c_pkt, value)                                   \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(7, 0))
++#define SET_RA_INFO_RA_MASK1(h2c_pkt, value)                                   \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(15, 8))
++#define SET_RA_INFO_RA_MASK2(h2c_pkt, value)                                   \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(23, 16))
++#define SET_RA_INFO_RA_MASK3(h2c_pkt, value)                                   \
++	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(31, 24))
++
++static inline struct rtw_c2h_cmd *get_c2h_from_skb(struct sk_buff *skb)
++{
++	u32 pkt_offset;
++
++	pkt_offset = *((u32 *)skb->cb);
++	return (struct rtw_c2h_cmd *)(skb->data + pkt_offset);
++}
++
++void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb);
++void rtw_fw_send_general_info(struct rtw_dev *rtwdev);
++void rtw_fw_send_phydm_info(struct rtw_dev *rtwdev);
++
++void rtw_fw_do_iqk(struct rtw_dev *rtwdev, struct rtw_iqk_para *para);
++void rtw_fw_set_pwr_mode(struct rtw_dev *rtwdev);
++void rtw_fw_send_rssi_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
++void rtw_fw_send_ra_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
++void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool conn);
++void rtw_add_rsvd_page(struct rtw_dev *rtwdev, enum rtw_rsvd_packet_type type,
++		       bool txdesc);
++int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
++				u8 *buf, u32 size);
++void rtw_reset_rsvd_page(struct rtw_dev *rtwdev);
++int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev,
++			      struct ieee80211_vif *vif);
++void rtw_send_rsvd_page_h2c(struct rtw_dev *rtwdev);
++int rtw_dump_drv_rsvd_page(struct rtw_dev *rtwdev,
++			   u32 offset, u32 size, u32 *buf);
 +#endif
 -- 
 2.7.4
