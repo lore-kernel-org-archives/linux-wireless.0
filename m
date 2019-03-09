@@ -2,43 +2,42 @@ Return-Path: <SRS0=krUy=RM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 891B3C10F0D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C197C4360F
 	for <linux-wireless@archiver.kernel.org>; Sat,  9 Mar 2019 13:49:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 62F54207E0
+	by mail.kernel.org (Postfix) with ESMTP id 12645207E0
 	for <linux-wireless@archiver.kernel.org>; Sat,  9 Mar 2019 13:49:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726487AbfCINtL (ORCPT
+        id S1726439AbfCINtJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Mar 2019 08:49:11 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:40677 "EHLO
+        Sat, 9 Mar 2019 08:49:09 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:40669 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726426AbfCINtK (ORCPT
+        with ESMTP id S1726235AbfCINtI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Mar 2019 08:49:10 -0500
+        Sat, 9 Mar 2019 08:49:08 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x29Dmmwk020448, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x29DmjWX020432, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x29Dmmwk020448
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x29DmjWX020432
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Sat, 9 Mar 2019 21:48:48 +0800
+        Sat, 9 Mar 2019 21:48:45 +0800
 Received: from localhost.localdomain (1.168.42.219) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Sat, 9 Mar 2019 21:48:47 +0800
+ 14.3.408.0; Sat, 9 Mar 2019 21:48:44 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
         <gregkh@linuxfoundation.org>
 CC:     <linux-wireless@vger.kernel.org>, <Larry.Finger@lwfinger.net>,
         <sgruszka@redhat.com>, <pkshih@realtek.com>, <tehuang@realtek.com>,
         <briannorris@chromium.org>
-Subject: [PATCH v7 08/14] rtw88: debug files
-Date:   Sat, 9 Mar 2019 21:48:16 +0800
-Message-ID: <1552139302-20476-9-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v7 05/14] rtw88: mac files
+Date:   Sat, 9 Mar 2019 21:48:13 +0800
+Message-ID: <1552139302-20476-6-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1552139302-20476-1-git-send-email-yhchuang@realtek.com>
 References: <1552139302-20476-1-git-send-email-yhchuang@realtek.com>
@@ -52,715 +51,1026 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-debug files for Realtek 802.11ac wireless network chips
+mac files for Realtek 802.11ac wireless network chips
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 637 +++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/debug.h |  52 +++
- 2 files changed, 689 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/debug.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/debug.h
+ drivers/net/wireless/realtek/rtw88/mac.c | 965 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/mac.h |  35 ++
+ 2 files changed, 1000 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/mac.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/mac.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
 new file mode 100644
-index 0000000..56af1f6
+index 0000000..5a60732
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -0,0 +1,637 @@
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -0,0 +1,965 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#include <linux/debugfs.h>
-+#include <linux/seq_file.h>
 +#include "main.h"
-+#include "sec.h"
++#include "mac.h"
++#include "reg.h"
 +#include "fw.h"
 +#include "debug.h"
 +
-+#ifdef CONFIG_RTW88_DEBUGFS
-+
-+struct rtw_debugfs_priv {
-+	struct rtw_dev *rtwdev;
-+	int (*cb_read)(struct seq_file *m, void *v);
-+	ssize_t (*cb_write)(struct file *filp, const char __user *buffer,
-+			    size_t count, loff_t *loff);
-+	union {
-+		u32 cb_data;
-+		u8 *buf;
-+		struct {
-+			u32 page_offset;
-+			u32 page_num;
-+		} rsvd_page;
-+		struct {
-+			u8 rf_path;
-+			u32 rf_addr;
-+			u32 rf_mask;
-+		};
-+		struct {
-+			u32 addr;
-+			u32 len;
-+		} read_reg;
-+	};
-+};
-+
-+static int rtw_debugfs_single_show(struct seq_file *m, void *v)
++void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
++			 u8 primary_ch_idx)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
++	u8 txsc40 = 0, txsc20 = 0;
++	u32 value32;
++	u8 value8;
 +
-+	return debugfs_priv->cb_read(m, v);
-+}
++	txsc20 = primary_ch_idx;
++	if (txsc20 == 1 || txsc20 == 3)
++		txsc40 = 9;
++	else
++		txsc40 = 10;
++	rtw_write8(rtwdev, REG_DATA_SC,
++		   BIT_TXSC_20M(txsc20) | BIT_TXSC_40M(txsc40));
 +
-+static ssize_t rtw_debugfs_common_write(struct file *filp,
-+					const char __user *buffer,
-+					size_t count, loff_t *loff)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
-+
-+	return debugfs_priv->cb_write(filp, buffer, count, loff);
-+}
-+
-+static ssize_t rtw_debugfs_single_write(struct file *filp,
-+					const char __user *buffer,
-+					size_t count, loff_t *loff)
-+{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+
-+	return debugfs_priv->cb_write(filp, buffer, count, loff);
-+}
-+
-+static int rtw_debugfs_single_open_rw(struct inode *inode, struct file *filp)
-+{
-+	return single_open(filp, rtw_debugfs_single_show, inode->i_private);
-+}
-+
-+static int rtw_debugfs_close(struct inode *inode, struct file *filp)
-+{
-+	return 0;
-+}
-+
-+static const struct file_operations file_ops_single_r = {
-+	.owner = THIS_MODULE,
-+	.open = rtw_debugfs_single_open_rw,
-+	.read = seq_read,
-+	.llseek = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+static const struct file_operations file_ops_single_rw = {
-+	.owner = THIS_MODULE,
-+	.open = rtw_debugfs_single_open_rw,
-+	.release = single_release,
-+	.read = seq_read,
-+	.llseek = seq_lseek,
-+	.write = rtw_debugfs_single_write,
-+};
-+
-+static const struct file_operations file_ops_common_write = {
-+	.owner = THIS_MODULE,
-+	.write = rtw_debugfs_common_write,
-+	.open = simple_open,
-+	.release = rtw_debugfs_close,
-+};
-+
-+static int rtw_debugfs_get_read_reg(struct seq_file *m, void *v)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val, len, addr;
-+
-+	len = debugfs_priv->read_reg.len;
-+	addr = debugfs_priv->read_reg.addr;
-+	switch (len) {
-+	case 1:
-+		val = rtw_read8(rtwdev, addr);
-+		seq_printf(m, "reg 0x%03x: 0x%02x\n", addr, val);
++	value32 = rtw_read32(rtwdev, REG_WMAC_TRXPTCL_CTL);
++	value32 &= ~BIT_RFMOD;
++	switch (bw) {
++	case RTW_CHANNEL_WIDTH_80:
++		value32 |= BIT_RFMOD_80M;
 +		break;
-+	case 2:
-+		val = rtw_read16(rtwdev, addr);
-+		seq_printf(m, "reg 0x%03x: 0x%04x\n", addr, val);
++	case RTW_CHANNEL_WIDTH_40:
++		value32 |= BIT_RFMOD_40M;
 +		break;
-+	case 4:
-+		val = rtw_read32(rtwdev, addr);
-+		seq_printf(m, "reg 0x%03x: 0x%08x\n", addr, val);
++	case RTW_CHANNEL_WIDTH_20:
++	default:
 +		break;
 +	}
-+	return 0;
++	rtw_write32(rtwdev, REG_WMAC_TRXPTCL_CTL, value32);
++
++	value32 = rtw_read32(rtwdev, REG_AFE_CTRL1) & ~(BIT_MAC_CLK_SEL);
++	value32 |= (MAC_CLK_HW_DEF_80M << BIT_SHIFT_MAC_CLK_SEL);
++	rtw_write32(rtwdev, REG_AFE_CTRL1, value32);
++
++	rtw_write8(rtwdev, REG_USTIME_TSF, MAC_CLK_SPEED);
++	rtw_write8(rtwdev, REG_USTIME_EDCA, MAC_CLK_SPEED);
++
++	value8 = rtw_read8(rtwdev, REG_CCK_CHECK);
++	value8 = value8 & ~BIT_CHECK_CCK_EN;
++	if (channel > 35)
++		value8 |= BIT_CHECK_CCK_EN;
++	rtw_write8(rtwdev, REG_CCK_CHECK, value8);
 +}
 +
-+static int rtw_debugfs_get_rf_read(struct seq_file *m, void *v)
++static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val, addr, mask;
-+	u8 path;
++	u32 value32;
++	u8 value8;
 +
-+	path = debugfs_priv->rf_path;
-+	addr = debugfs_priv->rf_addr;
-+	mask = debugfs_priv->rf_mask;
++	rtw_write8(rtwdev, REG_RSV_CTRL, 0);
 +
-+	val = rtw_read_rf(rtwdev, path, addr, mask);
-+
-+	seq_printf(m, "rf_read path:%d addr:0x%08x mask:0x%08x val=0x%08x\n",
-+		   path, addr, mask, val);
-+
-+	return 0;
-+}
-+
-+static int rtw_debugfs_copy_from_user(char tmp[], int size,
-+				      const char __user *buffer, size_t count,
-+				      int num)
-+{
-+	int tmp_len;
-+
-+	if (count < num)
-+		return -EFAULT;
-+
-+	tmp_len = (count > size - 1 ? size - 1 : count);
-+
-+	if (!buffer || copy_from_user(tmp, buffer, tmp_len))
-+		return count;
-+
-+	tmp[tmp_len] = '\0';
-+
-+	return 0;
-+}
-+
-+static ssize_t rtw_debugfs_set_read_reg(struct file *filp,
-+					const char __user *buffer,
-+					size_t count, loff_t *loff)
-+{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 addr, len;
-+	int num;
-+
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 2);
-+
-+	num = sscanf(tmp, "%x %x", &addr, &len);
-+
-+	if (num !=  2)
-+		return count;
-+
-+	if (len != 1 && len != 2 && len != 4) {
-+		rtw_warn(rtwdev, "read reg setting wrong len\n");
++	switch (rtw_hci_type(rtwdev)) {
++	case RTW_HCI_TYPE_PCIE:
++		rtw_write32_set(rtwdev, REG_HCI_OPT_CTRL, BIT_BT_DIG_CLK_EN);
++		break;
++	case RTW_HCI_TYPE_USB:
++		break;
++	default:
 +		return -EINVAL;
 +	}
-+	debugfs_priv->read_reg.addr = addr;
-+	debugfs_priv->read_reg.len = len;
 +
-+	return count;
-+}
++	/* config PIN Mux */
++	value32 = rtw_read32(rtwdev, REG_PAD_CTRL1);
++	value32 |= BIT_PAPE_WLBT_SEL | BIT_LNAON_WLBT_SEL;
++	rtw_write32(rtwdev, REG_PAD_CTRL1, value32);
 +
-+static int rtw_debugfs_get_dump_cam(struct seq_file *m, void *v)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val, command;
-+	u32 hw_key_idx = debugfs_priv->cb_data << RTW_SEC_CAM_ENTRY_SHIFT;
-+	u32 read_cmd = RTW_SEC_CMD_POLLING;
-+	int i;
++	value32 = rtw_read32(rtwdev, REG_LED_CFG);
++	value32 &= ~(BIT_PAPE_SEL_EN | BIT_LNAON_SEL_EN);
++	rtw_write32(rtwdev, REG_LED_CFG, value32);
 +
-+	seq_printf(m, "cam entry%d\n", debugfs_priv->cb_data);
-+	seq_puts(m, "0x0      0x1      0x2     0x3     ");
-+	seq_puts(m, "0x4     0x5\n");
-+	mutex_lock(&rtwdev->mutex);
-+	for (i = 0; i <= 5; i++) {
-+		command = read_cmd | (hw_key_idx + i);
-+		rtw_write32(rtwdev, RTW_SEC_CMD_REG, command);
-+		val = rtw_read32(rtwdev, RTW_SEC_READ_REG);
-+		seq_printf(m, "%8.8x", val);
-+		if (i < 2)
-+			seq_puts(m, " ");
-+	}
-+	seq_puts(m, "\n");
-+	mutex_unlock(&rtwdev->mutex);
++	value32 = rtw_read32(rtwdev, REG_GPIO_MUXCFG);
++	value32 |= BIT_WLRFE_4_5_EN;
++	rtw_write32(rtwdev, REG_GPIO_MUXCFG, value32);
++
++	/* disable BB/RF */
++	value8 = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
++	value8 &= ~(BIT_FEN_BB_RSTB | BIT_FEN_BB_GLB_RST);
++	rtw_write8(rtwdev, REG_SYS_FUNC_EN, value8);
++
++	value8 = rtw_read8(rtwdev, REG_RF_CTRL);
++	value8 &= ~(BIT_RF_SDM_RSTB | BIT_RF_RSTB | BIT_RF_EN);
++	rtw_write8(rtwdev, REG_RF_CTRL, value8);
++
++	value32 = rtw_read32(rtwdev, REG_WLRF1);
++	value32 &= ~BIT_WLRF1_BBRF_EN;
++	rtw_write32(rtwdev, REG_WLRF1, value32);
++
 +	return 0;
 +}
 +
-+static int rtw_debugfs_get_rsvd_page(struct seq_file *m, void *v)
++static int rtw_pwr_cmd_polling(struct rtw_dev *rtwdev,
++			       struct rtw_pwr_seq_cmd *cmd)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u8 page_size = rtwdev->chip->page_size;
-+	u32 buf_size = debugfs_priv->rsvd_page.page_num * page_size;
-+	u32 offset = debugfs_priv->rsvd_page.page_offset * page_size;
-+	u8 *buf;
-+	int i;
++	u8 value;
++	u8 flag = 0;
++	u32 offset;
++	u32 cnt = RTW_PWR_POLLING_CNT;
++
++	if (cmd->base == RTW_PWR_ADDR_SDIO)
++		offset = cmd->offset | SDIO_LOCAL_OFFSET;
++	else
++		offset = cmd->offset;
++
++	do {
++		cnt--;
++		value = rtw_read8(rtwdev, offset);
++		value &= cmd->mask;
++		if (value == (cmd->value & cmd->mask))
++			return 0;
++		if (cnt == 0) {
++			if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE &&
++			    flag == 0) {
++				value = rtw_read8(rtwdev, REG_SYS_PW_CTRL);
++				value |= BIT(3);
++				rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
++				value &= ~BIT(3);
++				rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
++				cnt = RTW_PWR_POLLING_CNT;
++				flag = 1;
++			} else {
++				return -EBUSY;
++			}
++		} else {
++			udelay(50);
++		}
++	} while (1);
++}
++
++static int rtw_sub_pwr_seq_parser(struct rtw_dev *rtwdev, u8 intf_mask,
++				  u8 cut_mask, struct rtw_pwr_seq_cmd *cmd)
++{
++	struct rtw_pwr_seq_cmd *cur_cmd;
++	u32 offset;
++	u8 value;
++
++	for (cur_cmd = cmd; cur_cmd->cmd != RTW_PWR_CMD_END; cur_cmd++) {
++		if (!(cur_cmd->intf_mask & intf_mask) ||
++		    !(cur_cmd->cut_mask & cut_mask))
++			continue;
++
++		switch (cur_cmd->cmd) {
++		case RTW_PWR_CMD_WRITE:
++			offset = cur_cmd->offset;
++
++			if (cur_cmd->base == RTW_PWR_ADDR_SDIO)
++				offset |= SDIO_LOCAL_OFFSET;
++
++			value = rtw_read8(rtwdev, offset);
++			value &= ~cur_cmd->mask;
++			value |= (cur_cmd->value & cur_cmd->mask);
++			rtw_write8(rtwdev, offset, value);
++			break;
++		case RTW_PWR_CMD_POLLING:
++			if (rtw_pwr_cmd_polling(rtwdev, cur_cmd))
++				return -EBUSY;
++			break;
++		case RTW_PWR_CMD_DELAY:
++			if (cur_cmd->value == RTW_PWR_DELAY_US)
++				udelay(cur_cmd->offset);
++			else
++				mdelay(cur_cmd->offset);
++			break;
++		case RTW_PWR_CMD_READ:
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++
++	return 0;
++}
++
++static int rtw_pwr_seq_parser(struct rtw_dev *rtwdev,
++			      struct rtw_pwr_seq_cmd **cmd_seq)
++{
++	u8 cut_mask;
++	u8 intf_mask;
++	u8 cut;
++	u32 idx = 0;
++	struct rtw_pwr_seq_cmd *cmd;
 +	int ret;
 +
-+	buf = vzalloc(buf_size);
++	cut = rtwdev->hal.cut_version;
++	cut_mask = cut_version_to_mask(cut);
++	switch (rtw_hci_type(rtwdev)) {
++	case RTW_HCI_TYPE_PCIE:
++		intf_mask = BIT(2);
++		break;
++	case RTW_HCI_TYPE_USB:
++		intf_mask = BIT(1);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	do {
++		cmd = cmd_seq[idx];
++		if (!cmd)
++			break;
++
++		ret = rtw_sub_pwr_seq_parser(rtwdev, intf_mask, cut_mask, cmd);
++		if (ret)
++			return -EBUSY;
++
++		idx++;
++	} while (1);
++
++	return 0;
++}
++
++static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_pwr_seq_cmd **pwr_seq;
++	u8 rpwm;
++	bool cur_pwr;
++
++	rpwm = rtw_read8(rtwdev, rtwdev->hci.rpwm_addr);
++
++	/* Check FW still exist or not */
++	if (rtw_read16(rtwdev, REG_MCUFW_CTRL) == 0xC078) {
++		rpwm = (rpwm ^ BIT_RPWM_TOGGLE) & BIT_RPWM_TOGGLE;
++		rtw_write8(rtwdev, rtwdev->hci.rpwm_addr, rpwm);
++	}
++
++	if (rtw_read8(rtwdev, REG_CR) == 0xea)
++		cur_pwr = false;
++	else if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB &&
++		 (rtw_read8(rtwdev, REG_SYS_STATUS1 + 1) & BIT(0)))
++		cur_pwr = false;
++	else
++		cur_pwr = true;
++
++	if (pwr_on && cur_pwr)
++		return -EALREADY;
++
++	pwr_seq = pwr_on ? chip->pwr_on_seq : chip->pwr_off_seq;
++	if (rtw_pwr_seq_parser(rtwdev, pwr_seq))
++		return -EINVAL;
++
++	return 0;
++}
++
++static int rtw_mac_init_system_cfg(struct rtw_dev *rtwdev)
++{
++	u8 sys_func_en = rtwdev->chip->sys_func_en;
++	u8 value8;
++	u32 value, tmp;
++
++	value = rtw_read32(rtwdev, REG_CPU_DMEM_CON);
++	value |= BIT_WL_PLATFORM_RST | BIT_DDMA_EN;
++	rtw_write32(rtwdev, REG_CPU_DMEM_CON, value);
++
++	rtw_write8(rtwdev, REG_SYS_FUNC_EN + 1, sys_func_en);
++	value8 = (rtw_read8(rtwdev, REG_CR_EXT + 3) & 0xF0) | 0x0C;
++	rtw_write8(rtwdev, REG_CR_EXT + 3, value8);
++
++	/* disable boot-from-flash for driver's DL FW */
++	tmp = rtw_read32(rtwdev, REG_MCUFW_CTRL);
++	if (tmp & BIT_BOOT_FSPI_EN) {
++		rtw_write32(rtwdev, REG_MCUFW_CTRL, tmp & (~BIT_BOOT_FSPI_EN));
++		value = rtw_read32(rtwdev, REG_GPIO_MUXCFG) & (~BIT_FSPI_EN);
++		rtw_write32(rtwdev, REG_GPIO_MUXCFG, value);
++	}
++
++	return 0;
++}
++
++int rtw_mac_power_on(struct rtw_dev *rtwdev)
++{
++	int ret = 0;
++
++	ret = rtw_mac_pre_system_cfg(rtwdev);
++	if (ret)
++		goto err;
++
++	ret = rtw_mac_power_switch(rtwdev, true);
++	if (ret)
++		goto err;
++
++	ret = rtw_mac_init_system_cfg(rtwdev);
++	if (ret)
++		goto err;
++
++	return 0;
++
++err:
++	rtw_err(rtwdev, "mac power on failed");
++	return ret;
++}
++
++void rtw_mac_power_off(struct rtw_dev *rtwdev)
++{
++	rtw_mac_power_switch(rtwdev, false);
++}
++
++static bool check_firmware_size(const u8 *data, u32 size)
++{
++	u32 dmem_size;
++	u32 imem_size;
++	u32 emem_size;
++	u32 real_size;
++
++	dmem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_DMEM_SIZE)));
++	imem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_IMEM_SIZE)));
++	emem_size = ((*(data + FW_HDR_MEM_USAGE)) & BIT(4)) ?
++		    le32_to_cpu(*((__le32 *)(data + FW_HDR_EMEM_SIZE))) : 0;
++
++	dmem_size += FW_HDR_CHKSUM_SIZE;
++	imem_size += FW_HDR_CHKSUM_SIZE;
++	emem_size += emem_size ? FW_HDR_CHKSUM_SIZE : 0;
++	real_size = FW_HDR_SIZE + dmem_size + imem_size + emem_size;
++	if (real_size != size)
++		return false;
++
++	return true;
++}
++
++static void wlan_cpu_enable(struct rtw_dev *rtwdev, bool enable)
++{
++	if (enable) {
++		/* cpu io interface enable */
++		rtw_write8_set(rtwdev, REG_RSV_CTRL + 1, BIT_WLMCU_IOIF);
++
++		/* cpu enable */
++		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN + 1, BIT_FEN_CPUEN);
++	} else {
++		/* cpu io interface disable */
++		rtw_write8_clr(rtwdev, REG_SYS_FUNC_EN + 1, BIT_FEN_CPUEN);
++
++		/* cpu disable */
++		rtw_write8_clr(rtwdev, REG_RSV_CTRL + 1, BIT_WLMCU_IOIF);
++	}
++}
++
++#define DLFW_RESTORE_REG_NUM 6
++
++static void download_firmware_reg_backup(struct rtw_dev *rtwdev,
++					 struct rtw_backup_info *bckp)
++{
++	u8 tmp;
++	u8 bckp_idx = 0;
++
++	/* set HIQ to hi priority */
++	bckp[bckp_idx].len = 1;
++	bckp[bckp_idx].reg = REG_TXDMA_PQ_MAP + 1;
++	bckp[bckp_idx].val = rtw_read8(rtwdev, REG_TXDMA_PQ_MAP + 1);
++	bckp_idx++;
++	tmp = RTW_DMA_MAPPING_HIGH << 6;
++	rtw_write8(rtwdev, REG_TXDMA_PQ_MAP + 1, tmp);
++
++	/* DLFW only use HIQ, map HIQ to hi priority */
++	bckp[bckp_idx].len = 1;
++	bckp[bckp_idx].reg = REG_CR;
++	bckp[bckp_idx].val = rtw_read8(rtwdev, REG_CR);
++	bckp_idx++;
++	bckp[bckp_idx].len = 4;
++	bckp[bckp_idx].reg = REG_H2CQ_CSR;
++	bckp[bckp_idx].val = BIT_H2CQ_FULL;
++	bckp_idx++;
++	tmp = BIT_HCI_TXDMA_EN | BIT_TXDMA_EN;
++	rtw_write8(rtwdev, REG_CR, tmp);
++	rtw_write32(rtwdev, REG_H2CQ_CSR, BIT_H2CQ_FULL);
++
++	/* Config hi priority queue and public priority queue page number */
++	bckp[bckp_idx].len = 2;
++	bckp[bckp_idx].reg = REG_FIFOPAGE_INFO_1;
++	bckp[bckp_idx].val = rtw_read16(rtwdev, REG_FIFOPAGE_INFO_1);
++	bckp_idx++;
++	bckp[bckp_idx].len = 4;
++	bckp[bckp_idx].reg = REG_RQPN_CTRL_2;
++	bckp[bckp_idx].val = rtw_read32(rtwdev, REG_RQPN_CTRL_2) | BIT_LD_RQPN;
++	bckp_idx++;
++	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, 0x200);
++	rtw_write32(rtwdev, REG_RQPN_CTRL_2, bckp[bckp_idx - 1].val);
++
++	/* Disable beacon related functions */
++	tmp = rtw_read8(rtwdev, REG_BCN_CTRL);
++	bckp[bckp_idx].len = 1;
++	bckp[bckp_idx].reg = REG_BCN_CTRL;
++	bckp[bckp_idx].val = tmp;
++	bckp_idx++;
++	tmp = (u8)((tmp & (~BIT_EN_BCN_FUNCTION)) | BIT_DIS_TSF_UDT);
++	rtw_write8(rtwdev, REG_BCN_CTRL, tmp);
++
++	WARN(bckp_idx != DLFW_RESTORE_REG_NUM, "wrong backup number\n");
++}
++
++static void download_firmware_reset_platform(struct rtw_dev *rtwdev)
++{
++	rtw_write8_clr(rtwdev, REG_CPU_DMEM_CON + 2, BIT_WL_PLATFORM_RST >> 16);
++	rtw_write8_clr(rtwdev, REG_SYS_CLK_CTRL + 1, BIT_CPU_CLK_EN >> 8);
++	rtw_write8_set(rtwdev, REG_CPU_DMEM_CON + 2, BIT_WL_PLATFORM_RST >> 16);
++	rtw_write8_set(rtwdev, REG_SYS_CLK_CTRL + 1, BIT_CPU_CLK_EN >> 8);
++}
++
++static void download_firmware_reg_restore(struct rtw_dev *rtwdev,
++					  struct rtw_backup_info *bckp,
++					  u8 bckp_num)
++{
++	rtw_restore_reg(rtwdev, bckp, bckp_num);
++}
++
++#define TX_DESC_SIZE 48
++
++static int send_firmware_pkt_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
++				       const u8 *data, u32 size)
++{
++	u8 *buf;
++	int ret;
++
++	buf = kmemdup(data, size, GFP_KERNEL);
 +	if (!buf)
 +		return -ENOMEM;
 +
-+	ret = rtw_dump_drv_rsvd_page(rtwdev, offset, buf_size, (u32 *)buf);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to dump rsvd page\n");
-+		vfree(buf);
-+		return ret;
-+	}
++	ret = rtw_fw_write_data_rsvd_page(rtwdev, pg_addr, buf, size);
++	kfree(buf);
++	return ret;
++}
 +
-+	for (i = 0 ; i < buf_size ; i += 8) {
-+		if (i % page_size == 0)
-+			seq_printf(m, "PAGE %d\n", (i + offset) / page_size);
-+		seq_printf(m, "%2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x\n",
-+			   *(buf + i), *(buf + i + 1),
-+			   *(buf + i + 2), *(buf + i + 3),
-+			   *(buf + i + 4), *(buf + i + 5),
-+			   *(buf + i + 6), *(buf + i + 7));
-+	}
-+	vfree(buf);
++static int
++send_firmware_pkt(struct rtw_dev *rtwdev, u16 pg_addr, const u8 *data, u32 size)
++{
++	int ret;
++
++	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB &&
++	    !((size + TX_DESC_SIZE) & (512 - 1)))
++		size += 1;
++
++	ret = send_firmware_pkt_rsvd_page(rtwdev, pg_addr, data, size);
++	if (ret)
++		rtw_err(rtwdev, "failed to download rsvd page\n");
++
++	return ret;
++}
++
++static int
++iddma_enable(struct rtw_dev *rtwdev, u32 src, u32 dst, u32 ctrl)
++{
++	rtw_write32(rtwdev, REG_DDMA_CH0SA, src);
++	rtw_write32(rtwdev, REG_DDMA_CH0DA, dst);
++	rtw_write32(rtwdev, REG_DDMA_CH0CTRL, ctrl);
++
++	if (!check_hw_ready(rtwdev, REG_DDMA_CH0CTRL, BIT_DDMACH0_OWN, 0))
++		return -EBUSY;
 +
 +	return 0;
 +}
 +
-+static ssize_t rtw_debugfs_set_rsvd_page(struct file *filp,
-+					 const char __user *buffer,
-+					 size_t count, loff_t *loff)
++static int iddma_download_firmware(struct rtw_dev *rtwdev, u32 src, u32 dst,
++				   u32 len, u8 first)
 +{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 offset, page_num;
-+	int num;
++	u32 ch0_ctrl = BIT_DDMACH0_CHKSUM_EN | BIT_DDMACH0_OWN;
 +
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 2);
++	if (!check_hw_ready(rtwdev, REG_DDMA_CH0CTRL, BIT_DDMACH0_OWN, 0))
++		return -EBUSY;
 +
-+	num = sscanf(tmp, "%d %d", &offset, &page_num);
++	ch0_ctrl |= len & BIT_MASK_DDMACH0_DLEN;
++	if (!first)
++		ch0_ctrl |= BIT_DDMACH0_CHKSUM_CONT;
 +
-+	if (num != 2) {
-+		rtw_warn(rtwdev, "invalid arguments\n");
-+		return num;
-+	}
++	if (iddma_enable(rtwdev, src, dst, ch0_ctrl))
++		return -EBUSY;
 +
-+	debugfs_priv->rsvd_page.page_offset = offset;
-+	debugfs_priv->rsvd_page.page_num = page_num;
-+
-+	return count;
++	return 0;
 +}
 +
-+static ssize_t rtw_debugfs_set_single_input(struct file *filp,
-+					    const char __user *buffer,
-+					    size_t count, loff_t *loff)
++static bool
++check_fw_checksum(struct rtw_dev *rtwdev, u32 addr)
 +{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 input;
-+	int num;
++	u8 fw_ctrl;
 +
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
++	fw_ctrl = rtw_read8(rtwdev, REG_MCUFW_CTRL);
 +
-+	num = kstrtoint(tmp, 0, &input);
++	if (rtw_read32(rtwdev, REG_DDMA_CH0CTRL) & BIT_DDMACH0_CHKSUM_STS) {
++		if (addr < OCPBASE_DMEM_88XX) {
++			fw_ctrl |= BIT_IMEM_DW_OK;
++			fw_ctrl &= ~BIT_IMEM_CHKSUM_OK;
++			rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
++		} else {
++			fw_ctrl |= BIT_DMEM_DW_OK;
++			fw_ctrl &= ~BIT_DMEM_CHKSUM_OK;
++			rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
++		}
 +
-+	if (num) {
-+		rtw_warn(rtwdev, "kstrtoint failed\n");
-+		return num;
++		rtw_err(rtwdev, "invalid fw checksum\n");
++
++		return false;
 +	}
 +
-+	debugfs_priv->cb_data = input;
++	if (addr < OCPBASE_DMEM_88XX) {
++		fw_ctrl |= (BIT_IMEM_DW_OK | BIT_IMEM_CHKSUM_OK);
++		rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
++	} else {
++		fw_ctrl |= (BIT_DMEM_DW_OK | BIT_DMEM_CHKSUM_OK);
++		rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
++	}
 +
-+	return count;
++	return true;
 +}
 +
-+static ssize_t rtw_debugfs_set_write_reg(struct file *filp,
-+					 const char __user *buffer,
-+					 size_t count, loff_t *loff)
++static int
++download_firmware_to_mem(struct rtw_dev *rtwdev, const u8 *data,
++			 u32 src, u32 dst, u32 size)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 addr, val, len;
-+	int num;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u32 desc_size = chip->tx_pkt_desc_sz;
++	u8 first_part;
++	u32 mem_offset;
++	u32 residue_size;
++	u32 pkt_size;
++	u32 max_size = 0x1000;
++	u32 val;
++	int ret;
 +
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
++	mem_offset = 0;
++	first_part = 1;
++	residue_size = size;
 +
-+	/* write BB/MAC register */
-+	num = sscanf(tmp, "%x %x %x", &addr, &val, &len);
++	val = rtw_read32(rtwdev, REG_DDMA_CH0CTRL);
++	val |= BIT_DDMACH0_RESET_CHKSUM_STS;
++	rtw_write32(rtwdev, REG_DDMA_CH0CTRL, val);
 +
-+	if (num !=  3)
-+		return count;
++	while (residue_size) {
++		if (residue_size >= max_size)
++			pkt_size = max_size;
++		else
++			pkt_size = residue_size;
 +
-+	switch (len) {
-+	case 1:
-+		rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
-+			"reg write8 0x%03x: 0x%08x\n", addr, val);
-+		rtw_write8(rtwdev, addr, (u8)val);
++		ret = send_firmware_pkt(rtwdev, (u16)(src >> 7),
++					data + mem_offset, pkt_size);
++		if (ret)
++			return ret;
++
++		ret = iddma_download_firmware(rtwdev, OCPBASE_TXBUF_88XX +
++					      src + desc_size,
++					      dst + mem_offset, pkt_size,
++					      first_part);
++		if (ret)
++			return ret;
++
++		first_part = 0;
++		mem_offset += pkt_size;
++		residue_size -= pkt_size;
++	}
++
++	if (!check_fw_checksum(rtwdev, dst))
++		return -EINVAL;
++
++	return 0;
++}
++
++static void update_firmware_info(struct rtw_dev *rtwdev,
++				 struct rtw_fw_state *fw)
++{
++	const u8 *data = fw->firmware->data;
++
++	fw->h2c_version =
++		le16_to_cpu(*((__le16 *)(data + FW_HDR_H2C_FMT_VER)));
++	fw->version =
++		le16_to_cpu(*((__le16 *)(data + FW_HDR_VERSION)));
++	fw->sub_version = *(data + FW_HDR_SUBVERSION);
++	fw->sub_index = *(data + FW_HDR_SUBINDEX);
++
++	rtw_dbg(rtwdev, RTW_DBG_FW, "fw h2c version: %x\n", fw->h2c_version);
++	rtw_dbg(rtwdev, RTW_DBG_FW, "fw version:     %x\n", fw->version);
++	rtw_dbg(rtwdev, RTW_DBG_FW, "fw sub version: %x\n", fw->sub_version);
++	rtw_dbg(rtwdev, RTW_DBG_FW, "fw sub index:   %x\n", fw->sub_index);
++}
++
++static int
++start_download_firmware(struct rtw_dev *rtwdev, const u8 *data, u32 size)
++{
++	const u8 *cur_fw;
++	u16 val;
++	u32 imem_size;
++	u32 dmem_size;
++	u32 emem_size;
++	u32 addr;
++	int ret;
++
++	dmem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_DMEM_SIZE)));
++	imem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_IMEM_SIZE)));
++	emem_size = ((*(data + FW_HDR_MEM_USAGE)) & BIT(4)) ?
++		    le32_to_cpu(*((__le32 *)(data + FW_HDR_EMEM_SIZE))) : 0;
++	dmem_size += FW_HDR_CHKSUM_SIZE;
++	imem_size += FW_HDR_CHKSUM_SIZE;
++	emem_size += emem_size ? FW_HDR_CHKSUM_SIZE : 0;
++
++	val = (u16)(rtw_read16(rtwdev, REG_MCUFW_CTRL) & 0x3800);
++	val |= BIT_MCUFWDL_EN;
++	rtw_write16(rtwdev, REG_MCUFW_CTRL, val);
++
++	cur_fw = data + FW_HDR_SIZE;
++	addr = le32_to_cpu(*((__le32 *)(data + FW_HDR_DMEM_ADDR)));
++	addr &= ~BIT(31);
++	ret = download_firmware_to_mem(rtwdev, cur_fw, 0, addr, dmem_size);
++	if (ret)
++		return ret;
++
++	cur_fw = data + FW_HDR_SIZE + dmem_size;
++	addr = le32_to_cpu(*((__le32 *)(data + FW_HDR_IMEM_ADDR)));
++	addr &= ~BIT(31);
++	ret = download_firmware_to_mem(rtwdev, cur_fw, 0, addr, imem_size);
++	if (ret)
++		return ret;
++
++	if (emem_size) {
++		cur_fw = data + FW_HDR_SIZE + dmem_size + imem_size;
++		addr = le32_to_cpu(*((__le32 *)(data + FW_HDR_EMEM_ADDR)));
++		addr &= ~BIT(31);
++		ret = download_firmware_to_mem(rtwdev, cur_fw, 0, addr,
++					       emem_size);
++		if (ret)
++			return ret;
++	}
++
++	return 0;
++}
++
++static int download_firmware_validate(struct rtw_dev *rtwdev)
++{
++	u32 fw_key;
++
++	if (!check_hw_ready(rtwdev, REG_MCUFW_CTRL, FW_READY_MASK, FW_READY)) {
++		fw_key = rtw_read32(rtwdev, REG_FW_DBG7) & FW_KEY_MASK;
++		if (fw_key == ILLEGAL_KEY_GROUP)
++			rtw_err(rtwdev, "invalid fw key\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static void download_firmware_end_flow(struct rtw_dev *rtwdev)
++{
++	u16 fw_ctrl;
++
++	rtw_write32(rtwdev, REG_TXDMA_STATUS, BTI_PAGE_OVF);
++
++	/* Check IMEM & DMEM checksum is OK or not */
++	fw_ctrl = rtw_read16(rtwdev, REG_MCUFW_CTRL);
++	if ((fw_ctrl & BIT_CHECK_SUM_OK) != BIT_CHECK_SUM_OK)
++		return;
++
++	fw_ctrl = (fw_ctrl | BIT_FW_DW_RDY) & ~BIT_MCUFWDL_EN;
++	rtw_write16(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
++}
++
++int rtw_download_firmware(struct rtw_dev *rtwdev, struct rtw_fw_state *fw)
++{
++	struct rtw_backup_info bckp[DLFW_RESTORE_REG_NUM];
++	const u8 *data = fw->firmware->data;
++	u32 size = fw->firmware->size;
++	u32 ltecoex_bckp;
++	int ret;
++
++	if (!check_firmware_size(data, size))
++		return -EINVAL;
++
++	if (!ltecoex_read_reg(rtwdev, 0x38, &ltecoex_bckp))
++		return -EBUSY;
++
++	wlan_cpu_enable(rtwdev, false);
++
++	download_firmware_reg_backup(rtwdev, bckp);
++	download_firmware_reset_platform(rtwdev);
++
++	ret = start_download_firmware(rtwdev, data, size);
++	if (ret)
++		goto dlfw_fail;
++
++	download_firmware_reg_restore(rtwdev, bckp, DLFW_RESTORE_REG_NUM);
++
++	download_firmware_end_flow(rtwdev);
++
++	wlan_cpu_enable(rtwdev, true);
++
++	if (!ltecoex_reg_write(rtwdev, 0x38, ltecoex_bckp))
++		return -EBUSY;
++
++	ret = download_firmware_validate(rtwdev);
++	if (ret)
++		goto dlfw_fail;
++
++	update_firmware_info(rtwdev, fw);
++
++	/* reset desc and index */
++	rtw_hci_setup(rtwdev);
++
++	rtwdev->h2c.last_box_num = 0;
++	rtwdev->h2c.seq = 0;
++
++	rtw_fw_send_general_info(rtwdev);
++	rtw_fw_send_phydm_info(rtwdev);
++
++	rtw_flag_set(rtwdev, RTW_FLAG_FW_RUNNING);
++
++	return 0;
++
++dlfw_fail:
++	/* Disable FWDL_EN */
++	rtw_write8_clr(rtwdev, REG_MCUFW_CTRL, BIT_MCUFWDL_EN);
++	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN + 1, BIT_FEN_CPUEN);
++
++	return ret;
++}
++
++static int txdma_queue_mapping(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_rqpn *rqpn = NULL;
++	u16 txdma_pq_map = 0;
++
++	switch (rtw_hci_type(rtwdev)) {
++	case RTW_HCI_TYPE_PCIE:
++		rqpn = &chip->rqpn_table[1];
 +		break;
-+	case 2:
-+		rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
-+			"reg write16 0x%03x: 0x%08x\n", addr, val);
-+		rtw_write16(rtwdev, addr, (u16)val);
-+		break;
-+	case 4:
-+		rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
-+			"reg write32 0x%03x: 0x%08x\n", addr, val);
-+		rtw_write32(rtwdev, addr, (u32)val);
++	case RTW_HCI_TYPE_USB:
++		if (rtwdev->hci.bulkout_num == 2)
++			rqpn = &chip->rqpn_table[2];
++		else if (rtwdev->hci.bulkout_num == 3)
++			rqpn = &chip->rqpn_table[3];
++		else if (rtwdev->hci.bulkout_num == 4)
++			rqpn = &chip->rqpn_table[4];
++		else
++			return -EINVAL;
 +		break;
 +	default:
-+		rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
-+			"error write length = %d\n", len);
++		return -EINVAL;
++	}
++
++	txdma_pq_map |= BIT_TXDMA_HIQ_MAP(rqpn->dma_map_hi);
++	txdma_pq_map |= BIT_TXDMA_MGQ_MAP(rqpn->dma_map_mg);
++	txdma_pq_map |= BIT_TXDMA_BKQ_MAP(rqpn->dma_map_bk);
++	txdma_pq_map |= BIT_TXDMA_BEQ_MAP(rqpn->dma_map_be);
++	txdma_pq_map |= BIT_TXDMA_VIQ_MAP(rqpn->dma_map_vi);
++	txdma_pq_map |= BIT_TXDMA_VOQ_MAP(rqpn->dma_map_vo);
++	rtw_write16(rtwdev, REG_TXDMA_PQ_MAP, txdma_pq_map);
++
++	rtw_write8(rtwdev, REG_CR, 0);
++	rtw_write8(rtwdev, REG_CR, MAC_TRX_ENABLE);
++	rtw_write32(rtwdev, REG_H2CQ_CSR, BIT_H2CQ_FULL);
++
++	return 0;
++}
++
++static int set_trx_fifo_info(struct rtw_dev *rtwdev)
++{
++	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u16 cur_pg_addr;
++	u8 csi_buf_pg_num = chip->csi_buf_pg_num;
++
++	/* config rsvd page num */
++	fifo->rsvd_drv_pg_num = 8;
++	fifo->txff_pg_num = chip->txff_size >> 7;
++	fifo->rsvd_pg_num = fifo->rsvd_drv_pg_num +
++			   RSVD_PG_H2C_EXTRAINFO_NUM +
++			   RSVD_PG_H2C_STATICINFO_NUM +
++			   RSVD_PG_H2CQ_NUM +
++			   RSVD_PG_CPU_INSTRUCTION_NUM +
++			   RSVD_PG_FW_TXBUF_NUM +
++			   csi_buf_pg_num;
++
++	if (fifo->rsvd_pg_num > fifo->txff_pg_num)
++		return -ENOMEM;
++
++	fifo->acq_pg_num = fifo->txff_pg_num - fifo->rsvd_pg_num;
++	fifo->rsvd_boundary = fifo->txff_pg_num - fifo->rsvd_pg_num;
++
++	cur_pg_addr = fifo->txff_pg_num;
++	cur_pg_addr -= csi_buf_pg_num;
++	fifo->rsvd_csibuf_addr = cur_pg_addr;
++	cur_pg_addr -= RSVD_PG_FW_TXBUF_NUM;
++	fifo->rsvd_fw_txbuf_addr = cur_pg_addr;
++	cur_pg_addr -= RSVD_PG_CPU_INSTRUCTION_NUM;
++	fifo->rsvd_cpu_instr_addr = cur_pg_addr;
++	cur_pg_addr -= RSVD_PG_H2CQ_NUM;
++	fifo->rsvd_h2cq_addr = cur_pg_addr;
++	cur_pg_addr -= RSVD_PG_H2C_STATICINFO_NUM;
++	fifo->rsvd_h2c_sta_info_addr = cur_pg_addr;
++	cur_pg_addr -= RSVD_PG_H2C_EXTRAINFO_NUM;
++	fifo->rsvd_h2c_info_addr = cur_pg_addr;
++	cur_pg_addr -= fifo->rsvd_drv_pg_num;
++	fifo->rsvd_drv_addr = cur_pg_addr;
++
++	if (fifo->rsvd_boundary != fifo->rsvd_drv_addr) {
++		rtw_err(rtwdev, "wrong rsvd driver address\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int priority_queue_cfg(struct rtw_dev *rtwdev)
++{
++	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_page_table *pg_tbl = NULL;
++	u16 pubq_num;
++	int ret;
++
++	ret = set_trx_fifo_info(rtwdev);
++	if (ret)
++		return ret;
++
++	switch (rtw_hci_type(rtwdev)) {
++	case RTW_HCI_TYPE_PCIE:
++		pg_tbl = &chip->page_table[1];
 +		break;
++	case RTW_HCI_TYPE_USB:
++		if (rtwdev->hci.bulkout_num == 2)
++			pg_tbl = &chip->page_table[2];
++		else if (rtwdev->hci.bulkout_num == 3)
++			pg_tbl = &chip->page_table[3];
++		else if (rtwdev->hci.bulkout_num == 4)
++			pg_tbl = &chip->page_table[4];
++		else
++			return -EINVAL;
++		break;
++	default:
++		return -EINVAL;
 +	}
 +
-+	return count;
-+}
++	pubq_num = fifo->acq_pg_num - pg_tbl->hq_num - pg_tbl->lq_num -
++		   pg_tbl->nq_num - pg_tbl->exq_num - pg_tbl->gapq_num;
++	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, pg_tbl->hq_num);
++	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_2, pg_tbl->lq_num);
++	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_3, pg_tbl->nq_num);
++	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_4, pg_tbl->exq_num);
++	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_5, pubq_num);
++	rtw_write32_set(rtwdev, REG_RQPN_CTRL_2, BIT_LD_RQPN);
 +
-+static ssize_t rtw_debugfs_set_rf_write(struct file *filp,
-+					const char __user *buffer,
-+					size_t count, loff_t *loff)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 path, addr, mask, val;
-+	int num;
++	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2, fifo->rsvd_boundary);
++	rtw_write8_set(rtwdev, REG_FWHW_TXQ_CTRL + 2, BIT_EN_WR_FREE_TAIL >> 16);
 +
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 4);
++	rtw_write16(rtwdev, REG_BCNQ_BDNY_V1, fifo->rsvd_boundary);
++	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2 + 2, fifo->rsvd_boundary);
++	rtw_write16(rtwdev, REG_BCNQ1_BDNY_V1, fifo->rsvd_boundary);
++	rtw_write32(rtwdev, REG_RXFF_BNDY, chip->rxff_size - C2H_PKT_BUF - 1);
++	rtw_write8_set(rtwdev, REG_AUTO_LLT_V1, BIT_AUTO_INIT_LLT_V1);
 +
-+	num = sscanf(tmp, "%x %x %x %x", &path, &addr, &mask, &val);
++	if (!check_hw_ready(rtwdev, REG_AUTO_LLT_V1, BIT_AUTO_INIT_LLT_V1, 0))
++		return -EBUSY;
 +
-+	if (num !=  4) {
-+		rtw_warn(rtwdev, "invalid args, [path] [addr] [mask] [val]\n");
-+		return count;
-+	}
++	rtw_write8(rtwdev, REG_CR + 3, 0);
 +
-+	rtw_write_rf(rtwdev, path, addr, mask, val);
-+	rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
-+		"write_rf path:%d addr:0x%08x mask:0x%08x, val:0x%08x\n",
-+		path, addr, mask, val);
-+
-+	return count;
-+}
-+
-+static ssize_t rtw_debugfs_set_rf_read(struct file *filp,
-+				       const char __user *buffer,
-+				       size_t count, loff_t *loff)
-+{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 path, addr, mask;
-+	int num;
-+
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
-+
-+	num = sscanf(tmp, "%x %x %x", &path, &addr, &mask);
-+
-+	if (num !=  3) {
-+		rtw_warn(rtwdev, "invalid args, [path] [addr] [mask] [val]\n");
-+		return count;
-+	}
-+
-+	debugfs_priv->rf_path = path;
-+	debugfs_priv->rf_addr = addr;
-+	debugfs_priv->rf_mask = mask;
-+
-+	return count;
-+}
-+
-+static int rtw_debug_get_mac_page(struct seq_file *m, void *v)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val;
-+	u32 page = debugfs_priv->cb_data;
-+	int i, n;
-+	int max = 0xff;
-+
-+	val = rtw_read32(rtwdev, debugfs_priv->cb_data);
-+	for (n = 0; n <= max; ) {
-+		seq_printf(m, "\n%8.8x  ", n + page);
-+		for (i = 0; i < 4 && n <= max; i++, n += 4)
-+			seq_printf(m, "%8.8x    ",
-+				   rtw_read32(rtwdev, (page | n)));
-+	}
-+	seq_puts(m, "\n");
 +	return 0;
 +}
 +
-+static int rtw_debug_get_bb_page(struct seq_file *m, void *v)
++static int init_h2c(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val;
-+	u32 page = debugfs_priv->cb_data;
-+	int i, n;
-+	int max = 0xff;
++	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
++	u8 value8;
++	u32 value32;
++	u32 h2cq_addr;
++	u32 h2cq_size;
++	u32 h2cq_free;
++	u32 wp, rp;
 +
-+	val = rtw_read32(rtwdev, debugfs_priv->cb_data);
-+	for (n = 0; n <= max; ) {
-+		seq_printf(m, "\n%8.8x  ", n + page);
-+		for (i = 0; i < 4 && n <= max; i++, n += 4)
-+			seq_printf(m, "%8.8x    ",
-+				   rtw_read32(rtwdev, (page | n)));
-+	}
-+	seq_puts(m, "\n");
-+	return 0;
-+}
++	h2cq_addr = fifo->rsvd_h2cq_addr << TX_PAGE_SIZE_SHIFT;
++	h2cq_size = RSVD_PG_H2CQ_NUM << TX_PAGE_SIZE_SHIFT;
 +
-+static int rtw_debug_get_rf_dump(struct seq_file *m, void *v)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 addr, offset, data;
-+	u8 path;
++	value32 = rtw_read32(rtwdev, REG_H2C_HEAD);
++	value32 = (value32 & 0xFFFC0000) | h2cq_addr;
++	rtw_write32(rtwdev, REG_H2C_HEAD, value32);
 +
-+	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
-+		seq_printf(m, "RF path:%d\n", path);
-+		for (addr = 0; addr < 0x100; addr += 4) {
-+			seq_printf(m, "%8.8x  ", addr);
-+			for (offset = 0; offset < 4; offset++) {
-+				data = rtw_read_rf(rtwdev, path, addr + offset,
-+						   0xffffffff);
-+				seq_printf(m, "%8.8x    ", data);
-+			}
-+			seq_puts(m, "\n");
-+		}
-+		seq_puts(m, "\n");
++	value32 = rtw_read32(rtwdev, REG_H2C_READ_ADDR);
++	value32 = (value32 & 0xFFFC0000) | h2cq_addr;
++	rtw_write32(rtwdev, REG_H2C_READ_ADDR, value32);
++
++	value32 = rtw_read32(rtwdev, REG_H2C_TAIL);
++	value32 &= 0xFFFC0000;
++	value32 |= (h2cq_addr + h2cq_size);
++	rtw_write32(rtwdev, REG_H2C_TAIL, value32);
++
++	value8 = rtw_read8(rtwdev, REG_H2C_INFO);
++	value8 = (u8)((value8 & 0xFC) | 0x01);
++	rtw_write8(rtwdev, REG_H2C_INFO, value8);
++
++	value8 = rtw_read8(rtwdev, REG_H2C_INFO);
++	value8 = (u8)((value8 & 0xFB) | 0x04);
++	rtw_write8(rtwdev, REG_H2C_INFO, value8);
++
++	value8 = rtw_read8(rtwdev, REG_TXDMA_OFFSET_CHK + 1);
++	value8 = (u8)((value8 & 0x7f) | 0x80);
++	rtw_write8(rtwdev, REG_TXDMA_OFFSET_CHK + 1, value8);
++
++	wp = rtw_read32(rtwdev, REG_H2C_PKT_WRITEADDR) & 0x3FFFF;
++	rp = rtw_read32(rtwdev, REG_H2C_PKT_READADDR) & 0x3FFFF;
++	h2cq_free = wp >= rp ? h2cq_size - (wp - rp) : rp - wp;
++
++	if (h2cq_size != h2cq_free) {
++		rtw_err(rtwdev, "H2C queue mismatch\n");
++		return -EINVAL;
 +	}
 +
 +	return 0;
 +}
 +
-+#define rtw_debug_impl_mac(page, addr)				\
-+static struct rtw_debugfs_priv rtw_debug_priv_mac_ ##page = {	\
-+	.cb_read = rtw_debug_get_mac_page,			\
-+	.cb_data = addr,					\
-+}
-+
-+rtw_debug_impl_mac(0, 0x0000);
-+rtw_debug_impl_mac(1, 0x0100);
-+rtw_debug_impl_mac(2, 0x0200);
-+rtw_debug_impl_mac(3, 0x0300);
-+rtw_debug_impl_mac(4, 0x0400);
-+rtw_debug_impl_mac(5, 0x0500);
-+rtw_debug_impl_mac(6, 0x0600);
-+rtw_debug_impl_mac(7, 0x0700);
-+rtw_debug_impl_mac(10, 0x1000);
-+rtw_debug_impl_mac(11, 0x1100);
-+rtw_debug_impl_mac(12, 0x1200);
-+rtw_debug_impl_mac(13, 0x1300);
-+rtw_debug_impl_mac(14, 0x1400);
-+rtw_debug_impl_mac(15, 0x1500);
-+rtw_debug_impl_mac(16, 0x1600);
-+rtw_debug_impl_mac(17, 0x1700);
-+
-+#define rtw_debug_impl_bb(page, addr)			\
-+static struct rtw_debugfs_priv rtw_debug_priv_bb_ ##page = {	\
-+	.cb_read = rtw_debug_get_bb_page,			\
-+	.cb_data = addr,					\
-+}
-+
-+rtw_debug_impl_bb(8, 0x0800);
-+rtw_debug_impl_bb(9, 0x0900);
-+rtw_debug_impl_bb(a, 0x0a00);
-+rtw_debug_impl_bb(b, 0x0b00);
-+rtw_debug_impl_bb(c, 0x0c00);
-+rtw_debug_impl_bb(d, 0x0d00);
-+rtw_debug_impl_bb(e, 0x0e00);
-+rtw_debug_impl_bb(f, 0x0f00);
-+rtw_debug_impl_bb(18, 0x1800);
-+rtw_debug_impl_bb(19, 0x1900);
-+rtw_debug_impl_bb(1a, 0x1a00);
-+rtw_debug_impl_bb(1b, 0x1b00);
-+rtw_debug_impl_bb(1c, 0x1c00);
-+rtw_debug_impl_bb(1d, 0x1d00);
-+rtw_debug_impl_bb(1e, 0x1e00);
-+rtw_debug_impl_bb(1f, 0x1f00);
-+rtw_debug_impl_bb(2c, 0x2c00);
-+rtw_debug_impl_bb(2d, 0x2d00);
-+rtw_debug_impl_bb(40, 0x4000);
-+rtw_debug_impl_bb(41, 0x4100);
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_rf_dump = {
-+	.cb_read = rtw_debug_get_rf_dump,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_write_reg = {
-+	.cb_write = rtw_debugfs_set_write_reg,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_rf_write = {
-+	.cb_write = rtw_debugfs_set_rf_write,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_rf_read = {
-+	.cb_write = rtw_debugfs_set_rf_read,
-+	.cb_read = rtw_debugfs_get_rf_read,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_read_reg = {
-+	.cb_write = rtw_debugfs_set_read_reg,
-+	.cb_read = rtw_debugfs_get_read_reg,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_dump_cam = {
-+	.cb_write = rtw_debugfs_set_single_input,
-+	.cb_read = rtw_debugfs_get_dump_cam,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_rsvd_page = {
-+	.cb_write = rtw_debugfs_set_rsvd_page,
-+	.cb_read = rtw_debugfs_get_rsvd_page,
-+};
-+
-+#define rtw_debugfs_add_core(name, mode, fopname, parent)		\
-+	do {								\
-+		rtw_debug_priv_ ##name.rtwdev = rtwdev;			\
-+		if (!debugfs_create_file(#name, mode,			\
-+					 parent, &rtw_debug_priv_ ##name,\
-+					 &file_ops_ ##fopname))		\
-+			pr_debug("Unable to initialize debugfs:%s\n",	\
-+			       #name);					\
-+	} while (0)
-+
-+#define rtw_debugfs_add_w(name)						\
-+	rtw_debugfs_add_core(name, S_IFREG | 0222, common_write, debugfs_topdir)
-+#define rtw_debugfs_add_rw(name)					\
-+	rtw_debugfs_add_core(name, S_IFREG | 0666, single_rw, debugfs_topdir)
-+#define rtw_debugfs_add_r(name)						\
-+	rtw_debugfs_add_core(name, S_IFREG | 0444, single_r, debugfs_topdir)
-+
-+void rtw_debugfs_init(struct rtw_dev *rtwdev)
++static int rtw_init_trx_cfg(struct rtw_dev *rtwdev)
 +{
-+	struct dentry *debugfs_topdir = rtwdev->debugfs;
++	int ret;
 +
-+	debugfs_topdir = debugfs_create_dir("rtw88",
-+					    rtwdev->hw->wiphy->debugfsdir);
-+	rtw_debugfs_add_w(write_reg);
-+	rtw_debugfs_add_rw(read_reg);
-+	rtw_debugfs_add_w(rf_write);
-+	rtw_debugfs_add_rw(rf_read);
-+	rtw_debugfs_add_rw(dump_cam);
-+	rtw_debugfs_add_rw(rsvd_page);
-+	rtw_debugfs_add_r(mac_0);
-+	rtw_debugfs_add_r(mac_1);
-+	rtw_debugfs_add_r(mac_2);
-+	rtw_debugfs_add_r(mac_3);
-+	rtw_debugfs_add_r(mac_4);
-+	rtw_debugfs_add_r(mac_5);
-+	rtw_debugfs_add_r(mac_6);
-+	rtw_debugfs_add_r(mac_7);
-+	rtw_debugfs_add_r(bb_8);
-+	rtw_debugfs_add_r(bb_9);
-+	rtw_debugfs_add_r(bb_a);
-+	rtw_debugfs_add_r(bb_b);
-+	rtw_debugfs_add_r(bb_c);
-+	rtw_debugfs_add_r(bb_d);
-+	rtw_debugfs_add_r(bb_e);
-+	rtw_debugfs_add_r(bb_f);
-+	rtw_debugfs_add_r(mac_10);
-+	rtw_debugfs_add_r(mac_11);
-+	rtw_debugfs_add_r(mac_12);
-+	rtw_debugfs_add_r(mac_13);
-+	rtw_debugfs_add_r(mac_14);
-+	rtw_debugfs_add_r(mac_15);
-+	rtw_debugfs_add_r(mac_16);
-+	rtw_debugfs_add_r(mac_17);
-+	rtw_debugfs_add_r(bb_18);
-+	rtw_debugfs_add_r(bb_19);
-+	rtw_debugfs_add_r(bb_1a);
-+	rtw_debugfs_add_r(bb_1b);
-+	rtw_debugfs_add_r(bb_1c);
-+	rtw_debugfs_add_r(bb_1d);
-+	rtw_debugfs_add_r(bb_1e);
-+	rtw_debugfs_add_r(bb_1f);
-+	if (rtwdev->chip->id == RTW_CHIP_TYPE_8822C) {
-+		rtw_debugfs_add_r(bb_2c);
-+		rtw_debugfs_add_r(bb_2d);
-+		rtw_debugfs_add_r(bb_40);
-+		rtw_debugfs_add_r(bb_41);
-+	}
-+	rtw_debugfs_add_r(rf_dump);
++	ret = txdma_queue_mapping(rtwdev);
++	if (ret)
++		return ret;
++
++	ret = priority_queue_cfg(rtwdev);
++	if (ret)
++		return ret;
++
++	ret = init_h2c(rtwdev);
++	if (ret)
++		return ret;
++
++	return 0;
 +}
 +
-+#endif /* CONFIG_RTW88_DEBUGFS */
-+
-+#ifdef CONFIG_RTW88_DEBUG
-+
-+void __rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
-+	       const char *fmt, ...)
++static int rtw_drv_info_cfg(struct rtw_dev *rtwdev)
 +{
-+	struct va_format vaf = {
-+		.fmt = fmt,
-+	};
-+	va_list args;
++	u8 value8;
 +
-+	va_start(args, fmt);
-+	vaf.va = &args;
++	rtw_write8(rtwdev, REG_RX_DRVINFO_SZ, PHY_STATUS_SIZE);
++	value8 = rtw_read8(rtwdev, REG_TRXFF_BNDY + 1);
++	value8 &= 0xF0;
++	/* For rxdesc len = 0 issue */
++	value8 |= 0xF;
++	rtw_write8(rtwdev, REG_TRXFF_BNDY + 1, value8);
++	rtw_write32_set(rtwdev, REG_RCR, BIT_APP_PHYSTS);
++	rtw_write32_clr(rtwdev, REG_WMAC_OPTION_FUNCTION + 4, BIT(8) | BIT(9));
 +
-+	if (rtw_debug_mask & mask)
-+		dev_printk(KERN_DEBUG, rtwdev->dev, "%pV", &vaf);
-+
-+	va_end(args);
++	return 0;
 +}
-+EXPORT_SYMBOL(__rtw_dbg);
 +
-+#endif /* CONFIG_RTW88_DEBUG */
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.h b/drivers/net/wireless/realtek/rtw88/debug.h
++int rtw_mac_init(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	int ret;
++
++	ret = rtw_init_trx_cfg(rtwdev);
++	if (ret)
++		return ret;
++
++	ret = chip->ops->mac_init(rtwdev);
++	if (ret)
++		return ret;
++
++	ret = rtw_drv_info_cfg(rtwdev);
++	if (ret)
++		return ret;
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.h b/drivers/net/wireless/realtek/rtw88/mac.h
 new file mode 100644
-index 0000000..016b472
+index 0000000..bd78630
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/debug.h
-@@ -0,0 +1,52 @@
++++ b/drivers/net/wireless/realtek/rtw88/mac.h
+@@ -0,0 +1,35 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#ifndef __RTW_DEBUG_H
-+#define __RTW_DEBUG_H
++#ifndef __RTW_MAC_H__
++#define __RTW_MAC_H__
 +
-+enum rtw_debug_mask {
-+	RTW_DBG_PCI		= 0x00000001,
-+	RTW_DBG_TX		= 0x00000002,
-+	RTW_DBG_RX		= 0x00000004,
-+	RTW_DBG_PHY		= 0x00000008,
-+	RTW_DBG_FW		= 0x00000010,
-+	RTW_DBG_EFUSE		= 0x00000020,
-+	RTW_DBG_COEX		= 0x00000040,
-+	RTW_DBG_RFK		= 0x00000080,
-+	RTW_DBG_REGD		= 0x00000100,
-+	RTW_DBG_DEBUGFS		= 0x00000200,
++#define RTW_HW_PORT_NUM		5
++#define cut_version_to_mask(cut) (0x1 << ((cut) + 1))
++#define SDIO_LOCAL_OFFSET	0x10250000
++#define DDMA_POLLING_COUNT	1000
++#define C2H_PKT_BUF		256
++#define PHY_STATUS_SIZE		4
++#define ILLEGAL_KEY_GROUP	0xFAAAAA00
 +
-+	RTW_DBG_ALL		= 0xffffffff
-+};
++/* HW memory address */
++#define OCPBASE_TXBUF_88XX		0x18780000
++#define OCPBASE_DMEM_88XX		0x00200000
++#define OCPBASE_EMEM_88XX		0x00100000
 +
-+#ifdef CONFIG_RTW88_DEBUGFS
++#define RSVD_PG_DRV_NUM			16
++#define RSVD_PG_H2C_EXTRAINFO_NUM	24
++#define RSVD_PG_H2C_STATICINFO_NUM	8
++#define RSVD_PG_H2CQ_NUM		8
++#define RSVD_PG_CPU_INSTRUCTION_NUM	0
++#define RSVD_PG_FW_TXBUF_NUM		4
 +
-+void rtw_debugfs_init(struct rtw_dev *rtwdev);
-+
-+#else
-+
-+static inline void rtw_debugfs_init(struct rtw_dev *rtwdev) {}
-+
-+#endif /* CONFIG_RTW88_DEBUGFS */
-+
-+#ifdef CONFIG_RTW88_DEBUG
-+
-+__printf(3, 4)
-+void __rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
-+	       const char *fmt, ...);
-+
-+#define rtw_dbg(rtwdev, a...) __rtw_dbg(rtwdev, ##a)
-+
-+#else
-+
-+static inline void rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
-+			   const char *fmt, ...) {}
-+
-+#endif /* CONFIG_RTW88_DEBUG */
-+
-+#define rtw_info(rtwdev, a...) dev_info(rtwdev->dev, ##a)
-+#define rtw_warn(rtwdev, a...) dev_warn(rtwdev->dev, ##a)
-+#define rtw_err(rtwdev, a...) dev_err(rtwdev->dev, ##a)
++void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
++			 u8 primary_ch_idx);
++int rtw_mac_power_on(struct rtw_dev *rtwdev);
++void rtw_mac_power_off(struct rtw_dev *rtwdev);
++int rtw_download_firmware(struct rtw_dev *rtwdev, struct rtw_fw_state *fw);
++int rtw_mac_init(struct rtw_dev *rtwdev);
 +
 +#endif
 -- 
