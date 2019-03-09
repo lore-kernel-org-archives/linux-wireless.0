@@ -2,42 +2,43 @@ Return-Path: <SRS0=krUy=RM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A909C10F00
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 891B3C10F0D
 	for <linux-wireless@archiver.kernel.org>; Sat,  9 Mar 2019 13:49:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0A6820851
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Mar 2019 13:49:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62F54207E0
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Mar 2019 13:49:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726432AbfCINtI (ORCPT
+        id S1726487AbfCINtL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Mar 2019 08:49:08 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:40670 "EHLO
+        Sat, 9 Mar 2019 08:49:11 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:40677 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726358AbfCINtI (ORCPT
+        with ESMTP id S1726426AbfCINtK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Mar 2019 08:49:08 -0500
+        Sat, 9 Mar 2019 08:49:10 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x29DmhLS020428, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x29Dmmwk020448, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x29DmhLS020428
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x29Dmmwk020448
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Sat, 9 Mar 2019 21:48:43 +0800
+        Sat, 9 Mar 2019 21:48:48 +0800
 Received: from localhost.localdomain (1.168.42.219) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Sat, 9 Mar 2019 21:48:43 +0800
+ 14.3.408.0; Sat, 9 Mar 2019 21:48:47 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
         <gregkh@linuxfoundation.org>
 CC:     <linux-wireless@vger.kernel.org>, <Larry.Finger@lwfinger.net>,
         <sgruszka@redhat.com>, <pkshih@realtek.com>, <tehuang@realtek.com>,
         <briannorris@chromium.org>
-Subject: [PATCH v7 04/14] rtw88: trx files
-Date:   Sat, 9 Mar 2019 21:48:12 +0800
-Message-ID: <1552139302-20476-5-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v7 08/14] rtw88: debug files
+Date:   Sat, 9 Mar 2019 21:48:16 +0800
+Message-ID: <1552139302-20476-9-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1552139302-20476-1-git-send-email-yhchuang@realtek.com>
 References: <1552139302-20476-1-git-send-email-yhchuang@realtek.com>
@@ -51,690 +52,715 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-trx files for Realtek 802.11ac wireless network chips
+debug files for Realtek 802.11ac wireless network chips
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rx.c | 151 +++++++++++++
- drivers/net/wireless/realtek/rtw88/rx.h |  41 ++++
- drivers/net/wireless/realtek/rtw88/tx.c | 367 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/tx.h |  89 ++++++++
- 4 files changed, 648 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rx.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rx.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/tx.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/tx.h
+ drivers/net/wireless/realtek/rtw88/debug.c | 637 +++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/debug.h |  52 +++
+ 2 files changed, 689 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/debug.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/debug.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wireless/realtek/rtw88/rx.c
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
 new file mode 100644
-index 0000000..276856e
+index 0000000..56af1f6
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rx.c
-@@ -0,0 +1,151 @@
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -0,0 +1,637 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
++#include <linux/debugfs.h>
++#include <linux/seq_file.h>
 +#include "main.h"
-+#include "rx.h"
-+#include "ps.h"
-+
-+void rtw_rx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
-+		  struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr;
-+	struct rtw_vif *rtwvif;
-+
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+
-+	if (!ieee80211_is_data(hdr->frame_control))
-+		return;
-+
-+	if (!is_broadcast_ether_addr(hdr->addr1) &&
-+	    !is_multicast_ether_addr(hdr->addr1)) {
-+		rtwdev->stats.rx_unicast += skb->len;
-+		rtwdev->stats.rx_cnt++;
-+		if (vif) {
-+			rtwvif = (struct rtw_vif *)vif->drv_priv;
-+			rtwvif->stats.rx_unicast += skb->len;
-+			rtwvif->stats.rx_cnt++;
-+			if (rtwvif->stats.rx_cnt > RTW_LPS_THRESHOLD)
-+				rtw_leave_lps_irqsafe(rtwdev, rtwvif);
-+		}
-+	}
-+}
-+EXPORT_SYMBOL(rtw_rx_stats);
-+
-+struct rtw_rx_addr_match_data {
-+	struct rtw_dev *rtwdev;
-+	struct ieee80211_hdr *hdr;
-+	struct rtw_rx_pkt_stat *pkt_stat;
-+	u8 *bssid;
-+};
-+
-+static void rtw_rx_addr_match_iter(void *data, u8 *mac,
-+				   struct ieee80211_vif *vif)
-+{
-+	struct rtw_rx_addr_match_data *iter_data = data;
-+	struct ieee80211_sta *sta;
-+	struct ieee80211_hdr *hdr = iter_data->hdr;
-+	struct rtw_dev *rtwdev = iter_data->rtwdev;
-+	struct rtw_sta_info *si;
-+	struct rtw_rx_pkt_stat *pkt_stat = iter_data->pkt_stat;
-+	u8 *bssid = iter_data->bssid;
-+
-+	if (ether_addr_equal(vif->bss_conf.bssid, bssid) &&
-+	    (ether_addr_equal(vif->addr, hdr->addr1) ||
-+	     ieee80211_is_beacon(hdr->frame_control)))
-+		sta = ieee80211_find_sta_by_ifaddr(rtwdev->hw, hdr->addr2,
-+						   vif->addr);
-+	else
-+		return;
-+
-+	if (!sta)
-+		return;
-+
-+	si = (struct rtw_sta_info *)sta->drv_priv;
-+	ewma_rssi_add(&si->avg_rssi, pkt_stat->rssi);
-+}
-+
-+static void rtw_rx_addr_match(struct rtw_dev *rtwdev,
-+			      struct rtw_rx_pkt_stat *pkt_stat,
-+			      struct ieee80211_hdr *hdr)
-+{
-+	struct rtw_rx_addr_match_data data = {};
-+
-+	if (pkt_stat->crc_err || pkt_stat->icv_err || !pkt_stat->phy_status ||
-+	    ieee80211_is_ctl(hdr->frame_control))
-+		return;
-+
-+	data.rtwdev = rtwdev;
-+	data.hdr = hdr;
-+	data.pkt_stat = pkt_stat;
-+	data.bssid = get_hdr_bssid(hdr);
-+
-+	rtw_iterate_vifs_atomic(rtwdev, rtw_rx_addr_match_iter, &data);
-+}
-+
-+void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
-+			   struct rtw_rx_pkt_stat *pkt_stat,
-+			   struct ieee80211_hdr *hdr,
-+			   struct ieee80211_rx_status *rx_status,
-+			   u8 *phy_status)
-+{
-+	struct ieee80211_hw *hw = rtwdev->hw;
-+
-+	memset(rx_status, 0, sizeof(*rx_status));
-+	rx_status->freq = hw->conf.chandef.chan->center_freq;
-+	rx_status->band = hw->conf.chandef.chan->band;
-+	if (pkt_stat->crc_err)
-+		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
-+	if (pkt_stat->decrypted)
-+		rx_status->flag |= RX_FLAG_DECRYPTED;
-+
-+	if (pkt_stat->rate >= DESC_RATEVHT1SS_MCS0)
-+		rx_status->encoding = RX_ENC_VHT;
-+	else if (pkt_stat->rate >= DESC_RATEMCS0)
-+		rx_status->encoding = RX_ENC_HT;
-+
-+	if (pkt_stat->rate >= DESC_RATEVHT1SS_MCS0 &&
-+	    pkt_stat->rate <= DESC_RATEVHT1SS_MCS9) {
-+		rx_status->nss = 1;
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT1SS_MCS0;
-+	} else if (pkt_stat->rate >= DESC_RATEVHT2SS_MCS0 &&
-+		   pkt_stat->rate <= DESC_RATEVHT2SS_MCS9) {
-+		rx_status->nss = 2;
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT2SS_MCS0;
-+	} else if (pkt_stat->rate >= DESC_RATEVHT3SS_MCS0 &&
-+		   pkt_stat->rate <= DESC_RATEVHT3SS_MCS9) {
-+		rx_status->nss = 3;
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT3SS_MCS0;
-+	} else if (pkt_stat->rate >= DESC_RATEVHT4SS_MCS0 &&
-+		   pkt_stat->rate <= DESC_RATEVHT4SS_MCS9) {
-+		rx_status->nss = 4;
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT4SS_MCS0;
-+	} else if (pkt_stat->rate >= DESC_RATEMCS0 &&
-+		   pkt_stat->rate <= DESC_RATEMCS15) {
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEMCS0;
-+	} else if (rx_status->band == NL80211_BAND_5GHZ &&
-+		   pkt_stat->rate >= DESC_RATE6M &&
-+		   pkt_stat->rate <= DESC_RATE54M) {
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATE6M;
-+	} else if (rx_status->band == NL80211_BAND_2GHZ &&
-+		   pkt_stat->rate >= DESC_RATE1M &&
-+		   pkt_stat->rate <= DESC_RATE54M) {
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATE1M;
-+	} else {
-+		rx_status->rate_idx = 0;
-+	}
-+
-+	rx_status->flag |= RX_FLAG_MACTIME_START;
-+	rx_status->mactime = pkt_stat->tsf_low;
-+
-+	if (pkt_stat->bw == RTW_CHANNEL_WIDTH_80)
-+		rx_status->bw = RATE_INFO_BW_80;
-+	else if (pkt_stat->bw == RTW_CHANNEL_WIDTH_40)
-+		rx_status->bw = RATE_INFO_BW_40;
-+	else
-+		rx_status->bw = RATE_INFO_BW_20;
-+
-+	rx_status->signal = pkt_stat->signal_power;
-+
-+	rtw_rx_addr_match(rtwdev, pkt_stat, hdr);
-+}
-diff --git a/drivers/net/wireless/realtek/rtw88/rx.h b/drivers/net/wireless/realtek/rtw88/rx.h
-new file mode 100644
-index 0000000..1c187de
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rx.h
-@@ -0,0 +1,41 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#ifndef __RTW_RX_H_
-+#define __RTW_RX_H_
-+
-+#define GET_RX_DESC_PHYST(rxdesc)                                              \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), BIT(26))
-+#define GET_RX_DESC_ICV_ERR(rxdesc)                                            \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), BIT(15))
-+#define GET_RX_DESC_CRC32(rxdesc)                                              \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), BIT(14))
-+#define GET_RX_DESC_SWDEC(rxdesc)                                              \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), BIT(27))
-+#define GET_RX_DESC_C2H(rxdesc)                                                \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x02), BIT(28))
-+#define GET_RX_DESC_PKT_LEN(rxdesc)                                            \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), GENMASK(13, 0))
-+#define GET_RX_DESC_DRV_INFO_SIZE(rxdesc)                                      \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), GENMASK(19, 16))
-+#define GET_RX_DESC_SHIFT(rxdesc)                                              \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), GENMASK(25, 24))
-+#define GET_RX_DESC_RX_RATE(rxdesc)                                            \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x03), GENMASK(6, 0))
-+#define GET_RX_DESC_MACID(rxdesc)                                              \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x01), GENMASK(6, 0))
-+#define GET_RX_DESC_PPDU_CNT(rxdesc)                                           \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x02), GENMASK(30, 29))
-+#define GET_RX_DESC_TSFL(rxdesc)                                               \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x05), GENMASK(31, 0))
-+
-+void rtw_rx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
-+		  struct sk_buff *skb);
-+void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
-+			   struct rtw_rx_pkt_stat *pkt_stat,
-+			   struct ieee80211_hdr *hdr,
-+			   struct ieee80211_rx_status *rx_status,
-+			   u8 *phy_status);
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-new file mode 100644
-index 0000000..e5267d5
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -0,0 +1,367 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#include "main.h"
-+#include "tx.h"
++#include "sec.h"
 +#include "fw.h"
-+#include "ps.h"
++#include "debug.h"
 +
-+static
-+void rtw_tx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
-+		  struct sk_buff *skb)
++#ifdef CONFIG_RTW88_DEBUGFS
++
++struct rtw_debugfs_priv {
++	struct rtw_dev *rtwdev;
++	int (*cb_read)(struct seq_file *m, void *v);
++	ssize_t (*cb_write)(struct file *filp, const char __user *buffer,
++			    size_t count, loff_t *loff);
++	union {
++		u32 cb_data;
++		u8 *buf;
++		struct {
++			u32 page_offset;
++			u32 page_num;
++		} rsvd_page;
++		struct {
++			u8 rf_path;
++			u32 rf_addr;
++			u32 rf_mask;
++		};
++		struct {
++			u32 addr;
++			u32 len;
++		} read_reg;
++	};
++};
++
++static int rtw_debugfs_single_show(struct seq_file *m, void *v)
 +{
-+	struct ieee80211_hdr *hdr;
-+	struct rtw_vif *rtwvif;
++	struct rtw_debugfs_priv *debugfs_priv = m->private;
 +
-+	hdr = (struct ieee80211_hdr *)skb->data;
++	return debugfs_priv->cb_read(m, v);
++}
 +
-+	if (!ieee80211_is_data(hdr->frame_control))
-+		return;
++static ssize_t rtw_debugfs_common_write(struct file *filp,
++					const char __user *buffer,
++					size_t count, loff_t *loff)
++{
++	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
 +
-+	if (!is_broadcast_ether_addr(hdr->addr1) &&
-+	    !is_multicast_ether_addr(hdr->addr1)) {
-+		rtwdev->stats.tx_unicast += skb->len;
-+		rtwdev->stats.tx_cnt++;
-+		if (vif) {
-+			rtwvif = (struct rtw_vif *)vif->drv_priv;
-+			rtwvif->stats.tx_unicast += skb->len;
-+			rtwvif->stats.tx_cnt++;
-+			if (rtwvif->stats.tx_cnt > RTW_LPS_THRESHOLD)
-+				rtw_leave_lps_irqsafe(rtwdev, rtwvif);
++	return debugfs_priv->cb_write(filp, buffer, count, loff);
++}
++
++static ssize_t rtw_debugfs_single_write(struct file *filp,
++					const char __user *buffer,
++					size_t count, loff_t *loff)
++{
++	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
++	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
++
++	return debugfs_priv->cb_write(filp, buffer, count, loff);
++}
++
++static int rtw_debugfs_single_open_rw(struct inode *inode, struct file *filp)
++{
++	return single_open(filp, rtw_debugfs_single_show, inode->i_private);
++}
++
++static int rtw_debugfs_close(struct inode *inode, struct file *filp)
++{
++	return 0;
++}
++
++static const struct file_operations file_ops_single_r = {
++	.owner = THIS_MODULE,
++	.open = rtw_debugfs_single_open_rw,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = seq_release,
++};
++
++static const struct file_operations file_ops_single_rw = {
++	.owner = THIS_MODULE,
++	.open = rtw_debugfs_single_open_rw,
++	.release = single_release,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.write = rtw_debugfs_single_write,
++};
++
++static const struct file_operations file_ops_common_write = {
++	.owner = THIS_MODULE,
++	.write = rtw_debugfs_common_write,
++	.open = simple_open,
++	.release = rtw_debugfs_close,
++};
++
++static int rtw_debugfs_get_read_reg(struct seq_file *m, void *v)
++{
++	struct rtw_debugfs_priv *debugfs_priv = m->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	u32 val, len, addr;
++
++	len = debugfs_priv->read_reg.len;
++	addr = debugfs_priv->read_reg.addr;
++	switch (len) {
++	case 1:
++		val = rtw_read8(rtwdev, addr);
++		seq_printf(m, "reg 0x%03x: 0x%02x\n", addr, val);
++		break;
++	case 2:
++		val = rtw_read16(rtwdev, addr);
++		seq_printf(m, "reg 0x%03x: 0x%04x\n", addr, val);
++		break;
++	case 4:
++		val = rtw_read32(rtwdev, addr);
++		seq_printf(m, "reg 0x%03x: 0x%08x\n", addr, val);
++		break;
++	}
++	return 0;
++}
++
++static int rtw_debugfs_get_rf_read(struct seq_file *m, void *v)
++{
++	struct rtw_debugfs_priv *debugfs_priv = m->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	u32 val, addr, mask;
++	u8 path;
++
++	path = debugfs_priv->rf_path;
++	addr = debugfs_priv->rf_addr;
++	mask = debugfs_priv->rf_mask;
++
++	val = rtw_read_rf(rtwdev, path, addr, mask);
++
++	seq_printf(m, "rf_read path:%d addr:0x%08x mask:0x%08x val=0x%08x\n",
++		   path, addr, mask, val);
++
++	return 0;
++}
++
++static int rtw_debugfs_copy_from_user(char tmp[], int size,
++				      const char __user *buffer, size_t count,
++				      int num)
++{
++	int tmp_len;
++
++	if (count < num)
++		return -EFAULT;
++
++	tmp_len = (count > size - 1 ? size - 1 : count);
++
++	if (!buffer || copy_from_user(tmp, buffer, tmp_len))
++		return count;
++
++	tmp[tmp_len] = '\0';
++
++	return 0;
++}
++
++static ssize_t rtw_debugfs_set_read_reg(struct file *filp,
++					const char __user *buffer,
++					size_t count, loff_t *loff)
++{
++	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
++	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	char tmp[32 + 1];
++	u32 addr, len;
++	int num;
++
++	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 2);
++
++	num = sscanf(tmp, "%x %x", &addr, &len);
++
++	if (num !=  2)
++		return count;
++
++	if (len != 1 && len != 2 && len != 4) {
++		rtw_warn(rtwdev, "read reg setting wrong len\n");
++		return -EINVAL;
++	}
++	debugfs_priv->read_reg.addr = addr;
++	debugfs_priv->read_reg.len = len;
++
++	return count;
++}
++
++static int rtw_debugfs_get_dump_cam(struct seq_file *m, void *v)
++{
++	struct rtw_debugfs_priv *debugfs_priv = m->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	u32 val, command;
++	u32 hw_key_idx = debugfs_priv->cb_data << RTW_SEC_CAM_ENTRY_SHIFT;
++	u32 read_cmd = RTW_SEC_CMD_POLLING;
++	int i;
++
++	seq_printf(m, "cam entry%d\n", debugfs_priv->cb_data);
++	seq_puts(m, "0x0      0x1      0x2     0x3     ");
++	seq_puts(m, "0x4     0x5\n");
++	mutex_lock(&rtwdev->mutex);
++	for (i = 0; i <= 5; i++) {
++		command = read_cmd | (hw_key_idx + i);
++		rtw_write32(rtwdev, RTW_SEC_CMD_REG, command);
++		val = rtw_read32(rtwdev, RTW_SEC_READ_REG);
++		seq_printf(m, "%8.8x", val);
++		if (i < 2)
++			seq_puts(m, " ");
++	}
++	seq_puts(m, "\n");
++	mutex_unlock(&rtwdev->mutex);
++	return 0;
++}
++
++static int rtw_debugfs_get_rsvd_page(struct seq_file *m, void *v)
++{
++	struct rtw_debugfs_priv *debugfs_priv = m->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	u8 page_size = rtwdev->chip->page_size;
++	u32 buf_size = debugfs_priv->rsvd_page.page_num * page_size;
++	u32 offset = debugfs_priv->rsvd_page.page_offset * page_size;
++	u8 *buf;
++	int i;
++	int ret;
++
++	buf = vzalloc(buf_size);
++	if (!buf)
++		return -ENOMEM;
++
++	ret = rtw_dump_drv_rsvd_page(rtwdev, offset, buf_size, (u32 *)buf);
++	if (ret) {
++		rtw_err(rtwdev, "failed to dump rsvd page\n");
++		vfree(buf);
++		return ret;
++	}
++
++	for (i = 0 ; i < buf_size ; i += 8) {
++		if (i % page_size == 0)
++			seq_printf(m, "PAGE %d\n", (i + offset) / page_size);
++		seq_printf(m, "%2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x\n",
++			   *(buf + i), *(buf + i + 1),
++			   *(buf + i + 2), *(buf + i + 3),
++			   *(buf + i + 4), *(buf + i + 5),
++			   *(buf + i + 6), *(buf + i + 7));
++	}
++	vfree(buf);
++
++	return 0;
++}
++
++static ssize_t rtw_debugfs_set_rsvd_page(struct file *filp,
++					 const char __user *buffer,
++					 size_t count, loff_t *loff)
++{
++	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
++	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	char tmp[32 + 1];
++	u32 offset, page_num;
++	int num;
++
++	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 2);
++
++	num = sscanf(tmp, "%d %d", &offset, &page_num);
++
++	if (num != 2) {
++		rtw_warn(rtwdev, "invalid arguments\n");
++		return num;
++	}
++
++	debugfs_priv->rsvd_page.page_offset = offset;
++	debugfs_priv->rsvd_page.page_num = page_num;
++
++	return count;
++}
++
++static ssize_t rtw_debugfs_set_single_input(struct file *filp,
++					    const char __user *buffer,
++					    size_t count, loff_t *loff)
++{
++	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
++	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	char tmp[32 + 1];
++	u32 input;
++	int num;
++
++	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
++
++	num = kstrtoint(tmp, 0, &input);
++
++	if (num) {
++		rtw_warn(rtwdev, "kstrtoint failed\n");
++		return num;
++	}
++
++	debugfs_priv->cb_data = input;
++
++	return count;
++}
++
++static ssize_t rtw_debugfs_set_write_reg(struct file *filp,
++					 const char __user *buffer,
++					 size_t count, loff_t *loff)
++{
++	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	char tmp[32 + 1];
++	u32 addr, val, len;
++	int num;
++
++	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
++
++	/* write BB/MAC register */
++	num = sscanf(tmp, "%x %x %x", &addr, &val, &len);
++
++	if (num !=  3)
++		return count;
++
++	switch (len) {
++	case 1:
++		rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
++			"reg write8 0x%03x: 0x%08x\n", addr, val);
++		rtw_write8(rtwdev, addr, (u8)val);
++		break;
++	case 2:
++		rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
++			"reg write16 0x%03x: 0x%08x\n", addr, val);
++		rtw_write16(rtwdev, addr, (u16)val);
++		break;
++	case 4:
++		rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
++			"reg write32 0x%03x: 0x%08x\n", addr, val);
++		rtw_write32(rtwdev, addr, (u32)val);
++		break;
++	default:
++		rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
++			"error write length = %d\n", len);
++		break;
++	}
++
++	return count;
++}
++
++static ssize_t rtw_debugfs_set_rf_write(struct file *filp,
++					const char __user *buffer,
++					size_t count, loff_t *loff)
++{
++	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	char tmp[32 + 1];
++	u32 path, addr, mask, val;
++	int num;
++
++	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 4);
++
++	num = sscanf(tmp, "%x %x %x %x", &path, &addr, &mask, &val);
++
++	if (num !=  4) {
++		rtw_warn(rtwdev, "invalid args, [path] [addr] [mask] [val]\n");
++		return count;
++	}
++
++	rtw_write_rf(rtwdev, path, addr, mask, val);
++	rtw_dbg(rtwdev, RTW_DBG_DEBUGFS,
++		"write_rf path:%d addr:0x%08x mask:0x%08x, val:0x%08x\n",
++		path, addr, mask, val);
++
++	return count;
++}
++
++static ssize_t rtw_debugfs_set_rf_read(struct file *filp,
++				       const char __user *buffer,
++				       size_t count, loff_t *loff)
++{
++	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
++	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	char tmp[32 + 1];
++	u32 path, addr, mask;
++	int num;
++
++	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
++
++	num = sscanf(tmp, "%x %x %x", &path, &addr, &mask);
++
++	if (num !=  3) {
++		rtw_warn(rtwdev, "invalid args, [path] [addr] [mask] [val]\n");
++		return count;
++	}
++
++	debugfs_priv->rf_path = path;
++	debugfs_priv->rf_addr = addr;
++	debugfs_priv->rf_mask = mask;
++
++	return count;
++}
++
++static int rtw_debug_get_mac_page(struct seq_file *m, void *v)
++{
++	struct rtw_debugfs_priv *debugfs_priv = m->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	u32 val;
++	u32 page = debugfs_priv->cb_data;
++	int i, n;
++	int max = 0xff;
++
++	val = rtw_read32(rtwdev, debugfs_priv->cb_data);
++	for (n = 0; n <= max; ) {
++		seq_printf(m, "\n%8.8x  ", n + page);
++		for (i = 0; i < 4 && n <= max; i++, n += 4)
++			seq_printf(m, "%8.8x    ",
++				   rtw_read32(rtwdev, (page | n)));
++	}
++	seq_puts(m, "\n");
++	return 0;
++}
++
++static int rtw_debug_get_bb_page(struct seq_file *m, void *v)
++{
++	struct rtw_debugfs_priv *debugfs_priv = m->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	u32 val;
++	u32 page = debugfs_priv->cb_data;
++	int i, n;
++	int max = 0xff;
++
++	val = rtw_read32(rtwdev, debugfs_priv->cb_data);
++	for (n = 0; n <= max; ) {
++		seq_printf(m, "\n%8.8x  ", n + page);
++		for (i = 0; i < 4 && n <= max; i++, n += 4)
++			seq_printf(m, "%8.8x    ",
++				   rtw_read32(rtwdev, (page | n)));
++	}
++	seq_puts(m, "\n");
++	return 0;
++}
++
++static int rtw_debug_get_rf_dump(struct seq_file *m, void *v)
++{
++	struct rtw_debugfs_priv *debugfs_priv = m->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	u32 addr, offset, data;
++	u8 path;
++
++	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
++		seq_printf(m, "RF path:%d\n", path);
++		for (addr = 0; addr < 0x100; addr += 4) {
++			seq_printf(m, "%8.8x  ", addr);
++			for (offset = 0; offset < 4; offset++) {
++				data = rtw_read_rf(rtwdev, path, addr + offset,
++						   0xffffffff);
++				seq_printf(m, "%8.8x    ", data);
++			}
++			seq_puts(m, "\n");
 +		}
-+	}
-+}
-+
-+void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb)
-+{
-+	__le32 *txdesc = (__le32 *)skb->data;
-+
-+	SET_TX_DESC_TXPKTSIZE(txdesc,  pkt_info->tx_pkt_size);
-+	SET_TX_DESC_OFFSET(txdesc, pkt_info->offset);
-+	SET_TX_DESC_PKT_OFFSET(txdesc, pkt_info->pkt_offset);
-+	SET_TX_DESC_QSEL(txdesc, pkt_info->qsel);
-+	SET_TX_DESC_BMC(txdesc, pkt_info->bmc);
-+	SET_TX_DESC_RATE_ID(txdesc, pkt_info->rate_id);
-+	SET_TX_DESC_DATARATE(txdesc, pkt_info->rate);
-+	SET_TX_DESC_DISDATAFB(txdesc, pkt_info->dis_rate_fallback);
-+	SET_TX_DESC_USE_RATE(txdesc, pkt_info->use_rate);
-+	SET_TX_DESC_SEC_TYPE(txdesc, pkt_info->sec_type);
-+	SET_TX_DESC_DATA_BW(txdesc, pkt_info->bw);
-+	SET_TX_DESC_SW_SEQ(txdesc, pkt_info->seq);
-+	SET_TX_DESC_MAX_AGG_NUM(txdesc, pkt_info->ampdu_factor);
-+	SET_TX_DESC_AMPDU_DENSITY(txdesc, pkt_info->ampdu_density);
-+	SET_TX_DESC_DATA_STBC(txdesc, pkt_info->stbc);
-+	SET_TX_DESC_DATA_LDPC(txdesc, pkt_info->ldpc);
-+	SET_TX_DESC_AGG_EN(txdesc, pkt_info->ampdu_en);
-+	SET_TX_DESC_LS(txdesc, pkt_info->ls);
-+	SET_TX_DESC_DATA_SHORT(txdesc, pkt_info->short_gi);
-+	SET_TX_DESC_SPE_RPT(txdesc, pkt_info->report);
-+	SET_TX_DESC_SW_DEFINE(txdesc, pkt_info->sn);
-+}
-+EXPORT_SYMBOL(rtw_tx_fill_tx_desc);
-+
-+static u8 get_tx_ampdu_factor(struct ieee80211_sta *sta)
-+{
-+	u8 exp = sta->ht_cap.ampdu_factor;
-+
-+	/* the least ampdu factor is 8K, and the value in the tx desc is the
-+	 * max aggregation num, which represents val * 2 packets can be
-+	 * aggregated in an AMPDU, so here we should use 8/2=4 as the base
-+	 */
-+	return (BIT(2) << exp) - 1;
-+}
-+
-+static u8 get_tx_ampdu_density(struct ieee80211_sta *sta)
-+{
-+	return sta->ht_cap.ampdu_density;
-+}
-+
-+static u8 get_highest_ht_tx_rate(struct rtw_dev *rtwdev,
-+				 struct ieee80211_sta *sta)
-+{
-+	u8 rate;
-+
-+	if (rtwdev->hal.rf_type == RF_2T2R && sta->ht_cap.mcs.rx_mask[1] != 0)
-+		rate = DESC_RATEMCS15;
-+	else
-+		rate = DESC_RATEMCS7;
-+
-+	return rate;
-+}
-+
-+static u8 get_highest_vht_tx_rate(struct rtw_dev *rtwdev,
-+				  struct ieee80211_sta *sta)
-+{
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	u8 rate;
-+	u16 tx_mcs_map;
-+
-+	tx_mcs_map = le16_to_cpu(sta->vht_cap.vht_mcs.tx_mcs_map);
-+	if (efuse->hw_cap.nss == 1) {
-+		switch (tx_mcs_map & 0x3) {
-+		case IEEE80211_VHT_MCS_SUPPORT_0_7:
-+			rate = DESC_RATEVHT1SS_MCS7;
-+			break;
-+		case IEEE80211_VHT_MCS_SUPPORT_0_8:
-+			rate = DESC_RATEVHT1SS_MCS8;
-+			break;
-+		default:
-+		case IEEE80211_VHT_MCS_SUPPORT_0_9:
-+			rate = DESC_RATEVHT1SS_MCS9;
-+			break;
-+		}
-+	} else if (efuse->hw_cap.nss >= 2) {
-+		switch ((tx_mcs_map & 0xc) >> 2) {
-+		case IEEE80211_VHT_MCS_SUPPORT_0_7:
-+			rate = DESC_RATEVHT2SS_MCS7;
-+			break;
-+		case IEEE80211_VHT_MCS_SUPPORT_0_8:
-+			rate = DESC_RATEVHT2SS_MCS8;
-+			break;
-+		default:
-+		case IEEE80211_VHT_MCS_SUPPORT_0_9:
-+			rate = DESC_RATEVHT2SS_MCS9;
-+			break;
-+		}
-+	} else {
-+		rate = DESC_RATEVHT1SS_MCS9;
++		seq_puts(m, "\n");
 +	}
 +
-+	return rate;
++	return 0;
 +}
 +
-+static void rtw_tx_report_enable(struct rtw_dev *rtwdev,
-+				 struct rtw_tx_pkt_info *pkt_info)
-+{
-+	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
-+
-+	/* [11:8], reserved, fills with zero
-+	 * [7:2],  tx report sequence number
-+	 * [1:0],  firmware use, fills with zero
-+	 */
-+	pkt_info->sn = (atomic_inc_return(&tx_report->sn) << 2) & 0xfc;
-+	pkt_info->report = true;
++#define rtw_debug_impl_mac(page, addr)				\
++static struct rtw_debugfs_priv rtw_debug_priv_mac_ ##page = {	\
++	.cb_read = rtw_debug_get_mac_page,			\
++	.cb_data = addr,					\
 +}
 +
-+void rtw_tx_report_purge_timer(struct timer_list *t)
-+{
-+	struct rtw_dev *rtwdev = from_timer(rtwdev, t, tx_report.purge_timer);
-+	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
-+	unsigned long flags;
++rtw_debug_impl_mac(0, 0x0000);
++rtw_debug_impl_mac(1, 0x0100);
++rtw_debug_impl_mac(2, 0x0200);
++rtw_debug_impl_mac(3, 0x0300);
++rtw_debug_impl_mac(4, 0x0400);
++rtw_debug_impl_mac(5, 0x0500);
++rtw_debug_impl_mac(6, 0x0600);
++rtw_debug_impl_mac(7, 0x0700);
++rtw_debug_impl_mac(10, 0x1000);
++rtw_debug_impl_mac(11, 0x1100);
++rtw_debug_impl_mac(12, 0x1200);
++rtw_debug_impl_mac(13, 0x1300);
++rtw_debug_impl_mac(14, 0x1400);
++rtw_debug_impl_mac(15, 0x1500);
++rtw_debug_impl_mac(16, 0x1600);
++rtw_debug_impl_mac(17, 0x1700);
 +
-+	if (skb_queue_len(&tx_report->queue) == 0)
-+		return;
-+
-+	WARN(1, "purge skb(s) not reported by firmware\n");
-+
-+	spin_lock_irqsave(&tx_report->q_lock, flags);
-+	skb_queue_purge(&tx_report->queue);
-+	spin_unlock_irqrestore(&tx_report->q_lock, flags);
++#define rtw_debug_impl_bb(page, addr)			\
++static struct rtw_debugfs_priv rtw_debug_priv_bb_ ##page = {	\
++	.cb_read = rtw_debug_get_bb_page,			\
++	.cb_data = addr,					\
 +}
 +
-+void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
++rtw_debug_impl_bb(8, 0x0800);
++rtw_debug_impl_bb(9, 0x0900);
++rtw_debug_impl_bb(a, 0x0a00);
++rtw_debug_impl_bb(b, 0x0b00);
++rtw_debug_impl_bb(c, 0x0c00);
++rtw_debug_impl_bb(d, 0x0d00);
++rtw_debug_impl_bb(e, 0x0e00);
++rtw_debug_impl_bb(f, 0x0f00);
++rtw_debug_impl_bb(18, 0x1800);
++rtw_debug_impl_bb(19, 0x1900);
++rtw_debug_impl_bb(1a, 0x1a00);
++rtw_debug_impl_bb(1b, 0x1b00);
++rtw_debug_impl_bb(1c, 0x1c00);
++rtw_debug_impl_bb(1d, 0x1d00);
++rtw_debug_impl_bb(1e, 0x1e00);
++rtw_debug_impl_bb(1f, 0x1f00);
++rtw_debug_impl_bb(2c, 0x2c00);
++rtw_debug_impl_bb(2d, 0x2d00);
++rtw_debug_impl_bb(40, 0x4000);
++rtw_debug_impl_bb(41, 0x4100);
++
++static struct rtw_debugfs_priv rtw_debug_priv_rf_dump = {
++	.cb_read = rtw_debug_get_rf_dump,
++};
++
++static struct rtw_debugfs_priv rtw_debug_priv_write_reg = {
++	.cb_write = rtw_debugfs_set_write_reg,
++};
++
++static struct rtw_debugfs_priv rtw_debug_priv_rf_write = {
++	.cb_write = rtw_debugfs_set_rf_write,
++};
++
++static struct rtw_debugfs_priv rtw_debug_priv_rf_read = {
++	.cb_write = rtw_debugfs_set_rf_read,
++	.cb_read = rtw_debugfs_get_rf_read,
++};
++
++static struct rtw_debugfs_priv rtw_debug_priv_read_reg = {
++	.cb_write = rtw_debugfs_set_read_reg,
++	.cb_read = rtw_debugfs_get_read_reg,
++};
++
++static struct rtw_debugfs_priv rtw_debug_priv_dump_cam = {
++	.cb_write = rtw_debugfs_set_single_input,
++	.cb_read = rtw_debugfs_get_dump_cam,
++};
++
++static struct rtw_debugfs_priv rtw_debug_priv_rsvd_page = {
++	.cb_write = rtw_debugfs_set_rsvd_page,
++	.cb_read = rtw_debugfs_get_rsvd_page,
++};
++
++#define rtw_debugfs_add_core(name, mode, fopname, parent)		\
++	do {								\
++		rtw_debug_priv_ ##name.rtwdev = rtwdev;			\
++		if (!debugfs_create_file(#name, mode,			\
++					 parent, &rtw_debug_priv_ ##name,\
++					 &file_ops_ ##fopname))		\
++			pr_debug("Unable to initialize debugfs:%s\n",	\
++			       #name);					\
++	} while (0)
++
++#define rtw_debugfs_add_w(name)						\
++	rtw_debugfs_add_core(name, S_IFREG | 0222, common_write, debugfs_topdir)
++#define rtw_debugfs_add_rw(name)					\
++	rtw_debugfs_add_core(name, S_IFREG | 0666, single_rw, debugfs_topdir)
++#define rtw_debugfs_add_r(name)						\
++	rtw_debugfs_add_core(name, S_IFREG | 0444, single_r, debugfs_topdir)
++
++void rtw_debugfs_init(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
-+	unsigned long flags;
-+	u8 *drv_data;
++	struct dentry *debugfs_topdir = rtwdev->debugfs;
 +
-+	/* pass sn to tx report handler through driver data */
-+	drv_data = (u8 *)IEEE80211_SKB_CB(skb)->status.status_driver_data;
-+	*drv_data = sn;
-+
-+	spin_lock_irqsave(&tx_report->q_lock, flags);
-+	__skb_queue_tail(&tx_report->queue, skb);
-+	spin_unlock_irqrestore(&tx_report->q_lock, flags);
-+
-+	mod_timer(&tx_report->purge_timer, jiffies + RTW_TX_PROBE_TIMEOUT);
-+}
-+EXPORT_SYMBOL(rtw_tx_report_enqueue);
-+
-+static void rtw_tx_report_tx_status(struct rtw_dev *rtwdev,
-+				    struct sk_buff *skb, bool acked)
-+{
-+	struct ieee80211_tx_info *info;
-+
-+	info = IEEE80211_SKB_CB(skb);
-+	ieee80211_tx_info_clear_status(info);
-+	if (acked)
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+	else
-+		info->flags &= ~IEEE80211_TX_STAT_ACK;
-+
-+	ieee80211_tx_status_irqsafe(rtwdev->hw, skb);
-+}
-+
-+void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
-+{
-+	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
-+	struct rtw_c2h_cmd *c2h;
-+	struct sk_buff *cur, *tmp;
-+	unsigned long flags;
-+	u8 sn, st;
-+	u8 *n;
-+
-+	c2h = get_c2h_from_skb(skb);
-+
-+	sn = GET_CCX_REPORT_SEQNUM(c2h->payload);
-+	st = GET_CCX_REPORT_STATUS(c2h->payload);
-+
-+	spin_lock_irqsave(&tx_report->q_lock, flags);
-+	skb_queue_walk_safe(&tx_report->queue, cur, tmp) {
-+		n = (u8 *)IEEE80211_SKB_CB(cur)->status.status_driver_data;
-+		if (*n == sn) {
-+			__skb_unlink(cur, &tx_report->queue);
-+			rtw_tx_report_tx_status(rtwdev, cur, st == 0);
-+			break;
-+		}
++	debugfs_topdir = debugfs_create_dir("rtw88",
++					    rtwdev->hw->wiphy->debugfsdir);
++	rtw_debugfs_add_w(write_reg);
++	rtw_debugfs_add_rw(read_reg);
++	rtw_debugfs_add_w(rf_write);
++	rtw_debugfs_add_rw(rf_read);
++	rtw_debugfs_add_rw(dump_cam);
++	rtw_debugfs_add_rw(rsvd_page);
++	rtw_debugfs_add_r(mac_0);
++	rtw_debugfs_add_r(mac_1);
++	rtw_debugfs_add_r(mac_2);
++	rtw_debugfs_add_r(mac_3);
++	rtw_debugfs_add_r(mac_4);
++	rtw_debugfs_add_r(mac_5);
++	rtw_debugfs_add_r(mac_6);
++	rtw_debugfs_add_r(mac_7);
++	rtw_debugfs_add_r(bb_8);
++	rtw_debugfs_add_r(bb_9);
++	rtw_debugfs_add_r(bb_a);
++	rtw_debugfs_add_r(bb_b);
++	rtw_debugfs_add_r(bb_c);
++	rtw_debugfs_add_r(bb_d);
++	rtw_debugfs_add_r(bb_e);
++	rtw_debugfs_add_r(bb_f);
++	rtw_debugfs_add_r(mac_10);
++	rtw_debugfs_add_r(mac_11);
++	rtw_debugfs_add_r(mac_12);
++	rtw_debugfs_add_r(mac_13);
++	rtw_debugfs_add_r(mac_14);
++	rtw_debugfs_add_r(mac_15);
++	rtw_debugfs_add_r(mac_16);
++	rtw_debugfs_add_r(mac_17);
++	rtw_debugfs_add_r(bb_18);
++	rtw_debugfs_add_r(bb_19);
++	rtw_debugfs_add_r(bb_1a);
++	rtw_debugfs_add_r(bb_1b);
++	rtw_debugfs_add_r(bb_1c);
++	rtw_debugfs_add_r(bb_1d);
++	rtw_debugfs_add_r(bb_1e);
++	rtw_debugfs_add_r(bb_1f);
++	if (rtwdev->chip->id == RTW_CHIP_TYPE_8822C) {
++		rtw_debugfs_add_r(bb_2c);
++		rtw_debugfs_add_r(bb_2d);
++		rtw_debugfs_add_r(bb_40);
++		rtw_debugfs_add_r(bb_41);
 +	}
-+	spin_unlock_irqrestore(&tx_report->q_lock, flags);
++	rtw_debugfs_add_r(rf_dump);
 +}
 +
-+static void rtw_tx_mgmt_pkt_info_update(struct rtw_dev *rtwdev,
-+					struct rtw_tx_pkt_info *pkt_info,
-+					struct ieee80211_tx_control *control,
-+					struct sk_buff *skb)
++#endif /* CONFIG_RTW88_DEBUGFS */
++
++#ifdef CONFIG_RTW88_DEBUG
++
++void __rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
++	       const char *fmt, ...)
 +{
-+	pkt_info->use_rate = true;
-+	pkt_info->rate_id = 6;
-+	pkt_info->dis_rate_fallback = true;
++	struct va_format vaf = {
++		.fmt = fmt,
++	};
++	va_list args;
++
++	va_start(args, fmt);
++	vaf.va = &args;
++
++	if (rtw_debug_mask & mask)
++		dev_printk(KERN_DEBUG, rtwdev->dev, "%pV", &vaf);
++
++	va_end(args);
 +}
++EXPORT_SYMBOL(__rtw_dbg);
 +
-+static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
-+					struct rtw_tx_pkt_info *pkt_info,
-+					struct ieee80211_tx_control *control,
-+					struct sk_buff *skb)
-+{
-+	struct ieee80211_sta *sta = control->sta;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct rtw_sta_info *si;
-+	u16 seq;
-+	u8 ampdu_factor = 0;
-+	u8 ampdu_density = 0;
-+	bool ampdu_en = false;
-+	u8 rate = DESC_RATE6M;
-+	u8 rate_id = 6;
-+	u8 bw = RTW_CHANNEL_WIDTH_20;
-+	bool stbc = false;
-+	bool ldpc = false;
-+
-+	seq = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
-+
-+	/* for broadcast/multicast, use default values */
-+	if (!sta)
-+		goto out;
-+
-+	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		ampdu_en = true;
-+		ampdu_factor = get_tx_ampdu_factor(sta);
-+		ampdu_density = get_tx_ampdu_density(sta);
-+	}
-+
-+	if (sta->vht_cap.vht_supported)
-+		rate = get_highest_vht_tx_rate(rtwdev, sta);
-+	else if (sta->ht_cap.ht_supported)
-+		rate = get_highest_ht_tx_rate(rtwdev, sta);
-+	else if (sta->supp_rates[0] <= 0xf)
-+		rate = DESC_RATE11M;
-+	else
-+		rate = DESC_RATE54M;
-+
-+	si = (struct rtw_sta_info *)sta->drv_priv;
-+
-+	bw = si->bw_mode;
-+	rate_id = si->rate_id;
-+	stbc = si->stbc_en;
-+	ldpc = si->ldpc_en;
-+
-+out:
-+	pkt_info->seq = seq;
-+	pkt_info->ampdu_factor = ampdu_factor;
-+	pkt_info->ampdu_density = ampdu_density;
-+	pkt_info->ampdu_en = ampdu_en;
-+	pkt_info->rate = rate;
-+	pkt_info->rate_id = rate_id;
-+	pkt_info->bw = bw;
-+	pkt_info->stbc = stbc;
-+	pkt_info->ldpc = ldpc;
-+}
-+
-+void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
-+			    struct rtw_tx_pkt_info *pkt_info,
-+			    struct ieee80211_tx_control *control,
-+			    struct sk_buff *skb)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct rtw_sta_info *si;
-+	struct ieee80211_vif *vif = NULL;
-+	__le16 fc = hdr->frame_control;
-+	u8 sec_type = 0;
-+	bool bmc;
-+
-+	if (control->sta) {
-+		si = (struct rtw_sta_info *)control->sta->drv_priv;
-+		vif = si->vif;
-+	}
-+
-+	if (ieee80211_is_mgmt(fc) || ieee80211_is_nullfunc(fc))
-+		rtw_tx_mgmt_pkt_info_update(rtwdev, pkt_info, control, skb);
-+	else if (ieee80211_is_data(fc))
-+		rtw_tx_data_pkt_info_update(rtwdev, pkt_info, control, skb);
-+
-+	if (info->control.hw_key) {
-+		struct ieee80211_key_conf *key = info->control.hw_key;
-+
-+		switch (key->cipher) {
-+		case WLAN_CIPHER_SUITE_WEP40:
-+		case WLAN_CIPHER_SUITE_WEP104:
-+		case WLAN_CIPHER_SUITE_TKIP:
-+			sec_type = 0x01;
-+			break;
-+		case WLAN_CIPHER_SUITE_CCMP:
-+			sec_type = 0x03;
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
-+	bmc = is_broadcast_ether_addr(hdr->addr1) ||
-+	      is_multicast_ether_addr(hdr->addr1);
-+
-+	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
-+		rtw_tx_report_enable(rtwdev, pkt_info);
-+
-+	pkt_info->bmc = bmc;
-+	pkt_info->sec_type = sec_type;
-+	pkt_info->tx_pkt_size = skb->len;
-+	pkt_info->offset = chip->tx_pkt_desc_sz;
-+	pkt_info->qsel = skb->priority;
-+	pkt_info->ls = true;
-+
-+	/* maybe merge with tx status ? */
-+	rtw_tx_stats(rtwdev, vif, skb);
-+}
-+
-+void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
-+				   struct rtw_tx_pkt_info *pkt_info,
-+				   struct sk_buff *skb)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	bool bmc;
-+
-+	bmc = is_broadcast_ether_addr(hdr->addr1) ||
-+	      is_multicast_ether_addr(hdr->addr1);
-+	pkt_info->use_rate = true;
-+	pkt_info->rate_id = 6;
-+	pkt_info->dis_rate_fallback = true;
-+	pkt_info->bmc = bmc;
-+	pkt_info->tx_pkt_size = skb->len;
-+	pkt_info->offset = chip->tx_pkt_desc_sz;
-+	pkt_info->qsel = skb->priority;
-+	pkt_info->ls = true;
-+}
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
++#endif /* CONFIG_RTW88_DEBUG */
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.h b/drivers/net/wireless/realtek/rtw88/debug.h
 new file mode 100644
-index 0000000..6782632
+index 0000000..016b472
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/tx.h
-@@ -0,0 +1,89 @@
++++ b/drivers/net/wireless/realtek/rtw88/debug.h
+@@ -0,0 +1,52 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#ifndef __RTW_TX_H_
-+#define __RTW_TX_H_
++#ifndef __RTW_DEBUG_H
++#define __RTW_DEBUG_H
 +
-+#define RTK_TX_MAX_AGG_NUM_MASK		0x1f
++enum rtw_debug_mask {
++	RTW_DBG_PCI		= 0x00000001,
++	RTW_DBG_TX		= 0x00000002,
++	RTW_DBG_RX		= 0x00000004,
++	RTW_DBG_PHY		= 0x00000008,
++	RTW_DBG_FW		= 0x00000010,
++	RTW_DBG_EFUSE		= 0x00000020,
++	RTW_DBG_COEX		= 0x00000040,
++	RTW_DBG_RFK		= 0x00000080,
++	RTW_DBG_REGD		= 0x00000100,
++	RTW_DBG_DEBUGFS		= 0x00000200,
 +
-+#define RTW_TX_PROBE_TIMEOUT		msecs_to_jiffies(500)
-+
-+#define SET_TX_DESC_TXPKTSIZE(txdesc, value)                                   \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, GENMASK(15, 0))
-+#define SET_TX_DESC_OFFSET(txdesc, value)                                      \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, GENMASK(23, 16))
-+#define SET_TX_DESC_PKT_OFFSET(txdesc, value)                                  \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(28, 24))
-+#define SET_TX_DESC_QSEL(txdesc, value)                                        \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(12, 8))
-+#define SET_TX_DESC_BMC(txdesc, value)                                         \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, BIT(24))
-+#define SET_TX_DESC_RATE_ID(txdesc, value)                                     \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(20, 16))
-+#define SET_TX_DESC_DATARATE(txdesc, value)                                    \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x04, value, GENMASK(6, 0))
-+#define SET_TX_DESC_DISDATAFB(txdesc, value)                                   \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, BIT(10))
-+#define SET_TX_DESC_USE_RATE(txdesc, value)                                    \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, BIT(8))
-+#define SET_TX_DESC_SEC_TYPE(txdesc, value)                                    \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(23, 22))
-+#define SET_TX_DESC_DATA_BW(txdesc, value)                                     \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, GENMASK(6, 5))
-+#define SET_TX_DESC_SW_SEQ(txdesc, value)                                      \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x09, value, GENMASK(23, 12))
-+#define SET_TX_DESC_MAX_AGG_NUM(txdesc, value)                                 \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, GENMASK(21, 17))
-+#define SET_TX_DESC_AMPDU_DENSITY(txdesc, value)                               \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, GENMASK(22, 20))
-+#define SET_TX_DESC_DATA_STBC(txdesc, value)                                   \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, GENMASK(9, 8))
-+#define SET_TX_DESC_DATA_LDPC(txdesc, value)                                   \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, BIT(7))
-+#define SET_TX_DESC_AGG_EN(txdesc, value)                                      \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, BIT(12))
-+#define SET_TX_DESC_LS(txdesc, value)                                          \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, BIT(26))
-+#define SET_TX_DESC_DATA_SHORT(txdesc, value)				       \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, BIT(4))
-+#define SET_TX_DESC_SPE_RPT(tx_desc, value)                                    \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, BIT(19))
-+#define SET_TX_DESC_SW_DEFINE(tx_desc, value)                                  \
-+	le32p_replace_bits((__le32 *)(txdesc) + 0x06, value, GENMASK(11, 0))
-+
-+enum rtw_tx_desc_queue_select {
-+	TX_DESC_QSEL_TID0	= 0,
-+	TX_DESC_QSEL_TID1	= 1,
-+	TX_DESC_QSEL_TID2	= 2,
-+	TX_DESC_QSEL_TID3	= 3,
-+	TX_DESC_QSEL_TID4	= 4,
-+	TX_DESC_QSEL_TID5	= 5,
-+	TX_DESC_QSEL_TID6	= 6,
-+	TX_DESC_QSEL_TID7	= 7,
-+	TX_DESC_QSEL_TID8	= 8,
-+	TX_DESC_QSEL_TID9	= 9,
-+	TX_DESC_QSEL_TID10	= 10,
-+	TX_DESC_QSEL_TID11	= 11,
-+	TX_DESC_QSEL_TID12	= 12,
-+	TX_DESC_QSEL_TID13	= 13,
-+	TX_DESC_QSEL_TID14	= 14,
-+	TX_DESC_QSEL_TID15	= 15,
-+	TX_DESC_QSEL_BEACON	= 16,
-+	TX_DESC_QSEL_HIGH	= 17,
-+	TX_DESC_QSEL_MGMT	= 18,
-+	TX_DESC_QSEL_H2C	= 19,
++	RTW_DBG_ALL		= 0xffffffff
 +};
 +
-+void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
-+			    struct rtw_tx_pkt_info *pkt_info,
-+			    struct ieee80211_tx_control *control,
-+			    struct sk_buff *skb);
-+void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb);
-+void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn);
-+void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb);
-+void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
-+				   struct rtw_tx_pkt_info *pkt_info,
-+				   struct sk_buff *skb);
++#ifdef CONFIG_RTW88_DEBUGFS
++
++void rtw_debugfs_init(struct rtw_dev *rtwdev);
++
++#else
++
++static inline void rtw_debugfs_init(struct rtw_dev *rtwdev) {}
++
++#endif /* CONFIG_RTW88_DEBUGFS */
++
++#ifdef CONFIG_RTW88_DEBUG
++
++__printf(3, 4)
++void __rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
++	       const char *fmt, ...);
++
++#define rtw_dbg(rtwdev, a...) __rtw_dbg(rtwdev, ##a)
++
++#else
++
++static inline void rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
++			   const char *fmt, ...) {}
++
++#endif /* CONFIG_RTW88_DEBUG */
++
++#define rtw_info(rtwdev, a...) dev_info(rtwdev->dev, ##a)
++#define rtw_warn(rtwdev, a...) dev_warn(rtwdev->dev, ##a)
++#define rtw_err(rtwdev, a...) dev_err(rtwdev->dev, ##a)
 +
 +#endif
 -- 
