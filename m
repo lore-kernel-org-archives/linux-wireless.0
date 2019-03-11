@@ -2,60 +2,84 @@ Return-Path: <SRS0=FsXk=RO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FC20C4360F
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 13:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C629BC43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 13:14:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B60320657
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 13:11:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F2FE20657
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 13:14:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YxHxXXGD";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YxHxXXGD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727017AbfCKNLD (ORCPT
+        id S1726977AbfCKNOo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 09:11:03 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:47862 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726605AbfCKNLD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 09:11:03 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Mon, 11 Mar 2019 09:14:44 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:50496 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726826AbfCKNOo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Mar 2019 09:14:44 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 9A690602F8; Mon, 11 Mar 2019 13:14:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552310083;
+        bh=PP9jj9/XlC/znWxo2CQ46qahNq+PfFdQnu4lMDDjRv0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=YxHxXXGDYSyJDLXAzDa2J2hO0MHf3GiMZWRYcDudMzgQWxr/CmnvCf1oPEFBmk2AB
+         pAvr0M5N/SChPcJ+JrASNkKzjRYRGIUPu1ER4eCkB9fh7IBcZ76AtxaxGf9olIjKri
+         P8F/9AiKgEo0A6YOMJz3nKi/M1Bit6eUfcdl3DHs=
+Received: from x230.qca.qualcomm.com (87-95-203-65.bb.dnainternet.fi [87.95.203.65])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 242B03092646;
-        Mon, 11 Mar 2019 13:11:03 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.83])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B7EC660BEE;
-        Mon, 11 Mar 2019 13:11:02 +0000 (UTC)
-Date:   Mon, 11 Mar 2019 14:11:00 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     yhchuang@realtek.com
-Cc:     kvalo@codeaurora.org, johannes@sipsolutions.net,
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BEFF2602F8;
+        Mon, 11 Mar 2019 13:14:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552310083;
+        bh=PP9jj9/XlC/znWxo2CQ46qahNq+PfFdQnu4lMDDjRv0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=YxHxXXGDYSyJDLXAzDa2J2hO0MHf3GiMZWRYcDudMzgQWxr/CmnvCf1oPEFBmk2AB
+         pAvr0M5N/SChPcJ+JrASNkKzjRYRGIUPu1ER4eCkB9fh7IBcZ76AtxaxGf9olIjKri
+         P8F/9AiKgEo0A6YOMJz3nKi/M1Bit6eUfcdl3DHs=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BEFF2602F8
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     yhchuang@realtek.com, johannes@sipsolutions.net,
         gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
         Larry.Finger@lwfinger.net, pkshih@realtek.com, tehuang@realtek.com,
         briannorris@chromium.org
 Subject: Re: [PATCH v7 01/14] rtw88: main files
-Message-ID: <20190311131100.GA6482@redhat.com>
 References: <1552139302-20476-1-git-send-email-yhchuang@realtek.com>
- <1552139302-20476-2-git-send-email-yhchuang@realtek.com>
+        <1552139302-20476-2-git-send-email-yhchuang@realtek.com>
+        <20190311131100.GA6482@redhat.com>
+Date:   Mon, 11 Mar 2019 15:14:38 +0200
+In-Reply-To: <20190311131100.GA6482@redhat.com> (Stanislaw Gruszka's message
+        of "Mon, 11 Mar 2019 14:11:00 +0100")
+Message-ID: <871s3da6yp.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1552139302-20476-2-git-send-email-yhchuang@realtek.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.43]); Mon, 11 Mar 2019 13:11:03 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> +#define RA_MASK_VHT_RATES_1SS	(0x3ff000 << 0)
-> +#define RA_MASK_VHT_RATES_2SS	(0x3ff000 << 10)
-> +#define RA_MASK_VHT_RATES_3SS	(0x3ff000 << 20)
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-Result will not fit in 32 bit, ULL marker should be added.
-I would also check if the driver compile without warnings
-on 32 bit cpus.
+>> +#define RA_MASK_VHT_RATES_1SS	(0x3ff000 << 0)
+>> +#define RA_MASK_VHT_RATES_2SS	(0x3ff000 << 10)
+>> +#define RA_MASK_VHT_RATES_3SS	(0x3ff000 << 20)
+>
+> Result will not fit in 32 bit, ULL marker should be added.
 
-Stanislaw
+I haven't checked how these are used but IMHO using GENMASK() would be
+so much better.
+
+-- 
+Kalle Valo
