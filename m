@@ -2,165 +2,127 @@ Return-Path: <SRS0=FsXk=RO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58545C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 06:44:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D80AAC43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 06:50:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B7A620657
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 06:44:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A21CE20657
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 06:50:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oL6xw/8C"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kna0F8tK";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QrfIjWWV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726694AbfCKGoM (ORCPT
+        id S1725870AbfCKGu1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 02:44:12 -0400
-Received: from mail-lf1-f67.google.com ([209.85.167.67]:42417 "EHLO
-        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725808AbfCKGoL (ORCPT
+        Mon, 11 Mar 2019 02:50:27 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:53722 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725850AbfCKGu1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 02:44:11 -0400
-Received: by mail-lf1-f67.google.com with SMTP id p1so2506185lfk.9;
-        Sun, 10 Mar 2019 23:44:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=zMblhS00+sT80Cq7Jhau/emE5bUOV9+iyYBuzntWk6Y=;
-        b=oL6xw/8CFRCz098lGbTjArOCC4a23FLC8kT+RwgXo6GsQY2PGFtrvqd/T6Tu0tQL/e
-         OxbISMd1xvzqofJx9EbqKm1DAN2qowbHunflfZIXGYUP+0gx6FaxLBivsWwWnhjnOvct
-         np8vSJ66MCrXsfw/GRWFc9derCiaaGwkvLIWtDpCmMpo9ZxSPvkDW5r1QHBEyP09oPXF
-         4VGE4E/XL/hOd7BLDxI6sMHj6e/bK+pNyIjs9w+nIETENJ8ML6/O3lVOrJSC7bIsqtOm
-         YjXs6WJkYLdXtXhkxenI62bge5N0ZRcsA45CASVHtPUFyR+0rEfDR29KbfdqB1qC7ZHl
-         oLvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=zMblhS00+sT80Cq7Jhau/emE5bUOV9+iyYBuzntWk6Y=;
-        b=tn/EWOn7LzG1QZyHMO8YNVVJJnnT7CMpETzCGEyK/bVU9n/Kwe8gJKy8psb2RPYbqS
-         DQbAXk7zv2uJFQ9JPRujOBCj9W52R0mPpu7/Gk8PujMcS9/zbWBl853I3tqQVyiBkVwo
-         uLcUy3Q7E7OrlAiRQGU76kBYNzCAk8ayNYqzqSKv1tVSD5MIFcM7gsoYQvKIPjSop9xA
-         k24L25XDFCAcuKY2Bt+yq9bm6K7522SOAaX4UMeNaEEWb7UWrRQbu8L4jdev6P+nSQYU
-         cH6ibljJUzAqBwhhA64oNlq1VRkB6AtveMDI4SV9mOy8s9HX+jxSISyCv58KCbuBAHTn
-         yXUA==
-X-Gm-Message-State: APjAAAWlYRL3ecM9kjQyaYzKYHHPgdjwI1kQMczjusdvcv+NFG4BzK0a
-        9euckCgH+Xa0uS6pPKug0J1dwQXbCPE=
-X-Google-Smtp-Source: APXvYqwuTiW2gbLz4ct+bHPP3Cy3Y05QdpW0stCLQdobogHmneQNkOlhrgoCAgG+lmEMUR/iw1tZFQ==
-X-Received: by 2002:a19:f008:: with SMTP id p8mr16311238lfc.134.1552286649210;
-        Sun, 10 Mar 2019 23:44:09 -0700 (PDT)
-Received: from [192.168.43.26] (c-5eea31d7-74736162.cust.telenor.se. [94.234.49.215])
-        by smtp.gmail.com with ESMTPSA id a8sm812717ljf.52.2019.03.10.23.44.07
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Sun, 10 Mar 2019 23:44:08 -0700 (PDT)
-Subject: Re: FW: [PATCH] ath10k: fix return value check in wake_tx_q op
-To:     Yibo Zhao <yiboz@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless-owner@vger.kernel.org
-References: <20180506132500.16888-1-erik.stromdahl@gmail.com>
- <6dc00772b826410e930306891fd13ed9@euamsexm01f.eu.qualcomm.com>
- <c77a1c0961f34ee68b7266444d2207f5@aptaiexm02e.ap.qualcomm.com>
- <66a74025a23795f305de37989c1b8aa3@codeaurora.org>
- <87sgwz8ylw.fsf@kamboji.qca.qualcomm.com>
- <a1c113622b9aec9b32393c0a3e159e32@codeaurora.org>
- <4dadbeebe8dc1e911cc4871d767b4ed1@codeaurora.org>
-From:   Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <8c882c7d-41e3-cdc9-34ae-6446970dbc52@gmail.com>
-Date:   Mon, 11 Mar 2019 07:44:06 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
-In-Reply-To: <4dadbeebe8dc1e911cc4871d767b4ed1@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        Mon, 11 Mar 2019 02:50:27 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 709A46021F; Mon, 11 Mar 2019 06:50:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552287026;
+        bh=PlP1+9hnNfWru1mIzNM1KW/WN/BYfuxGus8t6iGpK+w=;
+        h=From:To:Cc:Subject:Date:From;
+        b=kna0F8tKRzUuefSUgG12ovD/n9P4dJ3kgrAmx1ktwhkjgpCsoZnS/znuMML82q0kk
+         +PJDJu7Ymyqv0zK956f5JqfHP4G0ErITn0Xkeu6g1YK71bd6D2lp86bh5cK4KinR5U
+         7jufWVl9DegYES+qmyXNsdWQhBZWpab9JyWW34VU=
+Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: tamizhr@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 46C076021F;
+        Mon, 11 Mar 2019 06:50:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552287025;
+        bh=PlP1+9hnNfWru1mIzNM1KW/WN/BYfuxGus8t6iGpK+w=;
+        h=From:To:Cc:Subject:Date:From;
+        b=QrfIjWWV49mBanTl3qHzO9V4Ft7UA6JkWxYzDvCVpOQUPP0bnBPmT8DNxDUBNxzDe
+         yQfdMMCPjPL2xnMkYava0OOBE4XoJ7s4mipf1UkmP5tJs4HgMnWU0qWqtLwo4phLn3
+         53XmijqsYLPeWDySsczetTlVZbN9Hpwuo1+LFUX0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 46C076021F
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
+From:   Tamizh chelvam <tamizhr@codeaurora.org>
+To:     johannes@sipsolutions.net, ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCHv4 0/9] cfg80211/mac80211: Add support for TID specific configuration
+Date:   Mon, 11 Mar 2019 12:18:12 +0530
+Message-Id: <1552286901-28285-1-git-send-email-tamizhr@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Yibo,
 
-Sorry for a late reply, but I have been busy with other projects lately.
-I have added my comments below
+Add infrastructure to support per TID configurations like noack policy,
+retry count, AMPDU control(disable/enable), RTSCTS control(enable/disable)
+and TX rate mask configurations.
+This will be useful for the driver which can supports data TID
+specific configuration rather than phy level configurations.
+Here NL80211_CMD_SET_TID_CONFIG added to support this operation by
+accepting TID configuration.
+This command can accept STA mac addreess to make the configuration
+station specific rather than applying to all the connected stations
+to the netdev.
+And this nested command configuration can accept multiple number of
+data TID specific configuration in a single command,
+enum ieee80211_tid_conf_mask used to notify the driver that which
+configuration got modified for the TID.
 
-On 3/4/19 2:56 AM, Yibo Zhao wrote:
-> 在 2019-02-25 12:40，Yibo Zhao 写道：
->> 在 2019-02-07 22:25，Kalle Valo 写道：
->>> Yibo Zhao <yiboz@codeaurora.org> writes:
->>>
->>>> We have met performance issue on our two-core system after applying
->>>> your patch. In WDS mode, we found that the peak throughput in TCP-DL
->>>> and UDP-DL dropped more than 10% compared with previous one. And in
->>>> some cases, though throughput stays the same, one CPU usage rises
->>>> about 20% which leads to 10% in total CPU usage. With your change, I
->>>> think driver will try its best to push as many packets as it can.
->>>> During this time, the driver's queue lock will be held for too much
->>>> time in one CPU and as a result, the other CPU will be blocked if it
->>>> wants to acquired the same lock. Working in this way seems not
->>>> efficiency.
->>>>
->>>> So I think it is better to revert the change till we come up with a
->>>> new solution.
->>>
->>> I don't think reverting is a clear option at this stage because that
->>> again creates problems for SDIO. IIRC without this patch SDIO was
->>> sending one packet a time (or something like that, can't remember all
->>> the details right now).
+Tamizh chelvam (9):
+  nl80211: New netlink command for TID specific configuration
+  nl80211: Add new netlink attribute for TID speicific retry count
+  nl80211: Add netlink attribute for AMPDU aggregation enable/disable
+  nl80211: Add netlink attribute to enable/disable RTS_CTS
+  nl80211: Add netlink attribute to configure TID specific tx rate
+  mac80211: Add api to support configuring TID specific configuration
+  ath10k: Add wmi command support for station specific TID config
+  ath10k: Add new api to support TID specific configuration
+  ath10k: Add extended TID configuration support
 
-I have a few patches related to bundling of TX packets on my private repo.
-I have not yet had the time to prepare them for submission.
-This patch is related to that work, but I decided to submit it separately
-since I considered it a bugfix.
+v4:
+  * Fixed kbuild warnings.
 
-<snip>
+v3:
+  * Modified "nl80211: Add netlink attribute to configure TID specific tx rate" patch
+    to accept multiple TX rate configuration at a time.
+  * Modified noack and ampdu variable data type to int in
+    "mac80211: Add api to support configuring TID specific configuration" patch to store
+    default configuration.
+  * Modified "ath10k: Add new api to support TID specific configuration" patch to handle
+    default values for noack and ampdu. And added sta pointer sanity check in
+    ath10k_mac_tid_bitrate_config function.
+  * Fixed "ath10k: Add extended TID configuration support" wmi command parameters
+    assigned part.
 
->>
->> IMHO, with Erik's change, Erik's change has changed the way fq's
->> schedule behavior and it looks like there is no other packets in the
->> fq after a packet has been dequeued. And as a result, this flow's
->> deficit will be refill and then removed from fq list at once in the
->> same CPU. And during this time, the other CPU could be blocked. When
->> new packet comes, same thing happens. So we get equal new flows and
->> tx-packets.
->>
->> Things would be different without Erik's change. After a packet has
->> been dequeued, this flow's deficit will not be refill immediately in
->> CPU0. It is possible that the deficit to be refilled in CPU1 while at
->> the same time CPU0 can fetch data from ethernet. So we can see more
->> tx-packets delivered to FW from aqm.
->>
->>
->>> Why does this happen only WDS mode? Did you test other modes, like AP or
->>> client mode?
->> AP mode has same issue. UDP throughput drops more than 10%. As for
->> TCP, CPU usage rising a lot although throughput stays similiar.
->> So, I'd say Erik's change does not work for us.
-> 
-> Hi Kalle,
-> 
-> May I have your comments?
-> 
+v2:
+  * Added support to accept multiple TID configuration
+  * Added support to configure TX rate and RTSCTS control
 
-As I wrote in the commit message, the original code will always break out of
-the loop after just one iteration.
+ drivers/net/wireless/ath/ath10k/core.c    |    4 +
+ drivers/net/wireless/ath/ath10k/core.h    |    6 +
+ drivers/net/wireless/ath/ath10k/mac.c     |  679 +++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |   19 +
+ drivers/net/wireless/ath/ath10k/wmi.c     |   35 ++
+ drivers/net/wireless/ath/ath10k/wmi.h     |   72 +++
+ include/net/cfg80211.h                    |   57 +++
+ include/net/mac80211.h                    |   38 ++
+ include/uapi/linux/nl80211.h              |  182 ++++++++
+ net/mac80211/cfg.c                        |   28 ++
+ net/mac80211/driver-ops.h                 |   15 +
+ net/wireless/nl80211.c                    |  253 ++++++++++-
+ net/wireless/rdev-ops.h                   |   11 +
+ net/wireless/trace.h                      |   18 +
+ 14 files changed, 1319 insertions(+), 98 deletions(-)
 
-It is OK with me to bring back the old logic, but I think we should skip the
-loop entirely then.
+-- 
+1.7.9.5
 
-Something like this:
-
-if (ath10k_mac_tx_can_push(hw, txq)) {
-	ath10k_mac_tx_push_txq(hw, txq);
-}
-
-
-Btw, I noticed that the "fair scheduling" mechanism (derived from ath9k) from
-Toke have been integrated.
-
-I haven't rebased my tree for a while, so I will most likely have to rewrite
-my patches anyway in order to make them work with the new TX scheduling.
