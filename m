@@ -2,134 +2,132 @@ Return-Path: <SRS0=FsXk=RO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B605C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 15:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF9DFC43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 15:47:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19C2F20657
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 15:29:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=azazel.net header.i=@azazel.net header.b="QNiVP2pU"
+	by mail.kernel.org (Postfix) with ESMTP id B065920657
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 15:47:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727122AbfCKP3G (ORCPT
+        id S1727705AbfCKPrp convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 11:29:06 -0400
-Received: from kadath.azazel.net ([81.187.231.250]:56280 "EHLO
-        kadath.azazel.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726864AbfCKP3G (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 11:29:06 -0400
-X-Greylist: delayed 2144 seconds by postgrey-1.27 at vger.kernel.org; Mon, 11 Mar 2019 11:29:05 EDT
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=azazel.net;
-         s=20190108; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
-        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=Pp0hqpqjCslrSXAn8lZXFgNmAVElhkqozU+LNwwYcoc=; b=QNiVP2pUTlSijwO1C4VrvXh9GG
-        viAE6J/OkOfgOJPMj52jzrhOQURsOKpePd7dDa35h5wwKuyol06DyuVsasCwrsnkf1UwNeALpBcmj
-        o4NqzWpw/Q36o9bR0eItIUfDk6S4oxuY8l1HriccPPrK5mGuHCYEiTU/H3MTWknEAWvTt0QhTNFBq
-        5RapNy8jAKyqzXSLARg7cCzufXpciqGq/F7/onbQRN8cMOtkZlZh7cbFiDOeQfm5AgeqHtvNfshOh
-        aCXsERW3FXbXZFgQTORyTXpuNqiJqWT3K3feRSng3XULbuZZN12RbIOWGGA3Usv4z8T2BPLZo0MbD
-        fnypGHXA==;
-Received: from kadath.azazel.net ([2001:8b0:135f:bcd1:e2cb:4eff:fedf:e608] helo=azazel.net)
-        by kadath.azazel.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <jeremy@azazel.net>)
-        id 1h3MID-0003PK-TU; Mon, 11 Mar 2019 14:52:41 +0000
-Date:   Mon, 11 Mar 2019 14:52:40 +0000
-From:   Jeremy Sowden <jeremy@azazel.net>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ga58taw@mytum.de, Julius Niedworok <julius.n@gmx.net>,
-        linux-wireless@vger.kernel.org, david@redhat.com, nc@net.in.tum.de,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC v2] mac80211: debugfs option to force TX status frames
-Message-ID: <20190311145240.akms2pz2hxsalmaz@azazel.net>
-References: <e20962001ee10a0f90f8e2f1f8baafcf3b70e9dd.camel@sipsolutions.net>
- <20190306200206.60916-1-julius.n@gmx.net>
- <87k1hazo6r.fsf@purkki.adurom.net>
- <20190307193045.a7awwn6mycloccq5@mission-control>
- <87h8c98q4l.fsf@codeaurora.org>
+        Mon, 11 Mar 2019 11:47:45 -0400
+Received: from mga04.intel.com ([192.55.52.120]:14797 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726942AbfCKPrp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Mar 2019 11:47:45 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 11 Mar 2019 08:47:44 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.58,468,1544515200"; 
+   d="scan'208";a="202818140"
+Received: from ahduyck-desk1.jf.intel.com ([10.7.198.76])
+  by orsmga001.jf.intel.com with ESMTP; 11 Mar 2019 08:47:44 -0700
+Message-ID: <e0630ae9d9bee73d8a1ce3499ea9f77900e9cdfa.camel@linux.intel.com>
+Subject: Re: [PATCH] iommu/amd: fix sg->dma_address for sg->offset bigger
+ than PAGE_SIZE
+From:   Alexander Duyck <alexander.h.duyck@linux.intel.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Rosen Penev <rosenp@gmail.com>, Joerg Roedel <joro@8bytes.org>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Samuel Sieb <samuel@sieb.net>,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, jan.viktorin@gmail.com
+Date:   Mon, 11 Mar 2019 08:47:44 -0700
+In-Reply-To: <20190311090314.GB3310@redhat.com>
+References: <20190226103450.GA2989@redhat.com>
+         <20190226104413.GH20740@8bytes.org> <20190226112407.GB2989@redhat.com>
+         <20190228090411.GA24938@redhat.com> <20190228104223.GA2749@redhat.com>
+         <20190228121948.GD6072@redhat.com> <20190228134029.GC1594@8bytes.org>
+         <20190304071037.GA2787@redhat.com>
+         <CAKxU2N-k-9DCYBv6W3CohL963dr3AeY3VHyt8FrUuo=BfacDsw@mail.gmail.com>
+         <20190311084319.GA3310@redhat.com> <20190311090314.GB3310@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="4jlle5knlvfploax"
-Content-Disposition: inline
-In-Reply-To: <87h8c98q4l.fsf@codeaurora.org>
-User-Agent: NeoMutt/20170113 (1.7.2)
-X-SA-Exim-Connect-IP: 2001:8b0:135f:bcd1:e2cb:4eff:fedf:e608
-X-SA-Exim-Mail-From: jeremy@azazel.net
-X-SA-Exim-Scanned: No (on kadath.azazel.net); SAEximRunCond expanded to false
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Mon, 2019-03-11 at 10:03 +0100, Stanislaw Gruszka wrote:
+> Take into account that sg->offset can be bigger than PAGE_SIZE when
+> setting segment sg->dma_address. Otherwise sg->dma_address will point
+> at diffrent page, what makes DMA not possible with erros like this:
+> 
+> xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa70c0 flags=0x0020]
+> xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa7040 flags=0x0020]
+> xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa7080 flags=0x0020]
+> xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa7100 flags=0x0020]
+> xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa7000 flags=0x0020]
+> 
+> Additinally with wrong sg->dma_address unmap_sg will free wrong pages,
+> what what can cause crashes like this:
+> 
+> Feb 28 19:27:45 kernel: BUG: Bad page state in process cinnamon  pfn:39e8b1
+> Feb 28 19:27:45 kernel: Disabling lock debugging due to kernel taint
+> Feb 28 19:27:45 kernel: flags: 0x2ffff0000000000()
+> Feb 28 19:27:45 kernel: raw: 02ffff0000000000 0000000000000000 ffffffff00000301 0000000000000000
+> Feb 28 19:27:45 kernel: raw: 0000000000000000 0000000000000000 00000001ffffffff 0000000000000000
+> Feb 28 19:27:45 kernel: page dumped because: nonzero _refcount
+> Feb 28 19:27:45 kernel: Modules linked in: ccm fuse arc4 nct6775 hwmon_vid amdgpu nls_iso8859_1 nls_cp437 edac_mce_amd vfat fat kvm_amd ccp rng_core kvm mt76x0u mt76x0_common mt76x02_usb irqbypass mt76_usb mt76x02_lib mt76 crct10dif_pclmul crc32_pclmul chash mac80211 amd_iommu_v2 ghash_clmulni_intel gpu_sched i2c_algo_bit ttm wmi_bmof snd_hda_codec_realtek snd_hda_codec_generic drm_kms_helper snd_hda_codec_hdmi snd_hda_intel drm snd_hda_codec aesni_intel snd_hda_core snd_hwdep aes_x86_64 crypto_simd snd_pcm cfg80211 cryptd mousedev snd_timer glue_helper pcspkr r8169 input_leds realtek agpgart libphy rfkill snd syscopyarea sysfillrect sysimgblt fb_sys_fops soundcore sp5100_tco k10temp i2c_piix4 wmi evdev gpio_amdpt pinctrl_amd mac_hid pcc_cpufreq acpi_cpufreq sg ip_tables x_tables ext4(E) crc32c_generic(E) crc16(E) mbcache(E) jbd2(E) fscrypto(E) sd_mod(E) hid_generic(E) usbhid(E) hid(E) dm_mod(E) serio_raw(E) atkbd(E) libps2(E) crc32c_intel(E) ahci(E) libahci(E) libata(E) xhci_pci(E
+ ) xhci_hcd(E)
+> Feb 28 19:27:45 kernel:  scsi_mod(E) i8042(E) serio(E) bcache(E) crc64(E)
+> Feb 28 19:27:45 kernel: CPU: 2 PID: 896 Comm: cinnamon Tainted: G    B   W   E     4.20.12-arch1-1-custom #1
+> Feb 28 19:27:45 kernel: Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./B450M Pro4, BIOS P1.20 06/26/2018
+> Feb 28 19:27:45 kernel: Call Trace:
+> Feb 28 19:27:45 kernel:  dump_stack+0x5c/0x80
+> Feb 28 19:27:45 kernel:  bad_page.cold.29+0x7f/0xb2
+> Feb 28 19:27:45 kernel:  __free_pages_ok+0x2c0/0x2d0
+> Feb 28 19:27:45 kernel:  skb_release_data+0x96/0x180
+> Feb 28 19:27:45 kernel:  __kfree_skb+0xe/0x20
+> Feb 28 19:27:45 kernel:  tcp_recvmsg+0x894/0xc60
+> Feb 28 19:27:45 kernel:  ? reuse_swap_page+0x120/0x340
+> Feb 28 19:27:45 kernel:  ? ptep_set_access_flags+0x23/0x30
+> Feb 28 19:27:45 kernel:  inet_recvmsg+0x5b/0x100
+> Feb 28 19:27:45 kernel:  __sys_recvfrom+0xc3/0x180
+> Feb 28 19:27:45 kernel:  ? handle_mm_fault+0x10a/0x250
+> Feb 28 19:27:45 kernel:  ? syscall_trace_enter+0x1d3/0x2d0
+> Feb 28 19:27:45 kernel:  ? __audit_syscall_exit+0x22a/0x290
+> Feb 28 19:27:45 kernel:  __x64_sys_recvfrom+0x24/0x30
+> Feb 28 19:27:45 kernel:  do_syscall_64+0x5b/0x170
+> Feb 28 19:27:45 kernel:  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> 
+> Cc: stable@vger.kernel.org
+> Reported-and-tested-by: jan.viktorin@gmail.com
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/iommu/amd_iommu.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+> index 6b0760dafb3e..949621f33624 100644
+> --- a/drivers/iommu/amd_iommu.c
+> +++ b/drivers/iommu/amd_iommu.c
+> @@ -2604,7 +2604,7 @@ static int map_sg(struct device *dev, struct scatterlist *sglist,
+>  
+>  	/* Everything is mapped - write the right values into s->dma_address */
+>  	for_each_sg(sglist, s, nelems, i) {
+> -		s->dma_address += address + s->offset;
+> +		s->dma_address += address + (s->offset & ~PAGE_MASK);
+>  		s->dma_length   = s->length;
+>  	}
+>  
 
---4jlle5knlvfploax
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+You should add a comment calling out that this is needed because the
+sg_phys(s) call above this is masked with PAGE_MASK. Then this makes
+much more sense. Otherwise I would have assumed you needed either the
+full offset or none.
 
-On 2019-03-11, at 16:03:38 +0200, Kalle Valo wrote:
-> ga58taw@mytum.de writes:
-> > On Thu, Mar 07, 2019 at 05:42:04PM +0200, Kalle Valo wrote:
-> > > > +   len = scnprintf(buf, sizeof(buf), "%d\n",
-> > > >                    (int)local->force_tx_status);
-> > >
-> > > I wonder about the cast, is it guaranteed that a bool is always of
-> > > the same size as an int?
-> >
-> > Why is this a problem? If a bool is smaller than an int, the
-> > compiler emits code that will prepend the value of force_tx_status
-> > with zeros.
->
-> Let's say that a bool is a byte and int is four bytes. If you use "%d"
-> I would guess that in that case scnprintf() writes 4 bytes, meaning
-> that 3 bytes will be overwriting either padding or some other field in
-> the struct.
+Other than that, from that I can tell the code itself looks to be
+correct, but just difficult to read.
 
-It's the value that matters, not the type.  It will only be too big for
-the buffer if the result of casting local->force_tx_status to int is
-less than -9 or greeater than 99.
+Reviewed-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
 
-  scnprintf(buf, size(buf), "%lld\n", (long long)local->force_tx_status)
-
-would also be fine if the value were in range.  Note also that scnprintf
-will not overrun the buffer: it will truncate the string.
-
-> But I'm no compiler expert so I'm not going to argue about this
-> anymore.  I just wanted to point out that that the cast looks
-> dangerous and I would not do it.
-
-As it happens, arguments to variadic functions are subject to the
-"default argument promotions," so if local->force_tx_status is in fact a
-bool (I can't find the definition), it would be promoted to int and the
-cast is superfluous.
-
-J.
-
---4jlle5knlvfploax
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEZ8d+2N/NBLDbUxIF0Z7UzfnX9sMFAlyGdjcACgkQ0Z7UzfnX
-9sMb1BAAsSESto65kU2vMM1odmXXphdjm3eCo+b7dJE6rHaaAB1IzY16XAGv1R1A
-T7vVvm+5Ia1WFFnKNr8VnF1s4gIhzqPCAGqHSuERNyIQKcAAwSVtSZtHpGa+WjrD
-qs/gfLXh7AkXQAePZG7p+KIvFVYa4ty94YonfEOE4MQlayUz1TdgwWnXezCk5i7d
-89H/rcZbcSQ9osp3+qIDoOGLvZa+nKLCIOrD85LTpfDpYUC3lUetM1byPsudv+5A
-HW7TGsbKOBnQLeIPx1o1DZUt0OX7pqlyrsO6K0XkBJHvGTFInP6MRenpDDPswXPn
-O8JxtqJ2mwEKj0HKoInopvXesPYY5NrHqML6PlzY3O9j1Wd5rviA6r80Y4MW06kd
-fQMoSKhK9nF6nNviaEXNmXCteryPlQTdAm5L05VmK2wiUJcza+ntF4yN6nEryq0a
-kd17nFUl+LU0LliCRxFpLSBV6F31s26rUVy9BEqp3q74Yh7Sqg5l5N0ZHInrEc2D
-XtJaTf5Nbyh7LHKiiiOpNMPzOD0pxixkmF8HU/2XW34uLl6ojXgvyiSE0EXrYdOM
-AjN5dEtxFpnM1dv7cQDoHdNTqYpcDLnstcXuyHcWru4bTXXcrPrVok/tbnsQ5x5m
-6Nlqd5G0pK0e2nigrCqBmigZxIPv4AVPRgDrlA/Sik96A9tbsq8=
-=KvZy
------END PGP SIGNATURE-----
-
---4jlle5knlvfploax--
