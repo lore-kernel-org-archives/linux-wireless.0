@@ -2,294 +2,231 @@ Return-Path: <SRS0=FsXk=RO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C949C4360F
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 06:51:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75FE2C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 07:02:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50BE720657
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 06:51:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30B64205C9
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 07:02:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SPJhKEXz";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BraZDDqg"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="klv3MKCC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726772AbfCKGvN (ORCPT
+        id S1726530AbfCKHCc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 02:51:13 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:55742 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725850AbfCKGvM (ORCPT
+        Mon, 11 Mar 2019 03:02:32 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:54242 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725839AbfCKHCc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 02:51:12 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 2CF6A60A05; Mon, 11 Mar 2019 06:51:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1552287070;
-        bh=sEOgT+Rqs+UyGQJFBoe99cwa1EM4neucfMniZ+InkoY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SPJhKEXz/hy07mLwNMRbkRNrNOwk9Cf3/IQQbM1CufhRseAM+nFVdgsKIsDG+VVX6
-         22F1Bz2f7nBEOuelvyIMqyTGLM/7cYttbVP8K3LWl/k4TWUZ9LicE/s9L0HyPWaMIr
-         DE5qKs0upVMpuvBryVuOJiAaQcQL2d8KeCv0rCd4=
-Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: tamizhr@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5D3B960ADE;
-        Mon, 11 Mar 2019 06:50:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1552287059;
-        bh=sEOgT+Rqs+UyGQJFBoe99cwa1EM4neucfMniZ+InkoY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BraZDDqgXhbar/YNyQho4NU+iaaDNtMpUjV8akfbqfe7vHF/bNThxkYFEV3UWCksl
-         hIzMxEJXN+4hLfEqDesAAvMSMzkS1q5QkXCbCoaFUsxrF+WT1kHOJcXncXA7ISguqI
-         hYfUoWY4GqCbY6pLnCgC/LEYYFNWVuLRe+2drqSg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5D3B960ADE
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
-From:   Tamizh chelvam <tamizhr@codeaurora.org>
-To:     johannes@sipsolutions.net, ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
+        Mon, 11 Mar 2019 03:02:32 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x2B6wiaj166530;
+        Mon, 11 Mar 2019 07:02:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type : in-reply-to;
+ s=corp-2018-07-02; bh=VptuTN5sLd9NwA+Fp/r87IFqvEmvK0A169dCruVVr/s=;
+ b=klv3MKCCinIzctPPrxB2BlDz8xs2psbeSfYItnSnQiCj6j4TZy7Lyct0ZPO/C/U99Rnf
+ hRSIaT/TLquGe1QSQ5WmOW4+tyaiFYc1pExu4ef0pFTIc1I3HsImrlX5sF1vmoMADv1N
+ RZN94//pqn6y3yKn8hk9SGxy+VV4N2PMX6HJ2dLi9/IYIXBZatg/ppBSlGqdwrMQkpYj
+ /Z0taLXiObjKtDX6XR8yhm1+1BHo4sp3erYR80d2FGrazMa+CEyYG6tjqrL3SnneUJWi
+ mD+ovfNwpAV+fstZ92LPEIEmbRqeU9dwQEGb2xvh48xJ3R+k8VwWbqe8n8DI8gX9RP4/ Pw== 
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2120.oracle.com with ESMTP id 2r464r4e6k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 Mar 2019 07:02:21 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x2B72FO6004743
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 Mar 2019 07:02:16 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x2B72Fjf005776;
+        Mon, 11 Mar 2019 07:02:15 GMT
+Received: from kadam (/197.157.34.165)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 11 Mar 2019 00:02:14 -0700
+Date:   Mon, 11 Mar 2019 10:02:07 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     kbuild@01.org, Tamizh chelvam <tamizhr@codeaurora.org>
+Cc:     kbuild-all@01.org, johannes@sipsolutions.net,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv4 9/9] ath10k: Add extended TID configuration support
-Date:   Mon, 11 Mar 2019 12:18:21 +0530
-Message-Id: <1552286901-28285-10-git-send-email-tamizhr@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1552286901-28285-1-git-send-email-tamizhr@codeaurora.org>
-References: <1552286901-28285-1-git-send-email-tamizhr@codeaurora.org>
+Subject: Re: [PATCHv3 8/9] ath10k: Add new api to support TID specific
+ configuration
+Message-ID: <20190311070207.GA2412@kadam>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1551895251-22941-9-git-send-email-tamizhr@codeaurora.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9191 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
+ definitions=main-1903110053
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch extend TID configuration support to configure
-RTS_CTS control and TX rate limit. Tx rate limit is
-similar to auto rate but it will be limited to the user
-configured rate mask rather than the station's highest
-supported rate mask. Here ext_tid_cfg_bitmap added
-to notify the target which extended configuration
-parameter has modified(here RTS_CTS).
+Hi Tamizh,
 
-WMI_10_4_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT service flag
-introduced to advertise this support.
+url:    https://github.com/0day-ci/linux/commits/Tamizh-chelvam/cfg80211-mac80211-Add-support-for-TID-specific-configuration/20190308-195433
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
 
-Testing:
-	* Tested HW: QCA9984
-	* Tested FW: 10.4-3.9.0.2-00021
+smatch warnings:
+drivers/net/wireless/ath/ath10k/mac.c:8438 ath10k_mac_op_set_tid_config() error: uninitialized symbol 'ret'.
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+# https://github.com/0day-ci/linux/commit/2eab2d81c36efa0cf08b02bfe2df3f83a2e2d756
+git remote add linux-review https://github.com/0day-ci/linux
+git remote update linux-review
+git checkout 2eab2d81c36efa0cf08b02bfe2df3f83a2e2d756
+vim +/ret +8438 drivers/net/wireless/ath/ath10k/mac.c
+
+6a7f8911 Anilkumar Kolli 2017-12-05  8306  
+2eab2d81 Tamizh chelvam  2019-03-06  8307  static int ath10k_mac_op_set_tid_config(struct ieee80211_hw *hw,
+2eab2d81 Tamizh chelvam  2019-03-06  8308  					struct ieee80211_vif *vif,
+2eab2d81 Tamizh chelvam  2019-03-06  8309  					struct ieee80211_sta *sta,
+2eab2d81 Tamizh chelvam  2019-03-06  8310  					struct ieee80211_tid_config *tid_config)
+2eab2d81 Tamizh chelvam  2019-03-06  8311  {
+2eab2d81 Tamizh chelvam  2019-03-06  8312  	struct ath10k *ar = hw->priv;
+2eab2d81 Tamizh chelvam  2019-03-06  8313  	struct ath10k_vif *arvif = (void *)vif->drv_priv;
+2eab2d81 Tamizh chelvam  2019-03-06  8314  	struct ath10k_mac_iter_tid_conf_data data = {};
+2eab2d81 Tamizh chelvam  2019-03-06  8315  	struct wmi_per_peer_per_tid_cfg_arg arg = {};
+2eab2d81 Tamizh chelvam  2019-03-06  8316  	int ret, i;
+2eab2d81 Tamizh chelvam  2019-03-06  8317  	u8 changed;
+2eab2d81 Tamizh chelvam  2019-03-06  8318  
+2eab2d81 Tamizh chelvam  2019-03-06  8319  	mutex_lock(&ar->conf_mutex);
+2eab2d81 Tamizh chelvam  2019-03-06  8320  	arg.vdev_id = arvif->vdev_id;
+2eab2d81 Tamizh chelvam  2019-03-06  8321  
+2eab2d81 Tamizh chelvam  2019-03-06  8322  	memset(arvif->tid_conf_changed, 0, sizeof(arvif->tid_conf_changed));
+2eab2d81 Tamizh chelvam  2019-03-06  8323  
+2eab2d81 Tamizh chelvam  2019-03-06  8324  	for (i = 0; i < tid_config->n_tid_conf; i++) {
+2eab2d81 Tamizh chelvam  2019-03-06  8325  		if (tid_config->tid_conf[i].tid >= IEEE80211_TID_MAX)
+2eab2d81 Tamizh chelvam  2019-03-06  8326  			continue;
+                                                                ^^^^^^^^^
+We would have to hit this continue over and over and "sta" would have
+to be non-NULL for this to be an issue.
+
+2eab2d81 Tamizh chelvam  2019-03-06  8327  
+2eab2d81 Tamizh chelvam  2019-03-06  8328  		ath10k_mac_parse_tid_config(ar, sta, vif,
+2eab2d81 Tamizh chelvam  2019-03-06  8329  					    &tid_config->tid_conf[i],
+2eab2d81 Tamizh chelvam  2019-03-06  8330  					    &arg);
+2eab2d81 Tamizh chelvam  2019-03-06  8331  		changed = tid_config->tid_conf[i].tid_conf_mask;
+2eab2d81 Tamizh chelvam  2019-03-06  8332  		if (sta) {
+2eab2d81 Tamizh chelvam  2019-03-06  8333  			if (!sta->wme) {
+2eab2d81 Tamizh chelvam  2019-03-06  8334  				ret = -ENOTSUPP;
+2eab2d81 Tamizh chelvam  2019-03-06  8335  				goto exit;
+2eab2d81 Tamizh chelvam  2019-03-06  8336  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8337  
+2eab2d81 Tamizh chelvam  2019-03-06  8338  			if (changed & IEEE80211_TID_CONF_RETRY) {
+2eab2d81 Tamizh chelvam  2019-03-06  8339  				if (sta->noack[arg.tid] == WMI_PEER_TID_CONFIG_NOACK ||
+2eab2d81 Tamizh chelvam  2019-03-06  8340  				    vif->noack[arg.tid] == WMI_PEER_TID_CONFIG_NOACK)
+2eab2d81 Tamizh chelvam  2019-03-06  8341  					arg.retry_count = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8342  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8343  
+2eab2d81 Tamizh chelvam  2019-03-06  8344  			if (changed & IEEE80211_TID_CONF_AMPDU) {
+2eab2d81 Tamizh chelvam  2019-03-06  8345  				if (sta->noack[arg.tid] == WMI_PEER_TID_CONFIG_NOACK ||
+2eab2d81 Tamizh chelvam  2019-03-06  8346  				    vif->noack[arg.tid] == WMI_PEER_TID_CONFIG_NOACK)
+2eab2d81 Tamizh chelvam  2019-03-06  8347  					arg.aggr_control = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8348  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8349  
+2eab2d81 Tamizh chelvam  2019-03-06  8350  			if (changed & IEEE80211_TID_CONF_TX_BITRATE) {
+2eab2d81 Tamizh chelvam  2019-03-06  8351  				if (sta->noack[arg.tid] == WMI_PEER_TID_CONFIG_NOACK ||
+2eab2d81 Tamizh chelvam  2019-03-06  8352  				    vif->noack[arg.tid] == WMI_PEER_TID_CONFIG_NOACK) {
+2eab2d81 Tamizh chelvam  2019-03-06  8353  					arg.rate_ctrl = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8354  					arg.rcode_flags = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8355  				}
+2eab2d81 Tamizh chelvam  2019-03-06  8356  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8357  
+2eab2d81 Tamizh chelvam  2019-03-06  8358  			ether_addr_copy(arg.peer_macaddr.addr, sta->addr);
+2eab2d81 Tamizh chelvam  2019-03-06  8359  			ret = ath10k_wmi_set_per_peer_per_tid_cfg(ar, &arg);
+2eab2d81 Tamizh chelvam  2019-03-06  8360  			if (ret)
+2eab2d81 Tamizh chelvam  2019-03-06  8361  				goto exit;
+2eab2d81 Tamizh chelvam  2019-03-06  8362  
+2eab2d81 Tamizh chelvam  2019-03-06  8363  			/* Store the configured parameters in success case */
+2eab2d81 Tamizh chelvam  2019-03-06  8364  			if (changed & IEEE80211_TID_CONF_NOACK) {
+2eab2d81 Tamizh chelvam  2019-03-06  8365  				if (tid_config->tid_conf[i].noack ==
+2eab2d81 Tamizh chelvam  2019-03-06  8366  						NL80211_TID_CONFIG_DEFAULT) {
+2eab2d81 Tamizh chelvam  2019-03-06  8367  					sta->noack[arg.tid] = -1;
+2eab2d81 Tamizh chelvam  2019-03-06  8368  				} else {
+2eab2d81 Tamizh chelvam  2019-03-06  8369  					sta->noack[arg.tid] = arg.ack_policy;
+2eab2d81 Tamizh chelvam  2019-03-06  8370  				}
+2eab2d81 Tamizh chelvam  2019-03-06  8371  
+2eab2d81 Tamizh chelvam  2019-03-06  8372  				arg.ack_policy = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8373  				arg.aggr_control = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8374  				arg.rate_ctrl = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8375  				arg.rcode_flags = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8376  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8377  
+2eab2d81 Tamizh chelvam  2019-03-06  8378  			if (changed & IEEE80211_TID_CONF_RETRY) {
+2eab2d81 Tamizh chelvam  2019-03-06  8379  				if (tid_config->tid_conf[i].retry_long == -1) {
+2eab2d81 Tamizh chelvam  2019-03-06  8380  					sta->retry_long[arg.tid] = -1;
+2eab2d81 Tamizh chelvam  2019-03-06  8381  				} else {
+2eab2d81 Tamizh chelvam  2019-03-06  8382  					sta->retry_long[arg.tid] = arg.retry_count;
+2eab2d81 Tamizh chelvam  2019-03-06  8383  				}
+2eab2d81 Tamizh chelvam  2019-03-06  8384  
+2eab2d81 Tamizh chelvam  2019-03-06  8385  				arg.retry_count = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8386  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8387  
+2eab2d81 Tamizh chelvam  2019-03-06  8388  			if (changed & IEEE80211_TID_CONF_AMPDU) {
+2eab2d81 Tamizh chelvam  2019-03-06  8389  				if (tid_config->tid_conf[i].ampdu ==
+2eab2d81 Tamizh chelvam  2019-03-06  8390  						NL80211_TID_CONFIG_DEFAULT) {
+2eab2d81 Tamizh chelvam  2019-03-06  8391  					sta->ampdu[arg.tid] = -1;
+2eab2d81 Tamizh chelvam  2019-03-06  8392  				} else {
+2eab2d81 Tamizh chelvam  2019-03-06  8393  					sta->ampdu[arg.tid] = arg.aggr_control;
+2eab2d81 Tamizh chelvam  2019-03-06  8394  				}
+2eab2d81 Tamizh chelvam  2019-03-06  8395  
+2eab2d81 Tamizh chelvam  2019-03-06  8396  				arg.aggr_control = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8397  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8398  
+2eab2d81 Tamizh chelvam  2019-03-06  8399  			if (changed & IEEE80211_TID_CONF_TX_BITRATE) {
+2eab2d81 Tamizh chelvam  2019-03-06  8400  				sta->rate_ctrl[arg.tid] = arg.rate_ctrl;
+2eab2d81 Tamizh chelvam  2019-03-06  8401  				arg.rate_ctrl = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8402  				arg.rcode_flags = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8403  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8404  		} else {
+2eab2d81 Tamizh chelvam  2019-03-06  8405  			arvif->tid_conf_changed[arg.tid] |= changed;
+2eab2d81 Tamizh chelvam  2019-03-06  8406  
+2eab2d81 Tamizh chelvam  2019-03-06  8407  			if (changed & IEEE80211_TID_CONF_NOACK) {
+2eab2d81 Tamizh chelvam  2019-03-06  8408  				vif->noack[arg.tid] = arg.ack_policy;
+2eab2d81 Tamizh chelvam  2019-03-06  8409  				vif->ampdu[arg.tid] = arg.aggr_control;
+2eab2d81 Tamizh chelvam  2019-03-06  8410  				vif->rate_ctrl[arg.tid] = arg.rate_ctrl;
+2eab2d81 Tamizh chelvam  2019-03-06  8411  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8412  
+2eab2d81 Tamizh chelvam  2019-03-06  8413  			if (changed & IEEE80211_TID_CONF_RETRY)
+2eab2d81 Tamizh chelvam  2019-03-06  8414  				vif->retry_long[arg.tid] = arg.retry_count;
+2eab2d81 Tamizh chelvam  2019-03-06  8415  
+2eab2d81 Tamizh chelvam  2019-03-06  8416  			if (changed & IEEE80211_TID_CONF_AMPDU)
+2eab2d81 Tamizh chelvam  2019-03-06  8417  				vif->ampdu[arg.tid] = arg.aggr_control;
+2eab2d81 Tamizh chelvam  2019-03-06  8418  
+2eab2d81 Tamizh chelvam  2019-03-06  8419  			if (changed & IEEE80211_TID_CONF_TX_BITRATE) {
+2eab2d81 Tamizh chelvam  2019-03-06  8420  				vif->rate_ctrl[arg.tid] = arg.rate_ctrl;
+2eab2d81 Tamizh chelvam  2019-03-06  8421  				vif->rate_code[arg.tid] = arg.rcode_flags;
+2eab2d81 Tamizh chelvam  2019-03-06  8422  			}
+2eab2d81 Tamizh chelvam  2019-03-06  8423  		}
+2eab2d81 Tamizh chelvam  2019-03-06  8424  	}
+2eab2d81 Tamizh chelvam  2019-03-06  8425  
+2eab2d81 Tamizh chelvam  2019-03-06  8426  	if (sta)
+2eab2d81 Tamizh chelvam  2019-03-06  8427  		goto exit;
+2eab2d81 Tamizh chelvam  2019-03-06  8428  
+2eab2d81 Tamizh chelvam  2019-03-06  8429  	ret = 0;
+2eab2d81 Tamizh chelvam  2019-03-06  8430  	data.curr_vif = vif;
+2eab2d81 Tamizh chelvam  2019-03-06  8431  	data.ar = ar;
+2eab2d81 Tamizh chelvam  2019-03-06  8432  
+2eab2d81 Tamizh chelvam  2019-03-06  8433  	ieee80211_iterate_stations_atomic(hw, ath10k_mac_vif_stations_tid_conf,
+2eab2d81 Tamizh chelvam  2019-03-06  8434  					  &data);
+2eab2d81 Tamizh chelvam  2019-03-06  8435  
+2eab2d81 Tamizh chelvam  2019-03-06  8436  exit:
+2eab2d81 Tamizh chelvam  2019-03-06  8437  	mutex_unlock(&ar->conf_mutex);
+2eab2d81 Tamizh chelvam  2019-03-06 @8438  	return ret;
+2eab2d81 Tamizh chelvam  2019-03-06  8439  }
+2eab2d81 Tamizh chelvam  2019-03-06  8440  
+
 ---
- drivers/net/wireless/ath/ath10k/core.c |    4 +++
- drivers/net/wireless/ath/ath10k/mac.c  |   48 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |    9 ++++--
- drivers/net/wireless/ath/ath10k/wmi.h  |   20 +++++++++++++
- 4 files changed, 78 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index ac2cf3f..248709d 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2623,6 +2623,10 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 		if (test_bit(WMI_SERVICE_REPORT_AIRTIME, ar->wmi.svc_map))
- 			val |= WMI_10_4_REPORT_AIRTIME;
- 
-+		if (test_bit(WMI_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT,
-+			     ar->wmi.svc_map))
-+			val |= WMI_10_4_EXT_PEER_TID_CONFIGS_SUPPORT;
-+
- 		status = ath10k_mac_ext_resource_config(ar, val);
- 		if (status) {
- 			ath10k_err(ar,
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e5ae054..5d4611e 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2950,6 +2950,12 @@ static int ath10k_new_peer_tid_config(struct ath10k *ar,
- 			arg.aggr_control = vif->ampdu[i];
- 			arg.rate_ctrl = vif->rate_ctrl[i];
- 			arg.rcode_flags = vif->rate_code[i];
-+			if (vif->rtscts[i])
-+				arg.ext_tid_cfg_bitmap =
-+					WMI_EXT_TID_RTS_CTS_CONFIG;
-+			else
-+				arg.ext_tid_cfg_bitmap = 0;
-+			arg.rtscts_ctrl = vif->rtscts[i];
- 		}
- 
- 		if (vif->noack[i]) {
-@@ -6560,6 +6566,10 @@ static int ath10k_mac_validate_rate_mask(struct ath10k *ar,
- 
- 	if (txrate_type == NL80211_TX_RATE_FIXED)
- 		*rate_ctrl = WMI_TID_CONFIG_RATE_CONTROL_FIXED_RATE;
-+	else if (txrate_type == NL80211_TX_RATE_LIMITED &&
-+		 (test_bit(WMI_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT,
-+			   ar->wmi.svc_map)))
-+		*rate_ctrl = WMI_PEER_TID_CONFIG_RATE_UPPER_CAP;
- 	else
- 		return -EOPNOTSUPP;
- 	return 0;
-@@ -6626,6 +6636,14 @@ static int ath10k_mac_validate_rate_mask(struct ath10k *ar,
- 			arg->rate_ctrl = 0;
- 		}
- 	}
-+
-+	if (changed & IEEE80211_TID_CONF_RTSCTS) {
-+		if (tid_conf->rtscts)
-+			arg->rtscts_ctrl = tid_conf->rtscts - 1;
-+		else
-+			arg->rtscts_ctrl = WMI_TID_CONFIG_RTSCTS_CONTROL_ENABLE;
-+		arg->ext_tid_cfg_bitmap = WMI_EXT_TID_RTS_CTS_CONFIG;
-+	}
- }
- 
- static void ath10k_sta_tid_cfg_wk(struct work_struct *wk)
-@@ -6706,6 +6724,18 @@ static void ath10k_sta_tid_cfg_wk(struct work_struct *wk)
- 			}
- 		}
- 
-+		if (changed & IEEE80211_TID_CONF_RTSCTS) {
-+			if (sta->rtscts[i]) {
-+				arg.rtscts_ctrl = 0;
-+				arg.ext_tid_cfg_bitmap = 0;
-+			} else {
-+				arg.rtscts_ctrl = vif->rtscts[i] - 1;
-+				arg.ext_tid_cfg_bitmap =
-+					WMI_EXT_TID_RTS_CTS_CONFIG;
-+				config_apply = true;
-+			}
-+		}
-+
- 		arg.tid = i;
- 
- 		if (config_apply) {
-@@ -8401,6 +8431,13 @@ static int ath10k_mac_op_set_tid_config(struct ieee80211_hw *hw,
- 				arg.rate_ctrl = 0;
- 				arg.rcode_flags = 0;
- 			}
-+
-+			if (changed & IEEE80211_TID_CONF_RTSCTS) {
-+				sta->rtscts[arg.tid] =
-+					tid_config->tid_conf[i].rtscts;
-+				arg.rtscts_ctrl = 0;
-+				arg.ext_tid_cfg_bitmap = 0;
-+			}
- 		} else {
- 			arvif->tid_conf_changed[arg.tid] |= changed;
- 
-@@ -8420,6 +8457,10 @@ static int ath10k_mac_op_set_tid_config(struct ieee80211_hw *hw,
- 				vif->rate_ctrl[arg.tid] = arg.rate_ctrl;
- 				vif->rate_code[arg.tid] = arg.rcode_flags;
- 			}
-+
-+			if (changed & IEEE80211_TID_CONF_RTSCTS)
-+				vif->rtscts[arg.tid] =
-+					tid_config->tid_conf[i].rtscts;
- 		}
- 	}
- 
-@@ -9166,6 +9207,13 @@ int ath10k_mac_register(struct ath10k *ar)
- 		ar->ops->set_tid_config = NULL;
- 		ar->hw->wiphy->flags &= ~WIPHY_FLAG_HAS_MAX_DATA_RETRY_COUNT;
- 	}
-+
-+	if (test_bit(WMI_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT, ar->wmi.svc_map)) {
-+		wiphy_ext_feature_set(ar->hw->wiphy,
-+				      NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL);
-+		wiphy_ext_feature_set(ar->hw->wiphy,
-+				      NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL);
-+	}
- 	/*
- 	 * on LL hardware queues are managed entirely by the FW
- 	 * so we only advertise to mac we can do the queues thing
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 44b66f2..6ae3f8c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -8884,11 +8884,14 @@ static u32 ath10k_wmi_prepare_peer_qos(u8 uapsd_queues, u8 sp)
- 	cmd->rate_control = cpu_to_le32(arg->rate_ctrl);
- 	cmd->retry_count = cpu_to_le32(arg->retry_count);
- 	cmd->rcode_flags = cpu_to_le32(arg->rcode_flags);
-+	cmd->ext_tid_cfg_bitmap = cpu_to_le32(arg->ext_tid_cfg_bitmap);
-+	cmd->rtscts_ctrl = cpu_to_le32(arg->rtscts_ctrl);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI,
--		   "wmi noack tid %d vdev id %d ack_policy %d aggr %u rate_ctrl %u rcflag %u retry_count %d mac_addr %pM\n",
--		   arg->tid, arg->vdev_id, arg->ack_policy, arg->aggr_control, arg->rate_ctrl,
--		   arg->rcode_flags, arg->retry_count, arg->peer_macaddr.addr);
-+		   "wmi noack tid %d vdev id %d ack_policy %d aggr %u rate_ctrl %u rcflag %u retry_count %d rtscts %d ext_tid_cfg_bitmap %d mac_addr %pM\n",
-+		   arg->tid, arg->vdev_id, arg->ack_policy, arg->aggr_control,
-+		   arg->rate_ctrl, arg->rcode_flags, arg->retry_count, arg->rtscts_ctrl,
-+		   arg->ext_tid_cfg_bitmap, arg->peer_macaddr.addr);
- 	return skb;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 187c13e..21a328f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -201,6 +201,7 @@ enum wmi_service {
- 	WMI_SERVICE_PER_PACKET_SW_ENCRYPT,
- 	WMI_SERVICE_REPORT_AIRTIME,
- 	WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT,
-+	WMI_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT,
- 
- 	/* Remember to add the new value to wmi_service_name()! */
- 
-@@ -493,6 +494,7 @@ static inline char *wmi_service_name(enum wmi_service service_id)
- 	SVCSTR(WMI_SERVICE_PER_PACKET_SW_ENCRYPT);
- 	SVCSTR(WMI_SERVICE_REPORT_AIRTIME);
- 	SVCSTR(WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT);
-+	SVCSTR(WMI_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT);
- 
- 	case WMI_SERVICE_MAX:
- 		return NULL;
-@@ -822,6 +824,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_REPORT_AIRTIME, len);
- 	SVCMAP(WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
- 	       WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT, len);
-+	SVCMAP(WMI_10_4_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT,
-+	       WMI_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT, len);
- }
- 
- #undef SVCMAP
-@@ -7169,6 +7173,16 @@ enum wmi_tid_rate_ctrl_conf {
- 	WMI_TID_CONFIG_RATE_CONTROL_AUTO,
- 	WMI_TID_CONFIG_RATE_CONTROL_FIXED_RATE,
- 	WMI_TID_CONFIG_RATE_CONTROL_DEFAULT_LOWEST_RATE,
-+	WMI_PEER_TID_CONFIG_RATE_UPPER_CAP,
-+};
-+
-+enum wmi_tid_rtscts_control_conf {
-+	WMI_TID_CONFIG_RTSCTS_CONTROL_ENABLE,
-+	WMI_TID_CONFIG_RTSCTS_CONTROL_DISABLE,
-+};
-+
-+enum wmi_ext_tid_config_map {
-+	WMI_EXT_TID_RTS_CTS_CONFIG = BIT(0),
- };
- 
- struct wmi_per_peer_per_tid_cfg_arg {
-@@ -7180,6 +7194,8 @@ struct wmi_per_peer_per_tid_cfg_arg {
- 	u8 rate_ctrl;
- 	u32 retry_count;
- 	u32 rcode_flags;
-+	u32 ext_tid_cfg_bitmap;
-+	u32 rtscts_ctrl;
- };
- 
- struct wmi_peer_per_tid_cfg_cmd {
-@@ -7195,6 +7211,10 @@ struct wmi_peer_per_tid_cfg_cmd {
- 	__le32 rate_control;
- 	__le32 rcode_flags;
- 	__le32 retry_count;
-+	/* See enum wmi_ext_tid_config_map */
-+	__le32 ext_tid_cfg_bitmap;
-+	/* see enum wmi_tid_rtscts_control_conf */
-+	__le32 rtscts_ctrl;
- } __packed;
- 
- enum wmi_txbf_conf {
--- 
-1.7.9.5
-
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
