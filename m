@@ -2,87 +2,68 @@ Return-Path: <SRS0=FsXk=RO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4D89C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 13:17:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B892C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 13:21:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8938620657
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 13:17:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="dXfdpGiA"
+	by mail.kernel.org (Postfix) with ESMTP id 239CF20657
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 13:21:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727026AbfCKNRt (ORCPT
+        id S1727670AbfCKNVi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 09:17:49 -0400
-Received: from nbd.name ([46.4.11.11]:58160 "EHLO nbd.name"
+        Mon, 11 Mar 2019 09:21:38 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:40028 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726826AbfCKNRt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 09:17:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=YgWtxYJWPuePHF4e5SAnns5nw7Zti+C6i56mRr0toRM=; b=dXfdpGiAgzb8XjOdWnXkFkmHXu
-        yccbE6SC/Wha01Scpeed0XiniibZf1bGQvaozvuWx0pZozVuYIQJWCQlW8zP+9WbLD5GCw/cPtFl8
-        JF1T3Z1nP9RnYnMtZQ9Uf3vPusG/Py9P8kYHtqvRqeNZoAqJHIPno+iUep0o2gZZmzrg=;
-Subject: Re: [PATCH] mt76: mt7603: use the correct hweight8() function
+        id S1727701AbfCKNTo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Mar 2019 09:19:44 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 62BB781F10;
+        Mon, 11 Mar 2019 13:19:44 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.83])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 007105DAAF;
+        Mon, 11 Mar 2019 13:19:43 +0000 (UTC)
+Date:   Mon, 11 Mar 2019 14:19:40 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-References: <20190311130953.61869-1-nbd@nbd.name>
- <87wol58s9i.fsf@codeaurora.org>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <43dc4551-bf1b-1f15-52e5-f5344eaf0e0f@nbd.name>
-Date:   Mon, 11 Mar 2019 14:17:47 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.5.3
+Cc:     yhchuang@realtek.com, johannes@sipsolutions.net,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        Larry.Finger@lwfinger.net, pkshih@realtek.com, tehuang@realtek.com,
+        briannorris@chromium.org
+Subject: Re: [PATCH v7 01/14] rtw88: main files
+Message-ID: <20190311131939.GB6089@redhat.com>
+References: <1552139302-20476-1-git-send-email-yhchuang@realtek.com>
+ <1552139302-20476-2-git-send-email-yhchuang@realtek.com>
+ <20190311131100.GA6482@redhat.com>
+ <871s3da6yp.fsf@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <87wol58s9i.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <871s3da6yp.fsf@codeaurora.org>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Mon, 11 Mar 2019 13:19:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-03-11 14:17, Kalle Valo wrote:
-> Felix Fietkau <nbd@nbd.name> writes:
+On Mon, Mar 11, 2019 at 03:14:38PM +0200, Kalle Valo wrote:
+> Stanislaw Gruszka <sgruszka@redhat.com> writes:
 > 
->> __sw_hweight8() is only defined if CONFIG_GENERIC_HWEIGHT is enabled.
->> The function that works on all architectures is hweight8().
->>
->> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> >> +#define RA_MASK_VHT_RATES_1SS	(0x3ff000 << 0)
+> >> +#define RA_MASK_VHT_RATES_2SS	(0x3ff000 << 10)
+> >> +#define RA_MASK_VHT_RATES_3SS	(0x3ff000 << 20)
+> >
+> > Result will not fit in 32 bit, ULL marker should be added.
 > 
-> This should go to 5.1, right?
-Yes.
+> I haven't checked how these are used but IMHO using GENMASK() would be
+> so much better.
 
-- Felix
+GENMASK_ULL() in this case :-)
+
+Stanislaw
