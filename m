@@ -2,120 +2,95 @@ Return-Path: <SRS0=FsXk=RO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC69EC43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 14:03:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 495D6C4360F
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 14:03:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9586B20657
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 14:03:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16E3720657
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 14:03:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Mm28mot+";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dp0pSymG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727739AbfCKODE (ORCPT
+        id S1727652AbfCKODr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 10:03:04 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:53742 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727471AbfCKODE (ORCPT
+        Mon, 11 Mar 2019 10:03:47 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:41300 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727469AbfCKODr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 10:03:04 -0400
-Received: by mail-wm1-f68.google.com with SMTP id e74so4642317wmg.3
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2019 07:03:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=LQGO+0VZ7PqFW40Hnn9iS4zvmoYnb6a3D5oAWS4Hyj8=;
-        b=l70uFEZFnFRk2hbA1yRarnXkzZayaRzV6FIzzpg4tYwTocIJK9PFOQbycUUxlwLXOz
-         HfftgDczuwGJcCWgnqqLshXzRWKPhqABMc4GibWxPxKlm9jtqG+C38JghaEDR/Db3D39
-         kLyRiluubQ7tpZpt0zmYh9OvVNuQYmyE1qYa/V4X9iaMoBNTCpNANeZ2W/nPT2IBcG0A
-         M1NDabZ0zae8AXKdbz7kW/GNUO/+ts3/1yChbBbxxcLnb9DZYBjHTcHFpPrjAoVUSqzk
-         +FWaiifd+ibaevWjfZae308hpRn2n49/US+2qbl865mekuc+vJ9s3u5PmVtI/jo+MgQx
-         5xyQ==
-X-Gm-Message-State: APjAAAXvA5wWFkwnRmk1HskgWp9qr2iCM/M8D/UiVbWGtizKgu7m77vK
-        s5itdiwwZRwm0DTsss1l2JTu9Q==
-X-Google-Smtp-Source: APXvYqxo5s92Qk4iyLZalC0gIHIbh6h3GZ5UQr1vHEi9L2+hyGYEVnXvPVRkYhChtOFTEsLt6LHX3Q==
-X-Received: by 2002:a1c:7a1a:: with SMTP id v26mr16813496wmc.129.1552312982582;
-        Mon, 11 Mar 2019 07:03:02 -0700 (PDT)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id a20sm9172213wmb.17.2019.03.11.07.03.01
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 11 Mar 2019 07:03:01 -0700 (PDT)
-Date:   Mon, 11 Mar 2019 15:02:56 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
-        ryder.lee@mediatek.com, roychl666@gmail.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/4] mt76: move mt76x02_insert_hdr_pad in mt76-core module
-Message-ID: <20190311140255.GA30882@localhost.localdomain>
-References: <cover.1552306908.git.lorenzo@kernel.org>
- <0ec618f40f6308f4da8c6a766519dfd66fa5ad57.1552306908.git.lorenzo@kernel.org>
- <20190311133058.GC6089@redhat.com>
+        Mon, 11 Mar 2019 10:03:47 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id F25EB60DAD; Mon, 11 Mar 2019 14:03:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552313026;
+        bh=rz3hpzhYgGZX+8d6angQRiM2LfoJqX1KFo32hfT+/ho=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Mm28mot+AnDLGjzpKCpXpJhjEF0veKfewlvbznM+Qd0Q0lap1JvORB0mp9xc55SEw
+         wTRbTCbY1a8olx5fMINSpPNYxxtlm5SnGQ+u86y9c+GBt/t2D//FyEt41JL7jMpQ30
+         SqArGQtVZSlCSkOLnHihKCx/+dZjJuz8+Bsu8DBs=
+Received: from x230.qca.qualcomm.com (87-95-203-65.bb.dnainternet.fi [87.95.203.65])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B693260CED;
+        Mon, 11 Mar 2019 14:03:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552313023;
+        bh=rz3hpzhYgGZX+8d6angQRiM2LfoJqX1KFo32hfT+/ho=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=dp0pSymG8EmWjTv0abskzeHgYzU+W61G9wg0vpDjEUmrrGQvtV/79aqrivAOENej6
+         KoBOlxtdNrVDuQSA5eA9DMRGvgiMApXcL4E6xfyF7uLtEJDEun2x7N/IK+fBaS5DM9
+         dALHH7z+0rP9opgHZg+DPBSavSPmB261T/cFWu1M=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B693260CED
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     ga58taw@mytum.de
+Cc:     Julius Niedworok <julius.n@gmx.net>,
+        linux-wireless@vger.kernel.org, david@redhat.com, nc@net.in.tum.de,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC v2] mac80211: debugfs option to force TX status frames
+References: <e20962001ee10a0f90f8e2f1f8baafcf3b70e9dd.camel@sipsolutions.net>
+        <20190306200206.60916-1-julius.n@gmx.net>
+        <87k1hazo6r.fsf@purkki.adurom.net>
+        <20190307193045.a7awwn6mycloccq5@mission-control>
+Date:   Mon, 11 Mar 2019 16:03:38 +0200
+In-Reply-To: <20190307193045.a7awwn6mycloccq5@mission-control>
+        (ga58taw@mytum.de's message of "Thu, 7 Mar 2019 20:30:45 +0100")
+Message-ID: <87h8c98q4l.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="SUOF0GtieIMvvwua"
-Content-Disposition: inline
-In-Reply-To: <20190311133058.GC6089@redhat.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+ga58taw@mytum.de writes:
 
---SUOF0GtieIMvvwua
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On Thu, Mar 07, 2019 at 05:42:04PM +0200, Kalle Valo wrote:
+>> > +   len = scnprintf(buf, sizeof(buf), "%d\n", (int)local->force_tx_status);
+>>
+>> I wonder about the cast, is it guaranteed that a bool is always of the
+>> same size as an int?
+>
+> Why is this a problem? If a bool is smaller than an int, the compiler
+> emits code that will prepend the value of force_tx_status with zeros.
 
-> On Mon, Mar 11, 2019 at 01:35:23PM +0100, Lorenzo Bianconi wrote:
-> > +static inline int mt76_insert_hdr_pad(struct sk_buff *skb)
-> > +{
-> > +	int len =3D ieee80211_get_hdrlen_from_skb(skb);
-> > +
-> > +	if (len % 4 =3D=3D 0)
-> > +		return 0;
-> > +
-> > +	skb_push(skb, 2);
-> > +	memmove(skb->data, skb->data + 2, len);
-> > +
-> > +	skb->data[len] =3D 0;
-> > +	skb->data[len + 1] =3D 0;
-> > +	return 2;
-> > +}
-> <snip>
-> > @@ -165,7 +165,7 @@ int mt76x02_tx_prepare_skb(struct mt76_dev *mdev, v=
-oid *txwi_ptr,
-> >  	pid =3D mt76_tx_status_skb_add(mdev, wcid, skb);
-> >  	txwi->pktid =3D pid;
-> > =20
-> > -	ret =3D mt76x02_insert_hdr_pad(skb);
-> > +	ret =3D mt76_insert_hdr_pad(skb);
-> >  	if (ret < 0)
-> >  		return ret;
->=20
-> Since you modify this you can make mt76_inser_hdr_pad() return
-> void since we do not return error any longer.
+Let's say that a bool is a byte and int is four bytes. If you use "%d" I
+would guess that in that case scnprintf() writes 4 bytes, meaning that 3
+bytes will be overwriting either padding or some other field in the
+struct.
 
-ack, will do in v2
+But I'm no compiler expert so I'm not going to argue about this anymore.
+I just wanted to point out that that the cast looks dangerous and I
+would not do it.
 
-Regards,
-Lorenzo
-
->=20
-> Stanislaw
-
---SUOF0GtieIMvvwua
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXIZqiwAKCRA6cBh0uS2t
-rBgyAP9pKYDMcambobo/jrTWCDASjrQkyPYI5Ux7j4CB5UGHqQEA3N5BvhWi3bc9
-bb5tzCIAaE0Cois8XjAnlvhymiZnWgk=
-=ylfc
------END PGP SIGNATURE-----
-
---SUOF0GtieIMvvwua--
+-- 
+Kalle Valo
