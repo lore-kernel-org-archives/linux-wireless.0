@@ -6,45 +6,45 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD22C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 12:35:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05679C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 12:36:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F32220657
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 12:35:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C144A20657
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 12:36:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1552307755;
-	bh=XSWTr19u5U8iGiZwuXk2fkCwpeqjXaEW5p+vIsS3vxY=;
+	s=default; t=1552307761;
+	bh=bKAFKn38eZ02osQt/0uzxvFg0XYzgZ0UOz+C5YYbxEc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WJYd0VV/VSf2uBKTea5DfxyOaGjV1hMCjBMXpv2tSadIQtOGwWLpAfomiOalMueHm
-	 zHZg1giHyFSs2Rdo7ZzA+iIAyFQZ3aSvHNxS+8iD3lQawFbgqQ3dF2id2K0LQLkBwl
-	 CNWrSGG12OMBqiGChcct/QZFWGQx+eMPq97d8HiM=
+	b=nV5DgLuY0toCNd4VKujq6ITUVev8+J7rd7uBj15DIDeqMrrIx6q5j041qyjYFq7uw
+	 zLAVdLN5yWC3/O4d0AHHTqZYkzmR8s1nH3cyNhhhBGVvK8XnU++fwQC9Sx2IMuy5wT
+	 u6joCbhDyEzb5VTdrsDUFRkBoFNs/2DVsZ/IjQfk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727219AbfCKMfz (ORCPT
+        id S1727239AbfCKMgB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 08:35:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51044 "EHLO mail.kernel.org"
+        Mon, 11 Mar 2019 08:36:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51078 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726826AbfCKMfy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 08:35:54 -0400
+        id S1726826AbfCKMgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Mar 2019 08:36:00 -0400
 Received: from localhost.localdomain (unknown [151.66.48.245])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 40A052084F;
-        Mon, 11 Mar 2019 12:35:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CF0A920657;
+        Mon, 11 Mar 2019 12:35:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1552307754;
-        bh=XSWTr19u5U8iGiZwuXk2fkCwpeqjXaEW5p+vIsS3vxY=;
+        s=default; t=1552307759;
+        bh=bKAFKn38eZ02osQt/0uzxvFg0XYzgZ0UOz+C5YYbxEc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Sns+rnDbX1d3tvIhtLCLTpyX4Uc9ubuHROPKLCH0HxgUFm9rYKeXiW5Orpuy8I6ii
-         3Z+o9eHyS8xL524cqMkt4UbofU8jBP1dHJWLdFPDtk6aGAmSlLoOhp/Eae9ata73Ht
-         bl3PoWrTLVJefs3JrEIf6RPNVawCd6dwRImnN4LA=
+        b=VeIhK0U1Y8kEYuy7HNmqSulCzlACjyvadgbFPDqyp1JnkoNZK4kbnB5JSQayWOylO
+         zCUtX00LnqqWsVWADuqtJQucPOaFYDkvuGAlYUjqndUkwKnRV+PFEVCFYzv4D0z0fR
+         WdqVk40fPCRJb11SMljfZi9aAuax8G1qMIgQtqKA=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     ryder.lee@mediatek.com, roychl666@gmail.com,
         linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
-Subject: [PATCH 3/4] mt76: move skb dma mapping before running tx_prepare_skb
-Date:   Mon, 11 Mar 2019 13:35:25 +0100
-Message-Id: <34d158de1d7476e03ade43c2c974363f18e042f8.1552306908.git.lorenzo@kernel.org>
+Subject: [PATCH 4/4] mt76: introduce mt76_tx_info data structure
+Date:   Mon, 11 Mar 2019 13:35:26 +0100
+Message-Id: <674ba0cdb3e5512cee4982ee19bd2702f422a0fa.1552306908.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <cover.1552306908.git.lorenzo@kernel.org>
 References: <cover.1552306908.git.lorenzo@kernel.org>
@@ -55,77 +55,211 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move skb dma mapping before configuring txwi since new chipsets (mt7615)
-will need skb dma addresses in order to properly configure txwi
+Add mt76_tx_info as auxiliary data structure to pass values
+to tx_prepare_skb pointer. This is a preliminary patch to add
+support for new chipsets (e.g. mt7615)
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c | 29 ++++++++++--------------
- 1 file changed, 12 insertions(+), 17 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c      | 27 ++++++++++---------
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  9 ++++++-
+ .../net/wireless/mediatek/mt76/mt7603/mac.c   |  2 +-
+ .../wireless/mediatek/mt76/mt7603/mt7603.h    |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02.h  |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x02_txrx.c |  8 +++---
+ .../net/wireless/mediatek/mt76/mt76x02_usb.h  |  2 +-
+ .../wireless/mediatek/mt76/mt76x02_usb_core.c |  2 +-
+ 8 files changed, 31 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 14dd6585bab4..a29b2aa95a51 100644
+index a29b2aa95a51..e1ff31205b11 100644
 --- a/drivers/net/wireless/mediatek/mt76/dma.c
 +++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -287,11 +287,10 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+@@ -284,13 +284,12 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 		      struct ieee80211_sta *sta)
+ {
+ 	struct mt76_queue *q = dev->q_tx[qid].q;
++	struct mt76_tx_info tx_info = {};
++	int len, n = 0, ret = -ENOMEM;
  	struct mt76_queue_entry e;
  	struct mt76_txwi_cache *t;
- 	struct mt76_queue_buf buf[32];
-+	int len, n = 0, ret = -ENOMEM;
+-	struct mt76_queue_buf buf[32];
+-	int len, n = 0, ret = -ENOMEM;
  	struct sk_buff *iter;
  	dma_addr_t addr;
--	int len;
- 	u32 tx_info = 0;
--	int n, ret;
+-	u32 tx_info = 0;
  
  	t = mt76_get_txwi(dev);
  	if (!t) {
-@@ -303,23 +302,11 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	if (dev->drv->tx_aligned4_skbs)
- 		mt76_insert_hdr_pad(skb);
- 
--	dma_sync_single_for_cpu(dev->dev, t->dma_addr, sizeof(t->txwi),
--				DMA_TO_DEVICE);
--	ret = dev->drv->tx_prepare_skb(dev, &t->txwi, skb, qid, wcid, sta,
--				       &tx_info);
--	dma_sync_single_for_device(dev->dev, t->dma_addr, sizeof(t->txwi),
--				   DMA_TO_DEVICE);
--	if (ret < 0)
--		goto free;
--
--	len = skb->len - skb->data_len;
-+	len = skb_headlen(skb);
- 	addr = dma_map_single(dev->dev, skb->data, len, DMA_TO_DEVICE);
--	if (dma_mapping_error(dev->dev, addr)) {
--		ret = -ENOMEM;
-+	if (dma_mapping_error(dev->dev, addr))
+@@ -307,13 +306,13 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 	if (dma_mapping_error(dev->dev, addr))
  		goto free;
--	}
  
--	n = 0;
- 	buf[n].addr = t->dma_addr;
- 	buf[n++].len = dev->drv->txwi_size;
- 	buf[n].addr = addr;
-@@ -341,10 +328,18 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+-	buf[n].addr = t->dma_addr;
+-	buf[n++].len = dev->drv->txwi_size;
+-	buf[n].addr = addr;
+-	buf[n++].len = len;
++	tx_info.buf[n].addr = t->dma_addr;
++	tx_info.buf[n++].len = dev->drv->txwi_size;
++	tx_info.buf[n].addr = addr;
++	tx_info.buf[n++].len = len;
+ 
+ 	skb_walk_frags(skb, iter) {
+-		if (n == ARRAY_SIZE(buf))
++		if (n == ARRAY_SIZE(tx_info.buf))
+ 			goto unmap;
+ 
+ 		addr = dma_map_single(dev->dev, iter->data, iter->len,
+@@ -321,9 +320,10 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 		if (dma_mapping_error(dev->dev, addr))
+ 			goto unmap;
+ 
+-		buf[n].addr = addr;
+-		buf[n++].len = iter->len;
++		tx_info.buf[n].addr = addr;
++		tx_info.buf[n++].len = iter->len;
+ 	}
++	tx_info.nbuf = n;
+ 
  	if (q->queued + (n + 1) / 2 >= q->ndesc - 1)
  		goto unmap;
+@@ -337,12 +337,13 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 	if (ret < 0)
+ 		goto unmap;
  
-+	dma_sync_single_for_cpu(dev->dev, t->dma_addr, sizeof(t->txwi),
-+				DMA_TO_DEVICE);
-+	ret = dev->drv->tx_prepare_skb(dev, &t->txwi, skb, qid, wcid, sta,
-+				       &tx_info);
-+	dma_sync_single_for_device(dev->dev, t->dma_addr, sizeof(t->txwi),
-+				   DMA_TO_DEVICE);
-+	if (ret < 0)
-+		goto unmap;
-+
- 	return mt76_dma_add_buf(dev, q, buf, n, tx_info, skb, t);
+-	return mt76_dma_add_buf(dev, q, buf, n, tx_info, skb, t);
++	return mt76_dma_add_buf(dev, q, tx_info.buf, tx_info.nbuf,
++				tx_info.info, skb, t);
  
  unmap:
--	ret = -ENOMEM;
  	for (n--; n > 0; n--)
- 		dma_unmap_single(dev->dev, buf[n].addr, buf[n].len,
- 				 DMA_TO_DEVICE);
+-		dma_unmap_single(dev->dev, buf[n].addr, buf[n].len,
+-				 DMA_TO_DEVICE);
++		dma_unmap_single(dev->dev, tx_info.buf[n].addr,
++				 tx_info.buf[n].len, DMA_TO_DEVICE);
+ 
+ free:
+ 	e.skb = skb;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index dc505d55409c..9573a283e29f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -83,6 +83,12 @@ struct mt76_queue_buf {
+ 	int len;
+ };
+ 
++struct mt76_tx_info {
++	struct mt76_queue_buf buf[32];
++	int nbuf;
++	u32 info;
++};
++
+ struct mt76u_buf {
+ 	struct mt76_dev *dev;
+ 	struct urb *urb;
+@@ -296,7 +302,8 @@ struct mt76_driver_ops {
+ 	int (*tx_prepare_skb)(struct mt76_dev *dev, void *txwi_ptr,
+ 			      struct sk_buff *skb, enum mt76_txq_id qid,
+ 			      struct mt76_wcid *wcid,
+-			      struct ieee80211_sta *sta, u32 *tx_info);
++			      struct ieee80211_sta *sta,
++			      struct mt76_tx_info *tx_info);
+ 
+ 	void (*tx_complete_skb)(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 				struct mt76_queue_entry *e);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+index 1ff4c10b291c..5f800467c628 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+@@ -939,7 +939,7 @@ mt7603_mac_write_txwi(struct mt7603_dev *dev, __le32 *txwi,
+ int mt7603_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 			  struct sk_buff *skb, enum mt76_txq_id qid,
+ 			  struct mt76_wcid *wcid, struct ieee80211_sta *sta,
+-			  u32 *tx_info)
++			  struct mt76_tx_info *tx_info)
+ {
+ 	struct mt7603_dev *dev = container_of(mdev, struct mt7603_dev, mt76);
+ 	struct mt7603_sta *msta = container_of(wcid, struct mt7603_sta, wcid);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+index 8bd00b97066a..f414ff2a5279 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+@@ -225,7 +225,7 @@ void mt7603_filter_tx(struct mt7603_dev *dev, int idx, bool abort);
+ int mt7603_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 			  struct sk_buff *skb, enum mt76_txq_id qid,
+ 			  struct mt76_wcid *wcid, struct ieee80211_sta *sta,
+-			  u32 *tx_info);
++			  struct mt76_tx_info *tx_info);
+ 
+ void mt7603_tx_complete_skb(struct mt76_dev *mdev, enum mt76_txq_id qid,
+ 			    struct mt76_queue_entry *e);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
+index 53ec8103a268..cb5792b41d2d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
+@@ -174,7 +174,7 @@ void mt76x02_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ int mt76x02_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
+ 			   struct sk_buff *skb, enum mt76_txq_id qid,
+ 			   struct mt76_wcid *wcid, struct ieee80211_sta *sta,
+-			   u32 *tx_info);
++			   struct mt76_tx_info *tx_info);
+ void mt76x02_sw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		     const u8 *mac);
+ void mt76x02_sw_scan_complete(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c b/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
+index 708f2c65d3fd..dd7d04b9b8db 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
+@@ -149,7 +149,7 @@ EXPORT_SYMBOL_GPL(mt76x02_tx_status_data);
+ int mt76x02_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 			   struct sk_buff *skb, enum mt76_txq_id qid,
+ 			   struct mt76_wcid *wcid, struct ieee80211_sta *sta,
+-			   u32 *tx_info)
++			   struct mt76_tx_info *tx_info)
+ {
+ 	struct mt76x02_dev *dev = container_of(mdev, struct mt76x02_dev, mt76);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+@@ -169,11 +169,11 @@ int mt76x02_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 	if (pid >= MT_PACKET_ID_FIRST)
+ 		qsel = MT_QSEL_MGMT;
+ 
+-	*tx_info = FIELD_PREP(MT_TXD_INFO_QSEL, qsel) |
+-		   MT_TXD_INFO_80211;
++	tx_info->info = FIELD_PREP(MT_TXD_INFO_QSEL, qsel) |
++			MT_TXD_INFO_80211;
+ 
+ 	if (!wcid || wcid->hw_key_idx == 0xff || wcid->sw_iv)
+-		*tx_info |= MT_TXD_INFO_WIV;
++		tx_info->info |= MT_TXD_INFO_WIV;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb.h b/drivers/net/wireless/mediatek/mt76/mt76x02_usb.h
+index 98e647c8c7c7..8f98cc6ce094 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb.h
+@@ -28,7 +28,7 @@ int mt76x02u_skb_dma_info(struct sk_buff *skb, int port, u32 flags);
+ int mt76x02u_tx_prepare_skb(struct mt76_dev *mdev, void *data,
+ 			    struct sk_buff *skb, enum mt76_txq_id qid,
+ 			    struct mt76_wcid *wcid, struct ieee80211_sta *sta,
+-			    u32 *tx_info);
++			    struct mt76_tx_info *tx_info);
+ void mt76x02u_tx_complete_skb(struct mt76_dev *mdev, enum mt76_txq_id qid,
+ 			      struct mt76_queue_entry *e);
+ #endif /* __MT76x02_USB_H */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+index 6c3fc4cea283..394dfe5b4a2e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+@@ -74,7 +74,7 @@ int mt76x02u_skb_dma_info(struct sk_buff *skb, int port, u32 flags)
+ int mt76x02u_tx_prepare_skb(struct mt76_dev *mdev, void *data,
+ 			    struct sk_buff *skb, enum mt76_txq_id qid,
+ 			    struct mt76_wcid *wcid, struct ieee80211_sta *sta,
+-			    u32 *tx_info)
++			    struct mt76_tx_info *tx_info)
+ {
+ 	struct mt76x02_dev *dev = container_of(mdev, struct mt76x02_dev, mt76);
+ 	int pid, len = skb->len, ep = q2ep(mdev->q_tx[qid].q->hw_idx);
 -- 
 2.20.1
 
