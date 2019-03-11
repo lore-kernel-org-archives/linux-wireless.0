@@ -2,128 +2,137 @@ Return-Path: <SRS0=FsXk=RO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B10D9C4360F
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 09:03:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C030C4360F
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 09:11:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D50A2075C
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 09:03:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C691206BA
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 09:11:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="P4Uy3OzZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727030AbfCKJDT convert rfc822-to-8bit (ORCPT
+        id S1726969AbfCKJL2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 05:03:19 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:58120 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725850AbfCKJDT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 05:03:19 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D6D3D30832C5;
-        Mon, 11 Mar 2019 09:03:18 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.57])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4E8575DA62;
-        Mon, 11 Mar 2019 09:03:16 +0000 (UTC)
-Date:   Mon, 11 Mar 2019 10:03:15 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Rosen Penev <rosenp@gmail.com>, Joerg Roedel <joro@8bytes.org>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Samuel Sieb <samuel@sieb.net>,
-        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, jan.viktorin@gmail.com
-Subject: [PATCH] iommu/amd: fix sg->dma_address for sg->offset bigger than
- PAGE_SIZE
-Message-ID: <20190311090314.GB3310@redhat.com>
-References: <20190226103450.GA2989@redhat.com>
- <20190226104413.GH20740@8bytes.org>
- <20190226112407.GB2989@redhat.com>
- <20190228090411.GA24938@redhat.com>
- <20190228104223.GA2749@redhat.com>
- <20190228121948.GD6072@redhat.com>
- <20190228134029.GC1594@8bytes.org>
- <20190304071037.GA2787@redhat.com>
- <CAKxU2N-k-9DCYBv6W3CohL963dr3AeY3VHyt8FrUuo=BfacDsw@mail.gmail.com>
- <20190311084319.GA3310@redhat.com>
+        Mon, 11 Mar 2019 05:11:28 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:32850 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725850AbfCKJL2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Mar 2019 05:11:28 -0400
+Received: by mail-pg1-f196.google.com with SMTP id h11so3566611pgl.0
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2019 02:11:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=pKmOmZCi0nHswOZFqc5YsLrWx3sA7RhPVdHvL7jN08s=;
+        b=P4Uy3OzZr/QFGG5Ew/YVhFtkDYVgyKS0/wGIrPLo18QbcMr0G3OtI1YEyoAM87zwwd
+         ETG+jcJh96k8+SipM3bHoe3CGu+vvCTucEnf+rg0I2kqOqjSw8BF6VSTTbQI/5WmLouP
+         Kco7H8D3hT00NzfACO7yvYpii6weEXh8+BsoQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=pKmOmZCi0nHswOZFqc5YsLrWx3sA7RhPVdHvL7jN08s=;
+        b=CBpmKFvAIxo4HQJSnTY+vGrp7Tr+K4W8quSqzePPoGl4y/v96RathwHCoPaBqpvNSp
+         ZJrS8o2Gmhbuhx81WpIid3eIaiqQeT1MmXENQ6zkB7E3wVbldtA2+XkgnMeuxaQBoFl/
+         TgGzOqxpdEU/P2h7AifxwWAG+3WTBVw3+7yXqqAE/n2WPkrHEG0kYVb+pW8uOuUAm5tO
+         DFV+gsH3otg6dXMzTTOH7pRewm4vSJHR6ZauNFabr5EHTsQok2iQnaYU03iPk19WJBAH
+         4y6BTOS5otkoKtCfbOe8D/m/ClUBkCzxhCfLNIhLih+9NFP1MBBlT1HYO1AWJeyekNDq
+         ykQQ==
+X-Gm-Message-State: APjAAAXH2PKMAdEEcs9m8EaL3SLNXTe1aUYjyT8cz9DgsxhsRYiNDStV
+        63LxVL/IQ2/jICDJTqL96bhIXA==
+X-Google-Smtp-Source: APXvYqyasWsdDVfc4tbSMLlo3gMEB4g0b9LxwEFoX1zNJMjNziXWuawObmkiLVfID4tdm8JVhH2PvA==
+X-Received: by 2002:a65:4549:: with SMTP id x9mr29580201pgr.3.1552295486455;
+        Mon, 11 Mar 2019 02:11:26 -0700 (PDT)
+Received: from [10.176.68.125] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id q4sm5016441pgn.20.2019.03.11.02.11.21
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 11 Mar 2019 02:11:25 -0700 (PDT)
+Subject: Re: [PATCH] net: brcm80211: fix potential NULL pointer dereferences
+To:     Kangjie Lu <kjlu@umn.edu>
+Cc:     pakki001@umn.edu, Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Stefan Wahren <stefan.wahren@i2se.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20190311073232.30807-1-kjlu@umn.edu>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <9f8b2ff5-9c24-6f7a-ea7a-5b79a24fd280@broadcom.com>
+Date:   Mon, 11 Mar 2019 10:11:18 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: 8BIT
-In-Reply-To: <20190311084319.GA3310@redhat.com>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Mon, 11 Mar 2019 09:03:18 +0000 (UTC)
+In-Reply-To: <20190311073232.30807-1-kjlu@umn.edu>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Take into account that sg->offset can be bigger than PAGE_SIZE when
-setting segment sg->dma_address. Otherwise sg->dma_address will point
-at diffrent page, what makes DMA not possible with erros like this:
+On 3/11/2019 8:32 AM, Kangjie Lu wrote:
+> In case kmemdup fails, the fix returns -ENOMEM to avoid NULL
+> pointer dereferences.
 
-xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa70c0 flags=0x0020]
-xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa7040 flags=0x0020]
-xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa7080 flags=0x0020]
-xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa7100 flags=0x0020]
-xhci_hcd 0000:38:00.3: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0000 address=0x00000000fdaa7000 flags=0x0020]
+Hi Kangjie Lu,
 
-Additinally with wrong sg->dma_address unmap_sg will free wrong pages,
-what what can cause crashes like this:
+Are you fixing any reported issue with this? If you looked further you 
+would see that this function is called in two places and the return 
+value is not checked there. So your patch is not changing anything.
 
-Feb 28 19:27:45 kernel: BUG: Bad page state in process cinnamon  pfn:39e8b1
-Feb 28 19:27:45 kernel: Disabling lock debugging due to kernel taint
-Feb 28 19:27:45 kernel: flags: 0x2ffff0000000000()
-Feb 28 19:27:45 kernel: raw: 02ffff0000000000 0000000000000000 ffffffff00000301 0000000000000000
-Feb 28 19:27:45 kernel: raw: 0000000000000000 0000000000000000 00000001ffffffff 0000000000000000
-Feb 28 19:27:45 kernel: page dumped because: nonzero _refcount
-Feb 28 19:27:45 kernel: Modules linked in: ccm fuse arc4 nct6775 hwmon_vid amdgpu nls_iso8859_1 nls_cp437 edac_mce_amd vfat fat kvm_amd ccp rng_core kvm mt76x0u mt76x0_common mt76x02_usb irqbypass mt76_usb mt76x02_lib mt76 crct10dif_pclmul crc32_pclmul chash mac80211 amd_iommu_v2 ghash_clmulni_intel gpu_sched i2c_algo_bit ttm wmi_bmof snd_hda_codec_realtek snd_hda_codec_generic drm_kms_helper snd_hda_codec_hdmi snd_hda_intel drm snd_hda_codec aesni_intel snd_hda_core snd_hwdep aes_x86_64 crypto_simd snd_pcm cfg80211 cryptd mousedev snd_timer glue_helper pcspkr r8169 input_leds realtek agpgart libphy rfkill snd syscopyarea sysfillrect sysimgblt fb_sys_fops soundcore sp5100_tco k10temp i2c_piix4 wmi evdev gpio_amdpt pinctrl_amd mac_hid pcc_cpufreq acpi_cpufreq sg ip_tables x_tables ext4(E) crc32c_generic(E) crc16(E) mbcache(E) jbd2(E) fscrypto(E) sd_mod(E) hid_generic(E) usbhid(E) hid(E) dm_mod(E) serio_raw(E) atkbd(E) libps2(E) crc32c_intel(E) ahci(E) libahci(E) libata(E) xhci_pci(E) 
- xhci_hcd(E)
-Feb 28 19:27:45 kernel:  scsi_mod(E) i8042(E) serio(E) bcache(E) crc64(E)
-Feb 28 19:27:45 kernel: CPU: 2 PID: 896 Comm: cinnamon Tainted: G    B   W   E     4.20.12-arch1-1-custom #1
-Feb 28 19:27:45 kernel: Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./B450M Pro4, BIOS P1.20 06/26/2018
-Feb 28 19:27:45 kernel: Call Trace:
-Feb 28 19:27:45 kernel:  dump_stack+0x5c/0x80
-Feb 28 19:27:45 kernel:  bad_page.cold.29+0x7f/0xb2
-Feb 28 19:27:45 kernel:  __free_pages_ok+0x2c0/0x2d0
-Feb 28 19:27:45 kernel:  skb_release_data+0x96/0x180
-Feb 28 19:27:45 kernel:  __kfree_skb+0xe/0x20
-Feb 28 19:27:45 kernel:  tcp_recvmsg+0x894/0xc60
-Feb 28 19:27:45 kernel:  ? reuse_swap_page+0x120/0x340
-Feb 28 19:27:45 kernel:  ? ptep_set_access_flags+0x23/0x30
-Feb 28 19:27:45 kernel:  inet_recvmsg+0x5b/0x100
-Feb 28 19:27:45 kernel:  __sys_recvfrom+0xc3/0x180
-Feb 28 19:27:45 kernel:  ? handle_mm_fault+0x10a/0x250
-Feb 28 19:27:45 kernel:  ? syscall_trace_enter+0x1d3/0x2d0
-Feb 28 19:27:45 kernel:  ? __audit_syscall_exit+0x22a/0x290
-Feb 28 19:27:45 kernel:  __x64_sys_recvfrom+0x24/0x30
-Feb 28 19:27:45 kernel:  do_syscall_64+0x5b/0x170
-Feb 28 19:27:45 kernel:  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+Please sent a V2 addressing my comments below.
 
-Cc: stable@vger.kernel.org
-Reported-and-tested-by: jan.viktorin@gmail.com
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/iommu/amd_iommu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
+Arend
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 6b0760dafb3e..949621f33624 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -2604,7 +2604,7 @@ static int map_sg(struct device *dev, struct scatterlist *sglist,
- 
- 	/* Everything is mapped - write the right values into s->dma_address */
- 	for_each_sg(sglist, s, nelems, i) {
--		s->dma_address += address + s->offset;
-+		s->dma_address += address + (s->offset & ~PAGE_MASK);
- 		s->dma_length   = s->length;
- 	}
- 
--- 
-2.7.5
+> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index e92f6351bd22..d903a45e7b68 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -5464,6 +5464,9 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
+>   		conn_info->req_ie =
+>   		    kmemdup(cfg->extra_buf, conn_info->req_ie_len,
+>   			    GFP_KERNEL);
+> +		if (!conn_info->req_ie)
+> +			return -ENOMEM;
 
+No need to return an error here. Instead set conn_info->req_ie_len to 
+zero here.
+
+> +
+>   	} else {
+>   		conn_info->req_ie_len = 0;
+>   		conn_info->req_ie = NULL;
+> @@ -5480,6 +5483,8 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
+>   		conn_info->resp_ie =
+>   		    kmemdup(cfg->extra_buf, conn_info->resp_ie_len,
+>   			    GFP_KERNEL);
+> +		if (!conn_info->resp_ie)
+> +			return -ENOMEM;
+
+Same here for conn_info->resp_ie_len.
+
+>   	} else {
+>   		conn_info->resp_ie_len = 0;
+>   		conn_info->resp_ie = NULL;
+> 
