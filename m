@@ -2,166 +2,115 @@ Return-Path: <SRS0=FsXk=RO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E708FC43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 08:31:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60F93C4360F
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 08:43:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C57820643
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 08:31:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="BNms+NR1"
+	by mail.kernel.org (Postfix) with ESMTP id 3B27C206BA
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 08:43:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726903AbfCKIbS (ORCPT
+        id S1726623AbfCKInZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 04:31:18 -0400
-Received: from narfation.org ([79.140.41.39]:60802 "EHLO v3-1039.vlinux.de"
+        Mon, 11 Mar 2019 04:43:25 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:47188 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726958AbfCKIbR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 04:31:17 -0400
-Received: from sven-desktop.home.narfation.org (unknown [IPv6:2001:16b8:55da:29ea::88d])
-        by v3-1039.vlinux.de (Postfix) with ESMTPSA id 5586911004F;
-        Mon, 11 Mar 2019 09:31:14 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=narfation.org;
-        s=20121; t=1552293074;
-        bh=xFb8JiQCiuT5FeNZmcVrnzIZ4O3Vv0GRfziM4IwjuVM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=BNms+NR1RZg2sbWNflzOdqLu48grHtmk4MvcqO3DQxqT4eMJqOY4xnJzcmSYqtSxf
-         KvZoE/DsUGxJa+sVdWWE1VsOWiwtgj6DUNMnQm3MjyxCoYPat8XHOnGPwLBC0tMPv4
-         UIrIRmY3p3jtloio5TNusiGoUvv1W740T+KiluGQ=
-From:   Sven Eckelmann <sven@narfation.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Sven Eckelmann <seckelmann@datto.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sriram R <srirrama@codeaurora.org>
-Subject: [PATCH] ath10k: avoid leaving .bss_info_changed prematurely
-Date:   Mon, 11 Mar 2019 09:31:07 +0100
-Message-Id: <20190311083107.311-1-sven@narfation.org>
-X-Mailer: git-send-email 2.20.1
+        id S1725869AbfCKInZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Mar 2019 04:43:25 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id BA7FE307D849;
+        Mon, 11 Mar 2019 08:43:24 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.57])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 341BC1001E69;
+        Mon, 11 Mar 2019 08:43:21 +0000 (UTC)
+Date:   Mon, 11 Mar 2019 09:43:20 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Rosen Penev <rosenp@gmail.com>
+Cc:     Joerg Roedel <joro@8bytes.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Samuel Sieb <samuel@sieb.net>,
+        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, jan.viktorin@gmail.com
+Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
+Message-ID: <20190311084319.GA3310@redhat.com>
+References: <20190226100535.GA20740@8bytes.org>
+ <20190226103450.GA2989@redhat.com>
+ <20190226104413.GH20740@8bytes.org>
+ <20190226112407.GB2989@redhat.com>
+ <20190228090411.GA24938@redhat.com>
+ <20190228104223.GA2749@redhat.com>
+ <20190228121948.GD6072@redhat.com>
+ <20190228134029.GC1594@8bytes.org>
+ <20190304071037.GA2787@redhat.com>
+ <CAKxU2N-k-9DCYBv6W3CohL963dr3AeY3VHyt8FrUuo=BfacDsw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAKxU2N-k-9DCYBv6W3CohL963dr3AeY3VHyt8FrUuo=BfacDsw@mail.gmail.com>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.48]); Mon, 11 Mar 2019 08:43:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sven Eckelmann <seckelmann@datto.com>
+On Sun, Mar 03, 2019 at 11:20:45PM -0800, Rosen Penev wrote:
+> On Sun, Mar 3, 2019 at 11:10 PM Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> >
+> > On Thu, Feb 28, 2019 at 02:40:29PM +0100, Joerg Roedel wrote:
+> > > On Thu, Feb 28, 2019 at 01:19:48PM +0100, Stanislaw Gruszka wrote:
+> > > > Nevermind, the patch is wrong, s->dma_address is initalized in sg_num_pages().
+> > >
+> > > Yes, it is. In sg_num_pages() the offset into the IOMMU mapping is
+> > > stored in s->dma_address, taking also the segment boundary mask into
+> > > account. map_sg() later only adds the base-address to that.
+> >
+> > I have some more info about the issues in
+> > https://bugzilla.kernel.org/show_bug.cgi?id=202673
+> >
+> > We have some bugs in mt76. Apparently we should not use
+> > page_frag_alloc() with size bigger than PAGE_SIZE as page_frag_alloc()
+> > can fallback to single page allocation. And also we should not make
+> > sizes unaligned as pointed in commit:
+> > 3bed3cc4156e ("net: Do not allocate page fragments that are not skb aligned"
+> As a small and totally unrelated note, page_frag_alloc is only used in
+> mt76 and the nvme driver ;)
 
-ath10k_bss_info_changed() handles various events from the upper layers. It
-parses the changed bitfield and then configures the driver/firmware
-accordingly. Each detected event is handled in a separate scope which is
-independent of each other - but in the same function.
+And there is nvme problem on AMD IOMMU:
+https://bugzilla.kernel.org/show_bug.cgi?id=202665
 
-The commit f279294e9ee2 ("ath10k: add support for configuring management
-packet rate") changed this behavior by returning from this function
-prematurely when some precondition was not fulfilled. All new event
-handlers added after the BSS_CHANGED_BASIC_RATES event handler would then
-also be skipped.
+While page_frag_alloc() should be used with cautious, at least care of
+size alignment with ARCH_DMA_MINALIGN (not for IOMMU, but standard arch
+dma), at this point I think some of those issues are AMD IOMMU problems.
 
-Signed-off-by: Sven Eckelmann <seckelmann@datto.com>
----
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Sriram R <srirrama@codeaurora.org>
+> > However after fixing that mt76usb still did not work. To make things
+> > work we had to change rx frag size from 2048 to PAGE_SIZE and change
+> > virt_to_head_page() to virt_to_page() when setting SG's.
+>
+> > I think I understand why first change was needed. If we do 2 separate
+> > dma maps of 2 different buffers in single page i.e (PAGE + off=0
+> > and PAGE + off=2048) it causes problem. So either map_sg() return
+> > error which mt76usb does not handle correctly or there is issue
+> > in AMD IOMMU because two dma maps use the same page.
 
-Only compile tested
----
- drivers/net/wireless/ath/ath10k/mac.c | 64 ++++++++++++++++-----------
- 1 file changed, 38 insertions(+), 26 deletions(-)
+Any comment on that? Is fine or not to do 2 or more dma mappings
+within the same single page on AMD IOMMU? If not, is there any
+mechanism for drivers to find out about this limitation to prevent
+to prepare wrong SG buffers?
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b73c23d4ce86..b1d0741c7861 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5578,6 +5578,40 @@ static void ath10k_configure_filter(struct ieee80211_hw *hw,
- 	mutex_unlock(&ar->conf_mutex);
- }
- 
-+static void ath10k_recalculate_mgmt_rate(struct ath10k *ar,
-+					 struct ieee80211_vif *vif)
-+{
-+	struct ath10k_vif *arvif = (void *)vif->drv_priv;
-+	const struct ieee80211_supported_band *sband;
-+	struct cfg80211_chan_def def;
-+	u8 basic_rate_idx;
-+	int hw_rate_code;
-+	u32 vdev_param;
-+	u16 bitrate;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (WARN_ON(ath10k_mac_vif_chan(vif, &def)))
-+		return;
-+
-+	sband = ar->hw->wiphy->bands[def.chan->band];
-+	basic_rate_idx = ffs(vif->bss_conf.basic_rates) - 1;
-+	bitrate = sband->bitrates[basic_rate_idx].bitrate;
-+
-+	hw_rate_code = ath10k_mac_get_rate_hw_value(bitrate);
-+	if (hw_rate_code < 0) {
-+		ath10k_warn(ar, "bitrate not supported %d\n", bitrate);
-+		return;
-+	}
-+
-+	vdev_param = ar->wmi.vdev_param->mgmt_rate;
-+	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+					hw_rate_code);
-+	if (ret)
-+		ath10k_warn(ar, "failed to set mgmt tx rate %d\n", ret);
-+}
-+
- static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 				    struct ieee80211_vif *vif,
- 				    struct ieee80211_bss_conf *info,
-@@ -5588,10 +5622,9 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 	struct cfg80211_chan_def def;
- 	u32 vdev_param, pdev_param, slottime, preamble;
- 	u16 bitrate, hw_value;
--	u8 rate, basic_rate_idx;
--	int rateidx, ret = 0, hw_rate_code;
-+	u8 rate;
-+	int rateidx, ret = 0;
- 	enum nl80211_band band;
--	const struct ieee80211_supported_band *sband;
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -5811,29 +5844,8 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 				    arvif->vdev_id,  ret);
- 	}
- 
--	if (changed & BSS_CHANGED_BASIC_RATES) {
--		if (WARN_ON(ath10k_mac_vif_chan(vif, &def))) {
--			mutex_unlock(&ar->conf_mutex);
--			return;
--		}
--
--		sband = ar->hw->wiphy->bands[def.chan->band];
--		basic_rate_idx = ffs(vif->bss_conf.basic_rates) - 1;
--		bitrate = sband->bitrates[basic_rate_idx].bitrate;
--
--		hw_rate_code = ath10k_mac_get_rate_hw_value(bitrate);
--		if (hw_rate_code < 0) {
--			ath10k_warn(ar, "bitrate not supported %d\n", bitrate);
--			mutex_unlock(&ar->conf_mutex);
--			return;
--		}
--
--		vdev_param = ar->wmi.vdev_param->mgmt_rate;
--		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
--						hw_rate_code);
--		if (ret)
--			ath10k_warn(ar, "failed to set mgmt tx rate %d\n", ret);
--	}
-+	if (changed & BSS_CHANGED_BASIC_RATES)
-+		ath10k_recalculate_mgmt_rate(ar, vif);
- 
- 	mutex_unlock(&ar->conf_mutex);
- }
--- 
-2.20.1
+> > But I don't understand why the second change was needed. Without
+> > it we have issue with incorrect page->_refcount . It is somehow
+> > related with AMD IOMMU, because on different platforms we do not
+> > have such problems.
 
+I think I found a bug in amd iommu code when setting sg->dma_address
+with sg->offset > PAGE_SIZE. Will post fix shortly. 
+
+Stanislaw
