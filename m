@@ -6,48 +6,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC0EC43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 20:06:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A8C7C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 20:06:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51ADB2087C
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 20:06:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4ACA22064A
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 20:06:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1552334787;
-	bh=d2Bgcs2belQVKRimstdtTzausWvXb8sIkcEQ0lrDXP0=;
+	s=default; t=1552334805;
+	bh=BxhVKlU1kSlcmaTW/zhPth8olLIL/MGXu4T5cRAGOMY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=o7qbwxD6OgUPdcGFoQ7I0MHln8d22I6GyZOqC+hkNPXqhhhj30iumnoDFACbQ9SSG
-	 q9WKjVErPgBysHGMJxlTnJN8jfapWFHOeOKAHbzhU+F/G7X1TyH2FpNrQhmSix7RB7
-	 NdoPVhndDuVIFKsYzGs0PDlLCRfrtQlnS6QIwjQY=
+	b=t6Rlkzk7ZmVSCUw4LG96luscQCXOxE0ohN0HoBWl6BY4Ev1hVGsRDNuVJynXAWs1C
+	 fi0rG05BHjd6BPWqaAY0eJkkWPuvTpMm31O4nIRVl2kwpCi1RFkA7/SxNyLsoaw8CO
+	 ksk2I7nsKY+a9KyDXTFd+RpkKhy2bMdmdcqW0VM0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729186AbfCKUGU (ORCPT
+        id S1729273AbfCKUGd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 16:06:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35252 "EHLO mail.kernel.org"
+        Mon, 11 Mar 2019 16:06:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35236 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729209AbfCKT5v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 15:57:51 -0400
+        id S1728443AbfCKT5u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Mar 2019 15:57:50 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3BD882084F;
-        Mon, 11 Mar 2019 19:57:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 14D0A21738;
+        Mon, 11 Mar 2019 19:57:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1552334271;
-        bh=d2Bgcs2belQVKRimstdtTzausWvXb8sIkcEQ0lrDXP0=;
+        s=default; t=1552334269;
+        bh=BxhVKlU1kSlcmaTW/zhPth8olLIL/MGXu4T5cRAGOMY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iAta4g5S2K83X+UxSNY/+s/j/5DPlkqfEEqDwoqTOkPKJsMVno0vp1isyl8jQv3f4
-         wNKoLbYl4NHQVmzdvYbqc+VtOaKiRH/UkdwLx5iqxWlVI1HIxG8T/QgUs+26+3OAn6
-         SXeXPLD4bota2eT0wVLo2ejOJWHW9w5ZdfRAqgSA=
+        b=k5V9kX2/qFSi23ks0esz4+vhWS6QHH2lzh168zFwfOlQCE5NyiVfcFtVf9Upk3s/i
+         KJOjj5l/dR7jzkDyN8Uq24hvJXJlcPyOPr70iIVK9EHTzog0g1uHFQKUwA4jphMg1h
+         Yjzd26FHIlhw1nSyDOKGADXq7nF7gSYnStqJvLTg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 27/44] mac80211: Fix Tx aggregation session tear down with ITXQs
-Date:   Mon, 11 Mar 2019 15:56:43 -0400
-Message-Id: <20190311195700.138462-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 26/44] mac80211: call drv_ibss_join() on restart
+Date:   Mon, 11 Mar 2019 15:56:42 -0400
+Message-Id: <20190311195700.138462-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190311195700.138462-1-sashal@kernel.org>
 References: <20190311195700.138462-1-sashal@kernel.org>
@@ -59,56 +58,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 6157ca0d6bfe437691b1e98a62e2efe12b6714da ]
+[ Upstream commit 4926b51bfaa6d36bd6f398fb7698679d3962e19d ]
 
-When mac80211 requests the low level driver to stop an ongoing
-Tx aggregation, the low level driver is expected to call
-ieee80211_stop_tx_ba_cb_irqsafe() to indicate that it is ready
-to stop the session. The callback in turn schedules a worker
-to complete the session tear down, which in turn also handles
-the relevant state for the intermediate Tx queue.
+If a driver does any significant activity in its ibss_join method,
+then it will very well expect that to be called during restart,
+before any stations are added. Do that.
 
-However, as this flow in asynchronous, the intermediate queue
-should be stopped and not continue servicing frames, as in
-such a case frames that are dequeued would be marked as part
-of an aggregation, although the aggregation is already been
-stopped.
-
-Fix this by stopping the intermediate Tx queue, before
-calling the low level driver to stop the Tx aggregation.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/agg-tx.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/mac80211/util.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 69e831bc317b..54821fb1a960 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -8,7 +8,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2007-2010, Intel Corporation
-  * Copyright(c) 2015-2017 Intel Deutschland GmbH
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 716cd6442d86..3deaa01ebee4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -5,7 +5,7 @@
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright (C) 2015-2017	Intel Deutschland GmbH
 - * Copyright (C) 2018 Intel Corporation
-+ * Copyright (C) 2018 - 2019 Intel Corporation
++ * Copyright (C) 2018-2019 Intel Corporation
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2 as
-@@ -366,6 +366,8 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 
- 	set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
- 
-+	ieee80211_agg_stop_txq(sta, tid);
-+
- 	spin_unlock_bh(&sta->lock);
- 
- 	ht_dbg(sta->sdata, "Tx BA session stop requested for %pM tid %u\n",
+@@ -2020,6 +2020,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		case NL80211_IFTYPE_AP_VLAN:
+ 		case NL80211_IFTYPE_MONITOR:
+ 			break;
++		case NL80211_IFTYPE_ADHOC:
++			if (sdata->vif.bss_conf.ibss_joined)
++				WARN_ON(drv_join_ibss(local, sdata));
++			/* fall through */
+ 		default:
+ 			ieee80211_reconfig_stations(sdata);
+ 			/* fall through */
 -- 
 2.19.1
 
