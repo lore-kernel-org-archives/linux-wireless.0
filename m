@@ -2,139 +2,134 @@ Return-Path: <SRS0=FsXk=RO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C8C7C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 15:01:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B605C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 15:29:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 039BC2075C
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 15:01:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19C2F20657
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Mar 2019 15:29:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=azazel.net header.i=@azazel.net header.b="QNiVP2pU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726546AbfCKPB6 (ORCPT
+        id S1727122AbfCKP3G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Mar 2019 11:01:58 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:35618 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725845AbfCKPB6 (ORCPT
+        Mon, 11 Mar 2019 11:29:06 -0400
+Received: from kadath.azazel.net ([81.187.231.250]:56280 "EHLO
+        kadath.azazel.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726864AbfCKP3G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Mar 2019 11:01:58 -0400
-Received: by mail-wr1-f65.google.com with SMTP id t18so5474744wrx.2
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2019 08:01:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=XzItXpW86jH2iwYjPku79dl5XcRneCM/ibHYnS38h6g=;
-        b=I/QBK9BXVvrQkIUwm9rdSEpXs7JyEmffqSsaqAmxBEUEm+6rPBgmilXrgPsrESv6dm
-         /F+zCJpRav2cgQw0HrWtEbX1y5g60oB7A1mMzzSngvwlLX4XtxrVc/DsZ0DJPWwioxgk
-         qi2NySqzMq0UdY5QJSLpWMZfZavoTNrxv5Z2r0qdYqsGid9pD+jfl2N5pplylR9ITtyL
-         3fMnEny/8T2rN+QcYQKaPL8hpspt8dc7CUdpC8vXXxuSdzo75guFGTbVXwWI9hxeRCSY
-         EbBc4tuM+vqJzMJcewqyw8C2aeHTk8oZQX873uhoFzFWM4Hvv9srPil2YBcY4mVlvVhg
-         Sq/g==
-X-Gm-Message-State: APjAAAXtae61QJ2kjU5iQwOQ3L+GrUGbtfphdj0MdvjUaYjyhR1e9aIt
-        SfS/T/+Nv1c329vofSklw1fjkA==
-X-Google-Smtp-Source: APXvYqxYXhc570CFsbHwMwCuLKLQTAFESuBNmkOObpabf0CAN5SCs2PokBwsxJhyQ38+woakUYjsHw==
-X-Received: by 2002:a5d:6ace:: with SMTP id u14mr16335105wrw.240.1552316511499;
-        Mon, 11 Mar 2019 08:01:51 -0700 (PDT)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id v2sm26584393wme.29.2019.03.11.08.01.50
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 11 Mar 2019 08:01:50 -0700 (PDT)
-Date:   Mon, 11 Mar 2019 16:01:45 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
-        ryder.lee@mediatek.com, roychl666@gmail.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/4] mt76: mmio: move mt76_insert_hdr_pad in
- mt76_dma_tx_queue_skb
-Message-ID: <20190311150144.GA1066@localhost.localdomain>
-References: <cover.1552306908.git.lorenzo@kernel.org>
- <e03a38968b3bca0a51a832bdb0dd9ff1beff314d.1552306908.git.lorenzo@kernel.org>
- <20190311133954.GD6089@redhat.com>
- <20190311142517.GB30882@localhost.localdomain>
- <20190311145852.GF6089@redhat.com>
+        Mon, 11 Mar 2019 11:29:06 -0400
+X-Greylist: delayed 2144 seconds by postgrey-1.27 at vger.kernel.org; Mon, 11 Mar 2019 11:29:05 EDT
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=azazel.net;
+         s=20190108; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
+        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=Pp0hqpqjCslrSXAn8lZXFgNmAVElhkqozU+LNwwYcoc=; b=QNiVP2pUTlSijwO1C4VrvXh9GG
+        viAE6J/OkOfgOJPMj52jzrhOQURsOKpePd7dDa35h5wwKuyol06DyuVsasCwrsnkf1UwNeALpBcmj
+        o4NqzWpw/Q36o9bR0eItIUfDk6S4oxuY8l1HriccPPrK5mGuHCYEiTU/H3MTWknEAWvTt0QhTNFBq
+        5RapNy8jAKyqzXSLARg7cCzufXpciqGq/F7/onbQRN8cMOtkZlZh7cbFiDOeQfm5AgeqHtvNfshOh
+        aCXsERW3FXbXZFgQTORyTXpuNqiJqWT3K3feRSng3XULbuZZN12RbIOWGGA3Usv4z8T2BPLZo0MbD
+        fnypGHXA==;
+Received: from kadath.azazel.net ([2001:8b0:135f:bcd1:e2cb:4eff:fedf:e608] helo=azazel.net)
+        by kadath.azazel.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <jeremy@azazel.net>)
+        id 1h3MID-0003PK-TU; Mon, 11 Mar 2019 14:52:41 +0000
+Date:   Mon, 11 Mar 2019 14:52:40 +0000
+From:   Jeremy Sowden <jeremy@azazel.net>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ga58taw@mytum.de, Julius Niedworok <julius.n@gmx.net>,
+        linux-wireless@vger.kernel.org, david@redhat.com, nc@net.in.tum.de,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC v2] mac80211: debugfs option to force TX status frames
+Message-ID: <20190311145240.akms2pz2hxsalmaz@azazel.net>
+References: <e20962001ee10a0f90f8e2f1f8baafcf3b70e9dd.camel@sipsolutions.net>
+ <20190306200206.60916-1-julius.n@gmx.net>
+ <87k1hazo6r.fsf@purkki.adurom.net>
+ <20190307193045.a7awwn6mycloccq5@mission-control>
+ <87h8c98q4l.fsf@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="/9DWx/yDrRhgMJTb"
+        protocol="application/pgp-signature"; boundary="4jlle5knlvfploax"
 Content-Disposition: inline
-In-Reply-To: <20190311145852.GF6089@redhat.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+In-Reply-To: <87h8c98q4l.fsf@codeaurora.org>
+User-Agent: NeoMutt/20170113 (1.7.2)
+X-SA-Exim-Connect-IP: 2001:8b0:135f:bcd1:e2cb:4eff:fedf:e608
+X-SA-Exim-Mail-From: jeremy@azazel.net
+X-SA-Exim-Scanned: No (on kadath.azazel.net); SAEximRunCond expanded to false
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 
---/9DWx/yDrRhgMJTb
+--4jlle5knlvfploax
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-> On Mon, Mar 11, 2019 at 03:25:18PM +0100, Lorenzo Bianconi wrote:
-> > On Mar 11, Stanislaw Gruszka wrote:
-> > > On Mon, Mar 11, 2019 at 01:35:24PM +0100, Lorenzo Bianconi wrote:
-> > > > Introduce tx_aligned4_skbs in mt76_driver_ops and move
-> > > > mt76_insert_hdr_pad in mt76_dma_tx_queue_skb. This is a preliminary
-> > > > patch in order to unify tx dma mapping for mt76x02 and new chipsets
-> > > >=20
-> > > > Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> > > > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> > > > ---
-> > > >  drivers/net/wireless/mediatek/mt76/dma.c          |  3 +++
-> > > >  drivers/net/wireless/mediatek/mt76/mt76.h         |  1 +
-> > > >  drivers/net/wireless/mediatek/mt76/mt76x0/pci.c   |  1 +
-> > > >  drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c | 13 +++++------=
---
-> > > >  drivers/net/wireless/mediatek/mt76/mt76x2/pci.c   |  1 +
-> > > >  5 files changed, 11 insertions(+), 8 deletions(-)
-> > > >=20
-> > > > diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net=
-/wireless/mediatek/mt76/dma.c
-> > > > index a66832a02281..14dd6585bab4 100644
-> > > > --- a/drivers/net/wireless/mediatek/mt76/dma.c
-> > > > +++ b/drivers/net/wireless/mediatek/mt76/dma.c
-> > > > @@ -300,6 +300,9 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enu=
-m mt76_txq_id qid,
-> > > >  	}
-> > > > =20
-> > > >  	skb->prev =3D skb->next =3D NULL;
-> > > > +	if (dev->drv->tx_aligned4_skbs)
-> > > > +		mt76_insert_hdr_pad(skb);
-> > >=20
-> > > We need 4 bytes aligned skbs for mt76x02 or we just need header
-> > > lenght be multiple of 4 ? =20
-> >=20
-> > I think IV/LLC should be 4 byte aligned
->=20
-> mt76_insert_hdr_pad() does not change alignment of IV/LLC , it only
-> moves header.
->=20
-> I'm not sure what is actually needed (4 bytes alignment or 4 bytes
-> lenght), but I just saw Felix sent 2 mac80211 patches that hopfully
-> do the right thing, so this code after appling mac80211 changes
-> and set TX_NEEDS_ALIGNED4_SKBS can be removed.
+On 2019-03-11, at 16:03:38 +0200, Kalle Valo wrote:
+> ga58taw@mytum.de writes:
+> > On Thu, Mar 07, 2019 at 05:42:04PM +0200, Kalle Valo wrote:
+> > > > +   len = scnprintf(buf, sizeof(buf), "%d\n",
+> > > >                    (int)local->force_tx_status);
+> > >
+> > > I wonder about the cast, is it guaranteed that a bool is always of
+> > > the same size as an int?
+> >
+> > Why is this a problem? If a bool is smaller than an int, the
+> > compiler emits code that will prepend the value of force_tx_status
+> > with zeros.
+>
+> Let's say that a bool is a byte and int is four bytes. If you use "%d"
+> I would guess that in that case scnprintf() writes 4 bytes, meaning
+> that 3 bytes will be overwriting either padding or some other field in
+> the struct.
 
-this is the plan :)
+It's the value that matters, not the type.  It will only be too big for
+the buffer if the result of casting local->force_tx_status to int is
+less than -9 or greeater than 99.
 
-Regards,
-Lorenzo
+  scnprintf(buf, size(buf), "%lld\n", (long long)local->force_tx_status)
 
->=20
-> Stanislaw
->=20
+would also be fine if the value were in range.  Note also that scnprintf
+will not overrun the buffer: it will truncate the string.
 
---/9DWx/yDrRhgMJTb
+> But I'm no compiler expert so I'm not going to argue about this
+> anymore.  I just wanted to point out that that the cast looks
+> dangerous and I would not do it.
+
+As it happens, arguments to variadic functions are subject to the
+"default argument promotions," so if local->force_tx_status is in fact a
+bool (I can't find the definition), it would be promoted to int and the
+cast is superfluous.
+
+J.
+
+--4jlle5knlvfploax
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXIZ4UQAKCRA6cBh0uS2t
-rHeGAQCYcj3gjA9uxW7RvLUKe5iM+FlesN4TUFVoTg61FyzQ6gEAjQUtKxvUm0JJ
-/tPgo1mAol/B+TVnH6WoRQuY7QhMcQQ=
-=rKlC
+iQIzBAABCAAdFiEEZ8d+2N/NBLDbUxIF0Z7UzfnX9sMFAlyGdjcACgkQ0Z7UzfnX
+9sMb1BAAsSESto65kU2vMM1odmXXphdjm3eCo+b7dJE6rHaaAB1IzY16XAGv1R1A
+T7vVvm+5Ia1WFFnKNr8VnF1s4gIhzqPCAGqHSuERNyIQKcAAwSVtSZtHpGa+WjrD
+qs/gfLXh7AkXQAePZG7p+KIvFVYa4ty94YonfEOE4MQlayUz1TdgwWnXezCk5i7d
+89H/rcZbcSQ9osp3+qIDoOGLvZa+nKLCIOrD85LTpfDpYUC3lUetM1byPsudv+5A
+HW7TGsbKOBnQLeIPx1o1DZUt0OX7pqlyrsO6K0XkBJHvGTFInP6MRenpDDPswXPn
+O8JxtqJ2mwEKj0HKoInopvXesPYY5NrHqML6PlzY3O9j1Wd5rviA6r80Y4MW06kd
+fQMoSKhK9nF6nNviaEXNmXCteryPlQTdAm5L05VmK2wiUJcza+ntF4yN6nEryq0a
+kd17nFUl+LU0LliCRxFpLSBV6F31s26rUVy9BEqp3q74Yh7Sqg5l5N0ZHInrEc2D
+XtJaTf5Nbyh7LHKiiiOpNMPzOD0pxixkmF8HU/2XW34uLl6ojXgvyiSE0EXrYdOM
+AjN5dEtxFpnM1dv7cQDoHdNTqYpcDLnstcXuyHcWru4bTXXcrPrVok/tbnsQ5x5m
+6Nlqd5G0pK0e2nigrCqBmigZxIPv4AVPRgDrlA/Sik96A9tbsq8=
+=KvZy
 -----END PGP SIGNATURE-----
 
---/9DWx/yDrRhgMJTb--
+--4jlle5knlvfploax--
