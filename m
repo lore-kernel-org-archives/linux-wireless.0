@@ -2,116 +2,198 @@ Return-Path: <SRS0=9Upc=RP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94622C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 15:18:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A13BEC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 15:20:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EA082054F
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 15:18:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 644502054F
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 15:20:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="f+ALq14V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726415AbfCLPSS (ORCPT
+        id S1726255AbfCLPUP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 11:18:18 -0400
-Received: from mga05.intel.com ([192.55.52.43]:41020 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726339AbfCLPSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 11:18:17 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2019 08:18:17 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,471,1544515200"; 
-   d="scan'208";a="133430143"
-Received: from ahduyck-desk1.jf.intel.com ([10.7.198.76])
-  by orsmga003.jf.intel.com with ESMTP; 12 Mar 2019 08:18:16 -0700
-Message-ID: <67c062b183fbd5651a9aa990e677d31673ff7580.camel@linux.intel.com>
-Subject: Re: [PATCH] iommu/amd: fix sg->dma_address for sg->offset bigger
- than PAGE_SIZE
-From:   Alexander Duyck <alexander.h.duyck@linux.intel.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Rosen Penev <rosenp@gmail.com>, Joerg Roedel <joro@8bytes.org>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Samuel Sieb <samuel@sieb.net>,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, jan.viktorin@gmail.com
-Date:   Tue, 12 Mar 2019 08:18:16 -0700
-In-Reply-To: <20190312070832.GA2483@redhat.com>
-References: <20190226112407.GB2989@redhat.com>
-         <20190228090411.GA24938@redhat.com> <20190228104223.GA2749@redhat.com>
-         <20190228121948.GD6072@redhat.com> <20190228134029.GC1594@8bytes.org>
-         <20190304071037.GA2787@redhat.com>
-         <CAKxU2N-k-9DCYBv6W3CohL963dr3AeY3VHyt8FrUuo=BfacDsw@mail.gmail.com>
-         <20190311084319.GA3310@redhat.com> <20190311090314.GB3310@redhat.com>
-         <e0630ae9d9bee73d8a1ce3499ea9f77900e9cdfa.camel@linux.intel.com>
-         <20190312070832.GA2483@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        Tue, 12 Mar 2019 11:20:15 -0400
+Received: from mta-p6.oit.umn.edu ([134.84.196.206]:59490 "EHLO
+        mta-p6.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726427AbfCLPUP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Mar 2019 11:20:15 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-p6.oit.umn.edu (Postfix) with ESMTP id 66F877CD
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 15:20:13 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at umn.edu
+Received: from mta-p6.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p6.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id DcGHA_pXIMgB for <linux-wireless@vger.kernel.org>;
+        Tue, 12 Mar 2019 10:20:13 -0500 (CDT)
+Received: from mail-it1-f197.google.com (mail-it1-f197.google.com [209.85.166.197])
+        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mta-p6.oit.umn.edu (Postfix) with ESMTPS id 274B712B
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 10:20:13 -0500 (CDT)
+Received: by mail-it1-f197.google.com with SMTP id r136so2496433ith.3
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 08:20:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=umn.edu; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=8gsSGvrhWQOMKFOJKLs0EMSL8Jnn2+NalFSIZty+4qI=;
+        b=f+ALq14VAnEsH0FbbBKw/IGMTRa7k2uNGf6MAFjzMHTr4Ul5VP3PjRbDjhymd4Dir8
+         wvb0eQ+caixT9hwTglin1YneyttUjQAkvRBYNTCOmnKrg5qk1r60TuLfq0hHKIPHBxb1
+         KUqUuQZzLKQv/M8Os0yDN02lR9kwPap2Mzu2XxdnE5S2It9s7E1MQgSx1MO8tfTpIyai
+         DHmF40fgJaAc3epK+QgYTy985YB7RR+U59KOHAN7kQIqvfU9GHVA1ogEUO1n3nHv9UII
+         kuheS2NwqkzfVq5c0pKkdxv1bdc7WIutYqMJtDQN0yaED+kF24Wcarj0TfghxT+ADtB6
+         cSug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=8gsSGvrhWQOMKFOJKLs0EMSL8Jnn2+NalFSIZty+4qI=;
+        b=h/jtmTm1YH/9ug0c1nk5qyak5KBQlDq0v43db76xGYUHGDgqdrVV0CuKUaLUBhSnVJ
+         6bp2mU1xT43ys2OhQHZE8rrdr8xFNlf/VOLStgT1RvGDROhTSe7P3lmRe8tiNKFrmK+O
+         zLudswbLMe5nxpoNLm6YzjIqcdjsIe/XLql57mCRk3ygAiNLFgnySZBITSLERSHJyJQH
+         jZ2bLS2OibiOWV1snxiAcp4kzjT/hDuYBEam7bNdxBmgI9Mhv5WTMLaz8AlmvFrUDS1Z
+         Am6XvaE/+JZYG4HKNL4YcXKMVqNGaOhO2WMywPhv2HJlcIcLhHsD3t+T/k+1S2xZN/i5
+         bv4g==
+X-Gm-Message-State: APjAAAU26rGruQ4xV3Fwn8Ktt6VKF+YDD9H+fIXzUP56XWCMYn1Ami5V
+        xPeOdHSSl9HcZYCTihH7RnvTlKxJtaGENqls7AcEH/DCw6mBMd8Ior/eeWioL5J7bP/9hMKcGLx
+        5Ln0y2rJcYAr8i/30QSVpYTRVWgk4W/k=
+X-Received: by 2002:a5e:dd43:: with SMTP id u3mr7691565iop.283.1552404012292;
+        Tue, 12 Mar 2019 08:20:12 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqxoQNYyWSCisVAgyabc+qJ4g4G4xeSgX3J/JVaPTLIf4xbWFhAW/yh1PkoxcUc6GCzbJ/hDLg==
+X-Received: by 2002:a5e:dd43:: with SMTP id u3mr7691545iop.283.1552404011926;
+        Tue, 12 Mar 2019 08:20:11 -0700 (PDT)
+Received: from [128.101.106.63] (cs-bee-u.cs.umn.edu. [128.101.106.63])
+        by smtp.gmail.com with ESMTPSA id u13sm773155iog.80.2019.03.12.08.20.10
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 12 Mar 2019 08:20:11 -0700 (PDT)
+Subject: Re: [PATCH] rtlwifi: fix potential NULL pointer dereference
+To:     pkshih@realtek.com, kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+References: <20190312090648.30750-1-pkshih@realtek.com>
+From:   Kangjie Lu <kjlu@umn.edu>
+Message-ID: <a514c8f3-be50-c2c0-0712-fde98e52ffd4@umn.edu>
+Date:   Tue, 12 Mar 2019 10:20:09 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
+In-Reply-To: <20190312090648.30750-1-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2019-03-12 at 08:08 +0100, Stanislaw Gruszka wrote:
-> On Mon, Mar 11, 2019 at 08:47:44AM -0700, Alexander Duyck wrote:
-> > >  drivers/iommu/amd_iommu.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-> > > index 6b0760dafb3e..949621f33624 100644
-> > > --- a/drivers/iommu/amd_iommu.c
-> > > +++ b/drivers/iommu/amd_iommu.c
-> > > @@ -2604,7 +2604,7 @@ static int map_sg(struct device *dev, struct scatterlist *sglist,
-> > >  
-> > >  	/* Everything is mapped - write the right values into s->dma_address */
-> > >  	for_each_sg(sglist, s, nelems, i) {
-> > > -		s->dma_address += address + s->offset;
-> > > +		s->dma_address += address + (s->offset & ~PAGE_MASK);
-> > >  		s->dma_length   = s->length;
-> > >  	}
-> > >  
-> > 
-> > You should add a comment calling out that this is needed because the
-> > sg_phys(s) call above this is masked with PAGE_MASK. Then this makes
-> > much more sense. Otherwise I would have assumed you needed either the
-> > full offset or none.
-> 
-> Would something like this 
-> 
-> /*
->  * Everything is mapped - write the right values into s->dma_address. 
->  * Take into account s->offset can be bigger than page size and sg_phys(s)
->  * address has to be aligned to page granularity.
->  */
-> 
-> be appropriate ?
-> 
-> Stanislaw
-> 
+Thanks for reporting the cases. There are still a few more such
+cases; we will report them soon.
 
-No, that isn't a good description. If you take a look at the code a few
-lines up you find:
-	phys_addr = (sg_phys(s) & PAGE_MASK) + (j << PAGE_SHIFT);
-
-Now if I am not mistaken the whole reason why you are having to make
-the change here is because the application of PAGE_MASK in this line.
-Basically what sg_phys() will do is take the address of the page,
-convert it to a physical address and add the offset. However what the
-mask is doing is limiting how much of that offset can be added. As a
-result you have to add the remainder that was masked out. So maybe a
-better comment would be something like:
-
-/*
- * Add in the remaining piece of the scatter-gather offset that was 
- * masked out when we were determining the physical address via
- * (sg_phys(s) & PAGE_MASK) earlier.
- */
-
-
-
+On 3/12/19 4:06 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+>
+> In case dev_alloc_skb fails, the fix safely returns to avoid
+> potential NULL pointer dereference.
+>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c       | 2 ++
+>   drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c | 2 ++
+>   drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c       | 2 ++
+>   drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c       | 2 ++
+>   drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c       | 2 ++
+>   drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c       | 4 ++++
+>   6 files changed, 14 insertions(+)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+> index 203e7b574e84..e2e0bfbc24fe 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+> @@ -600,6 +600,8 @@ void rtl88e_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished)
+>   		      u1rsvdpageloc, 3);
+>   
+>   	skb = dev_alloc_skb(totalpacketlen);
+> +	if (!skb)
+> +		return;
+>   	skb_put_data(skb, &reserved_page_packet, totalpacketlen);
+>   
+>   	rtstatus = rtl_cmd_send_packet(hw, skb);
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+> index 18c76990a089..86b1b88cc4ed 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+> @@ -623,6 +623,8 @@ void rtl92c_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+>   		      u1rsvdpageloc, 3);
+>   
+>   	skb = dev_alloc_skb(totalpacketlen);
+> +	if (!skb)
+> +		return;
+>   	skb_put_data(skb, &reserved_page_packet, totalpacketlen);
+>   
+>   	if (cmd_send_packet)
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+> index 7c5b54b71a92..67305ce915ec 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+> @@ -744,6 +744,8 @@ void rtl92ee_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished)
+>   		      u1rsvdpageloc, 3);
+>   
+>   	skb = dev_alloc_skb(totalpacketlen);
+> +	if (!skb)
+> +		return;
+>   	skb_put_data(skb, &reserved_page_packet, totalpacketlen);
+>   
+>   	rtstatus = rtl_cmd_send_packet(hw, skb);
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+> index be451a6f7dbe..33481232fad0 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+> @@ -448,6 +448,8 @@ void rtl8723e_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished)
+>   		      u1rsvdpageloc, 3);
+>   
+>   	skb = dev_alloc_skb(totalpacketlen);
+> +	if (!skb)
+> +		return;
+>   	skb_put_data(skb, &reserved_page_packet, totalpacketlen);
+>   
+>   	rtstatus = rtl_cmd_send_packet(hw, skb);
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+> index 4d7fa27f55ca..aa56058af56e 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+> @@ -562,6 +562,8 @@ void rtl8723be_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+>   		      u1rsvdpageloc, sizeof(u1rsvdpageloc));
+>   
+>   	skb = dev_alloc_skb(totalpacketlen);
+> +	if (!skb)
+> +		return;
+>   	skb_put_data(skb, &reserved_page_packet, totalpacketlen);
+>   
+>   	rtstatus = rtl_cmd_send_packet(hw, skb);
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+> index dc0eb692088f..fe32d397d287 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+> @@ -1623,6 +1623,8 @@ void rtl8812ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+>   		      &reserved_page_packet_8812[0], totalpacketlen);
+>   
+>   	skb = dev_alloc_skb(totalpacketlen);
+> +	if (!skb)
+> +		return;
+>   	skb_put_data(skb, &reserved_page_packet_8812, totalpacketlen);
+>   
+>   	rtstatus = rtl_cmd_send_packet(hw, skb);
+> @@ -1759,6 +1761,8 @@ void rtl8821ae_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+>   		      &reserved_page_packet_8821[0], totalpacketlen);
+>   
+>   	skb = dev_alloc_skb(totalpacketlen);
+> +	if (!skb)
+> +		return;
+>   	skb_put_data(skb, &reserved_page_packet_8821, totalpacketlen);
+>   
+>   	rtstatus = rtl_cmd_send_packet(hw, skb);
