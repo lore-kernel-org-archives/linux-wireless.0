@@ -2,138 +2,94 @@ Return-Path: <SRS0=9Upc=RP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07745C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 12:57:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DFB0C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 14:08:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA9992177E
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 12:57:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iibUy15w"
+	by mail.kernel.org (Postfix) with ESMTP id 155FF2087C
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 14:08:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726415AbfCLM5g (ORCPT
+        id S1726649AbfCLOIN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 08:57:36 -0400
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:41105 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725844AbfCLM5g (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 08:57:36 -0400
-Received: by mail-oi1-f196.google.com with SMTP id e7so1942711oia.8;
-        Tue, 12 Mar 2019 05:57:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=QdpB0yqk9irxbeRBNZ4oj46IQGC+jIFBfKXVTxsbwZs=;
-        b=iibUy15wPV+3VYPJ1GYn2m5L5geb49SI/nEAh75OE8t4vdM2dQR+74rzR4BSg+tXOZ
-         Y98XIOc3va4Iaw9CKPpe3ODJ22foeHnm4MN0T1LkGDL6ViBGdmVgnUb/UMQBY7b5cevI
-         ZKZfhw2I4NmHvdDCsnWjqaxp0Kv0ycOu4W+aDp+qWzJUfU8tstsETXGOJc13eCCLn+Bv
-         IzPzBqQu3E99wwnb8dNzOYi8RzBKCkyp5ajleu/pVhFGBPC0rfTtlVfJwLhG2StY1CFk
-         4eocIWe0jRiwYPFZCBBGM8I1U7GBxS9JGEd+Ey90fb0sj876vbfGStp0As1AY+xeUmcC
-         +79Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=QdpB0yqk9irxbeRBNZ4oj46IQGC+jIFBfKXVTxsbwZs=;
-        b=giFaxsugJbxfRuk9Ep2JlQpkITrdRLdY3aXykwKvEhR8nlPzgk8Wx9tS+pbgW4EHXN
-         Op6Izd2U+nnAPTEli3HteTFLwk4eUWsV+Jkr3Os5e5leh4JQz3Htxc1SklOV6Y+4Jeit
-         Ug6zVBDSNTL9rCM/sCKT0jbPOB1CgrYtiLwjXF2f8fqIxQt3+Ajzl53tTd0d3MRagyY4
-         meL+qcdB8PM/9/uFVQIfbNLUHsPNCzEdJAeMAcbNYehDo2RXDOCFvh3yii8/USUmUEj5
-         KDl0rwJje1aUZ+P9CvVJEbnO85558T0IDbY1NUqxCU+L7U19sE2Tm2y5ooYrwQ9s5XL+
-         RD3w==
-X-Gm-Message-State: APjAAAWAYFZtqDCA9hdInHMe0LHcCvPkGPEIfR63k7Hoo9E8jaT2gau8
-        Jo566W4ZWKSpw91/kfGLIWTOnaDQ
-X-Google-Smtp-Source: APXvYqxTYssZqcVkqd2WiftErf3CWcuoZDU4RUT5rQ0mSHFxL+sP2Eq1cxR5zulm8zqbatlkjaD42Q==
-X-Received: by 2002:aca:3a0b:: with SMTP id h11mr1629034oia.97.1552395454741;
-        Tue, 12 Mar 2019 05:57:34 -0700 (PDT)
-Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id n25sm3529851otj.76.2019.03.12.05.57.33
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 12 Mar 2019 05:57:33 -0700 (PDT)
-Subject: Re: [PATCH] drivers/net/wireless/realtek/rtlwifi/usb.c - fix some
- non-kerneldoc comments
-To:     =?UTF-8?Q?Valdis_Kl=c4=93tnieks?= <valdis.kletnieks@vt.edu>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <15731.1552388757@turing-police>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <69ce20a8-4342-5852-20fa-1e7369b629f4@lwfinger.net>
-Date:   Tue, 12 Mar 2019 07:57:32 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        Tue, 12 Mar 2019 10:08:13 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:44724 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726192AbfCLOIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Mar 2019 10:08:13 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E88ED307D874;
+        Tue, 12 Mar 2019 14:08:12 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.83])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8CC0127C44;
+        Tue, 12 Mar 2019 14:08:12 +0000 (UTC)
+Date:   Tue, 12 Mar 2019 15:03:40 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mt76: fix schedule while atomic in mt76x02_reset_state
+Message-ID: <20190312140339.GA5881@redhat.com>
+References: <cover.1552309862.git.lorenzo@kernel.org>
+ <f5d501960f82e62806e4a4566e0b50795b2103db.1552309862.git.lorenzo@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <15731.1552388757@turing-police>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f5d501960f82e62806e4a4566e0b50795b2103db.1552309862.git.lorenzo@kernel.org>
+User-Agent: Mutt/1.5.20 (2009-12-10)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.48]); Tue, 12 Mar 2019 14:08:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/12/19 6:05 AM, Valdis Klētnieks wrote:
-> Building with W=1:
->    CC [M]  drivers/net/wireless/realtek/rtlwifi/usb.o
-> drivers/net/wireless/realtek/rtlwifi/usb.c:243: warning: Cannot understand  *
->   on line 243 - I thought it was a doc line
-> drivers/net/wireless/realtek/rtlwifi/usb.c:760: warning: Cannot understand  *
->   on line 760 - I thought it was a doc line
-> drivers/net/wireless/realtek/rtlwifi/usb.c:790: warning: Cannot understand  *
->   on line 790 - I thought it was a doc line
+On Mon, Mar 11, 2019 at 02:24:35PM +0100, Lorenzo Bianconi wrote:
+> Fix following schedule while atomic in mt76x02_reset_state
+> since synchronize_rcu is run inside a RCU section
 > 
-> Fix comment blocks so they don't look like kerneldoc lines
-> 
-> Signed-off-by: Valdis Kletnieks <valdis.kletnieks@vt.edu>
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-> index e24fda5e9087..9478cc0d4f8b 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-> @@ -239,7 +239,7 @@ static void _rtl_usb_io_handler_release(struct ieee80211_hw *hw)
->   	mutex_destroy(&rtlpriv->io.bb_mutex);
->   }
->   
-> -/**
-> +/*
->    *
->    *	Default aggregation handler. Do nothing and just return the oldest skb.
->    */
-> @@ -756,7 +756,7 @@ static int rtl_usb_start(struct ieee80211_hw *hw)
->   	return err;
->   }
->   
-> -/**
-> +/*
->    *
->    *
->    */
-> @@ -786,7 +786,7 @@ static void rtl_usb_cleanup(struct ieee80211_hw *hw)
->   	usb_kill_anchored_urbs(&rtlusb->tx_submitted);
->   }
->   
-> -/**
-> +/*
->    *
->    * We may add some struct into struct rtl_usb later. Do deinit here.
->    *
+> [44036.944222] mt76x2e 0000:06:00.0: MCU message 31 (seq 3) timed out
+> [44036.944281] BUG: sleeping function called from invalid context at kernel/rcu/tree_exp.h:818
+> [44036.944284] in_atomic(): 1, irqs_disabled(): 0, pid: 28066, name: kworker/u4:1
+> [44036.944287] INFO: lockdep is turned off.
+> [44036.944292] CPU: 1 PID: 28066 Comm: kworker/u4:1 Tainted: G        W         5.0.0-rc7-wdn-t1+ #7
+> [44036.944294] Hardware name: Dell Inc. Studio XPS 1340/0K183D, BIOS A11 09/08/2009
+> [44036.944305] Workqueue: phy1 mt76x02_wdt_work [mt76x02_lib]
+> [44036.944308] Call Trace:
+> [44036.944317]  dump_stack+0x67/0x90
+> [44036.944322]  ___might_sleep.cold.88+0x9f/0xaf
+> [44036.944327]  rcu_blocking_is_gp+0x13/0x50
+> [44036.944330]  synchronize_rcu+0x17/0x80
+> [44036.944337]  mt76_sta_state+0x138/0x1d0 [mt76]
+> [44036.944349]  mt76x02_wdt_work+0x1c9/0x610 [mt76x02_lib]
+> [44036.944355]  process_one_work+0x2a5/0x620
+> [44036.944361]  worker_thread+0x35/0x3e0
+> [44036.944368]  kthread+0x11c/0x140
+> [44036.944376]  ret_from_fork+0x3a/0x50
+> [44036.944384] BUG: scheduling while atomic: kworker/u4:1/28066/0x00000002
+> [44036.944387] INFO: lockdep is turned off.
+> [44036.944389] Modules linked in: cmac ctr ccm af_packet snd_hda_codec_hdmi
 
-As these comments are 1 line at most, I would have changed the first and third 
-instance to /* <contents of line> */, and deleted the second empty comment, but 
-the content of this patch is OK. The subject line needs to be changed. It should 
-start with "rtlwifi: rtl_usb: Fix some ...".
+Does the patch fix the issue for you ? For me on my MT7612E device it
+make the BUG warning gone, but instead of that I have total system hung
+without any error message except information about hw restart.
 
-Once this change is made in v2, then
+[  174.425507] mt76x2e 0000:04:00.0: mac specific condition occurred
+[  176.590750] mt76x2e 0000:04:00.0: MCU message 31 (seq 13) timed out
+[  176.861345] mt76x2e 0000:04:00.0: Firmware Version: 0.0.00
+[  176.867214] mt76x2e 0000:04:00.0: Build: 1
+[  176.876563] mt76x2e 0000:04:00.0: Build Time: 201507311614____
+[  176.908095] mt76x2e 0000:04:00.0: Firmware running!
+[  176.920030] ieee80211 phy0: Hardware restart was requested
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+... hung at this point.  
 
-Larry
+This is with this fix and Felix's
+[PATCH] mac80211: do not call driver wake_tx_queue op during reconfig
+on latest nbd/wireless tree.
+
+Stanislaw
 
