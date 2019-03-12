@@ -3,129 +3,74 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBAD2C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 09:51:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB8AFC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 09:51:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C0BF2214D8
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 09:51:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B9162147C
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 09:51:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726606AbfCLJvv (ORCPT
+        id S1726619AbfCLJvw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 05:51:51 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:54158 "EHLO mx1.redhat.com"
+        Tue, 12 Mar 2019 05:51:52 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:56180 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725906AbfCLJvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 05:51:50 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        id S1725906AbfCLJvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Mar 2019 05:51:51 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 24D1F3082B6E;
-        Tue, 12 Mar 2019 09:51:50 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id B2D323086265;
+        Tue, 12 Mar 2019 09:51:51 +0000 (UTC)
 Received: from localhost (unknown [10.40.205.176])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B4E345DA60;
-        Tue, 12 Mar 2019 09:51:49 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4C0D960FB4;
+        Tue, 12 Mar 2019 09:51:51 +0000 (UTC)
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>,
         Daniel Golle <daniel@makrotopia.org>,
         Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Subject: [PATCH v3 3/4] rt2x00: check number of EPROTO errors
-Date:   Tue, 12 Mar 2019 10:51:42 +0100
-Message-Id: <1552384303-29529-4-git-send-email-sgruszka@redhat.com>
+Subject: [PATCH v3 4/4] rt2x00: do not print error when queue is full
+Date:   Tue, 12 Mar 2019 10:51:43 +0100
+Message-Id: <1552384303-29529-5-git-send-email-sgruszka@redhat.com>
 In-Reply-To: <1552384303-29529-1-git-send-email-sgruszka@redhat.com>
 References: <1552384303-29529-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Tue, 12 Mar 2019 09:51:50 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.49]); Tue, 12 Mar 2019 09:51:51 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Some USB host devices/drivers on some conditions can always return
-EPROTO error on submitted URBs. That can cause infinity loop in the
-rt2x00 driver.
+For unknown reasons printk() on some context can cause CPU hung on
+embedded MT7620 AP/router MIPS platforms. What can result on wifi
+disconnects.
 
-Since we can have single EPROTO errors we can not mark as device as
-removed to avoid infinity loop. However we can count consecutive
-EPROTO errors and mark device as removed if get lot of it.
-I choose number 10 as threshold.
+This patch move queue full messages to debug level what is consistent
+with other mac80211 drivers which drop packet silently if tx queue is
+full. This make MT7620 OpenWRT routers more stable, what was reported
+by various users.
 
-Reported-and-tested-by: Randy Oostdyk <linux-kernel@oostdyk.com>
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  1 +
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 22 +++++++++++++++++++---
- 2 files changed, 20 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index 5657495cf626..c1519c98ad41 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -1017,6 +1017,7 @@ struct rt2x00_dev {
- 	unsigned int extra_tx_headroom;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+index 92ddc19e7bf7..947fc8964e9a 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+@@ -671,7 +671,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
+ 	spin_lock(&queue->tx_lock);
  
- 	struct usb_anchor *anchor;
-+	unsigned int num_proto_errs;
- 
- 	/* Clock for System On Chip devices. */
- 	struct clk *clk;
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index 086aad22743d..9cdd7f2c92b5 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -31,6 +31,22 @@
- #include "rt2x00.h"
- #include "rt2x00usb.h"
- 
-+static bool rt2x00usb_check_usb_error(struct rt2x00_dev *rt2x00dev, int status)
-+{
-+	if (status == -ENODEV || status == -ENOENT)
-+		return true;
-+
-+	if (status == -EPROTO || status == -ETIMEDOUT)
-+		rt2x00dev->num_proto_errs++;
-+	else
-+		rt2x00dev->num_proto_errs = 0;
-+
-+	if (rt2x00dev->num_proto_errs > 3)
-+		return true;
-+
-+	return false;
-+}
-+
- /*
-  * Interfacing with the HW.
-  */
-@@ -57,7 +73,7 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
- 		if (status >= 0)
- 			return 0;
- 
--		if (status == -ENODEV || status == -ENOENT) {
-+		if (rt2x00usb_check_usb_error(rt2x00dev, status)) {
- 			/* Device has disappeared. */
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 			break;
-@@ -321,7 +337,7 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
- 
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
--		if (status == -ENODEV || status == -ENOENT)
-+		if (rt2x00usb_check_usb_error(rt2x00dev, status))
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
- 		rt2x00lib_dmadone(entry);
-@@ -410,7 +426,7 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
- 
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
--		if (status == -ENODEV || status == -ENOENT)
-+		if (rt2x00usb_check_usb_error(rt2x00dev, status))
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
- 		rt2x00lib_dmadone(entry);
+ 	if (unlikely(rt2x00queue_full(queue))) {
+-		rt2x00_err(queue->rt2x00dev, "Dropping frame due to full tx queue %d\n",
++		rt2x00_dbg(queue->rt2x00dev, "Dropping frame due to full tx queue %d\n",
+ 			   queue->qid);
+ 		ret = -ENOBUFS;
+ 		goto out;
 -- 
 2.7.5
 
