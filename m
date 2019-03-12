@@ -4,112 +4,114 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D043C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 07:56:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E3F3C10F00
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 08:00:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D2456214AF
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 07:56:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F013D214D8
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 08:00:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="Rrwb3kUu"
+	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="Ch9vuvjy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727173AbfCLH4n (ORCPT
+        id S1727303AbfCLIAB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 03:56:43 -0400
-Received: from mta-p8.oit.umn.edu ([134.84.196.208]:55874 "EHLO
-        mta-p8.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726614AbfCLH4m (ORCPT
+        Tue, 12 Mar 2019 04:00:01 -0400
+Received: from mta-p6.oit.umn.edu ([134.84.196.206]:38488 "EHLO
+        mta-p6.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726518AbfCLH75 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 03:56:42 -0400
+        Tue, 12 Mar 2019 03:59:57 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-p8.oit.umn.edu (Postfix) with ESMTP id 2CC12A99
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 07:56:41 +0000 (UTC)
+        by mta-p6.oit.umn.edu (Postfix) with ESMTP id E61049FD
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 07:59:55 +0000 (UTC)
 X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p8.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p8.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id WX-DGblfPM3Q for <linux-wireless@vger.kernel.org>;
-        Tue, 12 Mar 2019 02:56:41 -0500 (CDT)
-Received: from mail-it1-f198.google.com (mail-it1-f198.google.com [209.85.166.198])
+Received: from mta-p6.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p6.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id Eh0qNM7Jo7LD for <linux-wireless@vger.kernel.org>;
+        Tue, 12 Mar 2019 02:59:55 -0500 (CDT)
+Received: from mail-it1-f200.google.com (mail-it1-f200.google.com [209.85.166.200])
         (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mta-p8.oit.umn.edu (Postfix) with ESMTPS id F277AA98
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 02:56:40 -0500 (CDT)
-Received: by mail-it1-f198.google.com with SMTP id 190so1459638itl.7
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 00:56:40 -0700 (PDT)
+        by mta-p6.oit.umn.edu (Postfix) with ESMTPS id B6BD9A2B
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 02:59:55 -0500 (CDT)
+Received: by mail-it1-f200.google.com with SMTP id q184so1511394itd.6
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 00:59:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=umn.edu; s=google;
         h=from:to:cc:subject:date:message-id;
-        bh=GHwL4zBqlKlQckqtsDRpff1AB+Nxp6P8f5kwUycKt+I=;
-        b=Rrwb3kUuQTLkon4rAku7XQ7Jg4lHHS8eKfKk7+CJayAofX14LiY/ADR2yL+fzWKzy/
-         yQFxzC1Xd9tahI3szGNNGQbqD6645mJg5E4tgzoql2LTQnvsAfobz/okxbkAuaRPZkTq
-         aEG1wFcTtu2t+15pLdM1RroMNIf4veY2WFEyp0H+FXiGgL74CxcrdfI5v06AQn6VCEAF
-         ZRE8j7dkwzGExBmRsLKH1Y2rhBezbVfJ6BQFfqGf2PbMHY2WSW5gvaUlitFQUKRxoJE+
-         zz2ze4xC5Ipl6ISpL1fqAEG5KH+mWcvBP7H0HR5MBqoEJZEcWONUYUTbJd+PwFP8h5FP
-         tTQw==
+        bh=1nkZcVU0GvUzDc/ZYNTpuRtHlao+2b0Vm1VZH2b1N8U=;
+        b=Ch9vuvjydJ4EhQPIcG7puULxC+JRbV5Chpg2PLSeQh+EyWOBrybWR1/nJNODcDbxaI
+         PQskGTtnLDWIo5/AU/BTCwwMJnVQgJs3ekRvPcMXx9Pp984XlFYGe7ufnX/NcpnSoEor
+         UorOHxgCM15q/CNDL8doF8cO90EcjUkKKvp+pmPW36YpXU7aK0nB1MOgA+u6Z8i4gMZn
+         XjmF4beVRrUNsqrgPHlNdEt3BVcTXDjYdAjqBsVNp7sxXBsHUXYnqQFn5cNQPRmM3rlM
+         snfDcGx7lXb78OO0gkXQ/5Yi3ibqv00LObONxyBOn9Ul81VHh61U4k69iGjjy3XnLsIC
+         EwnQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=GHwL4zBqlKlQckqtsDRpff1AB+Nxp6P8f5kwUycKt+I=;
-        b=Z3jlljXBbozgjNiOOkMt/izMFePm+iC3mFBnv133l2UvwldNoEnG1i4kf4J02mmVWV
-         VQGUV+LW5vOhEa4JuVtYUWC6AxjnI8pctGokt/92kPNsR+Hp/vZiJ5Zn/R4ddqj0YtZ0
-         keABco03ZuNIKHHyoHCwvINtlvSLxFabw3zU/vUkPqDzxHJIovBMF86RdH8gI+axu7mg
-         1sEw5iJBjuJnupKAAsnUugXvbEQp3HzdZIoabq3oP8lk+KTTAHeuyodFBTeR0M40AtGB
-         /nXzXB7O0aLUY3IrAnwS4f24SRG/AiLP+D3PisibQtuPXuFs7vBfSB3lJFIODKiQbpoW
-         MQTw==
-X-Gm-Message-State: APjAAAVY7Gahbgt/5X4KmuZE9zjfMBDI2xT2B78H2JEUTfo9p3ZJ49Ic
-        EMkbpbzZDLSMSY0W4vyj5FwqA0S6R6Q6e3rZR2zJ5YXN2O/NVp5geponBT8hU/JWQwrCq3h5N7c
-        CcAysxywO17BOVH5hMKb5aChKn704JHc=
-X-Received: by 2002:a6b:7219:: with SMTP id n25mr10363256ioc.117.1552377400154;
-        Tue, 12 Mar 2019 00:56:40 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqwCOLy0p/Zx9y/3ip/ZQBpQCX4CLC4JCn7dfHgj8FIju2Odvfqkl6BklClOE5Sd+YohY31Vig==
-X-Received: by 2002:a6b:7219:: with SMTP id n25mr10363242ioc.117.1552377399938;
-        Tue, 12 Mar 2019 00:56:39 -0700 (PDT)
+        bh=1nkZcVU0GvUzDc/ZYNTpuRtHlao+2b0Vm1VZH2b1N8U=;
+        b=uYvv8nUpHR4xoK23YrYsauLUlDD+w0Yqds66NMEuD4B2HrWHLG8fxHfPywkCSBdw6W
+         7AocvX/o1yIAlrLFjMZgg5W6Jlf3Vpf6I0SknRF9dM0OvpxlSeUwdqjfglSrJo583neA
+         pAusxln7X/Zb56UF869B5hSEsNMJr5Rmw2korABowZY+hU/tGoGOnt3mKxqLNAuZeeDp
+         9ntKR5pI5hQerFsmbNp6JREKtaGDufOtnd1pk0AlO928Bzvg/R1N0LhF8v/oDXG2aSEw
+         wDJMTNGGrvlt1JRC38ZMHWnv2A2nzX8euedHFWnO1fQIuqxyx9QCyFcF89UjrxBdNl0j
+         iXug==
+X-Gm-Message-State: APjAAAVJnIr3B8mE4mXt9stUYWnTjbTN2oqOrcwGTf+dPe4EXDeBqo/X
+        8R8WYT7SC4R/KMVDZrjsM++tLbA3No6X8DqaxoCmYSiGnmTW7UMy+FbEVP7Qes2FZvZuU5hxXP6
+        OxEVcv/hmmLvDm+tH4IwtVPatWlgwqjQ=
+X-Received: by 2002:a02:4083:: with SMTP id n125mr21568218jaa.63.1552377595298;
+        Tue, 12 Mar 2019 00:59:55 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqyOfP+9mqD+1XLGDv4RfFO3LOxcYkCR4RoLYjEACGFPQr+ni9W5LMOCuUKOkpHRPxMIwUeagA==
+X-Received: by 2002:a02:4083:: with SMTP id n125mr21568200jaa.63.1552377595059;
+        Tue, 12 Mar 2019 00:59:55 -0700 (PDT)
 Received: from bee.dtc.umn.edu (cs-bee-u.cs.umn.edu. [128.101.106.63])
-        by smtp.gmail.com with ESMTPSA id s10sm2669419ioc.54.2019.03.12.00.56.38
+        by smtp.gmail.com with ESMTPSA id u12sm3391365iop.77.2019.03.12.00.59.53
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 12 Mar 2019 00:56:38 -0700 (PDT)
+        Tue, 12 Mar 2019 00:59:54 -0700 (PDT)
 From:   Kangjie Lu <kjlu@umn.edu>
 To:     kjlu@umn.edu
 Cc:     pakki001@umn.edu, Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Ingo Molnar <mingo@kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] net: rtlwifi: fix a potential NULL pointer dereference
-Date:   Tue, 12 Mar 2019 02:56:33 -0500
-Message-Id: <20190312075633.573-1-kjlu@umn.edu>
+Subject: [PATCH] net: rtl8192c: fix a potential NULL pointer dereference
+Date:   Tue, 12 Mar 2019 02:59:46 -0500
+Message-Id: <20190312075948.1569-1-kjlu@umn.edu>
 X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In case alloc_workqueue fails, the fix reports the error and
-returns to avoid NULL pointer dereference.
+In case dev_alloc_skb fails, the fix safely returns to avoid
+potential NULL pointer dereference.
 
 Signed-off-by: Kangjie Lu <kjlu@umn.edu>
 ---
- drivers/net/wireless/realtek/rtlwifi/base.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 217d2a7a43c7..ac746c322554 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -448,6 +448,11 @@ static void _rtl_init_deferred_work(struct ieee80211_hw *hw)
- 	/* <2> work queue */
- 	rtlpriv->works.hw = hw;
- 	rtlpriv->works.rtl_wq = alloc_workqueue("%s", 0, 0, rtlpriv->cfg->name);
-+	if (unlikely(!rtlpriv->works.rtl_wq)) {
-+		pr_err("Failed to allocate work queue\n");
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+index 18c76990a089..9042fc044c7e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+@@ -623,6 +623,9 @@ void rtl92c_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
+ 		      u1rsvdpageloc, 3);
+ 
+ 	skb = dev_alloc_skb(totalpacketlen);
++	if (!skb)
 +		return;
-+	}
 +
- 	INIT_DELAYED_WORK(&rtlpriv->works.watchdog_wq,
- 			  (void *)rtl_watchdog_wq_callback);
- 	INIT_DELAYED_WORK(&rtlpriv->works.ips_nic_off_wq,
+ 	skb_put_data(skb, &reserved_page_packet, totalpacketlen);
+ 
+ 	if (cmd_send_packet)
 -- 
 2.17.1
 
