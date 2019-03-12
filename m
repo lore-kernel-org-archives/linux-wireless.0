@@ -2,111 +2,155 @@ Return-Path: <SRS0=9Upc=RP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C8FC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 20:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BC5FC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 21:28:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F1C74206BA
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 20:48:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6F23213A2
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 21:28:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Y1gfGqw4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726411AbfCLUss (ORCPT
+        id S1726512AbfCLV2j (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 16:48:48 -0400
-Received: from mga02.intel.com ([134.134.136.20]:16848 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726329AbfCLUss (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 16:48:48 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2019 13:48:47 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,471,1544515200"; 
-   d="scan'208";a="124909403"
-Received: from fmsmsx103.amr.corp.intel.com ([10.18.124.201])
-  by orsmga008.jf.intel.com with ESMTP; 12 Mar 2019 13:48:46 -0700
-Received: from fmsmsx154.amr.corp.intel.com (10.18.116.70) by
- FMSMSX103.amr.corp.intel.com (10.18.124.201) with Microsoft SMTP Server (TLS)
- id 14.3.408.0; Tue, 12 Mar 2019 13:48:46 -0700
-Received: from hasmsx107.ger.corp.intel.com (10.184.198.27) by
- FMSMSX154.amr.corp.intel.com (10.18.116.70) with Microsoft SMTP Server (TLS)
- id 14.3.408.0; Tue, 12 Mar 2019 13:48:46 -0700
-Received: from hasmsx112.ger.corp.intel.com ([169.254.11.157]) by
- hasmsx107.ger.corp.intel.com ([169.254.2.23]) with mapi id 14.03.0415.000;
- Tue, 12 Mar 2019 22:48:42 +0200
-From:   "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To:     "kevin@kevinlocke.name" <kevin@kevinlocke.name>
-CC:     linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: Re: [linuxwifi] [RFC] iwlwifi: enable TX AMPDU for some iwldvm
-Thread-Topic: [linuxwifi] [RFC] iwlwifi: enable TX AMPDU for some iwldvm
-Thread-Index: AQHU2PbGwTd9hj9DNU+dTGwq4/G/q6YIQsCAgAACgACAAAxOgIAABOwA
-Date:   Tue, 12 Mar 2019 20:48:42 +0000
-Message-ID: <58bd45ab11912eef5c809427449a31800ecdbf53.camel@intel.com>
-References: <20190312171205.GA12792@kevinolos>
-         <0f9132187a5567fa94e396ed317efbae1aa4de14.camel@intel.com>
-         <1b6eaef941d3bc887a9fbedea47c2677e5511cdd.camel@intel.com>
-         <20190312203101.GA19902@kevinolos>
-In-Reply-To: <20190312203101.GA19902@kevinolos>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.252.25.57]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <0AD6A98CA44EC647B88AAD5263E28486@intel.com>
-Content-Transfer-Encoding: base64
+        Tue, 12 Mar 2019 17:28:39 -0400
+Received: from [208.74.158.174] ([208.74.158.174]:33080 "EHLO
+        mail3.candelatech.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1726396AbfCLV2j (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Mar 2019 17:28:39 -0400
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id DE6D2114B52;
+        Tue, 12 Mar 2019 14:28:38 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com DE6D2114B52
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1552426119;
+        bh=Itm+DrqgoNF1ScOJPgFfSP4B95Jx2mPcYMa77y/2FJM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Y1gfGqw4CTBYuYKYjLn1K1fQ4XmW5PUnnsji5ce6hXUUY3IX7/vbHRqa6g+s38oYS
+         58yXIWz0p6CvCwSMT/hrFUohLOxCK3TbFqIxdZY04DvGSM6+Hed2v7a3LVrEf1IV98
+         GT+b+ydviT4CZt05uSt3tkYeLFbuhO4FqJMkJQQM=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [RFC 1/2] mac80211:  Support decrypting action frames for reinsertion into the driver.
+Date:   Tue, 12 Mar 2019 14:28:29 -0700
+Message-Id: <20190312212830.9813-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gVHVlLCAyMDE5LTAzLTEyIGF0IDE0OjMxIC0wNjAwLCBLZXZpbiBMb2NrZSB3cm90ZToNCj4g
-VGhhbmtzIEx1Y2EgYW5kIEVtbWFudWVsLA0KPiANCj4gT24gVHVlLCAyMDE5LTAzLTEyIGF0IDE5
-OjQ3ICswMDAwLCBHcnVtYmFjaCwgRW1tYW51ZWwgd3JvdGU6DQo+ID4gT24gVHVlLCAyMDE5LTAz
-LTEyIGF0IDIxOjM4ICswMjAwLCBMdWNpYW5vIENvZWxobyB3cm90ZToNCj4gPiA+IElmIHRoaXMg
-ZmVhdHVyZSB3YXMgZXhwbGljaXRseSBkaXNhYmxlZCwgaXQgY2VydGFpbmx5IG1lYW5zIHRoYXQN
-Cj4gPiA+IHNvbWV0aGluZyB3YXMgY2F1c2luZyBwcm9ibGVtcyB3aXRoIGl0LCBzbyBJJ2QgYmUg
-d2FyeSB0byBlbmFibGUNCj4gPiA+IGl0DQo+ID4gPiBmb3IgYWxsIERWTSBkZXZpY2VzLg0KPiA+
-ID4gDQo+ID4gPiBJIGd1ZXNzIHdlIGNvdWxkIGVuYWJsZSBpdCBieSBkZWZhdWx0IGZvciBkZXZp
-Y2VzIHRoYXQgd29yayBmaW5lLA0KPiA+ID4gYnV0DQo+ID4gPiB3ZSB3b3VsZCBoYXZlIHRvIHJ1
-biBpdCBpbiByZWFsIGxpZmUgZm9yIGEgbG90IGxvbmdlciB3aXRoIGEgbG90DQo+ID4gPiBtb3Jl
-DQo+ID4gPiBkaWZmZXJlbnQgQVBzIHRvIGJlIHN1cmUgaXQgd29uJ3QgY2F1c2UgYW55IHByb2Js
-ZW1zLg0KPiANCj4gTWFrZXMgc2Vuc2UgdG8gbWUuICBJIGNhbiBzdGFydCB0ZXN0aW5nIHdpdGgg
-YXZhaWxhYmxlIEFQcy4gIExldCBtZQ0KPiBrbm93IGlmIHRoZXJlIGlzIGFueXRoaW5nIHNwZWNp
-ZmljIEkgc2hvdWxkIGxvb2sgZm9yIG9yIGNhdGFsb2cNCj4gYmV5b25kDQo+IGxhdGVuY3ksIHBh
-Y2tldCBkcm9wIHJhdGVzLCBhbmQgYmFuZHdpZHRoLg0KPiANCj4gPiA+IEVtbWFudWVsLCBkbyB5
-b3UgaGFwcGVuIHRvIHJlbWVtYmVyIHdoYXQgd2FzIHRoZSBpc3N1ZSwgc28gS2V2aW4NCj4gPiA+
-IGNvdWxkIHRlc3QgdGhhdCBzcGVjaWZpYyBzY2VuYXJpbyB3aXRoIHRoaXMgc3BlY2lmaWMgTklD
-Pw0KPiA+IA0KPiA+IGxvbmcgbG9uZyBuaWdodHMgb2YgZGVzcGFpci4NCj4gPiANCj4gPiBXZSBo
-YWQgaXNzdWVzIHdpdGggcmVjbGFpbSBwYXRoIHVwb24gQkFDSy4gVGhpcyBpcyBvZiBjb3Vyc2Ug
-YQ0KPiA+IGZpcm13YXJlDQo+ID4gcHJvYmxlbS4uLg0KPiANCj4gRG9lcyB0aGF0IHN1Z2dlc3Qg
-dGhlIGlzc3VlIG1heSBoYXZlIGJlZW4gZml4ZWQgYnkgYSBmaXJtd2FyZSB1cGRhdGU/DQo+IEZv
-ciByZWZlcmVuY2UsIEknbSBjdXJyZW50bHkgdXNpbmcgImZpcm13YXJlIHZlcnNpb24gOS4yMjEu
-NC4xIGJ1aWxkDQo+IDI1NTMyIiBmcm9tIHRoZSBmaXJtd2FyZS1pd2x3aWZpIERlYmlhbiBwYWNr
-YWdlICh2ZXJzaW9uIDIwMTkwMTE0LTEpLg0KPiANCj4gSWYgaXQgd291bGQgYmUgaGVscGZ1bCwg
-SSBjb3VsZCBhdHRlbXB0IHRvIGJpc2VjdCB0aGUgZmlybXdhcmUNCj4gcmV2aXNpb25zIHRvIGZp
-bmQgdGhlIG9uZSB0aGF0IGZpeGVkIGl0IChhc3N1bWluZyBJIGNhbiByZXByb2R1Y2UgdGhlDQo+
-IGlzc3VlIHdpdGggYSBwcmV2aW91cyBmaXJtd2FyZSB2ZXJzaW9uKS4NCg0KV2VsbC4uIFNvcnJ5
-LCBJIHdhc24ndCB2ZXJ5ICJ0ZWNobmljYWwiLg0KU28gdGhlIHByb2JsZW0gd2FzIHJlYWxseSB0
-aGF0IHdlIHN0b3BwZWQgZ2V0dGluZyBCQUNLIG5vdGlmaWNhdGlvbnMNCmZyb20gdGhlIGZpcm13
-YXJlIGFuZCB0aGF0IGNhdXNlZCBhIHJlY2xhaW0gc3RhbGwgd2hpY2ggaW4gdHVybiB3YXMNCmNh
-dWdodCBieSBhIFR4IHF1ZXVlIHN0dWNrIHRpbWVyIGZpcmluZyBpbiB0aGUgZHJpdmVyLg0KSSB3
-YXMgbmV2ZXIgYWJsZSB0byByZXByb2R1Y2UgdGhpcy4gV2hhdCBJIGNhbiBkbyBpcyB0byBlbmFi
-bGUgQS1NUERVDQpvbiBteSBvbGQgc3lzdGVtIHRoYXQgaGFzIHRoaXMgc2FtZSBkZXZpY2UsIGp1
-c3QgdG8gc2VlIHdoYXQgaGFwcGVucy4NCldoaWxlIGNoYXNpbmcgdGhpcyBidWcsIEkgZXZlbiBm
-b3VuZCBhbm90aGVyIG9uZSB3aGljaCBib3VnaHQgbWUgYSBmZXcNCm1vbWVudHMgb2YgZmFtZToN
-Cg0KY29tbWl0IGQ2ZWUyN2ViMTNiZWFiOTQwNTZlMGRlNTJkODEyMjAwNThjYTIyOTcNCkF1dGhv
-cjogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4NCkRhdGU6
-ICAgV2VkIEp1biA2IDA5OjEzOjM2IDIwMTIgKzAyMDANCg0KICAgIGl3bHdpZmk6IGRvbid0IG1l
-c3MgdXAgdGhlIFNDRCB3aGVuIHJlbW92aW5nIGEga2V5DQoNCmFuZCBpbiB0aGUgY29tbWl0IG1l
-c3NhZ2Ugb2YgdGhhdCB2ZXJ5IGNvbW1pdDoNCg0KICAgIFRoaXMgZG9lc24ndCBzZWVtIHRvIGZp
-eCB0aGUgaGlnaGVyIHF1ZXVlcyB0aGF0IGdldCBzdHVjaw0KICAgIGZyb20gdGltZSB0byB0aW1l
-Lg0KDQpUaGVyZSB3ZXJlIG5vIG5ldyB2ZXJzaW9ucyBvZiB0aGUgZmlybXdhcmUgcmVsZWFzZWQg
-c2luY2UgdGhlbi4NCkkgdHJpZWQgdG8gc2tpbSB0aHJvdWdoIGJ1Z3ppbGxhLCBidXQgY291bGRu
-J3QgZmluZCB0aGUgYnVncyBJIHdhcw0KaGFuZGxpbmcgdGhlbi4NCg0KPiANCj4gVGhhbmtzIGFn
-YWluLA0KPiBLZXZpbg0K
+From: Ben Greear <greearb@candelatech.com>
+
+Some drivers, like ath10k-ct support rxswcrypt, but the firmware needs to
+handle at least part of the blockack logic internally.  Since firmware cannot
+decode the frame in rxswcrypt mode, this patch adds a way for the driver to
+request to be delivered the decrypted blockack action frames.  The
+driver can then re-insert the decrypted frame for proper handling.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ include/net/mac80211.h    | 10 ++++++++++
+ net/mac80211/driver-ops.c |  9 +++++++++
+ net/mac80211/driver-ops.h |  3 +++
+ net/mac80211/iface.c      |  7 +++++++
+ 4 files changed, 29 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 393501666820..0a49f683de57 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3631,6 +3631,14 @@ enum ieee80211_reconfig_type {
+  *	skb is always a real frame, head may or may not be an A-MSDU.
+  * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
+  *	Statistics should be cumulative, currently no way to reset is provided.
++ * @consume_block_ack: Offer block-ack management frames back to driver to see
++ *      if it wishes to consume it.  This can be useful for when firmware wants
++ *      to handle block-ack logic itself, but PMF is used and the firmware
++ *      cannot actually decode the block-ack frames itself.  So, firmware can
++ *      pass the encoded block-ack up the stack, and receive it through this
++ *      callback.  If return value is zero, the mac80211 stack will not further
++ *      process the skb.  skb will be freed by calling code, so driver must
++ *      make a copy of anything it needs in the skb before returning.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3917,6 +3925,8 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
++	int (*consume_block_ack)(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif, struct sk_buff* skb);
+ 	bool (*can_aggregate_in_amsdu)(struct ieee80211_hw *hw,
+ 				       struct sk_buff *head,
+ 				       struct sk_buff *skb);
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index bb886e7db47f..0dc3b9606e01 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -52,6 +52,15 @@ void drv_stop(struct ieee80211_local *local)
+ 	local->started = false;
+ }
+ 
++int drv_consume_block_ack(struct ieee80211_local *local,
++			  struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
++{
++	/*pr_warn("consume-block-ack: %p\n", local->ops->consume_block_ack);*/
++	if (local->ops->consume_block_ack)
++		return local->ops->consume_block_ack(&local->hw, &sdata->vif, skb);
++	return -EINVAL;
++}
++
+ int drv_add_interface(struct ieee80211_local *local,
+ 		      struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index e019199f6f7b..de2ca3cd16e7 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -153,6 +153,9 @@ static inline void drv_set_wakeup(struct ieee80211_local *local,
+ }
+ #endif
+ 
++int drv_consume_block_ack(struct ieee80211_local *local,
++			  struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
++
+ int drv_add_interface(struct ieee80211_local *local,
+ 		      struct ieee80211_sub_if_data *sdata);
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 03764e58db4c..0add6c47b8e3 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1304,6 +1304,11 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 		if (ieee80211_is_action(mgmt->frame_control) &&
+ 		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+ 			int len = skb->len;
++			int barv = drv_consume_block_ack(local, sdata, skb);
++
++			/*pr_err("called drv_consume_blockack, rv: %d\n", barv);*/
++			if (barv == 0)
++				goto done_skb_free;
+ 
+ 			mutex_lock(&local->sta_mtx);
+ 			sta = sta_info_get_bss(sdata, mgmt->sa);
+@@ -1404,6 +1409,8 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 			break;
+ 		}
+ 
++	done_skb_free:
++
+ 		kfree_skb(skb);
+ 	}
+ 
+-- 
+2.20.1
+
