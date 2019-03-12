@@ -2,115 +2,199 @@ Return-Path: <SRS0=9Upc=RP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3811C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 11:06:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6110BC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 11:18:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9C8C0206DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 11:06:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EB2B206BA
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 11:18:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E+XUBUCa";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RqnuaCnp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726535AbfCLLGH (ORCPT
+        id S1726421AbfCLLSf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 07:06:07 -0400
-Received: from outbound.smtp.vt.edu ([198.82.183.121]:46142 "EHLO
-        omr1.cc.vt.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726008AbfCLLGG (ORCPT
+        Tue, 12 Mar 2019 07:18:35 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:58528 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726280AbfCLLSf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 07:06:06 -0400
-Received: from mr3.cc.vt.edu (mr3.cc.vt.edu [IPv6:2607:b400:92:8500:0:7f:b804:6b0a])
-        by omr1.cc.vt.edu (8.14.4/8.14.4) with ESMTP id x2CB65xk009366
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 07:06:05 -0400
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
-        by mr3.cc.vt.edu (8.14.7/8.14.7) with ESMTP id x2CB60TM008916
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 07:06:05 -0400
-Received: by mail-qt1-f199.google.com with SMTP id x12so1896364qtk.2
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 04:06:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:mime-version:date
-         :message-id;
-        bh=fHbH8xXrsdcVp7DgI6FhDseV5/05/lU0RAksNhHFrTE=;
-        b=TtRIGj3JKHFCMhjInuNsEuYO4DY4sZS1//7/U22jklt5gI7aiAvMYMHPdlTPz6OErJ
-         Sx/m6+oAkqW+NP412TmOccLa9/KM1gqtuZ9epq45EVvVsJvSa5AOqYQY11259oYKFRFx
-         STZkmclIAkgjQHE3bt7FoCEyAoVh9GnGnSTztQGql12wcaOBLpFa45KxkonxcfJddfDy
-         d/jPsH6OOxSVL7vRK4W8PJPz4NDSDAXq11UEt9EmMjhVYR/k5WWTxCPvX8dlmAbssgaI
-         QjJ9ksxdqM8QA2D9L1oy3d0XzCjmfWcHgpd6pXOECMyLHwG41dqy0HVFNbVUK6airRMC
-         kzmQ==
-X-Gm-Message-State: APjAAAVqB0cZhjLAWKpDt/v8AcWfjubTkS4i9gxLvB7RmgIFOpcFhUZI
-        csNfkCvxL1aPF3Z0TIU+rJp/rLL53lF46CV7dJUUGIuFTecW2aTB3WnGxWXCzmKEiTyIU+bZIeT
-        IYebJPCgDur515jP+j8ImfOtjjTKX8Koh6kRidA==
-X-Received: by 2002:a37:b704:: with SMTP id h4mr19373796qkf.39.1552388759941;
-        Tue, 12 Mar 2019 04:05:59 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqzc3WkjPFIew0rUJ4rvq+sC1ihUc28g1hckhy15AZ++tjWJ/KJPi6jAT6PWskJO+gQkvMlrZA==
-X-Received: by 2002:a37:b704:: with SMTP id h4mr19373775qkf.39.1552388759653;
-        Tue, 12 Mar 2019 04:05:59 -0700 (PDT)
-Received: from turing-police ([2601:5c0:c001:4341::3b7])
-        by smtp.gmail.com with ESMTPSA id f13sm5575421qto.80.2019.03.12.04.05.58
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 12 Mar 2019 04:05:58 -0700 (PDT)
-From:   "Valdis Kl=?utf-8?Q?=c4=93?=tnieks" <valdis.kletnieks@vt.edu>
-X-Google-Original-From: "Valdis Kl=?utf-8?Q?=c4=93?=tnieks" <Valdis.Kletnieks@vt.edu>
-X-Mailer: exmh version 2.9.0 11/07/2018 with nmh-1.7+dev
-To:     Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers/net/wireless/realtek/rtlwifi/usb.c - fix some non-kerneldoc comments
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Date:   Tue, 12 Mar 2019 07:05:57 -0400
-Message-ID: <15731.1552388757@turing-police>
+        Tue, 12 Mar 2019 07:18:35 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 16A3C608FC; Tue, 12 Mar 2019 11:18:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552389514;
+        bh=T0Y11xnRL4iPaIcxIL83IaSdyaTDLXUlNdcgaQD6Bmg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=E+XUBUCaeRBxSQ8E8R0mD8SkhZDDaeR5r6sWmor/a271mZI6YadU6Uhc92JwkS7NL
+         EC1//md1PAoFW0Mk54MtD62PILuOMTiX/aAjSZuS20nbrPb/twR61oBNgd8q/ACgaz
+         DguNvSJF3cN3RxyssXjLHKtBXjeJ7qYBEdlykv5k=
+Received: from checstex0244823-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: bpothuno@codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 20E9660208;
+        Tue, 12 Mar 2019 11:18:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552389513;
+        bh=T0Y11xnRL4iPaIcxIL83IaSdyaTDLXUlNdcgaQD6Bmg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=RqnuaCnprc0q54frozcQQB7MaeC8sji4g8qfQCIc7REIDUCXf26bh9B8sHxu50h/z
+         4gnVr4uZxex5IYxo2HHMPu6dAnL1PUmocoEKEP6vF9cGgFyEjhU20PXx2CCfQaV1SI
+         shpnHciNuBaJJFYRgoLE4dgtnqezp2sWKwbu7X8M=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 20E9660208
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bpothuno@codeaurora.org
+From:   Balaji Pothunoori <bpothuno@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Balaji Pothunoori <bpothuno@codeaurora.org>
+Subject: [PATCH] ath10k: rx_duration update for fw_stats debugfs entry
+Date:   Tue, 12 Mar 2019 16:47:50 +0530
+Message-Id: <1552389470-28405-1-git-send-email-bpothuno@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Building with W=1:
-  CC [M]  drivers/net/wireless/realtek/rtlwifi/usb.o
-drivers/net/wireless/realtek/rtlwifi/usb.c:243: warning: Cannot understand  *
- on line 243 - I thought it was a doc line
-drivers/net/wireless/realtek/rtlwifi/usb.c:760: warning: Cannot understand  *
- on line 760 - I thought it was a doc line
-drivers/net/wireless/realtek/rtlwifi/usb.c:790: warning: Cannot understand  *
- on line 790 - I thought it was a doc line
+Currently instant rx_duration always fetching as zero
+in fw_stats debugfs entry if extended peer stats event
+supports.
 
-Fix comment blocks so they don't look like kerneldoc lines
+This patch updates instant rx_duration in fw_stats entry
+based on extended peer stats and maintaining backward
+compatibility for 10.2/10.x.
 
-Signed-off-by: Valdis Kletnieks <valdis.kletnieks@vt.edu>
+Tested HW: QCA9984.
+Tested FW: 10.4-3.6.0.1-00004.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index e24fda5e9087..9478cc0d4f8b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -239,7 +239,7 @@ static void _rtl_usb_io_handler_release(struct ieee80211_hw *hw)
- 	mutex_destroy(&rtlpriv->io.bb_mutex);
+Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.h  |  2 +-
+ drivers/net/wireless/ath/ath10k/debug.c |  3 +++
+ drivers/net/wireless/ath/ath10k/wmi.c   | 37 +++++++++++++++++++++++++++------
+ 3 files changed, 35 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e08a17b..a184097 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -196,7 +196,7 @@ struct ath10k_fw_extd_stats_peer {
+ 	struct list_head list;
+ 
+ 	u8 peer_macaddr[ETH_ALEN];
+-	u32 rx_duration;
++	u64 rx_duration;
+ };
+ 
+ struct ath10k_fw_stats_vdev {
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 32d967a..ac1bcd9 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -305,6 +305,9 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+ 	if (is_end)
+ 		ar->debug.fw_stats_done = true;
+ 
++	if (stats.extended)
++		ar->debug.fw_stats.extended = true;
++
+ 	is_started = !list_empty(&ar->debug.fw_stats.pdevs);
+ 
+ 	if (is_started && !is_end) {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 98a90e4..4f707c6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -8309,7 +8309,7 @@ ath10k_wmi_fw_vdev_stats_fill(const struct ath10k_fw_stats_vdev *vdev,
+ 
+ static void
+ ath10k_wmi_fw_peer_stats_fill(const struct ath10k_fw_stats_peer *peer,
+-			      char *buf, u32 *length)
++			      char *buf, u32 *length, bool extended_peer)
+ {
+ 	u32 len = *length;
+ 	u32 buf_len = ATH10K_FW_STATS_BUF_SIZE;
+@@ -8322,13 +8322,27 @@ ath10k_wmi_fw_peer_stats_fill(const struct ath10k_fw_stats_peer *peer,
+ 			"Peer TX rate", peer->peer_tx_rate);
+ 	len += scnprintf(buf + len, buf_len - len, "%30s %u\n",
+ 			"Peer RX rate", peer->peer_rx_rate);
+-	len += scnprintf(buf + len, buf_len - len, "%30s %llu\n",
+-			"Peer RX duration", peer->rx_duration);
++	if (!extended_peer)
++		len += scnprintf(buf + len, buf_len - len, "%30s %llu\n",
++				"Peer RX duration", peer->rx_duration);
+ 
+ 	len += scnprintf(buf + len, buf_len - len, "\n");
+ 	*length = len;
  }
  
--/**
-+/*
-  *
-  *	Default aggregation handler. Do nothing and just return the oldest skb.
-  */
-@@ -756,7 +756,7 @@ static int rtl_usb_start(struct ieee80211_hw *hw)
- 	return err;
- }
++static void
++ath10k_wmi_fw_extd_peer_stats_fill(const struct ath10k_fw_extd_stats_peer *peer,
++				   char *buf, u32 *length)
++{
++	u32 len = *length;
++	u32 buf_len = ATH10K_FW_STATS_BUF_SIZE;
++
++	len += scnprintf(buf + len, buf_len - len, "%30s %pM\n",
++			"Peer MAC address", peer->peer_macaddr);
++	len += scnprintf(buf + len, buf_len - len, "%30s %llu\n",
++			"Peer RX duration", peer->rx_duration);
++}
++
+ void ath10k_wmi_main_op_fw_stats_fill(struct ath10k *ar,
+ 				      struct ath10k_fw_stats *fw_stats,
+ 				      char *buf)
+@@ -8374,7 +8388,8 @@ void ath10k_wmi_main_op_fw_stats_fill(struct ath10k *ar,
+ 				 "=================");
  
--/**
-+/*
-  *
-  *
-  */
-@@ -786,7 +786,7 @@ static void rtl_usb_cleanup(struct ieee80211_hw *hw)
- 	usb_kill_anchored_urbs(&rtlusb->tx_submitted);
- }
+ 	list_for_each_entry(peer, &fw_stats->peers, list) {
+-		ath10k_wmi_fw_peer_stats_fill(peer, buf, &len);
++		ath10k_wmi_fw_peer_stats_fill(peer, buf, &len,
++					      fw_stats->extended);
+ 	}
  
--/**
-+/*
-  *
-  * We may add some struct into struct rtl_usb later. Do deinit here.
-  *
+ unlock:
+@@ -8432,7 +8447,8 @@ void ath10k_wmi_10x_op_fw_stats_fill(struct ath10k *ar,
+ 				 "=================");
+ 
+ 	list_for_each_entry(peer, &fw_stats->peers, list) {
+-		ath10k_wmi_fw_peer_stats_fill(peer, buf, &len);
++		ath10k_wmi_fw_peer_stats_fill(peer, buf, &len,
++					      fw_stats->extended);
+ 	}
+ 
+ unlock:
+@@ -8541,6 +8557,7 @@ void ath10k_wmi_10_4_op_fw_stats_fill(struct ath10k *ar,
+ 	const struct ath10k_fw_stats_pdev *pdev;
+ 	const struct ath10k_fw_stats_vdev_extd *vdev;
+ 	const struct ath10k_fw_stats_peer *peer;
++	const struct ath10k_fw_extd_stats_peer *extd_peer;
+ 	size_t num_peers;
+ 	size_t num_vdevs;
+ 
+@@ -8603,7 +8620,15 @@ void ath10k_wmi_10_4_op_fw_stats_fill(struct ath10k *ar,
+ 				"=================");
+ 
+ 	list_for_each_entry(peer, &fw_stats->peers, list) {
+-		ath10k_wmi_fw_peer_stats_fill(peer, buf, &len);
++		ath10k_wmi_fw_peer_stats_fill(peer, buf, &len,
++					      fw_stats->extended);
++	}
++
++	if (fw_stats->extended) {
++		list_for_each_entry(extd_peer, &fw_stats->peers_extd, list) {
++			ath10k_wmi_fw_extd_peer_stats_fill(extd_peer, buf,
++							   &len);
++		}
+ 	}
+ 
+ unlock:
+-- 
+2.7.4
 
