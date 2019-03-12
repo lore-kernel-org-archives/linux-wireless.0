@@ -6,114 +6,110 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D1AFC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 15:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2268C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 15:06:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 585052147C
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 15:06:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B7B62147C
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 15:06:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726943AbfCLPGV (ORCPT
+        id S1726910AbfCLPGZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 11:06:21 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:52476 "EHLO mx1.redhat.com"
+        Tue, 12 Mar 2019 11:06:25 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:35678 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726427AbfCLPGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 11:06:20 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        id S1726556AbfCLPGY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Mar 2019 11:06:24 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8277430917AD;
-        Tue, 12 Mar 2019 15:06:20 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id C8D43307CB3B;
+        Tue, 12 Mar 2019 15:06:24 +0000 (UTC)
 Received: from localhost (unknown [10.43.2.83])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5B9056109F;
-        Tue, 12 Mar 2019 15:06:18 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8252127C46;
+        Tue, 12 Mar 2019 15:06:21 +0000 (UTC)
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RFC 01/12] mt76usb: change mt76u_submit_buf
-Date:   Tue, 12 Mar 2019 16:05:55 +0100
-Message-Id: <1552403166-3821-2-git-send-email-sgruszka@redhat.com>
+Subject: [RFC 02/12] mt76: remove rx_page_lock
+Date:   Tue, 12 Mar 2019 16:05:56 +0100
+Message-Id: <1552403166-3821-3-git-send-email-sgruszka@redhat.com>
 In-Reply-To: <1552403166-3821-1-git-send-email-sgruszka@redhat.com>
 References: <1552403166-3821-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Tue, 12 Mar 2019 15:06:20 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.42]); Tue, 12 Mar 2019 15:06:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove unnecessery arguments and change the function name since is
-now used only for RX.
+We can not run mt76u_alloc_buf() concurently, rx_tasklet is stooped
+when mt76u_submit_rx_buffers(). We can remove rx_page_lock.
 
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/usb.c | 30 ++++++++++++------------------
- 1 file changed, 12 insertions(+), 18 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h | 1 -
+ drivers/net/wireless/mediatek/mt76/usb.c  | 8 +-------
+ 2 files changed, 1 insertion(+), 8 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 3d3f0a5fc426..424f9090680d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -132,7 +132,6 @@ struct mt76_queue {
+ 	dma_addr_t desc_dma;
+ 	struct sk_buff *rx_head;
+ 	struct page_frag_cache rx_page;
+-	spinlock_t rx_page_lock;
+ };
+ 
+ struct mt76_sw_queue {
 diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index c5f3b2cdd9b1..661a65cb9c35 100644
+index 661a65cb9c35..883e8a2b519f 100644
 --- a/drivers/net/wireless/mediatek/mt76/usb.c
 +++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -394,18 +394,6 @@ static void mt76u_buf_free(struct mt76u_buf *buf)
- 			  complete_fn, context);
+@@ -292,7 +292,6 @@ static bool mt76u_check_sg(struct mt76_dev *dev)
+ 	struct urb *urb = buf->urb;
+ 	int i;
+ 
+-	spin_lock_bh(&q->rx_page_lock);
+ 	for (i = 0; i < nsgs; i++) {
+ 		struct page *page;
+ 		void *data;
+@@ -306,7 +305,6 @@ static bool mt76u_check_sg(struct mt76_dev *dev)
+ 		offset = data - page_address(page);
+ 		sg_set_page(&urb->sg[i], page, sglen, offset);
+ 	}
+-	spin_unlock_bh(&q->rx_page_lock);
+ 
+ 	if (i < nsgs) {
+ 		int j;
+@@ -569,7 +567,6 @@ static int mt76u_alloc_rx(struct mt76_dev *dev)
+ 	if (!usb->mcu.data)
+ 		return -ENOMEM;
+ 
+-	spin_lock_init(&q->rx_page_lock);
+ 	spin_lock_init(&q->lock);
+ 	q->entry = devm_kcalloc(dev->dev,
+ 				MT_NUM_RX_ENTRIES, sizeof(*q->entry),
+@@ -597,15 +594,12 @@ static void mt76u_free_rx(struct mt76_dev *dev)
+ 	for (i = 0; i < q->ndesc; i++)
+ 		mt76u_buf_free(&q->entry[i].ubuf);
+ 
+-	spin_lock_bh(&q->rx_page_lock);
+ 	if (!q->rx_page.va)
+-		goto out;
++		return;
+ 
+ 	page = virt_to_page(q->rx_page.va);
+ 	__page_frag_cache_drain(page, q->rx_page.pagecnt_bias);
+ 	memset(&q->rx_page, 0, sizeof(q->rx_page));
+-out:
+-	spin_unlock_bh(&q->rx_page_lock);
  }
  
--static int
--mt76u_submit_buf(struct mt76_dev *dev, int dir, int index,
--		 struct mt76u_buf *buf, gfp_t gfp,
--		 usb_complete_t complete_fn, void *context)
--{
--	mt76u_fill_bulk_urb(dev, dir, index, buf, complete_fn,
--			    context);
--	trace_submit_urb(dev, buf->urb);
--
--	return usb_submit_urb(buf->urb, gfp);
--}
--
- static inline struct mt76u_buf
- *mt76u_get_next_rx_entry(struct mt76_queue *q)
- {
-@@ -513,6 +501,16 @@ static void mt76u_complete_rx(struct urb *urb)
- 	spin_unlock_irqrestore(&q->lock, flags);
- }
- 
-+static int
-+mt76u_submit_rx_buf(struct mt76_dev *dev, struct mt76u_buf *buf)
-+{
-+	mt76u_fill_bulk_urb(dev, USB_DIR_IN, MT_EP_IN_PKT_RX, buf,
-+			    mt76u_complete_rx, dev);
-+	trace_submit_urb(dev, buf->urb);
-+
-+	return usb_submit_urb(buf->urb, GFP_ATOMIC);
-+}
-+
- static void mt76u_rx_tasklet(unsigned long data)
- {
- 	struct mt76_dev *dev = (struct mt76_dev *)data;
-@@ -534,9 +532,7 @@ static void mt76u_rx_tasklet(unsigned long data)
- 			if (err < 0)
- 				break;
- 		}
--		mt76u_submit_buf(dev, USB_DIR_IN, MT_EP_IN_PKT_RX,
--				 buf, GFP_ATOMIC,
--				 mt76u_complete_rx, dev);
-+		mt76u_submit_rx_buf(dev, buf);
- 	}
- 	mt76_rx_poll_complete(dev, MT_RXQ_MAIN, NULL);
- 
-@@ -551,9 +547,7 @@ int mt76u_submit_rx_buffers(struct mt76_dev *dev)
- 
- 	spin_lock_irqsave(&q->lock, flags);
- 	for (i = 0; i < q->ndesc; i++) {
--		err = mt76u_submit_buf(dev, USB_DIR_IN, MT_EP_IN_PKT_RX,
--				       &q->entry[i].ubuf, GFP_ATOMIC,
--				       mt76u_complete_rx, dev);
-+		err = mt76u_submit_rx_buf(dev, &q->entry[i].ubuf);
- 		if (err < 0)
- 			break;
- 	}
+ static void mt76u_stop_rx(struct mt76_dev *dev)
 -- 
 1.9.3
 
