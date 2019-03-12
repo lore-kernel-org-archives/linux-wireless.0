@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C73C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDAF7C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:51:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 30527206BA
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:48:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD3A7206BA
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:51:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726890AbfCLXsK (ORCPT
+        id S1727450AbfCLXvX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 19:48:10 -0400
-Received: from mga05.intel.com ([192.55.52.43]:12563 "EHLO mga05.intel.com"
+        Tue, 12 Mar 2019 19:51:23 -0400
+Received: from mga05.intel.com ([192.55.52.43]:12704 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726680AbfCLXsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 19:48:10 -0400
+        id S1726372AbfCLXvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Mar 2019 19:51:23 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2019 16:48:09 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2019 16:51:22 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.58,472,1544515200"; 
-   d="scan'208";a="124950878"
+   d="scan'208";a="124951612"
 Received: from ray.jf.intel.com (HELO [10.7.201.126]) ([10.7.201.126])
-  by orsmga008.jf.intel.com with ESMTP; 12 Mar 2019 16:48:09 -0700
-Subject: Re: [PATCH v5 13/18] x86/split_lock: Add a sysfs interface to allow
- user to enable or disable split lock detection on all CPUs during run time
+  by orsmga008.jf.intel.com with ESMTP; 12 Mar 2019 16:51:22 -0700
+Subject: Re: [PATCH v5 09/18] x86/split_lock: Handle #AC exception for split
+ lock
 To:     Fenghua Yu <fenghua.yu@intel.com>,
         Thomas Gleixner <tglx@linutronix.de>,
         Ingo Molnar <mingo@redhat.com>, H Peter Anvin <hpa@zytor.com>,
@@ -43,7 +43,7 @@ Cc:     linux-kernel <linux-kernel@vger.kernel.org>, x86 <x86@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         kvm@vger.kernel.org
 References: <1552431636-31511-1-git-send-email-fenghua.yu@intel.com>
- <1552431636-31511-14-git-send-email-fenghua.yu@intel.com>
+ <1552431636-31511-10-git-send-email-fenghua.yu@intel.com>
 From:   Dave Hansen <dave.hansen@intel.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=dave.hansen@intel.com; keydata=
@@ -89,23 +89,58 @@ Autocrypt: addr=dave.hansen@intel.com; keydata=
  MTsCeQDdjpgHsj+P2ZDeEKCbma4m6Ez/YWs4+zDm1X8uZDkZcfQlD9NldbKDJEXLIjYWo1PH
  hYepSffIWPyvBMBTW2W5FRjJ4vLRrJSUoEfJuPQ3vW9Y73foyo/qFoURHO48AinGPZ7PC7TF
  vUaNOTjKedrqHkaOcqB185ahG2had0xnFsDPlx5y
-Message-ID: <f41ee19b-0169-052d-7c71-49e5c38ac1db@intel.com>
-Date:   Tue, 12 Mar 2019 16:48:09 -0700
+Message-ID: <5c76062a-e088-fdb3-09e2-7e4423d820a1@intel.com>
+Date:   Tue, 12 Mar 2019 16:51:22 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <1552431636-31511-14-git-send-email-fenghua.yu@intel.com>
+In-Reply-To: <1552431636-31511-10-git-send-email-fenghua.yu@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 On 3/12/19 4:00 PM, Fenghua Yu wrote:
-> The interface /sys/device/system/cpu/split_lock_detect is added
-> to allow user to control split lock detection and show current split
-> lock detection setting.
+> +#ifndef CONFIG_CPU_SUP_INTEL
+>  DO_ERROR(X86_TRAP_AC,     SIGBUS,  BUS_ADRALN, NULL, "alignment check",     alignment_check)
+> +#else
+> +dotraplinkage void do_alignment_check(struct pt_regs *regs, long error_code)
+> +{
+> +	unsigned int trapnr = X86_TRAP_AC;
+> +	char str[] = "alignment check";
+> +	int signr = SIGBUS;
+> +
+> +	RCU_LOCKDEP_WARN(!rcu_is_watching(), "entry code didn't wake RCU");
+> +
+> +	if (notify_die(DIE_TRAP, str, regs, error_code, trapnr, signr) !=
+> +			NOTIFY_STOP) {
+> +		cond_local_irq_enable(regs);
+> +		if (!user_mode(regs)) {
+> +			/*
+> +			 * Only split lock can generate #AC from kernel. Warn
+> +			 * and disable #AC for split lock on current CPU.
+> +			 */
+> +			msr_clear_bit(MSR_TEST_CTL,
+> +				      TEST_CTL_ENABLE_SPLIT_LOCK_DETECT_SHIFT)
 
-Did I miss the Documentation/ for this new sysfs feature?
+I don't see any feature checking here.  Don't we need to see if this MSR
+is supported?
+
+Shouldn't the code here on systems that don't support split lock
+disabling be the same as on CONFIG_CPU_SUP_INTEL=n systems?
+
+> +			WARN_ONCE(1, "A split lock issue is detected.\n");
+> +
+> +			return;
+> +		}
+> +		/* Handle #AC generated from user code. */
+> +		do_trap(X86_TRAP_AC, SIGBUS, "alignment check", regs,
+> +			error_code, BUS_ADRALN, NULL);
+> +	}
+> +}
+> +#endif
+
+So...  Do we really need an Intel-specific #ifdef for this sucker?
