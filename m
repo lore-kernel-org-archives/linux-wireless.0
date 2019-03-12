@@ -2,84 +2,114 @@ Return-Path: <SRS0=9Upc=RP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34863C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 07:13:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D043C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 07:56:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F387214AE
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 07:13:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2456214AF
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 07:56:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="Rrwb3kUu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727348AbfCLHNS (ORCPT
+        id S1727173AbfCLH4n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 03:13:18 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:36262 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726614AbfCLHNS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 03:13:18 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Tue, 12 Mar 2019 03:56:43 -0400
+Received: from mta-p8.oit.umn.edu ([134.84.196.208]:55874 "EHLO
+        mta-p8.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726614AbfCLH4m (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Mar 2019 03:56:42 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-p8.oit.umn.edu (Postfix) with ESMTP id 2CC12A99
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 07:56:41 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at umn.edu
+Received: from mta-p8.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p8.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id WX-DGblfPM3Q for <linux-wireless@vger.kernel.org>;
+        Tue, 12 Mar 2019 02:56:41 -0500 (CDT)
+Received: from mail-it1-f198.google.com (mail-it1-f198.google.com [209.85.166.198])
+        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4259A308125D;
-        Tue, 12 Mar 2019 07:13:18 +0000 (UTC)
-Received: from localhost (ovpn-204-138.brq.redhat.com [10.40.204.138])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 770EC60A9A;
-        Tue, 12 Mar 2019 07:13:15 +0000 (UTC)
-Date:   Tue, 12 Mar 2019 08:13:14 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Rosen Penev <rosenp@gmail.com>
-Cc:     Joerg Roedel <joro@8bytes.org>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Samuel Sieb <samuel@sieb.net>,
-        Alexander Duyck <alexander.h.duyck@linux.intel.com>,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, jan.viktorin@gmail.com
-Subject: Re: MT76x2U crashes XHCI driver on AMD Ryzen system
-Message-ID: <20190312071314.GB2483@redhat.com>
-References: <20190226103450.GA2989@redhat.com>
- <20190226104413.GH20740@8bytes.org>
- <20190226112407.GB2989@redhat.com>
- <20190228090411.GA24938@redhat.com>
- <20190228104223.GA2749@redhat.com>
- <20190228121948.GD6072@redhat.com>
- <20190228134029.GC1594@8bytes.org>
- <20190304071037.GA2787@redhat.com>
- <CAKxU2N-k-9DCYBv6W3CohL963dr3AeY3VHyt8FrUuo=BfacDsw@mail.gmail.com>
- <20190311084319.GA3310@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190311084319.GA3310@redhat.com>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.49]); Tue, 12 Mar 2019 07:13:18 +0000 (UTC)
+        by mta-p8.oit.umn.edu (Postfix) with ESMTPS id F277AA98
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 02:56:40 -0500 (CDT)
+Received: by mail-it1-f198.google.com with SMTP id 190so1459638itl.7
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2019 00:56:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=umn.edu; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=GHwL4zBqlKlQckqtsDRpff1AB+Nxp6P8f5kwUycKt+I=;
+        b=Rrwb3kUuQTLkon4rAku7XQ7Jg4lHHS8eKfKk7+CJayAofX14LiY/ADR2yL+fzWKzy/
+         yQFxzC1Xd9tahI3szGNNGQbqD6645mJg5E4tgzoql2LTQnvsAfobz/okxbkAuaRPZkTq
+         aEG1wFcTtu2t+15pLdM1RroMNIf4veY2WFEyp0H+FXiGgL74CxcrdfI5v06AQn6VCEAF
+         ZRE8j7dkwzGExBmRsLKH1Y2rhBezbVfJ6BQFfqGf2PbMHY2WSW5gvaUlitFQUKRxoJE+
+         zz2ze4xC5Ipl6ISpL1fqAEG5KH+mWcvBP7H0HR5MBqoEJZEcWONUYUTbJd+PwFP8h5FP
+         tTQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=GHwL4zBqlKlQckqtsDRpff1AB+Nxp6P8f5kwUycKt+I=;
+        b=Z3jlljXBbozgjNiOOkMt/izMFePm+iC3mFBnv133l2UvwldNoEnG1i4kf4J02mmVWV
+         VQGUV+LW5vOhEa4JuVtYUWC6AxjnI8pctGokt/92kPNsR+Hp/vZiJ5Zn/R4ddqj0YtZ0
+         keABco03ZuNIKHHyoHCwvINtlvSLxFabw3zU/vUkPqDzxHJIovBMF86RdH8gI+axu7mg
+         1sEw5iJBjuJnupKAAsnUugXvbEQp3HzdZIoabq3oP8lk+KTTAHeuyodFBTeR0M40AtGB
+         /nXzXB7O0aLUY3IrAnwS4f24SRG/AiLP+D3PisibQtuPXuFs7vBfSB3lJFIODKiQbpoW
+         MQTw==
+X-Gm-Message-State: APjAAAVY7Gahbgt/5X4KmuZE9zjfMBDI2xT2B78H2JEUTfo9p3ZJ49Ic
+        EMkbpbzZDLSMSY0W4vyj5FwqA0S6R6Q6e3rZR2zJ5YXN2O/NVp5geponBT8hU/JWQwrCq3h5N7c
+        CcAysxywO17BOVH5hMKb5aChKn704JHc=
+X-Received: by 2002:a6b:7219:: with SMTP id n25mr10363256ioc.117.1552377400154;
+        Tue, 12 Mar 2019 00:56:40 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqwCOLy0p/Zx9y/3ip/ZQBpQCX4CLC4JCn7dfHgj8FIju2Odvfqkl6BklClOE5Sd+YohY31Vig==
+X-Received: by 2002:a6b:7219:: with SMTP id n25mr10363242ioc.117.1552377399938;
+        Tue, 12 Mar 2019 00:56:39 -0700 (PDT)
+Received: from bee.dtc.umn.edu (cs-bee-u.cs.umn.edu. [128.101.106.63])
+        by smtp.gmail.com with ESMTPSA id s10sm2669419ioc.54.2019.03.12.00.56.38
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 12 Mar 2019 00:56:38 -0700 (PDT)
+From:   Kangjie Lu <kjlu@umn.edu>
+To:     kjlu@umn.edu
+Cc:     pakki001@umn.edu, Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] net: rtlwifi: fix a potential NULL pointer dereference
+Date:   Tue, 12 Mar 2019 02:56:33 -0500
+Message-Id: <20190312075633.573-1-kjlu@umn.edu>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Mar 11, 2019 at 09:43:19AM +0100, Stanislaw Gruszka wrote:
-> > > However after fixing that mt76usb still did not work. To make things
-> > > work we had to change rx frag size from 2048 to PAGE_SIZE and change
-> > > virt_to_head_page() to virt_to_page() when setting SG's.
-> >
-> > > I think I understand why first change was needed. If we do 2 separate
-> > > dma maps of 2 different buffers in single page i.e (PAGE + off=0
-> > > and PAGE + off=2048) it causes problem. So either map_sg() return
-> > > error which mt76usb does not handle correctly or there is issue
-> > > in AMD IOMMU because two dma maps use the same page.
-> 
-> Any comment on that? Is fine or not to do 2 or more dma mappings
-> within the same single page on AMD IOMMU? If not, is there any
-> mechanism for drivers to find out about this limitation to prevent
-> to prepare wrong SG buffers?
+In case alloc_workqueue fails, the fix reports the error and
+returns to avoid NULL pointer dereference.
 
-FTR: it was confirmed by Jan (bug reporter) the 2 or more dma mappings
-within single page works with AMD IOMMU. Most likely it was needed
-previously to workaround this sg->offset problem until proper fix to
-AMD IOMMU was applied.
+Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Stanislaw 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 217d2a7a43c7..ac746c322554 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -448,6 +448,11 @@ static void _rtl_init_deferred_work(struct ieee80211_hw *hw)
+ 	/* <2> work queue */
+ 	rtlpriv->works.hw = hw;
+ 	rtlpriv->works.rtl_wq = alloc_workqueue("%s", 0, 0, rtlpriv->cfg->name);
++	if (unlikely(!rtlpriv->works.rtl_wq)) {
++		pr_err("Failed to allocate work queue\n");
++		return;
++	}
++
+ 	INIT_DELAYED_WORK(&rtlpriv->works.watchdog_wq,
+ 			  (void *)rtl_watchdog_wq_callback);
+ 	INIT_DELAYED_WORK(&rtlpriv->works.ips_nic_off_wq,
+-- 
+2.17.1
+
