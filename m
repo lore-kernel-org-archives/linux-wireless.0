@@ -6,26 +6,26 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DD0DC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:11:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 111C6C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:11:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E905F206BA
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:11:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDE38217D9
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:11:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727468AbfCLXK6 (ORCPT
+        id S1727856AbfCLXLK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 19:10:58 -0400
-Received: from mga18.intel.com ([134.134.136.126]:65104 "EHLO mga18.intel.com"
+        Tue, 12 Mar 2019 19:11:10 -0400
+Received: from mga02.intel.com ([134.134.136.20]:34564 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727188AbfCLXIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727032AbfCLXIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 12 Mar 2019 19:08:15 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2019 16:08:14 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2019 16:08:14 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.58,472,1544515200"; 
-   d="scan'208";a="326744246"
+   d="scan'208";a="326744243"
 Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
   by fmsmga006.fm.intel.com with ESMTP; 12 Mar 2019 16:08:14 -0700
 From:   Fenghua Yu <fenghua.yu@intel.com>
@@ -43,9 +43,9 @@ Cc:     "linux-kernel" <linux-kernel@vger.kernel.org>,
         netdev@vger.kernel.org, kvm@vger.kernel.org,
         Xiaoyao Li <xiaoyao.li@linux.intel.com>,
         Fenghua Yu <fenghua.yu@intel.com>
-Subject: [PATCH v5 11/18] kvm/vmx: Emulate MSR TEST_CTL
-Date:   Tue, 12 Mar 2019 16:00:29 -0700
-Message-Id: <1552431636-31511-12-git-send-email-fenghua.yu@intel.com>
+Subject: [PATCH v5 10/18] kvm/x86: Emulate MSR IA32_CORE_CAPABILITY
+Date:   Tue, 12 Mar 2019 16:00:28 -0700
+Message-Id: <1552431636-31511-11-git-send-email-fenghua.yu@intel.com>
 X-Mailer: git-send-email 2.5.0
 In-Reply-To: <1552431636-31511-1-git-send-email-fenghua.yu@intel.com>
 References: <1552431636-31511-1-git-send-email-fenghua.yu@intel.com>
@@ -56,150 +56,144 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Xiaoyao Li <xiaoyao.li@linux.intel.com>
 
-A control bit (bit 29) in TEST_CTL MSR 0x33 will be introduced in
-future x86 processors. When bit 29 is set, the processor causes #AC
-exception for split locked accesses at all CPL.
+MSR IA32_CORE_CAPABILITY is a feature-enumerating MSR, bit 5 of which
+reports the capability of enabling detection of split locks (will be
+supported on future processors based on Tremont microarchitecture and
+later).
+
+CPUID.(EAX=7H,ECX=0):EDX[30] will enumerate the presence of the
+IA32_CORE_CAPABILITY MSR.
 
 Please check the latest Intel 64 and IA-32 Architectures Software
 Developer's Manual for more detailed information on the MSR and
 the split lock bit.
 
-This patch emulate MSR TEST_CTL with vmx->msr_test_ctl and does the
-following:
-1. As we emulate MSR TEST_CTL of guest, we should enable the related bits
-in CORE_CAPABILITY to corretly report this feature to guest.
+Since MSR_IA32_CORE_CAPABILITY is a feature-enumerating MSR, we can
+emulate it in software regardless of host's capability. What we need to
+do is to set the right value of it to report the capability of guest.
 
-2. Differentiate MSR TEST_CTL between host and guest.
+In this patch we just set the guest's core_capability as 0, because we
+haven't added support of the features it indicates to guest. It's for
+bisectability.
 
 Signed-off-by: Xiaoyao Li <xiaoyao.li@linux.intel.com>
 Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
 ---
- arch/x86/kvm/vmx/vmx.c | 35 +++++++++++++++++++++++++++++++++++
- arch/x86/kvm/vmx/vmx.h |  1 +
- arch/x86/kvm/x86.c     | 17 ++++++++++++++++-
- 3 files changed, 52 insertions(+), 1 deletion(-)
+ arch/x86/include/asm/kvm_host.h |  2 ++
+ arch/x86/kvm/cpuid.c            |  6 ++++++
+ arch/x86/kvm/x86.c              | 24 ++++++++++++++++++++++++
+ 3 files changed, 32 insertions(+)
 
-diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
-index 30a6bcd735ec..270c6566fd5a 100644
---- a/arch/x86/kvm/vmx/vmx.c
-+++ b/arch/x86/kvm/vmx/vmx.c
-@@ -1659,6 +1659,12 @@ static int vmx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
- 	u32 index;
- 
- 	switch (msr_info->index) {
-+	case MSR_TEST_CTL:
-+		if (!msr_info->host_initiated &&
-+		    !(vcpu->arch.core_capability & CORE_CAP_SPLIT_LOCK_DETECT))
-+			return 1;
-+		msr_info->data = vmx->msr_test_ctl;
-+		break;
- #ifdef CONFIG_X86_64
- 	case MSR_FS_BASE:
- 		msr_info->data = vmcs_readl(GUEST_FS_BASE);
-@@ -1799,6 +1805,14 @@ static int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
- 	u32 index;
- 
- 	switch (msr_index) {
-+	case MSR_TEST_CTL:
-+		if (!(vcpu->arch.core_capability & CORE_CAP_SPLIT_LOCK_DETECT))
-+			return 1;
-+
-+		if (data & ~TEST_CTL_ENABLE_SPLIT_LOCK_DETECT)
-+			return 1;
-+		vmx->msr_test_ctl = data;
-+		break;
- 	case MSR_EFER:
- 		ret = kvm_set_msr_common(vcpu, msr_info);
- 		break;
-@@ -4085,6 +4099,9 @@ static void vmx_vcpu_setup(struct vcpu_vmx *vmx)
- 
- 	vmx->arch_capabilities = kvm_get_arch_capabilities();
- 
-+	/* disable AC split lock by default */
-+	vmx->msr_test_ctl = 0;
-+
- 	vm_exit_controls_init(vmx, vmx_vmexit_ctrl());
- 
- 	/* 22.2.1, 20.8.1 */
-@@ -4122,6 +4139,7 @@ static void vmx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)
- 
- 	vmx->rmode.vm86_active = 0;
- 	vmx->spec_ctrl = 0;
-+	vmx->msr_test_ctl = 0;
- 
- 	vcpu->arch.microcode_version = 0x100000000ULL;
- 	vmx->vcpu.arch.regs[VCPU_REGS_RDX] = get_rdx_init_val();
-@@ -6321,6 +6339,21 @@ static void atomic_switch_perf_msrs(struct vcpu_vmx *vmx)
- 					msrs[i].host, false);
- }
- 
-+static void atomic_switch_msr_test_ctl(struct vcpu_vmx *vmx)
-+{
-+	u64 host_msr_test_ctl;
-+
-+	/* if TEST_CTL MSR doesn't exist on the hardware, we do nothing */
-+	if (rdmsrl_safe(MSR_TEST_CTL, &host_msr_test_ctl))
-+		return;
-+
-+	if (host_msr_test_ctl == vmx->msr_test_ctl)
-+		clear_atomic_switch_msr(vmx, MSR_TEST_CTL);
-+	else
-+		add_atomic_switch_msr(vmx, MSR_TEST_CTL, vmx->msr_test_ctl,
-+				      host_msr_test_ctl, false);
-+}
-+
- static void vmx_arm_hv_timer(struct vcpu_vmx *vmx, u32 val)
- {
- 	vmcs_write32(VMX_PREEMPTION_TIMER_VALUE, val);
-@@ -6562,6 +6595,8 @@ static void vmx_vcpu_run(struct kvm_vcpu *vcpu)
- 
- 	atomic_switch_perf_msrs(vmx);
- 
-+	atomic_switch_msr_test_ctl(vmx);
-+
- 	vmx_update_hv_timer(vcpu);
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 180373360e34..2c53df4a5a2a 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -570,6 +570,7 @@ struct kvm_vcpu_arch {
+ 	bool tpr_access_reporting;
+ 	u64 ia32_xss;
+ 	u64 microcode_version;
++	u64 core_capability;
  
  	/*
-diff --git a/arch/x86/kvm/vmx/vmx.h b/arch/x86/kvm/vmx/vmx.h
-index 0ac0a64c7790..8549cba0fb75 100644
---- a/arch/x86/kvm/vmx/vmx.h
-+++ b/arch/x86/kvm/vmx/vmx.h
-@@ -191,6 +191,7 @@ struct vcpu_vmx {
- 	u64		      msr_guest_kernel_gs_base;
- #endif
+ 	 * Paging state of the vcpu
+@@ -1527,6 +1528,7 @@ int kvm_pv_send_ipi(struct kvm *kvm, unsigned long ipi_bitmap_low,
+ 		    unsigned long icr, int op_64_bit);
  
-+	u64		      msr_test_ctl;
- 	u64		      arch_capabilities;
- 	u64		      spec_ctrl;
+ u64 kvm_get_arch_capabilities(void);
++u64 kvm_get_core_capability(void);
+ void kvm_define_shared_msr(unsigned index, u32 msr);
+ int kvm_set_shared_msr(unsigned index, u64 val, u64 mask);
  
+diff --git a/arch/x86/kvm/cpuid.c b/arch/x86/kvm/cpuid.c
+index c07958b59f50..b7fb1822a1e5 100644
+--- a/arch/x86/kvm/cpuid.c
++++ b/arch/x86/kvm/cpuid.c
+@@ -505,6 +505,12 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
+ 			 * if the host doesn't support it.
+ 			 */
+ 			entry->edx |= F(ARCH_CAPABILITIES);
++			/*
++			 * Since we emulate MSR IA32_CORE_CAPABILITY in
++			 * software, we can always enable it for guest
++			 * regardless of host's capability.
++			 */
++			entry->edx |= F(CORE_CAPABILITY);
+ 		} else {
+ 			entry->ebx = 0;
+ 			entry->ecx = 0;
 diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
-index e20cbb8c2b74..ad1df965574e 100644
+index 941f932373d0..e20cbb8c2b74 100644
 --- a/arch/x86/kvm/x86.c
 +++ b/arch/x86/kvm/x86.c
-@@ -1228,7 +1228,22 @@ EXPORT_SYMBOL_GPL(kvm_get_arch_capabilities);
+@@ -1158,6 +1158,7 @@ static u32 emulated_msrs[] = {
  
- u64 kvm_get_core_capability(void)
- {
--	return 0;
-+	u64 data;
-+
-+	rdmsrl_safe(MSR_IA32_CORE_CAPABILITY, &data);
-+
-+	/* mask non-virtualizable functions */
-+	data &= CORE_CAP_SPLIT_LOCK_DETECT;
-+
-+	/*
-+	 * There will be a list of FMS values that have split lock detection
-+	 * but lack the CORE CAPABILITY MSR. In this case, we can set
-+	 * CORE_CAP_SPLIT_LOCK_DETECT since we emulate MSR CORE_CAPABILITY.
-+	 */
-+	if (boot_cpu_has(X86_FEATURE_SPLIT_LOCK_DETECT))
-+		data |= CORE_CAP_SPLIT_LOCK_DETECT;
-+
-+	return data;
+ 	MSR_IA32_TSC_ADJUST,
+ 	MSR_IA32_TSCDEADLINE,
++	MSR_IA32_CORE_CAPABILITY,
+ 	MSR_IA32_MISC_ENABLE,
+ 	MSR_IA32_MCG_STATUS,
+ 	MSR_IA32_MCG_CTL,
+@@ -1197,6 +1198,7 @@ static u32 msr_based_features[] = {
+ 
+ 	MSR_F10H_DECFG,
+ 	MSR_IA32_UCODE_REV,
++	MSR_IA32_CORE_CAPABILITY,
+ 	MSR_IA32_ARCH_CAPABILITIES,
+ };
+ 
+@@ -1224,9 +1226,18 @@ u64 kvm_get_arch_capabilities(void)
  }
- EXPORT_SYMBOL_GPL(kvm_get_core_capability);
+ EXPORT_SYMBOL_GPL(kvm_get_arch_capabilities);
  
++u64 kvm_get_core_capability(void)
++{
++	return 0;
++}
++EXPORT_SYMBOL_GPL(kvm_get_core_capability);
++
+ static int kvm_get_msr_feature(struct kvm_msr_entry *msr)
+ {
+ 	switch (msr->index) {
++	case MSR_IA32_CORE_CAPABILITY:
++		msr->data = kvm_get_core_capability();
++		break;
+ 	case MSR_IA32_ARCH_CAPABILITIES:
+ 		msr->data = kvm_get_arch_capabilities();
+ 		break;
+@@ -2445,6 +2456,12 @@ int kvm_set_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 		break;
+ 	case MSR_EFER:
+ 		return set_efer(vcpu, data);
++	case MSR_IA32_CORE_CAPABILITY:
++		if (!msr_info->host_initiated)
++			return 1;
++
++		vcpu->arch.core_capability = data;
++		break;
+ 	case MSR_K7_HWCR:
+ 		data &= ~(u64)0x40;	/* ignore flush filter disable */
+ 		data &= ~(u64)0x100;	/* ignore ignne emulation enable */
+@@ -2750,6 +2767,12 @@ int kvm_get_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 	case MSR_IA32_TSC:
+ 		msr_info->data = kvm_scale_tsc(vcpu, rdtsc()) + vcpu->arch.tsc_offset;
+ 		break;
++	case MSR_IA32_CORE_CAPABILITY:
++		if (!msr_info->host_initiated &&
++		    !guest_cpuid_has(vcpu, X86_FEATURE_CORE_CAPABILITY))
++			return 1;
++		msr_info->data = vcpu->arch.core_capability;
++		break;
+ 	case MSR_MTRRcap:
+ 	case 0x200 ... 0x2ff:
+ 		return kvm_mtrr_get_msr(vcpu, msr_info->index, &msr_info->data);
+@@ -8725,6 +8748,7 @@ struct kvm_vcpu *kvm_arch_vcpu_create(struct kvm *kvm,
+ 
+ int kvm_arch_vcpu_setup(struct kvm_vcpu *vcpu)
+ {
++	vcpu->arch.core_capability = kvm_get_core_capability();
+ 	vcpu->arch.msr_platform_info = MSR_PLATFORM_INFO_CPUID_FAULT;
+ 	kvm_vcpu_mtrr_init(vcpu);
+ 	vcpu_load(vcpu);
 -- 
 2.19.1
 
