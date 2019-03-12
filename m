@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46CAAC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:43:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C73C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:48:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EFDB206BA
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:43:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30527206BA
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Mar 2019 23:48:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726880AbfCLXn1 (ORCPT
+        id S1726890AbfCLXsK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 19:43:27 -0400
-Received: from mga17.intel.com ([192.55.52.151]:48541 "EHLO mga17.intel.com"
+        Tue, 12 Mar 2019 19:48:10 -0400
+Received: from mga05.intel.com ([192.55.52.43]:12563 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726535AbfCLXn0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 19:43:26 -0400
+        id S1726680AbfCLXsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Mar 2019 19:48:10 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2019 16:43:26 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2019 16:48:09 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.58,472,1544515200"; 
-   d="scan'208";a="124949581"
+   d="scan'208";a="124950878"
 Received: from ray.jf.intel.com (HELO [10.7.201.126]) ([10.7.201.126])
-  by orsmga008.jf.intel.com with ESMTP; 12 Mar 2019 16:43:25 -0700
-Subject: Re: [PATCH v5 12/18] x86/split_lock: Enable #AC for split lock by
- default
+  by orsmga008.jf.intel.com with ESMTP; 12 Mar 2019 16:48:09 -0700
+Subject: Re: [PATCH v5 13/18] x86/split_lock: Add a sysfs interface to allow
+ user to enable or disable split lock detection on all CPUs during run time
 To:     Fenghua Yu <fenghua.yu@intel.com>,
         Thomas Gleixner <tglx@linutronix.de>,
         Ingo Molnar <mingo@redhat.com>, H Peter Anvin <hpa@zytor.com>,
@@ -43,7 +43,7 @@ Cc:     linux-kernel <linux-kernel@vger.kernel.org>, x86 <x86@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         kvm@vger.kernel.org
 References: <1552431636-31511-1-git-send-email-fenghua.yu@intel.com>
- <1552431636-31511-13-git-send-email-fenghua.yu@intel.com>
+ <1552431636-31511-14-git-send-email-fenghua.yu@intel.com>
 From:   Dave Hansen <dave.hansen@intel.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=dave.hansen@intel.com; keydata=
@@ -89,85 +89,23 @@ Autocrypt: addr=dave.hansen@intel.com; keydata=
  MTsCeQDdjpgHsj+P2ZDeEKCbma4m6Ez/YWs4+zDm1X8uZDkZcfQlD9NldbKDJEXLIjYWo1PH
  hYepSffIWPyvBMBTW2W5FRjJ4vLRrJSUoEfJuPQ3vW9Y73foyo/qFoURHO48AinGPZ7PC7TF
  vUaNOTjKedrqHkaOcqB185ahG2had0xnFsDPlx5y
-Message-ID: <8098a229-e853-12fc-c8e8-d5e2cb4436a2@intel.com>
-Date:   Tue, 12 Mar 2019 16:43:25 -0700
+Message-ID: <f41ee19b-0169-052d-7c71-49e5c38ac1db@intel.com>
+Date:   Tue, 12 Mar 2019 16:48:09 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <1552431636-31511-13-git-send-email-fenghua.yu@intel.com>
+In-Reply-To: <1552431636-31511-14-git-send-email-fenghua.yu@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 On 3/12/19 4:00 PM, Fenghua Yu wrote:
-> Split locked access locks bus and degradates overall memory access
+> The interface /sys/device/system/cpu/split_lock_detect is added
+> to allow user to control split lock detection and show current split
+> lock detection setting.
 
-Either "split locked accesses lock" or "A split lock access locks".
-
-s/degradates/degrades/
-
-> performance. When split lock detection feature is enumerated, we want to
-
-		   ^ the
-
-Also, you need to go back and remove all the "we"'s.  Our friendly x86
-maintainers prefer phrasing this like:
-
-	 When split lock detection feature is enumerated, enable the 	
-	feature...
-
-> enable the feature by default to find any split lock issue and then fix
-> the issue.
-
-Generally, the changelogs here are passable but pretty rough.  They have
-a ton of issues like this and I'm sure they can be improved.  I'm sure
-that with some love an attention they can be brought up to the highest
-standards.
-
-> +#define DISABLE_SPLIT_LOCK_DETECT 0
-> +#define ENABLE_SPLIT_LOCK_DETECT  1
-
-These are a bit overkill, but oh well.
-
-> +static int split_lock_detect_val;
-> +
->  /*
->   * Just in case our CPU detection goes bad, or you have a weird system,
->   * allow a way to override the automatic disabling of MPX.
-> @@ -161,10 +166,35 @@ static bool bad_spectre_microcode(struct cpuinfo_x86 *c)
->  	return false;
->  }
->  
-> +static u32 new_sp_test_ctl_val(u32 test_ctl_val)
-> +{
-> +	/* Change the split lock setting. */
-> +	if (split_lock_detect_val == DISABLE_SPLIT_LOCK_DETECT)
-> +		test_ctl_val &= ~TEST_CTL_ENABLE_SPLIT_LOCK_DETECT;
-> +	else
-> +		test_ctl_val |= TEST_CTL_ENABLE_SPLIT_LOCK_DETECT;
-> +
-> +	return test_ctl_val;
-> +}
-> +
-> +static void init_split_lock_detect(struct cpuinfo_x86 *c)
-> +{
-> +	if (cpu_has(c, X86_FEATURE_SPLIT_LOCK_DETECT)) {
-> +		u32 l, h;
-> +
-> +		rdmsr(MSR_TEST_CTL, l, h);
-> +		l = new_sp_test_ctl_val(l);
-> +		wrmsr(MSR_TEST_CTL, l, h);
-> +		pr_info_once("#AC for split lock is enabled\n");
-> +	}
-> +}
-
-Please make sure you've removed all the "#AC for split lock"
-nomenclature in these patches.  It's acronym nonsense and there's no
-reason to be so oblique.  Just say "split lock detection enabled".  This
-also needs a proper prefix, like "x86/intel:".  Look around for examples.
-
-
+Did I miss the Documentation/ for this new sysfs feature?
