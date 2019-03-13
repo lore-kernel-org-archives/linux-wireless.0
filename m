@@ -2,88 +2,91 @@ Return-Path: <SRS0=EMXR=RQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A92FCC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 19:30:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC997C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 22:55:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7275A2075C
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 19:30:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1552505447;
-	bh=c2HUv8/0cgEKg+1TA/chHORLaO1npFiBLFmYD92ruCY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=p33mIgwZNWk8SeAm7RogLfgIyM9yWPzCKxkRzh4xt8j1kZpQmHmpsFvTnYzFtK3LY
-	 rbDGm1ikOWoJgIBQEnK476qpjBGzjSZoxwJkkWDiis0hHyhYPZUDO4R/Qsbpg/GPFl
-	 JZlcC+px5lZL0pLRB3uZ0oqV80zdX0dHFF8UZefk=
+	by mail.kernel.org (Postfix) with ESMTP id AF00E2087C
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 22:55:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728020AbfCMTak (ORCPT
+        id S1726689AbfCMWzh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Mar 2019 15:30:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43008 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726639AbfCMTMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Mar 2019 15:12:25 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9DC49213A2;
-        Wed, 13 Mar 2019 19:12:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1552504345;
-        bh=c2HUv8/0cgEKg+1TA/chHORLaO1npFiBLFmYD92ruCY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1dKj9SAIACvr/HalmXN03y4sKcko7QTSuKH3jCIbysez1alC0uMgt3T95NIjinBW8
-         Ug+b6bxLTsn+Tawku6tZ61GjwxU54RFrObwDiqyRnM0zbCdmPAPQ2h+jLmpbCl2R+K
-         dZmT0uJyAyLTxrqm8RwwiM0U5v4TaiUTrXrKXt8s=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Li RongQing <lirongqing@baidu.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.20 50/60] mac80211_hwsim: propagate genlmsg_reply return code
-Date:   Wed, 13 Mar 2019 15:10:11 -0400
-Message-Id: <20190313191021.158171-50-sashal@kernel.org>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190313191021.158171-1-sashal@kernel.org>
-References: <20190313191021.158171-1-sashal@kernel.org>
+        Wed, 13 Mar 2019 18:55:37 -0400
+Received: from mail-ed1-f44.google.com ([209.85.208.44]:33741 "EHLO
+        mail-ed1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725876AbfCMWzh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Mar 2019 18:55:37 -0400
+Received: by mail-ed1-f44.google.com with SMTP id d12so3004173edp.0
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2019 15:55:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=ThEzivQajH3MEZnXuOcJ60aDGQ8LHJnqBac7DXicpN0=;
+        b=qdoQPxXG4ORuXvDpU9WE/EUlfB1fwL36C7Pr/FN8w+oCtsVUl+FHyUeJBKnLeCHcwE
+         jehCe+DfDYZvdAtK+/Z+lLSBVB6fuowbWaETHcJ9sr58WE8YlRR3ACeDwQeauuVILMZc
+         WWIWWhPA3uI2pPVUNd4c999EtGZ2Evi/U35HBSGmxKlCaEfaevcSl/DPYt+NT4Cmgo//
+         ctS+j7q77BBi5stjrauZjmMZKqK4ZbcJbu8EmJnj6C/QGJU2P7AbWL815bU67uR6RkXW
+         v8Z1od0FzseqKyuOKLY1xYwjAvJfYtQpqim3jLUumeRqLQ3igc11WWzNhYtix+8I0Ls9
+         augA==
+X-Gm-Message-State: APjAAAU8rtuHMMqMHE3Ic6mAcBAATAVWyveCuNi5KBMkQwNI7xnmqH3P
+        1ayD9A440OJLFFXFSoCvDBAR8RadYzs=
+X-Google-Smtp-Source: APXvYqwnuarBSJEasYQvVcVKOSrUoBdeDe8rxjM1LdD978PcfjcWTGKwh770NQ9C0TnGcRohOwt/cw==
+X-Received: by 2002:a17:906:7711:: with SMTP id q17mr30839781ejm.174.1552517735667;
+        Wed, 13 Mar 2019 15:55:35 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
+        by smtp.gmail.com with ESMTPSA id w6sm712231eja.50.2019.03.13.15.55.34
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 13 Mar 2019 15:55:34 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id CDC6B18200E; Wed, 13 Mar 2019 23:55:33 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: Re: [RFC] mac80211: rework locking for txq scheduling / airtime fairness
+In-Reply-To: <20190313181531.62539-1-nbd@nbd.name>
+References: <20190313181531.62539-1-nbd@nbd.name>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Wed, 13 Mar 2019 23:55:33 +0100
+Message-ID: <87va0mz8nu.fsf@toke.dk>
 MIME-Version: 1.0
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Li RongQing <lirongqing@baidu.com>
+Felix Fietkau <nbd@nbd.name> writes:
 
-[ Upstream commit 17407715240456448e4989bee46ffc93991add83 ]
+> Holding the lock around the entire duration of tx scheduling can
+> create some nasty lock contention, especially when processing airtime
+> information from the tx status or the rx path.
 
-genlmsg_reply can fail, so propagate its return code
+Right, I can see how that could become an issue at higher loads than
+what I tested with :)
 
-Signed-off-by: Li RongQing <lirongqing@baidu.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/mac80211_hwsim.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Improve locking by only holding the active_txq_lock for lookups /
+> scheduling list modifications.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index d1464e3e1be2..47a4610e7a5b 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3449,7 +3449,7 @@ static int hwsim_get_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 			goto out_err;
- 		}
- 
--		genlmsg_reply(skb, info);
-+		res = genlmsg_reply(skb, info);
- 		break;
- 	}
- 
--- 
-2.19.1
+So the (potential) issue I see with this modification is that it
+requires the driver to ensure that it will not interleave two different
+scheduling rounds for the same acno. I.e., another call to
+schedule_start() will reset the round counter and something needs to
+guarantee that this doesn't happen until the driver has actually
+finished the previous round.
 
+I am not sure to what extent this would *actually* be a problem. For
+ath9k, for instance, there's already the in-driver chan_lock (although
+the call to ieee80211_txq_schedule_start() would then have to be moved
+into the section covered by that lock). But it does introduce an
+implicit dependency in the API, which should at least be documented.
+
+If memory serves, avoiding this implicit dependency was the original
+reason I had for adding the full lock around everything. I can't think
+of any other reason right now, but if I do think of something I'll be
+sure to let you know :)
+
+-Toke
