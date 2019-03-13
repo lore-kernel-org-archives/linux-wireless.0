@@ -2,41 +2,41 @@ Return-Path: <SRS0=EMXR=RQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UPPERCASE_50_75,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 300AEC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 04:14:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E0F9C4360F
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 04:15:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBB792070D
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 04:14:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7ED62070D
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 04:15:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726974AbfCMEO5 (ORCPT
+        id S1726985AbfCMEPA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Mar 2019 00:14:57 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:34984 "EHLO
+        Wed, 13 Mar 2019 00:15:00 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:34975 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726183AbfCMEOt (ORCPT
+        with ESMTP id S1726033AbfCMEOs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Mar 2019 00:14:49 -0400
+        Wed, 13 Mar 2019 00:14:48 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x2D4EIVm000419, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x2D4EF3Z000403, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x2D4EIVm000419
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x2D4EF3Z000403
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Wed, 13 Mar 2019 12:14:18 +0800
+        Wed, 13 Mar 2019 12:14:15 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Wed, 13 Mar 2019 12:14:17 +0800
+ 14.3.408.0; Wed, 13 Mar 2019 12:14:14 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <johannes@sipsolutions.net>
 CC:     <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>,
         <sgruszka@redhat.com>, <pkshih@realtek.com>, <tehuang@realtek.com>,
         <briannorris@chromium.org>, <Larry.Finger@lwfinger.net>
-Subject: [PATCH v8 06/14] rtw88: fw and efuse files
-Date:   Wed, 13 Mar 2019 12:13:55 +0800
-Message-ID: <1552450443-351-7-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v8 02/14] rtw88: core files
+Date:   Wed, 13 Mar 2019 12:13:51 +0800
+Message-ID: <1552450443-351-3-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
 References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
@@ -50,1085 +50,863 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-fw and efuse files for Realtek 802.11ac wireless network chips
+core files for Realtek 802.11ac wireless network chips
 
 Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/efuse.c | 160 ++++++++
- drivers/net/wireless/realtek/rtw88/efuse.h |  26 ++
- drivers/net/wireless/realtek/rtw88/fw.c    | 633 +++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/fw.h    | 222 ++++++++++
- 4 files changed, 1041 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/fw.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/fw.h
+ drivers/net/wireless/realtek/rtw88/ps.c   | 166 +++++++++++++
+ drivers/net/wireless/realtek/rtw88/ps.h   |  20 ++
+ drivers/net/wireless/realtek/rtw88/regd.c | 391 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/regd.h |  67 +++++
+ drivers/net/wireless/realtek/rtw88/sec.c  | 120 +++++++++
+ drivers/net/wireless/realtek/rtw88/sec.h  |  39 +++
+ 6 files changed, 803 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/ps.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/ps.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/regd.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/regd.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sec.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sec.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/efuse.c b/drivers/net/wireless/realtek/rtw88/efuse.c
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
 new file mode 100644
-index 0000000..d41072c
+index 0000000..c0dcc07
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/efuse.c
-@@ -0,0 +1,160 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#include "main.h"
-+#include "efuse.h"
-+#include "reg.h"
-+#include "debug.h"
-+
-+#define RTW_EFUSE_BANK_WIFI		0x0
-+
-+static void switch_efuse_bank(struct rtw_dev *rtwdev)
-+{
-+	rtw_write32_mask(rtwdev, REG_LDO_EFUSE_CTRL, BIT_MASK_EFUSE_BANK_SEL,
-+			 RTW_EFUSE_BANK_WIFI);
-+}
-+
-+#define invalid_efuse_header(hdr1, hdr2) \
-+	((hdr1) == 0xff || (((hdr1) & 0x1f) == 0xf && (hdr2) == 0xff))
-+#define invalid_efuse_content(word_en, i) \
-+	(((word_en) & BIT(i)) != 0x0)
-+#define get_efuse_blk_idx_2_byte(hdr1, hdr2) \
-+	((((hdr2) & 0xf0) >> 1) | (((hdr1) >> 5) & 0x07))
-+#define get_efuse_blk_idx_1_byte(hdr1) \
-+	(((hdr1) & 0xf0) >> 4)
-+#define block_idx_to_logical_idx(blk_idx, i) \
-+	(((blk_idx) << 3) + ((i) << 1))
-+
-+/* efuse header format
-+ *
-+ * | 7        5   4    0 | 7        4   3          0 | 15  8  7   0 |
-+ *   block[2:0]   0 1111   block[6:3]   word_en[3:0]   byte0  byte1
-+ * | header 1 (optional) |          header 2         |    word N    |
-+ *
-+ * word_en: 4 bits each word. 0 -> write; 1 -> not write
-+ * N: 1~4, depends on word_en
-+ */
-+static int rtw_dump_logical_efuse_map(struct rtw_dev *rtwdev, u8 *phy_map,
-+				      u8 *log_map)
-+{
-+	u32 physical_size = rtwdev->efuse.physical_size;
-+	u32 protect_size = rtwdev->efuse.protect_size;
-+	u32 logical_size = rtwdev->efuse.logical_size;
-+	u32 phy_idx, log_idx;
-+	u8 hdr1, hdr2;
-+	u8 blk_idx;
-+	u8 word_en;
-+	int i;
-+
-+	for (phy_idx = 0; phy_idx < physical_size - protect_size;) {
-+		hdr1 = phy_map[phy_idx];
-+		hdr2 = phy_map[phy_idx + 1];
-+		if (invalid_efuse_header(hdr1, hdr2))
-+			break;
-+
-+		if ((hdr1 & 0x1f) == 0xf) {
-+			/* 2-byte header format */
-+			blk_idx = get_efuse_blk_idx_2_byte(hdr1, hdr2);
-+			word_en = hdr2 & 0xf;
-+			phy_idx += 2;
-+		} else {
-+			/* 1-byte header format */
-+			blk_idx = get_efuse_blk_idx_1_byte(hdr1);
-+			word_en = hdr1 & 0xf;
-+			phy_idx += 1;
-+		}
-+
-+		for (i = 0; i < 4; i++) {
-+			if (invalid_efuse_content(word_en, i))
-+				continue;
-+
-+			log_idx = block_idx_to_logical_idx(blk_idx, i);
-+			if (phy_idx + 1 > physical_size - protect_size ||
-+			    log_idx + 1 > logical_size)
-+				return -EINVAL;
-+
-+			log_map[log_idx] = phy_map[phy_idx];
-+			log_map[log_idx + 1] = phy_map[phy_idx + 1];
-+			phy_idx += 2;
-+		}
-+	}
-+	return 0;
-+}
-+
-+static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	u32 size = rtwdev->efuse.physical_size;
-+	u32 efuse_ctl;
-+	u32 addr;
-+	u32 cnt;
-+
-+	switch_efuse_bank(rtwdev);
-+
-+	/* disable 2.5V LDO */
-+	chip->ops->cfg_ldo25(rtwdev, false);
-+
-+	efuse_ctl = rtw_read32(rtwdev, REG_EFUSE_CTRL);
-+
-+	for (addr = 0; addr < size; addr++) {
-+		efuse_ctl &= ~(BIT_MASK_EF_DATA | BITS_EF_ADDR);
-+		efuse_ctl |= (addr & BIT_MASK_EF_ADDR) << BIT_SHIFT_EF_ADDR;
-+		rtw_write32(rtwdev, REG_EFUSE_CTRL, efuse_ctl & (~BIT_EF_FLAG));
-+
-+		cnt = 1000000;
-+		do {
-+			udelay(1);
-+			efuse_ctl = rtw_read32(rtwdev, REG_EFUSE_CTRL);
-+			if (--cnt == 0)
-+				return -EBUSY;
-+		} while (!(efuse_ctl & BIT_EF_FLAG));
-+
-+		*(map + addr) = (u8)(efuse_ctl & BIT_MASK_EF_DATA);
-+	}
-+
-+	return 0;
-+}
-+
-+int rtw_parse_efuse_map(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	u32 phy_size = efuse->physical_size;
-+	u32 log_size = efuse->logical_size;
-+	u8 *phy_map = NULL;
-+	u8 *log_map = NULL;
-+	int ret = 0;
-+
-+	phy_map = kmalloc(phy_size, GFP_KERNEL);
-+	log_map = kmalloc(log_size, GFP_KERNEL);
-+	if (!phy_map || !log_map) {
-+		ret = -ENOMEM;
-+		goto out_free;
-+	}
-+
-+	ret = rtw_dump_physical_efuse_map(rtwdev, phy_map);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to dump efuse physical map\n");
-+		goto out_free;
-+	}
-+
-+	memset(log_map, 0xff, log_size);
-+	ret = rtw_dump_logical_efuse_map(rtwdev, phy_map, log_map);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to dump efuse logical map\n");
-+		goto out_free;
-+	}
-+
-+	ret = chip->ops->read_efuse(rtwdev, log_map);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to read efuse map\n");
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kfree(log_map);
-+	kfree(phy_map);
-+
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/realtek/rtw88/efuse.h b/drivers/net/wireless/realtek/rtw88/efuse.h
-new file mode 100644
-index 0000000..c33e899
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/efuse.h
-@@ -0,0 +1,26 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#ifndef __RTW_EFUSE_H__
-+#define __RTW_EFUSE_H__
-+
-+#define EFUSE_HW_CAP_IGNORE		0
-+#define EFUSE_HW_CAP_PTCL_VHT		3
-+#define EFUSE_HW_CAP_SUPP_BW80		7
-+#define EFUSE_HW_CAP_SUPP_BW40		6
-+
-+#define GET_EFUSE_HW_CAP_HCI(hw_cap)					       \
-+	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(3, 0))
-+#define GET_EFUSE_HW_CAP_BW(hw_cap)					       \
-+	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(18, 16))
-+#define GET_EFUSE_HW_CAP_NSS(hw_cap)					       \
-+	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(20, 19))
-+#define GET_EFUSE_HW_CAP_ANT_NUM(hw_cap)				       \
-+	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(23, 21))
-+#define GET_EFUSE_HW_CAP_PTCL(hw_cap)					       \
-+	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(27, 26))
-+
-+int rtw_parse_efuse_map(struct rtw_dev *rtwdev);
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-new file mode 100644
-index 0000000..12c4de8
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -0,0 +1,633 @@
++++ b/drivers/net/wireless/realtek/rtw88/ps.c
+@@ -0,0 +1,166 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
 +#include "main.h"
 +#include "fw.h"
-+#include "tx.h"
-+#include "reg.h"
++#include "ps.h"
++#include "mac.h"
 +#include "debug.h"
 +
-+void rtw_fw_c2h_cmd_handle_ext(struct rtw_dev *rtwdev, struct sk_buff *skb)
-+{
-+	struct rtw_c2h_cmd *c2h;
-+	u8 sub_cmd_id;
-+
-+	c2h = get_c2h_from_skb(skb);
-+	sub_cmd_id = c2h->payload[0];
-+
-+	switch (sub_cmd_id) {
-+	case C2H_CCX_RPT:
-+		rtw_tx_report_handle(rtwdev, skb);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
-+{
-+	struct rtw_c2h_cmd *c2h;
-+	u32 pkt_offset;
-+	u8 len;
-+
-+	pkt_offset = *((u32 *)skb->cb);
-+	c2h = (struct rtw_c2h_cmd *)(skb->data + pkt_offset);
-+	len = skb->len - pkt_offset - 2;
-+
-+	rtw_dbg(rtwdev, RTW_DBG_FW, "recv C2H, id=0x%02x, seq=0x%02x, len=%d\n",
-+		c2h->id, c2h->seq, len);
-+
-+	switch (c2h->id) {
-+	case C2H_HALMAC:
-+		rtw_fw_c2h_cmd_handle_ext(rtwdev, skb);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev, u8 *h2c)
-+{
-+	u8 box;
-+	u8 box_state;
-+	u32 box_reg, box_ex_reg;
-+	u32 h2c_wait;
-+	int idx;
-+
-+	rtw_dbg(rtwdev, RTW_DBG_FW,
-+		"send H2C content %02x%02x%02x%02x %02x%02x%02x%02x\n",
-+		h2c[3], h2c[2], h2c[1], h2c[0],
-+		h2c[7], h2c[6], h2c[5], h2c[4]);
-+
-+	spin_lock(&rtwdev->h2c.lock);
-+
-+	box = rtwdev->h2c.last_box_num;
-+	switch (box) {
-+	case 0:
-+		box_reg = REG_HMEBOX0;
-+		box_ex_reg = REG_HMEBOX0_EX;
-+		break;
-+	case 1:
-+		box_reg = REG_HMEBOX1;
-+		box_ex_reg = REG_HMEBOX1_EX;
-+		break;
-+	case 2:
-+		box_reg = REG_HMEBOX2;
-+		box_ex_reg = REG_HMEBOX2_EX;
-+		break;
-+	case 3:
-+		box_reg = REG_HMEBOX3;
-+		box_ex_reg = REG_HMEBOX3_EX;
-+		break;
-+	default:
-+		WARN(1, "invalid h2c mail box number\n");
-+		goto out;
-+	}
-+
-+	h2c_wait = 20;
-+	do {
-+		box_state = rtw_read8(rtwdev, REG_HMETFR);
-+	} while ((box_state >> box) & 0x1 && --h2c_wait > 0);
-+
-+	if (!h2c_wait) {
-+		rtw_err(rtwdev, "failed to send h2c command\n");
-+		goto out;
-+	}
-+
-+	for (idx = 0; idx < 4; idx++)
-+		rtw_write8(rtwdev, box_reg + idx, h2c[idx]);
-+	for (idx = 0; idx < 4; idx++)
-+		rtw_write8(rtwdev, box_ex_reg + idx, h2c[idx + 4]);
-+
-+	if (++rtwdev->h2c.last_box_num >= 4)
-+		rtwdev->h2c.last_box_num = 0;
-+
-+out:
-+	spin_unlock(&rtwdev->h2c.lock);
-+}
-+
-+static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
++static int rtw_ips_pwr_up(struct rtw_dev *rtwdev)
 +{
 +	int ret;
 +
-+	spin_lock(&rtwdev->h2c.lock);
-+
-+	FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, rtwdev->h2c.seq);
-+	ret = rtw_hci_write_data_h2c(rtwdev, h2c_pkt, H2C_PKT_SIZE);
++	ret = rtw_core_start(rtwdev);
 +	if (ret)
-+		rtw_err(rtwdev, "failed to send h2c packet\n");
-+	rtwdev->h2c.seq++;
++		rtw_err(rtwdev, "leave idle state failed\n");
 +
-+	spin_unlock(&rtwdev->h2c.lock);
-+}
-+
-+void
-+rtw_fw_send_general_info(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+	u16 total_size = H2C_PKT_HDR_SIZE + 4;
-+
-+	rtw_h2c_pkt_set_header(h2c_pkt, H2C_PKT_GENERAL_INFO);
-+
-+	SET_PKT_H2C_TOTAL_LEN(h2c_pkt, total_size);
-+
-+	GENERAL_INFO_SET_FW_TX_BOUNDARY(h2c_pkt,
-+					fifo->rsvd_fw_txbuf_addr -
-+					fifo->rsvd_boundary);
-+
-+	rtw_fw_send_h2c_packet(rtwdev, h2c_pkt);
-+}
-+
-+void
-+rtw_fw_send_phydm_info(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+	u16 total_size = H2C_PKT_HDR_SIZE + 8;
-+	u8 fw_rf_type = 0;
-+
-+	if (hal->rf_type == RF_1T1R)
-+		fw_rf_type = FW_RF_1T1R;
-+	else if (hal->rf_type == RF_2T2R)
-+		fw_rf_type = FW_RF_2T2R;
-+
-+	rtw_h2c_pkt_set_header(h2c_pkt, H2C_PKT_PHYDM_INFO);
-+
-+	SET_PKT_H2C_TOTAL_LEN(h2c_pkt, total_size);
-+	PHYDM_INFO_SET_REF_TYPE(h2c_pkt, efuse->rfe_option);
-+	PHYDM_INFO_SET_RF_TYPE(h2c_pkt, fw_rf_type);
-+	PHYDM_INFO_SET_CUT_VER(h2c_pkt, hal->cut_version);
-+	PHYDM_INFO_SET_RX_ANT_STATUS(h2c_pkt, hal->antenna_tx);
-+	PHYDM_INFO_SET_TX_ANT_STATUS(h2c_pkt, hal->antenna_rx);
-+
-+	rtw_fw_send_h2c_packet(rtwdev, h2c_pkt);
-+}
-+
-+void rtw_fw_do_iqk(struct rtw_dev *rtwdev, struct rtw_iqk_para *para)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+	u16 total_size = H2C_PKT_HDR_SIZE + 1;
-+
-+	rtw_h2c_pkt_set_header(h2c_pkt, H2C_PKT_IQK);
-+	SET_PKT_H2C_TOTAL_LEN(h2c_pkt, total_size);
-+	IQK_SET_CLEAR(h2c_pkt, para->clear);
-+	IQK_SET_SEGMENT_IQK(h2c_pkt, para->segment_iqk);
-+
-+	rtw_fw_send_h2c_packet(rtwdev, h2c_pkt);
-+}
-+
-+void rtw_fw_send_rssi_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+	u8 rssi = ewma_rssi_read(&si->avg_rssi);
-+	bool stbc_en = si->stbc_en ? true : false;
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RSSI_MONITOR);
-+
-+	SET_RSSI_INFO_MACID(h2c_pkt, si->mac_id);
-+	SET_RSSI_INFO_RSSI(h2c_pkt, rssi);
-+	SET_RSSI_INFO_STBC(h2c_pkt, stbc_en);
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
-+void rtw_fw_send_ra_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+	bool no_update = si->updated;
-+	bool disable_pt = true;
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RA_INFO);
-+
-+	SET_RA_INFO_MACID(h2c_pkt, si->mac_id);
-+	SET_RA_INFO_RATE_ID(h2c_pkt, si->rate_id);
-+	SET_RA_INFO_INIT_RA_LVL(h2c_pkt, si->init_ra_lv);
-+	SET_RA_INFO_SGI_EN(h2c_pkt, si->sgi_enable);
-+	SET_RA_INFO_BW_MODE(h2c_pkt, si->bw_mode);
-+	SET_RA_INFO_LDPC(h2c_pkt, si->ldpc_en);
-+	SET_RA_INFO_NO_UPDATE(h2c_pkt, no_update);
-+	SET_RA_INFO_VHT_EN(h2c_pkt, si->vht_enable);
-+	SET_RA_INFO_DIS_PT(h2c_pkt, disable_pt);
-+	SET_RA_INFO_RA_MASK0(h2c_pkt, (si->ra_mask & 0xff));
-+	SET_RA_INFO_RA_MASK1(h2c_pkt, (si->ra_mask & 0xff00) >> 8);
-+	SET_RA_INFO_RA_MASK2(h2c_pkt, (si->ra_mask & 0xff0000) >> 16);
-+	SET_RA_INFO_RA_MASK3(h2c_pkt, (si->ra_mask & 0xff000000) >> 24);
-+
-+	si->init_ra_lv = 0;
-+	si->updated = true;
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
-+void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool connect)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_MEDIA_STATUS_RPT);
-+	MEDIA_STATUS_RPT_SET_OP_MODE(h2c_pkt, connect);
-+	MEDIA_STATUS_RPT_SET_MACID(h2c_pkt, mac_id);
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
-+void rtw_fw_set_pwr_mode(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_SET_PWR_MODE);
-+
-+	SET_PWR_MODE_SET_MODE(h2c_pkt, conf->mode);
-+	SET_PWR_MODE_SET_RLBM(h2c_pkt, conf->rlbm);
-+	SET_PWR_MODE_SET_SMART_PS(h2c_pkt, conf->smart_ps);
-+	SET_PWR_MODE_SET_AWAKE_INTERVAL(h2c_pkt, conf->awake_interval);
-+	SET_PWR_MODE_SET_PORT_ID(h2c_pkt, conf->port_id);
-+	SET_PWR_MODE_SET_PWR_STATE(h2c_pkt, conf->state);
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
-+static u8 rtw_get_rsvd_page_location(struct rtw_dev *rtwdev,
-+				     enum rtw_rsvd_packet_type type)
-+{
-+	struct rtw_rsvd_page *rsvd_pkt;
-+	u8 location = 0;
-+
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
-+		if (type == rsvd_pkt->type)
-+			location = rsvd_pkt->page;
-+	}
-+
-+	return location;
-+}
-+
-+void rtw_send_rsvd_page_h2c(struct rtw_dev *rtwdev)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+	u8 location = 0;
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RSVD_PAGE);
-+
-+	location = rtw_get_rsvd_page_location(rtwdev, RSVD_PROBE_RESP);
-+	*(h2c_pkt + 1) = location;
-+	rtw_dbg(rtwdev, RTW_DBG_FW, "RSVD_PROBE_RESP loc: %d\n", location);
-+
-+	location = rtw_get_rsvd_page_location(rtwdev, RSVD_PS_POLL);
-+	*(h2c_pkt + 2) = location;
-+	rtw_dbg(rtwdev, RTW_DBG_FW, "RSVD_PS_POLL loc: %d\n", location);
-+
-+	location = rtw_get_rsvd_page_location(rtwdev, RSVD_NULL);
-+	*(h2c_pkt + 3) = location;
-+	rtw_dbg(rtwdev, RTW_DBG_FW, "RSVD_NULL loc: %d\n", location);
-+
-+	location = rtw_get_rsvd_page_location(rtwdev, RSVD_QOS_NULL);
-+	*(h2c_pkt + 4) = location;
-+	rtw_dbg(rtwdev, RTW_DBG_FW, "RSVD_QOS_NULL loc: %d\n", location);
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
-+static struct sk_buff *
-+rtw_beacon_get(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
-+{
-+	struct sk_buff *skb_new;
-+
-+	if (vif->type != NL80211_IFTYPE_AP &&
-+	    vif->type != NL80211_IFTYPE_ADHOC &&
-+	    !ieee80211_vif_is_mesh(vif)) {
-+		skb_new = alloc_skb(1, GFP_KERNEL);
-+		if (!skb_new)
-+			return NULL;
-+		skb_put(skb_new, 1);
-+	} else {
-+		skb_new = ieee80211_beacon_get(hw, vif);
-+	}
-+
-+	return skb_new;
-+}
-+
-+static struct sk_buff *rtw_get_rsvd_page_skb(struct ieee80211_hw *hw,
-+					     struct ieee80211_vif *vif,
-+					     enum rtw_rsvd_packet_type type)
-+{
-+	struct sk_buff *skb_new;
-+
-+	switch (type) {
-+	case RSVD_BEACON:
-+		skb_new = rtw_beacon_get(hw, vif);
-+		break;
-+	case RSVD_PS_POLL:
-+		skb_new = ieee80211_pspoll_get(hw, vif);
-+		break;
-+	case RSVD_PROBE_RESP:
-+		skb_new = ieee80211_proberesp_get(hw, vif);
-+		break;
-+	case RSVD_NULL:
-+		skb_new = ieee80211_nullfunc_get(hw, vif, false);
-+		break;
-+	case RSVD_QOS_NULL:
-+		skb_new = ieee80211_nullfunc_get(hw, vif, true);
-+		break;
-+	default:
-+		return NULL;
-+	}
-+
-+	if (!skb_new)
-+		return NULL;
-+
-+	return skb_new;
-+}
-+
-+static void rtw_fill_rsvd_page_desc(struct rtw_dev *rtwdev, struct sk_buff *skb)
-+{
-+	struct rtw_tx_pkt_info pkt_info;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	u8 *pkt_desc;
-+
-+	memset(&pkt_info, 0, sizeof(pkt_info));
-+	rtw_rsvd_page_pkt_info_update(rtwdev, &pkt_info, skb);
-+	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
-+	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
-+	rtw_tx_fill_tx_desc(&pkt_info, skb);
-+}
-+
-+static inline u8 rtw_len_to_page(unsigned int len, u8 page_size)
-+{
-+	return DIV_ROUND_UP(len, page_size);
-+}
-+
-+static void rtw_rsvd_page_list_to_buf(struct rtw_dev *rtwdev, u8 page_size,
-+				      u8 page_margin, u32 page, u8 *buf,
-+				      struct rtw_rsvd_page *rsvd_pkt)
-+{
-+	struct sk_buff *skb = rsvd_pkt->skb;
-+
-+	if (rsvd_pkt->add_txdesc)
-+		rtw_fill_rsvd_page_desc(rtwdev, skb);
-+
-+	if (page >= 1)
-+		memcpy(buf + page_margin + page_size * (page - 1),
-+		       skb->data, skb->len);
-+	else
-+		memcpy(buf, skb->data, skb->len);
-+}
-+
-+void rtw_add_rsvd_page(struct rtw_dev *rtwdev, enum rtw_rsvd_packet_type type,
-+		       bool txdesc)
-+{
-+	struct rtw_rsvd_page *rsvd_pkt;
-+
-+	lockdep_assert_held(&rtwdev->mutex);
-+
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
-+		if (rsvd_pkt->type == type)
-+			return;
-+	}
-+
-+	rsvd_pkt = kmalloc(sizeof(*rsvd_pkt), GFP_KERNEL);
-+	if (!rsvd_pkt)
-+		return;
-+
-+	rsvd_pkt->type = type;
-+	rsvd_pkt->add_txdesc = txdesc;
-+	list_add_tail(&rsvd_pkt->list, &rtwdev->rsvd_page_list);
-+}
-+
-+void rtw_reset_rsvd_page(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_rsvd_page *rsvd_pkt, *tmp;
-+
-+	lockdep_assert_held(&rtwdev->mutex);
-+
-+	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list, list) {
-+		if (rsvd_pkt->type == RSVD_BEACON)
-+			continue;
-+		list_del(&rsvd_pkt->list);
-+		kfree(rsvd_pkt);
-+	}
-+}
-+
-+int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
-+				u8 *buf, u32 size)
-+{
-+	u8 bckp[2];
-+	u8 val;
-+	u16 rsvd_pg_head;
-+	int ret;
-+
-+	lockdep_assert_held(&rtwdev->mutex);
-+
-+	if (!size)
-+		return -EINVAL;
-+
-+	pg_addr &= BIT_MASK_BCN_HEAD_1_V1;
-+	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2, pg_addr | BIT_BCN_VALID_V1);
-+
-+	val = rtw_read8(rtwdev, REG_CR + 1);
-+	bckp[0] = val;
-+	val |= BIT_ENSWBCN >> 8;
-+	rtw_write8(rtwdev, REG_CR + 1, val);
-+
-+	val = rtw_read8(rtwdev, REG_FWHW_TXQ_CTRL + 2);
-+	bckp[1] = val;
-+	val &= ~(BIT_EN_BCNQ_DL >> 16);
-+	rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 2, val);
-+
-+	ret = rtw_hci_write_data_rsvd_page(rtwdev, buf, size);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to write data to rsvd page\n");
-+		goto restore;
-+	}
-+
-+	if (!check_hw_ready(rtwdev, REG_FIFOPAGE_CTRL_2, BIT_BCN_VALID_V1, 1)) {
-+		rtw_err(rtwdev, "error beacon valid\n");
-+		ret = -EBUSY;
-+	}
-+
-+restore:
-+	rsvd_pg_head = rtwdev->fifo.rsvd_boundary;
-+	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2,
-+		    rsvd_pg_head | BIT_BCN_VALID_V1);
-+	rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 2, bckp[1]);
-+	rtw_write8(rtwdev, REG_CR + 1, bckp[0]);
++	rtw_set_channel(rtwdev);
++	rtw_flag_clear(rtwdev, RTW_FLAG_INACTIVE_PS);
 +
 +	return ret;
 +}
 +
-+static int rtw_download_drv_rsvd_page(struct rtw_dev *rtwdev, u8 *buf, u32 size)
++int rtw_enter_ips(struct rtw_dev *rtwdev)
 +{
-+	u32 pg_size;
-+	u32 pg_num = 0;
-+	u16 pg_addr = 0;
++	rtw_flag_set(rtwdev, RTW_FLAG_INACTIVE_PS);
 +
-+	pg_size = rtwdev->chip->page_size;
-+	pg_num = size / pg_size + ((size & (pg_size - 1)) ? 1 : 0);
-+	if (pg_num > rtwdev->fifo.rsvd_drv_pg_num)
-+		return -ENOMEM;
++	rtw_core_stop(rtwdev);
 +
-+	pg_addr = rtwdev->fifo.rsvd_drv_addr;
-+
-+	return rtw_fw_write_data_rsvd_page(rtwdev, pg_addr, buf, size);
-+}
-+
-+static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
-+			       struct ieee80211_vif *vif, u32 *size)
-+{
-+	struct ieee80211_hw *hw = rtwdev->hw;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct sk_buff *iter;
-+	struct rtw_rsvd_page *rsvd_pkt;
-+	u32 page = 0;
-+	u8 total_page = 0;
-+	u8 page_size, page_margin, tx_desc_sz;
-+	u8 *buf;
-+
-+	page_size = chip->page_size;
-+	tx_desc_sz = chip->tx_pkt_desc_sz;
-+	page_margin = page_size - tx_desc_sz;
-+
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
-+		iter = rtw_get_rsvd_page_skb(hw, vif, rsvd_pkt->type);
-+		if (!iter) {
-+			rtw_err(rtwdev, "fail to build rsvd packet\n");
-+			goto release_skb;
-+		}
-+		rsvd_pkt->skb = iter;
-+		rsvd_pkt->page = total_page;
-+		if (rsvd_pkt->add_txdesc)
-+			total_page += rtw_len_to_page(iter->len + tx_desc_sz,
-+						      page_size);
-+		else
-+			total_page += rtw_len_to_page(iter->len, page_size);
-+	}
-+
-+	if (total_page > rtwdev->fifo.rsvd_drv_pg_num) {
-+		rtw_err(rtwdev, "rsvd page over size: %d\n", total_page);
-+		goto release_skb;
-+	}
-+
-+	*size = (total_page - 1) * page_size + page_margin;
-+	buf = kzalloc(*size, GFP_KERNEL);
-+	if (!buf)
-+		goto release_skb;
-+
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
-+		rtw_rsvd_page_list_to_buf(rtwdev, page_size, page_margin,
-+					  page, buf, rsvd_pkt);
-+		page += rtw_len_to_page(rsvd_pkt->skb->len, page_size);
-+	}
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list)
-+		kfree_skb(rsvd_pkt->skb);
-+
-+	return buf;
-+
-+release_skb:
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list)
-+		kfree_skb(rsvd_pkt->skb);
-+
-+	return NULL;
-+}
-+
-+static int
-+rtw_download_beacon(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_hw *hw = rtwdev->hw;
-+	struct sk_buff *skb;
-+	int ret = 0;
-+
-+	skb = rtw_beacon_get(hw, vif);
-+	if (!skb) {
-+		rtw_err(rtwdev, "failed to get beacon skb\n");
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	ret = rtw_download_drv_rsvd_page(rtwdev, skb->data, skb->len);
-+	if (ret)
-+		rtw_err(rtwdev, "failed to download drv rsvd page\n");
-+
-+	dev_kfree_skb(skb);
-+
-+out:
-+	return ret;
-+}
-+
-+int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
-+{
-+	u8 *buf;
-+	u32 size;
-+	int ret;
-+
-+	buf = rtw_build_rsvd_page(rtwdev, vif, &size);
-+	if (!buf) {
-+		rtw_err(rtwdev, "failed to build rsvd page pkt\n");
-+		return -ENOMEM;
-+	}
-+
-+	ret = rtw_download_drv_rsvd_page(rtwdev, buf, size);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to download drv rsvd page\n");
-+		goto free;
-+	}
-+
-+	ret = rtw_download_beacon(rtwdev, vif);
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to download beacon\n");
-+		goto free;
-+	}
-+
-+free:
-+	kfree(buf);
-+
-+	return ret;
-+}
-+
-+int rtw_dump_drv_rsvd_page(struct rtw_dev *rtwdev,
-+			   u32 offset, u32 size, u32 *buf)
-+{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	u32 residue, i;
-+	u16 start_pg;
-+	u16 idx = 0;
-+	u16 ctl;
-+	u8 rcr;
-+
-+	if (size & 0x3) {
-+		rtw_warn(rtwdev, "should be 4-byte aligned\n");
-+		return -EINVAL;
-+	}
-+
-+	offset += fifo->rsvd_boundary << TX_PAGE_SIZE_SHIFT;
-+	residue = offset & (FIFO_PAGE_SIZE - 1);
-+	start_pg = offset >> FIFO_PAGE_SIZE_SHIFT;
-+	start_pg += RSVD_PAGE_START_ADDR;
-+
-+	rcr = rtw_read8(rtwdev, REG_RCR + 2);
-+	ctl = rtw_read16(rtwdev, REG_PKTBUF_DBG_CTRL) & 0xf000;
-+
-+	/* disable rx clock gate */
-+	rtw_write8(rtwdev, REG_RCR, rcr | BIT(3));
-+
-+	do {
-+		rtw_write16(rtwdev, REG_PKTBUF_DBG_CTRL, start_pg | ctl);
-+
-+		for (i = FIFO_DUMP_ADDR + residue;
-+		     i < FIFO_DUMP_ADDR + FIFO_PAGE_SIZE; i += 4) {
-+			buf[idx++] = rtw_read32(rtwdev, i);
-+			size -= 4;
-+			if (size == 0)
-+				goto out;
-+		}
-+
-+		residue = 0;
-+		start_pg++;
-+	} while (size);
-+
-+out:
-+	rtw_write16(rtwdev, REG_PKTBUF_DBG_CTRL, ctl);
-+	rtw_write8(rtwdev, REG_RCR + 2, rcr);
 +	return 0;
 +}
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
++
++static void rtw_restore_port_cfg_iter(void *data, u8 *mac,
++				      struct ieee80211_vif *vif)
++{
++	struct rtw_dev *rtwdev = data;
++	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++	u32 config = ~0;
++
++	rtw_vif_port_config(rtwdev, rtwvif, config);
++}
++
++int rtw_leave_ips(struct rtw_dev *rtwdev)
++{
++	int ret;
++
++	ret = rtw_ips_pwr_up(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to leave ips state\n");
++		return ret;
++	}
++
++	rtw_iterate_vifs_atomic(rtwdev, rtw_restore_port_cfg_iter, rtwdev);
++
++	return 0;
++}
++
++static void rtw_leave_lps_core(struct rtw_dev *rtwdev)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	conf->state = RTW_ALL_ON;
++	conf->awake_interval = 1;
++	conf->rlbm = 0;
++	conf->smart_ps = 0;
++
++	rtw_fw_set_pwr_mode(rtwdev);
++	rtw_flag_clear(rtwdev, RTW_FLAG_LEISURE_PS);
++}
++
++static void rtw_enter_lps_core(struct rtw_dev *rtwdev)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	conf->state = RTW_RF_OFF;
++	conf->awake_interval = 1;
++	conf->rlbm = 1;
++	conf->smart_ps = 2;
++
++	rtw_fw_set_pwr_mode(rtwdev);
++	rtw_flag_set(rtwdev, RTW_FLAG_LEISURE_PS);
++}
++
++void rtw_lps_work(struct work_struct *work)
++{
++	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
++					      lps_work.work);
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++	struct rtw_vif *rtwvif = conf->rtwvif;
++
++	if (WARN_ON(!rtwvif))
++		return;
++
++	if (conf->mode == RTW_MODE_LPS)
++		rtw_enter_lps_core(rtwdev);
++	else
++		rtw_leave_lps_core(rtwdev);
++}
++
++void rtw_enter_lps_irqsafe(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	if (rtwvif->in_lps)
++		return;
++
++	conf->mode = RTW_MODE_LPS;
++	conf->rtwvif = rtwvif;
++	rtwvif->in_lps = true;
++
++	ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->lps_work, 0);
++}
++
++void rtw_leave_lps_irqsafe(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	if (!rtwvif->in_lps)
++		return;
++
++	conf->mode = RTW_MODE_ACTIVE;
++	conf->rtwvif = rtwvif;
++	rtwvif->in_lps = false;
++
++	ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->lps_work, 0);
++}
++
++bool rtw_in_lps(struct rtw_dev *rtwdev)
++{
++	return rtw_flag_check(rtwdev, RTW_FLAG_LEISURE_PS);
++}
++
++void rtw_enter_lps(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	if (WARN_ON(!rtwvif))
++		return;
++
++	if (rtwvif->in_lps)
++		return;
++
++	conf->mode = RTW_MODE_LPS;
++	conf->rtwvif = rtwvif;
++	rtwvif->in_lps = true;
++
++	rtw_enter_lps_core(rtwdev);
++}
++
++void rtw_leave_lps(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	if (WARN_ON(!rtwvif))
++		return;
++
++	if (!rtwvif->in_lps)
++		return;
++
++	conf->mode = RTW_MODE_ACTIVE;
++	conf->rtwvif = rtwvif;
++	rtwvif->in_lps = false;
++
++	rtw_leave_lps_core(rtwdev);
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.h b/drivers/net/wireless/realtek/rtw88/ps.h
 new file mode 100644
-index 0000000..86d9c86
+index 0000000..4006c6c
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -0,0 +1,222 @@
++++ b/drivers/net/wireless/realtek/rtw88/ps.h
+@@ -0,0 +1,20 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#ifndef __RTW_FW_H_
-+#define __RTW_FW_H_
++#ifndef __RTW_PS_H_
++#define __RTW_PS_H_
 +
-+#define H2C_PKT_SIZE		32
-+#define H2C_PKT_HDR_SIZE	8
++#define RTW_LPS_THRESHOLD	2
 +
-+/* FW bin information */
-+#define FW_HDR_SIZE			64
-+#define FW_HDR_CHKSUM_SIZE		8
-+#define FW_HDR_VERSION			4
-+#define FW_HDR_SUBVERSION		6
-+#define FW_HDR_SUBINDEX			7
-+#define FW_HDR_MONTH			16
-+#define FW_HDR_DATE			17
-+#define FW_HDR_HOUR			18
-+#define FW_HDR_MIN			19
-+#define FW_HDR_YEAR			20
-+#define FW_HDR_MEM_USAGE		24
-+#define FW_HDR_H2C_FMT_VER		28
-+#define FW_HDR_DMEM_ADDR		32
-+#define FW_HDR_DMEM_SIZE		36
-+#define FW_HDR_IMEM_SIZE		48
-+#define FW_HDR_EMEM_SIZE		52
-+#define FW_HDR_EMEM_ADDR		56
-+#define FW_HDR_IMEM_ADDR		60
++int rtw_enter_ips(struct rtw_dev *rtwdev);
++int rtw_leave_ips(struct rtw_dev *rtwdev);
 +
-+#define FIFO_PAGE_SIZE_SHIFT		12
-+#define FIFO_PAGE_SIZE			4096
-+#define RSVD_PAGE_START_ADDR		0x780
-+#define FIFO_DUMP_ADDR			0x8000
++void rtw_lps_work(struct work_struct *work);
++void rtw_enter_lps_irqsafe(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif);
++void rtw_leave_lps_irqsafe(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif);
++void rtw_enter_lps(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif);
++void rtw_leave_lps(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif);
++bool rtw_in_lps(struct rtw_dev *rtwdev);
 +
-+enum rtw_c2h_cmd_id {
-+	C2H_BT_INFO = 0x09,
-+	C2H_HW_FEATURE_REPORT = 0x19,
-+	C2H_HW_FEATURE_DUMP = 0xfd,
-+	C2H_HALMAC = 0xff,
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/regd.c b/drivers/net/wireless/realtek/rtw88/regd.c
+new file mode 100644
+index 0000000..8d29b92
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/regd.c
+@@ -0,0 +1,391 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#include "main.h"
++#include "regd.h"
++#include "debug.h"
++#include "phy.h"
++
++#define COUNTRY_CHPLAN_ENT(_alpha2, _chplan, _txpwr_regd) \
++	{.alpha2 = (_alpha2), \
++	 .chplan = (_chplan), \
++	 .txpwr_regd = (_txpwr_regd) \
++	}
++
++/* If country code is not correctly defined in efuse,
++ * use worldwide country code and txpwr regd.
++ */
++static const struct rtw_regulatory rtw_defined_chplan =
++	COUNTRY_CHPLAN_ENT("00", RTW_CHPLAN_REALTEK_DEFINE, RTW_REGD_WW);
++
++static const struct rtw_regulatory all_chplan_map[] = {
++	COUNTRY_CHPLAN_ENT("AD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AF", RTW_CHPLAN_ETSI1_ETSI4, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AN", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AO", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AQ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AR", RTW_CHPLAN_FCC2_FCC7, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("AS", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("AT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AU", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("AW", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("AZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BB", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("BD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BH", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BJ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BN", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BO", RTW_CHPLAN_WORLD_FCC7, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("BR", RTW_CHPLAN_FCC2_FCC1, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("BS", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("BW", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BY", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("BZ", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("CA", RTW_CHPLAN_IC1_IC2, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("CC", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CL", RTW_CHPLAN_WORLD_CHILE1, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("CM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CN", RTW_CHPLAN_WORLD_ETSI7, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CO", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("CR", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("CV", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CX", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CY", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("CZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("DE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("DJ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("DK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("DM", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("DO", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("DZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("EC", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("EE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("EG", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("EH", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("ER", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("ES", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("ET", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("FI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("FJ", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("FK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("FM", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("FO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("FR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GB", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GD", RTW_CHPLAN_FCC1_FCC7, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("GE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GN", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GP", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GQ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GT", RTW_CHPLAN_FCC2_FCC7, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("GU", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("GW", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("GY", RTW_CHPLAN_FCC1_NCC3, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("HK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("HM", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("HN", RTW_CHPLAN_WORLD_FCC5, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("HR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("HT", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("HU", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("ID", RTW_CHPLAN_ETSI1_ETSI12, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("IE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("IL", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("IM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("IN", RTW_CHPLAN_WORLD_ETSI7, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("IQ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("IR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("IS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("IT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("JE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("JM", RTW_CHPLAN_WORLD_ETSI10, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("JO", RTW_CHPLAN_WORLD_ETSI8, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("JP", RTW_CHPLAN_MKK1_MKK1, RTW_REGD_MKK),
++	COUNTRY_CHPLAN_ENT("KE", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("KG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("KH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("KI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("KN", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("KR", RTW_CHPLAN_KCC1_KCC2, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("KW", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("KY", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("KZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LB", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LC", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("LI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LU", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LV", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("LY", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MA", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MC", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("ME", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MF", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("MG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MH", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("MK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("ML", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MN", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MP", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("MQ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MU", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MV", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MW", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MX", RTW_CHPLAN_FCC2_FCC7, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("MY", RTW_CHPLAN_WORLD_ETSI20, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("MZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NC", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NF", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NG", RTW_CHPLAN_WORLD_ETSI20, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NI", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("NL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NP", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NU", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("NZ", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("OM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("PA", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("PE", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("PF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("PG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("PH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("PK", RTW_CHPLAN_WORLD_ETSI10, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("PL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("PM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("PR", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("PT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("PW", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("PY", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("QA", RTW_CHPLAN_WORLD_ETSI10, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("RE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("RO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("RS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("RU", RTW_CHPLAN_WORLD_ETSI14, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("RW", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SB", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SC", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("SE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SJ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SN", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("SR", RTW_CHPLAN_FCC2_FCC17, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("ST", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("SV", RTW_CHPLAN_WORLD_FCC3, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("SX", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("SZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TC", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TJ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TK", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TN", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TT", RTW_CHPLAN_ETSI1_ETSI4, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("TW", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("TZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("UA", RTW_CHPLAN_WORLD_ETSI3, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("UG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("US", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("UY", RTW_CHPLAN_WORLD_FCC3, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("UZ", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("VA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("VC", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("VE", RTW_CHPLAN_WORLD_FCC3, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("VI", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("VN", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("VU", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("WF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("WS", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
++	COUNTRY_CHPLAN_ENT("YE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("YT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("ZA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("ZM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
++	COUNTRY_CHPLAN_ENT("ZW", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
 +};
 +
-+enum rtw_c2h_cmd_id_ext {
-+	C2H_CCX_RPT = 0x0f,
-+};
-+
-+struct rtw_c2h_cmd {
-+	u8 id;
-+	u8 seq;
-+	u8 payload[0];
-+} __packed;
-+
-+enum rtw_rsvd_packet_type {
-+	RSVD_BEACON,
-+	RSVD_PS_POLL,
-+	RSVD_PROBE_RESP,
-+	RSVD_NULL,
-+	RSVD_QOS_NULL,
-+};
-+
-+enum rtw_fw_rf_type {
-+	FW_RF_1T2R = 0,
-+	FW_RF_2T4R = 1,
-+	FW_RF_2T2R = 2,
-+	FW_RF_2T3R = 3,
-+	FW_RF_1T1R = 4,
-+	FW_RF_2T2R_GREEN = 5,
-+	FW_RF_3T3R = 6,
-+	FW_RF_3T4R = 7,
-+	FW_RF_4T4R = 8,
-+	FW_RF_MAX_TYPE = 0xF,
-+};
-+
-+struct rtw_iqk_para {
-+	u8 clear;
-+	u8 segment_iqk;
-+};
-+
-+struct rtw_rsvd_page {
-+	struct list_head list;
-+	struct sk_buff *skb;
-+	enum rtw_rsvd_packet_type type;
-+	u8 page;
-+	bool add_txdesc;
-+};
-+
-+/* C2H */
-+#define GET_CCX_REPORT_SEQNUM(c2h_payload)	(c2h_payload[8] & 0xfc)
-+#define GET_CCX_REPORT_STATUS(c2h_payload)	(c2h_payload[9] & 0xc0)
-+
-+/* PKT H2C */
-+#define H2C_PKT_CMD_ID 0xFF
-+#define H2C_PKT_CATEGORY 0x01
-+
-+#define H2C_PKT_GENERAL_INFO 0x0D
-+#define H2C_PKT_PHYDM_INFO 0x11
-+#define H2C_PKT_IQK 0x0E
-+
-+#define SET_PKT_H2C_CATEGORY(h2c_pkt, value)                                   \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(6, 0))
-+#define SET_PKT_H2C_CMD_ID(h2c_pkt, value)                                     \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
-+#define SET_PKT_H2C_SUB_CMD_ID(h2c_pkt, value)                                 \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(31, 16))
-+#define SET_PKT_H2C_TOTAL_LEN(h2c_pkt, value)                                  \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(15, 0))
-+
-+static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
++static void rtw_regd_apply_beaconing_flags(struct wiphy *wiphy,
++					   enum nl80211_reg_initiator initiator)
 +{
-+	SET_PKT_H2C_CATEGORY(h2c_pkt, H2C_PKT_CATEGORY);
-+	SET_PKT_H2C_CMD_ID(h2c_pkt, H2C_PKT_CMD_ID);
-+	SET_PKT_H2C_SUB_CMD_ID(h2c_pkt, sub_id);
++	enum nl80211_band band;
++	struct ieee80211_supported_band *sband;
++	const struct ieee80211_reg_rule *reg_rule;
++	struct ieee80211_channel *ch;
++	unsigned int i;
++
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		if (!wiphy->bands[band])
++			continue;
++
++		sband = wiphy->bands[band];
++		for (i = 0; i < sband->n_channels; i++) {
++			ch = &sband->channels[i];
++
++			reg_rule = freq_reg_info(wiphy,
++						 MHZ_TO_KHZ(ch->center_freq));
++			if (IS_ERR(reg_rule))
++				continue;
++
++			ch->flags &= ~IEEE80211_CHAN_DISABLED;
++
++			if (!(reg_rule->flags & NL80211_RRF_NO_IR))
++				ch->flags &= ~IEEE80211_CHAN_NO_IR;
++		}
++	}
 +}
 +
-+#define FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, value)                             \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(31, 16))
-+#define GENERAL_INFO_SET_FW_TX_BOUNDARY(h2c_pkt, value)                        \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(23, 16))
-+
-+#define PHYDM_INFO_SET_REF_TYPE(h2c_pkt, value)                                \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(7, 0))
-+#define PHYDM_INFO_SET_RF_TYPE(h2c_pkt, value)                                 \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(15, 8))
-+#define PHYDM_INFO_SET_CUT_VER(h2c_pkt, value)                                 \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(23, 16))
-+#define PHYDM_INFO_SET_RX_ANT_STATUS(h2c_pkt, value)                           \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(27, 24))
-+#define PHYDM_INFO_SET_TX_ANT_STATUS(h2c_pkt, value)                           \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, GENMASK(31, 28))
-+#define IQK_SET_CLEAR(h2c_pkt, value)                                          \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, BIT(0))
-+#define IQK_SET_SEGMENT_IQK(h2c_pkt, value)                                    \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x02, value, BIT(1))
-+
-+/* Command H2C */
-+#define H2C_CMD_RSVD_PAGE		0x0
-+#define H2C_CMD_MEDIA_STATUS_RPT	0x01
-+#define H2C_CMD_SET_PWR_MODE		0x20
-+#define H2C_CMD_RA_INFO			0x40
-+#define H2C_CMD_RSSI_MONITOR		0x42
-+
-+#define SET_H2C_CMD_ID_CLASS(h2c_pkt, value)				       \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(7, 0))
-+
-+#define MEDIA_STATUS_RPT_SET_OP_MODE(h2c_pkt, value)                           \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(8))
-+#define MEDIA_STATUS_RPT_SET_MACID(h2c_pkt, value)                             \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(23, 16))
-+
-+#define SET_PWR_MODE_SET_MODE(h2c_pkt, value)                                  \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(14, 8))
-+#define SET_PWR_MODE_SET_RLBM(h2c_pkt, value)                                  \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(19, 16))
-+#define SET_PWR_MODE_SET_SMART_PS(h2c_pkt, value)                              \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(23, 20))
-+#define SET_PWR_MODE_SET_AWAKE_INTERVAL(h2c_pkt, value)                        \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(31, 24))
-+#define SET_PWR_MODE_SET_PORT_ID(h2c_pkt, value)                               \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(7, 5))
-+#define SET_PWR_MODE_SET_PWR_STATE(h2c_pkt, value)                             \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(15, 8))
-+#define SET_RSSI_INFO_MACID(h2c_pkt, value)                                    \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
-+#define SET_RSSI_INFO_RSSI(h2c_pkt, value)                                     \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(31, 24))
-+#define SET_RSSI_INFO_STBC(h2c_pkt, value)                                     \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, BIT(1))
-+#define SET_RA_INFO_MACID(h2c_pkt, value)                                      \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
-+#define SET_RA_INFO_RATE_ID(h2c_pkt, value)                                    \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(20, 16))
-+#define SET_RA_INFO_INIT_RA_LVL(h2c_pkt, value)                                \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(22, 21))
-+#define SET_RA_INFO_SGI_EN(h2c_pkt, value)                                     \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(23))
-+#define SET_RA_INFO_BW_MODE(h2c_pkt, value)                                    \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(25, 24))
-+#define SET_RA_INFO_LDPC(h2c_pkt, value)                                       \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(26))
-+#define SET_RA_INFO_NO_UPDATE(h2c_pkt, value)                                  \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(27))
-+#define SET_RA_INFO_VHT_EN(h2c_pkt, value)                                     \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(29, 28))
-+#define SET_RA_INFO_DIS_PT(h2c_pkt, value)                                     \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(30))
-+#define SET_RA_INFO_RA_MASK0(h2c_pkt, value)                                   \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(7, 0))
-+#define SET_RA_INFO_RA_MASK1(h2c_pkt, value)                                   \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(15, 8))
-+#define SET_RA_INFO_RA_MASK2(h2c_pkt, value)                                   \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(23, 16))
-+#define SET_RA_INFO_RA_MASK3(h2c_pkt, value)                                   \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(31, 24))
-+
-+static inline struct rtw_c2h_cmd *get_c2h_from_skb(struct sk_buff *skb)
++static void rtw_regd_apply_hw_cap_flags(struct wiphy *wiphy)
 +{
-+	u32 pkt_offset;
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	int i;
 +
-+	pkt_offset = *((u32 *)skb->cb);
-+	return (struct rtw_c2h_cmd *)(skb->data + pkt_offset);
++	if (efuse->hw_cap.bw & BIT(RTW_CHANNEL_WIDTH_80))
++		return;
++
++	sband = wiphy->bands[NL80211_BAND_2GHZ];
++	if (!sband)
++		goto out_5g;
++
++	for (i = 0; i < sband->n_channels; i++) {
++		ch = &sband->channels[i];
++		ch->flags |= IEEE80211_CHAN_NO_80MHZ;
++	}
++
++out_5g:
++	sband = wiphy->bands[NL80211_BAND_5GHZ];
++	if (!sband)
++		return;
++
++	for (i = 0; i < sband->n_channels; i++) {
++		ch = &sband->channels[i];
++		ch->flags |= IEEE80211_CHAN_NO_80MHZ;
++	}
 +}
 +
-+void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb);
-+void rtw_fw_send_general_info(struct rtw_dev *rtwdev);
-+void rtw_fw_send_phydm_info(struct rtw_dev *rtwdev);
++static void rtw_regd_apply_world_flags(struct wiphy *wiphy,
++				       enum nl80211_reg_initiator initiator)
++{
++	rtw_regd_apply_beaconing_flags(wiphy, initiator);
++}
 +
-+void rtw_fw_do_iqk(struct rtw_dev *rtwdev, struct rtw_iqk_para *para);
-+void rtw_fw_set_pwr_mode(struct rtw_dev *rtwdev);
-+void rtw_fw_send_rssi_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
-+void rtw_fw_send_ra_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
-+void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool conn);
-+void rtw_add_rsvd_page(struct rtw_dev *rtwdev, enum rtw_rsvd_packet_type type,
-+		       bool txdesc);
-+int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
-+				u8 *buf, u32 size);
-+void rtw_reset_rsvd_page(struct rtw_dev *rtwdev);
-+int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev,
-+			      struct ieee80211_vif *vif);
-+void rtw_send_rsvd_page_h2c(struct rtw_dev *rtwdev);
-+int rtw_dump_drv_rsvd_page(struct rtw_dev *rtwdev,
-+			   u32 offset, u32 size, u32 *buf);
++static struct rtw_regulatory rtw_regd_find_reg_by_name(char *alpha2)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(all_chplan_map); i++) {
++		if (!memcmp(all_chplan_map[i].alpha2, alpha2, 2))
++			return all_chplan_map[i];
++	}
++
++	return rtw_defined_chplan;
++}
++
++static int rtw_regd_notifier_apply(struct rtw_dev *rtwdev,
++				   struct wiphy *wiphy,
++				   struct regulatory_request *request)
++{
++	if (request->initiator == NL80211_REGDOM_SET_BY_USER)
++		return 0;
++	rtwdev->regd = rtw_regd_find_reg_by_name(request->alpha2);
++	rtw_regd_apply_world_flags(wiphy, request->initiator);
++
++	return 0;
++}
++
++static int
++rtw_regd_init_wiphy(struct rtw_regulatory *reg, struct wiphy *wiphy,
++		    void (*reg_notifier)(struct wiphy *wiphy,
++					 struct regulatory_request *request))
++{
++	wiphy->reg_notifier = reg_notifier;
++
++	wiphy->regulatory_flags &= ~REGULATORY_CUSTOM_REG;
++	wiphy->regulatory_flags &= ~REGULATORY_STRICT_REG;
++	wiphy->regulatory_flags &= ~REGULATORY_DISABLE_BEACON_HINTS;
++
++	rtw_regd_apply_hw_cap_flags(wiphy);
++
++	return 0;
++}
++
++int rtw_regd_init(struct rtw_dev *rtwdev,
++		  void (*reg_notifier)(struct wiphy *wiphy,
++				       struct regulatory_request *request))
++{
++	struct wiphy *wiphy = rtwdev->hw->wiphy;
++
++	if (!wiphy)
++		return -EINVAL;
++
++	rtwdev->regd = rtw_regd_find_reg_by_name(rtwdev->efuse.country_code);
++	rtw_regd_init_wiphy(&rtwdev->regd, wiphy, reg_notifier);
++
++	return 0;
++}
++
++void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request)
++{
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_hal *hal = &rtwdev->hal;
++
++	rtw_regd_notifier_apply(rtwdev, wiphy, request);
++	rtw_dbg(rtwdev, RTW_DBG_REGD,
++		"get alpha2 %c%c from initiator %d, mapping to chplan 0x%x, txregd %d\n",
++		request->alpha2[0], request->alpha2[1], request->initiator,
++		rtwdev->regd.chplan, rtwdev->regd.txpwr_regd);
++
++	rtw_phy_set_tx_power_level(rtwdev, hal->current_channel);
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/regd.h b/drivers/net/wireless/realtek/rtw88/regd.h
+new file mode 100644
+index 0000000..8316e8b
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/regd.h
+@@ -0,0 +1,67 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_REGD_H_
++#define __RTW_REGD_H_
++
++#define IEEE80211_CHAN_NO_IBSS IEEE80211_CHAN_NO_IR
++#define IEEE80211_CHAN_PASSIVE_SCAN IEEE80211_CHAN_NO_IR
++enum rtw_chplan_id {
++	RTW_CHPLAN_WORLD_ETSI1 = 0x26,
++	RTW_CHPLAN_MKK1_MKK1 = 0x27,
++	RTW_CHPLAN_IC1_IC2 = 0x2B,
++	RTW_CHPLAN_WORLD_CHILE1 = 0x2D,
++	RTW_CHPLAN_WORLD_FCC3 = 0x30,
++	RTW_CHPLAN_WORLD_FCC5 = 0x32,
++	RTW_CHPLAN_FCC1_FCC7 = 0x34,
++	RTW_CHPLAN_WORLD_ETSI3 = 0x36,
++	RTW_CHPLAN_ETSI1_ETSI12 = 0x3D,
++	RTW_CHPLAN_KCC1_KCC2 = 0x3E,
++	RTW_CHPLAN_ETSI1_ETSI4 = 0x42,
++	RTW_CHPLAN_FCC1_NCC3 = 0x44,
++	RTW_CHPLAN_WORLD_ACMA1 = 0x45,
++	RTW_CHPLAN_WORLD_ETSI6 = 0x47,
++	RTW_CHPLAN_WORLD_ETSI7 = 0x48,
++	RTW_CHPLAN_WORLD_ETSI8 = 0x49,
++	RTW_CHPLAN_WORLD_ETSI10 = 0x51,
++	RTW_CHPLAN_WORLD_ETSI14 = 0x59,
++	RTW_CHPLAN_FCC2_FCC7 = 0x61,
++	RTW_CHPLAN_FCC2_FCC1 = 0x62,
++	RTW_CHPLAN_WORLD_FCC7 = 0x73,
++	RTW_CHPLAN_FCC2_FCC17 = 0x74,
++	RTW_CHPLAN_WORLD_ETSI20 = 0x75,
++	RTW_CHPLAN_FCC2_FCC11 = 0x76,
++	RTW_CHPLAN_REALTEK_DEFINE = 0x7f,
++};
++
++struct country_code_to_enum_rd {
++	u16 countrycode;
++	const char *iso_name;
++};
++
++enum country_code_type {
++	COUNTRY_CODE_FCC = 0,
++	COUNTRY_CODE_IC = 1,
++	COUNTRY_CODE_ETSI = 2,
++	COUNTRY_CODE_SPAIN = 3,
++	COUNTRY_CODE_FRANCE = 4,
++	COUNTRY_CODE_MKK = 5,
++	COUNTRY_CODE_MKK1 = 6,
++	COUNTRY_CODE_ISRAEL = 7,
++	COUNTRY_CODE_TELEC = 8,
++	COUNTRY_CODE_MIC = 9,
++	COUNTRY_CODE_GLOBAL_DOMAIN = 10,
++	COUNTRY_CODE_WORLD_WIDE_13 = 11,
++	COUNTRY_CODE_TELEC_NETGEAR = 12,
++	COUNTRY_CODE_WORLD_WIDE_13_5G_ALL = 13,
++
++	/* new channel plan above this */
++	COUNTRY_CODE_MAX
++};
++
++int rtw_regd_init(struct rtw_dev *rtwdev,
++		  void (*reg_notifier)(struct wiphy *wiphy,
++				       struct regulatory_request *request));
++void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request);
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/sec.c b/drivers/net/wireless/realtek/rtw88/sec.c
+new file mode 100644
+index 0000000..59b6fce
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/sec.c
+@@ -0,0 +1,120 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#include "main.h"
++#include "sec.h"
++#include "reg.h"
++
++int rtw_sec_get_free_cam(struct rtw_sec_desc *sec)
++{
++	/* if default key search is enabled, the first 4 cam entries
++	 * are used to direct map to group key with its key->key_idx, so
++	 * driver should use cam entries after 4 to install pairwise key
++	 */
++	if (sec->default_key_search)
++		return find_next_zero_bit(sec->cam_map, RTW_MAX_SEC_CAM_NUM,
++					  RTW_SEC_DEFAULT_KEY_NUM);
++
++	return find_first_zero_bit(sec->cam_map, RTW_MAX_SEC_CAM_NUM);
++}
++
++void rtw_sec_write_cam(struct rtw_dev *rtwdev,
++		       struct rtw_sec_desc *sec,
++		       struct ieee80211_sta *sta,
++		       struct ieee80211_key_conf *key,
++		       u8 hw_key_type, u8 hw_key_idx)
++{
++	struct rtw_cam_entry *cam = &sec->cam_table[hw_key_idx];
++	u32 write_cmd;
++	u32 command;
++	u32 content;
++	u32 addr;
++	int i, j;
++
++	set_bit(hw_key_idx, sec->cam_map);
++	cam->valid = true;
++	cam->group = !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE);
++	cam->hw_key_type = hw_key_type;
++	cam->key = key;
++	if (sta)
++		ether_addr_copy(cam->addr, sta->addr);
++	else
++		eth_broadcast_addr(cam->addr);
++
++	write_cmd = RTW_SEC_CMD_WRITE_ENABLE | RTW_SEC_CMD_POLLING;
++	addr = hw_key_idx << RTW_SEC_CAM_ENTRY_SHIFT;
++	for (i = 5; i >= 0; i--) {
++		switch (i) {
++		case 0:
++			content = ((key->keyidx & 0x3))		|
++				  ((hw_key_type & 0x7)	<< 2)	|
++				  (cam->group		<< 6)	|
++				  (cam->valid		<< 15)	|
++				  (cam->addr[0]		<< 16)	|
++				  (cam->addr[1]		<< 24);
++			break;
++		case 1:
++			content = (cam->addr[2])		|
++				  (cam->addr[3]		<< 8)	|
++				  (cam->addr[4]		<< 16)	|
++				  (cam->addr[5]		<< 24);
++			break;
++		default:
++			j = (i - 2) << 2;
++			content = (key->key[j])			|
++				  (key->key[j + 1]	<< 8)	|
++				  (key->key[j + 2]	<< 16)	|
++				  (key->key[j + 3]	<< 24);
++			break;
++		}
++
++		command = write_cmd | (addr + i);
++		rtw_write32(rtwdev, RTW_SEC_WRITE_REG, content);
++		rtw_write32(rtwdev, RTW_SEC_CMD_REG, command);
++	}
++}
++
++void rtw_sec_clear_cam(struct rtw_dev *rtwdev,
++		       struct rtw_sec_desc *sec,
++		       u8 hw_key_idx)
++{
++	struct rtw_cam_entry *cam = &sec->cam_table[hw_key_idx];
++	u32 write_cmd;
++	u32 command;
++	u32 addr;
++
++	clear_bit(hw_key_idx, sec->cam_map);
++	cam->valid = false;
++	cam->key = NULL;
++	eth_zero_addr(cam->addr);
++
++	write_cmd = RTW_SEC_CMD_WRITE_ENABLE | RTW_SEC_CMD_POLLING;
++	addr = hw_key_idx << RTW_SEC_CAM_ENTRY_SHIFT;
++	command = write_cmd | addr;
++	rtw_write32(rtwdev, RTW_SEC_WRITE_REG, 0);
++	rtw_write32(rtwdev, RTW_SEC_CMD_REG, command);
++}
++
++void rtw_sec_enable_sec_engine(struct rtw_dev *rtwdev)
++{
++	struct rtw_sec_desc *sec = &rtwdev->sec;
++	u16 ctrl_reg;
++	u16 sec_config;
++
++	/* default use default key search for now */
++	sec->default_key_search = true;
++
++	ctrl_reg = rtw_read16(rtwdev, REG_CR);
++	ctrl_reg |= RTW_SEC_ENGINE_EN;
++	rtw_write16(rtwdev, REG_CR, ctrl_reg);
++
++	sec_config = rtw_read16(rtwdev, RTW_SEC_CONFIG);
++
++	sec_config |= RTW_SEC_TX_DEC_EN | RTW_SEC_RX_DEC_EN;
++	if (sec->default_key_search)
++		sec_config |= RTW_SEC_TX_UNI_USE_DK | RTW_SEC_RX_UNI_USE_DK |
++			      RTW_SEC_TX_BC_USE_DK | RTW_SEC_RX_BC_USE_DK;
++
++	rtw_write16(rtwdev, RTW_SEC_CONFIG, sec_config);
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/sec.h b/drivers/net/wireless/realtek/rtw88/sec.h
+new file mode 100644
+index 0000000..f13b36a
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/sec.h
+@@ -0,0 +1,39 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_SEC_H_
++#define __RTW_SEC_H_
++
++#define RTW_SEC_CMD_REG			0x670
++#define RTW_SEC_WRITE_REG		0x674
++#define RTW_SEC_READ_REG		0x678
++#define RTW_SEC_CONFIG			0x680
++
++#define RTW_SEC_CAM_ENTRY_SHIFT		3
++#define RTW_SEC_DEFAULT_KEY_NUM		4
++#define RTW_SEC_CMD_WRITE_ENABLE	BIT(16)
++#define RTW_SEC_CMD_CLEAR		BIT(30)
++#define RTW_SEC_CMD_POLLING		BIT(31)
++
++#define RTW_SEC_TX_UNI_USE_DK		BIT(0)
++#define RTW_SEC_RX_UNI_USE_DK		BIT(1)
++#define RTW_SEC_TX_DEC_EN		BIT(2)
++#define RTW_SEC_RX_DEC_EN		BIT(3)
++#define RTW_SEC_TX_BC_USE_DK		BIT(6)
++#define RTW_SEC_RX_BC_USE_DK		BIT(7)
++
++#define RTW_SEC_ENGINE_EN		BIT(9)
++
++int rtw_sec_get_free_cam(struct rtw_sec_desc *sec);
++void rtw_sec_write_cam(struct rtw_dev *rtwdev,
++		       struct rtw_sec_desc *sec,
++		       struct ieee80211_sta *sta,
++		       struct ieee80211_key_conf *key,
++		       u8 hw_key_type, u8 hw_key_idx);
++void rtw_sec_clear_cam(struct rtw_dev *rtwdev,
++		       struct rtw_sec_desc *sec,
++		       u8 hw_key_idx);
++void rtw_sec_enable_sec_engine(struct rtw_dev *rtwdev);
++
 +#endif
 -- 
 2.7.4
