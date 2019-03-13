@@ -2,269 +2,115 @@ Return-Path: <SRS0=EMXR=RQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E42EC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 18:15:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D3A0C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 18:42:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3FE002075C
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 18:15:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0275821019
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 18:42:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="co1T56QB"
+	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="nFNtfzBY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726814AbfCMSPf (ORCPT
+        id S1726512AbfCMSml (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Mar 2019 14:15:35 -0400
-Received: from nbd.name ([46.4.11.11]:35864 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726328AbfCMSPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Mar 2019 14:15:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=CLgO/7fzcRdCegxdow9RWsVubZQ0t6sWAjgqAFdjte4=; b=co1T56QBMJA78qqjNU0Q4guX5+
-        3XMEF1IdbuvygECC84jQbqtF9BA3lxeCWLz7TkD5Ht8iZdT0Y9Eu33aVPdA6yojwxqyo3LfMetZxd
-        qUqBGbMGsezioPs8XsR/CKYhnv5wDx9dB1TRfJVO1u4HMYMmMapBerAdMuK8FilH8MUE=;
-Received: from p4ff1316d.dip0.t-ipconnect.de ([79.241.49.109] helo=maeck-2.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1h48Pd-0001c0-0P; Wed, 13 Mar 2019 19:15:33 +0100
-Received: by maeck-2.local (Postfix, from userid 501)
-        id 0926E528F9FF; Wed, 13 Mar 2019 19:15:31 +0100 (CET)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-Subject: [RFC] mac80211: rework locking for txq scheduling / airtime fairness
-Date:   Wed, 13 Mar 2019 19:15:31 +0100
-Message-Id: <20190313181531.62539-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.17.0
+        Wed, 13 Mar 2019 14:42:41 -0400
+Received: from mta-p5.oit.umn.edu ([134.84.196.205]:48850 "EHLO
+        mta-p5.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726396AbfCMSmk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Mar 2019 14:42:40 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-p5.oit.umn.edu (Postfix) with ESMTP id 616CAC9B
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2019 18:42:39 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at umn.edu
+Received: from mta-p5.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p5.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id E736aHhPtLAI for <linux-wireless@vger.kernel.org>;
+        Wed, 13 Mar 2019 13:42:39 -0500 (CDT)
+Received: from mail-it1-f200.google.com (mail-it1-f200.google.com [209.85.166.200])
+        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mta-p5.oit.umn.edu (Postfix) with ESMTPS id 374BDA31
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2019 13:42:39 -0500 (CDT)
+Received: by mail-it1-f200.google.com with SMTP id 190so2340965itv.3
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2019 11:42:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=umn.edu; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=8ghsiZfNwLC/j1f+xgqjTbC5IFJtUmxVAyN34aNAvZA=;
+        b=nFNtfzBYSEGJx5paxTIeBAd5YBmmR/u4g7BXmj8U2O/gSPrsXt4U9vJtAe2py/nZwL
+         b+1x/U+qkcjU+LI5zKE9bmKj4+fNLtvO/7GMTmjkWLkyNop70Cs6Tru/dz19V+LjjqHy
+         gDU1LMMxoggxRmPMiFgkHOYzk7iPa3DU0BpWqE1Qq6+X3ZJsMvXPwpGFkvaoxnHbr8Ij
+         Acm/EmyfwbxxXaYJn8y16vfQTgdK5ovhfxTu1MFlJqmb/HdTP6nNNk/QdHYcZM9SNckU
+         9t9pjfip6n/olwWyt6bOAdkVJNaVO8lb7ZKdHvYVodzYJ6sIsVMXlVo/pF8+uATqErDX
+         JAog==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=8ghsiZfNwLC/j1f+xgqjTbC5IFJtUmxVAyN34aNAvZA=;
+        b=rbd+9hIqIllxhntZz+qQf8coqkaAeNfTT9m9wJqOJOw0yY9pVASG/A2NIeNud2tw9S
+         zNfypEATKvTDstY4o58CuXW0a0w33qLluJ1ai7jqgGv433oW04tP6Mvpx5LsL5dVrx0h
+         5N96ZZNjcjO+poN414erACgliEemtQC6MTSyrHDOYg+oUdttkTFqk0qI4bRmJwh4++Ea
+         vl3JlTzI7thfwH0qrUxmoHYfTsmwzOce0xpOmQQXR0hjY3xRMoyvfwF5eeCgF6D0BXzB
+         UKdW4YAjhPwZrZRXXNCVpDK30cjFZvMCTeZf7lPGUdkpVJrInyc/GXJfNacE1ZiwnsDp
+         F4/w==
+X-Gm-Message-State: APjAAAXq7FC8hxJqzhAgOfl7LD9kPyTIBWuc5UvmuJxMLL2/bce2bO+c
+        DHdKHZJl88vGwqchTsJkW37J3aYpBkE7GPbHe+YTSjDgL+gMUrddf+Mg3TP8kXv47vTCDmmp7HK
+        GuDvW9/a8stn6aYJ9YJ6yr4yfLjOtJCU=
+X-Received: by 2002:a24:5c43:: with SMTP id q64mr2673747itb.75.1552502558801;
+        Wed, 13 Mar 2019 11:42:38 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqyt9UzYS4kbMOZoPbgo08PkW3VVK+QnvLOMbz3oC2BTWpqMRRwMJkpz/0Qk36jIBBpUHGaylw==
+X-Received: by 2002:a24:5c43:: with SMTP id q64mr2673730itb.75.1552502558576;
+        Wed, 13 Mar 2019 11:42:38 -0700 (PDT)
+Received: from cs-u-syssec1.dtc.umn.edu (cs-u-syssec1.cs.umn.edu. [128.101.106.66])
+        by smtp.gmail.com with ESMTPSA id z25sm690067ioh.43.2019.03.13.11.42.37
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 13 Mar 2019 11:42:38 -0700 (PDT)
+From:   Aditya Pakki <pakki001@umn.edu>
+To:     pakki001@umn.edu
+Cc:     kjlu@umn.edu, Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] mwifiex: Fix potential NULL pointer dereference
+Date:   Wed, 13 Mar 2019 13:42:29 -0500
+Message-Id: <20190313184229.24780-1-pakki001@umn.edu>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Holding the lock around the entire duration of tx scheduling can create
-some nasty lock contention, especially when processing airtime information
-from the tx status or the rx path.
-Improve locking by only holding the active_txq_lock for lookups / scheduling
-list modifications.
+dev_alloc_skb can fail and return a NULL pointer. The patch avoids
+a potential NULL pointer dereference and returns -ENOMEM.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Aditya Pakki <pakki001@umn.edu>
 ---
- include/net/mac80211.h | 48 ++++++++++++++++--------------------------
- net/mac80211/tx.c      | 44 ++++++++++++++------------------------
- 2 files changed, 34 insertions(+), 58 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 3771625b7a9d..40fbd15e6c8c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6269,8 +6269,6 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
-  * @hw: pointer as obtained from ieee80211_alloc_hw()
-  * @ac: AC number to return packets from.
-  *
-- * Should only be called between calls to ieee80211_txq_schedule_start()
-- * and ieee80211_txq_schedule_end().
-  * Returns the next txq if successful, %NULL if no queue is eligible. If a txq
-  * is returned, it should be returned with ieee80211_return_txq() after the
-  * driver has finished scheduling it.
-@@ -6278,51 +6276,41 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac);
- 
- /**
-- * ieee80211_return_txq - return a TXQ previously acquired by ieee80211_next_txq()
-- *
-- * @hw: pointer as obtained from ieee80211_alloc_hw()
-- * @txq: pointer obtained from station or virtual interface
-- *
-- * Should only be called between calls to ieee80211_txq_schedule_start()
-- * and ieee80211_txq_schedule_end().
-- */
--void ieee80211_return_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq);
--
--/**
-- * ieee80211_txq_schedule_start - acquire locks for safe scheduling of an AC
-+ * ieee80211_txq_schedule_start - start new scheduling round for TXQs
-  *
-  * @hw: pointer as obtained from ieee80211_alloc_hw()
-  * @ac: AC number to acquire locks for
-  *
-- * Acquire locks needed to schedule TXQs from the given AC. Should be called
-- * before ieee80211_next_txq() or ieee80211_return_txq().
-+ * Should be called before ieee80211_next_txq() or ieee80211_return_txq().
-  */
--void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac)
--	__acquires(txq_lock);
-+void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac);
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 60db2b969e20..4e2fa972a78a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -341,6 +341,9 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
+ 		sleep_cfm_tmp =
+ 			dev_alloc_skb(sizeof(struct mwifiex_opt_sleep_confirm)
+ 				      + MWIFIEX_TYPE_LEN);
++		if (!sleep_cfm_tmp)
++			return -ENOMEM;
 +
-+/* (deprecated) */
-+static inline void ieee80211_txq_schedule_end(struct ieee80211_hw *hw, u8 ac)
-+{
-+}
- 
- /**
-- * ieee80211_txq_schedule_end - release locks for safe scheduling of an AC
-+ * ieee80211_schedule_txq - schedule a TXQ for transmission
-  *
-  * @hw: pointer as obtained from ieee80211_alloc_hw()
-- * @ac: AC number to acquire locks for
-+ * @txq: pointer obtained from station or virtual interface
-  *
-- * Release locks previously acquired by ieee80211_txq_schedule_end().
-+ * Schedules a TXQ for transmission if it is not already scheduled.
-  */
--void ieee80211_txq_schedule_end(struct ieee80211_hw *hw, u8 ac)
--	__releases(txq_lock);
-+void ieee80211_schedule_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
- 
- /**
-- * ieee80211_schedule_txq - schedule a TXQ for transmission
-+ * ieee80211_return_txq - return a TXQ previously acquired by ieee80211_next_txq()
-  *
-  * @hw: pointer as obtained from ieee80211_alloc_hw()
-  * @txq: pointer obtained from station or virtual interface
-- *
-- * Schedules a TXQ for transmission if it is not already scheduled. Takes a
-- * lock, which means it must *not* be called between
-- * ieee80211_txq_schedule_start() and ieee80211_txq_schedule_end()
-  */
--void ieee80211_schedule_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
--	__acquires(txq_lock) __releases(txq_lock);
-+static inline void
-+ieee80211_return_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
-+{
-+	ieee80211_schedule_txq(hw, txq);
-+}
- 
- /**
-  * ieee80211_txq_may_transmit - check whether TXQ is allowed to transmit
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ca23abbf5c0b..51cc37802439 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3653,16 +3653,17 @@ EXPORT_SYMBOL(ieee80211_tx_dequeue);
- struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_txq *ret = NULL;
- 	struct txq_info *txqi = NULL;
- 
--	lockdep_assert_held(&local->active_txq_lock[ac]);
-+	spin_lock_bh(&local->active_txq_lock[ac]);
- 
-  begin:
- 	txqi = list_first_entry_or_null(&local->active_txqs[ac],
- 					struct txq_info,
- 					schedule_order);
- 	if (!txqi)
--		return NULL;
-+		goto out;
- 
- 	if (txqi->txq.sta) {
- 		struct sta_info *sta = container_of(txqi->txq.sta,
-@@ -3679,21 +3680,25 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
- 
- 
- 	if (txqi->schedule_round == local->schedule_round[ac])
--		return NULL;
-+		goto out;
- 
- 	list_del_init(&txqi->schedule_order);
- 	txqi->schedule_round = local->schedule_round[ac];
--	return &txqi->txq;
-+	ret = &txqi->txq;
-+
-+out:
-+	spin_unlock_bh(&local->active_txq_lock[ac]);
-+	return ret;
- }
- EXPORT_SYMBOL(ieee80211_next_txq);
- 
--void ieee80211_return_txq(struct ieee80211_hw *hw,
--			  struct ieee80211_txq *txq)
-+void ieee80211_schedule_txq(struct ieee80211_hw *hw,
-+			    struct ieee80211_txq *txq)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct txq_info *txqi = to_txq_info(txq);
- 
--	lockdep_assert_held(&local->active_txq_lock[txq->ac]);
-+	spin_lock_bh(&local->active_txq_lock[txq->ac]);
- 
- 	if (list_empty(&txqi->schedule_order) &&
- 	    (!skb_queue_empty(&txqi->frags) || txqi->tin.backlog_packets)) {
-@@ -3713,17 +3718,7 @@ void ieee80211_return_txq(struct ieee80211_hw *hw,
- 			list_add_tail(&txqi->schedule_order,
- 				      &local->active_txqs[txq->ac]);
- 	}
--}
--EXPORT_SYMBOL(ieee80211_return_txq);
- 
--void ieee80211_schedule_txq(struct ieee80211_hw *hw,
--			    struct ieee80211_txq *txq)
--	__acquires(txq_lock) __releases(txq_lock)
--{
--	struct ieee80211_local *local = hw_to_local(hw);
--
--	spin_lock_bh(&local->active_txq_lock[txq->ac]);
--	ieee80211_return_txq(hw, txq);
- 	spin_unlock_bh(&local->active_txq_lock[txq->ac]);
- }
- EXPORT_SYMBOL(ieee80211_schedule_txq);
-@@ -3736,7 +3731,7 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
- 	struct sta_info *sta;
- 	u8 ac = txq->ac;
- 
--	lockdep_assert_held(&local->active_txq_lock[ac]);
-+	spin_lock_bh(&local->active_txq_lock[ac]);
- 
- 	if (!txqi->txq.sta)
- 		goto out;
-@@ -3766,34 +3761,27 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
- 
- 	sta->airtime[ac].deficit += sta->airtime_weight;
- 	list_move_tail(&txqi->schedule_order, &local->active_txqs[ac]);
-+	spin_unlock_bh(&local->active_txq_lock[ac]);
- 
- 	return false;
- out:
- 	if (!list_empty(&txqi->schedule_order))
- 		list_del_init(&txqi->schedule_order);
-+	spin_unlock_bh(&local->active_txq_lock[ac]);
- 
- 	return true;
- }
- EXPORT_SYMBOL(ieee80211_txq_may_transmit);
- 
- void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac)
--	__acquires(txq_lock)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 
- 	spin_lock_bh(&local->active_txq_lock[ac]);
- 	local->schedule_round[ac]++;
--}
--EXPORT_SYMBOL(ieee80211_txq_schedule_start);
--
--void ieee80211_txq_schedule_end(struct ieee80211_hw *hw, u8 ac)
--	__releases(txq_lock)
--{
--	struct ieee80211_local *local = hw_to_local(hw);
--
- 	spin_unlock_bh(&local->active_txq_lock[ac]);
- }
--EXPORT_SYMBOL(ieee80211_txq_schedule_end);
-+EXPORT_SYMBOL(ieee80211_txq_schedule_start);
- 
- void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 				  struct net_device *dev,
+ 		skb_put(sleep_cfm_tmp, sizeof(struct mwifiex_opt_sleep_confirm)
+ 			+ MWIFIEX_TYPE_LEN);
+ 		put_unaligned_le32(MWIFIEX_USB_TYPE_CMD, sleep_cfm_tmp->data);
 -- 
-2.17.0
+2.17.1
 
