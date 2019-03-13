@@ -2,106 +2,97 @@ Return-Path: <SRS0=EMXR=RQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79649C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 07:06:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6E92C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 07:10:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B5332171F
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 07:06:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC67E2171F
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 07:10:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NMm4XTvS";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="O8jlujMR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727198AbfCMHG4 convert rfc822-to-8bit (ORCPT
+        id S1726995AbfCMHKP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Mar 2019 03:06:56 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:48867 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725820AbfCMHGy (ORCPT
+        Wed, 13 Mar 2019 03:10:15 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:58632 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725888AbfCMHKP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Mar 2019 03:06:54 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x2D76PdC024833, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcas11.realtek.com.tw[172.21.6.12])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x2D76PdC024833
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 13 Mar 2019 15:06:25 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCAS11.realtek.com.tw ([fe80::7c6d:ced5:c4ff:8297%15]) with mapi id
- 14.03.0399.000; Wed, 13 Mar 2019 15:06:25 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>,
+        Wed, 13 Mar 2019 03:10:15 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 9ABC1608CE; Wed, 13 Mar 2019 07:10:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552461014;
+        bh=A46rVnsLdGMb2I2DUXWiqpEwGHy0MlO8Gf3jR+n3PNA=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=NMm4XTvSk8VbprRNyB0O3kreHRcwJgdqvX8hgDP13H8D1NL4jldestEHDWxBBnIZi
+         s1MEg7p+FDLGpS101Q/lkqRK20IZczuavfw7Zivu7dTD3/pv2mpj1vlodbwNTxVt8Q
+         ox1bgDnRViVYm/0CnTCBFHhfuhFrK3o1BYze8rcA=
+Received: from x230.qca.qualcomm.com (85-76-44-132-nat.elisa-mobile.fi [85.76.44.132])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8453560208;
+        Wed, 13 Mar 2019 07:10:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552461013;
+        bh=A46rVnsLdGMb2I2DUXWiqpEwGHy0MlO8Gf3jR+n3PNA=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=O8jlujMR+tZPEHw1YagW/9319k8cC4WCGAUiA/FxnCi2uSL2R+7012O8vKoOrTby+
+         MtNa1uZhXbUzZfqWZG6aGAiCroeeXXiRxf6XVbi4WPz73cFM2dGuNlXd8Z87kWSa55
+         jAzXGo7vwLJkHtwlNVLR1dKRFgWmXMBFkUupDb50=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8453560208
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     "johannes\@sipsolutions.net" <johannes@sipsolutions.net>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "sgruszka\@redhat.com" <sgruszka@redhat.com>,
         Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "briannorris@chromium.org" <briannorris@chromium.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: RE: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
-Thread-Topic: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
- wireless network chips
-Thread-Index: AQHU2VNS+GVXIkmks0i6acEtkruVp6YJHu3ngAAD34A=
-Date:   Wed, 13 Mar 2019 07:06:24 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17BF35B@RTITMBSVM04.realtek.com.tw>
+        "briannorris\@chromium.org" <briannorris@chromium.org>,
+        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
 References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
- <87wol31d8k.fsf@codeaurora.org>
-In-Reply-To: <87wol31d8k.fsf@codeaurora.org>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.124]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        <87wol31d8k.fsf@codeaurora.org>
+        <F7CD281DE3E379468C6D07993EA72F84D17BF35B@RTITMBSVM04.realtek.com.tw>
+Date:   Wed, 13 Mar 2019 09:10:09 +0200
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17BF35B@RTITMBSVM04.realtek.com.tw>
+        (Tony Chuang's message of "Wed, 13 Mar 2019 07:06:24 +0000")
+Message-ID: <877ed31c8e.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Tony Chuang <yhchuang@realtek.com> writes:
 
+>> > v8
+>> >
+>> >  - add prefix "rtw_" to *_rates and corresponding *_sizes, otherwise
+>> >    the extern will confuse the linker there are multiple definitions
+>> >    with brcmsmac driver
+>> 
+>> I tried to explain this already last time, but maybe I wasn't clear
+>> enough so I'll try again: PLEASE do not submit any new versions of rtw88
+>> until I explicitly ask you to send v9. If you post new versions too
+>> frequently it makes the review harder. Reviewing full driver is very
+>> different from reviewing normal patches, the patches are larger and it
+>> takes more time to review.
+>
+> Sorry about that. I thought " please fix that in the next version " was asking
+> me to send the next version. Now I get it, will include these fixes in my tree,
+> and send v9 until you ask to.
 
-> -----Original Message-----
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> 
-> <yhchuang@realtek.com> writes:
-> 
-> > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> >
-> > This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
-> > rtw88 now supports RTL8822BE/RTL8822CE now, with basic station mode
-> > functionalities. The firmware for both can be found at linux-firmware.
-> >
-> 
-> [...]
-> 
-> > v8
-> >
-> >  - add prefix "rtw_" to *_rates and corresponding *_sizes, otherwise
-> >    the extern will confuse the linker there are multiple definitions
-> >    with brcmsmac driver
-> 
-> I tried to explain this already last time, but maybe I wasn't clear
-> enough so I'll try again: PLEASE do not submit any new versions of rtw88
-> until I explicitly ask you to send v9. If you post new versions too
-> frequently it makes the review harder. Reviewing full driver is very
-> different from reviewing normal patches, the patches are larger and it
-> takes more time to review.
+Great, thank you.
 
-Sorry about that. I thought " please fix that in the next version " was asking
-me to send the next version. Now I get it, will include these fixes in my tree,
-and send v9 until you ask to.
-
-> 
-> Also you did not switch to using GENMASK() like I asked.
-> 
-> So no more new versions of rtw88 until everyone have reviewed v8 and I
-> ask you to send v9.
-> 
-> --
-> Kalle Valo
-
-
-Yan-Hsuan
-
+-- 
+Kalle Valo
