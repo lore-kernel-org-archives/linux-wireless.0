@@ -2,121 +2,118 @@ Return-Path: <SRS0=EMXR=RQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71F22C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 01:08:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17898C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 03:08:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 486B62063F
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 01:08:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D67EB2077B
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 03:08:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jMc6Kesp";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jMc6Kesp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726558AbfCMBI1 (ORCPT
+        id S1726786AbfCMDIk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Mar 2019 21:08:27 -0400
-Received: from mga03.intel.com ([134.134.136.65]:54715 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726269AbfCMBI1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Mar 2019 21:08:27 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2019 18:08:26 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,472,1544515200"; 
-   d="scan'208";a="133571670"
-Received: from dclarkso-mobl.amr.corp.intel.com (HELO [10.254.83.153]) ([10.254.83.153])
-  by orsmga003.jf.intel.com with ESMTP; 12 Mar 2019 18:08:25 -0700
-Subject: Re: [PATCH v5 13/18] x86/split_lock: Add a sysfs interface to allow
- user to enable or disable split lock detection on all CPUs during run time
-To:     Fenghua Yu <fenghua.yu@intel.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, H Peter Anvin <hpa@zytor.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Xiaoyao Li <xiaoyao.li@intel.com>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ravi V Shankar <ravi.v.shankar@intel.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        x86 <x86@kernel.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, kvm@vger.kernel.org
-References: <1552431636-31511-1-git-send-email-fenghua.yu@intel.com>
- <1552431636-31511-14-git-send-email-fenghua.yu@intel.com>
- <f41ee19b-0169-052d-7c71-49e5c38ac1db@intel.com>
- <20190313005259.GB31710@romley-ivt3.sc.intel.com>
-From:   Dave Hansen <dave.hansen@intel.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=dave.hansen@intel.com; keydata=
- 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
-Message-ID: <bb21e571-35ad-ac94-d6cd-f0366eaecc7c@intel.com>
-Date:   Tue, 12 Mar 2019 18:08:25 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
-MIME-Version: 1.0
-In-Reply-To: <20190313005259.GB31710@romley-ivt3.sc.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        Tue, 12 Mar 2019 23:08:40 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:43330 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726385AbfCMDIk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Mar 2019 23:08:40 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id BD98360A43; Wed, 13 Mar 2019 03:08:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552446519;
+        bh=w/oa3ozzXFC20BirKzqeEO/aMbnEbQR47GvQe4T+L+I=;
+        h=From:To:Cc:Subject:Date:From;
+        b=jMc6Kespsq9orbES8caS4sENC/3cltbtuBgQHD3QY5cPT0PAYeYPjy/hxvprFO+sy
+         /+wmovqeXJh/M5mx4k6/ZuBDVHJJzw1cmpyG7dMM8yJTlLQ7M79FX/n1OLhcV4iOjB
+         x62hEs0M+w3L6W6UpcWGBu1MEg7Vl/2maEVAEEqI=
+Received: from ybzhao-Latitude-E5440.ap.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: yiboz@codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 147A96013C;
+        Wed, 13 Mar 2019 03:08:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1552446519;
+        bh=w/oa3ozzXFC20BirKzqeEO/aMbnEbQR47GvQe4T+L+I=;
+        h=From:To:Cc:Subject:Date:From;
+        b=jMc6Kespsq9orbES8caS4sENC/3cltbtuBgQHD3QY5cPT0PAYeYPjy/hxvprFO+sy
+         /+wmovqeXJh/M5mx4k6/ZuBDVHJJzw1cmpyG7dMM8yJTlLQ7M79FX/n1OLhcV4iOjB
+         x62hEs0M+w3L6W6UpcWGBu1MEg7Vl/2maEVAEEqI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 147A96013C
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=yiboz@codeaurora.org
+From:   Yibo Zhao <yiboz@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, Yibo Zhao <yiboz@codeaurora.org>
+Subject: [PATCH v2] fq: fix fq_tin tx bytes overflow
+Date:   Wed, 13 Mar 2019 11:08:25 +0800
+Message-Id: <1552446505-15444-1-git-send-email-yiboz@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/12/19 5:53 PM, Fenghua Yu wrote:
-> On Tue, Mar 12, 2019 at 04:48:09PM -0700, Dave Hansen wrote:
->> On 3/12/19 4:00 PM, Fenghua Yu wrote:
->>> The interface /sys/device/system/cpu/split_lock_detect is added
->>> to allow user to control split lock detection and show current split
->>> lock detection setting.
->> Did I miss the Documentation/ for this new sysfs feature?
-> I don't have a doc for the interface.
-> 
-> Should I create a new file in Documentation/ or can I add the interface
-> doc in an existing doc file?
+Currently, we are using u32 for tx_bytes in fq_tin.
+If the throughput stays more than 1.2Gbps, tx_bytes
+statistics overflow in about 1 min.
 
-I'd suggest spending a few minutes familiarizing yourself with
-Documentation/.  Maybe you can even grep for some other similar files in
-there and see if those are documented.
+In order to allow us to trace the tx_bytes statistics
+for longer time in high throughput, change its type
+from u32 to u64.
+
+Signed-off-by: Yibo Zhao <yiboz@codeaurora.org>
+---
+ include/net/fq.h              | 2 +-
+ net/mac80211/debugfs_netdev.c | 2 +-
+ net/mac80211/debugfs_sta.c    | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/fq.h b/include/net/fq.h
+index ac944a6..70f8b12 100644
+--- a/include/net/fq.h
++++ b/include/net/fq.h
+@@ -53,7 +53,7 @@ struct fq_tin {
+ 	u32 overlimit;
+ 	u32 collisions;
+ 	u32 flows;
+-	u32 tx_bytes;
++	u64 tx_bytes;
+ 	u32 tx_packets;
+ };
+ 
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index cff0fb3..8d66f41 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -499,7 +499,7 @@ static ssize_t ieee80211_if_fmt_aqm(
+ 	len = scnprintf(buf,
+ 			buflen,
+ 			"ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets\n"
+-			"%u %u %u %u %u %u %u %u %u %u\n",
++			"%u %u %u %u %u %u %u %u %llu %u\n",
+ 			txqi->txq.ac,
+ 			txqi->tin.backlog_bytes,
+ 			txqi->tin.backlog_packets,
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 3aa618d..e54a6d6 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -168,7 +168,7 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+ 			continue;
+ 		txqi = to_txq_info(sta->sta.txq[i]);
+ 		p += scnprintf(p, bufsz+buf-p,
+-			       "%d %d %u %u %u %u %u %u %u %u %u 0x%lx(%s%s%s)\n",
++			       "%d %d %u %u %u %u %u %u %u %llu %u 0x%lx(%s%s%s)\n",
+ 			       txqi->txq.tid,
+ 			       txqi->txq.ac,
+ 			       txqi->tin.backlog_bytes,
+-- 
+1.9.1
+
