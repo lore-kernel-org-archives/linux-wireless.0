@@ -2,96 +2,131 @@ Return-Path: <SRS0=EMXR=RQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A3D8C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 13:38:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27B30C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 13:48:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F4D9214AE
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 13:38:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E30E42087C
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 13:48:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="g+C/7DA6"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KML2Qon8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726421AbfCMNiE (ORCPT
+        id S1726624AbfCMNsC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Mar 2019 09:38:04 -0400
-Received: from nbd.name ([46.4.11.11]:47910 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725889AbfCMNiE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Mar 2019 09:38:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=j0scKnfRO605LeYFh2mUhHyPX6OrjuhY89gYNcx2haw=; b=g+C/7DA6xr+KvxvqisJ1p9U2pq
-        /6RJ9hiPBAneCePv1gXaNp4qND9YY9CUAfyUSXn6rIE8orem6cE81iplBTsVA7+Kejb0W0C8sOU3i
-        iCEA45T3O7wzr1jZXT8qgWiQ9Sk75UnYLlA/1pJ35A6dqdni7XIYmzeuGXspNvc1p0sI=;
-Received: from p4ff1316d.dip0.t-ipconnect.de ([79.241.49.109] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1h4454-0007HJ-6B; Wed, 13 Mar 2019 14:38:02 +0100
-Subject: Re: [RFC] mt76: add 3dBm for reporting txpower also for 1x1
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-References: <1552484061-4647-1-git-send-email-sgruszka@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <795dd253-53db-d837-4da6-6016a096cdc7@nbd.name>
-Date:   Wed, 13 Mar 2019 14:38:01 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.5.3
+        Wed, 13 Mar 2019 09:48:02 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:42824 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726339AbfCMNsC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Mar 2019 09:48:02 -0400
+Received: by mail-oi1-f193.google.com with SMTP id m4so1438873oim.9
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2019 06:48:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=xqVwTyoATsrE3IBLh2pa5URtp/9IDvoR0LSrU99Vk98=;
+        b=KML2Qon8rarW0JlUfZCkeGCeK08v09e+GJHp/jHDN1WGEG6IIKA0FXZruw5F68utz+
+         zgmpc5j5VmqImbdisMCVBrtz3GHSZBiXu0S0mo+doSmYhX+/1jyzWeLkR0vayOkB4hjm
+         7SUMUgJ9pUQ6PDn119ji2E5FEfQDynk6HkkI5OcyLgu30iZxxxZXubZ3cfRyUvJuaiT0
+         QbnfVTnYnHtDNufvvTL9J9Dx63R/9kp+lbbN/E6gP2bIBQpMVIePsumXLMOSdueGjGeB
+         BA6u28dAbYSbYSLobzNqJzI/2lNA9mrO9dC4zL2Nek7nfk5l21ykwLi8x+Ngi1sp8UzD
+         vfIg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=xqVwTyoATsrE3IBLh2pa5URtp/9IDvoR0LSrU99Vk98=;
+        b=q6d8urGYx1LeW/DPYritDTRF3IcYv8itDB6+rMPRgT3U+r3hq5sKuw2m1FMsN1jZXN
+         V3U7Y2OnUvP8S+tkW3vWPAHYaINm0NIUfwmp93voskADe1ItVOAMiUSW0Y0/ot1Pp01d
+         eQyUQEz4IICQQBmNoPw/0iHOf805JxRYta0Orpoo3lxL8aqiFdLXLS9jdCsBCwHpgnYP
+         bWwWd2pKvevA2QcfW25AbmZPtolgvu85rMT+WpnOifYZW6p31yQMBeKm7GeeApsm6MHK
+         2g7T0+eJxm4M9zcXLbFqaqNIoyEzIsaXCrY0V+oFpqr8BPt0MfsgtzNLd4TPzEZKycgf
+         8uVQ==
+X-Gm-Message-State: APjAAAUrum+gLgxluNwRFakDoX4igDM/QhryWfK7tCNBsextPC8IOyQm
+        IO3yox3YZlkUVhapJcjLDeVlghU1yjQQWBnQn1vwzQ==
+X-Google-Smtp-Source: APXvYqzixi2CvXHlLGHuVcXOdL2JAdvpvOoQXQBCpS4Qm+M4H4ojEpBhw7LmxMZhaz/rgCTDONkD4fFZyIMite4JSbU=
+X-Received: by 2002:aca:5c89:: with SMTP id q131mr1656209oib.50.1552484881584;
+ Wed, 13 Mar 2019 06:48:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1552484061-4647-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: by 2002:a9d:6a97:0:0:0:0:0 with HTTP; Wed, 13 Mar 2019 06:48:01
+ -0700 (PDT)
+In-Reply-To: <20190313130910.GD2003@redhat.com>
+References: <1552417902-11040-1-git-send-email-pozega.tomislav@gmail.com>
+ <1552417902-11040-2-git-send-email-pozega.tomislav@gmail.com>
+ <20190313091252.GB2663@redhat.com> <CAKR_QV+sFc6J97f5dtW9OtxGoEj5udB=fY5qAb3_QgF4jfqEVA@mail.gmail.com>
+ <20190313130910.GD2003@redhat.com>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Wed, 13 Mar 2019 14:48:01 +0100
+Message-ID: <CAKR_QVLB9k0bGiRW9ON3PeQR1ZoMfWbrXg3W+Bg4N4G+9pAsZg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] rt2x00: enable experimental MFP with HW crypt
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        daniel@makrotopia.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-03-13 14:34, Stanislaw Gruszka wrote:
-> It's not clear for my why we should add 3dBm for 2x2 devices
-> and not for 1x1. 3dBm looks rater like minimal txpower and
-> hardware transmit at 3dBm + dev->txpower_cur / 2 .
-> 
-> With the change reported txpower value are closer to regulatory
-> values, but honestly I have no idea what should be reported.
-> 
-> Perhaps also some better comment should be added.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-The reason why we add 3dBm is because using two chains to transmit in
-the worst case (from regulatory point of view) doubles the transmit
-power (= +3dBm). There's no reason to do the same for 1x1.
+On 13/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Wed, Mar 13, 2019 at 02:02:32PM +0100, Tom Psyborg wrote:
+>> On 13/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> > On Tue, Mar 12, 2019 at 08:11:42PM +0100, Tomislav Po=C5=BEega wrote:
+>> >> MFP can work with enabled HW crypt engine, but in this case
+>> >> available bandwidth is reduced at least when connecting to
+>> >> Archer C7 (QCA9558). Enable the feature for known to work chipsets-
+>> >> MT7620, RT3070 and RT5390. Userspace setting for ieee80211w should
+>> >> default to 0 in order to prevent unintentional bandwidth drop.
+>> >>
+>> >> Signed-off-by: Tomislav Po?ega <pozega.tomislav@gmail.com>
+>> >> ---
+>> >>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c |   11 +++++++----
+>> >>  1 files changed, 7 insertions(+), 4 deletions(-)
+>> >>
+>> >> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+>> >> b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+>> >> index a03b528..bb8204d 100644
+>> >> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+>> >> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+>> >> @@ -9326,6 +9326,13 @@ static int rt2800_probe_hw_mode(struct
+>> >> rt2x00_dev
+>> >> *rt2x00dev)
+>> >>  	ieee80211_hw_set(rt2x00dev->hw, SIGNAL_DBM);
+>> >>  	ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_PS);
+>> >>
+>> >> +	/* Experimental: Set MFP with HW crypto enabled. */
+>> >> +	if (rt2x00_rt(rt2x00dev, RT3070) || rt2x00_rt(rt2x00dev, RT5390) ||
+>> >> +	    rt2x00_rt(rt2x00dev, RT6352))
+>> >> +		ieee80211_hw_set(rt2x00dev->hw, MFP_CAPABLE);
+>> >
+>> > Is not that we support MFP in hardware. We just return -EOPNOTSUPP
+>> > in rt2x00mac_set_key() when mac80211 will try to set MFP ciphers
+>> > (since rt2x00crypto_key_to_cipher() will return CIPHER_NONE) and
+>> > we fallback to software encryption.
+>> >
+>> > Please repost patch that enable MFP unconditionally with
+>> > 'Cc: stable@vger.kernel.org' tag.
+>> >
+>> > Stanislaw
+>> >
+>>
+>> No, I have not test any other chipsets besides the ones I enabled it
+>> for. It is possible this would cause problems on other devices, so
+>> just enable it for the known to work ones.
+>
+> It's just matter of sending already encrypted frames. All chipsets
+> handle that.
+>
+> Stanislaw
+>
 
-- Felix
+The question is how well all chipsets handle that. I've seen some lags
+too with MFP enabled connection. While being about 40-50% lower,
+throughput would still occasionally drop to very low values, like
+800Kbps.
