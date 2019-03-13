@@ -2,42 +2,45 @@ Return-Path: <SRS0=EMXR=RQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 196D4C4360F
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 04:14:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA5BAC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 04:14:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5F9E217F5
+	by mail.kernel.org (Postfix) with ESMTP id 931872070D
 	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 04:14:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726911AbfCMEOu (ORCPT
+        id S1726924AbfCMEOu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 13 Mar 2019 00:14:50 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:34979 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:34985 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726806AbfCMEOs (ORCPT
+        with ESMTP id S1726184AbfCMEOs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Mar 2019 00:14:48 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x2D4EDHl000395, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x2D4EGca000407, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x2D4EDHl000395
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x2D4EGca000407
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Wed, 13 Mar 2019 12:14:13 +0800
+        Wed, 13 Mar 2019 12:14:16 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Wed, 13 Mar 2019 12:14:12 +0800
+ 14.3.408.0; Wed, 13 Mar 2019 12:14:15 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>, <johannes@sipsolutions.net>
 CC:     <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>,
         <sgruszka@redhat.com>, <pkshih@realtek.com>, <tehuang@realtek.com>,
         <briannorris@chromium.org>, <Larry.Finger@lwfinger.net>
-Subject: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
-Date:   Wed, 13 Mar 2019 12:13:49 +0800
-Message-ID: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v8 03/14] rtw88: hci files
+Date:   Wed, 13 Mar 2019 12:13:52 +0800
+Message-ID: <1552450443-351-4-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
+References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.126]
@@ -48,580 +51,1699 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
-rtw88 now supports RTL8822BE/RTL8822CE now, with basic station mode
-functionalities. The firmware for both can be found at linux-firmware.
+hci files for Realtek 802.11ac wireless network chips
 
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
-For RTL8822BE: rtw88/rtw8822b_fw.bin
-For RTL8822CE: rtw88/rtw8822c_fw.bin
+For now there is only PCI bus supported by rtwlan, in the future it
+will also have USB/SDIO
 
-And for now, only PCI buses (RTL8xxxE) are supported. We will add support
-for USB and SDIO in the future. The bus interface abstraction can be seen
-in this driver such as hci.h. Most of the hardware setting are the same
-except for some TRX path or probing setup should be separated.
-
-Supported:
-
- * Basic STA/AP/ADHOC mode, and TDLS (STA is well tested)
-
-Missing feature:
-
- * WOW/PNO
- * USB & SDIO bus (such as RTL8xxxU/RTL8xxxS)
- * BT coexistence (8822B/8822C are combo ICs)
- * Multiple interfaces (for now single STA is better supported)
- * Dynamic hardware calibrations (to improve/stabilize performance)
-
-Potential problems:
-
- * static calibration spends too much time, and it is painful for
-   driver to leave IDLE state. And slows down associate process.
-   But reload function are under development, will be added soon!
- * TRX statictics misleading, as we are not reporting status correctly,
-   or say, not reporting for "every" packet.
-
-
-The next patch set should have BT coexistence code since RTL8822B/C are
-combo ICs, and the driver for BT can be found after Linux Kernel v4.20.
-So it is better to add it first to make WiFi + BT work concurrently.
-
-Although now rtw88 is simple but we are developing more features for it.
-Even we want to add support for more chips such as RTL8821C/RTL8814B.
-
-Finally, rtw88 has many authors, listed alphabetically:
-
-Ping-Ke Shih <pkshih@realtek.com>
-Tzu-En Huang <tehuang@realtek.com>
-Yan-Hsuan Chuang <yhchuang@realtek.com>
-
-
-v2
-
- - add comment for watch dog
-
-
-v3
-
- - change tree location to wireless-next
-
-
-v4
-
- - remove useless "T:" and "W:" lines in MAINTAINERS file, as we don't have
-   our own tree and wiki page now
- - rename patch 13 to "add MAINTAINERS entry"
- - use skb_pull to remove tx descriptors before reporting tx status to
-   mac80211 stack, otherwise mac80211 tx status will always fail to match
-   addr1/addr2 and will finally trigger to disconnect
- - return back to operating channel when we leave IDLE state, as mac80211
-   stack expected. If we don't, mac80211 will assume we are already at
-   channel 1 and start to scan. And we will never be able to connect to
-   APs that are in channel 1. (which is most AP's default channel)
- - wait for async firmware load successfully, otherwise some slower platform
-   might start to download firmware before loaded. And system crashes with a
-   null pointer accessed.
- - fix typo for mac.h __RTW_MAc_H__ -> __RTW_MAC_H__
-
-
-v5
-
- - add rtw_debug_mask for rtw_dbg to control debug messages
- - use dev_printk for rtw_dbg to not depend on CONFIG_DYNAMIC_DEBUG
- - remove useless rtw_pci_parse_configuration
- - keep struct and MODULE_* declaration close
- - use macro instead of ugly struct layout with #ifdef __LITTLE_ENDIAN
- - simplify efuse logical map parsing function
- - remove unused member and whole map dump for efuse
- - reduce some usage of magic number
- - enable DMA sync to avoid pci bus timeout
- - adjust download firmware sequence to avoid DMA error flag honored
- - change download firmware prototype for further use, sometimes we may
-   want to download another special purposed firmware
- - move out rtw_send_rsvd_page_h2c, remove the static
-
-
-v6
-
- - merge two patchsets
- - removal of staging/rtlwifi as it is conflicting with rtw88
-
-
-v7
-
- - resend for missing util.[ch] in v6
-
-
-v8
-
- - add prefix "rtw_" to *_rates and corresponding *_sizes, otherwise
-   the extern will confuse the linker there are multiple definitions
-   with brcmsmac driver
-
-
-Yan-Hsuan Chuang (14):
-  rtw88: main files
-  rtw88: core files
-  rtw88: hci files
-  rtw88: trx files
-  rtw88: mac files
-  rtw88: fw and efuse files
-  rtw88: phy files
-  rtw88: debug files
-  rtw88: chip files
-  rtw88: 8822B init table
-  rtw88: 8822C init table
-  rtw88: Kconfig & Makefile
-  rtw88: add MAINTAINERS entry
-  staging: rtlwifi: remove staging rtlwifi driver
-
- MAINTAINERS                                        |     6 +
- drivers/net/wireless/realtek/Kconfig               |     1 +
- drivers/net/wireless/realtek/Makefile              |     1 +
- drivers/net/wireless/realtek/rtw88/Kconfig         |    55 +
- drivers/net/wireless/realtek/rtw88/Makefile        |    20 +
- drivers/net/wireless/realtek/rtw88/debug.c         |   637 +
- drivers/net/wireless/realtek/rtw88/debug.h         |    52 +
- drivers/net/wireless/realtek/rtw88/efuse.c         |   160 +
- drivers/net/wireless/realtek/rtw88/efuse.h         |    26 +
- drivers/net/wireless/realtek/rtw88/fw.c            |   633 +
- drivers/net/wireless/realtek/rtw88/fw.h            |   222 +
- drivers/net/wireless/realtek/rtw88/hci.h           |   211 +
- drivers/net/wireless/realtek/rtw88/mac.c           |   965 +
- drivers/net/wireless/realtek/rtw88/mac.h           |    35 +
- drivers/net/wireless/realtek/rtw88/mac80211.c      |   481 +
- drivers/net/wireless/realtek/rtw88/main.c          |  1211 ++
- drivers/net/wireless/realtek/rtw88/main.h          |  1104 +
- drivers/net/wireless/realtek/rtw88/pci.c           |  1211 ++
- drivers/net/wireless/realtek/rtw88/pci.h           |   237 +
- drivers/net/wireless/realtek/rtw88/phy.c           |  1724 ++
- drivers/net/wireless/realtek/rtw88/phy.h           |   134 +
- drivers/net/wireless/realtek/rtw88/ps.c            |   166 +
- drivers/net/wireless/realtek/rtw88/ps.h            |    20 +
- drivers/net/wireless/realtek/rtw88/reg.h           |   421 +
- drivers/net/wireless/realtek/rtw88/regd.c          |   391 +
- drivers/net/wireless/realtek/rtw88/regd.h          |    67 +
- drivers/net/wireless/realtek/rtw88/rtw8822b.c      |  1594 ++
- drivers/net/wireless/realtek/rtw88/rtw8822b.h      |   170 +
- .../net/wireless/realtek/rtw88/rtw8822b_table.c    | 20783 +++++++++++++++++++
- .../net/wireless/realtek/rtw88/rtw8822b_table.h    |    18 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c      |  1890 ++
- drivers/net/wireless/realtek/rtw88/rtw8822c.h      |   186 +
- .../net/wireless/realtek/rtw88/rtw8822c_table.c    | 11753 +++++++++++
- .../net/wireless/realtek/rtw88/rtw8822c_table.h    |    17 +
- drivers/net/wireless/realtek/rtw88/rx.c            |   151 +
- drivers/net/wireless/realtek/rtw88/rx.h            |    41 +
- drivers/net/wireless/realtek/rtw88/sec.c           |   120 +
- drivers/net/wireless/realtek/rtw88/sec.h           |    39 +
- drivers/net/wireless/realtek/rtw88/tx.c            |   367 +
- drivers/net/wireless/realtek/rtw88/tx.h            |    89 +
- drivers/net/wireless/realtek/rtw88/util.c          |    72 +
- drivers/net/wireless/realtek/rtw88/util.h          |    34 +
- drivers/staging/Kconfig                            |     2 -
- drivers/staging/Makefile                           |     1 -
- drivers/staging/rtlwifi/Kconfig                    |    12 -
- drivers/staging/rtlwifi/Makefile                   |    70 -
- drivers/staging/rtlwifi/TODO                       |    11 -
- drivers/staging/rtlwifi/base.c                     |  2815 ---
- drivers/staging/rtlwifi/base.h                     |   175 -
- drivers/staging/rtlwifi/btcoexist/Makefile         |     8 -
- drivers/staging/rtlwifi/btcoexist/halbt_precomp.h  |    74 -
- .../staging/rtlwifi/btcoexist/halbtc8822b1ant.c    |  5233 -----
- .../staging/rtlwifi/btcoexist/halbtc8822b1ant.h    |   433 -
- .../staging/rtlwifi/btcoexist/halbtc8822b2ant.c    |  5210 -----
- .../staging/rtlwifi/btcoexist/halbtc8822b2ant.h    |   487 -
- .../rtlwifi/btcoexist/halbtc8822bwifionly.c        |    54 -
- .../rtlwifi/btcoexist/halbtc8822bwifionly.h        |    24 -
- drivers/staging/rtlwifi/btcoexist/halbtcoutsrc.c   |  1837 --
- drivers/staging/rtlwifi/btcoexist/halbtcoutsrc.h   |   791 -
- drivers/staging/rtlwifi/btcoexist/rtl_btc.c        |   517 -
- drivers/staging/rtlwifi/btcoexist/rtl_btc.h        |    64 -
- drivers/staging/rtlwifi/cam.c                      |   315 -
- drivers/staging/rtlwifi/cam.h                      |    39 -
- drivers/staging/rtlwifi/core.c                     |  1996 --
- drivers/staging/rtlwifi/core.h                     |    71 -
- drivers/staging/rtlwifi/debug.c                    |   624 -
- drivers/staging/rtlwifi/debug.h                    |   223 -
- drivers/staging/rtlwifi/efuse.c                    |  1331 --
- drivers/staging/rtlwifi/efuse.h                    |   109 -
- drivers/staging/rtlwifi/halmac/halmac_2_platform.h |    41 -
- .../halmac_88xx/halmac_8822b/halmac_8822b_cfg.h    |   121 -
- .../halmac_88xx/halmac_8822b/halmac_8822b_phy.c    |    95 -
- .../halmac_8822b/halmac_8822b_pwr_seq.c            |   552 -
- .../halmac_8822b/halmac_8822b_pwr_seq.h            |    29 -
- .../halmac_88xx/halmac_8822b/halmac_api_8822b.c    |   332 -
- .../halmac_88xx/halmac_8822b/halmac_api_8822b.h    |    33 -
- .../halmac_8822b/halmac_api_8822b_pcie.c           |   312 -
- .../halmac_8822b/halmac_api_8822b_pcie.h           |    42 -
- .../halmac_8822b/halmac_api_8822b_sdio.c           |   173 -
- .../halmac_8822b/halmac_api_8822b_sdio.h           |    31 -
- .../halmac_8822b/halmac_api_8822b_usb.c            |   174 -
- .../halmac_8822b/halmac_api_8822b_usb.h            |    34 -
- .../halmac_88xx/halmac_8822b/halmac_func_8822b.c   |   403 -
- .../halmac_88xx/halmac_8822b/halmac_func_8822b.h   |    27 -
- .../rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h   |   160 -
- .../rtlwifi/halmac/halmac_88xx/halmac_api_88xx.c   |  5970 ------
- .../rtlwifi/halmac/halmac_88xx/halmac_api_88xx.h   |   385 -
- .../halmac/halmac_88xx/halmac_api_88xx_pcie.c      |   318 -
- .../halmac/halmac_88xx/halmac_api_88xx_pcie.h      |    60 -
- .../halmac/halmac_88xx/halmac_api_88xx_sdio.c      |   963 -
- .../halmac/halmac_88xx/halmac_api_88xx_sdio.h      |    73 -
- .../halmac/halmac_88xx/halmac_api_88xx_usb.c       |   543 -
- .../halmac/halmac_88xx/halmac_api_88xx_usb.h       |    62 -
- .../rtlwifi/halmac/halmac_88xx/halmac_func_88xx.c  |  4462 ----
- .../rtlwifi/halmac/halmac_88xx/halmac_func_88xx.h  |   310 -
- drivers/staging/rtlwifi/halmac/halmac_api.c        |   415 -
- drivers/staging/rtlwifi/halmac/halmac_api.h        |    70 -
- drivers/staging/rtlwifi/halmac/halmac_bit2.h       | 13396 ------------
- drivers/staging/rtlwifi/halmac/halmac_bit_8822b.h  | 12092 -----------
- drivers/staging/rtlwifi/halmac/halmac_fw_info.h    |   111 -
- .../rtlwifi/halmac/halmac_fw_offload_c2h_nic.h     |   173 -
- .../rtlwifi/halmac/halmac_fw_offload_h2c_nic.h     |   504 -
- .../rtlwifi/halmac/halmac_h2c_extra_info_nic.h     |   104 -
- .../staging/rtlwifi/halmac/halmac_intf_phy_cmd.h   |    43 -
- .../rtlwifi/halmac/halmac_original_c2h_nic.h       |   392 -
- .../rtlwifi/halmac/halmac_original_h2c_nic.h       |  1000 -
- .../staging/rtlwifi/halmac/halmac_pwr_seq_cmd.h    |   105 -
- drivers/staging/rtlwifi/halmac/halmac_reg2.h       |  1121 -
- drivers/staging/rtlwifi/halmac/halmac_reg_8822b.h  |   717 -
- drivers/staging/rtlwifi/halmac/halmac_rx_bd_chip.h |    37 -
- drivers/staging/rtlwifi/halmac/halmac_rx_bd_nic.h  |    37 -
- .../staging/rtlwifi/halmac/halmac_rx_desc_chip.h   |   107 -
- .../staging/rtlwifi/halmac/halmac_rx_desc_nic.h    |   122 -
- drivers/staging/rtlwifi/halmac/halmac_sdio_reg.h   |    51 -
- drivers/staging/rtlwifi/halmac/halmac_tx_bd_chip.h |   107 -
- drivers/staging/rtlwifi/halmac/halmac_tx_bd_nic.h  |   112 -
- .../staging/rtlwifi/halmac/halmac_tx_desc_chip.h   |   433 -
- .../staging/rtlwifi/halmac/halmac_tx_desc_nic.h    |   495 -
- drivers/staging/rtlwifi/halmac/halmac_type.h       |  1923 --
- drivers/staging/rtlwifi/halmac/halmac_usb_reg.h    |    17 -
- drivers/staging/rtlwifi/halmac/rtl_halmac.c        |  1373 --
- drivers/staging/rtlwifi/halmac/rtl_halmac.h        |    83 -
- drivers/staging/rtlwifi/pci.c                      |  2496 ---
- drivers/staging/rtlwifi/pci.h                      |   318 -
- drivers/staging/rtlwifi/phydm/halphyrf_ce.c        |   954 -
- drivers/staging/rtlwifi/phydm/halphyrf_ce.h        |    74 -
- drivers/staging/rtlwifi/phydm/mp_precomp.h         |    13 -
- drivers/staging/rtlwifi/phydm/phydm.c              |  1975 --
- drivers/staging/rtlwifi/phydm/phydm.h              |   935 -
- drivers/staging/rtlwifi/phydm/phydm_acs.c          |   189 -
- drivers/staging/rtlwifi/phydm/phydm_acs.h          |    46 -
- drivers/staging/rtlwifi/phydm/phydm_adaptivity.c   |   930 -
- drivers/staging/rtlwifi/phydm/phydm_adaptivity.h   |   108 -
- drivers/staging/rtlwifi/phydm/phydm_adc_sampling.c |   616 -
- drivers/staging/rtlwifi/phydm/phydm_adc_sampling.h |    85 -
- drivers/staging/rtlwifi/phydm/phydm_antdiv.c       |    72 -
- drivers/staging/rtlwifi/phydm/phydm_antdiv.h       |   290 -
- drivers/staging/rtlwifi/phydm/phydm_beamforming.h  |    37 -
- drivers/staging/rtlwifi/phydm/phydm_ccx.c          |   447 -
- drivers/staging/rtlwifi/phydm/phydm_ccx.h          |    72 -
- drivers/staging/rtlwifi/phydm/phydm_cfotracking.c  |   332 -
- drivers/staging/rtlwifi/phydm/phydm_cfotracking.h  |    49 -
- drivers/staging/rtlwifi/phydm/phydm_debug.c        |  2888 ---
- drivers/staging/rtlwifi/phydm/phydm_debug.h        |   164 -
- drivers/staging/rtlwifi/phydm/phydm_dfs.h          |    48 -
- drivers/staging/rtlwifi/phydm/phydm_dig.c          |  1521 --
- drivers/staging/rtlwifi/phydm/phydm_dig.h          |   230 -
- .../staging/rtlwifi/phydm/phydm_dynamic_rx_path.h  |    26 -
- .../rtlwifi/phydm/phydm_dynamicbbpowersaving.c     |   118 -
- .../rtlwifi/phydm/phydm_dynamicbbpowersaving.h     |    39 -
- .../staging/rtlwifi/phydm/phydm_dynamictxpower.c   |    91 -
- .../staging/rtlwifi/phydm/phydm_dynamictxpower.h   |    53 -
- .../staging/rtlwifi/phydm/phydm_edcaturbocheck.c   |   128 -
- .../staging/rtlwifi/phydm/phydm_edcaturbocheck.h   |    33 -
- drivers/staging/rtlwifi/phydm/phydm_features.h     |    22 -
- drivers/staging/rtlwifi/phydm/phydm_hwconfig.c     |  1848 --
- drivers/staging/rtlwifi/phydm/phydm_hwconfig.h     |   487 -
- drivers/staging/rtlwifi/phydm/phydm_interface.c    |   307 -
- drivers/staging/rtlwifi/phydm/phydm_interface.h    |   183 -
- drivers/staging/rtlwifi/phydm/phydm_iqk.h          |    65 -
- drivers/staging/rtlwifi/phydm/phydm_kfree.c        |   217 -
- drivers/staging/rtlwifi/phydm/phydm_kfree.h        |    31 -
- drivers/staging/rtlwifi/phydm/phydm_noisemonitor.c |   319 -
- drivers/staging/rtlwifi/phydm/phydm_noisemonitor.h |    35 -
- .../staging/rtlwifi/phydm/phydm_powertracking_ce.c |   633 -
- .../staging/rtlwifi/phydm/phydm_powertracking_ce.h |   282 -
- drivers/staging/rtlwifi/phydm/phydm_pre_define.h   |   602 -
- drivers/staging/rtlwifi/phydm/phydm_precomp.h      |    74 -
- drivers/staging/rtlwifi/phydm/phydm_psd.c          |   406 -
- drivers/staging/rtlwifi/phydm/phydm_psd.h          |    56 -
- drivers/staging/rtlwifi/phydm/phydm_rainfo.c       |  1196 --
- drivers/staging/rtlwifi/phydm/phydm_rainfo.h       |   258 -
- drivers/staging/rtlwifi/phydm/phydm_reg.h          |   140 -
- .../staging/rtlwifi/phydm/phydm_regdefine11ac.h    |    83 -
- drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h |   202 -
- drivers/staging/rtlwifi/phydm/phydm_types.h        |   119 -
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_bb.c      |  1956 --
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_bb.h      |    43 -
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_mac.c     |   211 -
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_mac.h     |    27 -
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_rf.c      |  4730 -----
- .../rtlwifi/phydm/rtl8822b/halhwimg8822b_rf.h      |   118 -
- .../rtlwifi/phydm/rtl8822b/halphyrf_8822b.c        |   340 -
- .../rtlwifi/phydm/rtl8822b/halphyrf_8822b.h        |    34 -
- .../rtlwifi/phydm/rtl8822b/phydm_hal_api8822b.c    |  1804 --
- .../rtlwifi/phydm/rtl8822b/phydm_hal_api8822b.h    |    73 -
- .../rtlwifi/phydm/rtl8822b/phydm_iqk_8822b.c       |  1399 --
- .../rtlwifi/phydm/rtl8822b/phydm_iqk_8822b.h       |    37 -
- .../rtlwifi/phydm/rtl8822b/phydm_regconfig8822b.c  |   157 -
- .../rtlwifi/phydm/rtl8822b/phydm_regconfig8822b.h  |    43 -
- .../rtlwifi/phydm/rtl8822b/phydm_rtl8822b.c        |   214 -
- .../rtlwifi/phydm/rtl8822b/phydm_rtl8822b.h        |    19 -
- .../rtlwifi/phydm/rtl8822b/version_rtl8822b.h      |    23 -
- drivers/staging/rtlwifi/phydm/rtl_phydm.c          |   863 -
- drivers/staging/rtlwifi/phydm/rtl_phydm.h          |    34 -
- drivers/staging/rtlwifi/phydm/txbf/halcomtxbf.h    |    56 -
- drivers/staging/rtlwifi/phydm/txbf/haltxbf8822b.h  |    28 -
- .../staging/rtlwifi/phydm/txbf/haltxbfinterface.h  |    27 -
- drivers/staging/rtlwifi/phydm/txbf/haltxbfjaguar.h |    25 -
- .../rtlwifi/phydm/txbf/phydm_hal_txbf_api.h        |    30 -
- drivers/staging/rtlwifi/ps.c                       |   996 -
- drivers/staging/rtlwifi/ps.h                       |    39 -
- drivers/staging/rtlwifi/pwrseqcmd.h                |    83 -
- drivers/staging/rtlwifi/rc.c                       |   309 -
- drivers/staging/rtlwifi/rc.h                       |    38 -
- drivers/staging/rtlwifi/regd.c                     |   458 -
- drivers/staging/rtlwifi/regd.h                     |    52 -
- drivers/staging/rtlwifi/rtl8822be/Makefile         |     7 -
- drivers/staging/rtlwifi/rtl8822be/def.h            |    71 -
- drivers/staging/rtlwifi/rtl8822be/fw.c             |   960 -
- drivers/staging/rtlwifi/rtl8822be/fw.h             |   187 -
- drivers/staging/rtlwifi/rtl8822be/hw.c             |  2430 ---
- drivers/staging/rtlwifi/rtl8822be/hw.h             |    55 -
- drivers/staging/rtlwifi/rtl8822be/led.c            |   116 -
- drivers/staging/rtlwifi/rtl8822be/led.h            |    23 -
- drivers/staging/rtlwifi/rtl8822be/phy.c            |  2223 --
- drivers/staging/rtlwifi/rtl8822be/phy.h            |   134 -
- drivers/staging/rtlwifi/rtl8822be/reg.h            |  1642 --
- drivers/staging/rtlwifi/rtl8822be/sw.c             |   470 -
- drivers/staging/rtlwifi/rtl8822be/sw.h             |    21 -
- drivers/staging/rtlwifi/rtl8822be/trx.c            |  1004 -
- drivers/staging/rtlwifi/rtl8822be/trx.h            |   154 -
- drivers/staging/rtlwifi/stats.c                    |   249 -
- drivers/staging/rtlwifi/stats.h                    |    31 -
- drivers/staging/rtlwifi/wifi.h                     |  3362 ---
- 225 files changed, 47515 insertions(+), 123718 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/Kconfig
- create mode 100644 drivers/net/wireless/realtek/rtw88/Makefile
- create mode 100644 drivers/net/wireless/realtek/rtw88/debug.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/debug.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/fw.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/fw.h
+Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/hci.h |  211 ++++++
+ drivers/net/wireless/realtek/rtw88/pci.c | 1211 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/pci.h |  237 ++++++
+ 3 files changed, 1659 insertions(+)
  create mode 100644 drivers/net/wireless/realtek/rtw88/hci.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/mac.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/mac.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/mac80211.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/main.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/main.h
  create mode 100644 drivers/net/wireless/realtek/rtw88/pci.c
  create mode 100644 drivers/net/wireless/realtek/rtw88/pci.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/phy.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/phy.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/ps.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/ps.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/reg.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/regd.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/regd.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b_table.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b_table.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rx.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rx.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/sec.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/sec.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/tx.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/tx.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/util.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/util.h
- delete mode 100644 drivers/staging/rtlwifi/Kconfig
- delete mode 100644 drivers/staging/rtlwifi/Makefile
- delete mode 100644 drivers/staging/rtlwifi/TODO
- delete mode 100644 drivers/staging/rtlwifi/base.c
- delete mode 100644 drivers/staging/rtlwifi/base.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/Makefile
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbt_precomp.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822b1ant.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822b1ant.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822b2ant.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822b2ant.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822bwifionly.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtc8822bwifionly.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtcoutsrc.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/halbtcoutsrc.h
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/rtl_btc.c
- delete mode 100644 drivers/staging/rtlwifi/btcoexist/rtl_btc.h
- delete mode 100644 drivers/staging/rtlwifi/cam.c
- delete mode 100644 drivers/staging/rtlwifi/cam.h
- delete mode 100644 drivers/staging/rtlwifi/core.c
- delete mode 100644 drivers/staging/rtlwifi/core.h
- delete mode 100644 drivers/staging/rtlwifi/debug.c
- delete mode 100644 drivers/staging/rtlwifi/debug.h
- delete mode 100644 drivers/staging/rtlwifi/efuse.c
- delete mode 100644 drivers/staging/rtlwifi/efuse.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_2_platform.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_phy.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_pwr_seq.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_pwr_seq.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_pcie.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_pcie.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_sdio.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_sdio.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_usb.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_api_8822b_usb.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_func_8822b.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_func_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_pcie.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_pcie.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_sdio.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_sdio.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_usb.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_api_88xx_usb.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_func_88xx.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_func_88xx.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_api.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_api.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_bit2.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_bit_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_fw_info.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_fw_offload_c2h_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_fw_offload_h2c_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_h2c_extra_info_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_intf_phy_cmd.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_original_c2h_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_original_h2c_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_pwr_seq_cmd.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_reg2.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_reg_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_rx_bd_chip.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_rx_bd_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_rx_desc_chip.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_rx_desc_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_sdio_reg.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_tx_bd_chip.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_tx_bd_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_tx_desc_chip.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_tx_desc_nic.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_type.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/halmac_usb_reg.h
- delete mode 100644 drivers/staging/rtlwifi/halmac/rtl_halmac.c
- delete mode 100644 drivers/staging/rtlwifi/halmac/rtl_halmac.h
- delete mode 100644 drivers/staging/rtlwifi/pci.c
- delete mode 100644 drivers/staging/rtlwifi/pci.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/halphyrf_ce.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/halphyrf_ce.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/mp_precomp.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_acs.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_acs.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_adaptivity.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_adaptivity.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_adc_sampling.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_adc_sampling.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_antdiv.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_antdiv.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_beamforming.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_ccx.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_ccx.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_cfotracking.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_cfotracking.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_debug.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_debug.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dfs.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dig.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dig.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamic_rx_path.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamicbbpowersaving.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamicbbpowersaving.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamictxpower.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_dynamictxpower.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_edcaturbocheck.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_edcaturbocheck.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_features.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_hwconfig.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_hwconfig.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_interface.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_interface.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_iqk.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_kfree.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_kfree.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_noisemonitor.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_noisemonitor.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_powertracking_ce.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_powertracking_ce.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_pre_define.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_precomp.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_psd.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_psd.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_rainfo.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_rainfo.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_reg.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_regdefine11ac.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/phydm_types.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_bb.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_bb.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_mac.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_mac.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_rf.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halhwimg8822b_rf.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halphyrf_8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/halphyrf_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_hal_api8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_hal_api8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_iqk_8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_iqk_8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_regconfig8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_regconfig8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_rtl8822b.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/phydm_rtl8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl8822b/version_rtl8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl_phydm.c
- delete mode 100644 drivers/staging/rtlwifi/phydm/rtl_phydm.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/halcomtxbf.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/haltxbf8822b.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/haltxbfinterface.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/haltxbfjaguar.h
- delete mode 100644 drivers/staging/rtlwifi/phydm/txbf/phydm_hal_txbf_api.h
- delete mode 100644 drivers/staging/rtlwifi/ps.c
- delete mode 100644 drivers/staging/rtlwifi/ps.h
- delete mode 100644 drivers/staging/rtlwifi/pwrseqcmd.h
- delete mode 100644 drivers/staging/rtlwifi/rc.c
- delete mode 100644 drivers/staging/rtlwifi/rc.h
- delete mode 100644 drivers/staging/rtlwifi/regd.c
- delete mode 100644 drivers/staging/rtlwifi/regd.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/Makefile
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/def.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/fw.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/fw.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/hw.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/hw.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/led.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/led.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/phy.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/phy.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/reg.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/sw.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/sw.h
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/trx.c
- delete mode 100644 drivers/staging/rtlwifi/rtl8822be/trx.h
- delete mode 100644 drivers/staging/rtlwifi/stats.c
- delete mode 100644 drivers/staging/rtlwifi/stats.h
- delete mode 100644 drivers/staging/rtlwifi/wifi.h
 
+diff --git a/drivers/net/wireless/realtek/rtw88/hci.h b/drivers/net/wireless/realtek/rtw88/hci.h
+new file mode 100644
+index 0000000..91b15ef
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/hci.h
+@@ -0,0 +1,211 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef	__RTW_HCI_H__
++#define __RTW_HCI_H__
++
++/* ops for PCI, USB and SDIO */
++struct rtw_hci_ops {
++	int (*tx)(struct rtw_dev *rtwdev,
++		  struct rtw_tx_pkt_info *pkt_info,
++		  struct sk_buff *skb);
++	int (*setup)(struct rtw_dev *rtwdev);
++	int (*start)(struct rtw_dev *rtwdev);
++	void (*stop)(struct rtw_dev *rtwdev);
++
++	int (*write_data_rsvd_page)(struct rtw_dev *rtwdev, u8 *buf, u32 size);
++	int (*write_data_h2c)(struct rtw_dev *rtwdev, u8 *buf, u32 size);
++
++	u8 (*read8)(struct rtw_dev *rtwdev, u32 addr);
++	u16 (*read16)(struct rtw_dev *rtwdev, u32 addr);
++	u32 (*read32)(struct rtw_dev *rtwdev, u32 addr);
++	void (*write8)(struct rtw_dev *rtwdev, u32 addr, u8 val);
++	void (*write16)(struct rtw_dev *rtwdev, u32 addr, u16 val);
++	void (*write32)(struct rtw_dev *rtwdev, u32 addr, u32 val);
++};
++
++static inline int rtw_hci_tx(struct rtw_dev *rtwdev,
++			     struct rtw_tx_pkt_info *pkt_info,
++			     struct sk_buff *skb)
++{
++	return rtwdev->hci.ops->tx(rtwdev, pkt_info, skb);
++}
++
++static inline int rtw_hci_setup(struct rtw_dev *rtwdev)
++{
++	return rtwdev->hci.ops->setup(rtwdev);
++}
++
++static inline int rtw_hci_start(struct rtw_dev *rtwdev)
++{
++	return rtwdev->hci.ops->start(rtwdev);
++}
++
++static inline void rtw_hci_stop(struct rtw_dev *rtwdev)
++{
++	rtwdev->hci.ops->stop(rtwdev);
++}
++
++static inline int
++rtw_hci_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf, u32 size)
++{
++	return rtwdev->hci.ops->write_data_rsvd_page(rtwdev, buf, size);
++}
++
++static inline int
++rtw_hci_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
++{
++	return rtwdev->hci.ops->write_data_h2c(rtwdev, buf, size);
++}
++
++static inline u8 rtw_read8(struct rtw_dev *rtwdev, u32 addr)
++{
++	return rtwdev->hci.ops->read8(rtwdev, addr);
++}
++
++static inline u16 rtw_read16(struct rtw_dev *rtwdev, u32 addr)
++{
++	return rtwdev->hci.ops->read16(rtwdev, addr);
++}
++
++static inline u32 rtw_read32(struct rtw_dev *rtwdev, u32 addr)
++{
++	return rtwdev->hci.ops->read32(rtwdev, addr);
++}
++
++static inline void rtw_write8(struct rtw_dev *rtwdev, u32 addr, u8 val)
++{
++	rtwdev->hci.ops->write8(rtwdev, addr, val);
++}
++
++static inline void rtw_write16(struct rtw_dev *rtwdev, u32 addr, u16 val)
++{
++	rtwdev->hci.ops->write16(rtwdev, addr, val);
++}
++
++static inline void rtw_write32(struct rtw_dev *rtwdev, u32 addr, u32 val)
++{
++	rtwdev->hci.ops->write32(rtwdev, addr, val);
++}
++
++static inline void rtw_write8_set(struct rtw_dev *rtwdev, u32 addr, u8 bit)
++{
++	u8 val;
++
++	val = rtw_read8(rtwdev, addr);
++	rtw_write8(rtwdev, addr, val | bit);
++}
++
++static inline void rtw_writ16_set(struct rtw_dev *rtwdev, u32 addr, u16 bit)
++{
++	u16 val;
++
++	val = rtw_read16(rtwdev, addr);
++	rtw_write16(rtwdev, addr, val | bit);
++}
++
++static inline void rtw_write32_set(struct rtw_dev *rtwdev, u32 addr, u32 bit)
++{
++	u32 val;
++
++	val = rtw_read32(rtwdev, addr);
++	rtw_write32(rtwdev, addr, val | bit);
++}
++
++static inline void rtw_write8_clr(struct rtw_dev *rtwdev, u32 addr, u8 bit)
++{
++	u8 val;
++
++	val = rtw_read8(rtwdev, addr);
++	rtw_write8(rtwdev, addr, val & ~bit);
++}
++
++static inline void rtw_write16_clr(struct rtw_dev *rtwdev, u32 addr, u16 bit)
++{
++	u16 val;
++
++	val = rtw_read16(rtwdev, addr);
++	rtw_write16(rtwdev, addr, val & ~bit);
++}
++
++static inline void rtw_write32_clr(struct rtw_dev *rtwdev, u32 addr, u32 bit)
++{
++	u32 val;
++
++	val = rtw_read32(rtwdev, addr);
++	rtw_write32(rtwdev, addr, val & ~bit);
++}
++
++static inline u32
++rtw_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++	    u32 addr, u32 mask)
++{
++	unsigned long flags;
++	u32 val;
++
++	spin_lock_irqsave(&rtwdev->rf_lock, flags);
++	val = rtwdev->chip->ops->read_rf(rtwdev, rf_path, addr, mask);
++	spin_unlock_irqrestore(&rtwdev->rf_lock, flags);
++
++	return val;
++}
++
++static inline void
++rtw_write_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++	     u32 addr, u32 mask, u32 data)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&rtwdev->rf_lock, flags);
++	rtwdev->chip->ops->write_rf(rtwdev, rf_path, addr, mask, data);
++	spin_unlock_irqrestore(&rtwdev->rf_lock, flags);
++}
++
++static inline u32
++rtw_read32_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask)
++{
++	u32 shift = __ffs(mask);
++	u32 orig;
++	u32 ret;
++
++	orig = rtw_read32(rtwdev, addr);
++	ret = (orig & mask) >> shift;
++
++	return ret;
++}
++
++static inline void
++rtw_write32_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
++{
++	u32 shift = __ffs(mask);
++	u32 orig;
++	u32 set;
++
++	WARN(addr & 0x3, "should be 4-byte aligned, addr = 0x%08x\n", addr);
++
++	orig = rtw_read32(rtwdev, addr);
++	set = (orig & ~mask) | ((data << shift) & mask);
++	rtw_write32(rtwdev, addr, set);
++}
++
++static inline void
++rtw_write8_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u8 data)
++{
++	u32 shift;
++	u8 orig, set;
++
++	mask &= 0xff;
++	shift = __ffs(mask);
++
++	orig = rtw_read8(rtwdev, addr);
++	set = (orig & ~mask) | ((data << shift) & mask);
++	rtw_write8(rtwdev, addr, set);
++}
++
++static inline enum rtw_hci_type rtw_hci_type(struct rtw_dev *rtwdev)
++{
++	return rtwdev->hci.type;
++}
++
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+new file mode 100644
+index 0000000..cf3bffb
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -0,0 +1,1211 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#include <linux/module.h>
++#include <linux/pci.h>
++#include "main.h"
++#include "pci.h"
++#include "tx.h"
++#include "rx.h"
++#include "debug.h"
++
++static u32 rtw_pci_tx_queue_idx_addr[] = {
++	[RTW_TX_QUEUE_BK]	= RTK_PCI_TXBD_IDX_BKQ,
++	[RTW_TX_QUEUE_BE]	= RTK_PCI_TXBD_IDX_BEQ,
++	[RTW_TX_QUEUE_VI]	= RTK_PCI_TXBD_IDX_VIQ,
++	[RTW_TX_QUEUE_VO]	= RTK_PCI_TXBD_IDX_VOQ,
++	[RTW_TX_QUEUE_MGMT]	= RTK_PCI_TXBD_IDX_MGMTQ,
++	[RTW_TX_QUEUE_HI0]	= RTK_PCI_TXBD_IDX_HI0Q,
++	[RTW_TX_QUEUE_H2C]	= RTK_PCI_TXBD_IDX_H2CQ,
++};
++
++static u8 rtw_pci_get_tx_qsel(struct sk_buff *skb, u8 queue)
++{
++	switch (queue) {
++	case RTW_TX_QUEUE_BCN:
++		return TX_DESC_QSEL_BEACON;
++	case RTW_TX_QUEUE_H2C:
++		return TX_DESC_QSEL_H2C;
++	case RTW_TX_QUEUE_MGMT:
++		return TX_DESC_QSEL_MGMT;
++	case RTW_TX_QUEUE_HI0:
++		return TX_DESC_QSEL_HIGH;
++	default:
++		return skb->priority;
++	}
++};
++
++static u8 rtw_pci_read8(struct rtw_dev *rtwdev, u32 addr)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++
++	return readb(rtwpci->mmap + addr);
++}
++
++static u16 rtw_pci_read16(struct rtw_dev *rtwdev, u32 addr)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++
++	return readw(rtwpci->mmap + addr);
++}
++
++static u32 rtw_pci_read32(struct rtw_dev *rtwdev, u32 addr)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++
++	return readl(rtwpci->mmap + addr);
++}
++
++static void rtw_pci_write8(struct rtw_dev *rtwdev, u32 addr, u8 val)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++
++	writeb(val, rtwpci->mmap + addr);
++}
++
++static void rtw_pci_write16(struct rtw_dev *rtwdev, u32 addr, u16 val)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++
++	writew(val, rtwpci->mmap + addr);
++}
++
++static void rtw_pci_write32(struct rtw_dev *rtwdev, u32 addr, u32 val)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++
++	writel(val, rtwpci->mmap + addr);
++}
++
++static inline void *rtw_pci_get_tx_desc(struct rtw_pci_tx_ring *tx_ring, u8 idx)
++{
++	int offset = tx_ring->r.desc_size * idx;
++
++	return tx_ring->r.head + offset;
++}
++
++static void rtw_pci_free_tx_ring(struct rtw_dev *rtwdev,
++				 struct rtw_pci_tx_ring *tx_ring)
++{
++	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
++	struct rtw_pci_tx_data *tx_data;
++	struct sk_buff *skb, *tmp;
++	dma_addr_t dma;
++	u8 *head = tx_ring->r.head;
++	u32 len = tx_ring->r.len;
++	int ring_sz = len * tx_ring->r.desc_size;
++
++	/* free every skb remained in tx list */
++	skb_queue_walk_safe(&tx_ring->queue, skb, tmp) {
++		__skb_unlink(skb, &tx_ring->queue);
++		tx_data = rtw_pci_get_tx_data(skb);
++		dma = tx_data->dma;
++
++		pci_unmap_single(pdev, dma, skb->len, PCI_DMA_TODEVICE);
++		dev_kfree_skb_any(skb);
++	}
++
++	/* free the ring itself */
++	pci_free_consistent(pdev, ring_sz, head, tx_ring->r.dma);
++	tx_ring->r.head = NULL;
++}
++
++static void rtw_pci_free_rx_ring(struct rtw_dev *rtwdev,
++				 struct rtw_pci_rx_ring *rx_ring)
++{
++	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
++	struct sk_buff *skb;
++	dma_addr_t dma;
++	u8 *head = rx_ring->r.head;
++	int buf_sz = RTK_PCI_RX_BUF_SIZE;
++	int ring_sz = rx_ring->r.desc_size * rx_ring->r.len;
++	int i;
++
++	for (i = 0; i < rx_ring->r.len; i++) {
++		skb = rx_ring->buf[i];
++		if (!skb)
++			continue;
++
++		dma = *((dma_addr_t *)skb->cb);
++		pci_unmap_single(pdev, dma, buf_sz, PCI_DMA_FROMDEVICE);
++		dev_kfree_skb(skb);
++		rx_ring->buf[i] = NULL;
++	}
++
++	pci_free_consistent(pdev, ring_sz, head, rx_ring->r.dma);
++}
++
++static void rtw_pci_free_trx_ring(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	struct rtw_pci_tx_ring *tx_ring;
++	struct rtw_pci_rx_ring *rx_ring;
++	int i;
++
++	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
++		tx_ring = &rtwpci->tx_rings[i];
++		rtw_pci_free_tx_ring(rtwdev, tx_ring);
++	}
++
++	for (i = 0; i < RTK_MAX_RX_QUEUE_NUM; i++) {
++		rx_ring = &rtwpci->rx_rings[i];
++		rtw_pci_free_rx_ring(rtwdev, rx_ring);
++	}
++}
++
++static int rtw_pci_init_tx_ring(struct rtw_dev *rtwdev,
++				struct rtw_pci_tx_ring *tx_ring,
++				u8 desc_size, u32 len)
++{
++	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
++	int ring_sz = desc_size * len;
++	dma_addr_t dma;
++	u8 *head;
++
++	head = pci_zalloc_consistent(pdev, ring_sz, &dma);
++	if (!head) {
++		rtw_err(rtwdev, "failed to allocate tx ring\n");
++		return -ENOMEM;
++	}
++
++	skb_queue_head_init(&tx_ring->queue);
++	tx_ring->r.head = head;
++	tx_ring->r.dma = dma;
++	tx_ring->r.len = len;
++	tx_ring->r.desc_size = desc_size;
++	tx_ring->r.wp = 0;
++	tx_ring->r.rp = 0;
++
++	return 0;
++}
++
++static int rtw_pci_reset_rx_desc(struct rtw_dev *rtwdev, struct sk_buff *skb,
++				 struct rtw_pci_rx_ring *rx_ring,
++				 u32 idx, u32 desc_sz)
++{
++	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
++	struct rtw_pci_rx_buffer_desc *buf_desc;
++	int buf_sz = RTK_PCI_RX_BUF_SIZE;
++	dma_addr_t dma;
++
++	if (!skb)
++		return -EINVAL;
++
++	dma = pci_map_single(pdev, skb->data, buf_sz, PCI_DMA_FROMDEVICE);
++	if (pci_dma_mapping_error(pdev, dma))
++		return -EBUSY;
++
++	*((dma_addr_t *)skb->cb) = dma;
++	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
++						     idx * desc_sz);
++	memset(buf_desc, 0, sizeof(*buf_desc));
++	buf_desc->buf_size = cpu_to_le16(RTK_PCI_RX_BUF_SIZE);
++	buf_desc->dma = cpu_to_le32(dma);
++
++	return 0;
++}
++
++static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
++				struct rtw_pci_rx_ring *rx_ring,
++				u8 desc_size, u32 len)
++{
++	struct pci_dev *pdev = to_pci_dev(rtwdev->dev);
++	struct sk_buff *skb = NULL;
++	dma_addr_t dma;
++	u8 *head;
++	int ring_sz = desc_size * len;
++	int buf_sz = RTK_PCI_RX_BUF_SIZE;
++	int i, allocated;
++	int ret = 0;
++
++	head = pci_zalloc_consistent(pdev, ring_sz, &dma);
++	if (!head) {
++		rtw_err(rtwdev, "failed to allocate rx ring\n");
++		return -ENOMEM;
++	}
++	rx_ring->r.head = head;
++
++	for (i = 0; i < len; i++) {
++		skb = dev_alloc_skb(buf_sz);
++		if (!skb) {
++			allocated = i;
++			ret = -ENOMEM;
++			goto err_out;
++		}
++
++		memset(skb->data, 0, buf_sz);
++		rx_ring->buf[i] = skb;
++		ret = rtw_pci_reset_rx_desc(rtwdev, skb, rx_ring, i, desc_size);
++		if (ret) {
++			allocated = i;
++			dev_kfree_skb_any(skb);
++			goto err_out;
++		}
++	}
++
++	rx_ring->r.dma = dma;
++	rx_ring->r.len = len;
++	rx_ring->r.desc_size = desc_size;
++	rx_ring->r.wp = 0;
++	rx_ring->r.rp = 0;
++
++	return 0;
++
++err_out:
++	for (i = 0; i < allocated; i++) {
++		skb = rx_ring->buf[i];
++		if (!skb)
++			continue;
++		dma = *((dma_addr_t *)skb->cb);
++		pci_unmap_single(pdev, dma, buf_sz, PCI_DMA_FROMDEVICE);
++		dev_kfree_skb_any(skb);
++		rx_ring->buf[i] = NULL;
++	}
++	pci_free_consistent(pdev, ring_sz, head, dma);
++
++	rtw_err(rtwdev, "failed to init rx buffer\n");
++
++	return ret;
++}
++
++static int rtw_pci_init_trx_ring(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	struct rtw_pci_tx_ring *tx_ring;
++	struct rtw_pci_rx_ring *rx_ring;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	int i = 0, j = 0, tx_alloced = 0, rx_alloced = 0;
++	int tx_desc_size, rx_desc_size;
++	u32 len;
++	int ret;
++
++	tx_desc_size = chip->tx_buf_desc_sz;
++
++	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
++		tx_ring = &rtwpci->tx_rings[i];
++		len = max_num_of_tx_queue(i);
++		ret = rtw_pci_init_tx_ring(rtwdev, tx_ring, tx_desc_size, len);
++		if (ret)
++			goto out;
++	}
++
++	rx_desc_size = chip->rx_buf_desc_sz;
++
++	for (j = 0; j < RTK_MAX_RX_QUEUE_NUM; j++) {
++		rx_ring = &rtwpci->rx_rings[j];
++		ret = rtw_pci_init_rx_ring(rtwdev, rx_ring, rx_desc_size,
++					   RTK_MAX_RX_DESC_NUM);
++		if (ret)
++			goto out;
++	}
++
++	return 0;
++
++out:
++	tx_alloced = i;
++	for (i = 0; i < tx_alloced; i++) {
++		tx_ring = &rtwpci->tx_rings[i];
++		rtw_pci_free_tx_ring(rtwdev, tx_ring);
++	}
++
++	rx_alloced = j;
++	for (j = 0; j < rx_alloced; j++) {
++		rx_ring = &rtwpci->rx_rings[j];
++		rtw_pci_free_rx_ring(rtwdev, rx_ring);
++	}
++
++	return ret;
++}
++
++static void rtw_pci_deinit(struct rtw_dev *rtwdev)
++{
++	rtw_pci_free_trx_ring(rtwdev);
++}
++
++static int rtw_pci_init(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	int ret = 0;
++
++	rtwpci->irq_mask[0] = IMR_HIGHDOK |
++			      IMR_MGNTDOK |
++			      IMR_BKDOK |
++			      IMR_BEDOK |
++			      IMR_VIDOK |
++			      IMR_VODOK |
++			      IMR_ROK |
++			      IMR_BCNDMAINT_E |
++			      0;
++	rtwpci->irq_mask[1] = IMR_TXFOVW |
++			      0;
++	rtwpci->irq_mask[3] = IMR_H2CDOK |
++			      0;
++	spin_lock_init(&rtwpci->irq_lock);
++	ret = rtw_pci_init_trx_ring(rtwdev);
++
++	return ret;
++}
++
++static void rtw_pci_reset_buf_desc(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	u32 len;
++	u8 tmp;
++	dma_addr_t dma;
++
++	tmp = rtw_read8(rtwdev, RTK_PCI_CTRL + 3);
++	rtw_write8(rtwdev, RTK_PCI_CTRL + 3, tmp | 0xf7);
++
++	dma = rtwpci->tx_rings[RTW_TX_QUEUE_BCN].r.dma;
++	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_BCNQ, dma);
++
++	len = rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.len;
++	dma = rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.dma;
++	rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.rp = 0;
++	rtwpci->tx_rings[RTW_TX_QUEUE_H2C].r.wp = 0;
++	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_H2CQ, len);
++	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_H2CQ, dma);
++
++	len = rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.len;
++	dma = rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.dma;
++	rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.rp = 0;
++	rtwpci->tx_rings[RTW_TX_QUEUE_BK].r.wp = 0;
++	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_BKQ, len);
++	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_BKQ, dma);
++
++	len = rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.len;
++	dma = rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.dma;
++	rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.rp = 0;
++	rtwpci->tx_rings[RTW_TX_QUEUE_BE].r.wp = 0;
++	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_BEQ, len);
++	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_BEQ, dma);
++
++	len = rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.len;
++	dma = rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.dma;
++	rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.rp = 0;
++	rtwpci->tx_rings[RTW_TX_QUEUE_VO].r.wp = 0;
++	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_VOQ, len);
++	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_VOQ, dma);
++
++	len = rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.len;
++	dma = rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.dma;
++	rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.rp = 0;
++	rtwpci->tx_rings[RTW_TX_QUEUE_VI].r.wp = 0;
++	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_VIQ, len);
++	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_VIQ, dma);
++
++	len = rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.len;
++	dma = rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.dma;
++	rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.rp = 0;
++	rtwpci->tx_rings[RTW_TX_QUEUE_MGMT].r.wp = 0;
++	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_MGMTQ, len);
++	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_MGMTQ, dma);
++
++	len = rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.len;
++	dma = rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.dma;
++	rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.rp = 0;
++	rtwpci->tx_rings[RTW_TX_QUEUE_HI0].r.wp = 0;
++	rtw_write16(rtwdev, RTK_PCI_TXBD_NUM_HI0Q, len);
++	rtw_write32(rtwdev, RTK_PCI_TXBD_DESA_HI0Q, dma);
++
++	len = rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.len;
++	dma = rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.dma;
++	rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.rp = 0;
++	rtwpci->rx_rings[RTW_RX_QUEUE_MPDU].r.wp = 0;
++	rtw_write16(rtwdev, RTK_PCI_RXBD_NUM_MPDUQ, len & 0xfff);
++	rtw_write32(rtwdev, RTK_PCI_RXBD_DESA_MPDUQ, dma);
++
++	/* reset read/write point */
++	rtw_write32(rtwdev, RTK_PCI_TXBD_RWPTR_CLR, 0xffffffff);
++
++	/* rest H2C Queue index */
++	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HOST_IDX);
++	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HW_IDX);
++}
++
++static void rtw_pci_reset_trx_ring(struct rtw_dev *rtwdev)
++{
++	rtw_pci_reset_buf_desc(rtwdev);
++}
++
++static void rtw_pci_enable_interrupt(struct rtw_dev *rtwdev,
++				     struct rtw_pci *rtwpci)
++{
++	rtw_write32(rtwdev, RTK_PCI_HIMR0, rtwpci->irq_mask[0]);
++	rtw_write32(rtwdev, RTK_PCI_HIMR1, rtwpci->irq_mask[1]);
++	rtw_write32(rtwdev, RTK_PCI_HIMR3, rtwpci->irq_mask[3]);
++	rtwpci->irq_enabled = true;
++}
++
++static void rtw_pci_disable_interrupt(struct rtw_dev *rtwdev,
++				      struct rtw_pci *rtwpci)
++{
++	rtw_write32(rtwdev, RTK_PCI_HIMR0, 0);
++	rtw_write32(rtwdev, RTK_PCI_HIMR1, 0);
++	rtw_write32(rtwdev, RTK_PCI_HIMR3, 0);
++	rtwpci->irq_enabled = false;
++}
++
++static int rtw_pci_setup(struct rtw_dev *rtwdev)
++{
++	rtw_pci_reset_trx_ring(rtwdev);
++
++	return 0;
++}
++
++static void rtw_pci_dma_reset(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
++{
++	/* reset dma and rx tag */
++	rtw_write32_set(rtwdev, RTK_PCI_CTRL,
++			BIT_RST_TRXDMA_INTF | BIT_RX_TAG_EN);
++	rtwpci->rx_tag = 0;
++}
++
++static int rtw_pci_start(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	unsigned long flags;
++
++	rtw_pci_dma_reset(rtwdev, rtwpci);
++
++	spin_lock_irqsave(&rtwpci->irq_lock, flags);
++	rtw_pci_enable_interrupt(rtwdev, rtwpci);
++	spin_unlock_irqrestore(&rtwpci->irq_lock, flags);
++
++	return 0;
++}
++
++static void rtw_pci_stop(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	unsigned long flags;
++
++	spin_lock_irqsave(&rtwpci->irq_lock, flags);
++	rtw_pci_disable_interrupt(rtwdev, rtwpci);
++	spin_unlock_irqrestore(&rtwpci->irq_lock, flags);
++}
++
++static u8 ac_to_hwq[] = {
++	[0] = RTW_TX_QUEUE_VO,
++	[1] = RTW_TX_QUEUE_VI,
++	[2] = RTW_TX_QUEUE_BE,
++	[3] = RTW_TX_QUEUE_BK,
++};
++
++static u8 rtw_hw_queue_mapping(struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	__le16 fc = hdr->frame_control;
++	u8 q_mapping = skb_get_queue_mapping(skb);
++	u8 queue;
++
++	if (unlikely(ieee80211_is_beacon(fc)))
++		queue = RTW_TX_QUEUE_BCN;
++	else if (unlikely(ieee80211_is_mgmt(fc) || ieee80211_is_ctl(fc)))
++		queue = RTW_TX_QUEUE_MGMT;
++	else
++		queue = ac_to_hwq[q_mapping];
++
++	return queue;
++}
++
++static void rtw_pci_release_rsvd_page(struct rtw_pci *rtwpci,
++				      struct rtw_pci_tx_ring *ring)
++{
++	struct sk_buff *prev = skb_dequeue(&ring->queue);
++	struct rtw_pci_tx_data *tx_data;
++	dma_addr_t dma;
++
++	if (!prev)
++		return;
++
++	tx_data = rtw_pci_get_tx_data(prev);
++	dma = tx_data->dma;
++	pci_unmap_single(rtwpci->pdev, dma, prev->len,
++			 PCI_DMA_TODEVICE);
++	dev_kfree_skb_any(prev);
++}
++
++static void rtw_pci_dma_check(struct rtw_dev *rtwdev,
++			      struct rtw_pci_rx_ring *rx_ring,
++			      u32 idx)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_pci_rx_buffer_desc *buf_desc;
++	u32 desc_sz = chip->rx_buf_desc_sz;
++	u16 total_pkt_size;
++
++	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
++						     idx * desc_sz);
++	total_pkt_size = le16_to_cpu(buf_desc->total_pkt_size);
++
++	/* rx tag mismatch, throw a warning */
++	if (total_pkt_size != rtwpci->rx_tag)
++		rtw_warn(rtwdev, "pci bus timeout, check dma status\n");
++
++	rtwpci->rx_tag = (rtwpci->rx_tag + 1) % RX_TAG_MAX;
++}
++
++static int rtw_pci_xmit(struct rtw_dev *rtwdev,
++			struct rtw_tx_pkt_info *pkt_info,
++			struct sk_buff *skb, u8 queue)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_pci_tx_ring *ring;
++	struct rtw_pci_tx_data *tx_data;
++	dma_addr_t dma;
++	u32 tx_pkt_desc_sz = chip->tx_pkt_desc_sz;
++	u32 tx_buf_desc_sz = chip->tx_buf_desc_sz;
++	u32 size;
++	u32 psb_len;
++	u8 *pkt_desc;
++	struct rtw_pci_tx_buffer_desc *buf_desc;
++	u32 bd_idx;
++
++	ring = &rtwpci->tx_rings[queue];
++
++	size = skb->len;
++
++	if (queue == RTW_TX_QUEUE_BCN)
++		rtw_pci_release_rsvd_page(rtwpci, ring);
++	else if (!avail_desc(ring->r.wp, ring->r.rp, ring->r.len))
++		return -ENOSPC;
++
++	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
++	memset(pkt_desc, 0, tx_pkt_desc_sz);
++	pkt_info->qsel = rtw_pci_get_tx_qsel(skb, queue);
++	rtw_tx_fill_tx_desc(pkt_info, skb);
++	dma = pci_map_single(rtwpci->pdev, skb->data, skb->len,
++			     PCI_DMA_TODEVICE);
++	if (pci_dma_mapping_error(rtwpci->pdev, dma))
++		return -EBUSY;
++
++	/* after this we got dma mapped, there is no way back */
++	buf_desc = get_tx_buffer_desc(ring, tx_buf_desc_sz);
++	memset(buf_desc, 0, tx_buf_desc_sz);
++	psb_len = (skb->len - 1) / 128 + 1;
++	if (queue == RTW_TX_QUEUE_BCN)
++		psb_len |= 1 << RTK_PCI_TXBD_OWN_OFFSET;
++
++	buf_desc[0].psb_len = cpu_to_le16(psb_len);
++	buf_desc[0].buf_size = cpu_to_le16(tx_pkt_desc_sz);
++	buf_desc[0].dma = cpu_to_le32(dma);
++	buf_desc[1].buf_size = cpu_to_le16(size);
++	buf_desc[1].dma = cpu_to_le32(dma + tx_pkt_desc_sz);
++
++	tx_data = rtw_pci_get_tx_data(skb);
++	tx_data->dma = dma;
++	tx_data->sn = pkt_info->sn;
++	skb_queue_tail(&ring->queue, skb);
++
++	/* kick off tx queue */
++	if (queue != RTW_TX_QUEUE_BCN) {
++		if (++ring->r.wp >= ring->r.len)
++			ring->r.wp = 0;
++		bd_idx = rtw_pci_tx_queue_idx_addr[queue];
++		rtw_write16(rtwdev, bd_idx, ring->r.wp & 0xfff);
++	} else {
++		u32 reg_bcn_work;
++
++		reg_bcn_work = rtw_read8(rtwdev, RTK_PCI_TXBD_BCN_WORK);
++		reg_bcn_work |= BIT_PCI_BCNQ_FLAG;
++		rtw_write8(rtwdev, RTK_PCI_TXBD_BCN_WORK, reg_bcn_work);
++	}
++
++	return 0;
++}
++
++static int rtw_pci_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf,
++					u32 size)
++{
++	struct sk_buff *skb;
++	struct rtw_tx_pkt_info pkt_info;
++	u32 tx_pkt_desc_sz;
++	u32 length;
++
++	tx_pkt_desc_sz = rtwdev->chip->tx_pkt_desc_sz;
++	length = size + tx_pkt_desc_sz;
++	skb = dev_alloc_skb(length);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_reserve(skb, tx_pkt_desc_sz);
++	memcpy((u8 *)skb_put(skb, size), buf, size);
++	memset(&pkt_info, 0, sizeof(pkt_info));
++	pkt_info.tx_pkt_size = size;
++	pkt_info.offset = tx_pkt_desc_sz;
++
++	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_BCN);
++}
++
++static int rtw_pci_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
++{
++	struct sk_buff *skb;
++	struct rtw_tx_pkt_info pkt_info;
++	u32 tx_pkt_desc_sz;
++	u32 length;
++
++	tx_pkt_desc_sz = rtwdev->chip->tx_pkt_desc_sz;
++	length = size + tx_pkt_desc_sz;
++	skb = dev_alloc_skb(length);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_reserve(skb, tx_pkt_desc_sz);
++	memcpy((u8 *)skb_put(skb, size), buf, size);
++	memset(&pkt_info, 0, sizeof(pkt_info));
++	pkt_info.tx_pkt_size = size;
++
++	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_H2C);
++}
++
++static int rtw_pci_tx(struct rtw_dev *rtwdev,
++		      struct rtw_tx_pkt_info *pkt_info,
++		      struct sk_buff *skb)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	struct rtw_pci_tx_ring *ring;
++	u8 queue = rtw_hw_queue_mapping(skb);
++	int ret;
++
++	ret = rtw_pci_xmit(rtwdev, pkt_info, skb, queue);
++	if (ret)
++		return ret;
++
++	ring = &rtwpci->tx_rings[queue];
++	if (avail_desc(ring->r.wp, ring->r.rp, ring->r.len) < 2) {
++		ieee80211_stop_queue(rtwdev->hw, skb_get_queue_mapping(skb));
++		ring->queue_stopped = true;
++	}
++
++	return 0;
++}
++
++static void rtw_pci_tx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
++			   u8 hw_queue)
++{
++	struct ieee80211_hw *hw = rtwdev->hw;
++	struct ieee80211_tx_info *info;
++	struct rtw_pci_tx_ring *ring;
++	struct rtw_pci_tx_data *tx_data;
++	struct sk_buff *skb;
++	u32 count;
++	u32 bd_idx_addr;
++	u32 bd_idx, cur_rp;
++	u16 q_map;
++
++	ring = &rtwpci->tx_rings[hw_queue];
++
++	bd_idx_addr = rtw_pci_tx_queue_idx_addr[hw_queue];
++	bd_idx = rtw_read32(rtwdev, bd_idx_addr);
++	cur_rp = bd_idx >> 16;
++	cur_rp &= 0xfff;
++	if (cur_rp >= ring->r.rp)
++		count = cur_rp - ring->r.rp;
++	else
++		count = ring->r.len - (ring->r.rp - cur_rp);
++
++	while (count--) {
++		skb = skb_dequeue(&ring->queue);
++		tx_data = rtw_pci_get_tx_data(skb);
++		pci_unmap_single(rtwpci->pdev, tx_data->dma, skb->len,
++				 PCI_DMA_TODEVICE);
++
++		/* just free command packets from host to card */
++		if (hw_queue == RTW_TX_QUEUE_H2C) {
++			dev_kfree_skb_irq(skb);
++			continue;
++		}
++
++		if (ring->queue_stopped &&
++		    avail_desc(ring->r.wp, ring->r.rp, ring->r.len) > 4) {
++			q_map = skb_get_queue_mapping(skb);
++			ieee80211_wake_queue(hw, q_map);
++			ring->queue_stopped = false;
++		}
++
++		skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
++
++		info = IEEE80211_SKB_CB(skb);
++
++		/* enqueue to wait for tx report */
++		if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
++			rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
++			continue;
++		}
++
++		/* always ACK for others, then they won't be marked as drop */
++		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
++			info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
++		else
++			info->flags |= IEEE80211_TX_STAT_ACK;
++
++		ieee80211_tx_info_clear_status(info);
++		ieee80211_tx_status_irqsafe(hw, skb);
++	}
++
++	ring->r.rp = cur_rp;
++}
++
++static void rtw_pci_rx_isr(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci,
++			   u8 hw_queue)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_pci_rx_ring *ring;
++	struct rtw_rx_pkt_stat pkt_stat;
++	struct ieee80211_rx_status rx_status;
++	struct sk_buff *skb, *new;
++	u32 cur_wp, cur_rp, tmp;
++	u32 count;
++	u32 pkt_offset;
++	u32 pkt_desc_sz = chip->rx_pkt_desc_sz;
++	u32 buf_desc_sz = chip->rx_buf_desc_sz;
++	u8 *rx_desc;
++	dma_addr_t dma;
++
++	ring = &rtwpci->rx_rings[RTW_RX_QUEUE_MPDU];
++
++	tmp = rtw_read32(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ);
++	cur_wp = tmp >> 16;
++	cur_wp &= 0xfff;
++	if (cur_wp >= ring->r.wp)
++		count = cur_wp - ring->r.wp;
++	else
++		count = ring->r.len - (ring->r.wp - cur_wp);
++
++	cur_rp = ring->r.rp;
++	while (count--) {
++		rtw_pci_dma_check(rtwdev, ring, cur_rp);
++		skb = ring->buf[cur_rp];
++		dma = *((dma_addr_t *)skb->cb);
++		pci_unmap_single(rtwpci->pdev, dma, RTK_PCI_RX_BUF_SIZE,
++				 PCI_DMA_FROMDEVICE);
++		rx_desc = skb->data;
++		chip->ops->query_rx_desc(rtwdev, rx_desc, &pkt_stat, &rx_status);
++
++		/* offset from rx_desc to payload */
++		pkt_offset = pkt_desc_sz + pkt_stat.drv_info_sz +
++			     pkt_stat.shift;
++
++		if (pkt_stat.is_c2h) {
++			/* keep rx_desc, halmac needs it */
++			skb_put(skb, pkt_stat.pkt_len + pkt_offset);
++
++			/* pass offset for further operation */
++			*((u32 *)skb->cb) = pkt_offset;
++			skb_queue_tail(&rtwdev->c2h_queue, skb);
++			ieee80211_queue_work(rtwdev->hw, &rtwdev->c2h_work);
++		} else {
++			/* remove rx_desc, maybe use skb_pull? */
++			skb_put(skb, pkt_stat.pkt_len);
++			skb_reserve(skb, pkt_offset);
++
++			/* alloc a smaller skb to mac80211 */
++			new = dev_alloc_skb(pkt_stat.pkt_len);
++			if (!new) {
++				new = skb;
++			} else {
++				skb_put_data(new, skb->data, skb->len);
++				dev_kfree_skb_any(skb);
++			}
++			/* TODO: merge into rx.c */
++			rtw_rx_stats(rtwdev, pkt_stat.vif, skb);
++			memcpy(new->cb, &rx_status, sizeof(rx_status));
++			ieee80211_rx_irqsafe(rtwdev->hw, new);
++		}
++
++		/* skb delivered to mac80211, alloc a new one in rx ring */
++		new = dev_alloc_skb(RTK_PCI_RX_BUF_SIZE);
++		if (WARN(!new, "rx routine starvation\n"))
++			return;
++
++		ring->buf[cur_rp] = new;
++		rtw_pci_reset_rx_desc(rtwdev, new, ring, cur_rp, buf_desc_sz);
++
++		/* host read next element in ring */
++		if (++cur_rp >= ring->r.len)
++			cur_rp = 0;
++	}
++
++	ring->r.rp = cur_rp;
++	ring->r.wp = cur_wp;
++	rtw_write16(rtwdev, RTK_PCI_RXBD_IDX_MPDUQ, ring->r.rp);
++}
++
++static void rtw_pci_irq_recognized(struct rtw_dev *rtwdev,
++				   struct rtw_pci *rtwpci, u32 *irq_status)
++{
++	irq_status[0] = rtw_read32(rtwdev, RTK_PCI_HISR0);
++	irq_status[1] = rtw_read32(rtwdev, RTK_PCI_HISR1);
++	irq_status[3] = rtw_read32(rtwdev, RTK_PCI_HISR3);
++	irq_status[0] &= rtwpci->irq_mask[0];
++	irq_status[1] &= rtwpci->irq_mask[1];
++	irq_status[3] &= rtwpci->irq_mask[3];
++	rtw_write32(rtwdev, RTK_PCI_HISR0, irq_status[0]);
++	rtw_write32(rtwdev, RTK_PCI_HISR1, irq_status[1]);
++	rtw_write32(rtwdev, RTK_PCI_HISR3, irq_status[3]);
++}
++
++static irqreturn_t rtw_pci_interrupt_handler(int irq, void *dev)
++{
++	struct rtw_dev *rtwdev = dev;
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	u32 irq_status[4];
++
++	spin_lock(&rtwpci->irq_lock);
++	if (!rtwpci->irq_enabled)
++		goto out;
++
++	rtw_pci_irq_recognized(rtwdev, rtwpci, irq_status);
++
++	if (irq_status[0] & IMR_MGNTDOK)
++		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_MGMT);
++	if (irq_status[0] & IMR_HIGHDOK)
++		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_HI0);
++	if (irq_status[0] & IMR_BEDOK)
++		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BE);
++	if (irq_status[0] & IMR_BKDOK)
++		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_BK);
++	if (irq_status[0] & IMR_VODOK)
++		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VO);
++	if (irq_status[0] & IMR_VIDOK)
++		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_VI);
++	if (irq_status[3] & IMR_H2CDOK)
++		rtw_pci_tx_isr(rtwdev, rtwpci, RTW_TX_QUEUE_H2C);
++	if (irq_status[0] & IMR_ROK)
++		rtw_pci_rx_isr(rtwdev, rtwpci, RTW_RX_QUEUE_MPDU);
++
++out:
++	spin_unlock(&rtwpci->irq_lock);
++
++	return IRQ_HANDLED;
++}
++
++static int rtw_pci_io_mapping(struct rtw_dev *rtwdev,
++			      struct pci_dev *pdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	unsigned long len;
++	u8 bar_id = 2;
++	int ret;
++
++	ret = pci_request_regions(pdev, KBUILD_MODNAME);
++	if (ret) {
++		rtw_err(rtwdev, "failed to request pci regions\n");
++		return ret;
++	}
++
++	len = pci_resource_len(pdev, bar_id);
++	rtwpci->mmap = pci_iomap(pdev, bar_id, len);
++	if (!rtwpci->mmap) {
++		rtw_err(rtwdev, "failed to map pci memory\n");
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++static void rtw_pci_io_unmapping(struct rtw_dev *rtwdev,
++				 struct pci_dev *pdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++
++	if (rtwpci->mmap) {
++		pci_iounmap(pdev, rtwpci->mmap);
++		pci_release_regions(pdev);
++	}
++}
++
++static void rtw_dbi_write8(struct rtw_dev *rtwdev, u16 addr, u8 data)
++{
++	u16 write_addr;
++	u16 remainder = addr & 0x3;
++	u8 flag;
++	u8 cnt = 20;
++
++	write_addr = ((addr & 0x0ffc) | (BIT(0) << (remainder + 12)));
++	rtw_write8(rtwdev, REG_DBI_WDATA_V1 + remainder, data);
++	rtw_write16(rtwdev, REG_DBI_FLAG_V1, write_addr);
++	rtw_write8(rtwdev, REG_DBI_FLAG_V1 + 2, 0x01);
++
++	flag = rtw_read8(rtwdev, REG_DBI_FLAG_V1 + 2);
++	while (flag && (cnt != 0)) {
++		udelay(10);
++		flag = rtw_read8(rtwdev, REG_DBI_FLAG_V1 + 2);
++		cnt--;
++	}
++
++	WARN(flag, "DBI write fail\n");
++}
++
++static void rtw_mdio_write(struct rtw_dev *rtwdev, u8 addr, u16 data, bool g1)
++{
++	u8 page;
++	u8 wflag;
++	u8 cnt;
++
++	rtw_write16(rtwdev, REG_MDIO_V1, data);
++
++	page = addr < 0x20 ? 0 : 1;
++	page += g1 ? 0 : 2;
++	rtw_write8(rtwdev, REG_PCIE_MIX_CFG, addr & 0x1f);
++	rtw_write8(rtwdev, REG_PCIE_MIX_CFG + 3, page);
++
++	rtw_write32_mask(rtwdev, REG_PCIE_MIX_CFG, BIT_MDIO_WFLAG_V1, 1);
++	wflag = rtw_read32_mask(rtwdev, REG_PCIE_MIX_CFG, BIT_MDIO_WFLAG_V1);
++
++	cnt = 20;
++	while (wflag && (cnt != 0)) {
++		udelay(10);
++		wflag = rtw_read32_mask(rtwdev, REG_PCIE_MIX_CFG,
++					BIT_MDIO_WFLAG_V1);
++		cnt--;
++	}
++
++	WARN(wflag, "MDIO write fail\n");
++}
++
++static void rtw_pci_phy_cfg(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_intf_phy_para *para;
++	u16 cut;
++	u16 value;
++	u16 offset;
++	u16 ip_sel;
++	int i;
++
++	cut = BIT(0) << rtwdev->hal.cut_version;
++
++	for (i = 0; i < chip->intf_table->n_gen1_para; i++) {
++		para = &chip->intf_table->gen1_para[i];
++		if (!(para->cut_mask & cut))
++			continue;
++		if (para->offset == 0xffff)
++			break;
++		offset = para->offset;
++		value = para->value;
++		ip_sel = para->ip_sel;
++		if (para->ip_sel == RTW_IP_SEL_PHY)
++			rtw_mdio_write(rtwdev, offset, value, true);
++		else
++			rtw_dbi_write8(rtwdev, offset, value);
++	}
++
++	for (i = 0; i < chip->intf_table->n_gen2_para; i++) {
++		para = &chip->intf_table->gen2_para[i];
++		if (!(para->cut_mask & cut))
++			continue;
++		if (para->offset == 0xffff)
++			break;
++		offset = para->offset;
++		value = para->value;
++		ip_sel = para->ip_sel;
++		if (para->ip_sel == RTW_IP_SEL_PHY)
++			rtw_mdio_write(rtwdev, offset, value, false);
++		else
++			rtw_dbi_write8(rtwdev, offset, value);
++	}
++}
++
++static int rtw_pci_claim(struct rtw_dev *rtwdev, struct pci_dev *pdev)
++{
++	int ret;
++
++	ret = pci_enable_device(pdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to enable pci device\n");
++		return ret;
++	}
++
++	pci_set_master(pdev);
++	pci_set_drvdata(pdev, rtwdev->hw);
++	SET_IEEE80211_DEV(rtwdev->hw, &pdev->dev);
++
++	return 0;
++}
++
++static void rtw_pci_declaim(struct rtw_dev *rtwdev, struct pci_dev *pdev)
++{
++	pci_clear_master(pdev);
++	pci_disable_device(pdev);
++}
++
++static int rtw_pci_setup_resource(struct rtw_dev *rtwdev, struct pci_dev *pdev)
++{
++	struct rtw_pci *rtwpci;
++	int ret;
++
++	rtwpci = (struct rtw_pci *)rtwdev->priv;
++	rtwpci->pdev = pdev;
++
++	/* after this driver can access to hw registers */
++	ret = rtw_pci_io_mapping(rtwdev, pdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to request pci io region\n");
++		goto err_out;
++	}
++
++	ret = rtw_pci_init(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to allocate pci resources\n");
++		goto err_io_unmap;
++	}
++
++	rtw_pci_phy_cfg(rtwdev);
++
++	return 0;
++
++err_io_unmap:
++	rtw_pci_io_unmapping(rtwdev, pdev);
++
++err_out:
++	return ret;
++}
++
++static void rtw_pci_destroy(struct rtw_dev *rtwdev, struct pci_dev *pdev)
++{
++	rtw_pci_deinit(rtwdev);
++	rtw_pci_io_unmapping(rtwdev, pdev);
++}
++
++static struct rtw_hci_ops rtw_pci_ops = {
++	.tx = rtw_pci_tx,
++	.setup = rtw_pci_setup,
++	.start = rtw_pci_start,
++	.stop = rtw_pci_stop,
++
++	.read8 = rtw_pci_read8,
++	.read16 = rtw_pci_read16,
++	.read32 = rtw_pci_read32,
++	.write8 = rtw_pci_write8,
++	.write16 = rtw_pci_write16,
++	.write32 = rtw_pci_write32,
++	.write_data_rsvd_page = rtw_pci_write_data_rsvd_page,
++	.write_data_h2c = rtw_pci_write_data_h2c,
++};
++
++static int rtw_pci_probe(struct pci_dev *pdev,
++			 const struct pci_device_id *id)
++{
++	struct ieee80211_hw *hw;
++	struct rtw_dev *rtwdev;
++	int drv_data_size;
++	int ret;
++
++	drv_data_size = sizeof(struct rtw_dev) + sizeof(struct rtw_pci);
++	hw = ieee80211_alloc_hw(drv_data_size, &rtw_ops);
++	if (!hw) {
++		dev_err(&pdev->dev, "failed to allocate hw\n");
++		return -ENOMEM;
++	}
++
++	rtwdev = hw->priv;
++	rtwdev->hw = hw;
++	rtwdev->dev = &pdev->dev;
++	rtwdev->chip = (struct rtw_chip_info *)id->driver_data;
++	rtwdev->hci.ops = &rtw_pci_ops;
++	rtwdev->hci.type = RTW_HCI_TYPE_PCIE;
++
++	ret = rtw_core_init(rtwdev);
++	if (ret)
++		goto err_release_hw;
++
++	rtw_dbg(rtwdev, RTW_DBG_PCI,
++		"rtw88 pci probe: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
++		pdev->vendor, pdev->device, pdev->revision);
++
++	ret = rtw_pci_claim(rtwdev, pdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to claim pci device\n");
++		goto err_deinit_core;
++	}
++
++	ret = rtw_pci_setup_resource(rtwdev, pdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to setup pci resources\n");
++		goto err_pci_declaim;
++	}
++
++	ret = rtw_chip_info_setup(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to setup chip information\n");
++		goto err_destroy_pci;
++	}
++
++	ret = rtw_register_hw(rtwdev, hw);
++	if (ret) {
++		rtw_err(rtwdev, "failed to register hw\n");
++		goto err_destroy_pci;
++	}
++
++	ret = request_irq(pdev->irq, &rtw_pci_interrupt_handler,
++			  IRQF_SHARED, KBUILD_MODNAME, rtwdev);
++	if (ret) {
++		ieee80211_unregister_hw(hw);
++		goto err_destroy_pci;
++	}
++
++	return 0;
++
++err_destroy_pci:
++	rtw_pci_destroy(rtwdev, pdev);
++
++err_pci_declaim:
++	rtw_pci_declaim(rtwdev, pdev);
++
++err_deinit_core:
++	rtw_core_deinit(rtwdev);
++
++err_release_hw:
++	ieee80211_free_hw(hw);
++
++	return ret;
++}
++
++static void rtw_pci_remove(struct pci_dev *pdev)
++{
++	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
++	struct rtw_dev *rtwdev;
++	struct rtw_pci *rtwpci;
++
++	if (!hw)
++		return;
++
++	rtwdev = hw->priv;
++	rtwpci = (struct rtw_pci *)rtwdev->priv;
++
++	rtw_unregister_hw(rtwdev, hw);
++	rtw_pci_disable_interrupt(rtwdev, rtwpci);
++	rtw_pci_destroy(rtwdev, pdev);
++	rtw_pci_declaim(rtwdev, pdev);
++	free_irq(rtwpci->pdev->irq, rtwdev);
++	rtw_core_deinit(rtwdev);
++	ieee80211_free_hw(hw);
++}
++
++static const struct pci_device_id rtw_pci_id_table[] = {
++#ifdef CONFIG_RTW88_8822BE
++	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xB822, rtw8822b_hw_spec) },
++#endif
++#ifdef CONFIG_RTW88_8822CE
++	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xC822, rtw8822c_hw_spec) },
++#endif
++	{},
++};
++MODULE_DEVICE_TABLE(pci, rtw_pci_id_table);
++
++static struct pci_driver rtw_pci_driver = {
++	.name = "rtw_pci",
++	.id_table = rtw_pci_id_table,
++	.probe = rtw_pci_probe,
++	.remove = rtw_pci_remove,
++};
++module_pci_driver(rtw_pci_driver);
++
++MODULE_AUTHOR("Realtek Corporation");
++MODULE_DESCRIPTION("Realtek 802.11ac wireless PCI driver");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
+new file mode 100644
+index 0000000..48bb927
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/pci.h
+@@ -0,0 +1,237 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTK_PCI_H_
++#define __RTK_PCI_H_
++
++#define RTK_PCI_DEVICE(vend, dev, hw_config)	\
++	PCI_DEVICE(vend, dev),			\
++	.driver_data = (kernel_ulong_t)&(hw_config),
++
++#define RTK_DEFAULT_TX_DESC_NUM 128
++#define RTK_BEQ_TX_DESC_NUM	256
++
++#define RTK_MAX_RX_DESC_NUM	512
++/* 8K + rx desc size */
++#define RTK_PCI_RX_BUF_SIZE	(8192 + 24)
++
++#define RTK_PCI_CTRL		0x300
++#define BIT_RST_TRXDMA_INTF	BIT(20)
++#define BIT_RX_TAG_EN		BIT(15)
++#define REG_DBI_WDATA_V1	0x03E8
++#define REG_DBI_FLAG_V1		0x03F0
++#define REG_MDIO_V1		0x03F4
++#define REG_PCIE_MIX_CFG	0x03F8
++#define BIT_MDIO_WFLAG_V1	BIT(5)
++
++#define BIT_PCI_BCNQ_FLAG	BIT(4)
++#define RTK_PCI_TXBD_DESA_BCNQ	0x308
++#define RTK_PCI_TXBD_DESA_H2CQ	0x1320
++#define RTK_PCI_TXBD_DESA_MGMTQ	0x310
++#define RTK_PCI_TXBD_DESA_BKQ	0x330
++#define RTK_PCI_TXBD_DESA_BEQ	0x328
++#define RTK_PCI_TXBD_DESA_VIQ	0x320
++#define RTK_PCI_TXBD_DESA_VOQ	0x318
++#define RTK_PCI_TXBD_DESA_HI0Q	0x340
++#define RTK_PCI_RXBD_DESA_MPDUQ	0x338
++
++/* BCNQ is specialized for rsvd page, does not need to specify a number */
++#define RTK_PCI_TXBD_NUM_H2CQ	0x1328
++#define RTK_PCI_TXBD_NUM_MGMTQ	0x380
++#define RTK_PCI_TXBD_NUM_BKQ	0x38A
++#define RTK_PCI_TXBD_NUM_BEQ	0x388
++#define RTK_PCI_TXBD_NUM_VIQ	0x386
++#define RTK_PCI_TXBD_NUM_VOQ	0x384
++#define RTK_PCI_TXBD_NUM_HI0Q	0x38C
++#define RTK_PCI_RXBD_NUM_MPDUQ	0x382
++#define RTK_PCI_TXBD_IDX_H2CQ	0x132C
++#define RTK_PCI_TXBD_IDX_MGMTQ	0x3B0
++#define RTK_PCI_TXBD_IDX_BKQ	0x3AC
++#define RTK_PCI_TXBD_IDX_BEQ	0x3A8
++#define RTK_PCI_TXBD_IDX_VIQ	0x3A4
++#define RTK_PCI_TXBD_IDX_VOQ	0x3A0
++#define RTK_PCI_TXBD_IDX_HI0Q	0x3B8
++#define RTK_PCI_RXBD_IDX_MPDUQ	0x3B4
++
++#define RTK_PCI_TXBD_RWPTR_CLR	0x39C
++#define RTK_PCI_TXBD_H2CQ_CSR	0x1330
++
++#define BIT_CLR_H2CQ_HOST_IDX	BIT(16)
++#define BIT_CLR_H2CQ_HW_IDX	BIT(8)
++
++#define RTK_PCI_HIMR0		0x0B0
++#define RTK_PCI_HISR0		0x0B4
++#define RTK_PCI_HIMR1		0x0B8
++#define RTK_PCI_HISR1		0x0BC
++#define RTK_PCI_HIMR2		0x10B0
++#define RTK_PCI_HISR2		0x10B4
++#define RTK_PCI_HIMR3		0x10B8
++#define RTK_PCI_HISR3		0x10BC
++/* IMR 0 */
++#define IMR_TIMER2		BIT(31)
++#define IMR_TIMER1		BIT(30)
++#define IMR_PSTIMEOUT		BIT(29)
++#define IMR_GTINT4		BIT(28)
++#define IMR_GTINT3		BIT(27)
++#define IMR_TBDER		BIT(26)
++#define IMR_TBDOK		BIT(25)
++#define IMR_TSF_BIT32_TOGGLE	BIT(24)
++#define IMR_BCNDMAINT0		BIT(20)
++#define IMR_BCNDOK0		BIT(16)
++#define IMR_HSISR_IND_ON_INT	BIT(15)
++#define IMR_BCNDMAINT_E		BIT(14)
++#define IMR_ATIMEND		BIT(12)
++#define IMR_HISR1_IND_INT	BIT(11)
++#define IMR_C2HCMD		BIT(10)
++#define IMR_CPWM2		BIT(9)
++#define IMR_CPWM		BIT(8)
++#define IMR_HIGHDOK		BIT(7)
++#define IMR_MGNTDOK		BIT(6)
++#define IMR_BKDOK		BIT(5)
++#define IMR_BEDOK		BIT(4)
++#define IMR_VIDOK		BIT(3)
++#define IMR_VODOK		BIT(2)
++#define IMR_RDU			BIT(1)
++#define IMR_ROK			BIT(0)
++/* IMR 1 */
++#define IMR_TXFIFO_TH_INT	BIT(30)
++#define IMR_BTON_STS_UPDATE	BIT(29)
++#define IMR_MCUERR		BIT(28)
++#define IMR_BCNDMAINT7		BIT(27)
++#define IMR_BCNDMAINT6		BIT(26)
++#define IMR_BCNDMAINT5		BIT(25)
++#define IMR_BCNDMAINT4		BIT(24)
++#define IMR_BCNDMAINT3		BIT(23)
++#define IMR_BCNDMAINT2		BIT(22)
++#define IMR_BCNDMAINT1		BIT(21)
++#define IMR_BCNDOK7		BIT(20)
++#define IMR_BCNDOK6		BIT(19)
++#define IMR_BCNDOK5		BIT(18)
++#define IMR_BCNDOK4		BIT(17)
++#define IMR_BCNDOK3		BIT(16)
++#define IMR_BCNDOK2		BIT(15)
++#define IMR_BCNDOK1		BIT(14)
++#define IMR_ATIMEND_E		BIT(13)
++#define IMR_ATIMEND		BIT(12)
++#define IMR_TXERR		BIT(11)
++#define IMR_RXERR		BIT(10)
++#define IMR_TXFOVW		BIT(9)
++#define IMR_RXFOVW		BIT(8)
++#define IMR_CPU_MGQ_TXDONE	BIT(5)
++#define IMR_PS_TIMER_C		BIT(4)
++#define IMR_PS_TIMER_B		BIT(3)
++#define IMR_PS_TIMER_A		BIT(2)
++#define IMR_CPUMGQ_TX_TIMER	BIT(1)
++/* IMR 3 */
++#define IMR_H2CDOK		BIT(16)
++
++/* one element is reserved to know if the ring is closed */
++static inline int avail_desc(u32 wp, u32 rp, u32 len)
++{
++	if (rp > wp)
++		return rp - wp - 1;
++	else
++		return len - wp + rp - 1;
++}
++
++#define RTK_PCI_TXBD_OWN_OFFSET 15
++#define RTK_PCI_TXBD_BCN_WORK	0x383
++
++struct rtw_pci_tx_buffer_desc {
++	__le16 buf_size;
++	__le16 psb_len;
++	__le32 dma;
++};
++
++struct rtw_pci_tx_data {
++	dma_addr_t dma;
++	u8 sn;
++};
++
++struct rtw_pci_ring {
++	u8 *head;
++	dma_addr_t dma;
++
++	u8 desc_size;
++
++	u32 len;
++	u32 wp;
++	u32 rp;
++};
++
++struct rtw_pci_tx_ring {
++	struct rtw_pci_ring r;
++	struct sk_buff_head queue;
++	bool queue_stopped;
++};
++
++struct rtw_pci_rx_buffer_desc {
++	__le16 buf_size;
++	__le16 total_pkt_size;
++	__le32 dma;
++};
++
++struct rtw_pci_rx_ring {
++	struct rtw_pci_ring r;
++	struct sk_buff *buf[RTK_MAX_RX_DESC_NUM];
++};
++
++#define RX_TAG_MAX	8192
++
++struct rtw_pci {
++	struct pci_dev *pdev;
++
++	/* used for pci interrupt */
++	spinlock_t irq_lock;
++	u32 irq_mask[4];
++	bool irq_enabled;
++
++	u16 rx_tag;
++	struct rtw_pci_tx_ring tx_rings[RTK_MAX_TX_QUEUE_NUM];
++	struct rtw_pci_rx_ring rx_rings[RTK_MAX_RX_QUEUE_NUM];
++
++	void __iomem *mmap;
++};
++
++static u32 max_num_of_tx_queue(u8 queue)
++{
++	u32 max_num;
++
++	switch (queue) {
++	case RTW_TX_QUEUE_BE:
++		max_num = RTK_BEQ_TX_DESC_NUM;
++		break;
++	case RTW_TX_QUEUE_BCN:
++		max_num = 1;
++		break;
++	default:
++		max_num = RTK_DEFAULT_TX_DESC_NUM;
++		break;
++	}
++
++	return max_num;
++}
++
++static inline struct
++rtw_pci_tx_data *rtw_pci_get_tx_data(struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	BUILD_BUG_ON(sizeof(struct rtw_pci_tx_data) >
++		     sizeof(info->status.status_driver_data));
++
++	return (struct rtw_pci_tx_data *)info->status.status_driver_data;
++}
++
++static inline
++struct rtw_pci_tx_buffer_desc *get_tx_buffer_desc(struct rtw_pci_tx_ring *ring,
++						  u32 size)
++{
++	u8 *buf_desc;
++
++	buf_desc = ring->r.head + ring->r.wp * size;
++	return (struct rtw_pci_tx_buffer_desc *)buf_desc;
++}
++
++#endif
 -- 
 2.7.4
 
