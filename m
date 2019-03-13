@@ -2,129 +2,137 @@ Return-Path: <SRS0=EMXR=RQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81571C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 11:31:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D035BC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 12:14:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42B7E2147C
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 11:31:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="P73PwKrd"
+	by mail.kernel.org (Postfix) with ESMTP id 94CDF2177E
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 12:14:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725895AbfCMLbm (ORCPT
+        id S1725907AbfCMMOO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Mar 2019 07:31:42 -0400
-Received: from nbd.name ([46.4.11.11]:40892 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725870AbfCMLbm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Mar 2019 07:31:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=6EfKyNWtzbtJFuEFvO2myljydnWDyFxNHlXfKTGFfrU=; b=P73PwKrdcP4P2TghUsgCh2ODyN
-        CDX4uIFMGOH6ShWoQkk1S8cX5Ao80IUVj0Q+NhVtjnBjq9eoi/2RaBH6gn0K3xmJg5bPRpfx77wpX
-        6fhy+fkpeBKm2x3UuFolDNVVVrqZ3bd0cAq9Xfp4JjPX30uMF/GO4+E0hjSd4eAb8FA8=;
-Received: from p4ff1316d.dip0.t-ipconnect.de ([79.241.49.109] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1h426h-00071e-Us; Wed, 13 Mar 2019 12:31:36 +0100
+        Wed, 13 Mar 2019 08:14:14 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:40709 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725836AbfCMMOO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Mar 2019 08:14:14 -0400
+Received: by mail-wr1-f65.google.com with SMTP id t5so1728684wri.7
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2019 05:14:13 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=U2bReYqA5i3DoXBC7FqZ76VPEEuiRX0LY/KgXRj+LGA=;
+        b=iCbLJthbOG7vxdtJlIs/T7JvGjtzPLAs6xsaZHa+RB++s3cz1GXyBdQ8ea0EHbq8iI
+         1wYfNiIOWQT52DzPW9V8uvxf928PwqBG1x2K2iySYk6ugsq8u/pcuki389JPiYz4hOIl
+         hto8TJvOfsVH6/AlStlr/0IyQYmSh/RhBgH/iy9bhjkI3Hx8ZdBCa4AdoYm8PQ65ksnp
+         OwBzW2rJCb2eroDk7W3EZJqS/bvhw+QaopdTx+Sj5Fp/fGfdvOiTEOV6Poc6fHclPywY
+         pekHIL8x5jt/SrbJQ1j8Qr0ecyzUdwk7qnOv8SspL8xAUR0aVklLYSfIWcQP5kevf6Tc
+         fspQ==
+X-Gm-Message-State: APjAAAWMXz2KK8gWEQOY1C1RMGGO5KNSrQDPScp17kzk8jUiw6CzxjcQ
+        b8NkhXV8lo7vbi8gHl1Y020kVA==
+X-Google-Smtp-Source: APXvYqwXhZmhN8mzq1jN5VunmLI6y1DKsU1EK1roNJ/Ln0dinnlXqmEM9V8sS0KnrA5GJ0jwREGaNw==
+X-Received: by 2002:adf:f686:: with SMTP id v6mr10402722wrp.241.1552479252496;
+        Wed, 13 Mar 2019 05:14:12 -0700 (PDT)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id h126sm1914346wmf.2.2019.03.13.05.14.11
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 13 Mar 2019 05:14:11 -0700 (PDT)
+Date:   Wed, 13 Mar 2019 13:14:08 +0100
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
+        linux-wireless@vger.kernel.org, sgruszka@redhat.com,
+        roychl666@gmail.com, ryder.lee@mediatek.com
 Subject: Re: [PATCH 4/5] mt76: introduce mt76_sw_queue data structure
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        lorenzo.bianconi@redhat.com, roychl666@gmail.com,
-        ryder.lee@mediatek.com
+Message-ID: <20190313121407.GB4389@localhost.localdomain>
 References: <cover.1551533068.git.lorenzo@kernel.org>
  <f76120bea93ac19b82c63765aab27a003e6b187e.1551533068.git.lorenzo@kernel.org>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <425244db-1638-1175-fa79-f4bda4cd7150@nbd.name>
-Date:   Wed, 13 Mar 2019 12:31:34 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.5.3
+ <425244db-1638-1175-fa79-f4bda4cd7150@nbd.name>
 MIME-Version: 1.0
-In-Reply-To: <f76120bea93ac19b82c63765aab27a003e6b187e.1551533068.git.lorenzo@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="uZ3hkaAS1mZxFaxD"
+Content-Disposition: inline
+In-Reply-To: <425244db-1638-1175-fa79-f4bda4cd7150@nbd.name>
+User-Agent: Mutt/1.11.3 (2019-02-01)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-03-02 14:47, Lorenzo Bianconi wrote:
-> Introduce mt76_sw_queue data structure in order to support new
-> chipsets (e.g. mt7615) that have a shared hardware queue for all traffic
-> identifiers. mt76_sw_queue will be used to track outstanding packets
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+
+--uZ3hkaAS1mZxFaxD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+> On 2019-03-02 14:47, Lorenzo Bianconi wrote:
+> > Introduce mt76_sw_queue data structure in order to support new
+> > chipsets (e.g. mt7615) that have a shared hardware queue for all traffic
+> > identifiers. mt76_sw_queue will be used to track outstanding packets
+> >=20
+> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> > ---
+> >  drivers/net/wireless/mediatek/mt76/debugfs.c  |  7 ++-
+> >  drivers/net/wireless/mediatek/mt76/dma.c      | 12 ++--
+> >  drivers/net/wireless/mediatek/mt76/mac80211.c |  4 +-
+> >  drivers/net/wireless/mediatek/mt76/mt76.h     | 16 ++++--
+> >  .../wireless/mediatek/mt76/mt7603/beacon.c    |  8 +--
+> >  .../net/wireless/mediatek/mt76/mt7603/dma.c   | 13 ++++-
+> >  .../net/wireless/mediatek/mt76/mt7603/mac.c   |  4 +-
+> >  .../net/wireless/mediatek/mt76/mt7603/main.c  |  2 +-
+> >  .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 19 +++++--
+> >  .../wireless/mediatek/mt76/mt76x02_usb_core.c |  2 +-
+> >  .../net/wireless/mediatek/mt76/mt76x02_util.c |  2 +-
+> >  drivers/net/wireless/mediatek/mt76/tx.c       | 55 ++++++++++---------
+> >  drivers/net/wireless/mediatek/mt76/usb.c      | 23 +++++---
+> >  13 files changed, 100 insertions(+), 67 deletions(-)
+> >=20
+> Turns out this causes a crash on cleanup if not all queues are
+> initialized. I will fold in the following fix:
 > ---
->  drivers/net/wireless/mediatek/mt76/debugfs.c  |  7 ++-
->  drivers/net/wireless/mediatek/mt76/dma.c      | 12 ++--
->  drivers/net/wireless/mediatek/mt76/mac80211.c |  4 +-
->  drivers/net/wireless/mediatek/mt76/mt76.h     | 16 ++++--
->  .../wireless/mediatek/mt76/mt7603/beacon.c    |  8 +--
->  .../net/wireless/mediatek/mt76/mt7603/dma.c   | 13 ++++-
->  .../net/wireless/mediatek/mt76/mt7603/mac.c   |  4 +-
->  .../net/wireless/mediatek/mt76/mt7603/main.c  |  2 +-
->  .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 19 +++++--
->  .../wireless/mediatek/mt76/mt76x02_usb_core.c |  2 +-
->  .../net/wireless/mediatek/mt76/mt76x02_util.c |  2 +-
->  drivers/net/wireless/mediatek/mt76/tx.c       | 55 ++++++++++---------
->  drivers/net/wireless/mediatek/mt76/usb.c      | 23 +++++---
->  13 files changed, 100 insertions(+), 67 deletions(-)
-> 
-Turns out this causes a crash on cleanup if not all queues are
-initialized. I will fold in the following fix:
----
---- a/drivers/net/wireless/mediatek/mt76/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/debugfs.c
-@@ -45,7 +45,7 @@ mt76_queues_read(struct seq_file *s, void *data)
- 	for (i = 0; i < ARRAY_SIZE(dev->q_tx); i++) {
- 		struct mt76_sw_queue *q = &dev->q_tx[i];
- 
--		if (!q->q->ndesc)
-+		if (!q->q)
- 			continue;
- 
- 		seq_printf(s,
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -152,7 +152,7 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
- 	bool wake = false;
- 	int last;
- 
--	if (!q->ndesc)
-+	if (!q)
- 		return;
- 
- 	spin_lock_bh(&q->lock);
+> --- a/drivers/net/wireless/mediatek/mt76/debugfs.c
+> +++ b/drivers/net/wireless/mediatek/mt76/debugfs.c
+> @@ -45,7 +45,7 @@ mt76_queues_read(struct seq_file *s, void *data)
+>  	for (i =3D 0; i < ARRAY_SIZE(dev->q_tx); i++) {
+>  		struct mt76_sw_queue *q =3D &dev->q_tx[i];
+> =20
+> -		if (!q->q->ndesc)
+> +		if (!q->q)
+>  			continue;
+> =20
+>  		seq_printf(s,
+> --- a/drivers/net/wireless/mediatek/mt76/dma.c
+> +++ b/drivers/net/wireless/mediatek/mt76/dma.c
+> @@ -152,7 +152,7 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_t=
+xq_id qid, bool flush)
+>  	bool wake =3D false;
+>  	int last;
+> =20
+> -	if (!q->ndesc)
+> +	if (!q)
+>  		return;
+> =20
+>  	spin_lock_bh(&q->lock);
+
+ack, thx for fixing it.
+
+Regards,
+Lorenzo
+
+--uZ3hkaAS1mZxFaxD
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXIj0DAAKCRA6cBh0uS2t
+rFQ0APwMNZIdQbFhjgX9EMXg7EJX21Epc0P4Mic1BfflLqoKEwEAiU1CdL0OsKxP
+elJtJHByCgqYCXgQXE0Whz6vxyOooAg=
+=nEn7
+-----END PGP SIGNATURE-----
+
+--uZ3hkaAS1mZxFaxD--
