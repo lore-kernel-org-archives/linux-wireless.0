@@ -2,117 +2,133 @@ Return-Path: <SRS0=QiZU=RR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79537C43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Mar 2019 22:17:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 813CDC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Mar 2019 23:23:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4CA682186A
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Mar 2019 22:17:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58A3D218A2
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Mar 2019 23:23:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727366AbfCNWRQ convert rfc822-to-8bit (ORCPT
+        id S1728103AbfCNXXY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Mar 2019 18:17:16 -0400
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:46971 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726885AbfCNWRQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Mar 2019 18:17:16 -0400
-Received: by mail-ed1-f67.google.com with SMTP id n17so5972521edt.13
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Mar 2019 15:17:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=LeJLeR6ZkNvZiB3KOeLrsOCt66tbJgEuzwycjLCtJYg=;
-        b=ZgRmTTIEkpIiMFtrLBBj2OjN4pRVg2fFI/aDF0MS0yxb0DXtmDDvOfm+A6WXkXZtOR
-         ste80R5r1+bSxt7n+YnonwPCZPyXyLB9qS/ZEvZCDlLZKR4p6PeRS4KdSu7Nqs/YKACC
-         teKx/ku5+gVM7F+Wo8Kxrw8l64OFUPZT6X0gRiqayS1PHW0Zw3cI/6SPMdpCd4ciXSzQ
-         mRTBpfaM+eC9L2syoasxcotOuKJRw4ZyZFl0PeadRL0XxOG/P0Wu2Ru7G0TY2ZX3pioF
-         959bhhrEHr5QvmGVfdKjLU0lMXNZOAouNZFJlyuXpT/y+2lx2TSjNeVLk1qUq+MxE/z/
-         XmAg==
-X-Gm-Message-State: APjAAAU2qJkTGJzGsD8U4txIH6RlNhGTznymlEQHAFZa/zqCyogpth1n
-        VRxeiTa0324im9CdxBA9dG7+tDQrd+Y=
-X-Google-Smtp-Source: APXvYqxShZAq3wCREZHsEnbumUh6hz7plMzpJpiegbH+NNHHmOJY2HgFdPCdZ+ZMy0+VzBDlIm4ekQ==
-X-Received: by 2002:a50:978e:: with SMTP id e14mr422860edb.234.1552601834439;
-        Thu, 14 Mar 2019 15:17:14 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id m5sm32466ejk.8.2019.03.14.15.17.13
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 14 Mar 2019 15:17:13 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 6B04B18200B; Thu, 14 Mar 2019 23:17:12 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: Re: [RFC] mac80211: rework locking for txq scheduling / airtime fairness
-In-Reply-To: <50e3ab54-4e8c-171c-28f0-7e3ad5a02c99@nbd.name>
-References: <20190313181531.62539-1-nbd@nbd.name> <87va0mz8nu.fsf@toke.dk> <50e3ab54-4e8c-171c-28f0-7e3ad5a02c99@nbd.name>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Thu, 14 Mar 2019 23:17:12 +0100
-Message-ID: <87bm2dxfrr.fsf@toke.dk>
+        Thu, 14 Mar 2019 19:23:24 -0400
+Received: from mga04.intel.com ([192.55.52.120]:54210 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727412AbfCNXXY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Mar 2019 19:23:24 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Mar 2019 16:23:23 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.58,479,1544515200"; 
+   d="scan'208";a="151834895"
+Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
+  by fmsmga002.fm.intel.com with ESMTP; 14 Mar 2019 16:23:23 -0700
+Date:   Thu, 14 Mar 2019 16:16:14 -0700
+From:   Fenghua Yu <fenghua.yu@intel.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, H Peter Anvin <hpa@zytor.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Xiaoyao Li <xiaoyao.li@intel.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ravi V Shankar <ravi.v.shankar@intel.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        x86 <x86@kernel.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kvm@vger.kernel.org
+Subject: Re: [PATCH v5 03/18] wlcore: simplify/fix/optimize
+ reg_ch_conf_pending operations
+Message-ID: <20190314231614.GA41447@romley-ivt3.sc.intel.com>
+References: <1552431636-31511-1-git-send-email-fenghua.yu@intel.com>
+ <1552431636-31511-4-git-send-email-fenghua.yu@intel.com>
+ <87a7hxzjda.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87a7hxzjda.fsf@purkki.adurom.net>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
+Hi, Valo,
 
-> On 2019-03-13 23:55, Toke Høiland-Jørgensen wrote:
->> Felix Fietkau <nbd@nbd.name> writes:
->> 
->>> Holding the lock around the entire duration of tx scheduling can
->>> create some nasty lock contention, especially when processing airtime
->>> information from the tx status or the rx path.
->> 
->> Right, I can see how that could become an issue at higher loads than
->> what I tested with :)
-> I stumbled onto this when I was doing perf runs with mt76 (before even
-> adding support for this API) and I noticed that a visible amount of lock
-> contention was caused by mac80211 tx calls being blocked by mt76 tx
-> scheduling.
-> I wanted to fix these issues by switching to the mac80211 txq scheduling
-> API, but when reading the code I noticed that using this API had the
-> very same issue I was trying to fix. That's why I made this patch :)
+On Thu, Mar 14, 2019 at 03:16:33PM +0200, Kalle Valo wrote:
+> Fenghua Yu <fenghua.yu@intel.com> writes:
+> 
+> > From: Paolo Bonzini <pbonzini@redhat.com>
+> >
+> > Bitmaps are defined on unsigned longs, so the usage of u32[2] in the
+> > wlcore driver is incorrect.  As noted by Peter Zijlstra, casting arrays
+> > to a bitmap is incorrect for big-endian architectures.
+> >
+> > When looking at it I observed that:
+> >
+> > - operations on reg_ch_conf_pending is always under the wl_lock mutex,
+> > so set_bit is overkill
+> >
+> > - the only case where reg_ch_conf_pending is accessed a u32 at a time is
+> > unnecessary too.
+> >
+> > This patch cleans up everything in this area, and changes tmp_ch_bitmap
+> > to have the proper alignment.
+> >
+> > Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+> > Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
+> 
+> [...]
+> 
+> >  int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl)
+> >  {
+> >  	struct wl12xx_cmd_regdomain_dfs_config *cmd = NULL;
+> >  	int ret = 0, i, b, ch_bit_idx;
+> > -	u32 tmp_ch_bitmap[2];
+> > +	u32 tmp_ch_bitmap[2] __aligned(sizeof(unsigned long));
+> >  	struct wiphy *wiphy = wl->hw->wiphy;
+> >  	struct ieee80211_supported_band *band;
+> >  	bool timeout = false;
+> 
+> [...]
+> 
+> > @@ -1754,8 +1751,8 @@ int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl)
+> >  		goto out;
+> >  	}
+> >  
+> > -	cmd->ch_bit_map1 = cpu_to_le32(tmp_ch_bitmap[0]);
+> > -	cmd->ch_bit_map2 = cpu_to_le32(tmp_ch_bitmap[1]);
+> > +	cmd->ch_bit_map1 = tmp_ch_bitmap[0];
+> > +	cmd->ch_bit_map2 = tmp_ch_bitmap[1];
+> 
+> Will sparse still be happy? AFAICS you are now assigning u32 to __le32:
+> 
+> struct wl12xx_cmd_regdomain_dfs_config {
+>        struct wl1271_cmd_header header;
+> 
+>        __le32 ch_bit_map1;
+>        __le32 ch_bit_map2;
 
-Ah, I see. Well I applaud you making fixing this and switching over mt76
-your solution :)
+Discussion between Peter and Paolo (https://lkml.org/lkml/2019/3/4/521)
+may answer your question.
 
->>> Improve locking by only holding the active_txq_lock for lookups /
->>> scheduling list modifications.
->> 
->> So the (potential) issue I see with this modification is that it
->> requires the driver to ensure that it will not interleave two different
->> scheduling rounds for the same acno. I.e., another call to
->> schedule_start() will reset the round counter and something needs to
->> guarantee that this doesn't happen until the driver has actually
->> finished the previous round.
->> 
->> I am not sure to what extent this would *actually* be a problem. For
->> ath9k, for instance, there's already the in-driver chan_lock (although
->> the call to ieee80211_txq_schedule_start() would then have to be moved
->> into the section covered by that lock). But it does introduce an
->> implicit dependency in the API, which should at least be documented.
-> With ath9k it's also protected by the per-txq lock.
+(Sorry I didn't send to you v4 patch set)
 
-Ah, right, that was just moved not removed entirely. Great!
+> 
+> Also this doesn't depend on anything else from this patchset, right? So
+> I could apply this directly?
 
-> With ath10k it's protected by having scheduling calls come from the NAPI
-> poll function.
+You are right. This patch doesn't rely on other patches from this patchset.
+This patch just fixes a split lock issue. You could apply this directly
+without other patches.
 
-Cool.
+Thanks.
 
->> If memory serves, avoiding this implicit dependency was the original
->> reason I had for adding the full lock around everything. I can't think
->> of any other reason right now, but if I do think of something I'll be
->> sure to let you know :)
-> I'll change the patch to make this more explicit and resubmit.
-> Thanks for your comments.
-
-Sounds good!
-
--Toke
+-Fenghua
