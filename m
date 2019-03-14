@@ -1,92 +1,76 @@
-Return-Path: <SRS0=EMXR=RQ=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=QiZU=RR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC997C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 22:55:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 262BDC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Mar 2019 09:08:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF00E2087C
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Mar 2019 22:55:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0B9A21852
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Mar 2019 09:08:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XmcBm6B4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726689AbfCMWzh (ORCPT
+        id S1726629AbfCNJIF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Mar 2019 18:55:37 -0400
-Received: from mail-ed1-f44.google.com ([209.85.208.44]:33741 "EHLO
-        mail-ed1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725876AbfCMWzh (ORCPT
+        Thu, 14 Mar 2019 05:08:05 -0400
+Received: from mail-qt1-f170.google.com ([209.85.160.170]:40365 "EHLO
+        mail-qt1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726284AbfCNJIF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Mar 2019 18:55:37 -0400
-Received: by mail-ed1-f44.google.com with SMTP id d12so3004173edp.0
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2019 15:55:36 -0700 (PDT)
+        Thu, 14 Mar 2019 05:08:05 -0400
+Received: by mail-qt1-f170.google.com with SMTP id f11so5166199qti.7
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Mar 2019 02:08:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=KFsGdJiREbumxh5N/+Ggm7SW1ZO2LTQnk8QvVEwiL78=;
+        b=XmcBm6B4asAfqCERbYPcEp4tvAp8YQQvy6uzDtDisC2ENasOtSAkFvQqUP0wePd0Ra
+         LxLOlshnLRDisNszwhEIBMzaPLXZGafVzSgZyJF4V4bAeC6ykj+meB+gKC/oR961rQ9o
+         8u/zuhiwb/FgqmOrBYcsl+p31WO7FLHkvKNgYu6wtS6e1WBjnWGNPkadKXeWXGy5EsOT
+         GXzCACo0PlDUOdjJ90XTNld1bmL4nrTp589K2ALipRQbTqkkw1cN8OnWw6UE4JxqOUYi
+         Z/8XTr4PiK1VsIqCqg1f8zH3X22kcgWAyE01fDGcjzCKuU/xEJLDLH4u1REkH5+LVEr7
+         qcXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version;
-        bh=ThEzivQajH3MEZnXuOcJ60aDGQ8LHJnqBac7DXicpN0=;
-        b=qdoQPxXG4ORuXvDpU9WE/EUlfB1fwL36C7Pr/FN8w+oCtsVUl+FHyUeJBKnLeCHcwE
-         jehCe+DfDYZvdAtK+/Z+lLSBVB6fuowbWaETHcJ9sr58WE8YlRR3ACeDwQeauuVILMZc
-         WWIWWhPA3uI2pPVUNd4c999EtGZ2Evi/U35HBSGmxKlCaEfaevcSl/DPYt+NT4Cmgo//
-         ctS+j7q77BBi5stjrauZjmMZKqK4ZbcJbu8EmJnj6C/QGJU2P7AbWL815bU67uR6RkXW
-         v8Z1od0FzseqKyuOKLY1xYwjAvJfYtQpqim3jLUumeRqLQ3igc11WWzNhYtix+8I0Ls9
-         augA==
-X-Gm-Message-State: APjAAAU8rtuHMMqMHE3Ic6mAcBAATAVWyveCuNi5KBMkQwNI7xnmqH3P
-        1ayD9A440OJLFFXFSoCvDBAR8RadYzs=
-X-Google-Smtp-Source: APXvYqwnuarBSJEasYQvVcVKOSrUoBdeDe8rxjM1LdD978PcfjcWTGKwh770NQ9C0TnGcRohOwt/cw==
-X-Received: by 2002:a17:906:7711:: with SMTP id q17mr30839781ejm.174.1552517735667;
-        Wed, 13 Mar 2019 15:55:35 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id w6sm712231eja.50.2019.03.13.15.55.34
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 13 Mar 2019 15:55:34 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id CDC6B18200E; Wed, 13 Mar 2019 23:55:33 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: Re: [RFC] mac80211: rework locking for txq scheduling / airtime fairness
-In-Reply-To: <20190313181531.62539-1-nbd@nbd.name>
-References: <20190313181531.62539-1-nbd@nbd.name>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Wed, 13 Mar 2019 23:55:33 +0100
-Message-ID: <87va0mz8nu.fsf@toke.dk>
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=KFsGdJiREbumxh5N/+Ggm7SW1ZO2LTQnk8QvVEwiL78=;
+        b=b2NZMNCyni4NF57AxZlHtNoYaCpb+EMgStzl/Lyj3Uv8pnNsAJYtHI34j0YlpXrKv4
+         Pl08/5lgZ2G/pro9kvlM8+NEEdn2MiAm5n4F+QXC9NknxuTIEjDrIrXSb5Lp6s16IOcU
+         /PX9qunBnbRvMv+Q/MAHcATsR+0izVo0mp/TSl0aR7SUDy9clP6SIX9JJIRrN5mNRIWy
+         +fp2Z7yilaOHlV7qdHesVnZUZ1b0Hzgyr4j3CtXKof7FOyIrUfB63cOeZgk09VqsRHOg
+         LBdgXaUCDGDR6sZV/hT5jbWFGzpkX74JW/nzZtrau65q0RsGC1F5w2cjJiuLieZyEEoK
+         +Akg==
+X-Gm-Message-State: APjAAAVi7pqnEulMDzZ39gR2420XfiQyTgxIhlm2tR1Jfci6tkR9pSNB
+        fSDelVnUJwirdpTRtfDAKYL8WIN6cu/EK+wZd1f3CG/r
+X-Google-Smtp-Source: APXvYqxklf7qDsS3JLc3Edb3OIpD861q8q8bHqPLtoXyPnrbIeCjIuMja9uqdbG3BW5etcAoy+jDYUL70LqSawqb050=
+X-Received: by 2002:ac8:7302:: with SMTP id x2mr12031483qto.293.1552554484248;
+ Thu, 14 Mar 2019 02:08:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From:   Robert Marko <robimarko@gmail.com>
+Date:   Thu, 14 Mar 2019 10:07:53 +0100
+Message-ID: <CAOX2RU5igDk_nkj74i-1_hoC4JbSSK3w1_-DyH+3EzyeMHnMcw@mail.gmail.com>
+Subject: wil6210 firmware version
+To:     linux-wireless@vger.kernel.org, merez@codeaurora.org,
+        wil6210@qti.qualcomm.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
+Hi,
+I am working on OpenWrt support for device using wil6210 card.
+I am using firmware and board file provided in linux-firmware for its
+development but it appears tha most of newer features that driver
+enables are firmware dependant and version 5.2 in linux-firmware is
+too old to expose those.
 
-> Holding the lock around the entire duration of tx scheduling can
-> create some nasty lock contention, especially when processing airtime
-> information from the tx status or the rx path.
+Is there any chance of QCA pushing updated version to linux-firmware?
 
-Right, I can see how that could become an issue at higher loads than
-what I tested with :)
-
-> Improve locking by only holding the active_txq_lock for lookups /
-> scheduling list modifications.
-
-So the (potential) issue I see with this modification is that it
-requires the driver to ensure that it will not interleave two different
-scheduling rounds for the same acno. I.e., another call to
-schedule_start() will reset the round counter and something needs to
-guarantee that this doesn't happen until the driver has actually
-finished the previous round.
-
-I am not sure to what extent this would *actually* be a problem. For
-ath9k, for instance, there's already the in-driver chan_lock (although
-the call to ieee80211_txq_schedule_start() would then have to be moved
-into the section covered by that lock). But it does introduce an
-implicit dependency in the API, which should at least be documented.
-
-If memory serves, avoiding this implicit dependency was the original
-reason I had for adding the full lock around everything. I can't think
-of any other reason right now, but if I do think of something I'll be
-sure to let you know :)
-
--Toke
+Thanks
+Robert Marko
