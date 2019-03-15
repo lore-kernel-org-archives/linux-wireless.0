@@ -3,148 +3,157 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC735C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 16:37:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E69BFC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 16:37:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C57F52077B
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 16:37:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2E062077B
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 16:37:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729586AbfCOQhL (ORCPT
+        id S1729589AbfCOQhP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Mar 2019 12:37:11 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44336 "EHLO
+        Fri, 15 Mar 2019 12:37:15 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44344 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729541AbfCOQhK (ORCPT
+        with ESMTP id S1729541AbfCOQhO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Mar 2019 12:37:10 -0400
+        Fri, 15 Mar 2019 12:37:14 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1h4ppC-0004qp-1X; Fri, 15 Mar 2019 18:36:50 +0200
+        id 1h4ppC-0004qp-Ri; Fri, 15 Mar 2019 18:36:51 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 15 Mar 2019 18:36:29 +0200
-Message-Id: <20190315163634.17315-12-luca@coelho.fi>
+Date:   Fri, 15 Mar 2019 18:36:30 +0200
+Message-Id: <20190315163634.17315-13-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190315163634.17315-1-luca@coelho.fi>
 References: <20190315163634.17315-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/16] iwlwifi: mvm: set max amsdu for TLC offload
+Subject: [PATCH 12/16] iwlwifi: dbg: add DRAM monitor support for AX210 device family
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-mac80211 sets max amsdu to min supported ht vs vht but TLC only works
-with one mode so we can set to the exact mode used (vht/ht)
-and enable larger amsdu sizes for vht.
+Allows to perform monitor dumping on AX210 device family
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    | 44 +++++++++++++++++--
- 1 file changed, 41 insertions(+), 3 deletions(-)
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  6 +++-
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  6 ++++
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 29 +++++++++++++------
+ 3 files changed, 31 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-index a28283ff7295..79f9eaf8dd1b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-@@ -6,7 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2017        Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -27,7 +27,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2017        Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -345,6 +345,37 @@ void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm,
- 	rcu_read_unlock();
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 9b5077bd46c3..ea5513050b56 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -211,6 +211,9 @@ struct iwl_fw_error_dump_info {
+  * @fw_mon_wr_ptr: the position of the write pointer in the cyclic buffer
+  * @fw_mon_base_ptr: base pointer of the data
+  * @fw_mon_cycle_cnt: number of wraparounds
++ * @fw_mon_base_high_ptr: used in AX210 devices, the base adderss is 64 bit
++ *	so fw_mon_base_ptr holds LSB 32 bits and fw_mon_base_high_ptr hold
++ *	MSB 32 bits
+  * @reserved: for future use
+  * @data: captured data
+  */
+@@ -218,7 +221,8 @@ struct iwl_fw_error_dump_fw_mon {
+ 	__le32 fw_mon_wr_ptr;
+ 	__le32 fw_mon_base_ptr;
+ 	__le32 fw_mon_cycle_cnt;
+-	__le32 reserved[3];
++	__le32 fw_mon_base_high_ptr;
++	__le32 reserved[2];
+ 	u8 data[];
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index 1af9f9e1ecd4..8e6a0c363c0d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -368,6 +368,12 @@
+ #define MON_BUFF_WRPTR_VER2		(0xa03c24)
+ #define MON_BUFF_CYCLE_CNT_VER2		(0xa03c28)
+ #define MON_BUFF_SHIFT_VER2		(0x8)
++/* FW monitor familiy AX210 and on */
++#define DBGC_CUR_DBGBUF_BASE_ADDR_LSB		(0xd03c20)
++#define DBGC_CUR_DBGBUF_BASE_ADDR_MSB		(0xd03c24)
++#define DBGC_CUR_DBGBUF_STATUS			(0xd03c1c)
++#define DBGC_DBGBUF_WRAP_AROUND			(0xd03c2c)
++#define DBGC_CUR_DBGBUF_STATUS_OFFSET_MSK	(0x00ffffff)
+ 
+ #define MON_DMARB_RD_CTL_ADDR		(0xa03c60)
+ #define MON_DMARB_RD_DATA_ADDR		(0xa03c5c)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index cd4fc7b4ccd8..2915840c8b95 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3012,10 +3012,14 @@ static void
+ iwl_trans_pcie_dump_pointers(struct iwl_trans *trans,
+ 			     struct iwl_fw_error_dump_fw_mon *fw_mon_data)
+ {
+-	u32 base, write_ptr, wrap_cnt;
+-
+-	/* If there was a dest TLV - use the values from there */
+-	if (trans->ini_valid) {
++	u32 base, base_high, write_ptr, write_ptr_val, wrap_cnt;
++
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
++		base = DBGC_CUR_DBGBUF_BASE_ADDR_LSB;
++		base_high = DBGC_CUR_DBGBUF_BASE_ADDR_MSB;
++		write_ptr = DBGC_CUR_DBGBUF_STATUS;
++		wrap_cnt = DBGC_DBGBUF_WRAP_AROUND;
++	} else if (trans->ini_valid) {
+ 		base = iwl_umac_prph(trans, MON_BUFF_BASE_ADDR_VER2);
+ 		write_ptr = iwl_umac_prph(trans, MON_BUFF_WRPTR_VER2);
+ 		wrap_cnt = iwl_umac_prph(trans, MON_BUFF_CYCLE_CNT_VER2);
+@@ -3028,12 +3032,18 @@ iwl_trans_pcie_dump_pointers(struct iwl_trans *trans,
+ 		write_ptr = MON_BUFF_WRPTR;
+ 		wrap_cnt = MON_BUFF_CYCLE_CNT;
+ 	}
+-	fw_mon_data->fw_mon_wr_ptr =
+-		cpu_to_le32(iwl_read_prph(trans, write_ptr));
++
++	write_ptr_val = iwl_read_prph(trans, write_ptr);
+ 	fw_mon_data->fw_mon_cycle_cnt =
+ 		cpu_to_le32(iwl_read_prph(trans, wrap_cnt));
+ 	fw_mon_data->fw_mon_base_ptr =
+ 		cpu_to_le32(iwl_read_prph(trans, base));
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
++		fw_mon_data->fw_mon_base_high_ptr =
++			cpu_to_le32(iwl_read_prph(trans, base_high));
++		write_ptr_val &= DBGC_CUR_DBGBUF_STATUS_OFFSET_MSK;
++	}
++	fw_mon_data->fw_mon_wr_ptr = cpu_to_le32(write_ptr_val);
  }
  
-+static u16 rs_fw_get_max_amsdu_len(struct ieee80211_sta *sta)
-+{
-+	const struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
-+	const struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
-+
-+	if (vht_cap && vht_cap->vht_supported) {
-+		switch (vht_cap->cap & IEEE80211_VHT_CAP_MAX_MPDU_MASK) {
-+		case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454:
-+			return IEEE80211_MAX_MPDU_LEN_VHT_11454;
-+		case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991:
-+			return IEEE80211_MAX_MPDU_LEN_VHT_7991;
-+		default:
-+			return IEEE80211_MAX_MPDU_LEN_VHT_3895;
-+	}
-+
-+	} else if (ht_cap && ht_cap->ht_supported) {
-+		if (ht_cap->cap & IEEE80211_HT_CAP_MAX_AMSDU)
-+			/*
-+			 * agg is offloaded so we need to assume that agg
-+			 * are enabled and max mpdu in ampdu is 4095
-+			 * (spec 802.11-2016 9.3.2.1)
-+			 */
-+			return IEEE80211_MAX_MPDU_LEN_HT_BA;
-+		else
-+			return IEEE80211_MAX_MPDU_LEN_HT_3839;
-+	}
-+
-+	/* in legacy mode no amsdu is enabled so return zero */
-+	return 0;
-+}
-+
- void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		     enum nl80211_band band, bool update)
- {
-@@ -353,14 +384,15 @@ void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	struct iwl_lq_sta_rs_fw *lq_sta = &mvmsta->lq_sta.rs_fw;
- 	u32 cmd_id = iwl_cmd_id(TLC_MNG_CONFIG_CMD, DATA_PATH_GROUP, 0);
- 	struct ieee80211_supported_band *sband;
-+	u16 max_amsdu_len = rs_fw_get_max_amsdu_len(sta);
- 	struct iwl_tlc_config_cmd cfg_cmd = {
- 		.sta_id = mvmsta->sta_id,
- 		.max_ch_width = update ?
- 			rs_fw_bw_from_sta_bw(sta) : RATE_MCS_CHAN_WIDTH_20,
- 		.flags = cpu_to_le16(rs_fw_set_config_flags(mvm, sta)),
- 		.chains = rs_fw_set_active_chains(iwl_mvm_get_valid_tx_ant(mvm)),
--		.max_mpdu_len = cpu_to_le16(sta->max_amsdu_len),
- 		.sgi_ch_width_supp = rs_fw_sgi_cw_support(sta),
-+		.max_mpdu_len = cpu_to_le16(max_amsdu_len),
- 		.amsdu = iwl_mvm_is_csum_supported(mvm),
- 	};
- 	int ret;
-@@ -373,6 +405,12 @@ void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	sband = hw->wiphy->bands[band];
- 	rs_fw_set_supp_rates(sta, sband, &cfg_cmd);
+ static u32
+@@ -3044,9 +3054,10 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
+ 	u32 len = 0;
  
-+	/*
-+	 * since TLC offload works with one mode we can assume
-+	 * that only vht/ht is used and also set it as station max amsdu
-+	 */
-+	sta->max_amsdu_len = max_amsdu_len;
-+
- 	ret = iwl_mvm_send_cmd_pdu(mvm, cmd_id, 0, sizeof(cfg_cmd), &cfg_cmd);
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to send rate scale config (%d)\n", ret);
+ 	if ((trans->num_blocks &&
+-	     trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) ||
+-	     (trans->dbg_dest_tlv && !trans->ini_valid) ||
+-	     (trans->ini_valid && trans->num_blocks)) {
++	     (trans->cfg->device_family == IWL_DEVICE_FAMILY_7000 ||
++	      trans->cfg->device_family >= IWL_DEVICE_FAMILY_AX210 ||
++	      trans->ini_valid)) ||
++	    (trans->dbg_dest_tlv && !trans->ini_valid)) {
+ 		struct iwl_fw_error_dump_fw_mon *fw_mon_data;
+ 
+ 		(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_FW_MONITOR);
 -- 
 2.20.1
 
