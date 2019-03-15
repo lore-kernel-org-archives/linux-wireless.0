@@ -2,128 +2,129 @@ Return-Path: <SRS0=bI0Y=RS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2485BC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 17:34:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7CBEC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 17:44:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E298F218AC
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 17:34:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D4DD218A1
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 17:44:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gateworks-com.20150623.gappssmtp.com header.i=@gateworks-com.20150623.gappssmtp.com header.b="L6Dm7DAo"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="cIOYp78d";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="TKSQp6oG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729877AbfCOReJ (ORCPT
+        id S1726418AbfCORov (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Mar 2019 13:34:09 -0400
-Received: from mail-vs1-f45.google.com ([209.85.217.45]:39040 "EHLO
-        mail-vs1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727075AbfCOReI (ORCPT
+        Fri, 15 Mar 2019 13:44:51 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51176 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725956AbfCORov (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Mar 2019 13:34:08 -0400
-Received: by mail-vs1-f45.google.com with SMTP id w14so5859348vso.6
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Mar 2019 10:34:07 -0700 (PDT)
+        Fri, 15 Mar 2019 13:44:51 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x2FHQ2Ng022908;
+        Fri, 15 Mar 2019 10:44:48 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : content-type : content-transfer-encoding :
+ mime-version; s=pfpt0818; bh=z7u38mkqXFGnWvEM3tXBA+7l3pisbXfepmjctj4pkSw=;
+ b=cIOYp78dRSBFt2v2U9dSTp0BPkyBQz6DCG31Z75KaSLwjFLEVGEER7jxGhH6mALjQJp4
+ Oa99jEbM+cMSwKgNKXlSo6g1VyQFP59C/noSSLwV31YMhhWxDzhH4pY7x1FKJvfjnyKs
+ Y/8I2KKhnpYVhB3FGy6t7um/kivcnsQX0PGmLia/4t/mi3fBezXDf4HztlZXVWV5LSrL
+ ReYdQBeNGzaHehxdOEGa+8sfiT9+sdmk0MhssiCZ9XZip+dU+/mFwkr1an+y+6Cx4BUl
+ LsT8JidmzwHGnovfwcv8QNh9YRpCEbyWriCefEVF7d+D4+Y/KZ0rE5YbqAug1ObPxDt0 ew== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2r857wt06y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Fri, 15 Mar 2019 10:44:48 -0700
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Fri, 15 Mar
+ 2019 10:44:47 -0700
+Received: from NAM02-BL2-obe.outbound.protection.outlook.com (104.47.38.54) by
+ SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Fri, 15 Mar 2019 10:44:47 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gateworks-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=4Nb0SyeHm8KrORQQJpAu069t7L9qLDVfe9U2FT865Tk=;
-        b=L6Dm7DAoMN2j5z9v/uqj662dO9lumQWXuxIV9A2eS8nr9bwVIhd95MQlWCpkfiYK+N
-         bUkT+8uURE+GaCftjshNyq80vLJvIXuU/sxMv7WViApbj3pBrity5k2oAR2Dt1CFFBuP
-         HbFJH6h74lAdMma+MffGBDrYSYWtUzwAXALhAivlvYE2d5psp9ABt4+m/WIl7mFKoACI
-         hBorpXYx2LQbng2ImSp4uJfPp3VhFVkXN4n7ZE4jQ1WL0uG8DtUodNfbe7DgrMPI+/jV
-         u6PsOvqFdKQLZrARn5Sz6H9TlzrWMKtO9k2z1PzZSina9N9TLaHdDh/mWHJkE8/DpC+Z
-         C8GQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=4Nb0SyeHm8KrORQQJpAu069t7L9qLDVfe9U2FT865Tk=;
-        b=KuosnhAV0DrIeQNhILNUX9PdsiDA/3IspWtKWr+Uodob180klg2Z14uHQgpyh6jrkR
-         dXFGBxWyhsC0gRWzZ+up9EsP1rH+zSoWsHDdTImX/Uxuc6YjNPPhXBsnuotaNJAUYMsD
-         cxYXxZnSeeVBAejOgMzzJspBXecdIdPT6+H2plvzmWPa7gZ8HEyhglHGij4J8dLEy9nH
-         TYkXBpk43E0PZyL/053HjeDWNHvd3/BBQh08zmRJXlG3gWgkq09xtDaFl/iURxW3Qrl5
-         ga0nbrRxfZscowSlmhSEMfuTEvGayYDWElU2NCKLKldCVnmKeVPQwQqz29auy/KAPe3j
-         JfYA==
-X-Gm-Message-State: APjAAAX7RPIJXqQcBWoTQU+TS4n4hoJhbj2F00UAN8pVd5CJr8/pT1s1
-        ubX9EIC+onv2kk/0tqS1wv7KilIBj9AqSOzmwH1OinTHUv0=
-X-Google-Smtp-Source: APXvYqxqoGajHPeYLL8BDAXC6lwusDls0EIY4W+e7P4+s0R+xM9QcGeJmALSVddpEaEgd6kH7FALCwky1dXNBdlYknI=
-X-Received: by 2002:a67:f88a:: with SMTP id h10mr2528423vso.71.1552671246730;
- Fri, 15 Mar 2019 10:34:06 -0700 (PDT)
+ d=marvell.onmicrosoft.com; s=selector1-marvell-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=z7u38mkqXFGnWvEM3tXBA+7l3pisbXfepmjctj4pkSw=;
+ b=TKSQp6oGxYnlBuvuV8ogwdepqDRq5Q8MRW+cFEHgpxeR3kBxaswZRwpq9038lHB9s1IYIESDiDkQb5aKkJwmgAp7gHUoY4QCN94wxb2ri6B5Y39f/doQ7YMDBW+C65NasRI8t3+7nzMBNovY/JM6VkawCtxj4PsyxO4YsbKR6Cc=
+Received: from CY4PR18MB1237.namprd18.prod.outlook.com (10.172.177.140) by
+ CY4PR18MB1655.namprd18.prod.outlook.com (10.173.60.141) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1709.13; Fri, 15 Mar 2019 17:44:42 +0000
+Received: from CY4PR18MB1237.namprd18.prod.outlook.com
+ ([fe80::a11f:1535:50c1:a310]) by CY4PR18MB1237.namprd18.prod.outlook.com
+ ([fe80::a11f:1535:50c1:a310%11]) with mapi id 15.20.1709.011; Fri, 15 Mar
+ 2019 17:44:42 +0000
+From:   Ganapathi Bhat <gbhat@marvell.com>
+To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Rakesh Parmar" <rakeshp@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, James Cao <jcao@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Mayur Arakere <mayur@marvell.com>
+Subject: pull-request mwifiex-firmware 2019-03-15
+Thread-Topic: pull-request mwifiex-firmware 2019-03-15
+Thread-Index: AQHU21ams1xW0y8Y60qbHGtAOXgJCA==
+Date:   Fri, 15 Mar 2019 17:44:42 +0000
+Message-ID: <CY4PR18MB1237CD0037B7ED3C3C11A5B5A0440@CY4PR18MB1237.namprd18.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [182.72.17.59]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 10c868d2-988f-4bce-f4c3-08d6a96de796
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:CY4PR18MB1655;
+x-ms-traffictypediagnostic: CY4PR18MB1655:
+x-microsoft-antispam-prvs: <CY4PR18MB1655E6697563B34F57183A0BA0440@CY4PR18MB1655.namprd18.prod.outlook.com>
+x-forefront-prvs: 09778E995A
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(376002)(396003)(346002)(39860400002)(136003)(189003)(199004)(97736004)(2906002)(8936002)(68736007)(6436002)(102836004)(2501003)(3846002)(5660300002)(2351001)(66066001)(6116002)(486006)(6916009)(74316002)(4744005)(71190400001)(55236004)(78486014)(186003)(71200400001)(6506007)(26005)(476003)(7696005)(55016002)(25786009)(99286004)(305945005)(9686003)(53936002)(86362001)(105586002)(14444005)(5640700003)(106356001)(256004)(7736002)(52536014)(316002)(107886003)(14454004)(4326008)(54906003)(8676002)(81166006)(81156014)(33656002)(478600001);DIR:OUT;SFP:1101;SCL:1;SRVR:CY4PR18MB1655;H:CY4PR18MB1237.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: /CjsOqT9ll9iDtc67hw45mKN6EWpx4PxC7MPTeAjOpFrjEoccbZDQUE4eZXvtS+KSfY+ZdToWSO1m6ytqIUJtSgWn9CnEo0HJd5vzuAjMv0mSryKI1FeesbSQo4BSYlqvxhfWpe3ROURvPjB6LKZ3sAF4Nc91v9KTVLXt3oU3GdAQ25YKw+uJ9jRuHN0ywkFrWHkrnrkx+E/pm1eRyavg6WScYV9j4M7YtMFEOVz0jsFlCYYS8B/2qTGRbEWpT62cvJ3zPEbGBUcEFvoojFti+uaeOoE52yxj6tenBu6lqBWGW+HZ+Qyiy3aK+fbhS5D55ymzCinVa+kZJIvJlz/fd6Hxakd9F6lSwo24KbSfkI8duLKl2IblMiUC3PXSKCD/FrogF5z3yhyeDqsRRBIP3DVnOsyfnvWyGPr4wKY+EQ=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-From:   Ryan Erbstoesser <rerbstoesser@gateworks.com>
-Date:   Fri, 15 Mar 2019 10:32:04 -0700
-Message-ID: <CAHUc_tsH9DsAnwfTWHbAwF7enp+ywWi8iFLX23JW=Dp4Tqn+BQ@mail.gmail.com>
-Subject: Sparklan WPEQ-160ACN(BT) USB Support
-To:     linux-wireless@vger.kernel.org
-Cc:     Tim Harvey <tharvey@gateworks.com>
-Content-Type: text/plain; charset="UTF-8"
+X-MS-Exchange-CrossTenant-Network-Message-Id: 10c868d2-988f-4bce-f4c3-08d6a96de796
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Mar 2019 17:44:42.0182
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR18MB1655
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-03-15_12:,,
+ signatures=0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+The following changes since commit 78d2b16af093783d40f0b8990d5d9ede8c3281d3=
+:
 
-I apologize in advance, I am new to posting on here.
+  linux-firmware: update Marvell 8787/8801/8887 firmware images (2019-02-28=
+ 23:35:32 +0530)
 
-I am trying to use the radio Sparklan WPEQ-160ACN(BT) (USB only, no
-PCIe) on an embedded ARM SBC.
+are available in the git repository at:
 
-The card is detected in lsusb but does not create an interface in
-/sys/class/net.
-I don't see anything in the logs that ath10k tried to load any firmware, etc.
+  git://git.marvell.com/mwifiex-firmware.git
 
-The current wiki says that usb is not supported.
-(https://wireless.wiki.kernel.org/en/users/drivers/ath10k#not_supported)
+for you to fetch changes up to d71dee4e5a86075c0ba6f81f00660ff999f171bc:
 
-Is the wiki still correct?
+  linux-firmware: update Marvell 8797/8997 firmware images (2019-03-15 21:0=
+2:17 +0530)
 
-Thank you, Ryan
+----------------------------------------------------------------
+Ganapathi Bhat (1):
+      linux-firmware: update Marvell 8797/8997 firmware images
 
-Logs and info below:
-
-root@bionic-armhf:~# lsusb
-Bus 001 Device 003: ID 0cf3:9378 Atheros Communications, Inc.
-Bus 001 Device 002: ID 0424:2514 Standard Microsystems Corp. USB 2.0 Hub
-Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-
-root@bionic-armhf:~# uname -a
-Linux bionic-armhf 4.20.7-gaf078a3 #1 SMP Wed Feb 13 17:42:49 PST 2019
-armv7l armv7l armv7l GNU/Linux
-
-root@bionic-armhf:~# ls /sys/class/net/
-can0  enp8s0  eth0  lo
-
-root@bionic-armhf:~# dmesg | grep ath
-root@bionic-armhf:~# dmesg | grep usb
-[    0.201196] usbcore: registered new interface driver usbfs
-[    0.201386] usbcore: registered new interface driver hub
-[    0.201713] usbcore: registered new device driver usb
-[    3.756564] usbcore: registered new interface driver usb-storage
-[    3.766381] imx_usb 2184000.usb: Linked as a consumer to regulator.10
-[    3.782126] imx_usb 2184200.usb: Linked as a consumer to regulator.9
-[    3.834669] usb usb1: New USB device found, idVendor=1d6b,
-idProduct=0002, bcdDevice= 4.20
-[    3.843208] usb usb1: New USB device strings: Mfr=3, Product=2,
-SerialNumber=1
-[    3.850519] usb usb1: Product: EHCI Host Controller
-[    3.855420] usb usb1: Manufacturer: Linux 4.20.7-gaf078a3 ehci_hcd
-[    3.861673] usb usb1: SerialNumber: ci_hdrc.1
-[    4.228010] usb usb1-port1: over-current condition
-[    4.588013] usb 1-1: new high-speed USB device number 2 using ci_hdrc
-[    4.669721] usb_otg_vbus: disabling
-[    4.808872] usb 1-1: New USB device found, idVendor=0424,
-idProduct=2514, bcdDevice= b.b3
-[    4.817185] usb 1-1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
-[    5.157790] usb 1-1.2: new high-speed USB device number 3 using ci_hdrc
-[    5.320105] usb 1-1.2: New USB device found, idVendor=0cf3,
-idProduct=9378, bcdDevice= 3.00
-[    5.328545] usb 1-1.2: New USB device strings: Mfr=1, Product=2,
-SerialNumber=3
-[    5.335877] usb 1-1.2: Product: USBWLAN
-[    5.339783] usb 1-1.2: Manufacturer: Qualcomm Atheros
-[    5.344856] usb 1-1.2: SerialNumber: 12345678
-root@bionic-armhf:~#
-
-root@bionic-armhf:~# ls /lib/firmware/ath10k/QCA9377/hw1.0/
-board-2.bin  board.bin  firmware-5.bin  notice_ath10k_firmware-5.txt
+ WHENCE                         |   6 +++---
+ mrvl/pcieuart8997_combo_v4.bin | Bin 583628 -> 632240 bytes
+ mrvl/sd8797_uapsta.bin         | Bin 458108 -> 533976 bytes
+ mrvl/usb8797_uapsta.bin        | Bin 553456 -> 553940 bytes
+ 4 files changed, 3 insertions(+), 3 deletions(-)=
