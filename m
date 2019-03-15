@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26424C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 16:36:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46656C4360F
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 16:36:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E57152077B
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 16:36:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15C9B2077B
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 16:36:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729487AbfCOQgq (ORCPT
+        id S1729521AbfCOQgr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Mar 2019 12:36:46 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44238 "EHLO
+        Fri, 15 Mar 2019 12:36:47 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44246 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728171AbfCOQgo (ORCPT
+        with ESMTP id S1729141AbfCOQgq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Mar 2019 12:36:44 -0400
+        Fri, 15 Mar 2019 12:36:46 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1h4pp4-0004qp-LR; Fri, 15 Mar 2019 18:36:43 +0200
+        id 1h4pp5-0004qp-Kn; Fri, 15 Mar 2019 18:36:44 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Shaul Triebitz <shaul.triebitz@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 15 Mar 2019 18:36:21 +0200
-Message-Id: <20190315163634.17315-4-luca@coelho.fi>
+Date:   Fri, 15 Mar 2019 18:36:22 +0200
+Message-Id: <20190315163634.17315-5-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190315163634.17315-1-luca@coelho.fi>
 References: <20190315163634.17315-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 03/16] iwlwifi: add support for 6-7 GHz channels
+Subject: [PATCH 04/16] iwlwifi: support new NVM response API
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -45,216 +45,252 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-Add UHB (ultra high band) channels and use 16 bit variables
-to fit the new channels.
+Support REGULATORY_NVM_GET_INFO_RSP_API_S_VER_4.
+This API adds the new 6-7GHz channels.
 
 Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  2 +
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  4 +-
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 74 +++++++++++--------
- 3 files changed, 49 insertions(+), 31 deletions(-)
+ .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   | 39 +++++++++++++---
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  3 ++
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 46 +++++++++++++------
+ 3 files changed, 69 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index fdc56f821b5a..dd781232c8a8 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -427,12 +427,14 @@ const struct iwl_cfg iwlax210_2ax_cfg_so_hr_a0 = {
- const struct iwl_cfg iwlax210_2ax_cfg_so_gf_a0 = {
- 	.name = "Intel(R) Wi-Fi 7 AX211 160MHz",
- 	.fw_name_pre = IWL_22000_SO_A_GF_A_FW_PRE,
-+	.uhb_supported = true,
- 	IWL_DEVICE_AX210,
- };
- 
- const struct iwl_cfg iwlax210_2ax_cfg_ty_gf_a0 = {
- 	.name = "Intel(R) Wi-Fi 7 AX210 160MHz",
- 	.fw_name_pre = IWL_22000_TY_A_GF_A_FW_PRE,
-+	.uhb_supported = true,
- 	IWL_DEVICE_AX210,
- };
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index f5f87773667b..a68481d16f1f 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -383,6 +383,7 @@ struct iwl_csr_params {
-  * @bisr_workaround: BISR hardware workaround (for 22260 series devices)
-  * @min_txq_size: minimum number of slots required in a TX queue
-  * @umac_prph_offset: offset to add to UMAC periphery address
-+ * @uhb_supported: ultra high band channels supported
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+index 93b392f0c6a4..97b49843e318 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright(C) 2018 - 2019 Intel Corporation
   *
-  * We enable the driver to be backward compatible wrt. hardware features.
-  * API differences in uCode shouldn't be handled here but through TLVs
-@@ -433,7 +434,8 @@ struct iwl_cfg {
- 	    gen2:1,
- 	    cdb:1,
- 	    dbgc_supported:1,
--	    bisr_workaround:1;
-+	    bisr_workaround:1,
-+	    uhb_supported:1;
- 	u8 valid_tx_ant;
- 	u8 valid_rx_ant;
- 	u8 non_shared_ant;
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 Intel Corporation
++ * Copyright(C) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -233,7 +233,8 @@ struct iwl_nvm_get_info_phy {
+ 	__le32 rx_chains;
+ } __packed; /* REGULATORY_NVM_GET_INFO_PHY_SKU_SECTION_S_VER_1 */
+ 
+-#define IWL_NUM_CHANNELS (51)
++#define IWL_NUM_CHANNELS_V1	51
++#define IWL_NUM_CHANNELS	110
+ 
+ /**
+  * struct iwl_nvm_get_info_regulatory - regulatory information
+@@ -241,12 +242,38 @@ struct iwl_nvm_get_info_phy {
+  * @channel_profile: regulatory data of this channel
+  * @reserved: reserved
+  */
+-struct iwl_nvm_get_info_regulatory {
++struct iwl_nvm_get_info_regulatory_v1 {
+ 	__le32 lar_enabled;
+-	__le16 channel_profile[IWL_NUM_CHANNELS];
++	__le16 channel_profile[IWL_NUM_CHANNELS_V1];
+ 	__le16 reserved;
+ } __packed; /* REGULATORY_NVM_GET_INFO_REGULATORY_S_VER_1 */
+ 
++/**
++ * struct iwl_nvm_get_info_regulatory - regulatory information
++ * @lar_enabled: is LAR enabled
++ * @n_channels: number of valid channels in the array
++ * @channel_profile: regulatory data of this channel
++ */
++struct iwl_nvm_get_info_regulatory {
++	__le32 lar_enabled;
++	__le32 n_channels;
++	__le32 channel_profile[IWL_NUM_CHANNELS];
++} __packed; /* REGULATORY_NVM_GET_INFO_REGULATORY_S_VER_2 */
++
++/**
++ * struct iwl_nvm_get_info_rsp_v3 - response to get NVM data
++ * @general: general NVM data
++ * @mac_sku: data relating to MAC sku
++ * @phy_sku: data relating to PHY sku
++ * @regulatory: regulatory data
++ */
++struct iwl_nvm_get_info_rsp_v3 {
++	struct iwl_nvm_get_info_general general;
++	struct iwl_nvm_get_info_sku mac_sku;
++	struct iwl_nvm_get_info_phy phy_sku;
++	struct iwl_nvm_get_info_regulatory_v1 regulatory;
++} __packed; /* REGULATORY_NVM_GET_INFO_RSP_API_S_VER_3 */
++
+ /**
+  * struct iwl_nvm_get_info_rsp - response to get NVM data
+  * @general: general NVM data
+@@ -259,7 +286,7 @@ struct iwl_nvm_get_info_rsp {
+ 	struct iwl_nvm_get_info_sku mac_sku;
+ 	struct iwl_nvm_get_info_phy phy_sku;
+ 	struct iwl_nvm_get_info_regulatory regulatory;
+-} __packed; /* REGULATORY_NVM_GET_INFO_RSP_API_S_VER_3 */
++} __packed; /* REGULATORY_NVM_GET_INFO_RSP_API_S_VER_4 */
+ 
+ /**
+  * struct iwl_nvm_access_complete_cmd - NVM_ACCESS commands are completed
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 04ad6b96a28b..3f26dee1b29c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -272,6 +272,8 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
+  *	version of the beacon notification.
+  * @IWL_UCODE_TLV_API_BEACON_FILTER_V4: This ucode supports v4 of
+  *	BEACON_FILTER_CONFIG_API_S_VER_4.
++ * @IWL_UCODE_TLV_API_REGULATORY_NVM_INFO: This ucode supports v4 of
++ *	REGULATORY_NVM_GET_INFO_RSP_API_S.
+  * @IWL_UCODE_TLV_API_FTM_NEW_RANGE_REQ: This ucode supports v7 of
+  *	LOCATION_RANGE_REQ_CMD_API_S and v6 of LOCATION_RANGE_RESP_NTFY_API_S.
+  *
+@@ -300,6 +302,7 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_REDUCE_TX_POWER	= (__force iwl_ucode_tlv_api_t)45,
+ 	IWL_UCODE_TLV_API_SHORT_BEACON_NOTIF	= (__force iwl_ucode_tlv_api_t)46,
+ 	IWL_UCODE_TLV_API_BEACON_FILTER_V4      = (__force iwl_ucode_tlv_api_t)47,
++	IWL_UCODE_TLV_API_REGULATORY_NVM_INFO   = (__force iwl_ucode_tlv_api_t)48,
+ 	IWL_UCODE_TLV_API_FTM_NEW_RANGE_REQ     = (__force iwl_ucode_tlv_api_t)49,
+ 
+ 	NUM_IWL_UCODE_TLV_API
 diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 87d6de7efdd2..a20ac68f4ba3 100644
+index a20ac68f4ba3..1408c89242a7 100644
 --- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
 +++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -130,7 +130,7 @@ enum nvm_sku_bits {
- /*
-  * These are the channel numbers in the order that they are stored in the NVM
-  */
--static const u8 iwl_nvm_channels[] = {
-+static const u16 iwl_nvm_channels[] = {
- 	/* 2.4 GHz */
- 	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
- 	/* 5 GHz */
-@@ -139,7 +139,7 @@ static const u8 iwl_nvm_channels[] = {
- 	149, 153, 157, 161, 165
+@@ -226,7 +226,7 @@ enum iwl_nvm_channel_flags {
  };
  
--static const u8 iwl_ext_nvm_channels[] = {
-+static const u16 iwl_ext_nvm_channels[] = {
- 	/* 2.4 GHz */
- 	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
- 	/* 5 GHz */
-@@ -148,14 +148,27 @@ static const u8 iwl_ext_nvm_channels[] = {
- 	149, 153, 157, 161, 165, 169, 173, 177, 181
- };
+ static inline void iwl_nvm_print_channel_flags(struct device *dev, u32 level,
+-					       int chan, u16 flags)
++					       int chan, u32 flags)
+ {
+ #define CHECK_AND_PRINT_I(x)	\
+ 	((flags & NVM_CHANNEL_##x) ? " " #x : "")
+@@ -257,7 +257,7 @@ static inline void iwl_nvm_print_channel_flags(struct device *dev, u32 level,
+ }
  
-+static const u16 iwl_uhb_nvm_channels[] = {
-+	/* 2.4 GHz */
-+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-+	/* 5 GHz */
-+	36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92,
-+	96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
-+	149, 153, 157, 161, 165, 169, 173, 177, 181,
-+	/* 6-7 GHz */
-+	189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 233, 237, 241,
-+	245, 249, 253, 257, 261, 265, 269, 273, 277, 281, 285, 289, 293, 297,
-+	301, 305, 309, 313, 317, 321, 325, 329, 333, 337, 341, 345, 349, 353,
-+	357, 361, 365, 369, 373, 377, 381, 385, 389, 393, 397, 401, 405, 409,
-+	413, 417, 421
-+};
-+
- #define IWL_NVM_NUM_CHANNELS		ARRAY_SIZE(iwl_nvm_channels)
- #define IWL_NVM_NUM_CHANNELS_EXT	ARRAY_SIZE(iwl_ext_nvm_channels)
-+#define IWL_NVM_NUM_CHANNELS_UHB	ARRAY_SIZE(iwl_uhb_nvm_channels)
- #define NUM_2GHZ_CHANNELS		14
--#define NUM_2GHZ_CHANNELS_EXT	14
- #define FIRST_2GHZ_HT_MINUS		5
- #define LAST_2GHZ_HT_PLUS		9
--#define LAST_5GHZ_HT			165
--#define LAST_5GHZ_HT_FAMILY_8000	181
- #define N_HW_ADDR_MASK			0xF
- 
- /* rate data (static) */
-@@ -247,17 +260,13 @@ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
- 				 u16 nvm_flags, const struct iwl_cfg *cfg)
+ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
+-				 u16 nvm_flags, const struct iwl_cfg *cfg)
++				 u32 nvm_flags, const struct iwl_cfg *cfg)
  {
  	u32 flags = IEEE80211_CHAN_NO_HT40;
--	u32 last_5ghz_ht = LAST_5GHZ_HT;
--
--	if (cfg->nvm_type == IWL_NVM_EXT)
--		last_5ghz_ht = LAST_5GHZ_HT_FAMILY_8000;
  
- 	if (!is_5ghz && (nvm_flags & NVM_CHANNEL_40MHZ)) {
- 		if (ch_num <= LAST_2GHZ_HT_PLUS)
- 			flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
- 		if (ch_num >= FIRST_2GHZ_HT_MINUS)
- 			flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
--	} else if (ch_num <= last_5ghz_ht && (nvm_flags & NVM_CHANNEL_40MHZ)) {
-+	} else if (nvm_flags & NVM_CHANNEL_40MHZ) {
- 		if ((ch_idx - NUM_2GHZ_CHANNELS) % 2 == 0)
- 			flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
- 		else
-@@ -299,17 +308,18 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+@@ -301,13 +301,13 @@ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
+ 
+ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 				struct iwl_nvm_data *data,
+-				const __le16 * const nvm_ch_flags,
+-				u32 sbands_flags)
++				const void * const nvm_ch_flags,
++				u32 sbands_flags, bool v4)
+ {
+ 	int ch_idx;
  	int n_channels = 0;
  	struct ieee80211_channel *channel;
- 	u16 ch_flags;
--	int num_of_ch, num_2ghz_channels;
--	const u8 *nvm_chan;
-+	int num_of_ch, num_2ghz_channels = NUM_2GHZ_CHANNELS;
-+	const u16 *nvm_chan;
+-	u16 ch_flags;
++	u32 ch_flags;
+ 	int num_of_ch, num_2ghz_channels = NUM_2GHZ_CHANNELS;
+ 	const u16 *nvm_chan;
  
--	if (cfg->nvm_type != IWL_NVM_EXT) {
--		num_of_ch = IWL_NVM_NUM_CHANNELS;
--		nvm_chan = &iwl_nvm_channels[0];
--		num_2ghz_channels = NUM_2GHZ_CHANNELS;
--	} else {
-+	if (cfg->uhb_supported) {
-+		num_of_ch = IWL_NVM_NUM_CHANNELS_UHB;
-+		nvm_chan = iwl_uhb_nvm_channels;
-+	} else if (cfg->nvm_type == IWL_NVM_EXT) {
- 		num_of_ch = IWL_NVM_NUM_CHANNELS_EXT;
--		nvm_chan = &iwl_ext_nvm_channels[0];
--		num_2ghz_channels = NUM_2GHZ_CHANNELS_EXT;
-+		nvm_chan = iwl_ext_nvm_channels;
-+	} else {
-+		num_of_ch = IWL_NVM_NUM_CHANNELS;
-+		nvm_chan = iwl_nvm_channels;
+@@ -325,7 +325,12 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
+ 		bool is_5ghz = (ch_idx >= num_2ghz_channels);
+ 
+-		ch_flags = __le16_to_cpup(nvm_ch_flags + ch_idx);
++		if (v4)
++			ch_flags =
++				__le32_to_cpup((__le32 *)nvm_ch_flags + ch_idx);
++		else
++			ch_flags =
++				__le16_to_cpup((__le16 *)nvm_ch_flags + ch_idx);
+ 
+ 		if (is_5ghz && !data->sku_cap_band_52ghz_enable)
+ 			continue;
+@@ -671,15 +676,15 @@ static void iwl_init_he_hw_capab(struct ieee80211_supported_band *sband,
+ 
+ static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+ 			    struct iwl_nvm_data *data,
+-			    const __le16 *nvm_ch_flags, u8 tx_chains,
+-			    u8 rx_chains, u32 sbands_flags)
++			    const void *nvm_ch_flags, u8 tx_chains,
++			    u8 rx_chains, u32 sbands_flags, bool v4)
+ {
+ 	int n_channels;
+ 	int n_used = 0;
+ 	struct ieee80211_supported_band *sband;
+ 
+ 	n_channels = iwl_init_channel_map(dev, cfg, data, nvm_ch_flags,
+-					  sbands_flags);
++					  sbands_flags, v4);
+ 	sband = &data->bands[NL80211_BAND_2GHZ];
+ 	sband->band = NL80211_BAND_2GHZ;
+ 	sband->bitrates = &iwl_cfg80211_rates[RATES_24_OFFS];
+@@ -1016,7 +1021,7 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		sbands_flags |= IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ;
+ 
+ 	iwl_init_sbands(dev, cfg, data, ch_section, tx_chains, rx_chains,
+-			sbands_flags);
++			sbands_flags, false);
+ 	data->calib_version = 255;
+ 
+ 	return data;
+@@ -1407,7 +1412,6 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
+ 				 const struct iwl_fw *fw)
+ {
+ 	struct iwl_nvm_get_info cmd = {};
+-	struct iwl_nvm_get_info_rsp *rsp;
+ 	struct iwl_nvm_data *nvm;
+ 	struct iwl_host_cmd hcmd = {
+ 		.flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
+@@ -1422,12 +1426,24 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
+ 	bool empty_otp;
+ 	u32 mac_flags;
+ 	u32 sbands_flags = 0;
++	/*
++	 * All the values in iwl_nvm_get_info_rsp v4 are the same as
++	 * in v3, except for the channel profile part of the
++	 * regulatory.  So we can just access the new struct, with the
++	 * exception of the latter.
++	 */
++	struct iwl_nvm_get_info_rsp *rsp;
++	struct iwl_nvm_get_info_rsp_v3 *rsp_v3;
++	bool v4 = fw_has_api(&fw->ucode_capa,
++			     IWL_UCODE_TLV_API_REGULATORY_NVM_INFO);
++	size_t rsp_size = v4 ? sizeof(*rsp) : sizeof(*rsp_v3);
++	void *channel_profile;
+ 
+ 	ret = iwl_trans_send_cmd(trans, &hcmd);
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 
+-	if (WARN(iwl_rx_packet_payload_len(hcmd.resp_pkt) != sizeof(*rsp),
++	if (WARN(iwl_rx_packet_payload_len(hcmd.resp_pkt) != rsp_size,
+ 		 "Invalid payload len in NVM response from FW %d",
+ 		 iwl_rx_packet_payload_len(hcmd.resp_pkt))) {
+ 		ret = -EINVAL;
+@@ -1489,11 +1505,15 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
+ 		sbands_flags |= IWL_NVM_SBANDS_FLAGS_LAR;
  	}
  
- 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
-@@ -1013,15 +1023,11 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- }
- IWL_EXPORT_SYMBOL(iwl_parse_nvm_data);
- 
--static u32 iwl_nvm_get_regdom_bw_flags(const u8 *nvm_chan,
-+static u32 iwl_nvm_get_regdom_bw_flags(const u16 *nvm_chan,
- 				       int ch_idx, u16 nvm_flags,
- 				       const struct iwl_cfg *cfg)
- {
- 	u32 flags = NL80211_RRF_NO_HT40;
--	u32 last_5ghz_ht = LAST_5GHZ_HT;
--
--	if (cfg->nvm_type == IWL_NVM_EXT)
--		last_5ghz_ht = LAST_5GHZ_HT_FAMILY_8000;
- 
- 	if (ch_idx < NUM_2GHZ_CHANNELS &&
- 	    (nvm_flags & NVM_CHANNEL_40MHZ)) {
-@@ -1029,8 +1035,7 @@ static u32 iwl_nvm_get_regdom_bw_flags(const u8 *nvm_chan,
- 			flags &= ~NL80211_RRF_NO_HT40PLUS;
- 		if (nvm_chan[ch_idx] >= FIRST_2GHZ_HT_MINUS)
- 			flags &= ~NL80211_RRF_NO_HT40MINUS;
--	} else if (nvm_chan[ch_idx] <= last_5ghz_ht &&
--		   (nvm_flags & NVM_CHANNEL_40MHZ)) {
-+	} else if (nvm_flags & NVM_CHANNEL_40MHZ) {
- 		if ((ch_idx - NUM_2GHZ_CHANNELS) % 2 == 0)
- 			flags &= ~NL80211_RRF_NO_HT40PLUS;
- 		else
-@@ -1074,8 +1079,7 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 	int ch_idx;
- 	u16 ch_flags;
- 	u32 reg_rule_flags, prev_reg_rule_flags = 0;
--	const u8 *nvm_chan = cfg->nvm_type == IWL_NVM_EXT ?
--			     iwl_ext_nvm_channels : iwl_nvm_channels;
-+	const u16 *nvm_chan;
- 	struct ieee80211_regdomain *regd, *copy_rd;
- 	int size_of_regd, regd_to_copy;
- 	struct ieee80211_reg_rule *rule;
-@@ -1084,8 +1088,18 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 	int center_freq, prev_center_freq = 0;
- 	int valid_rules = 0;
- 	bool new_rule;
--	int max_num_ch = cfg->nvm_type == IWL_NVM_EXT ?
--			 IWL_NVM_NUM_CHANNELS_EXT : IWL_NVM_NUM_CHANNELS;
-+	int max_num_ch;
++	rsp_v3 = (void *)rsp;
++	channel_profile = v4 ? (void *)rsp->regulatory.channel_profile :
++			  (void *)rsp_v3->regulatory.channel_profile;
 +
-+	if (cfg->uhb_supported) {
-+		max_num_ch = IWL_NVM_NUM_CHANNELS_UHB;
-+		nvm_chan = iwl_uhb_nvm_channels;
-+	} else if (cfg->nvm_type == IWL_NVM_EXT) {
-+		max_num_ch = IWL_NVM_NUM_CHANNELS_EXT;
-+		nvm_chan = iwl_ext_nvm_channels;
-+	} else {
-+		max_num_ch = IWL_NVM_NUM_CHANNELS;
-+		nvm_chan = iwl_nvm_channels;
-+	}
+ 	iwl_init_sbands(trans->dev, trans->cfg, nvm,
+ 			rsp->regulatory.channel_profile,
+ 			nvm->valid_tx_ant & fw->valid_tx_ant,
+ 			nvm->valid_rx_ant & fw->valid_rx_ant,
+-			sbands_flags);
++			sbands_flags, v4);
  
- 	if (WARN_ON(num_of_ch > max_num_ch))
- 		num_of_ch = max_num_ch;
+ 	iwl_free_resp(&hcmd);
+ 	return nvm;
 -- 
 2.20.1
 
