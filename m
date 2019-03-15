@@ -2,96 +2,145 @@ Return-Path: <SRS0=bI0Y=RS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.7 required=3.0 tests=FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DD2FC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 22:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AA5C4360F
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 23:42:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0646F21872
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 22:46:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aAuRd+Rs"
+	by mail.kernel.org (Postfix) with ESMTP id 8FFC32085A
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 23:42:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727530AbfCOWqg (ORCPT
+        id S1727606AbfCOXmG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Mar 2019 18:46:36 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:41178 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727483AbfCOWqf (ORCPT
+        Fri, 15 Mar 2019 19:42:06 -0400
+Received: from mail-io1-f72.google.com ([209.85.166.72]:38364 "EHLO
+        mail-io1-f72.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727365AbfCOXmF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Mar 2019 18:46:35 -0400
-Received: by mail-ed1-f68.google.com with SMTP id a25so1673298edc.8
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Mar 2019 15:46:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=eajXAAAi7XNKaWrha17Hvvp0Tfkt+YEk+XHIyNYuSn8=;
-        b=aAuRd+RsU8QmVHfkVFv4fkQdP6WACYWBIQ+mbt9zBA42D6fznzXL0qmRhLko3x2bS2
-         zQHEU4fo4/+iQ01pro8K39BKALjScNJTGXDKn6i5MpWJxx+6pih+zhOTiOq6Keg4N+Js
-         yGEQNIAwoaa0JJP8YjT45OJLHtW9vIEsEJ8gE=
+        Fri, 15 Mar 2019 19:42:05 -0400
+Received: by mail-io1-f72.google.com with SMTP id b16so4185193iot.5
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Mar 2019 16:42:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=eajXAAAi7XNKaWrha17Hvvp0Tfkt+YEk+XHIyNYuSn8=;
-        b=LogpWYkCJXB5fWSTlCU/wcnEpb4pWjNjhjHOyvH3kH/OCZh7yPFiDjuJNdQ0NZuHUd
-         S/3mJMTcA01BrAz4zYg+y0/zqg5vzCGGXkAzr41HdXoP7t8noQhldf7GwAQWXgfdLo9z
-         O/l5ycPlLK2jcXxjWiZAhoGkoE1YTDqK26HGOM6TTmY9MHQXU0Qjo6zYkofm+xiHRA1N
-         mEFXO9s6a7yiUyfx0BUTNN8mywGBHw/nc9e9OdF1snyKTJ1MCGlVjrqoYMaa2f+O60PD
-         jREJ+GKA1RqdLAoHijsV5H5PnkESlR25WwnmTj/LpblOe9Ja0uExJbbNiYmCev7/sDw6
-         i2Cg==
-X-Gm-Message-State: APjAAAVjWOBslaQuh7nOmrz53fdTXVzfaKIdS4aObiEy5rZe/yZsspBW
-        +kVE1q0bMqi4UM0my8viBMa4Vg==
-X-Google-Smtp-Source: APXvYqyZEe4DTSSTBaG6JBTZkCjRVeCh17wd/rr6cnR6XJh2VRJBHC1JwHI+dv0bSUXC0AM+NbrC/Q==
-X-Received: by 2002:a17:906:8401:: with SMTP id n1mr3442167ejx.143.1552689994185;
-        Fri, 15 Mar 2019 15:46:34 -0700 (PDT)
-Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
-        by smtp.gmail.com with ESMTPSA id q3sm962338eds.41.2019.03.15.15.46.32
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 15 Mar 2019 15:46:33 -0700 (PDT)
-Subject: Re: [PATCH v3] brcmfmac: fix missing checks for kmemdup
-To:     Kangjie Lu <kjlu@umn.edu>
-Cc:     pakki001@umn.edu, Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        Stefan Wahren <stefan.wahren@i2se.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <d712dd26-8b51-143a-b3ff-ad44f2774944@broadcom.com>
- <20190315170433.3845-1-kjlu@umn.edu>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <0b85b931-d9a7-46c8-2fc2-1c554793d35d@broadcom.com>
-Date:   Fri, 15 Mar 2019 23:46:32 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.3
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
+        bh=Nsnf//GuMQcOLFjTV3KKzijAqjmjSSrLGCrx4Ctnfkk=;
+        b=adRRBdqaUprISLDvDN1ikfGkOsxQA7o2Nb/FH+Czc2TsCBfemju0cKdA5Fo8NGB+dT
+         FIx7xVyJkuDj7saTMza+cfGKsv8Kt9aANdyrH/YSnQKMzNuFWqG/0XyyyMKbGRunKDSq
+         puWpdJQjqc2QF+wztN8PsBdoPjHFdQS4AgmMq64lzWvNQQbBg8hmvY8YcsX3durihzWA
+         G9F+EH0B86eEvAqr9TH6hLwdY3c17v2WI36KKTg5Y7h5R0Epjv6l1Nx1iCzN1q8VjEcu
+         p0c6SSEaYx9P3V5A+dWoKFT3XLLafz9xEKhRCteFjGZVoFbskaV87uI6h0XplVlte1y0
+         bYYA==
+X-Gm-Message-State: APjAAAXN2Fr6ad3a08bfRfcrzu01/DYHFSegqU43xR0szQGWDfGE/RdT
+        6QVKJ6ZVnxcfsyl+m+nUY4fdTSr5Yd1lsedjLpHgc2BxkFOP
+X-Google-Smtp-Source: APXvYqx/kuvGnLBvq2g8RfapgwlNobNMEE/Advf1PfAk8Vm7pN7fKiu+kaJxGNKhi4f1gj40zl5unOtSjHSG0dyt3G2BFEjmX+9e
 MIME-Version: 1.0
-In-Reply-To: <20190315170433.3845-1-kjlu@umn.edu>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a02:6a1c:: with SMTP id l28mr3724871jac.8.1552693325006;
+ Fri, 15 Mar 2019 16:42:05 -0700 (PDT)
+Date:   Fri, 15 Mar 2019 16:42:04 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000150ed605842a96af@google.com>
+Subject: WARNING in wiphy_register (4)
+From:   syzbot <syzbot+8f91bd563bbff230d0ee@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, johannes@sipsolutions.net,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/15/2019 6:04 PM, Kangjie Lu wrote:
-> In case kmemdup fails, the fix sets conn_info->req_ie_len and
-> conn_info->resp_ie_len to zero to avoid buffer overflows.
+Hello,
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++++
->   1 file changed, 4 insertions(+)
+syzbot found the following crash on:
+
+HEAD commit:    3b319ee2 Merge tag 'acpi-5.1-rc1-2' of git://git.kernel.or..
+git tree:       net-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=15d8a2d7200000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f05902bca21d8935
+dashboard link: https://syzkaller.appspot.com/bug?extid=8f91bd563bbff230d0ee
+compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+userspace arch: amd64
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16590b5f200000
+
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+8f91bd563bbff230d0ee@syzkaller.appspotmail.com
+
+netlink: 'syz-executor.5': attribute type 23 has an invalid length.
+WARNING: CPU: 1 PID: 7527 at net/wireless/core.c:639  
+wiphy_verify_combinations net/wireless/core.c:639 [inline]
+WARNING: CPU: 1 PID: 7527 at net/wireless/core.c:639  
+wiphy_register+0x2200/0x25f0 net/wireless/core.c:784
+Kernel panic - not syncing: panic_on_warn set ...
+CPU: 1 PID: 7527 Comm: syz-executor.5 Not tainted 5.0.0+ #98
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Call Trace:
+  __dump_stack lib/dump_stack.c:77 [inline]
+  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
+  panic+0x2cb/0x65c kernel/panic.c:214
+  __warn.cold+0x20/0x45 kernel/panic.c:571
+  report_bug+0x263/0x2b0 lib/bug.c:186
+  fixup_bug arch/x86/kernel/traps.c:179 [inline]
+  fixup_bug arch/x86/kernel/traps.c:174 [inline]
+  do_error_trap+0x11b/0x200 arch/x86/kernel/traps.c:272
+  do_invalid_op+0x37/0x50 arch/x86/kernel/traps.c:291
+  invalid_op+0x14/0x20 arch/x86/entry/entry_64.S:973
+RIP: 0010:wiphy_verify_combinations net/wireless/core.c:639 [inline]
+RIP: 0010:wiphy_register+0x2200/0x25f0 net/wireless/core.c:784
+Code: 06 f6 de fa 0f 0b 41 bc ea ff ff ff e9 8b e2 ff ff e8 c4 aa b1 fa 48  
+8b 7c 24 60 e8 fa ee 16 fb e9 a6 de ff ff e8 e0 f5 de fa <0f> 0b 41 bc ea  
+ff ff ff e9 65 e2 ff ff 48 89 df e8 db ee 16 fb e9
+RSP: 0018:ffff88808b897190 EFLAGS: 00010293
+RAX: ffff88808c448040 RBX: 0000000000000001 RCX: ffffffff869160af
+RDX: 0000000000000000 RSI: ffffffff86916e50 RDI: 0000000000000004
+RBP: ffff88808b8972c8 R08: ffff88808c448040 R09: ffffed10149cb1c1
+R10: ffffed10149cb1c0 R11: ffff8880a4e58e05 R12: 0000000000000002
+R13: 0000000000000002 R14: 0000000000000800 R15: ffff8880a4e5b974
+  ieee80211_register_hw+0x1674/0x3c00 net/mac80211/main.c:1128
+  mac80211_hwsim_new_radio+0x1f16/0x3de0  
+drivers/net/wireless/mac80211_hwsim.c:2929
+  hwsim_new_radio_nl+0x9e3/0x1070 drivers/net/wireless/mac80211_hwsim.c:3477
+  genl_family_rcv_msg+0x6e1/0xd90 net/netlink/genetlink.c:601
+  genl_rcv_msg+0xca/0x16c net/netlink/genetlink.c:626
+  netlink_rcv_skb+0x17a/0x460 net/netlink/af_netlink.c:2485
+  genl_rcv+0x29/0x40 net/netlink/genetlink.c:637
+  netlink_unicast_kernel net/netlink/af_netlink.c:1310 [inline]
+  netlink_unicast+0x536/0x720 net/netlink/af_netlink.c:1336
+  netlink_sendmsg+0x8ae/0xd70 net/netlink/af_netlink.c:1925
+  sock_sendmsg_nosec net/socket.c:622 [inline]
+  sock_sendmsg+0xdd/0x130 net/socket.c:632
+  ___sys_sendmsg+0x806/0x930 net/socket.c:2137
+  __sys_sendmsg+0x105/0x1d0 net/socket.c:2175
+  __do_sys_sendmsg net/socket.c:2184 [inline]
+  __se_sys_sendmsg net/socket.c:2182 [inline]
+  __x64_sys_sendmsg+0x78/0xb0 net/socket.c:2182
+  do_syscall_64+0x103/0x610 arch/x86/entry/common.c:290
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x458079
+Code: ad b8 fb ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 48 89 f8 48 89 f7  
+48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff  
+ff 0f 83 7b b8 fb ff c3 66 2e 0f 1f 84 00 00 00 00
+RSP: 002b:00007f5ae4523c78 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 0000000000458079
+RDX: 0000000000000000 RSI: 0000000020000080 RDI: 0000000000000003
+RBP: 000000000073bf00 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00007f5ae45246d4
+R13: 00000000004c564c R14: 00000000004d9520 R15: 00000000ffffffff
+Kernel Offset: disabled
+Rebooting in 86400 seconds..
+
+
+---
+This bug is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this bug report. See:
+https://goo.gl/tpsmEJ#bug-status-tracking for how to communicate with  
+syzbot.
+syzbot can test patches for this bug, for details see:
+https://goo.gl/tpsmEJ#testing-patches
