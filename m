@@ -2,41 +2,39 @@ Return-Path: <SRS0=bI0Y=RS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5F92C10F00
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79EE4C43381
 	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 15:39:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6E82205C9
+	by mail.kernel.org (Postfix) with ESMTP id 4BBE8205C9
 	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 15:39:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729358AbfCOPjR (ORCPT
+        id S1729314AbfCOPjQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Mar 2019 11:39:17 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44094 "EHLO
+        Fri, 15 Mar 2019 11:39:16 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44082 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729313AbfCOPjR (ORCPT
+        with ESMTP id S1727451AbfCOPjQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Mar 2019 11:39:17 -0400
+        Fri, 15 Mar 2019 11:39:16 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1h4ovT-0004n1-ND; Fri, 15 Mar 2019 17:39:16 +0200
+        id 1h4ovQ-0004n1-Pn; Fri, 15 Mar 2019 17:39:13 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 15 Mar 2019 17:38:59 +0200
-Message-Id: <20190315153907.16192-4-luca@coelho.fi>
+Date:   Fri, 15 Mar 2019 17:38:56 +0200
+Message-Id: <20190315153907.16192-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190315153907.16192-1-luca@coelho.fi>
-References: <20190315153907.16192-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 03/11] nl80211: copy the length of dst of src in nl80211_notify_radar_detection()
+Subject: [PATCH 00/11] cfg80211/mac80211 patches from our internal tree 2019-03-15
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -44,29 +42,56 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-It is generally safer to copy the length of the destination instead of
-the length of the source, because if the sizes don't match, it's
-usually better to leak some data from the source than to write data
-out of bounds in the destination.
+Hi,
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Some patches with mac80211 and cfg80211 changes from our internal
+tree.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 25a9e3b5c154..239be0e2f9e1 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8061,7 +8061,7 @@ static int nl80211_notify_radar_detection(struct sk_buff *skb,
- 
- 	cfg80211_sched_dfs_chan_update(rdev);
- 
--	memcpy(&rdev->radar_chandef, &chandef, sizeof(chandef));
-+	memcpy(&rdev->radar_chandef, &chandef, sizeof(rdev->radar_chandef));
- 
- 	/* Propagate this notification to other radios as well */
- 	queue_work(cfg80211_wq, &rdev->propagate_radar_detect_wk);
+Please review, though you have already reviewed most if not all of
+them ;)
+
+Cheers,
+Luca.
+
+
+Andrei Otcheretianski (1):
+  mac80211: Increase MAX_MSG_LEN
+
+Avraham Stern (1):
+  mac80211_hwsim: set p2p device interface support indication
+
+Ilan Peer (1):
+  cfg80211: Handle WMM rules in regulatory domain intersection
+
+Liad Kaufman (1):
+  ieee80211: update HE IEs to D4.0 spec
+
+Luca Coelho (1):
+  nl80211: copy the length of dst of src in
+    nl80211_notify_radar_detection()
+
+Sara Sharon (5):
+  cfg80211: don't skip multi-bssid index element
+  cfg80211: support non-inheritance element
+  mac80211: support non-inheritance element
+  cfg80211: support profile split between elements
+  mac80211: support profile split between elements
+
+Shaul Triebitz (1):
+  nl80211: increase NL80211_MAX_SUPP_REG_RULES
+
+ drivers/net/wireless/mac80211_hwsim.c |   2 +
+ include/linux/ieee80211.h             |  14 ++-
+ include/net/cfg80211.h                |  22 ++++
+ include/uapi/linux/nl80211.h          |   4 +-
+ net/mac80211/ieee80211_i.h            |   1 -
+ net/mac80211/trace_msg.h              |   7 +-
+ net/mac80211/util.c                   | 162 +++++++++++++++---------
+ net/wireless/nl80211.c                |   2 +-
+ net/wireless/reg.c                    |  39 ++++++
+ net/wireless/scan.c                   | 173 ++++++++++++++++++++++++--
+ 10 files changed, 345 insertions(+), 81 deletions(-)
+
 -- 
 2.20.1
 
