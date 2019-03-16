@@ -1,146 +1,125 @@
-Return-Path: <SRS0=bI0Y=RS=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=BJpU=RT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AA5C4360F
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 23:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A6A6C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 14:33:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8FFC32085A
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Mar 2019 23:42:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAB0421903
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 14:33:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1552746786;
+	bh=GZaECBoPKosqiXBJI07rJFrURoQxvYGG/l7uSPERc9g=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=gBCi++6JAUeAv2pxdAgDiCLO08g0Rt2kpNp5n7eB03uaVMiQquyiA+cnmbEoHFfHD
+	 eF03fBltjbtVkjt+n+PQUhx+fGjsAkBYgVjV6SIy2n3GKq0V3SKimyIeCkkgY2XfpV
+	 8HRw91hLvT70DQZby7eaJXfMG9lnrQlEEBKiluCQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727606AbfCOXmG (ORCPT
+        id S1726861AbfCPOdF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Mar 2019 19:42:06 -0400
-Received: from mail-io1-f72.google.com ([209.85.166.72]:38364 "EHLO
-        mail-io1-f72.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727365AbfCOXmF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Mar 2019 19:42:05 -0400
-Received: by mail-io1-f72.google.com with SMTP id b16so4185193iot.5
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Mar 2019 16:42:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=Nsnf//GuMQcOLFjTV3KKzijAqjmjSSrLGCrx4Ctnfkk=;
-        b=adRRBdqaUprISLDvDN1ikfGkOsxQA7o2Nb/FH+Czc2TsCBfemju0cKdA5Fo8NGB+dT
-         FIx7xVyJkuDj7saTMza+cfGKsv8Kt9aANdyrH/YSnQKMzNuFWqG/0XyyyMKbGRunKDSq
-         puWpdJQjqc2QF+wztN8PsBdoPjHFdQS4AgmMq64lzWvNQQbBg8hmvY8YcsX3durihzWA
-         G9F+EH0B86eEvAqr9TH6hLwdY3c17v2WI36KKTg5Y7h5R0Epjv6l1Nx1iCzN1q8VjEcu
-         p0c6SSEaYx9P3V5A+dWoKFT3XLLafz9xEKhRCteFjGZVoFbskaV87uI6h0XplVlte1y0
-         bYYA==
-X-Gm-Message-State: APjAAAXN2Fr6ad3a08bfRfcrzu01/DYHFSegqU43xR0szQGWDfGE/RdT
-        6QVKJ6ZVnxcfsyl+m+nUY4fdTSr5Yd1lsedjLpHgc2BxkFOP
-X-Google-Smtp-Source: APXvYqx/kuvGnLBvq2g8RfapgwlNobNMEE/Advf1PfAk8Vm7pN7fKiu+kaJxGNKhi4f1gj40zl5unOtSjHSG0dyt3G2BFEjmX+9e
+        Sat, 16 Mar 2019 10:33:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56566 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726064AbfCPOdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Mar 2019 10:33:05 -0400
+Received: from localhost.localdomain (unknown [151.66.48.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9EFB9218D0;
+        Sat, 16 Mar 2019 14:33:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1552746784;
+        bh=GZaECBoPKosqiXBJI07rJFrURoQxvYGG/l7uSPERc9g=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=vW9wUScvfgfZAbAGVUE+Q+evI0SlfKI3/sY2vwIzw6KPs2SNCiy8d/qDcBrpQIsMw
+         NQwffID20+ECOqDEWpQzih1HIdcaI95CPRAPBcTJg/qcW7Ut/A3uwFdvUeULXZuos9
+         VzWoFBlA1kg/UPxI1Vxb1wsBsP/Abu9dgMrhzhDg=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sgruszka@redhat.com
+Subject: [PATCH] mt7603: remove mt7603_mcu_init routine
+Date:   Sat, 16 Mar 2019 15:32:53 +0100
+Message-Id: <de62eeed41d63ee5444f7039592323750165f992.1552739522.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <cover.1552739522.git.lorenzo@kernel.org>
+References: <cover.1552739522.git.lorenzo@kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a02:6a1c:: with SMTP id l28mr3724871jac.8.1552693325006;
- Fri, 15 Mar 2019 16:42:05 -0700 (PDT)
-Date:   Fri, 15 Mar 2019 16:42:04 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000150ed605842a96af@google.com>
-Subject: WARNING in wiphy_register (4)
-From:   syzbot <syzbot+8f91bd563bbff230d0ee@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, johannes@sipsolutions.net,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+Remove mt7603_mcu_init since mcu.mutex has been already initialized
+in mt76_mmio_init. Run mt7603_load_firmware directly in
+mt7603_init_hardware
 
-syzbot found the following crash on:
-
-HEAD commit:    3b319ee2 Merge tag 'acpi-5.1-rc1-2' of git://git.kernel.or..
-git tree:       net-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=15d8a2d7200000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=f05902bca21d8935
-dashboard link: https://syzkaller.appspot.com/bug?extid=8f91bd563bbff230d0ee
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-userspace arch: amd64
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16590b5f200000
-
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+8f91bd563bbff230d0ee@syzkaller.appspotmail.com
-
-netlink: 'syz-executor.5': attribute type 23 has an invalid length.
-WARNING: CPU: 1 PID: 7527 at net/wireless/core.c:639  
-wiphy_verify_combinations net/wireless/core.c:639 [inline]
-WARNING: CPU: 1 PID: 7527 at net/wireless/core.c:639  
-wiphy_register+0x2200/0x25f0 net/wireless/core.c:784
-Kernel panic - not syncing: panic_on_warn set ...
-CPU: 1 PID: 7527 Comm: syz-executor.5 Not tainted 5.0.0+ #98
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
-  panic+0x2cb/0x65c kernel/panic.c:214
-  __warn.cold+0x20/0x45 kernel/panic.c:571
-  report_bug+0x263/0x2b0 lib/bug.c:186
-  fixup_bug arch/x86/kernel/traps.c:179 [inline]
-  fixup_bug arch/x86/kernel/traps.c:174 [inline]
-  do_error_trap+0x11b/0x200 arch/x86/kernel/traps.c:272
-  do_invalid_op+0x37/0x50 arch/x86/kernel/traps.c:291
-  invalid_op+0x14/0x20 arch/x86/entry/entry_64.S:973
-RIP: 0010:wiphy_verify_combinations net/wireless/core.c:639 [inline]
-RIP: 0010:wiphy_register+0x2200/0x25f0 net/wireless/core.c:784
-Code: 06 f6 de fa 0f 0b 41 bc ea ff ff ff e9 8b e2 ff ff e8 c4 aa b1 fa 48  
-8b 7c 24 60 e8 fa ee 16 fb e9 a6 de ff ff e8 e0 f5 de fa <0f> 0b 41 bc ea  
-ff ff ff e9 65 e2 ff ff 48 89 df e8 db ee 16 fb e9
-RSP: 0018:ffff88808b897190 EFLAGS: 00010293
-RAX: ffff88808c448040 RBX: 0000000000000001 RCX: ffffffff869160af
-RDX: 0000000000000000 RSI: ffffffff86916e50 RDI: 0000000000000004
-RBP: ffff88808b8972c8 R08: ffff88808c448040 R09: ffffed10149cb1c1
-R10: ffffed10149cb1c0 R11: ffff8880a4e58e05 R12: 0000000000000002
-R13: 0000000000000002 R14: 0000000000000800 R15: ffff8880a4e5b974
-  ieee80211_register_hw+0x1674/0x3c00 net/mac80211/main.c:1128
-  mac80211_hwsim_new_radio+0x1f16/0x3de0  
-drivers/net/wireless/mac80211_hwsim.c:2929
-  hwsim_new_radio_nl+0x9e3/0x1070 drivers/net/wireless/mac80211_hwsim.c:3477
-  genl_family_rcv_msg+0x6e1/0xd90 net/netlink/genetlink.c:601
-  genl_rcv_msg+0xca/0x16c net/netlink/genetlink.c:626
-  netlink_rcv_skb+0x17a/0x460 net/netlink/af_netlink.c:2485
-  genl_rcv+0x29/0x40 net/netlink/genetlink.c:637
-  netlink_unicast_kernel net/netlink/af_netlink.c:1310 [inline]
-  netlink_unicast+0x536/0x720 net/netlink/af_netlink.c:1336
-  netlink_sendmsg+0x8ae/0xd70 net/netlink/af_netlink.c:1925
-  sock_sendmsg_nosec net/socket.c:622 [inline]
-  sock_sendmsg+0xdd/0x130 net/socket.c:632
-  ___sys_sendmsg+0x806/0x930 net/socket.c:2137
-  __sys_sendmsg+0x105/0x1d0 net/socket.c:2175
-  __do_sys_sendmsg net/socket.c:2184 [inline]
-  __se_sys_sendmsg net/socket.c:2182 [inline]
-  __x64_sys_sendmsg+0x78/0xb0 net/socket.c:2182
-  do_syscall_64+0x103/0x610 arch/x86/entry/common.c:290
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x458079
-Code: ad b8 fb ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 48 89 f8 48 89 f7  
-48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff  
-ff 0f 83 7b b8 fb ff c3 66 2e 0f 1f 84 00 00 00 00
-RSP: 002b:00007f5ae4523c78 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 0000000000458079
-RDX: 0000000000000000 RSI: 0000000020000080 RDI: 0000000000000003
-RBP: 000000000073bf00 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 00007f5ae45246d4
-R13: 00000000004c564c R14: 00000000004d9520 R15: 00000000ffffffff
-Kernel Offset: disabled
-Rebooting in 86400 seconds..
-
-
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ drivers/net/wireless/mediatek/mt76/mt7603/init.c   |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt7603/mcu.c    | 10 +---------
+ drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h |  2 +-
+ 3 files changed, 3 insertions(+), 11 deletions(-)
 
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#bug-status-tracking for how to communicate with  
-syzbot.
-syzbot can test patches for this bug, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+index d54dda67d036..e17b6b89dfe2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+@@ -282,7 +282,7 @@ mt7603_init_hardware(struct mt7603_dev *dev)
+ 		mt76_poll(dev, MT_PSE_RTA, MT_PSE_RTA_BUSY, 0, 5000);
+ 	}
+ 
+-	ret = mt7603_mcu_init(dev);
++	ret = mt7603_load_firmware(dev);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
+index d06905ea8cc6..57481012ee47 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
+@@ -170,8 +170,7 @@ mt7603_mcu_restart(struct mt7603_dev *dev)
+ 				   MCU_Q_NA);
+ }
+ 
+-static int
+-mt7603_load_firmware(struct mt7603_dev *dev)
++int mt7603_load_firmware(struct mt7603_dev *dev)
+ {
+ 	const struct firmware *fw;
+ 	const struct mt7603_fw_trailer *hdr;
+@@ -269,13 +268,6 @@ mt7603_load_firmware(struct mt7603_dev *dev)
+ 	return ret;
+ }
+ 
+-int mt7603_mcu_init(struct mt7603_dev *dev)
+-{
+-	mutex_init(&dev->mt76.mmio.mcu.mutex);
+-
+-	return mt7603_load_firmware(dev);
+-}
+-
+ void mt7603_mcu_exit(struct mt7603_dev *dev)
+ {
+ 	mt7603_mcu_restart(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+index 8bd00b97066a..b65348ea4868 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+@@ -176,7 +176,7 @@ void mt7603_unregister_device(struct mt7603_dev *dev);
+ int mt7603_eeprom_init(struct mt7603_dev *dev);
+ int mt7603_dma_init(struct mt7603_dev *dev);
+ void mt7603_dma_cleanup(struct mt7603_dev *dev);
+-int mt7603_mcu_init(struct mt7603_dev *dev);
++int mt7603_load_firmware(struct mt7603_dev *dev);
+ void mt7603_init_debugfs(struct mt7603_dev *dev);
+ 
+ static inline void mt7603_irq_enable(struct mt7603_dev *dev, u32 mask)
+-- 
+2.20.1
+
