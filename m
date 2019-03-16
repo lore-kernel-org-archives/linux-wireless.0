@@ -6,41 +6,41 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F063C43381
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 19:27:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BAB5C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 19:30:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5B25218D0
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 19:27:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAFD6218D0
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 19:30:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="aL8fsjZd"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="az1FoCif"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726822AbfCPT11 (ORCPT
+        id S1726549AbfCPTa4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Mar 2019 15:27:27 -0400
-Received: from nbd.name ([46.4.11.11]:35250 "EHLO nbd.name"
+        Sat, 16 Mar 2019 15:30:56 -0400
+Received: from nbd.name ([46.4.11.11]:35496 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726418AbfCPT11 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Mar 2019 15:27:27 -0400
+        id S1726466AbfCPTa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Mar 2019 15:30:56 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=ZncerlEuyx8TLnWUBxexs7U8lTDGwijT6bz7qW/IiIk=; b=aL8fsjZdYubsTWitDId524Oopt
-        9w1uHVArdANYSTWDwmIPsXPbsGIVK9Lr/+/CgaoNNCvIlKsWhqQpGcQanecRn1HEzxnVZDic2w7Ih
-        W1ObQi26Nyts3qXb9r3JshvbpiDN+rPq3Sm1QR+8jXd7l+m7Mk4QXf8xB+Yuu8j9rq3A=;
+        bh=tYKKscIycDzWwKcZWXL3pc5xiFCxZCjtAalRSh8woxw=; b=az1FoCifNhaumiwiUl2sivNmWO
+        SsrwD5Tqr2yMRGPcGUjIHEKNqKl+cGtvUrp5zYhxxEAmlIJOxVxWS3W2E7t/Kr17sF6XF6aN1H5av
+        yUmSW41i4xd/zoBD/TqG3r9M9LFdy3pkxVRpXL8Er8R1hlmXT4OBRe8ZT5CdVczi4wP4=;
 Received: from p4ff1316d.dip0.t-ipconnect.de ([79.241.49.109] helo=nf.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1h5Exp-0008Up-T3; Sat, 16 Mar 2019 20:27:26 +0100
-Subject: Re: [PATCH] mt76: dma: add static qualifier to mt76_dma_tx_queue_skb
+        id 1h5F1A-0000NF-G2; Sat, 16 Mar 2019 20:30:52 +0100
+Subject: Re: [PATCH v2] mt76: usb: reduce code indentation in mt76u_alloc_tx
 To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com,
+Cc:     linux-wireless@vger.kernel.org, joe@perches.com,
         lorenzo.bianconi@redhat.com
-References: <cover.1551968693.git.lorenzo@kernel.org>
- <d7405a02d013b9804de3f69120f23170d570cb19.1551968693.git.lorenzo@kernel.org>
+References: <cover.1551703530.git.lorenzo@kernel.org>
+ <f17ee2ae87708b9e70cea5116d8fa41852adbcff.1551703530.git.lorenzo@kernel.org>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -66,12 +66,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <9ce3438f-5f4e-ab04-61ca-ea8e22965e6d@nbd.name>
-Date:   Sat, 16 Mar 2019 20:27:25 +0100
+Message-ID: <ee132e6e-cd7e-f3fd-1415-0247da2365ba@nbd.name>
+Date:   Sat, 16 Mar 2019 20:30:51 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.3
 MIME-Version: 1.0
-In-Reply-To: <d7405a02d013b9804de3f69120f23170d570cb19.1551968693.git.lorenzo@kernel.org>
+In-Reply-To: <f17ee2ae87708b9e70cea5116d8fa41852adbcff.1551703530.git.lorenzo@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -80,10 +80,9 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-03-07 15:45, Lorenzo Bianconi wrote:
-> As already done for mt76_dma_tx_queue_skb_raw, add static qualifier to
-> mt76_dma_tx_queue_skb and introduce mt76_tx_queue_skb in order to run
-> mt76_dma_tx_queue_skb in driver code
+On 2019-03-04 13:59, Lorenzo Bianconi wrote:
+> Improve code readability reducing code indentation in
+> mt76u_alloc_tx
 > 
 > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Applied, thanks.
