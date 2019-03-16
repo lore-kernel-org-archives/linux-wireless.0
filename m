@@ -6,41 +6,41 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BAB5C43381
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 19:30:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB0A9C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 19:44:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EAFD6218D0
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 19:30:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5A7E21871
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Mar 2019 19:44:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="az1FoCif"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Bc1nDrYN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726549AbfCPTa4 (ORCPT
+        id S1726629AbfCPToY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Mar 2019 15:30:56 -0400
-Received: from nbd.name ([46.4.11.11]:35496 "EHLO nbd.name"
+        Sat, 16 Mar 2019 15:44:24 -0400
+Received: from nbd.name ([46.4.11.11]:36136 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726466AbfCPTa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Mar 2019 15:30:56 -0400
+        id S1726418AbfCPToY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Mar 2019 15:44:24 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=tYKKscIycDzWwKcZWXL3pc5xiFCxZCjtAalRSh8woxw=; b=az1FoCifNhaumiwiUl2sivNmWO
-        SsrwD5Tqr2yMRGPcGUjIHEKNqKl+cGtvUrp5zYhxxEAmlIJOxVxWS3W2E7t/Kr17sF6XF6aN1H5av
-        yUmSW41i4xd/zoBD/TqG3r9M9LFdy3pkxVRpXL8Er8R1hlmXT4OBRe8ZT5CdVczi4wP4=;
+        bh=Pd0VuIyqTNIi14PaZH6c1s/KBvOzHApsIaF3vS9tV2U=; b=Bc1nDrYNqFKVLzcZz01GoQUcTx
+        jXGAVjilq8XWca6Tdl/Juojj/RDC4UsC688ljdIoOVcL+ki/mzAXZI56JJ+7BV0kd4CFVqafKneuF
+        LkKCHVj3wHESpOoxvvp8tljMX/sfqGL0UDGmaB0SRT2oiaXsGyqiDFm4RHoakWbZ2478=;
 Received: from p4ff1316d.dip0.t-ipconnect.de ([79.241.49.109] helo=nf.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1h5F1A-0000NF-G2; Sat, 16 Mar 2019 20:30:52 +0100
-Subject: Re: [PATCH v2] mt76: usb: reduce code indentation in mt76u_alloc_tx
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, joe@perches.com,
-        lorenzo.bianconi@redhat.com
-References: <cover.1551703530.git.lorenzo@kernel.org>
- <f17ee2ae87708b9e70cea5116d8fa41852adbcff.1551703530.git.lorenzo@kernel.org>
+        id 1h5FEE-0001Hz-EZ; Sat, 16 Mar 2019 20:44:22 +0100
+Subject: Re: [PATCH 08/11] mt76x02u: implement pre TBTT work for USB
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <1551692896-7062-1-git-send-email-sgruszka@redhat.com>
+ <1551692896-7062-9-git-send-email-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -66,12 +66,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <ee132e6e-cd7e-f3fd-1415-0247da2365ba@nbd.name>
-Date:   Sat, 16 Mar 2019 20:30:51 +0100
+Message-ID: <5844c0b8-3db9-d985-da75-a11318df37c5@nbd.name>
+Date:   Sat, 16 Mar 2019 20:44:21 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.5.3
 MIME-Version: 1.0
-In-Reply-To: <f17ee2ae87708b9e70cea5116d8fa41852adbcff.1551703530.git.lorenzo@kernel.org>
+In-Reply-To: <1551692896-7062-9-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -80,11 +80,19 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-03-04 13:59, Lorenzo Bianconi wrote:
-> Improve code readability reducing code indentation in
-> mt76u_alloc_tx
+On 2019-03-04 10:48, Stanislaw Gruszka wrote:
+> Program beacons data and PS buffered frames on TBTT work for USB.
+> We do not have MT_TXQ_PSD queue available via USB endpoints. The way
+> we can send PS broadcast frames in timely manner before PS stations go
+> sleep again is program them in beacon data area. Hardware do not modify
+> those frames since TXWI is properly configured. mt76x02_mac_set_beacon()
+> already handle this and free no longer used frames.
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Applied, thanks.
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+I think it's a nice idea, but there is one problem with that approach:
+beacon slots only have 1024 bytes for TXWI + data.
+I think to support this properly, you probably need to adjust beacon
+offsets for USB dynamically and limit the number of frames to what you
+can fit in SRAM.
 
 - Felix
