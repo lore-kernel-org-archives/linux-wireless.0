@@ -2,95 +2,73 @@ Return-Path: <SRS0=49bh=RV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9E8FC43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Mar 2019 04:59:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F420C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Mar 2019 09:54:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9CC0120857
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Mar 2019 04:59:03 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LvkHtNSu";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LvkHtNSu"
+	by mail.kernel.org (Postfix) with ESMTP id EDED92075C
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Mar 2019 09:54:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726135AbfCRE7D (ORCPT
+        id S1727368AbfCRJyw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Mar 2019 00:59:03 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:32956 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725915AbfCRE7C (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Mar 2019 00:59:02 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id DF8EA6077A; Mon, 18 Mar 2019 04:59:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1552885141;
-        bh=XLbGpVewknCHe69MjgaElQwikk6kEgoM0vtdGHk2XWk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=LvkHtNSuMrQsAWSZWjfU+CTGcIOE05/o4o/grauti5im88NDHCGr1kmJBxS8ZzWqu
-         zNeUxj8Kh/mux5Feg4PUFN3Yf3YQjdTO5alaymBS4o/IDjjVEUUcVms8pPH+pVW67K
-         pbq7HiYn/ouJNMirwIPzuAROBF5EJtsh5OxLWwgw=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 4D3066074F;
-        Mon, 18 Mar 2019 04:59:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1552885141;
-        bh=XLbGpVewknCHe69MjgaElQwikk6kEgoM0vtdGHk2XWk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=LvkHtNSuMrQsAWSZWjfU+CTGcIOE05/o4o/grauti5im88NDHCGr1kmJBxS8ZzWqu
-         zNeUxj8Kh/mux5Feg4PUFN3Yf3YQjdTO5alaymBS4o/IDjjVEUUcVms8pPH+pVW67K
-         pbq7HiYn/ouJNMirwIPzuAROBF5EJtsh5OxLWwgw=
+        Mon, 18 Mar 2019 05:54:52 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:54318 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726691AbfCRJyw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Mar 2019 05:54:52 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1D97089C38;
+        Mon, 18 Mar 2019 09:54:52 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.106])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C1AAC1001DE7;
+        Mon, 18 Mar 2019 09:54:49 +0000 (UTC)
+Date:   Mon, 18 Mar 2019 10:50:15 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Subject: Re: [PATCH 08/11] mt76x02u: implement pre TBTT work for USB
+Message-ID: <20190318095014.GA3323@redhat.com>
+References: <1551692896-7062-1-git-send-email-sgruszka@redhat.com>
+ <1551692896-7062-9-git-send-email-sgruszka@redhat.com>
+ <5844c0b8-3db9-d985-da75-a11318df37c5@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 18 Mar 2019 12:59:01 +0800
-From:   Yibo Zhao <yiboz@codeaurora.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH v2] fq: fix fq_tin tx bytes overflow
-In-Reply-To: <13392e1203be4ddd97c4e0e6b6a6c48ce97aae6f.camel@sipsolutions.net>
-References: <1552446505-15444-1-git-send-email-yiboz@codeaurora.org>
- (sfid-20190313_040846_202389_4E584F4C)
- <13392e1203be4ddd97c4e0e6b6a6c48ce97aae6f.camel@sipsolutions.net>
-Message-ID: <fa575f93f3936aa3be1cf6b14f87e511@codeaurora.org>
-X-Sender: yiboz@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5844c0b8-3db9-d985-da75-a11318df37c5@nbd.name>
+User-Agent: Mutt/1.5.20 (2009-12-10)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Mon, 18 Mar 2019 09:54:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-03-15 17:38, Johannes Berg wrote:
-> On Wed, 2019-03-13 at 11:08 +0800, Yibo Zhao wrote:
->> Currently, we are using u32 for tx_bytes in fq_tin.
->> If the throughput stays more than 1.2Gbps, tx_bytes
->> statistics overflow in about 1 min.
->> 
->> In order to allow us to trace the tx_bytes statistics
->> for longer time in high throughput, change its type
->> from u32 to u64.
-> 
-> Hmm. 64-bit values are kinda expensive on 32-bit architectures. How
-> badly do you need this? I mean ... worst case you just have to capture
-> every 30 seconds or so if you're doing really high throughput with HE 
-> or
-> something?
-> 
-> johannes
+On Sat, Mar 16, 2019 at 08:44:21PM +0100, Felix Fietkau wrote:
+> On 2019-03-04 10:48, Stanislaw Gruszka wrote:
+> > Program beacons data and PS buffered frames on TBTT work for USB.
+> > We do not have MT_TXQ_PSD queue available via USB endpoints. The way
+> > we can send PS broadcast frames in timely manner before PS stations go
+> > sleep again is program them in beacon data area. Hardware do not modify
+> > those frames since TXWI is properly configured. mt76x02_mac_set_beacon()
+> > already handle this and free no longer used frames.
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> I think it's a nice idea, but there is one problem with that approach:
+> beacon slots only have 1024 bytes for TXWI + data.
+> I think to support this properly, you probably need to adjust beacon
+> offsets for USB dynamically and limit the number of frames to what you
+> can fit in SRAM.
+That would be good since we could sent more buffered frames (ARP frames
+are small), but for now I would prefer simpler solution to enable 
+AP support for USB: increase slot size to 1600 and make only 5 slots
+available.
 
-Hi Johannes,
+I assume we can not increase beacon SRAM area to more than 8kB.
 
-I understand your concern. Yes, I am using high end AP for throughput 
-test. I'd say 1.2 Gbps is not the worst case since we can achieve max 
-1.4Gbps according to our test. AFAIK, for most throughput cases, 1min is 
-the minimum requirement. And I think, with more and more high end 
-products(even higher throughput) on the ways to the market, it is highly 
-possible that 30s is not a safe time before overflow.
-
--- 
-Yibo
+Stanislaw
