@@ -2,152 +2,85 @@ Return-Path: <SRS0=Jk3u=RW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8E16C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 21:01:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 223AAC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 21:02:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 95805213F2
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 21:01:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3E3C213F2
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 21:02:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UmVRVwOB";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Fti0GXXt"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UAMVpjnc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727376AbfCSVBW (ORCPT
+        id S1727099AbfCSVCy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Mar 2019 17:01:22 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:52128 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727087AbfCSVBW (ORCPT
+        Tue, 19 Mar 2019 17:02:54 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:32891 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726740AbfCSVCx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Mar 2019 17:01:22 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 7986E60F3F; Tue, 19 Mar 2019 21:01:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553029281;
-        bh=4NkBDu7Dwh4wk0TSBg687tjF/FZQKyLvHVNLHO+Xd+I=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=UmVRVwOBTIQqIfZT2vEnioUsFUs81NJ7aaHwotlEcCCWewbGxCD4gxFUwegTXaqgp
-         5m2nsJR3kAvqnwtAMDYR9RDJp65GjL0fPRQcDgMAJeRbf2F0Wi/K7LO+ITiEMZQxFp
-         0kRZGB0yDiwR/0cVGLPHTFHgx83jxC4uEo/0RqXM=
-Received: from x230.qca.qualcomm.com (unknown [195.39.71.253])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 45E1160312;
-        Tue, 19 Mar 2019 21:01:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553029280;
-        bh=4NkBDu7Dwh4wk0TSBg687tjF/FZQKyLvHVNLHO+Xd+I=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Fti0GXXtfpcgI3qqq8Ed+frTJsoB7S4A8rXDrd6yIn468aESIlLGGXggR11ONlvoz
-         jUsz5vXjvhYHODCGCebwyY6ZY9Zo48h17XkQMVFHG8zciIbJnJIcNKpwhOfok0Hfu0
-         MrRLNxq/bG0/giMn3e01MDl5pr1V5drdDpH6dmlI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 45E1160312
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     <yhchuang@realtek.com>
-Cc:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-        <gregkh@linuxfoundation.org>, <sgruszka@redhat.com>,
-        <pkshih@realtek.com>, <tehuang@realtek.com>,
-        <briannorris@chromium.org>, <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v8 14/14] staging: rtlwifi: remove staging rtlwifi driver
-References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
-        <1552450443-351-15-git-send-email-yhchuang@realtek.com>
-Date:   Tue, 19 Mar 2019 23:01:16 +0200
-In-Reply-To: <1552450443-351-15-git-send-email-yhchuang@realtek.com>
-        (yhchuang@realtek.com's message of "Wed, 13 Mar 2019 12:14:03 +0800")
-Message-ID: <87mulqtw83.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Tue, 19 Mar 2019 17:02:53 -0400
+Received: by mail-oi1-f196.google.com with SMTP id e22so93037oiy.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2019 14:02:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=btJmV0Vlix+mVX/mKsKPiNQtoli5p2UkalUAhUDCYUM=;
+        b=UAMVpjncJqpvJzCXNQhjwHox38N0rDOWuzkeIQGrDD9Tr5DREaFcm5DuDZJuIv7tT8
+         w6JrqBXRTII1gUelfYUn1webKweGZSlUBKEzpLtYtLMWAc+o70iZqsTHEmbVzPxESffT
+         u1CQYhEtCNX3mz8KsmOcEW2Y9UYob7P/YuzQclDsyuDQAS7ShFxfPilkUNSIP09fTuRS
+         lulur7DcULLMVNFdW0D8YcI9QfFincRivEMWXZiZbG4V3+dcFPOov+E1jVkTAy1q2Cm4
+         l9G9Ay9Nt0bhDvXcxkaJvmlbbEcBREwVpEwQkgQxAAs2qOgc2os/hMZ+0gytycaTUgic
+         WpIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=btJmV0Vlix+mVX/mKsKPiNQtoli5p2UkalUAhUDCYUM=;
+        b=mmgKbpBD8RV++76ciYtCztQ5NgQ07PvH0VF3c9aevTuSuDiygUpVZISaj/Sm0RR1Hb
+         JyNSmA7AGuVLjvFYUwqZ7nKFMDsxtooOBG/y962U+6azODj7OuKD0luHRHox3Ugy/9qI
+         Aznpl677PP+NJOHENc607ikc5C0Aefp40djvyqMNlwbtajiaALL97i0bLCkc4JP1rT4a
+         yy5d9SDhH2G1kTfJYWM9DCbX9/VeSGWq2j+tdWvuNcs8BG+X/8fMEoqsNXNznDvKZ9dU
+         mrvYIEHkiq804Tb58Q42YXoJAWc1uzOObYdcmp3rsa56r9M2syC+K5gNA6kfFr3zkn14
+         RixQ==
+X-Gm-Message-State: APjAAAUATKcVOoQXYUWmpmphF+qQRBYeMAfrBa/jEQyMsFy9ZDF5qa62
+        AEkSWuMu1cmSfjMVnahAGMeXHbTB6b5xk6LnyHU=
+X-Google-Smtp-Source: APXvYqySJ2a3tAxBbrlUtXoJ+rXbgaOe5qyXlRoD04spid75ZPuX6P7RrHqBKSevXwwAcShmMI5E4nU0B6Bt9U2Ymd4=
+X-Received: by 2002:aca:52cc:: with SMTP id g195mr2939822oib.30.1553029373234;
+ Tue, 19 Mar 2019 14:02:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Received: by 2002:a9d:628c:0:0:0:0:0 with HTTP; Tue, 19 Mar 2019 14:02:52
+ -0700 (PDT)
+In-Reply-To: <0851502b-be6d-7947-ac7e-908065f2b330@bowerswilkins.com>
+References: <1553025580-6118-1-git-send-email-pozega.tomislav@gmail.com> <0851502b-be6d-7947-ac7e-908065f2b330@bowerswilkins.com>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Tue, 19 Mar 2019 22:02:52 +0100
+Message-ID: <CAKR_QVJZE==KsO=5CnN_drSnmXs+UNjh5vrHsTLbJMa4Kf30aA@mail.gmail.com>
+Subject: Re: [PATCH] ath10k: Fix ASPM L1 state on QCA988X
+To:     Peter Oh <peter.oh@bowerswilkins.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-<yhchuang@realtek.com> writes:
-
-> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On 19/03/2019, Peter Oh <peter.oh@bowerswilkins.com> wrote:
+> On 03/19/2019 12:59 PM, Tomislav Po=C5=BEega wrote:
 >
-> The rtlwifi driver is conflicting with Realtek's new 802.11ac chip
-> series driver rtw88, remove it to avoid racing with the same ID.
+>> On some systems there are heavy crashes if the kernel config
+>> option CONFIG_PCIEASPM_PERFORMANCE is not set. Patch provided by
+>> Sujith for ath9k fixes
+> ath10k?
 >
-> The rtw88 driver can be found at drivers/net/wireless/realtek/rtw88
+> Peter
 >
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> ---
->  drivers/staging/Kconfig                            |     2 -
->  drivers/staging/Makefile                           |     1 -
->  drivers/staging/rtlwifi/Kconfig                    |    12 -
->  drivers/staging/rtlwifi/Makefile                   |    70 -
->  drivers/staging/rtlwifi/TODO                       |    11 -
->  drivers/staging/rtlwifi/base.c                     |  2815 ----
->  drivers/staging/rtlwifi/base.h                     |   175 -
 
-[...]
-
->  drivers/staging/rtlwifi/stats.c                    |   249 -
->  drivers/staging/rtlwifi/stats.h                    |    31 -
->  drivers/staging/rtlwifi/wifi.h                     |  3362 -----
->  183 files changed, 123718 deletions(-)
->  delete mode 100644 drivers/staging/rtlwifi/Kconfig
->  delete mode 100644 drivers/staging/rtlwifi/Makefile
->  delete mode 100644 drivers/staging/rtlwifi/TODO
->  delete mode 100644 drivers/staging/rtlwifi/base.c
->  delete mode 100644 drivers/staging/rtlwifi/base.h
-
-[...]
-
-> --- a/drivers/staging/Kconfig
-> +++ b/drivers/staging/Kconfig
-> @@ -40,8 +40,6 @@ source "drivers/staging/rtl8712/Kconfig"
->  
->  source "drivers/staging/rtl8188eu/Kconfig"
->  
-> -source "drivers/staging/rtlwifi/Kconfig"
-> -
->  source "drivers/staging/rts5208/Kconfig"
->  
->  source "drivers/staging/octeon/Kconfig"
-> diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
-> index 5868631..49e436f 100644
-> --- a/drivers/staging/Makefile
-> +++ b/drivers/staging/Makefile
-> @@ -10,7 +10,6 @@ obj-$(CONFIG_RTL8192E)		+= rtl8192e/
->  obj-$(CONFIG_RTL8723BS)		+= rtl8723bs/
->  obj-$(CONFIG_R8712U)		+= rtl8712/
->  obj-$(CONFIG_R8188EU)		+= rtl8188eu/
-> -obj-$(CONFIG_R8822BE)		+= rtlwifi/
->  obj-$(CONFIG_RTS5208)		+= rts5208/
->  obj-$(CONFIG_NETLOGIC_XLR_NET)	+= netlogic/
->  obj-$(CONFIG_OCTEON_ETHERNET)	+= octeon/
-> diff --git a/drivers/staging/rtlwifi/Kconfig b/drivers/staging/rtlwifi/Kconfig
-> deleted file mode 100644
-> index 7b4276f5..0000000
-> --- a/drivers/staging/rtlwifi/Kconfig
-> +++ /dev/null
-> @@ -1,12 +0,0 @@
-> -config R8822BE
-> -	tristate "Realtek RTL8822BE Wireless Network Adapter"
-> -	depends on PCI && MAC80211 && m
-> -	select FW_LOADER
-> -	---help---
-> -	This is the staging driver for Realtek RTL8822BE 802.11ac PCIe
-> -	wireless network adapters.
-> -
-> -config RTLWIFI_DEBUG_ST
-> -	bool
-> -	depends on R8822BE
-> -	default y
-
-This patch is huge and does not make it to the list because of the size.
-Is there a way to optimise the size, any ideas? At least 'git
-format-patch -M' or '-C' didn't help, just tried that.
-
--- 
-Kalle Valo
+Original patch was for AR9462: https://patchwork.kernel.org/patch/2849305/
