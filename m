@@ -2,90 +2,126 @@ Return-Path: <SRS0=Jk3u=RW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB8D1C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 02:37:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD0C0C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 03:19:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 772C42085A
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 02:37:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD6D320854
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 03:19:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gjS65iVs"
+	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="nnVtm/8M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727244AbfCSCh2 (ORCPT
+        id S1727146AbfCSDTu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Mar 2019 22:37:28 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:34121 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727030AbfCSCh2 (ORCPT
+        Mon, 18 Mar 2019 23:19:50 -0400
+Received: from mta-p7.oit.umn.edu ([134.84.196.207]:46734 "EHLO
+        mta-p7.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726579AbfCSDTu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Mar 2019 22:37:28 -0400
-Received: by mail-ot1-f66.google.com with SMTP id r19so16373508otn.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2019 19:37:28 -0700 (PDT)
+        Mon, 18 Mar 2019 23:19:50 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-p7.oit.umn.edu (Postfix) with ESMTP id D6FE7B45
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2019 03:19:48 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at umn.edu
+Received: from mta-p7.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p7.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id NTfpJi6O0JwS for <linux-wireless@vger.kernel.org>;
+        Mon, 18 Mar 2019 22:19:48 -0500 (CDT)
+Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
+        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mta-p7.oit.umn.edu (Postfix) with ESMTPS id A7631994
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2019 22:19:48 -0500 (CDT)
+Received: by mail-io1-f69.google.com with SMTP id k24so14996678ioa.18
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2019 20:19:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=hngMdJ9dLq62MKzrhHinT5XoCXsHjtG5akXdXLZQkNw=;
-        b=gjS65iVsTnYyPpmHXupXVC7q5bXphbvTi1dZcEH0mRmz4NN1jq4k0ZojSE9bOREvft
-         ZXZyP/vmcXt8VNvYIM+PIq/Hh6KvvA4hfosTjJ5E3ynYoRigpAMm9hkC9TA5MMi+Cs1+
-         Gb1pWKthCDsHfU7woUfXUUVYzOsLalpzUDgSmEUeqSE9x+EXprqRuKMG7Lxxw/gH1B47
-         Krv8yHHYzouPvAbLLS3H8yTt58F0apWjuRTyMUfRDBgrXjWKLa+iFE94iKUq0Wou5Ioh
-         g8BO8nmhWWxP7npI44HQISzpeCt5KM6mYYa0C4tBGt7yaOHduJ1bcp3FO461RZzOUNxp
-         sdkQ==
+        d=umn.edu; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=fHMSauccrIJ9HihNDOavw9LAVGK09QKXxKSO/H0MbjE=;
+        b=nnVtm/8MN7bK1K66rhuZ624aJBIK8T50Z2c/ARXOugIpTiH6hl+Z87hhFe5Ak0l0DI
+         fbBhh7o18k3HQ80Rv87c+OIxwHB1I+yL6sJ/khrCB302jQREZBN/gSibY8vMUtsN4U7w
+         FfMSo9m28zmzzyGl2CSSLX5SitSDbRQLxruAsuO3Ro44HlXUhoZ/zuzrf3Nc+vsjxlFy
+         x8YZXCjb2cSyaMOoGV8t1WjNKJsAwfnSaLFITDwhMkCNC08b03doZXoUyve1Wx7qmB1h
+         P3+wKpzDDwO11QbkrRSzHjUIWfxiZ2d+JxlG94mI7kavc09LHeSUei7Osh3wCT7mZ42u
+         gqpw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=hngMdJ9dLq62MKzrhHinT5XoCXsHjtG5akXdXLZQkNw=;
-        b=roaMKKXieRx+uLkTJ7c7V8iBXs9y6xUmDaFFWnmvkGw3I1VfOQs//faMLVoJhWVz4M
-         w7QI+X5WEeoIuqYmkFOKgfvwoHuohFMiikqJxTYu+cPI/P56omwpo8ewc2t2ibU39OEj
-         ujz6vYzVX+MINvdsGXjgBN42Q/0WrFH5b3sidJVV+yvs4vGFHZQTC9fmpOghqoOS0D9f
-         eyDAbH53eiEw63APBL9nSjJtpk7luNhqhFfj+ifn3wpUCMZuWMPlrGN1pQEEabQtwgwa
-         dUJ+Cdc9i/9cAOEkIkgsiY2t1ImEAdRXo1m50tjP8hC2R7DavJ9UVl1Q4RG3WaX/r1KO
-         SF0A==
-X-Gm-Message-State: APjAAAWGmIruQ4I/XE1QWqiaCCN54tmHMZ+6ttMcI8u61y0E6VwlVy/6
-        JrvjNSIm5mKy7gfVwSLcrprlYafmTvM+ySYgcJA=
-X-Google-Smtp-Source: APXvYqy+t5WBCrZwaL6ONk0BrEeu0FZdddbuHNSznmJ4rUxGc4dsTJm7qUK0UOrYQbAQjVtwIVpk7tuHkOqRbj36UnE=
-X-Received: by 2002:a9d:6e0a:: with SMTP id e10mr7749843otr.281.1552963047868;
- Mon, 18 Mar 2019 19:37:27 -0700 (PDT)
-MIME-Version: 1.0
-Received: by 2002:a9d:628c:0:0:0:0:0 with HTTP; Mon, 18 Mar 2019 19:37:27
- -0700 (PDT)
-In-Reply-To: <20190209172825.GB19297@makrotopia.org>
-References: <CAKR_QVKQMcGGpY_3ur9kFjuYpaKgca=YfUJxjSjLEfP1HELuJw@mail.gmail.com>
- <20181227102535.GA25885@redhat.com> <CAKR_QVK_2j6a9YiwUEKuWF+ss0-pr808Sr=AUrX4a6L3Zw=F0w@mail.gmail.com>
- <20190102081934.GA5300@redhat.com> <20190209110259.GA14900@redhat.com>
- <CAKR_QVK7N_NGFR+_2+6fP5iZ0j3dDbvdxJOQt3Yjwn7DMBUfYA@mail.gmail.com>
- <20190209115628.GA16082@redhat.com> <CAKR_QVJtQdRcbRMV+WDKw=N2CxLhUSo6hE8mUME2orD6JEMAmQ@mail.gmail.com>
- <20190209153850.GA19297@makrotopia.org> <CAKR_QVJXaYyy64BBj0qz7-Rua70nKGTypV7uiysCqyR=jG_Adw@mail.gmail.com>
- <20190209172825.GB19297@makrotopia.org>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Tue, 19 Mar 2019 03:37:27 +0100
-Message-ID: <CAKR_QVJn96DnzXW=6fHQvw4z_ia+0D1mcv76VGzq0gjaJDOTmg@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] rt2x00: do not print error when queue is full
-To:     Daniel Golle <daniel@makrotopia.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        Randy Oostdyk <linux-kernel@oostdyk.com>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=fHMSauccrIJ9HihNDOavw9LAVGK09QKXxKSO/H0MbjE=;
+        b=IvUmI4gun8GmY4/qtBcHz3+lgNzmjiI3sxZX9gq7cwUxqscjIHruuqkd+DsH27O435
+         QqyfwznqJEh7TkpIdxcXcGUae91LvYNFPdzautI7SV8DFNxq3V0+vtprovKVg/m3OwaO
+         2SmfV6QKXsCsfeoxW3ghRYGNHjaI5Tp3DfEwMZPEs8JsOXLvIgLYP3rC+46GOQpYy6gL
+         5rWodZjfZNhAauCuY6IxaYv5KqxhA78kUWq8hKk/EjCvalYdHUkC/mL2+Qs68lc3jV1/
+         7ZTVTS0wgueaC6+z3lF1tCMK9cdnoSSxghTgMx8KiyUP3Qji6mj3ur9DAi17RTwMq3gU
+         R2rg==
+X-Gm-Message-State: APjAAAUB726e51g/UDHWae1TfZ7vSn2O2iotsAN3tgPXFBY2aBCX59Xe
+        xfe3HPEvz7er1buO1HC1dzcZh0ROIXYojLhvWODwyvIPzTjOy01Aj9iSLVE3dzZtR6KFP9yrleK
+        QZ2Lx1qb+Kl5FPwH/qwzHGXXM0dUmWmg=
+X-Received: by 2002:a02:b703:: with SMTP id g3mr137942jam.106.1552965588332;
+        Mon, 18 Mar 2019 20:19:48 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqwzeoP/kvrNPPv201hX0xDPECjhwxZLnNlLFv8wbsnFiAV5IMiJ8QiU35yw/YyQCLM2CyVLyA==
+X-Received: by 2002:a02:b703:: with SMTP id g3mr137934jam.106.1552965588156;
+        Mon, 18 Mar 2019 20:19:48 -0700 (PDT)
+Received: from lenovo-1.hsd1.mn.comcast.net (c-73-242-25-233.hsd1.mn.comcast.net. [73.242.25.233])
+        by smtp.googlemail.com with ESMTPSA id 202sm940459itl.1.2019.03.18.20.19.47
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 18 Mar 2019 20:19:47 -0700 (PDT)
+From:   Aditya Pakki <pakki001@umn.edu>
+To:     pakki001@umn.edu
+Cc:     kjlu@umn.edu, Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] net: Fix to check for kmemdup failure
+Date:   Mon, 18 Mar 2019 22:19:44 -0500
+Message-Id: <20190319031944.18984-1-pakki001@umn.edu>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 09/02/2019, Daniel Golle <daniel@makrotopia.org> wrote:
+In case of kmemdup failure while setting the service name the patch
+returns -ENOMEM upstream for processing.
 
->>20MiB/s download rate is very impressive for 2.4GHz WiFi, I never saw
-> anything even near that (using BitTorrent I get up to 8MiB/s when next
-> to the router in low-noise environment with proprietry ubiquiti gear).
+Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+---
+ net/nfc/llcp_sock.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-various apps and data transfer stacks may add significant overhead.
-for real throughput testing i rely on iperf2 (tried iperf3 it was
-mess). if interested take a look at bandwidth achieved on OCed QCA9531
-device: https://forum.openwrt.org/t/different-wifi-speed-tx-rx-archer-c7-v2/18860/10?u=psyborg
+diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
+index ae296273ce3d..17dcd0b5eb32 100644
+--- a/net/nfc/llcp_sock.c
++++ b/net/nfc/llcp_sock.c
+@@ -726,6 +726,10 @@ static int llcp_sock_connect(struct socket *sock, struct sockaddr *_addr,
+ 	llcp_sock->service_name = kmemdup(addr->service_name,
+ 					  llcp_sock->service_name_len,
+ 					  GFP_KERNEL);
++	if (!llcp_sock->service_name) {
++		ret = -ENOMEM;
++		goto sock_llcp_release;
++	}
+ 
+ 	nfc_llcp_sock_link(&local->connecting_sockets, sk);
+ 
+@@ -745,10 +749,11 @@ static int llcp_sock_connect(struct socket *sock, struct sockaddr *_addr,
+ 	return ret;
+ 
+ sock_unlink:
+-	nfc_llcp_put_ssap(local, llcp_sock->ssap);
+-
+ 	nfc_llcp_sock_unlink(&local->connecting_sockets, sk);
+ 
++sock_llcp_release:
++	nfc_llcp_put_ssap(local, llcp_sock->ssap);
++
+ put_dev:
+ 	nfc_put_device(dev);
+ 
+-- 
+2.17.1
+
