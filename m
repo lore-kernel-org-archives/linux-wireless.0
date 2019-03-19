@@ -2,96 +2,104 @@ Return-Path: <SRS0=Jk3u=RW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E183CC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 15:38:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78E31C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 16:04:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B00A2083D
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 15:38:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Lu57QcKv";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AKeYkVpY"
+	by mail.kernel.org (Postfix) with ESMTP id 4E86C2085A
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 16:04:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727239AbfCSPiF (ORCPT
+        id S1727528AbfCSQEl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Mar 2019 11:38:05 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:57704 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727054AbfCSPiF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Mar 2019 11:38:05 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id DFC92614DB; Tue, 19 Mar 2019 15:38:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553009884;
-        bh=ozqEIhBaptY+VX07w+q58X075Pq0Rh/5EPaCpNUyoE4=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Lu57QcKvgann3tm8b9LkjXTTkV/+M5EYN/clm811ayZ0TrXD5YgPzdetDUigKbgtH
-         E+tcEQOOtqIV54nUE69EByTVqpoHien8sPYS2pQP2yVqu+S64mO7wx9u28uQ9I6j52
-         nC3xdIYLNPMeNNiI925gOUZhsz65L+Pu8HP6QUkA=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Tue, 19 Mar 2019 12:04:41 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:35134 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726612AbfCSQEl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Mar 2019 12:04:41 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3BFE1613A3;
-        Tue, 19 Mar 2019 15:38:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553009884;
-        bh=ozqEIhBaptY+VX07w+q58X075Pq0Rh/5EPaCpNUyoE4=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=AKeYkVpY4NuHjYPnkQ7WIzH43+yG4w8t30TJiDXHPdxQayyfyAzj6lsv4HICcHX+n
-         kQTmqSIN+nr5Jcwhu1jhWalzFNgPQAV0iZQtSdiddfbb7ymjoY10DBBLuYEf+4//yd
-         jXNNL4UzP73qEVOj/PEs6rlH03hmN0kcreAS7VOA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3BFE1613A3
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        by mx1.redhat.com (Postfix) with ESMTPS id D9134307C940;
+        Tue, 19 Mar 2019 16:04:40 +0000 (UTC)
+Received: from localhost (ovpn-204-101.brq.redhat.com [10.40.204.101])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0FB1E28991;
+        Tue, 19 Mar 2019 16:04:29 +0000 (UTC)
+Date:   Tue, 19 Mar 2019 17:04:27 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
+        linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mt76: usb: reduce locking in mt76u_tx_tasklet
+Message-ID: <20190319160426.GA15616@redhat.com>
+References: <cover.1552907276.git.lorenzo@kernel.org>
+ <1ee5ce7818f9d45c9713ce99e810cb84f50dcf03.1552907276.git.lorenzo@kernel.org>
+ <20190319110708.GA5360@redhat.com>
+ <20190319125812.GA21821@localhost.localdomain>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 5.1] mt76x02: do not enable RTS/CTS by default
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1552393927-26634-1-git-send-email-sgruszka@redhat.com>
-References: <1552393927-26634-1-git-send-email-sgruszka@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190319153804.DFC92614DB@smtp.codeaurora.org>
-Date:   Tue, 19 Mar 2019 15:38:04 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190319125812.GA21821@localhost.localdomain>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.46]); Tue, 19 Mar 2019 16:04:40 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-
-> My commit 26a7b5473191 ("mt76x02: set protection according to ht
-> operation element") enabled by default RTS/CTS protection for OFDM
-> and CCK traffic, because MT_TX_RTS_CFG_THRESH is configured to non
-> 0xffff by initvals and .set_rts_threshold callback is not called by
-> mac80211 on initialization, only on user request or during
-> ieee80211_reconfig() (suspend/resuem or restart_hw).
+On Tue, Mar 19, 2019 at 01:58:13PM +0100, Lorenzo Bianconi wrote:
+> > On Mon, Mar 18, 2019 at 12:09:32PM +0100, Lorenzo Bianconi wrote:
+> > > Similar to pci counterpart, reduce locking in mt76u_tx_tasklet since
+> > > q->head is managed just in mt76u_tx_tasklet and q->queued is updated
+> > > holding q->lock
+> > > 
+> > > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> > > ---
+> > >  drivers/net/wireless/mediatek/mt76/usb.c | 18 +++++++++++-------
+> > >  1 file changed, 11 insertions(+), 7 deletions(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+> > > index ac03acdae279..8cd70c32d77a 100644
+> > > --- a/drivers/net/wireless/mediatek/mt76/usb.c
+> > > +++ b/drivers/net/wireless/mediatek/mt76/usb.c
+> > > @@ -634,29 +634,33 @@ static void mt76u_tx_tasklet(unsigned long data)
+> > >  	int i;
+> > >  
+> > >  	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+> > > +		u32 n_queued = 0, n_sw_queued = 0;
+> > > +
+> > >  		sq = &dev->q_tx[i];
+> > >  		q = sq->q;
+> > >  
+> > > -		spin_lock_bh(&q->lock);
+> > > -		while (true) {
+> > > +		while (q->queued > n_queued) {
+> > >  			buf = &q->entry[q->head].ubuf;
+> > > -			if (!buf->done || !q->queued)
+> > > +			if (!buf->done)
+> > >  				break;
+> > 
+> > I'm still thinking if this is safe or not. Is somewhat tricky to
+> > read variable outside the lock because in such case there is no time
+> > guarantee when variable written on one CPU gets updated value on
+> > different CPU. And for USB is not only q->queued but also buf->done.
 > 
-> Enabling RTS/CTS cause some problems when sending probe request
-> frames by hcxdumptool penetration tool, but I expect it can cause
-> other issues on different scenarios.
->  
-> Restore previous setting of RTS/CTS being disabled by default for
-> OFDM/CCK by changing MT_TX_RTS_CFG_THRESH initvals to 0xffff.
+> Hi Stanislaw,
 > 
-> Fixes: 26a7b5473191 ("mt76x02: set protection according to ht operation element")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> I was wondering if this is safe as well, but q->queued is updated holding q->lock
+> and I guess it will ensure to not overlap tx and status code path.
 
-Patch applied to wireless-drivers.git, thanks.
+Overlap will not happen, at worst what can happen is q->queued will be
+smaller on tx_tasklet than on tx_queue_skb.
 
-7dfc45e6282a mt76x02: do not enable RTS/CTS by default
+> Regarding buf->done, it is already updated without holding the lock in mt76u_complete_tx
 
--- 
-https://patchwork.kernel.org/patch/10849179/
+That's actually a bug, but it's not important, if tx_tasklet will not
+see updated buf->done <- true value by mt76u_complete_tx on different
+cpu, it will not complete skb. It will be done on next tx_tasklet iteration.
+Worse thing would be opposite situation.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Stanislaw
