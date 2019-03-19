@@ -2,85 +2,102 @@ Return-Path: <SRS0=Jk3u=RW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 223AAC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 21:02:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D546CC10F03
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 21:16:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D3E3C213F2
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 21:02:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9899A20850
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 21:16:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UAMVpjnc"
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="eekPoUhm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727099AbfCSVCy (ORCPT
+        id S1727390AbfCSVQF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Mar 2019 17:02:54 -0400
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:32891 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726740AbfCSVCx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Mar 2019 17:02:53 -0400
-Received: by mail-oi1-f196.google.com with SMTP id e22so93037oiy.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2019 14:02:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=btJmV0Vlix+mVX/mKsKPiNQtoli5p2UkalUAhUDCYUM=;
-        b=UAMVpjncJqpvJzCXNQhjwHox38N0rDOWuzkeIQGrDD9Tr5DREaFcm5DuDZJuIv7tT8
-         w6JrqBXRTII1gUelfYUn1webKweGZSlUBKEzpLtYtLMWAc+o70iZqsTHEmbVzPxESffT
-         u1CQYhEtCNX3mz8KsmOcEW2Y9UYob7P/YuzQclDsyuDQAS7ShFxfPilkUNSIP09fTuRS
-         lulur7DcULLMVNFdW0D8YcI9QfFincRivEMWXZiZbG4V3+dcFPOov+E1jVkTAy1q2Cm4
-         l9G9Ay9Nt0bhDvXcxkaJvmlbbEcBREwVpEwQkgQxAAs2qOgc2os/hMZ+0gytycaTUgic
-         WpIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=btJmV0Vlix+mVX/mKsKPiNQtoli5p2UkalUAhUDCYUM=;
-        b=mmgKbpBD8RV++76ciYtCztQ5NgQ07PvH0VF3c9aevTuSuDiygUpVZISaj/Sm0RR1Hb
-         JyNSmA7AGuVLjvFYUwqZ7nKFMDsxtooOBG/y962U+6azODj7OuKD0luHRHox3Ugy/9qI
-         Aznpl677PP+NJOHENc607ikc5C0Aefp40djvyqMNlwbtajiaALL97i0bLCkc4JP1rT4a
-         yy5d9SDhH2G1kTfJYWM9DCbX9/VeSGWq2j+tdWvuNcs8BG+X/8fMEoqsNXNznDvKZ9dU
-         mrvYIEHkiq804Tb58Q42YXoJAWc1uzOObYdcmp3rsa56r9M2syC+K5gNA6kfFr3zkn14
-         RixQ==
-X-Gm-Message-State: APjAAAUATKcVOoQXYUWmpmphF+qQRBYeMAfrBa/jEQyMsFy9ZDF5qa62
-        AEkSWuMu1cmSfjMVnahAGMeXHbTB6b5xk6LnyHU=
-X-Google-Smtp-Source: APXvYqySJ2a3tAxBbrlUtXoJ+rXbgaOe5qyXlRoD04spid75ZPuX6P7RrHqBKSevXwwAcShmMI5E4nU0B6Bt9U2Ymd4=
-X-Received: by 2002:aca:52cc:: with SMTP id g195mr2939822oib.30.1553029373234;
- Tue, 19 Mar 2019 14:02:53 -0700 (PDT)
+        Tue, 19 Mar 2019 17:16:05 -0400
+Received: from ozlabs.org ([203.11.71.1]:51437 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726712AbfCSVQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Mar 2019 17:16:05 -0400
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 44P5Sf17DLz9s55;
+        Wed, 20 Mar 2019 08:16:02 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1553030162;
+        bh=E2wnzAReI1ubftwHCLcpe6Rlm+ZuHN9i1cLy4wUZBe8=;
+        h=Date:From:To:Cc:Subject:From;
+        b=eekPoUhmOSbZLE9DPk+jIfIZzcDuioPxjt6QEov2y9joSgpgBF9uYl+k+ktniMZE0
+         tiNKpzm1LA2jibUgc1AYjHrPd4rPLigS4Xla/wkRMN+TZONpmd8NNDOoIFcqwBh+3/
+         h1huPlPESdYUgZ941iWoaeoqDli1KqCyReL7O4F5VA+q2BHYZKZSwGiMtKjwymf9JS
+         YfHxZ78h6JJsar1qZvMwoKDCSvxiHPi3HRlK71gQfxsobbvY/y2xWwFQdhNSqJje+S
+         wkhXVY06bIsENwS4yMUl7rauuFbk4MM6Z/97TMXzLVI/KB8b4lSOJjGKZPOZKYWfp3
+         EffD57ld1wMfw==
+Date:   Wed, 20 Mar 2019 08:15:49 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     David Miller <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>
+Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Subject: linux-next: Fixes tag needs some work in the net tree
+Message-ID: <20190320081549.7112c33c@canb.auug.org.au>
 MIME-Version: 1.0
-Received: by 2002:a9d:628c:0:0:0:0:0 with HTTP; Tue, 19 Mar 2019 14:02:52
- -0700 (PDT)
-In-Reply-To: <0851502b-be6d-7947-ac7e-908065f2b330@bowerswilkins.com>
-References: <1553025580-6118-1-git-send-email-pozega.tomislav@gmail.com> <0851502b-be6d-7947-ac7e-908065f2b330@bowerswilkins.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Tue, 19 Mar 2019 22:02:52 +0100
-Message-ID: <CAKR_QVJZE==KsO=5CnN_drSnmXs+UNjh5vrHsTLbJMa4Kf30aA@mail.gmail.com>
-Subject: Re: [PATCH] ath10k: Fix ASPM L1 state on QCA988X
-To:     Peter Oh <peter.oh@bowerswilkins.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/618FRZgG7M0vaLQeL9_GrKU"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 19/03/2019, Peter Oh <peter.oh@bowerswilkins.com> wrote:
-> On 03/19/2019 12:59 PM, Tomislav Po=C5=BEega wrote:
->
->> On some systems there are heavy crashes if the kernel config
->> option CONFIG_PCIEASPM_PERFORMANCE is not set. Patch provided by
->> Sujith for ath9k fixes
-> ath10k?
->
-> Peter
->
+--Sig_/618FRZgG7M0vaLQeL9_GrKU
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Original patch was for AR9462: https://patchwork.kernel.org/patch/2849305/
+Hi all,
+
+In commit
+
+  13f61dfc5235 ("mt76: fix schedule while atomic in mt76x02_reset_state")
+
+Fixes tag
+
+  Fixes: e4ebb8b403d1 ("mt76: mt76x2: implement full device restart on watc=
+hdog reset")
+
+has these problem(s):
+
+  - Target SHA1 does not exist
+
+Did you mean:
+
+  004960423fe1 ("mt76: mt76x2: implement full device restart on watchdog re=
+set")
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/618FRZgG7M0vaLQeL9_GrKU
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlyRXAUACgkQAVBC80lX
+0Gxf9wf+JlXe6uuNvIIy847vnW2S26JD8fXZxuO8/hiNsfGjqH9q4OMjSjbT0V0U
+meColBd+i51f0QTX7PBiaaRVx80/VZ8y3C2NhvDJ28ZFuyNFsf9lS8GL7HvArGYa
+VfF5cEgcjR7ehJjO1hgfgKOGpBMvzhoWouxJFv1GQ5EAJxUAKZp/66E0uD9XR4dE
+dJMpqdaCAVt+M8wqDdQyr4ArV0L14zoAxupOmpR9DvwcOu4TtHsKbIGYIlaXs4Ax
+UvpyTMtJhwc56Pfq+q7gvWJ+AWqe6IJKgGip5Q7rdeXrNayDzfot8qIqFWJ1v3+N
+tnD+KNDDbc+1+iYCSnom4K1wQ5K4KQ==
+=GNw9
+-----END PGP SIGNATURE-----
+
+--Sig_/618FRZgG7M0vaLQeL9_GrKU--
