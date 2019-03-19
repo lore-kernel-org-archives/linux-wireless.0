@@ -2,100 +2,95 @@ Return-Path: <SRS0=Jk3u=RW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B3ECC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 22:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37734C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 23:38:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D29D62175B
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 22:15:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0574920811
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 23:38:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Gxw6ss8L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727054AbfCSWPc convert rfc822-to-8bit (ORCPT
+        id S1726835AbfCSXis (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Mar 2019 18:15:32 -0400
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:46427 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726768AbfCSWPc (ORCPT
+        Tue, 19 Mar 2019 19:38:48 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:35933 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725958AbfCSXis (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Mar 2019 18:15:32 -0400
-Received: by mail-ed1-f65.google.com with SMTP id d1so237684edd.13
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2019 15:15:31 -0700 (PDT)
+        Tue, 19 Mar 2019 19:38:48 -0400
+Received: by mail-oi1-f193.google.com with SMTP id t206so365150oib.3;
+        Tue, 19 Mar 2019 16:38:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=NDRtOZ+acBN+uU5aUd6XsYoQMrcl+FASNQzPXm/qy64=;
+        b=Gxw6ss8LRMeQCMgkGbHnbieNAbueSSLHeBHV0Du44tR0jVjoj9Jv6wq0tTyKDEQZxB
+         5pqerog3iRna5t/u6dLk7Ro5D9qwpcBVO7YYriCqHVy5IRaayrICSulOcVUCDHIrJUKn
+         dv1Ngc7oKivCLU6KjeDxNxpEYW/ySKl3c+kVduCAXPCDdzimfAMNn28EPFuZR2lkMYAO
+         aRiabbjUnWKfk1j++CdJ8/WC5QhGqMXl2IaN1afCnVpFS2S8y459MssFjUBBOsAM7FJs
+         LF/60Wl5MBpHmVxfEkTbPeAUbMe28Kgp4up28SHVFloNAwq401ye31i709hvr//ptSF/
+         27pQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=kziuXU0Z45Y0ipJyuk3/G5QWYSbbgOjzmOZBEkWXnJc=;
-        b=ObEdHdnroGjwYuMYjVDy1FKArp4yO7QaDL3+0jYm4YWTghDOmH3qwsVWHUA+7lE7bG
-         n8o9V2Iu2gDyUUV4MTjtXSCxxeyatXoL0mAE9SgPkDJFd5cmJbQyjIclCIm0neCAZvDx
-         nW8e3Oy/429u23UiJMEseKM3cjCBidLY3MYV6FhBO7VfQ4/Sx5ZdxaZEM24VZ89cPotc
-         BwYEIUThKVAs3FRshNf3d7khgwlZTfF3FIOgcIAloehARV5XQMWfh7CGRVvp6W2fd9CJ
-         4TCxcbrIoGMLh5MVKXxdpeTXdRNPHZYJjoydxwEWTdE2gZjc1br2XZTbsexoepr1maQZ
-         SnKg==
-X-Gm-Message-State: APjAAAXQGt/76JVbzppATDXxbg8vRu/Q41zXACtZtA76fyJh+FCHJQDz
-        FlMH3EBOSJ8lfmpswt4zX/53Ew==
-X-Google-Smtp-Source: APXvYqxz6tGpz3EPoQVSS5XnwrYgoJeeAQhqNVFvVGFBHoO2cAOSjomD/EgzFZwsOrfQhnv3Asp9oA==
-X-Received: by 2002:aa7:c1ce:: with SMTP id d14mr18209909edp.50.1553033730984;
-        Tue, 19 Mar 2019 15:15:30 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id k32sm65744ede.97.2019.03.19.15.15.29
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 19 Mar 2019 15:15:29 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id BE5861804A4; Tue, 19 Mar 2019 23:15:28 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: Re: [PATCH v2] mac80211: un-schedule TXQs on powersave start
-In-Reply-To: <20190319110013.45228-1-nbd@nbd.name>
-References: <20190319110013.45228-1-nbd@nbd.name>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Tue, 19 Mar 2019 23:15:28 +0100
-Message-ID: <871s32se7z.fsf@toke.dk>
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=NDRtOZ+acBN+uU5aUd6XsYoQMrcl+FASNQzPXm/qy64=;
+        b=iPOvlzvss9QeXq1sj7gOD6KktrfIVSpL5hGaUeMhkedaa+8q6CQbR9pI0/Nla1dFw/
+         WADOnhVJFa4AixHy4RiX7+F+3SdYsMh7bg9TEf4BlcQZKoOvRZrYXV7wCW8AtEhf60rF
+         QoTjapPTtt5CgfqPllkbPiR2uJ8DTd5knDX/jbE1YpHI26MemS6h18ih0ocRllMrpUg1
+         REmM3Zyjp6krrrOgQoWOb1FjaUHgfkG6PDYJnwrxgAC1/wOUuuFPH2tr2HLA+3wXlFR3
+         HYeH1/zXhPgMqFd993yhnx7fejypOITbHTn2rxVXsagRxawE+4bB2NcVXwGnVLIWeMAd
+         tTHQ==
+X-Gm-Message-State: APjAAAV389xOyA5bk6pZ48n+E9QGZViU3NBY9LnH/BXupT6rlDJQmEKX
+        f09mS1lVDf/WVj34ReuDQZgjx9TbM4OaWqmfyqc=
+X-Google-Smtp-Source: APXvYqxq545xEnWCf/qVTky6QcrEep4O2gGcfBubpdDCiN0zRlSJL4c2TVbjk8MdSNKBRJVR+C1Y97/I5+xjARZaz/8=
+X-Received: by 2002:aca:b904:: with SMTP id j4mr3337945oif.128.1553038727308;
+ Tue, 19 Mar 2019 16:38:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Received: by 2002:a9d:628c:0:0:0:0:0 with HTTP; Tue, 19 Mar 2019 16:38:46
+ -0700 (PDT)
+In-Reply-To: <57195909-b18b-8490-e1b8-043ff9727e5a@gmx.de>
+References: <20190318190557.21599-1-timschumi@gmx.de> <CAKR_QV+wjuOZVfv9awX5bRLYC8xkoAy0h22LSPvL0DX6yg4-yw@mail.gmail.com>
+ <57195909-b18b-8490-e1b8-043ff9727e5a@gmx.de>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Wed, 20 Mar 2019 00:38:46 +0100
+Message-ID: <CAKR_QVKWbrx2EmcaCBhyuaYRd+T3pFW0i2jVcDZG6=wee=DaMA@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: Check for errors when reading SREV register
+To:     Tim Schumacher <timschumi@gmx.de>
+Cc:     QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
-
-> Once a station enters powersave, its queues should not be returned by
-> ieee80211_next_txq() anymore. They will be re-scheduled again after the
-> station has woken up again
+On 19/03/2019, Tim Schumacher <timschumi@gmx.de> wrote:
 >
-> Fixes: 1866760096bf4 ("mac80211: Add TXQ scheduling API")
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-
-Acked-by: Toke Høiland-Jørgensen <toke@redhat.com>
-
-> ---
->  net/mac80211/rx.c | 10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
+> The case in where the revision succeeded to read, but it simply
+> isn't supported by the driver, is untouched and it still prints
+> the original message.
 >
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 295535b75184..60aac91e35d0 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1568,7 +1568,15 @@ static void sta_ps_start(struct sta_info *sta)
->  		return;
->  
->  	for (tid = 0; tid < IEEE80211_NUM_TIDS; tid++) {
-> -		if (txq_has_queue(sta->sta.txq[tid]))
-> +		struct ieee80211_txq *txq = sta->sta.txq[tid];
-> +		struct txq_info *txqi = to_txq_info(txq);
-> +
-> +		spin_lock(&local->active_txq_lock[txq->ac]);
-> +		if (!list_empty(&txqi->schedule_order))
-> +			list_del_init(&txqi->schedule_order);
-> +		spin_unlock(&local->active_txq_lock[txq->ac]);
-> +
-> +		if (txq_has_queue(txq))
->  			set_bit(tid, &sta->txq_buffered_tids);
->  		else
->  			clear_bit(tid, &sta->txq_buffered_tids);
-> -- 
-> 2.17.0
+
+In that case this change is fine.
+
+> I don't know why it fails to read the SREV register in my specific
+> case (I tracked it down to a WMI command timeout, which seems to
+> only happen on a Raspberry Pi 3), but having the SREV error message
+> (which points to the actual issue) instead of the false-positive
+> "Rev not supported" message would have saved me quite some time that
+> I spent with debugging the issue, searching for the source of the
+> wrong value.
+>
+
+Did you try some other device than RPI3 ? I've noticed that on router
+and laptop while doing some htc fw builds.
