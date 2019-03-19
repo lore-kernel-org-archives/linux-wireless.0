@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AB22C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 20:42:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B83CC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 20:43:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA3712146E
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 20:42:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E57CB2146E
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Mar 2019 20:43:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="fERWm63y"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="lU5UNVHG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726740AbfCSUmT (ORCPT
+        id S1726914AbfCSUnB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Mar 2019 16:42:19 -0400
-Received: from 9.mo4.mail-out.ovh.net ([46.105.40.176]:33586 "EHLO
-        9.mo4.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726712AbfCSUmT (ORCPT
+        Tue, 19 Mar 2019 16:43:01 -0400
+Received: from 5.mo2.mail-out.ovh.net ([87.98.181.248]:35612 "EHLO
+        5.mo2.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726712AbfCSUnA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Mar 2019 16:42:19 -0400
-Received: from player794.ha.ovh.net (unknown [10.109.159.159])
-        by mo4.mail-out.ovh.net (Postfix) with ESMTP id 72A3D1DE9EC
+        Tue, 19 Mar 2019 16:43:00 -0400
+Received: from player711.ha.ovh.net (unknown [10.109.159.35])
+        by mo2.mail-out.ovh.net (Postfix) with ESMTP id 73FA718B7D1
         for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2019 21:35:33 +0100 (CET)
 Received: from awhome.eu (p4FF91B93.dip0.t-ipconnect.de [79.249.27.147])
         (Authenticated sender: postmaster@awhome.eu)
-        by player794.ha.ovh.net (Postfix) with ESMTPSA id 2D5203D596CB;
+        by player711.ha.ovh.net (Postfix) with ESMTPSA id 2E0243C93B0B;
         Tue, 19 Mar 2019 20:35:32 +0000 (UTC)
 From:   Alexander Wetzel <alexander@wetzel-home.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
         s=wetzel-home; t=1553027731;
-        bh=Li8b8ckG1YLbPMCudSaMYBJkoLDseITnAiXH5AZY2NI=;
+        bh=mXC3t1z6oIefJ9X3Sie/j8wogY0rWV7+C/ACZV7YCr8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=fERWm63yAyP8On7MsmnBGaxdj5HV5FVCRAONK5CPwftdhcKkAJ0/Tp0ffIn+6Rcex
-         QuTjHed4YwFS5r+IKftMZ2QW/Hk+NkNQaNwDkKPjIf+jcnzWeqP13I0uwv4lpz3rMK
-         ARd4uRxTN1y9NIaHwTbaMZCmS9D1hbgRetjKTQK4=
+        b=lU5UNVHGTkLN9qVrlxJV5oMdOikGslnENZOeYeULCv8JZRhfgnc+IpqSdW77jEK18
+         dQ7SIruenC/beKDZsxt14D1pk9SGCgSqLzUUudlNlUjWBqnNBq1gbr2Xzi9v5hvIpn
+         /qXcTQNiK4zbWmBcOukATU6r5na7+aUx9pok7fxU=
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [PATCH v2 4/4] mac80211: Mark A-MPDU keyid borders for drivers
-Date:   Tue, 19 Mar 2019 21:34:10 +0100
-Message-Id: <20190319203410.25145-5-alexander@wetzel-home.de>
+Subject: [PATCH v2 2/4] mac80211: IEEE 802.11 Extended Key ID support
+Date:   Tue, 19 Mar 2019 21:34:08 +0100
+Message-Id: <20190319203410.25145-3-alexander@wetzel-home.de>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190319203410.25145-1-alexander@wetzel-home.de>
 References: <20190319203410.25145-1-alexander@wetzel-home.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 5950662486000737479
+X-Ovh-Tracer-Id: 5950662484094360775
 X-VR-SPAMSTATE: OK
 X-VR-SPAMSCORE: 0
 X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedutddrieeggddugedvucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenuc
@@ -58,235 +58,538 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-IEEE 802.11-2016 "9.7.3 A-MPDU contents" forbids aggregating MPDUs with
-different keyids. Without Extended Key ID support this can't happen,
-since we only aggregate unicast frames using either no key or key ID 0.
-Extended Key ID support can also use key ID 1 for unicast frames and a
-rekey with A-MPDU active will therefore need special handling to not
-violate the above requirement.
+Add support for Extended Key ID as defined in IEEE 802.11-2016.
 
-To support drivers handling the key ID borders in A-MPDUs mac80211 will
-set the new @IEEE80211_TX_CTRL_AMPDU_FLUSH flag for the last MPDU using
-the current keyid. Drivers should then aggregate the MPDU and send out
-all A-MPDUs with one or more MPDUs aggregated for all affected TIDs
-immediately.
+ - Implement the nl80211 API for Extended Key ID
+ - Extend mac80211 API to allow drivers to support Extended Key ID
+ - Enable Extended Key ID by default for drivers only supporting SW
+   crypto (e.g. mac80211_hwsim)
+ - Allow unicast Tx usage to be supressed (IEEE80211_KEY_FLAG_NO_AUTO_TX)
+ - Select the decryption key based on the MPDU keyid
+ - Enforce existing assumptions in the code that rekeys don't change the
+   cipher
 
 Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
 ---
 
 Bugs fixed compared to last RFC patch:
- - Initial key install is directly used for Tx (last RFC patch hung for
-   10s).
- - Always activating Rx accel for correct key in COMPAT mode.
+ - Off by one: ieee80211_get_keyid() no longer accepts invalid keyID 4
 
- include/net/mac80211.h  |  4 +++
- net/mac80211/key.c      | 21 ++++++++++++---
- net/mac80211/sta_info.c |  1 +
- net/mac80211/sta_info.h |  4 ++-
- net/mac80211/tx.c       | 60 +++++++++++++++++++++++++++++++++++------
- 5 files changed, 78 insertions(+), 12 deletions(-)
+ include/net/mac80211.h     |  6 ++++
+ net/mac80211/cfg.c         | 36 +++++++++++++++++++
+ net/mac80211/debugfs.c     |  1 +
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/key.c         | 63 ++++++++++++++++++++++++--------
+ net/mac80211/key.h         |  2 ++
+ net/mac80211/main.c        | 22 ++++++++++++
+ net/mac80211/rx.c          | 74 ++++++++++++++++++++------------------
+ net/mac80211/sta_info.c    |  9 +++++
+ net/mac80211/tx.c          | 13 ++-----
+ 10 files changed, 168 insertions(+), 60 deletions(-)
 
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 56b1c1ca39a6..91a307238654 100644
+index ac2ed8ec662b..c10abca55fde 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
-@@ -807,6 +807,9 @@ enum mac80211_tx_info_flags {
-  * @IEEE80211_TX_CTRL_RATE_INJECT: This frame is injected with rate information
-  * @IEEE80211_TX_CTRL_AMSDU: This frame is an A-MSDU frame
-  * @IEEE80211_TX_CTRL_FAST_XMIT: This frame is going through the fast_xmit path
-+ * @IEEE80211_TX_CTRL_AMPDU_FLUSH: This frame is the last one allowed to be
-+ *	aggregated with previous frames to an A-MPDU. Driver has to flush all
-+ *	running A-MPDU aggreagations (TIDs) for sta.
-  *
-  * These flags are used in tx_info->control.flags.
+@@ -1697,6 +1697,7 @@ struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif);
+  * @IEEE80211_KEY_FLAG_PUT_MIC_SPACE: This flag should be set by the driver for
+  *	a TKIP key if it only requires MIC space. Do not set together with
+  *	@IEEE80211_KEY_FLAG_GENERATE_MMIC on the same key.
++ * @IEEE80211_KEY_FLAG_NO_AUTO_TX: Key needs explicit Tx activation.
   */
-@@ -816,6 +819,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTRL_RATE_INJECT		= BIT(2),
- 	IEEE80211_TX_CTRL_AMSDU			= BIT(3),
- 	IEEE80211_TX_CTRL_FAST_XMIT		= BIT(4),
-+	IEEE80211_TX_CTRL_AMPDU_FLUSH		= BIT(5),
+ enum ieee80211_key_flags {
+ 	IEEE80211_KEY_FLAG_GENERATE_IV_MGMT	= BIT(0),
+@@ -1708,6 +1709,7 @@ enum ieee80211_key_flags {
+ 	IEEE80211_KEY_FLAG_RX_MGMT		= BIT(6),
+ 	IEEE80211_KEY_FLAG_RESERVE_TAILROOM	= BIT(7),
+ 	IEEE80211_KEY_FLAG_PUT_MIC_SPACE	= BIT(8),
++	IEEE80211_KEY_FLAG_NO_AUTO_TX		= BIT(9),
  };
  
- /*
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index bd38167916ad..c174f102f72b 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -294,9 +294,17 @@ int ieee80211_set_tx_key(struct ieee80211_key *key)
+ /**
+@@ -2243,6 +2245,9 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID: Hardware supports multi BSSID
+  *	only for HE APs. Applies if @IEEE80211_HW_SUPPORTS_MULTI_BSSID is set.
+  *
++ * @IEEE80211_HW_EXT_KEY_ID_NATIVE: Driver and hardware are supporting Extended
++ *	Key ID and can handle two unicast keys per station for Rx and Tx.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2294,6 +2299,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TX_STATUS_NO_AMPDU_LEN,
+ 	IEEE80211_HW_SUPPORTS_MULTI_BSSID,
+ 	IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID,
++	IEEE80211_HW_EXT_KEY_ID_NATIVE,
  
- 	assert_key_lock(local);
- 
-+	/* Two key activations must not overlap */
-+	if (WARN_ON(sta->ptk_idx_next != INVALID_PTK_KEYIDX))
-+		return -EOPNOTSUPP;
-+
- 	old = key_mtx_dereference(local, sta->ptk[sta->ptk_idx]);
--	sta->ptk_idx = key->conf.keyidx;
--	ieee80211_check_fast_xmit(sta);
-+
-+	/* The initial key still must be used immediately */
-+	if (sta->ptk_idx == INVALID_PTK_KEYIDX)
-+		sta->ptk_idx = key->conf.keyidx;
-+	else
-+		sta->ptk_idx_next = key->conf.keyidx;
- 
- 	if (ieee80211_hw_check(&local->hw, EXT_KEY_ID_COMPAT) &&
- 	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-@@ -1102,13 +1110,20 @@ void delayed_rx_accel_work(struct work_struct *wk)
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_key *key;
-+	int keyid;
- 
- 	sta = container_of(wk, struct sta_info, delayed_rx_accel_wk);
- 	local = sta->local;
- 	sdata = sta->sdata;
- 
-+	/* sta->ptk_idx_next is the new key if not set to INVALID_PTK_KEYIDX */
-+	if (sta->ptk_idx_next != INVALID_PTK_KEYIDX)
-+		keyid = sta->ptk_idx_next;
-+	else
-+		keyid = sta->ptk_idx;
-+
- 	mutex_lock(&local->key_mtx);
--	key = key_mtx_dereference(local, sta->ptk[sta->ptk_idx]);
-+	key = key_mtx_dereference(local, sta->ptk[keyid]);
- 	drv_set_key(local, ENABLE_KEY_RX, sdata, &sta->sta, &key->conf);
- 
- 	mutex_unlock(&local->key_mtx);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 41ea1d05a946..7aa85cc7a667 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -357,6 +357,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	 */
- 	BUILD_BUG_ON(ARRAY_SIZE(sta->ptk) <= INVALID_PTK_KEYIDX);
- 	sta->ptk_idx = INVALID_PTK_KEYIDX;
-+	sta->ptk_idx_next = INVALID_PTK_KEYIDX;
- 
- 	sta->local = local;
- 	sta->sdata = sdata;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 45f7cbfe9698..271c0075f4e2 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -449,7 +449,8 @@ struct ieee80211_sta_rx_stats {
-  * @local: pointer to the global information
-  * @sdata: virtual interface this station belongs to
-  * @ptk: peer keys negotiated with this station, if any
-- * @ptk_idx: last installed peer key index
-+ * @ptk_idx: activated peer key index
-+ * @ptk_idx_next: peer key index in activation (Extended Key ID only)
-  * @delayed_rx_accel_wk: Used to activate Rx crypto offload only after
-  *	we have	seen one MPDU encrypted with the key.
-  * @gtk: group keys negotiated with this station, if any
-@@ -534,6 +535,7 @@ struct sta_info {
- 	struct ieee80211_key __rcu *ptk[NUM_DEFAULT_KEYS];
- 	struct work_struct delayed_rx_accel_wk;
- 	u8 ptk_idx;
-+	u8 ptk_idx_next;
- 	struct rate_control_ref *rate_ctrl;
- 	void *rate_ctrl_priv;
- 	spinlock_t rate_ctrl_lock;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 111bd6c490a6..c3ea5107d8f9 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -586,6 +586,47 @@ ieee80211_tx_h_check_control_port_protocol(struct ieee80211_tx_data *tx)
- 	return TX_CONTINUE;
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 09dd1c2860fc..14bbb7e8ad0e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -351,6 +351,36 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 	return 0;
  }
  
-+static struct ieee80211_key debug_noinline
-+*ieee80211_select_sta_key(struct ieee80211_tx_data *tx)
++static int ieee80211_set_tx(struct ieee80211_sub_if_data *sdata,
++			    const u8 *mac_addr, u8 key_idx)
 +{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
-+	struct sta_info *sta = tx->sta;
++	struct ieee80211_local *local = sdata->local;
 +	struct ieee80211_key *key;
-+	struct ieee80211_key *next_key;
++	struct sta_info *sta;
++	int ret = -EINVAL;
 +
-+	key = rcu_dereference(tx->sta->ptk[tx->sta->ptk_idx]);
++	if (!wiphy_ext_feature_isset(local->hw.wiphy,
++				     NL80211_EXT_FEATURE_EXT_KEY_ID))
++		return -EINVAL;
 +
-+	if (likely(sta->ptk_idx_next == INVALID_PTK_KEYIDX))
-+		return key;
++	sta = sta_info_get_bss(sdata, mac_addr);
 +
-+	/* Only when using Extended Key ID the code below can be executed */
++	if (!sta)
++		return -EINVAL;
 +
-+	if (!ieee80211_is_data_present(hdr->frame_control))
-+		return key;
++	if (sta->ptk_idx == key_idx)
++		return 0;
 +
-+	if (sta->ptk_idx_next == sta->ptk_idx) {
-+		/* First packet using new key with A-MPDU active */
-+		sta->ptk_idx_next = INVALID_PTK_KEYIDX;
-+		ieee80211_check_fast_xmit(tx->sta);
-+		return key;
-+	}
++	mutex_lock(&local->key_mtx);
++	key = key_mtx_dereference(local, sta->ptk[key_idx]);
 +
-+	next_key = rcu_dereference(sta->ptk[sta->ptk_idx_next]);
-+	sta->ptk_idx = sta->ptk_idx_next;
++	if (key && key->conf.flags & IEEE80211_KEY_FLAG_NO_AUTO_TX)
++		ret = ieee80211_set_tx_key(key);
 +
-+	if (key && info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		/* Last packet with old key with A-MPDU active */
-+		info->control.flags |= IEEE80211_TX_CTRL_AMPDU_FLUSH;
-+		return key;
-+	}
-+
-+	/* No A-MPDU active or no encryption, just use the new key */
-+	sta->ptk_idx_next = INVALID_PTK_KEYIDX;
-+	ieee80211_check_fast_xmit(tx->sta);
-+	return next_key;
++	mutex_unlock(&local->key_mtx);
++	return ret;
 +}
 +
- static ieee80211_tx_result debug_noinline
- ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- {
-@@ -595,9 +636,8 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 			     struct key_params *params)
+@@ -365,6 +395,9 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return -ENETDOWN;
  
- 	if (unlikely(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT))
- 		tx->key = NULL;
--	else if (tx->sta &&
--		 (key = rcu_dereference(tx->sta->ptk[tx->sta->ptk_idx])))
--		tx->key = key;
-+	else if (tx->sta)
-+		tx->key = ieee80211_select_sta_key(tx);
- 	else if (ieee80211_is_group_privacy_action(tx->skb) &&
- 		(key = rcu_dereference(tx->sdata->default_multicast_key)))
- 		tx->key = key;
-@@ -3414,6 +3454,10 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
- 	if (skb->sk && skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS)
- 		return false;
- 
-+	/* ieee80211_key_activate() requests to change key */
-+	if (unlikely(sta->ptk_idx_next != INVALID_PTK_KEYIDX))
-+		return false;
++	if (pairwise && params->mode == NL80211_KEY_SET_TX)
++		return ieee80211_set_tx(sdata, mac_addr, key_idx);
 +
- 	if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
- 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
- 		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
-@@ -3556,6 +3600,11 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	if (txq->sta)
- 		tx.sta = container_of(txq->sta, struct sta_info, sta);
+ 	/* reject WEP and TKIP keys if WEP failed to initialize */
+ 	switch (params->cipher) {
+ 	case WLAN_CIPHER_SUITE_WEP40:
+@@ -396,6 +429,9 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 	if (pairwise)
+ 		key->conf.flags |= IEEE80211_KEY_FLAG_PAIRWISE;
  
-+	if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags))
-+		info->flags |= IEEE80211_TX_CTL_AMPDU;
-+	else
-+		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
++	if (params->mode == NL80211_KEY_NO_TX)
++		key->conf.flags |= IEEE80211_KEY_FLAG_NO_AUTO_TX;
 +
+ 	mutex_lock(&local->sta_mtx);
+ 
+ 	if (mac_addr) {
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 2d43bc127043..aa6f23e1a457 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -221,6 +221,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(TX_STATUS_NO_AMPDU_LEN),
+ 	FLAG(SUPPORTS_MULTI_BSSID),
+ 	FLAG(SUPPORTS_ONLY_HE_MULTI_BSSID),
++	FLAG(EXT_KEY_ID_NATIVE),
+ #undef FLAG
+ };
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e170f986d226..e5d95d2233e3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1269,7 +1269,7 @@ struct ieee80211_local {
+ 
  	/*
- 	 * The key can be removed while the packet was queued, so need to call
- 	 * this here to get the current key.
-@@ -3566,11 +3615,6 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 		goto begin;
+ 	 * Key mutex, protects sdata's key_list and sta_info's
+-	 * key pointers (write access, they're RCU.)
++	 * key pointers and ptk_idx (write access, they're RCU.)
+ 	 */
+ 	struct mutex key_mtx;
+ 
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index b9f2bfc00263..20bf9db7a388 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -264,9 +264,24 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 			  sta ? sta->sta.addr : bcast_addr, ret);
+ }
+ 
++int ieee80211_set_tx_key(struct ieee80211_key *key)
++{
++	struct sta_info *sta = key->sta;
++	struct ieee80211_local *local = key->local;
++	struct ieee80211_key *old;
++
++	assert_key_lock(local);
++
++	old = key_mtx_dereference(local, sta->ptk[sta->ptk_idx]);
++	sta->ptk_idx = key->conf.keyidx;
++	ieee80211_check_fast_xmit(sta);
++
++	return 0;
++}
++
+ static int ieee80211_hw_key_replace(struct ieee80211_key *old_key,
+ 				    struct ieee80211_key *new_key,
+-				    bool ptk0rekey)
++				    bool pairwise)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_local *local;
+@@ -283,8 +298,9 @@ static int ieee80211_hw_key_replace(struct ieee80211_key *old_key,
+ 	assert_key_lock(old_key->local);
+ 	sta = old_key->sta;
+ 
+-	/* PTK only using key ID 0 needs special handling on rekey */
+-	if (new_key && sta && ptk0rekey) {
++	/* Unicast rekey without Extended Key ID needs special handling */
++	if (new_key && sta && pairwise &&
++	    rcu_access_pointer(sta->ptk[sta->ptk_idx]) == old_key) {
+ 		local = old_key->local;
+ 		sdata = old_key->sdata;
+ 
+@@ -400,10 +416,6 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (old) {
+ 		idx = old->conf.keyidx;
+-		/* TODO: proper implement and test "Extended Key ID for
+-		 * Individually Addressed Frames" from IEEE 802.11-2016.
+-		 * Till then always assume only key ID 0 is used for
+-		 * pairwise keys.*/
+ 		ret = ieee80211_hw_key_replace(old, new, pairwise);
+ 	} else {
+ 		/* new must be provided in case old is not */
+@@ -420,15 +432,20 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 	if (sta) {
+ 		if (pairwise) {
+ 			rcu_assign_pointer(sta->ptk[idx], new);
+-			sta->ptk_idx = idx;
+-			if (new) {
++			if (new &&
++			    !(new->conf.flags & IEEE80211_KEY_FLAG_NO_AUTO_TX)) {
++				sta->ptk_idx = idx;
+ 				clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 				ieee80211_check_fast_xmit(sta);
+ 			}
+ 		} else {
+ 			rcu_assign_pointer(sta->gtk[idx], new);
+ 		}
+-		if (new)
++		/* Only needed for transition from no key -> key.
++		 * Still triggers unnecessary when using Extended Key ID
++		 * and installing the second key ID the first time.
++		 */
++		if (new && !old)
+ 			ieee80211_check_fast_rx(sta);
+ 	} else {
+ 		defunikey = old &&
+@@ -744,16 +761,34 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 	 * can cause warnings to appear.
+ 	 */
+ 	bool delay_tailroom = sdata->vif.type == NL80211_IFTYPE_STATION;
+-	int ret;
++	int ret = -EOPNOTSUPP;
+ 
+ 	mutex_lock(&sdata->local->key_mtx);
+ 
+-	if (sta && pairwise)
++	if (sta && pairwise) {
++		struct ieee80211_key *alt_key;
++
+ 		old_key = key_mtx_dereference(sdata->local, sta->ptk[idx]);
+-	else if (sta)
++		alt_key = key_mtx_dereference(sdata->local, sta->ptk[idx ^ 1]);
++
++		/* The rekey code assumes that the old and new key are using
++		 * the same cipher. Enforce the assumption for pairwise keys.
++		 */
++		if (key &&
++		    ((alt_key && alt_key->conf.cipher != key->conf.cipher) ||
++		     (old_key && old_key->conf.cipher != key->conf.cipher)))
++			goto out;
++	} else if (sta) {
+ 		old_key = key_mtx_dereference(sdata->local, sta->gtk[idx]);
+-	else
++	} else {
+ 		old_key = key_mtx_dereference(sdata->local, sdata->keys[idx]);
++	}
++
++	/* Non-pairwise keys must also not switch the cipher on rekey */
++	if (!pairwise) {
++		if (key && old_key && old_key->conf.cipher != key->conf.cipher)
++			goto out;
++	}
+ 
+ 	/*
+ 	 * Silently accept key re-installation without really installing the
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index ebdb80b85dc3..f06fbd03d235 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -18,6 +18,7 @@
+ 
+ #define NUM_DEFAULT_KEYS 4
+ #define NUM_DEFAULT_MGMT_KEYS 2
++#define INVALID_PTK_KEYIDX 2 /* Keyidx always pointing to a NULL key for PTK */
+ 
+ struct ieee80211_local;
+ struct ieee80211_sub_if_data;
+@@ -146,6 +147,7 @@ ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
+ int ieee80211_key_link(struct ieee80211_key *key,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct sta_info *sta);
++int ieee80211_set_tx_key(struct ieee80211_key *key);
+ void ieee80211_key_free(struct ieee80211_key *key, bool delay_tailroom);
+ void ieee80211_key_free_unused(struct ieee80211_key *key);
+ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 800e67615e2a..2dea3fe3a35d 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -35,6 +35,11 @@
+ #include "led.h"
+ #include "debugfs.h"
+ 
++static int ieee80211_extended_key_id = 1; /* Driver setting */
++module_param(ieee80211_extended_key_id, int, 0444);
++MODULE_PARM_DESC(ieee80211_extended_key_id,
++		 "IEEE 802.11 Extended Key ID support. 0: Force off 1: Driver setting 2: Force on. (default: 1)");
++
+ void ieee80211_configure_filter(struct ieee80211_local *local)
+ {
+ 	u64 mc;
+@@ -1051,6 +1056,23 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		}
  	}
  
--	if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags))
--		info->flags |= IEEE80211_TX_CTL_AMPDU;
--	else
--		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
++	switch (ieee80211_extended_key_id) {
++	case 2:
++		/* Force on */
++		ieee80211_hw_set(&local->hw, EXT_KEY_ID_NATIVE);
++		/* fall trough */
++	case 1:
++		if (!local->ops->set_key ||
++		    ieee80211_hw_check(&local->hw, EXT_KEY_ID_NATIVE))
++			wiphy_ext_feature_set(local->hw.wiphy,
++					      NL80211_EXT_FEATURE_EXT_KEY_ID);
++		wiphy_info(hw->wiphy, "Extended Key ID support enabled.\n");
++		break;
++	default:
++		/* Force off */
++		wiphy_info(hw->wiphy, "Extended Key ID not supported.\n");
++	}
++
+ 	/*
+ 	 * Calculate scan IE length -- we need this to alloc
+ 	 * memory and to subtract from the driver limit. It
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 7f8d93401ce0..4a03c18b39a8 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1005,23 +1005,43 @@ static int ieee80211_get_mmie_keyidx(struct sk_buff *skb)
+ 	return -1;
+ }
+ 
+-static int ieee80211_get_cs_keyid(const struct ieee80211_cipher_scheme *cs,
+-				  struct sk_buff *skb)
++static int ieee80211_get_keyid(struct sk_buff *skb,
++			       const struct ieee80211_cipher_scheme *cs)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	__le16 fc;
+ 	int hdrlen;
++	int minlen;
++	u8 key_idx_off;
++	u8 key_idx_shift;
+ 	u8 keyid;
+ 
+ 	fc = hdr->frame_control;
+ 	hdrlen = ieee80211_hdrlen(fc);
+ 
+-	if (skb->len < hdrlen + cs->hdr_len)
++	if (cs) {
++		minlen = hdrlen + cs->hdr_len;
++		key_idx_off = hdrlen + cs->key_idx_off;
++		key_idx_shift = cs->key_idx_shift;
++	} else {
++		/* WEP, TKIP, CCMP and GCMP */
++		minlen = hdrlen + IEEE80211_WEP_IV_LEN;
++		key_idx_off = hdrlen + 3;
++		key_idx_shift = 6;
++	}
++
++	if (unlikely(skb->len < minlen))
+ 		return -EINVAL;
+ 
+-	skb_copy_bits(skb, hdrlen + cs->key_idx_off, &keyid, 1);
+-	keyid &= cs->key_idx_mask;
+-	keyid >>= cs->key_idx_shift;
++	skb_copy_bits(skb, key_idx_off, &keyid, 1);
++
++	if (cs)
++		keyid &= cs->key_idx_mask;
++	keyid >>= key_idx_shift;
++
++	/* cs could use more than the usual two bits for the keyid */
++	if (unlikely(keyid >= NUM_DEFAULT_KEYS))
++		return -EINVAL;
+ 
+ 	return keyid;
+ }
+@@ -1852,9 +1872,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	int keyidx;
+-	int hdrlen;
+ 	ieee80211_rx_result result = RX_DROP_UNUSABLE;
+ 	struct ieee80211_key *sta_ptk = NULL;
++	struct ieee80211_key *ptk_idx = NULL;
+ 	int mmie_keyidx = -1;
+ 	__le16 fc;
+ 	const struct ieee80211_cipher_scheme *cs = NULL;
+@@ -1892,21 +1912,24 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 
+ 	if (rx->sta) {
+ 		int keyid = rx->sta->ptk_idx;
++		sta_ptk = rcu_dereference(rx->sta->ptk[keyid]);
+ 
+-		if (ieee80211_has_protected(fc) && rx->sta->cipher_scheme) {
++		if (ieee80211_has_protected(fc)) {
+ 			cs = rx->sta->cipher_scheme;
+-			keyid = ieee80211_get_cs_keyid(cs, rx->skb);
++			keyid = ieee80211_get_keyid(rx->skb, cs);
++
+ 			if (unlikely(keyid < 0))
+ 				return RX_DROP_UNUSABLE;
++
++			ptk_idx = rcu_dereference(rx->sta->ptk[keyid]);
+ 		}
+-		sta_ptk = rcu_dereference(rx->sta->ptk[keyid]);
+ 	}
+ 
+ 	if (!ieee80211_has_protected(fc))
+ 		mmie_keyidx = ieee80211_get_mmie_keyidx(rx->skb);
+ 
+ 	if (!is_multicast_ether_addr(hdr->addr1) && sta_ptk) {
+-		rx->key = sta_ptk;
++		rx->key = ptk_idx ? ptk_idx : sta_ptk;
+ 		if ((status->flag & RX_FLAG_DECRYPTED) &&
+ 		    (status->flag & RX_FLAG_IV_STRIPPED))
+ 			return RX_CONTINUE;
+@@ -1966,8 +1989,6 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		}
+ 		return RX_CONTINUE;
+ 	} else {
+-		u8 keyid;
 -
- 	if (info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT) {
- 		struct sta_info *sta = container_of(txq->sta, struct sta_info,
- 						    sta);
+ 		/*
+ 		 * The device doesn't give us the IV so we won't be
+ 		 * able to look up the key. That's ok though, we
+@@ -1981,23 +2002,10 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		    (status->flag & RX_FLAG_IV_STRIPPED))
+ 			return RX_CONTINUE;
+ 
+-		hdrlen = ieee80211_hdrlen(fc);
+-
+-		if (cs) {
+-			keyidx = ieee80211_get_cs_keyid(cs, rx->skb);
++		keyidx = ieee80211_get_keyid(rx->skb, cs);
+ 
+-			if (unlikely(keyidx < 0))
+-				return RX_DROP_UNUSABLE;
+-		} else {
+-			if (rx->skb->len < 8 + hdrlen)
+-				return RX_DROP_UNUSABLE; /* TODO: count this? */
+-			/*
+-			 * no need to call ieee80211_wep_get_keyidx,
+-			 * it verifies a bunch of things we've done already
+-			 */
+-			skb_copy_bits(rx->skb, hdrlen + 3, &keyid, 1);
+-			keyidx = keyid >> 6;
+-		}
++		if (unlikely(keyidx < 0))
++			return RX_DROP_UNUSABLE;
+ 
+ 		/* check per-station GTK first, if multicast packet */
+ 		if (is_multicast_ether_addr(hdr->addr1) && rx->sta)
+@@ -4042,12 +4050,8 @@ void ieee80211_check_fast_rx(struct sta_info *sta)
+ 		case WLAN_CIPHER_SUITE_GCMP_256:
+ 			break;
+ 		default:
+-			/* we also don't want to deal with WEP or cipher scheme
+-			 * since those require looking up the key idx in the
+-			 * frame, rather than assuming the PTK is used
+-			 * (we need to revisit this once we implement the real
+-			 * PTK index, which is now valid in the spec, but we
+-			 * haven't implemented that part yet)
++			/* We also don't want to deal with
++			 * WEP or cipher scheme.
+ 			 */
+ 			goto clear_rcu;
+ 		}
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 11f058987a54..7c61f6aee873 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -347,6 +347,15 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	sta->sta.max_rx_aggregation_subframes =
+ 		local->hw.max_rx_aggregation_subframes;
+ 
++	/* Extended Key ID needs to install keys for keyid 0 and 1 Rx-only.
++	 * The Tx path starts to use a key as soon as the key slot ptk_idx
++	 * references to is not NULL. To not use the initial Rx-only key
++	 * prematurely for Tx initialize ptk_idx to an impossible PTK keyid
++	 * which always will refer to a NULL key.
++	 */
++	BUILD_BUG_ON(ARRAY_SIZE(sta->ptk) <= INVALID_PTK_KEYIDX);
++	sta->ptk_idx = INVALID_PTK_KEYIDX;
++
+ 	sta->local = local;
+ 	sta->sdata = sdata;
+ 	sta->rx_stats.last_rx = jiffies;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 8a49a74c0a37..111bd6c490a6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3000,23 +3000,15 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+ 		switch (build.key->conf.cipher) {
+ 		case WLAN_CIPHER_SUITE_CCMP:
+ 		case WLAN_CIPHER_SUITE_CCMP_256:
+-			/* add fixed key ID */
+-			if (gen_iv) {
+-				(build.hdr + build.hdr_len)[3] =
+-					0x20 | (build.key->conf.keyidx << 6);
++			if (gen_iv)
+ 				build.pn_offs = build.hdr_len;
+-			}
+ 			if (gen_iv || iv_spc)
+ 				build.hdr_len += IEEE80211_CCMP_HDR_LEN;
+ 			break;
+ 		case WLAN_CIPHER_SUITE_GCMP:
+ 		case WLAN_CIPHER_SUITE_GCMP_256:
+-			/* add fixed key ID */
+-			if (gen_iv) {
+-				(build.hdr + build.hdr_len)[3] =
+-					0x20 | (build.key->conf.keyidx << 6);
++			if (gen_iv)
+ 				build.pn_offs = build.hdr_len;
+-			}
+ 			if (gen_iv || iv_spc)
+ 				build.hdr_len += IEEE80211_GCMP_HDR_LEN;
+ 			break;
+@@ -3383,6 +3375,7 @@ static void ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sdata,
+ 			pn = atomic64_inc_return(&key->conf.tx_pn);
+ 			crypto_hdr[0] = pn;
+ 			crypto_hdr[1] = pn >> 8;
++			crypto_hdr[3] = 0x20 | (key->conf.keyidx << 6);
+ 			crypto_hdr[4] = pn >> 16;
+ 			crypto_hdr[5] = pn >> 24;
+ 			crypto_hdr[6] = pn >> 32;
 -- 
 2.21.0
 
