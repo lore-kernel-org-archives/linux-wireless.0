@@ -2,126 +2,183 @@ Return-Path: <SRS0=2I9a=RX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7771C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:10:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AE0C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:42:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8FA2A20850
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:10:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bqKeYF2K"
+	by mail.kernel.org (Postfix) with ESMTP id 8BE5820857
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:42:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726788AbfCTTKb (ORCPT
+        id S1726647AbfCTTmR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 15:10:31 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:39333 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726239AbfCTTKb (ORCPT
+        Wed, 20 Mar 2019 15:42:17 -0400
+Received: from gateway23.websitewelcome.com ([192.185.50.250]:21821 "EHLO
+        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726093AbfCTTmR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 15:10:31 -0400
-Received: by mail-ed1-f68.google.com with SMTP id p27so2963576edc.6;
-        Wed, 20 Mar 2019 12:10:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=E1J0TLtNxQGhiW+cnGH2Vxj6UXnA7Xkbtcf3KUCqpLY=;
-        b=bqKeYF2KAVLf1abyHvg8mOPOBK4qTIE9S/qG1gyDlXcK3xGKmiUhWzIYProZPQM7aS
-         toZByuvXfkrcQd9wLCFzWIeQmmeeVKhm/F0TqSvxbzUT08uAqlqEpzaiEVOmuE0eJOAL
-         pYaNCC5xsPFx/6O4bwsC7z10Iz2vFFDgv3UDGxBhcBIUzijeMCFvHo56VitCNZhnxpWk
-         NvZKYmwyU4bF/FU3K19q0i/cEllUQTjE3mGCdQb7LbnsPlHn0Ymz1LN9K7K/zbhKVEgP
-         j758KAzqqLQnAFCJeVJfLjDC3y+a3YT1d+xcsREYoRLqbhzey39rmAzugcd3Qr2AV1fh
-         9CHg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=E1J0TLtNxQGhiW+cnGH2Vxj6UXnA7Xkbtcf3KUCqpLY=;
-        b=EUhckBePi0hnpjy/odqKsvoUk1Fi1oBUrrVduBHEc9nFOUwduRE2pPemZ+80qDaDAF
-         I7DWD9zvV3etCjhR8QiaoqClBWkjtjbmjZLqCGEtXQEv3BjY9r5OglkQzLFx6UhZZPmv
-         ucgzbc7GyBj5hi3gQKxPQqbPigIAB/l1jmo9pFxXU6TbtMlC9/CnNE2ZwEbqGbG3ipzI
-         WC28FWk5/orfyFLpeUKSMujn3wZ+1pDef7R2sMVNlwICqRvcaCqtYyY2GHQgssgeZwUM
-         IWN9aOS05Z3jIhaoQsdIp5tTapUU0yzUiedKMTDZXFR3TyZRmMeLch+JfiluSgMkjdMf
-         9ymw==
-X-Gm-Message-State: APjAAAU/l39hVzKxr0gzOudf9hPwdE7eCF2F2skYgqcqV2/sGGfMt1J9
-        +t6aK7ERPB5VX8JaGgJLqGw=
-X-Google-Smtp-Source: APXvYqy0YWmnCFTw36hzPK6pIBzUYnXZR3uFMjLRPffWACQ9Np7uliEfETIX6cKQMfdAqvYRmjp8ag==
-X-Received: by 2002:a17:906:1d0f:: with SMTP id n15mr18193353ejh.102.1553109029444;
-        Wed, 20 Mar 2019 12:10:29 -0700 (PDT)
-Received: from archlinux-ryzen ([2a01:4f9:2a:1fae::2])
-        by smtp.gmail.com with ESMTPSA id z3sm863426edh.74.2019.03.20.12.10.28
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Wed, 20 Mar 2019 12:10:28 -0700 (PDT)
-Date:   Wed, 20 Mar 2019 12:10:26 -0700
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com,
-        Nick Desaulniers <ndesaulniers@google.com>
-Subject: Re: [PATCH] cfg80211: Change an 'else if' into an 'else' in
- cfg80211_calculate_bitrate_he
-Message-ID: <20190320191026.GC28744@archlinux-ryzen>
-References: <20190307235735.31487-1-natechancellor@gmail.com>
+        Wed, 20 Mar 2019 15:42:17 -0400
+X-Greylist: delayed 1287 seconds by postgrey-1.27 at vger.kernel.org; Wed, 20 Mar 2019 15:42:16 EDT
+Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
+        by gateway23.websitewelcome.com (Postfix) with ESMTP id BE05D54A85
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2019 14:20:49 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id 6gldhAw7U90on6gldhRGdT; Wed, 20 Mar 2019 14:20:49 -0500
+X-Authority-Reason: nr=8
+Received: from [189.250.104.39] (port=59042 helo=[192.168.1.76])
+        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.91)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1h6gld-003Hqf-3n; Wed, 20 Mar 2019 14:20:49 -0500
+Subject: Re: [PATCH] NFC: st21nfca: Fix a couple of fall-through warnings
+To:     Samuel Ortiz <sameo@linux.intel.com>
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kees Cook <keescook@chromium.org>
+References: <20190212173902.GA6829@embeddedor>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=gustavo@embeddedor.com; keydata=
+ mQINBFssHAwBEADIy3ZoPq3z5UpsUknd2v+IQud4TMJnJLTeXgTf4biSDSrXn73JQgsISBwG
+ 2Pm4wnOyEgYUyJd5tRWcIbsURAgei918mck3tugT7AQiTUN3/5aAzqe/4ApDUC+uWNkpNnSV
+ tjOx1hBpla0ifywy4bvFobwSh5/I3qohxDx+c1obd8Bp/B/iaOtnq0inli/8rlvKO9hp6Z4e
+ DXL3PlD0QsLSc27AkwzLEc/D3ZaqBq7ItvT9Pyg0z3Q+2dtLF00f9+663HVC2EUgP25J3xDd
+ 496SIeYDTkEgbJ7WYR0HYm9uirSET3lDqOVh1xPqoy+U9zTtuA9NQHVGk+hPcoazSqEtLGBk
+ YE2mm2wzX5q2uoyptseSNceJ+HE9L+z1KlWW63HhddgtRGhbP8pj42bKaUSrrfDUsicfeJf6
+ m1iJRu0SXYVlMruGUB1PvZQ3O7TsVfAGCv85pFipdgk8KQnlRFkYhUjLft0u7CL1rDGZWDDr
+ NaNj54q2CX9zuSxBn9XDXvGKyzKEZ4NY1Jfw+TAMPCp4buawuOsjONi2X0DfivFY+ZsjAIcx
+ qQMglPtKk/wBs7q2lvJ+pHpgvLhLZyGqzAvKM1sVtRJ5j+ARKA0w4pYs5a5ufqcfT7dN6TBk
+ LXZeD9xlVic93Ju08JSUx2ozlcfxq+BVNyA+dtv7elXUZ2DrYwARAQABtCxHdXN0YXZvIEEu
+ IFIuIFNpbHZhIDxndXN0YXZvQGVtYmVkZGVkb3IuY29tPokCPQQTAQgAJwUCWywcDAIbIwUJ
+ CWYBgAULCQgHAgYVCAkKCwIEFgIDAQIeAQIXgAAKCRBHBbTLRwbbMZ6tEACk0hmmZ2FWL1Xi
+ l/bPqDGFhzzexrdkXSfTTZjBV3a+4hIOe+jl6Rci/CvRicNW4H9yJHKBrqwwWm9fvKqOBAg9
+ obq753jydVmLwlXO7xjcfyfcMWyx9QdYLERTeQfDAfRqxir3xMeOiZwgQ6dzX3JjOXs6jHBP
+ cgry90aWbaMpQRRhaAKeAS14EEe9TSIly5JepaHoVdASuxklvOC0VB0OwNblVSR2S5i5hSsh
+ ewbOJtwSlonsYEj4EW1noQNSxnN/vKuvUNegMe+LTtnbbocFQ7dGMsT3kbYNIyIsp42B5eCu
+ JXnyKLih7rSGBtPgJ540CjoPBkw2mCfhj2p5fElRJn1tcX2McsjzLFY5jK9RYFDavez5w3lx
+ JFgFkla6sQHcrxH62gTkb9sUtNfXKucAfjjCMJ0iuQIHRbMYCa9v2YEymc0k0RvYr43GkA3N
+ PJYd/vf9vU7VtZXaY4a/dz1d9dwIpyQARFQpSyvt++R74S78eY/+lX8wEznQdmRQ27kq7BJS
+ R20KI/8knhUNUJR3epJu2YFT/JwHbRYC4BoIqWl+uNvDf+lUlI/D1wP+lCBSGr2LTkQRoU8U
+ 64iK28BmjJh2K3WHmInC1hbUucWT7Swz/+6+FCuHzap/cjuzRN04Z3Fdj084oeUNpP6+b9yW
+ e5YnLxF8ctRAp7K4yVlvA7kCDQRbLBwMARAAsHCE31Ffrm6uig1BQplxMV8WnRBiZqbbsVJB
+ H1AAh8tq2ULl7udfQo1bsPLGGQboJSVN9rckQQNahvHAIK8ZGfU4Qj8+CER+fYPp/MDZj+t0
+ DbnWSOrG7z9HIZo6PR9z4JZza3Hn/35jFggaqBtuydHwwBANZ7A6DVY+W0COEU4of7CAahQo
+ 5NwYiwS0lGisLTqks5R0Vh+QpvDVfuaF6I8LUgQR/cSgLkR//V1uCEQYzhsoiJ3zc1HSRyOP
+ otJTApqGBq80X0aCVj1LOiOF4rrdvQnj6iIlXQssdb+WhSYHeuJj1wD0ZlC7ds5zovXh+FfF
+ l5qH5RFY/qVn3mNIVxeO987WSF0jh+T5ZlvUNdhedGndRmwFTxq2Li6GNMaolgnpO/CPcFpD
+ jKxY/HBUSmaE9rNdAa1fCd4RsKLlhXda+IWpJZMHlmIKY8dlUybP+2qDzP2lY7kdFgPZRU+e
+ zS/pzC/YTzAvCWM3tDgwoSl17vnZCr8wn2/1rKkcLvTDgiJLPCevqpTb6KFtZosQ02EGMuHQ
+ I6Zk91jbx96nrdsSdBLGH3hbvLvjZm3C+fNlVb9uvWbdznObqcJxSH3SGOZ7kCHuVmXUcqoz
+ ol6ioMHMb+InrHPP16aVDTBTPEGwgxXI38f7SUEn+NpbizWdLNz2hc907DvoPm6HEGCanpcA
+ EQEAAYkCJQQYAQgADwUCWywcDAIbDAUJCWYBgAAKCRBHBbTLRwbbMdsZEACUjmsJx2CAY+QS
+ UMebQRFjKavwXB/xE7fTt2ahuhHT8qQ/lWuRQedg4baInw9nhoPE+VenOzhGeGlsJ0Ys52sd
+ XvUjUocKgUQq6ekOHbcw919nO5L9J2ejMf/VC/quN3r3xijgRtmuuwZjmmi8ct24TpGeoBK4
+ WrZGh/1hAYw4ieARvKvgjXRstcEqM5thUNkOOIheud/VpY+48QcccPKbngy//zNJWKbRbeVn
+ imua0OpqRXhCrEVm/xomeOvl1WK1BVO7z8DjSdEBGzbV76sPDJb/fw+y+VWrkEiddD/9CSfg
+ fBNOb1p1jVnT2mFgGneIWbU0zdDGhleI9UoQTr0e0b/7TU+Jo6TqwosP9nbk5hXw6uR5k5PF
+ 8ieyHVq3qatJ9K1jPkBr8YWtI5uNwJJjTKIA1jHlj8McROroxMdI6qZ/wZ1ImuylpJuJwCDC
+ ORYf5kW61fcrHEDlIvGc371OOvw6ejF8ksX5+L2zwh43l/pKkSVGFpxtMV6d6J3eqwTafL86
+ YJWH93PN+ZUh6i6Rd2U/i8jH5WvzR57UeWxE4P8bQc0hNGrUsHQH6bpHV2lbuhDdqo+cM9eh
+ GZEO3+gCDFmKrjspZjkJbB5Gadzvts5fcWGOXEvuT8uQSvl+vEL0g6vczsyPBtqoBLa9SNrS
+ VtSixD1uOgytAP7RWS474w==
+Message-ID: <c21a91dc-4b45-1a98-4c05-940123e44232@embeddedor.com>
+Date:   Wed, 20 Mar 2019 14:20:48 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190307235735.31487-1-natechancellor@gmail.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+In-Reply-To: <20190212173902.GA6829@embeddedor>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 189.250.104.39
+X-Source-L: No
+X-Exim-ID: 1h6gld-003Hqf-3n
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.1.76]) [189.250.104.39]:59042
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 2
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Mar 07, 2019 at 04:57:35PM -0700, Nathan Chancellor wrote:
-> When building with -Wsometimes-uninitialized, Clang warns:
+Hi all,
+
+If no one cares, I'll add this to my tree for 5.2
+
+Thanks
+--
+Gustavo
+
+On 2/12/19 11:39 AM, Gustavo A. R. Silva wrote:
+> In preparation to enabling -Wimplicit-fallthrough, mark switch
+> cases where we are expecting to fall through.
 > 
-> net/wireless/util.c:1223:11: warning: variable 'result' is used
-> uninitialized whenever 'if' condition is false
-> [-Wsometimes-uninitialized]
+> This patch fixes the following warnings by adding a missing break
+> and a fall-through annotation:
 > 
-> Clang can't evaluate at this point that WARN(1, ...) always returns true
-> because __ret_warn_on is defined as !!(condition), which isn't
-> immediately evaluated as 1. Change this branch to else so that it's
-> clear to Clang that we intend to bail out here.
+> drivers/nfc/st21nfca/dep.c: In function ‘st21nfca_tm_event_send_data’:
+> drivers/nfc/st21nfca/dep.c:391:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    switch (cmd1) {
+>    ^~~~~~
+> drivers/nfc/st21nfca/dep.c:404:2: note: here
+>   default:
+>   ^~~~~~~
+> In file included from ./include/linux/kernel.h:15,
+>                  from ./include/linux/skbuff.h:17,
+>                  from ./include/net/nfc/hci.h:21,
+>                  from drivers/nfc/st21nfca/dep.c:17:
+> drivers/nfc/st21nfca/dep.c: In function ‘st21nfca_im_recv_dep_res_cb’:
+> ./include/linux/printk.h:303:2: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>   printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+>   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/nfc/st21nfca/dep.c:622:4: note: in expansion of macro ‘pr_err’
+>     pr_err("Received a ACK/NACK PDU\n");
+>     ^~~~~~
+> drivers/nfc/st21nfca/dep.c:623:3: note: here
+>    case ST21NFCA_NFC_DEP_PFB_I_PDU:
+>    ^~~~
 > 
-> Link: https://github.com/ClangBuiltLinux/linux/issues/382
-> Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> Warning level 3 was used: -Wimplicit-fallthrough=3
+> 
+> This patch is part of the ongoing efforts to enable
+> -Wimplicit-fallthrough.
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->  net/wireless/util.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  drivers/nfc/st21nfca/dep.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-> index e4b8db5e81ec..75899b62bdc9 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -1220,9 +1220,11 @@ static u32 cfg80211_calculate_bitrate_he(struct rate_info *rate)
->  	else if (rate->bw == RATE_INFO_BW_HE_RU &&
->  		 rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_26)
->  		result = rates_26[rate->he_gi];
-> -	else if (WARN(1, "invalid HE MCS: bw:%d, ru:%d\n",
-> -		      rate->bw, rate->he_ru_alloc))
-> +	else {
-> +		WARN(1, "invalid HE MCS: bw:%d, ru:%d\n",
-> +		     rate->bw, rate->he_ru_alloc);
->  		return 0;
-> +	}
->  
->  	/* now scale to the appropriate MCS */
->  	tmp = result;
-> -- 
-> 2.21.0
+> diff --git a/drivers/nfc/st21nfca/dep.c b/drivers/nfc/st21nfca/dep.c
+> index 3420c5104c94..60f013063f80 100644
+> --- a/drivers/nfc/st21nfca/dep.c
+> +++ b/drivers/nfc/st21nfca/dep.c
+> @@ -401,6 +401,7 @@ static int st21nfca_tm_event_send_data(struct nfc_hci_dev *hdev,
+>  		default:
+>  			return 1;
+>  		}
+> +		break;
+>  	default:
+>  		return 1;
+>  	}
+> @@ -620,6 +621,7 @@ static void st21nfca_im_recv_dep_res_cb(void *context, struct sk_buff *skb,
+>  		switch (ST21NFCA_NFC_DEP_PFB_TYPE(dep_res->pfb)) {
+>  		case ST21NFCA_NFC_DEP_PFB_ACK_NACK_PDU:
+>  			pr_err("Received a ACK/NACK PDU\n");
+> +			/* fall through */
+>  		case ST21NFCA_NFC_DEP_PFB_I_PDU:
+>  			info->dep_info.curr_nfc_dep_pni =
+>  			    ST21NFCA_NFC_DEP_PFB_PNI(dep_res->pfb + 1);
 > 
-
-Gentle ping (if there was a response to this, I didn't receive it). I
-know I sent it in the middle of a merge window so I get if it slipped
-through the cracks.
-
-Thanks,
-Nathan
