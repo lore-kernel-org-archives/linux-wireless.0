@@ -2,125 +2,99 @@ Return-Path: <SRS0=2I9a=RX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A442C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 02:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26826C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 04:45:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F2A8217F4
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 02:42:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1B9A2075E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 04:45:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="daipzmQK"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eCccvDja";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iPFLKn5h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726937AbfCTCmI (ORCPT
+        id S1726006AbfCTEpS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Mar 2019 22:42:08 -0400
-Received: from mail-it1-f195.google.com ([209.85.166.195]:55284 "EHLO
-        mail-it1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725958AbfCTCmH (ORCPT
+        Wed, 20 Mar 2019 00:45:18 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:53934 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725900AbfCTEpS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Mar 2019 22:42:07 -0400
-Received: by mail-it1-f195.google.com with SMTP id w18so29331243itj.4;
-        Tue, 19 Mar 2019 19:42:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=Kr+RfcbNmLFGxezrVVwyPZmhnYgmN1h2XaSmiI3F1s8=;
-        b=daipzmQKeiDGAuOkK5KJp4dQdISACL1QOaKns5W8Bq+2Kvb8bcdNwtAz3+rtczy4aD
-         I0AeTdJhDYpEL1tYsEj43yT9zDA+KBbwoyk/q0SuXN4Yk5mI2+BuGQwUv1MU9JY0sxbX
-         T1Hkam9xuyPusEgxBasUYSVcy2VGb3l9+bTt5oy3N7h/9aad/c3JJJ67lyM4q2K2BlFi
-         0qvqYV3qe3dasc5dUhLMQP2YeZiiar96ov4eledprPm8TdERvOPdzFBWQ4GMNfZZpygG
-         HohjDT6+2Rh017TXkI6APRm8dL2rJHgThHPOTcF7hFKHs0PNjKqt/9s+1QHYC3iYSIBU
-         2Eig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=Kr+RfcbNmLFGxezrVVwyPZmhnYgmN1h2XaSmiI3F1s8=;
-        b=M+jr7hAs6xD2/qjdDpmtL+MvqiQ4OMgXu48MgxNJmWD1G8UxrZuqFNoXtiC+A5SfRA
-         gVNaI8IlPU2Xtp4q57GHRZ7hqPpqijQX7Q3pnCAn7Vl7iQs6yR5NyUudi9jRCTcrflYL
-         cZ3v/sJuyL1XcO4zw88Ws5CK/ATJwXbaifikDYoWCcjnBMrCyQAbxtQ04iccukiW+WsV
-         gBSwEEO8xjIml3zDveF3TzR2eAOVyrUG6nw1Rtihjonv7iI4P8RBfV7j8oUgJCLdB6Ke
-         +pHuinmcx0Vuz7pcoWuKYqUx+uVxdHZJG9dOzVAgYWTh07WRuWug1lE87ma42zVXThSU
-         RseQ==
-X-Gm-Message-State: APjAAAVyNcwFZl4VjHigsd+mv8c0Yz+4c5VKoITODzKL6Vd7sU14YWal
-        d6W9sq6MVhEZUEhmuhc5IYGDUxthc8wqQy90F58=
-X-Google-Smtp-Source: APXvYqxxndfQViHK4a7LCZOilcf9GKOWE5QEz/a3HewfH5jOdzoAYSl9GXJ8TRVZwsB84b3FatuA5JaV/YEAz3pkT1w=
-X-Received: by 2002:a24:9:: with SMTP id 9mr3519924ita.127.1553049726641; Tue,
- 19 Mar 2019 19:42:06 -0700 (PDT)
+        Wed, 20 Mar 2019 00:45:18 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 2691D60E57; Wed, 20 Mar 2019 04:45:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553057118;
+        bh=4vSItePpkN/PzC6k1gCpKDYgoD9uLTJnbp2OQFNBqY0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=eCccvDjajwnLlcKaLphG9m97L+q2ebUSjmSAp8f9rqnJJ2KtueozjI/vlr3F5AOLd
+         oCFJDUUfTkVEfKY0an6UqRQmhH6cNgBKnhpF+qJD2Ns9tivEo5GXymGdkHg3ySAvOp
+         duCp3oPK3zb2FV0iB2lrMmopakwUffQLHTUwhn5A=
+Received: from govinds-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: govinds@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2ACFB6087A;
+        Wed, 20 Mar 2019 04:45:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553057117;
+        bh=4vSItePpkN/PzC6k1gCpKDYgoD9uLTJnbp2OQFNBqY0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=iPFLKn5h21V0Y//QFiqXGtJ91cuo5Yxcv4LKMjR3g0fCSzGfuaEfbRWYf4Gf/nczE
+         /5To5v7x0i68z2AaR2u/A6GsaWVw8x+PExJYZUt2b9xCvPIA4yUq1XZglU5kCz1dWq
+         9BMOLNJrEV5MRseckG3SIlH7GGH0U8Xv3sfZsilU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2ACFB6087A
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=govinds@codeaurora.org
+From:   Govind Singh <govinds@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v2 0/2] Add xo calibration support for wifi rf clock
+Date:   Wed, 20 Mar 2019 10:15:09 +0530
+Message-Id: <20190320044511.12172-1-govinds@codeaurora.org>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-References: <1553005870-28018-1-git-send-email-chongguiguzi@gmail.com> <1553049084.13542.2.camel@realtek.com>
-In-Reply-To: <1553049084.13542.2.camel@realtek.com>
-From:   =?UTF-8?B?6LCi5qyi?= <chongguiguzi@gmail.com>
-Date:   Wed, 20 Mar 2019 10:41:54 +0800
-Message-ID: <CAJ3e5OY-vuuenepfugTwZesksAhzAjHC8rENKcrWLJTqiYm8=Q@mail.gmail.com>
-Subject: Re: [PATCH] net:rtlwifi:move spin_lock_bh to spin_lock in tasklet
-To:     Pkshih <pkshih@realtek.com>
-Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Thank you so much for your useful advice.
+PMIC XO is the clock source for wifi rf clock in integrated wifi
+chipset ex: WCN3990. Due to board layout errors XO frequency drifts
+can cause wifi rf clock inaccuracy.
+XO calibration test tree in Factory Test Mode is used to find the
+best frequency offset(for example +/-2KHz )by programming XO trim
+register. This ensure system clock stays within required 20 ppm
+WLAN rf clock.
 
-Pkshih <pkshih@realtek.com> =E4=BA=8E2019=E5=B9=B43=E6=9C=8820=E6=97=A5=E5=
-=91=A8=E4=B8=89 =E4=B8=8A=E5=8D=8810:31=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Tue, 2019-03-19 at 22:31 +0800, Jeff Xie wrote:
-> > It is unnecessary to call spin_lock_bh in a tasklet.
-> >
-> > Signed-off-by: Jeff Xie <chongguiguzi@gmail.com>
-> >
-> > ---
-> >  drivers/net/wireless/realtek/rtlwifi/pci.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c
-> > b/drivers/net/wireless/realtek/rtlwifi/pci.c
-> > index 48ca521..4055e0a 100644
-> > --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-> > +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-> > @@ -499,16 +499,16 @@ static void _rtl_pci_tx_chk_waitq(struct ieee8021=
-1_hw
-> > *hw)
-> >
-> >                       memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc))=
-;
-> >
-> > -                     spin_lock_bh(&rtlpriv->locks.waitq_lock);
-> > +                     spin_lock(&rtlpriv->locks.waitq_lock);
-> >                       if (!skb_queue_empty(&mac->skb_waitq[tid]) &&
-> >                           (ring->entries - skb_queue_len(&ring->queue) =
->
-> >                            rtlhal->max_earlymode_num)) {
-> >                               skb =3D skb_dequeue(&mac->skb_waitq[tid])=
-;
-> >                       } else {
-> > -                             spin_unlock_bh(&rtlpriv->locks.waitq_lock=
-);
-> > +                             spin_unlock(&rtlpriv->locks.waitq_lock);
-> >                               break;
-> >                       }
-> > -                     spin_unlock_bh(&rtlpriv->locks.waitq_lock);
-> > +                     spin_unlock(&rtlpriv->locks.waitq_lock);
-> >
-> >                       /* Some macaddr can't do early mode. like
-> >                        * multicast/broadcast/no_qos data
->
-> The mail subject should be 'rtlwifi: move ....', and the other looks good=
- to me.
->
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
->
->
+Retrieve the xo trim offset via system firmware (e.g., device tree),
+especially in the case where the device doesn't have a useful EEPROM
+on which to store the calibrated XO offset (e.g., for integrated Wifi).
+Calibrated XO offset is sent to fw, which compensate the clock drift
+by programing the XO trim register.
+
+Testing:
+        Tested on QCS404 platform(WCN3990 HW)
+        Tested FW: WLAN.HL.3.1-00959-QCAHLSWMTPLZ-1
+
+change since v1:
+        Added return check for case where xo cal dt is not populated.
+
+Govind Singh (2):
+  dt: bindings: add dt entry for XO calibration support
+  ath10k: Add xo calibration support for wifi rf clock
+
+ .../devicetree/bindings/net/wireless/qcom,ath10k.txt |  1 +
+ drivers/net/wireless/ath/ath10k/qmi.c                | 12 ++++++++++++
+ drivers/net/wireless/ath/ath10k/snoc.c               | 11 +++++++++++
+ drivers/net/wireless/ath/ath10k/snoc.h               |  2 ++
+ 4 files changed, 26 insertions(+)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
