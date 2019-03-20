@@ -2,130 +2,123 @@ Return-Path: <SRS0=2I9a=RX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FDB6C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 08:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1819FC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 09:45:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 355EC2146E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 08:37:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="L+Zifx+P"
+	by mail.kernel.org (Postfix) with ESMTP id E502F2175B
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 09:45:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726093AbfCTIh0 (ORCPT
+        id S1727434AbfCTJpK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 04:37:26 -0400
-Received: from narfation.org ([79.140.41.39]:34068 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725906AbfCTIhZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 04:37:25 -0400
-Received: from bentobox.localnet (unknown [IPv6:2001:16b8:5523:5cf2:11e7:332b:14eb:c67a])
-        by v3-1039.vlinux.de (Postfix) with ESMTPSA id C074F1100E9;
-        Wed, 20 Mar 2019 09:37:22 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=narfation.org;
-        s=20121; t=1553071043;
-        bh=D3KCSmQcGUyPyvzruVCQhnOiDagqF9dPaMF9W9SMALk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=L+Zifx+PCTo9kWechY5+qB9XzR6CEmN85Sb0lryBrH8I6BvUpnrmpPWjeIg0ijkww
-         FevkQ+cMl8bYgofGnMwC7jVeD0whUzqlCe0ztYnZiJLdVEOvqACwO60Ki16eFh45fc
-         /gZO7DlVmyV3c10hNbA+Ohhv7utbo+wSnd5llQ/k=
-From:   Sven Eckelmann <sven@narfation.org>
-To:     Govind Singh <govinds@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Shashidhar Lakkavalli <slakkavalli@datto.com>,
-        Catrinel Catrinescu <cc@80211.de>
-Subject: Re: [PATCH v2 0/2] Add xo calibration support for wifi rf clock
-Date:   Wed, 20 Mar 2019 09:37:14 +0100
-Message-ID: <2614783.8fX38OIfA2@bentobox>
-In-Reply-To: <20190320044511.12172-1-govinds@codeaurora.org>
-References: <20190320044511.12172-1-govinds@codeaurora.org>
+        Wed, 20 Mar 2019 05:45:10 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:36712 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727399AbfCTJpK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Mar 2019 05:45:10 -0400
+Received: by mail-wr1-f68.google.com with SMTP id y13so1970281wrd.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2019 02:45:09 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=/5Jq/1A4wnNU45uP0a2SlC5SWn4VZjmGVVWgkyU8b6Q=;
+        b=WWiHEWVp5YwiuM/BYWMuwC+IFgzERZu6Qm10t42x5TAt3kbrtSYGZyDOcS7TjU2y+u
+         UzjUet0rIKgM2+b56U5LOuXZtOgnVjzQp+T2EGBXV4n+5GllGBygtYBC6a/UShq8rY9s
+         lSGYhMEdaDE6BJNLQbR/Su1H7pDaxdc37490KXWRtqjoBhGpqTDEhbOhTaSmD2K9xtFW
+         IMYdX0FT6i/oYkPcP0JgdFRXJXplKcQmU3Gx4LJGwMUMTt9+H9PWN64vxrZzKRTqYLwU
+         ka+HM6MMMbkFXYRS/0wNyhoMcPqjJCKQKeLr6t+Wl66k7zftCuL4KpNj+1KHh3bvDqsW
+         +CUQ==
+X-Gm-Message-State: APjAAAUCxekojDp19GrLQ7bWQc1Eb0Tf7I6roWzUwwliN+5wQLIEiiIK
+        H52DqGssEURJb8bvp84UcTcw9Q==
+X-Google-Smtp-Source: APXvYqzII/fmq2lFyYDmCPW3x4gl3JslO9q1l87eIxW6hq+HHlFlkhJTlM2Tth2VSEq8y9DUCy8RPg==
+X-Received: by 2002:adf:90af:: with SMTP id i44mr20781788wri.222.1553075108830;
+        Wed, 20 Mar 2019 02:45:08 -0700 (PDT)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id o10sm1234925wrx.82.2019.03.20.02.45.07
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 20 Mar 2019 02:45:08 -0700 (PDT)
+Date:   Wed, 20 Mar 2019 10:45:05 +0100
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+Cc:     David Miller <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: Fixes tag needs some work in the net tree
+Message-ID: <20190320094504.GA16193@localhost.localdomain>
+References: <20190320081549.7112c33c@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2399685.A95HZVWdDr"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="wRRV7LY7NUeQGEoC"
+Content-Disposition: inline
+In-Reply-To: <20190320081549.7112c33c@canb.auug.org.au>
+User-Agent: Mutt/1.11.3 (2019-02-01)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---nextPart2399685.A95HZVWdDr
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
 
-On Wednesday, 20 March 2019 05:45:09 CET Govind Singh wrote:
-> PMIC XO is the clock source for wifi rf clock in integrated wifi
-> chipset ex: WCN3990. Due to board layout errors XO frequency drifts
-> can cause wifi rf clock inaccuracy.
-> XO calibration test tree in Factory Test Mode is used to find the
-> best frequency offset(for example +/-2KHz )by programming XO trim
-> register. This ensure system clock stays within required 20 ppm
-> WLAN rf clock.
-> 
-> Retrieve the xo trim offset via system firmware (e.g., device tree),
-> especially in the case where the device doesn't have a useful EEPROM
-> on which to store the calibrated XO offset (e.g., for integrated Wifi).
-> Calibrated XO offset is sent to fw, which compensate the clock drift
-> by programing the XO trim register.
+--wRRV7LY7NUeQGEoC
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Who is responsible to fill in this values in the device-tree? On other 
-products, the correct XTAL capacitor registers values are calibrated on 
-different devices (in the same product line) separately to ensure that each 
-device has a minimal inaccuracy. During the boot of the device, the two u8 
-taken from params_for_tuning_caps (inside the EEPROM) are just written to the 
-AR_CH0_XTAL register (mapped to the correct the INDAC and OUTDAC region).
+> Hi all,
+>=20
+> In commit
+>=20
+>   13f61dfc5235 ("mt76: fix schedule while atomic in mt76x02_reset_state")
+>=20
+> Fixes tag
+>=20
+>   Fixes: e4ebb8b403d1 ("mt76: mt76x2: implement full device restart on wa=
+tchdog reset")
+>=20
+> has these problem(s):
+>=20
+>   - Target SHA1 does not exist
+>=20
+> Did you mean:
+>=20
+>   004960423fe1 ("mt76: mt76x2: implement full device restart on watchdog =
+reset")
 
-Your patch here seems to be doing something similar (you may correct me if I 
-misinterpret something) but you are already saying that these devices don't 
-have an EEPROM. This is already quite odd because then we also wouldn't have 
-temperature compensation (also stored in per device EEPROM/precal data for 
-other devices).
+Hi Stephen,
 
-So you move it to the device tree. By default, this device tree is most likely 
-a static thing which is shipped with the rest of the firmware. So no per 
-device data is stored in this DTB on the flash. To include device specific 
-information (mac addresses, calibration data, ...), you could also have the 
-bootloader (u-boot for example) change the device tree during the boot process 
-and let it inject the device specific XO trim register data.
+yes, the right Fixes tag is:
+004960423fe1 ("mt76: mt76x2: implement full device restart on watchdog rese=
+t")
 
-How is this planned to work? Is the bootloader expected to modify the device 
-tree during the boot to provide the device specific xo-cal-data. If yes, where 
-is it getting the information from? And is there already support for QDART for 
-it?
+Sorry for the mistake.
 
-If you do this, why aren't you using the data from qcom,ath10k-pre-
-calibration-data. At least for other ath10k devices, it includes the 
-previously mentioned tuning caps. It is the first time I heard about an XO 
-trim register and thus it might be something different than what I expect.
+Regards,
+Lorenzo
+
+>=20
+> --=20
+> Cheers,
+> Stephen Rothwell
 
 
-Last question: why is it an u32 when the message with xo_cal_data can only 
-transport an u8?
 
-Kind regards,
-	Sven
---nextPart2399685.A95HZVWdDr
+--wRRV7LY7NUeQGEoC
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlyR+7oACgkQXYcKB8Em
-e0YN1Q//bYYPDFBXGEMAMOw9fXoqELZn3tQrZTxIQgO4pUgSC5z0AJRYhhInJSjX
-Bpj6xZErQCRBbDQ6Rt5l4MVff7kdAsxdlk1EvC6PfwmPp5W16kQbFKDzgg2jLv7q
-HctZ0a0Ymg+af9yfmk3LF2jTBxHQI8E/0acVriRji0BUyJr25xMNvigoUP2i/W8N
-z8JcGlG6H/gQOQqpkmcmbfxVZfO8NdYFplreYnObEIqCVE2jxHs+WT74wN4jtc9R
-rocuFgUx1wyCfR368ZaebFedCmOLMLFKfgz343qN445WCTTsXteVX0iRA2uGjYoi
-nbO+w7takmRHMiB7p33McJIiIPLhNx5pvVZQY2Hq0/PCp/WJan5JuHjTwNH9cXc1
-FGtohj9zcCNsl6zVzxi9RtLpYy7pxWrXblUNhXdozNoi/36EGJr/ZJAWzoBZmAgX
-3YiQZxwmAPWKvochTzkIc90kQXvVv0/OlXHPRTrtzB6Ld8rCy0pKKK2PpIiIJeRB
-PuuaBWzdrvSP3K+ilK7aPu9PrrVaagIXaIY80Wgw5uO8zvC3zSbsZpJ31ePsR1Mv
-oorynjVevuP38PPBSwRl/XicZR1Ea55Q97fdvR+LBPUrPOArTyAekLHOWqORqqtP
-pgvd+j/8wQVIp95T4Q5g9/UxmUq8Ord7j11T12a2rWWv1osJ3L0=
-=1z4Z
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXJILnAAKCRA6cBh0uS2t
+rLs1APsHBqDbJ8Dnrh33NzyBoydGceQK5C9X0KLG7NNv2zDm+AEA2CUnUhrv+gGQ
+4h9qAzCppfRa+tbcAkyvr+pprstOPwE=
+=0ehf
 -----END PGP SIGNATURE-----
 
---nextPart2399685.A95HZVWdDr--
-
-
-
+--wRRV7LY7NUeQGEoC--
