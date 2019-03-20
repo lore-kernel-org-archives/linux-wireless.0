@@ -2,169 +2,160 @@ Return-Path: <SRS0=2I9a=RX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03FCFC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:37:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6784AC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 11:46:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BDFC62184E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:37:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31A632184D
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 11:46:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="d5gP9wZQ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="nKKz6/Ea";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="olg/eOrx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727738AbfCTKhi (ORCPT
+        id S1728017AbfCTLqc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 06:37:38 -0400
-Received: from narfation.org ([79.140.41.39]:34086 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726506AbfCTKhi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 06:37:38 -0400
-Received: from sven-desktop.home.narfation.org (unknown [IPv6:2001:16b8:5523:5cf2:11e7:332b:14eb:c67a])
-        by v3-1039.vlinux.de (Postfix) with ESMTPSA id 801FD1100E9;
-        Wed, 20 Mar 2019 11:37:36 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=narfation.org;
-        s=20121; t=1553078256;
-        bh=+uR4AhtXnnJTSfnZbm9a8xyvhzmZZDjy6VQugo88pWw=;
-        h=From:To:Cc:Subject:Date:From;
-        b=d5gP9wZQnHfYZJEwEABcUeKxgpA8XCzzgkQkZLr+l+ElYC/4pw1xw1w4HPIgIOIc/
-         A/uPcjHsyzrR5no7ceI8Uk974hTDQDCImurh8eF8H2LXd99wxQwFXqQOsHRReIM3kz
-         G3mE/V3ZqS/OCrBlsOIFgCIgrziwZifMng93//Cs=
-From:   Sven Eckelmann <sven@narfation.org>
-To:     linux-wireless@vger.kernel.org
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Sven Eckelmann <sven@narfation.org>
-Subject: [PATCH] ath9k: Differentiate between max combined and per chain power
-Date:   Wed, 20 Mar 2019 11:37:23 +0100
-Message-Id: <20190320103723.27228-1-sven@narfation.org>
-X-Mailer: git-send-email 2.20.1
+        Wed, 20 Mar 2019 07:46:32 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:60986 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727979AbfCTLqc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Mar 2019 07:46:32 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 3D28B60F3D; Wed, 20 Mar 2019 11:46:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553082390;
+        bh=VmzJX/2OLP/7dqiL/0LC3hiIYSPzgbIpQQ4mfE7q6Tc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=nKKz6/Ea+90ANz3th1l1Xb+M5n8MzA3pdbTdewSteeQuCqwRgpoai2X5iaHrrTXUo
+         9nX3F6uvrYXSMjk3C52sdogmG4CIOUkSI8MwK13VPAZOh88+n1eMgT1Cf+eu8KkqNm
+         GOUc5QQfkDCSQ4sZWlRXod6kUAiajoRGEUnFkkXU=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 692EF60EA5;
+        Wed, 20 Mar 2019 11:46:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553082389;
+        bh=VmzJX/2OLP/7dqiL/0LC3hiIYSPzgbIpQQ4mfE7q6Tc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=olg/eOrxZ+NpRske7lH3/mlo2Fv4kARCwdt65YGxxx9ipJ0nEKEV1qDoZeNK4BOMu
+         w0xucxe/732dJSD205GpSvIbsK2AzwJDZ6wGnW8YLXBF9LsoCZ1EfDHXq6kO3FgGvM
+         oSJKD+ptqG6HTfKrMuVTIiLZaSXb1SUfEiVgwdy4=
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 20 Mar 2019 17:16:29 +0530
+From:   Govind Singh <govinds@codeaurora.org>
+To:     Sven Eckelmann <sven@narfation.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Shashidhar Lakkavalli <slakkavalli@datto.com>,
+        Catrinel Catrinescu <cc@80211.de>, srichara@codeaurora.org
+Subject: Re: [PATCH v2 0/2] Add xo calibration support for wifi rf clock
+In-Reply-To: <2614783.8fX38OIfA2@bentobox>
+References: <20190320044511.12172-1-govinds@codeaurora.org>
+ <2614783.8fX38OIfA2@bentobox>
+Message-ID: <010c3a8c56a85fb5d3c8194594f5b9c2@codeaurora.org>
+X-Sender: govinds@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The ath9k driver uses as maximum allowed txpower the constant
-MAX_RATE_POWER. It is used to set a maximum txpower limit for the PHY
-(which is combined txpower) and also the maximum txpower for per chain
-rates. Its value 63 is derived from the maximum number the registers can
-store for the per chain txpower.
+Hi Sven,
 
-The max txpower a user can set because of this is 31 dBm (floor(63 / 2)).
-This also means that a device with multiple tx chains is even limited
-further:
+On 2019-03-20 14:07, Sven Eckelmann wrote:
+> On Wednesday, 20 March 2019 05:45:09 CET Govind Singh wrote:
+>> PMIC XO is the clock source for wifi rf clock in integrated wifi
+>> chipset ex: WCN3990. Due to board layout errors XO frequency drifts
+>> can cause wifi rf clock inaccuracy.
+>> XO calibration test tree in Factory Test Mode is used to find the
+>> best frequency offset(for example +/-2KHz )by programming XO trim
+>> register. This ensure system clock stays within required 20 ppm
+>> WLAN rf clock.
+>> 
+>> Retrieve the xo trim offset via system firmware (e.g., device tree),
+>> especially in the case where the device doesn't have a useful EEPROM
+>> on which to store the calibrated XO offset (e.g., for integrated 
+>> Wifi).
+>> Calibrated XO offset is sent to fw, which compensate the clock drift
+>> by programing the XO trim register.
+> 
+> Who is responsible to fill in this values in the device-tree?
 
-* 1 chain:  31 dBm per chain
-* 2 chains: 28 dBm per chain
-* 3 chains: 26 dBm per chain
+This is populated via boot-loader/system fw(for chrome-OS its coreboot).
+Post calibration QDART writes to non-volatile/persist region and
+during boot up boot loader fills this value in dt node as there is
+no otp region or EPROM available.
 
-This combined txpower limit of 31 dBm becomes even more problematic when
-some extra antenna gain is set in the EEPROM. A high power device is then
-no longer able to reach its potential limits.
+> On other
+> products, the correct XTAL capacitor registers values are calibrated on
+> different devices (in the same product line) separately to ensure that 
+> each
+> device has a minimal inaccuracy. During the boot of the device, the two 
+> u8
+> taken from params_for_tuning_caps (inside the EEPROM) are just written 
+> to the
+> AR_CH0_XTAL register (mapped to the correct the INDAC and OUTDAC 
+> region).
+> 
+> Your patch here seems to be doing something similar (you may correct me 
+> if I
+> misinterpret something) but you are already saying that these devices 
+> don't
+> have an EEPROM. This is already quite odd because then we also wouldn't 
+> have
+> temperature compensation (also stored in per device EEPROM/precal data 
+> for
+> other devices).
+> 
+> So you move it to the device tree. By default, this device tree is most 
+> likely
+> a static thing which is shipped with the rest of the firmware. So no 
+> per
+> device data is stored in this DTB on the flash. To include device 
+> specific
+> information (mac addresses, calibration data, ...), you could also have 
+> the
+> bootloader (u-boot for example) change the device tree during the boot 
+> process
+> and let it inject the device specific XO trim register data.
+> 
+> How is this planned to work? Is the bootloader expected to modify the 
+> device
+> tree during the boot to provide the device specific xo-cal-data. If 
+> yes, where
+> is it getting the information from? And is there already support for 
+> QDART for
+> it?
+> 
+Per device data will be stored in NOR flash by QDART and dt entry will 
+be populated during boot by bootloader.
+Here we are trying to set the xo trim register of PMIC xtal, which is 
+the base clk source of wifi rf clk.
 
-Instead the code dealing with the combined txpower must use a higher limit
-than 63 and only the code dealing with the per chain txpower have to use
-the limit of 63. Since the antenna gain can be quite large and 8 bit
-variables are often used in ath9k for txpower, a large, divisible by two
-number like 254 is a good choice for this new limit.
+> If you do this, why aren't you using the data from qcom,ath10k-pre-
+> calibration-data. At least for other ath10k devices, it includes the
+> previously mentioned tuning caps. It is the first time I heard about an 
+> XO
+> trim register and thus it might be something different than what I 
+> expect.
+> 
+No, Integrated chip set ex:WCN3990 does not use 
+ath10k-pre-calibration-data.
 
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
----
- drivers/net/wireless/ath/ath9k/eeprom.c    | 2 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c | 1 +
- drivers/net/wireless/ath/ath9k/hw.c        | 8 ++++----
- drivers/net/wireless/ath/ath9k/hw.h        | 1 +
- drivers/net/wireless/ath/ath9k/init.c      | 2 +-
- 5 files changed, 8 insertions(+), 6 deletions(-)
+> 
+> Last question: why is it an u32 when the message with xo_cal_data can 
+> only
+> transport an u8?
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index 6fbd5559c0c0..c22d457dbc54 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -428,7 +428,7 @@ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
- 	else
- 		power_limit = 0;
- 
--	return power_limit;
-+	return min_t(u16, power_limit, MAX_RATE_POWER);
- }
- 
- void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index b8c0a08066a0..e8c2cc03be0c 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -424,6 +424,7 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
- 	scaledPower = powerLimit - antenna_reduction;
-+	scaledPower = min_t(u16, scaledPower, MAX_RATE_POWER);
- 	numCtlModes = ARRAY_SIZE(ctlModesFor11g) - SUB_NUM_CTL_MODES_AT_2G_40;
- 	pCtlMode = ctlModesFor11g;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8581d917635a..f47322869bc3 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -446,7 +446,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 
- 	regulatory->country_code = CTRY_DEFAULT;
--	regulatory->power_limit = MAX_RATE_POWER;
-+	regulatory->power_limit = MAX_COMBINED_POWER;
- 
- 	ah->hw_version.magic = AR5416_MAGIC;
- 	ah->hw_version.subvendorid = 0;
-@@ -2952,7 +2952,7 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
- 		ctl = ath9k_regd_get_ctl(reg, chan);
- 
- 	channel = chan->chan;
--	chan_pwr = min_t(int, channel->max_power * 2, MAX_RATE_POWER);
-+	chan_pwr = min_t(int, channel->max_power * 2, MAX_COMBINED_POWER);
- 	new_pwr = min_t(int, chan_pwr, reg->power_limit);
- 
- 	ah->eep_ops->set_txpower(ah, chan, ctl,
-@@ -2965,9 +2965,9 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
- 	struct ath9k_channel *chan = ah->curchan;
- 	struct ieee80211_channel *channel = chan->chan;
- 
--	reg->power_limit = min_t(u32, limit, MAX_RATE_POWER);
-+	reg->power_limit = min_t(u32, limit, MAX_COMBINED_POWER);
- 	if (test)
--		channel->max_power = MAX_RATE_POWER / 2;
-+		channel->max_power = MAX_COMBINED_POWER / 2;
- 
- 	ath9k_hw_apply_txpower(ah, chan, test);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 68956cdc8c9a..2e4489700a85 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -173,6 +173,7 @@
- #define ATH9K_NUM_QUEUES            10
- 
- #define MAX_RATE_POWER              63
-+#define MAX_COMBINED_POWER          254 /* 128 dBm, chosen to fit in u8 */
- #define AH_WAIT_TIMEOUT             100000 /* (us) */
- #define AH_TSF_WRITE_TIMEOUT        100    /* (us) */
- #define AH_TIME_QUANTUM             10
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 98141b699c88..043801f773b5 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -805,7 +805,7 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- 		ah->curchan = &ah->channels[chan->hw_value];
- 		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
- 		ath9k_cmn_get_channel(sc->hw, ah, &chandef);
--		ath9k_hw_set_txpowerlimit(ah, MAX_RATE_POWER, true);
-+		ath9k_hw_set_txpowerlimit(ah, MAX_COMBINED_POWER, true);
- 	}
- }
- 
--- 
-2.20.1
+Yes, this i will fix in next version.
 
+> Kind regards,
+> 	Sven
+
+BR,
+Govind
