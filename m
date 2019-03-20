@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AE0C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 229E7C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:43:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8BE5820857
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:42:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8EF820857
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:43:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726647AbfCTTmR (ORCPT
+        id S1726611AbfCTTn4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 15:42:17 -0400
-Received: from gateway23.websitewelcome.com ([192.185.50.250]:21821 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726093AbfCTTmR (ORCPT
+        Wed, 20 Mar 2019 15:43:56 -0400
+Received: from gateway33.websitewelcome.com ([192.185.146.97]:20381 "EHLO
+        gateway33.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726067AbfCTTn4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 15:42:17 -0400
-X-Greylist: delayed 1287 seconds by postgrey-1.27 at vger.kernel.org; Wed, 20 Mar 2019 15:42:16 EDT
-Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id BE05D54A85
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2019 14:20:49 -0500 (CDT)
+        Wed, 20 Mar 2019 15:43:56 -0400
+X-Greylist: delayed 1364 seconds by postgrey-1.27 at vger.kernel.org; Wed, 20 Mar 2019 15:43:55 EDT
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway33.websitewelcome.com (Postfix) with ESMTP id 58B34AB860
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2019 14:21:10 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id 6gldhAw7U90on6gldhRGdT; Wed, 20 Mar 2019 14:20:49 -0500
+        id 6glyhTksKdnCe6glyhLnBl; Wed, 20 Mar 2019 14:21:10 -0500
 X-Authority-Reason: nr=8
-Received: from [189.250.104.39] (port=59042 helo=[192.168.1.76])
+Received: from [189.250.104.39] (port=59214 helo=[192.168.1.76])
         by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
         (Exim 4.91)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1h6gld-003Hqf-3n; Wed, 20 Mar 2019 14:20:49 -0500
-Subject: Re: [PATCH] NFC: st21nfca: Fix a couple of fall-through warnings
-To:     Samuel Ortiz <sameo@linux.intel.com>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        id 1h6glx-003I6U-V3; Wed, 20 Mar 2019 14:21:10 -0500
+Subject: Re: [PATCH] NFC: pn533: mark expected switch fall-throughs
+To:     Samuel Ortiz <sameo@linux.intel.com>,
         Kees Cook <keescook@chromium.org>
-References: <20190212173902.GA6829@embeddedor>
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20190213185741.GA5047@embeddedor>
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=gustavo@embeddedor.com; keydata=
@@ -83,12 +83,12 @@ Autocrypt: addr=gustavo@embeddedor.com; keydata=
  YJWH93PN+ZUh6i6Rd2U/i8jH5WvzR57UeWxE4P8bQc0hNGrUsHQH6bpHV2lbuhDdqo+cM9eh
  GZEO3+gCDFmKrjspZjkJbB5Gadzvts5fcWGOXEvuT8uQSvl+vEL0g6vczsyPBtqoBLa9SNrS
  VtSixD1uOgytAP7RWS474w==
-Message-ID: <c21a91dc-4b45-1a98-4c05-940123e44232@embeddedor.com>
-Date:   Wed, 20 Mar 2019 14:20:48 -0500
+Message-ID: <4c9a29a0-18e5-f7e2-1f60-8a87f4625d63@embeddedor.com>
+Date:   Wed, 20 Mar 2019 14:21:09 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <20190212173902.GA6829@embeddedor>
+In-Reply-To: <20190213185741.GA5047@embeddedor>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -100,13 +100,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 189.250.104.39
 X-Source-L: No
-X-Exim-ID: 1h6gld-003Hqf-3n
+X-Exim-ID: 1h6glx-003I6U-V3
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: ([192.168.1.76]) [189.250.104.39]:59042
+X-Source-Sender: ([192.168.1.76]) [189.250.104.39]:59214
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 2
+X-Email-Count: 7
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -122,63 +122,57 @@ Thanks
 --
 Gustavo
 
-On 2/12/19 11:39 AM, Gustavo A. R. Silva wrote:
+On 2/13/19 12:57 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch
 > cases where we are expecting to fall through.
 > 
-> This patch fixes the following warnings by adding a missing break
-> and a fall-through annotation:
+> This patch fixes the following warnings:
 > 
-> drivers/nfc/st21nfca/dep.c: In function ‘st21nfca_tm_event_send_data’:
-> drivers/nfc/st21nfca/dep.c:391:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
->    switch (cmd1) {
->    ^~~~~~
-> drivers/nfc/st21nfca/dep.c:404:2: note: here
+> drivers/nfc/pn533/pn533.c: In function ‘pn533_transceive’:
+> drivers/nfc/pn533/pn533.c:2142:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    if (dev->tgt_active_prot == NFC_PROTO_FELICA) {
+>       ^
+> drivers/nfc/pn533/pn533.c:2150:2: note: here
 >   default:
 >   ^~~~~~~
-> In file included from ./include/linux/kernel.h:15,
->                  from ./include/linux/skbuff.h:17,
->                  from ./include/net/nfc/hci.h:21,
->                  from drivers/nfc/st21nfca/dep.c:17:
-> drivers/nfc/st21nfca/dep.c: In function ‘st21nfca_im_recv_dep_res_cb’:
-> ./include/linux/printk.h:303:2: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
->   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/nfc/st21nfca/dep.c:622:4: note: in expansion of macro ‘pr_err’
->     pr_err("Received a ACK/NACK PDU\n");
->     ^~~~~~
-> drivers/nfc/st21nfca/dep.c:623:3: note: here
->    case ST21NFCA_NFC_DEP_PFB_I_PDU:
->    ^~~~
+> drivers/nfc/pn533/pn533.c: In function ‘pn533_wq_mi_recv’:
+> drivers/nfc/pn533/pn533.c:2267:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    if (dev->tgt_active_prot == NFC_PROTO_FELICA) {
+>       ^
+> drivers/nfc/pn533/pn533.c:2276:2: note: here
+>   default:
+>   ^~~~~~~
 > 
 > Warning level 3 was used: -Wimplicit-fallthrough=3
 > 
 > This patch is part of the ongoing efforts to enable
 > -Wimplicit-fallthrough.
 > 
+> Addresses-Coverity-ID: 1230487 ("Missing break in switch")
+> Addresses-Coverity-ID: 1230488 ("Missing break in switch")
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->  drivers/nfc/st21nfca/dep.c | 2 ++
+>  drivers/nfc/pn533/pn533.c | 2 ++
 >  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/nfc/st21nfca/dep.c b/drivers/nfc/st21nfca/dep.c
-> index 3420c5104c94..60f013063f80 100644
-> --- a/drivers/nfc/st21nfca/dep.c
-> +++ b/drivers/nfc/st21nfca/dep.c
-> @@ -401,6 +401,7 @@ static int st21nfca_tm_event_send_data(struct nfc_hci_dev *hdev,
->  		default:
->  			return 1;
+> diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
+> index a0cc1cc45292..5961f14259e5 100644
+> --- a/drivers/nfc/pn533/pn533.c
+> +++ b/drivers/nfc/pn533/pn533.c
+> @@ -2147,6 +2147,7 @@ static int pn533_transceive(struct nfc_dev *nfc_dev,
+>  
+>  			break;
 >  		}
-> +		break;
+> +		/* fall through */
 >  	default:
->  		return 1;
->  	}
-> @@ -620,6 +621,7 @@ static void st21nfca_im_recv_dep_res_cb(void *context, struct sk_buff *skb,
->  		switch (ST21NFCA_NFC_DEP_PFB_TYPE(dep_res->pfb)) {
->  		case ST21NFCA_NFC_DEP_PFB_ACK_NACK_PDU:
->  			pr_err("Received a ACK/NACK PDU\n");
-> +			/* fall through */
->  		case ST21NFCA_NFC_DEP_PFB_I_PDU:
->  			info->dep_info.curr_nfc_dep_pni =
->  			    ST21NFCA_NFC_DEP_PFB_PNI(dep_res->pfb + 1);
+>  		/* jumbo frame ? */
+>  		if (skb->len > PN533_CMD_DATAEXCH_DATA_MAXLEN) {
+> @@ -2273,6 +2274,7 @@ static void pn533_wq_mi_recv(struct work_struct *work)
+>  
+>  			break;
+>  		}
+> +		/* fall through */
+>  	default:
+>  		skb_put_u8(skb, 1); /*TG*/
+>  
 > 
