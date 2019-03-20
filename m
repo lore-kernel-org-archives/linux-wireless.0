@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6245DC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:04:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12BA5C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:05:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 26A6D2184E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:04:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE00E2184E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:04:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="3Bs5IRzn"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="np7+rk67"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727247AbfCTKEv (ORCPT
+        id S1727443AbfCTKE7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 06:04:51 -0400
-Received: from mail-eopbgr710079.outbound.protection.outlook.com ([40.107.71.79]:22688
-        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
+        Wed, 20 Mar 2019 06:04:59 -0400
+Received: from mail-eopbgr780059.outbound.protection.outlook.com ([40.107.78.59]:41504
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725905AbfCTKEv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 06:04:51 -0400
+        id S1725905AbfCTKE6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Mar 2019 06:04:58 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=l+8YlrRsoHgqbYEKCDNyaacjBfAukgSQ9kyFGgvf6u0=;
- b=3Bs5IRznA54L0/ibPmXDXQOm70430JzA2JagDco8sv/0NNbDhS9FxwVAIu+iQ/sOMWvOaT5iCOfg7DQ2V0Ph4DrN47iJYQa+FauK7wyPVKmHMrm6Wy6avZMuRSIXcTHAcCA4uBtEaWmpA7IXC+Jf2pWt0qjLKXtu/7oFeIzAnww=
-Received: from SN6PR05MB4656.namprd05.prod.outlook.com (52.135.114.202) by
- SN6PR05MB5424.namprd05.prod.outlook.com (52.135.109.143) with Microsoft SMTP
+ bh=wUc0VWfGocqZonnzNYqq6B41FC9DgWqxj1JO0ULDOt4=;
+ b=np7+rk67vKga48Cx7xlY6ihw7/C1EBUSMIG34WNqDyLYiTKjaAGIi5jUbld4gssjFw0U9XquaURQ845M9qDEt+jdTA1C8KxCdUapNPXvW0JOh3taeVz1fxil0i9VHLb5nfQJwfqxD2W3xskRP/tRtgiA+XC6x31gOW5CZOD8uY4=
+Received: from MWHPR05MB3021.namprd05.prod.outlook.com (10.168.246.139) by
+ MWHPR05MB2845.namprd05.prod.outlook.com (10.168.245.15) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1730.15; Wed, 20 Mar 2019 10:04:42 +0000
-Received: from SN6PR05MB4656.namprd05.prod.outlook.com
- ([fe80::a8f6:a314:5b0f:f2a]) by SN6PR05MB4656.namprd05.prod.outlook.com
- ([fe80::a8f6:a314:5b0f:f2a%5]) with mapi id 15.20.1709.015; Wed, 20 Mar 2019
- 10:04:42 +0000
+ 15.20.1709.11; Wed, 20 Mar 2019 10:04:56 +0000
+Received: from MWHPR05MB3021.namprd05.prod.outlook.com
+ ([fe80::58de:69e7:147c:1d2d]) by MWHPR05MB3021.namprd05.prod.outlook.com
+ ([fe80::58de:69e7:147c:1d2d%2]) with mapi id 15.20.1730.008; Wed, 20 Mar 2019
+ 10:04:56 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
- SN6PR05MB4672.namprd05.prod.outlook.com (52.135.114.206) with Microsoft SMTP
+ SN6PR05MB5661.namprd05.prod.outlook.com (52.135.111.220) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1709.15; Wed, 20 Mar 2019 10:03:48 +0000
+ 15.20.1709.15; Wed, 20 Mar 2019 10:03:59 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::ecfd:3a22:dcb3:3b9e]) by SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::ecfd:3a22:dcb3:3b9e%4]) with mapi id 15.20.1709.015; Wed, 20 Mar 2019
- 10:03:48 +0000
+ 10:03:59 +0000
 From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
         Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 01/14] qtnfmac: make regulatory notifier work on per-phy basis
-Thread-Topic: [PATCH 01/14] qtnfmac: make regulatory notifier work on per-phy
- basis
-Thread-Index: AQHU3wQ2GdxTz1znikS9tg7IZCFdOg==
-Date:   Wed, 20 Mar 2019 10:03:48 +0000
-Message-ID: <20190320100340.14168-2-sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 07/14] qtnfmac: pass DFS region to firmware on region update
+Thread-Topic: [PATCH 07/14] qtnfmac: pass DFS region to firmware on region
+ update
+Thread-Index: AQHU3wQ8ZyBKWbEOiUOAT+EuksObHw==
+Date:   Wed, 20 Mar 2019 10:03:58 +0000
+Message-ID: <20190320100340.14168-8-sergey.matyukevich.os@quantenna.com>
 References: <20190320100340.14168-1-sergey.matyukevich.os@quantenna.com>
 In-Reply-To: <20190320100340.14168-1-sergey.matyukevich.os@quantenna.com>
 Accept-Language: en-US
@@ -69,28 +69,28 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.11.0
 x-originating-ip: [195.182.157.78]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 54721120-37fc-445c-c354-08d6ad1b5852
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB4672;
-x-ms-traffictypediagnostic: SN6PR05MB4672:|SN6PR05MB5424:
-x-moderation-data: 3/20/2019 10:04:38 AM
-x-microsoft-antispam-prvs: <SN6PR05MB542407BEF16F2FE9E9314D25A3410@SN6PR05MB5424.namprd05.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 4b9982eb-8833-4855-249b-08d6ad1b5ec3
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB5661;
+x-ms-traffictypediagnostic: SN6PR05MB5661:|MWHPR05MB2845:
+x-moderation-data: 3/20/2019 10:04:53 AM
+x-microsoft-antispam-prvs: <MWHPR05MB28454581B94B990CFE529D44A3410@MWHPR05MB2845.namprd05.prod.outlook.com>
 x-forefront-prvs: 098291215C
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(396003)(346002)(136003)(376002)(39850400004)(199004)(189003)(14454004)(36756003)(1076003)(14444005)(256004)(97736004)(15650500001)(305945005)(103116003)(7736002)(478600001)(2351001)(11346002)(446003)(186003)(99286004)(436003)(6116002)(3846002)(486006)(2616005)(476003)(54906003)(6436002)(6486002)(316002)(52116002)(76176011)(71200400001)(71190400001)(386003)(105586002)(106356001)(25786009)(6506007)(6916009)(2906002)(102836004)(26005)(6512007)(8676002)(8936002)(5640700003)(4326008)(81156014)(68736007)(5660300002)(2501003)(53936002)(86362001)(50226002)(107886003)(81166006)(66066001);DIR:OUT;SFP:1101;SCL:1;SRVR:SN6PR05MB5424;H:SN6PR05MB4656.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(39850400004)(396003)(366004)(136003)(346002)(199004)(189003)(14444005)(256004)(103116003)(52116002)(107886003)(26005)(4326008)(446003)(102836004)(66066001)(6486002)(8936002)(8676002)(53936002)(478600001)(11346002)(6506007)(476003)(76176011)(25786009)(6512007)(50226002)(436003)(81166006)(3846002)(6436002)(186003)(5640700003)(2616005)(6116002)(386003)(6916009)(15650500001)(99286004)(2501003)(305945005)(1076003)(36756003)(68736007)(81156014)(2351001)(71190400001)(105586002)(106356001)(7736002)(86362001)(71200400001)(2906002)(5660300002)(14454004)(97736004)(316002)(486006)(54906003);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR05MB2845;H:MWHPR05MB3021.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: quantenna.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: IaIBuZRU2SFLbCTG2emcKtWSey8dcbgMMaKhGmplKLZlV08kdP1M/NXriK4rnEiWloGJxBcDeRFaaH/qK/9KktO1cte/y7VCV0e0AIAVORhQq4gtm5Z0NwrwEj0pud042fFD5qm8J97SbqGOlbn1O0mx0FFXptCShXDv/3nQj6oWvdRu3pfPyEiBSki7vaQlLyb2ZuJPUIz4yk7au+Me3AMUDtxRB6gbTCqEvtXCf8kytmhCDkFkfr2AdDnmimwQP6U1UEPfUjnYLlZIKnAVAow2IttTQS6XD7XT3pr/5QY2TD8lVohdGtEkU+Gx7Z4VceJ8y0ct6T9wsvYfwKm+THtZbyRymm57oy7OppUGDScjyJNf1TSI40wgtxCKnqdk8AUzgMSbkq7A52LbaVQ61dGHR0ZANb7aTFllIaT5a0Q=
+x-microsoft-antispam-message-info: /FR+LCGx8aiuG7XJmizwkJ/8dPHvnp2/7hP1D+0HgYI4l73seGPfL8jaXSPUNXoaLhP42dHdWLlnb8nZ70n42PmnfWw+dOWj+wrYg3QYdVVBNLLLVITCoFqjz8hQXJcPYiOE3tpkay7mhkiyMCUkevxkrlwSEO0siYEdWdGqMVb1Z2i21vE09HGxGHMCD3/RC12hKTBIdeBRyODouZUb12xeNUXoGRGR/QJTDwKq9wrLuc7V8bc/d2WpnK+lv8kKoq1HlZprZ6eyq+KfAC0D8XJ45FPkVj9qa4IzGloZ2A3TVYrv8qz9Wm4B+HhHxOUzUIGkQzc4Qm6cMvE10QwuMmWA08zdSKyZz6En92585jnBJeCLc5s4b7W7OgR6OM30n1/U5lWpLdQML0pmY5J+Nlp9ddD3xTv5JCn5XhDuc6s=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 54721120-37fc-445c-c354-08d6ad1b5852
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4b9982eb-8833-4855-249b-08d6ad1b5ec3
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Mar 2019 10:04:42.0911
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Mar 2019 10:04:56.1546
  (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR05MB5424
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR05MB2845
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -98,135 +98,77 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Wireless core calls regulatory notifier for each wiphy and it only
-guarantees that bands info is updated for this particular wiphy prior
-to calling a notifier. Hence updating all wiphy which belong to driver
-in a single notifier callback is redundant and incorrect.
+Pass DFS region as requested by regulatory core directly to firmware
+so it can initialize radar detection block accordingly.
 
 Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 32 +++++++------------=
-----
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  9 +++----
- drivers/net/wireless/quantenna/qtnfmac/commands.h |  2 +-
- 3 files changed, 13 insertions(+), 30 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 15 +++++++++++++++
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  6 ++++--
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/ne=
-t/wireless/quantenna/qtnfmac/cfg80211.c
-index dcb0991432f4..295890b2673c 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -993,20 +993,17 @@ static struct cfg80211_ops qtn_cfg80211_ops =3D {
- #endif
- };
-=20
--static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
-+static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy,
- 				       struct regulatory_request *req)
- {
--	struct qtnf_wmac *mac =3D wiphy_priv(wiphy_in);
--	struct qtnf_bus *bus =3D mac->bus;
--	struct wiphy *wiphy;
--	unsigned int mac_idx;
-+	struct qtnf_wmac *mac =3D wiphy_priv(wiphy);
- 	enum nl80211_band band;
- 	int ret;
-=20
- 	pr_debug("MAC%u: initiator=3D%d alpha=3D%c%c\n", mac->macid, req->initiat=
-or,
- 		 req->alpha2[0], req->alpha2[1]);
-=20
--	ret =3D qtnf_cmd_reg_notify(bus, req);
-+	ret =3D qtnf_cmd_reg_notify(mac, req);
- 	if (ret) {
- 		if (ret =3D=3D -EOPNOTSUPP) {
- 			pr_warn("reg update not supported\n");
-@@ -1021,25 +1018,14 @@ static void qtnf_cfg80211_reg_notifier(struct wiphy=
- *wiphy_in,
- 		return;
- 	}
-=20
--	for (mac_idx =3D 0; mac_idx < QTNF_MAX_MAC; ++mac_idx) {
--		if (!(bus->hw_info.mac_bitmap & (1 << mac_idx)))
--			continue;
--
--		mac =3D bus->mac[mac_idx];
--		if (!mac)
-+	for (band =3D 0; band < NUM_NL80211_BANDS; ++band) {
-+		if (!wiphy->bands[band])
- 			continue;
-=20
--		wiphy =3D priv_to_wiphy(mac);
--
--		for (band =3D 0; band < NUM_NL80211_BANDS; ++band) {
--			if (!wiphy->bands[band])
--				continue;
--
--			ret =3D qtnf_cmd_band_info_get(mac, wiphy->bands[band]);
--			if (ret)
--				pr_err("failed to get chan info for mac %u band %u\n",
--				       mac_idx, band);
--		}
-+		ret =3D qtnf_cmd_band_info_get(mac, wiphy->bands[band]);
-+		if (ret)
-+			pr_err("MAC%u: failed to update band %u\n",
-+			       mac->macid, band);
- 	}
- }
-=20
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/ne=
 t/wireless/quantenna/qtnfmac/commands.c
-index 85a2a58f4c16..9aabba7429ed 100644
+index 1a248d9f2e4c..cc7f74333f48 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
 +++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2404,13 +2404,14 @@ int qtnf_cmd_send_updown_intf(struct qtnf_vif *vif,=
- bool up)
- 	return ret;
- }
+@@ -2376,6 +2376,21 @@ int qtnf_cmd_reg_notify(struct qtnf_wmac *mac, struc=
+t regulatory_request *req)
+ 		break;
+ 	}
 =20
--int qtnf_cmd_reg_notify(struct qtnf_bus *bus, struct regulatory_request *r=
-eq)
-+int qtnf_cmd_reg_notify(struct qtnf_wmac *mac, struct regulatory_request *=
-req)
- {
-+	struct qtnf_bus *bus =3D mac->bus;
- 	struct sk_buff *cmd_skb;
- 	int ret;
- 	struct qlink_cmd_reg_notify *cmd;
++	switch (req->dfs_region) {
++	case NL80211_DFS_FCC:
++		cmd->dfs_region =3D QLINK_DFS_FCC;
++		break;
++	case NL80211_DFS_ETSI:
++		cmd->dfs_region =3D QLINK_DFS_ETSI;
++		break;
++	case NL80211_DFS_JP:
++		cmd->dfs_region =3D QLINK_DFS_JP;
++		break;
++	default:
++		cmd->dfs_region =3D QLINK_DFS_UNSET;
++		break;
++	}
++
+ 	cmd->num_channels =3D 0;
 =20
--	cmd_skb =3D qtnf_cmd_alloc_new_cmdskb(QLINK_MACID_RSVD, QLINK_VIFID_RSVD,
-+	cmd_skb =3D qtnf_cmd_alloc_new_cmdskb(mac->macid, QLINK_VIFID_RSVD,
- 					    QLINK_CMD_REG_NOTIFY,
- 					    sizeof(*cmd));
- 	if (!cmd_skb)
-@@ -2449,10 +2450,6 @@ int qtnf_cmd_reg_notify(struct qtnf_bus *bus, struct=
- regulatory_request *req)
+ 	for (band =3D 0; band < NUM_NL80211_BANDS; band++) {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/w=
+ireless/quantenna/qtnfmac/qlink.h
+index 6951f6370985..f6d30069ef3a 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -582,6 +582,7 @@ enum qlink_user_reg_hint_type {
+  *	of &enum qlink_user_reg_hint_type.
+  * @num_channels: number of &struct qlink_tlv_channel in a variable portio=
+n of a
+  *	payload.
++ * @dfs_region: one of &enum qlink_dfs_regions.
+  * @info: variable portion of regulatory notifier callback.
+  */
+ struct qlink_cmd_reg_notify {
+@@ -590,7 +591,8 @@ struct qlink_cmd_reg_notify {
+ 	u8 initiator;
+ 	u8 user_reg_hint_type;
+ 	u8 num_channels;
+-	u8 rsvd[3];
++	u8 dfs_region;
++	u8 rsvd[2];
+ 	u8 info[0];
+ } __packed;
 =20
- 	qtnf_bus_lock(bus);
- 	ret =3D qtnf_cmd_send(bus, cmd_skb);
--	if (ret)
--		goto out;
--
--out:
- 	qtnf_bus_unlock(bus);
-=20
- 	return ret;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/ne=
-t/wireless/quantenna/qtnfmac/commands.h
-index 64f0b9dc8a14..050f9a49d16c 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -57,7 +57,7 @@ int qtnf_cmd_send_disconnect(struct qtnf_vif *vif,
- 			     u16 reason_code);
- int qtnf_cmd_send_updown_intf(struct qtnf_vif *vif,
- 			      bool up);
--int qtnf_cmd_reg_notify(struct qtnf_bus *bus, struct regulatory_request *r=
-eq);
-+int qtnf_cmd_reg_notify(struct qtnf_wmac *mac, struct regulatory_request *=
-req);
- int qtnf_cmd_get_chan_stats(struct qtnf_wmac *mac, u16 channel,
- 			    struct qtnf_chan_stats *stats);
- int qtnf_cmd_send_chan_switch(struct qtnf_vif *vif,
+@@ -800,7 +802,7 @@ enum qlink_dfs_regions {
+  * @alpha2: country code ID firmware is configured to.
+  * @n_reg_rules: number of regulatory rules TLVs in variable portion of th=
+e
+  *	message.
+- * @dfs_region: regulatory DFS region, one of @enum qlink_dfs_region.
++ * @dfs_region: regulatory DFS region, one of &enum qlink_dfs_regions.
+  * @var_info: variable-length WMAC info data.
+  */
+ struct qlink_resp_get_mac_info {
 --=20
 2.11.0
 
