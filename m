@@ -2,120 +2,130 @@ Return-Path: <SRS0=2I9a=RX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3BF9C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 08:11:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FDB6C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 08:37:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BCBE02146E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 08:11:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 355EC2146E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 08:37:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="L+Zifx+P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727792AbfCTILd (ORCPT
+        id S1726093AbfCTIh0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 04:11:33 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:54252 "EHLO mx1.redhat.com"
+        Wed, 20 Mar 2019 04:37:26 -0400
+Received: from narfation.org ([79.140.41.39]:34068 "EHLO v3-1039.vlinux.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727304AbfCTILd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 04:11:33 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BF23DC04D2F7;
-        Wed, 20 Mar 2019 08:11:32 +0000 (UTC)
-Received: from localhost (ovpn-204-179.brq.redhat.com [10.40.204.179])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0C3C25C478;
-        Wed, 20 Mar 2019 08:11:29 +0000 (UTC)
-Date:   Wed, 20 Mar 2019 09:11:28 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
-        linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mt76: usb: reduce locking in mt76u_tx_tasklet
-Message-ID: <20190320081127.GA17841@redhat.com>
-References: <cover.1552907276.git.lorenzo@kernel.org>
- <1ee5ce7818f9d45c9713ce99e810cb84f50dcf03.1552907276.git.lorenzo@kernel.org>
- <20190319110708.GA5360@redhat.com>
- <20190319125812.GA21821@localhost.localdomain>
- <20190319160426.GA15616@redhat.com>
- <20190319162324.GB21821@localhost.localdomain>
+        id S1725906AbfCTIhZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Mar 2019 04:37:25 -0400
+Received: from bentobox.localnet (unknown [IPv6:2001:16b8:5523:5cf2:11e7:332b:14eb:c67a])
+        by v3-1039.vlinux.de (Postfix) with ESMTPSA id C074F1100E9;
+        Wed, 20 Mar 2019 09:37:22 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=narfation.org;
+        s=20121; t=1553071043;
+        bh=D3KCSmQcGUyPyvzruVCQhnOiDagqF9dPaMF9W9SMALk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=L+Zifx+PCTo9kWechY5+qB9XzR6CEmN85Sb0lryBrH8I6BvUpnrmpPWjeIg0ijkww
+         FevkQ+cMl8bYgofGnMwC7jVeD0whUzqlCe0ztYnZiJLdVEOvqACwO60Ki16eFh45fc
+         /gZO7DlVmyV3c10hNbA+Ohhv7utbo+wSnd5llQ/k=
+From:   Sven Eckelmann <sven@narfation.org>
+To:     Govind Singh <govinds@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Shashidhar Lakkavalli <slakkavalli@datto.com>,
+        Catrinel Catrinescu <cc@80211.de>
+Subject: Re: [PATCH v2 0/2] Add xo calibration support for wifi rf clock
+Date:   Wed, 20 Mar 2019 09:37:14 +0100
+Message-ID: <2614783.8fX38OIfA2@bentobox>
+In-Reply-To: <20190320044511.12172-1-govinds@codeaurora.org>
+References: <20190320044511.12172-1-govinds@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190319162324.GB21821@localhost.localdomain>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Wed, 20 Mar 2019 08:11:32 +0000 (UTC)
+Content-Type: multipart/signed; boundary="nextPart2399685.A95HZVWdDr"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Mar 19, 2019 at 05:23:25PM +0100, Lorenzo Bianconi wrote:
-> > On Tue, Mar 19, 2019 at 01:58:13PM +0100, Lorenzo Bianconi wrote:
-> > > > On Mon, Mar 18, 2019 at 12:09:32PM +0100, Lorenzo Bianconi wrote:
-> > > > > Similar to pci counterpart, reduce locking in mt76u_tx_tasklet since
-> > > > > q->head is managed just in mt76u_tx_tasklet and q->queued is updated
-> > > > > holding q->lock
-> > > > > 
-> > > > > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> > > > > ---
-> > > > >  drivers/net/wireless/mediatek/mt76/usb.c | 18 +++++++++++-------
-> > > > >  1 file changed, 11 insertions(+), 7 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-> > > > > index ac03acdae279..8cd70c32d77a 100644
-> > > > > --- a/drivers/net/wireless/mediatek/mt76/usb.c
-> > > > > +++ b/drivers/net/wireless/mediatek/mt76/usb.c
-> > > > > @@ -634,29 +634,33 @@ static void mt76u_tx_tasklet(unsigned long data)
-> > > > >  	int i;
-> > > > >  
-> > > > >  	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-> > > > > +		u32 n_queued = 0, n_sw_queued = 0;
-> > > > > +
-> > > > >  		sq = &dev->q_tx[i];
-> > > > >  		q = sq->q;
-> > > > >  
-> > > > > -		spin_lock_bh(&q->lock);
-> > > > > -		while (true) {
-> > > > > +		while (q->queued > n_queued) {
-> > > > >  			buf = &q->entry[q->head].ubuf;
-> > > > > -			if (!buf->done || !q->queued)
-> > > > > +			if (!buf->done)
-> > > > >  				break;
-> > > > 
-> > > > I'm still thinking if this is safe or not. Is somewhat tricky to
-> > > > read variable outside the lock because in such case there is no time
-> > > > guarantee when variable written on one CPU gets updated value on
-> > > > different CPU. And for USB is not only q->queued but also buf->done.
-> > > 
-> > > Hi Stanislaw,
-> > > 
-> > > I was wondering if this is safe as well, but q->queued is updated holding q->lock
-> > > and I guess it will ensure to not overlap tx and status code path.
-> > 
-> > Overlap will not happen, at worst what can happen is q->queued will be
-> > smaller on tx_tasklet than on tx_queue_skb.
-> 
-> Yes, that is the point :)
-> 
-> > 
-> > > Regarding buf->done, it is already updated without holding the lock in mt76u_complete_tx
-> > 
-> > That's actually a bug, but it's not important, if tx_tasklet will not
-> > see updated buf->done <- true value by mt76u_complete_tx on different
-> > cpu, it will not complete skb. It will be done on next tx_tasklet iteration.
-> > Worse thing would be opposite situation.
-> 
-> Can this really occur?
-I was thinking about that and yes it can occur. If q->queued and
-buf->done writes/read will be reordered by CPUs. To prevent that you 
-will need to use smp_wmb/smp_rmb pair, but it's just simpler and more
-convenient to use lock.
+--nextPart2399685.A95HZVWdDr
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-> (since queued is update holding the lock)
-Holding the lock on one thread without holding it on concurrent thread
-is irrelevant, it's the same as not holding any lock at all.
+On Wednesday, 20 March 2019 05:45:09 CET Govind Singh wrote:
+> PMIC XO is the clock source for wifi rf clock in integrated wifi
+> chipset ex: WCN3990. Due to board layout errors XO frequency drifts
+> can cause wifi rf clock inaccuracy.
+> XO calibration test tree in Factory Test Mode is used to find the
+> best frequency offset(for example +/-2KHz )by programming XO trim
+> register. This ensure system clock stays within required 20 ppm
+> WLAN rf clock.
+> 
+> Retrieve the xo trim offset via system firmware (e.g., device tree),
+> especially in the case where the device doesn't have a useful EEPROM
+> on which to store the calibrated XO offset (e.g., for integrated Wifi).
+> Calibrated XO offset is sent to fw, which compensate the clock drift
+> by programing the XO trim register.
 
-Stanislaw
+Who is responsible to fill in this values in the device-tree? On other 
+products, the correct XTAL capacitor registers values are calibrated on 
+different devices (in the same product line) separately to ensure that each 
+device has a minimal inaccuracy. During the boot of the device, the two u8 
+taken from params_for_tuning_caps (inside the EEPROM) are just written to the 
+AR_CH0_XTAL register (mapped to the correct the INDAC and OUTDAC region).
+
+Your patch here seems to be doing something similar (you may correct me if I 
+misinterpret something) but you are already saying that these devices don't 
+have an EEPROM. This is already quite odd because then we also wouldn't have 
+temperature compensation (also stored in per device EEPROM/precal data for 
+other devices).
+
+So you move it to the device tree. By default, this device tree is most likely 
+a static thing which is shipped with the rest of the firmware. So no per 
+device data is stored in this DTB on the flash. To include device specific 
+information (mac addresses, calibration data, ...), you could also have the 
+bootloader (u-boot for example) change the device tree during the boot process 
+and let it inject the device specific XO trim register data.
+
+How is this planned to work? Is the bootloader expected to modify the device 
+tree during the boot to provide the device specific xo-cal-data. If yes, where 
+is it getting the information from? And is there already support for QDART for 
+it?
+
+If you do this, why aren't you using the data from qcom,ath10k-pre-
+calibration-data. At least for other ath10k devices, it includes the 
+previously mentioned tuning caps. It is the first time I heard about an XO 
+trim register and thus it might be something different than what I expect.
+
+
+Last question: why is it an u32 when the message with xo_cal_data can only 
+transport an u8?
+
+Kind regards,
+	Sven
+--nextPart2399685.A95HZVWdDr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlyR+7oACgkQXYcKB8Em
+e0YN1Q//bYYPDFBXGEMAMOw9fXoqELZn3tQrZTxIQgO4pUgSC5z0AJRYhhInJSjX
+Bpj6xZErQCRBbDQ6Rt5l4MVff7kdAsxdlk1EvC6PfwmPp5W16kQbFKDzgg2jLv7q
+HctZ0a0Ymg+af9yfmk3LF2jTBxHQI8E/0acVriRji0BUyJr25xMNvigoUP2i/W8N
+z8JcGlG6H/gQOQqpkmcmbfxVZfO8NdYFplreYnObEIqCVE2jxHs+WT74wN4jtc9R
+rocuFgUx1wyCfR368ZaebFedCmOLMLFKfgz343qN445WCTTsXteVX0iRA2uGjYoi
+nbO+w7takmRHMiB7p33McJIiIPLhNx5pvVZQY2Hq0/PCp/WJan5JuHjTwNH9cXc1
+FGtohj9zcCNsl6zVzxi9RtLpYy7pxWrXblUNhXdozNoi/36EGJr/ZJAWzoBZmAgX
+3YiQZxwmAPWKvochTzkIc90kQXvVv0/OlXHPRTrtzB6Ld8rCy0pKKK2PpIiIJeRB
+PuuaBWzdrvSP3K+ilK7aPu9PrrVaagIXaIY80Wgw5uO8zvC3zSbsZpJ31ePsR1Mv
+oorynjVevuP38PPBSwRl/XicZR1Ea55Q97fdvR+LBPUrPOArTyAekLHOWqORqqtP
+pgvd+j/8wQVIp95T4Q5g9/UxmUq8Ord7j11T12a2rWWv1osJ3L0=
+=1z4Z
+-----END PGP SIGNATURE-----
+
+--nextPart2399685.A95HZVWdDr--
+
+
+
