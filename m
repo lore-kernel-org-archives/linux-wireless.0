@@ -2,109 +2,93 @@ Return-Path: <SRS0=2I9a=RX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC05C10F05
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 07:08:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6C19C10F05
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 07:26:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7EDE721871
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 07:08:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B03F21850
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 07:26:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RBKnLfOa"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KiZ/7Spk";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KiZ/7Spk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727417AbfCTHIx (ORCPT
+        id S1727434AbfCTH0c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 03:08:53 -0400
-Received: from mail-it1-f194.google.com ([209.85.166.194]:52446 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727246AbfCTHIw (ORCPT
+        Wed, 20 Mar 2019 03:26:32 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:59874 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726123AbfCTH03 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 03:08:52 -0400
-Received: by mail-it1-f194.google.com with SMTP id g17so30002384ita.2;
-        Wed, 20 Mar 2019 00:08:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=pT/tFO87Fgg1H9sne6N3fiyT9w1xy0s9QxvBKnrOsNg=;
-        b=RBKnLfOaoYZH6YSRrbOOjqP5okECkvx5w3jxFNXbU+A3iqb7XzbkXbtAEh6dI+eJeM
-         A92Xat6XcYslJigA3vgnud583kbULVb4jviFiexBmtmGSOH0udiT6rc7GhVuYRgLjWcC
-         iVbdA/GGfPJajnlNj1M853xZohkaNyYvxt8hQjdITu4L48ePXT0G3gUIqC3dBrfKVC/r
-         wwAHUAMlDEs9SGSnRaBLoInQ3Wq/J4ziupbnl6ZdHiskzDq0Vs7v8sEFKL7bxQKY7/d+
-         TgLRz7KWRURpMDboNT6MOobRGubn3HD7LQUYpw8FAl1wPIkjWjSz8Gai39LExbkfDJet
-         dcPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=pT/tFO87Fgg1H9sne6N3fiyT9w1xy0s9QxvBKnrOsNg=;
-        b=YkZzuPKZX17GsKVdIV333Hc1MYcDzOLSMTtXyFfxVQ9azugN9l4p4ub6+WKaQ6fDvA
-         nVx+zPtyRi0t07+PCZIcgDUr35do6QYVkS9I7X6TYKe2WJPcVhD7+0puPBHqAhOruCcV
-         d48t9qz/OzOF8GpMw2hskJGakhyV1Pe13DtwQSjUpUbp2lJ3wOu0O5NFirUBRwVTmcvz
-         DRZGhUSk9nn/IliiMveghBtdY4/cc/ZzULsTpvEv0OLxb4IrHUAFN1plrDxnavAXZl2y
-         qf8XAE+9XcalBmftrGy4S6lD52HFecQ/WfTB0yMQHtSe2lWI9fhi9lr0SDZzScJBD8xe
-         gUUw==
-X-Gm-Message-State: APjAAAUW3gWlWG0q+Y9Ccf6l+di2YL8/J86ZZT/1jgtlVKjq5DxgMGKi
-        QIq1EFw+VkZ+090lIwYUN0RQR/ZNxhAndXlteTI/cu4G
-X-Google-Smtp-Source: APXvYqwLTODjbF1xk7xH3NiAxu0gsXWKnF/C0FMAZ2mRagTLLlseCUjnu5dVkyVrMnQ7owXByFvRGVeXkH0t1PtWJVE=
-X-Received: by 2002:a05:660c:a54:: with SMTP id j20mr4241072itl.158.1553065731632;
- Wed, 20 Mar 2019 00:08:51 -0700 (PDT)
+        Wed, 20 Mar 2019 03:26:29 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 910FA60850; Wed, 20 Mar 2019 07:26:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553066788;
+        bh=BlbMmcSUQ+1gbzVIOZJC1WZ0TVsvZmReGeTN/mVM94g=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=KiZ/7Spk892XsX3lYn+gCBCGF/pkQawHPY9huVYIPKQKSWhrIbNTUcJLEyVj91gb1
+         zzsvGJ9630EhLvLK4ieoxiBCStdfcY++DHaTWqgR1n9rX/K0ImIMrrf2OQh9rTHRp1
+         IcAOV87yFGsA9W6IHul8oBj3dxpMWBbxtWwHtsKM=
+Received: from x230.qca.qualcomm.com (unknown [195.39.71.253])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C5B1B60850;
+        Wed, 20 Mar 2019 07:26:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553066788;
+        bh=BlbMmcSUQ+1gbzVIOZJC1WZ0TVsvZmReGeTN/mVM94g=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=KiZ/7Spk892XsX3lYn+gCBCGF/pkQawHPY9huVYIPKQKSWhrIbNTUcJLEyVj91gb1
+         zzsvGJ9630EhLvLK4ieoxiBCStdfcY++DHaTWqgR1n9rX/K0ImIMrrf2OQh9rTHRp1
+         IcAOV87yFGsA9W6IHul8oBj3dxpMWBbxtWwHtsKM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C5B1B60850
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+Cc:     David Miller <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: Fixes tag needs some work in the net tree
+References: <20190320081549.7112c33c@canb.auug.org.au>
+Date:   Wed, 20 Mar 2019 09:26:23 +0200
+In-Reply-To: <20190320081549.7112c33c@canb.auug.org.au> (Stephen Rothwell's
+        message of "Wed, 20 Mar 2019 08:15:49 +1100")
+Message-ID: <87ftrit3a8.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-References: <1553012645-28989-1-git-send-email-chongguiguzi@gmail.com>
-In-Reply-To: <1553012645-28989-1-git-send-email-chongguiguzi@gmail.com>
-From:   Menion <menion@gmail.com>
-Date:   Wed, 20 Mar 2019 08:08:40 +0100
-Message-ID: <CAJVZm6dUfAB8Q5CDCpiZhwAJcRiL=N8d3Aa-wxQx3_2ybzZROg@mail.gmail.com>
-Subject: Re: [PATCH] net:mwl8k:move spin_lock_bh to spin_lock in tasklet
-To:     Jeff Xie <chongguiguzi@gmail.com>
-Cc:     buytenh@wantstofly.org, kvalo@codeaurora.org, davem@davemloft.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Is it possible that this solves this long standing issue? :
-https://www.spinics.net/lists/linux-wireless/msg151171.html
-Bye
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
 
-Il giorno mar 19 mar 2019 alle ore 17:25 Jeff Xie
-<chongguiguzi@gmail.com> ha scritto:
+> In commit
 >
-> It is unnecessary to call spin_lock_bh in a tasklet.
+>   13f61dfc5235 ("mt76: fix schedule while atomic in mt76x02_reset_state")
 >
-> Signed-off-by: Jeff Xie <chongguiguzi@gmail.com>
-> ---
->  drivers/net/wireless/marvell/mwl8k.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> Fixes tag
 >
-> diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
-> index 8e4e9b6..21a86cc 100644
-> --- a/drivers/net/wireless/marvell/mwl8k.c
-> +++ b/drivers/net/wireless/marvell/mwl8k.c
-> @@ -4631,7 +4631,7 @@ static void mwl8k_tx_poll(unsigned long data)
+>   Fixes: e4ebb8b403d1 ("mt76: mt76x2: implement full device restart on watchdog reset")
 >
->         limit = 32;
+> has these problem(s):
 >
-> -       spin_lock_bh(&priv->tx_lock);
-> +       spin_lock(&priv->tx_lock);
+>   - Target SHA1 does not exist
 >
->         for (i = 0; i < mwl8k_tx_queues(priv); i++)
->                 limit -= mwl8k_txq_reclaim(hw, i, limit, 0);
-> @@ -4641,7 +4641,7 @@ static void mwl8k_tx_poll(unsigned long data)
->                 priv->tx_wait = NULL;
->         }
+> Did you mean:
 >
-> -       spin_unlock_bh(&priv->tx_lock);
-> +       spin_unlock(&priv->tx_lock);
->
->         if (limit) {
->                 writel(~MWL8K_A2H_INT_TX_DONE,
-> --
-> 2.7.4
->
+>   004960423fe1 ("mt76: mt76x2: implement full device restart on watchdog reset")
+
+Sorry, I missed this but too late to fix now.
+
+-- 
+Kalle Valo
