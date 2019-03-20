@@ -2,108 +2,126 @@ Return-Path: <SRS0=2I9a=RX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14C4FC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 17:26:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7771C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:10:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D4E11218A2
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 17:26:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FA2A20850
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:10:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="mPv2fRN9"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bqKeYF2K"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726830AbfCTRZ7 (ORCPT
+        id S1726788AbfCTTKb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 13:25:59 -0400
-Received: from narfation.org ([79.140.41.39]:34132 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726529AbfCTRZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 13:25:59 -0400
-Received: from bentobox.localnet (unknown [IPv6:2001:16b8:5523:5cf2:11e7:332b:14eb:c67a])
-        by v3-1039.vlinux.de (Postfix) with ESMTPSA id 881011100E9;
-        Wed, 20 Mar 2019 18:25:56 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=narfation.org;
-        s=20121; t=1553102756;
-        bh=oHzKjOM8F8KMTckj/Z8/+vWnvIyYFWxN2xzBMtiJxPU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mPv2fRN9pcooZStMWqD156YG+w/SGGZSM6bFvy1ZO+MB5YVFrDk/6k25UFsvsDfOS
-         YijklamzZipbRhFEXqBgnd0MhGf71eBWEap3cpSXPde5kZEe2uABTbifNDg0cQjdKo
-         JuPvq38aK8lUKSvX45Y6TQKDvtdVtxbQMUxU+GIw=
-From:   Sven Eckelmann <sven@narfation.org>
-To:     Tom Psyborg <pozega.tomislav@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH] ath9k: Differentiate between max combined and per chain power
-Date:   Wed, 20 Mar 2019 18:25:43 +0100
-Message-ID: <1693082.M5RyE5W9Oo@bentobox>
-In-Reply-To: <CAKR_QV+eHK4FN6V5aduS9vc8Zd2kbK5Ry3NO35Q1BwY58arZug@mail.gmail.com>
-References: <20190320103723.27228-1-sven@narfation.org> <CAKR_QV+eHK4FN6V5aduS9vc8Zd2kbK5Ry3NO35Q1BwY58arZug@mail.gmail.com>
+        Wed, 20 Mar 2019 15:10:31 -0400
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:39333 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726239AbfCTTKb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Mar 2019 15:10:31 -0400
+Received: by mail-ed1-f68.google.com with SMTP id p27so2963576edc.6;
+        Wed, 20 Mar 2019 12:10:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=E1J0TLtNxQGhiW+cnGH2Vxj6UXnA7Xkbtcf3KUCqpLY=;
+        b=bqKeYF2KAVLf1abyHvg8mOPOBK4qTIE9S/qG1gyDlXcK3xGKmiUhWzIYProZPQM7aS
+         toZByuvXfkrcQd9wLCFzWIeQmmeeVKhm/F0TqSvxbzUT08uAqlqEpzaiEVOmuE0eJOAL
+         pYaNCC5xsPFx/6O4bwsC7z10Iz2vFFDgv3UDGxBhcBIUzijeMCFvHo56VitCNZhnxpWk
+         NvZKYmwyU4bF/FU3K19q0i/cEllUQTjE3mGCdQb7LbnsPlHn0Ymz1LN9K7K/zbhKVEgP
+         j758KAzqqLQnAFCJeVJfLjDC3y+a3YT1d+xcsREYoRLqbhzey39rmAzugcd3Qr2AV1fh
+         9CHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=E1J0TLtNxQGhiW+cnGH2Vxj6UXnA7Xkbtcf3KUCqpLY=;
+        b=EUhckBePi0hnpjy/odqKsvoUk1Fi1oBUrrVduBHEc9nFOUwduRE2pPemZ+80qDaDAF
+         I7DWD9zvV3etCjhR8QiaoqClBWkjtjbmjZLqCGEtXQEv3BjY9r5OglkQzLFx6UhZZPmv
+         ucgzbc7GyBj5hi3gQKxPQqbPigIAB/l1jmo9pFxXU6TbtMlC9/CnNE2ZwEbqGbG3ipzI
+         WC28FWk5/orfyFLpeUKSMujn3wZ+1pDef7R2sMVNlwICqRvcaCqtYyY2GHQgssgeZwUM
+         IWN9aOS05Z3jIhaoQsdIp5tTapUU0yzUiedKMTDZXFR3TyZRmMeLch+JfiluSgMkjdMf
+         9ymw==
+X-Gm-Message-State: APjAAAU/l39hVzKxr0gzOudf9hPwdE7eCF2F2skYgqcqV2/sGGfMt1J9
+        +t6aK7ERPB5VX8JaGgJLqGw=
+X-Google-Smtp-Source: APXvYqy0YWmnCFTw36hzPK6pIBzUYnXZR3uFMjLRPffWACQ9Np7uliEfETIX6cKQMfdAqvYRmjp8ag==
+X-Received: by 2002:a17:906:1d0f:: with SMTP id n15mr18193353ejh.102.1553109029444;
+        Wed, 20 Mar 2019 12:10:29 -0700 (PDT)
+Received: from archlinux-ryzen ([2a01:4f9:2a:1fae::2])
+        by smtp.gmail.com with ESMTPSA id z3sm863426edh.74.2019.03.20.12.10.28
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Wed, 20 Mar 2019 12:10:28 -0700 (PDT)
+Date:   Wed, 20 Mar 2019 12:10:26 -0700
+From:   Nathan Chancellor <natechancellor@gmail.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com,
+        Nick Desaulniers <ndesaulniers@google.com>
+Subject: Re: [PATCH] cfg80211: Change an 'else if' into an 'else' in
+ cfg80211_calculate_bitrate_he
+Message-ID: <20190320191026.GC28744@archlinux-ryzen>
+References: <20190307235735.31487-1-natechancellor@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2242750.p2HVIC31lz"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190307235735.31487-1-natechancellor@gmail.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---nextPart2242750.p2HVIC31lz
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-
-On Wednesday, 20 March 2019 14:49:57 CET Tom Psyborg wrote:
-> On 20/03/2019, Sven Eckelmann <sven@narfation.org> wrote:
+On Thu, Mar 07, 2019 at 04:57:35PM -0700, Nathan Chancellor wrote:
+> When building with -Wsometimes-uninitialized, Clang warns:
 > 
-> > This also means that a device with multiple tx chains is even limited
-> > further:
-> >
-> > * 1 chain:  31 dBm per chain
-> > * 2 chains: 28 dBm per chain
-> > * 3 chains: 26 dBm per chain
-> >
+> net/wireless/util.c:1223:11: warning: variable 'result' is used
+> uninitialized whenever 'if' condition is false
+> [-Wsometimes-uninitialized]
 > 
-> This is flawed theory and should be reverted instead of making further
-> complications. Simplest way would be to remove
-> POWER_CORRECTION_FOR_TWO_CHAIN and POWER_CORRECTION_FOR_THREE_CHAIN;
-> from driver
+> Clang can't evaluate at this point that WARN(1, ...) always returns true
+> because __ret_warn_on is defined as !!(condition), which isn't
+> immediately evaluated as 1. Change this branch to else so that it's
+> clear to Clang that we intend to bail out here.
+> 
+> Link: https://github.com/ClangBuiltLinux/linux/issues/382
+> Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> ---
+>  net/wireless/util.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/wireless/util.c b/net/wireless/util.c
+> index e4b8db5e81ec..75899b62bdc9 100644
+> --- a/net/wireless/util.c
+> +++ b/net/wireless/util.c
+> @@ -1220,9 +1220,11 @@ static u32 cfg80211_calculate_bitrate_he(struct rate_info *rate)
+>  	else if (rate->bw == RATE_INFO_BW_HE_RU &&
+>  		 rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_26)
+>  		result = rates_26[rate->he_gi];
+> -	else if (WARN(1, "invalid HE MCS: bw:%d, ru:%d\n",
+> -		      rate->bw, rate->he_ru_alloc))
+> +	else {
+> +		WARN(1, "invalid HE MCS: bw:%d, ru:%d\n",
+> +		     rate->bw, rate->he_ru_alloc);
+>  		return 0;
+> +	}
+>  
+>  	/* now scale to the appropriate MCS */
+>  	tmp = result;
+> -- 
+> 2.21.0
+> 
 
-You can of course propose a patch for that. But I will not participate in the 
-discussion how EIRP should be measured (per antenna/per system, on max point/
-via integral over all positions, ...).
+Gentle ping (if there was a response to this, I didn't receive it). I
+know I sent it in the middle of a merge window so I get if it slipped
+through the cracks.
 
-And you should also discuss it with QCA to find out whether they will also 
-remove the power correction from their closed source firmware. At least it 
-would also affect ath10k... maybe even their other drivers with closed source 
-components.
-
-And your change would also not completely supersede my change. You forget that 
-the antennagain reduction is also done by scaled ath9k_hw_get_scaled_power.
-
-Kind regards,
-	Sven
---nextPart2242750.p2HVIC31lz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlySd5cACgkQXYcKB8Em
-e0Y8FhAA1dP+Tj72QHRSaJgmQbDxAljz6n+ArmlBFTIfaXq+sxeq5egL+MHxxAoK
-5bzEj1F5WfjnueVLWoq+V9SAIW8B8ABmlfjxNUHbHtb+n4mVTmX/aZe9JFXSOhER
-bh8c83CSYKnQQtuPqZk/dkjfJHJbRrNysLIKDXBZvXVYGqSfgyXt+WLLRdRVKgwl
-BaCoAO0qyIm2NiThAIkDzaD5+zAaGa0uYfPyLFXSZYZNcnxxSsE3AvMdHcxkZY/7
-ZL8eeiUZPsPBIrBYtS7jRMMw/cSH1NIlZXpL+EoZoPTjia5kEFkf5sIfc+RvW+EY
-CoS/qiXSfSlS/Bx40e1+0rubVVUSuNoWsDY2GISHU1LW0HLQxj0Gj/oM3aBQio4G
-AZm4bys9u6SDmJRyYQ7MZq7mg1JMs4o+KN15Js82oscx1kXy0/iCJQ/XOivV75Z4
-Sq9aPFSUbkjRv5iy7ZDuAc0W2Mv8XB3e65BtCMNbMxBDfb/0F0pdrSUJHsXsEIya
-NYAKxFiAEbWUwGGmWat946qPB5OSjVgNGbz/qOHowOV8ePe+o9gdYX1eorHDmWsr
-ALV2o7kw/ms+z6s2/dW1RA0p/Jn2tR93l4vUqDfZ1R2UN0+O36X26B5xMTRhbbwM
-fNvXfPJftpT9diu3fFDyY1N0mTgb80ahKiKLqyS5lMFcawllpL4=
-=GQU8
------END PGP SIGNATURE-----
-
---nextPart2242750.p2HVIC31lz--
-
-
-
+Thanks,
+Nathan
