@@ -4,56 +4,57 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEFFDC10F05
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F377DC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:05:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE2352184E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:05:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAA182184E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 10:05:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="TgTHAMt9"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="qmVcaRKm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727528AbfCTKFM (ORCPT
+        id S1727566AbfCTKFS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 06:05:12 -0400
-Received: from mail-eopbgr710061.outbound.protection.outlook.com ([40.107.71.61]:37882
-        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
+        Wed, 20 Mar 2019 06:05:18 -0400
+Received: from mail-eopbgr740073.outbound.protection.outlook.com ([40.107.74.73]:60864
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727493AbfCTKFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 06:05:12 -0400
+        id S1727054AbfCTKFR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Mar 2019 06:05:17 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RYkU8545NTNaIJzczqNIYJzC2lkgtUs90wWmiJfeOmE=;
- b=TgTHAMt94hSHGXDXfTgB+0huY2HxH6QekmapLEmlZqlv/7dbqPlfsaqTOQ8NAaYDAueKWbZR5Uw4vokSi8MzzdWEzTvELIFa7tEowELpaBZtLeUWYrMBOQqoCCayaMwTsY6nob4PX0k8365gdhhpa6iczki1Ce/4tn4ijnfJvus=
-Received: from MWHPR0501MB3739.namprd05.prod.outlook.com (10.167.163.147) by
- MWHPR0501MB3770.namprd05.prod.outlook.com (10.167.163.154) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1709.15; Wed, 20 Mar 2019 10:04:50 +0000
-Received: from MWHPR0501MB3739.namprd05.prod.outlook.com
- ([fe80::c4ff:fb38:941f:deee]) by MWHPR0501MB3739.namprd05.prod.outlook.com
- ([fe80::c4ff:fb38:941f:deee%3]) with mapi id 15.20.1730.013; Wed, 20 Mar 2019
- 10:04:50 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
- SN6PR05MB4672.namprd05.prod.outlook.com (52.135.114.206) with Microsoft SMTP
+ bh=69Gw43XMINcbHa57Znd+s8wPtyT1V2KH4BZoGsz62QQ=;
+ b=qmVcaRKmWn5eKu6/SoXpGJV3tguuCTZ57CNeT63Y9mhabbGHC6rtswC0t2lvBAqLrS07HSTw4FD1Qz4pMKowhFGAljPEM49u0YRPeAZf8+1dXhC6iD3R5c2FZ4kKxznCc2ZoSIkNmaB/dcewz7JmZjBg5++dWeMBcWVBxE9IW6Y=
+Received: from DM5PR0501MB3701.namprd05.prod.outlook.com (10.167.106.19) by
+ DM5PR0501MB3910.namprd05.prod.outlook.com (10.167.108.37) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1709.15; Wed, 20 Mar 2019 10:03:55 +0000
+ 15.20.1709.16; Wed, 20 Mar 2019 10:05:15 +0000
+Received: from DM5PR0501MB3701.namprd05.prod.outlook.com
+ ([fe80::fc20:4997:6034:8b47]) by DM5PR0501MB3701.namprd05.prod.outlook.com
+ ([fe80::fc20:4997:6034:8b47%2]) with mapi id 15.20.1709.015; Wed, 20 Mar 2019
+ 10:05:15 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
+ SN6PR05MB5661.namprd05.prod.outlook.com (52.135.111.220) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1709.15; Wed, 20 Mar 2019 10:04:07 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::ecfd:3a22:dcb3:3b9e]) by SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::ecfd:3a22:dcb3:3b9e%4]) with mapi id 15.20.1709.015; Wed, 20 Mar 2019
- 10:03:55 +0000
+ 10:04:07 +0000
 From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
         Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 05/14] qtnfmac: flexible regulatory domain registration logic
-Thread-Topic: [PATCH 05/14] qtnfmac: flexible regulatory domain registration
- logic
-Thread-Index: AQHU3wQ69YnqsxqY6EO5lH8BefM+WA==
-Date:   Wed, 20 Mar 2019 10:03:55 +0000
-Message-ID: <20190320100340.14168-6-sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 12/14] qtnfmac: fix debugfs entries for multiple cards on the
+ same host
+Thread-Topic: [PATCH 12/14] qtnfmac: fix debugfs entries for multiple cards on
+ the same host
+Thread-Index: AQHU3wRBThr6jAugZ0GKclwbi1SOew==
+Date:   Wed, 20 Mar 2019 10:04:07 +0000
+Message-ID: <20190320100340.14168-13-sergey.matyukevich.os@quantenna.com>
 References: <20190320100340.14168-1-sergey.matyukevich.os@quantenna.com>
 In-Reply-To: <20190320100340.14168-1-sergey.matyukevich.os@quantenna.com>
 Accept-Language: en-US
@@ -69,94 +70,68 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.11.0
 x-originating-ip: [195.182.157.78]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 65656ca0-a903-4823-7e6a-08d6ad1b5c8a
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB4672;
-x-ms-traffictypediagnostic: SN6PR05MB4672:|MWHPR0501MB3770:
-x-moderation-data: 3/20/2019 10:04:48 AM
-x-microsoft-antispam-prvs: <MWHPR0501MB3770E06E09B2C28BED3D6D03A3410@MWHPR0501MB3770.namprd05.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 724e5e4d-0d08-4208-7902-08d6ad1b63e8
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB5661;
+x-ms-traffictypediagnostic: SN6PR05MB5661:|DM5PR0501MB3910:
+x-moderation-data: 3/20/2019 10:05:13 AM
+x-microsoft-antispam-prvs: <DM5PR0501MB3910BA001CDE16BBF5B3ED3BA3410@DM5PR0501MB3910.namprd05.prod.outlook.com>
 x-forefront-prvs: 098291215C
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(376002)(396003)(346002)(39850400004)(136003)(189003)(199004)(14454004)(54906003)(2906002)(36756003)(97736004)(71200400001)(71190400001)(99286004)(3846002)(1076003)(186003)(8936002)(81166006)(81156014)(8676002)(6116002)(15650500001)(50226002)(53936002)(305945005)(6486002)(107886003)(6436002)(7736002)(6916009)(4326008)(68736007)(66066001)(5640700003)(256004)(5660300002)(386003)(478600001)(2501003)(6512007)(6506007)(76176011)(86362001)(25786009)(102836004)(26005)(52116002)(476003)(486006)(436003)(11346002)(446003)(2351001)(2616005)(105586002)(103116003)(316002)(14444005)(106356001);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR0501MB3770;H:MWHPR0501MB3739.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(136003)(346002)(39840400004)(396003)(366004)(199004)(189003)(8676002)(66066001)(81156014)(6486002)(50226002)(256004)(14444005)(5024004)(5660300002)(102836004)(6506007)(5640700003)(436003)(3846002)(6116002)(386003)(103116003)(26005)(71190400001)(186003)(54906003)(316002)(71200400001)(14454004)(68736007)(97736004)(2501003)(25786009)(8936002)(86362001)(81166006)(99286004)(6436002)(478600001)(76176011)(2351001)(4326008)(36756003)(107886003)(486006)(6916009)(2616005)(53936002)(105586002)(106356001)(305945005)(446003)(6512007)(11346002)(476003)(2906002)(1076003)(7736002)(52116002);DIR:OUT;SFP:1101;SCL:1;SRVR:DM5PR0501MB3910;H:DM5PR0501MB3701.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: quantenna.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: B58x1ulXBgGVnubxek3EoJd41KPX3lFBLfa42dxwfxCowQAZ010AQPifTFJGltgQ1r/RY+Bc/rnXV8Q8caJlSiRFrQFEOjV47NlStHM6WSAgflsx7WL2hxCnoj2PRc1YPFBXZrsFxW1jX7A2jeBjr1DCo+tocUaOa55y9/VAfKB8ilWuDDApBpHSl/rd1chkenTbjaWFcH9yigfHMdi+jMVlNnsCYHxRVp2ZuI++u7e435/Zw1WIp0n+sCGCiUizwWX7hYmfpzMFgdhu+R4SEBhIYiZykYuVAi4pGgyhQNvKqDCnieCyXziAy3sm8tGhfSWkZK1Yp3/7Ixsd33PCvFkTJzPkIf1xKW/Lf5dy/n5+zPvMWmjiytWog1hmJCOPnmwa17exYvfjn69h7y1zCRfdzUSnKuzhG17/eINod8k=
+x-microsoft-antispam-message-info: lQbgtKeZfA/GRHCmPWwwQL0BYOHWZ21MQijD26tMdlzx6Tlteo5vJrInxlUS+hSuxyeDNsaU+F9tTEMo2f7maCIk2aVV3yEdJ7Yw717SKKV8PwrOfkqKaUI+gFBnqCu6dAoZ+k6a6vKV5yhjLq6m+0n/01itOwCscNIgiX3M1NE3PRmCufIaTZDngF2C8qgqmsDnV0Yzb/8iZYV2UgAjYYpq9q5V8mLxtAF16YAzpz1FBXqy5SjJ0oH5jcXaSqH9crU7xrS6rug1+1+5sQnu9WnI+jSwDF7rSTAq1DfSxifbGMBlQ11flbgtOfIVAksugUDjC82PM9MDK8yhNI4Gsswa02GJ2u5wx0h41mkm5IJYcPC3KxxFfLHfVrY7qsYtvBfkC98ug+/7dOH0Okj02F27W5gsL3Vm1HwtNCxlw9k=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 65656ca0-a903-4823-7e6a-08d6ad1b5c8a
+X-MS-Exchange-CrossTenant-Network-Message-Id: 724e5e4d-0d08-4208-7902-08d6ad1b63e8
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Mar 2019 10:04:50.3070
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Mar 2019 10:05:15.5810
  (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0501MB3770
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR0501MB3910
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Fix creation of debugfs entries for qtnfmac wireless card: use separate
+directories for different wireless cards. This commit enables support
+for multiple qtnfmac wireless cards on the same PCIe host.
 
-Use REGULATORY_CUSTOM_REG flag only if firmware advertised a custom
-regulatory domain prior to wiphy registration. Use REGULATORY_STRICT_REG
-flag only if firmware knows its regulatory domain.
-
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/ne=
-t/wireless/quantenna/qtnfmac/cfg80211.c
-index ae08b37d81d2..3131ced8801f 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -1073,6 +1073,7 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info,=
- struct qtnf_wmac *mac)
- 	struct wiphy *wiphy =3D priv_to_wiphy(mac);
- 	struct qtnf_mac_info *macinfo =3D &mac->macinfo;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c b/drivers/n=
+et/wireless/quantenna/qtnfmac/pcie/pcie.c
+index b561b75e4433..56fc6d49c121 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+@@ -130,6 +130,8 @@ static int qtnf_dbg_shm_stats(struct seq_file *s, void =
+*data)
+=20
+ int qtnf_pcie_fw_boot_done(struct qtnf_bus *bus)
+ {
++	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
++	char card_id[64];
  	int ret;
-+	bool regdomain_is_known;
 =20
- 	if (!wiphy) {
- 		pr_err("invalid wiphy pointer\n");
-@@ -1144,11 +1145,20 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_inf=
-o, struct qtnf_wmac *mac)
- 		wiphy->wowlan =3D macinfo->wowlan;
- #endif
-=20
-+	regdomain_is_known =3D isalpha(hw_info->rd->alpha2[0]) &&
-+		isalpha(hw_info->rd->alpha2[1]);
-+
- 	if (hw_info->hw_capab & QLINK_HW_CAPAB_REG_UPDATE) {
--		wiphy->regulatory_flags |=3D REGULATORY_STRICT_REG |
--			REGULATORY_CUSTOM_REG;
- 		wiphy->reg_notifier =3D qtnf_cfg80211_reg_notifier;
--		wiphy_apply_custom_regulatory(wiphy, hw_info->rd);
-+
-+		if (hw_info->rd->alpha2[0] =3D=3D '9' &&
-+		    hw_info->rd->alpha2[1] =3D=3D '9') {
-+			wiphy->regulatory_flags |=3D REGULATORY_CUSTOM_REG |
-+				REGULATORY_STRICT_REG;
-+			wiphy_apply_custom_regulatory(wiphy, hw_info->rd);
-+		} else if (regdomain_is_known) {
-+			wiphy->regulatory_flags |=3D REGULATORY_STRICT_REG;
-+		}
+ 	bus->fw_state =3D QTNF_FW_STATE_BOOT_DONE;
+@@ -137,7 +139,9 @@ int qtnf_pcie_fw_boot_done(struct qtnf_bus *bus)
+ 	if (ret) {
+ 		pr_err("failed to attach core\n");
  	} else {
- 		wiphy->regulatory_flags |=3D REGULATORY_WIPHY_SELF_MANAGED;
- 	}
-@@ -1172,8 +1182,7 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info,=
- struct qtnf_wmac *mac)
-=20
- 	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
- 		ret =3D regulatory_set_wiphy_regd(wiphy, hw_info->rd);
--	else if (isalpha(hw_info->rd->alpha2[0]) &&
--		 isalpha(hw_info->rd->alpha2[1]))
-+	else if (regdomain_is_known)
- 		ret =3D regulatory_hint(wiphy, hw_info->rd->alpha2);
-=20
- out:
+-		qtnf_debugfs_init(bus, DRV_NAME);
++		snprintf(card_id, sizeof(card_id), "%s:%s",
++			 DRV_NAME, pci_name(priv->pdev));
++		qtnf_debugfs_init(bus, card_id);
+ 		qtnf_debugfs_add_entry(bus, "mps", qtnf_dbg_mps_show);
+ 		qtnf_debugfs_add_entry(bus, "msi_enabled", qtnf_dbg_msi_show);
+ 		qtnf_debugfs_add_entry(bus, "shm_stats", qtnf_dbg_shm_stats);
 --=20
 2.11.0
 
