@@ -2,160 +2,129 @@ Return-Path: <SRS0=2I9a=RX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6784AC43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 11:46:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D9DCC10F05
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 12:13:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31A632184D
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 11:46:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0CA52175B
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 12:13:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="nKKz6/Ea";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="olg/eOrx"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=azazel.net header.i=@azazel.net header.b="e2ssjAx/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728017AbfCTLqc (ORCPT
+        id S1727520AbfCTMNn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 07:46:32 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:60986 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727979AbfCTLqc (ORCPT
+        Wed, 20 Mar 2019 08:13:43 -0400
+Received: from kadath.azazel.net ([81.187.231.250]:45520 "EHLO
+        kadath.azazel.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725905AbfCTMNm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 07:46:32 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 3D28B60F3D; Wed, 20 Mar 2019 11:46:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553082390;
-        bh=VmzJX/2OLP/7dqiL/0LC3hiIYSPzgbIpQQ4mfE7q6Tc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=nKKz6/Ea+90ANz3th1l1Xb+M5n8MzA3pdbTdewSteeQuCqwRgpoai2X5iaHrrTXUo
-         9nX3F6uvrYXSMjk3C52sdogmG4CIOUkSI8MwK13VPAZOh88+n1eMgT1Cf+eu8KkqNm
-         GOUc5QQfkDCSQ4sZWlRXod6kUAiajoRGEUnFkkXU=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 692EF60EA5;
-        Wed, 20 Mar 2019 11:46:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553082389;
-        bh=VmzJX/2OLP/7dqiL/0LC3hiIYSPzgbIpQQ4mfE7q6Tc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=olg/eOrxZ+NpRske7lH3/mlo2Fv4kARCwdt65YGxxx9ipJ0nEKEV1qDoZeNK4BOMu
-         w0xucxe/732dJSD205GpSvIbsK2AzwJDZ6wGnW8YLXBF9LsoCZ1EfDHXq6kO3FgGvM
-         oSJKD+ptqG6HTfKrMuVTIiLZaSXb1SUfEiVgwdy4=
+        Wed, 20 Mar 2019 08:13:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=azazel.net;
+         s=20190108; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
+        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=K+BS3UVbmz6lIBbC1bue6JFHcJxWC6jm7YXAXxS2wUM=; b=e2ssjAx/NCQpiYAehjV7nx2N6k
+        xCFmQieu5XIbV9lO0clBz7ElsU1Svgl4XbYDhnOFYV5HRLlT05LGPX61kCF6N3s5XrXEYO4evBbHK
+        UeDvcAkBwMYi8WDC3pRKZdeG3yRN+RS8qUXNrq4iRGxmSSBKhKQT7v7EpEWw2J4yNCNhc7HcIBWz6
+        zYLwUiMl71hOy2voYrus6Ycia37SEb5QltkK52nOgvwzNuFlKannt8OILszBhTALXqAWpqMhn1+Zo
+        y0+anEPuv2rNL7Jq/tV9CHmuhZxcyYncIwd+IapqQ6Q4caKIaMjZSbU3K5927tXt2+GjN4/SHqhRq
+        mC7OVetg==;
+Received: from kadath.azazel.net ([2001:8b0:135f:bcd1:e2cb:4eff:fedf:e608] helo=azazel.net)
+        by kadath.azazel.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <jeremy@azazel.net>)
+        id 1h6a5x-0002pe-V4; Wed, 20 Mar 2019 12:13:22 +0000
+Date:   Wed, 20 Mar 2019 12:13:20 +0000
+From:   Jeremy Sowden <jeremy@azazel.net>
+To:     Julius Niedworok <julius.n@gmx.net>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, ga58taw@mytum.de,
+        linux-wireless@vger.kernel.org, david@redhat.com, nc@net.in.tum.de,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC v2] mac80211: debugfs option to force TX status frames
+Message-ID: <20190320121320.myrxmtfccaoybyih@azazel.net>
+References: <e20962001ee10a0f90f8e2f1f8baafcf3b70e9dd.camel@sipsolutions.net>
+ <20190306200206.60916-1-julius.n@gmx.net>
+ <87k1hazo6r.fsf@purkki.adurom.net>
+ <20190307193045.a7awwn6mycloccq5@mission-control>
+ <87h8c98q4l.fsf@codeaurora.org>
+ <20190311145240.akms2pz2hxsalmaz@azazel.net>
+ <D78A58DC-E38B-4BD8-9D11-A873FFE16602@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 20 Mar 2019 17:16:29 +0530
-From:   Govind Singh <govinds@codeaurora.org>
-To:     Sven Eckelmann <sven@narfation.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Shashidhar Lakkavalli <slakkavalli@datto.com>,
-        Catrinel Catrinescu <cc@80211.de>, srichara@codeaurora.org
-Subject: Re: [PATCH v2 0/2] Add xo calibration support for wifi rf clock
-In-Reply-To: <2614783.8fX38OIfA2@bentobox>
-References: <20190320044511.12172-1-govinds@codeaurora.org>
- <2614783.8fX38OIfA2@bentobox>
-Message-ID: <010c3a8c56a85fb5d3c8194594f5b9c2@codeaurora.org>
-X-Sender: govinds@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="gobq5cnyp6n7jj7v"
+Content-Disposition: inline
+In-Reply-To: <D78A58DC-E38B-4BD8-9D11-A873FFE16602@gmx.net>
+User-Agent: NeoMutt/20170113 (1.7.2)
+X-SA-Exim-Connect-IP: 2001:8b0:135f:bcd1:e2cb:4eff:fedf:e608
+X-SA-Exim-Mail-From: jeremy@azazel.net
+X-SA-Exim-Scanned: No (on kadath.azazel.net); SAEximRunCond expanded to false
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Sven,
 
-On 2019-03-20 14:07, Sven Eckelmann wrote:
-> On Wednesday, 20 March 2019 05:45:09 CET Govind Singh wrote:
->> PMIC XO is the clock source for wifi rf clock in integrated wifi
->> chipset ex: WCN3990. Due to board layout errors XO frequency drifts
->> can cause wifi rf clock inaccuracy.
->> XO calibration test tree in Factory Test Mode is used to find the
->> best frequency offset(for example +/-2KHz )by programming XO trim
->> register. This ensure system clock stays within required 20 ppm
->> WLAN rf clock.
->> 
->> Retrieve the xo trim offset via system firmware (e.g., device tree),
->> especially in the case where the device doesn't have a useful EEPROM
->> on which to store the calibrated XO offset (e.g., for integrated 
->> Wifi).
->> Calibrated XO offset is sent to fw, which compensate the clock drift
->> by programing the XO trim register.
-> 
-> Who is responsible to fill in this values in the device-tree?
+--gobq5cnyp6n7jj7v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-This is populated via boot-loader/system fw(for chrome-OS its coreboot).
-Post calibration QDART writes to non-volatile/persist region and
-during boot up boot loader fills this value in dt node as there is
-no otp region or EPROM available.
+On 2019-03-19, at 16:07:32 +0100, Julius Niedworok wrote:
+> On 11.03.2019 15:52, Jeremy Sowden wrote:
+> > It's the value that matters, not the type.  It will only be too big
+> > for the buffer if the result of casting local->force_tx_status to
+> > int is less than -9 or greeater than 99.
+> >
+> >  scnprintf(buf, size(buf), "%lld\n",
+> >            (long long)local->force_tx_status)
+> >
+> > would also be fine if the value were in range.  Note also that
+> > scnprintf will not overrun the buffer: it will truncate the string.
+>
+> Thanks for the clarification :)
 
-> On other
-> products, the correct XTAL capacitor registers values are calibrated on
-> different devices (in the same product line) separately to ensure that 
-> each
-> device has a minimal inaccuracy. During the boot of the device, the two 
-> u8
-> taken from params_for_tuning_caps (inside the EEPROM) are just written 
-> to the
-> AR_CH0_XTAL register (mapped to the correct the INDAC and OUTDAC 
-> region).
-> 
-> Your patch here seems to be doing something similar (you may correct me 
-> if I
-> misinterpret something) but you are already saying that these devices 
-> don't
-> have an EEPROM. This is already quite odd because then we also wouldn't 
-> have
-> temperature compensation (also stored in per device EEPROM/precal data 
-> for
-> other devices).
-> 
-> So you move it to the device tree. By default, this device tree is most 
-> likely
-> a static thing which is shipped with the rest of the firmware. So no 
-> per
-> device data is stored in this DTB on the flash. To include device 
-> specific
-> information (mac addresses, calibration data, ...), you could also have 
-> the
-> bootloader (u-boot for example) change the device tree during the boot 
-> process
-> and let it inject the device specific XO trim register data.
-> 
-> How is this planned to work? Is the bootloader expected to modify the 
-> device
-> tree during the boot to provide the device specific xo-cal-data. If 
-> yes, where
-> is it getting the information from? And is there already support for 
-> QDART for
-> it?
-> 
-Per device data will be stored in NOR flash by QDART and dt entry will 
-be populated during boot by bootloader.
-Here we are trying to set the xo trim register of PMIC xtal, which is 
-the base clk source of wifi rf clk.
+You're welcome. :)
 
-> If you do this, why aren't you using the data from qcom,ath10k-pre-
-> calibration-data. At least for other ath10k devices, it includes the
-> previously mentioned tuning caps. It is the first time I heard about an 
-> XO
-> trim register and thus it might be something different than what I 
-> expect.
-> 
-No, Integrated chip set ex:WCN3990 does not use 
-ath10k-pre-calibration-data.
+> > As it happens, arguments to variadic functions are subject to the
+> > "default argument promotions," so if local->force_tx_status is in
+> > fact a bool (I can't find the definition), it would be promoted to
+> > int and the cast is superfluous.
+>
+> Yes - the cast is superfluous. We still think it might be useful to
+> keep it there to make the point that the value will be casted.
+> However, if you prefer to omit the cast, we are happy to take it out.
 
-> 
-> Last question: why is it an u32 when the message with xo_cal_data can 
-> only
-> transport an u8?
-> 
+If I were maintaining this code, I'd probably take it out.  However, I
+did have to check the documentation to verify that the cast wasn't
+required, and I know the more obscure corners of the C standard pretty
+well, so it may cause less confusion to keep it.
 
-Yes, this i will fix in next version.
+J.
 
-> Kind regards,
-> 	Sven
+--gobq5cnyp6n7jj7v
+Content-Type: application/pgp-signature; name="signature.asc"
 
-BR,
-Govind
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEZ8d+2N/NBLDbUxIF0Z7UzfnX9sMFAlySLlcACgkQ0Z7UzfnX
+9sNIMQ//fDp3IMBLu8+HwPUXtM2AkLgb9rCRP5CRwci6vn8rV5oz3LS3QMcA7jFp
+l3f0QBBR46ci5rYYT0j51coOagA0OYwvm1rdeodnvCpXm4uNveBoHYpjuYsSWpuf
+HNlauDby25BT57hyzvccO//gpig5BAcBa7tXunbvPao69AGB2txfPBOXgkFdBzP5
+wgZ+4ajlneiliNdLVxEOn7pNNV0fFcn4msz4tqi2ek7ooWwTZquvDqwcz4/hfcqd
+te3xsqY1lTYk3xOzBuk0gNbCcf0+vQEW9Z72VWbJtuJsm9ydz/JNRjzRFbxMTNdF
+tg4fNARhN3U4rn0/vOXtLfLcdYBgzMlvAXy/Mh/QX72ME2Uz9sLktZGgwNCXje5p
+7QkVkYI3JYrK+YlAN8oYb5C+mK5hTJg6Zj6RXaR8vuRpV+r/qvU7pr+JTzBYLs5N
+C/2SM1CcCFA/7P+JyIFUbM1dDRRjq2vtNQ7as2+JFNvAlnzwpMrJ7hsQz73ZxIdf
+/xSe3m3RyI3bHhAPFVJFAchL/lLAkvNhHccwFaIrBsSpYfXihxK/TNX4LfXDYeTl
+ZLJ/IHDMaHVAvkOdfa3zgs2Hb7aMgWsCfrq5hzbG+pF7pXJSvPM2/KoT7ZiCmh6l
+1xSMO+jgWFPBMCgO7T6IB7si7QgrINZmLy20/lNY4KAVIIAi8l8=
+=tpY5
+-----END PGP SIGNATURE-----
+
+--gobq5cnyp6n7jj7v--
