@@ -1,165 +1,101 @@
 Return-Path: <SRS0=G8on=RY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,UNWANTED_LANGUAGE_BODY autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A697CC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 18:19:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C3A6C43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 21:52:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D76F21874
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 18:19:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4803221917
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 21:52:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1553205128;
+	bh=ulYwG0F5KYe/15mcyzD5dIJhKe0L3Nj6vt7OcqudvX0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=TzHEsIZHbFQbyHYYLE/CxZxBkgcLv5q9fdemYZQq79AWdoknwzdgdfWpVMmYbAcV/
+	 JL+1Jcvz7RdNv76YBPurnhj9BFi6I7hfObIBUzL372K3TvMAElUCD9QgczLM1cLiqv
+	 np8c5a4W9A9nrFgL1KTzuAeereoNw25L8IZ1FxIs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728663AbfCUSTe (ORCPT
+        id S1726555AbfCUVwH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Mar 2019 14:19:34 -0400
-Received: from mail-qk1-f173.google.com ([209.85.222.173]:36102 "EHLO
-        mail-qk1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728507AbfCUSTe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Mar 2019 14:19:34 -0400
-Received: by mail-qk1-f173.google.com with SMTP id k130so16918007qke.3
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2019 11:19:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=6mYFXnXLv75CVhJ6VdILBQhpe6gHe658UTUMm7yplYU=;
-        b=LodzK3y592Y1wtbyFVE2yw0xhMOMDggwmAfqPaXQ/YUO0/daaln3PFq9UdUqJy8+28
-         FW0mob1E2YH6ImKnkd4lGdjrQLBaTOWcyNgLfaJ5OR7+sjG/l2SpLiEWlTqDdcCqWZKE
-         uVR+uCZNtjoyTZ2J3NFDBo+jaL0tcfVf69x5oNXbh3c5+W2slryRsJIP11vgPi6f+2kO
-         pMUFnbVbYLEc34Klo9FJa3piYNAx2tqdUW63yWTw758DH5xjlE09lzAqmj3RIBHNZ6Im
-         khPLxHDUGRi2Lskypl+1K/fvwOSl90/+gdGyZm7qln83POZBbO63sZbPfRJiWiARH4L+
-         0xpA==
-X-Gm-Message-State: APjAAAXJ8nF3GqTTMiq7u5MyviOzqTNp/7o5Uf+0/7iqCgxoEIXO+4en
-        SPQEV+zA+sAAArQO6UpSza0KwQ==
-X-Google-Smtp-Source: APXvYqzVki9u0JceZcQl6Kf4a0CIXJeZbMmMCXGqXbWLC1sUAuc8JhQqROPAQ8fuc5FaDIHJSfbV/Q==
-X-Received: by 2002:ae9:f308:: with SMTP id p8mr3869221qkg.33.1553192372503;
-        Thu, 21 Mar 2019 11:19:32 -0700 (PDT)
-Received: from ?IPv6:2601:602:9800:dae6::c6a6? ([2601:602:9800:dae6::c6a6])
-        by smtp.gmail.com with ESMTPSA id 37sm3615987qtz.95.2019.03.21.11.19.30
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 21 Mar 2019 11:19:31 -0700 (PDT)
-To:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Cc:     Intel Linux Wireless <linuxwifi@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From:   Laura Abbott <labbott@redhat.com>
-Subject: panic from iwl_mvm_vif_dbgfs_register with 5.0
-Message-ID: <1e322b48-b344-7dfa-2e51-88c34c33fe53@redhat.com>
-Date:   Thu, 21 Mar 2019 11:19:30 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        Thu, 21 Mar 2019 17:52:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59764 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725999AbfCUVwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Mar 2019 17:52:07 -0400
+Received: from localhost.localdomain (unknown [151.66.48.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C713621916;
+        Thu, 21 Mar 2019 21:52:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553205126;
+        bh=ulYwG0F5KYe/15mcyzD5dIJhKe0L3Nj6vt7OcqudvX0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Wt0g1++eW25hNrfaQTt0SSxK5JFlrIp/RhSatg8nexP88sDtv260k2njCLaVXI5QI
+         KRSU0t0RbpvACcIY7vgsKMuOP9ULd2m+BNsoscRSrcR46oKhXQpONBVPf17mV3cH6k
+         Oz5gV2ko5qiC2eLdk0EyPElGawMdPB/w1g7ezToQ=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sgruszka@redhat.com
+Subject: [PATCH] mt76: tx: check return value of tx_queue_skb in mt76_tx
+Date:   Thu, 21 Mar 2019 22:51:56 +0100
+Message-Id: <c57c934c56942a64d6bb09d8fbc6c704568c707c.1553204966.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <cover.1553204966.git.lorenzo@kernel.org>
+References: <cover.1553204966.git.lorenzo@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SGksDQoNCkZlZG9yYSBnb3QgYSBidWcgcmVwb3J0IG9mIGEgcGFuaWMgd2l0aCBrZXJuZWxz
-ID4gNS4wOg0KDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBCVUc6IHVuYWJsZSB0byBoYW5k
-bGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAwMDAwMDAwMDAwMDAwMDQz
-DQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiAjUEYgZXJyb3I6IFtub3JtYWwga2VybmVsIHJl
-YWQgZmF1bHRdDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBQR0QgODAwMDAwMDNkZTFkNzA2
-NyBQNEQgODAwMDAwMDNkZTFkNzA2NyBQVUQgM2RlMWRiMDY3IFBNRCAwDQpNYXIgMjAgMTA6
-NTI6Mzgga2VybmVsOiBPb3BzOiAwMDAwIFsjMV0gU01QIFBUSQ0KTWFyIDIwIDEwOjUyOjM4
-IGtlcm5lbDogQ1BVOiAwIFBJRDogMjA3MSBDb21tOiBob3N0YXBkIE5vdCB0YWludGVkIDUu
-MS4wLTAucmMwLmdpdDkuMS5mYzMxLng4Nl82NCAjMQ0KTWFyIDIwIDEwOjUyOjM4IGtlcm5l
-bDogSGFyZHdhcmUgbmFtZTogTEVOT1ZPIDEwQThTMDhQMDAvU0hBUktCQVksIEJJT1MgRkJL
-VDU2QVVTIDExLzE4LzIwMTMNCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IFJJUDogMDAxMDpk
-ZW50cnlfbmFtZSsweDllLzB4MjEwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBDb2RlOiA2
-YiBmZiA1YSA4NSBjMCA3NCAwZCA4MCAzZCA3MyA2MCBlMiAwMCAwMCAwZiA4NCAwNCAwMSAw
-MCAwMCA0NSA4NSBmZiAwZiA4ZSA1ZCAwMSAwMCAwMCAzMSBmZiBlYiAwOSA0OCA4MyBjNyAw
-MSA0MSAzOSBmZiA3ZSAyZiA8NDg+IDhiIDQzIDUwIDQ4IDg5IGRhIDg5IGZlIDQ4IDg5IGMz
-IDQ4IDhiIDQyIDYwIDQ4IDg5IDA0IGZjIDQ4IDM5DQpNYXIgMjAgMTA6NTI6Mzgga2VybmVs
-OiBSU1A6IDAwMTg6ZmZmZmE3OGQ4MmYwNzkyMCBFRkxBR1M6IDAwMDEwMjQ2DQpNYXIgMjAg
-MTA6NTI6Mzgga2VybmVsOiBSQVg6IDAwMDAwMDAwMDAwMDAwMDEgUkJYOiBmZmZmZmZmZmZm
-ZmZmZmYzIFJDWDogMDAwMDAwMDBmMjBiNDJmZA0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDog
-UkRYOiBmZmZmZmZmZmE4YWMzYjcwIFJTSTogZmZmZjk4ZTU3MmMyOGQ2MCBSREk6IDAwMDAw
-MDAwMDAwMDAwMDANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IFJCUDogZmZmZmE3OGQ4MmYw
-N2E3NSBSMDg6IDAwMDAwMDMzZGNkMDQ0ZjAgUjA5OiAwMDAwMDAwMDAwMDAwMDAwDQpNYXIg
-MjAgMTA6NTI6Mzgga2VybmVsOiBSMTA6IDAwMDAwMDAwMDAwMDAwMDEgUjExOiAwMDAwMDAw
-MDAwMDAwMDAyIFIxMjogZmZmZjBhMDBmZmZmZmYwNQ0KTWFyIDIwIDEwOjUyOjM4IGtlcm5l
-bDogUjEzOiBmZmZmZmZmZmZmZmZmZmZmIFIxNDogZmZmZmE3OGQ4MmYwN2FkMCBSMTU6IDAw
-MDAwMDAwMDAwMDAwMDMNCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IEZTOiAgMDAwMDdmOGI0
-N2Y0Yzc0MCgwMDAwKSBHUzpmZmZmOThlNThlNjAwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAw
-MDAwMDAwMDANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IENTOiAgMDAxMCBEUzogMDAwMCBF
-UzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwMzMNCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6
-IENSMjogMDAwMDAwMDAwMDAwMDA0MyBDUjM6IDAwMDAwMDAzZGUyNmUwMDUgQ1I0OiAwMDAw
-MDAwMDAwMTYwNmYwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBDYWxsIFRyYWNlOg0KTWFy
-IDIwIDEwOjUyOjM4IGtlcm5lbDogID8gX19sb2NrX2FjcXVpcmUrMHgyNTIvMHgxMDYwDQpN
-YXIgMjAgMTA6NTI6Mzgga2VybmVsOiAgcG9pbnRlcisweDE0ZS8weDM3MA0KTWFyIDIwIDEw
-OjUyOjM4IGtlcm5lbDogIHZzbnByaW50ZisweDFmZi8weDUyMA0KTWFyIDIwIDEwOjUyOjM4
-IGtlcm5lbDogIHNucHJpbnRmKzB4NDkvMHg2MA0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDog
-ID8gX19kZWJ1Z2ZzX2NyZWF0ZV9maWxlKzB4M2EvMHgxMzANCk1hciAyMCAxMDo1MjozOCBr
-ZXJuZWw6ICBpd2xfbXZtX3ZpZl9kYmdmc19yZWdpc3RlcisweDIzMS8weDMxMCBbaXdsbXZt
-XQ0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDogID8gaXdsX212bV9maW5kX2ZyZWVfc3RhX2lk
-KzB4ODcvMHgxMDAgW2l3bG12bV0NCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6ICBpd2xfbXZt
-X21hY19hZGRfaW50ZXJmYWNlKzB4MjIxLzB4MmEwIFtpd2xtdm1dDQpNYXIgMjAgMTA6NTI6
-Mzgga2VybmVsOiAgZHJ2X2FkZF9pbnRlcmZhY2UrMHg3Ny8weDIzMCBbbWFjODAyMTFdDQpN
-YXIgMjAgMTA6NTI6Mzgga2VybmVsOiAgaWVlZTgwMjExX2RvX29wZW4rMHgxM2UvMHg5MTAg
-W21hYzgwMjExXQ0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDogID8gaWVlZTgwMjExX2NoZWNr
-X2NvbmN1cnJlbnRfaWZhY2UrMHgxNTEvMHgxYzAgW21hYzgwMjExXQ0KTWFyIDIwIDEwOjUy
-OjM4IGtlcm5lbDogIF9fZGV2X29wZW4rMHhkNC8weDE3MA0KTWFyIDIwIDEwOjUyOjM4IGtl
-cm5lbDogIF9fZGV2X2NoYW5nZV9mbGFncysweDFhNy8weDIwMA0KTWFyIDIwIDEwOjUyOjM4
-IGtlcm5lbDogIGRldl9jaGFuZ2VfZmxhZ3MrMHgyMS8weDYwDQpNYXIgMjAgMTA6NTI6Mzgg
-a2VybmVsOiAgZGV2aW5ldF9pb2N0bCsweDY0NC8weDdjMA0KTWFyIDIwIDEwOjUyOjM4IGtl
-cm5lbDogIGluZXRfaW9jdGwrMHgxNWEvMHgyMjANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6
-ICA/IGF2Y19oYXNfZXh0ZW5kZWRfcGVybXMrMHgyNTIvMHg1YzANCk1hciAyMCAxMDo1Mjoz
-OCBrZXJuZWw6ICBzb2NrX2RvX2lvY3RsKzB4NDcvMHgxNDANCk1hciAyMCAxMDo1MjozOCBr
-ZXJuZWw6ICBzb2NrX2lvY3RsKzB4MWM1LzB4MzYwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVs
-OiAgZG9fdmZzX2lvY3RsKzB4NDA4LzB4NzUwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiAg
-a3N5c19pb2N0bCsweDVlLzB4OTANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6ICBfX3g2NF9z
-eXNfaW9jdGwrMHgxNi8weDIwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiAgZG9fc3lzY2Fs
-bF82NCsweDVjLzB4YTANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6ICBlbnRyeV9TWVNDQUxM
-XzY0X2FmdGVyX2h3ZnJhbWUrMHg0OS8weGJlDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBS
-SVA6IDAwMzM6MHg3ZjhiNDgwODcwOWINCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IENvZGU6
-IDBmIDFlIGZhIDQ4IDhiIDA1IGVkIGJkIDBjIDAwIDY0IGM3IDAwIDI2IDAwIDAwIDAwIDQ4
-IGM3IGMwIGZmIGZmIGZmIGZmIGMzIDY2IDBmIDFmIDQ0IDAwIDAwIGYzIDBmIDFlIGZhIGI4
-IDEwIDAwIDAwIDAwIDBmIDA1IDw0OD4gM2QgMDEgZjAgZmYgZmYgNzMgMDEgYzMgNDggOGIg
-MGQgYmQgYmQgMGMgMDAgZjcgZDggNjQgODkgMDEgNDgNCk1hciAyMCAxMDo1MjozOCBrZXJu
-ZWw6IFJTUDogMDAyYjowMDAwN2ZmZDQ0MDkwYmI4IEVGTEFHUzogMDAwMDAyNDYgT1JJR19S
-QVg6IDAwMDAwMDAwMDAwMDAwMTANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IFJBWDogZmZm
-ZmZmZmZmZmZmZmZkYSBSQlg6IDAwMDAwMDAwMDAwMDAwMDAgUkNYOiAwMDAwN2Y4YjQ4MDg3
-MDliDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBSRFg6IDAwMDA3ZmZkNDQwOTBiYzAgUlNJ
-OiAwMDAwMDAwMDAwMDA4OTE0IFJESTogMDAwMDAwMDAwMDAwMDAwOA0KTWFyIDIwIDEwOjUy
-OjM4IGtlcm5lbDogUkJQOiAwMDAwMDAwMDAwMDAwMDA4IFIwODogMDAwMDdmZmQ0NDA5MGJj
-ZiBSMDk6IDAwMDAwMDAwMDAwMDAwMDcNCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IFIxMDog
-MDAwMDAwMDAwMTQ5MjBiMCBSMTE6IDAwMDAwMDAwMDAwMDAyNDYgUjEyOiAwMDAwN2ZmZDQ0
-MDkwYmMwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBSMTM6IDAwMDAwMDAwMDE0OTBkOTAg
-UjE0OiAwMDAwMDAwMDAwMDAwMDAxIFIxNTogMDAwMDAwMDAwMDAwMDAwMA0KTWFyIDIwIDEw
-OjUyOjM4IGtlcm5lbDogTW9kdWxlcyBsaW5rZWQgaW46IGVidGFibGVfZmlsdGVyIGVidGFi
-bGVzIGlwNnRhYmxlX2ZpbHRlciBpcDZfdGFibGVzIGJyaWRnZSBzdHAgbGxjIG5mX25hdF9m
-dHAgbmZfY29ubnRyYWNrX2Z0cCBuZl9uYXRfdGZ0cCBuZl9jb25udHJhY2tfdGZ0cCB4dF9w
-a3R0eXBlIHh0X3N0YXRlIHh0X2Nvbm50cmFjayB4dF9uYXQgaXB0YWJsZV9uYXQgbmZfbmF0
-IG5mX2Nvbm50cmFjayBuZl9kZWZyYWdfaXB2NiBuZl9kZWZyYWdfaXB2NCBsaWJjcmMzMmMg
-bmZfbG9nX2lwdjQgbmZfbG9nX2NvbW1vbiB4dF9kc2NwIHh0X211bHRpcG9ydCB4dF9MT0cg
-eHRfc2V0IHh0X2xlbmd0aCB4dF9tYXJrIGlwdGFibGVfbWFuZ2xlIGlwX3NldF9oYXNoX25l
-dCBpcF9zZXRfYml0bWFwX3BvcnQgaXBfc2V0X2hhc2hfaXAgaXBfc2V0X2hhc2hfbmV0cG9y
-dCBpcF9zZXQgbmZuZXRsaW5rIHN1bnJwYyB2ZmF0IGZhdCBtZWlfd2R0IG1laV9oZGNwIGlu
-dGVsX3JhcGwgeDg2X3BrZ190ZW1wX3RoZXJtYWwgaW50ZWxfcG93ZXJjbGFtcCBjb3JldGVt
-cCBhcmM0IGt2bV9pbnRlbCBrdm0gaXJxYnlwYXNzIGl3bG12bSBtYWM4MDIxMSBjcmN0MTBk
-aWZfcGNsbXVsIGNyYzMyX3BjbG11bCBnaGFzaF9jbG11bG5pX2ludGVsIGludGVsX2NzdGF0
-ZSBpbnRlbF91bmNvcmUgaW50ZWxfcmFwbF9wZXJmIGlUQ09fd2R0IHNuZF9oZGFfY29kZWNf
-cmVhbHRlayBpVENPX3ZlbmRvcl9zdXBwb3J0IHNuZF9oZGFfY29kZWNfZ2VuZXJpYyBzbmRf
-aGRhX2NvZGVjX2hkbWkgbGVkdHJpZ19hdWRpbyBpd2x3aWZpIHNuZF9oZGFfaW50ZWwgam95
-ZGV2IHNuZF9oZGFfY29kZWMgd21pX2Jtb2Ygc25kX2hkYV9jb3JlIHNuZF9od2RlcCBzbmRf
-c2VxIGNmZzgwMjExIGkyY19pODAxIHNuZF9zZXFfZGV2aWNlIHNuZF9wY20gcmZraWxsIHNu
-ZF90aW1lciBzbmQgc291bmRjb3JlIG1laV9tZSBwY2NfY3B1ZnJlcSBscGNfaWNoIG1laSBy
-YWlkMSBpOTE1IGNyYzMyY19pbnRlbCBpMmNfYWxnb19iaXQNCk1hciAyMCAxMDo1MjozOCBr
-ZXJuZWw6ICBkcm1fa21zX2hlbHBlciBkcm0gdW1zX3JlYWx0ZWsgdWFzIHI4MTY5IHVzYl9z
-dG9yYWdlIGUxMDAwZSB3bWkgdmlkZW8NCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IENSMjog
-MDAwMDAwMDAwMDAwMDA0Mw0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDogLS0tWyBlbmQgdHJh
-Y2UgYzE1YmU0ZDViZGJiMTAwNCBdLS0tDQoNClRoaXMgcGFydGljdWxhciB0cmFjZSBpcyBm
-cm9tIGYyNjFjNGU1MjlkYWM1NjA4YTYwNGQzZGQzYWUxY2QyYWRmMjNjODkgc25hcHNob3Qg
-YnV0IGl0DQp3YXMgcmVwb3J0ZWQgb24gYSA1LjAueCBzdGFibGUgc2VyaWVzIGFzIHdlbGwu
-IFRoaXMgbG9va3MgbGlrZSB0aGUgc25wcmludGYNCmZyb20gaXdsX212bV92aWZfZGJnZnNf
-cmVnaXN0ZXIgYnV0IEkgY2FuIGdpdmUgZnVsbCBsaW5lIGluZm9ybWF0aW9uIGlmIGl0J3Mg
-dXNlZnVsLg0KDQpUaGFua3MsDQpMYXVyYQ0K
+Do not kick the queue if tx_queue_skb fails in mt76_tx
+
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/tx.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 60bbb6561d8f..833c414cea83 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -258,8 +258,8 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	int err, qid = skb_get_queue_mapping(skb);
+ 	struct mt76_queue *q;
+-	int qid = skb_get_queue_mapping(skb);
+ 
+ 	if (WARN_ON(qid >= MT_TXQ_PSD)) {
+ 		qid = MT_TXQ_BE;
+@@ -286,7 +286,10 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
+ 	q = dev->q_tx[qid].q;
+ 
+ 	spin_lock_bh(&q->lock);
+-	dev->queue_ops->tx_queue_skb(dev, qid, skb, wcid, sta);
++	err = dev->queue_ops->tx_queue_skb(dev, qid, skb, wcid, sta);
++	if (err < 0)
++		goto out;
++
+ 	dev->queue_ops->kick(dev, q);
+ 
+ 	if (q->queued > q->ndesc - 8 && !q->stopped) {
+@@ -294,6 +297,7 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
+ 		q->stopped = true;
+ 	}
+ 
++out:
+ 	spin_unlock_bh(&q->lock);
+ }
+ EXPORT_SYMBOL_GPL(mt76_tx);
+-- 
+2.20.1
+
