@@ -1,178 +1,116 @@
-Return-Path: <SRS0=2I9a=RX=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=G8on=RY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 229E7C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:43:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8BEC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 07:35:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8EF820857
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Mar 2019 19:43:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F081218A5
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 07:35:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WO5YY8os";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WO5YY8os"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726611AbfCTTn4 (ORCPT
+        id S1727844AbfCUHfI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Mar 2019 15:43:56 -0400
-Received: from gateway33.websitewelcome.com ([192.185.146.97]:20381 "EHLO
-        gateway33.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726067AbfCTTn4 (ORCPT
+        Thu, 21 Mar 2019 03:35:08 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:56686 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726509AbfCUHfI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Mar 2019 15:43:56 -0400
-X-Greylist: delayed 1364 seconds by postgrey-1.27 at vger.kernel.org; Wed, 20 Mar 2019 15:43:55 EDT
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway33.websitewelcome.com (Postfix) with ESMTP id 58B34AB860
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2019 14:21:10 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id 6glyhTksKdnCe6glyhLnBl; Wed, 20 Mar 2019 14:21:10 -0500
-X-Authority-Reason: nr=8
-Received: from [189.250.104.39] (port=59214 helo=[192.168.1.76])
-        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.91)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1h6glx-003I6U-V3; Wed, 20 Mar 2019 14:21:10 -0500
-Subject: Re: [PATCH] NFC: pn533: mark expected switch fall-throughs
-To:     Samuel Ortiz <sameo@linux.intel.com>,
-        Kees Cook <keescook@chromium.org>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20190213185741.GA5047@embeddedor>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=gustavo@embeddedor.com; keydata=
- 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
- VtSixD1uOgytAP7RWS474w==
-Message-ID: <4c9a29a0-18e5-f7e2-1f60-8a87f4625d63@embeddedor.com>
-Date:   Wed, 20 Mar 2019 14:21:09 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        Thu, 21 Mar 2019 03:35:08 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id E726D608FC; Thu, 21 Mar 2019 07:35:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553153706;
+        bh=3/39Wdkya0HOUTp7jMvtK3ntf+s/eGwHKvzmwCtmjdc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=WO5YY8osnUTIxpJXB9EGbl1FQfrPGbBjj4agQLi0rHiEIDhKY0DdPoNm2j4o2HtO4
+         blWe2ak/JXkqX2VDjnEz7alCSz4U2rOWrXDwkufzDvBj0rWeTbZrJF/SAn7p1n75gj
+         LNpowKuoM+aF+JvQYcu6t4TqeTnRRtt3KOvHMbfw=
+Received: from x230.qca.qualcomm.com (unknown [195.39.71.253])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 824F86086B;
+        Thu, 21 Mar 2019 07:35:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553153706;
+        bh=3/39Wdkya0HOUTp7jMvtK3ntf+s/eGwHKvzmwCtmjdc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=WO5YY8osnUTIxpJXB9EGbl1FQfrPGbBjj4agQLi0rHiEIDhKY0DdPoNm2j4o2HtO4
+         blWe2ak/JXkqX2VDjnEz7alCSz4U2rOWrXDwkufzDvBj0rWeTbZrJF/SAn7p1n75gj
+         LNpowKuoM+aF+JvQYcu6t4TqeTnRRtt3KOvHMbfw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 824F86086B
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc:     "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: Re: [PATCH 12/14] qtnfmac: fix debugfs entries for multiple cards on the same host
+References: <20190320100340.14168-1-sergey.matyukevich.os@quantenna.com>
+        <20190320100340.14168-13-sergey.matyukevich.os@quantenna.com>
+        <874l7xzlmo.fsf@purkki.adurom.net>
+        <20190320151641.3477cx3kuc3ipqam@bars>
+Date:   Thu, 21 Mar 2019 09:35:02 +0200
+In-Reply-To: <20190320151641.3477cx3kuc3ipqam@bars> (Sergey Matyukevich's
+        message of "Wed, 20 Mar 2019 15:16:47 +0000")
+Message-ID: <8736ngsms9.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20190213185741.GA5047@embeddedor>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 189.250.104.39
-X-Source-L: No
-X-Exim-ID: 1h6glx-003I6U-V3
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.1.76]) [189.250.104.39]:59214
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 7
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi all,
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-If no one cares, I'll add this to my tree for 5.2
+>> > Fix creation of debugfs entries for qtnfmac wireless card: use separate
+>> > directories for different wireless cards. This commit enables support
+>> > for multiple qtnfmac wireless cards on the same PCIe host.
+>> >
+>> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+>> > ---
+>> >  drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c | 6 +++++-
+>> >  1 file changed, 5 insertions(+), 1 deletion(-)
+>> >
+>> > diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+>> > index b561b75e4433..56fc6d49c121 100644
+>> > --- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+>> > +++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+>> > @@ -130,6 +130,8 @@ static int qtnf_dbg_shm_stats(struct seq_file *s, void *data)
+>> >
+>> >  int qtnf_pcie_fw_boot_done(struct qtnf_bus *bus)
+>> >  {
+>> > +     struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
+>> > +     char card_id[64];
+>> >       int ret;
+>> >
+>> >       bus->fw_state = QTNF_FW_STATE_BOOT_DONE;
+>> > @@ -137,7 +139,9 @@ int qtnf_pcie_fw_boot_done(struct qtnf_bus *bus)
+>> >       if (ret) {
+>> >               pr_err("failed to attach core\n");
+>> >       } else {
+>> > -             qtnf_debugfs_init(bus, DRV_NAME);
+>> > +             snprintf(card_id, sizeof(card_id), "%s:%s",
+>> > +                      DRV_NAME, pci_name(priv->pdev));
+>> 
+>> Can you give an example for the path?
+>> 
+>
+> For instance:  /sys/kernel/debug/qtnfmac_pcie:0000:01:00.0
 
-Thanks
---
-Gustavo
+TBH not really fond of that. What about
+"/sys/kernel/debug/qtnfmac/pcie:0000:01:00.0"? IIRC iwlwifi used
+something like that.
 
-On 2/13/19 12:57 PM, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wimplicit-fallthrough, mark switch
-> cases where we are expecting to fall through.
-> 
-> This patch fixes the following warnings:
-> 
-> drivers/nfc/pn533/pn533.c: In function ‘pn533_transceive’:
-> drivers/nfc/pn533/pn533.c:2142:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
->    if (dev->tgt_active_prot == NFC_PROTO_FELICA) {
->       ^
-> drivers/nfc/pn533/pn533.c:2150:2: note: here
->   default:
->   ^~~~~~~
-> drivers/nfc/pn533/pn533.c: In function ‘pn533_wq_mi_recv’:
-> drivers/nfc/pn533/pn533.c:2267:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
->    if (dev->tgt_active_prot == NFC_PROTO_FELICA) {
->       ^
-> drivers/nfc/pn533/pn533.c:2276:2: note: here
->   default:
->   ^~~~~~~
-> 
-> Warning level 3 was used: -Wimplicit-fallthrough=3
-> 
-> This patch is part of the ongoing efforts to enable
-> -Wimplicit-fallthrough.
-> 
-> Addresses-Coverity-ID: 1230487 ("Missing break in switch")
-> Addresses-Coverity-ID: 1230488 ("Missing break in switch")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
->  drivers/nfc/pn533/pn533.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
-> index a0cc1cc45292..5961f14259e5 100644
-> --- a/drivers/nfc/pn533/pn533.c
-> +++ b/drivers/nfc/pn533/pn533.c
-> @@ -2147,6 +2147,7 @@ static int pn533_transceive(struct nfc_dev *nfc_dev,
->  
->  			break;
->  		}
-> +		/* fall through */
->  	default:
->  		/* jumbo frame ? */
->  		if (skb->len > PN533_CMD_DATAEXCH_DATA_MAXLEN) {
-> @@ -2273,6 +2274,7 @@ static void pn533_wq_mi_recv(struct work_struct *work)
->  
->  			break;
->  		}
-> +		/* fall through */
->  	default:
->  		skb_put_u8(skb, 1); /*TG*/
->  
-> 
+And please add an example path to the commit log.
+
+-- 
+Kalle Valo
