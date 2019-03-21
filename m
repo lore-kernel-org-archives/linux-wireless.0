@@ -1,124 +1,165 @@
 Return-Path: <SRS0=G8on=RY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Level: *
+X-Spam-Status: No, score=1.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,UNWANTED_LANGUAGE_BODY autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F95DC43381
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 17:06:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A697CC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 18:19:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C72521902
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 17:06:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="THlvYh0k";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oKCRe3x9"
+	by mail.kernel.org (Postfix) with ESMTP id 7D76F21874
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Mar 2019 18:19:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728445AbfCURGu (ORCPT
+        id S1728663AbfCUSTe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Mar 2019 13:06:50 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:58686 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726787AbfCURGu (ORCPT
+        Thu, 21 Mar 2019 14:19:34 -0400
+Received: from mail-qk1-f173.google.com ([209.85.222.173]:36102 "EHLO
+        mail-qk1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728507AbfCUSTe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Mar 2019 13:06:50 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id E2F5A61B5D; Thu, 21 Mar 2019 17:06:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553188008;
-        bh=8df6kmaM/lxIeunygn87DAa8obJWVXEk5w1R/5N95eU=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=THlvYh0k2CYdHSg7vOlH4uRMFhOHxty/5uHpKSnpC/H2sJPQSp0pqIQyInNj5cxRQ
-         xHmNX7o1b38s4fZYhYZ8OttBRFeHGXZZjERvZTLhAuyxX+p/R4J/X4faOg3eD4yDJS
-         ButMC11MnEQfw3a6nsXDJ+Ex8K+MTN78um6rVN8c=
-Received: from x230.qca.qualcomm.com (unknown [195.39.71.253])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 76CAE61573;
-        Thu, 21 Mar 2019 17:06:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553188007;
-        bh=8df6kmaM/lxIeunygn87DAa8obJWVXEk5w1R/5N95eU=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=oKCRe3x9Ch7MZSNcMqd9sxyVEVxETTIdLJoga2ONscHRwUIc17qJueTPYq4xRiE1y
-         9lvZACbUilNCdanEgbRfIujTDChUudoedRPFLCZlyQTYy2d/vYxrO06dFGVlcTfCXa
-         g5VV3BcJnoJoCHVJhFg1mZllKgw7ih0gMe2oRyZo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 76CAE61573
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: Re: [PATCH 12/14] qtnfmac: fix debugfs entries for multiple cards on the same host
-References: <20190320100340.14168-1-sergey.matyukevich.os@quantenna.com>
-        <20190320100340.14168-13-sergey.matyukevich.os@quantenna.com>
-        <874l7xzlmo.fsf@purkki.adurom.net>
-        <20190320151641.3477cx3kuc3ipqam@bars> <8736ngsms9.fsf@codeaurora.org>
-        <5d1012ab-9c4e-3c14-05b6-f76e6fde2951@broadcom.com>
-Date:   Thu, 21 Mar 2019 19:06:43 +0200
-In-Reply-To: <5d1012ab-9c4e-3c14-05b6-f76e6fde2951@broadcom.com> (Arend Van
-        Spriel's message of "Thu, 21 Mar 2019 11:14:59 +0100")
-Message-ID: <87lg18nom4.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Thu, 21 Mar 2019 14:19:34 -0400
+Received: by mail-qk1-f173.google.com with SMTP id k130so16918007qke.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2019 11:19:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=6mYFXnXLv75CVhJ6VdILBQhpe6gHe658UTUMm7yplYU=;
+        b=LodzK3y592Y1wtbyFVE2yw0xhMOMDggwmAfqPaXQ/YUO0/daaln3PFq9UdUqJy8+28
+         FW0mob1E2YH6ImKnkd4lGdjrQLBaTOWcyNgLfaJ5OR7+sjG/l2SpLiEWlTqDdcCqWZKE
+         uVR+uCZNtjoyTZ2J3NFDBo+jaL0tcfVf69x5oNXbh3c5+W2slryRsJIP11vgPi6f+2kO
+         pMUFnbVbYLEc34Klo9FJa3piYNAx2tqdUW63yWTw758DH5xjlE09lzAqmj3RIBHNZ6Im
+         khPLxHDUGRi2Lskypl+1K/fvwOSl90/+gdGyZm7qln83POZBbO63sZbPfRJiWiARH4L+
+         0xpA==
+X-Gm-Message-State: APjAAAXJ8nF3GqTTMiq7u5MyviOzqTNp/7o5Uf+0/7iqCgxoEIXO+4en
+        SPQEV+zA+sAAArQO6UpSza0KwQ==
+X-Google-Smtp-Source: APXvYqzVki9u0JceZcQl6Kf4a0CIXJeZbMmMCXGqXbWLC1sUAuc8JhQqROPAQ8fuc5FaDIHJSfbV/Q==
+X-Received: by 2002:ae9:f308:: with SMTP id p8mr3869221qkg.33.1553192372503;
+        Thu, 21 Mar 2019 11:19:32 -0700 (PDT)
+Received: from ?IPv6:2601:602:9800:dae6::c6a6? ([2601:602:9800:dae6::c6a6])
+        by smtp.gmail.com with ESMTPSA id 37sm3615987qtz.95.2019.03.21.11.19.30
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 21 Mar 2019 11:19:31 -0700 (PDT)
+To:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Cc:     Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From:   Laura Abbott <labbott@redhat.com>
+Subject: panic from iwl_mvm_vif_dbgfs_register with 5.0
+Message-ID: <1e322b48-b344-7dfa-2e51-88c34c33fe53@redhat.com>
+Date:   Thu, 21 Mar 2019 11:19:30 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: base64
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
-
-> On 3/21/2019 8:35 AM, Kalle Valo wrote:
->> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
->>
->>>>> Fix creation of debugfs entries for qtnfmac wireless card: use separate
->>>>> directories for different wireless cards. This commit enables support
->>>>> for multiple qtnfmac wireless cards on the same PCIe host.
->>>>>
->>>>> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
->>>>> ---
->>>>>   drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c | 6 +++++-
->>>>>   1 file changed, 5 insertions(+), 1 deletion(-)
->>>>>
->>>>> diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
->>>>> index b561b75e4433..56fc6d49c121 100644
->>>>> --- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
->>>>> +++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
->>>>> @@ -130,6 +130,8 @@ static int qtnf_dbg_shm_stats(struct seq_file *s, void *data)
->>>>>
->>>>>   int qtnf_pcie_fw_boot_done(struct qtnf_bus *bus)
->>>>>   {
->>>>> +     struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
->>>>> +     char card_id[64];
->>>>>        int ret;
->>>>>
->>>>>        bus->fw_state = QTNF_FW_STATE_BOOT_DONE;
->>>>> @@ -137,7 +139,9 @@ int qtnf_pcie_fw_boot_done(struct qtnf_bus *bus)
->>>>>        if (ret) {
->>>>>                pr_err("failed to attach core\n");
->>>>>        } else {
->>>>> -             qtnf_debugfs_init(bus, DRV_NAME);
->>>>> +             snprintf(card_id, sizeof(card_id), "%s:%s",
->>>>> +                      DRV_NAME, pci_name(priv->pdev));
->>>>
->>>> Can you give an example for the path?
->>>>
->>>
->>> For instance:  /sys/kernel/debug/qtnfmac_pcie:0000:01:00.0
->>
->> TBH not really fond of that. What about
->> "/sys/kernel/debug/qtnfmac/pcie:0000:01:00.0"? IIRC iwlwifi used
->> something like that.
->
-> In brcmfmac we used to have it like that, but I changed it to use
-> wiphy debugfs, ie. /sys/kernel/debug/ieee80211/phyX/.
-
-Yeah, that's much better.
-
--- 
-Kalle Valo
+SGksDQoNCkZlZG9yYSBnb3QgYSBidWcgcmVwb3J0IG9mIGEgcGFuaWMgd2l0aCBrZXJuZWxz
+ID4gNS4wOg0KDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBCVUc6IHVuYWJsZSB0byBoYW5k
+bGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAwMDAwMDAwMDAwMDAwMDQz
+DQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiAjUEYgZXJyb3I6IFtub3JtYWwga2VybmVsIHJl
+YWQgZmF1bHRdDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBQR0QgODAwMDAwMDNkZTFkNzA2
+NyBQNEQgODAwMDAwMDNkZTFkNzA2NyBQVUQgM2RlMWRiMDY3IFBNRCAwDQpNYXIgMjAgMTA6
+NTI6Mzgga2VybmVsOiBPb3BzOiAwMDAwIFsjMV0gU01QIFBUSQ0KTWFyIDIwIDEwOjUyOjM4
+IGtlcm5lbDogQ1BVOiAwIFBJRDogMjA3MSBDb21tOiBob3N0YXBkIE5vdCB0YWludGVkIDUu
+MS4wLTAucmMwLmdpdDkuMS5mYzMxLng4Nl82NCAjMQ0KTWFyIDIwIDEwOjUyOjM4IGtlcm5l
+bDogSGFyZHdhcmUgbmFtZTogTEVOT1ZPIDEwQThTMDhQMDAvU0hBUktCQVksIEJJT1MgRkJL
+VDU2QVVTIDExLzE4LzIwMTMNCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IFJJUDogMDAxMDpk
+ZW50cnlfbmFtZSsweDllLzB4MjEwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBDb2RlOiA2
+YiBmZiA1YSA4NSBjMCA3NCAwZCA4MCAzZCA3MyA2MCBlMiAwMCAwMCAwZiA4NCAwNCAwMSAw
+MCAwMCA0NSA4NSBmZiAwZiA4ZSA1ZCAwMSAwMCAwMCAzMSBmZiBlYiAwOSA0OCA4MyBjNyAw
+MSA0MSAzOSBmZiA3ZSAyZiA8NDg+IDhiIDQzIDUwIDQ4IDg5IGRhIDg5IGZlIDQ4IDg5IGMz
+IDQ4IDhiIDQyIDYwIDQ4IDg5IDA0IGZjIDQ4IDM5DQpNYXIgMjAgMTA6NTI6Mzgga2VybmVs
+OiBSU1A6IDAwMTg6ZmZmZmE3OGQ4MmYwNzkyMCBFRkxBR1M6IDAwMDEwMjQ2DQpNYXIgMjAg
+MTA6NTI6Mzgga2VybmVsOiBSQVg6IDAwMDAwMDAwMDAwMDAwMDEgUkJYOiBmZmZmZmZmZmZm
+ZmZmZmYzIFJDWDogMDAwMDAwMDBmMjBiNDJmZA0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDog
+UkRYOiBmZmZmZmZmZmE4YWMzYjcwIFJTSTogZmZmZjk4ZTU3MmMyOGQ2MCBSREk6IDAwMDAw
+MDAwMDAwMDAwMDANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IFJCUDogZmZmZmE3OGQ4MmYw
+N2E3NSBSMDg6IDAwMDAwMDMzZGNkMDQ0ZjAgUjA5OiAwMDAwMDAwMDAwMDAwMDAwDQpNYXIg
+MjAgMTA6NTI6Mzgga2VybmVsOiBSMTA6IDAwMDAwMDAwMDAwMDAwMDEgUjExOiAwMDAwMDAw
+MDAwMDAwMDAyIFIxMjogZmZmZjBhMDBmZmZmZmYwNQ0KTWFyIDIwIDEwOjUyOjM4IGtlcm5l
+bDogUjEzOiBmZmZmZmZmZmZmZmZmZmZmIFIxNDogZmZmZmE3OGQ4MmYwN2FkMCBSMTU6IDAw
+MDAwMDAwMDAwMDAwMDMNCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IEZTOiAgMDAwMDdmOGI0
+N2Y0Yzc0MCgwMDAwKSBHUzpmZmZmOThlNThlNjAwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAw
+MDAwMDAwMDANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IENTOiAgMDAxMCBEUzogMDAwMCBF
+UzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwMzMNCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6
+IENSMjogMDAwMDAwMDAwMDAwMDA0MyBDUjM6IDAwMDAwMDAzZGUyNmUwMDUgQ1I0OiAwMDAw
+MDAwMDAwMTYwNmYwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBDYWxsIFRyYWNlOg0KTWFy
+IDIwIDEwOjUyOjM4IGtlcm5lbDogID8gX19sb2NrX2FjcXVpcmUrMHgyNTIvMHgxMDYwDQpN
+YXIgMjAgMTA6NTI6Mzgga2VybmVsOiAgcG9pbnRlcisweDE0ZS8weDM3MA0KTWFyIDIwIDEw
+OjUyOjM4IGtlcm5lbDogIHZzbnByaW50ZisweDFmZi8weDUyMA0KTWFyIDIwIDEwOjUyOjM4
+IGtlcm5lbDogIHNucHJpbnRmKzB4NDkvMHg2MA0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDog
+ID8gX19kZWJ1Z2ZzX2NyZWF0ZV9maWxlKzB4M2EvMHgxMzANCk1hciAyMCAxMDo1MjozOCBr
+ZXJuZWw6ICBpd2xfbXZtX3ZpZl9kYmdmc19yZWdpc3RlcisweDIzMS8weDMxMCBbaXdsbXZt
+XQ0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDogID8gaXdsX212bV9maW5kX2ZyZWVfc3RhX2lk
+KzB4ODcvMHgxMDAgW2l3bG12bV0NCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6ICBpd2xfbXZt
+X21hY19hZGRfaW50ZXJmYWNlKzB4MjIxLzB4MmEwIFtpd2xtdm1dDQpNYXIgMjAgMTA6NTI6
+Mzgga2VybmVsOiAgZHJ2X2FkZF9pbnRlcmZhY2UrMHg3Ny8weDIzMCBbbWFjODAyMTFdDQpN
+YXIgMjAgMTA6NTI6Mzgga2VybmVsOiAgaWVlZTgwMjExX2RvX29wZW4rMHgxM2UvMHg5MTAg
+W21hYzgwMjExXQ0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDogID8gaWVlZTgwMjExX2NoZWNr
+X2NvbmN1cnJlbnRfaWZhY2UrMHgxNTEvMHgxYzAgW21hYzgwMjExXQ0KTWFyIDIwIDEwOjUy
+OjM4IGtlcm5lbDogIF9fZGV2X29wZW4rMHhkNC8weDE3MA0KTWFyIDIwIDEwOjUyOjM4IGtl
+cm5lbDogIF9fZGV2X2NoYW5nZV9mbGFncysweDFhNy8weDIwMA0KTWFyIDIwIDEwOjUyOjM4
+IGtlcm5lbDogIGRldl9jaGFuZ2VfZmxhZ3MrMHgyMS8weDYwDQpNYXIgMjAgMTA6NTI6Mzgg
+a2VybmVsOiAgZGV2aW5ldF9pb2N0bCsweDY0NC8weDdjMA0KTWFyIDIwIDEwOjUyOjM4IGtl
+cm5lbDogIGluZXRfaW9jdGwrMHgxNWEvMHgyMjANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6
+ICA/IGF2Y19oYXNfZXh0ZW5kZWRfcGVybXMrMHgyNTIvMHg1YzANCk1hciAyMCAxMDo1Mjoz
+OCBrZXJuZWw6ICBzb2NrX2RvX2lvY3RsKzB4NDcvMHgxNDANCk1hciAyMCAxMDo1MjozOCBr
+ZXJuZWw6ICBzb2NrX2lvY3RsKzB4MWM1LzB4MzYwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVs
+OiAgZG9fdmZzX2lvY3RsKzB4NDA4LzB4NzUwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiAg
+a3N5c19pb2N0bCsweDVlLzB4OTANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6ICBfX3g2NF9z
+eXNfaW9jdGwrMHgxNi8weDIwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiAgZG9fc3lzY2Fs
+bF82NCsweDVjLzB4YTANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6ICBlbnRyeV9TWVNDQUxM
+XzY0X2FmdGVyX2h3ZnJhbWUrMHg0OS8weGJlDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBS
+SVA6IDAwMzM6MHg3ZjhiNDgwODcwOWINCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IENvZGU6
+IDBmIDFlIGZhIDQ4IDhiIDA1IGVkIGJkIDBjIDAwIDY0IGM3IDAwIDI2IDAwIDAwIDAwIDQ4
+IGM3IGMwIGZmIGZmIGZmIGZmIGMzIDY2IDBmIDFmIDQ0IDAwIDAwIGYzIDBmIDFlIGZhIGI4
+IDEwIDAwIDAwIDAwIDBmIDA1IDw0OD4gM2QgMDEgZjAgZmYgZmYgNzMgMDEgYzMgNDggOGIg
+MGQgYmQgYmQgMGMgMDAgZjcgZDggNjQgODkgMDEgNDgNCk1hciAyMCAxMDo1MjozOCBrZXJu
+ZWw6IFJTUDogMDAyYjowMDAwN2ZmZDQ0MDkwYmI4IEVGTEFHUzogMDAwMDAyNDYgT1JJR19S
+QVg6IDAwMDAwMDAwMDAwMDAwMTANCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IFJBWDogZmZm
+ZmZmZmZmZmZmZmZkYSBSQlg6IDAwMDAwMDAwMDAwMDAwMDAgUkNYOiAwMDAwN2Y4YjQ4MDg3
+MDliDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBSRFg6IDAwMDA3ZmZkNDQwOTBiYzAgUlNJ
+OiAwMDAwMDAwMDAwMDA4OTE0IFJESTogMDAwMDAwMDAwMDAwMDAwOA0KTWFyIDIwIDEwOjUy
+OjM4IGtlcm5lbDogUkJQOiAwMDAwMDAwMDAwMDAwMDA4IFIwODogMDAwMDdmZmQ0NDA5MGJj
+ZiBSMDk6IDAwMDAwMDAwMDAwMDAwMDcNCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IFIxMDog
+MDAwMDAwMDAwMTQ5MjBiMCBSMTE6IDAwMDAwMDAwMDAwMDAyNDYgUjEyOiAwMDAwN2ZmZDQ0
+MDkwYmMwDQpNYXIgMjAgMTA6NTI6Mzgga2VybmVsOiBSMTM6IDAwMDAwMDAwMDE0OTBkOTAg
+UjE0OiAwMDAwMDAwMDAwMDAwMDAxIFIxNTogMDAwMDAwMDAwMDAwMDAwMA0KTWFyIDIwIDEw
+OjUyOjM4IGtlcm5lbDogTW9kdWxlcyBsaW5rZWQgaW46IGVidGFibGVfZmlsdGVyIGVidGFi
+bGVzIGlwNnRhYmxlX2ZpbHRlciBpcDZfdGFibGVzIGJyaWRnZSBzdHAgbGxjIG5mX25hdF9m
+dHAgbmZfY29ubnRyYWNrX2Z0cCBuZl9uYXRfdGZ0cCBuZl9jb25udHJhY2tfdGZ0cCB4dF9w
+a3R0eXBlIHh0X3N0YXRlIHh0X2Nvbm50cmFjayB4dF9uYXQgaXB0YWJsZV9uYXQgbmZfbmF0
+IG5mX2Nvbm50cmFjayBuZl9kZWZyYWdfaXB2NiBuZl9kZWZyYWdfaXB2NCBsaWJjcmMzMmMg
+bmZfbG9nX2lwdjQgbmZfbG9nX2NvbW1vbiB4dF9kc2NwIHh0X211bHRpcG9ydCB4dF9MT0cg
+eHRfc2V0IHh0X2xlbmd0aCB4dF9tYXJrIGlwdGFibGVfbWFuZ2xlIGlwX3NldF9oYXNoX25l
+dCBpcF9zZXRfYml0bWFwX3BvcnQgaXBfc2V0X2hhc2hfaXAgaXBfc2V0X2hhc2hfbmV0cG9y
+dCBpcF9zZXQgbmZuZXRsaW5rIHN1bnJwYyB2ZmF0IGZhdCBtZWlfd2R0IG1laV9oZGNwIGlu
+dGVsX3JhcGwgeDg2X3BrZ190ZW1wX3RoZXJtYWwgaW50ZWxfcG93ZXJjbGFtcCBjb3JldGVt
+cCBhcmM0IGt2bV9pbnRlbCBrdm0gaXJxYnlwYXNzIGl3bG12bSBtYWM4MDIxMSBjcmN0MTBk
+aWZfcGNsbXVsIGNyYzMyX3BjbG11bCBnaGFzaF9jbG11bG5pX2ludGVsIGludGVsX2NzdGF0
+ZSBpbnRlbF91bmNvcmUgaW50ZWxfcmFwbF9wZXJmIGlUQ09fd2R0IHNuZF9oZGFfY29kZWNf
+cmVhbHRlayBpVENPX3ZlbmRvcl9zdXBwb3J0IHNuZF9oZGFfY29kZWNfZ2VuZXJpYyBzbmRf
+aGRhX2NvZGVjX2hkbWkgbGVkdHJpZ19hdWRpbyBpd2x3aWZpIHNuZF9oZGFfaW50ZWwgam95
+ZGV2IHNuZF9oZGFfY29kZWMgd21pX2Jtb2Ygc25kX2hkYV9jb3JlIHNuZF9od2RlcCBzbmRf
+c2VxIGNmZzgwMjExIGkyY19pODAxIHNuZF9zZXFfZGV2aWNlIHNuZF9wY20gcmZraWxsIHNu
+ZF90aW1lciBzbmQgc291bmRjb3JlIG1laV9tZSBwY2NfY3B1ZnJlcSBscGNfaWNoIG1laSBy
+YWlkMSBpOTE1IGNyYzMyY19pbnRlbCBpMmNfYWxnb19iaXQNCk1hciAyMCAxMDo1MjozOCBr
+ZXJuZWw6ICBkcm1fa21zX2hlbHBlciBkcm0gdW1zX3JlYWx0ZWsgdWFzIHI4MTY5IHVzYl9z
+dG9yYWdlIGUxMDAwZSB3bWkgdmlkZW8NCk1hciAyMCAxMDo1MjozOCBrZXJuZWw6IENSMjog
+MDAwMDAwMDAwMDAwMDA0Mw0KTWFyIDIwIDEwOjUyOjM4IGtlcm5lbDogLS0tWyBlbmQgdHJh
+Y2UgYzE1YmU0ZDViZGJiMTAwNCBdLS0tDQoNClRoaXMgcGFydGljdWxhciB0cmFjZSBpcyBm
+cm9tIGYyNjFjNGU1MjlkYWM1NjA4YTYwNGQzZGQzYWUxY2QyYWRmMjNjODkgc25hcHNob3Qg
+YnV0IGl0DQp3YXMgcmVwb3J0ZWQgb24gYSA1LjAueCBzdGFibGUgc2VyaWVzIGFzIHdlbGwu
+IFRoaXMgbG9va3MgbGlrZSB0aGUgc25wcmludGYNCmZyb20gaXdsX212bV92aWZfZGJnZnNf
+cmVnaXN0ZXIgYnV0IEkgY2FuIGdpdmUgZnVsbCBsaW5lIGluZm9ybWF0aW9uIGlmIGl0J3Mg
+dXNlZnVsLg0KDQpUaGFua3MsDQpMYXVyYQ0K
