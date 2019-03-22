@@ -2,41 +2,39 @@ Return-Path: <SRS0=qAgV=RZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC419C4360F
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 12:47:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C26C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 13:59:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85BFE2070D
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 12:47:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0F00218A5
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 13:59:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387883AbfCVMrz (ORCPT
+        id S1727822AbfCVN7O (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Mar 2019 08:47:55 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:46028 "EHLO
+        Fri, 22 Mar 2019 09:59:14 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:46052 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2387786AbfCVMrx (ORCPT
+        with ESMTP id S1727487AbfCVN7O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Mar 2019 08:47:53 -0400
+        Fri, 22 Mar 2019 09:59:14 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1h7JaR-0000ZZ-5E; Fri, 22 Mar 2019 14:47:51 +0200
+        id 1h7KhS-0000bK-DU; Fri, 22 Mar 2019 15:59:11 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 22 Mar 2019 14:47:44 +0200
-Message-Id: <20190322124744.17924-4-luca@coelho.fi>
+Date:   Fri, 22 Mar 2019 15:58:39 +0200
+Message-Id: <20190322135903.10631-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190322124744.17924-1-luca@coelho.fi>
-References: <20190322124744.17924-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 3/3] iwlwifi: add support for quz firmwares
+Subject: [PATCH 00/24]  iwlwifi: updates intended for v5.2 2019-03-22
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -44,108 +42,103 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-Add a new configuration with a new firmware name for quz devices.
-And, since these devices have the same PCI device and subsystem IDs,
-we need to add some code to switch from a normal qu firmware to the
-quz firmware.
+Hi,
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 18 ++++++++++++++++--
- .../net/wireless/intel/iwlwifi/iwl-config.h    |  1 +
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h   |  1 +
- .../net/wireless/intel/iwlwifi/pcie/trans.c    |  4 ++++
- 4 files changed, 22 insertions(+), 2 deletions(-)
+Here's the third set of patches intended for v5.2.  It's the usual
+development, new features, cleanups and bugfixes.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index d5c29298ae3e..eb6defb6d0cd 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -82,6 +82,7 @@
- #define IWL_22000_HR_A0_FW_PRE		"iwlwifi-QuQnj-a0-hr-a0-"
- #define IWL_22000_SU_Z0_FW_PRE		"iwlwifi-su-z0-"
- #define IWL_QU_B_JF_B_FW_PRE		"iwlwifi-Qu-b0-jf-b0-"
-+#define IWL_QUZ_A_HR_B_FW_PRE		"iwlwifi-QuZ-a0-hr-b0-"
- #define IWL_QNJ_B_JF_B_FW_PRE		"iwlwifi-QuQnj-b0-jf-b0-"
- #define IWL_CC_A_FW_PRE			"iwlwifi-cc-a0-"
- #define IWL_22000_SO_A_JF_B_FW_PRE	"iwlwifi-so-a0-jf-b0-"
-@@ -105,8 +106,8 @@
- 	IWL_22000_HR_A0_FW_PRE __stringify(api) ".ucode"
- #define IWL_22000_SU_Z0_MODULE_FIRMWARE(api) \
- 	IWL_22000_SU_Z0_FW_PRE __stringify(api) ".ucode"
--#define IWL_QU_B_JF_B_MODULE_FIRMWARE(api) \
--	IWL_QU_B_JF_B_FW_PRE __stringify(api) ".ucode"
-+#define IWL_QUZ_A_HR_B_MODULE_FIRMWARE(api) \
-+	IWL_QUZ_A_HR_B_FW_PRE __stringify(api) ".ucode"
- #define IWL_QU_B_JF_B_MODULE_FIRMWARE(api) \
- 	IWL_QU_B_JF_B_FW_PRE __stringify(api) ".ucode"
- #define IWL_QNJ_B_JF_B_MODULE_FIRMWARE(api)		\
-@@ -235,6 +236,18 @@ const struct iwl_cfg iwl_ax101_cfg_qu_hr = {
- 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
- };
- 
-+const struct iwl_cfg iwl_ax101_cfg_quz_hr = {
-+	.name = "Intel(R) Wi-Fi 6 AX101",
-+	.fw_name_pre = IWL_QUZ_A_HR_B_FW_PRE,
-+	IWL_DEVICE_22500,
-+	/*
-+	 * This device doesn't support receiving BlockAck with a large bitmap
-+	 * so we need to restrict the size of transmitted aggregation to the
-+	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
-+	 */
-+	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
-+};
-+
- const struct iwl_cfg iwl_ax200_cfg_cc = {
- 	.name = "Intel(R) Wi-Fi 6 AX200 160MHz",
- 	.fw_name_pre = IWL_CC_A_FW_PRE,
-@@ -444,6 +457,7 @@ MODULE_FIRMWARE(IWL_22000_HR_B_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_22000_HR_A0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_22000_SU_Z0_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_QU_B_JF_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL_QUZ_A_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_QNJ_B_JF_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_CC_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_22000_SO_A_JF_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index c91b537fa7ff..93070848280a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -549,6 +549,7 @@ extern const struct iwl_cfg iwl22000_2ac_cfg_hr;
- extern const struct iwl_cfg iwl22000_2ac_cfg_hr_cdb;
- extern const struct iwl_cfg iwl22000_2ac_cfg_jf;
- extern const struct iwl_cfg iwl_ax101_cfg_qu_hr;
-+extern const struct iwl_cfg iwl_ax101_cfg_quz_hr;
- extern const struct iwl_cfg iwl22000_2ax_cfg_hr;
- extern const struct iwl_cfg iwl_ax200_cfg_cc;
- extern const struct iwl_cfg killer1650s_2ax_cfg_qu_b0_hr_b0;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index aea6d03e545a..e539bc94eff7 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -327,6 +327,7 @@ enum {
- #define CSR_HW_REV_TYPE_NONE		(0x00001F0)
- #define CSR_HW_REV_TYPE_QNJ		(0x0000360)
- #define CSR_HW_REV_TYPE_QNJ_B0		(0x0000364)
-+#define CSR_HW_REV_TYPE_QUZ		(0x0000354)
- #define CSR_HW_REV_TYPE_HR_CDB		(0x0000340)
- #define CSR_HW_REV_TYPE_SO		(0x0000370)
- #define CSR_HW_REV_TYPE_TY		(0x0000420)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 1d6f3053f233..79c1dc05f948 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3543,6 +3543,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		}
- 	} else if (cfg == &iwl_ax101_cfg_qu_hr) {
- 		if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
-+		    CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR) &&
-+		    trans->hw_rev == CSR_HW_REV_TYPE_QNJ_B0) {
-+			trans->cfg = &iwl22000_2ax_cfg_qnj_hr_b0;
-+		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
- 		    CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR)) {
- 			trans->cfg = &iwl_ax101_cfg_qu_hr;
- 		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
+The changes are:
+
+* Work on the new debugging infra continues;
+* Fixes for the 22000 series;
+* Support for some new FW API changes;
+* Work on new hardware continues;
+* Some debugfs cleanups by Greg-KH;
+* General bugfixes;
+* Other cleanups;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Avraham Stern (1):
+  iwlwifi: mvm: use correct GP2 register address for 22000 family
+
+Greg Kroah-Hartman (2):
+  iwlwifi: mvm: no need to check return value of debugfs_create
+    functions
+  iwlwifi: pcie: no need to check return value of debugfs_create
+    functions
+
+Ihab Zhaika (1):
+  iwlwifi: remove misconfigured pci ids from 22260 series
+
+Johannes Berg (2):
+  iwlwifi: mvm: IBSS: use BE FIFO for multicast
+  iwlwifi: mvm: remove buggy and unnecessary hw_queue initialization
+
+Liad Kaufman (1):
+  iwlwifi: mvm: fix pointer reference when setting HE QAM thres
+
+Sara Sharon (1):
+  iwlwifi: mvm: support HE context cmd API change
+
+Shahar S Matityahu (14):
+  iwlwifi: dbg_ini: support HW error trigger
+  iwlwifi: dbg_ini: enforce always on domain checking
+  iwlwifi: dbg_ini: fix iwl_dump_ini_dev_mem_iter memory base address
+  iwlwifi: dbg_ini: add memory offset to the base address of a memory
+    region
+  iwlwifi: dbg_ini: add version to dump header
+  iwlwifi: dbg_ini: add region id to the region dump
+  iwlwifi: dbg_ini: add registers addresses in fifo dump
+  iwlwifi: dbg_ini: change memory range base address to u64
+  iwlwifi: dbg_ini: fix the dram monitor header size
+  iwlwifi: dbg_ini: add monitor header to smem monitor
+  iwlwifi: dbg_ini: remove redundant curly brackets from trigger
+    collection flow
+  iwlwifi: dbg_ini: remove redundant type argument from iwl_dump_ini_mem
+  iwlwifi: dbg_ini: apply rx fifo offset after reading the region
+    registers
+  iwlwifi: dbg: fill radio registers data regardless of fifos data
+    dumping
+
+Shaul Triebitz (2):
+  iwlwifi: trust calling function
+  iwlwifi: set 512 TX queue slots for AX210 devices
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |  13 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  10 +-
+ .../net/wireless/intel/iwlwifi/fw/api/mac.h   |  77 +++++-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 237 ++++++++++++------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  10 +
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  33 ++-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |   3 +
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |   8 +
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |   7 +-
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |   2 +
+ .../wireless/intel/iwlwifi/mvm/debugfs-vif.c  |  17 +-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |  89 +++----
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  40 +--
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  26 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  19 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tdls.c |   7 +-
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    |  12 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  11 +-
+ .../wireless/intel/iwlwifi/pcie/internal.h    |   7 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |   1 +
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  12 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |   6 +-
+ 25 files changed, 403 insertions(+), 263 deletions(-)
+
 -- 
 2.20.1
 
