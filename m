@@ -6,116 +6,92 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69206C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 13:59:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 840B0C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 14:00:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41300218A5
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 13:59:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C00E218A5
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 14:00:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727693AbfCVN76 (ORCPT
+        id S1727977AbfCVOAB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Mar 2019 09:59:58 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:46218 "EHLO
+        Fri, 22 Mar 2019 10:00:01 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:46226 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727946AbfCVN76 (ORCPT
+        with ESMTP id S1727946AbfCVOAB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Mar 2019 09:59:58 -0400
+        Fri, 22 Mar 2019 10:00:01 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1h7Khm-0000bK-Qi; Fri, 22 Mar 2019 15:59:31 +0200
+        id 1h7Khf-0000bK-RJ; Fri, 22 Mar 2019 15:59:24 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 22 Mar 2019 15:59:01 +0200
-Message-Id: <20190322135903.10631-23-luca@coelho.fi>
+Date:   Fri, 22 Mar 2019 15:58:53 +0200
+Message-Id: <20190322135903.10631-15-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190322135903.10631-1-luca@coelho.fi>
 References: <20190322135903.10631-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 22/24] iwlwifi: set 512 TX queue slots for AX210 devices
+Subject: [PATCH 14/24] iwlwifi: dbg_ini: remove redundant curly brackets from trigger collection flow
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-AX210 devices support 256 BA (256 MPDUs in an AMPDU).
-The firmware requires that the number of TFDs will be
-minimum twice as big as the BA size (2 * 256 = 512).
+remove redundant curly brackets from iwl_fw_ini_dump_trigger and
+iwl_fw_ini_get_trigger_len
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c  | 3 ++-
- drivers/net/wireless/intel/iwlwifi/iwl-config.h | 3 +++
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c    | 6 ++++--
- 3 files changed, 9 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index e0db1988b6a3..3203aa72541a 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -209,7 +209,8 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
- 	.base_params = &iwl_22000_base_params,				\
- 	.csr = &iwl_csr_v1,						\
- 	.min_txq_size = 128,						\
--	.gp2_reg_addr = 0xd02c68
-+	.gp2_reg_addr = 0xd02c68,					\
-+	.min_256_ba_txq_size = 512
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 87da6125683a..3709e90b55f1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1746,7 +1746,7 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
+ 		case IWL_FW_INI_REGION_RXF:
+ 			size += hdr_len + iwl_dump_ini_rxf_get_size(fwrt, reg);
+ 			break;
+-		case IWL_FW_INI_REGION_PAGING: {
++		case IWL_FW_INI_REGION_PAGING:
+ 			size += hdr_len;
+ 			if (iwl_fw_dbg_is_paging_enabled(fwrt)) {
+ 				size += iwl_dump_ini_paging_get_size(fwrt, reg);
+@@ -1755,7 +1755,6 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
+ 									  reg);
+ 			}
+ 			break;
+-		}
+ 		case IWL_FW_INI_REGION_DRAM_BUFFER:
+ 			if (!fwrt->trans->num_blocks)
+ 				break;
+@@ -1831,7 +1830,7 @@ static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
+ 			ops.fill_range = iwl_dump_ini_dev_mem_iter;
+ 			iwl_dump_ini_mem(fwrt, type, data, reg, &ops);
+ 			break;
+-		case IWL_FW_INI_REGION_PAGING: {
++		case IWL_FW_INI_REGION_PAGING:
+ 			ops.fill_mem_hdr = iwl_dump_ini_mem_fill_header;
+ 			if (iwl_fw_dbg_is_paging_enabled(fwrt)) {
+ 				ops.get_num_of_ranges =
+@@ -1848,7 +1847,6 @@ static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
  
- const struct iwl_cfg iwl22000_2ac_cfg_hr = {
- 	.name = "Intel(R) Dual Band Wireless AC 22000",
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index bc929d6639bd..486b6daea370 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -384,6 +384,8 @@ struct iwl_csr_params {
-  * @min_txq_size: minimum number of slots required in a TX queue
-  * @umac_prph_offset: offset to add to UMAC periphery address
-  * @uhb_supported: ultra high band channels supported
-+ * @min_256_ba_txq_size: minimum number of slots required in a TX queue which
-+ *	supports 256 BA aggregation
-  *
-  * We enable the driver to be backward compatible wrt. hardware features.
-  * API differences in uCode shouldn't be handled here but through TLVs
-@@ -457,6 +459,7 @@ struct iwl_cfg {
- 	u32 fw_mon_smem_cycle_cnt_ptr_addr;
- 	u32 fw_mon_smem_cycle_cnt_ptr_msk;
- 	u32 gp2_reg_addr;
-+	u32 min_256_ba_txq_size;
- };
- 
- extern const struct iwl_csr_params iwl_csr_v1;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 9fbd37d23e85..bb0fc1c2b4f2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -999,7 +999,8 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
- 			slots_num = max_t(u32, TFD_CMD_SLOTS,
- 					  trans->cfg->min_txq_size);
- 		else
--			slots_num = TFD_TX_CMD_SLOTS;
-+			slots_num = max_t(u32, TFD_TX_CMD_SLOTS,
-+					  trans->cfg->min_256_ba_txq_size);
- 		trans_pcie->txq[txq_id] = &trans_pcie->txq_memory[txq_id];
- 		ret = iwl_pcie_txq_alloc(trans, trans_pcie->txq[txq_id],
- 					 slots_num, cmd_queue);
-@@ -1052,7 +1053,8 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
- 			slots_num = max_t(u32, TFD_CMD_SLOTS,
- 					  trans->cfg->min_txq_size);
- 		else
--			slots_num = TFD_TX_CMD_SLOTS;
-+			slots_num = max_t(u32, TFD_TX_CMD_SLOTS,
-+					  trans->cfg->min_256_ba_txq_size);
- 		ret = iwl_pcie_txq_init(trans, trans_pcie->txq[txq_id],
- 					slots_num, cmd_queue);
- 		if (ret) {
+ 			iwl_dump_ini_mem(fwrt, type, data, reg, &ops);
+ 			break;
+-		}
+ 		case IWL_FW_INI_REGION_TXF: {
+ 			struct iwl_ini_txf_iter_data iter = { .init = true };
+ 			void *fifo_iter = fwrt->dump.fifo_iter;
 -- 
 2.20.1
 
