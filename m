@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 895A2C4360F
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 13:59:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6961EC10F10
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 13:59:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 61163218E2
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 13:59:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44242218A5
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 13:59:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727836AbfCVN7P (ORCPT
+        id S1727850AbfCVN7R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Mar 2019 09:59:15 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:46056 "EHLO
+        Fri, 22 Mar 2019 09:59:17 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:46078 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727806AbfCVN7P (ORCPT
+        with ESMTP id S1727806AbfCVN7R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Mar 2019 09:59:15 -0400
+        Fri, 22 Mar 2019 09:59:17 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1h7KhU-0000bK-4m; Fri, 22 Mar 2019 15:59:13 +0200
+        id 1h7KhX-0000bK-3k; Fri, 22 Mar 2019 15:59:15 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 22 Mar 2019 15:58:40 +0200
-Message-Id: <20190322135903.10631-2-luca@coelho.fi>
+Date:   Fri, 22 Mar 2019 15:58:43 +0200
+Message-Id: <20190322135903.10631-5-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190322135903.10631-1-luca@coelho.fi>
 References: <20190322135903.10631-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/24] iwlwifi: dbg_ini: support HW error trigger
+Subject: [PATCH 04/24] iwlwifi: dbg_ini: add memory offset to the base address of a memory region
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -45,94 +45,75 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Differentiate between SW and HW error interrupts and support ini HW
-error trigger.
+Add the offset to the base address of a memory region to show the actual
+addresses being read.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h    | 10 ++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c   |  7 +++----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c   |  1 +
- 4 files changed, 16 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 26 +++++++++------------
+ 1 file changed, 11 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index 13cb164a4fb9..cccf91db74c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -458,4 +458,14 @@ static inline void iwl_fw_umac_set_alive_err_table(struct iwl_trans *trans,
- /* This bit is used to differentiate the legacy dump from the ini dump */
- #define INI_DUMP_BIT BIT(31)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 4beec863197e..78bca27b7809 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1049,14 +1049,14 @@ static int iwl_dump_ini_prph_iter(struct iwl_fw_runtime *fwrt,
+ {
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+ 	__le32 *val = range->data;
+-	u32 addr, prph_val, offset = le32_to_cpu(reg->offset);
++	u32 prph_val;
++	u32 addr = le32_to_cpu(reg->start_addr[idx]) + le32_to_cpu(reg->offset);
+ 	int i;
  
-+static inline void iwl_fw_error_collect(struct iwl_fw_runtime *fwrt)
-+{
-+	if (fwrt->trans->ini_valid && fwrt->trans->hw_error) {
-+		_iwl_fw_dbg_ini_collect(fwrt, IWL_FW_TRIGGER_ID_FW_HW_ERROR);
-+		fwrt->trans->hw_error = false;
-+	} else {
-+		iwl_fw_dbg_collect_desc(fwrt, &iwl_dump_desc_assert, false, 0);
-+	}
-+}
-+
- #endif  /* __iwl_fw_dbg_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index cef045d3f1bf..2235978adf70 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -768,6 +768,7 @@ struct iwl_self_init_dram {
-  * @umac_error_event_table: addr of umac error table
-  * @error_event_table_tlv_status: bitmap that indicates what error table
-  *	pointers was recevied via TLV. use enum &iwl_error_event_table_status
-+ * @hw_error: equals true if hw error interrupt was received from the FW
-  */
- struct iwl_trans {
- 	const struct iwl_trans_ops *ops;
-@@ -831,6 +832,7 @@ struct iwl_trans {
- 	u32 umac_error_event_table;
- 	unsigned int error_event_table_tlv_status;
- 	wait_queue_head_t fw_halt_waitq;
-+	bool hw_error;
+-	range->start_addr = reg->start_addr[idx];
++	range->start_addr = cpu_to_le32(addr);
+ 	range->range_data_size = reg->internal.range_data_size;
+ 	for (i = 0; i < le32_to_cpu(reg->internal.range_data_size); i += 4) {
+-		addr = le32_to_cpu(range->start_addr) + i;
+-		prph_val = iwl_read_prph(fwrt->trans, addr + offset);
++		prph_val = iwl_read_prph(fwrt->trans, addr + i);
+ 		if (prph_val == 0x5a5a5a5a)
+ 			return -EBUSY;
+ 		*val++ = cpu_to_le32(prph_val);
+@@ -1071,16 +1071,13 @@ static int iwl_dump_ini_csr_iter(struct iwl_fw_runtime *fwrt,
+ {
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+ 	__le32 *val = range->data;
+-	u32 addr, offset = le32_to_cpu(reg->offset);
++	u32 addr = le32_to_cpu(reg->start_addr[idx]) + le32_to_cpu(reg->offset);
+ 	int i;
  
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 3cc6048d6a10..8e2e4fa7914e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1291,8 +1291,7 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 	 * can't recover this since we're already half suspended.
- 	 */
- 	if (!mvm->fw_restart && fw_error) {
--		iwl_fw_dbg_collect_desc(&mvm->fwrt, &iwl_dump_desc_assert,
--					false, 0);
-+		iwl_fw_error_collect(&mvm->fwrt);
- 	} else if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
- 		struct iwl_mvm_reprobe *reprobe;
+-	range->start_addr = reg->start_addr[idx];
++	range->start_addr = cpu_to_le32(addr);
+ 	range->range_data_size = reg->internal.range_data_size;
+-	for (i = 0; i < le32_to_cpu(reg->internal.range_data_size); i += 4) {
+-		addr = le32_to_cpu(range->start_addr) + i;
+-		*val++ = cpu_to_le32(iwl_trans_read32(fwrt->trans,
+-						      addr + offset));
+-	}
++	for (i = 0; i < le32_to_cpu(reg->internal.range_data_size); i += 4)
++		*val++ = cpu_to_le32(iwl_trans_read32(fwrt->trans, addr + i));
  
-@@ -1340,8 +1339,8 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 			}
- 		}
+ 	return sizeof(*range) + le32_to_cpu(range->range_data_size);
+ }
+@@ -1090,12 +1087,11 @@ static int iwl_dump_ini_dev_mem_iter(struct iwl_fw_runtime *fwrt,
+ 				     void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+-	u32 addr, offset = le32_to_cpu(reg->offset);
++	u32 addr = le32_to_cpu(reg->start_addr[idx]) + le32_to_cpu(reg->offset);
  
--		iwl_fw_dbg_collect_desc(&mvm->fwrt, &iwl_dump_desc_assert,
--					false, 0);
-+		iwl_fw_error_collect(&mvm->fwrt);
-+
- 		if (fw_error && mvm->fw_restart > 0)
- 			mvm->fw_restart--;
- 		set_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED, &mvm->status);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index abe40196266b..69fcfa930791 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -2207,6 +2207,7 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 			"Hardware error detected. Restarting.\n");
+-	range->start_addr = reg->start_addr[idx];
+-	addr = le32_to_cpu(range->start_addr);
++	range->start_addr = cpu_to_le32(addr);
+ 	range->range_data_size = reg->internal.range_data_size;
+-	iwl_trans_read_mem_bytes(fwrt->trans, addr + offset, range->data,
++	iwl_trans_read_mem_bytes(fwrt->trans, addr, range->data,
+ 				 le32_to_cpu(reg->internal.range_data_size));
  
- 		isr_stats->hw++;
-+		trans->hw_error = true;
- 		iwl_pcie_irq_handle_error(trans);
- 	}
- 
+ 	return sizeof(*range) + le32_to_cpu(range->range_data_size);
 -- 
 2.20.1
 
