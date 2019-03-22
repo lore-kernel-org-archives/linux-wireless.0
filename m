@@ -2,138 +2,130 @@ Return-Path: <SRS0=qAgV=RZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0230DC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 10:58:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CDD7C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 11:02:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD74D21900
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 10:58:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F90721900
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 11:02:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728111AbfCVK6P (ORCPT
+        id S1727938AbfCVLCb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Mar 2019 06:58:15 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:45970 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726667AbfCVK6P (ORCPT
+        Fri, 22 Mar 2019 07:02:31 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:41824 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727786AbfCVLCb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Mar 2019 06:58:15 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=chariottest7)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1h7HsK-0000X2-Ov; Fri, 22 Mar 2019 12:58:13 +0200
-Message-ID: <c1c92313e0ecec1110d60d5624e94c8d75d5e664.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Date:   Fri, 22 Mar 2019 12:58:10 +0200
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-xEkisaUiQyo3ytnKq8b/"
-User-Agent: Evolution 3.30.5-1 
+        Fri, 22 Mar 2019 07:02:31 -0400
+Received: by mail-wr1-f68.google.com with SMTP id p1so1834487wrs.8
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2019 04:02:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=6ANzRJ0k+3+goLh3LfiFr7ME1Atee7NUlBLgpI+ki2Q=;
+        b=PCRLxUZ6jJYoIXDVFX3ggBh0COOskZnCs7AGWrcyPPtk+LPtsuJ0mFAJkV1TpKdfRw
+         gon7yp1toDM/nu7r8tYmqdtE4l+o8QoSLHv2UwWbVPDeHiMu0aAIl99My5MTxczdUxZZ
+         /4Ru3KgSsYaGGwyoRtwwLSb7nNvBBZydaCEnZm1bJkL/eXTl5FXo58G3xmLt9ZuiwE4M
+         cPo8vLJZzdhLXjdHsFi+G+eJGUwtpOPBCVR6e62rZOXix44807DZocTE0BD1fZFWDdNK
+         N13XoqraIu8U4MpxtrP4Qv4JWMe7Vcif5xyZTfyoF8FVplGd92Ax2huOD/4fLQlTXHje
+         RkqA==
+X-Gm-Message-State: APjAAAX2DAYDVjLFPiJv2q2FkQYO2AxFByKYg0B3TJvqDK69PCqOpwZZ
+        DRbxi/d6NR3OsYr1ae5d7tEr7pXW1OA=
+X-Google-Smtp-Source: APXvYqz23/qPuV8OIlGjMlBB/bQou/s9icJjEjcq0HcUvkyjS0h14wDP+9S9MGCHIZ0fBCGZiC9KqQ==
+X-Received: by 2002:a5d:4710:: with SMTP id y16mr5779877wrq.176.1553252549276;
+        Fri, 22 Mar 2019 04:02:29 -0700 (PDT)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id s21sm6282263wmh.22.2019.03.22.04.02.28
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 22 Mar 2019 04:02:28 -0700 (PDT)
+Date:   Fri, 22 Mar 2019 12:02:26 +0100
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/12] mt76usb: some cleanups and optimizations
+Message-ID: <20190322110226.GB22889@localhost.localdomain>
+References: <20190321152537.19105-1-sgruszka@redhat.com>
 MIME-Version: 1.0
-Subject: pull-request: iwlwifi-fixes 2019-03-22
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="/NkBOFFp2J2Af1nK"
+Content-Disposition: inline
+In-Reply-To: <20190321152537.19105-1-sgruszka@redhat.com>
+User-Agent: Mutt/1.11.3 (2019-02-01)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 
---=-xEkisaUiQyo3ytnKq8b/
-Content-Type: text/plain; charset="UTF-8"
+--/NkBOFFp2J2Af1nK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi Kalle,
+> Significant change is remove mt76u_buf and use urb directly
+> and allocate urb and sg as linear data for better cache usage.
+> Other that that, set consist only of some minor cleanups.
+>=20
+> RFC -> v1:
+> - introduce mt76u_tx_setup_buffers
+> - calculate data_len differently
+> - fix *usb->sg bug on intermediate patches
+> - use (struct scatterlist *)(e->urb + 1) trick
+>=20
+> Rebased on latest tree and=20
+> [PATCH v2 00/12] mt76x02: AP support for USB with PS
+> https://lore.kernel.org/linux-wireless/1552991867-5087-1-git-send-email-s=
+gruszka@redhat.com/
+>  =20
+> Not rebased on
+> [PATCH 1/6] mt76: use mac80211 txq scheduling
+> https://lore.kernel.org/linux-wireless/20190316204242.73560-1-nbd@nbd.nam=
+e/
+> It easer to rebase '[PATCH 5/6] mt76: move tx tasklet to struct mt76_dev'
+> from that set of top of my 2 pending sets.=20
 
-This is the first batch of fixes for v5.1.  More details about the
-contents in the tag description.
+LGTM
 
-I have sent this out before and kbuildbot reported success.
+Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
 
-Please let me know if there are any issues.
+>=20
+> Stanislaw Gruszka (12):
+>   mt76usb: change mt76u_submit_buf
+>   mt76: remove rx_page_lock
+>   mt76usb: change mt76u_fill_rx_sg arguments
+>   mt76usb: use usb_dev private data
+>   mt76usb: remove mt76u_buf redundant fileds
+>   mt76usb: move mt76u_buf->done to queue entry
+>   mt76usb: remove mt76u_buf and use urb directly
+>   mt76usb: remove MT_RXQ_MAIN queue from mt76u_urb_alloc
+>   mt76usb: resue mt76u_urb_alloc for tx
+>   mt76usb: remove unneded sg_init_table
+>   mt76usb: allocate urb and sg as linear data
+>   mt76usb: remove queue variable from rx_tasklet
+>=20
+>  drivers/net/wireless/mediatek/mt76/mt76.h     |  15 +-
+>  .../net/wireless/mediatek/mt76/mt76x0/usb.c   |   2 +-
+>  .../net/wireless/mediatek/mt76/mt76x2/usb.c   |   4 +-
+>  drivers/net/wireless/mediatek/mt76/usb.c      | 243 ++++++++----------
+>  4 files changed, 118 insertions(+), 146 deletions(-)
+>=20
+> --=20
+> 2.20.1
+>=20
 
-Cheers,
-Luca.
-
-
-The following changes since commit 7dfc45e6282a7662279d168cc1219929456f8750=
-:
-
-  mt76x02: do not enable RTS/CTS by default (2019-03-19 17:37:25 +0200)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
-ags/iwlwifi-for-kalle-2019-03-22
-
-for you to fetch changes up to 972d8e1377795556024e948357e82532890f2f7d:
-
-  iwlwifi: add new 0x2723/0x2080 card for 22000 (2019-03-22 12:49:05 +0200)
-
-----------------------------------------------------------------
-First batch of iwlwifi fixes intended for v5.1
-
-* add some new PCI IDs (plus a struct name change they depend on);
-* fix crypto with new devices, namely 22560 and above;
-* a bunch of fixes (and a dependency) for the new debugging infra;
-
-----------------------------------------------------------------
-Ihab Zhaika (2):
-      iwlwifi: rename structs to fit the new names
-      iwlwifi: add new 0x2723/0x2080 card for 22000
-
-Johannes Berg (1):
-      iwlwifi: mvm: fix TX crypto on 22560+ devices
-
-Shahar S Matityahu (4):
-      iwlwifi: add sync_nmi to trans ops
-      iwlwifi: dbg_ini: in case of region dump failure set memory to 0
-      iwlwifi: dbg_ini: fix bad dump size calculation
-      iwlwifi: use sync nmi in case of init flow failure
-
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c     | 12 ++++++------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c        | 34 ++++++++----------=
-----------------
- drivers/net/wireless/intel/iwlwifi/fw/init.c       |  1 -
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     | 12 ++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 64 +++++++++++++++---=
-----------------------------------------------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  1 -
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 41 ++----------------=
------------------------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |  7 ++-----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      | 13 +++++++------
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  7 ++++---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  2 +-
- 14 files changed, 54 insertions(+), 146 deletions(-)
-
---=-xEkisaUiQyo3ytnKq8b/
+--/NkBOFFp2J2Af1nK
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlyUv8IACgkQoUecoho8
-xfrhvhAAtjBCZEQj9NmUoiq5vkC3id8R9qvaEF5xUpMQQEKTZOv3ExnEAUZh3rYi
-trihGNMqyI6BiyvGlvQE3ib5wahZv6LgYO1HCDAOPAKYmF+xS2YfnNad7frKuDOJ
-1C1fqor+SwB4wvHody6CPA2wpe1PP069YyejEUO7r06/quNK1SOzv9yEnRNc9FYx
-qtNPPRyTXI7317v1XFN4dAk3znmA6cN4NHVvFTR/5p1tVuiPY0drI7fKKYE40KOc
-TV0daTLArVyTxeFYjTIczVkgP10ZMh9K3Esv2R/DyMCR0yBK7QFh0GdH7eRtB85G
-3O7qi5gFe6pCpacW4Z4hy93KjCBlhEmpMIKS/fRjnu2IhlOV33936TqzWIuKbpml
-RRNl3v3waVwsQgcs0dN7+2lxcS3lfGqPPZ1yhBP2M6UGvIkjgfAixk9hlRp8zymu
-o6i3GRyNV/HzltxtX3EF8/ryawAz3KiYSb459ZIs6pecarTIE8YvzwpXxpn0GySG
-1bS79xcU9Oj8uMIacFm/ffAkQ9vsLaF+Z3xsH0saQojaN0/bnJAvRLM+5uD48+eq
-MzWBr2cBWn1/JhMRjNMwNk+7xdcCPVKBNLHIE1nMiKGhfD1CNrFcwhD1f6Fty9gH
-TTjaON64R7JwR8Mhr7vZ7JL2uS6qR/MZr1FxOrq+uI+M86EhKbA=
-=dce3
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXJTAvgAKCRA6cBh0uS2t
+rKT0AQD+G40GFyJ0qyDcO6m27Yl/CeM6kLhgTyghuDaKxV7exwEAo5GeELz/jNB0
+VEz6FPwvOV+oIvZ3XNye+syp5SCEbAg=
+=QzUz
 -----END PGP SIGNATURE-----
 
---=-xEkisaUiQyo3ytnKq8b/--
-
+--/NkBOFFp2J2Af1nK--
