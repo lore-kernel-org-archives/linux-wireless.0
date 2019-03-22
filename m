@@ -2,112 +2,119 @@ Return-Path: <SRS0=qAgV=RZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CAFDC43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 14:36:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01736C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 14:37:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EFC08218A5
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 14:36:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="lZsjegfr"
+	by mail.kernel.org (Postfix) with ESMTP id CEBC8218A5
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 14:37:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729248AbfCVOgm (ORCPT
+        id S1729172AbfCVOht (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Mar 2019 10:36:42 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:36763 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728733AbfCVOg0 (ORCPT
+        Fri, 22 Mar 2019 10:37:49 -0400
+Received: from mout.kundenserver.de ([212.227.126.134]:54539 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728114AbfCVOhs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Mar 2019 10:36:26 -0400
-Received: by mail-wr1-f66.google.com with SMTP id y13so2640868wrd.3
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2019 07:36:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=brfv5UT05UhmleJgTjxmxXWvloFZXn+Xt2HH6mAqytk=;
-        b=lZsjegfr+92RA7KFcs02UK3/Cl8CYKjdFMbo7854mtnq5TquJ3jO3DOVrAdCMohjDH
-         WoLfBcNRrKkeas6nsVOhUM4d9qU5sVuj46q8jqLgZfEgETxg3J/j4s26Vv0L9kW+cZu2
-         tkt32kKT3o/PN3oCEk/kfp3zTqwGU8uOxoABo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=brfv5UT05UhmleJgTjxmxXWvloFZXn+Xt2HH6mAqytk=;
-        b=Itj0Z82wqTzqHy64sYhdr0nQbdCciWlBKxCz1zLR14R05Pm9y4CMZnjfSiRyNEAV2p
-         T6V+v1Bb8NN8JSzSqEESHB9aYpk4sCpyyDtNhcCpsKVQgKUxCJ6VevLzpRzvxUOvWqgc
-         f2K61ljHBV76BXR9+AJl2n2HBC0/hAb70aRwZlL03WomYoe/Bf8aMpwRU0H27m8xpVs3
-         kVJAO2EKsLznZ/c7Gxru8YADWWjgP6OZhVDMUkSFDakxVVZPPGk9wjQuXE8AwYkMbG8K
-         KycATjS9w0MSoH5WaerEYug1JPATgznjIMbH4OT5uZ7W4rc1u8/+MsqpCSMpOAzYoNJs
-         5EUQ==
-X-Gm-Message-State: APjAAAUg1iyBR6FlUkOqsbQhL7tVhUWOS1rxZ51yx/7KjXMw2hGjGBvj
-        QFG+EoL+kI8rO/2WzsENHPYmFT7lw7GONg==
-X-Google-Smtp-Source: APXvYqwIPveR8RcisvYEcveHZsebnJmIwe9EEVAKN9TPK/DjGjf8pwN0IbftgI76vEg9RgtkuyPLew==
-X-Received: by 2002:adf:ea81:: with SMTP id s1mr6514610wrm.277.1553265384429;
-        Fri, 22 Mar 2019 07:36:24 -0700 (PDT)
-Received: from penguin ([195.39.71.253])
-        by smtp.gmail.com with ESMTPSA id h10sm8272231wrs.27.2019.03.22.07.36.22
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 22 Mar 2019 07:36:23 -0700 (PDT)
-Date:   Fri, 22 Mar 2019 14:36:21 +0000
-From:   Brian Norris <briannorris@chromium.org>
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     Grant Grundler <grundler@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 03/13] rtw88: hci files
-Message-ID: <20190322143621.2rtyzysglv4fqocf@penguin>
-References: <1548820940-15237-1-git-send-email-yhchuang@realtek.com>
- <1548820940-15237-4-git-send-email-yhchuang@realtek.com>
- <20190131223609.GA191502@google.com>
- <CANEJEGt4xJ5pTXgqazTVV2MNZy9+SWa6uE+wbE_94aT+FvL-+A@mail.gmail.com>
- <F7CD281DE3E379468C6D07993EA72F84D17AA49B@RTITMBSVM04.realtek.com.tw>
+        Fri, 22 Mar 2019 10:37:48 -0400
+Received: from wuerfel.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
+ (mreue009 [212.227.15.129]) with ESMTPA (Nemesis) id
+ 1M9Frj-1h2eTO01nr-006Q9h; Fri, 22 Mar 2019 15:37:29 +0100
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Arnd Bergmann <arnd@arndb.de>, Priit Laes <plaes@plaes.org>
+Cc:     clang-built-linux@googlegroups.com,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] b43: shut up clang -Wuninitialized variable warning
+Date:   Fri, 22 Mar 2019 15:37:02 +0100
+Message-Id: <20190322143725.1332353-1-arnd@arndb.de>
+X-Mailer: git-send-email 2.20.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17AA49B@RTITMBSVM04.realtek.com.tw>
-User-Agent: NeoMutt/20170113 (1.7.2)
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:l+2T80ShE+wTWiEe+c8OHlmyzj8CU42buJBkcKsGPQOBxWGYPTf
+ j/kcjAHihwKHFlPM4ljM8JZXYhEDR8dXTSxF5mUQuY0mVyiUic/PNez3JVahn7vM0Na7my3
+ EO66dIl54ScqGvgQD0uCaahAnvsomdz2pKqPiovsPdi+ocCU/do4ml5ccxYH5yb3Dr5586N
+ Wio0ucP310IyvrzrbStXQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:CpQElZp5ItQ=:dYDfuQLB5Am3TDLWwGF4Dv
+ NsQDuDbjPx7JRa+zfg2KJBJY2pxX6rWTo559vCkechEZ+1rw/77kY6Kzjz4xmqjulx72bq7JH
+ 7+TENnWyzsNlhbdo5GBMCexG9J7qc8xLlJPIzAysfskt88QzH/53w8WMjtVn0NVaSRTPOfSdg
+ p4+CC9llH72WrAAzkrUVoi+EKTiixPqAFT8Fj/VfYmIrDxPtv3OoJPq2FYKCdEkC2ac+ehWD8
+ DT2Fn2Du5o4HHPd3lqy22GDReq1RFnnPunXfFx5mLbD7XIJFwyeflIqzUZYwoPdmpJ6ayDLHu
+ ttDtJJttQjGSyIBtVq9fHRgUJqAkQLxYe5y/5JSSu3i2FIu+e1rd11eYIddCKEcl55EpJZaUO
+ H+ffaIx0E4vcBzDpnRYmmXo6hZwFS7MG4SeD5KaLVANrfjpIDSGeEVqDiwX1WbJDFEARV0Kiq
+ th4ViD5AHDkH0joOsp2H5DmR71U4nRtPmVTGmcPoUZoxtP+5irMVQHOu86roksLmslPrcvx1G
+ 9lPkh/eZ+5tKibfxwIrsI5f2+pvfM96YUEKwLoEK3NLJOcZ829hnrBC5juJI+f1ukYlV2MWV3
+ k4qybbTu5kz1wyLtEjSHA5YbD7Tpd85ngmXmoK6jonUglGzCi5reeiGH6jKomJDfuEEYvoUrv
+ 7qq5fgdG7obk4m44tbAbhtiDCEEN4ANta2k4dhe8AvHDE/JCjDdoUl/sp5EqDL0KBgU3LQV+g
+ 9di8dKRIEomqLKeqoj2d2cy7Z6doER1HiDv/HA==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-[Following up a little late on this one]
+Clang warns about what is clearly a case of passing an uninitalized
+variable into a static function:
 
-Hi Grant and Tony,
+drivers/net/wireless/broadcom/b43/phy_lp.c:1852:23: error: variable 'gains' is uninitialized when used here
+      [-Werror,-Wuninitialized]
+                lpphy_papd_cal(dev, gains, 0, 1, 30);
+                                    ^~~~~
+drivers/net/wireless/broadcom/b43/phy_lp.c:1838:2: note: variable 'gains' is declared here
+        struct lpphy_tx_gains gains, oldgains;
+        ^
+1 error generated.
 
-On Wed, Feb 20, 2019 at 11:19:10AM +0000, Tony Chuang wrote:
-> > -----Original Message-----
-> > From: Grant Grundler [mailto:grundler@chromium.org]
+However, this function is empty, and its arguments are never evaluated,
+so gcc in contrast does not warn here. Both compilers behave in a
+reasonable way as far as I can tell, so we should change the code
+to avoid the warning everywhere.
 
-> > This is another bug in the code actually: the code accessing tx
-> > descriptor rings should be declared volatile since they are updated by
-> > the device which is not visible to the compiler.  Compiler won't
-> > optimize (or reorder) volatile code (by "volatile code" I mean code
-> > that is accessing data marked "volatile").
+We could just eliminate the lpphy_papd_cal() function entirely,
+given that it has had the TODO comment in it for 10 years now
+and is rather unlikely to ever get done. I'm doing a simpler
+change here, and just pass the 'oldgains' variable in that has
+been initialized, based on the guess that this is what was
+originally meant.
 
-If I'm understanding the code correctly, the TX ISR assumes that
-everything between the last entry we processed (ring->r.rp) and a
-certain point (cur_rp) is complete. The former index was saved during
-the previous interrupt and the latter is determined via a register read.
-So assuming properly synchronized interrupts (such as with PCIe MSI) and
-no device-/firmware-related ordering bugs, then I think we're OK -- the
-only "volatile" piece is the register read, which already embeds
-volatile in the IO accessors.
+Fixes: 2c0d6100da3e ("b43: LP-PHY: Begin implementing calibration & software RFKILL support")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/broadcom/b43/phy_lp.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> This is fixed in PATCH v5. We reset and use rx tag to sync dma.
-> So the polling can be removed and the bus timeout has not happened again.
+diff --git a/drivers/net/wireless/broadcom/b43/phy_lp.c b/drivers/net/wireless/broadcom/b43/phy_lp.c
+index 46408a560814..aedee026c5e2 100644
+--- a/drivers/net/wireless/broadcom/b43/phy_lp.c
++++ b/drivers/net/wireless/broadcom/b43/phy_lp.c
+@@ -1835,7 +1835,7 @@ static void lpphy_papd_cal(struct b43_wldev *dev, struct lpphy_tx_gains gains,
+ static void lpphy_papd_cal_txpwr(struct b43_wldev *dev)
+ {
+ 	struct b43_phy_lp *lpphy = dev->phy.lp;
+-	struct lpphy_tx_gains gains, oldgains;
++	struct lpphy_tx_gains oldgains;
+ 	int old_txpctl, old_afe_ovr, old_rf, old_bbmult;
+ 
+ 	lpphy_read_tx_pctl_mode_from_hardware(dev);
+@@ -1849,9 +1849,9 @@ static void lpphy_papd_cal_txpwr(struct b43_wldev *dev)
+ 	lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
+ 
+ 	if (dev->dev->chip_id == 0x4325 && dev->dev->chip_rev == 0)
+-		lpphy_papd_cal(dev, gains, 0, 1, 30);
++		lpphy_papd_cal(dev, oldgains, 0, 1, 30);
+ 	else
+-		lpphy_papd_cal(dev, gains, 0, 1, 65);
++		lpphy_papd_cal(dev, oldgains, 0, 1, 65);
+ 
+ 	if (old_afe_ovr)
+ 		lpphy_set_tx_gains(dev, oldgains);
+-- 
+2.20.0
 
-Yes, I tested the later versions of this series, and I didn't see this
-problem so far. I'll follow up there with my Review/Test information
-eventually.
-
-Thanks,
-Brian
