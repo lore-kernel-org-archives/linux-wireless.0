@@ -2,144 +2,115 @@ Return-Path: <SRS0=qAgV=RZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A196C4360F
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 16:06:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C92EC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 18:59:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A35021900
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 16:06:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2097218FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 18:59:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P5uBFY21"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NPez2YT0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728164AbfCVQGT (ORCPT
+        id S1727000AbfCVS7E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Mar 2019 12:06:19 -0400
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:36192 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727778AbfCVQGT (ORCPT
+        Fri, 22 Mar 2019 14:59:04 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:41907 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726073AbfCVS7E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Mar 2019 12:06:19 -0400
-Received: by mail-ed1-f66.google.com with SMTP id e4so2130443edi.3;
-        Fri, 22 Mar 2019 09:06:17 -0700 (PDT)
+        Fri, 22 Mar 2019 14:59:04 -0400
+Received: by mail-wr1-f67.google.com with SMTP id p1so3461450wrs.8
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2019 11:59:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=Yqr048Vn5eeLffA+DI+RO2WyyaqgT7iEICWrTrJZlkM=;
-        b=P5uBFY212XyWizZTdLRlR+7W4Wjqk4xpy5TdhySjmzpwuNVuzCYtLo0aItEs5/Dk5a
-         /r2j7umJ1grqenbNJrdXKPC4ss4/zgsrTXJkGKmVh607i+Noatw0nRmUVcQCxx4aSOl3
-         TNHbqDMDeci4jT68qabGBD5ekM+Wlt1qtDh70dHnddEesCinQ5GhOToWdD33RtYcjnC6
-         lLhnRQW0Khe/kS8mZLz5ANtsrknDphYjN6wQNx2VnUA+ahcnwcGX7+79GeJxIo4p3j53
-         ihT5A5zTlCIJaHOrnm5kmt7gMZoiuau3BHm2ULiOYl6UEQMDoCihmWN6IetYbjcf5JGr
-         6zow==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=qcdSnDTSowJzKfOwTYCbaCs2fE9AmMZzQfDyywO/xLw=;
+        b=NPez2YT05c+LAyKtsD5fnfFI/mIFI1Qak+nnBw2ol2GyUabLMFOyDsoDFzz6ZJ2R2A
+         URsx8EXO9gl/AxE7QKgkP+9f+E6CWBt2JA9jVZoDgQ4gzFkjfUS9z1/y5Uf3zIdp/aVo
+         DLa6H5M7Q1NxSmwHsFNqRBhOYRgS65JQzl1mjevaf5NC1Hbqq4Bay6mir0IGHyXgRNKU
+         vbPqHFAQOraL4GiwlywsBYVTRHWrPe5SIKq724v3fTJMK3fmU2tLYiXj5jrSAlpGReEr
+         jcS7WG0p9TwD28TPWvwIb20bxVH82UC4lRp2svfZit95BPcWxGwf2hnJTqKCSCAOKDE1
+         +qKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Yqr048Vn5eeLffA+DI+RO2WyyaqgT7iEICWrTrJZlkM=;
-        b=XhYs86KOsMfBiLmS+Z66buWerC/XfgWwc1kjEeeWTU6/IGf06SpeH5KQaU35AnjqlC
-         1o0mj1R7Bgl8d6Ap5f8zwHgVrGjIIrfcZnustHBXzeWZHtHnIEiWigsw9KN7xf2lnJH8
-         rIyniuFPAMA5T+HnkeT2o6pYb34JT+UgpcJGQd1ZP84nhoLXhEENGex50S/wfX4spVd1
-         cGWFKFSApaFKpB+izdKOz7QtjNB0YV/REZulENlXwMEERXnblXNfcE6D2yHTZhGND2LJ
-         JU7KST1UWViJttVckaHSwbl252fZ0imKagOwUw5ft0rvRoOnxTjH1WOGpn3xzdNo574d
-         T04A==
-X-Gm-Message-State: APjAAAU4BdvZiGVXtpsvI8TmDdibHK6qjsnPmBH4AOukGXe6RragC2Kf
-        52qbvONNAnm/seeDU8eFisk=
-X-Google-Smtp-Source: APXvYqwgXmLut7voRGM8MXDXlgSfIZz7Um6YPNl3UbKycrC0Gh2ZWO6Sej7lEjOiibIRhLnEiEwyrQ==
-X-Received: by 2002:a50:92b2:: with SMTP id k47mr6608911eda.148.1553270776816;
-        Fri, 22 Mar 2019 09:06:16 -0700 (PDT)
-Received: from archlinux-ryzen ([2a01:4f9:2a:1fae::2])
-        by smtp.gmail.com with ESMTPSA id d10sm2869910edk.14.2019.03.22.09.06.15
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 22 Mar 2019 09:06:16 -0700 (PDT)
-Date:   Fri, 22 Mar 2019 09:06:14 -0700
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Priit Laes <plaes@plaes.org>,
-        clang-built-linux@googlegroups.com,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43: shut up clang -Wuninitialized variable warning
-Message-ID: <20190322160614.GF21978@archlinux-ryzen>
-References: <20190322143725.1332353-1-arnd@arndb.de>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=qcdSnDTSowJzKfOwTYCbaCs2fE9AmMZzQfDyywO/xLw=;
+        b=Uh+INCiqVVobx7el5whQ/wk79o6CU1wVEkmGUUWF0Ym60x+QSyp1B+AMf0m3QwTlA8
+         8VxyiZIBl2SDfVzH8ih0KTxofE680trzlSDhB9DwBtpxox+A3O8Q3D/qoL/nzMKx+dGx
+         XDUvGMqGeyfra3BQpwmfKtEeuRiH0+Et8Xo9+y3fD4+u9wAbBcy1kEeNwssrdvDhwiRA
+         xe0q340Wa/gDDXQWa6dA7Ur2bI3sgGdMEm+DDSaqIe5DqWFveZhZLwFaiVIxuVf0WyKH
+         6ovEi8SnGQ7hgsPTLh63EhEzdsYKukZkM5tJHzd5ZJl8HGVFck47o4cg6C+8XL8lxqRJ
+         ujEg==
+X-Gm-Message-State: APjAAAUzUH51CA6ON+NcYF6W5m0Een8j0h7ZXy3yzkVBkgDoItCaS+Nn
+        BSJWHgnSDT1mxPhH1jXm4kRdyHe5
+X-Google-Smtp-Source: APXvYqwgCeaRUDs7BbJK/fjqLAz5OM3F1SPYifNUgUYFFghOFRoPDKSfheEreO4C6kJQ1hGnkaXViQ==
+X-Received: by 2002:adf:f80d:: with SMTP id s13mr6608311wrp.38.1553281142741;
+        Fri, 22 Mar 2019 11:59:02 -0700 (PDT)
+Received: from localhost.localdomain ([31.147.208.18])
+        by smtp.googlemail.com with ESMTPSA id o8sm6963126wmh.11.2019.03.22.11.59.01
+        (version=TLS1 cipher=AES128-SHA bits=128/128);
+        Fri, 22 Mar 2019 11:59:02 -0700 (PDT)
+From:   =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     openwrt-devel@lists.openwrt.org
+Subject: [PATCH] ath10k: reset chip after supported check
+Date:   Fri, 22 Mar 2019 19:58:40 +0100
+Message-Id: <1553281120-22139-1-git-send-email-pozega.tomislav@gmail.com>
+X-Mailer: git-send-email 1.7.0.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190322143725.1332353-1-arnd@arndb.de>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Mar 22, 2019 at 03:37:02PM +0100, Arnd Bergmann wrote:
-> Clang warns about what is clearly a case of passing an uninitalized
-> variable into a static function:
-> 
-> drivers/net/wireless/broadcom/b43/phy_lp.c:1852:23: error: variable 'gains' is uninitialized when used here
->       [-Werror,-Wuninitialized]
->                 lpphy_papd_cal(dev, gains, 0, 1, 30);
->                                     ^~~~~
-> drivers/net/wireless/broadcom/b43/phy_lp.c:1838:2: note: variable 'gains' is declared here
->         struct lpphy_tx_gains gains, oldgains;
->         ^
-> 1 error generated.
-> 
-> However, this function is empty, and its arguments are never evaluated,
-> so gcc in contrast does not warn here. Both compilers behave in a
-> reasonable way as far as I can tell, so we should change the code
-> to avoid the warning everywhere.
-> 
-> We could just eliminate the lpphy_papd_cal() function entirely,
-> given that it has had the TODO comment in it for 10 years now
-> and is rather unlikely to ever get done. I'm doing a simpler
-> change here, and just pass the 'oldgains' variable in that has
-> been initialized, based on the guess that this is what was
-> originally meant.
-> 
-> Fixes: 2c0d6100da3e ("b43: LP-PHY: Begin implementing calibration & software RFKILL support")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+When chip reset is done before the chip is checked if supported
+there will be crash. Previous behaviour caused bootloops on
+Archer C7 v1 units, this patch allows clean device boot without
+excluding ath10k driver.
 
-Reviewed-by: Nathan Chancellor <natechancellor@gmail.com>
+Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-> ---
->  drivers/net/wireless/broadcom/b43/phy_lp.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/b43/phy_lp.c b/drivers/net/wireless/broadcom/b43/phy_lp.c
-> index 46408a560814..aedee026c5e2 100644
-> --- a/drivers/net/wireless/broadcom/b43/phy_lp.c
-> +++ b/drivers/net/wireless/broadcom/b43/phy_lp.c
-> @@ -1835,7 +1835,7 @@ static void lpphy_papd_cal(struct b43_wldev *dev, struct lpphy_tx_gains gains,
->  static void lpphy_papd_cal_txpwr(struct b43_wldev *dev)
->  {
->  	struct b43_phy_lp *lpphy = dev->phy.lp;
-> -	struct lpphy_tx_gains gains, oldgains;
-> +	struct lpphy_tx_gains oldgains;
->  	int old_txpctl, old_afe_ovr, old_rf, old_bbmult;
->  
->  	lpphy_read_tx_pctl_mode_from_hardware(dev);
-> @@ -1849,9 +1849,9 @@ static void lpphy_papd_cal_txpwr(struct b43_wldev *dev)
->  	lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
->  
->  	if (dev->dev->chip_id == 0x4325 && dev->dev->chip_rev == 0)
-> -		lpphy_papd_cal(dev, gains, 0, 1, 30);
-> +		lpphy_papd_cal(dev, oldgains, 0, 1, 30);
->  	else
-> -		lpphy_papd_cal(dev, gains, 0, 1, 65);
-> +		lpphy_papd_cal(dev, oldgains, 0, 1, 65);
->  
->  	if (old_afe_ovr)
->  		lpphy_set_tx_gains(dev, oldgains);
-> -- 
-> 2.20.0
-> 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index e24403c..ec681da 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -3619,12 +3619,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_deinit_irq;
+ 	}
+ 
+-	ret = ath10k_pci_chip_reset(ar);
+-	if (ret) {
+-		ath10k_err(ar, "failed to reset chip: %d\n", ret);
+-		goto err_free_irq;
+-	}
+-
+ 	bus_params.dev_type = ATH10K_DEV_TYPE_LL;
+ 	bus_params.link_can_suspend = true;
+ 	bus_params.chip_id = ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
+@@ -3639,6 +3633,12 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_free_irq;
+ 	}
+ 
++	ret = ath10k_pci_chip_reset(ar);
++	if (ret) {
++		ath10k_err(ar, "failed to reset chip: %d\n", ret);
++		goto err_free_irq;
++	}
++
+ 	ret = ath10k_core_register(ar, &bus_params);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
+-- 
+1.7.0.4
+
