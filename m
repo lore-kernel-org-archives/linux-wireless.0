@@ -2,130 +2,109 @@ Return-Path: <SRS0=qAgV=RZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9692C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 19:25:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CB30C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 20:40:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98303218FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 19:25:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F40CD2190A
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Mar 2019 20:40:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N1P7kS4Q"
+	dkim=pass (2048-bit key) header.d=ibsgaard-io.20150623.gappssmtp.com header.i=@ibsgaard-io.20150623.gappssmtp.com header.b="O40CKOXo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727645AbfCVTZl (ORCPT
+        id S1727521AbfCVUkQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Mar 2019 15:25:41 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:38977 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726055AbfCVTZl (ORCPT
+        Fri, 22 Mar 2019 16:40:16 -0400
+Received: from mail-it1-f195.google.com ([209.85.166.195]:35440 "EHLO
+        mail-it1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726603AbfCVUkQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Mar 2019 15:25:41 -0400
-Received: by mail-wm1-f67.google.com with SMTP id t124so3233441wma.4
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2019 12:25:40 -0700 (PDT)
+        Fri, 22 Mar 2019 16:40:16 -0400
+Received: by mail-it1-f195.google.com with SMTP id w15so5466245itc.0
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2019 13:40:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=n7ngg4JF+rzvOfnPjOAg1BjIpI8zb7UwgqF93+Q0lA0=;
-        b=N1P7kS4Qr4ZSBzAMlhgmGU+deVD1JC6gfUN2kC5PCcGHCBZik9xOn2vJkWUxaAnmWL
-         yJ6gHYn/yJ5FuFnadb2R7r8fZEprx2GQ6fvVakxHnRs3QKDuNNJ75lGMZjKOusvnjtfL
-         7F12VcT1xfTgTWZG5NdHYugGVDPh2Fy54W0bSfCis/jOpK6QGP5lXdToEJEmDEfWglww
-         NyX9PtX+8qO1h4bTajmK81X4m3pHbTIuZaI7tIPijIRRdYSq0SeA8P+MadPjP1ICYMPv
-         CBicD3iVMbWhlF0RjIOBEknRNB3p41ghfMhQC37ZL8bBNqbVqgvweGeZTeAIwJi+uZ3/
-         70+Q==
+        d=ibsgaard-io.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=3RYrlJBAd5RXJNAy7UusN4Ej4akzvmGng0DULBeetKc=;
+        b=O40CKOXowM+h+qpXlwj7kzAP9j/Enpm2VPNarJOY/OGvX+FqGMZ2jvnw8pgaSHXKGK
+         ZKfUdS2KacXCLylwu+y+WbyTX8djR4XhO8Qho5ovDX52LwHn5TCsZ8EsDS9gwY6m5nm9
+         ConrscDFQUDEK9Qo8avtcoAYTsVV8NgjuZISBCGaJnCVUHKM/TWGgnXTIQk+pRB78CjV
+         0sZ6k28iampexR1Dff7lfwJfwxhnVinN5SW4q8C81ZorJg6YMEb87x+t4MI7ZsZFMiKm
+         bcoBINAffoo+UzygzCSeYawDXFIM5qsZhwxvGRux446XDmG7DtqiZQgtqOLbzpzBQ4Rx
+         JxMg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=n7ngg4JF+rzvOfnPjOAg1BjIpI8zb7UwgqF93+Q0lA0=;
-        b=lFLQ7CUDHqCLyyrPh0AgNnk3Q/QbDA7anzn0lm+hwSfTsU/p+ZT3zFK+qEsy6dB5Dx
-         xdEoZfgdqE+FsKMX0D2iZ6yrxAkkatlDqjgU/0pQJpTLt3lmCnHUA0F4CUraioh/OuLP
-         FwwCTforcBu9GMaBZWagq0gIEqDViqPpcG0ZkHvrvSnpJ6ee09BAnoYwKAEbqmu0O1Hj
-         LJ3MHRBSrRs8CoOmRy6JzUKkDP93eoOG/0OU7s78t8I68HrUCRDzYrbAgl0J1zueBTbb
-         E+FB9LOxoQSJqDcBBjT8nsTJ+rAPstSWCF/W9quJ5jv9utDTv1/7CjXpn8IZk+heSoWc
-         +3bg==
-X-Gm-Message-State: APjAAAXdhMPnv85pU54sx2TKGiL7fW9Cz/UQLyuMuYa8sR46GCCYRzBA
-        4IX9oP52mdeWKw2iMKp/yog=
-X-Google-Smtp-Source: APXvYqwYi75bxOchVq/AbZfBFqtwipHe5PVz4hvt/BNcZY2FMUEtOzrXal/WIiCd9vjTbr0bWmit6g==
-X-Received: by 2002:a1c:b455:: with SMTP id d82mr4338823wmf.153.1553282739280;
-        Fri, 22 Mar 2019 12:25:39 -0700 (PDT)
-Received: from debian64.daheim (p5B0D7465.dip0.t-ipconnect.de. [91.13.116.101])
-        by smtp.gmail.com with ESMTPSA id v1sm9576373wrt.88.2019.03.22.12.25.38
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 22 Mar 2019 12:25:38 -0700 (PDT)
-Received: from localhost.daheim ([127.0.0.1] helo=debian64.localnet)
-        by debian64.daheim with esmtp (Exim 4.92)
-        (envelope-from <chunkeey@gmail.com>)
-        id 1h7PnO-0000h6-0g; Fri, 22 Mar 2019 20:25:38 +0100
-From:   Christian Lamparter <chunkeey@gmail.com>
-To:     Tomislav =?utf-8?B?UG/FvmVnYQ==?= <pozega.tomislav@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, openwrt-devel@lists.openwrt.org,
-        kalle@codeaurora.org
-Subject: Re: [PATCH] ath10k: reset chip after supported check
-Date:   Fri, 22 Mar 2019 20:25:37 +0100
-Message-ID: <3337086.qEUs9xMCTV@debian64>
-In-Reply-To: <1553281120-22139-1-git-send-email-pozega.tomislav@gmail.com>
-References: <1553281120-22139-1-git-send-email-pozega.tomislav@gmail.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=3RYrlJBAd5RXJNAy7UusN4Ej4akzvmGng0DULBeetKc=;
+        b=L7Pi1S02xQVr6JA9HyqlM9w4lF5Cgv6BVoScLb+ICzbw847vsPFDMP1whC+nvfef4s
+         Hfqs8SPiII41iOGvpVI1VjLOC83JMsjxKxrgBYmV8mvLAhwZFCUsRi1KcwR+hePwKlfn
+         TGh6S6eSeMkYoJU2IVius1HdDZG/H4nrqjNlX/KgXbpipvxj5o8VX7ieD9WeADADu+T7
+         1CiYA8kcuBHGyKi5jt5wcy43Y9Hvn/Vd/d+PKdiQH/YUWXKKaVRMWETPVJKS/B75+1Rk
+         HoyCpotNy99P+XMERbBtV/51Xr1XbTZkn3sB0pMvu10Tvlxbcj+FARKNEf6NEvKufRWA
+         a1jw==
+X-Gm-Message-State: APjAAAVtSTj+Sfcnj8hr1J5IpcE0o1E0SGUdYA5NCnX5RzFgVYvhj6UL
+        JgrmvSivF9beq8Gafjg73rbEwJvQRvN1+gj6G+QsvetH
+X-Google-Smtp-Source: APXvYqwbbOpIMYLvGHnmBxJiLFQGgmuDcPV5KHZpQ6XrbJep5XReEZ2iY4cK0Vao+d2qfvhwwptk5SZZ9yey2ZVVYf8=
+X-Received: by 2002:a24:75c7:: with SMTP id y190mr693217itc.108.1553287214856;
+ Fri, 22 Mar 2019 13:40:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+References: <CABWD38man7mGiConmvmK0V=35P9zV7uvhVoY-8eSQQeO9W2+Qw@mail.gmail.com>
+ <83dad8c2478e141e382b02056389ba281bc72720.camel@sipsolutions.net>
+In-Reply-To: <83dad8c2478e141e382b02056389ba281bc72720.camel@sipsolutions.net>
+From:   thomas <thomas@ibsgaard.io>
+Date:   Fri, 22 Mar 2019 13:40:04 -0700
+Message-ID: <CABWD38kCrzns2RkShGDY6ip99fAFM3Ar_n6zDhk73KHxLTDbpQ@mail.gmail.com>
+Subject: Re: preparing for 802.11ah channels
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Friday, March 22, 2019 7:58:40 PM CET Tomislav Po=C5=BEega wrote:
-> When chip reset is done before the chip is checked if supported
-> there will be crash. Previous behaviour caused bootloops on
-> Archer C7 v1 units, this patch allows clean device boot without
-> excluding ath10k driver.
->=20
-You need
+On Fri, Mar 15, 2019 at 2:47 AM Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> On Sat, 2019-02-16 at 15:45 -0800, thomas pedersen wrote:
+> > Hello,
+> >
+> > I'm working on defining new channels for S1G PHYs in mac80211. These
+> > are in the 900MHz range and center frequency for the 1MHz channels are
+> > on a half MHz, while the existing channel definitions are in units of
+> > MHz.
+>
+> Yay... :)
+>
+> > In order to support the new channels we could change the internal
+> > center frequency units to KHz and extend the nl80211 API so
+> > NL80211_FREQUENCY_ATTR_FREQ and NL80211_ATTR_WIPHY_FREQ get _KHZ
+> > variants while renaming the original attributes to _MHZ to reflect the
+> > units.
+>
+> The nl80211 API seems straightforward, yeah.
+>
+> > From looking at the code it looks like this should be fairly
+> > straightforward, if involving a lot of changes since the driver
+> > declarations would have to change too. Am I missing something
+> > obviously wrong, or does this sound reasonable?
+>
+> I'm not sure I agree about all the driver changes being straightforward.
+> In theory yes, but ... ;-)
+>
+> I guess you'd define a new band (NL80211_BAND_S1G or something?), so
+> perhaps there's a way we can get away with doing it only on that band?
+>
+> OTOH, I guess if you change center_freq1 to center_freq1_khz or
+> something then you compile-fail everywhere ...
 
-=46ixes: 1a7fecb766c8 ("ath10k: reset chip before reading chip_id in probe")
+Yeah it gets ugly quick to have additional freq_khz members,
+especially when doing comparisons etc.
 
-too
-> Signed-off-by: Tomislav Po=C5=BEega <pozega.tomislav@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath10k/pci.c |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless=
-/ath/ath10k/pci.c
-> index e24403c..ec681da 100644
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -3619,12 +3619,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
->  		goto err_deinit_irq;
->  	}
-> =20
-> -	ret =3D ath10k_pci_chip_reset(ar);
-> -	if (ret) {
-> -		ath10k_err(ar, "failed to reset chip: %d\n", ret);
-> -		goto err_free_irq;
-> -	}
-> -
->  	bus_params.dev_type =3D ATH10K_DEV_TYPE_LL;
->  	bus_params.link_can_suspend =3D true;
->  	bus_params.chip_id =3D ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
-> @@ -3639,6 +3633,12 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
->  		goto err_free_irq;
->  	}
-> =20
-> +	ret =3D ath10k_pci_chip_reset(ar);
-> +	if (ret) {
-> +		ath10k_err(ar, "failed to reset chip: %d\n", ret);
-> +		goto err_free_irq;
-> +	}
-> +
->  	ret =3D ath10k_core_register(ar, &bus_params);
->  	if (ret) {
->  		ath10k_err(ar, "failed to register driver core: %d\n", ret);
->=20
+The kernel part was not too bad, there are only 3 structs or so to
+worry about. hostap on the other hand is incredibly hairy :)
 
-
-
-
+Thomas
