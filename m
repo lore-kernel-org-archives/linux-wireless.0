@@ -2,134 +2,104 @@ Return-Path: <SRS0=3nVx=R2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE40C10F05
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Mar 2019 04:00:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32E7CC43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Mar 2019 06:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC9D2218B0
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Mar 2019 04:00:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="TiRxLVa8"
+	by mail.kernel.org (Postfix) with ESMTP id 0E167218E2
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Mar 2019 06:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726801AbfCWD74 (ORCPT
+        id S1726093AbfCWGLV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Mar 2019 23:59:56 -0400
-Received: from mta-p7.oit.umn.edu ([134.84.196.207]:39236 "EHLO
-        mta-p7.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726038AbfCWD74 (ORCPT
+        Sat, 23 Mar 2019 02:11:21 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:46472 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726029AbfCWGLV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Mar 2019 23:59:56 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-p7.oit.umn.edu (Postfix) with ESMTP id BE22CDFD
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Mar 2019 03:59:54 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p7.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p7.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id fl3WUoZRKmAL for <linux-wireless@vger.kernel.org>;
-        Fri, 22 Mar 2019 22:59:54 -0500 (CDT)
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
-        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mta-p7.oit.umn.edu (Postfix) with ESMTPS id 7CC94E15
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2019 22:59:54 -0500 (CDT)
-Received: by mail-pf1-f198.google.com with SMTP id n63so4180004pfb.14
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2019 20:59:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umn.edu; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=kbLUaSkzG1k2scHHzUxC15KlkXaxuyP58YKT+Se2aT4=;
-        b=TiRxLVa87PIbxL3FuXhkwuBB0QtTcOzdZvLj13T4VhqUaERna5B4n8iTo0RY/lV8ct
-         4+1v2XtnAYbjaW0E0vX6n9TFR6dyGaunNbfPFFAsDp5h4vbQMSj7+9003JBekJY2KW+u
-         lfz+kZpP9Q8PJ1LwibAHXwI71XFXzhmrJ1WxFW639wDEsAV/b/LHw2dP4L3XzB/y6KXT
-         YhaNoegf52tjZRqdom3T0T58acXDcKXseXNDaQTGdh5h3BeT9Xc67wpf5fd8IqUK+oJJ
-         R5n8DdN2uPPQ5/9xGXiTNNdM4OpUQA9JzVky3dMr37He9pjGEsNM2Bn79OxXn0SOphNS
-         7qDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=kbLUaSkzG1k2scHHzUxC15KlkXaxuyP58YKT+Se2aT4=;
-        b=RcTkNkK74OFtuRuax17QmmfWfbPHozyh978DkpfPD4QiY7ROALeUdbpIaFI+4kr26J
-         oKRj1DIWZTmuoyKn7McMhA4hQFnkPR5TTV+0DGwEA1ugGX+iUFdEBUjcQPIuYLSSyJuA
-         48goXgylSkEALEHtg5fxE1cFqT5m9H3VEHFxXkTM+y2ZIOxbzp6EYe+LHgVPClY+ycc4
-         tD6fW+6CybHImA08zIr6POINrDVRYowgd5fgzpIf7yiGrO+EtmeNmk967MXvl2jIHYQo
-         QdZepYVRq8AnzAIFtZje6QWn8OAE5DFCDiYZ3u0ohTqnQjhHNedX5DIFw1FCm18BPu2h
-         Ff6Q==
-X-Gm-Message-State: APjAAAWfhUP/talo7n2FtezgqoVMCPgTqH5FpuUdtijc862vJF+T6nHg
-        jBRPYsdeHyJ9jOez3Bp5eMw6o4JL2tnq7sJBY8Yc5gpj3PR98sgdMPewMK9vGAm+IXAjHYhQbr9
-        2c+chLpfYwj58aoNrG1qDynee8xaSSoI=
-X-Received: by 2002:a65:62d4:: with SMTP id m20mr12477507pgv.416.1553313593833;
-        Fri, 22 Mar 2019 20:59:53 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqzFmrNYmDfE7sro7m6tbkgr3shsk+L+XOf86dbqj/J5DztcqH2KLaskPjalaMlwzaCs09NDlw==
-X-Received: by 2002:a65:62d4:: with SMTP id m20mr12477485pgv.416.1553313593619;
-        Fri, 22 Mar 2019 20:59:53 -0700 (PDT)
-Received: from [10.184.4.71] (host-173-230-104-21.mnmigsc.mn.minneapolis.us.clients.pavlovmedia.net. [173.230.104.21])
-        by smtp.gmail.com with ESMTPSA id e15sm11032031pgk.30.2019.03.22.20.59.52
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 22 Mar 2019 20:59:52 -0700 (PDT)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 12.2 \(3445.102.3\))
-Subject: Re: [PATCH] net: rtlwifi: fix a potential NULL pointer dereference
-From:   Kangjie Lu <kjlu@umn.edu>
-In-Reply-To: <20190312075633.573-1-kjlu@umn.edu>
-Date:   Fri, 22 Mar 2019 22:59:53 -0500
-Cc:     pakki001@umn.edu, Ping-Ke Shih <pkshih@realtek.com>,
+        Sat, 23 Mar 2019 02:11:21 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1h7Zs8-00015K-0H; Sat, 23 Mar 2019 08:11:12 +0200
+Message-ID: <a92bc0994d5f3fa5da5da471d0ccd01f8cefeee5.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Johannes Berg <johannes.berg@intel.com>
+Cc:     clang-built-linux@googlegroups.com,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Avraham Stern <avraham.stern@intel.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <AFBB09F8-46AE-4B74-BF53-1045814476B0@umn.edu>
-References: <20190312075633.573-1-kjlu@umn.edu>
-To:     kjlu@umn.edu
-X-Mailer: Apple Mail (2.3445.102.3)
+Date:   Sat, 23 Mar 2019 08:11:10 +0200
+In-Reply-To: <20190322141322.463149-1-arnd@arndb.de>
+References: <20190322141322.463149-1-arnd@arndb.de>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5-1 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] iwlwifi: work around clang -Wuninitialized warning
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-
-
-> On Mar 12, 2019, at 2:56 AM, Kangjie Lu <kjlu@umn.edu> wrote:
->=20
-> In case alloc_workqueue fails, the fix reports the error and
-> returns to avoid NULL pointer dereference.
->=20
-> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+On Fri, 2019-03-22 at 15:13 +0100, Arnd Bergmann wrote:
+> Clang incorrectly warns about an uninitialized variable:
+> 
+> drivers/net/wireless/intel/iwlwifi/mvm/sta.c:2114:12: error: variable
+> 'queue' is used uninitialized whenever 'if'
+>       condition is false [-Werror,-Wsometimes-uninitialized]
+>                 else if (WARN(1, "Missing required TXQ for adding
+> bcast STA\n"))
+>                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> ~~~~~~~~~~
+> include/asm-generic/bug.h:130:36: note: expanded from macro 'WARN'
+>  #define WARN(condition, format...)
+> ({                                   \
+>                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> ~~~~
+> drivers/net/wireless/intel/iwlwifi/mvm/sta.c:2119:33: note:
+> uninitialized use occurs here
+>                 iwl_mvm_enable_txq(mvm, NULL, queue, 0, &cfg,
+> wdg_timeout);
+>                                               ^~~~~
+> drivers/net/wireless/intel/iwlwifi/mvm/sta.c:2114:8: note: remove the
+> 'if' if its condition is always true
+>                 else if (WARN(1, "Missing required TXQ for adding
+> bcast STA\n"))
+>                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> ~~~~~~~~~~~
+> drivers/net/wireless/intel/iwlwifi/mvm/sta.c:2094:11: note:
+> initialize the variable 'queue' to silence this warning
+>         int queue;
+>                  ^
+>                   = 0
+> 1 error generated.
+> 
+> This cannot happen because the if/else if/else if block always
+> has one code path that is entered. However, we can simply
+> rearrange the code to let clang see this as well.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 > ---
-> drivers/net/wireless/realtek/rtlwifi/base.c | 5 +++++
-> 1 file changed, 5 insertions(+)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c =
-b/drivers/net/wireless/realtek/rtlwifi/base.c
-> index 217d2a7a43c7..ac746c322554 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-> @@ -448,6 +448,11 @@ static void _rtl_init_deferred_work(struct =
-ieee80211_hw *hw)
-> 	/* <2> work queue */
-> 	rtlpriv->works.hw =3D hw;
-> 	rtlpriv->works.rtl_wq =3D alloc_workqueue("%s", 0, 0, =
-rtlpriv->cfg->name);
-> +	if (unlikely(!rtlpriv->works.rtl_wq)) {
-> +		pr_err("Failed to allocate work queue\n");
-> +		return;
-> +	}
-> +
 
-Can someone review the patch?
+Thanks for the patch, Arnd! But I have already queued up an equivalent
+patch for v5.2 (should probably reach linux-next by the end of next
+week or so):
 
-Thanks.
+https://patchwork.kernel.org/patch/10844025/
 
-> 	INIT_DELAYED_WORK(&rtlpriv->works.watchdog_wq,
-> 			  (void *)rtl_watchdog_wq_callback);
-> 	INIT_DELAYED_WORK(&rtlpriv->works.ips_nic_off_wq,
-> --=20
-> 2.17.1
->=20
+--
+Cheers,
+Luca.
 
