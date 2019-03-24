@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24F6CC43381
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 07:23:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B98CC43381
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 07:25:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E717121019
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 07:23:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25E9921019
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 07:25:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Vv3WU5gw"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="FS72EXG9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728474AbfCXHXg (ORCPT
+        id S1728418AbfCXHZy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Mar 2019 03:23:36 -0400
-Received: from nbd.name ([46.4.11.11]:59310 "EHLO nbd.name"
+        Sun, 24 Mar 2019 03:25:54 -0400
+Received: from nbd.name ([46.4.11.11]:59440 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727963AbfCXHXf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Mar 2019 03:23:35 -0400
+        id S1727963AbfCXHZx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 Mar 2019 03:25:53 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=s6XBxVp0uwjhGwUlbNzPGypbwbSEjpNWQJoMfowQArU=; b=Vv3WU5gwRP65zCvyQxDeSfEqxB
-        gReKSFR84IIvrdJQZhVmd1+Q9XDd+JLZi4uFSpkZbh2XwHDMmQLJPly64YFi9YNybl7VFwIrvn9P+
-        PLNa9mS4nhJak7yOcL6qmp7l68qaRoMwZnjNt9SBLguuB1xfRDWYLEY2OuBKk2Og4Xos=;
+        bh=InzgAKpDIPTUxArWDj2I2CvJ7N8qJWI8vpqHwjaY2aw=; b=FS72EXG97aUOAwfa+YNTku2UZV
+        oUGXFi2mIT5Up2d3bVkyL5VdtUV5dptjkC92TMHPoffQDqcOwLwsd2ju1i56B8JzyB7MeM0ugAXNS
+        k5Wwgij0EuNSMyG4MMdCWgyqgIFaarYxt73gbQgjBGc9X+lByKyfdKDQ4pkCASt8nOhk=;
 Received: from p4ff13c7c.dip0.t-ipconnect.de ([79.241.60.124] helo=nf.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1h7xTi-0003za-QA; Sun, 24 Mar 2019 08:23:34 +0100
-Subject: Re: [PATCH v2 00/12] mt76x02: AP support for USB with PS
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        id 1h7xVw-00049T-5S; Sun, 24 Mar 2019 08:25:52 +0100
+Subject: Re: [PATCH 00/12] mt76usb: some cleanups and optimizations
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         linux-wireless@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-References: <1552991867-5087-1-git-send-email-sgruszka@redhat.com>
+References: <20190321152537.19105-1-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -65,12 +65,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <e174cda5-c3af-0393-512a-7dd9d5888378@nbd.name>
-Date:   Sun, 24 Mar 2019 08:23:33 +0100
+Message-ID: <26d8dba0-0384-4e4a-6744-66fc03a66a1c@nbd.name>
+Date:   Sun, 24 Mar 2019 08:25:51 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.6.0
 MIME-Version: 1.0
-In-Reply-To: <1552991867-5087-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <20190321152537.19105-1-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -79,32 +79,26 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-03-19 11:37, Stanislaw Gruszka wrote:
-> On USB we do not have available PSD queue. Using standard AC queues is
-> unreliable for sending PS buffered frames, stations can go sleep again
-> before frames are sent. Only reliable way I could find to sent broadcast
-> PS buffered frames is put them into beacon data registers, then frames
-> are sent just after proper beacon. HW do the work when we encrypt the 
-> frames in software.
+On 2019-03-21 16:25, Stanislaw Gruszka wrote:
+> Significant change is remove mt76u_buf and use urb directly
+> and allocate urb and sg as linear data for better cache usage.
+> Other that that, set consist only of some minor cleanups.
 > 
-> I tested functionality used arping to iwlwifi station that do
-> aggressive PS, it works like this:
+> RFC -> v1:
+> - introduce mt76u_tx_setup_buffers
+> - calculate data_len differently
+> - fix *usb->sg bug on intermediate patches
+> - use (struct scatterlist *)(e->urb + 1) trick
 > 
-> # arping -c 1 -I wlan0 192.168.9.110 
-> ARPING 192.168.9.110 from 192.168.9.1 wlan0
-> Unicast reply from 192.168.9.110 [4C:34:88:5E:76:D5]  324.885ms
-> Sent 1 probes (1 broadcast(s))
-> 
-> Otherwise arping fails:
-> 
-> # arping -c 1 -I wlan0 192.168.9.110 
-> ARPING 192.168.9.110 from 192.168.1.148 wlan0
-> Sent 1 probes (1 broadcast(s))
-> Received 0 response(s)
-> 
-> Tested on MT7610U and MT7630E (on this device TX hang
-> in AP mode on 2.4GHz band, but this is not related to this
-> patch set).
+> Rebased on latest tree and 
+> [PATCH v2 00/12] mt76x02: AP support for USB with PS
+> https://lore.kernel.org/linux-wireless/1552991867-5087-1-git-send-email-sgruszka@redhat.com/
+>   
+> Not rebased on
+> [PATCH 1/6] mt76: use mac80211 txq scheduling
+> https://lore.kernel.org/linux-wireless/20190316204242.73560-1-nbd@nbd.name/
+> It easer to rebase '[PATCH 5/6] mt76: move tx tasklet to struct mt76_dev'
+> from that set of top of my 2 pending sets. 
 Applied, thanks.
 
 - Felix
