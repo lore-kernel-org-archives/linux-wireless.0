@@ -6,48 +6,48 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D832C4360F
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 13:32:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 673ACC43381
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 14:54:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C5574222DA
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 13:32:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B8A721906
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 14:54:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553434331;
-	bh=+X0ggVubXnDee5xsUa36ECKwOER5tlYZcsyXzDpOtq4=;
+	s=default; t=1553439297;
+	bh=LXBF2R8bIAyDDO/smDih3uCtHsR3PVkpUj70P9WaklE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=JVuvEj8kxw7fI7k5NxFHXc29JS2j+04QPnFu/ZfqIyzU8brnla9r7xSRpOLveYsdb
-	 p3XnzZSOpEDd02+k2mAapUtyMWBXspsmCaILMqlMIUq+YMRAwCXXOoZpj88j59dshC
-	 Py64x28AXskQHNe+b2gf4ZQWN4sT5jG9n/B6BtRM=
+	b=HE3EQ1yOXILXcwGgkDr4Ew1FvuihnJD7p8gIYoRHq63wCE/9egvSZd0KSwY8eFLtL
+	 h7BPPN1m4KqcgV86jnZmvNj1PYTxJg57V3LvTaIF5hpQwUd8weXmYSlIZEzEISm8Jr
+	 C6KhaXvaUi+LDqQ4WgSN2SD61YaeavpENP1262DA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727728AbfCXNcK (ORCPT
+        id S1727137AbfCXOvx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Mar 2019 09:32:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35876 "EHLO mail.kernel.org"
+        Sun, 24 Mar 2019 10:51:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51462 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727252AbfCXNcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Mar 2019 09:32:10 -0400
+        id S1726603AbfCXOvx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 Mar 2019 10:51:53 -0400
 Received: from localhost.localdomain (unknown [151.66.48.245])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 08EC5222D6;
-        Sun, 24 Mar 2019 13:32:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2988E2147C;
+        Sun, 24 Mar 2019 14:51:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553434329;
-        bh=+X0ggVubXnDee5xsUa36ECKwOER5tlYZcsyXzDpOtq4=;
+        s=default; t=1553439112;
+        bh=LXBF2R8bIAyDDO/smDih3uCtHsR3PVkpUj70P9WaklE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=q6xSdgSdixjYlAk/KWZR70tnWC/SL6i4sCXpbLPQ/UfwEJwn+0RG7N0vesV6ih1e/
-         REi1JbSBUVWeflLry/PhZ+i+rbq+1o1XFOLM9afXMFzWljswxEWiSwpUSu4qBqoShQ
-         Z5G5fs91QHh+udGglrOkW/haPxtPwr7eRzChoqmA=
+        b=miLICvz24dJlqwO75jk5CDdel/XCSdKfWD28kVHufaRFZzfXwL8Zseewf3sW7gqBN
+         LLII88BIxQ35Y0jgQbiXoAZMAmX7mNTzsXGlAaqUqAdXX72x4BTe3nXWv3yfCqGkSz
+         niEMwnidjl+eZ8cC+V0dpqaYgcZAhff0zfmkMmjg=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
-Cc:     ryder.lee@mediatek.com, roychl666@gmail.com,
-        lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] mt76: dma: add skb check for dummy pointer
-Date:   Sun, 24 Mar 2019 14:31:11 +0100
-Message-Id: <7c3cc3aa6a07a902a25e64b84266964702846de7.1553425942.git.lorenzo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sgruszka@redhat.com
+Subject: [PATCH] mt76: usb: reduce locking in mt76u_tx_tasklet
+Date:   Sun, 24 Mar 2019 15:51:43 +0100
+Message-Id: <1f489df8bc635660a1d1fb72400e5562504c0555.1553437543.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1553425942.git.lorenzo@kernel.org>
-References: <cover.1553425942.git.lorenzo@kernel.org>
+In-Reply-To: <cover.1553437543.git.lorenzo@kernel.org>
+References: <cover.1553437543.git.lorenzo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -55,64 +55,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce skb check for dummy address in mt76_dma_tx_cleanup_idx.
-This is a preliminary patch to add support for new chipsets (e.g. 7615)
+Similar to pci counterpart, reduce locking in mt76u_tx_tasklet since
+q->head is managed just in mt76u_tx_tasklet and q->queued is updated
+holding q->lock
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c | 9 +++++----
- drivers/net/wireless/mediatek/mt76/dma.h | 2 ++
- 2 files changed, 7 insertions(+), 4 deletions(-)
+Changes since RFC:
+- reset done to false in mt76u_tx_tasklet instead of in mt76u_tx_queue_skb
+---
+ drivers/net/wireless/mediatek/mt76/usb.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 8302ebd89338..8a4b935d03b2 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -18,8 +18,6 @@
- #include "mt76.h"
- #include "dma.h"
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index 15aeda0582e7..f06112180694 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -624,28 +624,35 @@ static void mt76u_tx_tasklet(unsigned long data)
+ 	int i;
  
--#define DMA_DUMMY_TXWI	((void *) ~0)
--
- static int
- mt76_dma_alloc_queue(struct mt76_dev *dev, struct mt76_queue *q,
- 		     int idx, int n_desc, int bufsize,
-@@ -67,7 +65,7 @@ mt76_dma_add_buf(struct mt76_dev *dev, struct mt76_queue *q,
- 	int i, idx = -1;
- 
- 	if (txwi)
--		q->entry[q->head].txwi = DMA_DUMMY_TXWI;
-+		q->entry[q->head].txwi = DMA_DUMMY_DATA;
- 
- 	for (i = 0; i < nbufs; i += 2, buf += 2) {
- 		u32 buf0 = buf[0].addr, buf1 = 0;
-@@ -126,9 +124,12 @@ mt76_dma_tx_cleanup_idx(struct mt76_dev *dev, struct mt76_queue *q, int idx,
- 				 DMA_TO_DEVICE);
- 	}
- 
--	if (e->txwi == DMA_DUMMY_TXWI)
-+	if (e->txwi == DMA_DUMMY_DATA)
- 		e->txwi = NULL;
- 
-+	if (e->skb == DMA_DUMMY_DATA)
-+		e->skb = NULL;
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		u32 n_queued = 0, n_sw_queued = 0;
++		int idx;
 +
- 	*prev_e = *e;
- 	memset(e, 0, sizeof(*e));
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.h b/drivers/net/wireless/mediatek/mt76/dma.h
-index e3292df5e9b2..03dd2bafa4e8 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.h
-+++ b/drivers/net/wireless/mediatek/mt76/dma.h
-@@ -16,6 +16,8 @@
- #ifndef __MT76_DMA_H
- #define __MT76_DMA_H
+ 		sq = &dev->q_tx[i];
+ 		q = sq->q;
  
-+#define DMA_DUMMY_DATA			((void *)~0)
+-		spin_lock_bh(&q->lock);
+-		while (true) {
+-			if (!q->entry[q->head].done || !q->queued)
++		while (q->queued > n_queued) {
++			if (!q->entry[q->head].done)
+ 				break;
+ 
+ 			if (q->entry[q->head].schedule) {
+ 				q->entry[q->head].schedule = false;
+-				sq->swq_queued--;
++				n_sw_queued++;
+ 			}
+ 
++			idx = q->head;
+ 			entry = q->entry[q->head];
+ 			q->head = (q->head + 1) % q->ndesc;
+-			q->queued--;
++			n_queued++;
+ 
+-			spin_unlock_bh(&q->lock);
+ 			dev->drv->tx_complete_skb(dev, i, &entry);
+-			spin_lock_bh(&q->lock);
++			q->entry[idx].done = false;
+ 		}
+ 
++		spin_lock_bh(&q->lock);
 +
- #define MT_RING_SIZE			0x10
++		sq->swq_queued -= n_sw_queued;
++		q->queued -= n_queued;
++
+ 		wake = q->stopped && q->queued < q->ndesc - 8;
+ 		if (wake)
+ 			q->stopped = false;
+@@ -741,7 +748,6 @@ mt76u_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 	if (err < 0)
+ 		return err;
  
- #define MT_DMA_CTL_SD_LEN1		GENMASK(13, 0)
+-	q->entry[idx].done = false;
+ 	urb = q->entry[idx].urb;
+ 	err = mt76u_tx_setup_buffers(dev, skb, urb);
+ 	if (err < 0)
 -- 
 2.20.1
 
