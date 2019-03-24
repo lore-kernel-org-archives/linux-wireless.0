@@ -2,122 +2,83 @@ Return-Path: <SRS0=yoP0=R3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59883C43381
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 12:32:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2E25C43381
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 13:31:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 217AD222D0
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 12:32:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YCrYe395"
+	by mail.kernel.org (Postfix) with ESMTP id AA020222DA
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 13:31:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1553434290;
+	bh=h/Xmg4F9Wpf0raWl08QBsAxXt4NmHs8v+vr9aWqVGBs=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=vY08SzWQgjHRwbDf3uV1ODppHwHTKS6g+3bpyEssu6X1cd2EPSUgAPZTbNrfKjY90
+	 6NT8ZclmogCCGEmKlmzzAOUeQ0nlM1Dqv5ExfnV7euD5EJuQy3f0psHV4KqkszAYm/
+	 ZHq3DvV35Q62hkKifzMz1auUQqLZM2onne1kbNMs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728727AbfCXMc3 (ORCPT
+        id S1726877AbfCXNb3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Mar 2019 08:32:29 -0400
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:34633 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726963AbfCXMc2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Mar 2019 08:32:28 -0400
-Received: by mail-qk1-f195.google.com with SMTP id n68so3810095qka.1;
-        Sun, 24 Mar 2019 05:32:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=F1oeOlYViFEt64dYVsfhCV9Mtb717mMqSiOiE0dp7Oo=;
-        b=YCrYe395JGDGZX+g/hZaiv2W8ffslDViGj1d8PvJsKKtWJl+REW1Qg7aSH82f03+9B
-         elKNtLgjDYkDB708aCXlTIF4xXEgmN0Uu9SAZgU3rq0pwY61Dwl1ddNlpT/5c2NcCWn6
-         uDZFONQhd0qj5m3zAHnZVc7fBDgSWbIFhOVtSz3Y5sUZD3WJX0OvX35KrN5/FSFQl8tY
-         YcDqs3Q5EmGBx9KWkBsQVNg1bRPiYz76X4vzQoo5S2t3bjBm2kahe0/5TDGlsv6F9FDa
-         0CqE2B/XSoaNVxF7MPaMoiWVhySZ3UeWOshWIQUVgfBCp8B3HhZrJVb+uSamqJ/RgVJ0
-         /U6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=F1oeOlYViFEt64dYVsfhCV9Mtb717mMqSiOiE0dp7Oo=;
-        b=nW/i/hBm3JCyQ9PbqZy0I80VWrirOp7gjIm2ztZOdyvS4zSvOQuku/jK6pVq737np9
-         t8jtdC4X6Bp1IS+t53m2cmBa/L9Q3koBqCCql7ZQvCWUkhSPPgCZx9yImaqP+Fnx4QVw
-         ILydmVPgRwGkQDLSlj8xVxgd8zwtWONGDFIqDElGfEx7FqiRgLjIa95dM3AcRovsXXel
-         pX8zr8kMGRVqwz7h4UdekU2zhnwTKlRSwX0WRYGHHJ/z+vnsHVuhZvn/kmLHqG8FANKl
-         ZFJgLqzInWWnKzZCBRWk6S9mR0tuKdaY6p521klUF+cmVxuv9+1yL7+vOrTtPZBRww/W
-         jmFg==
-X-Gm-Message-State: APjAAAXfwUNBGAcZ72pjQTzIbTjxr51bd4VRN98xHPg+4I7N2tnHEQKg
-        6I25d7zs4SGJs24o+tqz6MMIy/IGVHsljw7uNm4=
-X-Google-Smtp-Source: APXvYqyMPHAN4KuBOygLw18xpQwuBElDXKHa0pmTrd2f49+OdnRgAFOYu0W5gdNsgum5pWVi2CL/5kID4hil3SbgR2A=
-X-Received: by 2002:ae9:de87:: with SMTP id s129mr15279572qkf.178.1553430747535;
- Sun, 24 Mar 2019 05:32:27 -0700 (PDT)
+        Sun, 24 Mar 2019 09:31:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35474 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726603AbfCXNb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 Mar 2019 09:31:29 -0400
+Received: from localhost.localdomain (unknown [151.66.48.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3349A222D6;
+        Sun, 24 Mar 2019 13:31:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553434288;
+        bh=h/Xmg4F9Wpf0raWl08QBsAxXt4NmHs8v+vr9aWqVGBs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=mis2pQjv0FtbKDdRHJoKyx21cwoSyFS2ReqiZ6Lhnp+b2nhQDd2mVKfG87e5LIVGs
+         LTlqTdsgjsZ9z7cnUePhFG6JFIiQzxZTGAWhLl0fHsYclJA6iv+4w0+RREcvR5uwBk
+         wWkQPzyrjSboM0XTAqZcPlRgLeGD/hNMhZnQuE4w=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     ryder.lee@mediatek.com, roychl666@gmail.com,
+        lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 0/4] add missing bits for mt7615 support
+Date:   Sun, 24 Mar 2019 14:31:07 +0100
+Message-Id: <cover.1553425942.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-References: <CAOX2RU5igDk_nkj74i-1_hoC4JbSSK3w1_-DyH+3EzyeMHnMcw@mail.gmail.com>
- <0aabbc6e74fefa8bd5a094dc84b1f87c@codeaurora.org> <CAOX2RU6wFpaP7Zm1MmvJTkxXL12Cz9VcWFvYTJzn=1=9g3wj9Q@mail.gmail.com>
- <64d97528f4fb088830a5dbcd8b74e934@codeaurora.org>
-In-Reply-To: <64d97528f4fb088830a5dbcd8b74e934@codeaurora.org>
-From:   Robert Marko <robimarko@gmail.com>
-Date:   Sun, 24 Mar 2019 13:32:15 +0100
-Message-ID: <CAOX2RU42VCwyizo5Y-23___i-1jLngegRadfjPwp0JaPLz73QQ@mail.gmail.com>
-Subject: Re: wil6210 firmware version
-To:     merez@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        linux-wireless-owner@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Well, that was not noted anywhere.
-I am sure that there are also other interesting things in newer
-firmware, especially since the device that I am working on is using
-6.2 FW itself in stock firmware.
+This is a preliminary series to add support for mt7615.
+Dynamically allocate txwi descriptor.
+Add missing bit in dma error data path.
+This series is based on https://patchwork.kernel.org/patch/10856027/
 
-On Sun, 24 Mar 2019 at 13:30, <merez@codeaurora.org> wrote:
->
-> On 2019-03-14 12:05, Robert Marko wrote:
-> > Biggest thing would be Channel 4 support as it is supported by driver
-> > but requires FW support also.
-> > But I would also like 20 station limit instead of 8.
-> >
-> > Cheers
-> > Robert Marko
->
-> Those features are supported only on Talyn device (latest wil6210 HW),
-> which is not available in market yet.
->
-> Thanks,
-> Maya
->
-> >
-> > On Thu, 14 Mar 2019 at 11:03, <merez@codeaurora.org> wrote:
-> >>
-> >> On 2019-03-14 11:07, Robert Marko wrote:
-> >> > Hi,
-> >> > I am working on OpenWrt support for device using wil6210 card.
-> >> > I am using firmware and board file provided in linux-firmware for its
-> >> > development but it appears tha most of newer features that driver
-> >> > enables are firmware dependant and version 5.2 in linux-firmware is
-> >> > too old to expose those.
-> >> >
-> >> > Is there any chance of QCA pushing updated version to linux-firmware?
-> >> >
-> >> > Thanks
-> >> > Robert Marko
-> >>
-> >> Is there any specific feature you are interested in?
-> >>
-> >> --
-> >> Maya Erez
-> >> Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> >> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-> >> a
-> >> Linux Foundation Collaborative Project
->
-> --
-> Maya Erez
-> Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
-> Linux Foundation Collaborative Project
+Lorenzo Bianconi (4):
+  mt76: set txwi_size according to the driver value
+  mt76: add skb pointer to mt76_tx_info
+  mt76: dma: introduce skb and flags fields in mt76_txwi_cache
+  mt76: dma: add skb check for dummy pointer
+
+ drivers/net/wireless/mediatek/mt76/dma.c      | 29 +++++++++++--------
+ drivers/net/wireless/mediatek/mt76/dma.h      |  2 ++
+ drivers/net/wireless/mediatek/mt76/mt76.h     | 19 ++++++++----
+ .../net/wireless/mediatek/mt76/mt7603/mac.c   | 11 +++----
+ .../wireless/mediatek/mt76/mt7603/mt7603.h    |  4 +--
+ drivers/net/wireless/mediatek/mt76/mt76x02.h  |  4 +--
+ .../net/wireless/mediatek/mt76/mt76x02_mac.c  |  4 ++-
+ .../net/wireless/mediatek/mt76/mt76x02_mmio.c |  1 -
+ .../net/wireless/mediatek/mt76/mt76x02_txrx.c | 12 ++++----
+ .../net/wireless/mediatek/mt76/mt76x02_usb.h  |  4 +--
+ .../wireless/mediatek/mt76/mt76x02_usb_core.c | 18 ++++++------
+ drivers/net/wireless/mediatek/mt76/tx.c       | 14 +++++----
+ drivers/net/wireless/mediatek/mt76/usb.c      | 14 +++++----
+ 13 files changed, 80 insertions(+), 56 deletions(-)
+
+-- 
+2.20.1
+
