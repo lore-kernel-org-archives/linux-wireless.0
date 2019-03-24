@@ -1,120 +1,110 @@
-Return-Path: <SRS0=3nVx=R2=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=yoP0=R3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BBBEC43381
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Mar 2019 22:34:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24F6CC43381
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 07:23:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 459AF21741
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Mar 2019 22:34:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E717121019
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Mar 2019 07:23:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="BagOUe1t"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Vv3WU5gw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727552AbfCWWdr (ORCPT
+        id S1728474AbfCXHXg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 23 Mar 2019 18:33:47 -0400
-Received: from mta-p5.oit.umn.edu ([134.84.196.205]:55500 "EHLO
-        mta-p5.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726727AbfCWWdr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Mar 2019 18:33:47 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-p5.oit.umn.edu (Postfix) with ESMTP id D2217C81
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Mar 2019 22:33:45 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p5.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p5.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 9LpSjBMzBpzo for <linux-wireless@vger.kernel.org>;
-        Sat, 23 Mar 2019 17:33:45 -0500 (CDT)
-Received: from mail-io1-f72.google.com (mail-io1-f72.google.com [209.85.166.72])
-        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mta-p5.oit.umn.edu (Postfix) with ESMTPS id A7701945
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Mar 2019 17:33:45 -0500 (CDT)
-Received: by mail-io1-f72.google.com with SMTP id e72so4870475iof.7
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Mar 2019 15:33:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umn.edu; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=Psj+9E0ZGFt1heJVKpqtu9ZsCWPx1khP7AIh+OGqXtE=;
-        b=BagOUe1tyzkSzznenoK/C0wGDpzYl7eEpW/6VFkmj2RHxXkNEV4Crchekq6U2ySgte
-         YIgLO8mVDBlBw4fqXnOCTa+QLNNCecwWUwQKoOf88KGE0mEBgyYYlQoFMiP/pn3u4vyA
-         GKtAwZROhZIdEai1eyUN9ZbFVZfQe2LDbnYcSnxXCsrsAZo1qpXQ2yMA1Tz8QWdFWBBZ
-         t5pPVTAv2gc17X7m3tRup9lTM1sfYLIyN8J7s+GfGN9mHEd8Du41rgxKtDbXDKea5Zr/
-         4JhBAmGXFfYZX8A3c0tO++GiObJpGal51opOO4t5AtdNPT2Fd5itRDuR9tt+DdcNq+/X
-         r1vQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=Psj+9E0ZGFt1heJVKpqtu9ZsCWPx1khP7AIh+OGqXtE=;
-        b=bRdfRjBS8keMQfWjbNQGPaVGrGNaNiPPJqE+92AdtzOYZ2uRiIw8jSLO5A9BP097dM
-         UkHCc+fhBx6Z/mcv6OM5g27dEQ9R5NgLORdvEJjv/RtleU1jzt7AHMrVHUbUNJjmOsVb
-         JkcWGI2wXiufUzq13/H7mxfjgnGh0mb18ljdb7AhnpQebBjkAJE7n9KRsG1WQWu79MEH
-         92FIwQ1a3IzK4lXh1/9kk3p+13lUhpXrlCdNd1IPxzIL6yyxGq0ncwtw7msBhwJ3/tpx
-         hnTkh4IezkFqxUIc5mA8BLFDG/+BhrqboE05/W5f83pjTeCszxiqd6xoAMDP9xBCijSM
-         axLg==
-X-Gm-Message-State: APjAAAXp90FDxr/bjhyPxOLe5abcrSP/f04O11yObz9R56VA7pLxcQPB
-        g/zzZfGEXp+knrsQ3JHuG/incEWtYzVTZLfemnBlslV9PqBwbZytqPRvXI+8yB6WT7abtRtzS/9
-        qKCqImbPJcKDYEh6D011fTeSwGKt5AnU=
-X-Received: by 2002:a24:9a86:: with SMTP id l128mr3362036ite.12.1553380425316;
-        Sat, 23 Mar 2019 15:33:45 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqwI92qwFiQVbGu3E57gI4WuOC3+XyW1LN6US+lDwUzzD62LTxJtB9AQCjhnPPyp2GAt79tBow==
-X-Received: by 2002:a24:9a86:: with SMTP id l128mr3362028ite.12.1553380424978;
-        Sat, 23 Mar 2019 15:33:44 -0700 (PDT)
-Received: from bee.dtc.umn.edu (cs-bee-u.cs.umn.edu. [128.101.106.63])
-        by smtp.gmail.com with ESMTPSA id 71sm3443185itm.31.2019.03.23.15.33.43
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 23 Mar 2019 15:33:43 -0700 (PDT)
-From:   Kangjie Lu <kjlu@umn.edu>
-To:     kjlu@umn.edu
-Cc:     pakki001@umn.edu, Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] net: mwifiex: fix a missing check of ssid
-Date:   Sat, 23 Mar 2019 17:33:39 -0500
-Message-Id: <20190323223339.13703-1-kjlu@umn.edu>
-X-Mailer: git-send-email 2.17.1
+        Sun, 24 Mar 2019 03:23:36 -0400
+Received: from nbd.name ([46.4.11.11]:59310 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727963AbfCXHXf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 Mar 2019 03:23:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=s6XBxVp0uwjhGwUlbNzPGypbwbSEjpNWQJoMfowQArU=; b=Vv3WU5gwRP65zCvyQxDeSfEqxB
+        gReKSFR84IIvrdJQZhVmd1+Q9XDd+JLZi4uFSpkZbh2XwHDMmQLJPly64YFi9YNybl7VFwIrvn9P+
+        PLNa9mS4nhJak7yOcL6qmp7l68qaRoMwZnjNt9SBLguuB1xfRDWYLEY2OuBKk2Og4Xos=;
+Received: from p4ff13c7c.dip0.t-ipconnect.de ([79.241.60.124] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1h7xTi-0003za-QA; Sun, 24 Mar 2019 08:23:34 +0100
+Subject: Re: [PATCH v2 00/12] mt76x02: AP support for USB with PS
+To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <1552991867-5087-1-git-send-email-sgruszka@redhat.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <e174cda5-c3af-0393-512a-7dd9d5888378@nbd.name>
+Date:   Sun, 24 Mar 2019 08:23:33 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.6.0
+MIME-Version: 1.0
+In-Reply-To: <1552991867-5087-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-sme->ssid may be invalid and thus should be checked.
+On 2019-03-19 11:37, Stanislaw Gruszka wrote:
+> On USB we do not have available PSD queue. Using standard AC queues is
+> unreliable for sending PS buffered frames, stations can go sleep again
+> before frames are sent. Only reliable way I could find to sent broadcast
+> PS buffered frames is put them into beacon data registers, then frames
+> are sent just after proper beacon. HW do the work when we encrypt the 
+> frames in software.
+> 
+> I tested functionality used arping to iwlwifi station that do
+> aggressive PS, it works like this:
+> 
+> # arping -c 1 -I wlan0 192.168.9.110 
+> ARPING 192.168.9.110 from 192.168.9.1 wlan0
+> Unicast reply from 192.168.9.110 [4C:34:88:5E:76:D5]  324.885ms
+> Sent 1 probes (1 broadcast(s))
+> 
+> Otherwise arping fails:
+> 
+> # arping -c 1 -I wlan0 192.168.9.110 
+> ARPING 192.168.9.110 from 192.168.1.148 wlan0
+> Sent 1 probes (1 broadcast(s))
+> Received 0 response(s)
+> 
+> Tested on MT7610U and MT7630E (on this device TX hang
+> in AP mode on 2.4GHz band, but this is not related to this
+> patch set).
+Applied, thanks.
 
-The fix adds such a check and returns an error if it is invalid.
-
-Signed-off-by: Kangjie Lu <kjlu@umn.edu>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index c46f0a54a0c7..a46820cf609f 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2343,6 +2343,12 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	int ret;
- 
-+	if (!sme->ssid) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "%s: Invalid ssid\n", dev->name);
-+		return -EOPNOTSUPP;
-+	}
-+
- 	if (GET_BSS_ROLE(priv) != MWIFIEX_BSS_ROLE_STA) {
- 		mwifiex_dbg(adapter, ERROR,
- 			    "%s: reject infra assoc request in non-STA role\n",
--- 
-2.17.1
-
+- Felix
