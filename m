@@ -2,141 +2,122 @@ Return-Path: <SRS0=1+XV=R4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8CCEC43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Mar 2019 14:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 652F8C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Mar 2019 14:34:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 973FF20850
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Mar 2019 14:33:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B48520879
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Mar 2019 14:34:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="hrqLszcD"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="nCtQvdQs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726177AbfCYOd4 (ORCPT
+        id S1726217AbfCYOeq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Mar 2019 10:33:56 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:41951 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725747AbfCYOd4 (ORCPT
+        Mon, 25 Mar 2019 10:34:46 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:35930 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726177AbfCYOeq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Mar 2019 10:33:56 -0400
-Received: by mail-pf1-f195.google.com with SMTP id 188so1095377pfd.8
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2019 07:33:56 -0700 (PDT)
+        Mon, 25 Mar 2019 10:34:46 -0400
+Received: by mail-pg1-f193.google.com with SMTP id r124so6693394pgr.3
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2019 07:34:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=mGGfmSUKgNNyGuiXLVx5jOgrRvs6jPkR8399Y1K2scs=;
-        b=hrqLszcDJJB5bXOrnBkheaF9OtxwKmfPzmdWLug7qiWI3zQA0cZq+y4QT8MNvNX3Xd
-         ChoIJjlxMDhpppCICUkDOjcfU6ahzxHY1jtaYdROvYQwpqDFbDhxWAw0c1jzisdmHeII
-         GoF3qMdx2DsOfEbzA4RdH0rU0pgWe+4urSRVg=
+        bh=I9vBCyjfANpsWkFDVseR5/3nUOvNBHoi3o5TEJQbQfI=;
+        b=nCtQvdQseoRMhD3LWldKrvXtnHNJf+YYgmjhwDbfPs4sKElAT5OZvQN9HSZPNLQtw4
+         /LpbR443PUCA8C+FuRv953Ek1H0lY4Yd/zUo85zZhKA+u7I1jAZisG6SnKqFR7Zo+zPg
+         mqnTX78kHJOfGBSMdq/L686b/JA2hHyVCJf/o=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=mGGfmSUKgNNyGuiXLVx5jOgrRvs6jPkR8399Y1K2scs=;
-        b=cnjjAoltRNWyATSYArELVTBw2a2rqA2SYjVy5QLIm9r1Ku0mnFXeg7P13OnNpVzgbl
-         toc4+OXCBtfM8ky4wFx4XsihdZA+EEL0977TrVlVTaF78VVMFv+MIkgrT2fiV8enULyr
-         X5ewnmSizLPv32Pfv3RW4aS0KhJ9odRcugGV4aZr6hZ1bF5C6P37uKRBV/phL5D6pSRw
-         ILHRZAaelkxaPjBq0IWG443ak0VXDqqAej/fjPkIFJTS4Y4mGdB3I1PRuPYhPwxopjfS
-         J9xkWRipZu5QBNprhkF76euL/DlUuPwRcZCPOcJm7e79IYYsK2nT+z1srfKgEb8pletZ
-         1KXw==
-X-Gm-Message-State: APjAAAUsCwm8itCOJh2D6p6ofW7IsTpOhKryMbbxWTJNEv6mdVRlp+jQ
-        YJQHoGtF9BG5NwvnC9zJgiJzzw==
-X-Google-Smtp-Source: APXvYqwyqfbQ9zdqT4f/gX5O+lPf0tVthOIQ7v0Qx1dlotFj121SWDcYMm965jNPcIc4ukVDw6nSVQ==
-X-Received: by 2002:a62:1b8a:: with SMTP id b132mr1936187pfb.19.1553524435980;
-        Mon, 25 Mar 2019 07:33:55 -0700 (PDT)
+        bh=I9vBCyjfANpsWkFDVseR5/3nUOvNBHoi3o5TEJQbQfI=;
+        b=WCHTXBzuxS4KUku7LS+pdMK/tEyw4FYso7usSJkIRG5/PVBqxsk73K74q8eOgDFImU
+         4BdI7z0rgw052MfM8U2eVShNqifT60Ia8fkFQOdhu5XgdTBfVoNLYSx3pzfS/aKq9MTh
+         sSsrpYl/NqwNrt/4XoxbhY0HvZd9i8ThGlaz830yJmWv9KvAWPCs/FvMfNlCWVR0EpMN
+         uAdahf4nY5l15JV9aAJqCTe7MgFgfitc9WfQulo2J3T2IH9Vg/qdloyxwG4kxmbXeaFz
+         XJrOIVIL4IPOAChPsdB7T8nI4XRRK7u9hxaCVIQRLXvlaxFQqxfcRZ0AC9u+FCLjEjZ6
+         tPkw==
+X-Gm-Message-State: APjAAAUa+bF0CCSglrnnLSS/FVlH6p0Tk8TTM1vCEBiutHES7IF/s50a
+        x3N1+LAgR552R35G6mgMWJXsmg==
+X-Google-Smtp-Source: APXvYqyWkdjNpS5PazUnWj9fmP863yltuwtEWV/DIOf2dlg9U8bFBN/v43CTZZLK6Nr1U4odQgYDFg==
+X-Received: by 2002:a63:4383:: with SMTP id q125mr22129295pga.370.1553524485434;
+        Mon, 25 Mar 2019 07:34:45 -0700 (PDT)
 Received: from penguin (189.8.197.35.bc.googleusercontent.com. [35.197.8.189])
-        by smtp.gmail.com with ESMTPSA id c16sm22147212pfb.102.2019.03.25.07.33.53
+        by smtp.gmail.com with ESMTPSA id i72sm28740915pfj.147.2019.03.25.07.34.43
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 25 Mar 2019 07:33:54 -0700 (PDT)
-Date:   Mon, 25 Mar 2019 14:33:48 +0000
+        Mon, 25 Mar 2019 07:34:44 -0700 (PDT)
+Date:   Mon, 25 Mar 2019 14:34:39 +0000
 From:   Brian Norris <briannorris@chromium.org>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Tony Chuang <yhchuang@realtek.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Grant Grundler <grundler@chromium.org>
-Subject: Re: [RFC v2 03/12] rtw88: hci files
-Message-ID: <20190325143258.wqpy4vt2o3jmb4lq@penguin>
-References: <1538553748-26364-1-git-send-email-yhchuang@realtek.com>
- <1538553748-26364-4-git-send-email-yhchuang@realtek.com>
- <20181004130212.GC16819@redhat.com>
- <F7CD281DE3E379468C6D07993EA72F84D172A54A@RTITMBSVM01.realtek.com.tw>
- <20181008093435.GE1961@redhat.com>
+To:     yhchuang@realtek.com
+Cc:     kvalo@codeaurora.org, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
+        sgruszka@redhat.com, pkshih@realtek.com, tehuang@realtek.com,
+        Larry.Finger@lwfinger.net
+Subject: Re: [PATCH v8 03/14] rtw88: hci files
+Message-ID: <20190325143439.pxe2sppqssdad4in@penguin>
+References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
+ <1552450443-351-4-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181008093435.GE1961@redhat.com>
+In-Reply-To: <1552450443-351-4-git-send-email-yhchuang@realtek.com>
 User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-+ Grant
+Hi,
 
-I'm sorry (a little) to drudge up old revisions. But I happened to be
-looking back at prior reviews, since I'm reviewing the latest, and I
-realized I had this same (then-unresolved) confusion on later versions.
-Maybe I should have read more before reviewing... Oh well. Comments
-below:
+On Wed, Mar 13, 2019 at 12:13:52PM +0800, yhchuang@realtek.com wrote:
+> diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+> new file mode 100644
+> index 0000000..cf3bffb
+> --- /dev/null
+> +++ b/drivers/net/wireless/realtek/rtw88/pci.c
+> @@ -0,0 +1,1211 @@
+...
+> +static u8 ac_to_hwq[] = {
+> +	[0] = RTW_TX_QUEUE_VO,
+> +	[1] = RTW_TX_QUEUE_VI,
+> +	[2] = RTW_TX_QUEUE_BE,
+> +	[3] = RTW_TX_QUEUE_BK,
+> +};
 
-On Mon, Oct 08, 2018 at 11:34:36AM +0200, Stanislaw Gruszka wrote:
-> On Fri, Oct 05, 2018 at 12:07:06PM +0000, Tony Chuang wrote:
-> > > > +static void rtw_pci_dma_check(struct rtw_dev *rtwdev,
-> > > > +			      struct rtw_pci_rx_ring *rx_ring,
-> > > > +			      u32 idx)
-> > > > +{
-> > > > +	struct rtw_chip_info *chip = rtwdev->chip;
-> > > > +	struct rtw_pci_rx_buffer_desc *buf_desc;
-> > > > +	u32 desc_sz = chip->rx_buf_desc_sz;
-> > > > +	u16 total_pkt_size;
-> > > > +	int i;
-> > > > +
-> > > > +	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
-> > > > +						     idx * desc_sz);
-> > > > +	for (i = 0; i < 20; i++) {
-> > > > +		total_pkt_size = le16_to_cpu(buf_desc->total_pkt_size);
-> > > > +		if (total_pkt_size)
-> > > > +			return;
-> > > > +	}
-> > > > +
-> > > > +	if (i >= 20)
-> > > > +		rtw_warn(rtwdev, "pci bus timeout, drop packet\n");
-> > > This is not right, most likely you need to use
+I don't want to dig up and repeat the details of my comments, but I
+think you missed my earlier suggestion here: you should use the
+ieee80211_ac_numbers enum instead of bare 0-3 indexing.
 
-Indeed, this was not right. Tony ended up removing it entirely later on,
-based on my independent (sorry, didn't read this!) suggestion.
+> +static u8 rtw_hw_queue_mapping(struct sk_buff *skb)
+> +{
+> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> +	__le16 fc = hdr->frame_control;
+> +	u8 q_mapping = skb_get_queue_mapping(skb);
+> +	u8 queue;
+> +
+> +	if (unlikely(ieee80211_is_beacon(fc)))
+> +		queue = RTW_TX_QUEUE_BCN;
+> +	else if (unlikely(ieee80211_is_mgmt(fc) || ieee80211_is_ctl(fc)))
+> +		queue = RTW_TX_QUEUE_MGMT;
+> +	else
+> +		queue = ac_to_hwq[q_mapping];
 
-> > > dma_sync_single_for_cpu() .
-> > 
-> > Not really understand how dma_sync_single_for_cpu() works.
-> > Can you show me if possible?
-> 
-> dma_sync_single_for_cpu() and dma_sync_single_for_device() 
-> transfer dma buffer ownership to respectivly CPU and device.
-> It is well documented in:
-> Documentation/DMA-API-HOWTO.txt:  
-> Documentation/DMA-API.txt
+It also seems wise to be defensive about the values of 'q_mapping', so
+we don't accidentally overstep the array if for some reason the
+implementation details of mac80211 change some day. e.g.:
 
-Yes, if we expect to need a sort of polling loop like this here, then it
-would be important to flush any caches (and, as Grant noted later, it
-would probably help to ensure some kind of consistent time deadline --
-udelay(), or maybe just check against ktime_get()).
+	else if (WARN_ON_ONCE(q_mapping >= ARRAY_SIZE(ac_to_hwq)))
+		// Pick a default.
 
-I'll also note here as I did on the later series: these rings are
-allocated with consistent memory, so as long as the device is only
-signalling this interrupt after it has completed writing to memory, then
-we should be reading the latest copy and there should be no need for a
-polling loop.
-
-And Tony apparently agreed with me; the loop is gone in the latest, and
-instead, we simply read once before emitting a warning.
-
-Regards,
 Brian
+
+> +
+> +	return queue;
+> +}
+> +
