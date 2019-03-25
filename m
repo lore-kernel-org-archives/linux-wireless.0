@@ -6,159 +6,154 @@ X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C3E2C43381
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Mar 2019 21:50:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83E34C43381
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Mar 2019 22:14:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D546F206DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Mar 2019 21:50:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 492F42075E
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Mar 2019 22:14:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="HYSufA7l"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="P7XWrekT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729552AbfCYVux (ORCPT
+        id S1730461AbfCYWOV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Mar 2019 17:50:53 -0400
-Received: from [208.74.158.174] ([208.74.158.174]:49618 "EHLO
-        mail3.candelatech.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S1729478AbfCYVux (ORCPT
+        Mon, 25 Mar 2019 18:14:21 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:32840 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729297AbfCYWOV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Mar 2019 17:50:53 -0400
-Received: from [192.168.43.60] (unknown [172.58.41.68])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id 42635137559;
-        Mon, 25 Mar 2019 14:50:52 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 42635137559
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1553550652;
-        bh=LKvG0E2p1GLJWMW+pmdSxsRdiwrr/I5Uuqt5plubzW8=;
-        h=Date:From:To:CC:Subject:References:In-Reply-To:From;
-        b=HYSufA7l+UA5N+jUIJzX8RDpf8sZCNrWKTBWzhxrg4LHFKqo7L1HqkBzkMwsWE/uQ
-         AHS1ynwG1/YCeYxs/sIsOuLGBZATUBHecL/fnNXtUPwxWsyCttX9LwUl6MzoZ6RKoH
-         h7JHzqiCYzFw26zg24IY5Ye7X8fF9CiB3iZXEgzE=
-Message-ID: <5C993A2C.8080300@candelatech.com>
-Date:   Mon, 25 Mar 2019 13:29:32 -0700
-From:   Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Thunderbird/31.3.0
+        Mon, 25 Mar 2019 18:14:21 -0400
+Received: by mail-lf1-f68.google.com with SMTP id v14so7278595lfi.0
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2019 15:14:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=VRdCcFgQLLDWWz3qnrffDNpSK5BWq9bf0WFwIbmMFV4=;
+        b=P7XWrekTGY7A8nQ7rO4xgArFr75AKAK1G6X4jdBf3U5yvR2bFi7zOk9SqWf4qF5Va1
+         hY1e4eBHzv7n4+hlsvGyGXPxh9eJ2P2L9X0Yz/rK6Azh9nz4lOzRd2EUzhirgM16oEKd
+         CBFD9CznHjmzYU2dyznZQzy+m1YSFRDk2Fv5Q=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=VRdCcFgQLLDWWz3qnrffDNpSK5BWq9bf0WFwIbmMFV4=;
+        b=Kw+rhzXNHVOOr9j3SitWJR/bRdI2LY5qAo0WBpwEkMmsqxz15XySRapNMgt/kf+ZDO
+         aLFGRWgprRAc/hGPlN40OYIAd1Fach1BginNHGWc4JpEotzQ1w6ogLNN+qCeNqwffi9X
+         lBJeTFE29kSd+1RWLMIZJPk+f8fUno1PMWDOuPjWIHLq/Biofs/CmIdp0adnF11zResX
+         CjWj7OLFZ6sBthiYNCyTwuD6iHHD5lfQuRJj3DrROEVWqQcHAbzs+v03O8Dnaem9Z/YE
+         mhLz2Fq0rCucFPFo/1Nh9oHaoONDcAIc5LOVp0i3Fz2Gde3GXqS7ad9d4PGgdSpdIuhO
+         p8cA==
+X-Gm-Message-State: APjAAAULFWwaTeP+d1D3wAQ3LAoRsweHxxVhfCpXAwhYxiv4d31i5FzG
+        7mEs9gCrHJbYdLSdwZZIIQppXPEwtgg=
+X-Google-Smtp-Source: APXvYqxzI8N8w0A6JQnm/rZcjsccYGM5vrclSbvE/c1zdkVHSTEXSZ0UTp+z1zGNjsmCbCam6HY5sw==
+X-Received: by 2002:a19:7916:: with SMTP id u22mr13218950lfc.144.1553552058908;
+        Mon, 25 Mar 2019 15:14:18 -0700 (PDT)
+Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com. [209.85.167.47])
+        by smtp.gmail.com with ESMTPSA id 73sm3949707ljf.72.2019.03.25.15.14.17
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 25 Mar 2019 15:14:17 -0700 (PDT)
+Received: by mail-lf1-f47.google.com with SMTP id u2so7147946lfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2019 15:14:17 -0700 (PDT)
+X-Received: by 2002:ac2:598b:: with SMTP id w11mr14160537lfn.139.1553552057087;
+ Mon, 25 Mar 2019 15:14:17 -0700 (PDT)
 MIME-Version: 1.0
-To:     =?UTF-8?B?TWljaGHFgiBLYXppb3I=?= <kazikcz@gmail.com>
-CC:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Christian Lamparter <chunkeey@gmail.com>,
-        =?UTF-8?B?VG9taXNsYXYgUG/FvmVnYQ==?= <pozega.tomislav@gmail.com>,
+References: <20190207014143.41529-1-briannorris@chromium.org>
+ <20190325202706.GA68720@google.com> <CABvG-CWODF24BMeoCE98OK5fnGNgX0k3z5qTU8A0AD9ncH0jHw@mail.gmail.com>
+In-Reply-To: <CABvG-CWODF24BMeoCE98OK5fnGNgX0k3z5qTU8A0AD9ncH0jHw@mail.gmail.com>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Mon, 25 Mar 2019 15:14:05 -0700
+X-Gmail-Original-Message-ID: <CA+ASDXMRXMSFPXfzbG_2wKzBYAZmp2AVO1qsAJdALLOkPrVRCw@mail.gmail.com>
+Message-ID: <CA+ASDXMRXMSFPXfzbG_2wKzBYAZmp2AVO1qsAJdALLOkPrVRCw@mail.gmail.com>
+Subject: Re: [PATCH] ath10k: pci: use mutex for diagnostic window CE polling
+To:     =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Carl Huang <cjhuang@codeaurora.org>,
         linux-wireless <linux-wireless@vger.kernel.org>,
-        openwrt-devel@lists.openwrt.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH] ath10k: reset chip after supported check
-References: <1553281120-22139-1-git-send-email-pozega.tomislav@gmail.com> <3337086.qEUs9xMCTV@debian64> <fe853ec8-0dca-d931-8632-fbe4df5cfaf8@broadcom.com> <edc38f32-977a-53f5-babd-605775326a20@broadcom.com> <CABvG-CUXHgJ1ZUfsZw6ajzR=4DjnRRNrPmF147mZsoWJBjp-jQ@mail.gmail.com> <c13da25c-9116-9388-8e40-96bac8dca087@candelatech.com> <CABvG-CWP4y4MU1pJB8ZSpLPPYMkQ+=kQt1zRoUJW=0dMLbD5WQ@mail.gmail.com> <f3763b33-7944-81f8-98e1-053e51474a38@candelatech.com> <CABvG-CW2WNpi6Wcan3UMOWKfZLDTgmEzif63Peemnyk+4VtW3Q@mail.gmail.com>
-In-Reply-To: <CABvG-CW2WNpi6Wcan3UMOWKfZLDTgmEzif63Peemnyk+4VtW3Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        ath10k@lists.infradead.org, Wen Gong <wgong@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 03/25/2019 02:34 PM, Michał Kazior wrote:
-> On Mon, 25 Mar 2019 at 21:23, Ben Greear <greearb@candelatech.com> wrote:
->>
->> On 3/25/19 1:08 PM, Michał Kazior wrote:
->>> On Mon, 25 Mar 2019 at 16:55, Ben Greear <greearb@candelatech.com> wrote:
->>>> On 3/25/19 5:14 AM, Michał Kazior wrote:
->>>>> On Sat, 23 Mar 2019 at 08:20, Arend Van Spriel
->>>>> <arend.vanspriel@broadcom.com> wrote:
->>>>>>
->>>>>> * resending with corrected email address from Kalle
->>>>>> --------------------------------------------------------------------
->>>>>> + Michał
->>>>>
->>>>> Thanks!
->>>>>
->>>>>
->>>>>> On 3/22/2019 8:25 PM, Christian Lamparter wrote:
->>>>>>     > On Friday, March 22, 2019 7:58:40 PM CET Tomislav Požega wrote:
->>>>>>     >> When chip reset is done before the chip is checked if supported
->>>>>>     >> there will be crash. Previous behaviour caused bootloops on
->>>>>>     >> Archer C7 v1 units, this patch allows clean device boot without
->>>>>>     >> excluding ath10k driver.
->>>>>
->>>>> Can you elaborate more a bit? What kind of crashes are you seeing?
->>>>> What does the bootloop look like? Do you have uart connected to
->>>>> diagnose?
->>>>>
->>>>> Didn't C7 v1 have the old QCA9880 hw v1 which isn't really supported
->>>>> by ath10k? I recall the v1 chip was really buggy and required
->>>>> hammering registers sometimes to get things working.
->>>>
->>>> The crash is related to the v1 chip.  Is there a good way to detect
->>>> that this is the chip in question and only apply this work-around
->>>> for the problem chip?
->>>
->>> I don't know of any good way to do that.
->>>
->>> You could consider device-tree but that would be no different from
->>> having a module blacklist in the C7v1 build recipe, or to not build
->>> the module at all. That is unless you actually want to make v1 chip
->>> work with ath10k at which point there's more fun to be had before it
->>> can actually work.
->>
->> I remember v1, and I have no interest in trying to make it work :)
->>
->> If we could blacklist certain pci slots in the ath10k driver, I guess
->> that would work?
->>
->> I think the goal is to not use the v1 chip, but allow users to add a
->> v2 NIC to the platform, so driver still needs to load.
+Hi Michal,
+
+Thanks for the quick and useful response.
+
+On Mon, Mar 25, 2019 at 2:20 PM Micha=C5=82 Kazior <kazikcz@gmail.com> wrot=
+e:
+> On Mon, 25 Mar 2019 at 21:27, Brian Norris <briannorris@chromium.org> wro=
+te:
+> > It would appear that this triggers new warnings
+> >
+> >   BUG: sleeping function called from invalid context
+> >
+> > when handling firmware crashes. The call stack is
+> >
+> >   ath10k_pci_fw_crashed_dump
+> >     -> ath10k_pci_dump_memory
+> >     ...
+> >       -> ath10k_pci_diag_read_mem
+> >
+> > and the problem is that we're holding the 'data_lock' spinlock with
+> > softirqs disabled, while later trying to grab this new mutex.
 >
-> That makes sense, but I don't see how blacklisting pci slots would
-> help someone putting v2 nic into C7v1 mobo? Won't the slot be the same
-> regardless what nic is put?
+> No, the spinlock is not the real problem. The real problem is you're
+> trying to hold a mutex on a path which is potentially atomic /
+> non-sleepable: ath10k_pci_napi_poll().
 
-I'm not sure about that...maybe let OpenWRT boot by default
-assuming the slot is blacklisted, and then disable the blacklist
-if known to be a v2 NIC.
+I'll admit here that I've been testing a variety of kernels here
+(including upstream), and some of them are prior to this commit:
 
-If your patch below works, that looks a lot better though.
+3c97f5de1f28 ath10k: implement NAPI support
 
-Hopefully someone with that v1 board can test it.
+So this was running in a tasklet, not NAPI polling. But then my
+understanding was still incorrect: tasklets are also an atomic
+(softirq) context. Doh.
+
+I guess I'd say the problem is "both".
+
+>
+> > Unfortunately, data_lock is used in a lot of places, and it's unclear i=
+f
+> > it can be migrated to a mutex as well. It seems like it probably can be=
+,
+> > but I'd have to audit a little more closely.
+>
+> It can't be migrated to a mutex. It's intended to synchronize top half
+> with bottom half. It has to be an atomic non-sleeping lock mechanism.
+
+Ack, thanks for the correction.
+
+> What you need to do is make sure ath10k_pci_diag_read_mem() and
+> ath10k_pci_diag_write_mem() are never called from an atomic context.
+
+I knew that part already :)
+
+> For one, you'll need to defer ath10k_pci_fw_crashed_dump to a worker.
+> Maybe into ar->restart_work which the dump function calls now.
+
+Hmm, that's an idea -- although I'm not sure if I'd steal
+'restart_work', or create a different work item on the same queue. But
+either way, we'd still also have to avoid holding 'data_lock', and at
+that point, I'm not sure if we're losing desirable properties of these
+firmware dumps -- it allows more "stuff" to keep going on while we're
+preparing to dump the device memory state.
+
+> To get rid of data_lock from ath10k_pci_fw_crashed_dump() you'll need
+> to at least make fw_crash_counter into an atomic_t. This is just from
+> a quick glance.
+
+Yes, we'd need at least that much. We'd also need some other form of
+locking to ensure exclusion between all users of
+ar->coredump.fw_crash_data and similar. At the moment, that's
+'data_lock', but I suppose we get a similar exclusion if all the
+dump/restart work is on the same workqueue.
+
+I'm still not quite sure if this is 5.1-rc material, or I should just
+revert for 5.1.
 
 Thanks,
-Ben
-
->
-> The best thing I can come up with is something like this:
->
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -3629,6 +3629,19 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
->                  goto err_deinit_irq;
->          }
->
-> +       if (hw_rev == ATH10K_HW_QCA988X) {
-> +               /* v1 can crash the system on chip_reset()
-> +                * so all we can do is keep our fingers
-> +                * crossed v2 never reports 0 without a
-> +                * chip_reset()
-> +                */
-> +               if (ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS) == 0) {
-> +                       ath10k_err(ar, "qca9880 v1 is chip not supported");
-> +                       ret = -ENOTSUP;
-> +                       goto err_free_irq;
-> +               }
-> +       }
-> +
->          ret = ath10k_pci_chip_reset(ar);
->          if (ret) {
->                  ath10k_err(ar, "failed to reset chip: %d\n", ret);
->
-> I didn't test it. Someone needs to compile and test and make sure v2
-> doesn't regress when fw hangs and cold & warm host cpu resets are
-> mixed in.
->
->
-> Michał
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Brian
