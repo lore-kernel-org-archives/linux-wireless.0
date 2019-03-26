@@ -2,163 +2,117 @@ Return-Path: <SRS0=Lwp6=R5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E3E1C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 11:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06162C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 12:43:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C21A2070B
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 11:35:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFCBA2075D
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 12:43:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="XqmJ5w71"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731438AbfCZLfG (ORCPT
+        id S1731583AbfCZMnQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Mar 2019 07:35:06 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:50846 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729662AbfCZLfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Mar 2019 07:35:06 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7DF1F90AC2;
-        Tue, 26 Mar 2019 11:35:05 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.199])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 17A63B5448;
-        Tue, 26 Mar 2019 11:35:04 +0000 (UTC)
-Date:   Tue, 26 Mar 2019 12:35:03 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        daniel@makrotopia.org
-Subject: Re: [PATCH 2/2] rt2x00: enable experimental MFP with HW crypt
-Message-ID: <20190326113502.GA9012@redhat.com>
-References: <1552417902-11040-1-git-send-email-pozega.tomislav@gmail.com>
- <1552417902-11040-2-git-send-email-pozega.tomislav@gmail.com>
- <20190313091252.GB2663@redhat.com>
- <CAKR_QV+sFc6J97f5dtW9OtxGoEj5udB=fY5qAb3_QgF4jfqEVA@mail.gmail.com>
- <20190313130910.GD2003@redhat.com>
- <CAKR_QVLB9k0bGiRW9ON3PeQR1ZoMfWbrXg3W+Bg4N4G+9pAsZg@mail.gmail.com>
- <20190313140607.GE2003@redhat.com>
- <CAKR_QV+gEJEE2+hwfE1wsF5mdEZVDGtNskivcpFUutGEbwKyKg@mail.gmail.com>
- <977a3cf4-3ec5-4aaa-b3d4-eea2e8593652@nbd.name>
+        Tue, 26 Mar 2019 08:43:16 -0400
+Received: from mail-eopbgr820052.outbound.protection.outlook.com ([40.107.82.52]:61024
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726241AbfCZMnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Mar 2019 08:43:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Uw1JQNLXciSthViCj0xl4bbnVEcJXl+hgqKtq9ZR51Q=;
+ b=XqmJ5w71IfF7rCch1Mz1mNLWecvNusHdFccDuPexyA622aE4x+ZryilYCe/8T5zvYj+wU8Qq7mMPTZzbWT1ZK7ub5BFRjm/1OlVp3QtkBtYhdrNUaWQGcfhRIlFgRHvEE/ksd1HG14CeMxxewqoLeSk+3J9cR4CNNWIsPovOTEI=
+Received: from BYAPR05MB4039.namprd05.prod.outlook.com (52.135.199.27) by
+ BYAPR05MB4792.namprd05.prod.outlook.com (52.135.235.90) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1730.15; Tue, 26 Mar 2019 12:43:13 +0000
+Received: from BYAPR05MB4039.namprd05.prod.outlook.com
+ ([fe80::1957:3d75:4e97:7d3c]) by BYAPR05MB4039.namprd05.prod.outlook.com
+ ([fe80::1957:3d75:4e97:7d3c%4]) with mapi id 15.20.1750.014; Tue, 26 Mar 2019
+ 12:43:13 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
+ SN6PR05MB6750.namprd05.prod.outlook.com (52.135.112.223) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1750.14; Tue, 26 Mar 2019 12:42:15 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e]) by SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e%4]) with mapi id 15.20.1750.014; Tue, 26 Mar 2019
+ 12:42:15 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: question: crda timeout in cfg80211
+Thread-Topic: question: crda timeout in cfg80211
+Thread-Index: AQHU49FXR0CTE3RHB0aq9jc7wfrsmA==
+Date:   Tue, 26 Mar 2019 12:42:15 +0000
+Message-ID: <20190326124209.j6tdk5cz47kc6mdj@bars>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BYAPR01CA0025.prod.exchangelabs.com (2603:10b6:a02:80::38)
+ To SN6PR05MB4928.namprd05.prod.outlook.com (2603:10b6:805:9d::10)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 507b36fd-5de5-4999-80ce-08d6b1e87976
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB6750;
+x-ms-traffictypediagnostic: SN6PR05MB6750:|BYAPR05MB4792:
+x-moderation-data: 3/26/2019 12:43:11 PM
+x-microsoft-antispam-prvs: <BYAPR05MB47927B21F54510940485F61AA35F0@BYAPR05MB4792.namprd05.prod.outlook.com>
+x-forefront-prvs: 09888BC01D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(396003)(366004)(376002)(136003)(39850400004)(346002)(53754006)(199004)(189003)(97736004)(8676002)(68736007)(71200400001)(6436002)(9686003)(5640700003)(99286004)(81166006)(66066001)(33716001)(8936002)(478600001)(6512007)(6116002)(4744005)(3846002)(81156014)(7736002)(6486002)(25786009)(2501003)(2906002)(186003)(486006)(5660300002)(6916009)(256004)(386003)(102836004)(305945005)(107886003)(2351001)(26005)(14454004)(476003)(1076003)(71190400001)(6506007)(52116002)(105586002)(4326008)(14444005)(53936002)(86362001)(316002)(106356001)(436003);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR05MB4792;H:BYAPR05MB4039.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: C0XDr3dbj1DBIRaGdLH+EXeARo/dKJBboNj7yVH9OdIv8RG5VicnEVWuXhnpgPf7W0vBTEHsA/IZKGZP9OFnCXpX+iQimy7arzriQu3IQQ0NwMKJphWS3LhYGSjEoUethxR4/8v9N6wZQrlGTgo/HS9+qpSG4PAdf1WNzcyiri5W6mqsuFw4WWunMYZXqEUF0E9pJjxNo+zoaXudRpIOhWx/P7YA+rVxrH29RRAL2aiBDKGkevpkuGpJf32mzjn+bY5h4dmieVDBNXszXlRdZZBIeHOc90sHTT3friceESOe+BvPUdA7zTaKThjt+fJ9q5hVFpUjkkxgZOr50LhkT0hnZRIU+GsoJyb2JPVTzldDrOw87myHgS/Ra4IADwNf3SOCqxxIj36P+YMFJrE9qtSs+JG+ylI3C6Zs9RyPOaU=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <1BF3B50A15A3134795D0C90D1FD11D6D@namprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <977a3cf4-3ec5-4aaa-b3d4-eea2e8593652@nbd.name>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Tue, 26 Mar 2019 11:35:05 +0000 (UTC)
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 507b36fd-5de5-4999-80ce-08d6b1e87976
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Mar 2019 12:43:13.4869
+ (UTC)
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR05MB4792
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Mar 26, 2019 at 11:41:37AM +0100, Felix Fietkau wrote:
-> On 2019-03-13 15:41, Tom Psyborg wrote:
-> > On 13/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> >> On Wed, Mar 13, 2019 at 02:48:01PM +0100, Tom Psyborg wrote:
-> >>> On 13/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> >>> > On Wed, Mar 13, 2019 at 02:02:32PM +0100, Tom Psyborg wrote:
-> >>> >> On 13/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> >>> >> > On Tue, Mar 12, 2019 at 08:11:42PM +0100, Tomislav Požega wrote:
-> >>> >> >> MFP can work with enabled HW crypt engine, but in this case
-> >>> >> >> available bandwidth is reduced at least when connecting to
-> >>> >> >> Archer C7 (QCA9558). Enable the feature for known to work chipsets-
-> >>> >> >> MT7620, RT3070 and RT5390. Userspace setting for ieee80211w should
-> >>> >> >> default to 0 in order to prevent unintentional bandwidth drop.
-> >>> >> >>
-> >>> >> >> Signed-off-by: Tomislav Po?ega <pozega.tomislav@gmail.com>
-> >>> >> >> ---
-> >>> >> >>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c |   11 +++++++----
-> >>> >> >>  1 files changed, 7 insertions(+), 4 deletions(-)
-> >>> >> >>
-> >>> >> >> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> >>> >> >> b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> >>> >> >> index a03b528..bb8204d 100644
-> >>> >> >> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> >>> >> >> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> >>> >> >> @@ -9326,6 +9326,13 @@ static int rt2800_probe_hw_mode(struct
-> >>> >> >> rt2x00_dev
-> >>> >> >> *rt2x00dev)
-> >>> >> >>  	ieee80211_hw_set(rt2x00dev->hw, SIGNAL_DBM);
-> >>> >> >>  	ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_PS);
-> >>> >> >>
-> >>> >> >> +	/* Experimental: Set MFP with HW crypto enabled. */
-> >>> >> >> +	if (rt2x00_rt(rt2x00dev, RT3070) || rt2x00_rt(rt2x00dev, RT5390)
-> >>> >> >> ||
-> >>> >> >> +	    rt2x00_rt(rt2x00dev, RT6352))
-> >>> >> >> +		ieee80211_hw_set(rt2x00dev->hw, MFP_CAPABLE);
-> >>> >> >
-> >>> >> > Is not that we support MFP in hardware. We just return -EOPNOTSUPP
-> >>> >> > in rt2x00mac_set_key() when mac80211 will try to set MFP ciphers
-> >>> >> > (since rt2x00crypto_key_to_cipher() will return CIPHER_NONE) and
-> >>> >> > we fallback to software encryption.
-> >>> >> >
-> >>> >> > Please repost patch that enable MFP unconditionally with
-> >>> >> > 'Cc: stable@vger.kernel.org' tag.
-> >>> >> >
-> >>> >> > Stanislaw
-> >>> >> >
-> >>> >>
-> >>> >> No, I have not test any other chipsets besides the ones I enabled it
-> >>> >> for. It is possible this would cause problems on other devices, so
-> >>> >> just enable it for the known to work ones.
-> >>> >
-> >>> > It's just matter of sending already encrypted frames. All chipsets
-> >>> > handle that.
-> >>> >
-> >>> > Stanislaw
-> >>> >
-> >>>
-> >>> The question is how well all chipsets handle that. I've seen some lags
-> >>> too with MFP enabled connection. While being about 40-50% lower,
-> >>> throughput would still occasionally drop to very low values, like
-> >>> 800Kbps.
-> >>
-> >> The only reason I can image that might have impact on throughput
-> >> in this case is limited CPU power since encryption is done in
-> >> software. Would be good to compare with PA2 with nohwcrypte, if
-> >> there are similar lags. However MFP can require more CPU power.
-> >>
-> >> Stanislaw
-> >>
-> > 
-> > nohwcrypt=y mfp=require: there was no throughput drop, no lag,
-> > measured about 80-85Mbps but the connection frozen after a minute or
-> > two. might be related to rekeying.
-> > 
-> > CPU power cannot be the problem since I run it on laptop (2x2.20GHz)
-> The lag is probably caused by failed A-MPDU setup exchanges due to
-> broken management frames.
-> 
-> I think it's likely that rt28xx chipsets are behaving like mt7612e in
-> that area (since the MAC design is very similar).
-> I've spent quite a bit of time making MFP work properly in mt76 on that
-> chipset, and here are my findings:
-> Hardware crypto for management frames is broken.
-> When using management frame protection, the same pairwise encryption key
-> needs to be used for both data frames and management frames.
-> There is a flag in mac80211 that allows software-encryption for
-> management frames only.
-> That leads us to the next issue: CCMP PN is usually generated in
-> hardware and stored in on-chip memory, which means the mac80211 key
-> tx_pn counter will be out of sync and software-encrypted management
-> packets will trigger replay protection on the other side.
-> To fix this, you need to enable software generated IV if management
-> frames are to be sent with the same key.
-> In that case you need to set TXINFO_W0_WIV and fill TXWI_W2_IV+TXWI_W3_EIV.
-> Also, for software encrypted frames you need to mask out WCID, since
-> otherwise the hardware will try to encrypt the frame again.
-> You can use mt76 as reference for how to do all of this
+Hi all,
 
-I see, I got it completely wrong. I thought with MFP we will use non
-supported rt2x00 cipher and we will fallback to software encryption
-anyway.
+Linux cfg80211 regulatory subsystem uses CRDA timeout to ensure completion
+of regulatory updates, performed by user-space software. See call_crda
+functon in net/wireless/reg.c:
 
-So, until properly implemented we should stay with nohwcrypt for MFP.
+static int call_crda(const char *alpha2)
+{
+	...
 
-Stanislaw
+	queue_delayed_work(system_power_efficient_wq,
+			&crda_timeout, msecs_to_jiffies(3142));
+	return 0;
+}
+
+So regulatory update/reset operations shall be completed in 3142 msec.
+And that includes processing of regulatory notifiers for all the
+wireless cards in the system.
+
+It is not quite clear where this specific timeout value came from.
+Original commit (a90c7a313a1c5b) doesn't go into details about it.
+
+Any ideas where it could come from ?
+
+Regards,
+Sergey
