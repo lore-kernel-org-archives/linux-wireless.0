@@ -2,117 +2,128 @@ Return-Path: <SRS0=Lwp6=R5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06162C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 12:43:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10208C4360F
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 14:28:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFCBA2075D
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 12:43:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="XqmJ5w71"
+	by mail.kernel.org (Postfix) with ESMTP id DF12A20857
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 14:28:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731583AbfCZMnQ (ORCPT
+        id S1731802AbfCZO2V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Mar 2019 08:43:16 -0400
-Received: from mail-eopbgr820052.outbound.protection.outlook.com ([40.107.82.52]:61024
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726241AbfCZMnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Mar 2019 08:43:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Uw1JQNLXciSthViCj0xl4bbnVEcJXl+hgqKtq9ZR51Q=;
- b=XqmJ5w71IfF7rCch1Mz1mNLWecvNusHdFccDuPexyA622aE4x+ZryilYCe/8T5zvYj+wU8Qq7mMPTZzbWT1ZK7ub5BFRjm/1OlVp3QtkBtYhdrNUaWQGcfhRIlFgRHvEE/ksd1HG14CeMxxewqoLeSk+3J9cR4CNNWIsPovOTEI=
-Received: from BYAPR05MB4039.namprd05.prod.outlook.com (52.135.199.27) by
- BYAPR05MB4792.namprd05.prod.outlook.com (52.135.235.90) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1730.15; Tue, 26 Mar 2019 12:43:13 +0000
-Received: from BYAPR05MB4039.namprd05.prod.outlook.com
- ([fe80::1957:3d75:4e97:7d3c]) by BYAPR05MB4039.namprd05.prod.outlook.com
- ([fe80::1957:3d75:4e97:7d3c%4]) with mapi id 15.20.1750.014; Tue, 26 Mar 2019
- 12:43:13 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
- SN6PR05MB6750.namprd05.prod.outlook.com (52.135.112.223) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1750.14; Tue, 26 Mar 2019 12:42:15 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::ecfd:3a22:dcb3:3b9e]) by SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::ecfd:3a22:dcb3:3b9e%4]) with mapi id 15.20.1750.014; Tue, 26 Mar 2019
- 12:42:15 +0000
-From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: question: crda timeout in cfg80211
-Thread-Topic: question: crda timeout in cfg80211
-Thread-Index: AQHU49FXR0CTE3RHB0aq9jc7wfrsmA==
-Date:   Tue, 26 Mar 2019 12:42:15 +0000
-Message-ID: <20190326124209.j6tdk5cz47kc6mdj@bars>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: BYAPR01CA0025.prod.exchangelabs.com (2603:10b6:a02:80::38)
- To SN6PR05MB4928.namprd05.prod.outlook.com (2603:10b6:805:9d::10)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [195.182.157.78]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 507b36fd-5de5-4999-80ce-08d6b1e87976
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB6750;
-x-ms-traffictypediagnostic: SN6PR05MB6750:|BYAPR05MB4792:
-x-moderation-data: 3/26/2019 12:43:11 PM
-x-microsoft-antispam-prvs: <BYAPR05MB47927B21F54510940485F61AA35F0@BYAPR05MB4792.namprd05.prod.outlook.com>
-x-forefront-prvs: 09888BC01D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(396003)(366004)(376002)(136003)(39850400004)(346002)(53754006)(199004)(189003)(97736004)(8676002)(68736007)(71200400001)(6436002)(9686003)(5640700003)(99286004)(81166006)(66066001)(33716001)(8936002)(478600001)(6512007)(6116002)(4744005)(3846002)(81156014)(7736002)(6486002)(25786009)(2501003)(2906002)(186003)(486006)(5660300002)(6916009)(256004)(386003)(102836004)(305945005)(107886003)(2351001)(26005)(14454004)(476003)(1076003)(71190400001)(6506007)(52116002)(105586002)(4326008)(14444005)(53936002)(86362001)(316002)(106356001)(436003);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR05MB4792;H:BYAPR05MB4039.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: quantenna.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: C0XDr3dbj1DBIRaGdLH+EXeARo/dKJBboNj7yVH9OdIv8RG5VicnEVWuXhnpgPf7W0vBTEHsA/IZKGZP9OFnCXpX+iQimy7arzriQu3IQQ0NwMKJphWS3LhYGSjEoUethxR4/8v9N6wZQrlGTgo/HS9+qpSG4PAdf1WNzcyiri5W6mqsuFw4WWunMYZXqEUF0E9pJjxNo+zoaXudRpIOhWx/P7YA+rVxrH29RRAL2aiBDKGkevpkuGpJf32mzjn+bY5h4dmieVDBNXszXlRdZZBIeHOc90sHTT3friceESOe+BvPUdA7zTaKThjt+fJ9q5hVFpUjkkxgZOr50LhkT0hnZRIU+GsoJyb2JPVTzldDrOw87myHgS/Ra4IADwNf3SOCqxxIj36P+YMFJrE9qtSs+JG+ylI3C6Zs9RyPOaU=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <1BF3B50A15A3134795D0C90D1FD11D6D@namprd05.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        Tue, 26 Mar 2019 10:28:21 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:32818 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731729AbfCZO2T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Mar 2019 10:28:19 -0400
+X-UUID: 044b2ce15da344f993e381d3b1099a43-20190326
+X-UUID: 044b2ce15da344f993e381d3b1099a43-20190326
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (mhqrelay.mediatek.com ESMTP with TLS)
+        with ESMTP id 1732120422; Tue, 26 Mar 2019 22:28:15 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Tue, 26 Mar 2019 22:28:13 +0800
+Received: from mtkslt306.mediatek.inc (10.21.14.136) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Tue, 26 Mar 2019 22:28:13 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>
+CC:     Roy Luo <royluo@google.com>, Sean Wang <sean.wang@mediatek.com>,
+        Nelson Chang <nelson.chang@mediatek.com>,
+        YF Luo <yf.luo@mediatek.com>, Kai Lin <kai.lin@mediatek.com>,
+        Rorscha Yang <rorscha.yang@mediatek.com>,
+        Kyle Lee <kyle.lee@mediatek.com>,
+        Miller Shen <miller.shen@mediatek.com>,
+        Haipin Liang <haipin.liang@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 3/4] mt76: use macro for sn and seq_ctrl conversion
+Date:   Tue, 26 Mar 2019 22:28:09 +0800
+Message-ID: <7b4aa870b4f1da720ce8b93ee1d9e4a6e254737d.1553607739.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <cover.1553607739.git.ryder.lee@mediatek.com>
+References: <cover.1553607739.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 507b36fd-5de5-4999-80ce-08d6b1e87976
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Mar 2019 12:43:13.4869
- (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR05MB4792
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 6D0FD367ACF931BF4BDA1C549375BFE175648A3CB72CC84A68981683718296D82000:8
+X-MTK:  N
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi all,
+Use macro to convert sn and seq_ctrl for better readability.
 
-Linux cfg80211 regulatory subsystem uses CRDA timeout to ensure completion
-of regulatory updates, performed by user-space software. See call_crda
-functon in net/wireless/reg.c:
+Signed-off-by: Roy Luo <royluo@google.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/agg-rx.c       | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7603/mac.c   | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7603/main.c  | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-static int call_crda(const char *alpha2)
-{
-	...
+diff --git a/drivers/net/wireless/mediatek/mt76/agg-rx.c b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+index 73c8b28..27e3ff0 100644
+--- a/drivers/net/wireless/mediatek/mt76/agg-rx.c
++++ b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+@@ -135,7 +135,7 @@
+ 		return;
+ 
+ 	status->tid = le16_to_cpu(bar->control) >> 12;
+-	seqno = le16_to_cpu(bar->start_seq_num) >> 4;
++	seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(bar->start_seq_num));
+ 	tid = rcu_dereference(wcid->aggr[status->tid]);
+ 	if (!tid)
+ 		return;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+index e498169..2f2961e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+@@ -627,7 +627,7 @@ void mt7603_mac_tx_ba_reset(struct mt7603_dev *dev, int wcid, int tid, int ssn,
+ 	status->aggr = unicast &&
+ 		       !ieee80211_is_qos_nullfunc(hdr->frame_control);
+ 	status->tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+-	status->seqno = hdr->seq_ctrl >> 4;
++	status->seqno = IEEE80211_SEQ_TO_SN(hdr->seq_ctrl);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+index 5d38392..0c78044 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+@@ -594,7 +594,7 @@
+ 		mt7603_mac_tx_ba_reset(dev, msta->wcid.idx, tid, *ssn, -1);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+-		mtxq->agg_ssn = *ssn << 4;
++		mtxq->agg_ssn = IEEE80211_SN_TO_SEQ(*ssn);
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP_CONT:
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index b137ce8..f0e1e12 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -378,7 +378,7 @@ int mt76x02_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		ieee80211_send_bar(vif, sta->addr, tid, mtxq->agg_ssn);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+-		mtxq->agg_ssn = *ssn << 4;
++		mtxq->agg_ssn = IEEE80211_SN_TO_SEQ(*ssn);
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP_CONT:
+-- 
+1.9.1
 
-	queue_delayed_work(system_power_efficient_wq,
-			&crda_timeout, msecs_to_jiffies(3142));
-	return 0;
-}
-
-So regulatory update/reset operations shall be completed in 3142 msec.
-And that includes processing of regulatory notifiers for all the
-wireless cards in the system.
-
-It is not quite clear where this specific timeout value came from.
-Original commit (a90c7a313a1c5b) doesn't go into details about it.
-
-Any ideas where it could come from ?
-
-Regards,
-Sergey
