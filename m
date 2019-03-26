@@ -2,162 +2,130 @@ Return-Path: <SRS0=Lwp6=R5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF1FC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 09:28:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 169DFC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 09:29:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3E8B120856
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 09:28:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D381520856
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 09:29:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="bzfwRRAC"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GIWrZIAx";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CbQZyQ2/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730239AbfCZJ2b (ORCPT
+        id S1726413AbfCZJ3g (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Mar 2019 05:28:31 -0400
-Received: from mail-eopbgr770041.outbound.protection.outlook.com ([40.107.77.41]:20345
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726178AbfCZJ2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Mar 2019 05:28:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=blsgRJeJzA7v4POqZ/4kqpwp3Z+4SDpGw/9V+Q04+jY=;
- b=bzfwRRACRe3JzBOWNwtmtoTt3En3RDmKcPTfVbUeNVNqkZZTw6HyVx40ep4YGjvxif8NTqowfgRR7OpQS2wjqthT/zSEeIL6Ox91Ylf0H+9ETSMak82asBjD9iAJw5SduyhxgsPhwJj54cvt4F2qYT1GELOq0dm2jWTEbDSIghI=
-Received: from DM6PR05MB5787.namprd05.prod.outlook.com (20.178.25.96) by
- DM6PR05MB6539.namprd05.prod.outlook.com (20.178.226.145) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1750.13; Tue, 26 Mar 2019 09:28:15 +0000
-Received: from DM6PR05MB5787.namprd05.prod.outlook.com
- ([fe80::8c80:7be5:eb8f:a653]) by DM6PR05MB5787.namprd05.prod.outlook.com
- ([fe80::8c80:7be5:eb8f:a653%3]) with mapi id 15.20.1750.010; Tue, 26 Mar 2019
- 09:28:15 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
- SN6PR05MB5181.namprd05.prod.outlook.com (20.177.249.88) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1750.14; Tue, 26 Mar 2019 09:27:37 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::ecfd:3a22:dcb3:3b9e]) by SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::ecfd:3a22:dcb3:3b9e%4]) with mapi id 15.20.1750.014; Tue, 26 Mar 2019
- 09:27:37 +0000
-From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2] mac80211/cfg80211: update bss channel on channel switch
-Thread-Topic: [PATCH v2] mac80211/cfg80211: update bss channel on channel
- switch
-Thread-Index: AQHU47YmKyfRpWtdvESokLuefZkwqQ==
-Date:   Tue, 26 Mar 2019 09:27:37 +0000
-Message-ID: <20190326092730.32511-1-sergey.matyukevich.os@quantenna.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: BYAPR05CA0045.namprd05.prod.outlook.com
- (2603:10b6:a03:74::22) To SN6PR05MB4928.namprd05.prod.outlook.com
- (2603:10b6:805:9d::10)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-mailer: git-send-email 2.11.0
-x-originating-ip: [195.182.157.78]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 84918f2b-7552-4f9f-2631-08d6b1cd48b7
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB5181;
-x-ms-traffictypediagnostic: SN6PR05MB5181:|DM6PR05MB6539:
-x-moderation-data: 3/26/2019 9:28:14 AM
-x-microsoft-antispam-prvs: <DM6PR05MB6539C84A57376322AD865B40A35F0@DM6PR05MB6539.namprd05.prod.outlook.com>
-x-forefront-prvs: 09888BC01D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(346002)(366004)(39850400004)(376002)(136003)(199004)(189003)(53936002)(25786009)(6486002)(66066001)(2351001)(6916009)(8676002)(305945005)(2906002)(81156014)(186003)(26005)(386003)(6506007)(103116003)(1076003)(71200400001)(3846002)(6116002)(8936002)(107886003)(71190400001)(15650500001)(5640700003)(5660300002)(99286004)(4326008)(102836004)(68736007)(81166006)(6436002)(52116002)(54906003)(50226002)(316002)(486006)(478600001)(2616005)(14454004)(97736004)(6512007)(476003)(7736002)(106356001)(256004)(14444005)(105586002)(2501003)(36756003)(86362001)(6346003)(436003)(21314003);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6PR05MB6539;H:DM6PR05MB5787.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: quantenna.com does not designate
- permitted sender hosts)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: otoylp1QTDzNhwkH/JScn+6wtCCbqAWwIwiBTVaXoehiyGfCEcVdf3BG8jj0odkD6CohGgNXt1Q1NWml8Td3LseM+1ABUBs9whmxeFbLmxWUH3ZDirt41MwFkcpfFJM/126b+wi2w9pXDnKHY0XortR3LfJUuMbA4rfKi4Z8A5t0QXQBei0PlwUCS6Ecgos8baTQJCs73e0u4AAM6z2IcScyLdkpdQ29H8UK8Dq2Yc2/AhAIHvI7L4b9qQ/SdfFUJvOhg6ykGPoTA5iJs7CFPeet9lGMMnPhPyBr3BVM7A45eoeqFUZ4l3w2gys6TMdTNrUnTbYBq0MqRgSR4uOjaD5ZTEI8Ng6VTbuJerjmEA7os6vmvV5fGTJv2+DBBZ4EukQ99Qw37OvSU/JQI03126fd9ZBCu1yK6R7eLF1aTak=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 84918f2b-7552-4f9f-2631-08d6b1cd48b7
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Mar 2019 09:28:15.6249
- (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR05MB6539
+        Tue, 26 Mar 2019 05:29:36 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:49338 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725948AbfCZJ3g (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Mar 2019 05:29:36 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id F159760E57; Tue, 26 Mar 2019 09:29:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553592575;
+        bh=tpBuU6whDg2telYLOYWJEYV1iGUHcDQvYHesYkPQyu8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=GIWrZIAxBCoHMEEHEeV25XByRVIdu3nBmJgYc/m8lSTQ6Yswr8zFUPK/eohX5dRnh
+         QNUFN21Yd4MDr4F9c09I9eb7b0d5Hsb2mP/Zw4Cgy8dr/vL5uFbDAyhJ9m5bfM/JkC
+         cFDw7K6qk85UcNC4qJrdz2dZZfQy5fEArTzFb6jU=
+Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: tamizhr@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4F3CA60A60;
+        Tue, 26 Mar 2019 09:29:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553592574;
+        bh=tpBuU6whDg2telYLOYWJEYV1iGUHcDQvYHesYkPQyu8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=CbQZyQ2/+FuEg/YP6bId1UhKihlBxIPCBIUUj4YSAj3dORrt7SltHlQWZK0HW4fZY
+         NawDzAWhoifIuPPDQHrLGywDUldp+QQI0VKbnggqbj9JrK9KDrKCwKXO9TTvwSCKmi
+         kR90EwVIZu1XGFaUtNPbx/nX6ZnVkSWWLman2GB8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4F3CA60A60
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
+From:   Tamizh chelvam <tamizhr@codeaurora.org>
+To:     johannes@sipsolutions.net, ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCHv5 0/9] cfg80211/mac80211: Add support for TID specific configuration
+Date:   Tue, 26 Mar 2019 14:59:01 +0530
+Message-Id: <1553592550-15282-1-git-send-email-tamizhr@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-FullMAC STAs have no way to update bss channel after CSA channel switch
-completion. As a result, user-space tools may provide inconsistent
-channel info. For instance, consider the following two commands:
-$ sudo iw dev wlan0 link
-$ sudo iw dev wlan0 info
-The latter command gets channel info from the hardware, so most probably
-its output will be correct. However the former command gets channel info
-from scan cache, so its output will contain outdated channel info.
-In fact, current bss channel info will not be updated until the
-next [re-]connect.
 
-Note that mac80211 STAs have a workaround for this, but it requires
-access to internal cfg80211 data, see ieee80211_chswitch_work:
+Add infrastructure to support per TID configurations like noack policy,
+retry count, AMPDU control(disable/enable), RTSCTS control(enable/disable)
+and TX rate mask configurations.
+This will be useful for the driver which can supports data TID
+specific configuration rather than phy level configurations.
+Here NL80211_CMD_SET_TID_CONFIG added to support this operation by
+accepting TID configuration.
+This command can accept STA mac addreess to make the configuration
+station specific rather than applying to all the connected stations
+to the netdev.
+And this nested command configuration can accept multiple number of
+data TID specific configuration in a single command,
+enum ieee80211_tid_conf_mask used to notify the driver that which
+configuration got modified for the TID.
 
-	/* XXX: shouldn't really modify cfg80211-owned data! */
-	ifmgd->associated->channel =3D sdata->csa_chandef.chan;
+Tamizh chelvam (9):
+  nl80211: New netlink command for TID specific configuration
+  nl80211: Add new netlink attribute for TID speicific retry count
+  nl80211: Add netlink attribute for AMPDU aggregation enable/disable
+  nl80211: Add netlink attribute to enable/disable RTS_CTS
+  nl80211: Add netlink attribute to configure TID specific tx rate
+  mac80211: Add api to support configuring TID specific configuration
+  ath10k: Add wmi command support for station specific TID config
+  ath10k: Add new api to support TID specific configuration
+  ath10k: Add extended TID configuration support
 
-This patch suggests to convert mac80211 workaround into cfg80211 behavior
-and to update current bss channel in cfg80211_ch_switch_notify.
+v5:
+  * Fixed possible memleak of 'tid_conf' in nl80211_set_tid_config.
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+v4:
+  * Fixed kbuild warnings.
 
----
-v1 -> v2:
-- as per suggestion by Johannes, use !WARN_ON(!wdev->current_bss)
+v3:
+  * Modified "nl80211: Add netlink attribute to configure TID specific tx rate" patch
+    to accept multiple TX rate configuration at a time.
+  * Modified noack and ampdu variable data type to int in
+    "mac80211: Add api to support configuring TID specific configuration" patch to store
+    default configuration.
+  * Modified "ath10k: Add new api to support TID specific configuration" patch to handle
+    default values for noack and ampdu. And added sta pointer sanity check in
+    ath10k_mac_tid_bitrate_config function.
+  * Fixed "ath10k: Add extended TID configuration support" wmi command parameters
+    assigned part.
 
+v2:
+  * Added support to accept multiple TID configuration
+  * Added support to configure TX rate and RTSCTS control
 
----
- net/mac80211/mlme.c    | 3 ---
- net/wireless/nl80211.c | 5 +++++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c    |    4 +
+ drivers/net/wireless/ath/ath10k/core.h    |    6 +
+ drivers/net/wireless/ath/ath10k/mac.c     |  679 +++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |   19 +
+ drivers/net/wireless/ath/ath10k/wmi.c     |   35 ++
+ drivers/net/wireless/ath/ath10k/wmi.h     |   72 +++
+ include/net/cfg80211.h                    |   57 +++
+ include/net/mac80211.h                    |   38 ++
+ include/uapi/linux/nl80211.h              |  182 ++++++++
+ net/mac80211/cfg.c                        |   28 ++
+ net/mac80211/driver-ops.h                 |   15 +
+ net/wireless/nl80211.c                    |  255 ++++++++++-
+ net/wireless/rdev-ops.h                   |   11 +
+ net/wireless/trace.h                      |   18 +
+ 14 files changed, 1321 insertions(+), 98 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2dbcf5d5512e..b7a9fe3d5fcb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1188,9 +1188,6 @@ static void ieee80211_chswitch_work(struct work_struc=
-t *work)
- 		goto out;
- 	}
-=20
--	/* XXX: shouldn't really modify cfg80211-owned data! */
--	ifmgd->associated->channel =3D sdata->csa_chandef.chan;
--
- 	ifmgd->csa_waiting_bcn =3D true;
-=20
- 	ieee80211_sta_reset_beacon_monitor(sdata);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 25a9e3b5c154..b108b635e2f3 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -15721,6 +15721,11 @@ void cfg80211_ch_switch_notify(struct net_device *=
-dev,
-=20
- 	wdev->chandef =3D *chandef;
- 	wdev->preset_chandef =3D *chandef;
-+
-+	if (wdev->iftype =3D=3D NL80211_IFTYPE_STATION &&
-+	    !WARN_ON(!wdev->current_bss))
-+		wdev->current_bss->pub.channel =3D chandef->chan;
-+
- 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
- 				 NL80211_CMD_CH_SWITCH_NOTIFY, 0);
- }
---=20
-2.11.0
+-- 
+1.7.9.5
 
