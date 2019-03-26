@@ -2,160 +2,121 @@ Return-Path: <SRS0=Lwp6=R5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FAKE_REPLY_C,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75B5DC43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 07:00:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85C3AC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 07:54:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38E8320811
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 07:00:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="im79SnYt"
+	by mail.kernel.org (Postfix) with ESMTP id 5C92620828
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 07:54:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730889AbfCZHAh (ORCPT
+        id S1730971AbfCZHyS convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Mar 2019 03:00:37 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:37194 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730821AbfCZHAg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Mar 2019 03:00:36 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x2Q6riH4072829;
-        Tue, 26 Mar 2019 07:00:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type : in-reply-to;
- s=corp-2018-07-02; bh=XdkdrGB99z4RaDA8f4VST36qOnk1e2ikwh9sH6I5Cuc=;
- b=im79SnYtVWoCPPBk+Mv/IAtaBuDT56is2VjWkvaf58KE6dy9mUnxBgx/RHshG3DT1XQJ
- DWt2VbM6RgLApBj+KyCMDjZ8xExPl2e/AvPtG/kttWYPToybdC9QDqRZeP8hsddz7eHe
- 1wIwuXnqvNJpBt0ltQYiY1uHlnLNnsdUGHWEWbDIktS30z4ngpArCNmUZ3U+PjIobruk
- Pkb1o1N/Qp8qko2P9CNItbQmQn/syUeWoAYRmWVMs8Ee2qOr2PgVjRn6PteYcl0ud8u+
- vu1UVsAczbTAY156dKEsWZK1/qqPT2Q0u4Z/gjtg6m5Z7jaBtcH/AeIQ89IOIPPnsB8X Fw== 
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2120.oracle.com with ESMTP id 2re6dj8etr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 26 Mar 2019 07:00:12 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x2Q70BdS030013
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 26 Mar 2019 07:00:11 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x2Q70Bcl025676;
-        Tue, 26 Mar 2019 07:00:11 GMT
-Received: from kadam (/197.157.0.51)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 26 Mar 2019 00:00:10 -0700
-Date:   Tue, 26 Mar 2019 10:00:02 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     kbuild@01.org, Tamizh chelvam <tamizhr@codeaurora.org>
-Cc:     kbuild-all@01.org, johannes@sipsolutions.net,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: Re: [PATCHv3 1/9] nl80211: New netlink command for TID specific
- configuration
-Message-ID: <20190326070002.GB32613@kadam>
+        Tue, 26 Mar 2019 03:54:18 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:47212 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726367AbfCZHyS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Mar 2019 03:54:18 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id DCD9EC057F4C;
+        Tue, 26 Mar 2019 07:54:17 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.199])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D835C1001DE6;
+        Tue, 26 Mar 2019 07:54:16 +0000 (UTC)
+Date:   Tue, 26 Mar 2019 08:54:14 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     yhchuang@realtek.com, kvalo@codeaurora.org,
+        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        gregkh@linuxfoundation.org, pkshih@realtek.com,
+        tehuang@realtek.com, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
+ wireless network chips
+Message-ID: <20190326075414.GA8598@redhat.com>
+References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
+ <20190325143611.sjwwjqtrftxntwyk@penguin>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1551895251-22941-2-git-send-email-tamizhr@codeaurora.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9206 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1903260052
+Content-Transfer-Encoding: 8BIT
+In-Reply-To: <20190325143611.sjwwjqtrftxntwyk@penguin>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Tue, 26 Mar 2019 07:54:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Tamizh,
 
-Thank you for the patch! Perhaps something to improve:
 
-url:    https://github.com/0day-ci/linux/commits/Tamizh-chelvam/cfg80211-mac80211-Add-support-for-TID-specific-configuration/20190308-195433
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
+On Mon, Mar 25, 2019 at 02:36:11PM +0000, Brian Norris wrote:
+> On Wed, Mar 13, 2019 at 12:13:49PM +0800, yhchuang@realtek.com wrote:
+> > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> > 
+> > This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
+> > rtw88 now supports RTL8822BE/RTL8822CE now, with basic station mode
+> > functionalities. The firmware for both can be found at linux-firmware.
+> > 
+> > https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+> > For RTL8822BE: rtw88/rtw8822b_fw.bin
+> > For RTL8822CE: rtw88/rtw8822c_fw.bin
+<snip>
+> I also gave 8822CE some moderate testing, and while I'm sure it's not
+> perfect, it's at least stable, and it's in much better than when I
+> tested approximately v2 (as Tony has rolled in a lot of fixes since
+> then):
+> 
+> Tested-by: Brian Norris <briannorris@chromium.org>
 
-New smatch warnings:
-net/wireless/nl80211.c:13336 nl80211_set_tid_config() warn: possible memory leak of 'tid_conf'
+I also tested on RTL8822CE we generously got from Tony. I replaced wifi
+card on my laptop by the 8822CE device. I have warning on resume from
+suspend (see below, it could be mac80211 issue though). But network
+connection was established after the warning and in general device
+works stable for 2 days now.
 
-Old smatch warnings:
-net/wireless/nl80211.c:13339 nl80211_set_tid_config() warn: possible memory leak of 'tid_conf'
+Tested-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-# https://github.com/0day-ci/linux/commit/e462f4e99ba46deede4c2e78bd343211d372246d
-git remote add linux-review https://github.com/0day-ci/linux
-git remote update linux-review
-git checkout e462f4e99ba46deede4c2e78bd343211d372246d
-vim +/tid_conf +13336 net/wireless/nl80211.c
+[16158.826873] rtw_pci 0000:02:00.0: start vif 00:e0:4c:09:94:0f on port 0
+[16158.827693] ------------[ cut here ]------------
+[16158.827694] wlan0: invalid CW_min/CW_max: 0/0
+[16158.827722] WARNING: CPU: 0 PID: 8407 at net/mac80211/driver-ops.c:175 drv_conf_tx+0x188/0x190 [mac80211]
+[16158.827723] Modules linked in: rtwpci rtw88 mac80211 cfg80211 tun ccm fuse bnep sunrpc arc4 snd_soc_skl snd_soc_core snd_soc_acpi_intel_match snd_hda_codec_hdmi snd_soc_acpi intel_rapl snd_soc_skl_ipc x86_pkg_temp_thermal snd_hda_codec_realtek mei_wdt snd_hda_codec_generic intel_powerclamp snd_soc_sst_ipc iTCO_wdt iTCO_vendor_support snd_soc_sst_dsp coretemp snd_hda_ext_core wmi_bmof intel_cstate uvcvideo intel_uncore btusb intel_wmi_thunderbolt videobuf2_vmalloc intel_rapl_perf snd_hda_intel btrtl videobuf2_memops btbcm btintel snd_hda_codec videobuf2_v4l2 bluetooth snd_hwdep videobuf2_common joydev snd_hda_core videodev media snd_seq snd_seq_device ecdh_generic snd_pcm mei_me mei ucsi_acpi idma64 typec_ucsi i2c_i801 typec intel_lpss_pci snd_timer intel_lpss intel_pch_thermal processor_thermal_device intel_soc_dts_iosf wmi thinkpad_acpi ledtrig_audio snd soundcore rfkill int3403_thermal int340x_thermal_zone acpi_pad int3400_thermal acpi_thermal_rel pcc_cpufreq uas usb_storage crc
+ 32c_intel
+[16158.827744]  i915 nvme i2c_algo_bit drm_kms_helper serio_raw e1000e nvme_core drm video ipv6 [last unloaded: cfg80211]
+[16158.827748] CPU: 0 PID: 8407 Comm: kworker/u16:34 Tainted: G        W         5.0.0-rc7+ #11
+[16158.827749] Hardware name: LENOVO 20KGS23S0P/20KGS23S0P, BIOS N23ET55W (1.30 ) 08/31/2018
+[16158.827752] Workqueue: events_unbound async_run_entry_fn
+[16158.827762] RIP: 0010:drv_conf_tx+0x188/0x190 [mac80211]
+[16158.827763] Code: ff ff ff e9 ea fe ff ff 41 0f b7 4e 04 0f b7 d0 48 8d b3 60 04 00 00 48 c7 c7 10 a6 e7 c0 c6 05 63 3e 0b 00 01 e8 92 30 2c f9 <0f> 0b e9 c1 fe ff ff 90 0f 1f 44 00 00 41 54 49 89 fc 55 53 48 89
+[16158.827763] RSP: 0018:ffff8e4c8a643d48 EFLAGS: 00010296
+[16158.827764] RAX: 0000000000000021 RBX: ffff8e4c8a1ce880 RCX: 0000000000000006
+[16158.827765] RDX: 0000000000000007 RSI: 0000000000000096 RDI: ffff8e4c8e6168c0
+[16158.827765] RBP: 00000000ffffffea R08: 0000000000000a15 R09: 0000000000000003
+[16158.827766] R10: 0000000000000000 R11: 0000000000000001 R12: ffff8e4c765e87c0
+[16158.827766] R13: 0000000000000000 R14: ffff8e4c8a1cee10 R15: ffff8e4c765e8d78
+[16158.827767] FS:  0000000000000000(0000) GS:ffff8e4c8e600000(0000) knlGS:0000000000000000
+[16158.827768] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[16158.827768] CR2: 00007fed80de2e38 CR3: 000000027320e002 CR4: 00000000003606f0
+[16158.827769] Call Trace:
+[16158.827782]  ieee80211_reconfig+0x58f/0x1420 [mac80211]
+[16158.827784]  ? enqueue_entity+0xf6/0x660
+[16158.827798]  wiphy_resume+0x7f/0x120 [cfg80211]
+[16158.827805]  ? wiphy_suspend+0x270/0x270 [cfg80211]
+[16158.827807]  dpm_run_callback+0x59/0x150
+[16158.827809]  device_resume+0xac/0x1f0
+[16158.827810]  async_resume+0x19/0x30
+[16158.827811]  async_run_entry_fn+0x39/0x160
+[16158.827813]  process_one_work+0x1a1/0x3a0
+[16158.827814]  worker_thread+0x30/0x380
+[16158.827815]  ? pwq_unbound_release_workfn+0xd0/0xd0
+[16158.827816]  kthread+0x112/0x130
+[16158.827818]  ? kthread_create_on_node+0x40/0x40
+[16158.827820]  ret_from_fork+0x35/0x40
+[16158.827821] ---[ end trace cc6c13e7f9e63472 ]---
 
-e462f4e9 Tamizh chelvam 2019-03-06  13293  
-e462f4e9 Tamizh chelvam 2019-03-06  13294  static int nl80211_set_tid_config(struct sk_buff *skb,
-e462f4e9 Tamizh chelvam 2019-03-06  13295  				  struct genl_info *info)
-e462f4e9 Tamizh chelvam 2019-03-06  13296  {
-e462f4e9 Tamizh chelvam 2019-03-06  13297  	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-e462f4e9 Tamizh chelvam 2019-03-06  13298  	struct nlattr *attrs[NL80211_ATTR_TID_CONFIG_MAX + 1];
-e462f4e9 Tamizh chelvam 2019-03-06  13299  	struct net_device *dev = info->user_ptr[1];
-e462f4e9 Tamizh chelvam 2019-03-06  13300  	struct ieee80211_tid_config *tid_conf;
-e462f4e9 Tamizh chelvam 2019-03-06  13301  	struct nlattr *tid;
-e462f4e9 Tamizh chelvam 2019-03-06  13302  	int conf_idx = 0, rem_conf;
-e462f4e9 Tamizh chelvam 2019-03-06  13303  	u32 num_conf = 0, size_of_conf;
-e462f4e9 Tamizh chelvam 2019-03-06  13304  	int ret = -EINVAL;
-e462f4e9 Tamizh chelvam 2019-03-06  13305  
-e462f4e9 Tamizh chelvam 2019-03-06  13306  	if (!info->attrs[NL80211_ATTR_TID_CONFIG])
-e462f4e9 Tamizh chelvam 2019-03-06  13307  		return -EINVAL;
-e462f4e9 Tamizh chelvam 2019-03-06  13308  
-e462f4e9 Tamizh chelvam 2019-03-06  13309  	if (!rdev->ops->set_tid_config)
-e462f4e9 Tamizh chelvam 2019-03-06  13310  		return -EOPNOTSUPP;
-e462f4e9 Tamizh chelvam 2019-03-06  13311  
-e462f4e9 Tamizh chelvam 2019-03-06  13312  	nla_for_each_nested(tid, info->attrs[NL80211_ATTR_TID_CONFIG],
-e462f4e9 Tamizh chelvam 2019-03-06  13313  			    rem_conf)
-e462f4e9 Tamizh chelvam 2019-03-06  13314  		num_conf++;
-e462f4e9 Tamizh chelvam 2019-03-06  13315  
-e462f4e9 Tamizh chelvam 2019-03-06  13316  	size_of_conf = sizeof(struct ieee80211_tid_config) +
-e462f4e9 Tamizh chelvam 2019-03-06  13317  		num_conf * sizeof(struct ieee80211_tid_cfg);
-e462f4e9 Tamizh chelvam 2019-03-06  13318  
-e462f4e9 Tamizh chelvam 2019-03-06  13319  	tid_conf = kzalloc(size_of_conf, GFP_KERNEL);
-e462f4e9 Tamizh chelvam 2019-03-06  13320  	if (!tid_conf)
-e462f4e9 Tamizh chelvam 2019-03-06  13321  		return -ENOMEM;
-e462f4e9 Tamizh chelvam 2019-03-06  13322  
-e462f4e9 Tamizh chelvam 2019-03-06  13323  	tid_conf->n_tid_conf = num_conf;
-e462f4e9 Tamizh chelvam 2019-03-06  13324  
-e462f4e9 Tamizh chelvam 2019-03-06  13325  	if (info->attrs[NL80211_ATTR_MAC])
-e462f4e9 Tamizh chelvam 2019-03-06  13326  		tid_conf->peer = nla_data(info->attrs[NL80211_ATTR_MAC]);
-e462f4e9 Tamizh chelvam 2019-03-06  13327  	else
-e462f4e9 Tamizh chelvam 2019-03-06  13328  		tid_conf->peer = NULL;
-e462f4e9 Tamizh chelvam 2019-03-06  13329  
-e462f4e9 Tamizh chelvam 2019-03-06  13330  	nla_for_each_nested(tid, info->attrs[NL80211_ATTR_TID_CONFIG],
-e462f4e9 Tamizh chelvam 2019-03-06  13331  			    rem_conf) {
-e462f4e9 Tamizh chelvam 2019-03-06  13332  		ret = nla_parse_nested(attrs, NL80211_ATTR_TID_CONFIG_MAX, tid,
-e462f4e9 Tamizh chelvam 2019-03-06  13333  				       NULL, NULL);
-e462f4e9 Tamizh chelvam 2019-03-06  13334  
-e462f4e9 Tamizh chelvam 2019-03-06  13335  		if (ret)
-e462f4e9 Tamizh chelvam 2019-03-06 @13336  			return ret;
-e462f4e9 Tamizh chelvam 2019-03-06  13337  
-e462f4e9 Tamizh chelvam 2019-03-06  13338  		if (!attrs[NL80211_ATTR_TID_CONFIG_TID])
-e462f4e9 Tamizh chelvam 2019-03-06  13339  			return -EINVAL;
-e462f4e9 Tamizh chelvam 2019-03-06  13340  
-e462f4e9 Tamizh chelvam 2019-03-06  13341  		ret = parse_tid_conf(rdev, attrs, &tid_conf->tid_conf[conf_idx],
-e462f4e9 Tamizh chelvam 2019-03-06  13342  				     tid_conf->peer);
-e462f4e9 Tamizh chelvam 2019-03-06  13343  		if (ret)
-e462f4e9 Tamizh chelvam 2019-03-06  13344  			goto bad_tid_conf;
-e462f4e9 Tamizh chelvam 2019-03-06  13345  
-e462f4e9 Tamizh chelvam 2019-03-06  13346  		conf_idx++;
-e462f4e9 Tamizh chelvam 2019-03-06  13347  	}
-e462f4e9 Tamizh chelvam 2019-03-06  13348  
-e462f4e9 Tamizh chelvam 2019-03-06  13349  	ret = rdev_set_tid_config(rdev, dev, tid_conf);
-e462f4e9 Tamizh chelvam 2019-03-06  13350  
-e462f4e9 Tamizh chelvam 2019-03-06  13351  bad_tid_conf:
-e462f4e9 Tamizh chelvam 2019-03-06  13352  	kfree(tid_conf);
-e462f4e9 Tamizh chelvam 2019-03-06  13353  	return ret;
-e462f4e9 Tamizh chelvam 2019-03-06  13354  }
-e462f4e9 Tamizh chelvam 2019-03-06  13355  
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Stanislaw
