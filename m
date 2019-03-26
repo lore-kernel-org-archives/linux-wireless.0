@@ -2,162 +2,162 @@ Return-Path: <SRS0=Lwp6=R5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18421C10F11
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 07:55:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3CF9C43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 08:13:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8E7720856
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 07:55:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B323C20830
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 08:13:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DChi02bh";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TIXozBzw"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RK+S8uAu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731336AbfCZHzh (ORCPT
+        id S1731306AbfCZINO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Mar 2019 03:55:37 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:59474 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726175AbfCZHzh (ORCPT
+        Tue, 26 Mar 2019 04:13:14 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:33446 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726302AbfCZINN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Mar 2019 03:55:37 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1884560DB4; Tue, 26 Mar 2019 07:55:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553586936;
-        bh=g4S0i5dvyZ22w0F8xBZyNOt510QlGaxzGA/D3ELUe90=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=DChi02bhuC0sTwZwp8g3dLJOIe3yvW50jKblCnd8yB71BJ51hoIZoCialeR8V5ZKZ
-         jZf7iFck6fxL/XcrDkcNyzpH14ygWPAQI/npzigjDTB576SzdCTy65zrP3ZtnHzroz
-         gYi3Vrw8FC4iuRkHcdPBSf1Zpf85MBqf8X2liVoA=
-Received: from x230.qca.qualcomm.com (176-93-125-176.bb.dnainternet.fi [176.93.125.176])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5F5F460A4E;
-        Tue, 26 Mar 2019 07:55:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553586935;
-        bh=g4S0i5dvyZ22w0F8xBZyNOt510QlGaxzGA/D3ELUe90=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=TIXozBzwfBJCxtnOpEqk6WGKdaipm0WXrns0Trr/HHbbOpE5uze+NwgS8QDB/ZX4O
-         zT9w8YLA+npZ0NlFtMBdUnZbj/ozvDXtUudLtzCQsXfwHVh8WDJMWNvQPB+97cVv8D
-         vXKJiXGAJ2CVMVeiBLhCX27wcZUHfhLPlqwEcaeA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5F5F460A4E
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Paolo Bonzini <pbonzini@redhat.com>
-Cc:     Fenghua Yu <fenghua.yu@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, H Peter Anvin <hpa@zytor.com>,
-        Dave Hansen <dave.hansen@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Xiaoyao Li <xiaoyao.li@intel.com>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ravi V Shankar <ravi.v.shankar@intel.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        x86 <x86@kernel.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, kvm@vger.kernel.org
-Subject: Re: [PATCH v5 03/18] wlcore: simplify/fix/optimize reg_ch_conf_pending operations
-References: <1552431636-31511-1-git-send-email-fenghua.yu@intel.com>
-        <1552431636-31511-4-git-send-email-fenghua.yu@intel.com>
-        <87a7hxzjda.fsf@purkki.adurom.net>
-        <20190314231614.GA41447@romley-ivt3.sc.intel.com>
-        <02f06de8-ebb2-24ff-27e1-f697cadc02c4@redhat.com>
-Date:   Tue, 26 Mar 2019 09:55:29 +0200
-In-Reply-To: <02f06de8-ebb2-24ff-27e1-f697cadc02c4@redhat.com> (Paolo
-        Bonzini's message of "Fri, 15 Mar 2019 18:17:06 +0100")
-Message-ID: <877ecmjci6.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Tue, 26 Mar 2019 04:13:13 -0400
+Received: by mail-ot1-f68.google.com with SMTP id j10so4171886otq.0
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2019 01:13:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=3iQY2044ltiP2GVGOJEJDrmIhYEt4TQSZ46wgSgf+uU=;
+        b=RK+S8uAutXG0XRuCyIpbr5gFTtAdI3N3n+10sTN0rVbzdjNzLb4odBa/wltMTrBbnm
+         T9+CeeIJEj6/C2IrW/Avl7bcv3WpYs+yUWvtXlqawQ+wWwXFDnUQNzDZLDBkN8LfzZPB
+         W17XN/qYEWNYG9ZOliK3R/7ewejDgtMwvovKmHBHQXK79VHqR2aioNcwktCms8Q3vGxu
+         wCBkJ1gNh/1Lzy7+MEz48hNXN62CTzD8hfHNbkRhw+2wTxuHJ0qW0oBQ9rP4xJ/Yh+2o
+         BFwNtHm3jzZl+uk/cvT3oqawdfDleU2h6lNKbiRCJogiaQiq5YCOhivnH7FMH/By2ID9
+         D6Hw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=3iQY2044ltiP2GVGOJEJDrmIhYEt4TQSZ46wgSgf+uU=;
+        b=et3a0qVXf+Gj4HcFR2UBkc8TVRyL+xyLaasb52U0xZHPOsOGUXNYFlPbuXZGlFDlsF
+         EggvUsTX6eNrUpw7gxPA8vrAKicvLdTnvcxytAbpE1LLK1pOAaArg59vPmh4o/dANIEw
+         N8w6CE3jjsKcWM7ojVTGI6/JdT8j3cacdyy5ZInJN/SzcnX1NN6Oq/+vUe3JpIbNMFVL
+         wdScSx6+XpeS+WizpwVyqG4J7uCQILoKTHIkk4JSz8sNu+Np36pWihTx3lSicCFJT5o3
+         salUSRQkrd9tpAHVCctRbOL6iyIk9HZvIULbvi2hhDQar3yf0TfQTw+hP8cCGIqRnpTM
+         8/jw==
+X-Gm-Message-State: APjAAAVq7yGkgyN7WZ/MJRrpVzxZWkpCd2D1LliXdig+EZgIunmOvk3I
+        35XjIXqEmPRyOlkz/+x6u9ZPPF0HlJFQXUVfBR0=
+X-Google-Smtp-Source: APXvYqxZ/imR1UJGirwDiQV0tn/gIy5KOvufMLP6wyHlq6RzGTa3NisGrXHLmcJeV0oUQoDNT7j8e20cgQbWVskMfwE=
+X-Received: by 2002:a9d:7acc:: with SMTP id m12mr1196743otn.296.1553587992687;
+ Tue, 26 Mar 2019 01:13:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Received: by 2002:a9d:628c:0:0:0:0:0 with HTTP; Tue, 26 Mar 2019 01:13:11
+ -0700 (PDT)
+In-Reply-To: <20190326061618.GA7200@redhat.com>
+References: <20190313091252.GB2663@redhat.com> <CAKR_QV+sFc6J97f5dtW9OtxGoEj5udB=fY5qAb3_QgF4jfqEVA@mail.gmail.com>
+ <20190313130910.GD2003@redhat.com> <CAKR_QVLB9k0bGiRW9ON3PeQR1ZoMfWbrXg3W+Bg4N4G+9pAsZg@mail.gmail.com>
+ <20190313140607.GE2003@redhat.com> <CAKR_QV+gEJEE2+hwfE1wsF5mdEZVDGtNskivcpFUutGEbwKyKg@mail.gmail.com>
+ <20190313155028.GB5302@redhat.com> <CAKR_QV+=i_Sp26zCkTC9cAHrhVLq4w0FoxLVmD-T3wFyd-ruEQ@mail.gmail.com>
+ <20190325142537.GA13884@redhat.com> <CAKR_QV+zUBKk=8UHiCnWQg9XCdB8zbMEcVSKEO7vFOR0Q2Yesw@mail.gmail.com>
+ <20190326061618.GA7200@redhat.com>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Tue, 26 Mar 2019 09:13:11 +0100
+Message-ID: <CAKR_QVK-+w1p3kwstJG=k0w1dp42knGGUe5VrFKq-45yYhkuHQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] rt2x00: enable experimental MFP with HW crypt
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        daniel@makrotopia.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Paolo Bonzini <pbonzini@redhat.com> writes:
+On 26/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Tue, Mar 26, 2019 at 02:54:25AM +0100, Tom Psyborg wrote:
+>> On 25/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> > On Thu, Mar 14, 2019 at 03:02:14PM +0100, Tom Psyborg wrote:
+>> >> On 13/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> >>
+>> >> >
+>> >> > There should be no difference between enabling MFP with nohwcrypt
+>> >> > and
+>> >> > without nohwcrypt,
+>> >>
+>> >> well there is. do you still want me to resend this with MFP enabled
+>> >> unconditionally for all chips?
+>> >
+>> > Please share your hostapd config file with MFP enabled.
+>> >
+>> > Stanislaw
+>> >
+>> >
+>>
+>> ctrl_interface=/var/run/wpa_supplicant
+>> eapol_version=1
+>> ap_scan=1
+>> fast_reauth=1
+>> pmf=2
+>> network={
+>> 	ssid="OpenWrt"
+>> 	proto=WPA2
+>> 	key_mgmt=WPA-PSK
+>> 	pairwise=CCMP
+>> 	group=CCMP
+>> 	ieee80211w=2
+>> 	psk="u7e5hwh46uz7ergv"
+>> 	wpa_ptk_rekey=60
+>> }
+>
+> This is supplicant config, I asked for hostapd. You can find it in
+> /tmp/run/hostapd-phy0.conf (I assume you use openwrt on QCA router,
+> or you use proprietary firmware ?).
+>
+> Stanislaw
+>
 
-> On 15/03/19 00:16, Fenghua Yu wrote:
->> Hi, Valo,
->> 
->> On Thu, Mar 14, 2019 at 03:16:33PM +0200, Kalle Valo wrote:
->>> Fenghua Yu <fenghua.yu@intel.com> writes:
->>>
->>>> From: Paolo Bonzini <pbonzini@redhat.com>
->>>>
->>>> Bitmaps are defined on unsigned longs, so the usage of u32[2] in the
->>>> wlcore driver is incorrect.  As noted by Peter Zijlstra, casting arrays
->>>> to a bitmap is incorrect for big-endian architectures.
->>>>
->>>> When looking at it I observed that:
->>>>
->>>> - operations on reg_ch_conf_pending is always under the wl_lock mutex,
->>>> so set_bit is overkill
->>>>
->>>> - the only case where reg_ch_conf_pending is accessed a u32 at a time is
->>>> unnecessary too.
->>>>
->>>> This patch cleans up everything in this area, and changes tmp_ch_bitmap
->>>> to have the proper alignment.
->>>>
->>>> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
->>>> Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
->>>
->>> [...]
->>>
->>>>  int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl)
->>>>  {
->>>>  	struct wl12xx_cmd_regdomain_dfs_config *cmd = NULL;
->>>>  	int ret = 0, i, b, ch_bit_idx;
->>>> -	u32 tmp_ch_bitmap[2];
->>>> +	u32 tmp_ch_bitmap[2] __aligned(sizeof(unsigned long));
->>>>  	struct wiphy *wiphy = wl->hw->wiphy;
->>>>  	struct ieee80211_supported_band *band;
->>>>  	bool timeout = false;
->>>
->>> [...]
->>>
->>>> @@ -1754,8 +1751,8 @@ int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl)
->>>>  		goto out;
->>>>  	}
->>>>  
->>>> -	cmd->ch_bit_map1 = cpu_to_le32(tmp_ch_bitmap[0]);
->>>> -	cmd->ch_bit_map2 = cpu_to_le32(tmp_ch_bitmap[1]);
->>>> +	cmd->ch_bit_map1 = tmp_ch_bitmap[0];
->>>> +	cmd->ch_bit_map2 = tmp_ch_bitmap[1];
->>>
->>> Will sparse still be happy? AFAICS you are now assigning u32 to __le32:
->>>
->>> struct wl12xx_cmd_regdomain_dfs_config {
->>>        struct wl1271_cmd_header header;
->>>
->>>        __le32 ch_bit_map1;
->>>        __le32 ch_bit_map2;
->> 
->> Discussion between Peter and Paolo (https://lkml.org/lkml/2019/3/4/521)
->> may answer your question.
->
-> No, Kalle is right.  You do need to change
->
-> -	u32 tmp_ch_bitmap[2];
-> +	u32 tmp_ch_bitmap[2] __aligned(sizeof(unsigned long));
->
-> into
->
-> -	u32 tmp_ch_bitmap[2];
-> +	__le32 tmp_ch_bitmap[2] __aligned(sizeof(unsigned long));
->
-> The assignment from wl->reg_ch_conf_pending to tmp_ch_bitmap is fine
-> because it goes through memcpy.
+in case it really matters here it is. basically default settings:
 
-Thanks for confirming, I'll then drop patch 3 and wait for a new
-version. IMHO it would be easier to submit this patch separately to
-linux-wireless, no need to have within this bigger patchset.
+driver=nl80211
+logger_syslog=127
+logger_syslog_level=2
+logger_stdout=127
+logger_stdout_level=2
+country_code=US
+ieee80211d=1
+hw_mode=g
+supported_rates=60 90 120 180 240 360 480 540
+basic_rates=60 120 240
+beacon_int=100
+channel=5
 
--- 
-Kalle Valo
+noscan=1
+ieee80211n=1
+ht_coex=0
+ht_capab=[HT40+][LDPC][SHORT-GI-20][SHORT-GI-40][TX-STBC][RX-STBC1][DSSS_CCK-40]
+
+interface=wlan0
+ctrl_interface=/var/run/hostapd
+ap_isolate=1
+bss_load_update_period=60
+chan_util_avg_period=600
+disassoc_low_ack=1
+preamble=1
+wmm_enabled=1
+ignore_broadcast_ssid=0
+uapsd_advertisement_enabled=1
+wpa_passphrase=u7e5hwh46uz7ergv
+auth_algs=1
+wpa=2
+wpa_pairwise=CCMP
+ssid=OpenWrt
+bridge=br-lan
+wpa_disable_eapol_key_retries=1
+wpa_key_mgmt=WPA-PSK WPA-PSK-SHA256
+okc=0
+disable_pmksa_caching=1
+ieee80211w=2
+group_mgmt_cipher=AES-128-CMAC
+bssid=10:fe:ed:a7:11:5f
