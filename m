@@ -2,209 +2,162 @@ Return-Path: <SRS0=Lwp6=R5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4460C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 08:34:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF1FC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 09:28:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8863E20857
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 08:34:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E8B120856
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 09:28:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="EE7Itci5"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="bzfwRRAC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730701AbfCZIe0 (ORCPT
+        id S1730239AbfCZJ2b (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Mar 2019 04:34:26 -0400
-Received: from nbd.name ([46.4.11.11]:38944 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726480AbfCZIeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Mar 2019 04:34:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        Sender:Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=reiBErJ+x//gFvl3axP/iGVRIVA62x6ssV7DhOxrHzg=; b=EE7Itci5bWJAwZr4Ge3mbge1Z3
-        iCJyrYS7U7KA3st/g4JEdaUAEftv1xpjAIMondyyV41oqxlrDUloZGtUIFHxuK8gU2+MdzNsJHiFU
-        W/ash1kJMMuHhq1BlzCSUzbh4TZq7GRCj+uJ71ZPvKif4xFIvNDzBHknwgmKaQB5At6A=;
-Received: from p4ff13338.dip0.t-ipconnect.de ([79.241.51.56] helo=maeck-2.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1h8hXK-0000fz-Oj; Tue, 26 Mar 2019 09:34:22 +0100
-Received: by maeck-2.local (Postfix, from userid 501)
-        id E4BE65583F85; Tue, 26 Mar 2019 09:34:21 +0100 (CET)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     kvalo@codeaurora.org
-Subject: [PATCH 5.1 2/3] mt76: mt7603: fix sequence number assignment
-Date:   Tue, 26 Mar 2019 09:34:20 +0100
-Message-Id: <20190326083421.57998-2-nbd@nbd.name>
-X-Mailer: git-send-email 2.17.0
-In-Reply-To: <20190326083421.57998-1-nbd@nbd.name>
-References: <20190326083421.57998-1-nbd@nbd.name>
+        Tue, 26 Mar 2019 05:28:31 -0400
+Received: from mail-eopbgr770041.outbound.protection.outlook.com ([40.107.77.41]:20345
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726178AbfCZJ2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Mar 2019 05:28:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=blsgRJeJzA7v4POqZ/4kqpwp3Z+4SDpGw/9V+Q04+jY=;
+ b=bzfwRRACRe3JzBOWNwtmtoTt3En3RDmKcPTfVbUeNVNqkZZTw6HyVx40ep4YGjvxif8NTqowfgRR7OpQS2wjqthT/zSEeIL6Ox91Ylf0H+9ETSMak82asBjD9iAJw5SduyhxgsPhwJj54cvt4F2qYT1GELOq0dm2jWTEbDSIghI=
+Received: from DM6PR05MB5787.namprd05.prod.outlook.com (20.178.25.96) by
+ DM6PR05MB6539.namprd05.prod.outlook.com (20.178.226.145) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1750.13; Tue, 26 Mar 2019 09:28:15 +0000
+Received: from DM6PR05MB5787.namprd05.prod.outlook.com
+ ([fe80::8c80:7be5:eb8f:a653]) by DM6PR05MB5787.namprd05.prod.outlook.com
+ ([fe80::8c80:7be5:eb8f:a653%3]) with mapi id 15.20.1750.010; Tue, 26 Mar 2019
+ 09:28:15 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
+ SN6PR05MB5181.namprd05.prod.outlook.com (20.177.249.88) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1750.14; Tue, 26 Mar 2019 09:27:37 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e]) by SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e%4]) with mapi id 15.20.1750.014; Tue, 26 Mar 2019
+ 09:27:37 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2] mac80211/cfg80211: update bss channel on channel switch
+Thread-Topic: [PATCH v2] mac80211/cfg80211: update bss channel on channel
+ switch
+Thread-Index: AQHU47YmKyfRpWtdvESokLuefZkwqQ==
+Date:   Tue, 26 Mar 2019 09:27:37 +0000
+Message-ID: <20190326092730.32511-1-sergey.matyukevich.os@quantenna.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BYAPR05CA0045.namprd05.prod.outlook.com
+ (2603:10b6:a03:74::22) To SN6PR05MB4928.namprd05.prod.outlook.com
+ (2603:10b6:805:9d::10)
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 2.11.0
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 84918f2b-7552-4f9f-2631-08d6b1cd48b7
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:SN6PR05MB5181;
+x-ms-traffictypediagnostic: SN6PR05MB5181:|DM6PR05MB6539:
+x-moderation-data: 3/26/2019 9:28:14 AM
+x-microsoft-antispam-prvs: <DM6PR05MB6539C84A57376322AD865B40A35F0@DM6PR05MB6539.namprd05.prod.outlook.com>
+x-forefront-prvs: 09888BC01D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(346002)(366004)(39850400004)(376002)(136003)(199004)(189003)(53936002)(25786009)(6486002)(66066001)(2351001)(6916009)(8676002)(305945005)(2906002)(81156014)(186003)(26005)(386003)(6506007)(103116003)(1076003)(71200400001)(3846002)(6116002)(8936002)(107886003)(71190400001)(15650500001)(5640700003)(5660300002)(99286004)(4326008)(102836004)(68736007)(81166006)(6436002)(52116002)(54906003)(50226002)(316002)(486006)(478600001)(2616005)(14454004)(97736004)(6512007)(476003)(7736002)(106356001)(256004)(14444005)(105586002)(2501003)(36756003)(86362001)(6346003)(436003)(21314003);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6PR05MB6539;H:DM6PR05MB5787.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: otoylp1QTDzNhwkH/JScn+6wtCCbqAWwIwiBTVaXoehiyGfCEcVdf3BG8jj0odkD6CohGgNXt1Q1NWml8Td3LseM+1ABUBs9whmxeFbLmxWUH3ZDirt41MwFkcpfFJM/126b+wi2w9pXDnKHY0XortR3LfJUuMbA4rfKi4Z8A5t0QXQBei0PlwUCS6Ecgos8baTQJCs73e0u4AAM6z2IcScyLdkpdQ29H8UK8Dq2Yc2/AhAIHvI7L4b9qQ/SdfFUJvOhg6ykGPoTA5iJs7CFPeet9lGMMnPhPyBr3BVM7A45eoeqFUZ4l3w2gys6TMdTNrUnTbYBq0MqRgSR4uOjaD5ZTEI8Ng6VTbuJerjmEA7os6vmvV5fGTJv2+DBBZ4EukQ99Qw37OvSU/JQI03126fd9ZBCu1yK6R7eLF1aTak=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 84918f2b-7552-4f9f-2631-08d6b1cd48b7
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Mar 2019 09:28:15.6249
+ (UTC)
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR05MB6539
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If the MT_TXD3_SN_VALID flag is not set in the tx descriptor, the hardware
-assigns the sequence number. However, the rest of the code assumes that the
-sequence number specified in the 802.11 header gets transmitted.
-This was causing issues with the aggregation setup, which worked for the
-initial one (where the sequence numbers were still close), but not for
-further teardown/re-establishing of sessions.
+FullMAC STAs have no way to update bss channel after CSA channel switch
+completion. As a result, user-space tools may provide inconsistent
+channel info. For instance, consider the following two commands:
+$ sudo iw dev wlan0 link
+$ sudo iw dev wlan0 info
+The latter command gets channel info from the hardware, so most probably
+its output will be correct. However the former command gets channel info
+from scan cache, so its output will contain outdated channel info.
+In fact, current bss channel info will not be updated until the
+next [re-]connect.
 
-Additionally, the overwrite of the TID sequence number in WTBL2 was resetting
-the hardware assigned sequence numbers, causing them to drift further apart.
+Note that mac80211 STAs have a workaround for this, but it requires
+access to internal cfg80211 data, see ieee80211_chswitch_work:
 
-Fix this by using the software assigned sequence numbers
+	/* XXX: shouldn't really modify cfg80211-owned data! */
+	ifmgd->associated->channel =3D sdata->csa_chandef.chan;
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+This patch suggests to convert mac80211 workaround into cfg80211 behavior
+and to update current bss channel in cfg80211_ch_switch_notify.
+
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+
 ---
- .../net/wireless/mediatek/mt76/mt7603/mac.c   | 53 +++++--------------
- .../net/wireless/mediatek/mt76/mt7603/main.c  |  6 +--
- .../wireless/mediatek/mt76/mt7603/mt7603.h    |  2 +-
- 3 files changed, 18 insertions(+), 43 deletions(-)
+v1 -> v2:
+- as per suggestion by Johannes, use !WARN_ON(!wdev->current_bss)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index 5e31d7da96fc..5abc02b57818 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -343,7 +343,7 @@ void mt7603_mac_rx_ba_reset(struct mt7603_dev *dev, void *addr, u8 tid)
- 		 MT_BA_CONTROL_1_RESET));
- }
- 
--void mt7603_mac_tx_ba_reset(struct mt7603_dev *dev, int wcid, int tid, int ssn,
-+void mt7603_mac_tx_ba_reset(struct mt7603_dev *dev, int wcid, int tid,
- 			    int ba_size)
- {
- 	u32 addr = mt7603_wtbl2_addr(wcid);
-@@ -358,43 +358,6 @@ void mt7603_mac_tx_ba_reset(struct mt7603_dev *dev, int wcid, int tid, int ssn,
- 		mt76_clear(dev, addr + (15 * 4), tid_mask);
- 		return;
+
+---
+ net/mac80211/mlme.c    | 3 ---
+ net/wireless/nl80211.c | 5 +++++
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2dbcf5d5512e..b7a9fe3d5fcb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1188,9 +1188,6 @@ static void ieee80211_chswitch_work(struct work_struc=
+t *work)
+ 		goto out;
  	}
--	mt76_poll(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_BUSY, 0, 5000);
+=20
+-	/* XXX: shouldn't really modify cfg80211-owned data! */
+-	ifmgd->associated->channel =3D sdata->csa_chandef.chan;
 -
--	mt7603_mac_stop(dev);
--	switch (tid) {
--	case 0:
--		mt76_rmw_field(dev, addr + (2 * 4), MT_WTBL2_W2_TID0_SN, ssn);
--		break;
--	case 1:
--		mt76_rmw_field(dev, addr + (2 * 4), MT_WTBL2_W2_TID1_SN, ssn);
--		break;
--	case 2:
--		mt76_rmw_field(dev, addr + (2 * 4), MT_WTBL2_W2_TID2_SN_LO,
--			       ssn);
--		mt76_rmw_field(dev, addr + (3 * 4), MT_WTBL2_W3_TID2_SN_HI,
--			       ssn >> 8);
--		break;
--	case 3:
--		mt76_rmw_field(dev, addr + (3 * 4), MT_WTBL2_W3_TID3_SN, ssn);
--		break;
--	case 4:
--		mt76_rmw_field(dev, addr + (3 * 4), MT_WTBL2_W3_TID4_SN, ssn);
--		break;
--	case 5:
--		mt76_rmw_field(dev, addr + (3 * 4), MT_WTBL2_W3_TID5_SN_LO,
--			       ssn);
--		mt76_rmw_field(dev, addr + (4 * 4), MT_WTBL2_W4_TID5_SN_HI,
--			       ssn >> 4);
--		break;
--	case 6:
--		mt76_rmw_field(dev, addr + (4 * 4), MT_WTBL2_W4_TID6_SN, ssn);
--		break;
--	case 7:
--		mt76_rmw_field(dev, addr + (4 * 4), MT_WTBL2_W4_TID7_SN, ssn);
--		break;
--	}
--	mt7603_wtbl_update(dev, wcid, MT_WTBL_UPDATE_WTBL2);
--	mt7603_mac_start(dev);
- 
- 	for (i = 7; i > 0; i--) {
- 		if (ba_size >= MT_AGG_SIZE_LIMIT(i))
-@@ -827,6 +790,7 @@ mt7603_mac_write_txwi(struct mt7603_dev *dev, __le32 *txwi,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *rate = &info->control.rates[0];
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_bar *bar = (struct ieee80211_bar *)skb->data;
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct mt7603_vif *mvif;
- 	int wlan_idx;
-@@ -834,6 +798,7 @@ mt7603_mac_write_txwi(struct mt7603_dev *dev, __le32 *txwi,
- 	int tx_count = 8;
- 	u8 frame_type, frame_subtype;
- 	u16 fc = le16_to_cpu(hdr->frame_control);
-+	u16 seqno = 0;
- 	u8 vif_idx = 0;
- 	u32 val;
- 	u8 bw;
-@@ -919,7 +884,17 @@ mt7603_mac_write_txwi(struct mt7603_dev *dev, __le32 *txwi,
- 		tx_count = 0x1f;
- 
- 	val = FIELD_PREP(MT_TXD3_REM_TX_COUNT, tx_count) |
--	      FIELD_PREP(MT_TXD3_SEQ, le16_to_cpu(hdr->seq_ctrl));
-+		  MT_TXD3_SN_VALID;
+ 	ifmgd->csa_waiting_bcn =3D true;
+=20
+ 	ieee80211_sta_reset_beacon_monitor(sdata);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 25a9e3b5c154..b108b635e2f3 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -15721,6 +15721,11 @@ void cfg80211_ch_switch_notify(struct net_device *=
+dev,
+=20
+ 	wdev->chandef =3D *chandef;
+ 	wdev->preset_chandef =3D *chandef;
 +
-+	if (ieee80211_is_data_qos(hdr->frame_control))
-+		seqno = le16_to_cpu(hdr->seq_ctrl);
-+	else if (ieee80211_is_back_req(hdr->frame_control))
-+		seqno = le16_to_cpu(bar->start_seq_num);
-+	else
-+		val &= ~MT_TXD3_SN_VALID;
++	if (wdev->iftype =3D=3D NL80211_IFTYPE_STATION &&
++	    !WARN_ON(!wdev->current_bss))
++		wdev->current_bss->pub.channel =3D chandef->chan;
 +
-+	val |= FIELD_PREP(MT_TXD3_SEQ, seqno >> 4);
-+
- 	txwi[3] = cpu_to_le32(val);
- 
- 	if (key) {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-index cc0fe0933b2d..31a7ca691195 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-@@ -584,13 +584,13 @@ mt7603_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
- 		mtxq->aggr = true;
- 		mtxq->send_bar = false;
--		mt7603_mac_tx_ba_reset(dev, msta->wcid.idx, tid, *ssn, ba_size);
-+		mt7603_mac_tx_ba_reset(dev, msta->wcid.idx, tid, ba_size);
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
- 		mtxq->aggr = false;
- 		ieee80211_send_bar(vif, sta->addr, tid, mtxq->agg_ssn);
--		mt7603_mac_tx_ba_reset(dev, msta->wcid.idx, tid, *ssn, -1);
-+		mt7603_mac_tx_ba_reset(dev, msta->wcid.idx, tid, -1);
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
- 		mtxq->agg_ssn = *ssn << 4;
-@@ -598,7 +598,7 @@ mt7603_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP_CONT:
- 		mtxq->aggr = false;
--		mt7603_mac_tx_ba_reset(dev, msta->wcid.idx, tid, *ssn, -1);
-+		mt7603_mac_tx_ba_reset(dev, msta->wcid.idx, tid, -1);
- 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
- 	}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-index 79f332429432..6049f3b7c8fe 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-@@ -200,7 +200,7 @@ void mt7603_beacon_set_timer(struct mt7603_dev *dev, int idx, int intval);
- int mt7603_mac_fill_rx(struct mt7603_dev *dev, struct sk_buff *skb);
- void mt7603_mac_add_txs(struct mt7603_dev *dev, void *data);
- void mt7603_mac_rx_ba_reset(struct mt7603_dev *dev, void *addr, u8 tid);
--void mt7603_mac_tx_ba_reset(struct mt7603_dev *dev, int wcid, int tid, int ssn,
-+void mt7603_mac_tx_ba_reset(struct mt7603_dev *dev, int wcid, int tid,
- 			    int ba_size);
- 
- void mt7603_pse_client_reset(struct mt7603_dev *dev);
--- 
-2.17.0
+ 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
+ 				 NL80211_CMD_CH_SWITCH_NOTIFY, 0);
+ }
+--=20
+2.11.0
 
