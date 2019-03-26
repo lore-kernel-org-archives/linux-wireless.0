@@ -4,35 +4,34 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5C4C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 14:28:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14D1FC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 14:28:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED75E20857
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 14:28:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D945D20857
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 14:28:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731824AbfCZO20 (ORCPT
+        id S1731845AbfCZO2c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Mar 2019 10:28:26 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:28359 "EHLO
+        Tue, 26 Mar 2019 10:28:32 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:27787 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731795AbfCZO2V (ORCPT
+        with ESMTP id S1731475AbfCZO2U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Mar 2019 10:28:21 -0400
-X-UUID: bbfcb7714f4244d5b5d3bececb1ba3e8-20190326
-X-UUID: bbfcb7714f4244d5b5d3bececb1ba3e8-20190326
+        Tue, 26 Mar 2019 10:28:20 -0400
+X-UUID: 5f85ea2dd4ba4c28b3777424eeff3904-20190326
+X-UUID: 5f85ea2dd4ba4c28b3777424eeff3904-20190326
 Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 1015308412; Tue, 26 Mar 2019 22:28:16 +0800
+        with ESMTP id 1194350895; Tue, 26 Mar 2019 22:28:14 +0800
 Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Tue, 26 Mar 2019 22:28:14 +0800
+ mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Tue, 26 Mar 2019 22:28:13 +0800
 Received: from mtkslt306.mediatek.inc (10.21.14.136) by mtkcas08.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Tue, 26 Mar 2019 22:28:14 +0800
+ Transport; Tue, 26 Mar 2019 22:28:13 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Felix Fietkau <nbd@nbd.name>
@@ -46,41 +45,68 @@ CC:     Roy Luo <royluo@google.com>, Sean Wang <sean.wang@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 4/4] MAINTAINERS: update entry for mt76 wireless driver
-Date:   Tue, 26 Mar 2019 22:28:10 +0800
-Message-ID: <e7da670d5a03e1639eb3916c24fb1533b0f93b73.1553607739.git.ryder.lee@mediatek.com>
+Subject: [PATCH 2/4] mt76: add unlikely() for dma_mapping_error() check
+Date:   Tue, 26 Mar 2019 22:28:08 +0800
+Message-ID: <ebd07347cc26a2e7dd7d7e1e1d213d80fc9d0940.1553607739.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <cover.1553607739.git.ryder.lee@mediatek.com>
 References: <cover.1553607739.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 9BF2E6EDE77AB05CC4E010BFB04F37965AA268A532F00CF5066941286F6F4E222000:8
 X-MTK:  N
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Roy and I actively join the development and review.
+In the tx/rx fastpath, the funciton dma_map_single() rarely fails.
+This adds unlikely() optimization to this error check conditional.
 
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- MAINTAINERS | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/mediatek/mt76/dma.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e17ebf7..7d92a87 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9768,6 +9768,8 @@ F:	Documentation/devicetree/bindings/media/mediatek-vpu.txt
- MEDIATEK MT76 WIRELESS LAN DRIVER
- M:	Felix Fietkau <nbd@nbd.name>
- M:	Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-+R:	Ryder Lee <ryder.lee@mediatek.com>
-+R:	Roy Luo <royluo@google.com>
- L:	linux-wireless@vger.kernel.org
- S:	Maintained
- F:	drivers/net/wireless/mediatek/mt76/
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 8a4b935..6f3ef09 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -272,7 +272,7 @@
+ 
+ 	addr = dma_map_single(dev->dev, skb->data, skb->len,
+ 			      DMA_TO_DEVICE);
+-	if (dma_mapping_error(dev->dev, addr))
++	if (unlikely(dma_mapping_error(dev->dev, addr)))
+ 		return -ENOMEM;
+ 
+ 	buf.addr = addr;
+@@ -315,7 +315,7 @@
+ 
+ 	len = skb_headlen(skb);
+ 	addr = dma_map_single(dev->dev, skb->data, len, DMA_TO_DEVICE);
+-	if (dma_mapping_error(dev->dev, addr))
++	if (unlikely(dma_mapping_error(dev->dev, addr)))
+ 		goto free;
+ 
+ 	tx_info.buf[n].addr = t->dma_addr;
+@@ -329,7 +329,7 @@
+ 
+ 		addr = dma_map_single(dev->dev, iter->data, iter->len,
+ 				      DMA_TO_DEVICE);
+-		if (dma_mapping_error(dev->dev, addr))
++		if (unlikely(dma_mapping_error(dev->dev, addr)))
+ 			goto unmap;
+ 
+ 		tx_info.buf[n].addr = addr;
+@@ -386,7 +386,7 @@
+ 			break;
+ 
+ 		addr = dma_map_single(dev->dev, buf, len, DMA_FROM_DEVICE);
+-		if (dma_mapping_error(dev->dev, addr)) {
++		if (unlikely(dma_mapping_error(dev->dev, addr))) {
+ 			skb_free_frag(buf);
+ 			break;
+ 		}
 -- 
 1.9.1
 
