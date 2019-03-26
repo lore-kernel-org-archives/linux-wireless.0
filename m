@@ -2,162 +2,77 @@ Return-Path: <SRS0=Lwp6=R5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3CF9C43381
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 08:13:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE31BC43381
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 08:34:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B323C20830
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 08:13:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E29B2084B
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Mar 2019 08:34:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RK+S8uAu"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="EeiFVqdI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731306AbfCZINO (ORCPT
+        id S1730637AbfCZIeZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Mar 2019 04:13:14 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:33446 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726302AbfCZINN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Mar 2019 04:13:13 -0400
-Received: by mail-ot1-f68.google.com with SMTP id j10so4171886otq.0
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2019 01:13:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=3iQY2044ltiP2GVGOJEJDrmIhYEt4TQSZ46wgSgf+uU=;
-        b=RK+S8uAutXG0XRuCyIpbr5gFTtAdI3N3n+10sTN0rVbzdjNzLb4odBa/wltMTrBbnm
-         T9+CeeIJEj6/C2IrW/Avl7bcv3WpYs+yUWvtXlqawQ+wWwXFDnUQNzDZLDBkN8LfzZPB
-         W17XN/qYEWNYG9ZOliK3R/7ewejDgtMwvovKmHBHQXK79VHqR2aioNcwktCms8Q3vGxu
-         wCBkJ1gNh/1Lzy7+MEz48hNXN62CTzD8hfHNbkRhw+2wTxuHJ0qW0oBQ9rP4xJ/Yh+2o
-         BFwNtHm3jzZl+uk/cvT3oqawdfDleU2h6lNKbiRCJogiaQiq5YCOhivnH7FMH/By2ID9
-         D6Hw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=3iQY2044ltiP2GVGOJEJDrmIhYEt4TQSZ46wgSgf+uU=;
-        b=et3a0qVXf+Gj4HcFR2UBkc8TVRyL+xyLaasb52U0xZHPOsOGUXNYFlPbuXZGlFDlsF
-         EggvUsTX6eNrUpw7gxPA8vrAKicvLdTnvcxytAbpE1LLK1pOAaArg59vPmh4o/dANIEw
-         N8w6CE3jjsKcWM7ojVTGI6/JdT8j3cacdyy5ZInJN/SzcnX1NN6Oq/+vUe3JpIbNMFVL
-         wdScSx6+XpeS+WizpwVyqG4J7uCQILoKTHIkk4JSz8sNu+Np36pWihTx3lSicCFJT5o3
-         salUSRQkrd9tpAHVCctRbOL6iyIk9HZvIULbvi2hhDQar3yf0TfQTw+hP8cCGIqRnpTM
-         8/jw==
-X-Gm-Message-State: APjAAAVq7yGkgyN7WZ/MJRrpVzxZWkpCd2D1LliXdig+EZgIunmOvk3I
-        35XjIXqEmPRyOlkz/+x6u9ZPPF0HlJFQXUVfBR0=
-X-Google-Smtp-Source: APXvYqxZ/imR1UJGirwDiQV0tn/gIy5KOvufMLP6wyHlq6RzGTa3NisGrXHLmcJeV0oUQoDNT7j8e20cgQbWVskMfwE=
-X-Received: by 2002:a9d:7acc:: with SMTP id m12mr1196743otn.296.1553587992687;
- Tue, 26 Mar 2019 01:13:12 -0700 (PDT)
-MIME-Version: 1.0
-Received: by 2002:a9d:628c:0:0:0:0:0 with HTTP; Tue, 26 Mar 2019 01:13:11
- -0700 (PDT)
-In-Reply-To: <20190326061618.GA7200@redhat.com>
-References: <20190313091252.GB2663@redhat.com> <CAKR_QV+sFc6J97f5dtW9OtxGoEj5udB=fY5qAb3_QgF4jfqEVA@mail.gmail.com>
- <20190313130910.GD2003@redhat.com> <CAKR_QVLB9k0bGiRW9ON3PeQR1ZoMfWbrXg3W+Bg4N4G+9pAsZg@mail.gmail.com>
- <20190313140607.GE2003@redhat.com> <CAKR_QV+gEJEE2+hwfE1wsF5mdEZVDGtNskivcpFUutGEbwKyKg@mail.gmail.com>
- <20190313155028.GB5302@redhat.com> <CAKR_QV+=i_Sp26zCkTC9cAHrhVLq4w0FoxLVmD-T3wFyd-ruEQ@mail.gmail.com>
- <20190325142537.GA13884@redhat.com> <CAKR_QV+zUBKk=8UHiCnWQg9XCdB8zbMEcVSKEO7vFOR0Q2Yesw@mail.gmail.com>
- <20190326061618.GA7200@redhat.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Tue, 26 Mar 2019 09:13:11 +0100
-Message-ID: <CAKR_QVK-+w1p3kwstJG=k0w1dp42knGGUe5VrFKq-45yYhkuHQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] rt2x00: enable experimental MFP with HW crypt
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        daniel@makrotopia.org
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 26 Mar 2019 04:34:25 -0400
+Received: from nbd.name ([46.4.11.11]:38940 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726302AbfCZIeY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Mar 2019 04:34:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
+        Sender:Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=k/eC8DAr+QG6E4chyKIMEUDoWRa9kYqTW2t7ZnZ+M5k=; b=EeiFVqdIvixC8iMnPKJ5JDN5se
+        El81688w0LRZnG/PNETfHUes6yPMr5EbNcvrYnN/pMhs8dMd9jYg3nlAqE7bEDxK6yhU+aKPbB/0h
+        1Ig51q0Hp6WEb9JSdm0724G5nDPEkjWIidpriWrKEDdw1g/rxt2oNXYmMLPqYU/Yt1AY=;
+Received: from p4ff13338.dip0.t-ipconnect.de ([79.241.51.56] helo=maeck-2.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1h8hXK-0000g0-Os; Tue, 26 Mar 2019 09:34:22 +0100
+Received: by maeck-2.local (Postfix, from userid 501)
+        id EA6595583F87; Tue, 26 Mar 2019 09:34:21 +0100 (CET)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     kvalo@codeaurora.org
+Subject: [PATCH 5.1 3/3] mt76: mt7603: send BAR after powersave wakeup
+Date:   Tue, 26 Mar 2019 09:34:21 +0100
+Message-Id: <20190326083421.57998-3-nbd@nbd.name>
+X-Mailer: git-send-email 2.17.0
+In-Reply-To: <20190326083421.57998-1-nbd@nbd.name>
+References: <20190326083421.57998-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 26/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Tue, Mar 26, 2019 at 02:54:25AM +0100, Tom Psyborg wrote:
->> On 25/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> > On Thu, Mar 14, 2019 at 03:02:14PM +0100, Tom Psyborg wrote:
->> >> On 13/03/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> >>
->> >> >
->> >> > There should be no difference between enabling MFP with nohwcrypt
->> >> > and
->> >> > without nohwcrypt,
->> >>
->> >> well there is. do you still want me to resend this with MFP enabled
->> >> unconditionally for all chips?
->> >
->> > Please share your hostapd config file with MFP enabled.
->> >
->> > Stanislaw
->> >
->> >
->>
->> ctrl_interface=/var/run/wpa_supplicant
->> eapol_version=1
->> ap_scan=1
->> fast_reauth=1
->> pmf=2
->> network={
->> 	ssid="OpenWrt"
->> 	proto=WPA2
->> 	key_mgmt=WPA-PSK
->> 	pairwise=CCMP
->> 	group=CCMP
->> 	ieee80211w=2
->> 	psk="u7e5hwh46uz7ergv"
->> 	wpa_ptk_rekey=60
->> }
->
-> This is supplicant config, I asked for hostapd. You can find it in
-> /tmp/run/hostapd-phy0.conf (I assume you use openwrt on QCA router,
-> or you use proprietary firmware ?).
->
-> Stanislaw
->
+Now that the sequence number allocation is fixed, we can finally send a BAR
+at powersave wakeup time to refresh the receiver side reorder window
 
-in case it really matters here it is. basically default settings:
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt7603/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-driver=nl80211
-logger_syslog=127
-logger_syslog_level=2
-logger_stdout=127
-logger_stdout_level=2
-country_code=US
-ieee80211d=1
-hw_mode=g
-supported_rates=60 90 120 180 240 360 480 540
-basic_rates=60 120 240
-beacon_int=100
-channel=5
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+index 31a7ca691195..a3c4ef198bfe 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+@@ -372,7 +372,7 @@ mt7603_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps)
+ 	struct mt7603_sta *msta = (struct mt7603_sta *)sta->drv_priv;
+ 	struct sk_buff_head list;
+ 
+-	mt76_stop_tx_queues(&dev->mt76, sta, false);
++	mt76_stop_tx_queues(&dev->mt76, sta, true);
+ 	mt7603_wtbl_set_ps(dev, msta, ps);
+ 	if (ps)
+ 		return;
+-- 
+2.17.0
 
-noscan=1
-ieee80211n=1
-ht_coex=0
-ht_capab=[HT40+][LDPC][SHORT-GI-20][SHORT-GI-40][TX-STBC][RX-STBC1][DSSS_CCK-40]
-
-interface=wlan0
-ctrl_interface=/var/run/hostapd
-ap_isolate=1
-bss_load_update_period=60
-chan_util_avg_period=600
-disassoc_low_ack=1
-preamble=1
-wmm_enabled=1
-ignore_broadcast_ssid=0
-uapsd_advertisement_enabled=1
-wpa_passphrase=u7e5hwh46uz7ergv
-auth_algs=1
-wpa=2
-wpa_pairwise=CCMP
-ssid=OpenWrt
-bridge=br-lan
-wpa_disable_eapol_key_retries=1
-wpa_key_mgmt=WPA-PSK WPA-PSK-SHA256
-okc=0
-disable_pmksa_caching=1
-ieee80211w=2
-group_mgmt_cipher=AES-128-CMAC
-bssid=10:fe:ed:a7:11:5f
