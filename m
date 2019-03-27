@@ -4,51 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A25F9C4360F
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:28:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEF93C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:29:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6AF472075C
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:28:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BB7D2075C
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:29:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553714895;
-	bh=kgyC4AFq3DDzsDi/XjOf0++6sqCrex772RFyGxRgOwc=;
+	s=default; t=1553714957;
+	bh=Ffqck2aIWABNUq3ZwltuooVhhQ3A2FFCOQHwiHl4c8U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=BPjDxEKYaexSAxd1Z4JKcslknOpIEnfAPCT29iwzT1hdbY2FDMbfX212ruQZzBxz3
-	 jkpZ5LP+R2jEo+mCGriylyBLlpsLPoH1KzpbrsSQuqWRxfADr5va4LDBwEoB7ZlpCN
-	 g6kh6wepkOJZqKSn7bqC2OlD4FyIvKI1Sc+3aRTM=
+	b=X4CkwWnD3h+LLpFwMhR/JhEbG0fCxuboayic4FjlnPg3N17qxuLknmo+ZTqJclq5y
+	 FV8kgLukrAciLP49Ttyfb7mVbgTSKS/8AOLtjM6PsFyURMw4cPDKQ/V1F+GUzpjlnO
+	 dejKt0EiSFOrfrJY/rIMUcoZlBRQWXzT6GeNG6Ws=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387534AbfC0T2J (ORCPT
+        id S1732989AbfC0SDz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 15:28:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45126 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 14:03:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44278 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731242AbfC0SE1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:04:27 -0400
+        id S1732879AbfC0SDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:03:53 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 58B6F2183F;
-        Wed, 27 Mar 2019 18:04:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 29310217D7;
+        Wed, 27 Mar 2019 18:03:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553709866;
-        bh=kgyC4AFq3DDzsDi/XjOf0++6sqCrex772RFyGxRgOwc=;
+        s=default; t=1553709832;
+        bh=Ffqck2aIWABNUq3ZwltuooVhhQ3A2FFCOQHwiHl4c8U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1vmZh5RvmUa/9B0qMfKiGNrIHDjlTIKD2F7lMAHXCAH2Tw6+8SAYTmA++me2KHrnb
-         3kk/dANDvXGTDPNtpvSqGNPr6EEkn8RAH+MzZRBNVdRa5imfFrOcAmUBSU2oic79EI
-         0hkyZ8mso6ArZLZpxSIBTnKvbyfMZ3ZNHQyX4G0E=
+        b=Jy6Fl+hp/xthAo710DUyJhO5Rvu8qul/7hFcw5HeRxAGQJ7qWVbuFH1hv37pNYwCp
+         U9lc9rFbrK9DTNBFtZSsRGCte7SJuDOn05dCfwqip+VAIfaThrzo9CItLg+Oe6IMzx
+         oGTvfNVfxoooUHkUwDcJYXIYGvVySTzklodpnePA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Alagu Sankar <alagusankar@silex-india.com>,
-        Wen Gong <wgong@codeaurora.org>,
+Cc:     Wen Yang <wen.yang99@zte.com.cn>, Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.0 079/262] ath10k: don't report unset rssi values to mac80211
-Date:   Wed, 27 Mar 2019 13:58:54 -0400
-Message-Id: <20190327180158.10245-79-sashal@kernel.org>
+        "David S. Miller" <davem@davemloft.net>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 064/262] mt76: fix a leaked reference by adding a missing of_node_put
+Date:   Wed, 27 Mar 2019 13:58:39 -0400
+Message-Id: <20190327180158.10245-64-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
 References: <20190327180158.10245-1-sashal@kernel.org>
@@ -60,52 +62,81 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+From: Wen Yang <wen.yang99@zte.com.cn>
 
-[ Upstream commit 7d444522303177f3a3c09b9abb104ddeea470a70 ]
+[ Upstream commit 34e022d8b780a03902d82fb3997ba7c7b1f40c81 ]
 
-The SDIO firmware does not provide RSSI value to the host, it's only set to
-zero. In that case don't report the value to mac80211. One risk here is that
-value zero might be a valid value with other firmware, currently there's no way
-to detect that.
+The call to of_find_node_by_phandle returns a node pointer with refcount
+incremented thus it must be explicitly decremented after the last
+usage.
 
-Without the fix, the rssi value indicated by iw changes between the actual
-value and -95.
+Detected by coccinelle with the following warnings:
+./drivers/net/wireless/mediatek/mt76/eeprom.c:58:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:61:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:67:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:70:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:72:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
 
-Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00005-QCARMSWP-1.
-
-Co-developed-by: Wen Gong <wgong@codeaurora.org>
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+Cc: Felix Fietkau <nbd@nbd.name>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-mediatek@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/eeprom.c | 24 ++++++++++++++-------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index f42bac204ef8..ecf34ce7acf0 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2130,9 +2130,15 @@ static bool ath10k_htt_rx_proc_rx_ind_hl(struct ath10k_htt *htt,
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	rx_status = IEEE80211_SKB_RXCB(skb);
- 	rx_status->chains |= BIT(0);
--	rx_status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
--			    rx->ppdu.combined_rssi;
--	rx_status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
-+	if (rx->ppdu.combined_rssi == 0) {
-+		/* SDIO firmware does not provide signal */
-+		rx_status->signal = 0;
-+		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
-+	} else {
-+		rx_status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
-+			rx->ppdu.combined_rssi;
-+		rx_status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
+diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
+index 530e5593765c..a1529920d877 100644
+--- a/drivers/net/wireless/mediatek/mt76/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
+@@ -54,22 +54,30 @@ mt76_get_of_eeprom(struct mt76_dev *dev, int len)
+ 		part = np->name;
+ 
+ 	mtd = get_mtd_device_nm(part);
+-	if (IS_ERR(mtd))
+-		return PTR_ERR(mtd);
++	if (IS_ERR(mtd)) {
++		ret =  PTR_ERR(mtd);
++		goto out_put_node;
 +	}
  
- 	spin_lock_bh(&ar->data_lock);
- 	ch = ar->scan_channel;
+-	if (size <= sizeof(*list))
+-		return -EINVAL;
++	if (size <= sizeof(*list)) {
++		ret = -EINVAL;
++		goto out_put_node;
++	}
+ 
+ 	offset = be32_to_cpup(list);
+ 	ret = mtd_read(mtd, offset, len, &retlen, dev->eeprom.data);
+ 	put_mtd_device(mtd);
+ 	if (ret)
+-		return ret;
++		goto out_put_node;
+ 
+-	if (retlen < len)
+-		return -EINVAL;
++	if (retlen < len) {
++		ret = -EINVAL;
++		goto out_put_node;
++	}
+ 
+-	return 0;
++out_put_node:
++	of_node_put(np);
++	return ret;
+ #else
+ 	return -ENOENT;
+ #endif
 -- 
 2.19.1
 
