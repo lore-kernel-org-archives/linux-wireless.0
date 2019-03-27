@@ -4,49 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9558AC10F06
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1036C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:44:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6866C2082F
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:42:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 757E6205C9
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:44:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553712138;
-	bh=ks2YUMp0EyQpEs3Ow1PHCEffpB9rW8iO8XuspyGU/Jw=;
+	s=default; t=1553712248;
+	bh=62NBNnPu9SNnmesvvyF6HAsOH7LdsagTCki+Evg2+HA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jwZeeD/L+uTck0om6oO4y52g3JBSTQ8KhBLfD9dJu1cdbHjxvNLZ7S0rT9Ws+rwTE
-	 x2bWX7NBvZODxZbxogrYgNlXqIVsmpD053Hni2P7zIARCNcI++3//nvHnmTXulmApK
-	 5q8FO6E9VHloKyEA3k4z5PDqk6SJ5ox3rQFPOVFc=
+	b=lugf9NNiAkZzgxw7Os/OMS3OarV6djsSNacmaSRAPa2KB60EmHM13/6SdwyzvItYT
+	 d5fEAV910emjXuOlQVWIDLKDK0ywbMA+u1YeRDLu1KZCUx9LMFY6ua33P9ypJ1+esL
+	 KfCHWKSpkxQ9eiJ5ggWTL2r6ykzGR+epKPwsqMmg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403796AbfC0SWA (ORCPT
+        id S2391153AbfC0SVX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:22:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39966 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 14:21:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39224 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2403782AbfC0SV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:21:59 -0400
+        id S2391145AbfC0SVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:21:22 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D6CF620643;
-        Wed, 27 Mar 2019 18:21:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8D1C72147C;
+        Wed, 27 Mar 2019 18:21:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710918;
-        bh=ks2YUMp0EyQpEs3Ow1PHCEffpB9rW8iO8XuspyGU/Jw=;
+        s=default; t=1553710881;
+        bh=62NBNnPu9SNnmesvvyF6HAsOH7LdsagTCki+Evg2+HA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=inkKAhDrh/9Q5iJlc1STDmdW47o7SPKprgTAJnouqOTRMibk3qU1QPg/UvXuTcrFH
-         rAvqyXvmac0JxlTWwMmpA7ju8tCFPKZdiqLH2DWRAyOABcCmcHYx7WD69rSrps9FVg
-         u9ssViHJZhb1tNN7oigzcjQC5uHiyGqXRm+Mw7SI=
+        b=gsNzh6/OdF4NPphrCF46p4xmmYjcBT0JFkbK9vdOMK8yf4nDb7QVwn7KLsWMv+gED
+         jkCUsAneTEjH2EPc689LfiG8FTsharjwccu4fxvaA6LpNN6I3P2Wyf4rxLQxGBXk+m
+         5cA6Rhiw84ygAQKdEJAtcpreg4riXOnT3Skr/F3c=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+        Maya Erez <merez@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 46/87] iwlwifi: pcie: fix emergency path
-Date:   Wed, 27 Mar 2019 14:19:59 -0400
-Message-Id: <20190327182040.17444-46-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 24/87] wil6210: check null pointer in _wil_cfg80211_merge_extra_ies
+Date:   Wed, 27 Mar 2019 14:19:37 -0400
+Message-Id: <20190327182040.17444-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190327182040.17444-1-sashal@kernel.org>
 References: <20190327182040.17444-1-sashal@kernel.org>
@@ -58,73 +61,68 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
 
-[ Upstream commit c6ac9f9fb98851f47b978a9476594fc3c477a34d ]
+[ Upstream commit de77a53c2d1e8fb3621e63e8e1f0f0c9a1a99ff7 ]
 
-Allocator swaps the pending requests with 0 when it starts
-working. This means that relying on it n RX path to decide if
-to move to emergency is not always a good idea, since it may
-be zero, but there are still a lot of unallocated RBs in the
-system. Change allocator to decrement the pending requests on
-real time. It is more expensive since it accesses the atomic
-variable more times, but it gives the RX path a better idea
-of the system's status.
+ies1 or ies2 might be null when code inside
+_wil_cfg80211_merge_extra_ies access them.
+Add explicit check for null and make sure ies1/ies2 are not
+accessed in such a case.
 
-Reported-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Fixes: 868a1e863f95 ("iwlwifi: pcie: avoid empty free RB queue")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+spos might be null and be accessed inside
+_wil_cfg80211_merge_extra_ies.
+Add explicit check for null in the while condition statement
+and make sure spos is not accessed in such a case.
+
+Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index e58a50d31d96..c21f8bd32d08 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -475,7 +475,7 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_rb_allocator *rba = &trans_pcie->rba;
- 	struct list_head local_empty;
--	int pending = atomic_xchg(&rba->req_pending, 0);
-+	int pending = atomic_read(&rba->req_pending);
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index d117240d9a73..b8eeaef17edc 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1005,6 +1005,12 @@ static int _wil_cfg80211_merge_extra_ies(const u8 *ies1, u16 ies1_len,
+ 	u8 *buf, *dpos;
+ 	const u8 *spos;
  
- 	IWL_DEBUG_RX(trans, "Pending allocation requests = %d\n", pending);
++	if (!ies1)
++		ies1_len = 0;
++
++	if (!ies2)
++		ies2_len = 0;
++
+ 	if (ies1_len == 0 && ies2_len == 0) {
+ 		*merged_ies = NULL;
+ 		*merged_len = 0;
+@@ -1014,17 +1020,19 @@ static int _wil_cfg80211_merge_extra_ies(const u8 *ies1, u16 ies1_len,
+ 	buf = kmalloc(ies1_len + ies2_len, GFP_KERNEL);
+ 	if (!buf)
+ 		return -ENOMEM;
+-	memcpy(buf, ies1, ies1_len);
++	if (ies1)
++		memcpy(buf, ies1, ies1_len);
+ 	dpos = buf + ies1_len;
+ 	spos = ies2;
+-	while (spos + 1 < ies2 + ies2_len) {
++	while (spos && (spos + 1 < ies2 + ies2_len)) {
+ 		/* IE tag at offset 0, length at offset 1 */
+ 		u16 ielen = 2 + spos[1];
  
-@@ -530,11 +530,13 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
- 			i++;
+ 		if (spos + ielen > ies2 + ies2_len)
+ 			break;
+ 		if (spos[0] == WLAN_EID_VENDOR_SPECIFIC &&
+-		    !_wil_cfg80211_find_ie(ies1, ies1_len, spos, ielen)) {
++		    (!ies1 || !_wil_cfg80211_find_ie(ies1, ies1_len,
++						     spos, ielen))) {
+ 			memcpy(dpos, spos, ielen);
+ 			dpos += ielen;
  		}
- 
-+		atomic_dec(&rba->req_pending);
- 		pending--;
-+
- 		if (!pending) {
--			pending = atomic_xchg(&rba->req_pending, 0);
-+			pending = atomic_read(&rba->req_pending);
- 			IWL_DEBUG_RX(trans,
--				     "Pending allocation requests = %d\n",
-+				     "Got more pending allocation requests = %d\n",
- 				     pending);
- 		}
- 
-@@ -546,12 +548,15 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
- 		spin_unlock(&rba->lock);
- 
- 		atomic_inc(&rba->req_ready);
-+
- 	}
- 
- 	spin_lock(&rba->lock);
- 	/* return unused rbds to the allocator empty list */
- 	list_splice_tail(&local_empty, &rba->rbd_empty);
- 	spin_unlock(&rba->lock);
-+
-+	IWL_DEBUG_RX(trans, "%s, exit.\n", __func__);
- }
- 
- /*
 -- 
 2.19.1
 
