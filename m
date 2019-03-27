@@ -6,50 +6,50 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B64A6C10F00
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:05:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 085DDC10F00
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:13:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 899F52063F
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:05:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD6E921741
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:13:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553709927;
-	bh=TGEWCY/rvzWzZ9YrYMXVfiNXzxSPUBhPdrFq5cU5Us4=;
+	s=default; t=1553710401;
+	bh=MJVzSy+4vdMfW0w03710h4/91SJYYvX1MThx5vyfq/A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=tfqGG8sWTrSm7gALqM+BVB3FbKr5uHObWKssAWjaCkT/zl9B0tZkVsb5zS0+GIxbr
-	 Kiibf3Jv7LQ0F6Gm0vfw3cGpLQ4cCCHPwzVqbDKdmYrZMZGetn4MPNesRbZyPMe/vd
-	 73RhEYzv057uvNl+aPp5IgIz0z6hciCKt4AVCq4E=
+	b=M59c9FvBYzOL7WRI9b4iPZRXbRYnEBMUBBQfEZ5n0EzsGr2bWR1FexRmh4q2AP36T
+	 ShpMGRSfVTkMMbstxU3F7qMp6cmZ9GAcQwi5hzuYALnbM31CR1mxIfH8M1hLOv2kgh
+	 4X8YUf4cd8vVGl71BaaFsqZnQ6aNAjU36G/LgrR8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387687AbfC0SF1 (ORCPT
+        id S2389398AbfC0SNU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:05:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46592 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 14:13:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55916 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387677AbfC0SFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:05:25 -0400
+        id S2389387AbfC0SNT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:13:19 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 80B55217F9;
-        Wed, 27 Mar 2019 18:05:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0D85E2184C;
+        Wed, 27 Mar 2019 18:13:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553709925;
-        bh=TGEWCY/rvzWzZ9YrYMXVfiNXzxSPUBhPdrFq5cU5Us4=;
+        s=default; t=1553710398;
+        bh=MJVzSy+4vdMfW0w03710h4/91SJYYvX1MThx5vyfq/A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1h4BKuPNweDNADW1ffCRCDt1qF1naEkH1s/hBoTyeZoRcsWJSIn2So/gZkuJZIGMK
-         vqaHIqAP+4d4YOBQiejCFhDqcaxV35dSWykbczgLZBYqUVZDdQUBT4rJFCzxkJ5OEU
-         Onap/9qsHSobyhFQB+Vko56Qe6Mk0I22ZeejXGoc=
+        b=ZWd1ARpl33+to/sjVEymt6FiB/urLOJ04NGQto444KVt8GJ0XlgNtyR+PcSB4MG6U
+         wdXicoA4zQFaK1dl8Rg+eqZztJqIs6TeaGgw6ojkSBvNzWfc8th81MC7UnhKZl6dyz
+         2jGkQeKpmcBSt92rBQhd+IKp9BrEg8vJosEacW4s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Norris <briannorris@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.0 116/262] mwifiex: don't advertise IBSS features without FW support
-Date:   Wed, 27 Mar 2019 13:59:31 -0400
-Message-Id: <20190327180158.10245-116-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 100/192] iwlwifi: pcie: fix emergency path
+Date:   Wed, 27 Mar 2019 14:08:52 -0400
+Message-Id: <20190327181025.13507-100-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
-References: <20190327180158.10245-1-sashal@kernel.org>
+In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
+References: <20190327181025.13507-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -58,66 +58,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Brian Norris <briannorris@chromium.org>
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ Upstream commit 6f21ab30469d670de620f758330aca9f3433f693 ]
+[ Upstream commit c6ac9f9fb98851f47b978a9476594fc3c477a34d ]
 
-As it is, doing something like
+Allocator swaps the pending requests with 0 when it starts
+working. This means that relying on it n RX path to decide if
+to move to emergency is not always a good idea, since it may
+be zero, but there are still a lot of unallocated RBs in the
+system. Change allocator to decrement the pending requests on
+real time. It is more expensive since it accesses the atomic
+variable more times, but it gives the RX path a better idea
+of the system's status.
 
-  # iw phy phy0 interface add foobar type ibss
-
-on a firmware that doesn't have ad-hoc support just yields failures of
-HostCmd_CMD_SET_BSS_MODE, which happened to return a '-1' error code
-(-EPERM? not really right...) and sometimes may even crash the firmware
-along the way.
-
-Let's parse the firmware capability flag while registering the wiphy, so
-we don't allow attempting IBSS at all, and we get a proper -EOPNOTSUPP
-from nl80211 instead.
-
-Fixes: e267e71e68ae ("mwifiex: Disable adhoc feature based on firmware capability")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Reported-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Fixes: 868a1e863f95 ("iwlwifi: pcie: avoid empty free RB queue")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 1467af22e394..883752f640b4 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -4310,11 +4310,13 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy->mgmt_stypes = mwifiex_mgmt_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
--				 BIT(NL80211_IFTYPE_ADHOC) |
- 				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 				 BIT(NL80211_IFTYPE_P2P_GO) |
- 				 BIT(NL80211_IFTYPE_AP);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index d4a31e014c82..b2905f01b7df 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -502,7 +502,7 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rb_allocator *rba = &trans_pcie->rba;
+ 	struct list_head local_empty;
+-	int pending = atomic_xchg(&rba->req_pending, 0);
++	int pending = atomic_read(&rba->req_pending);
  
-+	if (ISSUPP_ADHOC_ENABLED(adapter->fw_cap_info))
-+		wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
+ 	IWL_DEBUG_RX(trans, "Pending allocation requests = %d\n", pending);
+ 
+@@ -557,11 +557,13 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ 			i++;
+ 		}
+ 
++		atomic_dec(&rba->req_pending);
+ 		pending--;
 +
- 	wiphy->bands[NL80211_BAND_2GHZ] = &mwifiex_band_2ghz;
- 	if (adapter->config_bands & BAND_A)
- 		wiphy->bands[NL80211_BAND_5GHZ] = &mwifiex_band_5ghz;
-@@ -4374,11 +4376,13 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy->available_antennas_tx = BIT(adapter->number_of_antenna) - 1;
- 	wiphy->available_antennas_rx = BIT(adapter->number_of_antenna) - 1;
+ 		if (!pending) {
+-			pending = atomic_xchg(&rba->req_pending, 0);
++			pending = atomic_read(&rba->req_pending);
+ 			IWL_DEBUG_RX(trans,
+-				     "Pending allocation requests = %d\n",
++				     "Got more pending allocation requests = %d\n",
+ 				     pending);
+ 		}
  
--	wiphy->features |= NL80211_FEATURE_HT_IBSS |
--			   NL80211_FEATURE_INACTIVITY_TIMER |
-+	wiphy->features |= NL80211_FEATURE_INACTIVITY_TIMER |
- 			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
- 			   NL80211_FEATURE_NEED_OBSS_SCAN;
+@@ -573,12 +575,15 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ 		spin_unlock(&rba->lock);
  
-+	if (ISSUPP_ADHOC_ENABLED(adapter->fw_cap_info))
-+		wiphy->features |= NL80211_FEATURE_HT_IBSS;
+ 		atomic_inc(&rba->req_ready);
 +
- 	if (ISSUPP_RANDOM_MAC(adapter->fw_cap_info))
- 		wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
- 				   NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
+ 	}
+ 
+ 	spin_lock(&rba->lock);
+ 	/* return unused rbds to the allocator empty list */
+ 	list_splice_tail(&local_empty, &rba->rbd_empty);
+ 	spin_unlock(&rba->lock);
++
++	IWL_DEBUG_RX(trans, "%s, exit.\n", __func__);
+ }
+ 
+ /*
 -- 
 2.19.1
 
