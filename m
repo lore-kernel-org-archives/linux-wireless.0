@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F88C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F2F7C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:22:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99DEE206C0
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:21:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2086A206C0
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:22:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553714484;
-	bh=hYwPbMhv4w8FEs0HKB1wEqsF+gEKZRKNcFtSFt6VcJw=;
+	s=default; t=1553714549;
+	bh=1s7RgBUl01/7/jLP5KHqoctGZubsKT0vnWmhrEcD3UA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=j/zRxvb+iFRv8FUExd2ZzBX7vqVd8shHg3iV2uk6gvvpoRBT7rz0jKVPXqw2W19ZC
-	 dr0hIjJkiR3iKNc8cFPiwKSpPpyQ9zs52zUZOdhA5RDbYgOC+m0DbMe+bTUr6Fvv92
-	 4OYhEZ87KV8c+rVFec63S93ny6tJ+LkT99NRa7oU=
+	b=olsGNZTy3GOscYypziOMZ8P6DsFoSiL/9iBJcmatZnuQoSvLlxJW6h3d+8uSzT+5/
+	 BiBMoG6T+HiNdsWrB8kM6zgog510mRnHhGaWII56CYbLhYnQV27m20RCZxgEAoGdy4
+	 4QABHEoPSNEbwJ/RMxy+b7H0kqlMcaY/ArQjY+5g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388061AbfC0SG6 (ORCPT
+        id S2387958AbfC0SGe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:06:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48720 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 14:06:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48096 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388048AbfC0SG4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:06:56 -0400
+        id S1733208AbfC0SGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:06:30 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DAFA021850;
-        Wed, 27 Mar 2019 18:06:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BCBFB2063F;
+        Wed, 27 Mar 2019 18:06:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710015;
-        bh=hYwPbMhv4w8FEs0HKB1wEqsF+gEKZRKNcFtSFt6VcJw=;
+        s=default; t=1553709989;
+        bh=1s7RgBUl01/7/jLP5KHqoctGZubsKT0vnWmhrEcD3UA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LtGAljHkQkOO94mp41tB+P+kI7wm05gp8iE8q28fH2GFB5CLQSxJEHW0A2jx6Dw3Z
-         KBaifmcvLl1jFkTNzUvOF67KwtSneIHf6ZXHgH562XazWkZOXUqU6VIS1BfSyNj7Q6
-         zqBza3OanwPyoYj72PB7OuX7yTZOyKzDsDe0u8FI=
+        b=B3ynSZJYbQJnzO68cIbJ4UjQqODjCtt8QHEtbNE5pAYnpSoPoV4B8MjGm+tvDjX8O
+         c6y2xPzWeWsip/mKx0iTs9OuYuRfaEsM4xuoCnp2SH9/Hgdgl7hbLFYB4/Uw3zcLmP
+         RI8YkivKC+WTvAK8H7BwBft8QihgjOVVzYxB/0mI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Rakesh Pillai <pillair@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+Cc:     Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.0 157/262] ath10k: fix shadow register implementation for WCN3990
-Date:   Wed, 27 Mar 2019 14:00:12 -0400
-Message-Id: <20190327180158.10245-157-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 145/262] iwlwifi: pcie: fix emergency path
+Date:   Wed, 27 Mar 2019 14:00:00 -0400
+Message-Id: <20190327180158.10245-145-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
 References: <20190327180158.10245-1-sashal@kernel.org>
@@ -59,108 +59,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rakesh Pillai <pillair@codeaurora.org>
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ Upstream commit 1863008369ae0407508033b4b00f98b985adeb15 ]
+[ Upstream commit c6ac9f9fb98851f47b978a9476594fc3c477a34d ]
 
-WCN3990 supports shadow registers write operation support
-for copy engine for regular operation in powersave mode.
+Allocator swaps the pending requests with 0 when it starts
+working. This means that relying on it n RX path to decide if
+to move to emergency is not always a good idea, since it may
+be zero, but there are still a lot of unallocated RBs in the
+system. Change allocator to decrement the pending requests on
+real time. It is more expensive since it accesses the atomic
+variable more times, but it gives the RX path a better idea
+of the system's status.
 
-Since WCN3990 is a 64-bit target, the shadow register
-implementation needs to be done in the copy engine handlers
-for 64-bit target. Currently the shadow register implementation
-is present in the 32-bit target handlers of copy engine.
-
-Fix the shadow register copy engine write operation
-implementation for 64-bit target(WCN3990).
-
-Tested HW: WCN3990
-Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
-
-Fixes: b7ba83f7c414 ("ath10k: add support for shadow register for WNC3990")
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Reported-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Fixes: 868a1e863f95 ("iwlwifi: pcie: avoid empty free RB queue")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/ce.c | 26 +++++++++++++-------------
- drivers/net/wireless/ath/ath10k/ce.h |  2 +-
- 2 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 2a5668b4f6bc..1a1ea4bbf8a0 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -500,14 +500,8 @@ static int _ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
- 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 9e850c25877b..c596c7b13504 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -499,7 +499,7 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rb_allocator *rba = &trans_pcie->rba;
+ 	struct list_head local_empty;
+-	int pending = atomic_xchg(&rba->req_pending, 0);
++	int pending = atomic_read(&rba->req_pending);
  
- 	/* WORKAROUND */
--	if (!(flags & CE_SEND_FLAG_GATHER)) {
--		if (ar->hw_params.shadow_reg_support)
--			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
--								  write_index);
--		else
--			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
--							   write_index);
--	}
-+	if (!(flags & CE_SEND_FLAG_GATHER))
-+		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
+ 	IWL_DEBUG_RX(trans, "Pending allocation requests = %d\n", pending);
  
- 	src_ring->write_index = write_index;
- exit:
-@@ -581,8 +575,14 @@ static int _ath10k_ce_send_nolock_64(struct ath10k_ce_pipe *ce_state,
- 	/* Update Source Ring Write Index */
- 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
+@@ -554,11 +554,13 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ 			i++;
+ 		}
  
--	if (!(flags & CE_SEND_FLAG_GATHER))
--		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
-+	if (!(flags & CE_SEND_FLAG_GATHER)) {
-+		if (ar->hw_params.shadow_reg_support)
-+			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
-+								  write_index);
-+		else
-+			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
-+							   write_index);
-+	}
++		atomic_dec(&rba->req_pending);
+ 		pending--;
++
+ 		if (!pending) {
+-			pending = atomic_xchg(&rba->req_pending, 0);
++			pending = atomic_read(&rba->req_pending);
+ 			IWL_DEBUG_RX(trans,
+-				     "Pending allocation requests = %d\n",
++				     "Got more pending allocation requests = %d\n",
+ 				     pending);
+ 		}
  
- 	src_ring->write_index = write_index;
- exit:
-@@ -1404,12 +1404,12 @@ static int ath10k_ce_alloc_shadow_base(struct ath10k *ar,
- 				       u32 nentries)
- {
- 	src_ring->shadow_base_unaligned = kcalloc(nentries,
--						  sizeof(struct ce_desc),
-+						  sizeof(struct ce_desc_64),
- 						  GFP_KERNEL);
- 	if (!src_ring->shadow_base_unaligned)
- 		return -ENOMEM;
+@@ -570,12 +572,15 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ 		spin_unlock(&rba->lock);
  
--	src_ring->shadow_base = (struct ce_desc *)
-+	src_ring->shadow_base = (struct ce_desc_64 *)
- 			PTR_ALIGN(src_ring->shadow_base_unaligned,
- 				  CE_DESC_RING_ALIGN);
- 	return 0;
-@@ -1461,7 +1461,7 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 		ret = ath10k_ce_alloc_shadow_base(ar, src_ring, nentries);
- 		if (ret) {
- 			dma_free_coherent(ar->dev,
--					  (nentries * sizeof(struct ce_desc) +
-+					  (nentries * sizeof(struct ce_desc_64) +
- 					   CE_DESC_RING_ALIGN),
- 					  src_ring->base_addr_owner_space_unaligned,
- 					  base_addr);
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index ead9987c3259..463e2fc8b501 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -118,7 +118,7 @@ struct ath10k_ce_ring {
- 	u32 base_addr_ce_space;
+ 		atomic_inc(&rba->req_ready);
++
+ 	}
  
- 	char *shadow_base_unaligned;
--	struct ce_desc *shadow_base;
-+	struct ce_desc_64 *shadow_base;
+ 	spin_lock(&rba->lock);
+ 	/* return unused rbds to the allocator empty list */
+ 	list_splice_tail(&local_empty, &rba->rbd_empty);
+ 	spin_unlock(&rba->lock);
++
++	IWL_DEBUG_RX(trans, "%s, exit.\n", __func__);
+ }
  
- 	/* keep last */
- 	void *per_transfer_context[0];
+ /*
 -- 
 2.19.1
 
