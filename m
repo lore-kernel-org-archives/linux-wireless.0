@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8344DC10F00
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F88C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:21:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 510CA2147C
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:19:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99DEE206C0
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:21:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553714359;
-	bh=KmERyaP2SScHkgC+FfJ/EX4B148TZzpTex/i/vYfU+o=;
+	s=default; t=1553714484;
+	bh=hYwPbMhv4w8FEs0HKB1wEqsF+gEKZRKNcFtSFt6VcJw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CX/U7dgSTqpCNAKXFkVo5LkhModEXFBdcmoyisNfWgweL2/e78J1a3X6WKLRKMk2X
-	 vSIkzUQVI+8gdL6PYe0e8nVJ9bVAZsJfikc1VKKXOP5YonUkZLY4u/Uiyuhx4Z2JLx
-	 c87Wr+fZEQgkI9tWIYSKZblXF7TtE0df7zvGnBOA=
+	b=j/zRxvb+iFRv8FUExd2ZzBX7vqVd8shHg3iV2uk6gvvpoRBT7rz0jKVPXqw2W19ZC
+	 dr0hIjJkiR3iKNc8cFPiwKSpPpyQ9zs52zUZOdhA5RDbYgOC+m0DbMe+bTUr6Fvv92
+	 4OYhEZ87KV8c+rVFec63S93ny6tJ+LkT99NRa7oU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388256AbfC0SHu (ORCPT
+        id S2388061AbfC0SG6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:07:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49704 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 14:06:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48720 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388247AbfC0SHt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:07:49 -0400
+        id S2388048AbfC0SG4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:06:56 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A308A2063F;
-        Wed, 27 Mar 2019 18:07:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DAFA021850;
+        Wed, 27 Mar 2019 18:06:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710068;
-        bh=KmERyaP2SScHkgC+FfJ/EX4B148TZzpTex/i/vYfU+o=;
+        s=default; t=1553710015;
+        bh=hYwPbMhv4w8FEs0HKB1wEqsF+gEKZRKNcFtSFt6VcJw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gFUzrEP3MZx8/WaK27N2zs46MDMbLggk3yrXRwnqp3icrTOCjFdbmEa7rFj8BR7Ub
-         98eODEraGHUZ9kMxae5wtM52lAvU5njqX/uZ4/a9vfIWNBMLR6WxF9gIA8PyQC3uNL
-         NIVGVsJk5fGUIRpFMW+aQ7kjJ8rinnqMTc+/eWps=
+        b=LtGAljHkQkOO94mp41tB+P+kI7wm05gp8iE8q28fH2GFB5CLQSxJEHW0A2jx6Dw3Z
+         KBaifmcvLl1jFkTNzUvOF67KwtSneIHf6ZXHgH562XazWkZOXUqU6VIS1BfSyNj7Q6
+         zqBza3OanwPyoYj72PB7OuX7yTZOyKzDsDe0u8FI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
+Cc:     Rakesh Pillai <pillair@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.0 182/262] iwlwifi: mvm: fix RFH config command with >=10 CPUs
-Date:   Wed, 27 Mar 2019 14:00:37 -0400
-Message-Id: <20190327180158.10245-182-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 157/262] ath10k: fix shadow register implementation for WCN3990
+Date:   Wed, 27 Mar 2019 14:00:12 -0400
+Message-Id: <20190327180158.10245-157-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
 References: <20190327180158.10245-1-sashal@kernel.org>
@@ -59,68 +59,108 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-[ Upstream commit dbf592f3d14fb7d532cb7c820b1065cf33e02aaa ]
+[ Upstream commit 1863008369ae0407508033b4b00f98b985adeb15 ]
 
-If we have >=10 (logical) CPUs, our command size exceeds the
-internal buffer size and the command fails; fix that by using
-IWL_HCMD_DFL_NOCOPY for the command that's allocated anyway.
+WCN3990 supports shadow registers write operation support
+for copy engine for regular operation in powersave mode.
 
-While at it, also fix the leak of cmd, and use struct_size()
-to calculate its size.
+Since WCN3990 is a 64-bit target, the shadow register
+implementation needs to be done in the copy engine handlers
+for 64-bit target. Currently the shadow register implementation
+is present in the 32-bit target handlers of copy engine.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Fixes: 8edbfaa19835 ("iwlwifi: mvm: configure multi RX queue")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fix the shadow register copy engine write operation
+implementation for 64-bit target(WCN3990).
+
+Tested HW: WCN3990
+Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+
+Fixes: b7ba83f7c414 ("ath10k: add support for shadow register for WNC3990")
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c | 26 +++++++++++++-------------
+ drivers/net/wireless/ath/ath10k/ce.h |  2 +-
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 0d6c313b6669..19ec55cef802 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -127,13 +127,17 @@ static int iwl_send_rss_cfg_cmd(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 2a5668b4f6bc..1a1ea4bbf8a0 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -500,14 +500,8 @@ static int _ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
+ 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
  
- static int iwl_configure_rxq(struct iwl_mvm *mvm)
+ 	/* WORKAROUND */
+-	if (!(flags & CE_SEND_FLAG_GATHER)) {
+-		if (ar->hw_params.shadow_reg_support)
+-			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
+-								  write_index);
+-		else
+-			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
+-							   write_index);
+-	}
++	if (!(flags & CE_SEND_FLAG_GATHER))
++		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
+ 
+ 	src_ring->write_index = write_index;
+ exit:
+@@ -581,8 +575,14 @@ static int _ath10k_ce_send_nolock_64(struct ath10k_ce_pipe *ce_state,
+ 	/* Update Source Ring Write Index */
+ 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
+ 
+-	if (!(flags & CE_SEND_FLAG_GATHER))
+-		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
++	if (!(flags & CE_SEND_FLAG_GATHER)) {
++		if (ar->hw_params.shadow_reg_support)
++			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
++								  write_index);
++		else
++			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
++							   write_index);
++	}
+ 
+ 	src_ring->write_index = write_index;
+ exit:
+@@ -1404,12 +1404,12 @@ static int ath10k_ce_alloc_shadow_base(struct ath10k *ar,
+ 				       u32 nentries)
  {
--	int i, num_queues, size;
-+	int i, num_queues, size, ret;
- 	struct iwl_rfh_queue_config *cmd;
-+	struct iwl_host_cmd hcmd = {
-+		.id = WIDE_ID(DATA_PATH_GROUP, RFH_QUEUE_CONFIG_CMD),
-+		.dataflags[0] = IWL_HCMD_DFL_NOCOPY,
-+	};
+ 	src_ring->shadow_base_unaligned = kcalloc(nentries,
+-						  sizeof(struct ce_desc),
++						  sizeof(struct ce_desc_64),
+ 						  GFP_KERNEL);
+ 	if (!src_ring->shadow_base_unaligned)
+ 		return -ENOMEM;
  
- 	/* Do not configure default queue, it is configured via context info */
- 	num_queues = mvm->trans->num_rx_queues - 1;
+-	src_ring->shadow_base = (struct ce_desc *)
++	src_ring->shadow_base = (struct ce_desc_64 *)
+ 			PTR_ALIGN(src_ring->shadow_base_unaligned,
+ 				  CE_DESC_RING_ALIGN);
+ 	return 0;
+@@ -1461,7 +1461,7 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
+ 		ret = ath10k_ce_alloc_shadow_base(ar, src_ring, nentries);
+ 		if (ret) {
+ 			dma_free_coherent(ar->dev,
+-					  (nentries * sizeof(struct ce_desc) +
++					  (nentries * sizeof(struct ce_desc_64) +
+ 					   CE_DESC_RING_ALIGN),
+ 					  src_ring->base_addr_owner_space_unaligned,
+ 					  base_addr);
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index ead9987c3259..463e2fc8b501 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -118,7 +118,7 @@ struct ath10k_ce_ring {
+ 	u32 base_addr_ce_space;
  
--	size = sizeof(*cmd) + num_queues * sizeof(struct iwl_rfh_queue_data);
-+	size = struct_size(cmd, data, num_queues);
+ 	char *shadow_base_unaligned;
+-	struct ce_desc *shadow_base;
++	struct ce_desc_64 *shadow_base;
  
- 	cmd = kzalloc(size, GFP_KERNEL);
- 	if (!cmd)
-@@ -154,10 +158,14 @@ static int iwl_configure_rxq(struct iwl_mvm *mvm)
- 		cmd->data[i].fr_bd_wid = cpu_to_le32(data.fr_bd_wid);
- 	}
- 
--	return iwl_mvm_send_cmd_pdu(mvm,
--				    WIDE_ID(DATA_PATH_GROUP,
--					    RFH_QUEUE_CONFIG_CMD),
--				    0, size, cmd);
-+	hcmd.data[0] = cmd;
-+	hcmd.len[0] = size;
-+
-+	ret = iwl_mvm_send_cmd(mvm, &hcmd);
-+
-+	kfree(cmd);
-+
-+	return ret;
- }
- 
- static int iwl_mvm_send_dqa_cmd(struct iwl_mvm *mvm)
+ 	/* keep last */
+ 	void *per_transfer_context[0];
 -- 
 2.19.1
 
