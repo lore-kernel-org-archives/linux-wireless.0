@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFA43C10F00
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56658C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:41:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FD002070B
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:39:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FA912070B
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:41:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553711960;
-	bh=DCLEt9aT55hFlCcygNM65d7H2MmkdZ8pjnyfQAVwuD8=;
+	s=default; t=1553712070;
+	bh=CNyzgmQlVVZObtHTQXU+S8sVQB1oL3W9h1AuiRvSM/E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cB5HOL93Wsgi1iJbxCpb6lEfMBFORp6JuQd/AlMI5Sztfh/lHl8XzLUymwS5q+Ptn
-	 1mjT8eI2ckLv7PeEro3tvA/z6qek8eSof5vag9pQLVWMOdgCvhrLuWq/LFSLP62HOU
-	 2enEIY6zlFnN9pf9d8o96eZoaXky7uzDhIPeoSKo=
+	b=TkvoaIRWxz16NuXV/t4zOpU4+bTr2UYyDYLlreWP9kWybDS4KTQoKvMf65b8dbnyV
+	 q1yYC5iXvgkqOyNYZaNdwelTZK57KkX14+UyB4fS+QIBrz5grKi27js5ggBLHxbQRu
+	 Ii0O/02Z+CxNT3hmqXiKCPffgFNwMiK2WNnT2fN0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391457AbfC0SXS (ORCPT
+        id S2391369AbfC0SlD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:23:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41666 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 14:41:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40794 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391446AbfC0SXQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:23:16 -0400
+        id S2391314AbfC0SWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:22:36 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4D48420643;
-        Wed, 27 Mar 2019 18:23:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 24CF420449;
+        Wed, 27 Mar 2019 18:22:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710996;
-        bh=DCLEt9aT55hFlCcygNM65d7H2MmkdZ8pjnyfQAVwuD8=;
+        s=default; t=1553710955;
+        bh=CNyzgmQlVVZObtHTQXU+S8sVQB1oL3W9h1AuiRvSM/E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Q8q9u1FQwDRhXIJEWtdwWUG0elbDBzL8fXE5JuwBvY6PLUmFygCSB/p5q9bE8twsg
-         tK/z5hTcRpP0fDitiTSNpQaFSJM7N6dFyKvBVBJH3OxFsthM6UQRQzc5+NG+VdJTmT
-         fN6V5wIzsoRhA3sPdZjVojn36Zd33KKwi0T93VSY=
+        b=LdMiaOv82UXgiwGlt9Gq/4MH0CxLinTiEUceiF80IEcefVt0zpnW0RrCo5YzBGmme
+         x8ox11MOaSKW9znXTfJSmTxA3IskiDeXJ3rr3kr4CJF6MUUgSuKMLxxoXPaov3Pvfh
+         PcO5FNayRnUPLTdVfnKtID2OP2KLLBzK0FFfUhFA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zumeng Chen <zumeng.chen@gmail.com>,
+Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 83/87] wlcore: Fix memory leak in case wl12xx_fetch_firmware failure
-Date:   Wed, 27 Mar 2019 14:20:36 -0400
-Message-Id: <20190327182040.17444-83-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 65/87] mt7601u: bump supported EEPROM version
+Date:   Wed, 27 Mar 2019 14:20:18 -0400
+Message-Id: <20190327182040.17444-65-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190327182040.17444-1-sashal@kernel.org>
 References: <20190327182040.17444-1-sashal@kernel.org>
@@ -59,59 +59,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zumeng Chen <zumeng.chen@gmail.com>
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-[ Upstream commit ba2ffc96321c8433606ceeb85c9e722b8113e5a7 ]
+[ Upstream commit 3bd1505fed71d834f45e87b32ff07157fdda47e0 ]
 
-Release fw_status, raw_fw_status, and tx_res_if when wl12xx_fetch_firmware
-failed instead of meaningless goto out to avoid the following memory leak
-reports(Only the last one listed):
+As reported by Michael eeprom 0d is supported and work with the driver.
 
-unreferenced object 0xc28a9a00 (size 512):
-  comm "kworker/0:4", pid 31298, jiffies 2783204 (age 203.290s)
-  hex dump (first 32 bytes):
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-  backtrace:
-    [<6624adab>] kmemleak_alloc+0x40/0x74
-    [<500ddb31>] kmem_cache_alloc_trace+0x1ac/0x270
-    [<db4d731d>] wl12xx_chip_wakeup+0xc4/0x1fc [wlcore]
-    [<76c5db53>] wl1271_op_add_interface+0x4a4/0x8f4 [wlcore]
-    [<cbf30777>] drv_add_interface+0xa4/0x1a0 [mac80211]
-    [<65bac325>] ieee80211_reconfig+0x9c0/0x1644 [mac80211]
-    [<2817c80e>] ieee80211_restart_work+0x90/0xc8 [mac80211]
-    [<7e1d425a>] process_one_work+0x284/0x42c
-    [<55f9432e>] worker_thread+0x2fc/0x48c
-    [<abb582c6>] kthread+0x148/0x160
-    [<63144b13>] ret_from_fork+0x14/0x2c
-    [< (null)>] (null)
-    [<1f6e7715>] 0xffffffff
+Dump of /sys/kernel/debug/ieee80211/phy1/mt7601u/eeprom_param
+with 0d EEPORM looks like this:
 
-Signed-off-by: Zumeng Chen <zumeng.chen@gmail.com>
+RSSI offset: 0 0
+Reference temp: f9
+LNA gain: 8
+Reg channels: 1-14
+Per rate power:
+	 raw:05 bw20:05 bw40:05
+	 raw:05 bw20:05 bw40:05
+	 raw:03 bw20:03 bw40:03
+	 raw:03 bw20:03 bw40:03
+	 raw:04 bw20:04 bw40:04
+	 raw:00 bw20:00 bw40:00
+	 raw:00 bw20:00 bw40:00
+	 raw:00 bw20:00 bw40:00
+	 raw:02 bw20:02 bw40:02
+	 raw:00 bw20:00 bw40:00
+Per channel power:
+	 tx_power  ch1:09 ch2:09
+	 tx_power  ch3:0a ch4:0a
+	 tx_power  ch5:0a ch6:0a
+	 tx_power  ch7:0b ch8:0b
+	 tx_power  ch9:0b ch10:0b
+	 tx_power  ch11:0b ch12:0b
+	 tx_power  ch13:0b ch14:0b
+
+Reported-and-tested-by: Michael <ZeroBeat@gmx.de>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Jakub Kicinski <kubakici@wp.pl>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt7601u/eeprom.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 5438975c7ff2..17d32ce5d16b 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1058,8 +1058,11 @@ static int wl12xx_chip_wakeup(struct wl1271 *wl, bool plt)
- 		goto out;
+diff --git a/drivers/net/wireless/mediatek/mt7601u/eeprom.h b/drivers/net/wireless/mediatek/mt7601u/eeprom.h
+index 662d12703b69..57b503ae63f1 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/eeprom.h
++++ b/drivers/net/wireless/mediatek/mt7601u/eeprom.h
+@@ -17,7 +17,7 @@
  
- 	ret = wl12xx_fetch_firmware(wl, plt);
--	if (ret < 0)
--		goto out;
-+	if (ret < 0) {
-+		kfree(wl->fw_status);
-+		kfree(wl->raw_fw_status);
-+		kfree(wl->tx_res_if);
-+	}
+ struct mt7601u_dev;
  
- out:
- 	return ret;
+-#define MT7601U_EE_MAX_VER			0x0c
++#define MT7601U_EE_MAX_VER			0x0d
+ #define MT7601U_EEPROM_SIZE			256
+ 
+ #define MT7601U_DEFAULT_TX_POWER		6
 -- 
 2.19.1
 
