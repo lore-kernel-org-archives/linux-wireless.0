@@ -6,50 +6,50 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94EB9C10F00
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:13:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17BBBC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:25:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 695DF2177E
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:13:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0F6821734
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:25:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553710422;
-	bh=3h8MLSLdYZNXZCpWImKpVeJl9X2MCtFsAQznmr2Nn/E=;
+	s=default; t=1553711116;
+	bh=BO/cEXQFGLc9Vi8NX+NOsPqhqpejiWkmiYAlIannvtM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=bfrAhWU5CkjZbE4nvXZqDhnl26Z1pLNy+Jrv1UypSWwVwH+AwW7SGKm16cs2vy0Fa
-	 MybPwN8T94leIiJOe8FSy4NYPDjck4L7gra3vTvErL2BZ4l9qHP7mRLvr9Ks8J0Khu
-	 ac1mtY+vbHcZ9MwComLJPO7v0fIjwtVIa2qFBAtk=
+	b=rCFEcWmYbpEvd4CpCJovb025KCkz/oYSbz+z/J/g/rc4uDw/gKjn58rilg5JtFG+y
+	 Tn+iIcutfj6F40HQDbgiN/VdbST9DtI43D06XzrUwX7gF5XAZJA3KqXlK4oeDCMVUK
+	 pOr86BdB6kzTVd1sRmjrAtCr3IsLO1jfgXV6oFGw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389466AbfC0SNl (ORCPT
+        id S2404139AbfC0SZN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:13:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56396 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 14:25:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44218 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388559AbfC0SNk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:13:40 -0400
+        id S2404130AbfC0SZM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:25:12 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3962A21741;
-        Wed, 27 Mar 2019 18:13:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1375720651;
+        Wed, 27 Mar 2019 18:25:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710419;
-        bh=3h8MLSLdYZNXZCpWImKpVeJl9X2MCtFsAQznmr2Nn/E=;
+        s=default; t=1553711111;
+        bh=BO/cEXQFGLc9Vi8NX+NOsPqhqpejiWkmiYAlIannvtM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RLHKmdG06kisIpsOsQ49tY+Zuc+zzid2j7jhJ3jzu8zjlBK8tZxyadBkhnYs0u4fE
-         koUYiX9Z7ExDMfE2s6hbI7rSQn76iDnU0h6n6HGDd/2NAZ3LJ6PPalfBm56fn09KWc
-         GPLSJkovF0mmz/jMfNYBP4SxCEAF2GYbi2oZ1rHg=
+        b=g+oRBITQ1Upi37ZAMmTW1qEs/5HxQPP70F1Gctde0+eJXELVc1jC3i33WXzGnqfw0
+         Czjnb8DhkzPyj0tZqGaX+R4fwEx8epWPIjq0OgYadXAdwpxAS/JjttgOtt849oVgUn
+         sJ5fE/uUDvgI9cSsbjVsGs5s5QzGS0dsO2gaPBb0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Rakesh Pillai <pillair@codeaurora.org>,
+Cc:     Zumeng Chen <zumeng.chen@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 110/192] ath10k: fix shadow register implementation for WCN3990
-Date:   Wed, 27 Mar 2019 14:09:02 -0400
-Message-Id: <20190327181025.13507-110-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 60/63] wlcore: Fix memory leak in case wl12xx_fetch_firmware failure
+Date:   Wed, 27 Mar 2019 14:23:20 -0400
+Message-Id: <20190327182323.18577-60-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
-References: <20190327181025.13507-1-sashal@kernel.org>
+In-Reply-To: <20190327182323.18577-1-sashal@kernel.org>
+References: <20190327182323.18577-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -58,108 +58,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rakesh Pillai <pillair@codeaurora.org>
+From: Zumeng Chen <zumeng.chen@gmail.com>
 
-[ Upstream commit 1863008369ae0407508033b4b00f98b985adeb15 ]
+[ Upstream commit ba2ffc96321c8433606ceeb85c9e722b8113e5a7 ]
 
-WCN3990 supports shadow registers write operation support
-for copy engine for regular operation in powersave mode.
+Release fw_status, raw_fw_status, and tx_res_if when wl12xx_fetch_firmware
+failed instead of meaningless goto out to avoid the following memory leak
+reports(Only the last one listed):
 
-Since WCN3990 is a 64-bit target, the shadow register
-implementation needs to be done in the copy engine handlers
-for 64-bit target. Currently the shadow register implementation
-is present in the 32-bit target handlers of copy engine.
+unreferenced object 0xc28a9a00 (size 512):
+  comm "kworker/0:4", pid 31298, jiffies 2783204 (age 203.290s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+  backtrace:
+    [<6624adab>] kmemleak_alloc+0x40/0x74
+    [<500ddb31>] kmem_cache_alloc_trace+0x1ac/0x270
+    [<db4d731d>] wl12xx_chip_wakeup+0xc4/0x1fc [wlcore]
+    [<76c5db53>] wl1271_op_add_interface+0x4a4/0x8f4 [wlcore]
+    [<cbf30777>] drv_add_interface+0xa4/0x1a0 [mac80211]
+    [<65bac325>] ieee80211_reconfig+0x9c0/0x1644 [mac80211]
+    [<2817c80e>] ieee80211_restart_work+0x90/0xc8 [mac80211]
+    [<7e1d425a>] process_one_work+0x284/0x42c
+    [<55f9432e>] worker_thread+0x2fc/0x48c
+    [<abb582c6>] kthread+0x148/0x160
+    [<63144b13>] ret_from_fork+0x14/0x2c
+    [< (null)>] (null)
+    [<1f6e7715>] 0xffffffff
 
-Fix the shadow register copy engine write operation
-implementation for 64-bit target(WCN3990).
-
-Tested HW: WCN3990
-Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
-
-Fixes: b7ba83f7c414 ("ath10k: add support for shadow register for WNC3990")
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Signed-off-by: Zumeng Chen <zumeng.chen@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/ce.c | 26 +++++++++++++-------------
- drivers/net/wireless/ath/ath10k/ce.h |  2 +-
- 2 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 18c709c484e7..f761d651c16e 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -500,14 +500,8 @@ static int _ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
- 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 7b27c7e23af2..cc10b72607c6 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1123,8 +1123,11 @@ static int wl12xx_chip_wakeup(struct wl1271 *wl, bool plt)
+ 		goto out;
  
- 	/* WORKAROUND */
--	if (!(flags & CE_SEND_FLAG_GATHER)) {
--		if (ar->hw_params.shadow_reg_support)
--			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
--								  write_index);
--		else
--			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
--							   write_index);
--	}
-+	if (!(flags & CE_SEND_FLAG_GATHER))
-+		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
- 
- 	src_ring->write_index = write_index;
- exit:
-@@ -581,8 +575,14 @@ static int _ath10k_ce_send_nolock_64(struct ath10k_ce_pipe *ce_state,
- 	/* Update Source Ring Write Index */
- 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
- 
--	if (!(flags & CE_SEND_FLAG_GATHER))
--		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
-+	if (!(flags & CE_SEND_FLAG_GATHER)) {
-+		if (ar->hw_params.shadow_reg_support)
-+			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
-+								  write_index);
-+		else
-+			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
-+							   write_index);
+ 	ret = wl12xx_fetch_firmware(wl, plt);
+-	if (ret < 0)
+-		goto out;
++	if (ret < 0) {
++		kfree(wl->fw_status);
++		kfree(wl->raw_fw_status);
++		kfree(wl->tx_res_if);
 +	}
  
- 	src_ring->write_index = write_index;
- exit:
-@@ -1394,12 +1394,12 @@ static int ath10k_ce_alloc_shadow_base(struct ath10k *ar,
- 				       u32 nentries)
- {
- 	src_ring->shadow_base_unaligned = kcalloc(nentries,
--						  sizeof(struct ce_desc),
-+						  sizeof(struct ce_desc_64),
- 						  GFP_KERNEL);
- 	if (!src_ring->shadow_base_unaligned)
- 		return -ENOMEM;
- 
--	src_ring->shadow_base = (struct ce_desc *)
-+	src_ring->shadow_base = (struct ce_desc_64 *)
- 			PTR_ALIGN(src_ring->shadow_base_unaligned,
- 				  CE_DESC_RING_ALIGN);
- 	return 0;
-@@ -1453,7 +1453,7 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 		ret = ath10k_ce_alloc_shadow_base(ar, src_ring, nentries);
- 		if (ret) {
- 			dma_free_coherent(ar->dev,
--					  (nentries * sizeof(struct ce_desc) +
-+					  (nentries * sizeof(struct ce_desc_64) +
- 					   CE_DESC_RING_ALIGN),
- 					  src_ring->base_addr_owner_space_unaligned,
- 					  base_addr);
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index b8fb5382dede..8088f7a66426 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -118,7 +118,7 @@ struct ath10k_ce_ring {
- 	u32 base_addr_ce_space;
- 
- 	char *shadow_base_unaligned;
--	struct ce_desc *shadow_base;
-+	struct ce_desc_64 *shadow_base;
- 
- 	/* keep last */
- 	void *per_transfer_context[0];
+ out:
+ 	return ret;
 -- 
 2.19.1
 
