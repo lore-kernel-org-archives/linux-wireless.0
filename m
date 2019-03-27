@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6633CC4360F
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:48:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD566C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:50:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2FFEE205C9
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:48:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F3422082F
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:50:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553712489;
-	bh=CNyzgmQlVVZObtHTQXU+S8sVQB1oL3W9h1AuiRvSM/E=;
+	s=default; t=1553712613;
+	bh=tcgg087K+KUeatzzQL5K3aqOm5Xz5dRyyCTzx66BCtk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=sq9RnJmfLnuc7vpPCXOCmn6L9k4p8IuYBOjQ9BsJ5b/ulU5ATiigUVYPzaTZSje0q
-	 8mzK2vzCZsr3S4rOzG1QUEAbtLEbQ+aYe2Oh2eJs279+Lf0tVp5FPZtDEZByiHTExn
-	 gPDYTprdfhkFRk1g+B9iXjgAi1CvkVjga2m5GaIY=
+	b=1VvJ6UmbusPQVuTYbizkIplL3GElNzb068R87C1ScUGIcbuVoQKu95dj5XPpVElOy
+	 ZwyuoCakE7wSHLZvVwx3jYP80T2wyelgFmFSJqYsJ3BgQCzIIrR/9i+Apv8F2sEfKh
+	 3bUmM17AZZoddoP0oFUprgtyDNzLy04xXXrDhG/w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390709AbfC0STX (ORCPT
+        id S2390629AbfC0SuB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:19:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36722 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 14:50:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35380 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390696AbfC0STU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:19:20 -0400
+        id S2389379AbfC0SS1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:18:27 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5F2562184E;
-        Wed, 27 Mar 2019 18:19:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 01DF420449;
+        Wed, 27 Mar 2019 18:18:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710760;
-        bh=CNyzgmQlVVZObtHTQXU+S8sVQB1oL3W9h1AuiRvSM/E=;
+        s=default; t=1553710706;
+        bh=tcgg087K+KUeatzzQL5K3aqOm5Xz5dRyyCTzx66BCtk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BY0QWCErABjp1pn5FvGexZ7rzg0Tr/tL1VZSmmNMKfdoexsN3z5f9Z2suZLDFtP2C
-         QGchoEWVXGL8gsGw/IorfiquA9xkdxOKgIOmOhREh8lC/ttnRVm/uRzjs1jzUiE5lW
-         TggqDQap5IFdto+PisK1iP7mRG+R0591EUdQGWyc=
+        b=vZKl1tDhX95IsVkskXrlQnCPrXnBvP8Fhha38Tbv6WuhnViiOGKmffqalIJqNgkAC
+         nINW+eFNzAtHG1wY97IvKBL6MEeUkq4Md8dm1eDVAXczvRxKQBLTWfIKxgzGf+/b7t
+         rAGzJ9o9QOIUXsJWKWJI45XRO6Ud5XMBooHbckWE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 091/123] mt7601u: bump supported EEPROM version
-Date:   Wed, 27 Mar 2019 14:15:55 -0400
-Message-Id: <20190327181628.15899-91-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 066/123] iwlwifi: pcie: fix emergency path
+Date:   Wed, 27 Mar 2019 14:15:30 -0400
+Message-Id: <20190327181628.15899-66-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190327181628.15899-1-sashal@kernel.org>
 References: <20190327181628.15899-1-sashal@kernel.org>
@@ -59,61 +59,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ Upstream commit 3bd1505fed71d834f45e87b32ff07157fdda47e0 ]
+[ Upstream commit c6ac9f9fb98851f47b978a9476594fc3c477a34d ]
 
-As reported by Michael eeprom 0d is supported and work with the driver.
+Allocator swaps the pending requests with 0 when it starts
+working. This means that relying on it n RX path to decide if
+to move to emergency is not always a good idea, since it may
+be zero, but there are still a lot of unallocated RBs in the
+system. Change allocator to decrement the pending requests on
+real time. It is more expensive since it accesses the atomic
+variable more times, but it gives the RX path a better idea
+of the system's status.
 
-Dump of /sys/kernel/debug/ieee80211/phy1/mt7601u/eeprom_param
-with 0d EEPORM looks like this:
-
-RSSI offset: 0 0
-Reference temp: f9
-LNA gain: 8
-Reg channels: 1-14
-Per rate power:
-	 raw:05 bw20:05 bw40:05
-	 raw:05 bw20:05 bw40:05
-	 raw:03 bw20:03 bw40:03
-	 raw:03 bw20:03 bw40:03
-	 raw:04 bw20:04 bw40:04
-	 raw:00 bw20:00 bw40:00
-	 raw:00 bw20:00 bw40:00
-	 raw:00 bw20:00 bw40:00
-	 raw:02 bw20:02 bw40:02
-	 raw:00 bw20:00 bw40:00
-Per channel power:
-	 tx_power  ch1:09 ch2:09
-	 tx_power  ch3:0a ch4:0a
-	 tx_power  ch5:0a ch6:0a
-	 tx_power  ch7:0b ch8:0b
-	 tx_power  ch9:0b ch10:0b
-	 tx_power  ch11:0b ch12:0b
-	 tx_power  ch13:0b ch14:0b
-
-Reported-and-tested-by: Michael <ZeroBeat@gmx.de>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Jakub Kicinski <kubakici@wp.pl>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Reported-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Fixes: 868a1e863f95 ("iwlwifi: pcie: avoid empty free RB queue")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt7601u/eeprom.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/eeprom.h b/drivers/net/wireless/mediatek/mt7601u/eeprom.h
-index 662d12703b69..57b503ae63f1 100644
---- a/drivers/net/wireless/mediatek/mt7601u/eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/eeprom.h
-@@ -17,7 +17,7 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 5a15362ef671..a40ad4675e19 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -475,7 +475,7 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rb_allocator *rba = &trans_pcie->rba;
+ 	struct list_head local_empty;
+-	int pending = atomic_xchg(&rba->req_pending, 0);
++	int pending = atomic_read(&rba->req_pending);
  
- struct mt7601u_dev;
+ 	IWL_DEBUG_RX(trans, "Pending allocation requests = %d\n", pending);
  
--#define MT7601U_EE_MAX_VER			0x0c
-+#define MT7601U_EE_MAX_VER			0x0d
- #define MT7601U_EEPROM_SIZE			256
+@@ -530,11 +530,13 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ 			i++;
+ 		}
  
- #define MT7601U_DEFAULT_TX_POWER		6
++		atomic_dec(&rba->req_pending);
+ 		pending--;
++
+ 		if (!pending) {
+-			pending = atomic_xchg(&rba->req_pending, 0);
++			pending = atomic_read(&rba->req_pending);
+ 			IWL_DEBUG_RX(trans,
+-				     "Pending allocation requests = %d\n",
++				     "Got more pending allocation requests = %d\n",
+ 				     pending);
+ 		}
+ 
+@@ -546,12 +548,15 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ 		spin_unlock(&rba->lock);
+ 
+ 		atomic_inc(&rba->req_ready);
++
+ 	}
+ 
+ 	spin_lock(&rba->lock);
+ 	/* return unused rbds to the allocator empty list */
+ 	list_splice_tail(&local_empty, &rba->rbd_empty);
+ 	spin_unlock(&rba->lock);
++
++	IWL_DEBUG_RX(trans, "%s, exit.\n", __func__);
+ }
+ 
+ /*
 -- 
 2.19.1
 
