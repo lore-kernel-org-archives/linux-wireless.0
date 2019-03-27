@@ -2,71 +2,116 @@ Return-Path: <SRS0=A7Z7=R6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C83C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:37:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFA43C10F00
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:39:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D39E820651
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:37:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FD002070B
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 18:39:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1553711960;
+	bh=DCLEt9aT55hFlCcygNM65d7H2MmkdZ8pjnyfQAVwuD8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=cB5HOL93Wsgi1iJbxCpb6lEfMBFORp6JuQd/AlMI5Sztfh/lHl8XzLUymwS5q+Ptn
+	 1mjT8eI2ckLv7PeEro3tvA/z6qek8eSof5vag9pQLVWMOdgCvhrLuWq/LFSLP62HOU
+	 2enEIY6zlFnN9pf9d8o96eZoaXky7uzDhIPeoSKo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404157AbfC0Sgz (ORCPT
+        id S2391457AbfC0SXS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:36:55 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:44012 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391717AbfC0Sft (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:35:49 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-        (Exim 4.76)
-        (envelope-from <colin.king@canonical.com>)
-        id 1h9DOr-0005c7-Hz; Wed, 27 Mar 2019 18:35:45 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
+        Wed, 27 Mar 2019 14:23:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41666 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2391446AbfC0SXQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:23:16 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4D48420643;
+        Wed, 27 Mar 2019 18:23:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553710996;
+        bh=DCLEt9aT55hFlCcygNM65d7H2MmkdZ8pjnyfQAVwuD8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Q8q9u1FQwDRhXIJEWtdwWUG0elbDBzL8fXE5JuwBvY6PLUmFygCSB/p5q9bE8twsg
+         tK/z5hTcRpP0fDitiTSNpQaFSJM7N6dFyKvBVBJH3OxFsthM6UQRQzc5+NG+VdJTmT
+         fN6V5wIzsoRhA3sPdZjVojn36Zd33KKwi0T93VSY=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Zumeng Chen <zumeng.chen@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] cfg80211: remove redundant zero check on variable 'changed'
-Date:   Wed, 27 Mar 2019 18:35:45 +0000
-Message-Id: <20190327183545.20631-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.20.1
+Subject: [PATCH AUTOSEL 4.9 83/87] wlcore: Fix memory leak in case wl12xx_fetch_firmware failure
+Date:   Wed, 27 Mar 2019 14:20:36 -0400
+Message-Id: <20190327182040.17444-83-sashal@kernel.org>
+X-Mailer: git-send-email 2.19.1
+In-Reply-To: <20190327182040.17444-1-sashal@kernel.org>
+References: <20190327182040.17444-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Zumeng Chen <zumeng.chen@gmail.com>
 
-The zero check on variable changed is redundant as it must be
-between 1 and 3 at the end of the proceeding if statement block.
-Remove the redundant check.
+[ Upstream commit ba2ffc96321c8433606ceeb85c9e722b8113e5a7 ]
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Release fw_status, raw_fw_status, and tx_res_if when wl12xx_fetch_firmware
+failed instead of meaningless goto out to avoid the following memory leak
+reports(Only the last one listed):
+
+unreferenced object 0xc28a9a00 (size 512):
+  comm "kworker/0:4", pid 31298, jiffies 2783204 (age 203.290s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+  backtrace:
+    [<6624adab>] kmemleak_alloc+0x40/0x74
+    [<500ddb31>] kmem_cache_alloc_trace+0x1ac/0x270
+    [<db4d731d>] wl12xx_chip_wakeup+0xc4/0x1fc [wlcore]
+    [<76c5db53>] wl1271_op_add_interface+0x4a4/0x8f4 [wlcore]
+    [<cbf30777>] drv_add_interface+0xa4/0x1a0 [mac80211]
+    [<65bac325>] ieee80211_reconfig+0x9c0/0x1644 [mac80211]
+    [<2817c80e>] ieee80211_restart_work+0x90/0xc8 [mac80211]
+    [<7e1d425a>] process_one_work+0x284/0x42c
+    [<55f9432e>] worker_thread+0x2fc/0x48c
+    [<abb582c6>] kthread+0x148/0x160
+    [<63144b13>] ret_from_fork+0x14/0x2c
+    [< (null)>] (null)
+    [<1f6e7715>] 0xffffffff
+
+Signed-off-by: Zumeng Chen <zumeng.chen@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/wext-compat.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index d522787c7354..46e4d69db845 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -353,9 +353,6 @@ static int cfg80211_wext_siwretry(struct net_device *dev,
- 		changed |= WIPHY_PARAM_RETRY_SHORT;
- 	}
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 5438975c7ff2..17d32ce5d16b 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1058,8 +1058,11 @@ static int wl12xx_chip_wakeup(struct wl1271 *wl, bool plt)
+ 		goto out;
  
--	if (!changed)
--		return 0;
--
- 	err = rdev_set_wiphy_params(rdev, changed);
- 	if (err) {
- 		wdev->wiphy->retry_short = oshort;
+ 	ret = wl12xx_fetch_firmware(wl, plt);
+-	if (ret < 0)
+-		goto out;
++	if (ret < 0) {
++		kfree(wl->fw_status);
++		kfree(wl->raw_fw_status);
++		kfree(wl->tx_res_if);
++	}
+ 
+ out:
+ 	return ret;
 -- 
-2.20.1
+2.19.1
 
