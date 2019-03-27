@@ -6,65 +6,148 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85108C4360F
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 09:58:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F241C10F00
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 09:58:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5332D2070B
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 09:58:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7671B2070B
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 09:58:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732789AbfC0J6h (ORCPT
+        id S1732988AbfC0J6m (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 05:58:37 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:42894 "EHLO mx1.redhat.com"
+        Wed, 27 Mar 2019 05:58:42 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51912 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731904AbfC0J6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 05:58:37 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        id S1731668AbfC0J6l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 05:58:41 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 35A00301988A;
-        Wed, 27 Mar 2019 09:58:37 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7D5B83083394;
+        Wed, 27 Mar 2019 09:58:41 +0000 (UTC)
 Received: from localhost (unknown [10.40.205.179])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BDA025D6B3;
-        Wed, 27 Mar 2019 09:58:36 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 977CC60C18;
+        Wed, 27 Mar 2019 09:58:38 +0000 (UTC)
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>,
         Daniel Golle <daniel@makrotopia.org>,
         Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Subject: [PATCH 2/8] rt2800: new flush implementation for SoC devices
-Date:   Wed, 27 Mar 2019 10:58:25 +0100
-Message-Id: <1553680711-15730-3-git-send-email-sgruszka@redhat.com>
+Subject: [PATCH 3/8] rt2800: move txstatus pending routine
+Date:   Wed, 27 Mar 2019 10:58:26 +0100
+Message-Id: <1553680711-15730-4-git-send-email-sgruszka@redhat.com>
 In-Reply-To: <1553680711-15730-1-git-send-email-sgruszka@redhat.com>
 References: <1553680711-15730-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.47]); Wed, 27 Mar 2019 09:58:37 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Wed, 27 Mar 2019 09:58:41 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use new flush_queue() callback for SoC devices, what was already done for
-PCIe devices.
+Move rt2800usb_txstatus_pending routine to rt2800lib. It will be reused
+by rt2800mmio code.
 
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800soc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 17 +++++++++++++++++
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h |  1 +
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 22 +++-------------------
+ 3 files changed, 21 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800soc.c b/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-index a502816214ab..05a801774713 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-@@ -203,7 +203,7 @@ static const struct rt2x00lib_ops rt2800soc_rt2x00_ops = {
- 	.start_queue		= rt2800mmio_start_queue,
- 	.kick_queue		= rt2800mmio_kick_queue,
- 	.stop_queue		= rt2800mmio_stop_queue,
--	.flush_queue		= rt2x00mmio_flush_queue,
-+	.flush_queue		= rt2800mmio_flush_queue,
- 	.write_tx_desc		= rt2800mmio_write_tx_desc,
- 	.write_tx_data		= rt2800_write_tx_data,
- 	.write_beacon		= rt2800_write_beacon,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 635aa6729529..e338b5d67a57 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1183,6 +1183,23 @@ bool rt2800_txstatus_timeout(struct rt2x00_dev *rt2x00dev)
+ }
+ EXPORT_SYMBOL_GPL(rt2800_txstatus_timeout);
+ 
++/*
++ * test if there is an entry in any TX queue for which DMA is done
++ * but the TX status has not been returned yet
++ */
++bool rt2800_txstatus_pending(struct rt2x00_dev *rt2x00dev)
++{
++	struct data_queue *queue;
++
++	tx_queue_for_each(rt2x00dev, queue) {
++		if (rt2x00queue_get_entry(queue, Q_INDEX_DMA_DONE) !=
++		    rt2x00queue_get_entry(queue, Q_INDEX_DONE))
++			return true;
++	}
++	return false;
++}
++EXPORT_SYMBOL_GPL(rt2800_txstatus_pending);
++
+ void rt2800_txdone_nostatus(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct data_queue *queue;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+index 506c319070dd..759eab2b70c3 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+@@ -198,6 +198,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi,
+ void rt2800_txdone(struct rt2x00_dev *rt2x00dev, unsigned int quota);
+ void rt2800_txdone_nostatus(struct rt2x00_dev *rt2x00dev);
+ bool rt2800_txstatus_timeout(struct rt2x00_dev *rt2x00dev);
++bool rt2800_txstatus_pending(struct rt2x00_dev *rt2x00dev);
+ 
+ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
+ void rt2800_clear_beacon(struct queue_entry *entry);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index 0bdcab374203..46f2239698a3 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -100,22 +100,6 @@ static void rt2800usb_stop_queue(struct data_queue *queue)
+ 	}
+ }
+ 
+-/*
+- * test if there is an entry in any TX queue for which DMA is done
+- * but the TX status has not been returned yet
+- */
+-static bool rt2800usb_txstatus_pending(struct rt2x00_dev *rt2x00dev)
+-{
+-	struct data_queue *queue;
+-
+-	tx_queue_for_each(rt2x00dev, queue) {
+-		if (rt2x00queue_get_entry(queue, Q_INDEX_DMA_DONE) !=
+-		    rt2x00queue_get_entry(queue, Q_INDEX_DONE))
+-			return true;
+-	}
+-	return false;
+-}
+-
+ #define TXSTATUS_READ_INTERVAL 1000000
+ 
+ static bool rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
+@@ -145,7 +129,7 @@ static bool rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
+ 	if (rt2800_txstatus_timeout(rt2x00dev))
+ 		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
+ 
+-	if (rt2800usb_txstatus_pending(rt2x00dev)) {
++	if (rt2800_txstatus_pending(rt2x00dev)) {
+ 		/* Read register after 1 ms */
+ 		hrtimer_start(&rt2x00dev->txstatus_timer,
+ 			      TXSTATUS_READ_INTERVAL,
+@@ -160,7 +144,7 @@ static bool rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
+ 	 * clear_bit someone could do rt2x00usb_interrupt_txdone, so recheck
+ 	 * here again if status reading is needed.
+ 	 */
+-	if (rt2800usb_txstatus_pending(rt2x00dev) &&
++	if (rt2800_txstatus_pending(rt2x00dev) &&
+ 	    !test_and_set_bit(TX_STATUS_READING, &rt2x00dev->flags))
+ 		return true;
+ 	else
+@@ -489,7 +473,7 @@ static void rt2800usb_work_txdone(struct work_struct *work)
+ 		 * if the medium is busy, thus the TX_STA_FIFO entry is
+ 		 * also delayed -> use a timer to retrieve it.
+ 		 */
+-		if (rt2800usb_txstatus_pending(rt2x00dev))
++		if (rt2800_txstatus_pending(rt2x00dev))
+ 			rt2800usb_async_read_tx_status(rt2x00dev);
+ 	}
+ }
 -- 
 2.7.5
 
