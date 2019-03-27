@@ -3,120 +3,161 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64608C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 05:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B869C43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 06:35:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 36F4E2075E
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 05:07:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68FBC2075E
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 06:35:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725791AbfC0FHk convert rfc822-to-8bit (ORCPT
+        id S1733243AbfC0Gfs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 01:07:40 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:39019 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725768AbfC0FHk (ORCPT
+        Wed, 27 Mar 2019 02:35:48 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:47506 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1733222AbfC0Gfs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 01:07:40 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x2R57IUG015511, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv02.realtek.com.tw[172.21.6.19])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x2R57IUG015511
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 27 Mar 2019 13:07:18 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCASV02.realtek.com.tw ([::1]) with mapi id 14.03.0439.000; Wed, 27 Mar
- 2019 13:07:18 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Brian Norris <briannorris@chromium.org>
-CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: RE: [PATCH v8 03/14] rtw88: hci files
-Thread-Topic: [PATCH v8 03/14] rtw88: hci files
-Thread-Index: AQHU2VNRV2ab8RA6e0q0FRHPGCHboaYb9v2AgAMLpqA=
-Date:   Wed, 27 Mar 2019 05:07:17 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17CB987@RTITMBSVM04.realtek.com.tw>
-References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
- <1552450443-351-4-git-send-email-yhchuang@realtek.com>
- <20190325143439.pxe2sppqssdad4in@penguin>
-In-Reply-To: <20190325143439.pxe2sppqssdad4in@penguin>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.183]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Wed, 27 Mar 2019 02:35:48 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=chariottest7)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1h929z-0003TG-IH; Wed, 27 Mar 2019 08:35:40 +0200
+Message-ID: <5f9c8beda0e925b079aa9342ce1c9523659837a4.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Laura Abbott <labbott@redhat.com>
+Cc:     linux-kernel@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Date:   Wed, 27 Mar 2019 08:35:37 +0200
+In-Reply-To: <20190327015346.GA17979@kroah.com>
+References: <20190122152151.16139-24-gregkh@linuxfoundation.org>
+         <03bb68be-8e42-a463-2d57-3be051dc2016@redhat.com>
+         <20190327012600.GA3649@kroah.com>
+         <5660d50d-6cbf-3b36-6e6c-312b1617ed23@redhat.com>
+         <20190327015346.GA17979@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5-1 
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] iwlwifi: mvm: no need to check return value of
+ debugfs_create functions
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Wed, 2019-03-27 at 10:53 +0900, Greg Kroah-Hartman wrote:
+> On Tue, Mar 26, 2019 at 06:47:33PM -0700, Laura Abbott wrote:
+> > On 3/26/19 6:26 PM, Greg Kroah-Hartman wrote:
+> > > On Tue, Mar 26, 2019 at 04:55:54PM -0700, Laura Abbott wrote:
+> > > > On 1/22/19 7:21 AM, Greg Kroah-Hartman wrote:
+> > > > > diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+> > > > > index 33b0af24a537..c52cdc538678 100644
+> > > > > --- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+> > > > > +++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+> > > > > @@ -1446,9 +1446,8 @@ static ssize_t iwl_dbgfs_quota_min_read(struct file *file,
+> > > > >    #define MVM_DEBUGFS_READ_WRITE_FILE_OPS(name, bufsz) \
+> > > > >    	_MVM_DEBUGFS_READ_WRITE_FILE_OPS(name, bufsz, struct ieee80211_vif)
+> > > > >    #define MVM_DEBUGFS_ADD_FILE_VIF(name, parent, mode) do {		\
+> > > > > -		if (!debugfs_create_file(#name, mode, parent, vif,	\
+> > > > > -					 &iwl_dbgfs_##name##_ops))	\
+> > > > > -			goto err;					\
+> > > > > +		debugfs_create_file(#name, mode, parent, vif,		\
+> > > > > +				    &iwl_dbgfs_##name##_ops);		\
+> > > > >    	} while (0)
+> > > > >    MVM_DEBUGFS_READ_FILE_OPS(mac_params);
+> > > > > @@ -1483,12 +1482,6 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+> > > > >    	mvmvif->dbgfs_dir = debugfs_create_dir("iwlmvm", dbgfs_dir);
+> > > > > -	if (!mvmvif->dbgfs_dir) {
+> > > > > -		IWL_ERR(mvm, "Failed to create debugfs directory under %pd\n",
+> > > > > -			dbgfs_dir);
+> > > > > -		return;
+> > > > > -	}
+> > > > > -
+> > > > >    	if (iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_CAM &&
+> > > > >    	    ((vif->type == NL80211_IFTYPE_STATION && !vif->p2p) ||
+> > > > >    	     (vif->type == NL80211_IFTYPE_STATION && vif->p2p)))
+> > > > > @@ -1537,12 +1530,6 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+> > > > >    	mvmvif->dbgfs_slink = debugfs_create_symlink(dbgfs_dir->d_name.name,
+> > > > >    						     mvm->debugfs_dir, buf);
+> > > > > -	if (!mvmvif->dbgfs_slink)
+> > > > > -		IWL_ERR(mvm, "Can't create debugfs symbolic link under %pd\n",
+> > > > > -			dbgfs_dir);
+> > > > > -	return;
+> > > > > -err:
+> > > > > -	IWL_ERR(mvm, "Can't create debugfs entity\n");
+> > > > >    }
+> > > > 
+> > > > Fedora got a bug report https://bugzilla.redhat.com/show_bug.cgi?id=1691034
+> > > > of a crash with 5.0 and the user did a bisect which pointed to ff9fb72bc077
+> > > > ("debugfs: return error values, not NULL") because the error checking is
+> > > > no longer correct in this driver.
+> > > > 
+> > > > Based on https://patchwork.kernel.org/patch/10865839/, it looks like
+> > > > this is supposed to go in for 5.2 but this needs to go in now as
+> > > > the error checking is currently broken without it. Can this get queued
+> > > > for Linus so we can get it in 5.0 stable?
+> > > 
+> > > That's odd, I can't see how the error checking is wrong here.  If the
+> > > directory is not created, an error will be returned, which should be
+> > > able to be handled by debugfs_create_file().
+> > > 
+> > > So with this patch does the error go away?
+> > > 
+> > 
+> > The full patch didn't apply cleanly and I didn't try to backport it
+> > for the reporter to test. I was going off of the theory that if the
+> > patch was there it would fix the problem.
+> > 
+> > What I _think_ is going wrong is dbgfs_dir is actually an errno value:
+> > 
+> > 
+> >         struct dentry *dbgfs_dir = vif->debugfs_dir;
+> >         struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+> >         char buf[100];
+> > 
+> >         /*
+> >          * Check if debugfs directory already exist before creating it.
+> >          * This may happen when, for example, resetting hw or suspend-resume
+> >          */
+> >         if (!dbgfs_dir || mvmvif->dbgfs_dir)
+> >                 return;
+> > 
+> > 
+> > so this blows up in the snprintf
+> > 
+> >         snprintf(buf, 100, "../../../%pd3/%pd",
+> >                  dbgfs_dir,
+> >                  mvmvif->dbgfs_dir);
+> 
+> Ah, yeah, that's horrible.  They had the name before, why pull it out of
+> the dentry again?  That will blow up hard, but maybe printk should check
+> to see if the pointer really is a pointer first.
 
-> Hi,
-> 
-> On Wed, Mar 13, 2019 at 12:13:52PM +0800, yhchuang@realtek.com wrote:
-> > diff --git a/drivers/net/wireless/realtek/rtw88/pci.c
-> b/drivers/net/wireless/realtek/rtw88/pci.c
-> > new file mode 100644
-> > index 0000000..cf3bffb
-> > --- /dev/null
-> > +++ b/drivers/net/wireless/realtek/rtw88/pci.c
-> > @@ -0,0 +1,1211 @@
-> ...
-> > +static u8 ac_to_hwq[] = {
-> > +	[0] = RTW_TX_QUEUE_VO,
-> > +	[1] = RTW_TX_QUEUE_VI,
-> > +	[2] = RTW_TX_QUEUE_BE,
-> > +	[3] = RTW_TX_QUEUE_BK,
-> > +};
-> 
-> I don't want to dig up and repeat the details of my comments, but I
-> think you missed my earlier suggestion here: you should use the
-> ieee80211_ac_numbers enum instead of bare 0-3 indexing.
+I agree this is ugly.  But do you mean we could use
+("../../../%pd3/%s", dbgfs_dir, "iwlmvm")? Or how did we have the name?
 
-Fixed, thanks. Will be in the next patches.
+Also, this would solve the sprintf() problem, but still wouldn't solve
+the real issue, which is not check for ERR in dbgfs_dir.
 
-> 
-> > +static u8 rtw_hw_queue_mapping(struct sk_buff *skb)
-> > +{
-> > +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> > +	__le16 fc = hdr->frame_control;
-> > +	u8 q_mapping = skb_get_queue_mapping(skb);
-> > +	u8 queue;
-> > +
-> > +	if (unlikely(ieee80211_is_beacon(fc)))
-> > +		queue = RTW_TX_QUEUE_BCN;
-> > +	else if (unlikely(ieee80211_is_mgmt(fc) || ieee80211_is_ctl(fc)))
-> > +		queue = RTW_TX_QUEUE_MGMT;
-> > +	else
-> > +		queue = ac_to_hwq[q_mapping];
-> 
-> It also seems wise to be defensive about the values of 'q_mapping', so
-> we don't accidentally overstep the array if for some reason the
-> implementation details of mac80211 change some day. e.g.:
-> 
-> 	else if (WARN_ON_ONCE(q_mapping >= ARRAY_SIZE(ac_to_hwq)))
-> 		// Pick a default.
 
-Yeah, should check if q_mapping does not fit into the array.
-Thanks.
+> > Unless I misunderstood what the debugfs error change did. I think this
+> > also means the if check needs to look for IS_ERR and not just !dbgfs_dir.
+> 
+> Yes, that is correct.
 
-> 
-> Brian
-> 
-> > +
-> > +	return queue;
-> > +}
-> > +
-> 
+Yeah, we can do that.  So this patch doesn't need to be sent for
+v5.1-rc* and v5.0, right? At least I don't see how it would fix the
+issue.  What we need is a new patch with the IS_ERR check.
 
-Yan-Hsuan
+--
+Cheers,
+Luca.
+
