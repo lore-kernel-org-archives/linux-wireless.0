@@ -4,53 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEF93C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0671C4360F
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:29:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BB7D2075C
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:29:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C04C32075C
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:29:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553714957;
-	bh=Ffqck2aIWABNUq3ZwltuooVhhQ3A2FFCOQHwiHl4c8U=;
+	s=default; t=1553714963;
+	bh=DZlINmG1lM12VF8DFoS3JMnFbQRIx5SlE38ekQv96nM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=X4CkwWnD3h+LLpFwMhR/JhEbG0fCxuboayic4FjlnPg3N17qxuLknmo+ZTqJclq5y
-	 FV8kgLukrAciLP49Ttyfb7mVbgTSKS/8AOLtjM6PsFyURMw4cPDKQ/V1F+GUzpjlnO
-	 dejKt0EiSFOrfrJY/rIMUcoZlBRQWXzT6GeNG6Ws=
+	b=0SLZPH1Wz9M3FwCMWkjaJl5H8FNJ8P6Y8JsD2dSCchyG+GzSmt4s3b8+ZbVXmM+fZ
+	 /XGpUUuKRWw/onpTEc754Y227QQ++/VDyF2ceAGEXzMVfyLJacbsMgyDTnP5Pw+Z8W
+	 tS9He6GMjZne/8uJUGUTfPsXiyot5Pc0JQA/sIoU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732989AbfC0SDz (ORCPT
+        id S1732966AbfC0SDz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 27 Mar 2019 14:03:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44278 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:44322 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732879AbfC0SDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:03:53 -0400
+        id S1729540AbfC0SDy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:03:54 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 29310217D7;
-        Wed, 27 Mar 2019 18:03:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E1E862082F;
+        Wed, 27 Mar 2019 18:03:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553709832;
-        bh=Ffqck2aIWABNUq3ZwltuooVhhQ3A2FFCOQHwiHl4c8U=;
+        s=default; t=1553709833;
+        bh=DZlINmG1lM12VF8DFoS3JMnFbQRIx5SlE38ekQv96nM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Jy6Fl+hp/xthAo710DUyJhO5Rvu8qul/7hFcw5HeRxAGQJ7qWVbuFH1hv37pNYwCp
-         U9lc9rFbrK9DTNBFtZSsRGCte7SJuDOn05dCfwqip+VAIfaThrzo9CItLg+Oe6IMzx
-         oGTvfNVfxoooUHkUwDcJYXIYGvVySTzklodpnePA=
+        b=APmf+JDt47gEzqz/cA6NHn10RCuTwAI5sZq4k/nfTgxtwjfCqYfB0Tscvnhn2r15g
+         H51srthQCGc1GbucWnsVyFS+nQFQ5S/jbaIraWinfWsCTPI1FLzlkua298y7VlPKyt
+         TMw077wJk+CNHv/N77DMsQpjAmtem3GICBFW02oU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Yang <wen.yang99@zte.com.cn>, Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+Cc:     Surabhi Vishnoi <svishnoi@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.0 064/262] mt76: fix a leaked reference by adding a missing of_node_put
-Date:   Wed, 27 Mar 2019 13:58:39 -0400
-Message-Id: <20190327180158.10245-64-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.0 065/262] ath10k: Fix the wrong updation of BW in tx_stats debugfs entry
+Date:   Wed, 27 Mar 2019 13:58:40 -0400
+Message-Id: <20190327180158.10245-65-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
 References: <20190327180158.10245-1-sashal@kernel.org>
@@ -62,81 +59,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Yang <wen.yang99@zte.com.cn>
+From: Surabhi Vishnoi <svishnoi@codeaurora.org>
 
-[ Upstream commit 34e022d8b780a03902d82fb3997ba7c7b1f40c81 ]
+[ Upstream commit ef9051c72ab7bc664e8047c55ac74bdb1c7fa3ee ]
 
-The call to of_find_node_by_phandle returns a node pointer with refcount
-incremented thus it must be explicitly decremented after the last
-usage.
+Currently, the bandwidth is updated wrongly in BW table in tx_stats
+debugfs per sta as there is difference in number of bandwidth type
+in mac80211 and driver stats table. This leads to bandwidth getting
+updated at wrong index in bandwidth table in tx_stats.
 
-Detected by coccinelle with the following warnings:
-./drivers/net/wireless/mediatek/mt76/eeprom.c:58:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
-./drivers/net/wireless/mediatek/mt76/eeprom.c:61:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
-./drivers/net/wireless/mediatek/mt76/eeprom.c:67:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
-./drivers/net/wireless/mediatek/mt76/eeprom.c:70:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
-./drivers/net/wireless/mediatek/mt76/eeprom.c:72:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+Fix this index mismatch between mac80211 and driver stats table (BW table)
+by making the number of bandwidth type in driver compatible with mac80211.
 
-Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
-Cc: Felix Fietkau <nbd@nbd.name>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-mediatek@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
+Tested HW: WCN3990
+Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
+
+Fixes: a904417fc876 ("ath10k: add extended per sta tx statistics support")
+Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/eeprom.c | 24 ++++++++++++++-------
- 1 file changed, 16 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c | 7 ++++---
+ drivers/net/wireless/ath/ath10k/wmi.h         | 2 +-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
-index 530e5593765c..a1529920d877 100644
---- a/drivers/net/wireless/mediatek/mt76/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
-@@ -54,22 +54,30 @@ mt76_get_of_eeprom(struct mt76_dev *dev, int len)
- 		part = np->name;
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 4778a455d81a..068f1a7e07d3 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -696,11 +696,12 @@ static ssize_t ath10k_dbg_sta_dump_tx_stats(struct file *file,
+ 						 "  %llu ", stats->ht[j][i]);
+ 			len += scnprintf(buf + len, size - len, "\n");
+ 			len += scnprintf(buf + len, size - len,
+-					" BW %s (20,40,80,160 MHz)\n", str[j]);
++					" BW %s (20,5,10,40,80,160 MHz)\n", str[j]);
+ 			len += scnprintf(buf + len, size - len,
+-					 "  %llu %llu %llu %llu\n",
++					 "  %llu %llu %llu %llu %llu %llu\n",
+ 					 stats->bw[j][0], stats->bw[j][1],
+-					 stats->bw[j][2], stats->bw[j][3]);
++					 stats->bw[j][2], stats->bw[j][3],
++					 stats->bw[j][4], stats->bw[j][5]);
+ 			len += scnprintf(buf + len, size - len,
+ 					 " NSS %s (1x1,2x2,3x3,4x4)\n", str[j]);
+ 			len += scnprintf(buf + len, size - len,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 2034ccc7cc72..1d5d0209ebeb 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -5003,7 +5003,7 @@ enum wmi_rate_preamble {
+ #define ATH10K_FW_SKIPPED_RATE_CTRL(flags)	(((flags) >> 6) & 0x1)
  
- 	mtd = get_mtd_device_nm(part);
--	if (IS_ERR(mtd))
--		return PTR_ERR(mtd);
-+	if (IS_ERR(mtd)) {
-+		ret =  PTR_ERR(mtd);
-+		goto out_put_node;
-+	}
- 
--	if (size <= sizeof(*list))
--		return -EINVAL;
-+	if (size <= sizeof(*list)) {
-+		ret = -EINVAL;
-+		goto out_put_node;
-+	}
- 
- 	offset = be32_to_cpup(list);
- 	ret = mtd_read(mtd, offset, len, &retlen, dev->eeprom.data);
- 	put_mtd_device(mtd);
- 	if (ret)
--		return ret;
-+		goto out_put_node;
- 
--	if (retlen < len)
--		return -EINVAL;
-+	if (retlen < len) {
-+		ret = -EINVAL;
-+		goto out_put_node;
-+	}
- 
--	return 0;
-+out_put_node:
-+	of_node_put(np);
-+	return ret;
- #else
- 	return -ENOENT;
- #endif
+ #define ATH10K_VHT_MCS_NUM	10
+-#define ATH10K_BW_NUM		4
++#define ATH10K_BW_NUM		6
+ #define ATH10K_NSS_NUM		4
+ #define ATH10K_LEGACY_NUM	12
+ #define ATH10K_GI_NUM		2
 -- 
 2.19.1
 
