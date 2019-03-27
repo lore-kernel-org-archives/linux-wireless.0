@@ -4,50 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95691C10F00
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:05:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C113C10F00
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:08:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64D1C204FD
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:05:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D0B4206BA
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:08:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553713535;
-	bh=c80z3gNG3M1BowWhAEYg2Y3VdXlEI905S2AFjE8wJDQ=;
+	s=default; t=1553713697;
+	bh=Ffqck2aIWABNUq3ZwltuooVhhQ3A2FFCOQHwiHl4c8U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hX8UnYF2ukpzdi2pP52VrmbW8hEHQ9eA920fAYJMn7FMxGRq2L/+SY178hiBw1ZYp
-	 4ESZ0neMLSxs4MK7MZxK8k4TF5DrDvJxNRXh2PesoePN8MD84jLnalDeQGZ6SKbGoW
-	 kIuuTRHSCXkDAF0LnoLXLuF/+lDAkhXcMQEDzANA=
+	b=xxaWJarLhgmHpkIWanJRWOYXXhn4OyCklRBPfXCs4cqRiACMtnzsFWKbD+kFRHWPy
+	 RU8J8E3olCspJxy/aiHp/Nx1kfjWHx/m5sVg1tJJLJGHsFyyX8rL+phHa/OYn1VO0+
+	 +IjZh+OtiuZStqNXi5rHaGrMhWuPoJC6WKrv5uXo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389260AbfC0SMp (ORCPT
+        id S2389625AbfC0TIL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:12:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55172 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 15:08:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54204 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389017AbfC0SMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:12:44 -0400
+        id S2388796AbfC0SLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:11:49 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BD1D321738;
-        Wed, 27 Mar 2019 18:12:42 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E41EA2177E;
+        Wed, 27 Mar 2019 18:11:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710363;
-        bh=c80z3gNG3M1BowWhAEYg2Y3VdXlEI905S2AFjE8wJDQ=;
+        s=default; t=1553710308;
+        bh=Ffqck2aIWABNUq3ZwltuooVhhQ3A2FFCOQHwiHl4c8U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1u6PRgBV/QHlXriwuTCg+9nkuTxzEFUP2wajX1sq2kyFP7JqELLtyAQXpUNF3RvnE
-         JHq6HfN6TUabarFZIln8Zpt/d198hz4glowZATmEU0IIpjGBauxGAJCXXiAEvW9dJH
-         ROzlhf3jyKuFmkgR+tH+0I9PURZgN5kc/A/SUM8c=
+        b=KVhfWhqCW8f3FKDkeUQuA4Zbl+Yt0R7yKgy3284K/YXPxPoM2s4CBGXK8LRnPXsD0
+         RdvaOPoNiRQkm31NDQkWx5Du7bBw+bQ1fB/3brN9xDVPzC264UdnhoJJP6h0NofNFe
+         R8t26v3L7PoJMen2yvYNuZeunJH/5hk7Ob5xWEcw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Norris <briannorris@chromium.org>,
+Cc:     Wen Yang <wen.yang99@zte.com.cn>, Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 081/192] mwifiex: don't advertise IBSS features without FW support
-Date:   Wed, 27 Mar 2019 14:08:33 -0400
-Message-Id: <20190327181025.13507-81-sashal@kernel.org>
+        "David S. Miller" <davem@davemloft.net>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 048/192] mt76: fix a leaked reference by adding a missing of_node_put
+Date:   Wed, 27 Mar 2019 14:08:00 -0400
+Message-Id: <20190327181025.13507-48-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
 References: <20190327181025.13507-1-sashal@kernel.org>
@@ -59,66 +62,81 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Brian Norris <briannorris@chromium.org>
+From: Wen Yang <wen.yang99@zte.com.cn>
 
-[ Upstream commit 6f21ab30469d670de620f758330aca9f3433f693 ]
+[ Upstream commit 34e022d8b780a03902d82fb3997ba7c7b1f40c81 ]
 
-As it is, doing something like
+The call to of_find_node_by_phandle returns a node pointer with refcount
+incremented thus it must be explicitly decremented after the last
+usage.
 
-  # iw phy phy0 interface add foobar type ibss
+Detected by coccinelle with the following warnings:
+./drivers/net/wireless/mediatek/mt76/eeprom.c:58:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:61:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:67:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:70:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:72:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
 
-on a firmware that doesn't have ad-hoc support just yields failures of
-HostCmd_CMD_SET_BSS_MODE, which happened to return a '-1' error code
-(-EPERM? not really right...) and sometimes may even crash the firmware
-along the way.
-
-Let's parse the firmware capability flag while registering the wiphy, so
-we don't allow attempting IBSS at all, and we get a proper -EOPNOTSUPP
-from nl80211 instead.
-
-Fixes: e267e71e68ae ("mwifiex: Disable adhoc feature based on firmware capability")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+Cc: Felix Fietkau <nbd@nbd.name>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-mediatek@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/eeprom.c | 24 ++++++++++++++-------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index adc88433faa8..2d87ebbfa4da 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -4282,11 +4282,13 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy->mgmt_stypes = mwifiex_mgmt_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
--				 BIT(NL80211_IFTYPE_ADHOC) |
- 				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 				 BIT(NL80211_IFTYPE_P2P_GO) |
- 				 BIT(NL80211_IFTYPE_AP);
+diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
+index 530e5593765c..a1529920d877 100644
+--- a/drivers/net/wireless/mediatek/mt76/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
+@@ -54,22 +54,30 @@ mt76_get_of_eeprom(struct mt76_dev *dev, int len)
+ 		part = np->name;
  
-+	if (ISSUPP_ADHOC_ENABLED(adapter->fw_cap_info))
-+		wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
-+
- 	wiphy->bands[NL80211_BAND_2GHZ] = &mwifiex_band_2ghz;
- 	if (adapter->config_bands & BAND_A)
- 		wiphy->bands[NL80211_BAND_5GHZ] = &mwifiex_band_5ghz;
-@@ -4346,11 +4348,13 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy->available_antennas_tx = BIT(adapter->number_of_antenna) - 1;
- 	wiphy->available_antennas_rx = BIT(adapter->number_of_antenna) - 1;
+ 	mtd = get_mtd_device_nm(part);
+-	if (IS_ERR(mtd))
+-		return PTR_ERR(mtd);
++	if (IS_ERR(mtd)) {
++		ret =  PTR_ERR(mtd);
++		goto out_put_node;
++	}
  
--	wiphy->features |= NL80211_FEATURE_HT_IBSS |
--			   NL80211_FEATURE_INACTIVITY_TIMER |
-+	wiphy->features |= NL80211_FEATURE_INACTIVITY_TIMER |
- 			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
- 			   NL80211_FEATURE_NEED_OBSS_SCAN;
+-	if (size <= sizeof(*list))
+-		return -EINVAL;
++	if (size <= sizeof(*list)) {
++		ret = -EINVAL;
++		goto out_put_node;
++	}
  
-+	if (ISSUPP_ADHOC_ENABLED(adapter->fw_cap_info))
-+		wiphy->features |= NL80211_FEATURE_HT_IBSS;
-+
- 	if (ISSUPP_RANDOM_MAC(adapter->fw_cap_info))
- 		wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
- 				   NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
+ 	offset = be32_to_cpup(list);
+ 	ret = mtd_read(mtd, offset, len, &retlen, dev->eeprom.data);
+ 	put_mtd_device(mtd);
+ 	if (ret)
+-		return ret;
++		goto out_put_node;
+ 
+-	if (retlen < len)
+-		return -EINVAL;
++	if (retlen < len) {
++		ret = -EINVAL;
++		goto out_put_node;
++	}
+ 
+-	return 0;
++out_put_node:
++	of_node_put(np);
++	return ret;
+ #else
+ 	return -ENOENT;
+ #endif
 -- 
 2.19.1
 
