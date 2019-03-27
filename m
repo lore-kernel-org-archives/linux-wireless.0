@@ -4,50 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E2F2C43381
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:01:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B53AC43381
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:04:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D493920700
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:01:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C5C1206BA
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Mar 2019 19:04:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553713263;
-	bh=NIasP6DPxc3baU4gsWDgtAfigeXrNNMXVMb1OS1+7YU=;
+	s=default; t=1553713487;
+	bh=2UU9fAwKw1UnKoHuma7OT/zKfWYUpmnSDhiHXfGPeOo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=qlV28Nhc4iu2zVpml1ig01aXXvnvNfOJ/Y5oVtE/ZiXwm4SEFQd/4uCqvAPEAwCUm
-	 a/wQe5V0kgTtYUQGxBQ3Ru9y+83a75EpqYHWkk4bI67xELExFSnDxrIoa/Oh6f0WcI
-	 4k0Px/FMO+qzXex+cZ3ov69RyHb8qDosjhS9aapE=
+	b=tFyc3krgF30f5Y4xZOQQOd81bVXsHwoGf1rQPqqMP+Fa30aPJre08qz4zZWcv06Ny
+	 60rn+I7Gi/+Kn8uEk+IYJKbtUpw804wKnWjT4PdQO08B7hQODzfOL1U625EMPGLb8w
+	 v3n6f4hpmn9tsSy4jUAQHFwxYHGaJrFoDvWfy0lY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389639AbfC0SO1 (ORCPT
+        id S2389331AbfC0SNE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Mar 2019 14:14:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57528 "EHLO mail.kernel.org"
+        Wed, 27 Mar 2019 14:13:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55598 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728815AbfC0SO0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Mar 2019 14:14:26 -0400
+        id S2389317AbfC0SND (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Mar 2019 14:13:03 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6AE9C20449;
-        Wed, 27 Mar 2019 18:14:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BF09B21855;
+        Wed, 27 Mar 2019 18:13:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710466;
-        bh=NIasP6DPxc3baU4gsWDgtAfigeXrNNMXVMb1OS1+7YU=;
+        s=default; t=1553710382;
+        bh=2UU9fAwKw1UnKoHuma7OT/zKfWYUpmnSDhiHXfGPeOo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OxsVW30EjnPVNRVeHUtk5eAqpV93gEK/oX6B/FV2AtL+Ke4uC7TU09dNXsEjimLLz
-         PgRZARcuoBH9YWSWDkzX8+XOiKOsszC2YqUrkCLHWGwA9HuN4au+jvhmVkR453lq9/
-         rUO4x4WFRo+CQ11euEUnarib1TZ33Gu+MQuA6uUA=
+        b=qKr9m9MZpgCAmh4v3pWaRAgs8mPEQVvCld/6dWz7PtFY47AZhlcWxB4+PRZXj8m0V
+         p4Mz3miZXWChlRUjke0zsZP8zJqy/e4OHTrarzh9sHAMO97Egb3bl+WDljPb+cTBQL
+         +2PJFySSVhqp2cnXrX3buu7ZfQlWcHHu7sTkO2WQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 132/192] iwlwifi: mvm: fix RFH config command with >=10 CPUs
-Date:   Wed, 27 Mar 2019 14:09:24 -0400
-Message-Id: <20190327181025.13507-132-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 091/192] mt76: usb: do not run mt76u_queues_deinit twice
+Date:   Wed, 27 Mar 2019 14:08:43 -0400
+Message-Id: <20190327181025.13507-91-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
 References: <20190327181025.13507-1-sashal@kernel.org>
@@ -59,68 +57,97 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-[ Upstream commit dbf592f3d14fb7d532cb7c820b1065cf33e02aaa ]
+[ Upstream commit b3098121c42caaf3aea239b8655cf52d45be116f ]
 
-If we have >=10 (logical) CPUs, our command size exceeds the
-internal buffer size and the command fails; fix that by using
-IWL_HCMD_DFL_NOCOPY for the command that's allocated anyway.
+Do not call mt76u_queues_deinit routine in mt76u_alloc_queues error path
+since it will be run in mt76x0u_register_device or
+mt76x2u_register_device error path. Current implementation triggers the
+following kernel warning:
 
-While at it, also fix the leak of cmd, and use struct_size()
-to calculate its size.
+[   67.005516] WARNING: CPU: 2 PID: 761 at lib/refcount.c:187 refcount_sub_and_test_checked+0xa4/0xb8
+[   67.019513] refcount_t: underflow; use-after-free.
+[   67.099872] Hardware name: BCM2835
+[   67.106268] Backtrace:
+[   67.111584] [<8010c91c>] (dump_backtrace) from [<8010cc00>] (show_stack+0x20/0x24)
+[   67.124974]  r6:60000013 r5:ffffffff r4:00000000 r3:a50bade6
+[   67.132226] [<8010cbe0>] (show_stack) from [<807ca5f4>] (dump_stack+0xc8/0x114)
+[   67.141225] [<807ca52c>] (dump_stack) from [<8011e65c>] (__warn+0xf4/0x120)
+[   67.149849]  r9:000000bb r8:804d0138 r7:00000009 r6:8099dc84 r5:00000000 r4:b66c7b58
+[   67.160767] [<8011e568>] (__warn) from [<8011e6d0>] (warn_slowpath_fmt+0x48/0x50)
+[   67.171436]  r9:7f65e128 r8:80d1419c r7:80c0bac4 r6:b97b3044 r5:b7368e00 r4:00000000
+[   67.182433] [<8011e68c>] (warn_slowpath_fmt) from [<804d0138>] (refcount_sub_and_test_checked+0xa4/0xb8)
+[   67.195221]  r3:80c91c25 r2:8099dc94
+[   67.200370]  r4:00000000
+[   67.204397] [<804d0094>] (refcount_sub_and_test_checked) from [<804d0164>] (refcount_dec_and_test_checked+0x18/0x1c)
+[   67.218046]  r4:b7368e00 r3:00000001
+[   67.223125] [<804d014c>] (refcount_dec_and_test_checked) from [<805db49c>] (usb_free_urb+0x20/0x4c)
+[   67.235358] [<805db47c>] (usb_free_urb) from [<7f639804>] (mt76u_buf_free+0x98/0xac [mt76_usb])
+[   67.247302]  r4:00000001 r3:00000001
+[   67.252468] [<7f63976c>] (mt76u_buf_free [mt76_usb]) from [<7f639ef8>] (mt76u_queues_deinit+0x44/0x100 [mt76_usb])
+[   67.266102]  r8:b8fe8600 r7:b5dac480 r6:b5dace20 r5:00000001 r4:00000000 r3:00000080
+[   67.277132] [<7f639eb4>] (mt76u_queues_deinit [mt76_usb]) from [<7f65c040>] (mt76x0u_cleanup+0x40/0x4c [mt76x0u])
+[   67.290737]  r7:b5dac480 r6:b8fe8600 r5:ffffffea r4:b5dace20
+[   67.298069] [<7f65c000>] (mt76x0u_cleanup [mt76x0u]) from [<7f65c564>] (mt76x0u_probe+0x1f0/0x354 [mt76x0u])
+[   67.311174]  r4:b5dace20 r3:00000000
+[   67.316312] [<7f65c374>] (mt76x0u_probe [mt76x0u]) from [<805e0b6c>] (usb_probe_interface+0x104/0x240)
+[   67.328915]  r7:00000000 r6:7f65e034 r5:b6634800 r4:b8fe8620
+[   67.336276] [<805e0a68>] (usb_probe_interface) from [<8056a8bc>] (really_probe+0x224/0x2f8)
+[   67.347965]  r10:b65f0a00 r9:00000019 r8:7f65e034 r7:80d3e124 r6:00000000 r5:80d3e120
+[   67.359175]  r4:b8fe8620 r3:805e0a68
+[   67.364384] [<8056a698>] (really_probe) from [<8056ab60>] (driver_probe_device+0x6c/0x180)
+[   67.375974]  r10:b65f0a00 r9:7f65e2c0 r8:b8fe8620 r7:00000000 r6:7f65e034 r5:7f65e034
+[   67.387170]  r4:b8fe8620 r3:00000000
+[   67.392378] [<8056aaf4>] (driver_probe_device) from [<8056ad54>] (__driver_attach+0xe0/0xe4)
+[   67.404097]  r9:7f65e2c0 r8:7f65d22c r7:00000000 r6:b8fe8654 r5:7f65e034 r4:b8fe8620
+[   67.415122] [<8056ac74>] (__driver_attach) from [<8056880c>] (bus_for_each_dev+0x68/0xa0)
+[   67.426628]  r6:8056ac74 r5:7f65e034 r4:00000000 r3:00000027
+[   67.434017] [<805687a4>] (bus_for_each_dev) from [<8056a1cc>] (driver_attach+0x28/0x30)
+[   67.445394]  r6:80c6ddc8 r5:b7368f80 r4:7f65e034
+[   67.451703] [<8056a1a4>] (driver_attach) from [<80569c24>] (bus_add_driver+0x194/0x21c)
+[   67.463081] [<80569a90>] (bus_add_driver) from [<8056b504>] (driver_register+0x8c/0x124)
+[   67.474560]  r7:80c6ddc8 r6:7f65e034 r5:00000000 r4:7f65e034
+[   67.481964] [<8056b478>] (driver_register) from [<805df510>] (usb_register_driver+0x74/0x140)
+[   67.493901]  r5:00000000 r4:7f65e000
+[   67.499131] [<805df49c>] (usb_register_driver) from [<7f661024>] (mt76x0_driver_init+0x24/0x1000 [mt76x0u])
+[   67.512258]  r9:00000001 r8:7f65e308 r7:00000000 r6:80c08d48 r5:7f661000 r4:7f65e2c0
+[   67.523404] [<7f661000>] (mt76x0_driver_init [mt76x0u]) from [<80102f6c>] (do_one_initcall+0x4c/0x210)
+[   67.536142] [<80102f20>] (do_one_initcall) from [<801ae63c>] (do_init_module+0x6c/0x21c)
+[   67.547639]  r8:7f65e308 r7:80c08d48 r6:b65f0ac0 r5:7f65e2c0 r4:7f65e2c0
+[   67.556129] [<801ae5d0>] (do_init_module) from [<801ad68c>] (load_module+0x1d10/0x2304)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Fixes: 8edbfaa19835 ("iwlwifi: mvm: configure multi RX queue")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: b40b15e1521f ("mt76: add usb support to mt76 layer")
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/usb.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 16c6c7f921a8..8b7d70e3a379 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -132,13 +132,17 @@ static int iwl_send_rss_cfg_cmd(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index 79e59f2379a2..8d40e92fb6f2 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -796,16 +796,9 @@ int mt76u_alloc_queues(struct mt76_dev *dev)
  
- static int iwl_configure_rxq(struct iwl_mvm *mvm)
- {
--	int i, num_queues, size;
-+	int i, num_queues, size, ret;
- 	struct iwl_rfh_queue_config *cmd;
-+	struct iwl_host_cmd hcmd = {
-+		.id = WIDE_ID(DATA_PATH_GROUP, RFH_QUEUE_CONFIG_CMD),
-+		.dataflags[0] = IWL_HCMD_DFL_NOCOPY,
-+	};
+ 	err = mt76u_alloc_rx(dev);
+ 	if (err < 0)
+-		goto err;
+-
+-	err = mt76u_alloc_tx(dev);
+-	if (err < 0)
+-		goto err;
++		return err;
  
- 	/* Do not configure default queue, it is configured via context info */
- 	num_queues = mvm->trans->num_rx_queues - 1;
- 
--	size = sizeof(*cmd) + num_queues * sizeof(struct iwl_rfh_queue_data);
-+	size = struct_size(cmd, data, num_queues);
- 
- 	cmd = kzalloc(size, GFP_KERNEL);
- 	if (!cmd)
-@@ -159,10 +163,14 @@ static int iwl_configure_rxq(struct iwl_mvm *mvm)
- 		cmd->data[i].fr_bd_wid = cpu_to_le32(data.fr_bd_wid);
- 	}
- 
--	return iwl_mvm_send_cmd_pdu(mvm,
--				    WIDE_ID(DATA_PATH_GROUP,
--					    RFH_QUEUE_CONFIG_CMD),
--				    0, size, cmd);
-+	hcmd.data[0] = cmd;
-+	hcmd.len[0] = size;
-+
-+	ret = iwl_mvm_send_cmd(mvm, &hcmd);
-+
-+	kfree(cmd);
-+
-+	return ret;
+-	return 0;
+-err:
+-	mt76u_queues_deinit(dev);
+-	return err;
++	return mt76u_alloc_tx(dev);
  }
+ EXPORT_SYMBOL_GPL(mt76u_alloc_queues);
  
- static int iwl_mvm_send_dqa_cmd(struct iwl_mvm *mvm)
 -- 
 2.19.1
 
