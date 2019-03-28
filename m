@@ -2,222 +2,98 @@ Return-Path: <SRS0=yxJm=R7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BE6CC10F03
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Mar 2019 13:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7219AC43381
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Mar 2019 14:41:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 500CD217F9
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Mar 2019 13:29:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CCA7217F9
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Mar 2019 14:41:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="G48StnBJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727237AbfC1N3p (ORCPT
+        id S1726311AbfC1OlI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Mar 2019 09:29:45 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:41908 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727028AbfC1N3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Mar 2019 09:29:44 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 35BD330BA37D;
-        Thu, 28 Mar 2019 13:29:43 +0000 (UTC)
-Received: from localhost (unknown [10.40.206.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7DB8219C77;
-        Thu, 28 Mar 2019 13:29:40 +0000 (UTC)
-Date:   Thu, 28 Mar 2019 14:29:39 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     stable@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Jan Viktorin <jan.viktorin@gmail.com>
-Subject: [PATCH 4.20, 5.0] mt76x02u: use usb_bulk_msg to upload firmware
-Message-ID: <20190328132932.GA16543@redhat.com>
+        Thu, 28 Mar 2019 10:41:08 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:33086 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725849AbfC1OlI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Mar 2019 10:41:08 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x2SEcebK062250;
+        Thu, 28 Mar 2019 14:41:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2018-07-02;
+ bh=OT5dAE0pEBQ+Lim9CilUecZtGHBiMqs6hw198UkfN2M=;
+ b=G48StnBJDh5Atdv+1yB86nssuBw5BKQ40UiFTZWP1/sKs0Q6jPNwckDU8xwRr0ZzPVCf
+ PFA5supIkNCh1qPwZmwS7w1jaf+zPvPowYlrFTL+eu1ZDK6/TlBfw10wC5wcnHexYXNj
+ bK8OB0894SiPjYvwVLCxTlOXMsRSOMHYiE7LZ8gcYNxTEar5Gq7/kGYY2Xzqmxc1Ggaj
+ qTWz/9WqUATCRfI4iAqHUtfcOO2ugQA3Rzwlfo5hpLG2HEoS5i7JE+5l6ahZ9H/czYhG
+ j/FLF4CJJtkz1+5IxdYTfdRKopwQRb0ra+fjfJM7oT2WLBQDIPCYYwCYsTCZU9F86oxM Vw== 
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2re6g1f0ky-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 28 Mar 2019 14:41:05 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x2SEf44G010615
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 28 Mar 2019 14:41:04 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x2SEf3cd022811;
+        Thu, 28 Mar 2019 14:41:04 GMT
+Received: from kadam (/41.202.241.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 28 Mar 2019 07:41:02 -0700
+Date:   Thu, 28 Mar 2019 17:40:56 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Samuel Ortiz <sameo@linux.intel.com>
+Cc:     linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] NFC: pn533: potential buffer overflow in
+ pn533_target_found_type_a()
+Message-ID: <20190328144056.GR32590@kadam>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.49]); Thu, 28 Mar 2019 13:29:43 +0000 (UTC)
+X-Mailer: git-send-email haha only kidding
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9208 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999
+ adultscore=10 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1810050000 definitions=main-1903280100
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-commit 5de4db8fcb6d6fc7d9064c22841211790c0ab81b upstream.
+Smatch doesn't trust information that comes from skb->data.  It
+complains that "nfc_tgt->nfcid1_len" is a u8 so it could be up to 255
+bytes, but the destination buffer is only 10 bytes large.
 
-We don't need to send firmware data asynchronously, much simpler is just
-use synchronous usb_bulk_msg().
-
-[ stable note: this patch was originally developed as cleanup, but it
-remove incorrect usage of page_frag_alloc(): alloc more than PAGE_SIZE
-and create not ARCH_DMA_MINALIGN dma buffers needed at least for
-performance reason. Was tested on 5.0 and 4.20, see
-https://bugzilla.kernel.org/show_bug.cgi?id=202673 and
-https://bugzilla.kernel.org/show_bug.cgi?id=202241 ]
-
-Tested-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Fixes: c3b1e1e8a76f ("NFC: Export NFCID1 from pn533")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h          | 13 ++++++
- .../net/wireless/mediatek/mt76/mt76x02_usb_mcu.c   | 52 +++++++---------------
- drivers/net/wireless/mediatek/mt76/usb.c           |  1 -
- 3 files changed, 29 insertions(+), 37 deletions(-)
+ drivers/nfc/pn533/pn533.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 5cd508a68609..6d29ba4046c3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -713,6 +713,19 @@ static inline bool mt76u_check_sg(struct mt76_dev *dev)
- 		 udev->speed == USB_SPEED_WIRELESS));
- }
+diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
+index a0cc1cc45292..9f9bbf912687 100644
+--- a/drivers/nfc/pn533/pn533.c
++++ b/drivers/nfc/pn533/pn533.c
+@@ -724,6 +724,8 @@ static int pn533_target_found_type_a(struct nfc_target *nfc_tgt, u8 *tgt_data,
+ 	nfc_tgt->sens_res = be16_to_cpu(tgt_type_a->sens_res);
+ 	nfc_tgt->sel_res = tgt_type_a->sel_res;
+ 	nfc_tgt->nfcid1_len = tgt_type_a->nfcid_len;
++	if (nfc_tgt->nfcid1_len > sizeof(nfc_tgt->nfcid1))
++		return -EINVAL;
+ 	memcpy(nfc_tgt->nfcid1, tgt_type_a->nfcid_data, nfc_tgt->nfcid1_len);
  
-+static inline int
-+mt76u_bulk_msg(struct mt76_dev *dev, void *data, int len, int timeout)
-+{
-+	struct usb_interface *intf = to_usb_interface(dev->dev);
-+	struct usb_device *udev = interface_to_usbdev(intf);
-+	struct mt76_usb *usb = &dev->usb;
-+	unsigned int pipe;
-+	int sent;
-+
-+	pipe = usb_sndbulkpipe(udev, usb->out_ep[MT_EP_OUT_INBAND_CMD]);
-+	return usb_bulk_msg(udev, pipe, data, len, &sent, timeout);
-+}
-+
- int mt76u_vendor_request(struct mt76_dev *dev, u8 req,
- 			 u8 req_type, u16 val, u16 offset,
- 			 void *buf, size_t len);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-index 6db789f90269..2ca393e267af 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-@@ -121,18 +121,14 @@ static int
- __mt76x02u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
- 			int cmd, bool wait_resp)
- {
--	struct usb_interface *intf = to_usb_interface(dev->dev);
--	struct usb_device *udev = interface_to_usbdev(intf);
- 	struct mt76_usb *usb = &dev->usb;
--	unsigned int pipe;
--	int ret, sent;
-+	int ret;
- 	u8 seq = 0;
- 	u32 info;
- 
- 	if (test_bit(MT76_REMOVED, &dev->state))
- 		return 0;
- 
--	pipe = usb_sndbulkpipe(udev, usb->out_ep[MT_EP_OUT_INBAND_CMD]);
- 	if (wait_resp) {
- 		seq = ++usb->mcu.msg_seq & 0xf;
- 		if (!seq)
-@@ -146,7 +142,7 @@ __mt76x02u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
- 	if (ret)
- 		return ret;
- 
--	ret = usb_bulk_msg(udev, pipe, skb->data, skb->len, &sent, 500);
-+	ret = mt76u_bulk_msg(dev, skb->data, skb->len, 500);
- 	if (ret)
- 		return ret;
- 
-@@ -268,14 +264,12 @@ void mt76x02u_mcu_fw_reset(struct mt76x02_dev *dev)
- EXPORT_SYMBOL_GPL(mt76x02u_mcu_fw_reset);
- 
- static int
--__mt76x02u_mcu_fw_send_data(struct mt76x02_dev *dev, struct mt76u_buf *buf,
-+__mt76x02u_mcu_fw_send_data(struct mt76x02_dev *dev, u8 *data,
- 			    const void *fw_data, int len, u32 dst_addr)
- {
--	u8 *data = sg_virt(&buf->urb->sg[0]);
--	DECLARE_COMPLETION_ONSTACK(cmpl);
- 	__le32 info;
- 	u32 val;
--	int err;
-+	int err, data_len;
- 
- 	info = cpu_to_le32(FIELD_PREP(MT_MCU_MSG_PORT, CPU_TX_PORT) |
- 			   FIELD_PREP(MT_MCU_MSG_LEN, len) |
-@@ -291,25 +285,12 @@ __mt76x02u_mcu_fw_send_data(struct mt76x02_dev *dev, struct mt76u_buf *buf,
- 	mt76u_single_wr(&dev->mt76, MT_VEND_WRITE_FCE,
- 			MT_FCE_DMA_LEN, len << 16);
- 
--	buf->len = MT_CMD_HDR_LEN + len + sizeof(info);
--	err = mt76u_submit_buf(&dev->mt76, USB_DIR_OUT,
--			       MT_EP_OUT_INBAND_CMD,
--			       buf, GFP_KERNEL,
--			       mt76u_mcu_complete_urb, &cmpl);
--	if (err < 0)
--		return err;
--
--	if (!wait_for_completion_timeout(&cmpl,
--					 msecs_to_jiffies(1000))) {
--		dev_err(dev->mt76.dev, "firmware upload timed out\n");
--		usb_kill_urb(buf->urb);
--		return -ETIMEDOUT;
--	}
-+	data_len = MT_CMD_HDR_LEN + len + sizeof(info);
- 
--	if (mt76u_urb_error(buf->urb)) {
--		dev_err(dev->mt76.dev, "firmware upload failed: %d\n",
--			buf->urb->status);
--		return buf->urb->status;
-+	err = mt76u_bulk_msg(&dev->mt76, data, data_len, 1000);
-+	if (err) {
-+		dev_err(dev->mt76.dev, "firmware upload failed: %d\n", err);
-+		return err;
- 	}
- 
- 	val = mt76_rr(dev, MT_TX_CPU_FROM_FCE_CPU_DESC_IDX);
-@@ -322,17 +303,16 @@ __mt76x02u_mcu_fw_send_data(struct mt76x02_dev *dev, struct mt76u_buf *buf,
- int mt76x02u_mcu_fw_send_data(struct mt76x02_dev *dev, const void *data,
- 			      int data_len, u32 max_payload, u32 offset)
- {
--	int err, len, pos = 0, max_len = max_payload - 8;
--	struct mt76u_buf buf;
-+	int len, err = 0, pos = 0, max_len = max_payload - 8;
-+	u8 *buf;
- 
--	err = mt76u_buf_alloc(&dev->mt76, &buf, 1, max_payload, max_payload,
--			      GFP_KERNEL);
--	if (err < 0)
--		return err;
-+	buf = kmalloc(max_payload, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	while (data_len > 0) {
- 		len = min_t(int, data_len, max_len);
--		err = __mt76x02u_mcu_fw_send_data(dev, &buf, data + pos,
-+		err = __mt76x02u_mcu_fw_send_data(dev, buf, data + pos,
- 						  len, offset + pos);
- 		if (err < 0)
- 			break;
-@@ -341,7 +321,7 @@ int mt76x02u_mcu_fw_send_data(struct mt76x02_dev *dev, const void *data,
- 		pos += len;
- 		usleep_range(5000, 10000);
- 	}
--	mt76u_buf_free(&buf);
-+	kfree(buf);
- 
- 	return err;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index b061263453d4..09923cedd039 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -326,7 +326,6 @@ int mt76u_buf_alloc(struct mt76_dev *dev, struct mt76u_buf *buf,
- 
- 	return mt76u_fill_rx_sg(dev, buf, nsgs, len, sglen);
- }
--EXPORT_SYMBOL_GPL(mt76u_buf_alloc);
- 
- void mt76u_buf_free(struct mt76u_buf *buf)
- {
+ 	return 0;
 -- 
-2.7.5
+2.17.1
 
