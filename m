@@ -2,94 +2,81 @@ Return-Path: <SRS0=IiY2=SA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0147C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 07:56:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60E87C43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 10:35:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A82432173C
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 07:56:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FC66206B8
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 10:35:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728943AbfC2H42 (ORCPT
+        id S1728806AbfC2KfS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Mar 2019 03:56:28 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:51090 "EHLO
+        Fri, 29 Mar 2019 06:35:18 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:53102 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728926AbfC2H42 (ORCPT
+        with ESMTP id S1727654AbfC2KfS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Mar 2019 03:56:28 -0400
+        Fri, 29 Mar 2019 06:35:18 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC5)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1h9mNG-0000wD-SE; Fri, 29 Mar 2019 08:56:27 +0100
+        id 1h9oqy-00049g-6A; Fri, 29 Mar 2019 11:35:16 +0100
+Message-ID: <f2fa741f5f818650b071eca23be16fb2bdb3c759.camel@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: allow scans on radar channels, unless there
+ is CAC or CSA
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] mac80211_hwsim: calculate if_combination.max_interfaces
-Date:   Fri, 29 Mar 2019 08:56:22 +0100
-Message-Id: <20190329075622.7534-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.17.2
+To:     Simon Wunderlich <sw@simonwunderlich.de>
+Cc:     linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+        mathias.kretschmer@fit.fraunhofer.de
+Date:   Fri, 29 Mar 2019 11:35:14 +0100
+In-Reply-To: <2969898.mUHQksrBSp@prime>
+References: <20180918141633.10282-1-sw@simonwunderlich.de>
+         <1537435276.3874.14.camel@sipsolutions.net> <2969898.mUHQksrBSp@prime>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2018-09-20 at 12:27 +0200, Simon Wunderlich wrote:
+> On Thursday, September 20, 2018 11:21:16 AM CEST Johannes Berg wrote:
+> > On Tue, 2018-09-18 at 16:16 +0200, Simon Wunderlich wrote:
+> > > Operating on a DFS channel doesn't mean we can't leave it for a short
+> > > time - actually, some features like off-channel CAC work by leaving the
+> > > operation channel to check other channels for availability (although
+> > > off-channel CAC isn't implemented in mac80211). In our case, we want to
+> > > use mesh while doing background surveys on other channels from time to
+> > > time.
+> > 
+> > Actually ... as far as I can tell it *does* mean that, at least
+> > currently for FCC.
+> 
+> 
+> Mhm. I remember you said that before. But I can't find references for it. I 
+> checked the FCC 15.407 document [1] but couldn't find anything in favor or 
+> against that. Same for the measurement procedures [2]. I also couldn't find 
+> off-channel CAC in FCC, which I used for my argument in ETSI:
+> 
+> In ETSI 301 893 [3] they talk about non-continuous checks for off-channel CAC 
+> (in 4.2.6.2.3, second paragraph) and continuous period for CAC (4.2.6.2.2.2, 
+> first paragraph). Continuity is not mentioned for in-service monitoring 
+> (4.2.6.2.4), but off-channel CAC could only work when continuity is not 
+> required.
+> 
+> I'd appreciate if you (or someone else) can point me to where it's stated that 
+> we can't leave the channel for the a short time. I'm assuming that we are back 
+> fast enough to ensure the required detection probability.
 
-If we just set this to 2048, and have multiple limits you
-can select from, the total number might run over and cause
-a warning in cfg80211. This doesn't make sense, so we just
-calculate the total max_interfaces now.
+I still don't have a document, but we spoke about it at the wireless
+workshop and Jouni agrees that this is an absolute no-go for FCC, while
+allowed for ETSI.
 
-Reported-by: syzbot+8f91bd563bbff230d0ee@syzkaller.appspotmail.com
-Fixes: 99e3a44bac37 ("mac80211_hwsim: allow setting iftype support")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+I guess you can make it depend on the radar domain information.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 77bce2d27841..53710d4e86a1 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2644,7 +2644,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	enum nl80211_band band;
- 	const struct ieee80211_ops *ops = &mac80211_hwsim_ops;
- 	struct net *net;
--	int idx;
-+	int idx, i;
- 	int n_limits = 0;
- 
- 	if (WARN_ON(param->channels > 1 && !param->use_chanctx))
-@@ -2768,12 +2768,23 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		goto failed_hw;
- 	}
- 
-+	data->if_combination.max_interfaces = 0;
-+	for (i = 0; i < n_limits; i++)
-+		data->if_combination.max_interfaces +=
-+			data->if_limits[i].max;
-+
- 	data->if_combination.n_limits = n_limits;
--	data->if_combination.max_interfaces = 2048;
- 	data->if_combination.limits = data->if_limits;
- 
--	hw->wiphy->iface_combinations = &data->if_combination;
--	hw->wiphy->n_iface_combinations = 1;
-+	/*
-+	 * If we actually were asked to support combinations,
-+	 * advertise them - if there's only a single thing like
-+	 * only IBSS then don't advertise it as combinations.
-+	 */
-+	if (data->if_combination.max_interfaces > 1) {
-+		hw->wiphy->iface_combinations = &data->if_combination;
-+		hw->wiphy->n_iface_combinations = 1;
-+	}
- 
- 	if (param->ciphers) {
- 		memcpy(data->ciphers, param->ciphers,
--- 
-2.17.2
+johannes
 
