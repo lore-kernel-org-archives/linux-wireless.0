@@ -4,49 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 725A0C43381
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 10:48:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00DEEC43381
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 10:49:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AECD20811
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 10:48:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B614C2173C
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 10:49:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="StGbYfD8";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WeP84G27"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="nt8mvLwX";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kPwv8bRq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729055AbfC2Ksf (ORCPT
+        id S1729016AbfC2Kt1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Mar 2019 06:48:35 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:57456 "EHLO
+        Fri, 29 Mar 2019 06:49:27 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:59638 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728869AbfC2Ksf (ORCPT
+        with ESMTP id S1728711AbfC2Kt0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Mar 2019 06:48:35 -0400
+        Fri, 29 Mar 2019 06:49:26 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id C819A607C6; Fri, 29 Mar 2019 10:48:33 +0000 (UTC)
+        id 4A71F608FF; Fri, 29 Mar 2019 10:49:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553856513;
-        bh=jj54oTE6gGlSYYfnt2j8MOjFFXKrIcKwL0pqajl+fDE=;
+        s=default; t=1553856565;
+        bh=xporHypkNrKn58i3YX99A58heugFY9ib7/WJikB8Qxw=;
         h=From:To:Cc:Subject:Date:From;
-        b=StGbYfD8h7JE8QImVj+ALBjt6H3D9dsXfSXSRcpdDeTmxG03xvHRI5Mpqi6ftnmZd
-         UIxzBHW2N+2HAqicSc9ck7V00KmNw2pA/DDtvjy4xf9mn5X15IoaKWowywChLtfB4E
-         oiC3nPbVmM5CPYHVKFL/DEtzzSeaK//u2YbXrkd4=
+        b=nt8mvLwXAAPRFljjACzsGVZGyLXS6LRYefZWZ6k98R224kNgV4mQee0J9ebYMoYCC
+         eFA5WVOngXYur+LLONYWmxOLDd/FtzqRdkKXe+gPaezNXQJP/cMg+DxB1p6QG2MUer
+         0pdwRJtZk2IKKoECy/J5TsrboXJlJpeoe/v1y+qo=
 Received: from checstex0244823-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: bpothuno@codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0979F607C6;
-        Fri, 29 Mar 2019 10:48:30 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8FACC608A5;
+        Fri, 29 Mar 2019 10:49:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553856512;
-        bh=jj54oTE6gGlSYYfnt2j8MOjFFXKrIcKwL0pqajl+fDE=;
+        s=default; t=1553856562;
+        bh=xporHypkNrKn58i3YX99A58heugFY9ib7/WJikB8Qxw=;
         h=From:To:Cc:Subject:Date:From;
-        b=WeP84G27MEEdOFJDaNiaFvayWqbIjU4XjowG8NSdCoW5gzEMATM9lf/5dkbcQwtmr
-         dbByCkTkzTfnrrN1nJonPDZzKuQqqYNsje0etLHWM61f6gGRzkR2ACj7QLOOV5HcZ5
-         COVN5ZHdvNvGPG49EpohMh4a90xID49eKk+2TBjo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0979F607C6
+        b=kPwv8bRqqFlqc9cmu6mDkmtMFjJd6NtY1D4LuL0oEMwcRo8W55eEtgdU2dJG7ZjMR
+         BCscaBemTmIhunMNV0t9GLV91ppAi6BH7SRJr0WjJo8kpmbdprHk20gcJBTcS9SNdo
+         Q65g0DmIOQSBxQxWOAJNlJblcUSe77sbpPsAkyw4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8FACC608A5
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bpothuno@codeaurora.org
 From:   Balaji Pothunoori <bpothuno@codeaurora.org>
@@ -54,9 +53,9 @@ To:     johannes@sipsolutions.net, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     Ashok Raj Nagarajan <arnagara@codeaurora.org>,
         Balaji Pothunoori <bpothuno@codeaurora.org>
-Subject: [PATCH v4 1/3] cfg80211: Add support to set tx power for a station associated
-Date:   Fri, 29 Mar 2019 16:18:21 +0530
-Message-Id: <1553856501-21492-1-git-send-email-bpothuno@codeaurora.org>
+Subject: [PATCH v4 2/3] mac80211: store tx power value from user to station
+Date:   Fri, 29 Mar 2019 16:19:09 +0530
+Message-Id: <1553856549-21552-1-git-send-email-bpothuno@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -65,190 +64,183 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
 
-This patch adds support to set transmit power setting type and transmit
-power level attributes to NL80211_CMD_SET_STATION in order to facilitate
-adjusting the transmit power level of a station associated to the AP.
-
-The added attributes allow selection of automatic and limited transmit
-power level, with the level defined in dBm format.
+This patch introduce a new driver callback drv_sta_set_txpwr. This API will
+copy the transmit power value passed from user space and call the driver
+callback to set the tx power for the station.
 
 Co-developed-by: Balaji Pothunoori <bpothuno@codeaurora.org>
 Signed-off-by: Ashok Raj Nagarajan <arnagara@codeaurora.org>
 Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
 ---
 v2: add txpwr structure
-    replaced nla_get_u32 with nla_get_u8/s16
-    added NLA_POLICY_RANGE check
-v3: updated kernel-doc for sta_txpwr
-     structure and rebased
-v4: added attribute check for tx power
+    added tx power set type in trace event
+v3: updated kernel-doc for ieee80211_sta_txpwr
+    structure and rebased
+v4: no changes, rebased
 
- include/net/cfg80211.h       | 22 ++++++++++++++++++++++
- include/uapi/linux/nl80211.h | 14 ++++++++++++++
- net/wireless/nl80211.c       | 43 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 79 insertions(+)
+ include/net/mac80211.h    | 22 ++++++++++++++++++++++
+ net/mac80211/cfg.c        |  9 +++++++++
+ net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
+ net/mac80211/driver-ops.h |  5 +++++
+ net/mac80211/trace.h      | 30 ++++++++++++++++++++++++++++++
+ 5 files changed, 87 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bb307a1..5413a58 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -973,6 +973,27 @@ enum station_parameters_apply_mask {
- 	STATION_PARAM_APPLY_UAPSD = BIT(0),
- 	STATION_PARAM_APPLY_CAPABILITY = BIT(1),
- 	STATION_PARAM_APPLY_PLINK_STATE = BIT(2),
-+	STATION_PARAM_APPLY_STA_TXPOWER = BIT(3),
-+};
-+
-+/**
-+ * struct sta_txpwr - station txpower configuration
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ac2ed8e..4f1f071 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1888,6 +1888,24 @@ struct ieee80211_sta_rates {
+ };
+ 
+ /**
++ * struct ieee80211_sta_txpwr - station txpower configuration
 + *
 + * Used to configure txpower for station.
 + *
-+ * @power: tx power (in dBm) to be used for sending data traffic. If tx power
-+ *	is not provided, the default per-interface tx power setting will be
-+ *	overriding. Driver should be picking up the lowest tx power, either tx
-+ *	power per-interface or per-station.
++ * @power: indicates the tx power, in dBm, to be used when sending data frames
++ *	to the STA.
 + * @type: In particular if TPC %type is NL80211_TX_POWER_LIMITED then tx power
 + *	will be less than or equal to specified from userspace, whereas if TPC
 + *	%type is NL80211_TX_POWER_AUTOMATIC then it indicates default tx power.
 + *	NL80211_TX_POWER_FIXED is not a valid configuration option for
 + *	per peer TPC.
 + */
-+struct sta_txpwr {
-+	s16 power;
-+	enum nl80211_tx_power_setting type;
- };
- 
- /**
-@@ -1047,6 +1068,7 @@ struct station_parameters {
- 	const struct ieee80211_he_cap_elem *he_capa;
- 	u8 he_capa_len;
- 	u16 airtime_weight;
-+	struct sta_txpwr txpwr;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index dd4f86e..83040c6 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2308,6 +2308,15 @@ enum nl80211_commands {
-  * @NL80211_ATTR_AIRTIME_WEIGHT: Station's weight when scheduled by the airtime
-  *	scheduler.
++struct ieee80211_sta_txpwr {
++		s16 power;
++		enum nl80211_tx_power_setting type;
++};
++
++/**
+  * struct ieee80211_sta - station table entry
   *
-+ * @NL80211_ATTR_STA_TX_POWER_SETTING: Transmit power setting type (u8) for
-+ *	station associated with the AP. See &enum nl80211_tx_power_setting for
-+ *	possible values.
-+ * @NL80211_ATTR_STA_TX_POWER: Transmit power level (s16) in dBm units. This
-+ *	allows to set Tx power for a station. If this attribute is not included,
-+ *	the default per-interface tx power setting will be overriding. Driver
-+ *	should be picking up the lowest tx power, either tx power per-interface
-+ *	or per-station.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2758,6 +2767,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_PEER_MEASUREMENTS,
+  * A station table entry represents a station we are possibly
+@@ -1973,6 +1991,7 @@ struct ieee80211_sta {
+ 	bool support_p2p_ps;
+ 	u16 max_rc_amsdu_len;
+ 	u16 max_tid_amsdu_len[IEEE80211_NUM_TIDS];
++	struct ieee80211_sta_txpwr txpwr;
  
- 	NL80211_ATTR_AIRTIME_WEIGHT,
-+	NL80211_ATTR_STA_TX_POWER_SETTING,
-+	NL80211_ATTR_STA_TX_POWER,
+ 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
  
- 	/* add attributes here, update the policy in nl80211.c */
+@@ -3794,6 +3813,9 @@ struct ieee80211_ops {
+ #endif
+ 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			enum sta_notify_cmd, struct ieee80211_sta *sta);
++	int (*sta_set_txpwr)(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif,
++			     struct ieee80211_sta *sta);
+ 	int (*sta_state)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			 struct ieee80211_sta *sta,
+ 			 enum ieee80211_sta_state old_state,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 09dd1c2..c3bfc7d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1421,6 +1421,15 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 	if (params->listen_interval >= 0)
+ 		sta->listen_interval = params->listen_interval;
  
-@@ -5343,6 +5354,8 @@ enum nl80211_feature_flags {
-  * @NL80211_EXT_FEATURE_AP_PMKSA_CACHING: Driver/device supports PMKSA caching
-  *	(set/del PMKSA operations) in AP mode.
-  *
-+ * @NL80211_EXT_FEATURE_STA_TX_PWR: This driver supports controlling tx power
-+ 8	to a station.
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
-@@ -5384,6 +5397,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER,
- 	NL80211_EXT_FEATURE_AIRTIME_FAIRNESS,
- 	NL80211_EXT_FEATURE_AP_PMKSA_CACHING,
-+	NL80211_EXT_FEATURE_STA_TX_PWR,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 25a9e3b..a6e9cea 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -331,6 +331,11 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 					       .len = NL80211_MAX_SUPP_RATES },
- 	[NL80211_ATTR_STA_PLINK_ACTION] =
- 		NLA_POLICY_MAX(NLA_U8, NUM_NL80211_PLINK_ACTIONS - 1),
-+	[NL80211_ATTR_STA_TX_POWER_SETTING] =
-+		NLA_POLICY_RANGE(NLA_U8,
-+				 NL80211_TX_POWER_AUTOMATIC,
-+				 NL80211_TX_POWER_FIXED),
-+	[NL80211_ATTR_STA_TX_POWER] = { .type = NLA_S16 },
- 	[NL80211_ATTR_STA_VLAN] = { .type = NLA_U32 },
- 	[NL80211_ATTR_MNTR_FLAGS] = { /* NLA_NESTED can't be empty */ },
- 	[NL80211_ATTR_MESH_ID] = { .type = NLA_BINARY,
-@@ -5387,6 +5392,36 @@ static int nl80211_set_station_tdls(struct genl_info *info,
- 	return nl80211_parse_sta_wme(info, params);
- }
- 
-+static int nl80211_parse_sta_txpower_setting(struct genl_info *info,
-+					     struct station_parameters *params)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	int idx;
-+
-+	if (info->attrs[NL80211_ATTR_STA_TX_POWER_SETTING]) {
-+		if (!rdev->ops->set_tx_power ||
-+		    !wiphy_ext_feature_isset(&rdev->wiphy,
-+					 NL80211_EXT_FEATURE_STA_TX_PWR))
-+			return -EOPNOTSUPP;
-+
-+		idx = NL80211_ATTR_STA_TX_POWER_SETTING;
-+		params->txpwr.type = nla_get_u8(info->attrs[idx]);
-+
-+		if (params->txpwr.type == NL80211_TX_POWER_LIMITED) {
-+			idx = NL80211_ATTR_STA_TX_POWER;
-+
-+			if (info->attrs[idx])
-+				params->txpwr.power =
-+					nla_get_s16(info->attrs[idx]);
-+			else
-+				return -EINVAL;
-+		}
-+		params->sta_modify_mask |= STATION_PARAM_APPLY_STA_TXPOWER;
++	if (params->sta_modify_mask & STATION_PARAM_APPLY_STA_TXPOWER) {
++		sta->sta.txpwr.type = params->txpwr.type;
++		if (params->txpwr.type == NL80211_TX_POWER_LIMITED)
++			sta->sta.txpwr.power = params->txpwr.power;
++		ret = drv_sta_set_txpwr(local, sdata, sta);
++		if (ret)
++			return ret;
 +	}
 +
-+	return 0;
+ 	if (params->supported_rates) {
+ 		ieee80211_parse_bitrates(&sdata->vif.bss_conf.chandef,
+ 					 sband, params->supported_rates,
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index bb886e7..839c002 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -138,6 +138,27 @@ int drv_sta_state(struct ieee80211_local *local,
+ 	return ret;
+ }
+ 
++__must_check
++int drv_sta_set_txpwr(struct ieee80211_local *local,
++		      struct ieee80211_sub_if_data *sdata,
++		      struct sta_info *sta)
++{
++	int ret = -EOPNOTSUPP;
++
++	might_sleep();
++
++	sdata = get_bss_sdata(sdata);
++	if (!check_sdata_in_driver(sdata))
++		return -EIO;
++
++	trace_drv_sta_set_txpwr(local, sdata, &sta->sta);
++	if (local->ops->sta_set_txpwr)
++		ret = local->ops->sta_set_txpwr(&local->hw, &sdata->vif,
++						&sta->sta);
++	trace_drv_return_int(local, ret);
++	return ret;
 +}
 +
- static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -5480,6 +5515,10 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 				     NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
- 		return -EOPNOTSUPP;
+ void drv_sta_rc_update(struct ieee80211_local *local,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct ieee80211_sta *sta, u32 changed)
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 28d022a..62edfa6 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -529,6 +529,11 @@ int drv_sta_state(struct ieee80211_local *local,
+ 		  enum ieee80211_sta_state old_state,
+ 		  enum ieee80211_sta_state new_state);
  
-+	err = nl80211_parse_sta_txpower_setting(info, &params);
-+	if (err)
-+		return err;
++__must_check
++int drv_sta_set_txpwr(struct ieee80211_local *local,
++		      struct ieee80211_sub_if_data *sdata,
++		      struct sta_info *sta);
 +
- 	/* Include parameters for TDLS peer (will check later) */
- 	err = nl80211_set_station_tdls(info, &params);
- 	if (err)
-@@ -5617,6 +5656,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 				     NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
- 		return -EOPNOTSUPP;
+ void drv_sta_rc_update(struct ieee80211_local *local,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct ieee80211_sta *sta, u32 changed);
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 8ba70d2..3bb4459 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -828,6 +828,36 @@ TRACE_EVENT(drv_sta_state,
+ 	)
+ );
  
-+	err = nl80211_parse_sta_txpower_setting(info, &params);
-+	if (err)
-+		return err;
++TRACE_EVENT(drv_sta_set_txpwr,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta),
 +
- 	err = nl80211_parse_sta_channel_info(info, &params);
- 	if (err)
- 		return err;
++	TP_ARGS(local, sdata, sta),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		__field(s16, txpwr)
++		__field(u8, type)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		__entry->txpwr = sta->txpwr.power;
++		__entry->type = sta->txpwr.type;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " txpwr: %d type %d",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG,
++		__entry->txpwr,  __entry->type
++	)
++);
++
+ TRACE_EVENT(drv_sta_rc_update,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
 -- 
 2.7.4
 
