@@ -2,104 +2,97 @@ Return-Path: <SRS0=EA+v=SB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA59CC43381
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 09:32:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5CFAC43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 14:22:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8AD02075E
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 09:32:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553938322;
-	bh=tgEJJsEp8HLK1niWW9oIcWkzJIxjOzFoVIV8bUJ0VlE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=rZNEzTV7fK5KOKOqKFL2VBOJsQI9l2Sg9jTNj8+55972Pa3ZVPqZNkDwvSHnbEX1t
-	 1vN0XPvCeEUNbwfnfKrV+oePFW0jGk4U13WxW62cc6jL9KreH9jUAKL47SlReOzmUj
-	 Z1wGphdTi7jTzHfy5tlhraJKAZLMtUafnrh8gRxI=
+	by mail.kernel.org (Postfix) with ESMTP id 6D4342183F
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 14:22:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hre8wLC1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730532AbfC3Jb6 (ORCPT
+        id S1730881AbfC3OWs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 30 Mar 2019 05:31:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33300 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730453AbfC3Jb5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Mar 2019 05:31:57 -0400
-Received: from localhost (unknown [62.119.166.9])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BFA4E2075E;
-        Sat, 30 Mar 2019 09:31:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553938316;
-        bh=tgEJJsEp8HLK1niWW9oIcWkzJIxjOzFoVIV8bUJ0VlE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NRwgdgKda486H3zPX22uXby3nX7q1xj7baYk1kYymUawG8cEyABTO+iilCzlPTI//
-         zzjaqOSVoJDzem209CKzJiORgVgakubh7wysfDYV/ze+n/lYK3MSq0if8jUA10yGeR
-         lHv9ukJjMBGtj7HXMNUWG/cG4CI9jFRwjiRU9ltg=
-Date:   Sat, 30 Mar 2019 10:31:52 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     Laura Abbott <labbott@redhat.com>, linux-kernel@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>,
-        stable <stable@vger.kernel.org>
-Subject: [PATCH] iwlwifi: properly check debugfs dentry before using it
-Message-ID: <20190330093152.GB14300@kroah.com>
-References: <20190122152151.16139-24-gregkh@linuxfoundation.org>
- <03bb68be-8e42-a463-2d57-3be051dc2016@redhat.com>
- <20190327012600.GA3649@kroah.com>
- <5660d50d-6cbf-3b36-6e6c-312b1617ed23@redhat.com>
- <20190327015346.GA17979@kroah.com>
- <5f9c8beda0e925b079aa9342ce1c9523659837a4.camel@coelho.fi>
- <20190330092247.GA14300@kroah.com>
+        Sat, 30 Mar 2019 10:22:48 -0400
+Received: from mail-wm1-f43.google.com ([209.85.128.43]:38352 "EHLO
+        mail-wm1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730831AbfC3OWs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Mar 2019 10:22:48 -0400
+Received: by mail-wm1-f43.google.com with SMTP id w15so5997836wmc.3
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Mar 2019 07:22:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=Mmhx1Yb4WO/QsiLGzdQT6RORbAbq5FJ4NTZg9R+0y4E=;
+        b=Hre8wLC1afU2A7LBzdzLrfysSlg8j+tp1ApPo1J8CWH3js+tx3RAl22DewNJ2wlTBT
+         vjY56M/fg6ISSP3cK4PYYAemEChOqHbO7CmtAmJkCg/JKM69VUEKFgM59zExWL65EwGw
+         Nscv9iF3afr1VELfsDhW8NY29BBD7M4Z3cUzgZSAC4fbCOBBkjKuwv/TIhAeNciUEkT3
+         buUS6ppfYtoywm/NBuJuo/VLZVZIHqU/+us21LkNrsQNuet20x7wOOpA49sNaVOTtcGf
+         KUNpgG1eaP/5xBhzDgy7kQBLCal47dYisKFc2mtXtX94/oOtSSXioCMWqUMOfc8Zb0yK
+         f40A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=Mmhx1Yb4WO/QsiLGzdQT6RORbAbq5FJ4NTZg9R+0y4E=;
+        b=ClhIe3L+AmATWOu5XcHL+H4rS3fvN4sUkL3omuPMaxd8qr/WXLtYDRsC7ibRKcakPA
+         tk+hA9SzZBvY1jhiiQzYfCoDLq2pzPwcJRU5peYP50+1Ad1XUpDcGNPS2IpT0M69siCW
+         ZAQAPjnkrKdowD74gMlApF/Qeb/oSiwva9C9xpEElijHYZyYVCD9ZStEcpPT751IFcDi
+         cKKyuP7ms6prR2ZJT74d1vpQdzSDpX9AlsEj0Cc76AtQNARgYdqXEzh5kGfHmUK+gdD6
+         briZFsTvwjYcDEfp/JcVogZBh4G6KL25Mh0XwZJv6LGduCHQLusccf/G/nZudcLI5uVa
+         3IRg==
+X-Gm-Message-State: APjAAAUmx2ynH0yOMi2hgpiDi51CK8kGLPmOkJWqoDnsu6Jn587cyEF3
+        /KRzKE/HoDcKUziduUfNlHtTx7C4LgPnbYDcrG1yhtWM
+X-Google-Smtp-Source: APXvYqx4/HgUF8Y7VhQ+wSzqBl+j2RGR0DxUe9HOxn2xYvO35qmDUg2RPUaOb0sB2rrLEoemoYf1ElM6iE8puXJ6iUc=
+X-Received: by 2002:a1c:7e51:: with SMTP id z78mr7028906wmc.82.1553955766711;
+ Sat, 30 Mar 2019 07:22:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190330092247.GA14300@kroah.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+From:   Matej Uhlik <matej.uhlik@gmail.com>
+Date:   Sat, 30 Mar 2019 15:22:35 +0100
+Message-ID: <CA+xR2TUfhF1MSvFHaJW_0PDs4zBczQFXmEJX7OGZ_n=9qJF67w@mail.gmail.com>
+Subject: Patch for mac80211_hwsim to use multiple BSSID
+To:     linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-debugfs can now report an error code if something went wrong instead of
-just NULL.  So if the return value is to be used as a "real" dentry, it
-needs to be checked if it is an error before dereferencing it.
-
-This is now happening because of ff9fb72bc077 ("debugfs: return error
-values, not NULL").  If multiple iwlwifi devices are in the system, this
-can cause problems when the driver attempts to create the main debugfs
-directory again.  Later on in the code we fail horribly by trying to
-dereference a pointer that is an error value.
-
-Reported-by: Laura Abbott <labbott@redhat.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: stable <stable@vger.kernel.org> # 5.0
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Hi,
 
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-index 2453ceabf00d..6925527d8457 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-@@ -774,8 +774,7 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		return;
- 
- 	mvmvif->dbgfs_dir = debugfs_create_dir("iwlmvm", dbgfs_dir);
--
--	if (!mvmvif->dbgfs_dir) {
-+	if (IS_ERR_OR_NULL(mvmvif->dbgfs_dir)) {
- 		IWL_ERR(mvm, "Failed to create debugfs directory under %pd\n",
- 			dbgfs_dir);
- 		return;
+
+I need to create patch that will do the following -> enables driver to
+respond with ACK to more than just one BSSID targeted frames. This is
+idea for SDWN solution namely Odin Wi-5, which works in a way, where
+AP is called agent, and is hosting many APs called LVAP(Light Virtual
+Access Point). The thing is, that normal AP is responding to one
+BSSID, the one that is assigned to him from manufacturer. In this case
+I need to make the driver, behaving as AP, respond to more than just
+one BSSID. These BSSIDs should be stored in text file.
+
+
+
+I am attaching link for ath9k driver, which has done the author of
+Odin. You can take this as example, of what am I trying to do here.
+
+
+
+https://github.com/Wi5/odin-wi5/blob/master/odin-patch-driver-ath9k/ath9k-bssid-mask.patch
+
+
+
+If anyone has any idea, how can I do the same in mac80211_hwsim, I
+would be more than happy. I am using Mininet-Wifi which is
+incorporating this mac80211_hwsim driver, and thats why I need to
+alter patch this driver.
+
+
+
+Regards,
+
+Matej.
