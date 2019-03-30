@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86546C43381
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:32:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A79DC4360F
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:34:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59072218EA
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:32:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C19F217F5
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:34:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553909554;
+	s=default; t=1553909693;
 	bh=wxCFi0Vwx4s7u0bNIU7e/yZ+bi5iPpGjLQsdyxd/4cY=;
 	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=saLwOSd7Wi1Vbro8IF4AgoZb+df3xzVvDcqIFMMIcpxOIgvt+61LnCAXV4g/pBQUN
-	 Buwme24L3wpNlGGk6nn8Yi2RbxG8xDYYQhtvQSuVZKfLqY92pWAJjrby1CvWtWbYFG
-	 iGCRJpxGim5BOzzvpLXvxzRoon//bXNMMm+Ps35o=
+	b=uI2TlJAqaMURUM6jhPJBw3gYSCaN884AJNL6hRD0hYqvdN5fNiaHXzOr9VkTYugrI
+	 chQQSfEWecYifCjeXdFNCoCY+98gN+8k/6uD84WQaqsOeLHywMuEoDwO5lR/J8M7S2
+	 qwUFVzCKkgQzgGUD4zhhsLKBcDMQZJJJ+Lc8FM+8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732360AbfC3Bcd (ORCPT
+        id S1732033AbfC3Beq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Mar 2019 21:32:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40514 "EHLO mail.kernel.org"
+        Fri, 29 Mar 2019 21:34:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39936 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732342AbfC3Bca (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Mar 2019 21:32:30 -0400
+        id S1731362AbfC3BcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Mar 2019 21:32:03 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id ADBB921773;
-        Sat, 30 Mar 2019 01:32:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C06F421773;
+        Sat, 30 Mar 2019 01:32:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553909549;
+        s=default; t=1553909522;
         bh=wxCFi0Vwx4s7u0bNIU7e/yZ+bi5iPpGjLQsdyxd/4cY=;
         h=From:To:Cc:Subject:Date:From;
-        b=R3ubPsV/1EZ3/gGEABS4RL9+6ux+KajMFaaVn93d6uC1HW8pNdVkUbBM1LLtunSNI
-         2Hb6yBtwjKkcCtLcw9UwKy7G6hVpb5kbaYmxEkn7vVSgq9pJZFOcTC3U65WGi8d/WE
-         5g3GCJn7ion6KEm0yxHhfQKQtY7dw45xqmkBnJF0=
+        b=IwHmbjleYJfB+5GY3e9ftOhWrNpdUS41e7KDr00N+yoBm/pD5o47RBv/DgcA83qLr
+         TAV3hGJpHf43KKuf5ZpNMNFT8aRKTawGAmqzgsy3v93agOw9MBbGSuVt2BxL0w+Ist
+         /GuxFaYL++/uBn3vnqbzw9rSckd2xX364j1eCsWA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 3.18 01/10] rsi: improve kernel thread handling to fix kernel panic
-Date:   Fri, 29 Mar 2019 21:32:18 -0400
-Message-Id: <20190330013227.1365-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 01/16] rsi: improve kernel thread handling to fix kernel panic
+Date:   Fri, 29 Mar 2019 21:31:45 -0400
+Message-Id: <20190330013200.1130-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
 X-stable: review
