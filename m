@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A745EC43381
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 06:40:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEB60C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 06:44:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 642F7218A3
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 06:40:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93850218A6
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 06:44:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XW0iPytZ";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MjVySjzs"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NGsdrrLV";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XGnJSl++"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726378AbfC3Ggk (ORCPT
+        id S1726402AbfC3Gk2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 30 Mar 2019 02:36:40 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53160 "EHLO
+        Sat, 30 Mar 2019 02:40:28 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:55426 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725792AbfC3Ggk (ORCPT
+        with ESMTP id S1726132AbfC3Gk2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Mar 2019 02:36:40 -0400
+        Sat, 30 Mar 2019 02:40:28 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 580AE6087F; Sat, 30 Mar 2019 06:36:39 +0000 (UTC)
+        id 462DF60850; Sat, 30 Mar 2019 06:40:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553927799;
-        bh=llezU4Dl75zyZRfpF8H+BjS17vo7SA0naWNF4tpPk9w=;
+        s=default; t=1553928027;
+        bh=TOL5fhKccn+XPU1LtJTmBIWnJK3GjRu5+m6tIv05BKU=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=XW0iPytZmyeDQ8Iyrl2CIMg/IhvjPPIC89bTHA4MZCVIYS7ZjMsJXaasCmKLfDOWF
-         EkiuHTyDndr4YtcHVzc/RhB+vIQ1so+7sP4ZIyzosPGMOjougRzyJllgfRnoJSWN6X
-         oECLAyZvG2FrWXXnyU1L0CwC+gCq+IVULe0b4i6Y=
+        b=NGsdrrLVhSy3hNToe8F7mMMxQnvXPkwE2CW5GMgfGu7t28qiKu7aU/rhn3BzifSOF
+         Umxi9PxHU/46ZimzMZBhRfY0bU9F/IIfKq2zcxDLjp/1a0n/8Rrp480CNV9cqAUQaX
+         Gqkdhuq9jSqWNAh2WTtfqIqOm37UcnG90dlv0Q4k=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5C2F1602BA;
-        Sat, 30 Mar 2019 06:36:37 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 62E3D602BA;
+        Sat, 30 Mar 2019 06:40:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1553927798;
-        bh=llezU4Dl75zyZRfpF8H+BjS17vo7SA0naWNF4tpPk9w=;
+        s=default; t=1553928026;
+        bh=TOL5fhKccn+XPU1LtJTmBIWnJK3GjRu5+m6tIv05BKU=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=MjVySjzsI4wAbzWf2EQcELzYeX1itBez9mO5sylqHdGEe9MibNNH1M+82/IEezzmO
-         RB9n0+LyX8YskoI8X/Sd552ivXmLCGorWGeH+OtjCHUmBeYZYUCESoqdsXf892l3f5
-         +nkETovYk68On1YZwPVu3H3rVZglAyQRDvrQKJ1o=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5C2F1602BA
+        b=XGnJSl++up0b2FDXijCUclTDPFQPTlQqg09ZLnt/aAuH9TxwqrMn/Q0on4dGQz7cn
+         q69/xipGuYmawXibvGAlZfqSAMCPgD+Ry5XXO9+QBlULXgx8wHDTudf5olauwVZUEo
+         CxsxwO0Y5YjmELJTcuUCH3o4yGVR/xnPQf4sxJfI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 62E3D602BA
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     Luca Coelho <luca@coelho.fi>
 Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
         david.e.box@intel.com, joe.konno@intel.com
-Subject: Re: pull-request: iwlwifi-fixes 2019-03-22
-References: <c1c92313e0ecec1110d60d5624e94c8d75d5e664.camel@coelho.fi>
-Date:   Sat, 30 Mar 2019 08:36:35 +0200
-In-Reply-To: <c1c92313e0ecec1110d60d5624e94c8d75d5e664.camel@coelho.fi> (Luca
-        Coelho's message of "Fri, 22 Mar 2019 12:58:10 +0200")
-Message-ID: <87ftr43m30.fsf@kamboji.qca.qualcomm.com>
+Subject: Re: pull-request: iwlwifi-next 2019-02-22
+References: <8dc374567ff4a1138b5c9605ecc2dc0aeb9bc4bc.camel@coelho.fi>
+Date:   Sat, 30 Mar 2019 08:40:23 +0200
+In-Reply-To: <8dc374567ff4a1138b5c9605ecc2dc0aeb9bc4bc.camel@coelho.fi> (Luca
+        Coelho's message of "Fri, 22 Mar 2019 14:16:08 +0200")
+Message-ID: <87bm1s3lwo.fsf@kamboji.qca.qualcomm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -69,10 +69,9 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Luca Coelho <luca@coelho.fi> writes:
 
-> Hi Kalle,
->
-> This is the first batch of fixes for v5.1.  More details about the
-> contents in the tag description.
+> This is the first batch of patches intended for v5.2.  This includes
+> the last two patchsets I sent.  Usual development work.  More details
+> about the contents in the tag description.
 >
 > I have sent this out before and kbuildbot reported success.
 >
@@ -82,24 +81,29 @@ Luca Coelho <luca@coelho.fi> writes:
 > Luca.
 >
 >
-> The following changes since commit 7dfc45e6282a7662279d168cc1219929456f8750:
+> The following changes since commit 501faf710230b67e470b314868110357cf3a554d:
 >
->   mt76x02: do not enable RTS/CTS by default (2019-03-19 17:37:25 +0200)
+>   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2019-02-28 11:50:40 +0200)
 >
 > are available in the Git repository at:
 >
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2019-03-22
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2019-03-22
 >
-> for you to fetch changes up to 972d8e1377795556024e948357e82532890f2f7d:
+> for you to fetch changes up to fe63f21b20df1adaab90c1839d36ee7c6e4b6ac0:
 >
->   iwlwifi: add new 0x2723/0x2080 card for 22000 (2019-03-22 12:49:05 +0200)
+>   iwlwifi: dbg_ini: align to FW api version 1 (2019-03-22 12:59:42 +0200)
 >
 > ----------------------------------------------------------------
-> First batch of iwlwifi fixes intended for v5.1
+> First batch of patches intended for v5.2
 >
-> * add some new PCI IDs (plus a struct name change they depend on);
-> * fix crypto with new devices, namely 22560 and above;
-> * a bunch of fixes (and a dependency) for the new debugging infra;
+> * Send NO_DATA events so they can be captured in radiotap;
+> * Some channel-switch changes;
+> * Support for multiple BSSID;
+> * Continued work and bugfixes for the new debugging infra;
+> * Support for some new FW API versions;
+> * Some work to support new hardware;
+> * General bugfixes;
+> * Other cleanups;
 >
 > ----------------------------------------------------------------
 
