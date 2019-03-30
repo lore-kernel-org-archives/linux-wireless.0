@@ -1,91 +1,120 @@
-Return-Path: <SRS0=IiY2=SA=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=EA+v=SB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E555C10F05
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 14:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3483C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:31:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C79F32184C
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Mar 2019 14:17:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A584E218FC
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:31:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553869022;
-	bh=aIBq2YBQwt2ZTQgUPJdoJ1ecKiXtpZegE6FpMvpCNWM=;
-	h=Date:From:To:To:To:To:Cc:Cc:Subject:In-Reply-To:References:
-	 List-ID:From;
-	b=iCuQq+2ePWnP9M1tixoTla3qVCnq5YessG6ggZK/tUQNHn1HW8fOYstRibEEbsfo6
-	 5xKlvv5p5qMo82Mb3bn2VKAcoJhrDub6QdPIktS0IB7OS5bSDmc8iU/Trq75yp+Kap
-	 nf3DIYWBnhv0eDUs5+G5ePtdFjzp9btHVTmQFgr8=
+	s=default; t=1553909478;
+	bh=wxCFi0Vwx4s7u0bNIU7e/yZ+bi5iPpGjLQsdyxd/4cY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=G6vO7H09y98cDuhojLX0RceKeH3l1DES8Ub5rAe4uJKmzjh6swNjb3Bz01mWw1k2A
+	 9aip014cjEX+NYwJfQGtaBALE4cWxKzKqhWXHrziWHJ4ZVYdgTOm87IG1e1GAasHYQ
+	 DbHq0RzRxnBs3W2tDXSOqk/nfgGH7MfKfgBVOJSg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729081AbfC2ORC (ORCPT
+        id S1731959AbfC3BbR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Mar 2019 10:17:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46158 "EHLO mail.kernel.org"
+        Fri, 29 Mar 2019 21:31:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38754 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728833AbfC2ORB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Mar 2019 10:17:01 -0400
-Received: from localhost (unknown [23.100.24.84])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1731938AbfC3BbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Mar 2019 21:31:16 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EA6AA206C0;
-        Fri, 29 Mar 2019 14:17:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9A2CB218D9;
+        Sat, 30 Mar 2019 01:31:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553869021;
-        bh=aIBq2YBQwt2ZTQgUPJdoJ1ecKiXtpZegE6FpMvpCNWM=;
-        h=Date:From:To:To:To:To:Cc:Cc:Subject:In-Reply-To:References:From;
-        b=YtAGe87jDie1xCh/z/APg+jW5fACWoZFfMPp//kzqhJWRecs4KTHnhC1b3Ty5sGgL
-         5dqZ7Po3eBm/Aj7CWiTMJeMh4AwsscPFsz6u8P6QA+eJDHrd/Pon7D/TAU7wkI9YV5
-         qooIqmVKfuN4Yc8GxbvsJ1EgboSr46uHCls505VY=
-Date:   Fri, 29 Mar 2019 14:16:59 +0000
+        s=default; t=1553909475;
+        bh=wxCFi0Vwx4s7u0bNIU7e/yZ+bi5iPpGjLQsdyxd/4cY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=iV3G5j18qfSYoxYcDZ0qRbD353hcU7tho4cngBfrdVOUQUWyZYohU1NtLsu1SIHtx
+         schBkPd18n2xpbT/dykYX0rq7NLAyHhSygObYjI25UlokwCBpVnIGVcWHLve2bFMqX
+         UP6AlW8Lw5r2Xd3HzkrkFOraM9HUlt5Yk+gP+HQc=
 From:   Sasha Levin <sashal@kernel.org>
-To:     Sasha Levin <sashal@kernel.org>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Vijayakumar Durai <vijayakumar.durai1@vivint.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     stable@vger.kernel.org
-Cc:     stable@vger.kernel.org
-Subject: Re: [PATCH 5.1] rt2x00: do not increment sequence number while re-transmitting
-In-Reply-To: <1553680997-19511-1-git-send-email-sgruszka@redhat.com>
-References: <1553680997-19511-1-git-send-email-sgruszka@redhat.com>
-Message-Id: <20190329141700.EA6AA206C0@mail.kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 02/21] rsi: improve kernel thread handling to fix kernel panic
+Date:   Fri, 29 Mar 2019 21:30:53 -0400
+Message-Id: <20190330013112.784-2-sashal@kernel.org>
+X-Mailer: git-send-email 2.19.1
+In-Reply-To: <20190330013112.784-1-sashal@kernel.org>
+References: <20190330013112.784-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-[This is an automated email]
+[ Upstream commit 4c62764d0fc21a34ffc44eec1210038c3a2e4473 ]
 
-This commit has been processed because it contains a -stable tag.
-The stable tag indicates that it's relevant for the following trees: all
+While running regressions, observed below kernel panic when sdio disconnect
+called. This is because of, kthread_stop() is taking care of
+wait_for_completion() by default. When wait_for_completion triggered
+in kthread_stop and as it was done already, giving kernel panic.
+Hence, removing redundant wait_for_completion() from rsi_kill_thread().
 
-The bot has tested the following trees: v5.0.5, v4.19.32, v4.14.109, v4.9.166, v4.4.177, v3.18.137.
+... skipping ...
+BUG: unable to handle kernel NULL pointer dereference at           (null)
+IP: [<ffffffff810a63df>] exit_creds+0x1f/0x50
+PGD 0
+Oops: 0002 [#1] SMP
+CPU: 0 PID: 6502 Comm: rmmod Tainted: G  OE   4.15.9-Generic #154-Ubuntu
+Hardware name: Dell Inc. Edge Gateway 3003/ , BIOS 01.00.00 04/17/2017
+Stack:
+ffff88007392e600 ffff880075847dc0 ffffffff8108160a 0000000000000000
+ffff88007392e600 ffff880075847de8 ffffffff810a484b ffff880076127000
+ffff88003cd3a800 ffff880074f12a00 ffff880075847e28 ffffffffc09bed15
+Call Trace:
+[<ffffffff8108160a>] __put_task_struct+0x5a/0x140
+[<ffffffff810a484b>] kthread_stop+0x10b/0x110
+[<ffffffffc09bed15>] rsi_disconnect+0x2f5/0x300 [ven_rsi_sdio]
+[<ffffffff81578bcb>] ? __pm_runtime_resume+0x5b/0x80
+[<ffffffff816f0918>] sdio_bus_remove+0x38/0x100
+[<ffffffff8156cc64>] __device_release_driver+0xa4/0x150
+[<ffffffff8156d7a5>] driver_detach+0xb5/0xc0
+[<ffffffff8156c6c5>] bus_remove_driver+0x55/0xd0
+[<ffffffff8156dfbc>] driver_unregister+0x2c/0x50
+[<ffffffff816f0b8a>] sdio_unregister_driver+0x1a/0x20
+[<ffffffffc09bf0f5>] rsi_module_exit+0x15/0x30 [ven_rsi_sdio]
+[<ffffffff8110cad8>] SyS_delete_module+0x1b8/0x210
+[<ffffffff81851dc8>] entry_SYSCALL_64_fastpath+0x1c/0xbb
 
-v5.0.5: Build OK!
-v4.19.32: Build OK!
-v4.14.109: Build OK!
-v4.9.166: Build OK!
-v4.4.177: Failed to apply! Possible dependencies:
-    262c741e0825 ("rt2x00: fix monitor mode regression")
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/rsi/rsi_common.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-v3.18.137: Failed to apply! Possible dependencies:
-    2359b5c2d950 ("staging: vt6655: replace memcpy() by ether_addr_copy() using coccinelle and pack variables")
-    262c741e0825 ("rt2x00: fix monitor mode regression")
-    33b1c8c13fb8 ("staging: vt6655: mac80211 conversion: add new rx functions")
-    67013f2c0e58 ("staging: vt6655: mac80211 conversion add main mac80211 functions")
-    81a4e959f201 ("staging: vt6655: device.h: Comments fixes")
-    89cf9be6e6e1 ("staging: vt6655: mac80211 conversion: s_uFillDataHead add power saving poll")
-    99b4a7e0a2a4 ("staging: vt6655: dpc.h: Replace C99 // comment by /bin /boot /dev /etc /home /initrd.img /initrd.img.old /lib /lib64 /lost+found /media /mnt /opt /proc /root /run /sbin /snap /srv /sys /tmp /usr /var /vmlinuz /vmlinuz.old */")
-    df1404650ccb ("mac80211: remove support for IFF_PROMISC")
-    fee7506a121a ("staging: vt6655: mac80211 conversion: add new key functions")
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index d3fbe33d2324..a13f08fd8690 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -75,7 +75,6 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
+ 	atomic_inc(&handle->thread_done);
+ 	rsi_set_event(&handle->event);
+ 
+-	wait_for_completion(&handle->completion);
+ 	return kthread_stop(handle->task);
+ }
+ 
+-- 
+2.19.1
 
-
-How should we proceed with this patch?
-
---
-Thanks,
-Sasha
