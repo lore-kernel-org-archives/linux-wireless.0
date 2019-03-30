@@ -4,51 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A79DC4360F
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:34:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35458C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:38:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1C19F217F5
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:34:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0276D217F5
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:38:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553909693;
-	bh=wxCFi0Vwx4s7u0bNIU7e/yZ+bi5iPpGjLQsdyxd/4cY=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=uI2TlJAqaMURUM6jhPJBw3gYSCaN884AJNL6hRD0hYqvdN5fNiaHXzOr9VkTYugrI
-	 chQQSfEWecYifCjeXdFNCoCY+98gN+8k/6uD84WQaqsOeLHywMuEoDwO5lR/J8M7S2
-	 qwUFVzCKkgQzgGUD4zhhsLKBcDMQZJJJ+Lc8FM+8=
+	s=default; t=1553909895;
+	bh=rQLJv/2SMiTvz2Vug3f0dOGP2fNBIcvrrnTFXWR93uw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=U73VUjK+6xwTB25TWu79F4BrMjxjRM/vq8VXEhYjV5CKvsRHOiMYJC30OJIp3Vudf
+	 ENiH+jYE57EYnzfV48Mq4wGhvoHdY7MkjVoGhAeBUCa1KxjBdBfwLZWdVFlHR2AXmH
+	 FecOd+ErAH9G5Gjy6rXBuyH/jVXikruavcfa4db4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732033AbfC3Beq (ORCPT
+        id S1731513AbfC3BaY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Mar 2019 21:34:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39936 "EHLO mail.kernel.org"
+        Fri, 29 Mar 2019 21:30:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37612 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731362AbfC3BcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Mar 2019 21:32:03 -0400
+        id S1731490AbfC3BaY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Mar 2019 21:30:24 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C06F421773;
-        Sat, 30 Mar 2019 01:32:01 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 94A87217F5;
+        Sat, 30 Mar 2019 01:30:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553909522;
-        bh=wxCFi0Vwx4s7u0bNIU7e/yZ+bi5iPpGjLQsdyxd/4cY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=IwHmbjleYJfB+5GY3e9ftOhWrNpdUS41e7KDr00N+yoBm/pD5o47RBv/DgcA83qLr
-         TAV3hGJpHf43KKuf5ZpNMNFT8aRKTawGAmqzgsy3v93agOw9MBbGSuVt2BxL0w+Ist
-         /GuxFaYL++/uBn3vnqbzw9rSckd2xX364j1eCsWA=
+        s=default; t=1553909423;
+        bh=rQLJv/2SMiTvz2Vug3f0dOGP2fNBIcvrrnTFXWR93uw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=zJcTOitem/96LcGS+kJyQKKcb5UgAN9oT3FolEsQxW6gzmbdcPp2GyDxt8UMfmNjC
+         3odN2Pw8YDzTTL8J3Y1diJJQJUq5lLHj2LBTFRV76ZIFUoZEtAI6Yp1MN8wRfdkTSG
+         XcmLfMBbILgm5wOoZFFk86UPs0pdflL34IFKTkIs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 01/16] rsi: improve kernel thread handling to fix kernel panic
-Date:   Fri, 29 Mar 2019 21:31:45 -0400
-Message-Id: <20190330013200.1130-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 02/37] rsi: improve kernel thread handling to fix kernel panic
+Date:   Fri, 29 Mar 2019 21:29:45 -0400
+Message-Id: <20190330013020.379-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
+In-Reply-To: <20190330013020.379-1-sashal@kernel.org>
+References: <20190330013020.379-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -102,10 +103,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 deletion(-)
 
 diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index d3fbe33d2324..a13f08fd8690 100644
+index e579d694d13c..21986ba56a3c 100644
 --- a/drivers/net/wireless/rsi/rsi_common.h
 +++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -75,7 +75,6 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
+@@ -74,7 +74,6 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
  	atomic_inc(&handle->thread_done);
  	rsi_set_event(&handle->event);
  
