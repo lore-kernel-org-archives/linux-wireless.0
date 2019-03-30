@@ -2,119 +2,106 @@ Return-Path: <SRS0=EA+v=SB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF97EC10F05
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:41:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FC61C43381
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 06:08:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF992217F5
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 01:41:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553910087;
-	bh=7Hqa+hd3SjcWJChOGFb42MMRW0TR0vlPtBDXq6GjTGI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=RZ8XMyBwUzpDmt9TU6peqrz1yDYpox5zABNvSmxeGYHK7XNXGcP/kOtWG7zsLr7wi
-	 QYBjzJ6/c2PQ028N/sAhahQUBY0LExUK3BmQUwluHvZzYyWmO9phSPjVjU2zCN1rLO
-	 SPjS4vdmVIYkHjmmDKYOIW2q88uJ4ldyptWwSKKY=
+	by mail.kernel.org (Postfix) with ESMTP id D2F00218A6
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Mar 2019 06:08:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pG27VudW";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="G6dLAxSy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731107AbfC3BlV (ORCPT
+        id S1730248AbfC3GIk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Mar 2019 21:41:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35690 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730664AbfC3B27 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Mar 2019 21:28:59 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Sat, 30 Mar 2019 02:08:40 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:35054 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730047AbfC3GIk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Mar 2019 02:08:40 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B56B96081E; Sat, 30 Mar 2019 06:08:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553926119;
+        bh=uXFMR+qQ9MU1kXbyJWeI2UPOE12YR3MK/gLmhHknfsk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=pG27VudWOPROS0WJ0x2m9PapF2RQ/H5iS0S0HhHaubvU3JdUJ/abyywVsaZnry962
+         4W+XUBHCA9WmOsh19yYcBUn8/BhQDfWr6pVcHxhpUuiSrdvT4XuhXHeS5d31hG3aG0
+         WglOWQoZ7h9iSidmLYfaZiKk+R422XW7JBNdntLw=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7BCC5218A6;
-        Sat, 30 Mar 2019 01:28:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553909338;
-        bh=7Hqa+hd3SjcWJChOGFb42MMRW0TR0vlPtBDXq6GjTGI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EeoMkCkkrhlbCA7CUSP/Tkg2U9ZpFRABR1HhkD83IQeKnKz+kBrT4OihjN3At6v0r
-         WgxNpkIbdKfFMgCs5CD4ZE0o8xxLHs8vaCoxQWZ/yvXVGCFUpdj/Wsy1/34JkSEg+v
-         izLE5m/jA/ErUFnW1TLFRVnS9hELE0V7kETKWBW8=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 03/57] rsi: improve kernel thread handling to fix kernel panic
-Date:   Fri, 29 Mar 2019 21:27:56 -0400
-Message-Id: <20190330012854.32212-3-sashal@kernel.org>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190330012854.32212-1-sashal@kernel.org>
-References: <20190330012854.32212-1-sashal@kernel.org>
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D72E6602BA;
+        Sat, 30 Mar 2019 06:08:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553926118;
+        bh=uXFMR+qQ9MU1kXbyJWeI2UPOE12YR3MK/gLmhHknfsk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=G6dLAxSy0iTsACn2xZjIW2DBDEY8R0KTpAeswWRh5VPySi7GVai5eo900YbEdWskt
+         N/Zce4Sd/gQA57khC0SIMmnGKZzekgjCpNynIfBOBAejHda4wF0wH9yRl1CG1MVMGl
+         XrjyE4C4Zn82l5+sbUuDpn30TRjvI5O3fDvofm38=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D72E6602BA
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Ryder Lee <ryder.lee@mediatek.com>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>, Roy Luo <royluo@google.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Nelson Chang <nelson.chang@mediatek.com>,
+        YF Luo <yf.luo@mediatek.com>, Kai Lin <kai.lin@mediatek.com>,
+        Rorscha Yang <rorscha.yang@mediatek.com>,
+        Kyle Lee <kyle.lee@mediatek.com>,
+        Miller Shen <miller.shen@mediatek.com>,
+        Haipin Liang <haipin.liang@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Subject: Re: [PATCH 1/4] mt76: add mac80211 driver for MT7615 PCIe-based chipsets
+References: <cover.1553607739.git.ryder.lee@mediatek.com>
+        <2849359e0b0ede6c13ae9f142aff77a016fd0a80.1553607739.git.ryder.lee@mediatek.com>
+Date:   Sat, 30 Mar 2019 08:08:32 +0200
+In-Reply-To: <2849359e0b0ede6c13ae9f142aff77a016fd0a80.1553607739.git.ryder.lee@mediatek.com>
+        (Ryder Lee's message of "Tue, 26 Mar 2019 22:28:07 +0800")
+Message-ID: <87lg0wyjvj.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Ryder Lee <ryder.lee@mediatek.com> writes:
 
-[ Upstream commit 4c62764d0fc21a34ffc44eec1210038c3a2e4473 ]
+> This driver is for a newer generation of MediaTek MT7615 4x4 802.11ac
+> PCIe-based chipsets, which support wave2 MU-MIMO up to 4 users/group
+> and also support up to 160MHz bandwidth.
+>
+> The driver fully supports AP, station and monitor mode.
+>
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> Signed-off-by: Roy Luo <royluo@google.com>
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 
-While running regressions, observed below kernel panic when sdio disconnect
-called. This is because of, kthread_stop() is taking care of
-wait_for_completion() by default. When wait_for_completion triggered
-in kthread_stop and as it was done already, giving kernel panic.
-Hence, removing redundant wait_for_completion() from rsi_kill_thread().
+[...]
 
-... skipping ...
-BUG: unable to handle kernel NULL pointer dereference at           (null)
-IP: [<ffffffff810a63df>] exit_creds+0x1f/0x50
-PGD 0
-Oops: 0002 [#1] SMP
-CPU: 0 PID: 6502 Comm: rmmod Tainted: G  OE   4.15.9-Generic #154-Ubuntu
-Hardware name: Dell Inc. Edge Gateway 3003/ , BIOS 01.00.00 04/17/2017
-Stack:
-ffff88007392e600 ffff880075847dc0 ffffffff8108160a 0000000000000000
-ffff88007392e600 ffff880075847de8 ffffffff810a484b ffff880076127000
-ffff88003cd3a800 ffff880074f12a00 ffff880075847e28 ffffffffc09bed15
-Call Trace:
-[<ffffffff8108160a>] __put_task_struct+0x5a/0x140
-[<ffffffff810a484b>] kthread_stop+0x10b/0x110
-[<ffffffffc09bed15>] rsi_disconnect+0x2f5/0x300 [ven_rsi_sdio]
-[<ffffffff81578bcb>] ? __pm_runtime_resume+0x5b/0x80
-[<ffffffff816f0918>] sdio_bus_remove+0x38/0x100
-[<ffffffff8156cc64>] __device_release_driver+0xa4/0x150
-[<ffffffff8156d7a5>] driver_detach+0xb5/0xc0
-[<ffffffff8156c6c5>] bus_remove_driver+0x55/0xd0
-[<ffffffff8156dfbc>] driver_unregister+0x2c/0x50
-[<ffffffff816f0b8a>] sdio_unregister_driver+0x1a/0x20
-[<ffffffffc09bf0f5>] rsi_module_exit+0x15/0x30 [ven_rsi_sdio]
-[<ffffffff8110cad8>] SyS_delete_module+0x1b8/0x210
-[<ffffffff81851dc8>] entry_SYSCALL_64_fastpath+0x1c/0xbb
+> --- /dev/null
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
+> @@ -0,0 +1,204 @@
+> +// SPDX-License-Identifier: GPL-2.0
 
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/rsi/rsi_common.h | 1 -
- 1 file changed, 1 deletion(-)
+mt76 is under ISC so why did you choose GPLv2 here? I don't think it's a
+good idea to use different licenses within the same driver.
 
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index d9ff3b8be86e..60f1f286b030 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -75,7 +75,6 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
- 	atomic_inc(&handle->thread_done);
- 	rsi_set_event(&handle->event);
- 
--	wait_for_completion(&handle->completion);
- 	return kthread_stop(handle->task);
- }
- 
+Also mt76 does not use SPDX tags yet. I would prefer that the whole
+driver is converted in one go to have consistent licensing information.
+
 -- 
-2.19.1
-
+Kalle Valo
