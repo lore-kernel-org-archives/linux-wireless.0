@@ -4,34 +4,35 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25479C43381
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 07:17:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A986EC43381
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 07:17:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F0A4720896
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 07:17:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83CBA20896
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 07:17:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731930AbfDAHQ4 (ORCPT
+        id S1731947AbfDAHRD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Apr 2019 03:16:56 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:14710 "EHLO
+        Mon, 1 Apr 2019 03:17:03 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:2923 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731160AbfDAHQz (ORCPT
+        with ESMTP id S1731898AbfDAHQz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 1 Apr 2019 03:16:55 -0400
-X-UUID: 36b3c62d12604a38a66536433460e54f-20190401
-X-UUID: 36b3c62d12604a38a66536433460e54f-20190401
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
+X-UUID: fda522bb369c4ce3ad6701d3c7a79b79-20190401
+X-UUID: fda522bb369c4ce3ad6701d3c7a79b79-20190401
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 1279938848; Mon, 01 Apr 2019 15:16:48 +0800
+        with ESMTP id 1142359240; Mon, 01 Apr 2019 15:16:49 +0800
 Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 1 Apr 2019 15:16:46 +0800
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Mon, 1 Apr 2019 15:16:47 +0800
 Received: from mtkslt306.mediatek.inc (10.21.14.136) by mtkcas07.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 1 Apr 2019 15:16:45 +0800
+ Transport; Mon, 1 Apr 2019 15:16:47 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Felix Fietkau <nbd@nbd.name>
@@ -47,69 +48,41 @@ CC:     Roy Luo <royluo@google.com>, Sean Wang <sean.wang@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v3 2/4] mt76: add unlikely() for dma_mapping_error() check
-Date:   Mon, 1 Apr 2019 15:16:42 +0800
-Message-ID: <87b458bb8525f3fe31cc96fef71df8542a01e1ab.1554102584.git.ryder.lee@mediatek.com>
+Subject: [PATCH v3 4/4] MAINTAINERS : update entry for mt76 wireless driver
+Date:   Mon, 1 Apr 2019 15:16:44 +0800
+Message-ID: <ce2f7b967021b9c3e64aa846084a816efd7f6002.1554102584.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <cover.1554102584.git.ryder.lee@mediatek.com>
 References: <cover.1554102584.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 31F39429F309C95AA95E268EB98C07749231EDFB59A6AB140917A7A3AA7BD1232000:8
+X-TM-SNTS-SMTP: 2BB8D97884A486168A52FCFD5260C0EE031937706E13C765D8FD80244D11E2ED2000:8
 X-MTK:  N
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In the tx/rx fastpath, the funciton dma_map_single() rarely fails.
-This adds unlikely() optimization to this error check conditional.
+Roy and I actively join the development and review.
 
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ MAINTAINERS | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 8a4b935..6f3ef09 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -272,7 +272,7 @@
- 
- 	addr = dma_map_single(dev->dev, skb->data, skb->len,
- 			      DMA_TO_DEVICE);
--	if (dma_mapping_error(dev->dev, addr))
-+	if (unlikely(dma_mapping_error(dev->dev, addr)))
- 		return -ENOMEM;
- 
- 	buf.addr = addr;
-@@ -315,7 +315,7 @@
- 
- 	len = skb_headlen(skb);
- 	addr = dma_map_single(dev->dev, skb->data, len, DMA_TO_DEVICE);
--	if (dma_mapping_error(dev->dev, addr))
-+	if (unlikely(dma_mapping_error(dev->dev, addr)))
- 		goto free;
- 
- 	tx_info.buf[n].addr = t->dma_addr;
-@@ -329,7 +329,7 @@
- 
- 		addr = dma_map_single(dev->dev, iter->data, iter->len,
- 				      DMA_TO_DEVICE);
--		if (dma_mapping_error(dev->dev, addr))
-+		if (unlikely(dma_mapping_error(dev->dev, addr)))
- 			goto unmap;
- 
- 		tx_info.buf[n].addr = addr;
-@@ -386,7 +386,7 @@
- 			break;
- 
- 		addr = dma_map_single(dev->dev, buf, len, DMA_FROM_DEVICE);
--		if (dma_mapping_error(dev->dev, addr)) {
-+		if (unlikely(dma_mapping_error(dev->dev, addr))) {
- 			skb_free_frag(buf);
- 			break;
- 		}
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e17ebf7..7d92a87 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9768,6 +9768,8 @@ F:	Documentation/devicetree/bindings/media/mediatek-vpu.txt
+ MEDIATEK MT76 WIRELESS LAN DRIVER
+ M:	Felix Fietkau <nbd@nbd.name>
+ M:	Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
++R:	Ryder Lee <ryder.lee@mediatek.com>
++R:	Roy Luo <royluo@google.com>
+ L:	linux-wireless@vger.kernel.org
+ S:	Maintained
+ F:	drivers/net/wireless/mediatek/mt76/
 -- 
 1.9.1
 
