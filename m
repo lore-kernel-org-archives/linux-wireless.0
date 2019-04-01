@@ -2,122 +2,95 @@ Return-Path: <SRS0=CFp0=SD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5CBFC10F05
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 15:39:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D5EBC43381
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 20:46:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8819D20880
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 15:39:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDE1E20857
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 20:46:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=bobcopeland-com.20150623.gappssmtp.com header.i=@bobcopeland-com.20150623.gappssmtp.com header.b="nWRFDUC8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727190AbfDAPja (ORCPT
+        id S1727019AbfDAUqP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Apr 2019 11:39:30 -0400
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:45246 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726905AbfDAPja (ORCPT
+        Mon, 1 Apr 2019 16:46:15 -0400
+Received: from mail-it1-f194.google.com ([209.85.166.194]:52703 "EHLO
+        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726109AbfDAUqO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Apr 2019 11:39:30 -0400
-Received: by mail-qt1-f195.google.com with SMTP id v20so11086468qtv.12
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Apr 2019 08:39:30 -0700 (PDT)
+        Mon, 1 Apr 2019 16:46:14 -0400
+Received: by mail-it1-f194.google.com with SMTP id g17so1459640ita.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Apr 2019 13:46:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bobcopeland-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=FavsM46h4CZKEcsfAQHLvOm2VBMwaDevdw0eQHm/J8Y=;
+        b=nWRFDUC84gItK3k53YS9uwvUHGS2rNl8bcP1iR7v4VplPp6+CPxKLlVUfFKVXjzV7u
+         lHE6sKjw8tpxb709zRQIxv8x9J8dyYbtahdGeD74kLS9S6AaIZTbGisH0md0mu1zETUc
+         FZvyfruAYOGU01u5nPqVLNnGzxdBdQdV+AWVLazFILS/IcD/jSKd2+WdVMOn082UZCUS
+         Taiw6u66bYzMIF0SIpX8mmE0GaYBLVbiYhGlFF28cCMVefkQ8qOuC5rHGeUlJ/iEz7Nw
+         GbFtiwMe9CA/cpsvxM5NjsaxuAc4JLgc4XZUiFCH0IEJx37PP5FA1jH6Me/F5ocqaPD5
+         TJCg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=gBxLW53d+ZRCybLNVSS/VBL4MZakdmMI6ZYXMCl28Y8=;
-        b=IgO6WMdqK3qbdbDVp3yevB/po3M62kdaKhSe9+0Y2LJ7tFLSci1hJ0XoTMK1p6q9B6
-         M8cVY3PxG03m3idxVeoVBLOkEOJ0NAxjfhvQnh6wKCIN13GzslrMG9c27cPYYOPTDxEo
-         73bvaVXkJIeCZHFhLG6HmxnJr5hFcUdSPlRzIOhT6h4oaMjg9zSthF/fhvPtQbY4ZLab
-         Ok1yjNa4SpiGl9VXQma2CXaT2lNAX6qt50Yr15gODsQ3pqjNXm5g6Vx7R72FejXgnNrr
-         5c73BSZaWHahVd2CvDzItkaZ7PNWFnKhQavXZCdVv5YsZaxCdrsuZbx/DVcyEE4aqbc/
-         eW6A==
-X-Gm-Message-State: APjAAAVdBFT1utjBLxhx0JzZc/ja1ThqFcvCTvrZhFNTWaHLMIafW6b1
-        qQrastMcXt6DmHgZcBrSeIv2RQ==
-X-Google-Smtp-Source: APXvYqxsZTTAvWfeUg60NgDxZkZg2oN5HSx4K1OFnKed7mF5ZJSQGr2dZgLeYsN60aceHRNRrPf6Fw==
-X-Received: by 2002:ac8:18e6:: with SMTP id o35mr53823517qtk.80.1554133169725;
-        Mon, 01 Apr 2019 08:39:29 -0700 (PDT)
-Received: from ?IPv6:2601:602:9800:dae6::fa4a? ([2601:602:9800:dae6::fa4a])
-        by smtp.gmail.com with ESMTPSA id w8sm5440314qki.54.2019.04.01.08.39.27
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 01 Apr 2019 08:39:28 -0700 (PDT)
-Subject: Re: [PATCH] iwlwifi: properly check debugfs dentry before using it
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Luca Coelho <luca@coelho.fi>
-Cc:     linux-kernel@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=FavsM46h4CZKEcsfAQHLvOm2VBMwaDevdw0eQHm/J8Y=;
+        b=eirP0BSim6eubzTP3G1huBpJo7Ujc0bTppGzP0PXG+R+3dvtZSM3onc4Tq+be8GLPm
+         NOWa4UFXNv0mQ2bK078iaRbEcObZf34+H8WDLj2Ki7y4LdrLtXDoo32dc/IweChUrjHG
+         BT9ob2+pk0vDpCqW8zBIGlabrlliKYnwZ9VgkKR/qkBUfCZbEJjNltx5w5HZ25DPslqQ
+         cJrKSbghf3Whq9UXhdJqqoZJ7z9cTTIMdn1BytRUmfmcjBTIY81MGBavXmIO0oNYiPJ6
+         S/rDIXRcFedaxcQJBrp6SmvTgIiuSTNiNPhWf/6Fvn80rQjXhnw8Dz6K0TxZRknx3nQn
+         HLRA==
+X-Gm-Message-State: APjAAAXYRsk/CUy1ElHnIOtqdB7C1gRtpd2DsvjxFkLxUvFbCxXKtanN
+        gIj5iRH2NCc+xymjpKSOIE2ZDg==
+X-Google-Smtp-Source: APXvYqxT1xEGPDO7pP4+cMsPmepvpTAVQW+bJ68kz830vHuiDcIcRodjuJ0PG5nQg/kpXcRb3zjS6Q==
+X-Received: by 2002:a24:1451:: with SMTP id 78mr1284125itg.51.1554151573921;
+        Mon, 01 Apr 2019 13:46:13 -0700 (PDT)
+Received: from hash (CPE30b5c2fb365b-CM18593342f28f.cpe.net.cable.rogers.com. [99.232.51.173])
+        by smtp.gmail.com with ESMTPSA id n124sm5806437itg.2.2019.04.01.13.46.12
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 01 Apr 2019 13:46:12 -0700 (PDT)
+Received: from bob by hash with local (Exim 4.92-RC6)
+        (envelope-from <me@bobcopeland.com>)
+        id 1hB3oq-0002Q7-2f; Mon, 01 Apr 2019 16:46:12 -0400
+Date:   Mon, 1 Apr 2019 16:46:12 -0400
+From:   Bob Copeland <me@bobcopeland.com>
+To:     Balaji Pothunoori <bpothuno@codeaurora.org>
+Cc:     johannes@sipsolutions.net, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>,
-        stable <stable@vger.kernel.org>
-References: <20190122152151.16139-24-gregkh@linuxfoundation.org>
- <03bb68be-8e42-a463-2d57-3be051dc2016@redhat.com>
- <20190327012600.GA3649@kroah.com>
- <5660d50d-6cbf-3b36-6e6c-312b1617ed23@redhat.com>
- <20190327015346.GA17979@kroah.com>
- <5f9c8beda0e925b079aa9342ce1c9523659837a4.camel@coelho.fi>
- <20190330092247.GA14300@kroah.com> <20190330093152.GB14300@kroah.com>
-From:   Laura Abbott <labbott@redhat.com>
-Message-ID: <50bffbea-69b5-71f4-0b9c-aead1ffc54da@redhat.com>
-Date:   Mon, 1 Apr 2019 08:39:26 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.0
+        Ashok Raj Nagarajan <arnagara@codeaurora.org>
+Subject: Re: [PATCH v4 1/3] cfg80211: Add support to set tx power for a
+ station associated
+Message-ID: <20190401204611.GA8910@localhost>
+References: <1553856501-21492-1-git-send-email-bpothuno@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20190330093152.GB14300@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1553856501-21492-1-git-send-email-bpothuno@codeaurora.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/30/19 2:31 AM, Greg Kroah-Hartman wrote:
-> debugfs can now report an error code if something went wrong instead of
-> just NULL.  So if the return value is to be used as a "real" dentry, it
-> needs to be checked if it is an error before dereferencing it.
-> 
-> This is now happening because of ff9fb72bc077 ("debugfs: return error
-> values, not NULL").  If multiple iwlwifi devices are in the system, this
-> can cause problems when the driver attempts to create the main debugfs
-> directory again.  Later on in the code we fail horribly by trying to
-> dereference a pointer that is an error value.
-> 
-> Reported-by: Laura Abbott <labbott@redhat.com>
+Hi Balaji,
 
-Can you add
+I started playing with these patches a bit -- they could be useful for
+my use case, but I had a question:
 
-Reported-by:  Gabriel Ramirez <gabriello.ramirez@gmail.com>
+> + * @power: tx power (in dBm) to be used for sending data traffic. If tx power
+> + *	is not provided, the default per-interface tx power setting will be
+> + *	overriding. Driver should be picking up the lowest tx power, either tx
+> + *	power per-interface or per-station.
 
-for the bugzilla reporter who took the time to do the bisect?
-I'll ask for testing as well.
+Should this really dBm?  It's a bit asymmetric for WIPHY_TX_POWER_LEVEL to
+use mBm and this to use dBm, and I might want to adjust in half-dB steps if
+supported by hardware.  Also allocating an s16 is a bit much for dBm.
 
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Cc: Luca Coelho <luciano.coelho@intel.com>
-> Cc: Intel Linux Wireless <linuxwifi@intel.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: stable <stable@vger.kernel.org> # 5.0
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> 
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-> index 2453ceabf00d..6925527d8457 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-> @@ -774,8 +774,7 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
->   		return;
->   
->   	mvmvif->dbgfs_dir = debugfs_create_dir("iwlmvm", dbgfs_dir);
-> -
-> -	if (!mvmvif->dbgfs_dir) {
-> +	if (IS_ERR_OR_NULL(mvmvif->dbgfs_dir)) {
->   		IWL_ERR(mvm, "Failed to create debugfs directory under %pd\n",
->   			dbgfs_dir);
->   		return;
-> 
-
+-- 
+Bob Copeland %% https://bobcopeland.com/
