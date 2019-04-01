@@ -2,175 +2,98 @@ Return-Path: <SRS0=CFp0=SD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61F35C43381
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 09:21:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A78C6C43381
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 09:46:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 30E05214C6
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 09:21:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YJxHPn1A";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="H1esYJOS"
+	by mail.kernel.org (Postfix) with ESMTP id 817C720896
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 09:46:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726495AbfDAJVB (ORCPT
+        id S1725882AbfDAJqj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Apr 2019 05:21:01 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:46360 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725821AbfDAJVB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Apr 2019 05:21:01 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id CF6BE61EA4; Mon,  1 Apr 2019 09:20:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554110460;
-        bh=qUPu6XBJvIgo98+m3rbdKAKKv7ZDCo1J8L8qcFZPZB4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YJxHPn1As8kgKkORd6tLWWnBIm0RGR24rfPrlmd7Hey+QDu02Auarxvswpe5PgdHv
-         YcniTfAzm4+w8+gpPqisJZyj2HSoS+HRP01TIfRBY7UfdYufABdnbe5hAWG3BnhGjy
-         G1Uw5EImd6axJUh4i5tVC+nz8VimsvGoV9phqVAI=
-Received: from govinds-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        Mon, 1 Apr 2019 05:46:39 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:34986 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725820AbfDAJqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Apr 2019 05:46:39 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: govinds@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6A96161F3D;
-        Mon,  1 Apr 2019 09:20:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554110459;
-        bh=qUPu6XBJvIgo98+m3rbdKAKKv7ZDCo1J8L8qcFZPZB4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=H1esYJOSoSImo1k6AYIoJ1+/Gkh04Pxf4NrepQLWmJ3LWUJjSnrjt+qFa13eim8Ne
-         eMRBdXXOU8MLC5OP9VnGR/Zp1GhISNB3+6G5LeHXQN78flrCEilssFVzo9lr2BSkny
-         wckiGl5kpNJ8jdMmFd3/PEMXVIrI40dUSDdnIZ1s=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6A96161F3D
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=govinds@codeaurora.org
-From:   Govind Singh <govinds@codeaurora.org>
-To:     ath10k@lists.infradead.org, robh@kernel.org
-Cc:     linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v3 2/2] ath10k: Add xo calibration support for wifi rf clock
-Date:   Mon,  1 Apr 2019 14:49:26 +0530
-Message-Id: <20190401091926.19119-3-govinds@codeaurora.org>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190401091926.19119-1-govinds@codeaurora.org>
-References: <20190401091926.19119-1-govinds@codeaurora.org>
+        by mx1.redhat.com (Postfix) with ESMTPS id 6B39981106;
+        Mon,  1 Apr 2019 09:46:38 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.159])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5E7BA1A7D4;
+        Mon,  1 Apr 2019 09:46:35 +0000 (UTC)
+Date:   Mon, 1 Apr 2019 11:46:34 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Ryder Lee <ryder.lee@mediatek.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>, Roy Luo <royluo@google.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Nelson Chang <nelson.chang@mediatek.com>,
+        YF Luo <yf.luo@mediatek.com>, Kai Lin <kai.lin@mediatek.com>,
+        Rorscha Yang <rorscha.yang@mediatek.com>,
+        Kyle Lee <kyle.lee@mediatek.com>,
+        Miller Shen <miller.shen@mediatek.com>,
+        Haipin Liang <haipin.liang@mediatek.com>,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org, Lorenzo Bianconi <lorenzo@kernel.org>
+Subject: Re: [PATCH 1/4] mt76: add mac80211 driver for MT7615 PCIe-based
+ chipsets
+Message-ID: <20190401094633.GC19802@redhat.com>
+References: <cover.1553607739.git.ryder.lee@mediatek.com>
+ <2849359e0b0ede6c13ae9f142aff77a016fd0a80.1553607739.git.ryder.lee@mediatek.com>
+ <87lg0wyjvj.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87lg0wyjvj.fsf@purkki.adurom.net>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Mon, 01 Apr 2019 09:46:38 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-PMIC XO is the clock source for wifi rf clock in integrated wifi
-chipset ex: WCN3990. Due to board layout errors XO frequency drifts
-can cause wifi rf clock inaccuracy.
-XO calibration test tree in Factory Test Mode is used to find the
-best frequency offset(for example +/-2KHz )by programming XO trim
-register. This ensure system clock stays within required 20 ppm
-WLAN rf clock.
+On Sat, Mar 30, 2019 at 08:08:32AM +0200, Kalle Valo wrote:
+> Ryder Lee <ryder.lee@mediatek.com> writes:
+> 
+> > This driver is for a newer generation of MediaTek MT7615 4x4 802.11ac
+> > PCIe-based chipsets, which support wave2 MU-MIMO up to 4 users/group
+> > and also support up to 160MHz bandwidth.
+> >
+> > The driver fully supports AP, station and monitor mode.
+> >
+> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> > Signed-off-by: Roy Luo <royluo@google.com>
+> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> 
+> [...]
+> 
+> > --- /dev/null
+> > +++ b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
+> > @@ -0,0 +1,204 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> 
+> mt76 is under ISC so why did you choose GPLv2 here? I don't think it's a
+> good idea to use different licenses within the same driver.
 
-Retrieve the xo trim offset via system firmware (e.g., device tree),
-especially in the case where the device doesn't have a useful EEPROM
-on which to store the calibrated XO offset (e.g., for integrated Wifi).
-Calibrated XO offset is sent to fw, which compensate the clock drift
-by programing the XO trim register.
+mt76x0 is GPL only as some parts of it are modified copy of either out
+of tree Mediatek GPL driver or Jakub's mt7601u also realised under GPL.
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/qmi.c  | 12 ++++++++++++
- drivers/net/wireless/ath/ath10k/snoc.c | 11 +++++++++++
- drivers/net/wireless/ath/ath10k/snoc.h |  2 ++
- 3 files changed, 25 insertions(+)
+Is ISC equal to "Dual BSD/GPL" what is marked by MODULE_LICENSE ?
+I think this should be clarified too.
 
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-index 37b3bd629f48..99c140a6628d 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.c
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -302,10 +302,16 @@ static int ath10k_qmi_send_cal_report_req(struct ath10k_qmi *qmi)
- 	struct wlfw_cal_report_resp_msg_v01 resp = {};
- 	struct wlfw_cal_report_req_msg_v01 req = {};
- 	struct ath10k *ar = qmi->ar;
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
- 	struct qmi_txn txn;
- 	int i, j = 0;
- 	int ret;
- 
-+	if (ar_snoc->xo_cal_supported) {
-+		req.xo_cal_data_valid = 1;
-+		req.xo_cal_data = ar_snoc->xo_cal_data;
-+	}
-+
- 	ret = qmi_txn_init(&qmi->qmi_hdl, &txn, wlfw_cal_report_resp_msg_v01_ei,
- 			   &resp);
- 	if (ret < 0)
-@@ -636,6 +642,7 @@ ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
- 	struct wlfw_ind_register_resp_msg_v01 resp = {};
- 	struct wlfw_ind_register_req_msg_v01 req = {};
- 	struct ath10k *ar = qmi->ar;
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
- 	struct qmi_txn txn;
- 	int ret;
- 
-@@ -646,6 +653,11 @@ ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
- 	req.msa_ready_enable_valid = 1;
- 	req.msa_ready_enable = 1;
- 
-+	if (ar_snoc->xo_cal_supported) {
-+		req.xo_cal_enable_valid = 1;
-+		req.xo_cal_enable = 1;
-+	}
-+
- 	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
- 			   wlfw_ind_register_resp_msg_v01_ei, &resp);
- 	if (ret < 0)
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 54efe6be8f1d..a7f837f4dc53 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -20,6 +20,7 @@
- #include <linux/of.h>
- #include <linux/of_device.h>
- #include <linux/platform_device.h>
-+#include <linux/property.h>
- #include <linux/regulator/consumer.h>
- 
- #include "ce.h"
-@@ -1189,6 +1190,16 @@ static int ath10k_snoc_resource_init(struct ath10k *ar)
- 		ar_snoc->ce_irqs[i].irq_line = res->start;
- 	}
- 
-+	ret = device_property_read_u32(&pdev->dev, "qcom,xo-cal-data",
-+				       &ar_snoc->xo_cal_data);
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc xo-cal-data return %d\n", ret);
-+	if (ret == 0) {
-+		ar_snoc->xo_cal_supported = true;
-+		ath10k_dbg(ar, ATH10K_DBG_SNOC, "xo cal data %x\n",
-+			   ar_snoc->xo_cal_data);
-+	}
-+	ret = 0;
-+
- out:
- 	return ret;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.h b/drivers/net/wireless/ath/ath10k/snoc.h
-index 2b2f23cf7c5d..25383de8f17d 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.h
-+++ b/drivers/net/wireless/ath/ath10k/snoc.h
-@@ -91,6 +91,8 @@ struct ath10k_snoc {
- 	struct ath10k_clk_info *clk;
- 	struct ath10k_qmi *qmi;
- 	unsigned long int flags;
-+	bool xo_cal_supported;
-+	u32 xo_cal_data;
- };
- 
- static inline struct ath10k_snoc *ath10k_snoc_priv(struct ath10k *ar)
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+> Also mt76 does not use SPDX tags yet. I would prefer that the whole
+> driver is converted in one go to have consistent licensing information.
 
+Agree. However not sure if we can unify of all mt76 code to the same
+license (and which one: GPL ?), but at least we can convert source 
+files to SPDX identifier.
+
+Stanislaw
