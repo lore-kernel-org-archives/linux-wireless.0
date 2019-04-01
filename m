@@ -7,37 +7,40 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A986EC43381
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 07:17:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C088FC43381
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 07:17:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 83CBA20896
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 07:17:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A55C20896
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Apr 2019 07:17:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731947AbfDAHRD (ORCPT
+        id S1731906AbfDAHQz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Apr 2019 03:17:03 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:2923 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731898AbfDAHQz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 1 Apr 2019 03:16:55 -0400
-X-UUID: fda522bb369c4ce3ad6701d3c7a79b79-20190401
-X-UUID: fda522bb369c4ce3ad6701d3c7a79b79-20190401
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+Received: from mailgw01.mediatek.com ([210.61.82.183]:44976 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731888AbfDAHQx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Apr 2019 03:16:53 -0400
+X-UUID: ba8bde23ba0d4f7a8d4286da09e07c73-20190401
+X-UUID: ba8bde23ba0d4f7a8d4286da09e07c73-20190401
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 1142359240; Mon, 01 Apr 2019 15:16:49 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+        with ESMTP id 1916109555; Mon, 01 Apr 2019 15:16:48 +0800
+Received: from MTKMBS01DR.mediatek.inc (172.21.101.111) by
+ mtkexhb01.mediatek.inc (172.21.101.102) with Microsoft SMTP Server (TLS) id
  15.0.1395.4; Mon, 1 Apr 2019 15:16:47 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs01dr.mediatek.inc (172.21.101.111) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Mon, 1 Apr 2019 15:16:46 +0800
 Received: from mtkslt306.mediatek.inc (10.21.14.136) by mtkcas07.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 1 Apr 2019 15:16:47 +0800
+ Transport; Mon, 1 Apr 2019 15:16:46 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Felix Fietkau <nbd@nbd.name>
 CC:     Roy Luo <royluo@google.com>, Sean Wang <sean.wang@mediatek.com>,
-        Nelson Chang <nelson.chang@mediatek.com>,
+        "Nelson Chang" <nelson.chang@mediatek.com>,
         YF Luo <yf.luo@mediatek.com>, Kai Lin <kai.lin@mediatek.com>,
         Rorscha Yang <rorscha.yang@mediatek.com>,
         Kyle Lee <kyle.lee@mediatek.com>,
@@ -47,42 +50,85 @@ CC:     Roy Luo <royluo@google.com>, Sean Wang <sean.wang@mediatek.com>,
         YH chen <yh.chen@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v3 4/4] MAINTAINERS : update entry for mt76 wireless driver
-Date:   Mon, 1 Apr 2019 15:16:44 +0800
-Message-ID: <ce2f7b967021b9c3e64aa846084a816efd7f6002.1554102584.git.ryder.lee@mediatek.com>
+        <linux-kernel@vger.kernel.org>,
+        "Ryder Lee" <ryder.lee@mediatek.com>
+Subject: [PATCH v3 3/4] mt76: use macro for sn and seq_ctrl conversion
+Date:   Mon, 1 Apr 2019 15:16:43 +0800
+Message-ID: <64e6331f3ddbd0a1f254fb3dfc3bed732ba64bf2.1554102584.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <cover.1554102584.git.ryder.lee@mediatek.com>
 References: <cover.1554102584.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 2BB8D97884A486168A52FCFD5260C0EE031937706E13C765D8FD80244D11E2ED2000:8
 X-MTK:  N
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Roy and I actively join the development and review.
+Use macro to convert sn and seq_ctrl for better readability.
 
+Signed-off-by: Roy Luo <royluo@google.com>
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- MAINTAINERS | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/mediatek/mt76/agg-rx.c       | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7603/mac.c   | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7603/main.c  | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e17ebf7..7d92a87 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9768,6 +9768,8 @@ F:	Documentation/devicetree/bindings/media/mediatek-vpu.txt
- MEDIATEK MT76 WIRELESS LAN DRIVER
- M:	Felix Fietkau <nbd@nbd.name>
- M:	Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-+R:	Ryder Lee <ryder.lee@mediatek.com>
-+R:	Roy Luo <royluo@google.com>
- L:	linux-wireless@vger.kernel.org
- S:	Maintained
- F:	drivers/net/wireless/mediatek/mt76/
+diff --git a/drivers/net/wireless/mediatek/mt76/agg-rx.c b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+index 73c8b28..27e3ff0 100644
+--- a/drivers/net/wireless/mediatek/mt76/agg-rx.c
++++ b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+@@ -135,7 +135,7 @@
+ 		return;
+ 
+ 	status->tid = le16_to_cpu(bar->control) >> 12;
+-	seqno = le16_to_cpu(bar->start_seq_num) >> 4;
++	seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(bar->start_seq_num));
+ 	tid = rcu_dereference(wcid->aggr[status->tid]);
+ 	if (!tid)
+ 		return;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+index e498169..2f2961e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+@@ -627,7 +627,7 @@ void mt7603_mac_tx_ba_reset(struct mt7603_dev *dev, int wcid, int tid, int ssn,
+ 	status->aggr = unicast &&
+ 		       !ieee80211_is_qos_nullfunc(hdr->frame_control);
+ 	status->tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+-	status->seqno = hdr->seq_ctrl >> 4;
++	status->seqno = IEEE80211_SEQ_TO_SN(hdr->seq_ctrl);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+index 5d38392..0c78044 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+@@ -594,7 +594,7 @@
+ 		mt7603_mac_tx_ba_reset(dev, msta->wcid.idx, tid, *ssn, -1);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+-		mtxq->agg_ssn = *ssn << 4;
++		mtxq->agg_ssn = IEEE80211_SN_TO_SEQ(*ssn);
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP_CONT:
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index b137ce8..f0e1e12 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -378,7 +378,7 @@ int mt76x02_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		ieee80211_send_bar(vif, sta->addr, tid, mtxq->agg_ssn);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+-		mtxq->agg_ssn = *ssn << 4;
++		mtxq->agg_ssn = IEEE80211_SN_TO_SEQ(*ssn);
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP_CONT:
 -- 
 1.9.1
 
