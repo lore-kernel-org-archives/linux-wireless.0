@@ -1,121 +1,114 @@
-Return-Path: <SRS0=bKPU=SE=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=OUAD=SF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED0BDC4360F
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Apr 2019 22:37:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8AB9C4360F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 03:01:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC1E720700
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Apr 2019 22:37:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A28A2204EC
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 03:01:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bobcopeland-com.20150623.gappssmtp.com header.i=@bobcopeland-com.20150623.gappssmtp.com header.b="UzTYJ5Oz"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wl//zg05";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wl//zg05"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726154AbfDBWhM (ORCPT
+        id S1726760AbfDCDBv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Apr 2019 18:37:12 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:45125 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726071AbfDBWhL (ORCPT
+        Tue, 2 Apr 2019 23:01:51 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:43552 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726130AbfDCDBv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Apr 2019 18:37:11 -0400
-Received: by mail-io1-f67.google.com with SMTP id s7so12356945iom.12
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2019 15:37:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bobcopeland-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=C4Y3+FQE8LR/DItATdDJ7c2PykcdyvSuhWsbJ/T+O6E=;
-        b=UzTYJ5OzJY9npNS7RHZu5SSKXdclpece2OVE4O5jmkFNPbMwiuPUefQwyfbEAbXVkS
-         Kji30NM2zEOZklx9oqYPRYxdYkE2CJgcZ15m3ifDo5t87uQ/BddbO92E8E/FsR9my4ni
-         pirdsriIhkWALIc47whZfDx9JWoxX0biuRaQOK/YXbH5QprXsZPilJo5X3XRC2w5gtAW
-         Oh0QYyRqGklyQi6xYawquGodyywTrbcsTF3FqptP/7NOFrayFty4PZZZNFQTktJKBFp0
-         jVYfGufEGxbcTozoZHGjXPt+/mZj48fBf3gZtoH4shl4An56jJppHhqH/REQlXodRbcn
-         BTpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=C4Y3+FQE8LR/DItATdDJ7c2PykcdyvSuhWsbJ/T+O6E=;
-        b=HrRixPBKWwvYo3RprcEo1qK2QB7PdGtjTOyXnlY/ThOOzXvWYC+hdX9dHHvB3LRL/p
-         me8QalnhEoTWNqjeZqpO0tmtlyYccpcJBGMiVuPxYIMn9aapLuedRq9DXGoSnoqqd3SH
-         msSzCZxALMW9Eee8iSsPJDXfFffQU0itjTD+b+NT/bWocQQPFKVvzB/IgBppWCtbpbol
-         rvaL0dJWYIqZ0EwDWWobo5b1UbuEL01cN2g116n0/sESmRLlkrzZ2qZ+6NRuffOCGzVg
-         +GUtsJLMd6V+/oaoKVIdwV95N7YqYHw3RNKWRc1zLODB81RGc0IUSDbyPwJSWm4VgYFn
-         SGnw==
-X-Gm-Message-State: APjAAAXlCI1D7Zote2OBGvrzgk+jKTDGZbSbRv5l78qr0B+lsz2Mq75m
-        wlc90hqy9TLS4pw+NuYSNnTk7Q==
-X-Google-Smtp-Source: APXvYqwuguNytTZte6kiBbzylm+RfdZ/s7vUz4nR4hWgqREYyhI3hRF6LgvP2/JnHhfNGaIuM+LjvA==
-X-Received: by 2002:a6b:7b03:: with SMTP id l3mr33287381iop.250.1554244630897;
-        Tue, 02 Apr 2019 15:37:10 -0700 (PDT)
-Received: from hash (CPE30b5c2fb365b-CM18593342f28f.cpe.net.cable.rogers.com. [99.232.51.173])
-        by smtp.gmail.com with ESMTPSA id w6sm5697875iom.22.2019.04.02.15.37.09
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 02 Apr 2019 15:37:09 -0700 (PDT)
-Received: from bob by hash with local (Exim 4.92-RC6)
-        (envelope-from <me@bobcopeland.com>)
-        id 1hBS1l-0002Du-4i; Tue, 02 Apr 2019 18:37:09 -0400
-Date:   Tue, 2 Apr 2019 18:37:09 -0400
-From:   Bob Copeland <me@bobcopeland.com>
-To:     Balaji Pothunoori <bpothuno@codeaurora.org>
-Cc:     johannes@sipsolutions.net, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Ashok Raj Nagarajan <arnagara@codeaurora.org>
-Subject: Re: [PATCH v4 3/3] ath10k: add support for controlling tx power to a
- station
-Message-ID: <20190402223709.GB8910@localhost>
-References: <1553856587-21611-1-git-send-email-bpothuno@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1553856587-21611-1-git-send-email-bpothuno@codeaurora.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Tue, 2 Apr 2019 23:01:51 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 9D6EE60590; Wed,  3 Apr 2019 03:01:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554260510;
+        bh=lMe6o8B2AhfkHpDYFEl/mJmX0XlcMCrr5a643xu5/38=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Wl//zg05eRiGSPTGpA7fDyzfNdNk9WKSZ7MnCd8uQv5KC4UiM89PZfXOVjdO5Wvy3
+         4RavZ/2PCkdFOeKqhZSZUeAYqbcZ2NZ7dyxZWK62SxGwygyCzqGs5DPjtYuJUV+oLo
+         BKC6AddHOa7KDO3PHQJHvyVyIvq7oe+iiO5CTQ7E=
+Received: from localhost.localdomain (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 29ECC60452;
+        Wed,  3 Apr 2019 03:01:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554260510;
+        bh=lMe6o8B2AhfkHpDYFEl/mJmX0XlcMCrr5a643xu5/38=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Wl//zg05eRiGSPTGpA7fDyzfNdNk9WKSZ7MnCd8uQv5KC4UiM89PZfXOVjdO5Wvy3
+         4RavZ/2PCkdFOeKqhZSZUeAYqbcZ2NZ7dyxZWK62SxGwygyCzqGs5DPjtYuJUV+oLo
+         BKC6AddHOa7KDO3PHQJHvyVyIvq7oe+iiO5CTQ7E=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 29ECC60452
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: add peer id check in ath10k_peer_find_by_id
+Date:   Wed,  3 Apr 2019 11:01:18 +0800
+Message-Id: <1554260478-4161-1-git-send-email-wgong@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Mar 29, 2019 at 04:19:47PM +0530, Balaji Pothunoori wrote:
-> From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-> 
-> This patch will add the support to control the transmit power for traffic
-> to a station associated with the AP.
-> 
-> Underlying firmware will enforce that the maximum tx power will be based
-> on the regulatory requirements. If the user given transmit power is greater
-> than the allowed tx power in the given channel, then the firmware will use
-> the maximum tx power in the same channel.
-> 
-> When 0 is sent to the firmware as tx power, it will revert to the default
-> tx power for the station.
-> 
-> Tested Hardware : QCA9984
-> Tested Firmware : 10.4-3.9.0.1-00013
+For some SDIO chip, the peer id is 65535 for MPDU with error status,
+then test_bit will trigger buffer overflow for peer's memory, if kasan
+enabled, it will report error.
 
-I tried this on qca9984 with 10.4-3.9.0.2-00040, which claims to support
-this feature, and it didn't seem to work:
+Add check for overflow the size of peer's peer_ids will avoid the buffer
+overflow access.
 
-- with global tx power limit set to 30 dBm, I started an iperf from station
-  A -> B
+Call trace of kasan:
+dump_backtrace+0x0/0x2ec
+show_stack+0x20/0x2c
+__dump_stack+0x20/0x28
+dump_stack+0xc8/0xec
+print_address_description+0x74/0x240
+kasan_report+0x250/0x26c
+__asan_report_load8_noabort+0x20/0x2c
+ath10k_peer_find_by_id+0x180/0x1e4 [ath10k_core]
+ath10k_htt_t2h_msg_handler+0x100c/0x2fd4 [ath10k_core]
+ath10k_htt_htc_t2h_msg_handler+0x20/0x34 [ath10k_core]
+ath10k_sdio_irq_handler+0xcc8/0x1678 [ath10k_sdio]
+process_sdio_pending_irqs+0xec/0x370
+sdio_run_irqs+0x68/0xe4
+sdio_irq_work+0x1c/0x28
+process_one_work+0x3d8/0x8b0
+worker_thread+0x508/0x7cc
+kthread+0x24c/0x264
+ret_from_fork+0x10/0x18
 
-- while iperf underway, I did tcpdump on a monitor on B and looked at signal
-  level in radiotap, in this case around -75 dBm
+Tested with QCA6174 SDIO with firmware
+WLAN.RMH.4.4.1-00007-QCARMSWP-1.
 
-- on A, changed the per-sta txpwr limit for B to something (tried as low as
-  1 dBm).  verified via printk that it went through to the driver / firmware
-  command and reported no error
-  -> result: signal level unchanged
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/txrx.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-- on A, changed the global tx power limit to 1 dBm
-  -> result: signal level dropped to ~ -95 dBm
-
-Reading the description above, now I'm wondering if the txpower is
-max(sta-power,global-power)?  If so, that seems a bit unintuitive to me,
-or at least isn't what I hoped for.  I'd prefer to have per-sta power
-setting override the global power.
-
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 23606b6..33de9e1 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -157,6 +157,9 @@ struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
+ {
+ 	struct ath10k_peer *peer;
+ 
++	if (peer_id >= sizeof(peer->peer_ids) * BITS_PER_BYTE)
++		return NULL;
++
+ 	lockdep_assert_held(&ar->data_lock);
+ 
+ 	list_for_each_entry(peer, &ar->peers, list)
 -- 
-Bob Copeland %% https://bobcopeland.com/
+1.9.1
+
