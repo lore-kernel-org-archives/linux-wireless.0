@@ -2,115 +2,185 @@ Return-Path: <SRS0=OUAD=SF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2547CC10F0B
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 07:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F259C4360F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 07:23:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9E9D21473
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 07:16:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D30A820830
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 07:23:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nm0nsNJy"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ra1ct9CC";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="T7p8/Jjm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727346AbfDCHQK (ORCPT
+        id S1728696AbfDCHXJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Apr 2019 03:16:10 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:37504 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725936AbfDCHQK (ORCPT
+        Wed, 3 Apr 2019 03:23:09 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:34924 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725936AbfDCHXI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Apr 2019 03:16:10 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3379IXo076793;
-        Wed, 3 Apr 2019 07:16:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type : in-reply-to;
- s=corp-2018-07-02; bh=LE0uoSUKVmSxSJRJzkp5I4IG+yuvVP2PpG1nsDsaPAk=;
- b=nm0nsNJyIz5pLimP3II4DrlOyTG8HqdPPe5bTQYjyAvm+KC0cskKZS6KrR5QQTUyE/m3
- UfktATbX34ND73YhFXpILqaciw9VTpDPqOEfOo7lMP7FJOCyvay3f/4iI7495L8ic5NI
- b+s0V23ezWiUeyKAkxPFl3SD526zdB/rQ4JpLLGiWSQycWqm8/5Ibxot6HDTuwUtZR4c
- 1rU5TRddumKWK/aAPJmXPsAgBFx8bVSf+dy3vIIwWzyAxk4Lc7vHzGYoU7uJkwWVraYy
- dkgqoStz+r050GzT6HPdD9rkBULUEz8DmW64VP+EYubViG5hxM1v0zcDPSEnTHpmFkgp sQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2rj0dnpc9p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 Apr 2019 07:16:04 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x337DvBD084931;
-        Wed, 3 Apr 2019 07:14:03 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2rm8f4xf0y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 Apr 2019 07:14:03 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x337E2ih032499;
-        Wed, 3 Apr 2019 07:14:02 GMT
-Received: from kadam (/41.202.241.37)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 03 Apr 2019 00:14:01 -0700
-Date:   Wed, 3 Apr 2019 10:13:51 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
-Subject: [PATCH 2/2 net] nfc: nci: Potential off by one in ->pipes[] array
-Message-ID: <20190403071351.GB5758@kadam>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190403071248.GA5758@kadam>
-X-Mailer: git-send-email haha only kidding
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9215 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1904030049
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9215 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1904030049
+        Wed, 3 Apr 2019 03:23:08 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 6466F607EB; Wed,  3 Apr 2019 07:23:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554276187;
+        bh=PjR8g1A71+K+0Yge7Fbhkf4paFD5YuKUEPizcvQIBqU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Ra1ct9CCdGH3L3Q1DvOwUAVHMHsbI0NaAi9CrsQfQZ24cpQJXNITWqj2e1f3CasPp
+         Ls+zNz2CHfy0RbBJ+hUF0IlT3QnFc16hlZXq8s6Ak0cAI+3sE0CIoLsRzXFsmCwZLb
+         npW3NfvoCpkhkcUUfSprE0eM97nuDyclury5XbD0=
+Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: pillair@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 514EB606DB;
+        Wed,  3 Apr 2019 07:23:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554276186;
+        bh=PjR8g1A71+K+0Yge7Fbhkf4paFD5YuKUEPizcvQIBqU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=T7p8/JjmZ2K86gxRA+OWB0zCYrs73IAPFwiWZPPiUMCYzzh2yu37IVIpU6NUeANY8
+         G9WyGB1aT8BM0CFbbku095+xY5mWgZ2pMIhQSXLx6d1NPbrAD0fBfYWu9h/9PwPRpD
+         02fnw5f9qU/5BpB/NBc2XJBIIlsUxbY5PTeqKgH4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 514EB606DB
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
+From:   Rakesh Pillai <pillair@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH v2] ath10k: Report low ack rssi based on the reason code
+Date:   Wed,  3 Apr 2019 12:53:01 +0530
+Message-Id: <1554276181-7879-1-git-send-email-pillair@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is similar to commit e285d5bfb7e9 ("NFC: Fix the number of pipes")
-where we changed NFC_HCI_MAX_PIPES from 127 to 128.
+Firmware sends peer sta kickout event to the driver
+along with the reason code for a particular peer.
 
-As the comment next to the define explains, the pipe identifier is 7
-bits long.  The highest possible pipe is 127, but the number of possible
-pipes is 128.  As the code is now, then there is potential for an
-out of bounds array access:
+Currently the sta kickout event is delivered to the
+upper layer without checking if the reason code is
+valid or not. This causes frequent disconnection of
+the STA.
 
-    net/nfc/nci/hci.c:297 nci_hci_cmd_received() warn: array off by one?
-    'ndev->hci_dev->pipes[pipe]' '0-127 == 127'
+Report low ack rssi event to mac80211 only if the reason
+code is valid.
 
-Fixes: 11f54f228643 ("NFC: nci: Add HCI over NCI protocol support")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Tested HW: WCN3990
+Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 ---
- include/net/nfc/nci_core.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Changes from v1:
+- Added reason code in tlv structure, so that it does not break non-tlv wmi event parsing.
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 +++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  5 +++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |  9 ++++++---
+ drivers/net/wireless/ath/ath10k/wmi.h     | 11 +++++++++++
+ 4 files changed, 25 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index 87499b6b35d6..df5c69db68af 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -166,7 +166,7 @@ struct nci_conn_info {
-  * According to specification 102 622 chapter 4.4 Pipes,
-  * the pipe identifier is 7 bits long.
-  */
--#define NCI_HCI_MAX_PIPES          127
-+#define NCI_HCI_MAX_PIPES          128
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 582fb11..9d6ee92 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -876,7 +876,7 @@ static int ath10k_wmi_tlv_op_pull_peer_kick_ev(struct ath10k *ar,
+ 					       struct wmi_peer_kick_ev_arg *arg)
+ {
+ 	const void **tb;
+-	const struct wmi_peer_sta_kickout_event *ev;
++	const struct wmi_tlv_peer_sta_kickout_event *ev;
+ 	int ret;
  
- struct nci_hci_gate {
- 	u8 gate;
+ 	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
+@@ -893,6 +893,8 @@ static int ath10k_wmi_tlv_op_pull_peer_kick_ev(struct ath10k *ar,
+ 	}
+ 
+ 	arg->mac_addr = ev->peer_macaddr.addr;
++	arg->reason = __le32_to_cpu(ev->reason);
++	arg->reason_code_valid = true;
+ 
+ 	kfree(tb);
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index 65e6aa5..be68ac6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1984,6 +1984,11 @@ struct wmi_tlv_diag_data_ev {
+ 	__le32 num_items;
+ } __packed;
+ 
++struct wmi_tlv_peer_sta_kickout_event {
++	struct wmi_mac_addr peer_macaddr;
++	__le32 reason;
++} __packed;
++
+ struct wmi_tlv_sta_keepalive_cmd {
+ 	__le32 vdev_id;
+ 	__le32 enabled;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 98a90e4..6603c31 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3428,9 +3428,6 @@ void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar, struct sk_buff *skb)
+ 		return;
+ 	}
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event peer sta kickout %pM\n",
+-		   arg.mac_addr);
+-
+ 	rcu_read_lock();
+ 
+ 	sta = ieee80211_find_sta_by_ifaddr(ar->hw, arg.mac_addr, NULL);
+@@ -3440,6 +3437,12 @@ void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar, struct sk_buff *skb)
+ 		goto exit;
+ 	}
+ 
++	if (arg.reason_code_valid &&
++	    arg.reason == WMI_PEER_STA_KICKOUT_REASON_UNSPECIFIED)
++		goto exit;
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event peer sta kickout %pM reason code %d\n",
++		   arg.mac_addr, arg.reason);
+ 	ieee80211_report_low_ack(sta, 10);
+ 
+ exit:
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index e1c40bb..3ccd79e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6797,6 +6797,8 @@ struct wmi_vdev_start_ev_arg {
+ 
+ struct wmi_peer_kick_ev_arg {
+ 	const u8 *mac_addr;
++	u32 reason;
++	bool reason_code_valid;
+ };
+ 
+ struct wmi_swba_ev_arg {
+@@ -6887,6 +6889,15 @@ struct wmi_pdev_bss_chan_info_event {
+ 	__le32 reserved;
+ } __packed;
+ 
++enum wmi_peer_sta_kickout_reason {
++	WMI_PEER_STA_KICKOUT_REASON_UNSPECIFIED,
++	WMI_PEER_STA_KICKOUT_REASON_XRETRY,
++	WMI_PEER_STA_KICKOUT_REASON_INACTIVITY,
++	WMI_PEER_STA_KICKOUT_REASON_IBSS_DISCONNECT,
++	WMI_PEER_STA_KICKOUT_REASON_TDLS_DISCONNECT,
++	WMI_PEER_STA_KICKOUT_REASON_SA_QUERY_TIMEOUT,
++};
++
+ /* WOW structures */
+ enum wmi_wow_wakeup_event {
+ 	WOW_BMISS_EVENT = 0,
 -- 
-2.17.1
+2.7.4
 
