@@ -4,59 +4,58 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 175D3C4360F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 19:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D85CC10F0B
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 19:14:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF38720882
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 19:14:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39ED620882
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 19:14:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VYXZklr3";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aSCK5B0g"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="P+tT+T1O";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lZ0qbGvW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726510AbfDCTOz (ORCPT
+        id S1726530AbfDCTO4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Apr 2019 15:14:55 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:32928 "EHLO
+        Wed, 3 Apr 2019 15:14:56 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:32960 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726064AbfDCTOy (ORCPT
+        with ESMTP id S1726064AbfDCTOz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Apr 2019 15:14:54 -0400
+        Wed, 3 Apr 2019 15:14:55 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 8E7EB60AD1; Wed,  3 Apr 2019 19:14:53 +0000 (UTC)
+        id 507476115C; Wed,  3 Apr 2019 19:14:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554318893;
-        bh=qqf8vrwS6veWVc3Rbr/kks8k7kpDpAcuSNpOd7CEdY4=;
+        s=default; t=1554318895;
+        bh=8+6n5PUUog++kECr6I4FZsP48ZE2OMLKHM3N1KUvPEw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VYXZklr35A2H+3Vn9XTUvZpvppExCvX4cwVNwFbRJmfETxzIO5okJlPb2wKNoLJUQ
-         U+wGM+emsaiRCn3BHbf5DtDjccS4rCPKXuSVOeaQA1+YUQX3jJMocX2Z3h2hK5KTO2
-         iRvjXuzyfu8dnMXQSxaog+zLzpTArQFe+qOjSLEc=
+        b=P+tT+T1O9rctUaEsUzAbwX0czJoU7tmq/BV1YnCK2TBocEdae/nDlxpEt/4OOGnHf
+         WtYgjwxZqzKx9G242jIiduV2VV93NoZaG8Q9nZNGRz+Al61qcmrWcwWWCKibs6VEbT
+         cXZxLFYPmsu5TN9109vvZecxuDjnGPKSU4BNECzY=
 Received: from smtp.codeaurora.org (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1 with cipher AES128-SHA (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: rmanohar@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 671FD60907;
-        Wed,  3 Apr 2019 19:14:51 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8145A609CD;
+        Wed,  3 Apr 2019 19:14:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554318892;
-        bh=qqf8vrwS6veWVc3Rbr/kks8k7kpDpAcuSNpOd7CEdY4=;
+        s=default; t=1554318894;
+        bh=8+6n5PUUog++kECr6I4FZsP48ZE2OMLKHM3N1KUvPEw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aSCK5B0gKPbJFKYgUTW02NFXdeHyHtKWAZeaXAZngTv9QGao3xiI6yUjyj6yX+9MJ
-         MVI3pAqA+F4lS9wIhaj7LfOXhP09ubSIKhKdglktj2nT9ozLj/GBHVmtB7imhczTL0
-         RKkopdleYrLd/P7k7tUvtTQYSCrLwPJ+IOcY0T3s=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 671FD60907
+        b=lZ0qbGvWKXh6Alxtgg2W9gmNFE78Jt0cKbYfN7/bAeFYAgskI1BI2j7OMLJBfNtGW
+         eWCmxmVIMMxw6wAfvH0m27gBoKwBWLF84C08LxnHsHFd8naHrn0BuPcaQ1l2A6XA9R
+         PqisotZHy95s8ku1EzW2i1hy7Zw04BfIAkjS0vFM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8145A609CD
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
-Received: by smtp.codeaurora.org (sSMTP sendmail emulation); Wed, 03 Apr 2019 12:14:50 -0700
+Received: by smtp.codeaurora.org (sSMTP sendmail emulation); Wed, 03 Apr 2019 12:14:52 -0700
 From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [PATCH v3 1/3] cfg80211: add support to probe unexercised mesh link
-Date:   Wed,  3 Apr 2019 12:14:42 -0700
-Message-Id: <1554318884-22450-2-git-send-email-rmanohar@codeaurora.org>
+Subject: [PATCH v3 2/3] mac80211: add option for setting control flags
+Date:   Wed,  3 Apr 2019 12:14:43 -0700
+Message-Id: <1554318884-22450-3-git-send-email-rmanohar@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1554318884-22450-1-git-send-email-rmanohar@codeaurora.org>
 References: <1554318884-22450-1-git-send-email-rmanohar@codeaurora.org>
@@ -65,205 +64,122 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Adding support to allow mesh HWMP to measure link metrics on unexercised
-direct mesh path by sending some data frames to other mesh points which
-are not currently selected as a primary traffic path but only 1 hop away.
-The absence of the primary path to the chosen node makes it necessary to
-apply some form of marking on a chosen packet stream so that the packets
-can be properly steered to the selected node for testing, and not by the
-regular mesh path lookup.
+Allows setting of control flags of skb cb - if needed -
+when calling ieee80211_subif_start_xmit().
 
 Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
 ---
- include/net/cfg80211.h       |  6 +++++
- include/uapi/linux/nl80211.h | 16 +++++++++++++
- net/wireless/nl80211.c       | 54 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 13 +++++++++++
- net/wireless/trace.h         | 19 ++++++++++++++++
- 5 files changed, 108 insertions(+)
+ net/mac80211/ieee80211_i.h |  3 ++-
+ net/mac80211/tdls.c        |  2 +-
+ net/mac80211/tx.c          | 18 +++++++++++-------
+ 3 files changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 13bfeb712d36..ae8a57b79a6e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3436,6 +3436,9 @@ struct cfg80211_pmsr_request {
-  *	Statistics should be cumulative, currently no way to reset is provided.
-  * @start_pmsr: start peer measurement (e.g. FTM)
-  * @abort_pmsr: abort peer measurement
-+ *
-+ * @probe_mesh_link: Probe direct Mesh peer's link quality by sending data frame
-+ *	and overrule HWMP path selection algorithm.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3750,6 +3753,9 @@ struct cfg80211_ops {
- 			      struct cfg80211_pmsr_request *request);
- 	void	(*abort_pmsr)(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			      struct cfg80211_pmsr_request *request);
-+
-+	int	(*probe_mesh_link)(struct wiphy *wiphy, struct net_device *dev,
-+				   const u8 *buf, size_t len);
- };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e170f986d226..bf3906ba42dd 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1761,7 +1761,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				       struct net_device *dev);
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+-				  u32 info_flags);
++				  u32 info_flags,
++				  u32 ctrl_flags);
+ void ieee80211_purge_tx_queue(struct ieee80211_hw *hw,
+ 			      struct sk_buff_head *skbs);
+ struct sk_buff *
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index d30690d79a58..24c37f91ca46 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -1056,7 +1056,7 @@ static void ieee80211_tdls_add_ies(struct ieee80211_sub_if_data *sdata,
  
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index dd4f86ee286e..d4ec38f5934e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1065,6 +1065,21 @@
-  *	indicated by %NL80211_ATTR_WIPHY_FREQ and other attributes
-  *	determining the width and type.
+ 	/* disable bottom halves when entering the Tx path */
+ 	local_bh_disable();
+-	__ieee80211_subif_start_xmit(skb, dev, flags);
++	__ieee80211_subif_start_xmit(skb, dev, flags, 0);
+ 	local_bh_enable();
+ 
+ 	return ret;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 2e816dd67be7..f352ec9f150c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2431,6 +2431,7 @@ static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+  * @sdata: virtual interface to build the header for
+  * @skb: the skb to build the header in
+  * @info_flags: skb flags to set
++ * @ctrl_flags: info control flags to set
   *
-+ * @NL80211_CMD_PROBE_MESH_LINK: The requirement for mesh link metric
-+ *	refreshing, is that from one mesh point we be able to send some data
-+ *	frames to other mesh points which are not currently selected as a
-+ *	primary traffic path, but which are only 1 hop away. The absence of
-+ *	the primary path to the chosen node makes it necessary to apply some
-+ *	form of marking on a chosen packet stream so that the packets can be
-+ *	properly steered to the selected node for testing, and not by the
-+ *	regular mesh path lookup. Further, the packets must be of type data
-+ *	so that the rate control (often embedded in firmware) is used for
-+ *	rate selection.
-+ *
-+ *	Here attribute %NL80211_ATTR_MAC is used to specify connected mesh
-+ *	peer MAC address and %NL80211_ATTR_FRAME is used to specify the frame
-+ *	content. The frame is ethernet data.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
+  * This function takes the skb with 802.3 header and reformats the header to
+  * the appropriate IEEE 802.11 header based on which interface the packet is
+@@ -2446,7 +2447,7 @@ static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
   */
-@@ -1284,6 +1299,7 @@ enum nl80211_commands {
- 	NL80211_CMD_PEER_MEASUREMENT_COMPLETE,
+ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 					   struct sk_buff *skb, u32 info_flags,
+-					   struct sta_info *sta)
++					   struct sta_info *sta, u32 ctrl_flags)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_tx_info *info;
+@@ -2818,6 +2819,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	info->flags = info_flags;
+ 	info->ack_frame_id = info_id;
+ 	info->band = band;
++	info->control.flags = ctrl_flags;
  
- 	NL80211_CMD_NOTIFY_RADAR,
-+	NL80211_CMD_PROBE_MESH_LINK,
+ 	return skb;
+  free:
+@@ -3783,7 +3785,8 @@ void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac)
  
- 	/* add new commands above here */
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+-				  u32 info_flags)
++				  u32 info_flags,
++				  u32 ctrl_flags)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct sta_info *sta;
+@@ -3848,7 +3851,8 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		skb->prev = NULL;
+ 		skb->next = NULL;
  
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 47e30a58566c..ba97ceddd877 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13259,6 +13259,52 @@ static int nl80211_get_ftm_responder_stats(struct sk_buff *skb,
- 	return -ENOBUFS;
- }
+-		skb = ieee80211_build_hdr(sdata, skb, info_flags, sta);
++		skb = ieee80211_build_hdr(sdata, skb, info_flags,
++					  sta, ctrl_flags);
+ 		if (IS_ERR(skb))
+ 			goto out;
  
-+static int nl80211_probe_mesh_link(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct station_info sinfo = {};
-+	const u8 *buf;
-+	size_t len;
-+	u8 *dest;
-+	int err;
-+
-+	if (!rdev->ops->probe_mesh_link || !rdev->ops->get_station)
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC] ||
-+	    !info->attrs[NL80211_ATTR_FRAME]) {
-+		GENL_SET_ERR_MSG(info, "Frame or MAC missing");
-+		return -EINVAL;
-+	}
-+
-+	wdev_lock(wdev);
-+	if (wdev->iftype != NL80211_IFTYPE_MESH_POINT) {
-+		wdev_unlock(wdev);
-+		err = -EOPNOTSUPP;
-+		return err;
-+	}
-+	wdev_unlock(wdev);
-+
-+	dest = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+	buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
-+	len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
-+
-+	if (len < sizeof(struct ethhdr))
-+		return -EINVAL;
-+
-+	if (!ether_addr_equal(buf, dest) || is_multicast_ether_addr(buf) ||
-+	    !ether_addr_equal(buf + ETH_ALEN, dev->dev_addr))
-+		return -EINVAL;
-+
-+	err = rdev_get_station(rdev, dev, dest, &sinfo);
-+	if (err)
-+		return err;
-+
-+	return rdev_probe_mesh_link(rdev, dev, dest, buf, len);
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -14199,6 +14245,14 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_PROBE_MESH_LINK,
-+		.doit = nl80211_probe_mesh_link,
-+		.policy = nl80211_policy,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
+@@ -3988,9 +3992,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		__skb_queue_head_init(&queue);
+ 		ieee80211_convert_to_unicast(skb, dev, &queue);
+ 		while ((skb = __skb_dequeue(&queue)))
+-			__ieee80211_subif_start_xmit(skb, dev, 0);
++			__ieee80211_subif_start_xmit(skb, dev, 0, 0);
+ 	} else {
+-		__ieee80211_subif_start_xmit(skb, dev, 0);
++		__ieee80211_subif_start_xmit(skb, dev, 0, 0);
+ 	}
  
- static struct genl_family nl80211_fam __ro_after_init = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 5cb48d135fab..ec1b4800872f 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1272,4 +1272,17 @@ static inline int rdev_del_pmk(struct cfg80211_registered_device *rdev,
- 	trace_rdev_return_void(&rdev->wiphy);
- }
+ 	return NETDEV_TX_OK;
+@@ -4015,7 +4019,7 @@ struct sk_buff *
+ 		goto out;
+ 	}
  
-+static inline int
-+rdev_probe_mesh_link(struct cfg80211_registered_device *rdev,
-+		     struct net_device *dev, const u8 *dest,
-+		     const void *buf, size_t len)
-+{
-+	int ret;
-+
-+	trace_rdev_probe_mesh_link(&rdev->wiphy, dev, dest, buf, len);
-+	ret = rdev->ops->probe_mesh_link(&rdev->wiphy, dev, buf, len);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 44b2ce1bb13a..274a844c7ea9 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3362,6 +3362,25 @@
- 		  WIPHY_PR_ARG, WDEV_PR_ARG,
- 		  (unsigned long long)__entry->cookie)
- );
-+
-+TRACE_EVENT(rdev_probe_mesh_link,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 const u8 *dest, const u8 *buf, size_t len),
-+	TP_ARGS(wiphy, netdev, dest, buf, len),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(dest)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(dest, dest);
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT,
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(dest))
-+);
-+
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+-	skb = ieee80211_build_hdr(sdata, skb, info_flags, sta);
++	skb = ieee80211_build_hdr(sdata, skb, info_flags, sta, 0);
+ 	if (IS_ERR(skb))
+ 		goto out;
  
- #undef TRACE_INCLUDE_PATH
+@@ -5052,7 +5056,7 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
+ 	skb_reset_mac_header(skb);
+ 
+ 	local_bh_disable();
+-	__ieee80211_subif_start_xmit(skb, skb->dev, flags);
++	__ieee80211_subif_start_xmit(skb, skb->dev, flags, 0);
+ 	local_bh_enable();
+ 
+ 	return 0;
 -- 
 1.9.1
 
