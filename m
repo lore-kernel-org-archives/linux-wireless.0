@@ -2,113 +2,98 @@ Return-Path: <SRS0=OUAD=SF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8AB9C4360F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 03:01:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D06FC4360F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 04:13:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A28A2204EC
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 03:01:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 385112084C
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 04:13:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wl//zg05";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wl//zg05"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N2XBiHtC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726760AbfDCDBv (ORCPT
+        id S1726606AbfDCENX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Apr 2019 23:01:51 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:43552 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726130AbfDCDBv (ORCPT
+        Wed, 3 Apr 2019 00:13:23 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:35958 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726157AbfDCENX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Apr 2019 23:01:51 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 9D6EE60590; Wed,  3 Apr 2019 03:01:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554260510;
-        bh=lMe6o8B2AhfkHpDYFEl/mJmX0XlcMCrr5a643xu5/38=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Wl//zg05eRiGSPTGpA7fDyzfNdNk9WKSZ7MnCd8uQv5KC4UiM89PZfXOVjdO5Wvy3
-         4RavZ/2PCkdFOeKqhZSZUeAYqbcZ2NZ7dyxZWK62SxGwygyCzqGs5DPjtYuJUV+oLo
-         BKC6AddHOa7KDO3PHQJHvyVyIvq7oe+iiO5CTQ7E=
-Received: from localhost.localdomain (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 29ECC60452;
-        Wed,  3 Apr 2019 03:01:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554260510;
-        bh=lMe6o8B2AhfkHpDYFEl/mJmX0XlcMCrr5a643xu5/38=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Wl//zg05eRiGSPTGpA7fDyzfNdNk9WKSZ7MnCd8uQv5KC4UiM89PZfXOVjdO5Wvy3
-         4RavZ/2PCkdFOeKqhZSZUeAYqbcZ2NZ7dyxZWK62SxGwygyCzqGs5DPjtYuJUV+oLo
-         BKC6AddHOa7KDO3PHQJHvyVyIvq7oe+iiO5CTQ7E=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 29ECC60452
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
-From:   Wen Gong <wgong@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] ath10k: add peer id check in ath10k_peer_find_by_id
-Date:   Wed,  3 Apr 2019 11:01:18 +0800
-Message-Id: <1554260478-4161-1-git-send-email-wgong@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+        Wed, 3 Apr 2019 00:13:23 -0400
+Received: by mail-pl1-f194.google.com with SMTP id ck15so6155153plb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2019 21:13:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=I8Y/85yS3Gq07h5Gy3WkHUo+WR3GAcABXtvfvXEVGAE=;
+        b=N2XBiHtCqLT8nuZra4euQ/FEd/cK1VbfK+cc0FAvopwfIHiiT7xa9w1VXjfZn0AhWq
+         kMN1edIhsNyIjT4xHTYDjctxlv14FYglsyH8k7CoLnyA/tyX/0wLK0+LtrKytT17Z1Tl
+         +wo6M5YXSNRUMhgyVouGTuuw5qnduTMgoHJfanERedS9K0I9frzHCLn/vFGpjlGlW5cU
+         GmKZz5m9ejlSiRoYuPvCDs0FcpXCTtITv5ftRS/mQKSXUWRoLHpBY3n+b+zxWaJLeZmU
+         op4f38RRn5OMzU/ksF5NF/M/jCG/ryeGf2qx4w0bVpXpwEHs1r9M7edXpFd2f+vNBXoY
+         N5kw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=I8Y/85yS3Gq07h5Gy3WkHUo+WR3GAcABXtvfvXEVGAE=;
+        b=s/4ln8r18bCVdOV1yCB9Es152qadro6SAhsBU8XB4HCzV8bYBkpNZWfpwh+87Z9RLH
+         fHDDM9wNMvpOgAqut8Jmq/biKFNeH5Jbkcc0Q/hMK3i/EekYtInYoBAPvltvLxE2oGhN
+         43erR+kYbu5hPTBqy7Wmkcm8AO1TEcmV9+mS61qIMKUP17grXY1eMGnxU4kRmXswnb/E
+         ciuE96qJbRJ4UEsUVkf1aD3RFfiiKHrEapTfwtjs1gQvAT6wj/CXP0E+9wlDroXUicLM
+         hR0kfbGLu1vkUSCW3J+l2q+OpaZm1V6xcXmOJ45/RPvuKOKuzJa+oPvpCWT7z+mDZCP1
+         0Mzw==
+X-Gm-Message-State: APjAAAXcRZ8ao0E6400Lo2Gv7EydRW5rblr0R151nzZOlsFa9qZW/4hb
+        Vj+23qg+RpuAX4fJY4CWPEc=
+X-Google-Smtp-Source: APXvYqy3crTGG0bKymT2f9RLhKxyG1cnmTxi2N5sok6eXLs3xGUg+oQnt4y/7Ondr7PhR9WCp5M98g==
+X-Received: by 2002:a17:902:248:: with SMTP id 66mr75370550plc.286.1554264802326;
+        Tue, 02 Apr 2019 21:13:22 -0700 (PDT)
+Received: from siva.domain.name ([123.201.77.78])
+        by smtp.gmail.com with ESMTPSA id r3sm42290239pgb.82.2019.04.02.21.13.19
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 02 Apr 2019 21:13:21 -0700 (PDT)
+From:   Siva Rebbagondla <siva8118@gmail.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, amitkarwar@gmail.com,
+        krishna.pedda@redpinesignals.com,
+        Ganapathiraju Kondraju <ganapathi.kondraju@redpinesignals.com>,
+        Siva Rebbagondla <siva8118@gmail.com>
+Subject: [PATCH 0/8] rsi: driver changes for new 9116 chipset.
+Date:   Wed,  3 Apr 2019 09:43:01 +0530
+Message-Id: <20190403041309.12829-1-siva8118@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For some SDIO chip, the peer id is 65535 for MPDU with error status,
-then test_bit will trigger buffer overflow for peer's memory, if kasan
-enabled, it will report error.
+This series of patches consists driver changes for new redpine
+9116 chipset and some miscallaneous changes.
 
-Add check for overflow the size of peer's peer_ids will avoid the buffer
-overflow access.
+Siva Rebbagondla (8):
+  rsi: add new device model for 9116
+  rsi: move common part of firmware load to separate function
+  rsi: add firmware loading for 9116 device
+  rsi: change in device init frame sequence for 9116
+  rsi: new bootup parameters for 9116
+  rsi: send new tx command frame wlan9116 features
+  rsi: reset device changes for 9116
+  rsi: miscallaneous changes for 9116 and common
 
-Call trace of kasan:
-dump_backtrace+0x0/0x2ec
-show_stack+0x20/0x2c
-__dump_stack+0x20/0x28
-dump_stack+0xc8/0xec
-print_address_description+0x74/0x240
-kasan_report+0x250/0x26c
-__asan_report_load8_noabort+0x20/0x2c
-ath10k_peer_find_by_id+0x180/0x1e4 [ath10k_core]
-ath10k_htt_t2h_msg_handler+0x100c/0x2fd4 [ath10k_core]
-ath10k_htt_htc_t2h_msg_handler+0x20/0x34 [ath10k_core]
-ath10k_sdio_irq_handler+0xcc8/0x1678 [ath10k_sdio]
-process_sdio_pending_irqs+0xec/0x370
-sdio_run_irqs+0x68/0xe4
-sdio_irq_work+0x1c/0x28
-process_one_work+0x3d8/0x8b0
-worker_thread+0x508/0x7cc
-kthread+0x24c/0x264
-ret_from_fork+0x10/0x18
+ drivers/net/wireless/rsi/rsi_91x_hal.c     | 199 ++++++++++++++++--
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c    | 232 +++++++++++++++++++--
+ drivers/net/wireless/rsi/rsi_91x_sdio.c    | 129 ++++++++++--
+ drivers/net/wireless/rsi/rsi_91x_usb.c     |  96 ++++++---
+ drivers/net/wireless/rsi/rsi_boot_params.h |  63 ++++++
+ drivers/net/wireless/rsi/rsi_hal.h         |  44 +++-
+ drivers/net/wireless/rsi/rsi_main.h        |  21 +-
+ drivers/net/wireless/rsi/rsi_mgmt.h        |  26 +++
+ drivers/net/wireless/rsi/rsi_sdio.h        |   5 +-
+ drivers/net/wireless/rsi/rsi_usb.h         |   3 +-
+ 10 files changed, 732 insertions(+), 86 deletions(-)
 
-Tested with QCA6174 SDIO with firmware
-WLAN.RMH.4.4.1-00007-QCARMSWP-1.
-
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/txrx.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 23606b6..33de9e1 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -157,6 +157,9 @@ struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
- {
- 	struct ath10k_peer *peer;
- 
-+	if (peer_id >= sizeof(peer->peer_ids) * BITS_PER_BYTE)
-+		return NULL;
-+
- 	lockdep_assert_held(&ar->data_lock);
- 
- 	list_for_each_entry(peer, &ar->peers, list)
 -- 
-1.9.1
+2.17.1
 
