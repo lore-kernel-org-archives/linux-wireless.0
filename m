@@ -6,32 +6,33 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA6F0C10F0B
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 16:04:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C278EC10F0B
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 16:22:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAF82206B7
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 16:04:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C69320700
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 16:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728589AbfDCQES (ORCPT
+        id S1726672AbfDCQWJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Apr 2019 12:04:18 -0400
-Received: from gateway23.websitewelcome.com ([192.185.50.107]:48555 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727025AbfDCQDp (ORCPT
+        Wed, 3 Apr 2019 12:22:09 -0400
+Received: from gateway32.websitewelcome.com ([192.185.145.100]:30624 "EHLO
+        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726099AbfDCQWJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Apr 2019 12:03:45 -0400
-Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id 2F5993508D
-        for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2019 11:03:44 -0500 (CDT)
+        Wed, 3 Apr 2019 12:22:09 -0400
+X-Greylist: delayed 1379 seconds by postgrey-1.27 at vger.kernel.org; Wed, 03 Apr 2019 12:22:09 EDT
+Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
+        by gateway32.websitewelcome.com (Postfix) with ESMTP id 3A5E34A60F5
+        for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2019 10:59:10 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id BiMahYIshiQerBiMahJJPm; Wed, 03 Apr 2019 11:03:44 -0500
+        id BiI9hIMkIYTGMBiIAhSR4l; Wed, 03 Apr 2019 10:59:10 -0500
 X-Authority-Reason: nr=8
-Received: from [189.250.114.183] (port=41784 helo=embeddedor)
+Received: from [189.250.114.183] (port=41758 helo=embeddedor)
         by gator4166.hostgator.com with esmtpa (Exim 4.91)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1hBiMZ-001C6T-Be; Wed, 03 Apr 2019 11:03:43 -0500
-Date:   Wed, 3 Apr 2019 11:03:42 -0500
+        id 1hBiI4-00182M-Jq; Wed, 03 Apr 2019 10:59:09 -0500
+Date:   Wed, 3 Apr 2019 10:59:01 -0500
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 To:     Johannes Berg <johannes.berg@intel.com>,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
@@ -42,8 +43,8 @@ To:     Johannes Berg <johannes.berg@intel.com>,
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH][next] iwlwifi: d3: Use struct_size() helper
-Message-ID: <20190403160342.GA24396@embeddedor>
+Subject: [PATCH][next] iwlwifi: lib: Use struct_size() helper
+Message-ID: <20190403155901.GA22686@embeddedor>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -56,13 +57,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 189.250.114.183
 X-Source-L: No
-X-Exim-ID: 1hBiMZ-001C6T-Be
+X-Exim-ID: 1hBiI4-00182M-Jq
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: (embeddedor) [189.250.114.183]:41784
+X-Source-Sender: (embeddedor) [189.250.114.183]:41758
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 7
+X-Email-Count: 22
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -87,19 +88,19 @@ This code was detected with the help of Coccinelle.
 
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 3 +--
+ drivers/net/wireless/intel/iwlwifi/dvm/lib.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 83fd7f93d9f5..99589b910bce 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -398,8 +398,7 @@ static int iwl_mvm_send_patterns(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
+index b2f172d4f78a..cae9cd438697 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
+@@ -1022,8 +1022,7 @@ int iwlagn_send_patterns(struct iwl_priv *priv,
  	if (!wowlan->n_patterns)
  		return 0;
  
 -	cmd.len[0] = sizeof(*pattern_cmd) +
--		wowlan->n_patterns * sizeof(struct iwl_wowlan_pattern);
+-		wowlan->n_patterns * sizeof(struct iwlagn_wowlan_pattern);
 +	cmd.len[0] = struct_size(pattern_cmd, patterns, wowlan->n_patterns);
  
  	pattern_cmd = kmalloc(cmd.len[0], GFP_KERNEL);
