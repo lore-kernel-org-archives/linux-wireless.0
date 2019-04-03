@@ -3,31 +3,31 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AC54C4360F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 21:33:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B33C4360F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 21:33:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 319752084B
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 21:33:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 147392082C
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 21:33:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727523AbfDCVdS (ORCPT
+        id S1726948AbfDCVdi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Apr 2019 17:33:18 -0400
-Received: from mga05.intel.com ([192.55.52.43]:37312 "EHLO mga05.intel.com"
+        Wed, 3 Apr 2019 17:33:38 -0400
+Received: from mga05.intel.com ([192.55.52.43]:37323 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726151AbfDCVaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726206AbfDCVaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 3 Apr 2019 17:30:18 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Apr 2019 14:30:11 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Apr 2019 14:30:13 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.60,306,1549958400"; 
-   d="scan'208";a="334754253"
+   d="scan'208";a="334754281"
 Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
-  by fmsmga005.fm.intel.com with ESMTP; 03 Apr 2019 14:30:11 -0700
+  by fmsmga005.fm.intel.com with ESMTP; 03 Apr 2019 14:30:13 -0700
 From:   Fenghua Yu <fenghua.yu@intel.com>
 To:     "Thomas Gleixner" <tglx@linutronix.de>,
         "Ingo Molnar" <mingo@redhat.com>, "Borislav Petkov" <bp@alien8.de>,
@@ -43,11 +43,10 @@ To:     "Thomas Gleixner" <tglx@linutronix.de>,
 Cc:     "linux-kernel" <linux-kernel@vger.kernel.org>,
         "x86" <x86@kernel.org>, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, kvm@vger.kernel.org,
-        Xiaoyao Li <xiaoyao.li@linux.intel.com>,
         Fenghua Yu <fenghua.yu@intel.com>
-Subject: [PATCH v6 11/20] kvm/x86: Emulate MSR IA32_CORE_CAPABILITY
-Date:   Wed,  3 Apr 2019 14:21:57 -0700
-Message-Id: <1554326526-172295-12-git-send-email-fenghua.yu@intel.com>
+Subject: [PATCH v6 18/20] x86/clearcpuid: Apply cleared feature bits that are forced set before
+Date:   Wed,  3 Apr 2019 14:22:04 -0700
+Message-Id: <1554326526-172295-19-git-send-email-fenghua.yu@intel.com>
 X-Mailer: git-send-email 2.5.0
 In-Reply-To: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com>
 References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com>
@@ -56,147 +55,74 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Xiaoyao Li <xiaoyao.li@linux.intel.com>
+Some CPU feature bits are forced set and stored in cpuinfo_x86 before
+handling clearcpuid options. To clear those bits from cpuinfo_x86,
+apply_forced_cap() is called after handling the options.
 
-MSR IA32_CORE_CAPABILITY is a feature-enumerating MSR, bit 5 of which
-reports the capability of enabling detection of split locks (will be
-supported on future processors based on Tremont microarchitecture and
-later).
+Please note, apply_forced_cap() is called twice on boot CPU. But this code
+is simple and there is no functionality issue.
 
-CPUID.(EAX=7H,ECX=0):EDX[30] will enumerate the presence of the
-IA32_CORE_CAPABILITY MSR.
-
-Please check the latest Intel 64 and IA-32 Architectures Software
-Developer's Manual for more detailed information on the MSR and
-the split lock bit.
-
-Since MSR_IA32_CORE_CAPABILITY is a feature-enumerating MSR, emulate
-it in software regardless of host's capability. What we need to
-do is to set the right value of it to report the capability of guest.
-
-In this patch, just set the guest's core_capability as 0, because we
-haven't added support of the features it indicates to guest. It's for
-bisectability.
-
-Signed-off-by: Xiaoyao Li <xiaoyao.li@linux.intel.com>
 Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- arch/x86/include/asm/kvm_host.h |  2 ++
- arch/x86/kvm/cpuid.c            |  6 ++++++
- arch/x86/kvm/x86.c              | 24 ++++++++++++++++++++++++
- 3 files changed, 32 insertions(+)
+ arch/x86/include/asm/cpu.h   | 2 ++
+ arch/x86/kernel/cpu/common.c | 5 +++--
+ arch/x86/kernel/fpu/init.c   | 2 ++
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
-index 159b5988292f..e28626f6a2e0 100644
---- a/arch/x86/include/asm/kvm_host.h
-+++ b/arch/x86/include/asm/kvm_host.h
-@@ -570,6 +570,7 @@ struct kvm_vcpu_arch {
- 	u64 ia32_xss;
- 	u64 microcode_version;
- 	u64 arch_capabilities;
-+	u64 core_capability;
- 
- 	/*
- 	 * Paging state of the vcpu
-@@ -1527,6 +1528,7 @@ int kvm_pv_send_ipi(struct kvm *kvm, unsigned long ipi_bitmap_low,
- 		    unsigned long icr, int op_64_bit);
- 
- u64 kvm_get_arch_capabilities(void);
-+u64 kvm_get_core_capability(void);
- void kvm_define_shared_msr(unsigned index, u32 msr);
- int kvm_set_shared_msr(unsigned index, u64 val, u64 mask);
- 
-diff --git a/arch/x86/kvm/cpuid.c b/arch/x86/kvm/cpuid.c
-index fd3951638ae4..4a2f7892ea31 100644
---- a/arch/x86/kvm/cpuid.c
-+++ b/arch/x86/kvm/cpuid.c
-@@ -505,6 +505,12 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
- 			 * if the host doesn't support it.
- 			 */
- 			entry->edx |= F(ARCH_CAPABILITIES);
-+			/*
-+			 * Since we emulate MSR IA32_CORE_CAPABILITY in
-+			 * software, we can always enable it for guest
-+			 * regardless of host's capability.
-+			 */
-+			entry->edx |= F(CORE_CAPABILITY);
- 		} else {
- 			entry->ebx = 0;
- 			entry->ecx = 0;
-diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
-index 099b851dabaf..4459115eb0ec 100644
---- a/arch/x86/kvm/x86.c
-+++ b/arch/x86/kvm/x86.c
-@@ -1159,6 +1159,7 @@ static u32 emulated_msrs[] = {
- 	MSR_IA32_TSC_ADJUST,
- 	MSR_IA32_TSCDEADLINE,
- 	MSR_IA32_ARCH_CAPABILITIES,
-+	MSR_IA32_CORE_CAPABILITY,
- 	MSR_IA32_MISC_ENABLE,
- 	MSR_IA32_MCG_STATUS,
- 	MSR_IA32_MCG_CTL,
-@@ -1198,6 +1199,7 @@ static u32 msr_based_features[] = {
- 
- 	MSR_F10H_DECFG,
- 	MSR_IA32_UCODE_REV,
-+	MSR_IA32_CORE_CAPABILITY,
- 	MSR_IA32_ARCH_CAPABILITIES,
+diff --git a/arch/x86/include/asm/cpu.h b/arch/x86/include/asm/cpu.h
+index 4e03f53fc079..bfa5ac6b7502 100644
+--- a/arch/x86/include/asm/cpu.h
++++ b/arch/x86/include/asm/cpu.h
+@@ -26,6 +26,8 @@ struct x86_cpu {
+ 	struct cpu cpu;
  };
  
-@@ -1225,9 +1227,18 @@ u64 kvm_get_arch_capabilities(void)
++void apply_forced_caps(struct cpuinfo_x86 *c);
++
+ #ifdef CONFIG_HOTPLUG_CPU
+ extern int arch_register_cpu(int num);
+ extern void arch_unregister_cpu(int);
+diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
+index bbdd69dd4f5f..e1d41405c27b 100644
+--- a/arch/x86/kernel/cpu/common.c
++++ b/arch/x86/kernel/cpu/common.c
+@@ -758,13 +758,14 @@ void cpu_detect(struct cpuinfo_x86 *c)
+ 	}
  }
- EXPORT_SYMBOL_GPL(kvm_get_arch_capabilities);
  
-+u64 kvm_get_core_capability(void)
-+{
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(kvm_get_core_capability);
-+
- static int kvm_get_msr_feature(struct kvm_msr_entry *msr)
+-static void apply_forced_caps(struct cpuinfo_x86 *c)
++void apply_forced_caps(struct cpuinfo_x86 *c)
  {
- 	switch (msr->index) {
-+	case MSR_IA32_CORE_CAPABILITY:
-+		msr->data = kvm_get_core_capability();
-+		break;
- 	case MSR_IA32_ARCH_CAPABILITIES:
- 		msr->data = kvm_get_arch_capabilities();
- 		break;
-@@ -2451,6 +2462,12 @@ int kvm_set_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
- 		break;
- 	case MSR_EFER:
- 		return set_efer(vcpu, data);
-+	case MSR_IA32_CORE_CAPABILITY:
-+		if (!msr_info->host_initiated)
-+			return 1;
-+
-+		vcpu->arch.core_capability = data;
-+		break;
- 	case MSR_K7_HWCR:
- 		data &= ~(u64)0x40;	/* ignore flush filter disable */
- 		data &= ~(u64)0x100;	/* ignore ignne emulation enable */
-@@ -2762,6 +2779,12 @@ int kvm_get_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
- 	case MSR_IA32_TSC:
- 		msr_info->data = kvm_scale_tsc(vcpu, rdtsc()) + vcpu->arch.tsc_offset;
- 		break;
-+	case MSR_IA32_CORE_CAPABILITY:
-+		if (!msr_info->host_initiated &&
-+		    !guest_cpuid_has(vcpu, X86_FEATURE_CORE_CAPABILITY))
-+			return 1;
-+		msr_info->data = vcpu->arch.core_capability;
-+		break;
- 	case MSR_MTRRcap:
- 	case 0x200 ... 0x2ff:
- 		return kvm_mtrr_get_msr(vcpu, msr_info->index, &msr_info->data);
-@@ -8762,6 +8785,7 @@ struct kvm_vcpu *kvm_arch_vcpu_create(struct kvm *kvm,
- int kvm_arch_vcpu_setup(struct kvm_vcpu *vcpu)
- {
- 	vcpu->arch.arch_capabilities = kvm_get_arch_capabilities();
-+	vcpu->arch.core_capability = kvm_get_core_capability();
- 	vcpu->arch.msr_platform_info = MSR_PLATFORM_INFO_CPUID_FAULT;
- 	kvm_vcpu_mtrr_init(vcpu);
- 	vcpu_load(vcpu);
+ 	int i;
+ 
+ 	for (i = 0; i < NCAPINTS + NBUGINTS; i++) {
+-		c->x86_capability[i] &= ~cpu_caps_cleared[i];
++		/* Bits may be cleared after they are set. */
+ 		c->x86_capability[i] |= cpu_caps_set[i];
++		c->x86_capability[i] &= ~cpu_caps_cleared[i];
+ 	}
+ }
+ 
+diff --git a/arch/x86/kernel/fpu/init.c b/arch/x86/kernel/fpu/init.c
+index 99b895eea166..9c2801b605e3 100644
+--- a/arch/x86/kernel/fpu/init.c
++++ b/arch/x86/kernel/fpu/init.c
+@@ -5,6 +5,7 @@
+ #include <asm/tlbflush.h>
+ #include <asm/setup.h>
+ #include <asm/cmdline.h>
++#include <asm/cpu.h>
+ 
+ #include <linux/sched.h>
+ #include <linux/sched/task.h>
+@@ -261,6 +262,7 @@ static void __init clear_cpuid(void)
+ 		    bit >= 0 && bit < NCAPINTS * 32)
+ 			setup_clear_cpu_cap(bit);
+ 	}
++	apply_forced_caps(&boot_cpu_data);
+ }
+ 
+ /*
 -- 
 2.19.1
 
