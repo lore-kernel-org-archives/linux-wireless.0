@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28A16C4360F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 04:13:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35594C4360F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 04:13:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1A332084C
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 04:13:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0301520882
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 04:13:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lIM042Rz"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WvcAn775"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727074AbfDCENl (ORCPT
+        id S1727259AbfDCENo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Apr 2019 00:13:41 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:40159 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726245AbfDCENl (ORCPT
+        Wed, 3 Apr 2019 00:13:44 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:33081 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726418AbfDCENo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Apr 2019 00:13:41 -0400
-Received: by mail-pf1-f195.google.com with SMTP id c207so7469135pfc.7
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2019 21:13:40 -0700 (PDT)
+        Wed, 3 Apr 2019 00:13:44 -0400
+Received: by mail-pf1-f194.google.com with SMTP id i19so7467866pfd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2019 21:13:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=b3AQPr73/M6BOJOJFvexFFcTQAPsKqGUU3t/QQimKwE=;
-        b=lIM042RzPnKKnPEKycR1N6Apny233i9z6C6Oe9ycw0iHtisqBA9g1Os4uFpcpjAm+v
-         hpNoG9qQQG2tMi/kIb0wxOKZeHT1CYXCo6xzr6el9yYRTXuBf9vSNrMNQWcjjYpMSPEd
-         J6o3SAWWK0Go0SWqWTN41sd4U2ya+1h2Xru4U1Np457JJ7n2DTvyWEVGDzlF/A765/Rn
-         wx3ZLXRxYcs4GK4RM3qa/vSJo6n+KiS2rDW4Ba1ZIew7wZ/C4Gn1QgVHmhQ0It40Ig2b
-         wDCQbpJK2UxJr1UcSJxibfN9Zdcqv45y2ywjMWWXtA2e/0NN3PeuTY+TKMFtzyjlxYon
-         zxsA==
+        bh=6dBcrYj0UhuGns5a0hOKLNuWZBN8wl89X8AQf3P64r0=;
+        b=WvcAn775pODAm6JxDwbeiiVh+93FALLPqHlZVuAQ4h92tOwa98YPRgaahPHojOb2pp
+         7Z6xnskHf8239V11+NizC+nMks8Rxdd1cNmykzHQDW+hgVTV1td16HAgjJ4EkjPSy1tf
+         aP4iTaJu8EMLFenjamiKMse33Vx95ybMZzJIna5HQFZ14YZDQm98bDiRC6U0jpxy3cXo
+         XA91PeEX9AinembRtjriZI0qySwOIh8TU6ik34QZxJlMmH0SBh3TzmIF88cOSAkT5MGq
+         dA3Vr8dTFWJfX6RQsmiKcMkJ8zEuQpLCvqcqtaKzI8OqUPhziOYDbM6lNhsVmQa8qXcV
+         k14g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=b3AQPr73/M6BOJOJFvexFFcTQAPsKqGUU3t/QQimKwE=;
-        b=KP+XmbU4Unxk3+J3XNbm3iU13vtkac+PD6/3q7KIBUYhNqjHHA/WFsb6lGxj5gFmG9
-         gJYYAYkXqDp56o4wh40r5tQmQNnmNwv1C5pqBJVcOqoY1ZfZbVC99TD+ZK47TfJM6f3J
-         PSHjbwM1r3i3f10ZY9O02b/KNnyEArddLHddb/+F0tzqY93B/UukOqDhFh1zpw4iv6iQ
-         nW06wSgUr9jcH+DviTaQFMSUcrkTrbdJTtiJ9eoaChyTUaCb50Fu0jyXHHo2B8Tt0IGv
-         NHY3FDwbvSsHUsXyItCs21FgCO0dVD1zvcofRdGU8AlLcbOye48GPI1xM9qAT/k5R7wm
-         QWaA==
-X-Gm-Message-State: APjAAAXVHl1zOWhgx1qqn6x41JmEQfomPKVTdXZV4pFvrMqyIQZnAu3b
-        4GslBlm9ehGd66LW6Teg0cOa91VN3GPXCIDX
-X-Google-Smtp-Source: APXvYqwEmO/4QQUJUbJulmemmFjPZrWouvkv16MR2/OKOguuZCbJaHaALy72OZBWGlKjjrmBD6qFTg==
-X-Received: by 2002:a63:8548:: with SMTP id u69mr70274066pgd.85.1554264820271;
-        Tue, 02 Apr 2019 21:13:40 -0700 (PDT)
+        bh=6dBcrYj0UhuGns5a0hOKLNuWZBN8wl89X8AQf3P64r0=;
+        b=pOxexvUYSH5lyk28YmoDD2PY4z3kwuLeDCy2kKdgnoLHJYduVWKGjc3bpIl7fdKS5c
+         uQw4bAmADXF7e0FdCO3O1X/Znr5TQdHkeGm0COy6qajbXzJ7bzbhDmjeNhtlIt+Q3DzK
+         pfKSk9GURKrvNJ9NKwiw7Y5S5Il+4ylm1lXaFWn938AZUG89UB6KZdGGdB3BpvIW7Z0m
+         GAHvcX5dCh8V9N+5wKWp6uQcTxK0cgu14ZldMC1pJU5pgMb1QjyR4wWc4iKBonBn6WeD
+         l4AC84NIuOPf2pKX8zDmw5d/aPbOYDuuFm9yOsy2qxFSfqYBoak5tN3g1w8hDw1e7Ppf
+         PFWg==
+X-Gm-Message-State: APjAAAVHGrE94eNL7l/Go1+D+FifP5Xgikju5uvX1sIMhniERCmrWR7H
+        o0MqGp6L1byShh6Xk1nc25IGvpkCjq+sW1U5
+X-Google-Smtp-Source: APXvYqyIymn9DRmHHKUWs9bzYJeyMPga0tLYKfSP/c1NRq5v92QuIRx55F0QQcSJ1v5cA5NxHgA9rA==
+X-Received: by 2002:a63:c706:: with SMTP id n6mr37048256pgg.310.1554264822816;
+        Tue, 02 Apr 2019 21:13:42 -0700 (PDT)
 Received: from siva.domain.name ([123.201.77.78])
-        by smtp.gmail.com with ESMTPSA id r3sm42290239pgb.82.2019.04.02.21.13.37
+        by smtp.gmail.com with ESMTPSA id r3sm42290239pgb.82.2019.04.02.21.13.40
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 02 Apr 2019 21:13:39 -0700 (PDT)
+        Tue, 02 Apr 2019 21:13:42 -0700 (PDT)
 From:   Siva Rebbagondla <siva8118@gmail.com>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org, amitkarwar@gmail.com,
         krishna.pedda@redpinesignals.com,
         Ganapathiraju Kondraju <ganapathi.kondraju@redpinesignals.com>,
         Siva Rebbagondla <siva8118@gmail.com>
-Subject: [PATCH 7/8] rsi: reset device changes for 9116
-Date:   Wed,  3 Apr 2019 09:43:08 +0530
-Message-Id: <20190403041309.12829-8-siva8118@gmail.com>
+Subject: [PATCH 8/8] rsi: miscallaneous changes for 9116 and common
+Date:   Wed,  3 Apr 2019 09:43:09 +0530
+Message-Id: <20190403041309.12829-9-siva8118@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190403041309.12829-1-siva8118@gmail.com>
 References: <20190403041309.12829-1-siva8118@gmail.com>
@@ -72,170 +72,123 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Device reset register(watchdog timer related) addresses and
-values are different for 9116.
+Below changes are done:
+* Device 80MHz clock should be disabled for 9116 in 20MHz band.
+* Default edca parameters should be used initially before
+  connection.
+* Default TA aggregation is 3 for 9116.
+* Bootup parameters should be loaded first when channel is
+  changed.
+* 4 byte register writes are possible for 9116.
 
 Signed-off-by: Siva Rebbagondla <siva8118@gmail.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 45 ++++++++++++++----
- drivers/net/wireless/rsi/rsi_91x_usb.c  | 61 +++++++++++++++++--------
- drivers/net/wireless/rsi/rsi_hal.h      | 15 ++++++
- 3 files changed, 91 insertions(+), 30 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 27 +++++++++++++++++--------
+ drivers/net/wireless/rsi/rsi_91x_usb.c  | 20 +++++++++---------
+ 2 files changed, 30 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index e9a2af0a1a80..f9c67ed473d1 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -1167,16 +1167,41 @@ static void rsi_reset_chip(struct rsi_hw *adapter)
- 	 * and any pending dma transfers to rf spi in device to finish.
- 	 */
- 	msleep(100);
--
--	ulp_read_write(adapter, RSI_ULP_RESET_REG, RSI_ULP_WRITE_0, 32);
--	ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_1, RSI_ULP_WRITE_2, 32);
--	ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_2, RSI_ULP_WRITE_0, 32);
--	ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_1, RSI_ULP_WRITE_50,
--		       32);
--	ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_2, RSI_ULP_WRITE_0,
--		       32);
--	ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_ENABLE,
--		       RSI_ULP_TIMER_ENABLE, 32);
-+	if (adapter->device_model != RSI_DEV_9116) {
-+		ulp_read_write(adapter, RSI_ULP_RESET_REG, RSI_ULP_WRITE_0, 32);
-+		ulp_read_write(adapter,
-+			       RSI_WATCH_DOG_TIMER_1, RSI_ULP_WRITE_2, 32);
-+		ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_2, RSI_ULP_WRITE_0,
-+			       32);
-+		ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_1,
-+			       RSI_ULP_WRITE_50, 32);
-+		ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_2,
-+			       RSI_ULP_WRITE_0, 32);
-+		ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_ENABLE,
-+			       RSI_ULP_TIMER_ENABLE, 32);
-+	} else {
-+		if ((rsi_sdio_master_reg_write(adapter,
-+					       NWP_WWD_INTERRUPT_TIMER,
-+					       NWP_WWD_INT_TIMER_CLKS,
-+					       RSI_9116_REG_SIZE)) < 0) {
-+			rsi_dbg(ERR_ZONE, "Failed to write to intr timer\n");
-+		}
-+		if ((rsi_sdio_master_reg_write(adapter,
-+					       NWP_WWD_SYSTEM_RESET_TIMER,
-+					       NWP_WWD_SYS_RESET_TIMER_CLKS,
-+					       RSI_9116_REG_SIZE)) < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"Failed to write to system reset timer\n");
-+		}
-+		if ((rsi_sdio_master_reg_write(adapter,
-+					       NWP_WWD_MODE_AND_RSTART,
-+					       NWP_WWD_TIMER_DISABLE,
-+					       RSI_9116_REG_SIZE)) < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"Failed to write to mode and restart\n");
-+		}
-+		rsi_dbg(ERR_ZONE, "***** Watch Dog Reset Successful *****\n");
-+	}
- 	/* This msleep will be sufficient for the ulp
- 	 * read write operations to complete for chip reset.
- 	 */
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 7d9b85925150..f0475b20f153 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -698,26 +698,47 @@ static int rsi_reset_card(struct rsi_hw *adapter)
- 		goto fail;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index f328532fef88..6c7f26ef6476 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -424,6 +424,10 @@ static int rsi_load_radio_caps(struct rsi_common *common)
+ 	}
+ 	radio_caps->radio_info |= radio_id;
+ 
++	if (adapter->device_model == RSI_DEV_9116 &&
++	    common->channel_width == BW_20MHZ)
++		radio_caps->radio_cfg_info &= ~0x3;
++
+ 	radio_caps->sifs_tx_11n = cpu_to_le16(SIFS_TX_11N_VALUE);
+ 	radio_caps->sifs_tx_11b = cpu_to_le16(SIFS_TX_11B_VALUE);
+ 	radio_caps->slot_rx_11n = cpu_to_le16(SHORT_SLOT_VALUE);
+@@ -439,14 +443,16 @@ static int rsi_load_radio_caps(struct rsi_common *common)
  	}
  
--	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_1,
--				 RSI_ULP_WRITE_2, 32);
--	if (ret < 0)
--		goto fail;
--	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_2,
--				 RSI_ULP_WRITE_0, 32);
--	if (ret < 0)
--		goto fail;
--	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_1,
--				 RSI_ULP_WRITE_50, 32);
--	if (ret < 0)
--		goto fail;
--	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_2,
--				 RSI_ULP_WRITE_0, 32);
--	if (ret < 0)
--		goto fail;
--	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_ENABLE,
--				 RSI_ULP_TIMER_ENABLE, 32);
--	if (ret < 0)
--		goto fail;
-+	if (adapter->device_model != RSI_DEV_9116) {
-+		ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_1,
-+					 RSI_ULP_WRITE_2, 32);
-+		if (ret < 0)
-+			goto fail;
-+		ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_2,
-+					 RSI_ULP_WRITE_0, 32);
-+		if (ret < 0)
-+			goto fail;
-+		ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_1,
-+					 RSI_ULP_WRITE_50, 32);
-+		if (ret < 0)
-+			goto fail;
-+		ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_2,
-+					 RSI_ULP_WRITE_0, 32);
-+		if (ret < 0)
-+			goto fail;
-+		ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_ENABLE,
-+					 RSI_ULP_TIMER_ENABLE, 32);
-+		if (ret < 0)
-+			goto fail;
-+	} else {
-+		if ((rsi_usb_master_reg_write(adapter,
-+					      NWP_WWD_INTERRUPT_TIMER,
-+					      NWP_WWD_INT_TIMER_CLKS,
-+					      RSI_9116_REG_SIZE)) < 0) {
-+			goto fail;
+ 	for (ii = 0; ii < NUM_EDCA_QUEUES; ii++) {
+-		radio_caps->qos_params[ii].cont_win_min_q =
+-			cpu_to_le16(common->edca_params[ii].cw_min);
+-		radio_caps->qos_params[ii].cont_win_max_q =
+-			cpu_to_le16(common->edca_params[ii].cw_max);
+-		radio_caps->qos_params[ii].aifsn_val_q =
+-			cpu_to_le16((common->edca_params[ii].aifs) << 8);
+-		radio_caps->qos_params[ii].txop_q =
+-			cpu_to_le16(common->edca_params[ii].txop);
++		if (common->edca_params[ii].cw_max > 0) {
++			radio_caps->qos_params[ii].cont_win_min_q =
++				cpu_to_le16(common->edca_params[ii].cw_min);
++			radio_caps->qos_params[ii].cont_win_max_q =
++				cpu_to_le16(common->edca_params[ii].cw_max);
++			radio_caps->qos_params[ii].aifsn_val_q =
++				cpu_to_le16(common->edca_params[ii].aifs << 8);
++			radio_caps->qos_params[ii].txop_q =
++				cpu_to_le16(common->edca_params[ii].txop);
 +		}
-+		if ((rsi_usb_master_reg_write(adapter,
-+					      NWP_WWD_SYSTEM_RESET_TIMER,
-+					      NWP_WWD_SYS_RESET_TIMER_CLKS,
-+					      RSI_9116_REG_SIZE)) < 0) {
-+			goto fail;
-+		}
-+		if ((rsi_usb_master_reg_write(adapter,
-+					      NWP_WWD_MODE_AND_RSTART,
-+					      NWP_WWD_TIMER_DISABLE,
-+					      RSI_9116_REG_SIZE)) < 0) {
-+			goto fail;
-+		}
+ 	}
+ 
+ 	radio_caps->qos_params[BROADCAST_HW_Q].txop_q = cpu_to_le16(0xffff);
+@@ -1026,6 +1032,11 @@ static int rsi_send_reset_mac(struct rsi_common *common)
+ 	mgmt_frame->desc_word[1] = cpu_to_le16(RESET_MAC_REQ);
+ 	mgmt_frame->desc_word[4] = cpu_to_le16(RETRY_COUNT << 8);
+ 
++#define RSI_9116_DEF_TA_AGGR	3
++	if (common->priv->device_model == RSI_DEV_9116)
++		mgmt_frame->desc_word[3] |=
++			cpu_to_le16(RSI_9116_DEF_TA_AGGR << 8);
++
+ 	skb_put(skb, FRAME_DESC_SZ);
+ 
+ 	return rsi_send_internal_mgmt_frame(common, skb);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index f0475b20f153..f5048d4b8cb6 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -213,7 +213,7 @@ static int rsi_usb_reg_read(struct usb_device *usbdev,
+  */
+ static int rsi_usb_reg_write(struct usb_device *usbdev,
+ 			     u32 reg,
+-			     u16 value,
++			     u32 value,
+ 			     u16 len)
+ {
+ 	u8 *usb_reg_buf;
+@@ -226,17 +226,17 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
+ 	if (!usb_reg_buf)
+ 		return status;
+ 
+-	usb_reg_buf[0] = (value & 0x00ff);
+-	usb_reg_buf[1] = (value & 0xff00) >> 8;
+-	usb_reg_buf[2] = 0x0;
+-	usb_reg_buf[3] = 0x0;
++	usb_reg_buf[0] = (cpu_to_le32(value) & 0x00ff);
++	usb_reg_buf[1] = (cpu_to_le32(value) & 0xff00) >> 8;
++	usb_reg_buf[2] = (cpu_to_le32(value) & 0x00ff0000) >> 16;
++	usb_reg_buf[3] = (cpu_to_le32(value) & 0xff000000) >> 24;
+ 
+ 	status = usb_control_msg(usbdev,
+ 				 usb_sndctrlpipe(usbdev, 0),
+ 				 USB_VENDOR_REGISTER_WRITE,
+ 				 RSI_USB_REQ_OUT,
+-				 ((reg & 0xffff0000) >> 16),
+-				 (reg & 0xffff),
++				 ((cpu_to_le32(reg) & 0xffff0000) >> 16),
++				 (cpu_to_le32(reg) & 0xffff),
+ 				 (void *)usb_reg_buf,
+ 				 len,
+ 				 USB_CTRL_SET_TIMEOUT);
+@@ -263,8 +263,10 @@ static void rsi_rx_done_handler(struct urb *urb)
+ 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)rx_cb->data;
+ 	int status = -EINVAL;
+ 
+-	if (urb->status)
+-		goto out;
++	if (urb->status) {
++		dev_kfree_skb(rx_cb->rx_skb);
++		return;
 +	}
  
- 	rsi_dbg(INFO_ZONE, "Reset card done\n");
- 	return ret;
-diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
-index c07b1a006d3f..46e36df9e8e3 100644
---- a/drivers/net/wireless/rsi/rsi_hal.h
-+++ b/drivers/net/wireless/rsi/rsi_hal.h
-@@ -70,6 +70,21 @@
- #define RSI_WATCH_DOG_DELAY_TIMER_2		0x16f
- #define RSI_WATCH_DOG_TIMER_ENABLE		0x170
- 
-+/* Watchdog timer addresses for 9116 */
-+#define NWP_AHB_BASE_ADDR		0x41300000
-+#define NWP_WWD_INTERRUPT_TIMER		(NWP_AHB_BASE_ADDR + 0x300)
-+#define NWP_WWD_SYSTEM_RESET_TIMER	(NWP_AHB_BASE_ADDR + 0x304)
-+#define NWP_WWD_WINDOW_TIMER		(NWP_AHB_BASE_ADDR + 0x308)
-+#define NWP_WWD_TIMER_SETTINGS		(NWP_AHB_BASE_ADDR + 0x30C)
-+#define NWP_WWD_MODE_AND_RSTART		(NWP_AHB_BASE_ADDR + 0x310)
-+#define NWP_WWD_RESET_BYPASS		(NWP_AHB_BASE_ADDR + 0x314)
-+#define NWP_FSM_INTR_MASK_REG		(NWP_AHB_BASE_ADDR + 0x104)
-+
-+/* Watchdog timer values */
-+#define NWP_WWD_INT_TIMER_CLKS		5
-+#define NWP_WWD_SYS_RESET_TIMER_CLKS	4
-+#define NWP_WWD_TIMER_DISABLE		0xAA0001
-+
- #define RSI_ULP_WRITE_0			00
- #define RSI_ULP_WRITE_2			02
- #define RSI_ULP_WRITE_50		50
+ 	if (urb->actual_length <= 0 ||
+ 	    urb->actual_length > rx_cb->rx_skb->len) {
 -- 
 2.17.1
 
