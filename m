@@ -6,45 +6,40 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C6C2C4360F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 17:02:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48EB2C10F06
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 17:20:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E149B205C9
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 17:01:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D82C205C9
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 17:20:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726184AbfDCRB6 (ORCPT
+        id S1726592AbfDCRUc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Apr 2019 13:01:58 -0400
-Received: from gateway31.websitewelcome.com ([192.185.143.234]:49155 "EHLO
-        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726084AbfDCRB6 (ORCPT
+        Wed, 3 Apr 2019 13:20:32 -0400
+Received: from gateway23.websitewelcome.com ([192.185.50.161]:15132 "EHLO
+        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726144AbfDCRUc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Apr 2019 13:01:58 -0400
-X-Greylist: delayed 1263 seconds by postgrey-1.27 at vger.kernel.org; Wed, 03 Apr 2019 13:01:58 EDT
-Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
-        by gateway31.websitewelcome.com (Postfix) with ESMTP id AA3A1D53F5
-        for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2019 11:40:54 -0500 (CDT)
+        Wed, 3 Apr 2019 13:20:32 -0400
+Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
+        by gateway23.websitewelcome.com (Postfix) with ESMTP id 42FDD139D6
+        for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2019 12:20:31 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id BiwYhlwnJ4FKpBiwYhHjyt; Wed, 03 Apr 2019 11:40:54 -0500
+        id BjYthbFDP2PzOBjYthCnyX; Wed, 03 Apr 2019 12:20:31 -0500
 X-Authority-Reason: nr=8
-Received: from [189.250.114.183] (port=42224 helo=embeddedor)
+Received: from [189.250.114.183] (port=42602 helo=embeddedor)
         by gator4166.hostgator.com with esmtpa (Exim 4.91)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1hBiwX-001ZIn-Lm; Wed, 03 Apr 2019 11:40:53 -0500
-Date:   Wed, 3 Apr 2019 11:40:52 -0500
+        id 1hBjYs-001xEV-Dv; Wed, 03 Apr 2019 12:20:30 -0500
+Date:   Wed, 3 Apr 2019 12:20:29 -0500
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH][next] mwifiex: use struct_size() in kzalloc()
-Message-ID: <20190403164052.GA26381@embeddedor>
+Subject: [PATCH][next] ath10k: Use struct_size() helper
+Message-ID: <20190403172029.GA302@embeddedor>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -57,13 +52,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 189.250.114.183
 X-Source-L: No
-X-Exim-ID: 1hBiwX-001ZIn-Lm
+X-Exim-ID: 1hBjYs-001xEV-Dv
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: (embeddedor) [189.250.114.183]:42224
+X-Source-Sender: (embeddedor) [189.250.114.183]:42602
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 16
+X-Email-Count: 12
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -71,57 +66,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-One of the more common cases of allocation size calculations is finding
-the size of a structure that has a zero-sized array at the end, along
-with memory for some number of elements for that array. For example:
+Make use of the struct_size() helper instead of an open-coded version
+in order to avoid any potential type mistakes, in particular in the
+context in which this code is being used.
 
-struct foo {
-    int stuff;
-    struct boo entry[];
-};
+So, change the following form:
 
-size = sizeof(struct foo) + count * sizeof(struct boo);
-instance = kzalloc(size, GFP_KERNEL)
+sizeof(*rx) + (sizeof(struct htt_rx_indication_mpdu_range) * num_mpdu_ranges)
 
-Instead of leaving these open-coded and prone to type mistakes, we can
-now use the new struct_size() helper:
+ to :
 
-instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL)
-
-Notice that, in this case, variable regd_size is not necessary,
-hence it is removed.
+struct_size(rx, mpdu_ranges, num_mpdu_ranges)
 
 This code was detected with the help of Coccinelle.
 
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index 69e3b624adbb..24b33e20e7a9 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -1025,17 +1025,14 @@ mwifiex_create_custom_regdomain(struct mwifiex_private *priv,
- 	struct ieee80211_regdomain *regd;
- 	struct ieee80211_reg_rule *rule;
- 	bool new_rule;
--	int regd_size, idx, freq, prev_freq = 0;
-+	int idx, freq, prev_freq = 0;
- 	u32 bw, prev_bw = 0;
- 	u8 chflags, prev_chflags = 0, valid_rules = 0;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index a20ea270d519..9652cf323927 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2193,9 +2193,7 @@ static void ath10k_htt_rx_proc_rx_ind_ll(struct ath10k_htt *htt,
+ 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
  
- 	if (WARN_ON_ONCE(num_chan > NL80211_MAX_SUPP_REG_RULES))
- 		return ERR_PTR(-EINVAL);
+ 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt rx ind: ",
+-			rx, sizeof(*rx) +
+-			(sizeof(struct htt_rx_indication_mpdu_range) *
+-				num_mpdu_ranges));
++			rx, struct_size(rx, mpdu_ranges, num_mpdu_ranges));
  
--	regd_size = sizeof(struct ieee80211_regdomain) +
--		    num_chan * sizeof(struct ieee80211_reg_rule);
--
--	regd = kzalloc(regd_size, GFP_KERNEL);
-+	regd = kzalloc(struct_size(regd, reg_rules, num_chan), GFP_KERNEL);
- 	if (!regd)
- 		return ERR_PTR(-ENOMEM);
- 
+ 	for (i = 0; i < num_mpdu_ranges; i++)
+ 		mpdu_count += mpdu_ranges[i].mpdu_count;
 -- 
 2.21.0
 
