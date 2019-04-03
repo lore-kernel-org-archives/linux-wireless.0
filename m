@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B73DC4360F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 21:32:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4538EC4360F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 21:32:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 697702084B
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 21:32:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A9AD2082C
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 21:32:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726682AbfDCVaU (ORCPT
+        id S1728642AbfDCVcn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Apr 2019 17:30:20 -0400
-Received: from mga05.intel.com ([192.55.52.43]:37312 "EHLO mga05.intel.com"
+        Wed, 3 Apr 2019 17:32:43 -0400
+Received: from mga05.intel.com ([192.55.52.43]:37323 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726628AbfDCVaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726636AbfDCVaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 3 Apr 2019 17:30:19 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Apr 2019 14:30:11 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Apr 2019 14:30:12 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.60,306,1549958400"; 
-   d="scan'208";a="334754234"
+   d="scan'208";a="334754267"
 Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
-  by fmsmga005.fm.intel.com with ESMTP; 03 Apr 2019 14:30:10 -0700
+  by fmsmga005.fm.intel.com with ESMTP; 03 Apr 2019 14:30:12 -0700
 From:   Fenghua Yu <fenghua.yu@intel.com>
 To:     "Thomas Gleixner" <tglx@linutronix.de>,
         "Ingo Molnar" <mingo@redhat.com>, "Borislav Petkov" <bp@alien8.de>,
@@ -44,9 +44,9 @@ Cc:     "linux-kernel" <linux-kernel@vger.kernel.org>,
         "x86" <x86@kernel.org>, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, kvm@vger.kernel.org,
         Fenghua Yu <fenghua.yu@intel.com>
-Subject: [PATCH v6 04/20] x86/split_lock: Align x86_capability to unsigned long to avoid split locked access
-Date:   Wed,  3 Apr 2019 14:21:50 -0700
-Message-Id: <1554326526-172295-5-git-send-email-fenghua.yu@intel.com>
+Subject: [PATCH v6 14/20] x86/split_lock: Add a sysfs interface to enable/disable split lock detection during run time
+Date:   Wed,  3 Apr 2019 14:22:00 -0700
+Message-Id: <1554326526-172295-15-git-send-email-fenghua.yu@intel.com>
 X-Mailer: git-send-email 2.5.0
 In-Reply-To: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com>
 References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com>
@@ -55,45 +55,103 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-set_cpu_cap() calls locked BTS and clear_cpu_cap() calls locked BTR to
-operate on bitmap defined in x86_capability.
+The interface /sys/device/system/cpu/split_lock_detect is added
+to allow user to control split lock detection and show current split
+lock detection setting.
 
-Locked BTS/BTR accesses a single unsigned long location. In 64-bit mode,
-the location is at:
-base address of x86_capability + (bit offset in x86_capability / 64) * 8
+Writing 1 to the file enables split lock detection and writing 0
+disables split lock detection. Split lock detection is enabled or
+disabled on all CPUs.
 
-Since base address of x86_capability may not be aligned to unsigned long,
-the single unsigned long location may cross two cache lines and
-accessing the location by locked BTS/BTR introductions will trigger #AC.
+Reading the file returns current global split lock detection setting:
+0: disabled
+1: enabled
 
-To fix the split lock issue, align x86_capability to unsigned long so that
-the location will be always within one cache line.
-
-Changing x86_capability[]'s type to unsigned long may also fix the issue
-because x86_capability[] will be naturally aligned to unsigned long. But
-this needs additional code changes. So choose the simpler solution
-by setting alignment to size of unsigned long.
+Please note the interface only shows global setting. During run time,
+split lock detection on one CPU may be disabled if split lock
+in kernel code happens on the CPU. The interface doesn't show split
+lock detection status on individual CPU. User can run rdmsr on 0x33
+to check split lock detection on each CPU.
 
 Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
 ---
- arch/x86/include/asm/processor.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ arch/x86/kernel/cpu/intel.c | 66 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
 
-diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
-index 2bb3a648fc12..7c62b9ad6e5a 100644
---- a/arch/x86/include/asm/processor.h
-+++ b/arch/x86/include/asm/processor.h
-@@ -93,7 +93,9 @@ struct cpuinfo_x86 {
- 	__u32			extended_cpuid_level;
- 	/* Maximum supported CPUID level, -1=no CPUID: */
- 	int			cpuid_level;
--	__u32			x86_capability[NCAPINTS + NBUGINTS];
-+	/* Aligned to size of unsigned long to avoid split lock in atomic ops */
-+	__u32			x86_capability[NCAPINTS + NBUGINTS]
-+				__aligned(sizeof(unsigned long));
- 	char			x86_vendor_id[16];
- 	char			x86_model_id[64];
- 	/* in KB - valid for CPUS which support this call: */
+diff --git a/arch/x86/kernel/cpu/intel.c b/arch/x86/kernel/cpu/intel.c
+index ae3e327d5e35..166033fa8423 100644
+--- a/arch/x86/kernel/cpu/intel.c
++++ b/arch/x86/kernel/cpu/intel.c
+@@ -1102,3 +1102,69 @@ void __init cpu_set_core_cap_bits(struct cpuinfo_x86 *c)
+ 	if (ia32_core_cap & CORE_CAP_SPLIT_LOCK_DETECT)
+ 		set_split_lock_detect();
+ }
++
++static ssize_t
++split_lock_detect_show(struct device *dev, struct device_attribute *attr,
++		       char *buf)
++{
++	return sprintf(buf, "%u\n", READ_ONCE(split_lock_detect_val));
++}
++
++static ssize_t
++split_lock_detect_store(struct device *dev, struct device_attribute *attr,
++			const char *buf, size_t count)
++{
++	u32 val, l, h;
++	int cpu, ret;
++
++	ret = kstrtou32(buf, 10, &val);
++	if (ret)
++		return ret;
++
++	if (val != DISABLE_SPLIT_LOCK_DETECT && val != ENABLE_SPLIT_LOCK_DETECT)
++		return -EINVAL;
++
++	/*
++	 * Since split lock could be disabled by kernel #AC handler or user
++	 * may directly change bit 29 in MSR_TEST_CTL, split lock setting on
++	 * each CPU may be different from global setting split_lock_detect_val
++	 * by now. Update MSR on each CPU, so all of CPUs will have same split
++	 * lock setting.
++	 */
++	mutex_lock(&split_lock_detect_mutex);
++
++	WRITE_ONCE(split_lock_detect_val, val);
++
++	/*
++	 * Get MSR_TEST_CTL on this CPU, assuming all CPUs have same value
++	 * in the MSR except split lock detection bit (bit 29).
++	 */
++	rdmsr(MSR_TEST_CTL, l, h);
++	l = new_sp_test_ctl_val(l);
++	/* Update the split lock detection setting on all online CPUs. */
++	for_each_online_cpu(cpu)
++		wrmsr_on_cpu(cpu, MSR_TEST_CTL, l, h);
++
++	mutex_unlock(&split_lock_detect_mutex);
++
++	return count;
++}
++
++static DEVICE_ATTR_RW(split_lock_detect);
++
++static int __init split_lock_init(void)
++{
++	int ret;
++
++	if (!boot_cpu_has(X86_FEATURE_SPLIT_LOCK_DETECT))
++		return -ENODEV;
++
++	ret = device_create_file(cpu_subsys.dev_root,
++				 &dev_attr_split_lock_detect);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++subsys_initcall(split_lock_init);
 -- 
 2.19.1
 
