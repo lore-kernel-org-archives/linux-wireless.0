@@ -2,115 +2,73 @@ Return-Path: <SRS0=OUAD=SF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CD2DC4360F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 13:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81DB5C4360F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 13:31:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3442A2084B
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 13:04:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D5212075E
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 13:31:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="GwACJi8Y"
+	dkim=pass (4096-bit key) header.d=bartschnet.de header.i=@bartschnet.de header.b="F/46cAHa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726099AbfDCNER (ORCPT
+        id S1726263AbfDCNa7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Apr 2019 09:04:17 -0400
-Received: from narfation.org ([79.140.41.39]:36634 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726064AbfDCNER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Apr 2019 09:04:17 -0400
-Received: from bentobox.localnet (unknown [IPv6:2001:16b8:5595:c8ea::e4d])
-        by v3-1039.vlinux.de (Postfix) with ESMTPSA id 5DF281100E9;
-        Wed,  3 Apr 2019 15:04:13 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=narfation.org;
-        s=20121; t=1554296654;
-        bh=7jhfPr/canMgQwp9EbLAuegAbLXhbDNmzcoVltEiZ/0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GwACJi8YpfEJmim5oVdRpcYy/V++I/NuUL+gDOOPeFqDwncOmx8YNeBy/Zf/NH9iv
-         eVwA3+bIev5tRNQnglY6HRM8BrnTk+8CMgy/6uHIjLmUby55oY2ccREBqInwiBkVte
-         fer22QAMDITc2gLTl8WPw5/wRm41/OXYEKCklgTo=
-From:   Sven Eckelmann <sven@narfation.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
-        Steve deRosier <derosier@cal-sierra.com>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Zhi Chen <zhichen@codeaurora.org>,
-        John Crispin <john@phrozen.org>,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-Subject: Re: [PATCH] ath10k: fix incorrect multicast/broadcast rate setting
-Date:   Wed, 03 Apr 2019 15:04:10 +0200
-Message-ID: <5618478.dNoBKn3uCK@bentobox>
-In-Reply-To: <8736mzuvbz.fsf@kamboji.qca.qualcomm.com>
-References: <1544504171-19810-1-git-send-email-pradeepc@codeaurora.org> <3062143.B1lnfLpWcE@bentobox> <8736mzuvbz.fsf@kamboji.qca.qualcomm.com>
+        Wed, 3 Apr 2019 09:30:59 -0400
+Received: from mail.core-networks.de ([82.96.72.7]:54135 "EHLO
+        mail.core-networks.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725959AbfDCNa6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Apr 2019 09:30:58 -0400
+X-Greylist: delayed 1895 seconds by postgrey-1.27 at vger.kernel.org; Wed, 03 Apr 2019 09:30:58 EDT
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=bartschnet.de; s=2018030201; h=Content-Transfer-Encoding:MIME-Version:Date:
+        Message-ID:Subject:From:To:content-disposition;
+        bh=y3PLBx8YBr7DiXb5fdzGqhlegrVXUC6Yf/qIkCpsSU8=; b=F/46cAHaN2uz7uCCf9ii+nAgsW
+        J2VyR8IkRuaTVnkbvBEFzCVotkRNp9t/ScB5nKBMNW/rV8PYlWyTsMlE1Un00trPC56c+Rvnpqfah
+        a4WCIPpQlxJJ5gkFkdfZRHFvpger6CsR8Qs4YCjdni2xOP6F3moYPBtYT6ThDhwsDKc0sLzJrcvyz
+        mgmVAQ83tcv6vvKLxZUWh20VZWjW0hbTErKcsYyh8HNYQoa6msGvsn3KXiwcof299P6zl+kdFydQa
+        SPgRcrUpVN4hSoSpo97bISZQ31NkYnzDPrH+mCcI6K2AZqZWmJ+hY4MxEe8euX3hTcKzb/wsjtG6L
+        ZZHPEPtU0wbl8oyJLEbQfxZNAOFkyGV6Fb0xrgYKBpazW6gEVq+hCcO/pgo7AGdK5yDYHwsPYceaa
+        zO6IXel5SGoMx5AqZ/kaP4Rl/gaFS4m1wcYw2eAThhZyU39zEY74RjspO/xsoiU89vulrcSUmVefn
+        lwz4fiNUxHRmQAghlBDZzfWrtJugQWldnDatWpOdQg2QmQLUSxVVqUqKX6FSUrEHMFrlFwDL/6OPi
+        IgBd9mn1OSQ8vlpL1gXloK6eR6AZ9cfoowkDYpgWJmslYaJSc74X9gJndXiwljnfbcZLWqwByD6Q4
+        x6AEEZzPnfm4774qpdDF/sBZB0fufWluzhkSOOCeQ=;
+Received: from localhost (localhost [127.0.0.1])
+        by mail.core-networks.de id 1hBfU8-000818-7A
+        with ESMTPSA (TLSv1.3:TLS_AES_256_GCM_SHA384:256)
+        for linux-wireless@vger.kernel.org; Wed, 03 Apr 2019 14:59:22 +0200
+To:     linux-wireless@vger.kernel.org
+From:   "Rene 'Renne' Bartsch, B.Sc. Informatics" <ml@bartschnet.de>
+Subject: Bug: Country code cannot be changed on Compex WLE900VX (qca9880)
+Message-ID: <2378a7a3-6973-6a38-fb74-d495ca7916ba@bartschnet.de>
+Date:   Wed, 3 Apr 2019 14:59:18 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart19681940.3Wz5n8HyCO"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---nextPart19681940.3Wz5n8HyCO
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Hi,
 
-On Wednesday, 3 April 2019 14:28:16 CEST Kalle Valo wrote:
-[...]
-> I'm planning to apply this. I was not sure what you wanted to add to the
-> commit log but I changed to now what's below. Please let me know if you
-> want to change it.
-> 
->     ath10k: fix incorrect multicast/broadcast rate setting
->     
->     Invalid rate code is sent to firmware when multicast rate value of 0 is
->     sent to driver indicating disabled case, causing broken mesh path.
->     so fix that.
->     
->     Tested on QCA9984 with firmware 10.4-3.6.1-00827
->     
->     Sven tested on IPQ4019 with 10.4-3.5.3-00057 and QCA9888 with 10.4-3.5.3-00053
->     (ath10k-firmware) and 10.4-3.6-00140 (linux-firmware 2018-12-16-211de167).
->     
->     Fixes: cd93b83ad92 ("ath10k: support for multicast rate control")
->     Co-developed-by: Zhi Chen <zhichen@codeaurora.org>
->     Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
->     Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
->     Tested-by: Sven Eckelmann <sven@narfation.org>
->     Patchwork-Id: 10723033
->     Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+the ath10k module sets the country code to US at initialization. After that the country code cannot be changed anymore (e.g. to "DE").
 
-I thought you just wanted to have this information added to the "Tested on " 
-line by him. So I didn't really invest time to propose a new paragraph.
+Compex support suggests setting "reg->country_code = CTRY_UNITED_STATES;" in "/drivers/net/wireless/ath/regd.c" to the local country.
 
-The new paragraph is fine for me.
+Re-compiling every kernel-update isn't an option on production systems. :-(
 
-Kind regards,
-	Sven
---nextPart19681940.3Wz5n8HyCO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Kernel version: 4.19.0-4-amd64 #1 SMP Debian 4.19.28-2 (2019-03-15) x86_64 GNU/Linux on Debian 10 Buster
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlykr0oACgkQXYcKB8Em
-e0ZRhxAAlXhcJ7j0AhFzo7pr/CS7CL4iXNb1RfKULViEtQfp61yN0A2+c7M6fYql
-VbIgjwtqI0hvGO2yFM98Q3ur00tlouCd1XbRWzozOp26wCbZDKkvHTzctS2szMKl
-qr+8VGHeL+E7eQBjdSi6aaV+TzoStLDaMgtm6R4wuiK4Ul3/yCKCNfghV72VW81J
-edwcQ3DsYLoZAWbN6/51m4hfNAfRzvvfGoyrjIBPDLNiq9EIr/K4ro2sBCxQCFt0
-uSBRRA3kjbIUdVPyHljDeYal46uB0gMx+UhiCvYeQ+KejyyU2I/uZh5aDaHjgMla
-s3gQP4x4ovsoccTNVhfo1X1a/gtGW7x6i2rDOieQ90Pd+ph1O6w25p4XZN6Lo72o
-f4RPyZZPrTjlP2kAaWd88EiloInxC92ALQz9ZdpoibaWqrX45DVuhXMQMK+8QNLd
-j61SmZe43URH41Wdmt248/3aT5/ZSvyTh3nm0JUcf+eodxRxJZJIstfFEorv6G3F
-MMwnIzMPNIxl8RUCd3hR+CBN+OCRI6u/3qnlKXYmnI9MfLgqggEncJCwK5HR0pl0
-BL4cy2LY1tTqlR/6SKwnSvw0lXCkqEXVHK3YFhEK6f9Cs1xrMTF/0U8+iYoGJFqM
-pHvTnKNgyVo5p866DQUQtqJt9WidG5HtaqKxCsCBB6c9Qh9XEV4=
-=K1c3
------END PGP SIGNATURE-----
-
---nextPart19681940.3Wz5n8HyCO--
+See http://forums.debian.net/viewtopic.php?f=5&t=141402&p=695556 for further details.
 
 
+Regards,
 
+Renne
