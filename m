@@ -2,103 +2,115 @@ Return-Path: <SRS0=OUAD=SF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21F96C4360F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 12:46:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CD2DC4360F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 13:04:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E637C20830
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 12:46:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3442A2084B
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Apr 2019 13:04:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GoVsFwgA";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="km7gGuvZ"
+	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="GwACJi8Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726183AbfDCMqz (ORCPT
+        id S1726099AbfDCNER (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Apr 2019 08:46:55 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:33614 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726064AbfDCMqy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Apr 2019 08:46:54 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id C9C9960ADE; Wed,  3 Apr 2019 12:46:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554295613;
-        bh=TxQoXv/i3BtIyXBofYhol/tqfvvtAgYV8a1AdfLX15Q=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=GoVsFwgANdYhM5tKQy7UhUnK15lMsCwmkQZFWFRnMlICLa37WPYUWmuOcJcDbFLCW
-         YgIINLFQYbWj7l5wVwGUzE4hq5hQebIao5VAa1vAOOggdcawk3QHE5WwZwaXuZASpo
-         y2jJulLfHEXfeDFUi+kAF4OzIEFGrA1Pcv+/7tOc=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id AE72160ADE;
-        Wed,  3 Apr 2019 12:46:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554295613;
-        bh=TxQoXv/i3BtIyXBofYhol/tqfvvtAgYV8a1AdfLX15Q=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=km7gGuvZPPbKRjBzu+7Co34uEymm0XviDvEwXvaj/Jdby4S7Ohd40U/dQg0wJDddZ
-         RLtviijl2PERisy1Ib6fI3CyOkhvKQzI/iSC8nWDzh28ry7qhbCQGmwCgEVnf6gVzQ
-         rs6CALvp0ZZIjLKybWQJNg/OCSxYQKN5Yfst3JEY=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AE72160ADE
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Wed, 3 Apr 2019 09:04:17 -0400
+Received: from narfation.org ([79.140.41.39]:36634 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726064AbfDCNER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Apr 2019 09:04:17 -0400
+Received: from bentobox.localnet (unknown [IPv6:2001:16b8:5595:c8ea::e4d])
+        by v3-1039.vlinux.de (Postfix) with ESMTPSA id 5DF281100E9;
+        Wed,  3 Apr 2019 15:04:13 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=narfation.org;
+        s=20121; t=1554296654;
+        bh=7jhfPr/canMgQwp9EbLAuegAbLXhbDNmzcoVltEiZ/0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=GwACJi8YpfEJmim5oVdRpcYy/V++I/NuUL+gDOOPeFqDwncOmx8YNeBy/Zf/NH9iv
+         eVwA3+bIev5tRNQnglY6HRM8BrnTk+8CMgy/6uHIjLmUby55oY2ccREBqInwiBkVte
+         fer22QAMDITc2gLTl8WPw5/wRm41/OXYEKCklgTo=
+From:   Sven Eckelmann <sven@narfation.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Ansuel Smith <ansuelsmth@gmail.com>,
+        Steve deRosier <derosier@cal-sierra.com>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Zhi Chen <zhichen@codeaurora.org>,
+        John Crispin <john@phrozen.org>,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+Subject: Re: [PATCH] ath10k: fix incorrect multicast/broadcast rate setting
+Date:   Wed, 03 Apr 2019 15:04:10 +0200
+Message-ID: <5618478.dNoBKn3uCK@bentobox>
+In-Reply-To: <8736mzuvbz.fsf@kamboji.qca.qualcomm.com>
+References: <1544504171-19810-1-git-send-email-pradeepc@codeaurora.org> <3062143.B1lnfLpWcE@bentobox> <8736mzuvbz.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 16/21] wil6210: fix report of rx packet checksum in edma
- mode
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1550845279-16103-17-git-send-email-merez@codeaurora.org>
-References: <1550845279-16103-17-git-send-email-merez@codeaurora.org>
-To:     Maya Erez <merez@codeaurora.org>
-Cc:     Ahmad Masri <amasri@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190403124653.C9C9960ADE@smtp.codeaurora.org>
-Date:   Wed,  3 Apr 2019 12:46:53 +0000 (UTC)
+Content-Type: multipart/signed; boundary="nextPart19681940.3Wz5n8HyCO"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Maya Erez <merez@codeaurora.org> wrote:
+--nextPart19681940.3Wz5n8HyCO
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-> Update the rx packet checksum of received packet according to edma
-> HW spec:
+On Wednesday, 3 April 2019 14:28:16 CEST Kalle Valo wrote:
+[...]
+> I'm planning to apply this. I was not sure what you wanted to add to the
+> commit log but I changed to now what's below. Please let me know if you
+> want to change it.
 > 
-> No need to calculate checksum in the following cases:
-> L4_status=0 and L3_status=0 - No L3 and no L4 known protocols found
-> L4_status=0 and L3_status=1 - L3 was found, and checksum check passed.
-> No known L4 protocol was found.
-> L4_status=1 - L4 was found, and checksum check passed.
-> 
-> Recalculate checksum in the following cases:
-> L4_status=3 and L3_status=1 - It means that L3 protocol was found,
-> and checksum passed, but L4 checksum failed.
-> L4_status=3 and L3_status=2	- Both L3 and L4 checksum check failed.
-> 
-> Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
-> Signed-off-by: Maya Erez <merez@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>     ath10k: fix incorrect multicast/broadcast rate setting
+>     
+>     Invalid rate code is sent to firmware when multicast rate value of 0 is
+>     sent to driver indicating disabled case, causing broken mesh path.
+>     so fix that.
+>     
+>     Tested on QCA9984 with firmware 10.4-3.6.1-00827
+>     
+>     Sven tested on IPQ4019 with 10.4-3.5.3-00057 and QCA9888 with 10.4-3.5.3-00053
+>     (ath10k-firmware) and 10.4-3.6-00140 (linux-firmware 2018-12-16-211de167).
+>     
+>     Fixes: cd93b83ad92 ("ath10k: support for multicast rate control")
+>     Co-developed-by: Zhi Chen <zhichen@codeaurora.org>
+>     Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
+>     Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+>     Tested-by: Sven Eckelmann <sven@narfation.org>
+>     Patchwork-Id: 10723033
+>     Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-6 patches applied to ath-next branch of ath.git, thanks.
+I thought you just wanted to have this information added to the "Tested on " 
+line by him. So I didn't really invest time to propose a new paragraph.
 
-4bf019865cf3 wil6210: fix report of rx packet checksum in edma mode
-49122ec42634 wil6210: fix return code of wmi_mgmt_tx and wmi_mgmt_tx_ext
-1683a001d5bf wil6210: prevent access to RGF_CAF_ICR in Talyn
-8454e72a3644 wil6210: add support for ucode tracing
-b4a967b7d0f5 wil6210: reset buff id in status message after completion
-fa0b735414f9 wil6210: print error in FW and board files load failures
+The new paragraph is fine for me.
 
--- 
-https://patchwork.kernel.org/patch/10826135/
+Kind regards,
+	Sven
+--nextPart19681940.3Wz5n8HyCO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlykr0oACgkQXYcKB8Em
+e0ZRhxAAlXhcJ7j0AhFzo7pr/CS7CL4iXNb1RfKULViEtQfp61yN0A2+c7M6fYql
+VbIgjwtqI0hvGO2yFM98Q3ur00tlouCd1XbRWzozOp26wCbZDKkvHTzctS2szMKl
+qr+8VGHeL+E7eQBjdSi6aaV+TzoStLDaMgtm6R4wuiK4Ul3/yCKCNfghV72VW81J
+edwcQ3DsYLoZAWbN6/51m4hfNAfRzvvfGoyrjIBPDLNiq9EIr/K4ro2sBCxQCFt0
+uSBRRA3kjbIUdVPyHljDeYal46uB0gMx+UhiCvYeQ+KejyyU2I/uZh5aDaHjgMla
+s3gQP4x4ovsoccTNVhfo1X1a/gtGW7x6i2rDOieQ90Pd+ph1O6w25p4XZN6Lo72o
+f4RPyZZPrTjlP2kAaWd88EiloInxC92ALQz9ZdpoibaWqrX45DVuhXMQMK+8QNLd
+j61SmZe43URH41Wdmt248/3aT5/ZSvyTh3nm0JUcf+eodxRxJZJIstfFEorv6G3F
+MMwnIzMPNIxl8RUCd3hR+CBN+OCRI6u/3qnlKXYmnI9MfLgqggEncJCwK5HR0pl0
+BL4cy2LY1tTqlR/6SKwnSvw0lXCkqEXVHK3YFhEK6f9Cs1xrMTF/0U8+iYoGJFqM
+pHvTnKNgyVo5p866DQUQtqJt9WidG5HtaqKxCsCBB6c9Qh9XEV4=
+=K1c3
+-----END PGP SIGNATURE-----
+
+--nextPart19681940.3Wz5n8HyCO--
+
+
 
