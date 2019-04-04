@@ -2,112 +2,106 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6AFBC4360F
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:45:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D44FC4360F
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:47:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 925B0206C0
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:45:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 635F1206C0
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:47:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Cch7lFka"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="OHxRQe4t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731190AbfDDUpS (ORCPT
+        id S1731165AbfDDUrc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 16:45:18 -0400
-Received: from [208.74.158.174] ([208.74.158.174]:38254 "EHLO
-        mail3.candelatech.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S1730337AbfDDUpS (ORCPT
+        Thu, 4 Apr 2019 16:47:32 -0400
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:39134 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728743AbfDDUrc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 16:45:18 -0400
-Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id C1C4527C29
-        for <linux-wireless@vger.kernel.org>; Thu,  4 Apr 2019 13:45:16 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C1C4527C29
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1554410716;
-        bh=wTXyLn0jtWbfkKdoMXQSb+1xAc2Zhl03kSlom67uSqo=;
-        h=Subject:From:To:References:Date:In-Reply-To:From;
-        b=Cch7lFkasVM/1ZaRKc2ncKoP26Yj4XvVBiXOfkWLVZwIwUE6xfUjjhQi/AZioFm4U
-         FdMJiZ1yL8W7MgNSUFJEhuRJCBZxvRfYAYQ2Vg9ALNreeZ3JIN7bdMEBUB5KyagiYt
-         13/TFjwwFKU8G84iwoR76FUfIX8WzXO4eqS+IWEc=
-Subject: Re: ath10k and min_gcd + adhoc issues in 4.20 kernel
-From:   Ben Greear <greearb@candelatech.com>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <3dfff3d9-a070-f3a3-723c-d1442ec06bc5@candelatech.com>
-Organization: Candela Technologies
-Message-ID: <5475c4c5-e30d-f254-e3b8-43b52b83a198@candelatech.com>
-Date:   Thu, 4 Apr 2019 13:45:16 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        Thu, 4 Apr 2019 16:47:32 -0400
+Received: by mail-lf1-f66.google.com with SMTP id m13so2788955lfb.6
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2019 13:47:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=lj7E0dX/n40xL9DviNuZFYN3qlP/0blpKhCIQVM1Noo=;
+        b=OHxRQe4tknqzI3KJ77CK0N68mnchHgfZ+2xhr2CG02T/h6b3IGBmAbJ2/e7r+vCrF9
+         Q8TUXAKzlrMDfjIYoooHsr2ZIWLjLY13afv05+6ufRoMFwil7lSTS5TXzIOo9ab3m3Mf
+         dr/mEnEWMScIWjoB9EGceddpryw6Pby5PXQa8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=lj7E0dX/n40xL9DviNuZFYN3qlP/0blpKhCIQVM1Noo=;
+        b=V39V2XiCdXGRSThdZohrbUnjrVtVE8kQgMOUyjKjBKGNsigQPS6bH9r8Ox+i7fz7CO
+         qg6/zgcujaaBp7iMeLyVhGnYFLmBEGo13nSo2mYDf8BmJ0i72Nn1L4nmWWmG1t1FLART
+         h4CLm2MExf3FITiugbT3paPYtHGNn+G/FgqUd18lltCEykFT2HeIs9okKFv4DgdD9+8e
+         EKQfoss4yyhoLNpE2kRlL+oZJf/RBkHCiukgIF4AQS4PKKdZc9IbxBmbiGQAUUcmAOaD
+         gvFVMkcGOSBmsxHjm2kRKtc6iDFG6Tt6nWoVKRDfhSiC4t/0KIe3MUAGAiCcfbpeqLLY
+         hR9Q==
+X-Gm-Message-State: APjAAAU10alPQXC2Xqz8KTSxkNyDeekZySfyzbDFaTRDvd5tuuZMxcoz
+        38vhDWjMifsYqKZ6rMo66xniVL7ZO4g=
+X-Google-Smtp-Source: APXvYqxCPW1FYsuQCDkjVqvRkK0ASBxIUUNHQbXNeAIHebU2sKqqFXc/cpQA64GY4vh9uK/Zf6glrQ==
+X-Received: by 2002:a19:ef19:: with SMTP id n25mr4410088lfh.0.1554410850420;
+        Thu, 04 Apr 2019 13:47:30 -0700 (PDT)
+Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com. [209.85.167.49])
+        by smtp.gmail.com with ESMTPSA id y13sm3822419lfl.22.2019.04.04.13.47.29
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 04 Apr 2019 13:47:29 -0700 (PDT)
+Received: by mail-lf1-f49.google.com with SMTP id v14so2837373lfi.0
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2019 13:47:29 -0700 (PDT)
+X-Received: by 2002:a19:7d84:: with SMTP id y126mr4559966lfc.124.1554410848649;
+ Thu, 04 Apr 2019 13:47:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <3dfff3d9-a070-f3a3-723c-d1442ec06bc5@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20190404040106.40519-1-dianders@chromium.org> <874l7egxdj.fsf@codeaurora.org>
+In-Reply-To: <874l7egxdj.fsf@codeaurora.org>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Thu, 4 Apr 2019 13:47:17 -0700
+X-Gmail-Original-Message-ID: <CA+ASDXNfOUmMEWYwts8PuiDaEjuoPK+tZ0BhDSSte5u5toydkA@mail.gmail.com>
+Message-ID: <CA+ASDXNfOUmMEWYwts8PuiDaEjuoPK+tZ0BhDSSte5u5toydkA@mail.gmail.com>
+Subject: Re: [PATCH] mwifiex: Make resume actually do something useful again
+ on SDIO cards
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Douglas Anderson <dianders@chromium.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Ryan Case <ryandcase@chromium.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Xinming Hu <huxinming820@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+On Wed, Apr 3, 2019 at 10:20 PM Kalle Valo <kvalo@codeaurora.org> wrote:
+> Douglas Anderson <dianders@chromium.org> writes:
+> > Fixes: fc3a2fcaa1ba ("mwifiex: use atomic bitops to represent adapter status variables")
+> > Signed-off-by: Douglas Anderson <dianders@chromium.org>
+>
+> I'm planning to queue this for 5.1.
 
-Any comments on this below?
+With an explicit
+
+Cc: <stable@vger.kernel.org>
+
+please? Somebody would likely pick it up anyway, but it's nice to be explicit.
+
+Not that it really matters, but also:
+
+Reviewed-by: Brian Norris <briannorris@chromium.org>
 
 Thanks,
-Ben
-
-On 1/15/19 3:29 PM, Ben Greear wrote:
-> I just updated to 4.20 and ported forward my ath10k patches.  Now the driver
-> will not register with mac80211 because this warning hits in net/wireless/core.c:
-> 
->              /*
->               * This isn't well-defined right now. If you have an
->               * IBSS interface, then its beacon interval may change
->               * by joining other networks, and nothing prevents it
->               * from doing that.
->               * So technically we probably shouldn't even allow AP
->               * and IBSS in the same interface, but it seems that
->               * some drivers support that, possibly only with fixed
->               * beacon intervals for IBSS.
->               */
->              if (WARN_ON(types & BIT(NL80211_IFTYPE_ADHOC) &&
->                      c->beacon_int_min_gcd)) {
->                  return -EINVAL;
->              }
-> 
-> 
-> It looks like this was triggered by:
-> 
-> Commit 0c317a02ca982ca093e71bf07cb562265ba40032
-> Author: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-> Date:   Wed Oct 12 18:26:51 2016 +0530
-> 
->      cfg80211: support virtual interfaces with different beacon intervals
-> 
-> and
-> 
-> commit 8ebee73b574ad3dd1f14d461f65ceaffbd637650
-> Author: Anilkumar Kolli <akolli@codeaurora.org>
-> Date:   Wed Mar 28 12:19:40 2018 +0300
-> 
->      ath10k: advertize beacon_int_min_gcd
-> 
-> 
-> To be honest, I don't see why that check for beacon_int_min_gcd is in the registration
-> logic.  Having it be '1' means that the driver/nic/firmware is flexible on pretty much
-> any combination of beacon interval, so why should that trigger the WARN_ON case?
-> 
-> Thanks,
-> Ben
-> 
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Brian
