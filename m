@@ -2,91 +2,151 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD9A0C4360F
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 09:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 182C7C10F05
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 09:30:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AABC8205F4
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 09:29:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EjVaaQx0";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aN4n385L"
+	by mail.kernel.org (Postfix) with ESMTP id DBA4D205F4
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 09:30:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1554370233;
+	bh=GHiXkZAloJXwcrj4Qa7/SdV9pTNyQRq0Vl8arTgRe60=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Q18Q0TGyk6TvXQmD26I1y4q7pRTIeIDyjAOoUb62/yt++in2++prQAxXGs1tvRR01
+	 qYKK/SeWpsQc1rVVK9MKrHx8LDAgoDD47FsERoUQfFlBH5tjxFR6FQQN/oo9C/0+kl
+	 37U/xou7XZwByXhapZk9LLFd0hEzoWVzASGtWQCI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733259AbfDDJ24 (ORCPT
+        id S1732929AbfDDJKD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 05:28:56 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:48664 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729275AbfDDJ2z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 05:28:55 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 58765614B5; Thu,  4 Apr 2019 09:28:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554370134;
-        bh=0Kvu+k7olBLdhhfbWZY3bUkOtIN9a4rTe3VpQTjAPjQ=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=EjVaaQx078VvzlNQl2b5s2/9X8zkexxkwgEtpngYr3E6k9geQTaQCeeQ93HNyaX17
-         4/euP7z5cb5Wwww+RB/B+W8+cdELCKWUBIkmGZWH6QkWLHpNI87cxqANt81mW2yEKr
-         oh7/lbnOWD1MvsyMD/+33FPmVkG5jy1ZZwKoBRhw=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        Thu, 4 Apr 2019 05:10:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49376 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732920AbfDDJKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Apr 2019 05:10:00 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F01FD619D2;
-        Thu,  4 Apr 2019 09:28:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554370133;
-        bh=0Kvu+k7olBLdhhfbWZY3bUkOtIN9a4rTe3VpQTjAPjQ=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=aN4n385Lh+W/3/LzSNhVU5wJ6Z2+OGOKrRAO883iCXKB7oIj7FWx1cVOezreYQaH3
-         TGDC83wB04rQeIh11droL4epwSpBF26xr9k0wXJlgJFCsh+aPPNSCwxtRJQLGJSdfe
-         NJb2k+WNXzLFM6F+sq1Z/msxOHeJKfmg6ES4MyZU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F01FD619D2
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] net: mwifiex: fix a NULL pointer dereference
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190323035711.23882-1-kjlu@umn.edu>
-References: <20190323035711.23882-1-kjlu@umn.edu>
-To:     Kangjie Lu <kjlu@umn.edu>
-Cc:     kjlu@umn.edu, pakki001@umn.edu,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
+        by mail.kernel.org (Postfix) with ESMTPSA id CCE6020693;
+        Thu,  4 Apr 2019 09:09:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1554368999;
+        bh=GHiXkZAloJXwcrj4Qa7/SdV9pTNyQRq0Vl8arTgRe60=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=wCByu3M7ppH8A+fL9L3iUEnJ3lCdWZU6dGZM2O9QAX+uLJCSytrps0CClpRYVhtPh
+         HL+52iRQvVba554vm9lO64YL0mZv6KFlZ9L93xW+SDI2leo9W4sHXinaw77dCSM+1r
+         HBuXek2/FBhuogCaF3NHrjSSjX2vOufPCW6wFPgM=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Wen Yang <wen.yang99@zte.com.cn>,
+        Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190404092854.58765614B5@smtp.codeaurora.org>
-Date:   Thu,  4 Apr 2019 09:28:53 +0000 (UTC)
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 5.0 060/246] mt76: fix a leaked reference by adding a missing of_node_put
+Date:   Thu,  4 Apr 2019 10:46:00 +0200
+Message-Id: <20190404084621.274424274@linuxfoundation.org>
+X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20190404084619.236418459@linuxfoundation.org>
+References: <20190404084619.236418459@linuxfoundation.org>
+User-Agent: quilt/0.65
+X-stable: review
+X-Patchwork-Hint: ignore
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kangjie Lu <kjlu@umn.edu> wrote:
+5.0-stable review patch.  If anyone has any objections, please let me know.
 
-> In case dev_alloc_skb fails, the fix returns -ENOMEM to avoid
-> NULL pointer dereference.
-> 
-> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+------------------
 
-There is a similar patch submitted:
+[ Upstream commit 34e022d8b780a03902d82fb3997ba7c7b1f40c81 ]
 
-https://patchwork.kernel.org/patch/10851669/
+The call to of_find_node_by_phandle returns a node pointer with refcount
+incremented thus it must be explicitly decremented after the last
+usage.
 
-Patch set to Superseded.
+Detected by coccinelle with the following warnings:
+./drivers/net/wireless/mediatek/mt76/eeprom.c:58:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:61:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:67:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:70:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
+./drivers/net/wireless/mediatek/mt76/eeprom.c:72:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 48, but without a corresponding object release within this function.
 
+Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+Cc: Felix Fietkau <nbd@nbd.name>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-mediatek@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/eeprom.c | 24 ++++++++++++++-------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
+index 530e5593765c..a1529920d877 100644
+--- a/drivers/net/wireless/mediatek/mt76/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
+@@ -54,22 +54,30 @@ mt76_get_of_eeprom(struct mt76_dev *dev, int len)
+ 		part = np->name;
+ 
+ 	mtd = get_mtd_device_nm(part);
+-	if (IS_ERR(mtd))
+-		return PTR_ERR(mtd);
++	if (IS_ERR(mtd)) {
++		ret =  PTR_ERR(mtd);
++		goto out_put_node;
++	}
+ 
+-	if (size <= sizeof(*list))
+-		return -EINVAL;
++	if (size <= sizeof(*list)) {
++		ret = -EINVAL;
++		goto out_put_node;
++	}
+ 
+ 	offset = be32_to_cpup(list);
+ 	ret = mtd_read(mtd, offset, len, &retlen, dev->eeprom.data);
+ 	put_mtd_device(mtd);
+ 	if (ret)
+-		return ret;
++		goto out_put_node;
+ 
+-	if (retlen < len)
+-		return -EINVAL;
++	if (retlen < len) {
++		ret = -EINVAL;
++		goto out_put_node;
++	}
+ 
+-	return 0;
++out_put_node:
++	of_node_put(np);
++	return ret;
+ #else
+ 	return -ENOENT;
+ #endif
 -- 
-https://patchwork.kernel.org/patch/10866749/
+2.19.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
 
