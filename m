@@ -2,106 +2,126 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D44FC4360F
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:47:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC2FCC4360F
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 22:57:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 635F1206C0
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:47:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="OHxRQe4t"
+	by mail.kernel.org (Postfix) with ESMTP id A6D6F2177E
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 22:57:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731165AbfDDUrc (ORCPT
+        id S1730517AbfDDW4z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 16:47:32 -0400
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:39134 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728743AbfDDUrc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 16:47:32 -0400
-Received: by mail-lf1-f66.google.com with SMTP id m13so2788955lfb.6
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2019 13:47:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=lj7E0dX/n40xL9DviNuZFYN3qlP/0blpKhCIQVM1Noo=;
-        b=OHxRQe4tknqzI3KJ77CK0N68mnchHgfZ+2xhr2CG02T/h6b3IGBmAbJ2/e7r+vCrF9
-         Q8TUXAKzlrMDfjIYoooHsr2ZIWLjLY13afv05+6ufRoMFwil7lSTS5TXzIOo9ab3m3Mf
-         dr/mEnEWMScIWjoB9EGceddpryw6Pby5PXQa8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=lj7E0dX/n40xL9DviNuZFYN3qlP/0blpKhCIQVM1Noo=;
-        b=V39V2XiCdXGRSThdZohrbUnjrVtVE8kQgMOUyjKjBKGNsigQPS6bH9r8Ox+i7fz7CO
-         qg6/zgcujaaBp7iMeLyVhGnYFLmBEGo13nSo2mYDf8BmJ0i72Nn1L4nmWWmG1t1FLART
-         h4CLm2MExf3FITiugbT3paPYtHGNn+G/FgqUd18lltCEykFT2HeIs9okKFv4DgdD9+8e
-         EKQfoss4yyhoLNpE2kRlL+oZJf/RBkHCiukgIF4AQS4PKKdZc9IbxBmbiGQAUUcmAOaD
-         gvFVMkcGOSBmsxHjm2kRKtc6iDFG6Tt6nWoVKRDfhSiC4t/0KIe3MUAGAiCcfbpeqLLY
-         hR9Q==
-X-Gm-Message-State: APjAAAU10alPQXC2Xqz8KTSxkNyDeekZySfyzbDFaTRDvd5tuuZMxcoz
-        38vhDWjMifsYqKZ6rMo66xniVL7ZO4g=
-X-Google-Smtp-Source: APXvYqxCPW1FYsuQCDkjVqvRkK0ASBxIUUNHQbXNeAIHebU2sKqqFXc/cpQA64GY4vh9uK/Zf6glrQ==
-X-Received: by 2002:a19:ef19:: with SMTP id n25mr4410088lfh.0.1554410850420;
-        Thu, 04 Apr 2019 13:47:30 -0700 (PDT)
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com. [209.85.167.49])
-        by smtp.gmail.com with ESMTPSA id y13sm3822419lfl.22.2019.04.04.13.47.29
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 04 Apr 2019 13:47:29 -0700 (PDT)
-Received: by mail-lf1-f49.google.com with SMTP id v14so2837373lfi.0
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2019 13:47:29 -0700 (PDT)
-X-Received: by 2002:a19:7d84:: with SMTP id y126mr4559966lfc.124.1554410848649;
- Thu, 04 Apr 2019 13:47:28 -0700 (PDT)
+        Thu, 4 Apr 2019 18:56:55 -0400
+Received: from mga14.intel.com ([192.55.52.115]:55973 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729009AbfDDW4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Apr 2019 18:56:54 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 04 Apr 2019 15:56:53 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,309,1549958400"; 
+   d="scan'208";a="128734818"
+Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
+  by orsmga007.jf.intel.com with ESMTP; 04 Apr 2019 15:56:53 -0700
+Date:   Thu, 4 Apr 2019 15:49:13 -0700
+From:   Fenghua Yu <fenghua.yu@intel.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        H Peter Anvin <hpa@zytor.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Xiaoyao Li <xiaoyao.li@intel.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ravi V Shankar <ravi.v.shankar@intel.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        x86 <x86@kernel.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kvm@vger.kernel.org
+Subject: Re: [PATCH v6 10/20] x86/split_lock: Handle #AC exception for split
+ lock
+Message-ID: <20190404224913.GB178488@romley-ivt3.sc.intel.com>
+References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com>
+ <1554326526-172295-11-git-send-email-fenghua.yu@intel.com>
+ <alpine.DEB.2.21.1904041921460.1802@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-References: <20190404040106.40519-1-dianders@chromium.org> <874l7egxdj.fsf@codeaurora.org>
-In-Reply-To: <874l7egxdj.fsf@codeaurora.org>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Thu, 4 Apr 2019 13:47:17 -0700
-X-Gmail-Original-Message-ID: <CA+ASDXNfOUmMEWYwts8PuiDaEjuoPK+tZ0BhDSSte5u5toydkA@mail.gmail.com>
-Message-ID: <CA+ASDXNfOUmMEWYwts8PuiDaEjuoPK+tZ0BhDSSte5u5toydkA@mail.gmail.com>
-Subject: Re: [PATCH] mwifiex: Make resume actually do something useful again
- on SDIO cards
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Douglas Anderson <dianders@chromium.org>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        Ryan Case <ryandcase@chromium.org>,
-        Heiko Stuebner <heiko@sntech.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Xinming Hu <huxinming820@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.21.1904041921460.1802@nanos.tec.linutronix.de>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Apr 3, 2019 at 10:20 PM Kalle Valo <kvalo@codeaurora.org> wrote:
-> Douglas Anderson <dianders@chromium.org> writes:
-> > Fixes: fc3a2fcaa1ba ("mwifiex: use atomic bitops to represent adapter status variables")
-> > Signed-off-by: Douglas Anderson <dianders@chromium.org>
->
-> I'm planning to queue this for 5.1.
+On Thu, Apr 04, 2019 at 07:31:59PM +0200, Thomas Gleixner wrote:
+> On Wed, 3 Apr 2019, Fenghua Yu wrote:
+> > +dotraplinkage void do_alignment_check(struct pt_regs *regs, long error_code)
+> > +{
+> > +	unsigned int trapnr = X86_TRAP_AC;
+> > +	char str[] = "alignment check";
+> > +	int signr = SIGBUS;
+> > +
+> > +	RCU_LOCKDEP_WARN(!rcu_is_watching(), "entry code didn't wake RCU");
+> > +
+> > +	/*
+> > +	 * WARN*()s end up here; fix them up before we call the
+> > +	 * notifier chain.
+> > +	 */
+> 
+> How exactly is WARN*() ending up here?
+> 
+> > +	if (!user_mode(regs) && fixup_bug(regs, trapnr))
+> 
+> And that fixup_bug() check does what?
+> 
+> int fixup_bug(struct pt_regs *regs, int trapnr)
+> {
+>  	if (trapnr != X86_TRAP_UD)
+>                 return 0;
+> 
+> Copy and paste from do_error_trap() ....
 
-With an explicit
+As you can see, do_alignment_check() is copied from do_error_trap().
+But seems this part of code is irrelevant to #AC handler.
 
-Cc: <stable@vger.kernel.org>
+So I will remove the "if (!user_mode(regs) && fixup_bug(regs, trapnr))"
+and surrounding code, right?
 
-please? Somebody would likely pick it up anyway, but it's nice to be explicit.
+> 
+> > +		return;
+> > +
+> > +	if (notify_die(DIE_TRAP, str, regs, error_code, trapnr, signr) ==
+> > +		       NOTIFY_STOP)
+> > +		return;
+> > +
+> > +	cond_local_irq_enable(regs);
+> > +	if (!user_mode(regs) &&
+> > +	    static_cpu_has(X86_FEATURE_SPLIT_LOCK_DETECT)) {
+> > +		/*
+> > +		 * Only split lock can generate #AC from kernel at this point.
+> > +		 * Warn and disable split lock detection on this CPU. The
+> > +		 * faulting instruction will be executed without generating
+> > +		 * another #AC fault. User needs to check the warning and
+> > +		 * fix the split lock issue in the faulting instruction.
+> 
+>   "User needs to check the warning and fix the issue ..."
+> 
+> I'm looking forward to all the fixes from Joe Users.
+> 
+> Please remove that sentence. It's useless. Users report warnings if at all
+> and the kernel developers who actually look at them surely don't need an
+> advice like that.
 
-Not that it really matters, but also:
+Sure. Will do this.
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+Thanks.
 
-Thanks,
-Brian
+-Fenghua
