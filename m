@@ -2,177 +2,100 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD45C4360F
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8DE4C4360F
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:02:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 21A012082E
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:01:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77DB22082E
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:02:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728744AbfDDQBu (ORCPT
+        id S1729397AbfDDQCE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 12:01:50 -0400
-Received: from gateway24.websitewelcome.com ([192.185.50.252]:25827 "EHLO
-        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726888AbfDDQBu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 12:01:50 -0400
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway24.websitewelcome.com (Postfix) with ESMTP id C16B48A51
-        for <linux-wireless@vger.kernel.org>; Thu,  4 Apr 2019 11:01:48 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id C4oGhXMMI2qH7C4oGhvZvL; Thu, 04 Apr 2019 11:01:48 -0500
-X-Authority-Reason: nr=8
-Received: from [189.250.114.183] (port=39314 helo=[192.168.1.76])
-        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.91)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1hC4oG-002Bs9-6e; Thu, 04 Apr 2019 11:01:48 -0500
-Subject: Re: [PATCH][next] qtnfmac: replace qtnf_cmd_acl_data_size() with
- struct_size()
-To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc:     Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Thu, 4 Apr 2019 12:02:04 -0400
+Received: from mga05.intel.com ([192.55.52.43]:18965 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728710AbfDDQCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Apr 2019 12:02:04 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 04 Apr 2019 09:02:03 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,308,1549958400"; 
+   d="scan'208";a="313154179"
+Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
+  by orsmga005.jf.intel.com with ESMTP; 04 Apr 2019 09:02:02 -0700
+Date:   Thu, 4 Apr 2019 08:54:23 -0700
+From:   Fenghua Yu <fenghua.yu@intel.com>
+To:     Borislav Petkov <bp@alien8.de>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, H Peter Anvin <hpa@zytor.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Peter Zijlstra <peterz@infradead.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20190403170236.GA31637@embeddedor>
- <20190404133234.2uatru2vlw3ntrmv@bars>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=gustavo@embeddedor.com; keydata=
- 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
- VtSixD1uOgytAP7RWS474w==
-Message-ID: <e56579c6-da6e-4cb2-90b1-89e7774debf9@embeddedor.com>
-Date:   Thu, 4 Apr 2019 11:01:46 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        Xiaoyao Li <xiaoyao.li@intel.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ravi V Shankar <ravi.v.shankar@intel.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        x86 <x86@kernel.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kvm@vger.kernel.org
+Subject: Re: [PATCH v6 01/20] x86/common: Align cpu_caps_cleared and
+ cpu_caps_set to unsigned long
+Message-ID: <20190404155422.GA177894@romley-ivt3.sc.intel.com>
+References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com>
+ <1554326526-172295-2-git-send-email-fenghua.yu@intel.com>
+ <20190404143942.GD22539@zn.tnic>
 MIME-Version: 1.0
-In-Reply-To: <20190404133234.2uatru2vlw3ntrmv@bars>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 189.250.114.183
-X-Source-L: No
-X-Exim-ID: 1hC4oG-002Bs9-6e
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.1.76]) [189.250.114.183]:39314
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 7
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190404143942.GD22539@zn.tnic>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-
-
-On 4/4/19 8:32 AM, Sergey Matyukevich wrote:
->> One of the more common cases of allocation size calculations is finding
->> the size of a structure that has a zero-sized array at the end, along
->> with memory for some number of elements for that array. For example:
->>
->> struct foo {
->>     int stuff;
->>     struct boo entry[];
->> };
->>
->> size = sizeof(struct foo) + count * sizeof(struct boo);
->> instance = kzalloc(size, GFP_KERNEL)
->>
->> Instead of leaving these open-coded and prone to type mistakes, we can
->> now use the new struct_size() helper:
->>
->> size = struct_size(instance, entry, count);
->>
->> or
->>
->> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL)
->>
->> Based on the above, replace qtnf_cmd_acl_data_size() with the
->> new struct_size() helper.
->>
->> This code was detected with the help of Coccinelle.
->>
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->> ---
->>  drivers/net/wireless/quantenna/qtnfmac/commands.c | 15 ++++-----------
->>  1 file changed, 4 insertions(+), 11 deletions(-)
+On Thu, Apr 04, 2019 at 04:39:43PM +0200, Borislav Petkov wrote:
+> On Wed, Apr 03, 2019 at 02:21:47PM -0700, Fenghua Yu wrote:
+> > cpu_caps_cleared and cpu_caps_set may not be aligned to unsigned long.
+> > Atomic operations (i.e. set_bit and clear_bit) on the bitmaps may access
 > 
-> Hi Gustavo,
+> Please end function names with parentheses.
+
+Sure.
+
 > 
-
-Hey Sergey,
-
-> Thanks for the patch! By the way, it does not apply cleanly, so it needs
-> to be rebased on top of the up-to-date wireless-drivers-next tree. Let
-> me know if you would prefer me to care about rebase. Then I will
-> add this patch to the upcoming series of qtnfmac fixes.
+> > two cache lines (a.k.a. split lock) and lock the bus to block all memory
 > 
+> not "lock the bus" but "cause the CPU to do a bus lock... "
 
-Don't worry. I'll do it and send this again.
+Sure.
 
-> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 > 
+> > accesses from other processors to ensure atomicity.
+> > 
+> > To avoid the overall performance degradation from the bus locking, align
+> > the two variables to unsigned long.
+> > 
+> > Defining the variables as unsigned long may also fix the issue because
+> > they are naturally aligned to unsigned long. But that needs additional
+> > code changes. Adding __aligned(unsigned long) is a simpler fix.
+> > 
+> > Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
+> > ---
+> >  arch/x86/kernel/cpu/common.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> With the above nitpicks addressed:
+> 
+> Reviewed-by: Borislav Petkov <bp@suse.de>
 
-I'll add your RB.
+Thank you for your review!
 
-Thanks!
---
-Gustavo
+-Fenghua
