@@ -6,177 +6,91 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 913F0C4360F
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 19:45:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15157C10F0E
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:20:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7046A2082E
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 19:45:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9AB2206B7
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:20:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730445AbfDDTpK (ORCPT
+        id S1730763AbfDDUU3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 15:45:10 -0400
-Received: from Galois.linutronix.de ([146.0.238.70]:46332 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730416AbfDDTpK (ORCPT
+        Thu, 4 Apr 2019 16:20:29 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:41426 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729184AbfDDUU2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 15:45:10 -0400
-Received: from p5492e2fc.dip0.t-ipconnect.de ([84.146.226.252] helo=nanos)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1hC8ID-0000dE-Qs; Thu, 04 Apr 2019 21:44:58 +0200
-Date:   Thu, 4 Apr 2019 21:44:56 +0200 (CEST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     Fenghua Yu <fenghua.yu@intel.com>
-cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        H Peter Anvin <hpa@zytor.com>,
-        Dave Hansen <dave.hansen@intel.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Xiaoyao Li <xiaoyao.li@intel.com>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ravi V Shankar <ravi.v.shankar@intel.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        x86 <x86@kernel.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, kvm@vger.kernel.org
-Subject: Re: [PATCH v6 13/20] x86/split_lock: Enable split lock detection by
- default
-In-Reply-To: <20190404192306.GA178488@romley-ivt3.sc.intel.com>
-Message-ID: <alpine.DEB.2.21.1904042135160.1802@nanos.tec.linutronix.de>
-References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com> <1554326526-172295-14-git-send-email-fenghua.yu@intel.com> <alpine.DEB.2.21.1904041932500.1802@nanos.tec.linutronix.de> <20190404192306.GA178488@romley-ivt3.sc.intel.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+        Thu, 4 Apr 2019 16:20:28 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC5)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hC8qV-0005b7-3S; Thu, 04 Apr 2019 22:20:23 +0200
+Message-ID: <a432ffb79a23dcc9276cdec15f156189de4518ea.camel@sipsolutions.net>
+Subject: Re: [PATCH 0/6] stricter netlink validation
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     David Miller <davem@davemloft.net>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, dsa@cumulusnetworks.com
+Date:   Thu, 04 Apr 2019 22:20:20 +0200
+In-Reply-To: <20190404.102850.631122626573856353.davem@davemloft.net>
+References: <20190404065408.5864-1-johannes@sipsolutions.net>
+         <20190404.102850.631122626573856353.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 4 Apr 2019, Fenghua Yu wrote:
-> On Thu, Apr 04, 2019 at 08:07:57PM +0200, Thomas Gleixner wrote:
-> > On Wed, 3 Apr 2019, Fenghua Yu wrote:
-> > > +static DEFINE_MUTEX(split_lock_detect_mutex);
-> > > +static int split_lock_detect_val;
-> > 
-> > detect_val? What value is that?
+On Thu, 2019-04-04 at 10:28 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Thu,  4 Apr 2019 08:54:02 +0200
 > 
-> According to previous discussions, I was told to call this split lock feature
-> as "split lock detection" instead of "#AC for split lock". So I use
-> "split_lock_detect..." in variable names or function names, call feature flag
-> as "split_lock_detect", and call the feature as "split lock detection" in
-> descriptions.
+> > Here's a version that has passed build testing ;-)
 > 
-> If you don't agree to name feature as "split lock detection", I can change
-> variable names/function names/feature flag/descriptions etc back to previous
-> names "ac_split_lock...", "#AC for split lock", etc.
-> 
-> The variable split_lock_detect_val is either 0 or 1. It stores current
-> enable/disable status of split lock detection feature. By default it's
-> one after the feature is enumerated. Then sysadmin can change it to 0 or 1
-> to enable or disable the feature during run time.
+> :-)
 
-> > static unsigned int ac_split_lock_enable;
-> 
-> If you agree to name the split lock feature as "split lock detection" feature,
-> can I change this variable to static unsigned int split_lock_detect_enable?
+Actually it passed more than that - I did test the nl80211 bits etc.,
+but I hadn't build-tested everything before so some missing function
+renames were caught by the full build testing.
 
-I don't care much whether it's ac_split_lock or split_lock_detect, but _val
-is a completely bogus and unintuitive name. The variable tells whether the
-functionality is enabled or not. Then do not name it $prefix_val, which can
-mean anything. Name it $prefix_enable, which makes it entirely clear what
-this is about.
+> I really like the approach taken here, and done in such a way that
+> new attributes added get strict checking by default.
 
-And please make it type bool so you don't need any of these defines either.
+It's two things really
 
-> > > +static u32 new_sp_test_ctl_val(u32 test_ctl_val)
-> > > +{
-> > > +	/* Change the split lock setting. */
-> > > +	if (READ_ONCE(split_lock_detect_val) == DISABLE_SPLIT_LOCK_DETECT)
-> > 
-> > That READ_ONCE() is required because?
-> 
-> Ok. Will remove READ_ONCE().
-> 
-> > 
-> > > +		test_ctl_val &= ~TEST_CTL_ENABLE_SPLIT_LOCK_DETECT;
-> > > +	else
-> > > +		test_ctl_val |= TEST_CTL_ENABLE_SPLIT_LOCK_DETECT;
-> > > +
-> > > +	return test_ctl_val;
-> > > +}
-> > 
-> > Aside of that do we really need a misnomed function which replaces the
-> > simple inline code at the call site:
-> > 
-> > 	rdmsr(l, h)
-> > 	l &= ~TEST_CTL_ENABLE_SPLIT_LOCK_DETECT;
-> > 	l |= ac_split_lock_enable << TEST_CTL_ENABLE_SPLIT_LOCK_DETECT_SHIFT;
-> > 	wrmrs(...)
-> > 
-> > or the even more simple
-> > 
-> > 	if (ac_split_lock_enable)
-> > 		msr_set_bit(...)
-> > 	else
-> > 		msr_clear_nit(...)
-> > 
-> > Hmm?
-> 
-> The function new_sp_test_ctrl_val() will be called twice: here when
-> initializing split lock detection and in split_lock_detect_store()
-> when enabling/disabling the feature through the sysfs interface in
-> patch 0014.
+ * new commands (aka new instances of nla_parse/nlmsg_parse and friends)
+   --> strict checking for everything, including existing attributes
+       because we reason that you're writing some new userspace code,
+       and even if that might use some existing functionality, which
+       might even be wrong, you're going to fix it here
 
-It's still pointless.
+ * new attributes on existing commands (in the policy)
+   --> can be set up (with the strict_start_type from patch 4) to be
+       strictly checked
 
-> So can I still keep this function and name it as get_new_test_ctrl_val()?
+> I'll let David Ahern et al. have time to review this.
 
-No. The function you want to share between init code and sysfs is
+Sure.
 
-    split_lock_update_msr()
-    {
- 	if (split_lock_enable)
- 		msr_set_bit(...)
- 	else
- 		msr_clear_nit(...)
-    }
+FWIW, I wasn't really entirely sure I liked doing a cross-tree rename,
+but ultimately I felt that we should discourage uses of what I now
+called *_deprecated() and *_strict_deprecated() APIs, and having sort of
+the "default" names do the thing we believe is right (strict checking)
+helps with that - in a sort of 'social engineering' way, people will not
+want to type out "_deprecated" all the time ;-)
 
-That's all. No duplicated code. No convoluted helper function,
-nothing. Simple straight forward readable code.
+I do realize that this may be a bit controversial and am certainly open
+to other suggestions on this.
 
-> > > +static inline void show_split_lock_detection_info(void)
-> > > +{
-> > > +	if (READ_ONCE(split_lock_detect_val))
-> > 
-> > That READ_ONCE() is required because?
-> 
-> Ok. Will remove READ_ONCE().
-> 
-> > 
-> > > +		pr_info_once("x86/split_lock: split lock detection enabled\n");
-> > > +	else
-> > > +		pr_info_once("x86/split_lock: split lock detection disabled\n");
-> > 
-> > pr_fmt exists for a reason and having 'split lock' repeated several times
-> > in the same line is not making it more readable.
-> 
-> Ok. I will change the string to "x86/split_lock_detection: enabled\n",
-> is it ok?
+Similarly, I engineered the generic netlink stuff in a way that adding
+non-strict behaviour needs extra work, so that hopefully new stuff will
+not do that extra work.
 
-Care to read carefully what I wrote? Hint: pr_fmt
- 
-> > Oh well. You add defines on top of the file and then you don't use them.
-> 
-> Will fix this.
+Also, both of these are then easier to see in reviews, since you can see
+"deprecated" in the function names, or "DONT_VALIDATE" in the generic
+netlink things.
 
-What about the init / feature detection sequence which you snipped from the
-reply?
+johannes
 
-Thanks,
-
-	tglx
