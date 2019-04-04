@@ -2,43 +2,44 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2DFEC10F0C
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:54:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D751C4360F
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 17:09:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AABD720855
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:54:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78AA1206BA
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 17:09:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729563AbfDDQyE (ORCPT
+        id S1728997AbfDDRJb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 12:54:04 -0400
-Received: from gateway34.websitewelcome.com ([192.185.150.114]:15901 "EHLO
-        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729534AbfDDQyB (ORCPT
+        Thu, 4 Apr 2019 13:09:31 -0400
+Received: from gateway36.websitewelcome.com ([50.116.127.2]:25686 "EHLO
+        gateway36.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726418AbfDDRJb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 12:54:01 -0400
-X-Greylist: delayed 1199 seconds by postgrey-1.27 at vger.kernel.org; Thu, 04 Apr 2019 12:54:00 EDT
-Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
-        by gateway34.websitewelcome.com (Postfix) with ESMTP id DF00052869
-        for <linux-wireless@vger.kernel.org>; Thu,  4 Apr 2019 11:34:00 -0500 (CDT)
+        Thu, 4 Apr 2019 13:09:31 -0400
+X-Greylist: delayed 1406 seconds by postgrey-1.27 at vger.kernel.org; Thu, 04 Apr 2019 13:09:31 EDT
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway36.websitewelcome.com (Postfix) with ESMTP id 8EEDE4012BD57
+        for <linux-wireless@vger.kernel.org>; Thu,  4 Apr 2019 11:03:15 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id C5JQhEpPp4FKpC5JQhkRC0; Thu, 04 Apr 2019 11:34:00 -0500
+        id C5V6hpiSvdnCeC5V6hev6b; Thu, 04 Apr 2019 11:46:04 -0500
 X-Authority-Reason: nr=8
-Received: from [189.250.114.183] (port=40686 helo=[192.168.1.76])
+Received: from [189.250.114.183] (port=42302 helo=[192.168.1.76])
         by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
         (Exim 4.91)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1hC5JP-002Wec-8g; Thu, 04 Apr 2019 11:34:00 -0500
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc:     Igor Mitsyanko <imitsyanko@quantenna.com>,
+        id 1hC5V3-002dvM-M1; Thu, 04 Apr 2019 11:46:01 -0500
+Subject: Re: [PATCH][next] qtnfmac: replace qtnf_cmd_acl_data_size() with
+ struct_size()
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        Igor Mitsyanko <imitsyanko@quantenna.com>,
         Avinash Patil <avinashp@quantenna.com>,
         Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
         "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
@@ -46,6 +47,9 @@ Cc:     Igor Mitsyanko <imitsyanko@quantenna.com>,
 References: <20190403170236.GA31637@embeddedor>
  <20190404133234.2uatru2vlw3ntrmv@bars>
  <e56579c6-da6e-4cb2-90b1-89e7774debf9@embeddedor.com>
+ <3baa19c1-a213-3dcf-2f03-23b058ec419a@embeddedor.com>
+ <87imvtsp09.fsf@kamboji.qca.qualcomm.com>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=gustavo@embeddedor.com; keydata=
  mQINBFssHAwBEADIy3ZoPq3z5UpsUknd2v+IQud4TMJnJLTeXgTf4biSDSrXn73JQgsISBwG
@@ -90,17 +94,15 @@ Autocrypt: addr=gustavo@embeddedor.com; keydata=
  YJWH93PN+ZUh6i6Rd2U/i8jH5WvzR57UeWxE4P8bQc0hNGrUsHQH6bpHV2lbuhDdqo+cM9eh
  GZEO3+gCDFmKrjspZjkJbB5Gadzvts5fcWGOXEvuT8uQSvl+vEL0g6vczsyPBtqoBLa9SNrS
  VtSixD1uOgytAP7RWS474w==
-Subject: Re: [PATCH][next] qtnfmac: replace qtnf_cmd_acl_data_size() with
- struct_size()
-Message-ID: <3baa19c1-a213-3dcf-2f03-23b058ec419a@embeddedor.com>
-Date:   Thu, 4 Apr 2019 11:33:56 -0500
+Message-ID: <16491aff-c788-1122-836b-ee1f713525ab@embeddedor.com>
+Date:   Thu, 4 Apr 2019 11:45:59 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <e56579c6-da6e-4cb2-90b1-89e7774debf9@embeddedor.com>
+In-Reply-To: <87imvtsp09.fsf@kamboji.qca.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
 X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
 X-AntiAbuse: Original Domain - vger.kernel.org
@@ -109,13 +111,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 189.250.114.183
 X-Source-L: No
-X-Exim-ID: 1hC5JP-002Wec-8g
+X-Exim-ID: 1hC5V3-002dvM-M1
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: ([192.168.1.76]) [189.250.114.183]:40686
+X-Source-Sender: ([192.168.1.76]) [189.250.114.183]:42302
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 21
+X-Email-Count: 30
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -125,64 +127,41 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 
 
-On 4/4/19 11:01 AM, Gustavo A. R. Silva wrote:
-> 
-> 
-> On 4/4/19 8:32 AM, Sergey Matyukevich wrote:
->>> One of the more common cases of allocation size calculations is finding
->>> the size of a structure that has a zero-sized array at the end, along
->>> with memory for some number of elements for that array. For example:
+On 4/4/19 11:40 AM, Kalle Valo wrote:
+
+[..]
+
+>>>>
+>>>> Hi Gustavo,
+>>>>
 >>>
->>> struct foo {
->>>     int stuff;
->>>     struct boo entry[];
->>> };
+>>> Hey Sergey,
 >>>
->>> size = sizeof(struct foo) + count * sizeof(struct boo);
->>> instance = kzalloc(size, GFP_KERNEL)
+>>>> Thanks for the patch! By the way, it does not apply cleanly, so it needs
+>>>> to be rebased on top of the up-to-date wireless-drivers-next tree. Let
+>>>> me know if you would prefer me to care about rebase. Then I will
+>>>> add this patch to the upcoming series of qtnfmac fixes.
+>>>>
 >>>
->>> Instead of leaving these open-coded and prone to type mistakes, we can
->>> now use the new struct_size() helper:
+>>> Don't worry. I'll do it and send this again.
 >>>
->>> size = struct_size(instance, entry, count);
->>>
->>> or
->>>
->>> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL)
->>>
->>> Based on the above, replace qtnf_cmd_acl_data_size() with the
->>> new struct_size() helper.
->>>
->>> This code was detected with the help of Coccinelle.
->>>
->>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->>> ---
->>>  drivers/net/wireless/quantenna/qtnfmac/commands.c | 15 ++++-----------
->>>  1 file changed, 4 insertions(+), 11 deletions(-)
 >>
->> Hi Gustavo,
+>> Hmm... I just applied it cleanly on top of wireless-drivers-next/master:
 >>
-> 
-> Hey Sergey,
-> 
->> Thanks for the patch! By the way, it does not apply cleanly, so it needs
->> to be rebased on top of the up-to-date wireless-drivers-next tree. Let
->> me know if you would prefer me to care about rebase. Then I will
->> add this patch to the upcoming series of qtnfmac fixes.
+>> 973a99be7943 (HEAD) qtnfmac: replace qtnf_cmd_acl_data_size() with struct_size()
+>> 38bb0baea310 (wireless-drivers-next/master) rtlwifi: move spin_lock_bh
+>> to spin_lock in tasklet
+>> 60209d482b97 rtlwifi: fix potential NULL pointer dereference
+>> 765976285a8c rtlwifi: fix a potential NULL pointer dereference
 >>
+>> Do you see any issues with this?
 > 
-> Don't worry. I'll do it and send this again.
+> Yeah, I also was able to apply it without problems. So it's in w-d-next
+> now :)
 > 
 
-Hmm... I just applied it cleanly on top of wireless-drivers-next/master:
+Awesome. :)
 
-973a99be7943 (HEAD) qtnfmac: replace qtnf_cmd_acl_data_size() with struct_size()
-38bb0baea310 (wireless-drivers-next/master) rtlwifi: move spin_lock_bh to spin_lock in tasklet
-60209d482b97 rtlwifi: fix potential NULL pointer dereference
-765976285a8c rtlwifi: fix a potential NULL pointer dereference
-
-Do you see any issues with this?
-
-Thanks
+Thanks, Kalle.
 --
 Gustavo
