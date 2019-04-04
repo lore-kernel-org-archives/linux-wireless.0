@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 182C7C10F05
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 09:30:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D60C4C10F0C
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 09:42:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBA4D205F4
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 09:30:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A822720855
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 09:42:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554370233;
-	bh=GHiXkZAloJXwcrj4Qa7/SdV9pTNyQRq0Vl8arTgRe60=;
+	s=default; t=1554370976;
+	bh=jNTb3dUjH/H2hvsA5PLRckeSce98Sa3onMsch0ZvF9o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Q18Q0TGyk6TvXQmD26I1y4q7pRTIeIDyjAOoUb62/yt++in2++prQAxXGs1tvRR01
-	 qYKK/SeWpsQc1rVVK9MKrHx8LDAgoDD47FsERoUQfFlBH5tjxFR6FQQN/oo9C/0+kl
-	 37U/xou7XZwByXhapZk9LLFd0hEzoWVzASGtWQCI=
+	b=i3a2Do1K4L0Soa6lT48hkhglekrTd0zZmuUR+jvcUx73rjkm6dclMFsRJAa/nucP7
+	 ikqMmlS7XoE0jspHRf/xAq7SsDAA/K73BfFvSsyt6Q63e7mPcMs5yQwaUtC/004Wvg
+	 YtKlgJrXu7PhSD3jeeQjCf1YxHClOG/71MdMLbbA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732929AbfDDJKD (ORCPT
+        id S1731351AbfDDJBG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 05:10:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49376 "EHLO mail.kernel.org"
+        Thu, 4 Apr 2019 05:01:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38056 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732920AbfDDJKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 05:10:00 -0400
+        id S1730446AbfDDJBF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Apr 2019 05:01:05 -0400
 Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CCE6020693;
-        Thu,  4 Apr 2019 09:09:58 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AF01F21741;
+        Thu,  4 Apr 2019 09:01:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554368999;
-        bh=GHiXkZAloJXwcrj4Qa7/SdV9pTNyQRq0Vl8arTgRe60=;
+        s=default; t=1554368464;
+        bh=jNTb3dUjH/H2hvsA5PLRckeSce98Sa3onMsch0ZvF9o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=wCByu3M7ppH8A+fL9L3iUEnJ3lCdWZU6dGZM2O9QAX+uLJCSytrps0CClpRYVhtPh
-         HL+52iRQvVba554vm9lO64YL0mZv6KFlZ9L93xW+SDI2leo9W4sHXinaw77dCSM+1r
-         HBuXek2/FBhuogCaF3NHrjSSjX2vOufPCW6wFPgM=
+        b=2ShqQo0YJQ2UkNwYDBKzEmu5uic/ucVk9H5rJlbwe9UnrRlks31z2qcDyODO1OfnS
+         OHlGQ3SEDAjLmXl2rCiMyYvvW6nz8KrqkC2UJiJFm9nsdznT7Oselh/LBs2GCE2ekC
+         NytE9IYYagDVxKZHvPH/A4yTDRwu2F2HtlICCU8g=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -51,12 +51,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org, Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 5.0 060/246] mt76: fix a leaked reference by adding a missing of_node_put
-Date:   Thu,  4 Apr 2019 10:46:00 +0200
-Message-Id: <20190404084621.274424274@linuxfoundation.org>
+Subject: [PATCH 4.19 049/187] mt76: fix a leaked reference by adding a missing of_node_put
+Date:   Thu,  4 Apr 2019 10:46:26 +0200
+Message-Id: <20190404084605.380921548@linuxfoundation.org>
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190404084619.236418459@linuxfoundation.org>
-References: <20190404084619.236418459@linuxfoundation.org>
+In-Reply-To: <20190404084603.119654039@linuxfoundation.org>
+References: <20190404084603.119654039@linuxfoundation.org>
 User-Agent: quilt/0.65
 X-stable: review
 X-Patchwork-Hint: ignore
@@ -68,7 +68,7 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-5.0-stable review patch.  If anyone has any objections, please let me know.
+4.19-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
