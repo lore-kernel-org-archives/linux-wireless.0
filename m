@@ -2,102 +2,187 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E54C10F0C
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2DFEC10F0C
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:54:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9FAB6206DF
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:52:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AABD720855
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:54:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729242AbfDDQwa (ORCPT
+        id S1729563AbfDDQyE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 12:52:30 -0400
-Received: from Galois.linutronix.de ([146.0.238.70]:46038 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726698AbfDDQwa (ORCPT
+        Thu, 4 Apr 2019 12:54:04 -0400
+Received: from gateway34.websitewelcome.com ([192.185.150.114]:15901 "EHLO
+        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729534AbfDDQyB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 12:52:30 -0400
-Received: from p5492e2fc.dip0.t-ipconnect.de ([84.146.226.252] helo=nanos)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1hC5b8-0006NC-9X; Thu, 04 Apr 2019 18:52:18 +0200
-Date:   Thu, 4 Apr 2019 18:52:17 +0200 (CEST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     David Laight <David.Laight@ACULAB.COM>
-cc:     'Fenghua Yu' <fenghua.yu@intel.com>,
-        'Ingo Molnar' <mingo@redhat.com>,
-        'Borislav Petkov' <bp@alien8.de>,
-        'H Peter Anvin' <hpa@zytor.com>,
-        'Dave Hansen' <dave.hansen@intel.com>,
-        'Paolo Bonzini' <pbonzini@redhat.com>,
-        'Ashok Raj' <ashok.raj@intel.com>,
-        'Peter Zijlstra' <peterz@infradead.org>,
-        'Kalle Valo' <kvalo@codeaurora.org>,
-        'Xiaoyao Li ' <xiaoyao.li@intel.com>,
-        'Michael Chan' <michael.chan@broadcom.com>,
-        'Ravi V Shankar' <ravi.v.shankar@intel.com>,
-        'linux-kernel' <linux-kernel@vger.kernel.org>,
-        'x86' <x86@kernel.org>,
-        "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-        "'netdev@vger.kernel.org'" <netdev@vger.kernel.org>,
-        "'kvm@vger.kernel.org'" <kvm@vger.kernel.org>
-Subject: RE: [PATCH v6 04/20] x86/split_lock: Align x86_capability to unsigned
- long to avoid split locked access
-In-Reply-To: <c0d43317cce34389ac4a1e91e97d909b@AcuMS.aculab.com>
-Message-ID: <alpine.DEB.2.21.1904041833480.1802@nanos.tec.linutronix.de>
-References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com> <1554326526-172295-5-git-send-email-fenghua.yu@intel.com> <73ecc9de54c3424da3cddd1a34cb8701@AcuMS.aculab.com> <c0d43317cce34389ac4a1e91e97d909b@AcuMS.aculab.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        Thu, 4 Apr 2019 12:54:01 -0400
+X-Greylist: delayed 1199 seconds by postgrey-1.27 at vger.kernel.org; Thu, 04 Apr 2019 12:54:00 EDT
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway34.websitewelcome.com (Postfix) with ESMTP id DF00052869
+        for <linux-wireless@vger.kernel.org>; Thu,  4 Apr 2019 11:34:00 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id C5JQhEpPp4FKpC5JQhkRC0; Thu, 04 Apr 2019 11:34:00 -0500
+X-Authority-Reason: nr=8
+Received: from [189.250.114.183] (port=40686 helo=[192.168.1.76])
+        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.91)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1hC5JP-002Wec-8g; Thu, 04 Apr 2019 11:34:00 -0500
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc:     Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20190403170236.GA31637@embeddedor>
+ <20190404133234.2uatru2vlw3ntrmv@bars>
+ <e56579c6-da6e-4cb2-90b1-89e7774debf9@embeddedor.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=gustavo@embeddedor.com; keydata=
+ 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
+ VtSixD1uOgytAP7RWS474w==
+Subject: Re: [PATCH][next] qtnfmac: replace qtnf_cmd_acl_data_size() with
+ struct_size()
+Message-ID: <3baa19c1-a213-3dcf-2f03-23b058ec419a@embeddedor.com>
+Date:   Thu, 4 Apr 2019 11:33:56 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-1812670699-1554396738=:1802"
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+In-Reply-To: <e56579c6-da6e-4cb2-90b1-89e7774debf9@embeddedor.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 189.250.114.183
+X-Source-L: No
+X-Exim-ID: 1hC5JP-002Wec-8g
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.1.76]) [189.250.114.183]:40686
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 21
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323329-1812670699-1554396738=:1802
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
 
-On Thu, 4 Apr 2019, David Laight wrote:
-> From: David Laight Sent: 04 April 2019 15:45
-> > From: Fenghua Yu Sent: 03 April 2019 22:22
-> > That is not true.
-> > The BTS/BTR instructions access the memory word that contains the
-> > expected bit.
-> > The 'operand size' only affects the size of the register use for the
-> > bit offset.
-> > If the 'operand size' is 16 bits wide (+/- 32k bit offset) the cpu might
-> > do an aligned 16bit memory access, otherwise (32 or 64bit bit offset) it
-> > might do an aligned 32 bit access.
-> > It should never do an 64bit access and never a misaligned one (even if
-> > the base address is misaligned).
+On 4/4/19 11:01 AM, Gustavo A. R. Silva wrote:
 > 
-> Hmmm... I may have misread things slightly.
-> The accessed address is 'Effective Address + (4 ∗ (BitOffset DIV 32))'.
-> However nothing suggests that it ever does 64bit accesses.
->
-> If it does do 64bit accesses when the operand size is 64 bits then the
-> asm stubs ought to be changed to only specify 32bit operand size.
+> 
+> On 4/4/19 8:32 AM, Sergey Matyukevich wrote:
+>>> One of the more common cases of allocation size calculations is finding
+>>> the size of a structure that has a zero-sized array at the end, along
+>>> with memory for some number of elements for that array. For example:
+>>>
+>>> struct foo {
+>>>     int stuff;
+>>>     struct boo entry[];
+>>> };
+>>>
+>>> size = sizeof(struct foo) + count * sizeof(struct boo);
+>>> instance = kzalloc(size, GFP_KERNEL)
+>>>
+>>> Instead of leaving these open-coded and prone to type mistakes, we can
+>>> now use the new struct_size() helper:
+>>>
+>>> size = struct_size(instance, entry, count);
+>>>
+>>> or
+>>>
+>>> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL)
+>>>
+>>> Based on the above, replace qtnf_cmd_acl_data_size() with the
+>>> new struct_size() helper.
+>>>
+>>> This code was detected with the help of Coccinelle.
+>>>
+>>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+>>> ---
+>>>  drivers/net/wireless/quantenna/qtnfmac/commands.c | 15 ++++-----------
+>>>  1 file changed, 4 insertions(+), 11 deletions(-)
+>>
+>> Hi Gustavo,
+>>
+> 
+> Hey Sergey,
+> 
+>> Thanks for the patch! By the way, it does not apply cleanly, so it needs
+>> to be rebased on top of the up-to-date wireless-drivers-next tree. Let
+>> me know if you would prefer me to care about rebase. Then I will
+>> add this patch to the upcoming series of qtnfmac fixes.
+>>
+> 
+> Don't worry. I'll do it and send this again.
+> 
 
-bitops operate on unsigned long arrays, so the RMW on the affected array
-member has to be atomic vs. other RMW operations on the same array
-member. If we make the bitops 32bit wide on x86/64 we break that.
+Hmm... I just applied it cleanly on top of wireless-drivers-next/master:
 
-So selecting 64bit access (REX.W prefix) is correct and has to stay.
+973a99be7943 (HEAD) qtnfmac: replace qtnf_cmd_acl_data_size() with struct_size()
+38bb0baea310 (wireless-drivers-next/master) rtlwifi: move spin_lock_bh to spin_lock in tasklet
+60209d482b97 rtlwifi: fix potential NULL pointer dereference
+765976285a8c rtlwifi: fix a potential NULL pointer dereference
 
-Thanks,
+Do you see any issues with this?
 
-	tglx
-
-
---8323329-1812670699-1554396738=:1802--
+Thanks
+--
+Gustavo
