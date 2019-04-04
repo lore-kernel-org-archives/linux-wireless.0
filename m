@@ -2,108 +2,113 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9169C4360F
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:35:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54248C10F0C
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:39:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E7B7206DF
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:35:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21DC2206DF
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:39:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YBQsv4R3";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JVQGS4tr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729288AbfDDQfq (ORCPT
+        id S1729216AbfDDQi7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 12:35:46 -0400
-Received: from mga11.intel.com ([192.55.52.93]:16322 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727039AbfDDQfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 12:35:46 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 04 Apr 2019 09:35:45 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.60,308,1549958400"; 
-   d="scan'208";a="128641824"
-Received: from sjchrist-coffee.jf.intel.com (HELO linux.intel.com) ([10.54.74.181])
-  by orsmga007.jf.intel.com with ESMTP; 04 Apr 2019 09:35:45 -0700
-Date:   Thu, 4 Apr 2019 09:35:45 -0700
-From:   Sean Christopherson <sean.j.christopherson@intel.com>
-To:     David Laight <David.Laight@ACULAB.COM>
-Cc:     'Fenghua Yu' <fenghua.yu@intel.com>,
-        'Thomas Gleixner' <tglx@linutronix.de>,
-        'Ingo Molnar' <mingo@redhat.com>,
-        'Borislav Petkov' <bp@alien8.de>,
-        'H Peter Anvin' <hpa@zytor.com>,
-        'Dave Hansen' <dave.hansen@intel.com>,
-        'Paolo Bonzini' <pbonzini@redhat.com>,
-        'Ashok Raj' <ashok.raj@intel.com>,
-        'Peter Zijlstra' <peterz@infradead.org>,
-        'Kalle Valo' <kvalo@codeaurora.org>,
-        'Xiaoyao Li ' <xiaoyao.li@intel.com>,
-        'Michael Chan' <michael.chan@broadcom.com>,
-        'Ravi V Shankar' <ravi.v.shankar@intel.com>,
-        'linux-kernel' <linux-kernel@vger.kernel.org>,
-        'x86' <x86@kernel.org>,
-        "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-        "'netdev@vger.kernel.org'" <netdev@vger.kernel.org>,
-        "'kvm@vger.kernel.org'" <kvm@vger.kernel.org>
-Subject: Re: [PATCH v6 04/20] x86/split_lock: Align x86_capability to
- unsigned long to avoid split locked access
-Message-ID: <20190404163545.GE9911@linux.intel.com>
-References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com>
- <1554326526-172295-5-git-send-email-fenghua.yu@intel.com>
- <73ecc9de54c3424da3cddd1a34cb8701@AcuMS.aculab.com>
- <c0d43317cce34389ac4a1e91e97d909b@AcuMS.aculab.com>
+        Thu, 4 Apr 2019 12:38:59 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:42946 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727191AbfDDQi7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Apr 2019 12:38:59 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 946856079C; Thu,  4 Apr 2019 16:38:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554395938;
+        bh=SKPAo48buD7X8AxyJfUMlxADDAoJ1X9bfMPOhEFlKtc=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=YBQsv4R3fqCKm3RYkj/6nEU8UBkZhhGSZ9jysQRxhf22IdO+ONKyUnG8n4pcPRNwu
+         A8TM7ZWIJzG5Ffwj5xLgb8ApZJde/Q81u08Tu2uJy4tue3joHh+Ox1PhNpXgw77NK9
+         3mXGE5pGOYw7kvrbn6IKk+uebJt6Cr8N5Eut33cM=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5303960790;
+        Thu,  4 Apr 2019 16:38:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554395936;
+        bh=SKPAo48buD7X8AxyJfUMlxADDAoJ1X9bfMPOhEFlKtc=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=JVQGS4trrTNaXS8flNloqNGoNaUbaq67SdXvpmOrQCUjHo+REVgZ3FOCxU6awzGY8
+         4ZY70m0qP1tE+hGSJMkNNUC0fOMUBUekzwzMA4m6ydFL5yrSP5kOI2d/h4BSj9BOQs
+         SjimriR31LUtTTjfcM0CtFW0rf8GLjJq6IX0qnr4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5303960790
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <c0d43317cce34389ac4a1e91e97d909b@AcuMS.aculab.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH][next] qtnfmac: replace qtnf_cmd_acl_data_size() with
+ struct_size()
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190403170236.GA31637@embeddedor>
+References: <20190403170236.GA31637@embeddedor>
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc:     Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190404163857.946856079C@smtp.codeaurora.org>
+Date:   Thu,  4 Apr 2019 16:38:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Apr 04, 2019 at 04:24:15PM +0000, David Laight wrote:
-> From: David Laight
-> > Sent: 04 April 2019 15:45
-> > 
-> > From: Fenghua Yu
-> > > Sent: 03 April 2019 22:22
-> > > set_cpu_cap() calls locked BTS and clear_cpu_cap() calls locked BTR to
-> > > operate on bitmap defined in x86_capability.
-> > >
-> > > Locked BTS/BTR accesses a single unsigned long location. In 64-bit mode,
-> > > the location is at:
-> > > base address of x86_capability + (bit offset in x86_capability / 64) * 8
-> > >
-> > > Since base address of x86_capability may not be aligned to unsigned long,
-> > > the single unsigned long location may cross two cache lines and
-> > > accessing the location by locked BTS/BTR introductions will trigger #AC.
-> > 
-> > That is not true.
-> > The BTS/BTR instructions access the memory word that contains the
-> > expected bit.
-> > The 'operand size' only affects the size of the register use for the
-> > bit offset.
-> > If the 'operand size' is 16 bits wide (+/- 32k bit offset) the cpu might
-> > do an aligned 16bit memory access, otherwise (32 or 64bit bit offset) it
-> > might do an aligned 32 bit access.
-> > It should never do an 64bit access and never a misaligned one (even if
-> > the base address is misaligned).
-> 
-> Hmmm... I may have misread things slightly.
-> The accessed address is 'Effective Address + (4 ∗ (BitOffset DIV 32))'.
-> However nothing suggests that it ever does 64bit accesses.
-> 
-> If it does do 64bit accesses when the operand size is 64 bits then the
-> asm stubs ought to be changed to only specify 32bit operand size.
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
 
-Heh, we had this discussion before[1], the op size dictates the size of
-the memory access and can generate unaligned accesses.
+> One of the more common cases of allocation size calculations is finding
+> the size of a structure that has a zero-sized array at the end, along
+> with memory for some number of elements for that array. For example:
+> 
+> struct foo {
+>     int stuff;
+>     struct boo entry[];
+> };
+> 
+> size = sizeof(struct foo) + count * sizeof(struct boo);
+> instance = kzalloc(size, GFP_KERNEL)
+> 
+> Instead of leaving these open-coded and prone to type mistakes, we can
+> now use the new struct_size() helper:
+> 
+> size = struct_size(instance, entry, count);
+> 
+> or
+> 
+> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL)
+> 
+> Based on the above, replace qtnf_cmd_acl_data_size() with the
+> new struct_size() helper.
+> 
+> This code was detected with the help of Coccinelle.
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-[1] https://lkml.kernel.org/r/20181127195153.GE27075@linux.intel.com
+Patch applied to wireless-drivers-next.git, thanks.
+
+95336d4cb588 qtnfmac: replace qtnf_cmd_acl_data_size() with struct_size()
+
+-- 
+https://patchwork.kernel.org/patch/10884311/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
