@@ -2,142 +2,102 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8285C10F0C
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E54C10F0C
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:52:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 979B2206DF
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:40:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="g8ut8LyD";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gV3uonkc"
+	by mail.kernel.org (Postfix) with ESMTP id 9FAB6206DF
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 16:52:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729393AbfDDQkM (ORCPT
+        id S1729242AbfDDQwa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 12:40:12 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:43294 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727191AbfDDQkM (ORCPT
+        Thu, 4 Apr 2019 12:52:30 -0400
+Received: from Galois.linutronix.de ([146.0.238.70]:46038 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726698AbfDDQwa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 12:40:12 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1A96A60746; Thu,  4 Apr 2019 16:40:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554396011;
-        bh=gGxqswoSC8eyw2H1E80LMaN0g64Olwvj3RMSqJJYLYQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=g8ut8LyDMbhIFK9oiU6YpFyZIXFGi+TiomvzGy+Tc9uGyWYoC9JxFdYoVJ+Yy9h7m
-         JxFFlxNEOQl/cG/DNNl06Tr5rUKHp8STX/Sai6rWWHecYuK3LTGRVKaA2ijlNtdxND
-         1kLHNb0VroZNYU5OME0l2gdNG0qiULjXkUnUTKiY=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4238560350;
-        Thu,  4 Apr 2019 16:40:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554396010;
-        bh=gGxqswoSC8eyw2H1E80LMaN0g64Olwvj3RMSqJJYLYQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=gV3uonkcBikVeo1pPwwneFXwapnPVs8SaFW5+OSquWc+rju5CjnSW73hjei0UTEkH
-         DhmL6vH/MG3rY2kP7dpQ4p2pbxWkpzxgdIrsEifHbdRLlZ0lXuG28iKFqL+sZhI/RQ
-         MfyxskMDSnzcBMCeJozRCMqdu5nhaaBCx2IVwPxc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4238560350
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH][next] qtnfmac: replace qtnf_cmd_acl_data_size() with struct_size()
-References: <20190403170236.GA31637@embeddedor>
-        <20190404133234.2uatru2vlw3ntrmv@bars>
-        <e56579c6-da6e-4cb2-90b1-89e7774debf9@embeddedor.com>
-        <3baa19c1-a213-3dcf-2f03-23b058ec419a@embeddedor.com>
-Date:   Thu, 04 Apr 2019 19:40:06 +0300
-In-Reply-To: <3baa19c1-a213-3dcf-2f03-23b058ec419a@embeddedor.com> (Gustavo A.
-        R. Silva's message of "Thu, 4 Apr 2019 11:33:56 -0500")
-Message-ID: <87imvtsp09.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Thu, 4 Apr 2019 12:52:30 -0400
+Received: from p5492e2fc.dip0.t-ipconnect.de ([84.146.226.252] helo=nanos)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1hC5b8-0006NC-9X; Thu, 04 Apr 2019 18:52:18 +0200
+Date:   Thu, 4 Apr 2019 18:52:17 +0200 (CEST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     David Laight <David.Laight@ACULAB.COM>
+cc:     'Fenghua Yu' <fenghua.yu@intel.com>,
+        'Ingo Molnar' <mingo@redhat.com>,
+        'Borislav Petkov' <bp@alien8.de>,
+        'H Peter Anvin' <hpa@zytor.com>,
+        'Dave Hansen' <dave.hansen@intel.com>,
+        'Paolo Bonzini' <pbonzini@redhat.com>,
+        'Ashok Raj' <ashok.raj@intel.com>,
+        'Peter Zijlstra' <peterz@infradead.org>,
+        'Kalle Valo' <kvalo@codeaurora.org>,
+        'Xiaoyao Li ' <xiaoyao.li@intel.com>,
+        'Michael Chan' <michael.chan@broadcom.com>,
+        'Ravi V Shankar' <ravi.v.shankar@intel.com>,
+        'linux-kernel' <linux-kernel@vger.kernel.org>,
+        'x86' <x86@kernel.org>,
+        "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+        "'netdev@vger.kernel.org'" <netdev@vger.kernel.org>,
+        "'kvm@vger.kernel.org'" <kvm@vger.kernel.org>
+Subject: RE: [PATCH v6 04/20] x86/split_lock: Align x86_capability to unsigned
+ long to avoid split locked access
+In-Reply-To: <c0d43317cce34389ac4a1e91e97d909b@AcuMS.aculab.com>
+Message-ID: <alpine.DEB.2.21.1904041833480.1802@nanos.tec.linutronix.de>
+References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com> <1554326526-172295-5-git-send-email-fenghua.yu@intel.com> <73ecc9de54c3424da3cddd1a34cb8701@AcuMS.aculab.com> <c0d43317cce34389ac4a1e91e97d909b@AcuMS.aculab.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed; boundary="8323329-1812670699-1554396738=:1802"
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"Gustavo A. R. Silva" <gustavo@embeddedor.com> writes:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> On 4/4/19 11:01 AM, Gustavo A. R. Silva wrote:
->> 
->> 
->> On 4/4/19 8:32 AM, Sergey Matyukevich wrote:
->>>> One of the more common cases of allocation size calculations is finding
->>>> the size of a structure that has a zero-sized array at the end, along
->>>> with memory for some number of elements for that array. For example:
->>>>
->>>> struct foo {
->>>>     int stuff;
->>>>     struct boo entry[];
->>>> };
->>>>
->>>> size = sizeof(struct foo) + count * sizeof(struct boo);
->>>> instance = kzalloc(size, GFP_KERNEL)
->>>>
->>>> Instead of leaving these open-coded and prone to type mistakes, we can
->>>> now use the new struct_size() helper:
->>>>
->>>> size = struct_size(instance, entry, count);
->>>>
->>>> or
->>>>
->>>> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL)
->>>>
->>>> Based on the above, replace qtnf_cmd_acl_data_size() with the
->>>> new struct_size() helper.
->>>>
->>>> This code was detected with the help of Coccinelle.
->>>>
->>>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->>>> ---
->>>>  drivers/net/wireless/quantenna/qtnfmac/commands.c | 15 ++++-----------
->>>>  1 file changed, 4 insertions(+), 11 deletions(-)
->>>
->>> Hi Gustavo,
->>>
->> 
->> Hey Sergey,
->> 
->>> Thanks for the patch! By the way, it does not apply cleanly, so it needs
->>> to be rebased on top of the up-to-date wireless-drivers-next tree. Let
->>> me know if you would prefer me to care about rebase. Then I will
->>> add this patch to the upcoming series of qtnfmac fixes.
->>>
->> 
->> Don't worry. I'll do it and send this again.
->> 
->
-> Hmm... I just applied it cleanly on top of wireless-drivers-next/master:
->
-> 973a99be7943 (HEAD) qtnfmac: replace qtnf_cmd_acl_data_size() with struct_size()
-> 38bb0baea310 (wireless-drivers-next/master) rtlwifi: move spin_lock_bh
-> to spin_lock in tasklet
-> 60209d482b97 rtlwifi: fix potential NULL pointer dereference
-> 765976285a8c rtlwifi: fix a potential NULL pointer dereference
->
-> Do you see any issues with this?
+--8323329-1812670699-1554396738=:1802
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-Yeah, I also was able to apply it without problems. So it's in w-d-next
-now :)
+On Thu, 4 Apr 2019, David Laight wrote:
+> From: David Laight Sent: 04 April 2019 15:45
+> > From: Fenghua Yu Sent: 03 April 2019 22:22
+> > That is not true.
+> > The BTS/BTR instructions access the memory word that contains the
+> > expected bit.
+> > The 'operand size' only affects the size of the register use for the
+> > bit offset.
+> > If the 'operand size' is 16 bits wide (+/- 32k bit offset) the cpu might
+> > do an aligned 16bit memory access, otherwise (32 or 64bit bit offset) it
+> > might do an aligned 32 bit access.
+> > It should never do an 64bit access and never a misaligned one (even if
+> > the base address is misaligned).
+> 
+> Hmmm... I may have misread things slightly.
+> The accessed address is 'Effective Address + (4 ∗ (BitOffset DIV 32))'.
+> However nothing suggests that it ever does 64bit accesses.
+>
+> If it does do 64bit accesses when the operand size is 64 bits then the
+> asm stubs ought to be changed to only specify 32bit operand size.
 
--- 
-Kalle Valo
+bitops operate on unsigned long arrays, so the RMW on the affected array
+member has to be atomic vs. other RMW operations on the same array
+member. If we make the bitops 32bit wide on x86/64 we break that.
+
+So selecting 64bit access (REX.W prefix) is correct and has to stay.
+
+Thanks,
+
+	tglx
+
+
+--8323329-1812670699-1554396738=:1802--
