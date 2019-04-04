@@ -2,95 +2,149 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 487A6C4360F
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 08:28:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B65C4360F
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 08:31:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 17E3C20674
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 08:28:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554366522;
-	bh=zEHqEhWXZb2ElXZMWNMqG3PazIE9/M702h9sDFLKoqY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=zoznxGTegdAO+r5QaNZTxEO+JVN4VqW/czxsensHagINXoew2r2NCnJ3YQDx+AS7P
-	 KPoE6pWZpd2vRknS3m7PlavPvBSd4Bx6eMea14BUoBrpqgLMNbekh5r78rjwQJLD+J
-	 mefcAjkqp2g3h21CyM6n1B05cxeqv42seVXp1m0Q=
+	by mail.kernel.org (Postfix) with ESMTP id A954120674
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 08:31:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727398AbfDDI2l (ORCPT
+        id S1727562AbfDDIbo convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 04:28:41 -0400
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:33307 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726563AbfDDI2l (ORCPT
+        Thu, 4 Apr 2019 04:31:44 -0400
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:47022 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726790AbfDDIbo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 04:28:41 -0400
-Received: by mail-ot1-f65.google.com with SMTP id j10so1605107otq.0;
-        Thu, 04 Apr 2019 01:28:40 -0700 (PDT)
+        Thu, 4 Apr 2019 04:31:44 -0400
+Received: by mail-ed1-f65.google.com with SMTP id d1so1342772edd.13
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2019 01:31:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=zEHqEhWXZb2ElXZMWNMqG3PazIE9/M702h9sDFLKoqY=;
-        b=Awyt8lL8vL0c5ewP9slsRjm5kQq4goQKUm0Dx5z329dX2lxTL2Lsm8f9clk8mktL+2
-         m8rNlZ/xcPubZ9f2InccBklkRcnCn6QjoM8Yr0L1N6MvkCwdgzUqC1zUEAJ/DoMWL5aD
-         JLyqO8uSNEbOeos/O5HrqIwnUnh2E2CtuDQNY0OICOlcN9iQtHSNjDnbJTi61j3kpJ8/
-         WsEw+UEcGvATaq3YG8OjOMhOY+fBw6VJz9TR+JUfsbYFDymLkdO+dZn1cjZw8XCpdTM+
-         URxePDg6HxhIn0I8uMgs5/1o9DVvnW0FV+PpXRPWNzwZXPpHdq1lpo346GM2z6MUjE7K
-         o3iQ==
-X-Gm-Message-State: APjAAAUONY4UVNUmsy0K6cg/24c82WhHE3UYJ3+OLQnCuR1GL/UIDgX1
-        +5iP/6VMigYW+Jd7Br6ZmLcmbh/nhN9CRyRplp8=
-X-Google-Smtp-Source: APXvYqz26shc4cF/ZfGh8dWrhns/8Uw5BUmNZalGvVl3BmA9zUgFDfVA2h0qFKhCfddHzVb8IWxgWo5gqAE43Ko5hYg=
-X-Received: by 2002:a05:6830:11d0:: with SMTP id v16mr3024742otq.159.1554366520385;
- Thu, 04 Apr 2019 01:28:40 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=Bsm1vVxwYVQoULCK7mCDz5ULCYHmGqc3KOmWINvNgm4=;
+        b=HljZjq1elyXTSxpXBRZ3yo0ff3J8qk4TnOusOLnO3jYs2Gffp/+tsClgXvS0Hss6Ka
+         XwTMb5757xvFqdK1kKnesf4lnt8lGlc3VrpW9f8ACof6Ptl9Wg347c6SAJYH9WTZGrCs
+         /dZZCeYnOTVVLYIbiOJ441WlMY4mzYBoF2o9a2ri0rLUQZgesDW3QXtKbgaUst9OhMAY
+         pQXKVAChrCCKQyLrcRmkA2Xr95HgcPvOlgWEOUzUiRJn4O19/fpjyO2iu32bralbnqny
+         5FJEZI/62SwD1AhvdG+c27c7anI7XpZNuPMf9hZo5iNAoQW9Qn0OBNn+XU+HpGYnXKEN
+         300Q==
+X-Gm-Message-State: APjAAAW3VHbtlGbFQhmrysROjbsmFZr/5sgnwBQ6B6rCACLlEO2dDuCh
+        CwympFsYJqtwSEoAd2WSGdw/jQ==
+X-Google-Smtp-Source: APXvYqy0nI3NvxiMR/YDaYwtd6uF7mlSwubfgtUL4T/La9x8We99+YViYodxB4hgJt7VjuBJB2WfBw==
+X-Received: by 2002:a50:bdc4:: with SMTP id z4mr2823292edh.199.1554366702830;
+        Thu, 04 Apr 2019 01:31:42 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk (alrua-x1.vpn.toke.dk. [2a00:7660:6da:10::2])
+        by smtp.gmail.com with ESMTPSA id 25sm3418542ejv.27.2019.04.04.01.31.42
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 04 Apr 2019 01:31:42 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 921DA1804A5; Thu,  4 Apr 2019 10:31:41 +0200 (CEST)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Yibo Zhao <yiboz@codeaurora.org>
+Cc:     make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
+Subject: Re: [RFC/RFT] mac80211: Switch to a virtual time-based airtime scheduler
+In-Reply-To: <753b328855b85f960ceaf974194a7506@codeaurora.org>
+References: <20190215170512.31512-1-toke@redhat.com> <753b328855b85f960ceaf974194a7506@codeaurora.org>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Thu, 04 Apr 2019 10:31:41 +0200
+Message-ID: <87ftqy41ea.fsf@toke.dk>
 MIME-Version: 1.0
-References: <2884043.Jv1Mn93hE8@aspire.rjw.lan> <20190403195718.GA74723@google.com>
- <1645947.WPhbVaNX0l@aspire.rjw.lan> <CA+ASDXPoB94o0pbY0TQGS7Dtp2RNz=3goH38gpLtBoJ15i7eoQ@mail.gmail.com>
- <87k1gatnvt.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87k1gatnvt.fsf@kamboji.qca.qualcomm.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Thu, 4 Apr 2019 10:28:29 +0200
-Message-ID: <CAJZ5v0h=gcurf7msXkxBCmf86D1C1cMP6uL8iadUjMaNd6FPYA@mail.gmail.com>
-Subject: Re: [PATCH] ath10k: Drop WARN_ON()s that always trigger during system resume
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Brian Norris <briannorris@chromium.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        ath10k@lists.infradead.org, Todd Brandt <todd.e.brandt@intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Sriram R <srirrama@codeaurora.org>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Claire Chang <tientzu@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Apr 4, 2019 at 6:08 AM Kalle Valo <kvalo@codeaurora.org> wrote:
->
-> Brian Norris <briannorris@chromium.org> writes:
->
-> > On Wed, Apr 3, 2019 at 2:47 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >> I have been wondering whether or not I need to resend this patch or something ...
-> >
-> > I think the linux-wireless Patchwork instance is the source of truth
-> > -- Kalle and Johannes use it for tracking status, IIUC. So this says
-> > your patch is still "New":
-> >
-> > https://patchwork.kernel.org/patch/10837139/
->
-> Yeah, that's right:
->
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#checking_state_of_patches_from_patchwork
->
-> So no need to resend, it's in my queue.
->
-> I was travelling and then busy with something else so I haven't had a
-> chance to process patches, I'll try to catch up now but I'm sure it will
-> take a while as there are so many patches. Sorry for the delay.
+Yibo Zhao <yiboz@codeaurora.org> writes:
 
-No worries. :-)
+> On 2019-02-16 01:05, Toke Høiland-Jørgensen wrote:
+>> This switches the airtime scheduler in mac80211 to use a virtual 
+>> time-based
+>> scheduler instead of the round-robin scheduler used before. This has a
+>> couple of advantages:
+>> 
+>> - No need to sync up the round-robin scheduler in firmware/hardware 
+>> with
+>>   the round-robin airtime scheduler.
+>> 
+>> - If several stations are eligible for transmission we can schedule 
+>> both of
+>>   them; no need to hard-block the scheduling rotation until the head of 
+>> the
+>>   queue has used up its quantum.
+>> 
+>> - The check of whether a station is eligible for transmission becomes
+>>   simpler (in ieee80211_txq_may_transmit()).
+>> 
+>> The drawback is that scheduling becomes slightly more expensive, as we 
+>> need
+>> to maintain an rbtree of TXQs sorted by virtual time. This means that
+>> ieee80211_register_airtime() becomes O(logN) in the number of currently
+>> scheduled TXQs. However, hopefully this number rarely grows too big 
+>> (it's
+>> only TXQs currently backlogged, not all associated stations), so it
+>> shouldn't be too big of an issue.
+>> 
+>> @@ -1831,18 +1830,32 @@ void ieee80211_sta_register_airtime(struct
+>> ieee80211_sta *pubsta, u8 tid,
+>>  {
+>>  	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+>>  	struct ieee80211_local *local = sta->sdata->local;
+>> +	struct ieee80211_txq *txq = sta->sta.txq[tid];
+>>  	u8 ac = ieee80211_ac_from_tid(tid);
+>> -	u32 airtime = 0;
+>> +	u64 airtime = 0, weight_sum;
+>> +
+>> +	if (!txq)
+>> +		return;
+>> 
+>>  	if (sta->local->airtime_flags & AIRTIME_USE_TX)
+>>  		airtime += tx_airtime;
+>>  	if (sta->local->airtime_flags & AIRTIME_USE_RX)
+>>  		airtime += rx_airtime;
+>> 
+>> +	/* Weights scale so the unit weight is 256 */
+>> +	airtime <<= 8;
+>> +
+>>  	spin_lock_bh(&local->active_txq_lock[ac]);
+>> +
+>>  	sta->airtime[ac].tx_airtime += tx_airtime;
+>>  	sta->airtime[ac].rx_airtime += rx_airtime;
+>> -	sta->airtime[ac].deficit -= airtime;
+>> +
+>> +	weight_sum = local->airtime_weight_sum[ac] ?: sta->airtime_weight;
+>> +
+>> +	local->airtime_v_t[ac] += airtime / weight_sum;
+> Hi Toke,
+>
+> Please ignore the previous two broken emails regarding this new proposal 
+> from me.
+>
+> It looks like local->airtime_v_t acts like a Tx criteria. Only the 
+> stations with less airtime than that are valid for Tx. That means there 
+> are situations, like 50 clients, that some of the stations can be used 
+> to Tx when putting next_txq in the loop. Am I right?
+
+I'm not sure what you mean here. Are you referring to the case where new
+stations appear with a very low (zero) airtime_v_t? That is handled when
+the station is enqueued.
+
+>> +	sta->airtime[ac].v_t += airtime / sta->airtime_weight;
+> Another question. Any plan for taking v_t overflow situation into 
+> consideration? u64 might be enough for low throughput products but not 
+> sure for high end products. Something like below for reference:
+
+The unit for the variable is time, not bytes, so it is unaffected by
+throughput. 2**64 microseconds is 584554 *years* according to my
+'units' binary, so don't think we have to worry too much about this
+overflowing ;)
+
+-Toke
