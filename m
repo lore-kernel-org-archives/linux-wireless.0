@@ -2,99 +2,145 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1CFC4360F
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 12:11:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40131C4360F
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 13:33:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37DB1206B7
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 12:11:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D16D206B7
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 13:33:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="P7Z6lV5t";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Mb0aoHio"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="O8+zmoN6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729003AbfDDMLO (ORCPT
+        id S1728684AbfDDNdD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 08:11:14 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:41944 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727310AbfDDMLN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 08:11:13 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 3F4AA60A42; Thu,  4 Apr 2019 12:11:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554379873;
-        bh=KYaaBlV/CAjDlVvm2RtokbQpLt21l4wkZz7tMtboaFg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=P7Z6lV5tC8K+3KsZMM8ggfyyNsvoKoAQEYSVcqKVJX7VKW1g6Io2x+RTorII1TfFt
-         /EVNqg/38u0cbli+ql5QDPuHqu8Q0jeh37VgZgkz6nj7+VXA/xQ5GtAQbau0Ys4tC/
-         nnt8HqGH0hjSjJZJfi7lkLsAFJEt0aAIhJ6ILqgw=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id E408F60909;
-        Thu,  4 Apr 2019 12:11:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554379872;
-        bh=KYaaBlV/CAjDlVvm2RtokbQpLt21l4wkZz7tMtboaFg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Mb0aoHioxSIc/8jUNbINU1HnYqyjeS7GdYWJGmW0AF7zXYgM4fxLrfY+LoXcbSBd/
-         puEi1GJTzs5l0QZ+uUM2raQQUor91+l7t7zGVEA4SOYIwV13/kSXmKc136tEOJySUh
-         SCdj1Qt2NB7xcwoWfx1VJKmBIoIJuZM+eBtUtRew=
+        Thu, 4 Apr 2019 09:33:03 -0400
+Received: from mail-eopbgr740078.outbound.protection.outlook.com ([40.107.74.78]:23794
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726269AbfDDNdD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Apr 2019 09:33:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=krEZKDAnezyPjEgf3rWaGq6ir146IFxLTl46GJh79+k=;
+ b=O8+zmoN6C3URrZms6wykcsRuQH7tN3kJpbUR6wXyNRVClu0mds4X5N/9hy3fWk0XnO5OydzTja/khhUtGhPcVEKlrNoNYM58ck6+6AtGs2+B7gH32Iptx/YVSb/zTIUWAUFqqC10aYfJB7CLhF2E2Ufl2/99Qy2YqlDzEyCSGvk=
+Received: from DM6PR05MB6348.namprd05.prod.outlook.com (20.178.224.143) by
+ DM6PR05MB4812.namprd05.prod.outlook.com (20.176.111.221) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1771.7; Thu, 4 Apr 2019 13:33:00 +0000
+Received: from DM6PR05MB6348.namprd05.prod.outlook.com
+ ([fe80::f485:e463:a00:e884]) by DM6PR05MB6348.namprd05.prod.outlook.com
+ ([fe80::f485:e463:a00:e884%3]) with mapi id 15.20.1771.007; Thu, 4 Apr 2019
+ 13:33:00 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
+ SN6PR05MB4814.namprd05.prod.outlook.com (52.135.116.220) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1771.6; Thu, 4 Apr 2019 13:32:42 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e]) by SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e%4]) with mapi id 15.20.1771.007; Thu, 4 Apr 2019
+ 13:32:42 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+CC:     Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH][next] qtnfmac: replace qtnf_cmd_acl_data_size() with
+ struct_size()
+Thread-Topic: [PATCH][next] qtnfmac: replace qtnf_cmd_acl_data_size() with
+ struct_size()
+Thread-Index: AQHU6kVbVDZ121t/CEKyy1UYmGUKFqYsAS+A
+Date:   Thu, 4 Apr 2019 13:32:42 +0000
+Message-ID: <20190404133234.2uatru2vlw3ntrmv@bars>
+References: <20190403170236.GA31637@embeddedor>
+In-Reply-To: <20190403170236.GA31637@embeddedor>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BYAPR03CA0029.namprd03.prod.outlook.com
+ (2603:10b6:a02:a8::42) To SN6PR05MB4928.namprd05.prod.outlook.com
+ (2603:10b6:805:9d::10)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 311b6b1d-26d7-46ff-9b79-08d6b902036d
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600139)(711020)(4605104)(2017052603328)(7193020);SRVR:SN6PR05MB4814;
+x-ms-traffictypediagnostic: SN6PR05MB4814:|DM6PR05MB4812:
+x-moderation-data: 4/4/2019 1:32:58 PM
+x-microsoft-antispam-prvs: <DM6PR05MB4812748889CD56BFFE63B856A3500@DM6PR05MB4812.namprd05.prod.outlook.com>
+x-forefront-prvs: 0997523C40
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(366004)(396003)(39850400004)(346002)(376002)(136003)(51914003)(189003)(199004)(66066001)(436003)(52116002)(2906002)(53936002)(54906003)(76176011)(11346002)(68736007)(446003)(6916009)(486006)(256004)(386003)(186003)(476003)(6506007)(102836004)(6246003)(316002)(6116002)(3846002)(26005)(33716001)(6512007)(99286004)(9686003)(6486002)(8936002)(305945005)(5660300002)(81166006)(71190400001)(229853002)(97736004)(71200400001)(7736002)(14454004)(105586002)(25786009)(81156014)(8676002)(86362001)(1076003)(4326008)(6436002)(478600001)(106356001);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6PR05MB4812;H:DM6PR05MB6348.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: 2TMw65H55pyoLAu/8AT3RbjTfxtalgm++u2x4eOBn1HBvMG+6YY2iU64SrfGXUqGicMiXtmgKgsRHQD+n49ZoVrwEyiH6vigzdh7C6V9jC4jeGyKEYoSWm2pqnap8nyFM5SidE+CiOgY7AMDdNcftp9lNg2biYxReOpenJ7XcfoHrO3ZhO4+QDi++Vf/w9DsV8W5gtndBlDZf+Q4ggUXSSKGxPxIK9zHnV1pnj4mtB5/5pTtNhrP+oHIFroSn2uQaB+YwRjQAPOmmYFtixANV44NC9xKo4omZKGyuY+7VKPLGG+9xAH2Ysu35PDVEGeE4xY0mIvH1cPXe2OlBQB+NKf+z3OgvNYYODw6rkRgLzDJNwYZlyetKMhA6OMVdroSOskUQRWir03cmfL4xLnVF1CAVhTVIXkj/U0SPeCr2Fo=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <69A65985265894408D7C1D2371109492@namprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 04 Apr 2019 17:41:12 +0530
-From:   Rakesh Pillai <pillair@codeaurora.org>
-To:     peter.oh@bowerswilkins.com
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: FW: [PATCH v2] ath10k: Report low ack rssi based on the reason
- code
-In-Reply-To: <8c3110f20aec4c4a90bb679c4551b1fc@aphydexm01b.ap.qualcomm.com>
-References: <1554276181-7879-1-git-send-email-pillair@codeaurora.org>
- <5f25f471-5753-7d4a-91f8-9a3986117580@bowerswilkins.com>
- <8c3110f20aec4c4a90bb679c4551b1fc@aphydexm01b.ap.qualcomm.com>
-Message-ID: <73e869e8f82a3395cfefaf1272d07906@codeaurora.org>
-X-Sender: pillair@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 311b6b1d-26d7-46ff-9b79-08d6b902036d
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Apr 2019 13:33:00.2196
+ (UTC)
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR05MB4812
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
->> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h 
->> b/drivers/net/wireless/ath/ath10k/wmi.h
->> index e1c40bb..3ccd79e 100644
->> --- a/drivers/net/wireless/ath/ath10k/wmi.h
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
->> @@ -6797,6 +6797,8 @@ struct wmi_vdev_start_ev_arg {
->> 
->>   struct wmi_peer_kick_ev_arg {
->>   	const u8 *mac_addr;
->> +	u32 reason;
->> +	bool reason_code_valid;
->>   };
->> 
-> Adding extra members to this structure breaks structure consistency
-> between FW and host driver since FW doesn't have such members.
-> 
-> Peter
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+> One of the more common cases of allocation size calculations is finding
+> the size of a structure that has a zero-sized array at the end, along
+> with memory for some number of elements for that array. For example:
+>=20
+> struct foo {
+>     int stuff;
+>     struct boo entry[];
+> };
+>=20
+> size =3D sizeof(struct foo) + count * sizeof(struct boo);
+> instance =3D kzalloc(size, GFP_KERNEL)
+>=20
+> Instead of leaving these open-coded and prone to type mistakes, we can
+> now use the new struct_size() helper:
+>=20
+> size =3D struct_size(instance, entry, count);
+>=20
+> or
+>=20
+> instance =3D kzalloc(struct_size(instance, entry, count), GFP_KERNEL)
+>=20
+> Based on the above, replace qtnf_cmd_acl_data_size() with the
+> new struct_size() helper.
+>=20
+> This code was detected with the help of Coccinelle.
+>=20
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>  drivers/net/wireless/quantenna/qtnfmac/commands.c | 15 ++++-----------
+>  1 file changed, 4 insertions(+), 11 deletions(-)
 
-struct wmi_peer_sta_kickout_event is used for parsing event from non-tlv 
-firmwares and
-struct wmi_tlv_peer_sta_kickout_event  is used for parsing event from 
-tlv firmwares.
-Both of the above structures maintain consistency with the respective 
-FW.
+Hi Gustavo,
 
-struct wmi_peer_kick_ev_arg is used only for internal ath10k operations 
-only.
+Thanks for the patch! By the way, it does not apply cleanly, so it needs
+to be rebased on top of the up-to-date wireless-drivers-next tree. Let
+me know if you would prefer me to care about rebase. Then I will
+add this patch to the upcoming series of qtnfmac fixes.
 
-Thanks,
-Rakesh Pillai.
+Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+
+Regards,
+Sergey
