@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D641AC10F05
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 06:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52380C10F0D
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 06:54:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ADB3820643
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 06:54:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E23B20643
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 06:54:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727165AbfDDGyT (ORCPT
+        id S1727199AbfDDGyU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 02:54:19 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:55728 "EHLO
+        Thu, 4 Apr 2019 02:54:20 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:55736 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727082AbfDDGyS (ORCPT
+        with ESMTP id S1726966AbfDDGyT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 02:54:18 -0400
+        Thu, 4 Apr 2019 02:54:19 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92-RC5)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hBwGM-0003Pn-Uh; Thu, 04 Apr 2019 08:54:15 +0200
+        id 1hBwGN-0003Pn-Ug; Thu, 04 Apr 2019 08:54:16 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
 Cc:     Pablo Neira Ayuso <pablo@netfilter.org>,
         David Ahern <dsa@cumulusnetworks.com>,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/6] netlink: add NLA_MIN_LEN
-Date:   Thu,  4 Apr 2019 08:54:03 +0200
-Message-Id: <20190404065408.5864-2-johannes@sipsolutions.net>
+Subject: [PATCH 3/6] netlink: re-add parse/validate functions in strict mode
+Date:   Thu,  4 Apr 2019 08:54:05 +0200
+Message-Id: <20190404065408.5864-4-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.17.2
 In-Reply-To: <20190404065408.5864-1-johannes@sipsolutions.net>
 References: <20190404065408.5864-1-johannes@sipsolutions.net>
@@ -42,86 +42,137 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Rather than using NLA_UNSPEC for this type of thing, use NLA_MIN_LEN
-so we can make NLA_UNSPEC be NLA_REJECT under certain conditions for
-future attributes.
-
-While at it, also use NLA_EXACT_LEN for the struct example.
+This re-adds the parse and validate functions like nla_parse()
+that are now actually strict after the previous rename and were
+just split out to make sure everything is converted (and if not
+compilation of the previous patch would fail.)
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/netlink.h | 6 +++++-
- lib/nlattr.c          | 9 ++++++++-
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ include/net/genetlink.h | 19 ++++++++++++
+ include/net/netlink.h   | 65 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 84 insertions(+)
 
+diff --git a/include/net/genetlink.h b/include/net/genetlink.h
+index 897cdba13569..68de579cfe5e 100644
+--- a/include/net/genetlink.h
++++ b/include/net/genetlink.h
+@@ -183,6 +183,25 @@ static inline int genlmsg_parse_deprecated(const struct nlmsghdr *nlh,
+ 			     policy, NL_VALIDATE_LIBERAL, extack);
+ }
+ 
++/**
++ * genlmsg_parse - parse attributes of a genetlink message
++ * @nlh: netlink message header
++ * @family: genetlink message family
++ * @tb: destination array with maxtype+1 elements
++ * @maxtype: maximum attribute type to be expected
++ * @policy: validation policy
++ * @extack: extended ACK report struct
++ */
++static inline int genlmsg_parse(const struct nlmsghdr *nlh,
++				const struct genl_family *family,
++				struct nlattr *tb[], int maxtype,
++				const struct nla_policy *policy,
++				struct netlink_ext_ack *extack)
++{
++	return __nlmsg_parse(nlh, family->hdrsize + GENL_HDRLEN, tb, maxtype,
++			     policy, NL_VALIDATE_STRICT, extack);
++}
++
+ /**
+  * genl_dump_check_consistent - check if sequence is consistent and advertise if not
+  * @cb: netlink callback structure that stores the sequence number
 diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 23f27b0b3cef..06f8605b740c 100644
+index 58570462db6d..d75545c906b6 100644
 --- a/include/net/netlink.h
 +++ b/include/net/netlink.h
-@@ -183,6 +183,7 @@ enum {
- 	NLA_REJECT,
- 	NLA_EXACT_LEN,
- 	NLA_EXACT_LEN_WARN,
-+	NLA_MIN_LEN,
- 	__NLA_TYPE_MAX,
- };
+@@ -542,6 +542,31 @@ nlmsg_next(const struct nlmsghdr *nlh, int *remaining)
+ 	return (struct nlmsghdr *) ((unsigned char *) nlh + totlen);
+ }
  
-@@ -212,6 +213,7 @@ enum nla_policy_validation {
-  *    NLA_NUL_STRING       Maximum length of string (excluding NUL)
-  *    NLA_FLAG             Unused
-  *    NLA_BINARY           Maximum length of attribute payload
-+ *    NLA_MIN_LEN          Minimum length of attribute payload
-  *    NLA_NESTED,
-  *    NLA_NESTED_ARRAY     Length verification is done by checking len of
-  *                         nested header (or empty); len field is used if
-@@ -230,6 +232,7 @@ enum nla_policy_validation {
-  *                         it is rejected.
-  *    NLA_EXACT_LEN_WARN   Attribute should have exactly this length, a warning
-  *                         is logged if it is longer, shorter is rejected.
-+ *    NLA_MIN_LEN          Minimum length of attribute payload
-  *    All other            Minimum length of attribute payload
-  *
-  * Meaning of `validation_data' field:
-@@ -281,7 +284,7 @@ enum nla_policy_validation {
-  * static const struct nla_policy my_policy[ATTR_MAX+1] = {
-  * 	[ATTR_FOO] = { .type = NLA_U16 },
-  *	[ATTR_BAR] = { .type = NLA_STRING, .len = BARSIZ },
-- *	[ATTR_BAZ] = { .len = sizeof(struct mystruct) },
-+ *	[ATTR_BAZ] = { .type = NLA_EXACT_LEN, .len = sizeof(struct mystruct) },
-  *	[ATTR_GOO] = { .type = NLA_BITFIELD32, .validation_data = &myvalidflags },
-  * };
-  */
-@@ -302,6 +305,7 @@ struct nla_policy {
- #define NLA_POLICY_EXACT_LEN(_len)	{ .type = NLA_EXACT_LEN, .len = _len }
- #define NLA_POLICY_EXACT_LEN_WARN(_len)	{ .type = NLA_EXACT_LEN_WARN, \
- 					  .len = _len }
-+#define NLA_POLICY_MIN_LEN(_len)	{ .type = NLA_MIN_LEN, .len = _len }
- 
- #define NLA_POLICY_ETH_ADDR		NLA_POLICY_EXACT_LEN(ETH_ALEN)
- #define NLA_POLICY_ETH_ADDR_COMPAT	NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN)
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index d26de6156b97..465c9e8ef8a5 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -278,10 +278,17 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 			}
- 		}
- 		break;
++/**
++ * nla_parse - Parse a stream of attributes into a tb buffer
++ * @tb: destination array with maxtype+1 elements
++ * @maxtype: maximum attribute type to be expected
++ * @head: head of attribute stream
++ * @len: length of attribute stream
++ * @policy: validation policy
++ * @extack: extended ACK pointer
++ *
++ * Parses a stream of attributes and stores a pointer to each attribute in
++ * the tb array accessible via the attribute type. Attributes with a type
++ * exceeding maxtype will be rejected, policy must be specified, attributes
++ * will be validated in the strictest way possible.
++ *
++ * Returns 0 on success or a negative error code.
++ */
++static inline int nla_parse(struct nlattr **tb, int maxtype,
++			    const struct nlattr *head, int len,
++			    const struct nla_policy *policy,
++			    struct netlink_ext_ack *extack)
++{
++	return __nla_parse(tb, maxtype, head, len, policy,
++			   NL_VALIDATE_STRICT, extack);
++}
 +
-+	case NLA_UNSPEC:
-+	case NLA_MIN_LEN:
-+		if (attrlen < pt->len)
-+			goto out_err;
-+		break;
-+
- 	default:
- 		if (pt->len)
- 			minlen = pt->len;
--		else if (pt->type != NLA_UNSPEC)
-+		else
- 			minlen = nla_attr_minlen[pt->type];
+ /**
+  * nla_parse_deprecated - Parse a stream of attributes into a tb buffer
+  * @tb: destination array with maxtype+1 elements
+@@ -595,6 +620,27 @@ static inline int __nlmsg_parse(const struct nlmsghdr *nlh, int hdrlen,
+ 			   extack);
+ }
  
- 		if (attrlen < minlen)
++/**
++ * nlmsg_parse - parse attributes of a netlink message
++ * @nlh: netlink message header
++ * @hdrlen: length of family specific header
++ * @tb: destination array with maxtype+1 elements
++ * @maxtype: maximum attribute type to be expected
++ * @validate: validation strictness
++ * @extack: extended ACK report struct
++ *
++ * See nla_parse()
++ */
++static inline int nlmsg_parse(const struct nlmsghdr *nlh, int hdrlen,
++			      struct nlattr *tb[], int maxtype,
++			      const struct nla_policy *policy,
++			      struct netlink_ext_ack *extack)
++{
++	return __nla_parse(tb, maxtype, nlmsg_attrdata(nlh, hdrlen),
++			   nlmsg_attrlen(nlh, hdrlen), policy,
++			   NL_VALIDATE_STRICT, extack);
++}
++
+ /**
+  * nlmsg_parse_deprecated - parse attributes of a netlink message
+  * @nlh: netlink message header
+@@ -1009,6 +1055,25 @@ nla_find_nested(const struct nlattr *nla, int attrtype)
+ 	return nla_find(nla_data(nla), nla_len(nla), attrtype);
+ }
+ 
++/**
++ * nla_parse_nested - parse nested attributes
++ * @tb: destination array with maxtype+1 elements
++ * @maxtype: maximum attribute type to be expected
++ * @nla: attribute containing the nested attributes
++ * @policy: validation policy
++ * @extack: extended ACK report struct
++ *
++ * See nla_parse()
++ */
++static inline int nla_parse_nested(struct nlattr *tb[], int maxtype,
++				   const struct nlattr *nla,
++				   const struct nla_policy *policy,
++				   struct netlink_ext_ack *extack)
++{
++	return __nla_parse(tb, maxtype, nla_data(nla), nla_len(nla), policy,
++			   NL_VALIDATE_STRICT, extack);
++}
++
+ /**
+  * nla_parse_nested_deprecated - parse nested attributes
+  * @tb: destination array with maxtype+1 elements
 -- 
 2.17.2
 
