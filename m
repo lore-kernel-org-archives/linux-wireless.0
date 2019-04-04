@@ -2,95 +2,112 @@ Return-Path: <SRS0=xyYy=SG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15157C10F0E
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:20:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6AFBC4360F
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:45:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D9AB2206B7
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:20:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 925B0206C0
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Apr 2019 20:45:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Cch7lFka"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730763AbfDDUU3 (ORCPT
+        id S1731190AbfDDUpS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 16:20:29 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:41426 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729184AbfDDUU2 (ORCPT
+        Thu, 4 Apr 2019 16:45:18 -0400
+Received: from [208.74.158.174] ([208.74.158.174]:38254 "EHLO
+        mail3.candelatech.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1730337AbfDDUpS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 16:20:28 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92-RC5)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hC8qV-0005b7-3S; Thu, 04 Apr 2019 22:20:23 +0200
-Message-ID: <a432ffb79a23dcc9276cdec15f156189de4518ea.camel@sipsolutions.net>
-Subject: Re: [PATCH 0/6] stricter netlink validation
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     David Miller <davem@davemloft.net>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org, dsa@cumulusnetworks.com
-Date:   Thu, 04 Apr 2019 22:20:20 +0200
-In-Reply-To: <20190404.102850.631122626573856353.davem@davemloft.net>
-References: <20190404065408.5864-1-johannes@sipsolutions.net>
-         <20190404.102850.631122626573856353.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Thu, 4 Apr 2019 16:45:18 -0400
+Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id C1C4527C29
+        for <linux-wireless@vger.kernel.org>; Thu,  4 Apr 2019 13:45:16 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C1C4527C29
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1554410716;
+        bh=wTXyLn0jtWbfkKdoMXQSb+1xAc2Zhl03kSlom67uSqo=;
+        h=Subject:From:To:References:Date:In-Reply-To:From;
+        b=Cch7lFkasVM/1ZaRKc2ncKoP26Yj4XvVBiXOfkWLVZwIwUE6xfUjjhQi/AZioFm4U
+         FdMJiZ1yL8W7MgNSUFJEhuRJCBZxvRfYAYQ2Vg9ALNreeZ3JIN7bdMEBUB5KyagiYt
+         13/TFjwwFKU8G84iwoR76FUfIX8WzXO4eqS+IWEc=
+Subject: Re: ath10k and min_gcd + adhoc issues in 4.20 kernel
+From:   Ben Greear <greearb@candelatech.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <3dfff3d9-a070-f3a3-723c-d1442ec06bc5@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <5475c4c5-e30d-f254-e3b8-43b52b83a198@candelatech.com>
+Date:   Thu, 4 Apr 2019 13:45:16 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
+MIME-Version: 1.0
+In-Reply-To: <3dfff3d9-a070-f3a3-723c-d1442ec06bc5@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-04-04 at 10:28 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Thu,  4 Apr 2019 08:54:02 +0200
+Hello,
+
+Any comments on this below?
+
+Thanks,
+Ben
+
+On 1/15/19 3:29 PM, Ben Greear wrote:
+> I just updated to 4.20 and ported forward my ath10k patches.  Now the driver
+> will not register with mac80211 because this warning hits in net/wireless/core.c:
 > 
-> > Here's a version that has passed build testing ;-)
+>              /*
+>               * This isn't well-defined right now. If you have an
+>               * IBSS interface, then its beacon interval may change
+>               * by joining other networks, and nothing prevents it
+>               * from doing that.
+>               * So technically we probably shouldn't even allow AP
+>               * and IBSS in the same interface, but it seems that
+>               * some drivers support that, possibly only with fixed
+>               * beacon intervals for IBSS.
+>               */
+>              if (WARN_ON(types & BIT(NL80211_IFTYPE_ADHOC) &&
+>                      c->beacon_int_min_gcd)) {
+>                  return -EINVAL;
+>              }
 > 
-> :-)
+> 
+> It looks like this was triggered by:
+> 
+> Commit 0c317a02ca982ca093e71bf07cb562265ba40032
+> Author: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+> Date:   Wed Oct 12 18:26:51 2016 +0530
+> 
+>      cfg80211: support virtual interfaces with different beacon intervals
+> 
+> and
+> 
+> commit 8ebee73b574ad3dd1f14d461f65ceaffbd637650
+> Author: Anilkumar Kolli <akolli@codeaurora.org>
+> Date:   Wed Mar 28 12:19:40 2018 +0300
+> 
+>      ath10k: advertize beacon_int_min_gcd
+> 
+> 
+> To be honest, I don't see why that check for beacon_int_min_gcd is in the registration
+> logic.  Having it be '1' means that the driver/nic/firmware is flexible on pretty much
+> any combination of beacon interval, so why should that trigger the WARN_ON case?
+> 
+> Thanks,
+> Ben
+> 
 
-Actually it passed more than that - I did test the nl80211 bits etc.,
-but I hadn't build-tested everything before so some missing function
-renames were caught by the full build testing.
 
-> I really like the approach taken here, and done in such a way that
-> new attributes added get strict checking by default.
-
-It's two things really
-
- * new commands (aka new instances of nla_parse/nlmsg_parse and friends)
-   --> strict checking for everything, including existing attributes
-       because we reason that you're writing some new userspace code,
-       and even if that might use some existing functionality, which
-       might even be wrong, you're going to fix it here
-
- * new attributes on existing commands (in the policy)
-   --> can be set up (with the strict_start_type from patch 4) to be
-       strictly checked
-
-> I'll let David Ahern et al. have time to review this.
-
-Sure.
-
-FWIW, I wasn't really entirely sure I liked doing a cross-tree rename,
-but ultimately I felt that we should discourage uses of what I now
-called *_deprecated() and *_strict_deprecated() APIs, and having sort of
-the "default" names do the thing we believe is right (strict checking)
-helps with that - in a sort of 'social engineering' way, people will not
-want to type out "_deprecated" all the time ;-)
-
-I do realize that this may be a bit controversial and am certainly open
-to other suggestions on this.
-
-Similarly, I engineered the generic netlink stuff in a way that adding
-non-strict behaviour needs extra work, so that hopefully new stuff will
-not do that extra work.
-
-Also, both of these are then easier to see in reviews, since you can see
-"deprecated" in the function names, or "DONT_VALIDATE" in the generic
-netlink things.
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
