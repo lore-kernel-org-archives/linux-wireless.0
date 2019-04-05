@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 708F9C282DA
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8954FC282CE
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 410F420700
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58E4820700
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="DIZEuBmu"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="E7KBcA4V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726602AbfDEXvq (ORCPT
+        id S1726862AbfDEXwY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Apr 2019 19:51:46 -0400
-Received: from vps.xff.cz ([195.181.215.36]:53642 "EHLO vps.xff.cz"
+        Fri, 5 Apr 2019 19:52:24 -0400
+Received: from vps.xff.cz ([195.181.215.36]:53636 "EHLO vps.xff.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726404AbfDEXvp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Apr 2019 19:51:45 -0400
+        id S1726397AbfDEXvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Apr 2019 19:51:46 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554507923; bh=wvF2/pCHwD4dahvKbMMVpdm0xJMLKd6LKkDTAqvA09g=;
+        t=1554507925; bh=LhKRrW0VZAWlwYr+NVOHhX0KGuDNwmtQcujH4vpUefU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DIZEuBmuGPuQZm2bQB8wtm5QmSC4S3EPc2qaoDXjNZG6gX1c7rw5+jt3myDMTjYta
-         ihlxTOK6DuAvkzY16enGnb2LY3kyY0ZZDXmIirm1vIl03vnWDzfcSUrldoZA7HJwZH
-         ksnvEYdVED+ruQSUryvJZCGZuodU37PaIa4tX9T4=
+        b=E7KBcA4VVi99ofHNaX4Q7W98vkZJM/l/9H+abMp00ahZAlIZchGYAp9Krql+csB4j
+         Efclmv0A4QbqHJhGYUkFvowzJY6Rl6bL5tYUxaXOVXc62xHyqWyc/8QIzPcYiZ58um
+         OpXCwj/GIAdjJPI9IWIWvcpnf0KyqHQKNbYu20CQ=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
         Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
         Linus Walleij <linus.walleij@linaro.org>
-Cc:     Icenowy Zheng <icenowy@aosc.io>, David Airlie <airlied@linux.ie>,
+Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         Daniel Vetter <daniel@ffwll.ch>,
         Mark Rutland <mark.rutland@arm.com>,
         Giuseppe Cavallaro <peppe.cavallaro@st.com>,
@@ -54,9 +54,9 @@ Cc:     Icenowy Zheng <icenowy@aosc.io>, David Airlie <airlied@linux.ie>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH 05/12] net: stmmac: sun8i: add support for Allwinner H6 EMAC
-Date:   Sat,  6 Apr 2019 01:45:07 +0200
-Message-Id: <20190405234514.6183-6-megous@megous.com>
+Subject: [PATCH 10/12] pinctrl: sunxi: Support I/O bias voltage setting on H6
+Date:   Sat,  6 Apr 2019 01:45:12 +0200
+Message-Id: <20190405234514.6183-11-megous@megous.com>
 In-Reply-To: <20190405234514.6183-1-megous@megous.com>
 References: <20190405234514.6183-1-megous@megous.com>
 MIME-Version: 1.0
@@ -66,54 +66,86 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Icenowy Zheng <icenowy@aosc.io>
+From: Ondrej Jirman <megous@megous.com>
 
-The EMAC on Allwinner H6 is just like the one on A64. The "internal PHY"
-on H6 is on a co-packaged AC200 chip, and it's not really internal (it's
-connected via RMII at PA GPIO bank).
+H6 SoC has a "pio group withstand voltage mode" register (datasheet
+description), that needs to be used to select either 1.8V or 3.3V
+I/O mode, based on what voltage is powering the respective pin
+banks and is thus used for I/O signals.
 
-Add support for the Allwinner H6 EMAC in the dwmac-sun8i driver.
+Add support for configuring this register according to the voltage
+of the pin bank regulator (if enabled).
 
-Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+This is similar to the support for I/O bias voltage setting patch
+for A80 and the same concerns apply. (see commit 402bfb3c135213dc
+Support I/O bias voltage setting on A80).
+
+Signed-off-by: Ondrej Jirman <megous@megous.com>
 ---
- .../net/ethernet/stmicro/stmmac/dwmac-sun8i.c   | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c |  1 +
+ drivers/pinctrl/sunxi/pinctrl-sunxi.c     | 14 ++++++++++++++
+ drivers/pinctrl/sunxi/pinctrl-sunxi.h     |  3 +++
+ 3 files changed, 18 insertions(+)
 
-diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-index 195669f550f0..e3e3dc44b33b 100644
---- a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-+++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-@@ -147,6 +147,21 @@ static const struct emac_variant emac_variant_a64 = {
- 	.tx_delay_max = 7,
+diff --git a/drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c b/drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c
+index ef4268cc6227..30b1befa8ed8 100644
+--- a/drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c
++++ b/drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c
+@@ -591,6 +591,7 @@ static const struct sunxi_pinctrl_desc h6_pinctrl_data = {
+ 	.irq_banks = 4,
+ 	.irq_bank_map = h6_irq_bank_map,
+ 	.irq_read_needs_mux = true,
++	.io_bias_cfg_variant = IO_BIAS_CFG_V2,
  };
  
-+static const struct emac_variant emac_variant_h6 = {
-+	.default_syscon_value = 0x50000,
-+	.syscon_field = &sun8i_syscon_reg_field,
-+	/*
-+	 * The "Internal PHY" of H6 is not on the die. It's on the co-packaged
-+	 * AC200 chip instead.
-+	 */
-+	.soc_has_internal_phy = false,
-+	.support_mii = true,
-+	.support_rmii = true,
-+	.support_rgmii = true,
-+	.rx_delay_max = 31,
-+	.tx_delay_max = 7,
-+};
+ static int h6_pinctrl_probe(struct platform_device *pdev)
+diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
+index 9f329fec77cf..59a4ed396d92 100644
+--- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
++++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
+@@ -607,6 +607,8 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
+ 					 unsigned pin,
+ 					 struct regulator *supply)
+ {
++	unsigned short bank = pin / PINS_PER_BANK;
++	unsigned long flags;
+ 	u32 val, reg;
+ 	int uV;
+ 
+@@ -639,6 +641,18 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
+ 		reg = readl(pctl->membase + sunxi_grp_config_reg(pin));
+ 		reg &= ~IO_BIAS_MASK;
+ 		writel(reg | val, pctl->membase + sunxi_grp_config_reg(pin));
++	} else if (pctl->desc->io_bias_cfg_variant == IO_BIAS_CFG_V2) {
++		val = uV <= 1800000 ? 1 : 0;
 +
- #define EMAC_BASIC_CTL0 0x00
- #define EMAC_BASIC_CTL1 0x04
- #define EMAC_INT_STA    0x08
-@@ -1210,6 +1225,8 @@ static const struct of_device_id sun8i_dwmac_match[] = {
- 		.data = &emac_variant_r40 },
- 	{ .compatible = "allwinner,sun50i-a64-emac",
- 		.data = &emac_variant_a64 },
-+	{ .compatible = "allwinner,sun50i-h6-emac",
-+		.data = &emac_variant_h6 },
- 	{ }
- };
- MODULE_DEVICE_TABLE(of, sun8i_dwmac_match);
++		dev_info(pctl->dev,
++			 "Setting voltage bias to %sV on bank P%c\n",
++			 val ? "1.8" : "3.3", 'A' + bank);
++
++		raw_spin_lock_irqsave(&pctl->lock, flags);
++		reg = readl(pctl->membase + PIO_POW_MOD_SEL_REG);
++		reg &= ~(1 << bank);
++		writel(reg | val << bank, pctl->membase + PIO_POW_MOD_SEL_REG);
++		raw_spin_unlock_irqrestore(&pctl->lock, flags);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.h b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
+index 476772f91dba..3a66376f141b 100644
+--- a/drivers/pinctrl/sunxi/pinctrl-sunxi.h
++++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
+@@ -95,7 +95,10 @@
+ #define PINCTRL_SUN7I_A20	BIT(7)
+ #define PINCTRL_SUN8I_R40	BIT(8)
+ 
++#define PIO_POW_MOD_SEL_REG	0x340
++
+ #define IO_BIAS_CFG_V1		1
++#define IO_BIAS_CFG_V2		2
+ 
+ struct sunxi_desc_function {
+ 	unsigned long	variant;
 -- 
 2.21.0
 
