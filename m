@@ -2,32 +2,32 @@ Return-Path: <SRS0=iN42=SH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CD61C282DA
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:51:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 742BDC282DA
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C43120700
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:51:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C0C920700
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="AwR28fHB"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="mfI2l4lL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726716AbfDEXvv (ORCPT
+        id S1726705AbfDEXvv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 5 Apr 2019 19:51:51 -0400
-Received: from vps.xff.cz ([195.181.215.36]:53650 "EHLO vps.xff.cz"
+Received: from vps.xff.cz ([195.181.215.36]:53652 "EHLO vps.xff.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726564AbfDEXvs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726571AbfDEXvs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 5 Apr 2019 19:51:48 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554507925; bh=WMMSUPUIjTKkomtNdJ6s4nOi54wvO80sy22EpoVnf48=;
+        t=1554507921; bh=VkQoH6CXHm1XnyYK3skp3BPEyuZWDtRMncNrhU7EJQM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AwR28fHBI/4o/xLR19xvU0sylB7WSYIh8mwPDhpspImnNyVUgz/TIf3Yi1M0rhldK
-         OCyCYYkHIFZ0HGaffrCcXiT4AHdPhiATw2Zr94GgKftGtJPZ5DXZkJk8exSNqZLEBW
-         c/DIhQCXdJVBrVvuL+c1QKRNbMp8MmDbMEG0B1DU=
+        b=mfI2l4lLc7S3tVZDZobNXaSUv3qU4Ro6sq2gU96vDrrN2AHK4uyOIP2nJpzYnEkuk
+         9GiyU79UoNh6m3Q1Qbpw+kB1v/tBVL37S73jL+d0IoToMisxaL7YRf+bV9GhBwyrP+
+         Aw58GUBY2N4UPaCsYs/fwvMGLwfblCSSdEf0PWVI=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -54,9 +54,9 @@ Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH 09/12] pinctrl: sunxi: Prepare for alternative bias voltage setting methods
-Date:   Sat,  6 Apr 2019 01:45:11 +0200
-Message-Id: <20190405234514.6183-10-megous@megous.com>
+Subject: [PATCH 02/12] drm: sun4i: Add support for enabling DDC I2C bus to dw_hdmi glue
+Date:   Sat,  6 Apr 2019 01:45:04 +0200
+Message-Id: <20190405234514.6183-3-megous@megous.com>
 In-Reply-To: <20190405234514.6183-1-megous@megous.com>
 References: <20190405234514.6183-1-megous@megous.com>
 MIME-Version: 1.0
@@ -68,107 +68,79 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ondrej Jirman <megous@megous.com>
 
-H6 has a different I/O voltage bias setting method than A80. Prepare
-existing code for using alternative bias voltage setting methods.
+Orange Pi 3 board requires enabling DDC I2C bus via some GPIO connected
+transistors, before it can be used. Model this as a power supply for DDC
+(via regulator framework).
 
 Signed-off-by: Ondrej Jirman <megous@megous.com>
 ---
- drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c |  2 +-
- drivers/pinctrl/sunxi/pinctrl-sunxi.c     | 38 ++++++++++++-----------
- drivers/pinctrl/sunxi/pinctrl-sunxi.h     |  4 ++-
- 3 files changed, 24 insertions(+), 20 deletions(-)
+ drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c | 17 ++++++++++++++++-
+ drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h |  1 +
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c b/drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c
-index da37d594a13d..3aa210079b18 100644
---- a/drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c
-+++ b/drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c
-@@ -722,7 +722,7 @@ static const struct sunxi_pinctrl_desc sun9i_a80_pinctrl_data = {
- 	.npins = ARRAY_SIZE(sun9i_a80_pins),
- 	.irq_banks = 5,
- 	.disable_strict_mode = true,
--	.has_io_bias_cfg = true,
-+	.io_bias_cfg_variant = IO_BIAS_CFG_V1,
- };
+diff --git a/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c b/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c
+index dc47720c99ba..a1518525fa2f 100644
+--- a/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c
++++ b/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c
+@@ -146,16 +146,28 @@ static int sun8i_dw_hdmi_bind(struct device *dev, struct device *master,
+ 		return PTR_ERR(hdmi->regulator);
+ 	}
  
- static int sun9i_a80_pinctrl_probe(struct platform_device *pdev)
-diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-index 8dd25caea2cf..9f329fec77cf 100644
---- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-+++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-@@ -610,7 +610,7 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
- 	u32 val, reg;
- 	int uV;
- 
--	if (!pctl->desc->has_io_bias_cfg)
-+	if (!pctl->desc->io_bias_cfg_variant)
- 		return 0;
- 
- 	uV = regulator_get_voltage(supply);
-@@ -621,23 +621,25 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
- 	if (uV == 0)
- 		return 0;
- 
--	/* Configured value must be equal or greater to actual voltage */
--	if (uV <= 1800000)
--		val = 0x0; /* 1.8V */
--	else if (uV <= 2500000)
--		val = 0x6; /* 2.5V */
--	else if (uV <= 2800000)
--		val = 0x9; /* 2.8V */
--	else if (uV <= 3000000)
--		val = 0xA; /* 3.0V */
--	else
--		val = 0xD; /* 3.3V */
--
--	pin -= pctl->desc->pin_base;
--
--	reg = readl(pctl->membase + sunxi_grp_config_reg(pin));
--	reg &= ~IO_BIAS_MASK;
--	writel(reg | val, pctl->membase + sunxi_grp_config_reg(pin));
-+	if (pctl->desc->io_bias_cfg_variant == IO_BIAS_CFG_V1) {
-+		/* Configured value must be equal or greater to actual voltage */
-+		if (uV <= 1800000)
-+			val = 0x0; /* 1.8V */
-+		else if (uV <= 2500000)
-+			val = 0x6; /* 2.5V */
-+		else if (uV <= 2800000)
-+			val = 0x9; /* 2.8V */
-+		else if (uV <= 3000000)
-+			val = 0xA; /* 3.0V */
-+		else
-+			val = 0xD; /* 3.3V */
-+
-+		pin -= pctl->desc->pin_base;
-+
-+		reg = readl(pctl->membase + sunxi_grp_config_reg(pin));
-+		reg &= ~IO_BIAS_MASK;
-+		writel(reg | val, pctl->membase + sunxi_grp_config_reg(pin));
++	hdmi->ddc_regulator = devm_regulator_get(dev, "ddc");
++	if (IS_ERR(hdmi->ddc_regulator)) {
++		dev_err(dev, "Couldn't get ddc regulator\n");
++		return PTR_ERR(hdmi->ddc_regulator);
 +	}
- 
- 	return 0;
- }
-diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.h b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
-index ee15ab067b5f..476772f91dba 100644
---- a/drivers/pinctrl/sunxi/pinctrl-sunxi.h
-+++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
-@@ -95,6 +95,8 @@
- #define PINCTRL_SUN7I_A20	BIT(7)
- #define PINCTRL_SUN8I_R40	BIT(8)
- 
-+#define IO_BIAS_CFG_V1		1
 +
- struct sunxi_desc_function {
- 	unsigned long	variant;
- 	const char	*name;
-@@ -117,7 +119,7 @@ struct sunxi_pinctrl_desc {
- 	const unsigned int		*irq_bank_map;
- 	bool				irq_read_needs_mux;
- 	bool				disable_strict_mode;
--	bool				has_io_bias_cfg;
-+	int				io_bias_cfg_variant;
- };
+ 	ret = regulator_enable(hdmi->regulator);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to enable regulator\n");
+ 		return ret;
+ 	}
  
- struct sunxi_pinctrl_function {
++	ret = regulator_enable(hdmi->ddc_regulator);
++	if (ret) {
++		dev_err(dev, "Failed to enable ddc regulator\n");
++		goto err_disable_regulator;
++	}
++
+ 	ret = reset_control_deassert(hdmi->rst_ctrl);
+ 	if (ret) {
+ 		dev_err(dev, "Could not deassert ctrl reset control\n");
+-		goto err_disable_regulator;
++		goto err_disable_ddc_regulator;
+ 	}
+ 
+ 	ret = clk_prepare_enable(hdmi->clk_tmds);
+@@ -208,6 +220,8 @@ static int sun8i_dw_hdmi_bind(struct device *dev, struct device *master,
+ 	clk_disable_unprepare(hdmi->clk_tmds);
+ err_assert_ctrl_reset:
+ 	reset_control_assert(hdmi->rst_ctrl);
++err_disable_ddc_regulator:
++	regulator_disable(hdmi->ddc_regulator);
+ err_disable_regulator:
+ 	regulator_disable(hdmi->regulator);
+ 
+@@ -223,6 +237,7 @@ static void sun8i_dw_hdmi_unbind(struct device *dev, struct device *master,
+ 	sun8i_hdmi_phy_remove(hdmi);
+ 	clk_disable_unprepare(hdmi->clk_tmds);
+ 	reset_control_assert(hdmi->rst_ctrl);
++	regulator_disable(hdmi->ddc_regulator);
+ 	regulator_disable(hdmi->regulator);
+ }
+ 
+diff --git a/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h b/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h
+index 720c5aa8adc1..6e93d55560b6 100644
+--- a/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h
++++ b/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h
+@@ -188,6 +188,7 @@ struct sun8i_dw_hdmi {
+ 	struct sun8i_hdmi_phy		*phy;
+ 	struct dw_hdmi_plat_data	plat_data;
+ 	struct regulator		*regulator;
++	struct regulator		*ddc_regulator;
+ 	const struct sun8i_dw_hdmi_quirks *quirks;
+ 	struct reset_control		*rst_ctrl;
+ };
 -- 
 2.21.0
 
