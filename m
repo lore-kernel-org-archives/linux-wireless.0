@@ -2,248 +2,63 @@ Return-Path: <SRS0=iN42=SH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9ACAC4360F
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 11:43:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DB23C10F0F
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 11:47:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A189E21871
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 11:43:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0965D2186A
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 11:47:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726202AbfDELnA (ORCPT
+        id S1728842AbfDELrO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Apr 2019 07:43:00 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:56348 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726027AbfDELnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Apr 2019 07:43:00 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2A8A3368E6;
-        Fri,  5 Apr 2019 11:43:00 +0000 (UTC)
-Received: from localhost (ovpn-204-239.brq.redhat.com [10.40.204.239])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8737760CAC;
-        Fri,  5 Apr 2019 11:42:57 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH 5.1] mt76x02: avoid status_list.lock and sta->rate_ctrl_lock dependency
-Date:   Fri,  5 Apr 2019 13:42:56 +0200
-Message-Id: <20190405114256.6416-1-sgruszka@redhat.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Fri, 05 Apr 2019 11:43:00 +0000 (UTC)
+        Fri, 5 Apr 2019 07:47:14 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:58966 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726124AbfDELrN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Apr 2019 07:47:13 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92-RC5)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hCNJM-0001IY-Tf; Fri, 05 Apr 2019 13:47:09 +0200
+Message-ID: <d423d283c91a48f75a509ee74255327cfe92fe97.camel@sipsolutions.net>
+Subject: Re: [PATCH 0/6] stricter netlink validation
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     David Miller <davem@davemloft.net>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pablo@netfilter.org, dsa@cumulusnetworks.com
+Date:   Fri, 05 Apr 2019 13:47:07 +0200
+In-Reply-To: <20190404.102850.631122626573856353.davem@davemloft.net>
+References: <20190404065408.5864-1-johannes@sipsolutions.net>
+         <20190404.102850.631122626573856353.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move ieee80211_tx_status_ext() outside of status_list lock section
-in order to avoid locking dependency and possible deadlock reposed by
-LOCKDEP in below warning.
+On Thu, 2019-04-04 at 10:28 -0700, David Miller wrote:
 
-Also do mt76_tx_status_lock() just before it's needed.
+> > Here's a version that has passed build testing ;-)
 
-[  440.224832] WARNING: possible circular locking dependency detected
-[  440.224833] 5.1.0-rc2+ #22 Not tainted
-[  440.224834] ------------------------------------------------------
-[  440.224835] kworker/u16:28/2362 is trying to acquire lock:
-[  440.224836] 0000000089b8cacf (&(&q->lock)->rlock#2){+.-.}, at: mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-[  440.224842]
-               but task is already holding lock:
-[  440.224842] 000000002cfedc59 (&(&sta->lock)->rlock){+.-.}, at: ieee80211_stop_tx_ba_cb+0x32/0x1f0 [mac80211]
-[  440.224863]
-               which lock already depends on the new lock.
+Umm, I sent out the wrong branch!
+(Didn't even realize I had two ... oops)
 
-[  440.224863]
-               the existing dependency chain (in reverse order) is:
-[  440.224864]
-               -> #3 (&(&sta->lock)->rlock){+.-.}:
-[  440.224869]        _raw_spin_lock_bh+0x34/0x40
-[  440.224880]        ieee80211_start_tx_ba_session+0xe4/0x3d0 [mac80211]
-[  440.224894]        minstrel_ht_get_rate+0x45c/0x510 [mac80211]
-[  440.224906]        rate_control_get_rate+0xc1/0x140 [mac80211]
-[  440.224918]        ieee80211_tx_h_rate_ctrl+0x195/0x3c0 [mac80211]
-[  440.224930]        ieee80211_xmit_fast+0x26d/0xa50 [mac80211]
-[  440.224942]        __ieee80211_subif_start_xmit+0xfc/0x310 [mac80211]
-[  440.224954]        ieee80211_subif_start_xmit+0x38/0x390 [mac80211]
-[  440.224956]        dev_hard_start_xmit+0xb8/0x300
-[  440.224957]        __dev_queue_xmit+0x7d4/0xbb0
-[  440.224968]        ip6_finish_output2+0x246/0x860 [ipv6]
-[  440.224978]        mld_sendpack+0x1bd/0x360 [ipv6]
-[  440.224987]        mld_ifc_timer_expire+0x1a4/0x2f0 [ipv6]
-[  440.224989]        call_timer_fn+0x89/0x2a0
-[  440.224990]        run_timer_softirq+0x1bd/0x4d0
-[  440.224992]        __do_softirq+0xdb/0x47c
-[  440.224994]        irq_exit+0xfa/0x100
-[  440.224996]        smp_apic_timer_interrupt+0x9a/0x220
-[  440.224997]        apic_timer_interrupt+0xf/0x20
-[  440.224999]        cpuidle_enter_state+0xc1/0x470
-[  440.225000]        do_idle+0x21a/0x260
-[  440.225001]        cpu_startup_entry+0x19/0x20
-[  440.225004]        start_secondary+0x135/0x170
-[  440.225006]        secondary_startup_64+0xa4/0xb0
-[  440.225007]
-               -> #2 (&(&sta->rate_ctrl_lock)->rlock){+.-.}:
-[  440.225009]        _raw_spin_lock_bh+0x34/0x40
-[  440.225022]        rate_control_tx_status+0x4f/0xb0 [mac80211]
-[  440.225031]        ieee80211_tx_status_ext+0x142/0x1a0 [mac80211]
-[  440.225035]        mt76x02_send_tx_status+0x2e4/0x340 [mt76x02_lib]
-[  440.225037]        mt76x02_tx_status_data+0x31/0x40 [mt76x02_lib]
-[  440.225040]        mt76u_tx_status_data+0x51/0xa0 [mt76_usb]
-[  440.225042]        process_one_work+0x237/0x5d0
-[  440.225043]        worker_thread+0x3c/0x390
-[  440.225045]        kthread+0x11d/0x140
-[  440.225046]        ret_from_fork+0x3a/0x50
-[  440.225047]
-               -> #1 (&(&list->lock)->rlock#8){+.-.}:
-[  440.225049]        _raw_spin_lock_bh+0x34/0x40
-[  440.225052]        mt76_tx_status_skb_add+0x51/0x100 [mt76]
-[  440.225054]        mt76x02u_tx_prepare_skb+0xbd/0x116 [mt76x02_usb]
-[  440.225056]        mt76u_tx_queue_skb+0x5f/0x180 [mt76_usb]
-[  440.225058]        mt76_tx+0x93/0x190 [mt76]
-[  440.225070]        ieee80211_tx_frags+0x148/0x210 [mac80211]
-[  440.225081]        __ieee80211_tx+0x75/0x1b0 [mac80211]
-[  440.225092]        ieee80211_tx+0xde/0x110 [mac80211]
-[  440.225105]        __ieee80211_tx_skb_tid_band+0x72/0x90 [mac80211]
-[  440.225122]        ieee80211_send_auth+0x1f3/0x360 [mac80211]
-[  440.225141]        ieee80211_auth.cold.40+0x6c/0x100 [mac80211]
-[  440.225156]        ieee80211_mgd_auth.cold.50+0x132/0x15f [mac80211]
-[  440.225171]        cfg80211_mlme_auth+0x149/0x360 [cfg80211]
-[  440.225181]        nl80211_authenticate+0x273/0x2e0 [cfg80211]
-[  440.225183]        genl_family_rcv_msg+0x196/0x3a0
-[  440.225184]        genl_rcv_msg+0x47/0x8e
-[  440.225185]        netlink_rcv_skb+0x3a/0xf0
-[  440.225187]        genl_rcv+0x24/0x40
-[  440.225188]        netlink_unicast+0x16d/0x210
-[  440.225189]        netlink_sendmsg+0x204/0x3b0
-[  440.225191]        sock_sendmsg+0x36/0x40
-[  440.225193]        ___sys_sendmsg+0x259/0x2b0
-[  440.225194]        __sys_sendmsg+0x47/0x80
-[  440.225196]        do_syscall_64+0x60/0x1f0
-[  440.225197]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
-[  440.225198]
-               -> #0 (&(&q->lock)->rlock#2){+.-.}:
-[  440.225200]        lock_acquire+0xb9/0x1a0
-[  440.225202]        _raw_spin_lock_bh+0x34/0x40
-[  440.225204]        mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-[  440.225215]        ieee80211_agg_start_txq+0xe8/0x2b0 [mac80211]
-[  440.225225]        ieee80211_stop_tx_ba_cb+0xb8/0x1f0 [mac80211]
-[  440.225235]        ieee80211_ba_session_work+0x1c1/0x2f0 [mac80211]
-[  440.225236]        process_one_work+0x237/0x5d0
-[  440.225237]        worker_thread+0x3c/0x390
-[  440.225239]        kthread+0x11d/0x140
-[  440.225240]        ret_from_fork+0x3a/0x50
-[  440.225240]
-               other info that might help us debug this:
+The generic netlink bits are completely broken here, I was passing a
+stack pointer to dump control, which obviously doesn't work
 
-[  440.225241] Chain exists of:
-                 &(&q->lock)->rlock#2 --> &(&sta->rate_ctrl_lock)->rlock --> &(&sta->lock)->rlock
+I've pushed out the right version to mac80211-next netlink-validation
+branch as David Ahern requested I don't resend for now.
 
-[  440.225243]  Possible unsafe locking scenario:
+I've also pushed some very much WIP code to the netlink-policy-export
+branch there that exposes the policies to userspace, there at least for
+generic netlink now.
 
-[  440.225244]        CPU0                    CPU1
-[  440.225244]        ----                    ----
-[  440.225245]   lock(&(&sta->lock)->rlock);
-[  440.225245]                                lock(&(&sta->rate_ctrl_lock)->rlock);
-[  440.225246]                                lock(&(&sta->lock)->rlock);
-[  440.225247]   lock(&(&q->lock)->rlock#2);
-[  440.225248]
-                *** DEADLOCK ***
-
-[  440.225249] 5 locks held by kworker/u16:28/2362:
-[  440.225250]  #0: 0000000048fcd291 ((wq_completion)phy0){+.+.}, at: process_one_work+0x1b5/0x5d0
-[  440.225252]  #1: 00000000f1c6828f ((work_completion)(&sta->ampdu_mlme.work)){+.+.}, at: process_one_work+0x1b5/0x5d0
-[  440.225254]  #2: 00000000433d2b2c (&sta->ampdu_mlme.mtx){+.+.}, at: ieee80211_ba_session_work+0x5c/0x2f0 [mac80211]
-[  440.225265]  #3: 000000002cfedc59 (&(&sta->lock)->rlock){+.-.}, at: ieee80211_stop_tx_ba_cb+0x32/0x1f0 [mac80211]
-[  440.225276]  #4: 000000009d7b9a44 (rcu_read_lock){....}, at: ieee80211_agg_start_txq+0x33/0x2b0 [mac80211]
-[  440.225286]
-               stack backtrace:
-[  440.225288] CPU: 2 PID: 2362 Comm: kworker/u16:28 Not tainted 5.1.0-rc2+ #22
-[  440.225289] Hardware name: LENOVO 20KGS23S0P/20KGS23S0P, BIOS N23ET55W (1.30 ) 08/31/2018
-[  440.225300] Workqueue: phy0 ieee80211_ba_session_work [mac80211]
-[  440.225301] Call Trace:
-[  440.225304]  dump_stack+0x85/0xc0
-[  440.225306]  print_circular_bug.isra.38.cold.58+0x15c/0x195
-[  440.225307]  check_prev_add.constprop.48+0x5f0/0xc00
-[  440.225309]  ? check_prev_add.constprop.48+0x39d/0xc00
-[  440.225311]  ? __lock_acquire+0x41d/0x1100
-[  440.225312]  __lock_acquire+0xd98/0x1100
-[  440.225313]  ? __lock_acquire+0x41d/0x1100
-[  440.225315]  lock_acquire+0xb9/0x1a0
-[  440.225317]  ? mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-[  440.225319]  _raw_spin_lock_bh+0x34/0x40
-[  440.225321]  ? mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-[  440.225323]  mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-[  440.225334]  ieee80211_agg_start_txq+0xe8/0x2b0 [mac80211]
-[  440.225344]  ieee80211_stop_tx_ba_cb+0xb8/0x1f0 [mac80211]
-[  440.225354]  ieee80211_ba_session_work+0x1c1/0x2f0 [mac80211]
-[  440.225356]  process_one_work+0x237/0x5d0
-[  440.225358]  worker_thread+0x3c/0x390
-[  440.225359]  ? wq_calc_node_cpumask+0x70/0x70
-[  440.225360]  kthread+0x11d/0x140
-[  440.225362]  ? kthread_create_on_node+0x40/0x40
-[  440.225363]  ret_from_fork+0x3a/0x50
-
-Cc: stable@vger.kernel.org
-Fixes: 88046b2c9f6d ("mt76: add support for reporting tx status with skb")
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 1eb669ccd5a7..4a77d509a86b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -466,7 +466,6 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 		return;
- 
- 	rcu_read_lock();
--	mt76_tx_status_lock(mdev, &list);
- 
- 	if (stat->wcid < ARRAY_SIZE(dev->mt76.wcid))
- 		wcid = rcu_dereference(dev->mt76.wcid[stat->wcid]);
-@@ -479,6 +478,8 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 					  drv_priv);
- 	}
- 
-+	mt76_tx_status_lock(mdev, &list);
-+
- 	if (wcid) {
- 		if (stat->pktid >= MT_PACKET_ID_FIRST)
- 			status.skb = mt76_tx_status_skb_get(mdev, wcid,
-@@ -498,7 +499,9 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 		if (*update == 0 && stat_val == stat_cache &&
- 		    stat->wcid == msta->status.wcid && msta->n_frames < 32) {
- 			msta->n_frames++;
--			goto out;
-+			mt76_tx_status_unlock(mdev, &list);
-+			rcu_read_unlock();
-+			return;
- 		}
- 
- 		mt76x02_mac_fill_tx_status(dev, status.info, &msta->status,
-@@ -514,11 +517,10 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 
- 	if (status.skb)
- 		mt76_tx_status_skb_done(mdev, status.skb, &list);
--	else
--		ieee80211_tx_status_ext(mt76_hw(dev), &status);
--
--out:
- 	mt76_tx_status_unlock(mdev, &list);
-+
-+	if (!status.skb)
-+		ieee80211_tx_status_ext(mt76_hw(dev), &status);
- 	rcu_read_unlock();
- }
- 
--- 
-2.20.1
+johannes
 
