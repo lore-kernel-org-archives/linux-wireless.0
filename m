@@ -2,102 +2,109 @@ Return-Path: <SRS0=iN42=SH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E2AAC4360F
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 02:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67CD0C4360F
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 03:35:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4987C20663
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 02:44:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36FD020657
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 03:35:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cumulusnetworks.com header.i=@cumulusnetworks.com header.b="VxvluLes"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KuTn2dL2";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JPYz3nEw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729988AbfDECo2 (ORCPT
+        id S1729777AbfDEDfr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Apr 2019 22:44:28 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:37966 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728762AbfDECo2 (ORCPT
+        Thu, 4 Apr 2019 23:35:47 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:53572 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728735AbfDEDfr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Apr 2019 22:44:28 -0400
-Received: by mail-pg1-f195.google.com with SMTP id j26so2240830pgl.5
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2019 19:44:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cumulusnetworks.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=JjSuo4+/1aISrciotapkBKKYAwC3BKgONv/FY7AlO84=;
-        b=VxvluLessmeBrnMLWfS7iBMcw+6If1Ar+/Rhhvgu6iklj7DBjBuYszqHFnnG4xsSLy
-         U8D1v4FE+i/vkf+AFzJYBOprhi4X8L+rqo1AFo7/qLTgIudAqM17a/pknCqvsOQ+LPIz
-         XD88PFhXX0XeiQIOCbh/TVEDF05D+LYQzi2+8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=JjSuo4+/1aISrciotapkBKKYAwC3BKgONv/FY7AlO84=;
-        b=rOFi1bKz30RUBpHm3cUvHN+RuZzefCSMxz04RntZnjA3ru1G87XL0ZeHIjZ0jra5eA
-         AXAS+j2u0EJ+v/kSlbKTPnMShm0B4nQGu8giFsnrmOK12b6yOkilv7dB6fD/EmJyA1kS
-         r3QawxajJ+frj3AXcqYTAKJHRBcoiuByHly6lY3hhaQjP5YPx58yC4zOtga5w1W6eFlI
-         8PhgMLACW/RvtWKnKZ0z3Rujh+6JrjbbPV4tlwLX6jRvL7wWtvlvIN4NtcnDrbGcqCSg
-         Txa0HUKodKH/VfuUk2uoPKq/PYFQB3Y6whYt5LZLVKac0v+Il1t/5Cu/02hA44FAG8YU
-         +NaA==
-X-Gm-Message-State: APjAAAXcYd/LPnshHL0Q5W6347PJJu9S0lCNUCEFwnp3K8Xqrd7867CL
-        OiU4Zss8NcSv0Xx80NbV5NxmQg==
-X-Google-Smtp-Source: APXvYqwKfzt6zhERZnnwl3DaxODPNZbl6VTt2RjTbLUInv+OuDdxO1UpnvuKfwQM1jSW75v4JQvnCw==
-X-Received: by 2002:a62:41dc:: with SMTP id g89mr9758934pfd.109.1554432267127;
-        Thu, 04 Apr 2019 19:44:27 -0700 (PDT)
-Received: from ?IPv6:2601:282:800:fd80:c5a1:6d6:d92c:c7c1? ([2601:282:800:fd80:c5a1:6d6:d92c:c7c1])
-        by smtp.googlemail.com with ESMTPSA id v1sm31176688pff.81.2019.04.04.19.44.25
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 04 Apr 2019 19:44:26 -0700 (PDT)
-Subject: Re: [PATCH 0/6] stricter netlink validation
-To:     David Miller <davem@davemloft.net>, johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pablo@netfilter.org
-References: <20190404065408.5864-1-johannes@sipsolutions.net>
- <20190404.102850.631122626573856353.davem@davemloft.net>
-From:   David Ahern <dsa@cumulusnetworks.com>
-Message-ID: <db599b6b-94a5-3123-5613-9e349fcee702@cumulusnetworks.com>
-Date:   Thu, 4 Apr 2019 20:44:25 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
+        Thu, 4 Apr 2019 23:35:47 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 6A44E60770; Fri,  5 Apr 2019 03:35:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554435346;
+        bh=pH5NRHK3JOeaMjJpO5sz2vfcWdz8zkPBSCKyEFpyFn4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=KuTn2dL2bUsnzb32vR7k+396N+otM2gShdUz4dX+6UzrlAsC/VnRC0Xqjmief3oQi
+         fjSZiTUYzWx0+K2uS3N+KzFfMDbuXDhh/Ke3eS06P7NddKqlUTfb2Z2EU9XvadY/ZC
+         29wAgQ941mPf2ID5m/6hha494ofAjHIRR4TpG0cw=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8BA0860770;
+        Fri,  5 Apr 2019 03:35:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554435345;
+        bh=pH5NRHK3JOeaMjJpO5sz2vfcWdz8zkPBSCKyEFpyFn4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=JPYz3nEwwGDOn0+iOFXFqhd940EoF9pZiS/uMd4IHJs36+J6oBi6wAydHfmG23fy+
+         KEKx3hYqOJsve1esFr77LXDNjFwui5Ih5UO15EF+BRXLeoZ/pQ3H0Ash3mR0wzz55/
+         vg+KSwfCFwtpzLua9GNdaZ5eixAQsGJpHviwqBnI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8BA0860770
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     Douglas Anderson <dianders@chromium.org>,
+        "open list\:ARM\/Rockchip SoC..." 
+        <linux-rockchip@lists.infradead.org>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Ryan Case <ryandcase@chromium.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "\<netdev\@vger.kernel.org\>" <netdev@vger.kernel.org>,
+        Xinming Hu <huxinming820@gmail.com>
+Subject: Re: [PATCH] mwifiex: Make resume actually do something useful again on SDIO cards
+References: <20190404040106.40519-1-dianders@chromium.org>
+        <874l7egxdj.fsf@codeaurora.org>
+        <CA+ASDXNfOUmMEWYwts8PuiDaEjuoPK+tZ0BhDSSte5u5toydkA@mail.gmail.com>
+Date:   Fri, 05 Apr 2019 06:35:39 +0300
+In-Reply-To: <CA+ASDXNfOUmMEWYwts8PuiDaEjuoPK+tZ0BhDSSte5u5toydkA@mail.gmail.com>
+        (Brian Norris's message of "Thu, 4 Apr 2019 13:47:17 -0700")
+Message-ID: <87ef6hruno.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20190404.102850.631122626573856353.davem@davemloft.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 4/4/19 11:28 AM, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Thu,  4 Apr 2019 08:54:02 +0200
-> 
->> Here's a version that has passed build testing ;-)
-> 
-> :-)
-> 
-> I really like the approach taken here, and done in such a way that
-> new attributes added get strict checking by default.
-> 
-> I'll let David Ahern et al. have time to review this.
-> 
+Brian Norris <briannorris@chromium.org> writes:
 
-Hit a compile issue right out of the gate:
+> On Wed, Apr 3, 2019 at 10:20 PM Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Douglas Anderson <dianders@chromium.org> writes:
+>> > Fixes: fc3a2fcaa1ba ("mwifiex: use atomic bitops to represent
+>> > adapter status variables")
+>> > Signed-off-by: Douglas Anderson <dianders@chromium.org>
+>>
+>> I'm planning to queue this for 5.1.
+>
+> With an explicit
+>
+> Cc: <stable@vger.kernel.org>
+>
+> please? Somebody would likely pick it up anyway, but it's nice to be
+> explicit.
 
-$ make O=kbuild/perf -j 24 -s
-/home/dsa/kernel-2.git/net/openvswitch/flow_netlink.c: In function
-‘validate_and_copy_check_pkt_len’:
-/home/dsa/kernel-2.git/net/openvswitch/flow_netlink.c:2887:8: error:
-implicit declaration of function ‘nla_parse_deprecated_strict’
-[-Werror=implicit-function-declaration]
-  err = nla_parse_deprecated_strict(a, OVS_CHECK_PKT_LEN_ATTR_MAX,
-        ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ok, I'll add that.
 
-You should do an allmodconfig build to check for any others. I disabled
-ovs to continue.
+> Not that it really matters, but also:
+>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+
+This patchwork picks up automatically so I don't have to do anything.
+But I so wish it would do the same for Cc and Fixes tags :)
+
+-- 
+Kalle Valo
