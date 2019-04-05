@@ -2,31 +2,32 @@ Return-Path: <SRS0=iN42=SH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C95C282CE
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9434AC282CE
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1810320700
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6495420700
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="Ob/lnvjy"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="CZ8tC/Lk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726576AbfDEXwO (ORCPT
+        id S1726798AbfDEXwO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 5 Apr 2019 19:52:14 -0400
-Received: from vps.xff.cz ([195.181.215.36]:53656 "EHLO vps.xff.cz"
+Received: from vps.xff.cz ([195.181.215.36]:53654 "EHLO vps.xff.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726584AbfDEXvs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726576AbfDEXvs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 5 Apr 2019 19:51:48 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554507920; bh=/RoD9OslD/yH1LdQ1birMG0d1kCxzgoTgbE7QUS3/ao=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Ob/lnvjyHnDCHFdGL4m9OAOCZQ+hTOU0LtDUeDDCOCxSTXdVumlPR+1Lj241Sk+pq
-         wmXkz4DjC9lr1l9VAswR2aYVPinTak6n4kEm/mnUg3rujq9xxxDUkaM7Rx6sqX3/rz
-         3xb02Cr1CIYuPZzZLx14lJAIOHvaThXuE23Pvw+g=
+        t=1554507922; bh=avWzQLZxSqgrxhMa+6HpRbxBI2MQ6XvI0eWZvucnLVA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=CZ8tC/Lkkf6LWIuB9vyMhJmjt5sLh4DgJjZVbnzpcxFEwJ6lDULKzvslAXieYBrgY
+         k3Dl/iBfUh6zfiQUzcEqv5I5k2e7C7i5runsLHCyYKYkoNuyCxFTEGgYTzCh6EUcTL
+         KHguC+QKPtUgN5/eq/MNUF/i5xnxvU5Mif0tAJCo=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -53,9 +54,11 @@ Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH 00/12] Add support for Orange Pi 3
-Date:   Sat,  6 Apr 2019 01:45:02 +0200
-Message-Id: <20190405234514.6183-1-megous@megous.com>
+Subject: [PATCH 04/12] arm64: dts: allwinner: orange-pi-3: Enable HDMI output
+Date:   Sat,  6 Apr 2019 01:45:06 +0200
+Message-Id: <20190405234514.6183-5-megous@megous.com>
+In-Reply-To: <20190405234514.6183-1-megous@megous.com>
+References: <20190405234514.6183-1-megous@megous.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -65,56 +68,81 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ondrej Jirman <megous@megous.com>
 
-This series implements support for Xunlong Orange Pi 3 board.
+Orange Pi 3 has a DDC_CEC_EN signal connected to PH2, that enables
+the DDC I2C bus. Before EDID can be read, we need to pull PH2 high.
 
-Unfortunately, this board needs some small driver patches, so I have
-split the boards DT patch into chunks that require patches for drivers
-in various subsystems:
+Signed-off-by: Ondrej Jirman <megous@megous.com>
+---
+ .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 35 +++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
-- Basic DT for the board  (patch 1)
-- HDMI support            (patches 2, 3, 4)
-- Ethernet support        (patches 5, 6, 7)
-- WiFi support            (patches 8, 9, 10, 11, 12)
-
-This patch is also needed to not get segfault on boot: 
-  https://lkml.org/lkml/2019/4/5/856
-
-Please take a look.
-
-regards,
-  Ondrej Jirman
-
-Icenowy Zheng (2):
-  net: stmmac: sun8i: add support for Allwinner H6 EMAC
-  net: stmmac: sun8i: force select external PHY when no internal one
-
-Ondrej Jirman (10):
-  arm64: dts: allwinner: h6: Add Orange Pi 3 DTS
-  drm: sun4i: Add support for enabling DDC I2C bus to dw_hdmi glue
-  dt-bindings: display: sun4i-drm: Add DDC power supply
-  arm64: dts: allwinner: orange-pi-3: Enable HDMI output
-  arm64: dts: allwinner: orange-pi-3: Enable ethernet
-  arm64: dts: allwinner: h6: Add MMC1 pins
-  pinctrl: sunxi: Prepare for alternative bias voltage setting methods
-  pinctrl: sunxi: Support I/O bias voltage setting on H6
-  brcmfmac: Loading the correct firmware for brcm43456
-  arm64: dts: allwinner: orange-pi-3: Enable WiFi
-
- .../bindings/display/sunxi/sun4i-drm.txt      |   1 +
- arch/arm64/boot/dts/allwinner/Makefile        |   1 +
- .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 339 ++++++++++++++++++
- arch/arm64/boot/dts/allwinner/sun50i-h6.dtsi  |   9 +
- drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c         |  17 +-
- drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h         |   1 +
- .../net/ethernet/stmicro/stmmac/dwmac-sun8i.c |  22 ++
- .../broadcom/brcm80211/brcmfmac/sdio.c        |   4 +-
- drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c     |   1 +
- drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c     |   2 +-
- drivers/pinctrl/sunxi/pinctrl-sunxi.c         |  50 ++-
- drivers/pinctrl/sunxi/pinctrl-sunxi.h         |   7 +-
- 12 files changed, 433 insertions(+), 21 deletions(-)
- create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+index 7a2424fcaed7..644946749088 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+@@ -21,6 +21,17 @@
+ 		stdout-path = "serial0:115200n8";
+ 	};
+ 
++	connector {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi_con_in: endpoint {
++				remote-endpoint = <&hdmi_out_con>;
++			};
++		};
++	};
++
+ 	leds {
+ 		compatible = "gpio-leds";
+ 
+@@ -36,6 +47,15 @@
+ 		};
+ 	};
+ 
++	reg_ddc: ddc-io {
++                compatible = "regulator-fixed";
++                regulator-name = "ddc-io";
++                regulator-min-microvolt = <5000000>;
++                regulator-max-microvolt = <5000000>;
++                enable-active-high;
++                gpio = <&pio 7 2 GPIO_ACTIVE_HIGH>; /* PH2 */
++        };
++
+ 	reg_vcc5v: vcc5v {
+ 		/* board wide 5V supply directly from the DC jack */
+ 		compatible = "regulator-fixed";
+@@ -50,6 +70,10 @@
+ 	cpu-supply = <&reg_dcdca>;
+ };
+ 
++&de {
++	status = "okay";
++};
++
+ &ehci0 {
+ 	status = "okay";
+ };
+@@ -58,6 +82,17 @@
+ 	status = "okay";
+ };
+ 
++&hdmi {
++	ddc-supply = <&reg_ddc>;
++	status = "okay";
++};
++
++&hdmi_out {
++	hdmi_out_con: endpoint {
++		remote-endpoint = <&hdmi_con_in>;
++	};
++};
++
+ &mmc0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&mmc0_pins>;
 -- 
 2.21.0
 
