@@ -2,32 +2,32 @@ Return-Path: <SRS0=iN42=SH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E10B5C282DD
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDBDDC282CE
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF5A820700
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCC0320700
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="Lyf6ZQIm"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="SIsA9uVm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726755AbfDEXwE (ORCPT
+        id S1726771AbfDEXwF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Apr 2019 19:52:04 -0400
-Received: from vps.xff.cz ([195.181.215.36]:53658 "EHLO vps.xff.cz"
+        Fri, 5 Apr 2019 19:52:05 -0400
+Received: from vps.xff.cz ([195.181.215.36]:53664 "EHLO vps.xff.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726588AbfDEXvt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726412AbfDEXvt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 5 Apr 2019 19:51:49 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554507926; bh=vFUAj+o/8uZzgqHvYg4IDlf8NAxVVLEt0H3MM73Czig=;
+        t=1554507921; bh=rZQKQg/2lv2N8dtkalHEDeL2ehtp0duhAGRxyWMcd5E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Lyf6ZQImDKUXGeeVjf2ZaV1pTfcR0tqf41GNnp9VIo/d9o4S4RIV0V+5NL4WdOBzq
-         BEtFUf7N1tLpQ7dk45TWWarTdvXoBu82cU/mvMUyN0TepJrv1O8+YNSxPIZV6XWiXr
-         1ixfDxhFUxubaylLEmsNHER5o01+VeFCogdbYMjU=
+        b=SIsA9uVm/wS9OlHfR9IWQVE4YOvde+7x5kcjk5f6dhst1RaHtDb10XLBSuO+pD7wg
+         pUqb9TiCuHLbMlTzpAE7cXzV1G2lTxGBIl3W95FinK/6p2rLXMsqZvK+NggULFcCPJ
+         6qpunf1ljGumzAX2eFF2oyqLmsPHKUZLcYtO7rHs=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -54,12 +54,13 @@ Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH 12/12] arm64: dts: allwinner: orange-pi-3: Enable WiFi
-Date:   Sat,  6 Apr 2019 01:45:14 +0200
-Message-Id: <20190405234514.6183-13-megous@megous.com>
+Subject: [PATCH 01/12] arm64: dts: allwinner: h6: Add Orange Pi 3 DTS
+Date:   Sat,  6 Apr 2019 01:45:03 +0200
+Message-Id: <20190405234514.6183-2-megous@megous.com>
 In-Reply-To: <20190405234514.6183-1-megous@megous.com>
 References: <20190405234514.6183-1-megous@megous.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -68,110 +69,264 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ondrej Jirman <megous@megous.com>
 
-Orange Pi 3 has AP6256 WiFi/BT module. WiFi part of the module is
-called bcm43356 and can be used with the brcmfmac driver. The module
-is powered by the two always on regulators (not AXP805).
+Orange Pi 3 is a H6 based SBC made by Xulong, released in
+January 2019. It has the following features:
 
-WiFi uses a PG port with 1.8V voltage level signals. SoC needs to be
-configured so that it sets up an 1.8V input bias on this port. This is
-done by the pio driver by reading the vcc-pg-supply voltage.
+- Allwinner H6 quad-core 64-bit ARM Cortex-A53
+- GPU Mali-T720
+- 1GB or 2GB LPDDR3 RAM
+- AXP805 PMIC
+- AP6256 Wifi/BT 5.0
+- USB 2.0 host port (A)
+- USB 2.0 micro usb, OTG
+- USB 3.0 Host + 4 port USB hub (GL3510)
+- Gigabit Ethernet (Realtek RTL8211E phy)
+- HDMI 2.0 port
+- soldered eMMC (optional)
+- 3x LED (one is on the bottom)
+- microphone
+- audio jack
+- PCIe
 
-You'll need a fw_bcm43456c5_ag.bin firmware file and nvram.txt
-configuration that can be found in the Xulongs's repository for H6:
-
-https://github.com/orangepi-xunlong/OrangePiH6_external/tree/master/ap6256
-
-Mainline brcmfmac driver expects the firmware and nvram at the
-following paths relative to the firmware directory:
-
-  brcm/brcmfmac43456-sdio.bin
-  brcm/brcmfmac43456-sdio.txt
+Add basic support for the board.
 
 Signed-off-by: Ondrej Jirman <megous@megous.com>
 ---
- .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 48 +++++++++++++++++++
- 1 file changed, 48 insertions(+)
+ arch/arm64/boot/dts/allwinner/Makefile        |   1 +
+ .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 212 ++++++++++++++++++
+ 2 files changed, 213 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
 
+diff --git a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwinner/Makefile
+index e4dce2f6fa3a..285a7cb5135b 100644
+--- a/arch/arm64/boot/dts/allwinner/Makefile
++++ b/arch/arm64/boot/dts/allwinner/Makefile
+@@ -20,6 +20,7 @@ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h5-orangepi-pc2.dtb
+ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h5-orangepi-prime.dtb
+ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h5-orangepi-zero-plus.dtb
+ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h5-orangepi-zero-plus2.dtb
++dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h6-orangepi-3.dtb
+ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h6-orangepi-lite2.dtb
+ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h6-orangepi-one-plus.dtb
+ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h6-pine-h64.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-index 5270142527f5..6a201829bb62 100644
---- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+new file mode 100644
+index 000000000000..7a2424fcaed7
+--- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-@@ -66,6 +66,26 @@
- 		regulator-always-on;
- 	};
- 
-+	reg_vcc33_wifi: vcc33-wifi {
-+		/* Always on 3.3V regulator for WiFi and BT */
+@@ -0,0 +1,212 @@
++// SPDX-License-Identifier: (GPL-2.0+ or MIT)
++/*
++ * Copyright (C) 2019 Ondřej Jirman <megous@megous.com>
++ */
++
++/dts-v1/;
++
++#include "sun50i-h6.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++
++/ {
++	model = "OrangePi 3";
++	compatible = "xunlong,orangepi-3", "allwinner,sun50i-h6";
++
++	aliases {
++		serial0 = &uart0;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		power {
++			label = "orangepi:red:power";
++			gpios = <&r_pio 0 4 GPIO_ACTIVE_HIGH>; /* PL4 */
++			default-state = "on";
++		};
++
++		status {
++			label = "orangepi:green:status";
++			gpios = <&r_pio 0 7 GPIO_ACTIVE_HIGH>; /* PL7 */
++		};
++	};
++
++	reg_vcc5v: vcc5v {
++		/* board wide 5V supply directly from the DC jack */
 +		compatible = "regulator-fixed";
-+		regulator-name = "vcc33-wifi";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
++		regulator-name = "vcc-5v";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
 +		regulator-always-on;
-+                vin-supply = <&reg_vcc5v>;
-+	};
-+
-+	reg_vcc_wifi_io: vcc-wifi-io {
-+		/* Always on 1.8V/300mA regulator for WiFi and BT IO */
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc-wifi-io";
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+		regulator-always-on;
-+                vin-supply = <&reg_vcc33_wifi>;
-+	};
-+
- 	/*
- 	 * The board uses 2.5V RGMII signalling. Power sequence
- 	 * to enable the phy is to enable GMAC-2V5 and GMAC-3V3 (aldo2)
-@@ -86,6 +106,14 @@
-                  */
-                 vin-supply = <&reg_aldo2>; /* GMAC-3V3 */
-         };
-+
-+	wifi_pwrseq: wifi_pwrseq {
-+		compatible = "mmc-pwrseq-simple";
-+		clocks = <&rtc 1>;
-+		clock-names = "ext_clock";
-+		reset-gpios = <&r_pio 1 3 GPIO_ACTIVE_LOW>; /* PM3 */
-+		post-power-on-delay-ms = <200>;
-+	};
- };
- 
- &cpu0 {
-@@ -146,6 +174,25 @@
- 	status = "okay";
- };
- 
-+&mmc1 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&mmc1_pins>;
-+	vmmc-supply = <&reg_vcc33_wifi>;
-+	vqmmc-supply = <&reg_vcc_wifi_io>;
-+	mmc-pwrseq = <&wifi_pwrseq>;
-+	bus-width = <4>;
-+	non-removable;
-+	status = "okay";
-+
-+	brcm: sdio-wifi@1 {
-+		reg = <1>;
-+		compatible = "brcm,bcm4329-fmac";
-+		interrupt-parent = <&r_pio>;
-+		interrupts = <1 0 IRQ_TYPE_LEVEL_LOW>; /* PM0 */
-+		interrupt-names = "host-wake";
 +	};
 +};
 +
- &ohci0 {
- 	status = "okay";
- };
-@@ -157,6 +204,7 @@
- &pio {
- 	vcc-pc-supply = <&reg_bldo2>;
- 	vcc-pd-supply = <&reg_cldo1>;
-+	vcc-pg-supply = <&reg_vcc_wifi_io>;
- };
- 
- &r_i2c {
++&cpu0 {
++	cpu-supply = <&reg_dcdca>;
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ehci3 {
++	status = "okay";
++};
++
++&mmc0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc0_pins>;
++	vmmc-supply = <&reg_cldo1>;
++	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>; /* PF6 */
++	bus-width = <4>;
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&ohci3 {
++	status = "okay";
++};
++
++&pio {
++	vcc-pc-supply = <&reg_bldo2>;
++	vcc-pd-supply = <&reg_cldo1>;
++};
++
++&r_i2c {
++	status = "okay";
++
++	axp805: pmic@36 {
++		compatible = "x-powers,axp805", "x-powers,axp806";
++		reg = <0x36>;
++		interrupt-parent = <&r_intc>;
++		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
++		interrupt-controller;
++		#interrupt-cells = <1>;
++		x-powers,self-working-mode;
++		vina-supply = <&reg_vcc5v>;
++		vinb-supply = <&reg_vcc5v>;
++		vinc-supply = <&reg_vcc5v>;
++		vind-supply = <&reg_vcc5v>;
++		vine-supply = <&reg_vcc5v>;
++		aldoin-supply = <&reg_vcc5v>;
++		bldoin-supply = <&reg_vcc5v>;
++		cldoin-supply = <&reg_vcc5v>;
++
++		regulators {
++			reg_aldo1: aldo1 {
++				regulator-always-on;
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-name = "vcc-pl-led-ir";
++			};
++
++			reg_aldo2: aldo2 {
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-name = "vcc33-audio-tv-ephy-mac";
++			};
++
++			/* ALDO3 is shorted to CLDO1 */
++			reg_aldo3: aldo3 {
++				regulator-always-on;
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-name = "vcc33-io-pd-emmc-sd-usb-uart-1";
++			};
++
++			reg_bldo1: bldo1 {
++				regulator-always-on;
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-name = "vcc18-dram-bias-pll";
++			};
++
++			reg_bldo2: bldo2 {
++				regulator-always-on;
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-name = "vcc-efuse-pcie-hdmi-pc";
++			};
++
++			bldo3 {
++				/* unused */
++			};
++
++			bldo4 {
++				/* unused */
++			};
++
++			reg_cldo1: cldo1 {
++				regulator-always-on;
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-name = "vcc33-io-pd-emmc-sd-usb-uart-2";
++			};
++
++			cldo2 {
++				/* unused */
++			};
++
++			cldo3 {
++				/* unused */
++			};
++
++			reg_dcdca: dcdca {
++				regulator-always-on;
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <1160000>;
++				regulator-name = "vdd-cpu";
++			};
++
++			reg_dcdcc: dcdcc {
++				regulator-min-microvolt = <810000>;
++				regulator-max-microvolt = <1080000>;
++				regulator-name = "vdd-gpu";
++			};
++
++			reg_dcdcd: dcdcd {
++				regulator-always-on;
++				regulator-min-microvolt = <960000>;
++				regulator-max-microvolt = <960000>;
++				regulator-name = "vdd-sys";
++			};
++
++			reg_dcdce: dcdce {
++				regulator-always-on;
++				regulator-min-microvolt = <1200000>;
++				regulator-max-microvolt = <1200000>;
++				regulator-name = "vcc-dram";
++			};
++
++			sw {
++				/* unused */
++			};
++		};
++	};
++};
++
++&uart0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart0_ph_pins>;
++	status = "okay";
++};
++
++&usb2otg {
++	dr_mode = "host";
++	status = "okay";
++};
++
++&usb2phy {
++	usb0_id_det-gpios = <&pio 2 15 GPIO_ACTIVE_HIGH>; /* PC15 */
++	usb0_vbus-supply = <&reg_vcc5v>;
++	usb3_vbus-supply = <&reg_vcc5v>;
++	status = "okay";
++};
 -- 
 2.21.0
 
