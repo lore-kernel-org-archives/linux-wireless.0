@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14132C282CE
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E2DDC282DA
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D921920700
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E726C20700
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Apr 2019 23:52:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="aRRAU1g/"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="aBgzGDif"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726534AbfDEXvq (ORCPT
+        id S1726467AbfDEXvq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 5 Apr 2019 19:51:46 -0400
-Received: from vps.xff.cz ([195.181.215.36]:53640 "EHLO vps.xff.cz"
+Received: from vps.xff.cz ([195.181.215.36]:53646 "EHLO vps.xff.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726412AbfDEXvp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726353AbfDEXvp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 5 Apr 2019 19:51:45 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554507923; bh=9sBa/x4rOB2AVivmG3/l1tDMopdUGPQTQlyQMH/xsqk=;
+        t=1554507926; bh=ZNOGG0aTZAwovMi2umW8ToHPPCFWOtl8YJbHvB4Q3ec=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aRRAU1g/69ghks7wcLox0q8Evc4sixu9ydhof1nYcgzsUBg7C1kh0Dg4rU8SFM3bQ
-         pPwWAQGqgqtTcJMxfaKGZH1ljvHUJ+0uvuGn+AlljbFse0TSxU8qBcu0/Xk7ML5RMa
-         TdvnkgDsrlxhkWRG0TS/XtG+xof3we+Skta2Tt1k=
+        b=aBgzGDifDzDPLcOXSPUz2a/WKyKZDgw8k2t6ZG4ftTf15dt8RkPQjUrilUNiFoZ9j
+         sEw/6uaruJmbe2l8pkkX9PodsBqj8T6pasohK1QFvlwO2bIncdbJMZuoDVXyocB40l
+         70xxx3/9O28FYo3xSSb61QMg2HMurXpgvn/YWEWY=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
         Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
         Linus Walleij <linus.walleij@linaro.org>
-Cc:     Icenowy Zheng <icenowy@aosc.io>, David Airlie <airlied@linux.ie>,
+Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         Daniel Vetter <daniel@ffwll.ch>,
         Mark Rutland <mark.rutland@arm.com>,
         Giuseppe Cavallaro <peppe.cavallaro@st.com>,
@@ -54,9 +54,9 @@ Cc:     Icenowy Zheng <icenowy@aosc.io>, David Airlie <airlied@linux.ie>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH 06/12] net: stmmac: sun8i: force select external PHY when no internal one
-Date:   Sat,  6 Apr 2019 01:45:08 +0200
-Message-Id: <20190405234514.6183-7-megous@megous.com>
+Subject: [PATCH 11/12] brcmfmac: Loading the correct firmware for brcm43456
+Date:   Sat,  6 Apr 2019 01:45:13 +0200
+Message-Id: <20190405234514.6183-12-megous@megous.com>
 In-Reply-To: <20190405234514.6183-1-megous@megous.com>
 References: <20190405234514.6183-1-megous@megous.com>
 MIME-Version: 1.0
@@ -66,40 +66,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Icenowy Zheng <icenowy@aosc.io>
+From: Ondrej Jirman <megous@megous.com>
 
-The PHY selection bit also exists on SoCs without an internal PHY; if
-it's set to 1 (internal PHY) then the MAC will not make use of any PHY.
+SDIO based brcm43456 is currently misdetected as brcm43455 and the wrong
+firmware name is used. Correct the detection and load the correct
+firmware file. Chiprev for brcm43456 is "9".
 
-This problem appears when adapting for H6, which has no real internal
-PHY (the "internal PHY" on H6 is not on-die, but on a co-packaged AC200
-chip, via RMII interface at GPIO bank A), but the PHY selection bit is
-set.
-
-Force the PHY selection bit to 0 when no external PHY to select this
-problem.
-
-Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+Signed-off-by: Ondrej Jirman <megous@megous.com>
 ---
- drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-index e3e3dc44b33b..bd340e77b2ea 100644
---- a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-+++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-@@ -908,6 +908,11 @@ static int sun8i_dwmac_set_syscon(struct stmmac_priv *priv)
- 		 * address. No need to mask it again.
- 		 */
- 		reg |= 1 << H3_EPHY_ADDR_SHIFT;
-+	} else {
-+		/* For SoCs without internal PHY the PHY selection bit should be
-+		 * set to 0 (external PHY).
-+		 */
-+		reg &= ~(H3_EPHY_SELECT);
- 	}
- 
- 	if (!of_property_read_u32(node, "allwinner,tx-delay-ps", &val)) {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index a06af0cd4a7f..22b73da42822 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -622,6 +622,7 @@ BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
+ /* Note the names are not postfixed with a1 for backward compatibility */
+ BRCMF_FW_DEF(43430A1, "brcmfmac43430-sdio");
+ BRCMF_FW_DEF(43455, "brcmfmac43455-sdio");
++BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
+ BRCMF_FW_DEF(4354, "brcmfmac4354-sdio");
+ BRCMF_FW_DEF(4356, "brcmfmac4356-sdio");
+ BRCMF_FW_DEF(4373, "brcmfmac4373-sdio");
+@@ -642,7 +643,8 @@ static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
+ 	BRCMF_FW_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
+-	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
++	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0x00000200, 43456),
++	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFDC0, 43455),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
+ 	BRCMF_FW_ENTRY(CY_CC_4373_CHIP_ID, 0xFFFFFFFF, 4373),
 -- 
 2.21.0
 
