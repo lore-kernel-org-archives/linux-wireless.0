@@ -2,76 +2,77 @@ Return-Path: <SRS0=AXTt=SI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19475C282DA
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Apr 2019 06:06:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09036C282DC
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Apr 2019 08:45:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D3FAA21855
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Apr 2019 06:06:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554530775;
-	bh=aMVH0AA7NMu7n93uAI9gR2hImaiRnVhXz+svA+Zsdno=;
-	h=Date:From:Subject:References:In-Reply-To:Cc:Cc:To:List-ID:From;
-	b=KjkcXLXYZwknqnMxW7edFOu0uezK359tq+9E00yPKuZgmWUWXMOvWiUWDXuf7lmh9
-	 xFJr4W7jJdSMtO4Z3iEbZFTJQMgCo3sM6wUy9jF3yF2cUKW7asT4NfYrL/MM1B+4bt
-	 UzT3RcM57j0V7y9wTgWH48XbhTUFGBMV+TdKhW3g=
+	by mail.kernel.org (Postfix) with ESMTP id D41D3218C3
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Apr 2019 08:45:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726676AbfDFGGO (ORCPT
+        id S1726436AbfDFIpu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 6 Apr 2019 02:06:14 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:45309 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726615AbfDFGGN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 6 Apr 2019 02:06:13 -0400
-Received: by mail-pl1-f194.google.com with SMTP id bf11so4165659plb.12;
-        Fri, 05 Apr 2019 23:06:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:date:from:subject:references
-         :in-reply-to:cc:cc:to;
-        bh=vHSi4SGK69vwHy4fERQMxrDWU2Xn9teQurmQABG1kF8=;
-        b=OpCtlmp04GyCwocXmQMfZ8WTgMfFcQiHQgnQ1tFzg4BVjjfnH/Y1Uv6J4y1jE64R9x
-         yn4VXTBJFZfPNAUQwwQMAq2x0qw4QUd4Uf2YIXCImfXUN+MUcwVZ6FbOrn5iDIMuJuK9
-         wfBg6NU9qM6Om/HA9C4K4rJL+Iuq6/geYw44sNyLoibUAGk/YpKMzF2uy0fim2XOOtpm
-         T7wdlbqSa7Ro86YmoITqpJhTDJIAOJeE2YierQzuxevqqI3bBuOL3sEGyXb1+wKO7zwR
-         O2zr4LRI79LzfkRw7GHfRbEb1k5OvtHm6jBsGLZGJIPXxdzfHhRzsIFOkSovV38TDLRp
-         XpRA==
-X-Gm-Message-State: APjAAAWG4uQS8WD1xWaOwoX0LxCX0p0byjmNXx9wJERmJiHbsHWngT9p
-        rxj+A+7yfoUU/WmVgNxZQQ==
-X-Google-Smtp-Source: APXvYqy2gAtCz4/BwS4gSVxuc/13wUhHpuZLLoJrKvE3RaxStU3eppmfAhKFoF/+4JT6bFW0m3Fbmg==
-X-Received: by 2002:a17:902:7841:: with SMTP id e1mr17137415pln.303.1554530772550;
-        Fri, 05 Apr 2019 23:06:12 -0700 (PDT)
-Received: from localhost ([210.160.217.71])
-        by smtp.gmail.com with ESMTPSA id t22sm28133497pgu.45.2019.04.05.23.06.11
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 05 Apr 2019 23:06:11 -0700 (PDT)
-Message-ID: <5ca841d3.1c69fb81.7ec38.ae4e@mx.google.com>
-Date:   Sat, 06 Apr 2019 01:06:10 -0500
-From:   Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v3 1/2] dt: bindings: add dt entry for XO calibration support
-References: <20190401091926.19119-1-govinds@codeaurora.org> <20190401091926.19119-2-govinds@codeaurora.org>
-In-Reply-To: <20190401091926.19119-2-govinds@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, robh@kernel.org
-Cc:     linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-To:     Govind Singh <govinds@codeaurora.org>
+        Sat, 6 Apr 2019 04:45:50 -0400
+Received: from www.osadl.org ([62.245.132.105]:59192 "EHLO www.osadl.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725978AbfDFIpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 6 Apr 2019 04:45:50 -0400
+X-Greylist: delayed 673 seconds by postgrey-1.27 at vger.kernel.org; Sat, 06 Apr 2019 04:45:49 EDT
+Received: from debian01.hofrr.at (178.115.242.59.static.drei.at [178.115.242.59])
+        by www.osadl.org (8.13.8/8.13.8/OSADL-2007092901) with ESMTP id x368jbQJ008629;
+        Sat, 6 Apr 2019 10:45:37 +0200
+From:   Nicholas Mc Guire <hofrat@osadl.org>
+To:     Adham Abozaeid <adham.abozaeid@microchip.com>
+Cc:     Ajay Singh <ajay.kathat@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH V2] staging: wilc1000: drop explicit conversion to bool
+Date:   Sat,  6 Apr 2019 10:40:30 +0200
+Message-Id: <1554540030-12740-1-git-send-email-hofrat@osadl.org>
+X-Mailer: git-send-email 2.1.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon,  1 Apr 2019 14:49:25 +0530, Govind Singh wrote:
-> Add dt binding to get xo calibration data support for wifi rf clock.
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 1 +
->  1 file changed, 1 insertion(+)
-> 
+As the expression evaluates to a boolean anyway (relational and logical
+operators) conversion with the ternary operator is not needed here as
+coccinelle notes (boolconv.cocci)
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
+
+V2: sent out the wrong version - the commit message was longer than 75
+    chars - only change here is the commit message wrapping.
+
+scripts/coccinelle/misc/boolconv.cocci warned about:
+drivers/staging/wilc1000/wilc_wlan.c:14:48-53: WARNING: conversion to bool not needed here
+
+Patch was compile tested with: x86_64_defconfig + Staging=y,
+WILC1000_SDIO=m, WILC1000_SPI=m, WILC1000=m
+(checkpatch, sparse and cocci clean otherwise)
+
+Patch is against 5.1-rc3 (localversion-next is -next-20190403)
+
+ drivers/staging/wilc1000/wilc_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index c238969..6c9fd3a 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -11,7 +11,7 @@
+ 
+ static inline bool is_wilc1000(u32 id)
+ {
+-	return ((id & 0xfffff000) == 0x100000 ? true : false);
++	return ((id & 0xfffff000) == 0x100000);
+ }
+ 
+ static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
+-- 
+2.1.4
 
