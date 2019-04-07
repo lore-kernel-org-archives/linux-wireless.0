@@ -2,66 +2,67 @@ Return-Path: <SRS0=5Jnr=SJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-11.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC405C282DE
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Apr 2019 15:04:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD18DC282DE
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Apr 2019 15:30:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 95F12218D0
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Apr 2019 15:04:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8156720880
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Apr 2019 15:30:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TEM5p9Np"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JGtTZR4Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726462AbfDGPEw (ORCPT
+        id S1726494AbfDGPaU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 7 Apr 2019 11:04:52 -0400
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:39655 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726049AbfDGPEv (ORCPT
+        Sun, 7 Apr 2019 11:30:20 -0400
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:42757 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726246AbfDGPaT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 7 Apr 2019 11:04:51 -0400
-Received: by mail-yb1-f195.google.com with SMTP id b88so4212581ybi.6;
-        Sun, 07 Apr 2019 08:04:51 -0700 (PDT)
+        Sun, 7 Apr 2019 11:30:19 -0400
+Received: by mail-yw1-f67.google.com with SMTP id e76so4056287ywa.9;
+        Sun, 07 Apr 2019 08:30:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :content-transfer-encoding;
-        bh=eJRJtUCAWZAiA3xFeQa9NsMNwetrHisMPV4hhqvu/mA=;
-        b=TEM5p9NpMEZOCJ9uqkU4km0TZQENEWDBzodgeiv1cLIOrw2xg/vHCmotlSHM/xv1fB
-         dkv3ln8YtlSUO81YhfdM6Dt/tATrm7MkK0JvPz34+jnMryPmcT3eaJ9X9jw9zGjItB/b
-         Jvr5PSut0mgYL5yIUiapnnM8/n2y07P7nvakQSct5WL/ikoXzLXBCiD4uT0fm43U2ByY
-         Ek9187r8yxGFB3QH86gfKIIusrcJTg6j1Xf0+wJzmHIcpE7Ddz0Yz/Cqjrcg579K0Cjb
-         3kqLAEJWaQ6tsxbnE4jabjPQwPsYKV0nB+VXUL+8WtvFq9jjMlTeaaMQlh4ns0Qyhw1f
-         gFhA==
+         :cc;
+        bh=ixHI/QSIq6h0wFos1VtE91H10sU7YXkJq6lUNwuj4Zw=;
+        b=JGtTZR4QU6ytZyBR73Tpxn/GbgBMB1+ZnT0/WvxMr9SDQTl8dEFOb1XpUrNk8LMpoM
+         jKLE2SIR00UlWAgtiVPNYVxx+Zr0fxQb2vPmi8nf8X2uWH6+4nE/YFPmDLbSooZFq2pu
+         CamDuzbnXr/4WfcvGcXfJLf/Fjg/41OcPINBdrc6nwWeuYdXoXuU39SOTtn8TYmKnCtp
+         gVq4JzqoQqTZRdq1lJ2ju/bGP2EFHXkyzeCEp3z12SYhMoAOp05tge3oRMGLNeJHTI/q
+         VxRcF0qYTt3mLTmkioZeQ/zOKBcOQFHpHwFEKqr5JmSwPK71PILFNY+iLpsymvYJ8Sts
+         SAiA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:content-transfer-encoding;
-        bh=eJRJtUCAWZAiA3xFeQa9NsMNwetrHisMPV4hhqvu/mA=;
-        b=mElGc8dECXjHbKh/DM+i1zOpzkng5OkRWGcH8IDelF2I6z6e9/xuustn8m3ojNPxQB
-         H9LVw0kc0c0lbVuBdX9hFDekJtSVpunAPghN68dxPPWRO8yxKb6hRWMZmxCrouaZKTaC
-         tCmT0PWF/nsD1qO2hAZG3PuEK/G9THhWSRPfHqZWUJGgDnLnh0+sAfelw3cgI89Jn9ko
-         GPo/XpXek6ak8lS+6sBPnWorPpC0m5fJMny7z9+r7W1kfJG0nUOCeUauc23yG+0PbTM1
-         hoLK7E2/Mh/ALg31YGT/QDEiZMYJ5Ka2M82OuRbWtA2cDUR8t8PAMHim1Kvcf4iQMjQl
-         DCnw==
-X-Gm-Message-State: APjAAAV24wrS3rv8OsVaYJIGcikr6RPhuPa7EX6XwESxrLm6MkGLc6On
-        7x22rdsTZevJBXRpaxAr1M9tembQPKOfcroyWdA=
-X-Google-Smtp-Source: APXvYqx6yAOnBihW5TS0ZFZMXgfk1AS2vifm2k86itsc3Njf2gYI8QMd4YHzDnxdiAEIn5eEnCzXIcJNGKEzJ75iMjE=
-X-Received: by 2002:a5b:144:: with SMTP id c4mr20531931ybp.328.1554649490318;
- Sun, 07 Apr 2019 08:04:50 -0700 (PDT)
+         :message-id:subject:to:cc;
+        bh=ixHI/QSIq6h0wFos1VtE91H10sU7YXkJq6lUNwuj4Zw=;
+        b=Bc0VE8WVOhzXIaPnBJEq+lubaOS6qkDiwapSXCTxL0gsArirt2BcHvIZC/w5m43N8D
+         z01CMgyczxQ4u6k3mKV6HwgNz17K8zz1jg++RecB8DMRtwGSPdsqnUFua4yFoHgGnQxs
+         7aElNQFM2nu7pzurbE/VyAxPjaNy8SGMO7ZOreU1gALMmY8Wuzcr6JKIkvWhXM9GLGGk
+         r5mei8iNf49snYcwOBhLelIg+XNak2PeAJTPXI/GtAcxp2jQ7vSW9su+3SJ6Qpfa6mNE
+         u8jAB3HnaEF+qWupUBjwSMRSiND3LdFxDnSmpjYqSDDXym9J8rkCJuc43w72taND6tdI
+         DaDw==
+X-Gm-Message-State: APjAAAVqLxkfoB+fn1nFrxnX/FGJn55NMI4APWnmtnst+T+13HpeyJjD
+        oRdkvLD8Fj8S/xSdeBGUumvO7nJrShdLxO5IvN4=
+X-Google-Smtp-Source: APXvYqy813tFP5IYoAZ1SpWytDUBaZgQyG5WIOziWnfsm7qhMhv229R7yvdIFlaS8twfxPvFmzJL8/v79HK1LDLd7gs=
+X-Received: by 2002:a81:7509:: with SMTP id q9mr19890761ywc.216.1554651018137;
+ Sun, 07 Apr 2019 08:30:18 -0700 (PDT)
 MIME-Version: 1.0
-References: <20190405234514.6183-1-megous@megous.com> <CAJiuCcew10Q3PUOk4VPoiyFc7ZhXwJzxXHQHNeVBUvVAQ3BkbQ@mail.gmail.com>
- <20190407143237.2qyoef4r5e3qvbmh@core.my.home>
-In-Reply-To: <20190407143237.2qyoef4r5e3qvbmh@core.my.home>
+References: <20190405234514.6183-1-megous@megous.com> <20190405234514.6183-13-megous@megous.com>
+In-Reply-To: <20190405234514.6183-13-megous@megous.com>
 From:   =?UTF-8?B?Q2zDqW1lbnQgUMOpcm9u?= <peron.clem@gmail.com>
-Date:   Sun, 7 Apr 2019 17:08:23 +0200
-Message-ID: <CAJiuCcd5OOyxU7rgy2HH2b6NvHQ1Hdh_Dwd5VL_PG=8uqRo+BQ@mail.gmail.com>
-Subject: Re: [linux-sunxi] [PATCH 00/12] Add support for Orange Pi 3
-To:     =?UTF-8?B?Q2zDqW1lbnQgUMOpcm9u?= <peron.clem@gmail.com>,
-        linux-sunxi@googlegroups.com,
+Date:   Sun, 7 Apr 2019 17:31:52 +0200
+Message-ID: <CAJiuCcdRHj56p_KFRhK8H9xO+M3ycNp1Jpzw_QWcKQZorcKGpA@mail.gmail.com>
+Subject: Re: [linux-sunxi] [PATCH 12/12] arm64: dts: allwinner: orange-pi-3:
+ Enable WiFi
+To:     megous@megous.com
+Cc:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
         Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
         Linus Walleij <linus.walleij@linaro.org>,
@@ -89,7 +90,6 @@ To:     =?UTF-8?B?Q2zDqW1lbnQgUMOpcm9u?= <peron.clem@gmail.com>,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -97,141 +97,126 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Hi,
 
-On Sun, 7 Apr 2019 at 16:32, Ond=C5=99ej Jirman <megous@megous.com> wrote:
+On Sat, 6 Apr 2019 at 01:45, megous via linux-sunxi
+<linux-sunxi@googlegroups.com> wrote:
 >
-> On Sun, Apr 07, 2019 at 03:36:21PM +0200, Cl=C3=A9ment P=C3=A9ron wrote:
-> > Hi,
-> >
-> > On Sat, 6 Apr 2019 at 01:45, megous via linux-sunxi
-> > <linux-sunxi@googlegroups.com> wrote:
-> > >
-> > > From: Ondrej Jirman <megous@megous.com>
-> > >
-> > > This series implements support for Xunlong Orange Pi 3 board.
-> >
-> > OrangePi 3 Lite2 and One Plus boards support has already been merged.
-> > The support is not complete but you should rebase your patches on top
-> > of sunxi/for-next
+> From: Ondrej Jirman <megous@megous.com>
 >
-> Hi,
+> Orange Pi 3 has AP6256 WiFi/BT module. WiFi part of the module is
+> called bcm43356 and can be used with the brcmfmac driver. The module
+> is powered by the two always on regulators (not AXP805).
 >
-> OrangePi 3 is somewhat different from these two boards (mostly it has a d=
-iffernt
-> power tree). It doesn't use the AXP regulators that are defined in the
-> sun50i-h6-orangepi.dtsi in the same way.
+> WiFi uses a PG port with 1.8V voltage level signals. SoC needs to be
+> configured so that it sets up an 1.8V input bias on this port. This is
+> done by the pio driver by reading the vcc-pg-supply voltage.
 >
-> For example:
+> You'll need a fw_bcm43456c5_ag.bin firmware file and nvram.txt
+> configuration that can be found in the Xulongs's repository for H6:
 >
-> - bldo3 (is turned always on in sun50i-h6-orangepi.dtsi but unused for op=
-i3)
-> - cldo2 and cldo3 are unused on opi3 and have nothing to do with WiFi
-> - aldo3 is not for dram
-> - bldo1 on the other hand is for dram on opi3
-> - some other regulators are used for different/more functions and thus
->   named differntly
-> - USB id-det pin is differnt
-> - ...
+> https://github.com/orangepi-xunlong/OrangePiH6_external/tree/master/ap6256
 >
-> OrangePi 3 is not a superset of what is defined in sun50i-h6-orangepi.dts=
-i.
+> Mainline brcmfmac driver expects the firmware and nvram at the
+> following paths relative to the firmware directory:
 >
-> So to base Orange Pi 3 dts on top of existing sun50i-h6-orangepi.dtsi I'd=
- have
-> to first move some things out of the base dtsi to the OrangePi Lite2 and =
-One
-> Plus board dts files, in order to have sun50i-h6-orangepi.dtsi only descr=
-ibe HW
-> that is *really* shared by these 2 boards and Orange Pi 3.
+>   brcm/brcmfmac43456-sdio.bin
+>   brcm/brcmfmac43456-sdio.txt
 >
-> If I do that, I'd undefine all the axp805 regulator nodes and move the
-> configurations to each of the 3 board files. That will probably end up be=
-ing
-> the least confusing and most maintainable. See axp81x.dtsi lines 86-144 f=
-or
-> what I mean.
+> Signed-off-by: Ondrej Jirman <megous@megous.com>
+> ---
+>  .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 48 +++++++++++++++++++
+>  1 file changed, 48 insertions(+)
 >
-> What do you think? Is this acceptable to everyone?
+> diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+> index 5270142527f5..6a201829bb62 100644
+> --- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+> +++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+> @@ -66,6 +66,26 @@
+>                 regulator-always-on;
+>         };
+>
+> +       reg_vcc33_wifi: vcc33-wifi {
+> +               /* Always on 3.3V regulator for WiFi and BT */
+> +               compatible = "regulator-fixed";
+> +               regulator-name = "vcc33-wifi";
+> +               regulator-min-microvolt = <3300000>;
+> +               regulator-max-microvolt = <3300000>;
+> +               regulator-always-on;
+> +                vin-supply = <&reg_vcc5v>;
+> +       };
+> +
+> +       reg_vcc_wifi_io: vcc-wifi-io {
+> +               /* Always on 1.8V/300mA regulator for WiFi and BT IO */
+> +               compatible = "regulator-fixed";
+> +               regulator-name = "vcc-wifi-io";
+> +               regulator-min-microvolt = <1800000>;
+> +               regulator-max-microvolt = <1800000>;
+> +               regulator-always-on;
+> +                vin-supply = <&reg_vcc33_wifi>;
+> +       };
+> +
+>         /*
+>          * The board uses 2.5V RGMII signalling. Power sequence
+>          * to enable the phy is to enable GMAC-2V5 and GMAC-3V3 (aldo2)
+> @@ -86,6 +106,14 @@
+>                   */
+>                  vin-supply = <&reg_aldo2>; /* GMAC-3V3 */
+>          };
+> +
+> +       wifi_pwrseq: wifi_pwrseq {
+> +               compatible = "mmc-pwrseq-simple";
+> +               clocks = <&rtc 1>;
 
-Indeed it seems to be a totally different board, not as much in common
-as I thought with Lite2 and One Plus.
-
-You should also add your board in Documentation
-devicetree/bindings/arm/sunxi.yaml
+Maybe I missed something, but the RTC in H6 is not yet available :
+https://lkml.org/lkml/2018/10/31/822
 
 Regards,
 Clement
 
-
-
+> +               clock-names = "ext_clock";
+> +               reset-gpios = <&r_pio 1 3 GPIO_ACTIVE_LOW>; /* PM3 */
+> +               post-power-on-delay-ms = <200>;
+> +       };
+>  };
 >
-> regards,
->   o.
+>  &cpu0 {
+> @@ -146,6 +174,25 @@
+>         status = "okay";
+>  };
 >
-> > https://git.kernel.org/pub/scm/linux/kernel/git/sunxi/linux.git/tree/ar=
-ch/arm64/boot/dts/allwinner/sun50i-h6-orangepi.dtsi?h=3Dsunxi/for-next
-> >
-> > Regards,
-> > Clement
-> >
-> > >
-> > > Unfortunately, this board needs some small driver patches, so I have
-> > > split the boards DT patch into chunks that require patches for driver=
-s
-> > > in various subsystems:
-> > >
-> > > - Basic DT for the board  (patch 1)
-> > > - HDMI support            (patches 2, 3, 4)
-> > > - Ethernet support        (patches 5, 6, 7)
-> > > - WiFi support            (patches 8, 9, 10, 11, 12)
-> > >
-> > > This patch is also needed to not get segfault on boot:
-> > >   https://lkml.org/lkml/2019/4/5/856
-> > >
-> > > Please take a look.
-> > >
-> > > regards,
-> > >   Ondrej Jirman
-> > >
-> > > Icenowy Zheng (2):
-> > >   net: stmmac: sun8i: add support for Allwinner H6 EMAC
-> > >   net: stmmac: sun8i: force select external PHY when no internal one
-> > >
-> > > Ondrej Jirman (10):
-> > >   arm64: dts: allwinner: h6: Add Orange Pi 3 DTS
-> > >   drm: sun4i: Add support for enabling DDC I2C bus to dw_hdmi glue
-> > >   dt-bindings: display: sun4i-drm: Add DDC power supply
-> > >   arm64: dts: allwinner: orange-pi-3: Enable HDMI output
-> > >   arm64: dts: allwinner: orange-pi-3: Enable ethernet
-> > >   arm64: dts: allwinner: h6: Add MMC1 pins
-> > >   pinctrl: sunxi: Prepare for alternative bias voltage setting method=
-s
-> > >   pinctrl: sunxi: Support I/O bias voltage setting on H6
-> > >   brcmfmac: Loading the correct firmware for brcm43456
-> > >   arm64: dts: allwinner: orange-pi-3: Enable WiFi
-> > >
-> > >  .../bindings/display/sunxi/sun4i-drm.txt      |   1 +
-> > >  arch/arm64/boot/dts/allwinner/Makefile        |   1 +
-> > >  .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 339 ++++++++++++++++=
-++
-> > >  arch/arm64/boot/dts/allwinner/sun50i-h6.dtsi  |   9 +
-> > >  drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c         |  17 +-
-> > >  drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h         |   1 +
-> > >  .../net/ethernet/stmicro/stmmac/dwmac-sun8i.c |  22 ++
-> > >  .../broadcom/brcm80211/brcmfmac/sdio.c        |   4 +-
-> > >  drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c     |   1 +
-> > >  drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c     |   2 +-
-> > >  drivers/pinctrl/sunxi/pinctrl-sunxi.c         |  50 ++-
-> > >  drivers/pinctrl/sunxi/pinctrl-sunxi.h         |   7 +-
-> > >  12 files changed, 433 insertions(+), 21 deletions(-)
-> > >  create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-=
-3.dts
-> > >
-> > > --
-> > > 2.21.0
-> > >
-> > > --
-> > > You received this message because you are subscribed to the Google Gr=
-oups "linux-sunxi" group.
-> > > To unsubscribe from this group and stop receiving emails from it, sen=
-d an email to linux-sunxi+unsubscribe@googlegroups.com.
-> > > For more options, visit https://groups.google.com/d/optout.
+> +&mmc1 {
+> +       pinctrl-names = "default";
+> +       pinctrl-0 = <&mmc1_pins>;
+> +       vmmc-supply = <&reg_vcc33_wifi>;
+> +       vqmmc-supply = <&reg_vcc_wifi_io>;
+> +       mmc-pwrseq = <&wifi_pwrseq>;
+> +       bus-width = <4>;
+> +       non-removable;
+> +       status = "okay";
+> +
+> +       brcm: sdio-wifi@1 {
+> +               reg = <1>;
+> +               compatible = "brcm,bcm4329-fmac";
+> +               interrupt-parent = <&r_pio>;
+> +               interrupts = <1 0 IRQ_TYPE_LEVEL_LOW>; /* PM0 */
+> +               interrupt-names = "host-wake";
+> +       };
+> +};
+> +
+>  &ohci0 {
+>         status = "okay";
+>  };
+> @@ -157,6 +204,7 @@
+>  &pio {
+>         vcc-pc-supply = <&reg_bldo2>;
+>         vcc-pd-supply = <&reg_cldo1>;
+> +       vcc-pg-supply = <&reg_vcc_wifi_io>;
+>  };
+>
+>  &r_i2c {
+> --
+> 2.21.0
+>
+> --
+> You received this message because you are subscribed to the Google Groups "linux-sunxi" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to linux-sunxi+unsubscribe@googlegroups.com.
+> For more options, visit https://groups.google.com/d/optout.
