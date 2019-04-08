@@ -5,35 +5,32 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6EA3C10F13
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 19:52:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2B30C10F13
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 19:57:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B655D20863
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 19:52:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF75A20880
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 19:57:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726544AbfDHTwf (ORCPT
+        id S1726959AbfDHT56 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 15:52:35 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:33602 "EHLO
+        Mon, 8 Apr 2019 15:57:58 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:33702 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726387AbfDHTwe (ORCPT
+        with ESMTP id S1726369AbfDHT55 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 15:52:34 -0400
+        Mon, 8 Apr 2019 15:57:57 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hDaJl-0006jb-2w; Mon, 08 Apr 2019 21:52:33 +0200
-Message-ID: <211816ff03cf188d834a21b1fbc98b4f8c5b81f4.camel@sipsolutions.net>
-Subject: Re: Flag for detecting 802.11r Fast BSS Transition support
+        id 1hDaOx-0006oc-MN; Mon, 08 Apr 2019 21:57:55 +0200
+Message-ID: <98e1f8942056486669c6295323ef09763fd2ec0a.camel@sipsolutions.net>
+Subject: Re: [PATCH v2 0/4] Extended Key ID support
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Brian Norris <briannorris@chromium.org>,
-        Matthew Wang <matthewmwang@google.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Kirtika Ruchandani <kirtika@google.com>
-Date:   Mon, 08 Apr 2019 21:52:30 +0200
-In-Reply-To: <20190403210200.GA93453@google.com> (sfid-20190403_230207_629987_2069AD98)
-References: <CAAooHFeLWrY_wmCp-HWqygh8gnKsfpoPCky7SykOBKZgXkb8OQ@mail.gmail.com>
-         <20190403210200.GA93453@google.com> (sfid-20190403_230207_629987_2069AD98)
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Mon, 08 Apr 2019 21:57:54 +0200
+In-Reply-To: <20190319203410.25145-1-alexander@wetzel-home.de>
+References: <20190319203410.25145-1-alexander@wetzel-home.de>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -43,29 +40,25 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2019-04-03 at 14:02 -0700, Brian Norris wrote:
-> + Johannes
-> 
-> On Thu, Oct 04, 2018 at 12:06:50PM -0700, Matthew Wang wrote:
-> > Hi,
-> > 
-> > I'm wondering if there is a flag for detecting firmware/driver support
-> > for FT. It seems like checking for SME support is a pretty good proxy
-> > for this, but there is a non-mac80211 driver that can do FT as well
-> > (ath/wil6210). It would be great if anyone knows of a feature flag
-> > specifically for FT.
-> 
-> I chatted with Johannes, and he agreed that there was no such flag
-> today. It also sounded like he was open to adding one, even if it's
-> several years too late. I don't think there's any useful way people
-> could (generically) use FT support today.
+On Tue, 2019-03-19 at 21:34 +0100, Alexander Wetzel wrote:
+> This patch series adds support for IEEE 802.11-2016 Extended Key ID
+> support. Compared to the last RFC there are again quite some API
+> changes, but also some bug fixes. (The bug fixes I remember are outlined
+> in the different patches.)
 
-I guess I'm not really sure if the flag is needed, but I guess like the
-original question says, it'd be more about non-mac80211 drivers.
+FWIW, I've applied the first two patches here.
 
-So I guess you'd have to figure out what operations the drivers need to
-support then? I'm not even sure how wpa_s would handle this for SME
-offload devices.
+I'd really like you to continue with only that for now, and (try to) get
+hostapd/wpa_supplicant changes upstream, perhaps with corresponding
+hwsim tests. That way, we can see this working live.
 
+We briefly discussed this at the wireless workshop, and the general
+feeling seems to have been that the compat mode is probably not really
+worthwhile, but I haven't quite made up my mind on that.
+
+Still, having tests and being able to check it out would help a lot,
+also as part of perhaps building a case for compat mode.
+
+Thanks,
 johannes
 
