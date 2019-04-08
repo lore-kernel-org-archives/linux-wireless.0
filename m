@@ -3,39 +3,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98B0CC10F13
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:23:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ED7DC10F14
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:26:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B8E52087F
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:23:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72B662087F
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:26:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726717AbfDHMXF (ORCPT
+        id S1726600AbfDHM0w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 08:23:05 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:54048 "EHLO
+        Mon, 8 Apr 2019 08:26:52 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:54084 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726554AbfDHMXF (ORCPT
+        with ESMTP id S1726369AbfDHM0w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 08:23:05 -0400
+        Mon, 8 Apr 2019 08:26:52 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hDTIh-0006Ai-6l; Mon, 08 Apr 2019 14:22:59 +0200
-Message-ID: <9240677794fecc4188038696e0eec8b94bd81377.camel@sipsolutions.net>
-Subject: Re: [PATCH 06/16] mac80211_hwsim: make copying of ciphers safer by
- checking the length
+        id 1hDTMR-0006F8-0s; Mon, 08 Apr 2019 14:26:51 +0200
+Message-ID: <ad4fbfcb67afcb63c34711d14459b2a183831e38.camel@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: optimize skb resizing
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Luca Coelho <luca@coelho.fi>, kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Mon, 08 Apr 2019 14:22:57 +0200
-In-Reply-To: <20190315163634.17315-7-luca@coelho.fi> (sfid-20190315_173654_856707_608C8EE1)
-References: <20190315163634.17315-1-luca@coelho.fi>
-         <20190315163634.17315-7-luca@coelho.fi>
-         (sfid-20190315_173654_856707_608C8EE1)
+To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Date:   Mon, 08 Apr 2019 14:26:49 +0200
+In-Reply-To: <20190317181859.71841-1-nbd@nbd.name>
+References: <20190317181859.71841-1-nbd@nbd.name>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -45,19 +39,25 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-03-15 at 18:36 +0200, Luca Coelho wrote:
-> From: Luca Coelho <luciano.coelho@intel.com>
+On Sun, 2019-03-17 at 19:18 +0100, Felix Fietkau wrote:
+> When forwarding unicast packets from ethernet to batman-adv over 802.11s
+> (with forwarding disabled), the typical required headroom to transmit
+> encrypted packets on mt76 is 32 (802.11) + 6 (802.11s) + 8 (CCMP) +
+> 2 (padding) + 6 (LLC) + 18 (batman-adv) - 14 (old ethernet header) = 58 bytes.
 > 
-> Make sure the length of the ciphers we are copying never exceeds the
-> space we have for storing them.  There is no risk of overcopying at
-> the moment, because we check n_params before, but this makes this
-> function safer in case someone changes something in the future.
+> On systems where NET_SKB_PAD is 64 this leads to a call to pskb_expand_head
+> for every packet, since mac80211 also tries to allocate 16 bytes status
+> headroom for radiotap headers.
+> 
+> This patch fixes these unnecessary reallocations by only requiring the extra
+> status headroom in ieee80211_tx_monitor()
+> If however a reallocation happens before that call, the status headroom gets
+> added there as well, in order to avoid double reallocation.
+> 
+> The patch also cleans up the code by moving the headroom calculation to
+> ieee80211_skb_resize.
 
-I don't think this makes sense.
-
-If anything, we should pass extack to mac80211_hwsim_new_radio() and do
-the entire validation there, but doing the same thing twice in two
-places just because of static checkers is useless.
+This doesn't apply, not really sure why.
 
 johannes
 
