@@ -3,28 +3,29 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_NEOMUTT autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_NEOMUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44E94C282CE
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 07:40:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EBECC282CE
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 07:42:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EC6820870
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 07:40:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 058F7208E3
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 07:42:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726465AbfDHHkw (ORCPT
+        id S1726369AbfDHHmc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 03:40:52 -0400
-Received: from relay11.mail.gandi.net ([217.70.178.231]:50743 "EHLO
-        relay11.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725881AbfDHHkw (ORCPT
+        Mon, 8 Apr 2019 03:42:32 -0400
+Received: from relay8-d.mail.gandi.net ([217.70.183.201]:51895 "EHLO
+        relay8-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725871AbfDHHmb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 03:40:52 -0400
+        Mon, 8 Apr 2019 03:42:31 -0400
+X-Originating-IP: 90.88.30.125
 Received: from localhost (aaubervilliers-681-1-89-125.w90-88.abo.wanadoo.fr [90.88.30.125])
         (Authenticated sender: maxime.ripard@bootlin.com)
-        by relay11.mail.gandi.net (Postfix) with ESMTPSA id A5024100002;
-        Mon,  8 Apr 2019 07:40:42 +0000 (UTC)
-Date:   Mon, 8 Apr 2019 09:40:42 +0200
+        by relay8-d.mail.gandi.net (Postfix) with ESMTPSA id 7D03E1BF20F;
+        Mon,  8 Apr 2019 07:42:23 +0000 (UTC)
+Date:   Mon, 8 Apr 2019 09:42:22 +0200
 From:   Maxime Ripard <maxime.ripard@bootlin.com>
 To:     megous@megous.com
 Cc:     linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
@@ -51,15 +52,16 @@ Cc:     linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: Re: [PATCH 07/12] arm64: dts: allwinner: orange-pi-3: Enable ethernet
-Message-ID: <20190408074042.74s5qckukcpore3e@flea>
+Subject: Re: [PATCH 10/12] pinctrl: sunxi: Support I/O bias voltage setting
+ on H6
+Message-ID: <20190408074222.ksyxorajs6goowmf@flea>
 References: <20190405234514.6183-1-megous@megous.com>
- <20190405234514.6183-8-megous@megous.com>
+ <20190405234514.6183-11-megous@megous.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="b4c2cydsu6ghev6c"
+        protocol="application/pgp-signature"; boundary="v4lezedvh2vii7fg"
 Content-Disposition: inline
-In-Reply-To: <20190405234514.6183-8-megous@megous.com>
+In-Reply-To: <20190405234514.6183-11-megous@megous.com>
 User-Agent: NeoMutt/20180716
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -67,66 +69,92 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 
---b4c2cydsu6ghev6c
+--v4lezedvh2vii7fg
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
-On Sat, Apr 06, 2019 at 01:45:09AM +0200, megous@megous.com wrote:
+On Sat, Apr 06, 2019 at 01:45:12AM +0200, megous@megous.com wrote:
 > From: Ondrej Jirman <megous@megous.com>
 >
-> Orange Pi 3 has two regulators that power the Realtek RTL8211E.
-> According to the phy datasheet, both regulators need to be enabled
-> at the same time, but we can only specify a single phy-supply in
-> the DT.
+> H6 SoC has a "pio group withstand voltage mode" register (datasheet
+> description), that needs to be used to select either 1.8V or 3.3V
+> I/O mode, based on what voltage is powering the respective pin
+> banks and is thus used for I/O signals.
 >
-> This can be achieved by making one regulator depedning on the
-> other via vin-supply. While it's not a technically correct
-> description of the hardware, it achieves the purpose.
+> Add support for configuring this register according to the voltage
+> of the pin bank regulator (if enabled).
 >
-> All values of RX/TX delay were tested exhaustively and a middle
-> one of the working values was chosen.
+> This is similar to the support for I/O bias voltage setting patch
+> for A80 and the same concerns apply. (see commit 402bfb3c135213dc
+> Support I/O bias voltage setting on A80).
 >
 > Signed-off-by: Ondrej Jirman <megous@megous.com>
 > ---
->  .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 44 +++++++++++++++++++
->  1 file changed, 44 insertions(+)
+>  drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c |  1 +
+>  drivers/pinctrl/sunxi/pinctrl-sunxi.c     | 14 ++++++++++++++
+>  drivers/pinctrl/sunxi/pinctrl-sunxi.h     |  3 +++
+>  3 files changed, 18 insertions(+)
 >
-> diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-> index 644946749088..5270142527f5 100644
-> --- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-> +++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-> @@ -15,6 +15,7 @@
+> diff --git a/drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c b/drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c
+> index ef4268cc6227..30b1befa8ed8 100644
+> --- a/drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c
+> +++ b/drivers/pinctrl/sunxi/pinctrl-sun50i-h6.c
+> @@ -591,6 +591,7 @@ static const struct sunxi_pinctrl_desc h6_pinctrl_data = {
+>  	.irq_banks = 4,
+>  	.irq_bank_map = h6_irq_bank_map,
+>  	.irq_read_needs_mux = true,
+> +	.io_bias_cfg_variant = IO_BIAS_CFG_V2,
+>  };
 >
->  	aliases {
->  		serial0 = &uart0;
-> +		ethernet0 = &emac;
->  	};
+>  static int h6_pinctrl_probe(struct platform_device *pdev)
+> diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
+> index 9f329fec77cf..59a4ed396d92 100644
+> --- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
+> +++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
+> @@ -607,6 +607,8 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
+>  					 unsigned pin,
+>  					 struct regulator *supply)
+>  {
+> +	unsigned short bank = pin / PINS_PER_BANK;
+> +	unsigned long flags;
+>  	u32 val, reg;
+>  	int uV;
 >
->  	chosen {
-> @@ -64,6 +65,27 @@
->  		regulator-max-microvolt = <5000000>;
->  		regulator-always-on;
->  	};
+> @@ -639,6 +641,18 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
+>  		reg = readl(pctl->membase + sunxi_grp_config_reg(pin));
+>  		reg &= ~IO_BIAS_MASK;
+>  		writel(reg | val, pctl->membase + sunxi_grp_config_reg(pin));
+> +	} else if (pctl->desc->io_bias_cfg_variant == IO_BIAS_CFG_V2) {
+> +		val = uV <= 1800000 ? 1 : 0;
 > +
-> +	/*
-> +	 * The board uses 2.5V RGMII signalling. Power sequence
-> +	 * to enable the phy is to enable GMAC-2V5 and GMAC-3V3 (aldo2)
-> +	 * power rails at the same time and to wait 100ms.
-> +	 */
-> +	reg_gmac_2v5: gmac-2v5 {
-> +                compatible = "regulator-fixed";
-> +                regulator-name = "gmac-2v5";
-> +                regulator-min-microvolt = <2500000>;
-> +                regulator-max-microvolt = <2500000>;
-> +                startup-delay-us = <100000>;
-> +                enable-active-high;
-> +                gpio = <&pio 3 6 GPIO_ACTIVE_HIGH>; /* PD6 */
+> +		dev_info(pctl->dev,
+> +			 "Setting voltage bias to %sV on bank P%c\n",
+> +			 val ? "1.8" : "3.3", 'A' + bank);
+> +
+> +		raw_spin_lock_irqsave(&pctl->lock, flags);
+> +		reg = readl(pctl->membase + PIO_POW_MOD_SEL_REG);
+> +		reg &= ~(1 << bank);
+> +		writel(reg | val << bank, pctl->membase + PIO_POW_MOD_SEL_REG);
+> +		raw_spin_unlock_irqrestore(&pctl->lock, flags);
+>  	}
+>
+>  	return 0;
+> diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.h b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
+> index 476772f91dba..3a66376f141b 100644
+> --- a/drivers/pinctrl/sunxi/pinctrl-sunxi.h
+> +++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
+> @@ -95,7 +95,10 @@
+>  #define PINCTRL_SUN7I_A20	BIT(7)
+>  #define PINCTRL_SUN8I_R40	BIT(8)
+>
+> +#define PIO_POW_MOD_SEL_REG	0x340
+> +
+>  #define IO_BIAS_CFG_V1		1
+> +#define IO_BIAS_CFG_V2		2
 
-Is enable-active-high still needed? It's redundant with the
-GPIO_ACTIVE_HIGH flag.
+Can you document what V1 and V2 means exactly?
 
-The indentation is wrong here as well.
-
+Thanks!
 Maxime
 
 --
@@ -134,15 +162,15 @@ Maxime Ripard, Bootlin
 Embedded Linux and Kernel engineering
 https://bootlin.com
 
---b4c2cydsu6ghev6c
+--v4lezedvh2vii7fg
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEABYIAB0WIQRcEzekXsqa64kGDp7j7w1vZxhRxQUCXKr6+gAKCRDj7w1vZxhR
-xWdjAQDqG1PAjXbsAJ8tdw7qyfdpedAk56EtuyF8rtMzGKwfkQD/QhgDvNH4Qmb3
-agLAWL6G4pdeJymsv+Aav+t7zcBKVQs=
-=oVDn
+iHUEABYIAB0WIQRcEzekXsqa64kGDp7j7w1vZxhRxQUCXKr7XgAKCRDj7w1vZxhR
+xapEAQCWH9HfWZ6/aNAfUpdW6frNrD0g7cn/TZt9VsoUSuXpbAD/VP7jCcNn46+7
+TUIA3ewrDthfu+aIwNwpw3KpD1EbhQE=
+=GWQk
 -----END PGP SIGNATURE-----
 
---b4c2cydsu6ghev6c--
+--v4lezedvh2vii7fg--
