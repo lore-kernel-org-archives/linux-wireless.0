@@ -2,90 +2,115 @@ Return-Path: <SRS0=ZTn4=SK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D34E4C10F13
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:10:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5148C10F13
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:17:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9FFE02084F
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:10:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71AB021841
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:17:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="CqQmQpp2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727331AbfDHUK6 (ORCPT
+        id S1726772AbfDHURB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 16:10:58 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:34000 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726220AbfDHUK5 (ORCPT
+        Mon, 8 Apr 2019 16:17:01 -0400
+Received: from 15.mo5.mail-out.ovh.net ([178.33.107.29]:46579 "EHLO
+        15.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726220AbfDHURB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 16:10:57 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hDabX-00074o-Rv; Mon, 08 Apr 2019 22:10:56 +0200
-Message-ID: <ed6e95dad39ef0ac98c62e3acd3f78fd7b3a6d2b.camel@sipsolutions.net>
-Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Alexander Wetzel <alexander@wetzel-home.de>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 08 Apr 2019 22:10:54 +0200
-In-Reply-To: <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
-References: <20190210210620.31181-1-alexander@wetzel-home.de>
-         <20190210210620.31181-8-alexander@wetzel-home.de>
-         <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
-         <e84c30de-28d6-7d1b-0fa3-d1ca466e257b@wetzel-home.de>
-         <69e6577f90d99289acaa9853fe236e6f15f9e774.camel@sipsolutions.net>
-         <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
+        Mon, 8 Apr 2019 16:17:01 -0400
+X-Greylist: delayed 602 seconds by postgrey-1.27 at vger.kernel.org; Mon, 08 Apr 2019 16:17:00 EDT
+Received: from player755.ha.ovh.net (unknown [10.109.159.132])
+        by mo5.mail-out.ovh.net (Postfix) with ESMTP id ADA152292A4
+        for <linux-wireless@vger.kernel.org>; Mon,  8 Apr 2019 21:58:24 +0200 (CEST)
+Received: from awhome.eu (p57B7E5B2.dip0.t-ipconnect.de [87.183.229.178])
+        (Authenticated sender: postmaster@awhome.eu)
+        by player755.ha.ovh.net (Postfix) with ESMTPSA id 2228C4A49A42;
+        Mon,  8 Apr 2019 19:58:21 +0000 (UTC)
+From:   Alexander Wetzel <alexander@wetzel-home.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+        s=wetzel-home; t=1554753500;
+        bh=0mrWvwN1gXCeZQqL5uKaozK4iK4Ebk4CD2vyb3gcKNY=;
+        h=From:Subject:To:Cc:References:Date:In-Reply-To;
+        b=CqQmQpp2i2r5BzV2YSGDyIqLJ4bW71hpjjAYU/+q9gxYokY0+Pze/wUH/eiRnRMYB
+         ueiYIIVvICHVtrysNAjhpX8/Q9QtfJSahngXGosnjjgiaZH8BDDOhHj4qGzWyQ0p9W
+         8A8h6+no1ExWtNY6gfG4GG/dciWpd1cPAK9agZ98=
+Subject: Re: [PATCH] mac80211: Honor SW_CRYPTO_CONTROL in AP VLAN mode
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, mpubbise@codeaurora.org,
+        Christian.Limpach@gmail.com
+References: <20190209140138.16692-1-alexander@wetzel-home.de>
+ <ad27a4098892dbd2ebd1954ba6f34ae0fea4600c.camel@sipsolutions.net>
+Message-ID: <d7f567e6-3467-451a-8bd3-7819688e779f@wetzel-home.de>
+Date:   Mon, 8 Apr 2019 21:58:18 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
+MIME-Version: 1.0
+In-Reply-To: <ad27a4098892dbd2ebd1954ba6f34ae0fea4600c.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Ovh-Tracer-Id: 12096668603026054258
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduuddrudefgddugeeiucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, 2019-02-24 at 14:04 +0100, Alexander Wetzel wrote:
-
-> Finding a really good sniffer able to also capture A-MPDU frames 
-> including control frames would be awesome. 
-
-I think the AC-9260 you have should be a decent sniffer. The (yet
-unreleased) follow-up hardware is even better, but this one is fine.
-
-Just remember to load with amsdu_size set to the appropriate (maximum)
-A-MSDU size you want to capture.
-
-> I probably should work on the new AP, but then I always wanted to test 
-> coreboot and finding out my notebook is now supported is too alluring to 
-> resist;-)
-
-:-)
-
-> > I think they all should just be made to work in native mode, the
-> > firmware basically supports this as you found, there must be some small
-> > bugs.
+>> Restore @SW_CRYPTO_CONTROL when interface is in AP Vlan mode and don't
+>> override driver decision for unicast keys.
+>>
+>> Fixes commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on crypto
+>> controlled devices"), which should only have allow SW crypto fallback for
+>> group keys.
 > 
-> Agree. And with your statements that it already should work and the 
-> option to get ucode updates I like our chances:-) With some luck it 
-> could even work and I made some error the first time. I'll give that a 
-> second look with what I have at hand soon. But after bombing you with 
-> mails for what feels like most of the weekend I'll postpone that for now:-)
+> This confuses me.
+> 
+> The driver doesn't really know about AP_VLAN, so the original commit
+> intentionally did this, I think?
+> 
+> There was some kind of other fix related to this though?
+Here how I understand the situation:
 
-I was looking at the firmware now and ... well, I want to really test
-this to understand what's going wrong, because it really *looks* like
-even the recent ones should be supported natively, at least as far as
-I've looked now.
+The intent of db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on crypto 
+controlled devices") was, to allow devices setting SW_CRYPTO_CONTROL to 
+still support AP_VLAN group keys. It unintentionally allowed more than 
+it should for that...
 
-> As mentioned above I'm currently aiming for two or three Intel AC-9260 
-> cards for the next development round. It's seems to be the most modern 
-> card and the price difference between the cards is irrelevant compared 
-> to both efforts and costs to get the cards working in two or three 
-> devices. If you thing another card would be better for development I'll 
-> just use that one instead...
+Prior to the commit db3bdcb9c3ff installing a group key when in AP_VLAN 
+mode could not work. Mac80211 was initializing ret to -EOPNOTSUPP and 
+then jumped to "out_unsupported" when the interface was in AP_VLAN mode 
+without trying to install the key and giving the driver a chance to 
+allow SW crypto. Software fallback was then blocked by ret != 1 with 
+SW_CRYPTO_CONTROL set by the driver.
 
-AC-9260 should be fine, as far as Intel is concerned. Also make for good
-sniffers, in my experience, we use them all the time for that.
+But any driver setting NL80211_IFTYPE_AP_VLAN already has confirmed to 
+be fine with SW crypto for group keys, since these CAN only be handled 
+with SW crypto currently. The net effect was that ath10k - the only 
+driver in tree setting SW_CRYPTO_CONTROL and also NL80211_IFTYPE_AP - 
+was not able to send out frames encrypted with the group key at all.
 
-johannes
+Now the fix for that was commit db3bdcb9c3ff. Unfortunately this went 
+too far:
+We now not only allows fallback to SW crypto for group keys (which the 
+driver allowed by setting NL80211_IFTYPE_AP_VLAN) but for ANY keys as 
+long as the interface is in AP_VLAN mode.
+So if for some reasons ath10k is not able to install a pairwise key 
+mac80211 now incorrectly allows the fallback to SW crypto...
+
+This patch here tries to fix that and excludes pairwise keys from the 
+special AP_VLAN handling again (but keeps it for group keys).
+
+This understanding is based on the result of a inquiry to linux-wireless 
+(see https://patchwork.kernel.org/patch/10313127/) and a short 
+out-of-list discussion with Christian Limpach who pointed me to 
+http://lists.infradead.org/pipermail/ath10k/2018-November/012542.html
+as the reason for the original fix in db3bdcb9c3ff.
+
+Alexander
 
