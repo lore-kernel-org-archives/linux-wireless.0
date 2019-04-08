@@ -2,129 +2,133 @@ Return-Path: <SRS0=ZTn4=SK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B58B5C282DF
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 03:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83E12C282DE
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 06:01:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C01B20880
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 03:51:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50DE620870
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 06:01:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=amarulasolutions.com header.i=@amarulasolutions.com header.b="VbtIk6D/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726607AbfDHDv2 (ORCPT
+        id S1726565AbfDHGBf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 7 Apr 2019 23:51:28 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:46508 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726499AbfDHDv1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 7 Apr 2019 23:51:27 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 39C40A6C51BE0B737F19;
-        Mon,  8 Apr 2019 11:51:25 +0800 (CST)
-Received: from localhost (10.177.31.96) by DGGEMS409-HUB.china.huawei.com
- (10.3.19.209) with Microsoft SMTP Server id 14.3.408.0; Mon, 8 Apr 2019
- 11:51:17 +0800
-From:   Yue Haibing <yuehaibing@huawei.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-        <davem@davemloft.net>, <netdev@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] at76c50x-usb: Don't register led_trigger if usb_register_driver failed
-Date:   Mon, 8 Apr 2019 11:45:29 +0800
-Message-ID: <20190408034529.27500-1-yuehaibing@huawei.com>
-X-Mailer: git-send-email 2.10.2.windows.1
+        Mon, 8 Apr 2019 02:01:35 -0400
+Received: from mail-it1-f193.google.com ([209.85.166.193]:35581 "EHLO
+        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726383AbfDHGBe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Apr 2019 02:01:34 -0400
+Received: by mail-it1-f193.google.com with SMTP id w15so19076802itc.0
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Apr 2019 23:01:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=amarulasolutions.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=4T36vFbzXz9I4WYORZ+tCw1SAFVgCJwxQq7ShjEX1i0=;
+        b=VbtIk6D/mX5+ufb9Vmk6hkvP2DPi3SRez32l7eae/k9phducOd/lsHYT4byjSKl/Ff
+         Zj0tkGY4ndnRGG3TGzdVndelgoz0Ns3M8eK+/T9Om+mCL+crmTI0j7/XrDEAHoK5lTH/
+         06XNjddytFqzXXpsgpZ2DC0M15MRNFQQi5+7k=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:content-transfer-encoding;
+        bh=4T36vFbzXz9I4WYORZ+tCw1SAFVgCJwxQq7ShjEX1i0=;
+        b=tdrPR/PT0HXXFK56sToyLRZbaoKqFpwzHfJqon/dcOjxe3etwTAnuOceD/bVFYvLPb
+         FWf2hlVzNrfkae5QP80FqpzIb/388pIa14Fy2A9NEvFSUhbRT677LSgGECD1GnJQiqJX
+         tjEZTFYbgVyVuTr2rGrMQVxMr8EKUjfPxwhUw9onbhFmWyHz5SuzbPhXCEFRRMDnvw90
+         rrvPWxqPLXsCi/j0hKxusijIriHDaRRAOG13fND3cYg7nevP+QIdbZZfbs3uXd0vQvEV
+         YZhCzb0HshE//Y1+D3wAYsMpw3/JNjYU4FST2TGvBSNgEzReIyxuzjDouSJFR5Jldakb
+         9kww==
+X-Gm-Message-State: APjAAAU+KK9/BDHfFMc0N/E9YnazGP8l6CuTSCnotp6oIpfh52GIntxs
+        8jaVsBJqPxFKtZSIv48ehNqHXwj6ayYRczXPujelpA==
+X-Google-Smtp-Source: APXvYqxuHX5chO2bTnqc2xiKpfYIYN9eWQBWiafvz1uph6MM3vnXKa3S0XyS+iakXfq5webXTSCWnIL6VOKjkgPF0ns=
+X-Received: by 2002:a24:cd01:: with SMTP id l1mr8827379itg.150.1554703293850;
+ Sun, 07 Apr 2019 23:01:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.177.31.96]
-X-CFilter-Loop: Reflected
+References: <20190405234514.6183-1-megous@megous.com> <CAJiuCcew10Q3PUOk4VPoiyFc7ZhXwJzxXHQHNeVBUvVAQ3BkbQ@mail.gmail.com>
+ <20190407143237.2qyoef4r5e3qvbmh@core.my.home>
+In-Reply-To: <20190407143237.2qyoef4r5e3qvbmh@core.my.home>
+From:   Jagan Teki <jagan@amarulasolutions.com>
+Date:   Mon, 8 Apr 2019 11:31:22 +0530
+Message-ID: <CAMty3ZDpppM5zBvxCBx3NjdVsRm4S93yz5kqi5Z5a0rhC-+zPg@mail.gmail.com>
+Subject: Re: [linux-sunxi] [PATCH 00/12] Add support for Orange Pi 3
+To:     megous@megous.com,
+        =?UTF-8?B?Q2zDqW1lbnQgUMOpcm9u?= <peron.clem@gmail.com>,
+        linux-sunxi <linux-sunxi@googlegroups.com>,
+        Maxime Ripard <maxime.ripard@bootlin.com>,
+        Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Jose Abreu <joabreu@synopsys.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+On Sun, Apr 7, 2019 at 8:02 PM 'Ond=C5=99ej Jirman' via linux-sunxi
+<linux-sunxi@googlegroups.com> wrote:
+>
+> On Sun, Apr 07, 2019 at 03:36:21PM +0200, Cl=C3=A9ment P=C3=A9ron wrote:
+> > Hi,
+> >
+> > On Sat, 6 Apr 2019 at 01:45, megous via linux-sunxi
+> > <linux-sunxi@googlegroups.com> wrote:
+> > >
+> > > From: Ondrej Jirman <megous@megous.com>
+> > >
+> > > This series implements support for Xunlong Orange Pi 3 board.
+> >
+> > OrangePi 3 Lite2 and One Plus boards support has already been merged.
+> > The support is not complete but you should rebase your patches on top
+> > of sunxi/for-next
+>
+> Hi,
+>
+> OrangePi 3 is somewhat different from these two boards (mostly it has a d=
+iffernt
+> power tree). It doesn't use the AXP regulators that are defined in the
+> sun50i-h6-orangepi.dtsi in the same way.
+>
+> For example:
+>
+> - bldo3 (is turned always on in sun50i-h6-orangepi.dtsi but unused for op=
+i3)
+> - cldo2 and cldo3 are unused on opi3 and have nothing to do with WiFi
+> - aldo3 is not for dram
+> - bldo1 on the other hand is for dram on opi3
+> - some other regulators are used for different/more functions and thus
+>   named differntly
+> - USB id-det pin is differnt
+> - ...
 
-Syzkaller report this:
-
-[ 1213.468581] BUG: unable to handle kernel paging request at fffffbfff83bf338
-[ 1213.469530] #PF error: [normal kernel read fault]
-[ 1213.469530] PGD 237fe4067 P4D 237fe4067 PUD 237e60067 PMD 1c868b067 PTE 0
-[ 1213.473514] Oops: 0000 [#1] SMP KASAN PTI
-[ 1213.473514] CPU: 0 PID: 6321 Comm: syz-executor.0 Tainted: G         C        5.1.0-rc3+ #8
-[ 1213.473514] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
-[ 1213.473514] RIP: 0010:strcmp+0x31/0xa0
-[ 1213.473514] Code: 00 00 00 00 fc ff df 55 53 48 83 ec 08 eb 0a 84 db 48 89 ef 74 5a 4c 89 e6 48 89 f8 48 89 fa 48 8d 6f 01 48 c1 e8 03 83 e2 07 <42> 0f b6 04 28 38 d0 7f 04 84 c0 75 50 48 89 f0 48 89 f2 0f b6 5d
-[ 1213.473514] RSP: 0018:ffff8881f2b7f950 EFLAGS: 00010246
-[ 1213.473514] RAX: 1ffffffff83bf338 RBX: ffff8881ea6f7240 RCX: ffffffff825350c6
-[ 1213.473514] RDX: 0000000000000000 RSI: ffffffffc1ee19c0 RDI: ffffffffc1df99c0
-[ 1213.473514] RBP: ffffffffc1df99c1 R08: 0000000000000001 R09: 0000000000000004
-[ 1213.473514] R10: 0000000000000000 R11: ffff8881de353f00 R12: ffff8881ee727900
-[ 1213.473514] R13: dffffc0000000000 R14: 0000000000000001 R15: ffffffffc1eeaaf0
-[ 1213.473514] FS:  00007fa66fa01700(0000) GS:ffff8881f7200000(0000) knlGS:0000000000000000
-[ 1213.473514] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1213.473514] CR2: fffffbfff83bf338 CR3: 00000001ebb9e005 CR4: 00000000007606f0
-[ 1213.473514] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[ 1213.473514] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[ 1213.473514] PKRU: 55555554
-[ 1213.473514] Call Trace:
-[ 1213.473514]  led_trigger_register+0x112/0x3f0
-[ 1213.473514]  led_trigger_register_simple+0x7a/0x110
-[ 1213.473514]  ? 0xffffffffc1c10000
-[ 1213.473514]  at76_mod_init+0x77/0x1000 [at76c50x_usb]
-[ 1213.473514]  do_one_initcall+0xbc/0x47d
-[ 1213.473514]  ? perf_trace_initcall_level+0x3a0/0x3a0
-[ 1213.473514]  ? kasan_unpoison_shadow+0x30/0x40
-[ 1213.473514]  ? kasan_unpoison_shadow+0x30/0x40
-[ 1213.473514]  do_init_module+0x1b5/0x547
-[ 1213.473514]  load_module+0x6405/0x8c10
-[ 1213.473514]  ? module_frob_arch_sections+0x20/0x20
-[ 1213.473514]  ? kernel_read_file+0x1e6/0x5d0
-[ 1213.473514]  ? find_held_lock+0x32/0x1c0
-[ 1213.473514]  ? cap_capable+0x1ae/0x210
-[ 1213.473514]  ? __do_sys_finit_module+0x162/0x190
-[ 1213.473514]  __do_sys_finit_module+0x162/0x190
-[ 1213.473514]  ? __ia32_sys_init_module+0xa0/0xa0
-[ 1213.473514]  ? __mutex_unlock_slowpath+0xdc/0x690
-[ 1213.473514]  ? wait_for_completion+0x370/0x370
-[ 1213.473514]  ? vfs_write+0x204/0x4a0
-[ 1213.473514]  ? do_syscall_64+0x18/0x450
-[ 1213.473514]  do_syscall_64+0x9f/0x450
-[ 1213.473514]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-[ 1213.473514] RIP: 0033:0x462e99
-[ 1213.473514] Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
-[ 1213.473514] RSP: 002b:00007fa66fa00c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
-[ 1213.473514] RAX: ffffffffffffffda RBX: 000000000073bf00 RCX: 0000000000462e99
-[ 1213.473514] RDX: 0000000000000000 RSI: 0000000020000300 RDI: 0000000000000003
-[ 1213.473514] RBP: 00007fa66fa00c70 R08: 0000000000000000 R09: 0000000000000000
-[ 1213.473514] R10: 0000000000000000 R11: 0000000000000246 R12: 00007fa66fa016bc
-[ 1213.473514] R13: 00000000004bcefa R14: 00000000006f6fb0 R15: 0000000000000004
-
-If usb_register failed, no need to call led_trigger_register_simple.
-
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Fixes: 1264b951463a ("at76c50x-usb: add driver")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/atmel/at76c50x-usb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-index e99e766..1cabae4 100644
---- a/drivers/net/wireless/atmel/at76c50x-usb.c
-+++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-@@ -2585,8 +2585,8 @@ static int __init at76_mod_init(void)
- 	if (result < 0)
- 		printk(KERN_ERR DRIVER_NAME
- 		       ": usb_register failed (status %d)\n", result);
--
--	led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
-+	else
-+		led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
- 	return result;
- }
- 
--- 
-2.7.4
-
-
+Based on my communication with OrangePI, OPI-3 has PCIE, 4 USB-3.0
+ports and AV are the key differences and rest seems to be similar. but
+if we have a diff or unused regulators may be we can't enable them in
+dtsi (I never looked that close as of now)
