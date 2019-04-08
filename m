@@ -2,106 +2,116 @@ Return-Path: <SRS0=ZTn4=SK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6217C10F13
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:48:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F6D7C10F13
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:54:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ADE5020883
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:48:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CD6521473
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:54:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="BCp7MYmj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726513AbfDHMsd (ORCPT
+        id S1726630AbfDHMyS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 08:48:33 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:53404 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726495AbfDHMsd (ORCPT
+        Mon, 8 Apr 2019 08:54:18 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:33148 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726373AbfDHMyL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 08:48:33 -0400
-Received: from mail-it1-f197.google.com ([209.85.166.197])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1hDThQ-0000TR-97
-        for linux-wireless@vger.kernel.org; Mon, 08 Apr 2019 12:48:32 +0000
-Received: by mail-it1-f197.google.com with SMTP id l202so12504015ita.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2019 05:48:32 -0700 (PDT)
+        Mon, 8 Apr 2019 08:54:11 -0400
+Received: by mail-lf1-f68.google.com with SMTP id v14so9448416lfi.0
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2019 05:54:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=nXrNLau4jzYolEjIyjWqN0Ii33iGgL5TkNiIMQjR8E0=;
+        b=BCp7MYmjzqKsxpjpRfui22RI+dj38/+eZpKMZjKSVTsoiABg/LL1DXGP5ZWshQt7Pz
+         VslIvC9Q5FCDdl22mhMMrNGKGOlFKzt/a51hsO10kgEOWB79sEamIgVctLacE1SdxlJ7
+         KahiKPMouTExOmRvN0yHUlHlCBYdbCgPc1/vCvMwaj32C7wAtWzLBgeHGpGPNi/TjeMA
+         9hHHsX4h7hMy+BlSK9QfyDhtP7SvHG3b/qnH56fqQ97S15PK8XsifGbJ0XVFFxKr9S+p
+         /ODeHzr5vTZxdwbS3cXxj6Ldq3b0APe/yO0ZuV9OCQDhucwnwbP/XgT9VNA4bNnBn5tY
+         XKCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=VaxxEll9ULaaE8ut29yUXAJ9vAKKyojtJHWcUYZTqrQ=;
-        b=QjKS6tH0kwSpBRfOklV113N4RQ5BZKiT0MTnolMN2pcpORZOV78aL6QY7pMZ6gBsHv
-         oFn/JPEvmbgkeBAhNYdymFT8S6N3j0MfQg9XXpYWe4ruN0WYC0WyJ2UEOA0J/UyBz0EX
-         I20LRPYeI+SeMQ9QHHCeMpcyLaS7VY76qh2zsyR6XpyINOA54vvDLX/3YSojzVkpFViU
-         wVuzHfDW3S5F/ige/X6tKw9+rBS7iNehdZgtgIxLZq20J7zm94/n91bcNL8a9D6y4CCg
-         e41W096+YhsFOCoP3MfHMDy6739RLrk4mqNrYLp3RefM3lfRYnd0WA0oZ2bTjhhJWDte
-         6iiw==
-X-Gm-Message-State: APjAAAWun8VSWn4R6MElq68oGQy/aN9yVjRLmCr84SeViVUeJkhs/35y
-        mpgMhFMLlq2kaXCDZP4eLULK2BWzN/40sUL6fuppbK1mcT/w7wbikU/Z9nzFnIpez6cPkXWQ1zp
-        lsujDf696sWSc1BZyauJOfaq2nqVPPz7vI4iWXHl+fpyf
-X-Received: by 2002:a6b:3ec3:: with SMTP id l186mr18201041ioa.255.1554727711119;
-        Mon, 08 Apr 2019 05:48:31 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqxR0Fd+tVM+egqP46DCHP3QUi1A5e9nglrgMTdK/DqYHfWZTyM+tzbYrzpNdReISwJEuMIizA==
-X-Received: by 2002:a6b:3ec3:: with SMTP id l186mr18201030ioa.255.1554727710819;
-        Mon, 08 Apr 2019 05:48:30 -0700 (PDT)
-Received: from localhost ([2605:a601:ac2:fb20:3d51:1338:4e8e:1eab])
-        by smtp.gmail.com with ESMTPSA id z13sm11315694ioj.21.2019.04.08.05.48.29
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 08 Apr 2019 05:48:29 -0700 (PDT)
-Date:   Mon, 8 Apr 2019 07:48:29 -0500
-From:   "seth.forshee" <seth.forshee@canonical.com>
-To:     "junping.xu@jaguarwave.com" <junping.xu@jaguarwave.com>
-Cc:     wireless-regdb <wireless-regdb@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: wireless-regdb: Please update regulatory rules for Japan (JP) on
- 60GHz
-Message-ID: <20190408124829.GD15126@ubuntu-xps13>
-References: <2019040118074276659215@jaguarwave.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=nXrNLau4jzYolEjIyjWqN0Ii33iGgL5TkNiIMQjR8E0=;
+        b=b9S28b74BesPU8qbmvBJguPcaqftB9gO6c8VDDHJUHEqdMzJm9FVNeZsKF2+QjVFGK
+         UBrOeFApRuAPDo+Na57RoVVxDc0w7s3zs4BDI5/TyDA6aehFeqEeZ5DBcd/mUiFCWf5R
+         t1OFYzoTgLKPBPs18PUwT+Bq+EHzzzj36miB7w9y9wh1MasJd5CZ6D5/KV80q4GXr4OO
+         nsBXaSAGeSP2XOpWPTexBZV3KgVTzvYK/ANRCSiAl3xI1kZF9VwHpuB2qqCgIJbUzuIL
+         +efG0s8g0un+cCoJy0EseQgfYfRnePemb0q98We0klr+9o4wEB8d+MjwyQKoPhSx4Vd5
+         Z6Jg==
+X-Gm-Message-State: APjAAAUpzqy7W21tPmotNUbM7WI3+M2QpC7BB68ct5vjUzwSBjczhZL+
+        gSJ2VAN1EVai+qrPaG+qLsXQmY7WKA8Va7LHFEbFPA==
+X-Google-Smtp-Source: APXvYqxfMB/eilL6r3Dt4yX0a6WuXtBKkH6JLvwhrN0CySOTh8e6NnyyDkI6jj3mpQC6L7vLb8Azsg8rXJqNieg2M/o=
+X-Received: by 2002:ac2:485a:: with SMTP id 26mr15436847lfy.128.1554728049625;
+ Mon, 08 Apr 2019 05:54:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2019040118074276659215@jaguarwave.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20190405234514.6183-1-megous@megous.com> <20190405234514.6183-10-megous@megous.com>
+In-Reply-To: <20190405234514.6183-10-megous@megous.com>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Mon, 8 Apr 2019 14:53:58 +0200
+Message-ID: <CACRpkdY=G0rpxVZL8TKJOQcf+Na8o5_FwG0EyBfb-ZCYXi=_oA@mail.gmail.com>
+Subject: Re: [PATCH 09/12] pinctrl: sunxi: Prepare for alternative bias
+ voltage setting methods
+To:     megous@megous.com
+Cc:     linux-sunxi <linux-sunxi@googlegroups.com>,
+        Maxime Ripard <maxime.ripard@bootlin.com>,
+        Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Jose Abreu <joabreu@synopsys.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        "open list:DRM PANEL DRIVERS" <dri-devel@lists.freedesktop.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Apr 01, 2019 at 06:07:44PM +0800, junping.xu@jaguarwave.com wrote:
-> Hi Forsheee,
->       The 60GHz band defined for Japan was between 59-66GHz, but is has been Updated to support 57-66Ghz about 2 years ago。
-> However, the latest wireless-regdb still containning the original regulatory information  as below. Please help to check the infomation 
-> and update the regulatory.bin.
-> 
-> db.txt:
-> ......
-> country JP: DFS-JP
-> (2402 - 2482 @ 40), (20)
-> (2474 - 2494 @ 20), (20), NO-OFDM
-> (4910 - 4990 @ 40), (23)
-> (5030 - 5090 @ 40), (23)
-> (5170 - 5250 @ 80), (20), AUTO-BW
-> (5250 - 5330 @ 80), (20), DFS, AUTO-BW
-> (5490 - 5710 @ 160), (23), DFS
-> # 60 GHz band channels 2-4 at 10mW,
-> # ref: http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
+On Sat, Apr 6, 2019 at 1:45 AM <megous@megous.com> wrote:
 
-The only change which is required to change:
+> From: Ondrej Jirman <megous@megous.com>
+>
+> H6 has a different I/O voltage bias setting method than A80. Prepare
+> existing code for using alternative bias voltage setting methods.
+>
+> Signed-off-by: Ondrej Jirman <megous@megous.com>
+> ---
+>  drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c |  2 +-
+>  drivers/pinctrl/sunxi/pinctrl-sunxi.c     | 38 ++++++++++++-----------
+>  drivers/pinctrl/sunxi/pinctrl-sunxi.h     |  4 ++-
 
-> (59000 - 66000 @ 2160), (10 mW)
+I need Maxime's ACK on these patches to merge.
 
-to:
+Can the pinctrl parts be applied independently of the rest
+of the changes when Maxime is happy with the patches?
 
- (57000 - 66000 @ 2160), (10 mW)
-
-Is that right? Can you provide a link to the documentation which
-supports this change? The current link above this rule appears to be
-broken.
-
-Thanks,
-Seth
+Yours,
+Linus Walleij
