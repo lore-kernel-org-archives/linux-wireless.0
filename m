@@ -5,36 +5,37 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D20C10F13
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:01:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D34E4C10F13
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:10:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7F5620880
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:01:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FFE02084F
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:10:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726818AbfDHUBf (ORCPT
+        id S1727331AbfDHUK6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 16:01:35 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:33842 "EHLO
+        Mon, 8 Apr 2019 16:10:58 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:34000 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726220AbfDHUBe (ORCPT
+        with ESMTP id S1726220AbfDHUK5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 16:01:34 -0400
+        Mon, 8 Apr 2019 16:10:57 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hDaSN-0006u0-AC; Mon, 08 Apr 2019 22:01:27 +0200
-Message-ID: <717acf1bde5507f73436ae7d45d114b34aee1c05.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] fq: fix fq_tin tx bytes overflow
+        id 1hDabX-00074o-Rv; Mon, 08 Apr 2019 22:10:56 +0200
+Message-ID: <ed6e95dad39ef0ac98c62e3acd3f78fd7b3a6d2b.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Yibo Zhao <yiboz@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
-        linux-wireless-owner@vger.kernel.org
-Date:   Mon, 08 Apr 2019 22:01:25 +0200
-In-Reply-To: <fa575f93f3936aa3be1cf6b14f87e511@codeaurora.org>
-References: <1552446505-15444-1-git-send-email-yiboz@codeaurora.org>
-         (sfid-20190313_040846_202389_4E584F4C) <13392e1203be4ddd97c4e0e6b6a6c48ce97aae6f.camel@sipsolutions.net>
-         <fa575f93f3936aa3be1cf6b14f87e511@codeaurora.org>
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Mon, 08 Apr 2019 22:10:54 +0200
+In-Reply-To: <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+         <20190210210620.31181-8-alexander@wetzel-home.de>
+         <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
+         <e84c30de-28d6-7d1b-0fa3-d1ca466e257b@wetzel-home.de>
+         <69e6577f90d99289acaa9853fe236e6f15f9e774.camel@sipsolutions.net>
+         <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -44,26 +45,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2019-03-18 at 12:59 +0800, Yibo Zhao wrote:
+On Sun, 2019-02-24 at 14:04 +0100, Alexander Wetzel wrote:
+
+> Finding a really good sniffer able to also capture A-MPDU frames 
+> including control frames would be awesome. 
+
+I think the AC-9260 you have should be a decent sniffer. The (yet
+unreleased) follow-up hardware is even better, but this one is fine.
+
+Just remember to load with amsdu_size set to the appropriate (maximum)
+A-MSDU size you want to capture.
+
+> I probably should work on the new AP, but then I always wanted to test 
+> coreboot and finding out my notebook is now supported is too alluring to 
+> resist;-)
+
+:-)
+
+> > I think they all should just be made to work in native mode, the
+> > firmware basically supports this as you found, there must be some small
+> > bugs.
 > 
-> I understand your concern. Yes, I am using high end AP for throughput 
-> test. I'd say 1.2 Gbps is not the worst case since we can achieve max 
-> 1.4Gbps according to our test. AFAIK, for most throughput cases, 1min is 
-> the minimum requirement. And I think, with more and more high end 
-> products(even higher throughput) on the ways to the market, it is highly 
-> possible that 30s is not a safe time before overflow.
+> Agree. And with your statements that it already should work and the 
+> option to get ucode updates I like our chances:-) With some luck it 
+> could even work and I made some error the first time. I'll give that a 
+> second look with what I have at hand soon. But after bombing you with 
+> mails for what feels like most of the weekend I'll postpone that for now:-)
 
-Well, 2 Gbps (goodput) would make it overflow every 16 seconds, so I'm
-not sure where you take the 1 minute from :-) Maybe from 1.2Gbps PHY
-rate.
+I was looking at the firmware now and ... well, I want to really test
+this to understand what's going wrong, because it really *looks* like
+even the recent ones should be supported natively, at least as far as
+I've looked now.
 
-But still, the only place we expose this is debugfs, so I'm not really
-sure we want to spend that.
+> As mentioned above I'm currently aiming for two or three Intel AC-9260 
+> cards for the next development round. It's seems to be the most modern 
+> card and the price difference between the cards is irrelevant compared 
+> to both efforts and costs to get the cards working in two or three 
+> devices. If you thing another card would be better for development I'll 
+> just use that one instead...
 
-Note that I'm generally pushing back on statistics right now - I really
-want to put some trace points or eBPF hooks in places that people can
-use to keep their favourite statistics, instead of trying to cover each
-and every use case in the stack itself.
+AC-9260 should be fine, as far as Intel is concerned. Also make for good
+sniffers, in my experience, we use them all the time for that.
 
 johannes
 
