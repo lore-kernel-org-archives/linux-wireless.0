@@ -6,92 +6,95 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD718C10F13
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 10:20:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63C8BC10F13
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 11:33:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98B9D20833
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 10:20:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 157B520663
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 11:33:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=qti.qualcomm.com header.i=@qti.qualcomm.com header.b="Y65Z/bts"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lCSBGmZd";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="h8cU1D4I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726119AbfDHKUD (ORCPT
+        id S1726396AbfDHLdO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 06:20:03 -0400
-Received: from alexa-out-tai-02.qualcomm.com ([103.229.16.227]:49040 "EHLO
-        alexa-out-tai-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725857AbfDHKUD (ORCPT
+        Mon, 8 Apr 2019 07:33:14 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:59066 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726068AbfDHLdN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 06:20:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=qti.qualcomm.com; i=@qti.qualcomm.com; q=dns/txt;
-  s=qcdkim; t=1554718801; x=1586254801;
-  h=from:to:cc:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version:subject;
-  bh=rvWuDjoL7k8UF13sbdUywrFVSHLQE6F3SoShyz50NoI=;
-  b=Y65Z/bts+JZDGyh7fx2QzMF2Wm4kDK80aeiBZT+cgypJ2Rujt5WG9R78
-   OOWgxr7dO8wRdoNPz9BMbPMBx/h4RLNTOyMPnrj9FoDt/lo2RLxw3WMy9
-   /qcWQGf4g3C+8xKwiyPpJ53UEhZ5MuiO30otfmWX3WVypfIq/u8aXwJob
-   0=;
-X-IronPort-AV: E=Sophos;i="5.60,324,1549900800"; 
-   d="scan'208";a="2154146"
-Subject: RE: [PATCH] ath10k: Remove ATH10K_STATE_RESTARTED in simulate fw crash
-Thread-Topic: [PATCH] ath10k: Remove ATH10K_STATE_RESTARTED in simulate fw crash
-Received: from ironmsg02-tai.qualcomm.com ([10.249.140.7])
-  by alexa-out-tai-02.qualcomm.com with ESMTP; 08 Apr 2019 18:20:00 +0800
-X-IronPort-AV: E=McAfee;i="5900,7806,9220"; a="26558402"
-Received: from aptaiexm02a.ap.qualcomm.com ([10.249.150.11])
-  by ironmsg02-tai.qualcomm.com with ESMTP/TLS/AES256-SHA; 08 Apr 2019 18:20:00 +0800
-Received: from aptaiexm02f.ap.qualcomm.com (10.249.150.16) by
- aptaiexm02a.ap.qualcomm.com (10.249.150.11) with Microsoft SMTP Server (TLS)
- id 15.0.1395.4; Mon, 8 Apr 2019 18:19:58 +0800
-Received: from aptaiexm02f.ap.qualcomm.com ([fe80::4152:1436:e436:faa1]) by
- aptaiexm02f.ap.qualcomm.com ([fe80::4152:1436:e436:faa1%19]) with mapi id
- 15.00.1395.000; Mon, 8 Apr 2019 18:19:58 +0800
-From:   Wen Gong <wgong@qti.qualcomm.com>
-To:     =?utf-8?B?TWljaGHFgiBLYXppb3I=?= <kazikcz@gmail.com>
-CC:     Wen Gong <wgong@codeaurora.org>,
+        Mon, 8 Apr 2019 07:33:13 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id D2C076086B; Mon,  8 Apr 2019 11:33:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554723192;
+        bh=MA9NkMtdwK0mnFctPvNzrDj4wSNs1F2eFxBh/MOyQS0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=lCSBGmZddpBKxFYpfWkg4GtRZ77XCIXyTZ+O8DnvT0QDipWP2W6rEn/KH61ub7UhH
+         lqEZ18EJ3Vikvg0H1JRN6r2meaK8CbKqE2/8VnUa+c3tbU29WXzq6L0ePAgyLwcyZs
+         jEJWSAS9PIM40KrPrrxj6H1F89qWXHM41TD2Qq3o=
+Received: from x230.qca.qualcomm.com (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C629E6086B;
+        Mon,  8 Apr 2019 11:33:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1554723191;
+        bh=MA9NkMtdwK0mnFctPvNzrDj4wSNs1F2eFxBh/MOyQS0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=h8cU1D4I1Wz9/c8dl2lwBGO0tlf8ogD6MrhJKWzP4mt5+FCzSuDgIpMlAuzKvbFXV
+         +UV/o2BTS6tKAyjutZeIs5FEWr82A2C8V1RCCh2xJGxLLMx+R5lerV1A++e9Xrd2hO
+         JuYcZ3yyHGIHxzyyS42Jqhii6YkINZbo6CcSuY4I=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C629E6086B
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     Brian Norris <briannorris@chromium.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
         linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Thread-Index: AQHUpmQJz5XVQIMvMUei5K703fyTnaYnTmZwgAtNzTA=
-Date:   Mon, 8 Apr 2019 10:19:58 +0000
-Message-ID: <54b4dab1191d41b8b329f3ceb7017626@aptaiexm02f.ap.qualcomm.com>
-References: <1542163824-795-1-git-send-email-wgong@codeaurora.org>
- <CABvG-CWg-VXAtoN8HZumW-ZdP6dX9cO_8fWJ58C22kD2yDcXdw@mail.gmail.com>
- <195f3bb0c88c43a6b1ca0ad336f947c0@aptaiexm02f.ap.qualcomm.com>
- <CABvG-CWAfB8jjCDW4ggjJ8_YC++CjttJOMOt4s24F3mymvNR9A@mail.gmail.com>
- <02904ba8682441e1a89668c1345cbec9@aptaiexm02f.ap.qualcomm.com>
-In-Reply-To: <02904ba8682441e1a89668c1345cbec9@aptaiexm02f.ap.qualcomm.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.249.136.10]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
+References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
+        <20190325143611.sjwwjqtrftxntwyk@penguin>
+        <20190326075414.GA8598@redhat.com>
+        <CA+ASDXNcCNcBmiHi468p1foWgSOXy9Mt8o+CD17Bd4PqhUXFoA@mail.gmail.com>
+        <F7CD281DE3E379468C6D07993EA72F84D17CB940@RTITMBSVM04.realtek.com.tw>
+        <20190327102623.GA20943@redhat.com>
+        <F7CD281DE3E379468C6D07993EA72F84D17D50A4@RTITMBSVM04.realtek.com.tw>
+Date:   Mon, 08 Apr 2019 14:33:06 +0300
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17D50A4@RTITMBSVM04.realtek.com.tw>
+        (Tony Chuang's message of "Mon, 8 Apr 2019 02:14:49 +0000")
+Message-ID: <87zhp0g2a5.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-DQoNCg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFdlbiBHb25nDQo+
-IFNlbnQ6IE1vbmRheSwgQXByaWwgMSwgMjAxOSAyOjExIFBNDQo+IFRvOiAnTWljaGHFgiBLYXpp
-b3InIDxrYXppa2N6QGdtYWlsLmNvbT4NCj4gQ2M6IFdlbiBHb25nIDx3Z29uZ0Bjb2RlYXVyb3Jh
-Lm9yZz47IGxpbnV4LXdpcmVsZXNzIDxsaW51eC0NCj4gd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
-PjsgYXRoMTBrQGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gU3ViamVjdDogUkU6IFtFWFRdIFJlOiBb
-UEFUQ0hdIGF0aDEwazogUmVtb3ZlIEFUSDEwS19TVEFURV9SRVNUQVJURUQgaW4NCj4gc2ltdWxh
-dGUgZncgY3Jhc2gNCj4gDQo+ID4NCj4gPiBJZiBpdCdzIHN0aWxsIGJvdGhlcmluZyB5b3UgdGhl
-biBwbGVhc2UgY29uc2lkZXIgYSBjcmFzaCBjb3VudGVyDQo+ID4gdGhyZXNob2xkIHNvIHRoYXQs
-IGUuZy4gYWZ0ZXIgNSBjcmFzaC13aGlsZS1yZXN0YXJ0aW5nIGl0J3MgZ29pbmcgdG8NCj4gPiBn
-aXZlIHVwLiBIb3dldmVyIEkgZG91YnQgaXQncyB3b3J0aCB0aGUgZWZmb3J0LiBNeSBleHBlcmll
-bmNlIHRlbGxzIG1lDQo+ID4gZmlybXdhcmUgY3Jhc2hlcyBkdXJpbmcgcmVjb3ZlcnkgYXJlIHJh
-cmVseSwgaWYgYXQgYWxsLCB0cmFuc2llbnQuDQo+ID4NCj4gPiBUaGUgc2ltdWxhdGVkIGZ3IGNy
-YXNoIGlzIG5vdCByZXByZXNlbnRhdGl2ZSBoZXJlLiBJdCdzIGEgbWVyZSB0b29sIHRvDQo+ID4g
-dGVzdCBkcml2ZXIgY29kZS4NCj4gPg0KPiBIaSBNaWNoYWwsDQo+IFRoZXJlIGhhdmUgYSBzdHJl
-c3MgdGVzdCBjYXNlIGZvciB0aGUgc2ltdWxhdGUgZncgY3Jhc2gsIGl0IHdpbGwgc2ltdWxhdGUg
-ZncNCj4gY3Jhc2gNCj4gaW4gYSB2ZXJ5IHNob3J0IHRpbWUgZm9yIGVhY2ggdGVzdCwgdGhpcyB3
-aWxsIHRyaWdnZXIgdGhlIHN0cmVzcyB0ZXN0IGZhaWwuDQo+IFRoZSBzaW11bGF0ZSBmdyBjcmFz
-aCBwcm9jZXNzIHNob3VsZCBub3QgYmUgcnVuIHBhcmFsbGVsLCBhZnRlciB0aGlzIHBhdGNoLCB0
-aGUNCj4gU3RyZXNzIHRlc3QgY2FzZSB3aWxsIHBhc3MuDQo+ID4NCg0KSGkgTWljaGHFgiwNCkRv
-IHlvdSBoYXZlIHNvbWUgbmV3IGNvbW1lbnRzPw0KDQo+ID4gTWljaGHFgg0K
+Tony Chuang <yhchuang@realtek.com> writes:
+
+> Hi Kalle
+>
+>> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+>> Sent: Wednesday, March 27, 2019 6:26 PM
+>> To: Tony Chuang
+>> Cc: Brian Norris; Kalle Valo; Johannes Berg; linux-wireless; Greg Kroah-Hartman;
+>> Pkshih; Andy Huang; Larry Finger
+>> Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
+>> wireless network chips
+>> 
+>
+> It's just a gentle reply to ask if rtw88 is getting merged.
+> Are you still reviewing or is there anything I can help.
+
+I just have been busy with other stuff, sorry. I'll try find time for
+this soon.
+
+-- 
+Kalle Valo
