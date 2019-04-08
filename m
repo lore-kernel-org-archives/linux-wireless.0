@@ -2,80 +2,129 @@ Return-Path: <SRS0=ZTn4=SK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0067FC10F0E
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 02:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B58B5C282DF
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 03:51:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C392E20880
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 02:15:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C01B20880
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 03:51:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726494AbfDHCPT convert rfc822-to-8bit (ORCPT
+        id S1726607AbfDHDv2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 7 Apr 2019 22:15:19 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:40413 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726461AbfDHCPS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 7 Apr 2019 22:15:18 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x382EoCw021461, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcas12.realtek.com.tw[172.21.6.16])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x382EoCw021461
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Mon, 8 Apr 2019 10:14:50 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCAS12.realtek.com.tw ([::1]) with mapi id 14.03.0439.000; Mon, 8 Apr 2019
- 10:14:50 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     Brian Norris <briannorris@chromium.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: RE: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
-Thread-Topic: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
- wireless network chips
-Thread-Index: AQHU2VNS+GVXIkmks0i6acEtkruVp6Yb92uAgAEiBwCAAIMJgIABZBmA///VtwCAEtb1sA==
-Date:   Mon, 8 Apr 2019 02:14:49 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17D50A4@RTITMBSVM04.realtek.com.tw>
-References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
- <20190325143611.sjwwjqtrftxntwyk@penguin> <20190326075414.GA8598@redhat.com>
- <CA+ASDXNcCNcBmiHi468p1foWgSOXy9Mt8o+CD17Bd4PqhUXFoA@mail.gmail.com>
- <F7CD281DE3E379468C6D07993EA72F84D17CB940@RTITMBSVM04.realtek.com.tw>
- <20190327102623.GA20943@redhat.com>
-In-Reply-To: <20190327102623.GA20943@redhat.com>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.183]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Sun, 7 Apr 2019 23:51:28 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:46508 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726499AbfDHDv1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 7 Apr 2019 23:51:27 -0400
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 39C40A6C51BE0B737F19;
+        Mon,  8 Apr 2019 11:51:25 +0800 (CST)
+Received: from localhost (10.177.31.96) by DGGEMS409-HUB.china.huawei.com
+ (10.3.19.209) with Microsoft SMTP Server id 14.3.408.0; Mon, 8 Apr 2019
+ 11:51:17 +0800
+From:   Yue Haibing <yuehaibing@huawei.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        <davem@davemloft.net>, <netdev@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH] at76c50x-usb: Don't register led_trigger if usb_register_driver failed
+Date:   Mon, 8 Apr 2019 11:45:29 +0800
+Message-ID: <20190408034529.27500-1-yuehaibing@huawei.com>
+X-Mailer: git-send-email 2.10.2.windows.1
 MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.177.31.96]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle
+From: YueHaibing <yuehaibing@huawei.com>
 
-> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
-> Sent: Wednesday, March 27, 2019 6:26 PM
-> To: Tony Chuang
-> Cc: Brian Norris; Kalle Valo; Johannes Berg; linux-wireless; Greg Kroah-Hartman;
-> Pkshih; Andy Huang; Larry Finger
-> Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
-> wireless network chips
-> 
+Syzkaller report this:
 
-It's just a gentle reply to ask if rtw88 is getting merged.
-Are you still reviewing or is there anything I can help.
-Thanks!
+[ 1213.468581] BUG: unable to handle kernel paging request at fffffbfff83bf338
+[ 1213.469530] #PF error: [normal kernel read fault]
+[ 1213.469530] PGD 237fe4067 P4D 237fe4067 PUD 237e60067 PMD 1c868b067 PTE 0
+[ 1213.473514] Oops: 0000 [#1] SMP KASAN PTI
+[ 1213.473514] CPU: 0 PID: 6321 Comm: syz-executor.0 Tainted: G         C        5.1.0-rc3+ #8
+[ 1213.473514] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
+[ 1213.473514] RIP: 0010:strcmp+0x31/0xa0
+[ 1213.473514] Code: 00 00 00 00 fc ff df 55 53 48 83 ec 08 eb 0a 84 db 48 89 ef 74 5a 4c 89 e6 48 89 f8 48 89 fa 48 8d 6f 01 48 c1 e8 03 83 e2 07 <42> 0f b6 04 28 38 d0 7f 04 84 c0 75 50 48 89 f0 48 89 f2 0f b6 5d
+[ 1213.473514] RSP: 0018:ffff8881f2b7f950 EFLAGS: 00010246
+[ 1213.473514] RAX: 1ffffffff83bf338 RBX: ffff8881ea6f7240 RCX: ffffffff825350c6
+[ 1213.473514] RDX: 0000000000000000 RSI: ffffffffc1ee19c0 RDI: ffffffffc1df99c0
+[ 1213.473514] RBP: ffffffffc1df99c1 R08: 0000000000000001 R09: 0000000000000004
+[ 1213.473514] R10: 0000000000000000 R11: ffff8881de353f00 R12: ffff8881ee727900
+[ 1213.473514] R13: dffffc0000000000 R14: 0000000000000001 R15: ffffffffc1eeaaf0
+[ 1213.473514] FS:  00007fa66fa01700(0000) GS:ffff8881f7200000(0000) knlGS:0000000000000000
+[ 1213.473514] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1213.473514] CR2: fffffbfff83bf338 CR3: 00000001ebb9e005 CR4: 00000000007606f0
+[ 1213.473514] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 1213.473514] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[ 1213.473514] PKRU: 55555554
+[ 1213.473514] Call Trace:
+[ 1213.473514]  led_trigger_register+0x112/0x3f0
+[ 1213.473514]  led_trigger_register_simple+0x7a/0x110
+[ 1213.473514]  ? 0xffffffffc1c10000
+[ 1213.473514]  at76_mod_init+0x77/0x1000 [at76c50x_usb]
+[ 1213.473514]  do_one_initcall+0xbc/0x47d
+[ 1213.473514]  ? perf_trace_initcall_level+0x3a0/0x3a0
+[ 1213.473514]  ? kasan_unpoison_shadow+0x30/0x40
+[ 1213.473514]  ? kasan_unpoison_shadow+0x30/0x40
+[ 1213.473514]  do_init_module+0x1b5/0x547
+[ 1213.473514]  load_module+0x6405/0x8c10
+[ 1213.473514]  ? module_frob_arch_sections+0x20/0x20
+[ 1213.473514]  ? kernel_read_file+0x1e6/0x5d0
+[ 1213.473514]  ? find_held_lock+0x32/0x1c0
+[ 1213.473514]  ? cap_capable+0x1ae/0x210
+[ 1213.473514]  ? __do_sys_finit_module+0x162/0x190
+[ 1213.473514]  __do_sys_finit_module+0x162/0x190
+[ 1213.473514]  ? __ia32_sys_init_module+0xa0/0xa0
+[ 1213.473514]  ? __mutex_unlock_slowpath+0xdc/0x690
+[ 1213.473514]  ? wait_for_completion+0x370/0x370
+[ 1213.473514]  ? vfs_write+0x204/0x4a0
+[ 1213.473514]  ? do_syscall_64+0x18/0x450
+[ 1213.473514]  do_syscall_64+0x9f/0x450
+[ 1213.473514]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[ 1213.473514] RIP: 0033:0x462e99
+[ 1213.473514] Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+[ 1213.473514] RSP: 002b:00007fa66fa00c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+[ 1213.473514] RAX: ffffffffffffffda RBX: 000000000073bf00 RCX: 0000000000462e99
+[ 1213.473514] RDX: 0000000000000000 RSI: 0000000020000300 RDI: 0000000000000003
+[ 1213.473514] RBP: 00007fa66fa00c70 R08: 0000000000000000 R09: 0000000000000000
+[ 1213.473514] R10: 0000000000000000 R11: 0000000000000246 R12: 00007fa66fa016bc
+[ 1213.473514] R13: 00000000004bcefa R14: 00000000006f6fb0 R15: 0000000000000004
 
-Yan-Hsuan
+If usb_register failed, no need to call led_trigger_register_simple.
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Fixes: 1264b951463a ("at76c50x-usb: add driver")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/net/wireless/atmel/at76c50x-usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+index e99e766..1cabae4 100644
+--- a/drivers/net/wireless/atmel/at76c50x-usb.c
++++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+@@ -2585,8 +2585,8 @@ static int __init at76_mod_init(void)
+ 	if (result < 0)
+ 		printk(KERN_ERR DRIVER_NAME
+ 		       ": usb_register failed (status %d)\n", result);
+-
+-	led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
++	else
++		led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
+ 	return result;
+ }
+ 
+-- 
+2.7.4
+
 
