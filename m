@@ -5,32 +5,36 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2B30C10F13
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 19:57:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D20C10F13
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:01:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF75A20880
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 19:57:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7F5620880
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 20:01:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726959AbfDHT56 (ORCPT
+        id S1726818AbfDHUBf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 15:57:58 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:33702 "EHLO
+        Mon, 8 Apr 2019 16:01:35 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:33842 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726369AbfDHT55 (ORCPT
+        with ESMTP id S1726220AbfDHUBe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 15:57:57 -0400
+        Mon, 8 Apr 2019 16:01:34 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hDaOx-0006oc-MN; Mon, 08 Apr 2019 21:57:55 +0200
-Message-ID: <98e1f8942056486669c6295323ef09763fd2ec0a.camel@sipsolutions.net>
-Subject: Re: [PATCH v2 0/4] Extended Key ID support
+        id 1hDaSN-0006u0-AC; Mon, 08 Apr 2019 22:01:27 +0200
+Message-ID: <717acf1bde5507f73436ae7d45d114b34aee1c05.camel@sipsolutions.net>
+Subject: Re: [PATCH v2] fq: fix fq_tin tx bytes overflow
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Alexander Wetzel <alexander@wetzel-home.de>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 08 Apr 2019 21:57:54 +0200
-In-Reply-To: <20190319203410.25145-1-alexander@wetzel-home.de>
-References: <20190319203410.25145-1-alexander@wetzel-home.de>
+To:     Yibo Zhao <yiboz@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
+        linux-wireless-owner@vger.kernel.org
+Date:   Mon, 08 Apr 2019 22:01:25 +0200
+In-Reply-To: <fa575f93f3936aa3be1cf6b14f87e511@codeaurora.org>
+References: <1552446505-15444-1-git-send-email-yiboz@codeaurora.org>
+         (sfid-20190313_040846_202389_4E584F4C) <13392e1203be4ddd97c4e0e6b6a6c48ce97aae6f.camel@sipsolutions.net>
+         <fa575f93f3936aa3be1cf6b14f87e511@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -40,25 +44,26 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2019-03-19 at 21:34 +0100, Alexander Wetzel wrote:
-> This patch series adds support for IEEE 802.11-2016 Extended Key ID
-> support. Compared to the last RFC there are again quite some API
-> changes, but also some bug fixes. (The bug fixes I remember are outlined
-> in the different patches.)
+On Mon, 2019-03-18 at 12:59 +0800, Yibo Zhao wrote:
+> 
+> I understand your concern. Yes, I am using high end AP for throughput 
+> test. I'd say 1.2 Gbps is not the worst case since we can achieve max 
+> 1.4Gbps according to our test. AFAIK, for most throughput cases, 1min is 
+> the minimum requirement. And I think, with more and more high end 
+> products(even higher throughput) on the ways to the market, it is highly 
+> possible that 30s is not a safe time before overflow.
 
-FWIW, I've applied the first two patches here.
+Well, 2 Gbps (goodput) would make it overflow every 16 seconds, so I'm
+not sure where you take the 1 minute from :-) Maybe from 1.2Gbps PHY
+rate.
 
-I'd really like you to continue with only that for now, and (try to) get
-hostapd/wpa_supplicant changes upstream, perhaps with corresponding
-hwsim tests. That way, we can see this working live.
+But still, the only place we expose this is debugfs, so I'm not really
+sure we want to spend that.
 
-We briefly discussed this at the wireless workshop, and the general
-feeling seems to have been that the compat mode is probably not really
-worthwhile, but I haven't quite made up my mind on that.
+Note that I'm generally pushing back on statistics right now - I really
+want to put some trace points or eBPF hooks in places that people can
+use to keep their favourite statistics, instead of trying to cover each
+and every use case in the stack itself.
 
-Still, having tests and being able to check it out would help a lot,
-also as part of perhaps building a case for compat mode.
-
-Thanks,
 johannes
 
