@@ -2,123 +2,167 @@ Return-Path: <SRS0=ZTn4=SK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0FD6C10F14
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:42:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7618CC10F14
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:47:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99BF4214C6
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:42:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F9AE20883
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:47:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="A1YEwYYx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbfDHMmF (ORCPT
+        id S1726531AbfDHMqt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 08:42:05 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:53156 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726343AbfDHMmF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 08:42:05 -0400
-Received: from mail-yb1-f200.google.com ([209.85.219.200])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1hDTb8-0008Mp-LD
-        for linux-wireless@vger.kernel.org; Mon, 08 Apr 2019 12:42:02 +0000
-Received: by mail-yb1-f200.google.com with SMTP id k76so4917464ybk.0
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2019 05:42:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Q+UBWvNK9F3+Y5i3IwaIJfT37NJ/BxmyKEw1tg/Eobw=;
-        b=JWng+mDNSVE08AsMliTt1/S5U3Zrd0++t6PkwaJpPRqNRfhGVdbdqEIL/ccVEymubz
-         UovXwvBPg1Vcm0Ewb53FRugCpKdlmUf/XQWnqeIjkyqFcrz7XKJFOIcSBDNh5jcxQ5rB
-         uUiBRlywhKoTIN4sU9GQ4k0hd8ymDo28KeX2ssqHgMVbaHq95sHiO/NCyxYa73coYsdC
-         WUhvQFMVoOrytNSOKCkWGrUOp45T652eH8zT0fFvl1EB/Lr00rd4HbgPTe+febIbekhO
-         EX8DcA8P3izsndsqF6CZeekIbsGefIqTFYTvbVFeNhsF2HPGot89Tcb1bEwJMzt0badU
-         Y9hQ==
-X-Gm-Message-State: APjAAAWbuVQm1Xkq4azp25NcCRzJ3tOavJfodJCDc/4EcTBr7LiVAIKf
-        siEmOXFZbHJr/7YgQ9hTqCKWVPcfXPkdYT9rY6VrHfd3GOKeaeLuxrrziA70kyH30bsD93TMBFb
-        n3cIdzLGZcsRugxuI3DIJUIYCy6y9JM7K8tY+9PllGFlP
-X-Received: by 2002:a25:14c1:: with SMTP id 184mr24934775ybu.403.1554727321525;
-        Mon, 08 Apr 2019 05:42:01 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqxkL/NUQINv1x+wtUVaajd6Q6G6inZne3TmjY7eDMCuSPDdSChvtG/Ab+LgKEUgPrSqHfn1ww==
-X-Received: by 2002:a25:14c1:: with SMTP id 184mr24934748ybu.403.1554727321148;
-        Mon, 08 Apr 2019 05:42:01 -0700 (PDT)
-Received: from localhost ([2605:a601:ac2:fb20:3d51:1338:4e8e:1eab])
-        by smtp.gmail.com with ESMTPSA id 196sm10943042ywf.69.2019.04.08.05.41.59
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 08 Apr 2019 05:42:00 -0700 (PDT)
-Date:   Mon, 8 Apr 2019 07:41:59 -0500
-From:   Seth Forshee <seth.forshee@canonical.com>
-To:     Peter Oh <peter.oh@bowerswilkins.com>
-Cc:     "wireless-regdb@lists.infradead.org" 
-        <wireless-regdb@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [wireless-regdb] [PATCH] wireless-regdb: Update regulatory rules
- for South Korea
-Message-ID: <20190408124159.GC15126@ubuntu-xps13>
-References: <1553711659-27600-1-git-send-email-peter.oh@bowerswilkins.com>
+        Mon, 8 Apr 2019 08:46:49 -0400
+Received: from vps.xff.cz ([195.181.215.36]:57210 "EHLO vps.xff.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725933AbfDHMqt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Apr 2019 08:46:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
+        t=1554727605; bh=lTN1NozdCp8DzN8dgazrTIyS14fAuLyXPB7ty8F8eUI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=A1YEwYYxjE7vYpe8injS1072Ba+AQc14gZEfvJn8CX8rQ6nu6LqlZSFvYdXkK1+Db
+         99S0PB3HOLS7EyZDoVH9yFs648xcjeL4WZFXOqiE491ncZvdms5Zb6SYBnz2xWxHZP
+         p57atcsYpKRUpu8R2q0M4yeOqC3EgGYz37NGiTQg=
+Date:   Mon, 8 Apr 2019 14:46:45 +0200
+From:   =?utf-8?Q?Ond=C5=99ej?= Jirman <megous@megous.com>
+To:     Jagan Teki <jagan@amarulasolutions.com>
+Cc:     =?utf-8?B?Q2zDqW1lbnQgUMOpcm9u?= <peron.clem@gmail.com>,
+        linux-sunxi <linux-sunxi@googlegroups.com>,
+        Maxime Ripard <maxime.ripard@bootlin.com>,
+        Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Jose Abreu <joabreu@synopsys.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
+Subject: Re: [linux-sunxi] [PATCH 00/12] Add support for Orange Pi 3
+Message-ID: <20190408124645.gv2tezjqhoxxx2yg@core.my.home>
+Mail-Followup-To: Jagan Teki <jagan@amarulasolutions.com>,
+        =?utf-8?B?Q2zDqW1lbnQgUMOpcm9u?= <peron.clem@gmail.com>,
+        linux-sunxi <linux-sunxi@googlegroups.com>,
+        Maxime Ripard <maxime.ripard@bootlin.com>,
+        Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Jose Abreu <joabreu@synopsys.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
+References: <20190405234514.6183-1-megous@megous.com>
+ <CAJiuCcew10Q3PUOk4VPoiyFc7ZhXwJzxXHQHNeVBUvVAQ3BkbQ@mail.gmail.com>
+ <20190407143237.2qyoef4r5e3qvbmh@core.my.home>
+ <CAMty3ZDpppM5zBvxCBx3NjdVsRm4S93yz5kqi5Z5a0rhC-+zPg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <1553711659-27600-1-git-send-email-peter.oh@bowerswilkins.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAMty3ZDpppM5zBvxCBx3NjdVsRm4S93yz5kqi5Z5a0rhC-+zPg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Mar 27, 2019 at 06:34:29PM +0000, Peter Oh wrote:
-> From: Peter Oh <peter.oh@bowerswilkins.com>
-> 
-> Update power limit as documented in:
-> https://www.rra.go.kr/FileDownSvl?file_type=LAWKR&file_parentseq=54&file_seq=27
-> which revised on November 30, 2016.
-> 
-> Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
+Hi Jagan,
 
-I usually try to check the changes against the documents, but in this
-case I haven't been able to get any English tranlation for the document
-(or even view the contents it in any meaningful way). I don't suppose
-you know where to find an English version of the document?
+On Mon, Apr 08, 2019 at 11:31:22AM +0530, Jagan Teki wrote:
+> On Sun, Apr 7, 2019 at 8:02 PM 'Ondřej Jirman' via linux-sunxi
+> <linux-sunxi@googlegroups.com> wrote:
+> >
+> > On Sun, Apr 07, 2019 at 03:36:21PM +0200, Clément Péron wrote:
+> > > Hi,
+> > >
+> > > On Sat, 6 Apr 2019 at 01:45, megous via linux-sunxi
+> > > <linux-sunxi@googlegroups.com> wrote:
+> > > >
+> > > > From: Ondrej Jirman <megous@megous.com>
+> > > >
+> > > > This series implements support for Xunlong Orange Pi 3 board.
+> > >
+> > > OrangePi 3 Lite2 and One Plus boards support has already been merged.
+> > > The support is not complete but you should rebase your patches on top
+> > > of sunxi/for-next
+> >
+> > Hi,
+> >
+> > OrangePi 3 is somewhat different from these two boards (mostly it has a differnt
+> > power tree). It doesn't use the AXP regulators that are defined in the
+> > sun50i-h6-orangepi.dtsi in the same way.
+> >
+> > For example:
+> >
+> > - bldo3 (is turned always on in sun50i-h6-orangepi.dtsi but unused for opi3)
+> > - cldo2 and cldo3 are unused on opi3 and have nothing to do with WiFi
+> > - aldo3 is not for dram
+> > - bldo1 on the other hand is for dram on opi3
+> > - some other regulators are used for different/more functions and thus
+> >   named differntly
+> > - USB id-det pin is differnt
+> > - ...
+> 
+> Based on my communication with OrangePI, OPI-3 has PCIE, 4 USB-3.0
+> ports and AV are the key differences and rest seems to be similar. but
+> if we have a diff or unused regulators may be we can't enable them in
+> dtsi (I never looked that close as of now)
 
-Thanks,
-Seth
+These regulators are not just disabled on Opi 3, they have different/no meaning.
 
-> ---
->  db.txt | 11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/db.txt b/db.txt
-> index 4fb1948..52c17e9 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -695,11 +695,12 @@ country KP: DFS-JP
->  	(5735 - 5815 @ 20), (30)
->  
->  country KR: DFS-JP
-> -	(2402 - 2482 @ 40), (13)
-> -	(5170 - 5250 @ 80), (20), AUTO-BW
-> -	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
-> -	(5490 - 5710 @ 160), (30), DFS
-> -	(5735 - 5835 @ 80), (30)
-> +	# ref: https://www.rra.go.kr/ko/reference/lawList_view.do?lw_seq=54&lw_type=3&searchCon=&lw_select=ALL&lw_model=&searchTxt=
-> +	(2402 - 2482 @ 40), (23)
-> +	(5170 - 5250 @ 80), (17), AUTO-BW
-> +	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
-> +	(5490 - 5710 @ 160), (23), DFS
-> +	(5735 - 5835 @ 80), (23)
->  	# 60 GHz band channels 1-4,
->  	# ref: http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
->  	(57000 - 66000 @ 2160), (43)
-> -- 
-> 2.7.4
-> 
-> 
-> _______________________________________________
-> wireless-regdb mailing list
-> wireless-regdb@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/wireless-regdb
+Schematics allow for high amount of variability in the power tree (see all the
+NC (not connected) / 0R resistors) in the schematic around AXP805. Every board
+based on this Xunlong design can be subtly different. 
+
+I already suggested a maintainable solution, below. Where base dtsi has empty
+config for regulators and every board based on that just defines it completely
+for itself.
+
+A few regulators (for CPU/GPU) will most probably have the same meaning on every
+derived board, so these can probably be kept in dtsi without causing too much
+annoyance.
+
+It's unpleasant to have wrong regulator setup defined in an underlying dtsi, and
+then trying to override it by removing/adding random properties in the board dts
+for the new boards based on that, so that it fits.
+
+The rest of the current HW descriptions in the sun50i-h6-orangepi.dtsi can be
+shared (as of now).
+
+thank you and regards,
+  o.
