@@ -5,35 +5,32 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB720C10F14
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:02:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC980C10F14
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:09:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97B2E20880
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:02:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84C1D21473
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Apr 2019 12:09:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726591AbfDHMCM (ORCPT
+        id S1726528AbfDHMJN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 08:02:12 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:53678 "EHLO
+        Mon, 8 Apr 2019 08:09:13 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:53746 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726005AbfDHMCL (ORCPT
+        with ESMTP id S1726068AbfDHMJN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 08:02:11 -0400
+        Mon, 8 Apr 2019 08:09:13 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hDSyY-0005jK-42; Mon, 08 Apr 2019 14:02:10 +0200
-Message-ID: <c852f186800a24a80353f7a9b1a882fb1f25f2da.camel@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac8011: Add support for
- NL80211_STA_INFO_RX_MCAST_BCAST
+        id 1hDT5L-0005uL-CD; Mon, 08 Apr 2019 14:09:11 +0200
+Message-ID: <ad27a4098892dbd2ebd1954ba6f34ae0fea4600c.camel@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: Honor SW_CRYPTO_CONTROL in AP VLAN mode
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Narayanraddi Masti <team.nmasti@gmail.com>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 08 Apr 2019 14:02:08 +0200
-In-Reply-To: <1549570566-28658-2-git-send-email-team.nmasti@gmail.com> (sfid-20190207_211547_441291_33DCE17E)
-References: <1549570566-28658-1-git-send-email-team.nmasti@gmail.com>
-         <1549570566-28658-2-git-send-email-team.nmasti@gmail.com>
-         (sfid-20190207_211547_441291_33DCE17E)
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org, mpubbise@codeaurora.org
+Date:   Mon, 08 Apr 2019 14:09:10 +0200
+In-Reply-To: <20190209140138.16692-1-alexander@wetzel-home.de>
+References: <20190209140138.16692-1-alexander@wetzel-home.de>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -43,21 +40,20 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-02-07 at 12:16 -0800, Narayanraddi Masti wrote:
-> Add support to collect per STA mcast/bcast packet information attribute
-> NL80211_STA_INFO_RX_MCAST_BCAST.
+On Sat, 2019-02-09 at 15:01 +0100, Alexander Wetzel wrote:
+> Restore @SW_CRYPTO_CONTROL when interface is in AP Vlan mode and don't
+> override driver decision for unicast keys.
+> 
+> Fixes commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on crypto
+> controlled devices"), which should only have allow SW crypto fallback for
+> group keys.
 
-This, honestly, I'm not a fan of.
+This confuses me.
 
-We've added far too many statistics already, and we keep adding more.
+The driver doesn't really know about AP_VLAN, so the original commit
+intentionally did this, I think?
 
-This, in particular, also adds a bunch of 64-bit counters (is that
-really needed?) which is relatively expensive on 32-bit platforms, and
-it didn't even update the fast-RX path properly.
-
-I really think we need to stick some eBPF hooks somewhere late enough to
-get valid data, but early enough to get all the data, and then you can
-keep all your favourite statistics there.
+There was some kind of other fix related to this though?
 
 johannes
 
