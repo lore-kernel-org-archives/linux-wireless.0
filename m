@@ -2,127 +2,187 @@ Return-Path: <SRS0=TYOj=SL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A623EC282DA
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 11:45:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5859FC282DA
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 11:48:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80E2F2084F
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 11:45:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F04920883
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 11:48:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727149AbfDILpv (ORCPT
+        id S1726655AbfDILsG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 07:45:51 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:47830 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727078AbfDILpv (ORCPT
+        Tue, 9 Apr 2019 07:48:06 -0400
+Received: from relay3-d.mail.gandi.net ([217.70.183.195]:38631 "EHLO
+        relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726035AbfDILsG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Apr 2019 07:45:51 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hDpCC-0002pS-FJ; Tue, 09 Apr 2019 13:45:44 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     David Miller <davem@davemloft.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2019-04-09
-Date:   Tue,  9 Apr 2019 13:45:36 +0200
-Message-Id: <20190409114537.19171-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.17.2
+        Tue, 9 Apr 2019 07:48:06 -0400
+X-Originating-IP: 90.88.30.125
+Received: from localhost (aaubervilliers-681-1-89-125.w90-88.abo.wanadoo.fr [90.88.30.125])
+        (Authenticated sender: maxime.ripard@bootlin.com)
+        by relay3-d.mail.gandi.net (Postfix) with ESMTPSA id DF06560006;
+        Tue,  9 Apr 2019 11:47:56 +0000 (UTC)
+Date:   Tue, 9 Apr 2019 13:47:56 +0200
+From:   Maxime Ripard <maxime.ripard@bootlin.com>
+To:     Jagan Teki <jagan@amarulasolutions.com>,
+        linux-sunxi <linux-sunxi@googlegroups.com>,
+        Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Jose Abreu <joabreu@synopsys.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
+Subject: Re: [linux-sunxi] [PATCH v2 02/13] arm64: dts: allwinner: h6: Add
+ Orange Pi 3 DTS
+Message-ID: <20190409114756.v6v33nsdtiitglee@flea>
+References: <20190409002452.14551-1-megous@megous.com>
+ <20190409002452.14551-3-megous@megous.com>
+ <CAMty3ZBK2jPHTP4Y+hiy8Gq+Nx9iWYoUgke+BvopyzR8T6=0Xw@mail.gmail.com>
+ <20190409113157.e4vrzesbgmyslomb@core.my.home>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="aa6vze47q2e2azio"
+Content-Disposition: inline
+In-Reply-To: <20190409113157.e4vrzesbgmyslomb@core.my.home>
+User-Agent: NeoMutt/20180716
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
 
-Here's a set of fixes for the current cycle. Mostly all over,
-but some focus from Felix on the mac80211 internal TXQs.
+--aa6vze47q2e2azio
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Please pull and let me know if there's any problem.
+On Tue, Apr 09, 2019 at 01:31:57PM +0200, Ond=C5=99ej Jirman wrote:
+> Hi Jagan,
+>
+> On Tue, Apr 09, 2019 at 02:08:18PM +0530, Jagan Teki wrote:
+> > Based on the conversation about using common dtsi from this thread[1],
+> > I'm commenting here to make show the diff directly on the nodes,
+> > giving comments on each node so-that we can see the diff globally.
+>
+> Thanks for the suggestions below. It mostly repeats the differences and
+> commonalities I already stated in the previous discussion.
+>
+> I don't have much to add to what I already said previously, though, becau=
+se you
+> didn't address my concerns there. But I can restate and expand on those
+> concerns.
+>
+> Previously I already agreed it's possible to base orangepi-3.dts on
+> orangepi.dtsi, and proposed a maintainable way forward, and why to follow=
+ it (to
+> quote myself):
+>
+>   Schematics allow for high amount of variability in the power tree (see =
+all the
+>   NC (not connected) / 0R resistors) in the schematic around AXP805. Ever=
+y board
+>   based on this Xunlong design can be subtly different.
+>
+>   I already suggested a maintainable solution, below. Where base dtsi has=
+ empty
+>   config for regulators and every board based on that just defines it com=
+pletely
+>   for itself.
+>
+>   A few regulators (for CPU/GPU) will most probably have the same meaning=
+ on
+>   every derived board, so these can probably be kept in dtsi without caus=
+ing too
+>   much annoyance.
+>
+>   It's unpleasant to have wrong regulator setup defined in an underlying =
+dtsi,
+>   and then trying to override it by removing/adding random properties in =
+the
+>   board dts for the new boards based on that, so that it fits.
+>
+>   The rest of the current HW descriptions in the sun50i-h6-orangepi.dtsi =
+can be
+>   shared (as of now).
+>
+> My suggestion was this:
+>
+>   So to base Orange Pi 3 dts on top of existing sun50i-h6-orangepi.dtsi I=
+'d have
+>   to first move some things out of the base dtsi to the OrangePi Lite2 an=
+d One
+>   Plus board dts files, in order to have sun50i-h6-orangepi.dtsi only des=
+cribe
+>   HW that is *really* shared by these 2 boards and Orange Pi 3.
+>
+>   If I do that, I'd undefine all the axp805 regulator nodes and move the
+>   configurations to each of the 3 board files. That will probably end up =
+being
+>   the least confusing and most maintainable. See axp81x.dtsi lines 86-144=
+ for
+>   what I mean.
+>
+> You seem to be suggesting a solution where every time we add an OrangePi =
+H6
+> based board, the person adding it will have to go through the base dtsi a=
+nd all
+> the other boards based on it, status disable or otherwise change regulato=
+rs in
+> the base dtsi, patch all the other boards to re-enable it.
+>
+> It would be already unpleasant just adding a third board based on this ap=
+proach.
+> And when the fourth board is added, with another small differences in the
+> regulator use/meanings, the person will be looking at patching 4 dts files
+> + adding one for his own board. For what benefit, to save some bytes righ=
+t now?
+>
+> I think maintainability, ease of adding new boards is more important, than
+> having a dtsi that tries to maximally cover all the commonalities between=
+ the
+> existing boards right now, without regards for the future. That's why
+> I suggested an approach like in axp81x.dtsi lines 86-144.
 
-Thanks,
-johannes
+I agree.
 
+Maxime
 
+--
+Maxime Ripard, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
 
-The following changes since commit 9a5a90d167b0e5fe3d47af16b68fd09ce64085cd:
+--aa6vze47q2e2azio
+Content-Type: application/pgp-signature; name="signature.asc"
 
-  net: core: netif_receive_skb_list: unlist skb before passing to pt->func (2019-03-28 17:28:05 -0700)
+-----BEGIN PGP SIGNATURE-----
 
-are available in the Git repository at:
+iHUEABYIAB0WIQRcEzekXsqa64kGDp7j7w1vZxhRxQUCXKyGbAAKCRDj7w1vZxhR
+xZTAAQCOzqr6NWU8ZLOC72DWyNDWvVDoMHEH5977Yq/x03pA3wEAwsPhQ1kQG3mb
+mRjfuU5xD+jCyn066cuvMBk6bRHgQgA=
+=ef/T
+-----END PGP SIGNATURE-----
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2019-04-09
-
-for you to fetch changes up to 78ad2341521d5ea96cb936244ed4c4c4ef9ec13b:
-
-  mac80211: Honor SW_CRYPTO_CONTROL for unicast keys in AP VLAN mode (2019-04-09 13:40:32 +0200)
-
-----------------------------------------------------------------
-Various fixes:
- * iTXQ fixes from Felix
- * tracing fix - increase message length
- * fix SW_CRYPTO_CONTROL enforcement
- * WMM rule handling for regdomain intersection
- * max_interfaces in hwsim - reported by syzbot
- * clear private data in some more commands
- * a clang compiler warning fix
-
-I added a patch with two new (unused) macros for
-rate-limited printing to simplify getting the users
-into the tree.
-
-----------------------------------------------------------------
-Alexander Wetzel (1):
-      mac80211: Honor SW_CRYPTO_CONTROL for unicast keys in AP VLAN mode
-
-Andrei Otcheretianski (1):
-      mac80211: Increase MAX_MSG_LEN
-
-Felix Fietkau (6):
-      mac80211: un-schedule TXQs on powersave start
-      mac80211: fix unaligned access in mesh table hash function
-      mac80211: fix memory accounting with A-MSDU aggregation
-      mac80211: do not call driver wake_tx_queue op during reconfig
-      mac80211: rework locking for txq scheduling / airtime fairness
-      mac80211: make ieee80211_schedule_txq schedule empty TXQs
-
-Ilan Peer (1):
-      cfg80211: Handle WMM rules in regulatory domain intersection
-
-Johannes Berg (1):
-      mac80211_hwsim: calculate if_combination.max_interfaces
-
-Nathan Chancellor (1):
-      cfg80211: Change an 'else if' into an 'else' in cfg80211_calculate_bitrate_he
-
-Stanislaw Gruszka (1):
-      cfg80211: add ratelimited variants of err and warn
-
-Sunil Dutt (1):
-      nl80211: Add NL80211_FLAG_CLEAR_SKB flag for other NL commands
-
-YueHaibing (1):
-      cfg80211: Use kmemdup in cfg80211_gen_new_ie()
-
- drivers/net/wireless/ath/ath10k/htt_rx.c |  2 +-
- drivers/net/wireless/ath/ath10k/mac.c    |  4 +-
- drivers/net/wireless/ath/ath9k/xmit.c    |  5 ++-
- drivers/net/wireless/mac80211_hwsim.c    | 19 ++++++++--
- include/net/cfg80211.h                   |  5 +++
- include/net/mac80211.h                   | 63 +++++++++++++++++---------------
- net/mac80211/driver-ops.h                |  3 ++
- net/mac80211/key.c                       |  9 ++---
- net/mac80211/mesh_pathtbl.c              |  2 +-
- net/mac80211/rx.c                        | 10 ++++-
- net/mac80211/trace_msg.h                 |  7 +++-
- net/mac80211/tx.c                        | 53 ++++++++++++---------------
- net/wireless/nl80211.c                   | 18 ++++++---
- net/wireless/reg.c                       | 39 ++++++++++++++++++++
- net/wireless/scan.c                      |  3 +-
- net/wireless/util.c                      |  6 ++-
- 16 files changed, 163 insertions(+), 85 deletions(-)
-
+--aa6vze47q2e2azio--
