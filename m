@@ -2,115 +2,118 @@ Return-Path: <SRS0=TYOj=SL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8559C10F0E
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 15:26:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DE9DC10F0E
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 16:30:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B6D52084F
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 15:26:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 551052084F
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 16:30:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QIQbz/89"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="SXyz+cp9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726655AbfDIP0r (ORCPT
+        id S1726431AbfDIQaA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 11:26:47 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:35025 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726492AbfDIP0r (ORCPT
+        Tue, 9 Apr 2019 12:30:00 -0400
+Received: from mail-ua1-f68.google.com ([209.85.222.68]:39238 "EHLO
+        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726372AbfDIQaA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Apr 2019 11:26:47 -0400
-Received: by mail-oi1-f194.google.com with SMTP id j132so13913645oib.2
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2019 08:26:47 -0700 (PDT)
+        Tue, 9 Apr 2019 12:30:00 -0400
+Received: by mail-ua1-f68.google.com with SMTP id d5so5723078uan.6
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2019 09:29:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=wU9CYVybnr03bB70fIZz8OH7tJiWKwVxIOLZY4v6yHA=;
-        b=QIQbz/89youb3DUX6iCU7xPY8WlcCP/vgX1+M4gfVXnh3arfvJoQAv/wXcFaAT0ygI
-         pq+1c9LPcRHdJVzfOa4qGAtVLFx6v4+OQa7WUOlXsl0bbMLaG1I5mHALzVgv0+yzG1D7
-         Kwb4HNZYTlMRYtu8oKYF1yJ29zPRPfbZPnbhFXKdlMgaH3ZjBhZMdq7SGgnitqPT27kR
-         tjqskAKtUR5sd6VVehy34X7j8Qc9TF9++Ky4dwz3chu/KPmWnuFQFyfZjJB5hSmTeJN6
-         ewIbsmGcTbkfa0zUlNo81nPflg1dkBRXZrXOIokEnXUq1Anj3jpn5Q/sjtR9LBFh+mh9
-         D2+A==
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=dqVrkebP9i8uuyqyr4MqTXK9lcw0lbYjOb+pihL7B98=;
+        b=SXyz+cp9YUh+SITTF07b/RFtwdxCMRFTVxMVL+Wb7A66MpIeIV6Z63tQCZHdRmQ+3E
+         LSwgMFrRHqJnm8xeqh+8fR/pysZYkDi0D9xly4o2p8LJLQj3behuV6hNylzsh8obwydb
+         7YCF03C20P2tOm3lVuu4mwZ0acmp8KxzHYJes=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=wU9CYVybnr03bB70fIZz8OH7tJiWKwVxIOLZY4v6yHA=;
-        b=jUrlHOD64l/K7sm4fR4j9TRlfhQ4QAVPHDdIw9NVsn3zNxDirQmWF0CELEKN4up1Xz
-         94ESNx9z1lkSB4qmKOI7msoDR0GxPiH8rs9uGoYfU1A8qeTr4Wa5imRpkhj3NQt7FF4t
-         JTHmOqDhi4wgazHMEb4PBZMqgAX1hlH0ZQhBCCQcs47CWN1Xr2qPelvpBEvUrkAfPkwI
-         utM5w2P0m2VtE4sFc48rFfnJbwGBgSTUofrjmEM9tlx5CvUAS9+U1kssL29lpXbx9477
-         1rO33GA0zgonaiHHpGvVeMDhanup12j545Cdigxot9Lezpe/EXHgvL03Q56xR5wcfPP0
-         obHQ==
-X-Gm-Message-State: APjAAAVpT+AstWakaYuYF4EVzy1qEqS6D3l/e+zR7AVKDaL1wc6cjBbn
-        /8extc7SuZi4s15EXEboy2hYUCeZpFRZzBIORlg=
-X-Google-Smtp-Source: APXvYqzv8/AfZotyUavSjOdOBsxdLifTRy71KPCNoml3itVXlrG/QuCKQzUFxVM5Hkyfevt7Yzz8QCE7f8BnmKEFq2U=
-X-Received: by 2002:aca:5bd7:: with SMTP id p206mr20593795oib.128.1554823606783;
- Tue, 09 Apr 2019 08:26:46 -0700 (PDT)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=dqVrkebP9i8uuyqyr4MqTXK9lcw0lbYjOb+pihL7B98=;
+        b=XrI2jR9AJbkFEnEbzLlbvsnliO9puYl77E85EqfuFT1jvTaCBRZIQSOrkIXr7wGBsJ
+         kZ1o8TljFMCjhNiqnsZhxuhYF/NrPik3GIJd1aTaKoRlBNnkSgbVnzXDSoniUJ40IfS1
+         VaZWsNKsBcxU13jtu+2M2AQNpKD7b/DEcYOPqYg32PlhIMmQjTtPYZ3w9Bgrxi5axBoI
+         GQcH+artxxShoDWHfpzGqFDJhDBmR/L+hhXAgRMU0w92HwvBYyJ/axEmwk2gg42mvHJg
+         tih0M1MOZJv6h2MTQ1SQwnw28XoeNGvmRJCMyx67UceoaQuqg0AZKzqxqCS9d0ufV+Uf
+         1bQg==
+X-Gm-Message-State: APjAAAXVpwAffjBKBY5x+Vv40Jb1EAlcBUWdroHP+aMaRXTgV4nsFiYa
+        asM2Tjd6zM1ImbNuTbpGZ/WWtI2eKl8=
+X-Google-Smtp-Source: APXvYqx40mZnq2pAi+2sxul+G6NeP0mgufnUzGWMMgWthEhvf4m6m4LsrUND9HY0sNgWQu7un4FdJQ==
+X-Received: by 2002:ab0:2708:: with SMTP id s8mr14164016uao.37.1554827398376;
+        Tue, 09 Apr 2019 09:29:58 -0700 (PDT)
+Received: from mail-vs1-f54.google.com (mail-vs1-f54.google.com. [209.85.217.54])
+        by smtp.gmail.com with ESMTPSA id j11sm9045038vkj.13.2019.04.09.09.29.56
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 09 Apr 2019 09:29:57 -0700 (PDT)
+Received: by mail-vs1-f54.google.com with SMTP id o10so7588776vsp.12
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2019 09:29:56 -0700 (PDT)
+X-Received: by 2002:a67:1345:: with SMTP id 66mr20102814vst.30.1554827395980;
+ Tue, 09 Apr 2019 09:29:55 -0700 (PDT)
 MIME-Version: 1.0
-Received: by 2002:a9d:628c:0:0:0:0:0 with HTTP; Tue, 9 Apr 2019 08:26:46 -0700 (PDT)
-In-Reply-To: <1554809828-13500-16-git-send-email-sgruszka@redhat.com>
-References: <1554809828-13500-1-git-send-email-sgruszka@redhat.com> <1554809828-13500-16-git-send-email-sgruszka@redhat.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Tue, 9 Apr 2019 17:26:46 +0200
-Message-ID: <CAKR_QVJtwmpEK2a5br2YEKPsAF0GHXwny5YbCTFoO_mgD+fVJw@mail.gmail.com>
-Subject: Re: [PATCH 15/21] rt2x00: rt2800lib: hardcode txmixer gain values to
- zero for RT3883
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>,
-        Gabor Juhos <juhosg@openwrt.org>
+References: <20190213185741.GA5047@embeddedor>
+In-Reply-To: <20190213185741.GA5047@embeddedor>
+From:   Kees Cook <keescook@chromium.org>
+Date:   Tue, 9 Apr 2019 09:29:43 -0700
+X-Gmail-Original-Message-ID: <CAGXu5jLaZ3czP9YDJ9R+3UeBxuULubBPcnFNdh+qT_S9D5eZZg@mail.gmail.com>
+Message-ID: <CAGXu5jLaZ3czP9YDJ9R+3UeBxuULubBPcnFNdh+qT_S9D5eZZg@mail.gmail.com>
+Subject: Re: [PATCH] NFC: pn533: mark expected switch fall-throughs
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc:     Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 09/04/2019, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> From: Gabor Juhos <juhosg@openwrt.org>
+On Wed, Feb 13, 2019 at 10:57 AM Gustavo A. R. Silva
+<gustavo@embeddedor.com> wrote:
 >
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+> In preparation to enabling -Wimplicit-fallthrough, mark switch
+> cases where we are expecting to fall through.
 >
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> index 0687bef990e1..4ea94c62d439 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> @@ -9128,7 +9128,8 @@ static u8 rt2800_get_txmixer_gain_24g(struct
-> rt2x00_dev *rt2x00dev)
->  {
->  	u16 word;
+> This patch fixes the following warnings:
 >
-> -	if (rt2x00_rt(rt2x00dev, RT3593))
-> +	if (rt2x00_rt(rt2x00dev, RT3593) ||
-> +	    rt2x00_rt(rt2x00dev, RT3883))
->  		return 0;
+> drivers/nfc/pn533/pn533.c: In function =E2=80=98pn533_transceive=E2=80=99=
+:
+> drivers/nfc/pn533/pn533.c:2142:6: warning: this statement may fall throug=
+h [-Wimplicit-fallthrough=3D]
+>    if (dev->tgt_active_prot =3D=3D NFC_PROTO_FELICA) {
+>       ^
+> drivers/nfc/pn533/pn533.c:2150:2: note: here
+>   default:
+>   ^~~~~~~
+> drivers/nfc/pn533/pn533.c: In function =E2=80=98pn533_wq_mi_recv=E2=80=99=
+:
+> drivers/nfc/pn533/pn533.c:2267:6: warning: this statement may fall throug=
+h [-Wimplicit-fallthrough=3D]
+>    if (dev->tgt_active_prot =3D=3D NFC_PROTO_FELICA) {
+>       ^
+> drivers/nfc/pn533/pn533.c:2276:2: note: here
+>   default:
+>   ^~~~~~~
 >
->  	word = rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG);
-> @@ -9142,7 +9143,8 @@ static u8 rt2800_get_txmixer_gain_5g(struct rt2x00_dev
-> *rt2x00dev)
->  {
->  	u16 word;
+> Warning level 3 was used: -Wimplicit-fallthrough=3D3
 >
-> -	if (rt2x00_rt(rt2x00dev, RT3593))
-> +	if (rt2x00_rt(rt2x00dev, RT3593) ||
-> +	    rt2x00_rt(rt2x00dev, RT3883))
->  		return 0;
+> This patch is part of the ongoing efforts to enable
+> -Wimplicit-fallthrough.
 >
->  	word = rt2800_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_A);
-> --
-> 2.7.5
->
->
+> Addresses-Coverity-ID: 1230487 ("Missing break in switch")
+> Addresses-Coverity-ID: 1230488 ("Missing break in switch")
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-Did someone actually verified this is correct?
+Reviewed-by: Kees Cook <keescook@chromium.org>
+
+--=20
+Kees Cook
