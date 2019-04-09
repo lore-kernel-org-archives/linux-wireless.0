@@ -2,233 +2,207 @@ Return-Path: <SRS0=TYOj=SL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E0BFC10F0E
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 13:25:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BD4C10F0E
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 13:28:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 613A22084C
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 13:25:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BD5720880
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 13:28:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dOKiV4VG";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UgNTS0sG"
+	dkim=pass (1024-bit key) header.d=amarulasolutions.com header.i=@amarulasolutions.com header.b="f5NR+bIX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727553AbfDINZi (ORCPT
+        id S1727414AbfDIN2E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 09:25:38 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:39144 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727110AbfDINZh (ORCPT
+        Tue, 9 Apr 2019 09:28:04 -0400
+Received: from mail-io1-f66.google.com ([209.85.166.66]:44513 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727324AbfDIN2A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Apr 2019 09:25:37 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 77D5160EA5; Tue,  9 Apr 2019 13:25:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554816336;
-        bh=xuP2kH7Tjz/dE/3GRisbBSAjWK7C0xKkPJHD+JMHMXM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=dOKiV4VGLeNtQMfiNRDSl+/Tt8zIyeNYTxYUzIEhYxlanQ8t6qpoE8COmGF3VyUuK
-         X1dnAz1wxbV6DI0nyWHQETgEpMip69WeJlC5N5BlWUOTfwqeaWgE/Xeh4VhQ+MgX4Z
-         Gpe9O8nMkujcbVzkUvg744j9vPPiS2IO3p4zuMxw=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id E294360779;
-        Tue,  9 Apr 2019 13:25:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554816335;
-        bh=xuP2kH7Tjz/dE/3GRisbBSAjWK7C0xKkPJHD+JMHMXM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=UgNTS0sGusdRbhMAV3AtHlwgrXzJAPMhCORmFcq3a/2EoM+9b7gm+dr1YLvMduu28
-         FLAGucNBaVkQv7CK6OOtLBMwlp6LxeOFA2tPuXNW2j6o7GR8722LDyVWa3p9yFZMzR
-         AOnccAHWNxcckoN0IOtZHQoY3WhLrR8layIQEo4U=
+        Tue, 9 Apr 2019 09:28:00 -0400
+Received: by mail-io1-f66.google.com with SMTP id u12so14208273iop.11
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2019 06:27:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=amarulasolutions.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=xJVc12goI8rqGySbWSdxOIoYdvxImxl/QNO4neztKXI=;
+        b=f5NR+bIXQSfde2BcDK/AtMhi+vY7SV0Q3mrZcwE7FSyiUi2hjBAQD++MmaDR20Iys8
+         RvzWxSkXC6zBwuq3OmNXHXU2h7sjufzOra+fMy6ivg0+hPgYMZK6fIsS14gn5Gu9ppIA
+         7yHcbbWvOfPcsHRoIqm5pb71TXKVILYuiPjFI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:content-transfer-encoding;
+        bh=xJVc12goI8rqGySbWSdxOIoYdvxImxl/QNO4neztKXI=;
+        b=WgbH21/W5SxSLTHURc6gRzprjJtYFDVKGTRBKN+3ykOe/+51ueW6gyVy/rpBTwz00l
+         kEi5CCeEYOUQoBex6amrJ99+95WR9LUE8SgiiF+TtrgliEo6Xa6oMZ3MRzsl/PvRfgAT
+         q6O7APbc8mNZjKc47fHEpPAkAT3AIvvQ4mHDIunx0HJRRMJjED74BHAW+erNnWv9/QZB
+         PMnHqk7vShLrM+PVKer60mIBk/4Tk9ehxdf+DP1jzeNdi84FQ/IKQRPzfTbt7iRrCwkX
+         uSiNqFnb99wFuitkmWJs4BmnHLR6u7iVJt8MDtJWr2nN4Ltj0ekicLjgZT7SwIdB1noB
+         gAag==
+X-Gm-Message-State: APjAAAUoikm/fxXNMs2qBlapOajafGaysJ3ECJzIztbR6jxWsrE6OYCW
+        McrEZFXDBmn+qVkTxFDGnvJChVBARiQjfbpNgO83ng==
+X-Google-Smtp-Source: APXvYqy01et48ReAOSaa4kFhye3b3Klu1UErPDXwE5xbVWJksNHuLhjMBRfNIJjL5gSUuguL4VbqOkwbSJ/SoAVk84c=
+X-Received: by 2002:a5e:9e02:: with SMTP id i2mr21183504ioq.238.1554816478797;
+ Tue, 09 Apr 2019 06:27:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Tue, 09 Apr 2019 21:25:34 +0800
-From:   Yibo Zhao <yiboz@codeaurora.org>
-To:     =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-Cc:     make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC/RFT] mac80211: Switch to a virtual time-based airtime
- scheduler
-In-Reply-To: <87ftqy41ea.fsf@toke.dk>
-References: <20190215170512.31512-1-toke@redhat.com>
- <753b328855b85f960ceaf974194a7506@codeaurora.org> <87ftqy41ea.fsf@toke.dk>
-Message-ID: <acd33756e87ea64c608e306e5ee60aa2@codeaurora.org>
-X-Sender: yiboz@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+References: <20190409002452.14551-1-megous@megous.com> <20190409002452.14551-3-megous@megous.com>
+ <CAMty3ZBK2jPHTP4Y+hiy8Gq+Nx9iWYoUgke+BvopyzR8T6=0Xw@mail.gmail.com> <20190409113157.e4vrzesbgmyslomb@core.my.home>
+In-Reply-To: <20190409113157.e4vrzesbgmyslomb@core.my.home>
+From:   Jagan Teki <jagan@amarulasolutions.com>
+Date:   Tue, 9 Apr 2019 18:57:47 +0530
+Message-ID: <CAMty3ZAivyE922rpJ_FgnL=3hk1jR2eJsnuiQHqXd+NcmhQ+SQ@mail.gmail.com>
+Subject: Re: [linux-sunxi] [PATCH v2 02/13] arm64: dts: allwinner: h6: Add
+ Orange Pi 3 DTS
+To:     Jagan Teki <jagan@amarulasolutions.com>,
+        linux-sunxi <linux-sunxi@googlegroups.com>,
+        Maxime Ripard <maxime.ripard@bootlin.com>,
+        Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Jose Abreu <joabreu@synopsys.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-04-04 16:31, Toke Høiland-Jørgensen wrote:
-> Yibo Zhao <yiboz@codeaurora.org> writes:
-> 
->> On 2019-02-16 01:05, Toke Høiland-Jørgensen wrote:
->>> This switches the airtime scheduler in mac80211 to use a virtual
->>> time-based
->>> scheduler instead of the round-robin scheduler used before. This has 
->>> a
->>> couple of advantages:
->>> 
->>> - No need to sync up the round-robin scheduler in firmware/hardware
->>> with
->>>   the round-robin airtime scheduler.
->>> 
->>> - If several stations are eligible for transmission we can schedule
->>> both of
->>>   them; no need to hard-block the scheduling rotation until the head 
->>> of
->>> the
->>>   queue has used up its quantum.
->>> 
->>> - The check of whether a station is eligible for transmission becomes
->>>   simpler (in ieee80211_txq_may_transmit()).
->>> 
->>> The drawback is that scheduling becomes slightly more expensive, as 
->>> we
->>> need
->>> to maintain an rbtree of TXQs sorted by virtual time. This means that
->>> ieee80211_register_airtime() becomes O(logN) in the number of 
->>> currently
->>> scheduled TXQs. However, hopefully this number rarely grows too big
->>> (it's
->>> only TXQs currently backlogged, not all associated stations), so it
->>> shouldn't be too big of an issue.
->>> 
->>> @@ -1831,18 +1830,32 @@ void ieee80211_sta_register_airtime(struct
->>> ieee80211_sta *pubsta, u8 tid,
->>>  {
->>>  	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
->>>  	struct ieee80211_local *local = sta->sdata->local;
->>> +	struct ieee80211_txq *txq = sta->sta.txq[tid];
->>>  	u8 ac = ieee80211_ac_from_tid(tid);
->>> -	u32 airtime = 0;
->>> +	u64 airtime = 0, weight_sum;
->>> +
->>> +	if (!txq)
->>> +		return;
->>> 
->>>  	if (sta->local->airtime_flags & AIRTIME_USE_TX)
->>>  		airtime += tx_airtime;
->>>  	if (sta->local->airtime_flags & AIRTIME_USE_RX)
->>>  		airtime += rx_airtime;
->>> 
->>> +	/* Weights scale so the unit weight is 256 */
->>> +	airtime <<= 8;
->>> +
->>>  	spin_lock_bh(&local->active_txq_lock[ac]);
->>> +
->>>  	sta->airtime[ac].tx_airtime += tx_airtime;
->>>  	sta->airtime[ac].rx_airtime += rx_airtime;
->>> -	sta->airtime[ac].deficit -= airtime;
->>> +
->>> +	weight_sum = local->airtime_weight_sum[ac] ?: sta->airtime_weight;
->>> +
->>> +	local->airtime_v_t[ac] += airtime / weight_sum;
->> Hi Toke,
->> 
->> Please ignore the previous two broken emails regarding this new 
->> proposal
->> from me.
->> 
->> It looks like local->airtime_v_t acts like a Tx criteria. Only the
->> stations with less airtime than that are valid for Tx. That means 
->> there
->> are situations, like 50 clients, that some of the stations can be used
->> to Tx when putting next_txq in the loop. Am I right?
-> 
-> I'm not sure what you mean here. Are you referring to the case where 
-> new
-> stations appear with a very low (zero) airtime_v_t? That is handled 
-> when
-> the station is enqueued.
-Hi Toke,
+Hi Ond=C5=99ej Jirman,
 
-Sorry for the confusion. I am not referring to the case that you 
-mentioned though it can be solved by your subtle design, max(local vt, 
-sta vt). :-)
+On Tue, Apr 9, 2019 at 5:01 PM Ond=C5=99ej Jirman <megous@megous.com> wrote=
+:
+>
+> Hi Jagan,
+>
+> On Tue, Apr 09, 2019 at 02:08:18PM +0530, Jagan Teki wrote:
+> > Based on the conversation about using common dtsi from this thread[1],
+> > I'm commenting here to make show the diff directly on the nodes,
+> > giving comments on each node so-that we can see the diff globally.
+>
+> Thanks for the suggestions below. It mostly repeats the differences and
+> commonalities I already stated in the previous discussion.
+>
+> I don't have much to add to what I already said previously, though, becau=
+se you
+> didn't address my concerns there. But I can restate and expand on those
+> concerns.
+>
+> Previously I already agreed it's possible to base orangepi-3.dts on
+> orangepi.dtsi, and proposed a maintainable way forward, and why to follow=
+ it (to
+> quote myself):
+>
+>   Schematics allow for high amount of variability in the power tree (see =
+all the
+>   NC (not connected) / 0R resistors) in the schematic around AXP805. Ever=
+y board
+>   based on this Xunlong design can be subtly different.
 
-Actually, my concern is situation about putting next_txq in the loop. 
-Let me explain a little more and see below.
+Well, how about defining them in required dts file and group it common
+regulators in dtsi? The idea of all these 3 H6 OPI boards are
+evaluated in the same design consideration by adding new IP's in new
+boards design by keeping the core things common like lite2 has wifi,
+one plus has emac and 3 has PCIe etc. This is what I got from
+Steven(OrangePI).
 
-> @@ -3640,126 +3638,191 @@ EXPORT_SYMBOL(ieee80211_tx_dequeue);
->  struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8
-> ac)
->  {
->  	struct ieee80211_local *local = hw_to_local(hw);
-> +	struct rb_node *node = local->schedule_pos[ac];
->  	struct txq_info *txqi = NULL;
-> +	bool first = false;
-> 
->  	lockdep_assert_held(&local->active_txq_lock[ac]);
-> 
-> - begin:
-> -	txqi = list_first_entry_or_null(&local->active_txqs[ac],
-> -					struct txq_info,
-> -					schedule_order);
-> -	if (!txqi)
-> +	if (!node) {
-> +		node = rb_first_cached(&local->active_txqs[ac]);
-> +		first = true;
-> +	} else
-> +		node = rb_next(node);
+>
+>   I already suggested a maintainable solution, below. Where base dtsi has=
+ empty
+>   config for regulators and every board based on that just defines it com=
+pletely
+>   for itself.
+>
+>   A few regulators (for CPU/GPU) will most probably have the same meaning=
+ on
+>   every derived board, so these can probably be kept in dtsi without caus=
+ing too
+>   much annoyance.
+>
+>   It's unpleasant to have wrong regulator setup defined in an underlying =
+dtsi,
+>   and then trying to override it by removing/adding random properties in =
+the
+>   board dts for the new boards based on that, so that it fits.
 
-Consider below piece of code from ath10k_mac_schedule_txq:
+If we manage them properly by moving common things in dtsi and rest in
+dts, we may avoid these underlying issues.
 
-         ieee80211_txq_schedule_start(hw, ac);
-         while ((txq = ieee80211_next_txq(hw, ac))) {
-                 while (ath10k_mac_tx_can_push(hw, txq)) {
-                         ret = ath10k_mac_tx_push_txq(hw, txq);
-                         if (ret < 0)
-                                 break;
-                 }
-                 ieee80211_return_txq(hw, txq);
-                 ath10k_htt_tx_txq_update(hw, txq);
-                 if (ret == -EBUSY)
-                         break;
-         }
-         ieee80211_txq_schedule_end(hw, ac);
+>
+>   The rest of the current HW descriptions in the sun50i-h6-orangepi.dtsi =
+can be
+>   shared (as of now).
+>
+> My suggestion was this:
+>
+>   So to base Orange Pi 3 dts on top of existing sun50i-h6-orangepi.dtsi I=
+'d have
+>   to first move some things out of the base dtsi to the OrangePi Lite2 an=
+d One
+>   Plus board dts files, in order to have sun50i-h6-orangepi.dtsi only des=
+cribe
+>   HW that is *really* shared by these 2 boards and Orange Pi 3.
+>
+>   If I do that, I'd undefine all the axp805 regulator nodes and move the
+>   configurations to each of the 3 board files. That will probably end up =
+being
+>   the least confusing and most maintainable. See axp81x.dtsi lines 86-144=
+ for
+>   what I mean.
+>
+> You seem to be suggesting a solution where every time we add an OrangePi =
+H6
+> based board, the person adding it will have to go through the base dtsi a=
+nd all
+> the other boards based on it, status disable or otherwise change regulato=
+rs in
+> the base dtsi, patch all the other boards to re-enable it.
+>
+> It would be already unpleasant just adding a third board based on this ap=
+proach.
+> And when the fourth board is added, with another small differences in the
+> regulator use/meanings, the person will be looking at patching 4 dts file=
+s
+> + adding one for his own board. For what benefit, to save some bytes righ=
+t now?
+>
+> I think maintainability, ease of adding new boards is more important, tha=
+n
+> having a dtsi that tries to maximally cover all the commonalities between=
+ the
+> existing boards right now, without regards for the future. That's why
+> I suggested an approach like in axp81x.dtsi lines 86-144.
 
-If my understanding is right, local->schedule_pos is used to record the 
-last scheduled node and used for traversal rbtree for valid txq. There 
-is chance that an empty txq is feeded to return_txq and got removed from 
-rbtree. The empty txq will always be the rb_first node. Then in the 
-following next_txq, local->schedule_pos becomes meaningless since its 
-rb_next will return NULL and the loop break. Only rb_first get dequeued 
-during this loop.
+True, if the boards indeed are different but we can maintain easily if
+the boards are from same family of design based my experience and few
+boards do share common things in dtsi already.
 
-	if (!node || RB_EMPTY_NODE(node)) {
-		node = rb_first_cached(&local->active_txqs[ac]);
-		first = true;
-	} else
-		node = rb_next(node);
+Anyway, thanks for inputs. Seems like patch is applied already may be
+we can move into dtsi if require in future.
 
-How about this? The nodes on the rbtree will be dequeued and removed 
-from rbtree one by one until HW is busy. Please note local vt and sta vt 
-will not be updated since txq lock is held during this time.
-
-
-> 
->>> +	sta->airtime[ac].v_t += airtime / sta->airtime_weight;
->> Another question. Any plan for taking v_t overflow situation into
->> consideration? u64 might be enough for low throughput products but not
->> sure for high end products. Something like below for reference:
-> 
-> The unit for the variable is time, not bytes, so it is unaffected by
-> throughput. 2**64 microseconds is 584554 *years* according to my
-> 'units' binary, so don't think we have to worry too much about this
-> overflowing ;)
-
-Cool, Great! Then no problem with that now.
-
-> 
-> -Toke
-
--- 
-Yibo
+Thanks,
+Jagan.
