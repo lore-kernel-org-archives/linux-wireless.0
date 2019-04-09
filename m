@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19E08C10F0E
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 12:08:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68EB0C282CE
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 12:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E6B7720880
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 12:08:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41B5E20883
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 12:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726464AbfDIMIY (ORCPT
+        id S1727286AbfDIML1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 08:08:24 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:48298 "EHLO
+        Tue, 9 Apr 2019 08:11:27 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:48390 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726387AbfDIMIY (ORCPT
+        with ESMTP id S1726948AbfDIML0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Apr 2019 08:08:24 -0400
+        Tue, 9 Apr 2019 08:11:26 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hDpY5-0003Tp-EL; Tue, 09 Apr 2019 14:08:21 +0200
+        id 1hDpb2-0003c0-1h; Tue, 09 Apr 2019 14:11:24 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix RX STBC override byte order
-Date:   Tue,  9 Apr 2019 14:08:19 +0200
-Message-Id: <20190409120819.3196-1-johannes@sipsolutions.net>
+Subject: [PATCH v2] mac80211: fix RX STBC override byte order
+Date:   Tue,  9 Apr 2019 14:11:20 +0200
+Message-Id: <20190409121120.7962-1-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.17.2
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -49,7 +49,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index e03c46ac8e4d..f0735413bff3 100644
+index e03c46ac8e4d..c62101857b9b 100644
 --- a/net/mac80211/ht.c
 +++ b/net/mac80211/ht.c
 @@ -112,8 +112,9 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
@@ -59,8 +59,8 @@ index e03c46ac8e4d..f0735413bff3 100644
 -	if (ht_capa_mask->cap_info & IEEE80211_HT_CAP_RX_STBC)
 -		ht_cap->cap |= ht_capa->cap_info & IEEE80211_HT_CAP_RX_STBC;
 +	if (ht_capa_mask->cap_info & cpu_to_le16(IEEE80211_HT_CAP_RX_STBC))
-+		ht_cap->cap |= ht_capa->cap_info &
-+					cpu_to_le16(IEEE80211_HT_CAP_RX_STBC);
++		ht_cap->cap |= le16_to_cpu(ht_capa->cap_info) &
++					IEEE80211_HT_CAP_RX_STBC;
  
  	/* Allow user to decrease AMPDU factor */
  	if (ht_capa_mask->ampdu_params_info &
