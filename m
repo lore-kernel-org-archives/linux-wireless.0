@@ -2,68 +2,71 @@ Return-Path: <SRS0=TYOj=SL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87166C10F0E
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 19:13:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B6CAC10F0E
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 19:13:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 520B92084F
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 19:13:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14E872084F
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 19:13:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EajAsTBO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pA1pFrjM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726628AbfDITNJ (ORCPT
+        id S1726702AbfDITNL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 15:13:09 -0400
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:36096 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726529AbfDITNJ (ORCPT
+        Tue, 9 Apr 2019 15:13:11 -0400
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:42057 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726559AbfDITNK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Apr 2019 15:13:09 -0400
-Received: by mail-lj1-f195.google.com with SMTP id r24so3765494ljg.3
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2019 12:13:07 -0700 (PDT)
+        Tue, 9 Apr 2019 15:13:10 -0400
+Received: by mail-lj1-f193.google.com with SMTP id v22so15495905lje.9
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2019 12:13:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=0TzgM4Ss5cnuZmuSTqOyUmgMUpi0hPf77e3I52aslDg=;
-        b=EajAsTBOZtILT3MbwKQ1fU5oC3NlWmsrXeNsQxXyLL3OcFr1YeWA3e72xPOpafvH89
-         P1HlyqNZs5EQG+QRJPjy0Ghf4wAZnxAcIJpmzbjgow4wkaYwIxu0arwfRJohnj4Aoja9
-         QK+TZrUgMPgGvhiJ1dUcTPGDK/9h6vmeokmfVPlhxVzhucIzsl1dnWnEOLH1uZIzKLHu
-         AFTKZ9jT0IYa6QBRgCMWrGwjsJZOip1DTNl4kFTZn+yEIm+cLTFbmRUcTQufN5JqyxRx
-         vNFrrPjV80Rt02k/Z9bUHVoDPd3faK8zeivMA7giqGrW/i8aHVH9PPhDlVZ2DQwcBlH+
-         JPkA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=W6Bi6Zd+xlYB7BEidk7J7o7FjU63HXTJmOjt8n1/y+Y=;
+        b=pA1pFrjMlmq/KfbLyF/VAyaYXoH2Q5994JlraOctwdYvWkL3xYb6KB1U6RbWdPnulD
+         /B9R5lREwV1h7BEMP5P8+vvIs8PVa93rIDwzHZsNBRu5wAfKGUqBYSmKYNOGLAsQR1J3
+         uhRMEJEYDG6DqXqsqxo68pYGTr52yfyELS1bwGS0EYNeN8a+s4qXWGuLB5KC8QLICWdk
+         esvq61U+VUADIRPcUGXlSyq8/eU5IBEBd4+bvEhdNhTTl25fguvyYgYvEbH9WLUsQ7eo
+         a/EADjKFEDaz3q9V4v6dO9milFRsVt349gu52JForlIIBuzSRZP8qfkYak34C4way+cR
+         N2iw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=0TzgM4Ss5cnuZmuSTqOyUmgMUpi0hPf77e3I52aslDg=;
-        b=X+nZfi8hOobkOyNPES0NdiiPWZVQwu3x9ibUIIhXxzxBrz2GGTvADOQozC1o9rbNcj
-         xqCYfsXR/5MQPO2MGnAjLE8QEPwLHy2jyfnVrHQ9tAP6PTzvfr9AN01JkEXzUPOf0iTt
-         c/jl6UyL8O2n80ua9+tgo+aD/0eGsovHa0ICwXCK2v2j0C48Z+D3kKFiAv7Ij3CPv45V
-         YHGB2of+OurFIxGvVxwHDfaUy9c6OT6TGgwHid90tlDBrKX+rZrGB/kvA66OCkf1ahUu
-         yAsIN4bP10DFK8SrlCJBd4k38wADzxevHazVfLR85+x9uB9waf3723MoHDRt9sYnj+4q
-         5cZQ==
-X-Gm-Message-State: APjAAAUUO/HDzOgkFn1gBrqzhH84rs5cd/2nMBeqRJPWz5Tw8uUa0hso
-        YerxkUnYN90GJAYa112rWobm6uPR
-X-Google-Smtp-Source: APXvYqwkmhoHuVehMV6P95D96HLmNLmuWz0IjrH7UXqrOVGrm4ufBd/tcMeU9/MtkeX1RmSGFcxZZg==
-X-Received: by 2002:a2e:9194:: with SMTP id f20mr20547146ljg.10.1554837187108;
-        Tue, 09 Apr 2019 12:13:07 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=W6Bi6Zd+xlYB7BEidk7J7o7FjU63HXTJmOjt8n1/y+Y=;
+        b=NCwF7PLAziPQuNiRPpVJ5CgEEtds2wUmG6gN2h9Q7NVUaiPDA4prrFsMHuSwrY6c4T
+         6e5O+Hai+gKpEZAD86Lw+/l2ov3vK8SaqEG3nRbeZ0weLWDHkhuR7I0J/MLSY33s09Wv
+         oS4AJ8b9SKPUNmRxG/0TXyGx2mXRh2yLpFqOMSmkAIGjNe9TOICo1szowVnknkEoP2F3
+         3j7PmjMVKB/zzj4xdRlMk8wM+MJrOcWLFfcViVQ+IXtFtgOMHscLrkTx90IydsiO1NiV
+         PEQV+j+4T12v0QJM51tEfy6xcp9TaIatkKb4qTBK3iSmSS8BGQJ0lkzRZJrbiVwQROqM
+         UXkA==
+X-Gm-Message-State: APjAAAVbwYgCG14GuRtUQIRwUaCu9vC/6U91xBBgEBWJlLECvRts86Vr
+        6igJ/i22aC2YXJQCbLov+fM=
+X-Google-Smtp-Source: APXvYqydxppC0vLz3qTRX6s6ocXeNZ3M89n4OLaqN5PDKlo1Tp4x4UhEQnDYhnI1zwO0e1Iu6MD5jw==
+X-Received: by 2002:a2e:9a91:: with SMTP id p17mr20553831lji.127.1554837188123;
+        Tue, 09 Apr 2019 12:13:08 -0700 (PDT)
 Received: from localhost.localdomain (81-233-89-221-no75.tbcn.telia.com. [81.233.89.221])
-        by smtp.gmail.com with ESMTPSA id q64sm6807848ljq.76.2019.04.09.12.13.06
+        by smtp.gmail.com with ESMTPSA id q64sm6807848ljq.76.2019.04.09.12.13.07
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Apr 2019 12:13:06 -0700 (PDT)
+        Tue, 09 Apr 2019 12:13:07 -0700 (PDT)
 From:   Erik Stromdahl <erik.stromdahl@gmail.com>
 To:     kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
         ath10k@lists.infradead.org
-Cc:     Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH 0/6] ath10k: SDIO and high latency patches from Silex
-Date:   Tue,  9 Apr 2019 21:08:45 +0200
-Message-Id: <20190409190851.4557-1-erik.stromdahl@gmail.com>
+Cc:     Alagu Sankar <alagusankar@silex-india.com>
+Subject: [PATCH 1/6] ath10k: use clean packet headers
+Date:   Tue,  9 Apr 2019 21:08:46 +0200
+Message-Id: <20190409190851.4557-2-erik.stromdahl@gmail.com>
 X-Mailer: git-send-email 2.19.1
+In-Reply-To: <20190409190851.4557-1-erik.stromdahl@gmail.com>
+References: <20190409190851.4557-1-erik.stromdahl@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -71,34 +74,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series adds a few more fixes for SDIO and high latency devices.
+From: Alagu Sankar <alagusankar@silex-india.com>
 
-I have had these on my private tree for quite some time now so they
-should be considered fairly well tested.
+HTC header carries junk values that may be interpreted by the firmware
+differently. Enable credit update only if flow control is enabled for
+the corresponding endpoint.
 
-4 out of 6 patches are from Alagu Sankar at Silex.
-I have made some adjustments to some of them in order to make them
-smaller and easier to review.
+PLL clock setting sequence does not mask the PLL_CONTROL
+register value. Side effect of not masking the values is not known as
+the entire pll clock setting sequence is undocumented.
 
-Alagu Sankar (4):
-  ath10k: use clean packet headers
-  ath10k: high latency fixes for beacon buffer
-  ath10k: sdio: read RX packets in bundles
-  ath10k: sdio: add MSDU ID allocation in HTT TX path
+Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 1 +
+ drivers/net/wireless/ath/ath10k/hw.c  | 2 ++
+ 2 files changed, 3 insertions(+)
 
-Erik Stromdahl (2):
-  ath10k: sdio: add missing error check
-  ath10k: sdio: replace skb_trim with explicit set of skb->len
-
- drivers/net/wireless/ath/ath10k/htc.c    |  1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c |  4 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 16 ++++-
- drivers/net/wireless/ath/ath10k/hw.c     |  2 +
- drivers/net/wireless/ath/ath10k/mac.c    | 31 +++++++---
- drivers/net/wireless/ath/ath10k/sdio.c   | 78 +++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/sdio.h   |  2 +
- 7 files changed, 109 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 805a7f8a04f2..1d4d1a1992fe 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -73,6 +73,7 @@ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
+ 	struct ath10k_htc_hdr *hdr;
+ 
+ 	hdr = (struct ath10k_htc_hdr *)skb->data;
++	memset(hdr, 0, sizeof(struct ath10k_htc_hdr));
+ 
+ 	hdr->eid = ep->eid;
+ 	hdr->len = __cpu_to_le16(skb->len - sizeof(*hdr));
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index ad082b7d7643..cfc232f1fdbc 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -814,6 +814,8 @@ static int ath10k_hw_qca6174_enable_pll_clock(struct ath10k *ar)
+ 	if (ret)
+ 		return -EINVAL;
+ 
++	reg_val &= ~(WLAN_PLL_CONTROL_REFDIV_MASK | WLAN_PLL_CONTROL_DIV_MASK |
++		     WLAN_PLL_CONTROL_NOPWD_MASK);
+ 	reg_val |= (SM(hw_clk->refdiv, WLAN_PLL_CONTROL_REFDIV) |
+ 		    SM(hw_clk->div, WLAN_PLL_CONTROL_DIV) |
+ 		    SM(1, WLAN_PLL_CONTROL_NOPWD));
 -- 
 2.19.1
 
