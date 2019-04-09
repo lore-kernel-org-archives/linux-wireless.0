@@ -4,30 +4,30 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE16C10F14
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C3DC10F13
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F187720883
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6321821841
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="Wc8Mra/E"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="oc9pO+tD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727080AbfDIAZJ (ORCPT
+        id S1727240AbfDIAZL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 20:25:09 -0400
-Received: from vps.xff.cz ([195.181.215.36]:36194 "EHLO vps.xff.cz"
+        Mon, 8 Apr 2019 20:25:11 -0400
+Received: from vps.xff.cz ([195.181.215.36]:36312 "EHLO vps.xff.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726864AbfDIAZH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 20:25:07 -0400
+        id S1726925AbfDIAZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Apr 2019 20:25:09 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554769500; bh=ta9jNeaOzUhhF9iRKrx9XUH+NO8eB903r/yZVGfZaE0=;
+        t=1554769502; bh=sWLjTZ6pha5DZuVhVEfKThCUnITYw/sdGtV9sBBFXgs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Wc8Mra/Efwwvg3CQH7nwd7pOZcnDmtxqtKCcc12YGs1B2w2ZkoL9vmpeuyAKDRWd6
-         p1b22kamXioHjRENcvv+1A+waDZshCxjkkyUvqYuaPqYLLa8ahnT+pWeMG83nZqmKu
-         ndtuxjdpPXQ95u3KmMLO1n+N7Um7xkG7BscSaYlo=
+        b=oc9pO+tDoMVf6NpaRklMjH9nz0gpn0bgca24na5fg6bdED4enT4OTM0Iu2odyhSSr
+         wn5bxzNI6myrybQIOajtej/h5tqH5cgPVGxhYPuTEXCMrvEoTY8SCX5LpzIg8e4r7k
+         SAOvo7ZwKLok5wwbaJZpcUOCq2P5i1jHu5/Ms8Gk=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -54,9 +54,9 @@ Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH v2 07/13] arm64: dts: allwinner: orange-pi-3: Enable ethernet
-Date:   Tue,  9 Apr 2019 02:24:46 +0200
-Message-Id: <20190409002452.14551-8-megous@megous.com>
+Subject: [PATCH v2 10/13] arm64: dts: allwinner: orange-pi-3: Enable HDMI output
+Date:   Tue,  9 Apr 2019 02:24:49 +0200
+Message-Id: <20190409002452.14551-11-megous@megous.com>
 In-Reply-To: <20190409002452.14551-1-megous@megous.com>
 References: <20190409002452.14551-1-megous@megous.com>
 MIME-Version: 1.0
@@ -68,91 +68,81 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ondrej Jirman <megous@megous.com>
 
-Orange Pi 3 has two regulators that power the Realtek RTL8211E. According
-to the phy datasheet, both regulators need to be enabled at the same time,
-but we can only specify a single phy-supply in the DT.
-
-This can be achieved by making one regulator depedning on the other via
-vin-supply. While it's not a technically correct description of the
-hardware, it achieves the purpose.
-
-All values of RX/TX delay were tested exhaustively and a middle one of the
-working values was chosen.
+Orange Pi 3 has a DDC_CEC_EN signal connected to PH2, that enables the DDC
+I2C bus voltage shifter. Before EDID can be read, we need to pull PH2 high.
 
 Signed-off-by: Ondrej Jirman <megous@megous.com>
 ---
- .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 44 +++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 35 +++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-index 5fbc5e410883..523f1d848042 100644
+index 523f1d848042..f5595653b2c5 100644
 --- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-@@ -15,6 +15,7 @@
- 
- 	aliases {
- 		serial0 = &uart0;
-+		ethernet0 = &emac;
+@@ -22,6 +22,17 @@
+ 		stdout-path = "serial0:115200n8";
  	};
  
- 	chosen {
-@@ -44,6 +45,27 @@
- 		regulator-max-microvolt = <5000000>;
- 		regulator-always-on;
- 	};
++	connector {
++		compatible = "hdmi-connector";
++		type = "a";
 +
-+	/*
-+	 * The board uses 2.5V RGMII signalling. Power sequence to enable
-+	 * the phy is to enable GMAC-2V5 and GMAC-3V3 (aldo2) power rails
-+	 * at the same time and to wait 100ms.
-+	 */
-+	reg_gmac_2v5: gmac-2v5 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "gmac-2v5";
-+		regulator-min-microvolt = <2500000>;
-+		regulator-max-microvolt = <2500000>;
-+		startup-delay-us = <100000>;
-+		enable-active-high;
-+		gpio = <&pio 3 6 GPIO_ACTIVE_HIGH>; /* PD6 */
-+
-+		/* The real parent of gmac-2v5 is reg_vcc5v, but we need to
-+		 * enable two regulators to power the phy. This is one way
-+		 * to achieve that.
-+		 */
-+		vin-supply = <&reg_aldo2>; /* GMAC-3V3 */
++		port {
++			hdmi_con_in: endpoint {
++				remote-endpoint = <&hdmi_out_con>;
++			};
++		};
 +	};
++
+ 	leds {
+ 		compatible = "gpio-leds";
+ 
+@@ -37,6 +48,15 @@
+ 		};
+ 	};
+ 
++	reg_ddc: ddc-io {
++		compatible = "regulator-fixed";
++		regulator-name = "ddc-io";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		enable-active-high;
++		gpio = <&pio 7 2 GPIO_ACTIVE_HIGH>; /* PH2 */
++	};
++
+ 	reg_vcc5v: vcc5v {
+ 		/* board wide 5V supply directly from the DC jack */
+ 		compatible = "regulator-fixed";
+@@ -72,6 +92,10 @@
+ 	cpu-supply = <&reg_dcdca>;
  };
  
- &cpu0 {
-@@ -58,6 +80,28 @@
- 	status = "okay";
- };
- 
-+&emac {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&ext_rgmii_pins>;
-+	phy-mode = "rgmii";
-+	phy-handle = <&ext_rgmii_phy>;
-+	phy-supply = <&reg_gmac_2v5>;
-+	allwinner,rx-delay-ps = <1500>;
-+	allwinner,tx-delay-ps = <700>;
++&de {
 +	status = "okay";
 +};
 +
-+&mdio {
-+	ext_rgmii_phy: ethernet-phy@1 {
-+		compatible = "ethernet-phy-ieee802.3-c22";
-+		reg = <1>;
+ &ehci0 {
+ 	status = "okay";
+ };
+@@ -91,6 +115,17 @@
+ 	status = "okay";
+ };
+ 
++&hdmi {
++	ddc-supply = <&reg_ddc>;
++	status = "okay";
++};
 +
-+		reset-gpios = <&pio 3 14 GPIO_ACTIVE_LOW>; /* PD14 */
-+		reset-assert-us = <15000>;
-+		reset-deassert-us = <40000>;
++&hdmi_out {
++	hdmi_out_con: endpoint {
++		remote-endpoint = <&hdmi_con_in>;
 +	};
 +};
 +
- &mmc0 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&mmc0_pins>;
+ &mdio {
+ 	ext_rgmii_phy: ethernet-phy@1 {
+ 		compatible = "ethernet-phy-ieee802.3-c22";
 -- 
 2.21.0
 
