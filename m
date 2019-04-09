@@ -2,139 +2,222 @@ Return-Path: <SRS0=TYOj=SL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72A2CC10F0E
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 19:59:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6945C10F0E
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 20:41:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5B3420833
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 19:59:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="d5v6FQb3"
+	by mail.kernel.org (Postfix) with ESMTP id 927882084B
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 20:41:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726530AbfDIT7F (ORCPT
+        id S1726479AbfDIUlL convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 15:59:05 -0400
-Received: from 7.mo178.mail-out.ovh.net ([46.105.58.91]:49824 "EHLO
-        7.mo178.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726412AbfDIT7F (ORCPT
+        Tue, 9 Apr 2019 16:41:11 -0400
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:33817 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726337AbfDIUlK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Apr 2019 15:59:05 -0400
-X-Greylist: delayed 600 seconds by postgrey-1.27 at vger.kernel.org; Tue, 09 Apr 2019 15:59:05 EDT
-Received: from player735.ha.ovh.net (unknown [10.109.160.244])
-        by mo178.mail-out.ovh.net (Postfix) with ESMTP id 4CC9F59FE4
-        for <linux-wireless@vger.kernel.org>; Tue,  9 Apr 2019 21:39:53 +0200 (CEST)
-Received: from awhome.eu (p57B7E5B2.dip0.t-ipconnect.de [87.183.229.178])
-        (Authenticated sender: postmaster@awhome.eu)
-        by player735.ha.ovh.net (Postfix) with ESMTPSA id 8273549B9878;
-        Tue,  9 Apr 2019 19:39:51 +0000 (UTC)
-Subject: Re: [PATCH v2 0/4] Extended Key ID support
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1554838790;
-        bh=ftBqBSPFRob/UZmhWOEZ3jWRZKhgkrVjGu7bX9rnBPQ=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=d5v6FQb3cKfB8pYeIpOywNHMB5dmJSa6Qnr7Pn1vPc1zNxvpx0JQkpSugfh91454Y
-         9laZsM9rrMhZDeKUu9YzPlKpH462Tl9ShcyKok02nnwbViw+PJMzkFfh9pzX14/yVj
-         tA/XjhPrfsA3Sid5Gzk3o0seL+YswmPtf6y5yA0k=
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org
-References: <20190319203410.25145-1-alexander@wetzel-home.de>
- <98e1f8942056486669c6295323ef09763fd2ec0a.camel@sipsolutions.net>
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-Message-ID: <e8ad598e-a2c4-45be-6923-11fccf80d296@wetzel-home.de>
-Date:   Tue, 9 Apr 2019 21:39:50 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        Tue, 9 Apr 2019 16:41:10 -0400
+Received: by mail-ed1-f68.google.com with SMTP id x14so56317eds.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2019 13:41:09 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=XPe7jI+WcE4ii926/vq4cq+lBNXK2hucWmRJ86xgeZk=;
+        b=evPN3za3dEEe2TUox2bAz+dn8njA7KuGtDbA2F5DZlIO8ngjmZ2tnfUntPoekWeT3J
+         gWVzLQNydsm3uHrHZdyfPicaHsk8hZdFsOvCOBNoC+mPhF25zlJncttXUCL0aru0OqyD
+         ypYdSip9gPFZheA/ETP3p2u39wrSr02/22/YRpxyLqe7gCUT1JEqyK5jLYncoocpg9Px
+         vjEERKrrSKeJGFfYgxONLiY0fvW7syCeSJanks5bW0Lqyy0e2boRvOHNCCCCKpyRP4kh
+         6FF53t3AMohAO46o1jstRuhO3rN529Zvsof4Euth7HeUUlqmS7nA8vjvhUhKsGwMKqph
+         QuUg==
+X-Gm-Message-State: APjAAAUN1WdPdaGoyo+UyKL0DH66VHPhsO+uoUSMEBWVwUY0MgLtwU23
+        NLPaKIE0jfSzvomcdi67VIlqWQ==
+X-Google-Smtp-Source: APXvYqzRy5WEosfm03JGPl6V8NT73z3+etyqXt6ZzYa5vhxqbtYEY3JNB4RoUQUttNO38FVKvKY6xg==
+X-Received: by 2002:a05:6402:180c:: with SMTP id g12mr14336772edy.181.1554842468615;
+        Tue, 09 Apr 2019 13:41:08 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
+        by smtp.gmail.com with ESMTPSA id b34sm9790443edd.24.2019.04.09.13.41.07
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 09 Apr 2019 13:41:07 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id C87481804A4; Tue,  9 Apr 2019 22:41:06 +0200 (CEST)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Yibo Zhao <yiboz@codeaurora.org>
+Cc:     make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
+Subject: Re: [RFC/RFT] mac80211: Switch to a virtual time-based airtime scheduler
+In-Reply-To: <acd33756e87ea64c608e306e5ee60aa2@codeaurora.org>
+References: <20190215170512.31512-1-toke@redhat.com> <753b328855b85f960ceaf974194a7506@codeaurora.org> <87ftqy41ea.fsf@toke.dk> <acd33756e87ea64c608e306e5ee60aa2@codeaurora.org>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Tue, 09 Apr 2019 22:41:06 +0200
+Message-ID: <877ec2ykrh.fsf@toke.dk>
 MIME-Version: 1.0
-In-Reply-To: <98e1f8942056486669c6295323ef09763fd2ec0a.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Ovh-Tracer-Id: 17656643816126291143
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduuddrudehgddugedtucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Am 08.04.19 um 21:57 schrieb Johannes Berg:
-> On Tue, 2019-03-19 at 21:34 +0100, Alexander Wetzel wrote:
->> This patch series adds support for IEEE 802.11-2016 Extended Key ID
->> support. Compared to the last RFC there are again quite some API
->> changes, but also some bug fixes. (The bug fixes I remember are outlined
->> in the different patches.)
-> 
-> FWIW, I've applied the first two patches here.
-> 
-> I'd really like you to continue with only that for now, and (try to) get
-> hostapd/wpa_supplicant changes upstream, perhaps with corresponding
-> hwsim tests. That way, we can see this working live.
+Yibo Zhao <yiboz@codeaurora.org> writes:
 
-That's splendid:-)
-I'll try to get the hostapd/wpa_supplicant patches finalized in the next 
-weeks. Hopefully I have something to submit here once the Extended Key 
-ID API is in mainline immediately.
+> On 2019-04-04 16:31, Toke Høiland-Jørgensen wrote:
+>> Yibo Zhao <yiboz@codeaurora.org> writes:
+>> 
+>>> On 2019-02-16 01:05, Toke Høiland-Jørgensen wrote:
+>>>> This switches the airtime scheduler in mac80211 to use a virtual
+>>>> time-based
+>>>> scheduler instead of the round-robin scheduler used before. This has 
+>>>> a
+>>>> couple of advantages:
+>>>> 
+>>>> - No need to sync up the round-robin scheduler in firmware/hardware
+>>>> with
+>>>>   the round-robin airtime scheduler.
+>>>> 
+>>>> - If several stations are eligible for transmission we can schedule
+>>>> both of
+>>>>   them; no need to hard-block the scheduling rotation until the head 
+>>>> of
+>>>> the
+>>>>   queue has used up its quantum.
+>>>> 
+>>>> - The check of whether a station is eligible for transmission becomes
+>>>>   simpler (in ieee80211_txq_may_transmit()).
+>>>> 
+>>>> The drawback is that scheduling becomes slightly more expensive, as 
+>>>> we
+>>>> need
+>>>> to maintain an rbtree of TXQs sorted by virtual time. This means that
+>>>> ieee80211_register_airtime() becomes O(logN) in the number of 
+>>>> currently
+>>>> scheduled TXQs. However, hopefully this number rarely grows too big
+>>>> (it's
+>>>> only TXQs currently backlogged, not all associated stations), so it
+>>>> shouldn't be too big of an issue.
+>>>> 
+>>>> @@ -1831,18 +1830,32 @@ void ieee80211_sta_register_airtime(struct
+>>>> ieee80211_sta *pubsta, u8 tid,
+>>>>  {
+>>>>  	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+>>>>  	struct ieee80211_local *local = sta->sdata->local;
+>>>> +	struct ieee80211_txq *txq = sta->sta.txq[tid];
+>>>>  	u8 ac = ieee80211_ac_from_tid(tid);
+>>>> -	u32 airtime = 0;
+>>>> +	u64 airtime = 0, weight_sum;
+>>>> +
+>>>> +	if (!txq)
+>>>> +		return;
+>>>> 
+>>>>  	if (sta->local->airtime_flags & AIRTIME_USE_TX)
+>>>>  		airtime += tx_airtime;
+>>>>  	if (sta->local->airtime_flags & AIRTIME_USE_RX)
+>>>>  		airtime += rx_airtime;
+>>>> 
+>>>> +	/* Weights scale so the unit weight is 256 */
+>>>> +	airtime <<= 8;
+>>>> +
+>>>>  	spin_lock_bh(&local->active_txq_lock[ac]);
+>>>> +
+>>>>  	sta->airtime[ac].tx_airtime += tx_airtime;
+>>>>  	sta->airtime[ac].rx_airtime += rx_airtime;
+>>>> -	sta->airtime[ac].deficit -= airtime;
+>>>> +
+>>>> +	weight_sum = local->airtime_weight_sum[ac] ?: sta->airtime_weight;
+>>>> +
+>>>> +	local->airtime_v_t[ac] += airtime / weight_sum;
+>>> Hi Toke,
+>>> 
+>>> Please ignore the previous two broken emails regarding this new 
+>>> proposal
+>>> from me.
+>>> 
+>>> It looks like local->airtime_v_t acts like a Tx criteria. Only the
+>>> stations with less airtime than that are valid for Tx. That means 
+>>> there
+>>> are situations, like 50 clients, that some of the stations can be used
+>>> to Tx when putting next_txq in the loop. Am I right?
+>> 
+>> I'm not sure what you mean here. Are you referring to the case where 
+>> new
+>> stations appear with a very low (zero) airtime_v_t? That is handled 
+>> when
+>> the station is enqueued.
+> Hi Toke,
+>
+> Sorry for the confusion. I am not referring to the case that you 
+> mentioned though it can be solved by your subtle design, max(local vt, 
+> sta vt). :-)
+>
+> Actually, my concern is situation about putting next_txq in the loop. 
+> Let me explain a little more and see below.
+>
+>> @@ -3640,126 +3638,191 @@ EXPORT_SYMBOL(ieee80211_tx_dequeue);
+>>  struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8
+>> ac)
+>>  {
+>>  	struct ieee80211_local *local = hw_to_local(hw);
+>> +	struct rb_node *node = local->schedule_pos[ac];
+>>  	struct txq_info *txqi = NULL;
+>> +	bool first = false;
+>> 
+>>  	lockdep_assert_held(&local->active_txq_lock[ac]);
+>> 
+>> - begin:
+>> -	txqi = list_first_entry_or_null(&local->active_txqs[ac],
+>> -					struct txq_info,
+>> -					schedule_order);
+>> -	if (!txqi)
+>> +	if (!node) {
+>> +		node = rb_first_cached(&local->active_txqs[ac]);
+>> +		first = true;
+>> +	} else
+>> +		node = rb_next(node);
+>
+> Consider below piece of code from ath10k_mac_schedule_txq:
+>
+>          ieee80211_txq_schedule_start(hw, ac);
+>          while ((txq = ieee80211_next_txq(hw, ac))) {
+>                  while (ath10k_mac_tx_can_push(hw, txq)) {
+>                          ret = ath10k_mac_tx_push_txq(hw, txq);
+>                          if (ret < 0)
+>                                  break;
+>                  }
+>                  ieee80211_return_txq(hw, txq);
+>                  ath10k_htt_tx_txq_update(hw, txq);
+>                  if (ret == -EBUSY)
+>                          break;
+>          }
+>          ieee80211_txq_schedule_end(hw, ac);
+>
+> If my understanding is right, local->schedule_pos is used to record the 
+> last scheduled node and used for traversal rbtree for valid txq. There 
+> is chance that an empty txq is feeded to return_txq and got removed from 
+> rbtree. The empty txq will always be the rb_first node. Then in the 
+> following next_txq, local->schedule_pos becomes meaningless since its 
+> rb_next will return NULL and the loop break. Only rb_first get dequeued 
+> during this loop.
+>
+> 	if (!node || RB_EMPTY_NODE(node)) {
+> 		node = rb_first_cached(&local->active_txqs[ac]);
+> 		first = true;
+> 	} else
+> 		node = rb_next(node);
 
-But if you or someone else want to run some tests prior to that.
-I've updated the patches available here with the ones I'm currently 
-using: https://www.awhome.eu/index.php/s/AJJXBLsZmzHdxpX
+Ah, I see what you mean. Yes, that would indeed be a problem - nice
+catch! :)
 
-They are fully functional and I'm using them on my main AP and 
-workstation for months now.
-They are on top of the current hostapd HEAD and should not cause any 
-regressions. They are also comparable simple to port between versions. 
-The code we touch here has not been changed in any relevant way since I 
-started working on the patches. Just really copy nl80211_copy.h from the 
-kernel...
+> How about this? The nodes on the rbtree will be dequeued and removed
+> from rbtree one by one until HW is busy. Please note local vt and sta
+> vt will not be updated since txq lock is held during this time.
 
-A sad side note:
-I'm pretty sure I've already found one broken Wlan implementation: 
-Samsung Galaxy Tap S3
-This device seems to just copy the RSN Capability (bit) from the AP and 
-then fails when the AP rekeys the connection and starts using keyid 1...
-But it's probably a Samsung specific bug, other Android devices - 
-including a Google Pixel 3 - don't "lie" in the RSN and are using 
-"legacy" key installs as they should.
+Insertion and removal from the rbtree are relatively expensive, so I'd
+rather not do that for every txq. I think a better way to solve this
+is to just defer the actual removal from the tree until
+ieee80211_txq_schedule_end()... Will fix that when I submit this again.
 
-> 
-> We briefly discussed this at the wireless workshop, and the general
-> feeling seems to have been that the compat mode is probably not really
-> worthwhile, but I haven't quite made up my mind on that.
-
-I would like to be able to support Extended Key ID for the the Atheros 
-cards < ath10k... Maybe that gets the attention of someone who can fix 
-the ath10k firmware to also support it, hopefully in NATIVE mode:-)
-But I see that the COMPAT mode may not be worth the added complexity in 
-the long term.
-
-Which reminds me:
-One potential follow up on the COMPAT code would be seamless Rx during 
-rekey even when not using Extended Key ID. It would need some slight of 
-hand but I think it's possible. Basically we just would have to try the 
-second key also if the first one did not decode the MPTU. So far I've 
-shelved any plans into that direction as too complex for too little 
-gain. And after all people should just start using Extended Key ID 
-instead. After all that's the point of having standards...
-
-> Still, having tests and being able to check it out would help a lot,
-> also as part of perhaps building a case for compat mode.
-
-Besides some review of the patches with my improved 802.11/code 
-understanding the only thing missing in the current 
-wpa_supplicant/hostapd patches *are* the test cases.
-
-The existing rekey tests are already working fine with Extended Key ID. 
-Separating Extended Key ID rekey from "legacy" rekeys tests is probably 
-half of the work here...
-With the patches you merged and the linked hostapd/wpa_supplicant 
-patches any (WPA2) rekey test will use Extended Key ID. (They won't test 
-any of the really interesting code pathes in the kernel, trough. No 
-A-MPDU, no TX-Pull and of course no HW crypto or RX/TX fast path if I 
-remember it right.)
-
-Thanks,
-Alexander
+-Toke
