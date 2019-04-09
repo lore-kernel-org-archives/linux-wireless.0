@@ -2,150 +2,123 @@ Return-Path: <SRS0=TYOj=SL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99457C282CE
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 11:56:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F28C282DA
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 12:00:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64DA62084F
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 11:56:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MWo93o8N"
+	by mail.kernel.org (Postfix) with ESMTP id D174D20833
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 12:00:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726948AbfDIL4J (ORCPT
+        id S1727337AbfDIMAK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 07:56:09 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:60746 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726066AbfDIL4J (ORCPT
+        Tue, 9 Apr 2019 08:00:10 -0400
+Received: from relay11.mail.gandi.net ([217.70.178.231]:48555 "EHLO
+        relay11.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727318AbfDIMAJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Apr 2019 07:56:09 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x39Bmxvb167358;
-        Tue, 9 Apr 2019 11:55:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=K9NT4H6etaliOftI2I7VlNB98ZvZITw3AZwIqxMlYSU=;
- b=MWo93o8NkTm+oTed1TsyEwEQTSIziFKczWqXZv4sgu5bTJwn3SPA1qUYWAa4p88uGFKW
- Hngthba2FaitaARlPz0PX6Dh6j9Z5i48vQd34r+YzS1YSoCx/s9mNMompIrftq1W+oSG
- 87ccLpCDO4HPb9NfG4C+VPrbnjiFPhsFTGgSl+f+cnvoO8XGxLYEg0KJ8cuL8Wgava46
- tbo1w5MUHAXBZqX0nmijKuCs0lTOpbjH2Ob6uylzQvpEnAnbPMBgg2R0HUxVaJXI20mM
- bAopCaCQ1fR3aY4r0IHAX9UKee6FAJRhZPZcAHiR9CYxZAPnjIFPaLq4qaK/aTsTdKZw SA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 2rphmeckxr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 09 Apr 2019 11:55:59 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x39BsRch026035;
-        Tue, 9 Apr 2019 11:55:58 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2rph7shf6k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 09 Apr 2019 11:55:58 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x39BtvpP026903;
-        Tue, 9 Apr 2019 11:55:57 GMT
-Received: from kadam (/197.157.0.24)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 09 Apr 2019 04:55:57 -0700
-Date:   Tue, 9 Apr 2019 14:55:44 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc:     Colin King <colin.king@canonical.com>,
+        Tue, 9 Apr 2019 08:00:09 -0400
+Received: from localhost (aaubervilliers-681-1-89-125.w90-88.abo.wanadoo.fr [90.88.30.125])
+        (Authenticated sender: maxime.ripard@bootlin.com)
+        by relay11.mail.gandi.net (Postfix) with ESMTPSA id 3FB78100006;
+        Tue,  9 Apr 2019 12:00:00 +0000 (UTC)
+Date:   Tue, 9 Apr 2019 13:59:59 +0200
+From:   Maxime Ripard <maxime.ripard@bootlin.com>
+To:     linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Jose Abreu <joabreu@synopsys.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH][V2] brcmfmac: fix leak of mypkt on error return path
-Message-ID: <20190409115544.GC6095@kadam>
-References: <20190409114333.24342-1-colin.king@canonical.com>
- <e0d984a7-6a6d-b902-6f75-26ee6f530efe@broadcom.com>
+        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
+Subject: Re: [PATCH v2 02/13] arm64: dts: allwinner: h6: Add Orange Pi 3 DTS
+Message-ID: <20190409115959.6nnjidsxtygjcfgr@flea>
+References: <20190409002452.14551-1-megous@megous.com>
+ <20190409002452.14551-3-megous@megous.com>
+ <20190409081230.pz55uwyq33x5tfgz@flea>
+ <20190409093304.sutpobe5azncyl5r@core.my.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="v7qurgsknlgpcsjo"
 Content-Disposition: inline
-In-Reply-To: <e0d984a7-6a6d-b902-6f75-26ee6f530efe@broadcom.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9221 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1904090077
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9221 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1904090077
+In-Reply-To: <20190409093304.sutpobe5azncyl5r@core.my.home>
+User-Agent: NeoMutt/20180716
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Apr 09, 2019 at 01:50:38PM +0200, Arend Van Spriel wrote:
-> On 4/9/2019 1:43 PM, Colin King wrote:
-> > From: Colin Ian King <colin.king@canonical.com>
-> > 
-> > Currently if the call to brcmf_sdiod_set_backplane_window fails then
-> > then error return path leaks mypkt. Fix this by returning by a new
-> > error path labelled 'out' that calls brcmu_pkt_buf_free_skb to free
-> > mypkt.  Also remove redundant check on err before calling
-> > brcmf_sdiod_skbuff_write.
-> > 
-> > Addresses-Coverity: ("Resource Leak")
-> > Fixes: a7c3aa1509e2 ("brcmfmac: Remove brcmf_sdiod_addrprep()")
-> > Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> > ---
-> > 
-> > V2: Remove  redundant check on err before calling
-> > brcmf_sdiod_skbuff_write, kudos to Dan Carpenter and Arend Van Spriel
-> > for spotting this.
-> > 
-> > ---
-> >   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 +++-----
-> >   1 file changed, 3 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> > index ec129864cc9c..60aede5abb4d 100644
-> > --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> > +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> > @@ -628,15 +628,13 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
-> >   	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
-> >   	if (err)
-> > -		return err;
-> > +		goto out;
-> >   	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-> >   	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-> > -	if (!err)
-> > -		err = brcmf_sdiod_skbuff_write(sdiodev, sdiodev->func2, addr,
-> > -					       mypkt);
-> > -
-> > +	err = brcmf_sdiod_skbuff_write(sdiodev, sdiodev->func2, addr, mypkt);
-> > +out:
-> 
-> I am fine with it, but my suggestion was a bit different:
-> 
-> 	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
-> 	if (!err) {
-> 		addr &= SBSDIO_SB_OFT_ADDR_MASK;
-> 		addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-> 		err = brcmf_sdiod_skbuff_write(sdiodev, sdiodev->func2,
-> 					       addr, mypkt);
-> 	}
 
-Success handling always leads to extra indenting like this...  It's
-less confusing to do failure handling keep the normal/success path at
-indent level 1.
+--v7qurgsknlgpcsjo
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-regards,
-dan carpenter
+On Tue, Apr 09, 2019 at 11:33:04AM +0200, Ond=C5=99ej Jirman wrote:
+> On Tue, Apr 09, 2019 at 10:12:30AM +0200, Maxime Ripard wrote:
+> > Hi,
+> >
+> > On Tue, Apr 09, 2019 at 02:24:41AM +0200, megous@megous.com wrote:
+> > > +&mmc0 {
+> > > +	pinctrl-names =3D "default";
+> > > +	pinctrl-0 =3D <&mmc0_pins>;
+> >
+> > Since 5 minutes ago, that's now the default.
+>
+> Ah. :)
+>
+> > > +&usb2otg {
+> > > +	/*
+> > > +	 * Beware that this board will not automatically disconnect
+> > > +	 * VBUS from DCIN, when self-powered and used as a peripheral.
+> > > +	 */
+> > > +	dr_mode =3D "otg";
+> > > +	status =3D "okay";
+> > > +};
+> >
+> > As we were discussing, I guess leaving it as host is the safest
+> > option.
+> >
+> > I can fix both issues while applying if that's ok for you.
+>
+> It's ok with me. Thank you.
 
+Done, thanks!
+Maxime
+
+--
+Maxime Ripard, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
+
+--v7qurgsknlgpcsjo
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQRcEzekXsqa64kGDp7j7w1vZxhRxQUCXKyJPwAKCRDj7w1vZxhR
+xSBtAQCP8U7f2IJ8NHcsyJMZocyouQJ61gHbuel6iVd6MthJRQD/U1j6Ci6B4YUF
+7iX4RfoNvY6X+8UULzi41a9bN5dq9Q0=
+=k4Ie
+-----END PGP SIGNATURE-----
+
+--v7qurgsknlgpcsjo--
