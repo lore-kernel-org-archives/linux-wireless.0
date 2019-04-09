@@ -2,114 +2,140 @@ Return-Path: <SRS0=TYOj=SL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D68BFC10F0E
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 08:12:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B763CC10F0E
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 08:36:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A430820883
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 08:12:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A77520833
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 08:36:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="zR50xb2Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726493AbfDIIMj (ORCPT
+        id S1726831AbfDIIgc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 04:12:39 -0400
-Received: from relay11.mail.gandi.net ([217.70.178.231]:54781 "EHLO
-        relay11.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726062AbfDIIMj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Apr 2019 04:12:39 -0400
-Received: from localhost (aaubervilliers-681-1-89-125.w90-88.abo.wanadoo.fr [90.88.30.125])
-        (Authenticated sender: maxime.ripard@bootlin.com)
-        by relay11.mail.gandi.net (Postfix) with ESMTPSA id D94A2100017;
-        Tue,  9 Apr 2019 08:12:30 +0000 (UTC)
-Date:   Tue, 9 Apr 2019 10:12:30 +0200
-From:   Maxime Ripard <maxime.ripard@bootlin.com>
-To:     megous@megous.com
-Cc:     linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-        Alexandre Torgue <alexandre.torgue@st.com>,
-        Jose Abreu <joabreu@synopsys.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Naveen Gupta <naveen.gupta@cypress.com>,
-        dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: Re: [PATCH v2 02/13] arm64: dts: allwinner: h6: Add Orange Pi 3 DTS
-Message-ID: <20190409081230.pz55uwyq33x5tfgz@flea>
-References: <20190409002452.14551-1-megous@megous.com>
- <20190409002452.14551-3-megous@megous.com>
+        Tue, 9 Apr 2019 04:36:32 -0400
+Received: from mail-eopbgr800087.outbound.protection.outlook.com ([40.107.80.87]:20608
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726001AbfDIIgc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Apr 2019 04:36:32 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0LrZ0DZTrY5EfiazN5GmiLfBwhtqHQiPC9LXrkaJVyI=;
+ b=zR50xb2QrwjDbG/cW6/F4EbZHcz/GseqqEVi6fuxAVQHS2+DzwN+dW3iZS0c8j2eNSX5MbPPm81sBissRilTetm8QcydmVKHkertBhOIrOMUwTmHCDDszF7efZLJ3sQ3FRwZOQkUF1p62VEq7CUv3rpJZ09xf47Qjj4BMjGIjM8=
+Received: from BYAPR05MB5909.namprd05.prod.outlook.com (20.178.50.154) by
+ BYAPR05MB4999.namprd05.prod.outlook.com (20.177.230.205) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1792.7; Tue, 9 Apr 2019 08:36:18 +0000
+Received: from BYAPR05MB5909.namprd05.prod.outlook.com
+ ([fe80::b1c5:c55f:bbd1:fcf3]) by BYAPR05MB5909.namprd05.prod.outlook.com
+ ([fe80::b1c5:c55f:bbd1:fcf3%3]) with mapi id 15.20.1792.009; Tue, 9 Apr 2019
+ 08:36:18 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
+ SN6PR05MB5952.namprd05.prod.outlook.com (20.178.6.13) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1792.7; Tue, 9 Apr 2019 08:35:57 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e]) by SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e%4]) with mapi id 15.20.1792.009; Tue, 9 Apr 2019
+ 08:35:57 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: Re: question: crda timeout in cfg80211
+Thread-Topic: question: crda timeout in cfg80211
+Thread-Index: AQHU49FUZcg4gTfb8k6NNfp7UvpVxKYytK3mgADiKwA=
+Date:   Tue, 9 Apr 2019 08:35:57 +0000
+Message-ID: <20190409083551.g27qvcxqhfm2x4uq@bars>
+References: <20190326124209.j6tdk5cz47kc6mdj@bars>
+ <07e019232f1720ce70d3353ce73cd32a23e5ed2f.camel@sipsolutions.net>
+In-Reply-To: <07e019232f1720ce70d3353ce73cd32a23e5ed2f.camel@sipsolutions.net>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BYAPR11CA0061.namprd11.prod.outlook.com
+ (2603:10b6:a03:80::38) To SN6PR05MB4928.namprd05.prod.outlook.com
+ (2603:10b6:805:9d::10)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 51372f57-35fc-4afc-3cd3-08d6bcc66316
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600139)(711020)(4605104)(2017052603328)(7193020);SRVR:SN6PR05MB5952;
+x-ms-traffictypediagnostic: SN6PR05MB5952:|BYAPR05MB4999:
+x-moderation-data: 4/9/2019 8:36:15 AM
+x-microsoft-antispam-prvs: <BYAPR05MB4999658008A1DB4A6220A03BA32D0@BYAPR05MB4999.namprd05.prod.outlook.com>
+x-forefront-prvs: 000227DA0C
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(346002)(39850400004)(376002)(366004)(136003)(396003)(199004)(189003)(54906003)(105586002)(1076003)(446003)(11346002)(81156014)(71200400001)(486006)(53936002)(71190400001)(52116002)(25786009)(476003)(14444005)(316002)(436003)(97736004)(8676002)(106356001)(9686003)(6512007)(256004)(186003)(8936002)(26005)(99286004)(6116002)(3846002)(2906002)(81166006)(66066001)(68736007)(14454004)(107886003)(33716001)(6436002)(86362001)(6246003)(76176011)(305945005)(102836004)(229853002)(6506007)(386003)(7736002)(6486002)(478600001)(6916009)(4326008)(5660300002);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR05MB4999;H:BYAPR05MB5909.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: 4paslHxr/oLHeIQII2ufB5cZxfi5NzYhQbB5qVf1ecP5ZYFWqwxfNAs2dFfrO04tTTKhZZlagpxQRsJR/zhTvbqRDF0PgrzpqS91fBdnhobIxmza7+mgkheSf43TU2uoIr4YfOpW84KaWcC//OkTva47X6RpHhqbzvz8rXQsiWGC3RL7+7Dj8mzTEEF7UOpyIQLCvxtw5wxxMDjnZSnVyIv+i6Ct98rHxlmOxsXKV0QLphgQoDhn5mw2e6bniwgFSOt4qYlRCSVe2WPgFMxfFwDJB6MLSpIsjaHPZu161+K2n6kFikwNb50hCaBC2odOk3mSP7587uQaaEfdz9nH3+xg+jI7FFaoO04/gW2pEvSSwlTclMczH8bgeRIv/C/wwOZ6NYUkjVR4xiUbTmUl/x/GVI0UZjHtrLwEjcSZ/8c=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <AAEF3D2ECC6D074096CEBFC0560BC997@namprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="fgjv5fzwmh3drajl"
-Content-Disposition: inline
-In-Reply-To: <20190409002452.14551-3-megous@megous.com>
-User-Agent: NeoMutt/20180716
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 51372f57-35fc-4afc-3cd3-08d6bcc66316
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Apr 2019 08:36:18.0146
+ (UTC)
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR05MB4999
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+> > Linux cfg80211 regulatory subsystem uses CRDA timeout to ensure complet=
+ion
+> > of regulatory updates, performed by user-space software. See call_crda
+> > functon in net/wireless/reg.c:
+> >
+> > static int call_crda(const char *alpha2)
+> > {
+> >       ...
+> >
+> >       queue_delayed_work(system_power_efficient_wq,
+> >                       &crda_timeout, msecs_to_jiffies(3142));
+> >       return 0;
+> > }
+> >
+> > So regulatory update/reset operations shall be completed in 3142 msec.
+> > And that includes processing of regulatory notifiers for all the
+> > wireless cards in the system.
+> >
+> > It is not quite clear where this specific timeout value came from.
+> > Original commit (a90c7a313a1c5b) doesn't go into details about it.
+> >
+> > Any ideas where it could come from ?
+>=20
+> No particular reason. It's just ~pi seconds, and IIRC Luis thought that
+> was funny :-)
 
---fgjv5fzwmh3drajl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Indeed, it is PI. I should have known. But instead I spent some time
+digging through 802.11 specs :)
 
-Hi,
+> Are you seeing any issues with that?
+=20
+Well, as I mentioned in my question, regulatory update/reset operations
+shall be completed in ~pi seconds for _all_ the wireless cards in the
+system. In our case, regulatory reset operation may be fairly costly.
+As a result, we end up with recurring reset timeout, when more than one
+qtn card is installed in a single pcie host. One option for us is to
+optimize regulatory reset operations in firmware.
 
-On Tue, Apr 09, 2019 at 02:24:41AM +0200, megous@megous.com wrote:
-> +&mmc0 {
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&mmc0_pins>;
+But what do you think about converting crda_timeout into a per-wiphy
+timeout in the case when all wiphy-s are being processed, e.g.
+in update_all_wiphy_regulatory.
 
-Since 5 minutes ago, that's now the default.
-
-> +&usb2otg {
-> +	/*
-> +	 * Beware that this board will not automatically disconnect
-> +	 * VBUS from DCIN, when self-powered and used as a peripheral.
-> +	 */
-> +	dr_mode = "otg";
-> +	status = "okay";
-> +};
-
-As we were discussing, I guess leaving it as host is the safest
-option.
-
-I can fix both issues while applying if that's ok for you.
-
-Maxime
-
---
-Maxime Ripard, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
-
---fgjv5fzwmh3drajl
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRcEzekXsqa64kGDp7j7w1vZxhRxQUCXKxT7gAKCRDj7w1vZxhR
-xSpjAQCfHRadv21M15/PeClia2vhDSbZrCAjvH8jYU7ANDzTUAD9FhWn+W/dA35K
-6aDRwfItW2sGyOKgfgr7Vtk67U2gVQs=
-=lY2Y
------END PGP SIGNATURE-----
-
---fgjv5fzwmh3drajl--
+Regards,
+Sergey
