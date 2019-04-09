@@ -2,32 +2,32 @@ Return-Path: <SRS0=TYOj=SL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-12.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABE67C10F14
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97860C282CE
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E41721841
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 669C021841
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="LlIGRhpP"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="cBNnKuRp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727216AbfDIAZK (ORCPT
+        id S1726638AbfDIAZk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 20:25:10 -0400
-Received: from vps.xff.cz ([195.181.215.36]:36374 "EHLO vps.xff.cz"
+        Mon, 8 Apr 2019 20:25:40 -0400
+Received: from vps.xff.cz ([195.181.215.36]:36456 "EHLO vps.xff.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726349AbfDIAZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Apr 2019 20:25:09 -0400
+        id S1726927AbfDIAZK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Apr 2019 20:25:10 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554769502; bh=op3dm3pge3hkv+pHZJvJy03uxi6x4i/4K3sT0Q5NnKo=;
+        t=1554769503; bh=XRcpB8ejlL9AWmT79eN42ER/fGwCbfSrOC+iNeucFmo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LlIGRhpPclK9zzJObX2eSFR+QmEP6IrknWw1Y2Qi0iVfXMhVevMijuoTJYJrX2lac
-         XRy0fRa+jl1HKTkBK4qvJQzCh7mLarvA5mwi9aOU05IpJlSBg++6EZRLRQd9q4/93u
-         mAt07lFBS+G2juFFwVNLq8EWNEnZqu8fO+NNuxG8=
+        b=cBNnKuRp1gpfYZsuZiSBR1gN7+vH2t5N3XZC5RT0uIvtEr72QDboNc2PcsnR4muV/
+         FGqTnm/fEl5ycYE3JHv/k39tTLR2mioGDUz0WNMOingFYJinQfyJGeYIdu2ShPxR4d
+         e8/dXY8B9rE8A7b9VZhaaBH0EjvYbPd1tKGVBYWs=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -54,9 +54,9 @@ Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH v2 11/13] brcmfmac: Loading the correct firmware for brcm43456
-Date:   Tue,  9 Apr 2019 02:24:50 +0200
-Message-Id: <20190409002452.14551-12-megous@megous.com>
+Subject: [PATCH v2 13/13] [DO NOT MERGE] arm64: dts: allwinner: orange-pi-3: Enable WiFi
+Date:   Tue,  9 Apr 2019 02:24:52 +0200
+Message-Id: <20190409002452.14551-14-megous@megous.com>
 In-Reply-To: <20190409002452.14551-1-megous@megous.com>
 References: <20190409002452.14551-1-megous@megous.com>
 MIME-Version: 1.0
@@ -68,37 +68,110 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ondrej Jirman <megous@megous.com>
 
-SDIO based brcm43456 is currently misdetected as brcm43455 and the wrong
-firmware name is used. Correct the detection and load the correct firmware
-file. Chiprev for brcm43456 is "9".
+Orange Pi 3 has AP6256 WiFi/BT module. WiFi part of the module is called
+bcm43356 and can be used with the brcmfmac driver. The module is powered by
+the two always on regulators (not AXP805).
+
+WiFi uses a PG port with 1.8V voltage level signals. SoC needs to be
+configured so that it sets up an 1.8V input bias on this port. This is done
+by the pio driver by reading the vcc-pg-supply voltage.
+
+You'll need a fw_bcm43456c5_ag.bin firmware file and nvram.txt
+configuration that can be found in the Xulongs's repository for H6:
+
+https://github.com/orangepi-xunlong/OrangePiH6_external/tree/master/ap6256
+
+Mainline brcmfmac driver expects the firmware and nvram at the following
+paths relative to the firmware directory:
+
+  brcm/brcmfmac43456-sdio.bin
+  brcm/brcmfmac43456-sdio.txt
 
 Signed-off-by: Ondrej Jirman <megous@megous.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 48 +++++++++++++++++++
+ 1 file changed, 48 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index a06af0cd4a7f..22b73da42822 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -622,6 +622,7 @@ BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
- /* Note the names are not postfixed with a1 for backward compatibility */
- BRCMF_FW_DEF(43430A1, "brcmfmac43430-sdio");
- BRCMF_FW_DEF(43455, "brcmfmac43455-sdio");
-+BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
- BRCMF_FW_DEF(4354, "brcmfmac4354-sdio");
- BRCMF_FW_DEF(4356, "brcmfmac4356-sdio");
- BRCMF_FW_DEF(4373, "brcmfmac4373-sdio");
-@@ -642,7 +643,8 @@ static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
- 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
- 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
--	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
-+	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0x00000200, 43456),
-+	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFDC0, 43455),
- 	BRCMF_FW_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
- 	BRCMF_FW_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
- 	BRCMF_FW_ENTRY(CY_CC_4373_CHIP_ID, 0xFFFFFFFF, 4373),
+diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+index f5595653b2c5..37efcca58a30 100644
+--- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
++++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
+@@ -66,6 +66,26 @@
+ 		regulator-always-on;
+ 	};
+ 
++	reg_vcc33_wifi: vcc33-wifi {
++		/* Always on 3.3V regulator for WiFi and BT */
++		compatible = "regulator-fixed";
++		regulator-name = "vcc33-wifi";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		vin-supply = <&reg_vcc5v>;
++	};
++
++	reg_vcc_wifi_io: vcc-wifi-io {
++		/* Always on 1.8V/300mA regulator for WiFi and BT IO */
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-wifi-io";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
++		vin-supply = <&reg_vcc33_wifi>;
++	};
++
+ 	/*
+ 	 * The board uses 2.5V RGMII signalling. Power sequence to enable
+ 	 * the phy is to enable GMAC-2V5 and GMAC-3V3 (aldo2) power rails
+@@ -86,6 +106,14 @@
+ 		 */
+ 		vin-supply = <&reg_aldo2>; /* GMAC-3V3 */
+ 	};
++
++	wifi_pwrseq: wifi_pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		clocks = <&rtc 1>;
++		clock-names = "ext_clock";
++		reset-gpios = <&r_pio 1 3 GPIO_ACTIVE_LOW>; /* PM3 */
++		post-power-on-delay-ms = <200>;
++	};
+ };
+ 
+ &cpu0 {
+@@ -146,6 +174,25 @@
+ 	status = "okay";
+ };
+ 
++&mmc1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc1_pins>;
++	vmmc-supply = <&reg_vcc33_wifi>;
++	vqmmc-supply = <&reg_vcc_wifi_io>;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	bus-width = <4>;
++	non-removable;
++	status = "okay";
++
++	brcm: sdio-wifi@1 {
++		reg = <1>;
++		compatible = "brcm,bcm4329-fmac";
++		interrupt-parent = <&r_pio>;
++		interrupts = <1 0 IRQ_TYPE_LEVEL_LOW>; /* PM0 */
++		interrupt-names = "host-wake";
++	};
++};
++
+ &ohci0 {
+ 	status = "okay";
+ };
+@@ -157,6 +204,7 @@
+ &pio {
+ 	vcc-pc-supply = <&reg_bldo2>;
+ 	vcc-pd-supply = <&reg_cldo1>;
++	vcc-pg-supply = <&reg_vcc_wifi_io>;
+ };
+ 
+ &r_i2c {
 -- 
 2.21.0
 
