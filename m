@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C3DC10F13
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABE67C10F14
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6321821841
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E41721841
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 00:25:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="oc9pO+tD"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="LlIGRhpP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727240AbfDIAZL (ORCPT
+        id S1727216AbfDIAZK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Apr 2019 20:25:11 -0400
-Received: from vps.xff.cz ([195.181.215.36]:36312 "EHLO vps.xff.cz"
+        Mon, 8 Apr 2019 20:25:10 -0400
+Received: from vps.xff.cz ([195.181.215.36]:36374 "EHLO vps.xff.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726925AbfDIAZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726349AbfDIAZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 8 Apr 2019 20:25:09 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554769502; bh=sWLjTZ6pha5DZuVhVEfKThCUnITYw/sdGtV9sBBFXgs=;
+        t=1554769502; bh=op3dm3pge3hkv+pHZJvJy03uxi6x4i/4K3sT0Q5NnKo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oc9pO+tDoMVf6NpaRklMjH9nz0gpn0bgca24na5fg6bdED4enT4OTM0Iu2odyhSSr
-         wn5bxzNI6myrybQIOajtej/h5tqH5cgPVGxhYPuTEXCMrvEoTY8SCX5LpzIg8e4r7k
-         SAOvo7ZwKLok5wwbaJZpcUOCq2P5i1jHu5/Ms8Gk=
+        b=LlIGRhpPclK9zzJObX2eSFR+QmEP6IrknWw1Y2Qi0iVfXMhVevMijuoTJYJrX2lac
+         XRy0fRa+jl1HKTkBK4qvJQzCh7mLarvA5mwi9aOU05IpJlSBg++6EZRLRQd9q4/93u
+         mAt07lFBS+G2juFFwVNLq8EWNEnZqu8fO+NNuxG8=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -54,9 +54,9 @@ Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH v2 10/13] arm64: dts: allwinner: orange-pi-3: Enable HDMI output
-Date:   Tue,  9 Apr 2019 02:24:49 +0200
-Message-Id: <20190409002452.14551-11-megous@megous.com>
+Subject: [PATCH v2 11/13] brcmfmac: Loading the correct firmware for brcm43456
+Date:   Tue,  9 Apr 2019 02:24:50 +0200
+Message-Id: <20190409002452.14551-12-megous@megous.com>
 In-Reply-To: <20190409002452.14551-1-megous@megous.com>
 References: <20190409002452.14551-1-megous@megous.com>
 MIME-Version: 1.0
@@ -68,81 +68,37 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ondrej Jirman <megous@megous.com>
 
-Orange Pi 3 has a DDC_CEC_EN signal connected to PH2, that enables the DDC
-I2C bus voltage shifter. Before EDID can be read, we need to pull PH2 high.
+SDIO based brcm43456 is currently misdetected as brcm43455 and the wrong
+firmware name is used. Correct the detection and load the correct firmware
+file. Chiprev for brcm43456 is "9".
 
 Signed-off-by: Ondrej Jirman <megous@megous.com>
 ---
- .../dts/allwinner/sun50i-h6-orangepi-3.dts    | 35 +++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-index 523f1d848042..f5595653b2c5 100644
---- a/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-+++ b/arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dts
-@@ -22,6 +22,17 @@
- 		stdout-path = "serial0:115200n8";
- 	};
- 
-+	connector {
-+		compatible = "hdmi-connector";
-+		type = "a";
-+
-+		port {
-+			hdmi_con_in: endpoint {
-+				remote-endpoint = <&hdmi_out_con>;
-+			};
-+		};
-+	};
-+
- 	leds {
- 		compatible = "gpio-leds";
- 
-@@ -37,6 +48,15 @@
- 		};
- 	};
- 
-+	reg_ddc: ddc-io {
-+		compatible = "regulator-fixed";
-+		regulator-name = "ddc-io";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		enable-active-high;
-+		gpio = <&pio 7 2 GPIO_ACTIVE_HIGH>; /* PH2 */
-+	};
-+
- 	reg_vcc5v: vcc5v {
- 		/* board wide 5V supply directly from the DC jack */
- 		compatible = "regulator-fixed";
-@@ -72,6 +92,10 @@
- 	cpu-supply = <&reg_dcdca>;
- };
- 
-+&de {
-+	status = "okay";
-+};
-+
- &ehci0 {
- 	status = "okay";
- };
-@@ -91,6 +115,17 @@
- 	status = "okay";
- };
- 
-+&hdmi {
-+	ddc-supply = <&reg_ddc>;
-+	status = "okay";
-+};
-+
-+&hdmi_out {
-+	hdmi_out_con: endpoint {
-+		remote-endpoint = <&hdmi_con_in>;
-+	};
-+};
-+
- &mdio {
- 	ext_rgmii_phy: ethernet-phy@1 {
- 		compatible = "ethernet-phy-ieee802.3-c22";
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index a06af0cd4a7f..22b73da42822 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -622,6 +622,7 @@ BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
+ /* Note the names are not postfixed with a1 for backward compatibility */
+ BRCMF_FW_DEF(43430A1, "brcmfmac43430-sdio");
+ BRCMF_FW_DEF(43455, "brcmfmac43455-sdio");
++BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
+ BRCMF_FW_DEF(4354, "brcmfmac4354-sdio");
+ BRCMF_FW_DEF(4356, "brcmfmac4356-sdio");
+ BRCMF_FW_DEF(4373, "brcmfmac4373-sdio");
+@@ -642,7 +643,8 @@ static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
+ 	BRCMF_FW_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
+-	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
++	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0x00000200, 43456),
++	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFDC0, 43455),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
+ 	BRCMF_FW_ENTRY(CY_CC_4373_CHIP_ID, 0xFFFFFFFF, 4373),
 -- 
 2.21.0
 
