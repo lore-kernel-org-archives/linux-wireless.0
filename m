@@ -2,130 +2,103 @@ Return-Path: <SRS0=TYOj=SL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC48FC282CE
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 09:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42AEBC10F0E
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 10:13:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA49520833
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 09:33:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="shNi6yPY"
+	by mail.kernel.org (Postfix) with ESMTP id 170752084F
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Apr 2019 10:13:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726831AbfDIJdI (ORCPT
+        id S1726387AbfDIKNB convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 05:33:08 -0400
-Received: from vps.xff.cz ([195.181.215.36]:41826 "EHLO vps.xff.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726415AbfDIJdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Apr 2019 05:33:08 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554802385; bh=51Swfdv/TdkuBEeSHdiIIRwvKSgRa5x0ewTJzKhwyZY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=shNi6yPYwETR18kTC/OrBtTo0orIFkiRFKj50xvSEHTB770Wzy7seg5Iq0QnFXUyr
-         pCXZJ1hHf9rBKSK7f5Loywxx4WpsIXjwJ+KX3JtD1nsrJZLHzBthJI0QEkDfYJK2SZ
-         frRAFyWOXhvrRf22Znine0LZEV2WgzN7eIBx48mI=
-Date:   Tue, 9 Apr 2019 11:33:04 +0200
-From:   =?utf-8?Q?Ond=C5=99ej?= Jirman <megous@megous.com>
-To:     Maxime Ripard <maxime.ripard@bootlin.com>
-Cc:     linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-        Alexandre Torgue <alexandre.torgue@st.com>,
-        Jose Abreu <joabreu@synopsys.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Naveen Gupta <naveen.gupta@cypress.com>,
-        dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: Re: [PATCH v2 02/13] arm64: dts: allwinner: h6: Add Orange Pi 3 DTS
-Message-ID: <20190409093304.sutpobe5azncyl5r@core.my.home>
-Mail-Followup-To: Maxime Ripard <maxime.ripard@bootlin.com>,
-        linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-        Alexandre Torgue <alexandre.torgue@st.com>,
-        Jose Abreu <joabreu@synopsys.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Naveen Gupta <naveen.gupta@cypress.com>,
-        dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-References: <20190409002452.14551-1-megous@megous.com>
- <20190409002452.14551-3-megous@megous.com>
- <20190409081230.pz55uwyq33x5tfgz@flea>
+        Tue, 9 Apr 2019 06:13:01 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:50187 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726091AbfDIKNB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Apr 2019 06:13:01 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x39ACHlf025528, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcas12.realtek.com.tw[172.21.6.16])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x39ACHlf025528
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Tue, 9 Apr 2019 18:12:18 +0800
+Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
+ RTITCAS12.realtek.com.tw ([::1]) with mapi id 14.03.0439.000; Tue, 9 Apr 2019
+ 18:12:17 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     Brian Norris <briannorris@chromium.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: RE: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
+Thread-Topic: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
+ wireless network chips
+Thread-Index: AQHU7f7V+GVXIkmks0i6acEtkruVp6Yzmz3w
+Date:   Tue, 9 Apr 2019 10:12:16 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17D6AD6@RTITMBSVM04.realtek.com.tw>
+References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
+        <20190325143611.sjwwjqtrftxntwyk@penguin>       <20190326075414.GA8598@redhat.com>
+        <CA+ASDXNcCNcBmiHi468p1foWgSOXy9Mt8o+CD17Bd4PqhUXFoA@mail.gmail.com>
+        <F7CD281DE3E379468C6D07993EA72F84D17CB940@RTITMBSVM04.realtek.com.tw>
+        <20190327102623.GA20943@redhat.com>
+        <F7CD281DE3E379468C6D07993EA72F84D17D50A4@RTITMBSVM04.realtek.com.tw>
+ <87zhp0g2a5.fsf@codeaurora.org>
+In-Reply-To: <87zhp0g2a5.fsf@codeaurora.org>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.183]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190409081230.pz55uwyq33x5tfgz@flea>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Apr 09, 2019 at 10:12:30AM +0200, Maxime Ripard wrote:
-> Hi,
+
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> Sent: Monday, April 08, 2019 7:33 PM
+> To: Tony Chuang
+> Cc: Brian Norris; Johannes Berg; linux-wireless; Greg Kroah-Hartman; Pkshih;
+> Andy Huang; Larry Finger; Stanislaw Gruszka
+> Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
+> wireless network chips
 > 
-> On Tue, Apr 09, 2019 at 02:24:41AM +0200, megous@megous.com wrote:
-> > +&mmc0 {
-> > +	pinctrl-names = "default";
-> > +	pinctrl-0 = <&mmc0_pins>;
+> Tony Chuang <yhchuang@realtek.com> writes:
 > 
-> Since 5 minutes ago, that's now the default.
-
-Ah. :)
-
-> > +&usb2otg {
-> > +	/*
-> > +	 * Beware that this board will not automatically disconnect
-> > +	 * VBUS from DCIN, when self-powered and used as a peripheral.
-> > +	 */
-> > +	dr_mode = "otg";
-> > +	status = "okay";
-> > +};
+> > Hi Kalle
+> >
+> >> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+> >> Sent: Wednesday, March 27, 2019 6:26 PM
+> >> To: Tony Chuang
+> >> Cc: Brian Norris; Kalle Valo; Johannes Berg; linux-wireless; Greg
+> Kroah-Hartman;
+> >> Pkshih; Andy Huang; Larry Finger
+> >> Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
+> >> wireless network chips
+> >>
+> >
+> > It's just a gentle reply to ask if rtw88 is getting merged.
+> > Are you still reviewing or is there anything I can help.
 > 
-> As we were discussing, I guess leaving it as host is the safest
-> option.
+> I just have been busy with other stuff, sorry. I'll try find time for
+> this soon.
 > 
-> I can fix both issues while applying if that's ok for you.
 
-It's ok with me. Thank you.
+It's OK. If you need any help just let me know. :)
 
-	o.
+BTW, I want to change the license from GPL to Dual BSD/GPL.
+Would you want to change them in the initial patch set, or I send a separate
+one after it got merged?
 
-> Maxime
-> 
-> --
-> Maxime Ripard, Bootlin
-> Embedded Linux and Kernel engineering
-> https://bootlin.com
-
-
+Yan-Hsuan
