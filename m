@@ -6,107 +6,102 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF890C10F14
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 05:07:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 231E1C10F11
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 06:31:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C6A2A218FD
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 05:07:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E61552084B
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 06:31:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727226AbfDJFHY (ORCPT
+        id S1727552AbfDJGbr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Apr 2019 01:07:24 -0400
-Received: from mga05.intel.com ([192.55.52.43]:19538 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726826AbfDJFHY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Apr 2019 01:07:24 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 09 Apr 2019 22:07:23 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.60,332,1549958400"; 
-   d="scan'208";a="222112098"
-Received: from lxy-dell.sh.intel.com ([10.239.159.145])
-  by orsmga001.jf.intel.com with ESMTP; 09 Apr 2019 22:07:19 -0700
-Message-ID: <9b16b5c5379eb6b5352de26e56b8064a6b6f1aa7.camel@linux.intel.com>
-Subject: Re: [PATCH v6 12/20] kvm/vmx: Emulate MSR TEST_CTL
-From:   Xiaoyao Li <xiaoyao.li@linux.intel.com>
-To:     Sean Christopherson <sean.j.christopherson@intel.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Wed, 10 Apr 2019 02:31:47 -0400
+Received: from Galois.linutronix.de ([146.0.238.70]:57740 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726056AbfDJGbr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Apr 2019 02:31:47 -0400
+Received: from 135.red-80-26-73.staticip.rima-tde.net ([80.26.73.135] helo=nanos)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1hE6lg-0007QM-Pa; Wed, 10 Apr 2019 08:31:32 +0200
+Date:   Wed, 10 Apr 2019 08:31:31 +0200 (CEST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     Fenghua Yu <fenghua.yu@intel.com>
+cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
         H Peter Anvin <hpa@zytor.com>,
         Dave Hansen <dave.hansen@intel.com>,
         Paolo Bonzini <pbonzini@redhat.com>,
         Ashok Raj <ashok.raj@intel.com>,
         Peter Zijlstra <peterz@infradead.org>,
         Kalle Valo <kvalo@codeaurora.org>,
+        Xiaoyao Li <xiaoyao.li@intel.com>,
         Michael Chan <michael.chan@broadcom.com>,
         Ravi V Shankar <ravi.v.shankar@intel.com>,
         linux-kernel <linux-kernel@vger.kernel.org>,
         x86 <x86@kernel.org>, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, kvm@vger.kernel.org
-Date:   Wed, 10 Apr 2019 13:03:59 +0800
-In-Reply-To: <20190408174805.GJ25880@linux.intel.com>
-References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com>
-         <1554326526-172295-13-git-send-email-fenghua.yu@intel.com>
-         <alpine.DEB.2.21.1904051400230.1802@nanos.tec.linutronix.de>
-         <423f329a8e194d799c6c41470266a04a9f90bc84.camel@linux.intel.com>
-         <20190408174805.GJ25880@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.el7) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v6 13/20] x86/split_lock: Enable split lock detection by
+ default
+In-Reply-To: <20190410000229.GA209676@romley-ivt3.sc.intel.com>
+Message-ID: <alpine.DEB.2.21.1904100827530.2020@nanos.tec.linutronix.de>
+References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com> <1554326526-172295-14-git-send-email-fenghua.yu@intel.com> <alpine.DEB.2.21.1904041932500.1802@nanos.tec.linutronix.de> <20190410000229.GA209676@romley-ivt3.sc.intel.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2019-04-08 at 10:48 -0700, Sean Christopherson wrote:
-> On Mon, Apr 08, 2019 at 05:54:25PM +0800, Xiaoyao Li wrote:
-> > On Fri, 2019-04-05 at 14:30 +0200, Thomas Gleixner wrote:
-> > > On Wed, 3 Apr 2019, Fenghua Yu wrote:
-> > > > @@ -1663,6 +1663,12 @@ static int vmx_get_msr(struct kvm_vcpu *vcpu,
-> > > > struct
-> > > > msr_data *msr_info)
-> > > >  	u32 index;
-> > > >  
-> > > >  	switch (msr_info->index) {
-> > > > +	case MSR_TEST_CTL:
-> > > > +		if (!msr_info->host_initiated &&
-> > > > +		    !(vcpu->arch.core_capability &
-> > > > CORE_CAP_SPLIT_LOCK_DETECT))
-> > > 
-> > > Errm? If the MSR_TEST_CTL is exposed to the guest via CPUID then the
-> > > rdmsr() in the guest is not supposed to fail just because
-> > > CORE_CAP_SPLIT_LOCK_DETECT is not set.
+On Tue, 9 Apr 2019, Fenghua Yu wrote:
+> On Thu, Apr 04, 2019 at 08:07:57PM +0200, Thomas Gleixner wrote:
+> > On Wed, 3 Apr 2019, Fenghua Yu wrote:
+> > >  static void early_init_intel(struct cpuinfo_x86 *c)
+> > >  {
+> > >  	u64 misc_enable;
+> > >  
+> > > +	init_split_lock_detect(c);
 > > 
-> > you're right.
+> > so we have in early boot:
 > > 
-> > > vmx->msr_test_ctl holds the proper value, which is either 0 or
-> > > CORE_CAP_SPLIT_LOCK_DETECT until more bits are supported.
-> > > 
-> > > So the chek needs to be guest_cpuid_has(X86_FEATURE_CORE_CAPABILITY).
+> > 	early_cpu_init()
+> > 	  early_identify_cpu()
+> > 	    this_cpu->c_early_init(c)
+> > 	      early_init_intel() {
+> > 	        init_split_lock_detect();
+> > 	      }	
+> >             ....
+> >             cpu_set_core_cap_bits(c)
+> > 	       set(FEATURE_SPLIT_LOCK)
 > > 
-> > I don't think so. There is no dependecy between
-> > guest_cpuid_has(X86_FEATURE_CORE_CAPABILITY) and MSR_TEST_CTL.
-> > guest_cpuid_has(X86_FEATURE_CORE_CAPABILITY) only indicates that guest has
-> > MSR
-> > CORE_CAPABILITY.
-> > 
-> > Due to the fact that MSR_TEST_CTL is emulated with vmx->msr_test_ctl. I
-> > think it
-> > 's ok to always let userspace or guest to read MSR_TEST_CTL, it just returns
-> > the
-> > emulated value. Like you said, " vmx->msr_test_ctl holds the proper value,
-> > which
-> > is either 0 or CORE_CAP_SPLIT_LOCK_DETECT until more bits are supported."
+> > I don't have to understand how init_split_lock_detect() will magically see
+> > the feature bit which gets set afterwards, right? 
 > 
-> Assuming the next version implements "vmx->msr_test_ctl_mask", KVM should
-> inject #GP if the guest attempts RDMSR(MSR_TEST_CTL) and the mask is zero.
-> It stands to reason that a kernel can only reasonably assume the MSR exists
-> if the (virtual) CPU supports at least one feature enabled via MSR_TEST_CTL.
+> early_init_intel() is called twice on the boot CPU. Besides it's called
+> in earl_cpu_init(), it's also called in:
+> 	identify_boot_cpu()
+> 		identify_cpu()
+> 			init_intel()
+> 				early_init_intel()
+> 					init_split_lock_detect();
+> 
+> It's true that init_split_lock_detect() doesn't see the feature bit when
+> it's called for the first time in early_cpu_init(). But it sees the feature
+> bit when it's called for the second time in identify_boot_cpu().
 
-It makes sense to me. Thanks for your reminder.
-Will apply it in next version.
+That's hideous, really. 
 
+> So is init_split_lock_detect() in the right place?
+
+You're not seriously asking that?
+
+It's obviously not the right place. We are not placing calls at random
+points just because they happen to work by chance.
+
+Thanks,
+
+	tglx
