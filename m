@@ -2,136 +2,83 @@ Return-Path: <SRS0=qAu2=SM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0CB9C10F14
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 06:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF9FAC10F14
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 07:23:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6CBE620850
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 06:59:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RLKyRjyV"
+	by mail.kernel.org (Postfix) with ESMTP id 906F4217D6
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 07:23:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728823AbfDJG7M (ORCPT
+        id S1728977AbfDJHX0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Apr 2019 02:59:12 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:50596 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728647AbfDJG7M (ORCPT
+        Wed, 10 Apr 2019 03:23:26 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:40398 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726931AbfDJHX0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Apr 2019 02:59:12 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3A6s3KB107629;
-        Wed, 10 Apr 2019 06:56:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=eUy6uNd20IYE0HM61hq/WDfOphNCC2hmiq/ognC0Li0=;
- b=RLKyRjyVa1eDa8Wtlw0800FywfAOqyVuwzvDOe+0DCgQQRFWcxH4tB947aFQDZ2vFfCv
- Ot7KxM2KJKfq2xNinZqcgvWuh3nidCddrNcRmpkwwcqg0fiad9WgaPUUrNUZsemyPHNa
- 7SUqb7ipupeQWGRMqx3LUpyOM+z3h43BScoqp05ktY0pWxOJo49KRLb7jDBHkqrYG0N5
- wpIincfr87c1v7e6iES1tBNxOKIW3vLq0WwtzxdqXZXnoYBUOEuyw4+jn0lMUwXYYtw2
- SiO5WtUp1RSXG3djmjhC+WvC2DZ5fu25eTcj8slgDF8bUafIEgq4hI8k0plONv8ktNPr Uw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2rpmrq9365-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Apr 2019 06:56:58 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3A6tdvQ002850;
-        Wed, 10 Apr 2019 06:56:57 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2rpytc2p5s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Apr 2019 06:56:57 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3A6ukAF026990;
-        Wed, 10 Apr 2019 06:56:46 GMT
-Received: from kadam (/197.157.0.42)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 09 Apr 2019 23:56:45 -0700
-Date:   Wed, 10 Apr 2019 09:56:27 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     "Alastair D'Silva" <alastair@au1.ibm.com>
-Cc:     alastair@d-silva.org, linux-fbdev@vger.kernel.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Petr Mladek <pmladek@suse.com>,
-        David Airlie <airlied@linux.ie>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org,
-        linux-scsi@vger.kernel.org, Jassi Brar <jassisinghbrar@gmail.com>,
-        ath10k@lists.infradead.org, intel-gfx@lists.freedesktop.org,
-        Jose Abreu <Jose.Abreu@synopsys.com>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        linux-fsdevel@vger.kernel.org,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Benson Leung <bleung@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>, netdev@vger.kernel.org,
-        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexander Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in
- hex_dump_to_buffer with flags
-Message-ID: <20190410065627.GF6095@kadam>
-References: <20190410031720.11067-1-alastair@au1.ibm.com>
- <20190410031720.11067-4-alastair@au1.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190410031720.11067-4-alastair@au1.ibm.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9222 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=630
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1904100050
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9222 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=652 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1904100050
+        Wed, 10 Apr 2019 03:23:26 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hE7Zj-0006AG-2f; Wed, 10 Apr 2019 09:23:15 +0200
+Message-ID: <46474c61d7748042cc0a1f23773186786020638e.camel@sipsolutions.net>
+Subject: Re: gsmtap design/extensions?
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Vadim Yanitskiy <axilirator@gmail.com>
+Cc:     Harald Welte <laforge@gnumonks.org>,
+        OpenBSC Mailing List <openbsc@lists.osmocom.org>,
+        Sean Tranchetti <stranche@codeaurora.org>, radiotap@netbsd.org,
+        Dan Williams <dcbw@redhat.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Aleksander Morgado <aleksander@aleksander.es>,
+        Subash Abhinov Kasiviswanathan <subashab@codeaurora.org>,
+        =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Date:   Wed, 10 Apr 2019 09:23:13 +0200
+In-Reply-To: <CAPEnp=bHTVARr7WA9Qkq4=y7kk8_FLWhrkqKOEXubMO4X=BHCw@mail.gmail.com> (sfid-20190410_083605_324978_F3549EC8)
+References: <cf07ae24c436f92769f9289d208f01846ebe8826.camel@sipsolutions.net>
+         <CAPEnp=bHTVARr7WA9Qkq4=y7kk8_FLWhrkqKOEXubMO4X=BHCw@mail.gmail.com>
+         (sfid-20190410_083605_324978_F3549EC8)
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Apr 10, 2019 at 01:17:19PM +1000, Alastair D'Silva wrote:
-> @@ -107,7 +108,7 @@ EXPORT_SYMBOL(bin2hex);
->   * string if enough space had been available.
->   */
->  int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
-> -		       char *linebuf, size_t linebuflen, bool ascii)
-> +		       char *linebuf, size_t linebuflen, u64 flags)
->  {
->  	const u8 *ptr = buf;
->  	int ngroups;
-> @@ -184,7 +185,7 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
->  		if (j)
->  			lx--;
->  	}
-> -	if (!ascii)
-> +	if (!flags & HEXDUMP_ASCII)
-            ^^^^^^^^^^^^^^^^^^^^^^
-This is a precedence bug.  It should be if (!(flags & HEXDUMP_ASCII)).
+On Wed, 2019-04-10 at 13:35 +0700, Vadim Yanitskiy wrote:
+> Hello Johannes,
+> 
+> FYI, there already was a discussion about GSMTAPv3:
+> 
+> https://www.youtube.com/watch?v=vum9jzavZi0&list=PL07C78AF831FFE8F9&index=10
+> 
+> but unfortunately, nobody has invested time into this (yet?).
 
+2012! But, umm, I don't really have time for a whole video right now -
+anyone have the slides? :-)
 
->  		goto nil;
->  
+But yeah, the first slides look sensible :-)
 
-regards,
-dan carpenter
+> > 1) Why the design with encapsulating it in UDP?
+> 
+> This gives us a possibility to "demux" multiple GSMTAP streams on the
+> receiving side, e.g. if you are running multiple processes.
 
+Not sure I get this, but I also don't really care all that much. It's
+just a pretty strange design if the kernel were to output this, I'm not
+even sure how I'd do that properly. I don't want to be generating UDP
+packets there...
+
+Perhaps we can define something (GSMTAPv3) to not really care how it's
+encapsulated, and for 'native' packet captures like what I want on Linux
+when integrated with the driver, actually use an ARPHDR_GSMTAP, and
+encapsulate in UDP when you create it in an application and want to send
+it elsewhere, rather than just writing it to a pcap file?
+
+johannes
 
