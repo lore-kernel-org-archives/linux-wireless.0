@@ -2,74 +2,84 @@ Return-Path: <SRS0=qAu2=SM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D74BFC10F11
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 07:28:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22DB3C10F11
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 07:35:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E22B20850
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 07:28:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E18F72064A
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 07:35:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726833AbfDJH2f (ORCPT
+        id S1728013AbfDJHf2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Apr 2019 03:28:35 -0400
-Received: from nbd.name ([46.4.11.11]:55180 "EHLO nbd.name"
+        Wed, 10 Apr 2019 03:35:28 -0400
+Received: from nbd.name ([46.4.11.11]:55548 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726494AbfDJH2e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Apr 2019 03:28:34 -0400
-Received: from p548c87d0.dip0.t-ipconnect.de ([84.140.135.208] helo=[192.168.45.69])
+        id S1727529AbfDJHf2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Apr 2019 03:35:28 -0400
+Received: from p548c87d0.dip0.t-ipconnect.de ([84.140.135.208] helo=bertha.fritz.box)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1hE7ep-0007gR-0e; Wed, 10 Apr 2019 09:28:31 +0200
-Subject: Re: [RFC V3 1/2] mac80211: add hw 80211 encapsulation offloading
- support
-To:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Shashidhar Lakkavalli <slakkavalli@datto.com>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-References: <20190401131416.22646-1-john@phrozen.org>
- <20190401131416.22646-2-john@phrozen.org> <87k1gcpwgy.fsf@toke.dk>
+        id 1hE7lU-00082V-Hj; Wed, 10 Apr 2019 09:35:24 +0200
 From:   John Crispin <john@phrozen.org>
-Message-ID: <46dfe65c-3bbf-7923-d358-9acec030f572@phrozen.org>
-Date:   Wed, 10 Apr 2019 09:28:29 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
-MIME-Version: 1.0
-In-Reply-To: <87k1gcpwgy.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org,
+        Srini Kode <skode@qti.qualcomm.com>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        Shashidhar Lakkavalli <slakkavalli@datto.com>,
+        John Crispin <john@phrozen.org>
+Subject: [RFC V4 0/2] mac80211: add 802.11 encapsulation offloading
+Date:   Wed, 10 Apr 2019 09:35:12 +0200
+Message-Id: <20190410073514.12794-1-john@phrozen.org>
+X-Mailer: git-send-email 2.11.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+This series picks up prior work from QCA. The patch is currently shipped
+inside QSDK as part of the wlan-open package.
 
-On 02/04/2019 11:50, Toke Høiland-Jørgensen wrote:
-> ieee80211_queue_skb() calls ieee80211_get_txq() which treats skb->data
-> like it contains an 802.11 header. That is probably not the intention
-> here, is it?
->
-> I guess we could augment the TXQ stuctures to also handle 802.3 frames
-> (and introduce ieee80211_queue_skb_8023())? Or would it be better to
-> have a qdisc on 802.3-mode interfaces and push packets back to that? I
-> guess we'd still benefit from per-station queueing of packets even if
-> they are Ethernet frames, which would mean amending the TXQs would be
-> better?
->
-> -Toke
+The series tries to address all feedback from the V2
+-> https://patchwork.kernel.org/patch/9602585/
 
-Hi Toke
+Changes in V3
+* rebase on latest kernel
+* various code style clean ups
+* give so eof the variables and functions more obvious names
+* move the code that disables support for non linear frames to the core
+* disable monitor and tkip support
 
-This patch guards the usage of the hdr pointer. hdr is only used for non 
-data frames which are not relevant when doing encap mode. The code will 
-then drop into the same path as for 80211 encapsulated frames. IMHO the 
-patch is correct and we do not need an additional 
-ieee80211_queue_skb_8023()  to benefit from per station TXQs. Let me 
-know if i missed something.
+Changes in V4
+* disable encap when TKIP is used instead of refusing TKIP
+* use a flag inside fx_info instead of an extra element
+* move 4addr detection into ieee80211_set_hw_80211_encap()
+* ieee80211_tx_dequeue() was dropping out to early
 
-     John
+Vasanthakumar Thiagarajan (2):
+  mac80211: add hw 80211 encapsulation offloading support
+  ath10k: add tx hw 802.11 encapusaltion offloading support
 
+ drivers/net/wireless/ath/ath10k/core.c   |  11 ++
+ drivers/net/wireless/ath/ath10k/core.h   |   3 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  24 ++--
+ drivers/net/wireless/ath/ath10k/mac.c    |  70 +++++++++---
+ drivers/net/wireless/ath/ath10k/txrx.c   |  11 +-
+ include/net/mac80211.h                   |  25 ++++
+ net/mac80211/cfg.c                       |   3 +
+ net/mac80211/debugfs.c                   |   1 +
+ net/mac80211/ieee80211_i.h               |  10 ++
+ net/mac80211/iface.c                     |  72 ++++++++++++
+ net/mac80211/key.c                       |   7 ++
+ net/mac80211/main.c                      |  10 +-
+ net/mac80211/status.c                    |  79 +++++++++++++
+ net/mac80211/tx.c                        | 189 ++++++++++++++++++++++++++++++-
+ 14 files changed, 481 insertions(+), 34 deletions(-)
+
+-- 
+2.11.0
 
