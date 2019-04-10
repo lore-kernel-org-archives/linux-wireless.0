@@ -3,55 +3,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E510C282CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 03:18:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D22FEC282DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 03:18:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 336C620830
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 03:18:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A33B720830
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 03:18:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727240AbfDJDSY (ORCPT
+        id S1727250AbfDJDSZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Apr 2019 23:18:24 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:48316 "EHLO
+        Tue, 9 Apr 2019 23:18:25 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:38194 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727040AbfDJDSD (ORCPT
+        by vger.kernel.org with ESMTP id S1727069AbfDJDSD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 9 Apr 2019 23:18:03 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x3A39Mqt075492
-        for <linux-wireless@vger.kernel.org>; Tue, 9 Apr 2019 23:18:02 -0400
-Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2rs5d9e8dj-1
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x3A3BmjX169679
+        for <linux-wireless@vger.kernel.org>; Tue, 9 Apr 2019 23:18:03 -0400
+Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2rs7gest97-1
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
         for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2019 23:18:02 -0400
 Received: from localhost
-        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-wireless@vger.kernel.org> from <alastair@au1.ibm.com>;
-        Wed, 10 Apr 2019 04:17:59 +0100
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (9.149.109.194)
-        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        Wed, 10 Apr 2019 04:18:00 +0100
+Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
+        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
         (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
         Wed, 10 Apr 2019 04:17:50 +0100
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x3A3Hn8G59048058
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x3A3Hng957278476
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Wed, 10 Apr 2019 03:17:49 GMT
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AE565A4060;
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9E452A4053;
         Wed, 10 Apr 2019 03:17:49 +0000 (GMT)
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 177F6A405F;
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 05B11A4051;
         Wed, 10 Apr 2019 03:17:49 +0000 (GMT)
 Received: from ozlabs.au.ibm.com (unknown [9.192.253.14])
-        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Wed, 10 Apr 2019 03:17:49 +0000 (GMT)
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed, 10 Apr 2019 03:17:48 +0000 (GMT)
 Received: from adsilva.ozlabs.ibm.com (haven.au.ibm.com [9.192.254.114])
         (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ozlabs.au.ibm.com (Postfix) with ESMTPSA id F261FA038B;
+        by ozlabs.au.ibm.com (Postfix) with ESMTPSA id DC90EA038A;
         Wed, 10 Apr 2019 13:17:47 +1000 (AEST)
 From:   "Alastair D'Silva" <alastair@au1.ibm.com>
 To:     alastair@d-silva.org
@@ -82,18 +82,18 @@ Cc:     Jani Nikula <jani.nikula@linux.intel.com>,
         ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
         devel@driverdev.osuosl.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 4/4] lib/hexdump.c: Allow multiple groups to be separated by lines '|'
-Date:   Wed, 10 Apr 2019 13:17:20 +1000
+Subject: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in hex_dump_to_buffer with flags
+Date:   Wed, 10 Apr 2019 13:17:19 +1000
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190410031720.11067-1-alastair@au1.ibm.com>
 References: <20190410031720.11067-1-alastair@au1.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-x-cbid: 19041003-0012-0000-0000-0000030D210A
+x-cbid: 19041003-4275-0000-0000-0000032624DB
 X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19041003-0013-0000-0000-000021454317
-Message-Id: <20190410031720.11067-5-alastair@au1.ibm.com>
+x-cbparentid: 19041003-4276-0000-0000-000038353F7F
+Message-Id: <20190410031720.11067-4-alastair@au1.ibm.com>
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-04-10_02:,,
  signatures=0
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
@@ -108,165 +108,301 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Alastair D'Silva <alastair@d-silva.org>
 
-With the wider display format, it can become hard to identify how many
-bytes into the line you are looking at.
-
-The patch adds new flags to hex_dump_to_buffer() and print_hex_dump() to
-print vertical lines to separate every N groups of bytes.
-
-eg.
-buf:00000000: 454d414e 43415053|4e495f45 00584544  NAMESPAC|E_INDEX.
-buf:00000010: 00000000 00000002|00000000 00000000  ........|........
+In order to support additional features in hex_dump_to_buffer, replace
+the ascii bool parameter with flags.
 
 Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
 ---
- include/linux/printk.h |  3 +++
- lib/hexdump.c          | 50 +++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 48 insertions(+), 5 deletions(-)
+ drivers/gpu/drm/i915/intel_engine_cs.c            |  2 +-
+ drivers/isdn/hardware/mISDN/mISDNisar.c           |  6 ++++--
+ drivers/mailbox/mailbox-test.c                    |  2 +-
+ drivers/net/ethernet/amd/xgbe/xgbe-drv.c          |  2 +-
+ drivers/net/ethernet/synopsys/dwc-xlgmac-common.c |  2 +-
+ drivers/net/wireless/ath/ath10k/debug.c           |  3 ++-
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c    |  2 +-
+ drivers/platform/chrome/wilco_ec/debugfs.c        |  3 ++-
+ drivers/scsi/scsi_logging.c                       |  8 +++-----
+ drivers/staging/fbtft/fbtft-core.c                |  2 +-
+ fs/seq_file.c                                     |  3 ++-
+ include/linux/printk.h                            |  2 +-
+ lib/hexdump.c                                     | 15 ++++++++-------
+ lib/test_hexdump.c                                |  5 +++--
+ 14 files changed, 31 insertions(+), 26 deletions(-)
 
+diff --git a/drivers/gpu/drm/i915/intel_engine_cs.c b/drivers/gpu/drm/i915/intel_engine_cs.c
+index 49fa43ff02ba..fb133e729f9a 100644
+--- a/drivers/gpu/drm/i915/intel_engine_cs.c
++++ b/drivers/gpu/drm/i915/intel_engine_cs.c
+@@ -1318,7 +1318,7 @@ static void hexdump(struct drm_printer *m, const void *buf, size_t len)
+ 		WARN_ON_ONCE(hex_dump_to_buffer(buf + pos, len - pos,
+ 						rowsize, sizeof(u32),
+ 						line, sizeof(line),
+-						false) >= sizeof(line));
++						0) >= sizeof(line));
+ 		drm_printf(m, "[%04zx] %s\n", pos, line);
+ 
+ 		prev = buf + pos;
+diff --git a/drivers/isdn/hardware/mISDN/mISDNisar.c b/drivers/isdn/hardware/mISDN/mISDNisar.c
+index 386731ec2489..f13f34db6c17 100644
+--- a/drivers/isdn/hardware/mISDN/mISDNisar.c
++++ b/drivers/isdn/hardware/mISDN/mISDNisar.c
+@@ -84,7 +84,8 @@ send_mbox(struct isar_hw *isar, u8 his, u8 creg, u8 len, u8 *msg)
+ 
+ 			while (l < (int)len) {
+ 				hex_dump_to_buffer(msg + l, len - l, 32, 1,
+-						   isar->log, 256, 1);
++						   isar->log, 256,
++						   HEXDUMP_ASCII);
+ 				pr_debug("%s: %s %02x: %s\n", isar->name,
+ 					 __func__, l, isar->log);
+ 				l += 32;
+@@ -113,7 +114,8 @@ rcv_mbox(struct isar_hw *isar, u8 *msg)
+ 
+ 			while (l < (int)isar->clsb) {
+ 				hex_dump_to_buffer(msg + l, isar->clsb - l, 32,
+-						   1, isar->log, 256, 1);
++						   1, isar->log, 256,
++						   HEXDUMP_ASCII);
+ 				pr_debug("%s: %s %02x: %s\n", isar->name,
+ 					 __func__, l, isar->log);
+ 				l += 32;
+diff --git a/drivers/mailbox/mailbox-test.c b/drivers/mailbox/mailbox-test.c
+index 4e4ac4be6423..2f9a094d0259 100644
+--- a/drivers/mailbox/mailbox-test.c
++++ b/drivers/mailbox/mailbox-test.c
+@@ -213,7 +213,7 @@ static ssize_t mbox_test_message_read(struct file *filp, char __user *userbuf,
+ 		hex_dump_to_buffer(ptr,
+ 				   MBOX_BYTES_PER_LINE,
+ 				   MBOX_BYTES_PER_LINE, 1, touser + l,
+-				   MBOX_HEXDUMP_LINE_LEN, true);
++				   MBOX_HEXDUMP_LINE_LEN, HEXDUMP_ASCII);
+ 
+ 		ptr += MBOX_BYTES_PER_LINE;
+ 		l += MBOX_HEXDUMP_LINE_LEN;
+diff --git a/drivers/net/ethernet/amd/xgbe/xgbe-drv.c b/drivers/net/ethernet/amd/xgbe/xgbe-drv.c
+index 0cc911f928b1..e954a31cee0c 100644
+--- a/drivers/net/ethernet/amd/xgbe/xgbe-drv.c
++++ b/drivers/net/ethernet/amd/xgbe/xgbe-drv.c
+@@ -2992,7 +2992,7 @@ void xgbe_print_pkt(struct net_device *netdev, struct sk_buff *skb, bool tx_rx)
+ 		unsigned int len = min(skb->len - i, 32U);
+ 
+ 		hex_dump_to_buffer(&skb->data[i], len, 32, 1,
+-				   buffer, sizeof(buffer), false);
++				   buffer, sizeof(buffer), 0);
+ 		netdev_dbg(netdev, "  %#06x: %s\n", i, buffer);
+ 	}
+ 
+diff --git a/drivers/net/ethernet/synopsys/dwc-xlgmac-common.c b/drivers/net/ethernet/synopsys/dwc-xlgmac-common.c
+index eb1c6b03c329..b80adfa1f890 100644
+--- a/drivers/net/ethernet/synopsys/dwc-xlgmac-common.c
++++ b/drivers/net/ethernet/synopsys/dwc-xlgmac-common.c
+@@ -349,7 +349,7 @@ void xlgmac_print_pkt(struct net_device *netdev,
+ 		unsigned int len = min(skb->len - i, 32U);
+ 
+ 		hex_dump_to_buffer(&skb->data[i], len, 32, 1,
+-				   buffer, sizeof(buffer), false);
++				   buffer, sizeof(buffer), 0);
+ 		netdev_dbg(netdev, "  %#06x: %s\n", i, buffer);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 32d967a31c65..4c99ea03226d 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -2662,7 +2662,8 @@ void ath10k_dbg_dump(struct ath10k *ar,
+ 						(unsigned int)(ptr - buf));
+ 			hex_dump_to_buffer(ptr, len - (ptr - buf), 16, 1,
+ 					   linebuf + linebuflen,
+-					   sizeof(linebuf) - linebuflen, true);
++					   sizeof(linebuf) - linebuflen,
++					   HEXDUMP_ASCII);
+ 			dev_printk(KERN_DEBUG, ar->dev, "%s\n", linebuf);
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+index 271977f7fbb0..acbe26d22c34 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+@@ -3247,7 +3247,7 @@ il3945_show_measurement(struct device *d, struct device_attribute *attr,
+ 
+ 	while (size && PAGE_SIZE - len) {
+ 		hex_dump_to_buffer(data + ofs, size, 16, 1, buf + len,
+-				   PAGE_SIZE - len, true);
++				   PAGE_SIZE - len, HEXDUMP_ASCII);
+ 		len = strlen(buf);
+ 		if (PAGE_SIZE - len)
+ 			buf[len++] = '\n';
+diff --git a/drivers/platform/chrome/wilco_ec/debugfs.c b/drivers/platform/chrome/wilco_ec/debugfs.c
+index c090db2cd5be..238ede4a26d8 100644
+--- a/drivers/platform/chrome/wilco_ec/debugfs.c
++++ b/drivers/platform/chrome/wilco_ec/debugfs.c
+@@ -174,7 +174,8 @@ static ssize_t raw_read(struct file *file, char __user *user_buf, size_t count,
+ 		fmt_len = hex_dump_to_buffer(debug_info->raw_data,
+ 					     debug_info->response_size,
+ 					     16, 1, debug_info->formatted_data,
+-					     FORMATTED_BUFFER_SIZE, true);
++					     FORMATTED_BUFFER_SIZE,
++					     HEXDUMP_ASCII);
+ 		/* Only return response the first time it is read */
+ 		debug_info->response_size = 0;
+ 	}
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index bd70339c1242..fce542bb40e6 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -263,7 +263,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+ 						 "CDB[%02x]: ", k);
+ 				hex_dump_to_buffer(&cmd->cmnd[k], linelen,
+ 						   16, 1, logbuf + off,
+-						   logbuf_len - off, false);
++						   logbuf_len - off, 0);
+ 			}
+ 			dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s",
+ 				   logbuf);
+@@ -274,8 +274,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+ 	if (!WARN_ON(off > logbuf_len - 49)) {
+ 		off += scnprintf(logbuf + off, logbuf_len - off, " ");
+ 		hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
+-				   logbuf + off, logbuf_len - off,
+-				   false);
++				   logbuf + off, logbuf_len - off, 0);
+ 	}
+ out_printk:
+ 	dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
+@@ -354,8 +353,7 @@ scsi_log_dump_sense(const struct scsi_device *sdev, const char *name, int tag,
+ 		off = sdev_format_header(logbuf, logbuf_len,
+ 					 name, tag);
+ 		hex_dump_to_buffer(&sense_buffer[i], len, 16, 1,
+-				   logbuf + off, logbuf_len - off,
+-				   false);
++				   logbuf + off, logbuf_len - off, 0);
+ 		dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
+ 	}
+ 	scsi_log_release_buffer(logbuf);
+diff --git a/drivers/staging/fbtft/fbtft-core.c b/drivers/staging/fbtft/fbtft-core.c
+index 9b07badf4c6c..2e5df5cc9d61 100644
+--- a/drivers/staging/fbtft/fbtft-core.c
++++ b/drivers/staging/fbtft/fbtft-core.c
+@@ -61,7 +61,7 @@ void fbtft_dbg_hex(const struct device *dev, int groupsize,
+ 	va_end(args);
+ 
+ 	hex_dump_to_buffer(buf, len, 32, groupsize, text + text_len,
+-			   512 - text_len, false);
++			   512 - text_len, 0);
+ 
+ 	if (len > 32)
+ 		dev_info(dev, "%s ...\n", text);
+diff --git a/fs/seq_file.c b/fs/seq_file.c
+index 1dea7a8a5255..a0213637af3e 100644
+--- a/fs/seq_file.c
++++ b/fs/seq_file.c
+@@ -873,7 +873,8 @@ void seq_hex_dump(struct seq_file *m, const char *prefix_str, int prefix_type,
+ 
+ 		size = seq_get_buf(m, &buffer);
+ 		ret = hex_dump_to_buffer(ptr + i, linelen, rowsize, groupsize,
+-					 buffer, size, ascii);
++					 buffer, size,
++					 ascii ? HEXDUMP_ASCII : 0);
+ 		seq_commit(m, ret < size ? ret : -1);
+ 
+ 		seq_putc(m, '\n');
 diff --git a/include/linux/printk.h b/include/linux/printk.h
-index 82975853c400..d9e407e59059 100644
+index c014e5573665..82975853c400 100644
 --- a/include/linux/printk.h
 +++ b/include/linux/printk.h
-@@ -485,6 +485,9 @@ enum {
- #define HEXDUMP_SUPPRESS_0XFF	(1 << 2)
- #define HEXDUMP_SUPPRESS_FIRST	(1 << 3)
- #define HEXDUMP_SUPPRESS_LAST	(1 << 4)
-+#define HEXDUMP_2_GRP_LINES	(1 << 5)
-+#define HEXDUMP_4_GRP_LINES	(1 << 6)
-+#define HEXDUMP_8_GRP_LINES	(1 << 7)
+@@ -493,7 +493,7 @@ enum {
  
- #define HEXDUMP_QUIET		(HEXDUMP_SUPPRESS_0X00 | \
- 				HEXDUMP_SUPPRESS_0XFF | \
+ extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
+ 			      int groupsize, char *linebuf, size_t linebuflen,
+-			      bool ascii);
++			      u64 flags);
+ 
+ #ifdef CONFIG_PRINTK
+ extern void print_hex_dump_ext(const char *level, const char *prefix_str,
 diff --git a/lib/hexdump.c b/lib/hexdump.c
-index 79db784577e7..d42f34b93b2c 100644
+index 2f3bafb55a44..79db784577e7 100644
 --- a/lib/hexdump.c
 +++ b/lib/hexdump.c
-@@ -76,6 +76,20 @@ char *bin2hex(char *dst, const void *src, size_t count)
- }
- EXPORT_SYMBOL(bin2hex);
- 
-+static const char *group_separator(int group, u64 flags)
-+{
-+	if ((flags & HEXDUMP_8_GRP_LINES) && ((group - 1) % 8))
-+		return "|";
-+
-+	if ((flags & HEXDUMP_4_GRP_LINES) && ((group - 1) % 4))
-+		return "|";
-+
-+	if ((flags & HEXDUMP_2_GRP_LINES) && ((group - 1) % 2))
-+		return "|";
-+
-+	return " ";
-+}
-+
- /**
-  * hex_dump_to_buffer - convert a blob of data to "hex ASCII" in memory
-  * @buf: data blob to dump
-@@ -86,6 +100,9 @@ EXPORT_SYMBOL(bin2hex);
+@@ -84,7 +84,8 @@ EXPORT_SYMBOL(bin2hex);
+  * @groupsize: number of bytes to print at a time (1, 2, 4, 8; default = 1)
+  * @linebuf: where to put the converted data
   * @linebuflen: total size of @linebuf, including space for terminating NUL
-  * @flags: A bitwise OR of the following flags:
-  *	HEXDUMP_ASCII:		include ASCII after the hex output
-+ *	HEXDUMP_2_GRP_LINES:	insert a '|' after every 2 groups
-+ *	HEXDUMP_4_GRP_LINES:	insert a '|' after every 4 groups
-+ *	HEXDUMP_8_GRP_LINES:	insert a '|' after every 8 groups
+- * @ascii: include ASCII after the hex output
++ * @flags: A bitwise OR of the following flags:
++ *	HEXDUMP_ASCII:		include ASCII after the hex output
   *
   * hex_dump_to_buffer() works on one "line" of output at a time, i.e.,
   * 16, 32 or 64 bytes of input data converted to hex + ASCII output.
-@@ -116,6 +133,7 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 	int j, lx = 0;
- 	int ascii_column;
- 	int ret;
-+	int line_chars = 0;
- 
- 	if (rowsize != 16 && rowsize != 32 && rowsize != 64)
- 		rowsize = 16;
-@@ -141,7 +159,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 
- 		for (j = 0; j < ngroups; j++) {
- 			ret = snprintf(linebuf + lx, linebuflen - lx,
--				       "%s%16.16llx", j ? " " : "",
-+				       "%s%16.16llx",
-+				       j ? group_separator(j, flags) : "",
- 				       get_unaligned(ptr8 + j));
- 			if (ret >= linebuflen - lx)
- 				goto overflow1;
-@@ -152,7 +171,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 
- 		for (j = 0; j < ngroups; j++) {
- 			ret = snprintf(linebuf + lx, linebuflen - lx,
--				       "%s%8.8x", j ? " " : "",
-+				       "%s%8.8x",
-+				       j ? group_separator(j, flags) : "",
- 				       get_unaligned(ptr4 + j));
- 			if (ret >= linebuflen - lx)
- 				goto overflow1;
-@@ -163,7 +183,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 
- 		for (j = 0; j < ngroups; j++) {
- 			ret = snprintf(linebuf + lx, linebuflen - lx,
--				       "%s%4.4x", j ? " " : "",
-+				       "%s%4.4x",
-+				       j ? group_separator(j, flags) : "",
- 				       get_unaligned(ptr2 + j));
- 			if (ret >= linebuflen - lx)
- 				goto overflow1;
-@@ -193,11 +214,26 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 			goto overflow2;
- 		linebuf[lx++] = ' ';
+@@ -95,7 +96,7 @@ EXPORT_SYMBOL(bin2hex);
+  *
+  * E.g.:
+  *   hex_dump_to_buffer(frame->data, frame->len, 16, 1,
+- *			linebuf, sizeof(linebuf), true);
++ *			linebuf, sizeof(linebuf), HEXDUMP_ASCII);
+  *
+  * example output buffer:
+  * 40 41 42 43 44 45 46 47 48 49 4a 4b 4c 4d 4e 4f  @ABCDEFGHIJKLMNO
+@@ -107,7 +108,7 @@ EXPORT_SYMBOL(bin2hex);
+  * string if enough space had been available.
+  */
+ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+-		       char *linebuf, size_t linebuflen, bool ascii)
++		       char *linebuf, size_t linebuflen, u64 flags)
+ {
+ 	const u8 *ptr = buf;
+ 	int ngroups;
+@@ -184,7 +185,7 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 		if (j)
+ 			lx--;
  	}
-+
-+	if (flags & HEXDUMP_2_GRP_LINES)
-+		line_chars = groupsize * 2;
-+	if (flags & HEXDUMP_4_GRP_LINES)
-+		line_chars = groupsize * 4;
-+	if (flags & HEXDUMP_8_GRP_LINES)
-+		line_chars = groupsize * 8;
-+
- 	for (j = 0; j < len; j++) {
- 		if (linebuflen < lx + 2)
- 			goto overflow2;
- 		ch = ptr[j];
- 		linebuf[lx++] = (isascii(ch) && isprint(ch)) ? ch : '.';
-+
-+		if (line_chars && ((j + 1) < len) &&
-+				((j + 1) % line_chars == 0)) {
-+			if (linebuflen < lx + 2)
-+				goto overflow2;
-+			linebuf[lx++] = '|';
-+		}
- 	}
- nil:
- 	linebuf[lx] = '\0';
-@@ -205,7 +241,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+-	if (!ascii)
++	if (!flags & HEXDUMP_ASCII)
+ 		goto nil;
+ 
+ 	while (lx < ascii_column) {
+@@ -204,7 +205,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
  overflow2:
  	linebuf[lx++] = '\0';
  overflow1:
--	return (flags & HEXDUMP_ASCII) ? ascii_column + len :
-+	return (flags & HEXDUMP_ASCII) ? ascii_column + len +
-+					(len - 1) / line_chars :
- 					 (groupsize * 2 + 1) * ngroups - 1;
+-	return ascii ? ascii_column + len : (groupsize * 2 + 1) * ngroups - 1;
++	return (flags & HEXDUMP_ASCII) ? ascii_column + len :
++					 (groupsize * 2 + 1) * ngroups - 1;
  }
  EXPORT_SYMBOL(hex_dump_to_buffer);
-@@ -246,6 +283,9 @@ static bool buf_is_all(const u8 *buf, size_t len, u8 val)
-  *	HEXDUMP_SUPPRESS_LAST:	allows the last line to be suppressed
-  *				If the first and last line may be suppressed,
-  *				an empty buffer will not produce any output
-+ *	HEXDUMP_2_GRP_LINES:	insert a '|' after every 2 groups
-+ *	HEXDUMP_4_GRP_LINES:	insert a '|' after every 4 groups
-+ *	HEXDUMP_8_GRP_LINES:	insert a '|' after every 8 groups
-  *
-  * Given a buffer of u8 data, print_hex_dump() prints a hex + ASCII dump
-  * to the kernel log at the specified kernel log level, with an optional
-@@ -271,7 +311,7 @@ void print_hex_dump_ext(const char *level, const char *prefix_str,
- {
- 	const u8 *ptr = buf;
- 	int i, remaining = len;
--	unsigned char linebuf[64 * 3 + 2 + 64 + 1];
-+	unsigned char linebuf[64 * 3 + 2 + 64 + 31 + 1];
- 	bool first_line = true;
  
- 	if (rowsize != 16 && rowsize != 32 && rowsize != 64)
+@@ -299,8 +301,7 @@ void print_hex_dump_ext(const char *level, const char *prefix_str,
+ 		first_line = false;
+ 
+ 		hex_dump_to_buffer(ptr + i, linelen, rowsize, groupsize,
+-				   linebuf, sizeof(linebuf),
+-				   flags & HEXDUMP_ASCII);
++				   linebuf, sizeof(linebuf), flags);
+ 
+ 		switch (prefix_type) {
+ 		case DUMP_PREFIX_ADDRESS:
+diff --git a/lib/test_hexdump.c b/lib/test_hexdump.c
+index 5144899d3c6b..16bdb483114d 100644
+--- a/lib/test_hexdump.c
++++ b/lib/test_hexdump.c
+@@ -132,7 +132,7 @@ static void __init test_hexdump(size_t len, int rowsize, int groupsize,
+ 
+ 	memset(real, FILL_CHAR, sizeof(real));
+ 	hex_dump_to_buffer(data_b, len, rowsize, groupsize, real, sizeof(real),
+-			   ascii);
++			   ascii ? HEXDUMP_ASCII : 0);
+ 
+ 	memset(test, FILL_CHAR, sizeof(test));
+ 	test_hexdump_prepare_test(len, rowsize, groupsize, test, sizeof(test),
+@@ -171,7 +171,8 @@ static void __init test_hexdump_overflow(size_t buflen, size_t len,
+ 
+ 	memset(buf, FILL_CHAR, sizeof(buf));
+ 
+-	r = hex_dump_to_buffer(data_b, len, rs, gs, buf, buflen, ascii);
++	r = hex_dump_to_buffer(data_b, len, rs, gs, buf, buflen,
++			ascii ? HEXDUMP_ASCII : 0);
+ 
+ 	/*
+ 	 * Caller must provide the data length multiple of groupsize. The
 -- 
 2.20.1
 
