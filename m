@@ -2,92 +2,116 @@ Return-Path: <SRS0=qAu2=SM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CBBBC10F11
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 08:49:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B5D6C10F14
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 08:53:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 040C020850
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 08:49:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCB3B217D9
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Apr 2019 08:53:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JTipYG6i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729729AbfDJItx convert rfc822-to-8bit (ORCPT
+        id S1729765AbfDJIxK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Apr 2019 04:49:53 -0400
-Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:53880 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727561AbfDJItw (ORCPT
+        Wed, 10 Apr 2019 04:53:10 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:42860 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728821AbfDJIxK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Apr 2019 04:49:52 -0400
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-138-Ndetxl5uP32KfMs7Mt-uIw-1; Wed, 10 Apr 2019 09:49:48 +0100
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b::d117) by AcuMS.aculab.com
- (fd9f:af1c:a25b::d117) with Microsoft SMTP Server (TLS) id 15.0.1347.2; Wed,
- 10 Apr 2019 09:50:57 +0100
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Wed, 10 Apr 2019 09:50:57 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Fenghua Yu' <fenghua.yu@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-CC:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H Peter Anvin" <hpa@zytor.com>,
-        Dave Hansen <dave.hansen@intel.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
+        Wed, 10 Apr 2019 04:53:10 -0400
+Received: by mail-pf1-f195.google.com with SMTP id w25so1042674pfi.9;
+        Wed, 10 Apr 2019 01:53:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=MAwA8hdcGfucrSp9x2LdZHnMV91ksCJGxM5uXbbJCtY=;
+        b=JTipYG6iK0X5X1nmc9EvGfJ0YCn8chNQPHnQm7tekpIo64uFjqjB9TTWSmYR3p2dx1
+         zKw4VN9hmz6TSOBo4ouIrBarjF1yuREgL8i5e+ecToq+Br2zrGEL+si/n/6+HIdM8J1a
+         b+W3gWbrdJcrjOPvvVP18247T9LTYWT1eIiNEAXgoRbyEXYv069DoOFuFW4AtFvmEqZE
+         47AmQV4CifH0Hty+LHZ9/kdFuU4qwIhoT2LGJK89islYyIofFGmPjIE8Y8C3D2iF7HTC
+         6gfb/eBBSPmayR00oCqW7xQ3X+4q2HwSlGPEeXocBxdlSBgaLPQBAlMOIoPIpLy99Xyu
+         VSmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=MAwA8hdcGfucrSp9x2LdZHnMV91ksCJGxM5uXbbJCtY=;
+        b=OwdUBIaCDat2YfS6FpBCItKOyycfvHUBBiv+R5san8BUvxnerMhgbj0lmUbE3KhBFm
+         TJg/sjYa503pqkCnfedieSM9bBSJbpjqlNw/qGDUJTV5+jCfpVc0Kyega/pBQa+ZeczO
+         e+g09Smi13fZf1KsYnrlO/mUXXP/ShdRI025vL0xLHGEmAOBbw156sG6xeAH1wMsI1mE
+         ZGI3b8Qqz5rlbxnE2DMCxC7aFFk6TRhni04php9y6l7KpbuUWfk/8SCPANy4N9A5I6zo
+         27n3rWWaGX1E1u8vwx1PpnocmVS1O8YtElu5obP2OAPcg6JTH2C8IB6dlC9CYoFK/mer
+         5AiQ==
+X-Gm-Message-State: APjAAAXNSCzQy3BgdfbSkhWf1BY01C/TU4p8NIYFTcUpT6zjm2aL3wrr
+        zU8N41rPLgU3rnT2pjMqj9s=
+X-Google-Smtp-Source: APXvYqxhkSaBHCeSJPrwvXou8ZFtLhANs4PeNDP819FhRRYIEPqUShqy+ScgDv8TvtNjZsL9uSUc/w==
+X-Received: by 2002:a63:2a8f:: with SMTP id q137mr38826358pgq.31.1554886389327;
+        Wed, 10 Apr 2019 01:53:09 -0700 (PDT)
+Received: from localhost ([175.223.11.210])
+        by smtp.gmail.com with ESMTPSA id l192sm22246219pge.42.2019.04.10.01.53.07
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 10 Apr 2019 01:53:08 -0700 (PDT)
+Date:   Wed, 10 Apr 2019 17:53:05 +0900
+From:   Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To:     Alastair D'Silva <alastair@au1.ibm.com>
+Cc:     alastair@d-silva.org, Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Karsten Keil <isdn@linux-pingi.de>,
+        Jassi Brar <jassisinghbrar@gmail.com>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jose Abreu <Jose.Abreu@synopsys.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Xiaoyao Li <xiaoyao.li@intel.com>,
-        Michael Chan <michael.chan@broadcom.com>,
-        "Ravi V Shankar" <ravi.v.shankar@intel.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        x86 <x86@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Subject: RE: [PATCH v6 13/20] x86/split_lock: Enable split lock detection by
- default
-Thread-Topic: [PATCH v6 13/20] x86/split_lock: Enable split lock detection by
- default
-Thread-Index: AQHU7zH5HfC+YrTTzk6Tff+d004VOaY1FYyA
-Date:   Wed, 10 Apr 2019 08:50:57 +0000
-Message-ID: <58bb4085161a4112995e23b46353b777@AcuMS.aculab.com>
-References: <1554326526-172295-1-git-send-email-fenghua.yu@intel.com>
- <1554326526-172295-14-git-send-email-fenghua.yu@intel.com>
- <alpine.DEB.2.21.1904041932500.1802@nanos.tec.linutronix.de>
- <20190410000229.GA209676@romley-ivt3.sc.intel.com>
-In-Reply-To: <20190410000229.GA209676@romley-ivt3.sc.intel.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Benson Leung <bleung@chromium.org>,
+        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Petr Mladek <pmladek@suse.com>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 4/4] lib/hexdump.c: Allow multiple groups to be separated
+ by lines '|'
+Message-ID: <20190410085305.GA4937@jagdpanzerIV>
+References: <20190410031720.11067-1-alastair@au1.ibm.com>
+ <20190410031720.11067-5-alastair@au1.ibm.com>
 MIME-Version: 1.0
-X-MC-Unique: Ndetxl5uP32KfMs7Mt-uIw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190410031720.11067-5-alastair@au1.ibm.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-FWIW it took me a while to work out what a 'split lock' was.
+On (04/10/19 13:17), Alastair D'Silva wrote:
+> With the wider display format, it can become hard to identify how many
+> bytes into the line you are looking at.
+> 
+> The patch adds new flags to hex_dump_to_buffer() and print_hex_dump() to
+> print vertical lines to separate every N groups of bytes.
+> 
+> eg.
+> buf:00000000: 454d414e 43415053|4e495f45 00584544  NAMESPAC|E_INDEX.
+> buf:00000010: 00000000 00000002|00000000 00000000  ........|........
 
-I suspect because I was thinking of kernel locks, not the
-instruction lock prefix.
-It also isn't really obvious that 'split' refers to crossing
-cache lines.
+What if the output had |-s in it?  |||||||||
 
-Referring to it as a 'misaligned lock' might be more
-easily understood.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+	-ss
