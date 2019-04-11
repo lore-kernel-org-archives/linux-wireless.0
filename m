@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D17D9C10F13
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:20:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D0CC10F14
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:21:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 993C820818
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:20:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28D4420818
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:21:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="rShVtDlm"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="SC6T5zFH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727021AbfDKKUl (ORCPT
+        id S1726997AbfDKKUk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Apr 2019 06:20:41 -0400
-Received: from vps.xff.cz ([195.181.215.36]:48598 "EHLO vps.xff.cz"
+        Thu, 11 Apr 2019 06:20:40 -0400
+Received: from vps.xff.cz ([195.181.215.36]:48608 "EHLO vps.xff.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726677AbfDKKUB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Apr 2019 06:20:01 -0400
+        id S1726775AbfDKKUD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Apr 2019 06:20:03 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554977997; bh=5oK+hUHvbPopzw2Jlb3qkR0ZnXTFnDc3XhhaDlcdJng=;
+        t=1554977997; bh=6VLGBninVYhLf3SKuzVOvcFENaFxMRjZ/uyrW9t0ZFM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rShVtDlmYfsIffqn52CiTS0aaDYBAlJANuq/YRzukRqIi6d1SHXabea4uVW760pay
-         pRvWPTfEPjc35EVA0vxz1Z3ShtAi/MtrfsKdGGcO1IIzWgcFL5whEH8Ecyyg5cPrNY
-         BG6r3ulcBnlaCmXGbi7JFMwfMelCwQkTqSPPcVyY=
+        b=SC6T5zFHak+HH758QTiX/0XdsteacPTzOO0BLxDh/pqZwl943jaz3s/nZICaiTPmp
+         UkO0sF/Ggir//tPrEm1F3Wx6h3TSe4UAebDkyUgVgGFr3xRZIjJQ5jzdV5yQuq4d1d
+         VNeQqNnGcT1QRDYPHwQQd/NG8lV2XqN/r0+csXWA=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -54,9 +54,9 @@ Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH v3 06/11] dt-bindings: display: hdmi-connector: Add DDC power supply
-Date:   Thu, 11 Apr 2019 12:19:46 +0200
-Message-Id: <20190411101951.30223-7-megous@megous.com>
+Subject: [PATCH v3 07/11] drm: sun4i: Add support for enabling DDC I2C bus power to dw_hdmi glue
+Date:   Thu, 11 Apr 2019 12:19:47 +0200
+Message-Id: <20190411101951.30223-8-megous@megous.com>
 In-Reply-To: <20190411101951.30223-1-megous@megous.com>
 References: <20190411101951.30223-1-megous@megous.com>
 MIME-Version: 1.0
@@ -68,29 +68,135 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ondrej Jirman <megous@megous.com>
 
-Some Allwinner SoC using boards (Orange Pi 3 for example) need to enable
-on-board voltage shifting logic for the DDC bus to be usable. Use
-ddc-supply on the hdmi-connector to model this.
+Orange Pi 3 board requires enabling DDC I2C bus via some GPIO connected
+transistors, before the bus can be used.
 
-Add binding documentation for optional ddc-supply property.
+Model this as a power supply for DDC bus on the HDMI connector connected
+to the output port (port 1) of the HDMI controller.
 
 Signed-off-by: Ondrej Jirman <megous@megous.com>
 ---
- .../devicetree/bindings/display/connector/hdmi-connector.txt     | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c | 60 ++++++++++++++++++++++++++-
+ drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h |  2 +
+ 2 files changed, 60 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/display/connector/hdmi-connector.txt b/Documentation/devicetree/bindings/display/connector/hdmi-connector.txt
-index 508aee461e0d..33085aeb0bb9 100644
---- a/Documentation/devicetree/bindings/display/connector/hdmi-connector.txt
-+++ b/Documentation/devicetree/bindings/display/connector/hdmi-connector.txt
-@@ -9,6 +9,7 @@ Optional properties:
- - label: a symbolic name for the connector
- - hpd-gpios: HPD GPIO number
- - ddc-i2c-bus: phandle link to the I2C controller used for DDC EDID probing
-+- ddc-supply: the power supply for the DDC bus
+diff --git a/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c b/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c
+index 39d8509d96a0..1b6ffba41177 100644
+--- a/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c
++++ b/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c
+@@ -98,6 +98,30 @@ static u32 sun8i_dw_hdmi_find_possible_crtcs(struct drm_device *drm,
+ 	return crtcs;
+ }
  
- Required nodes:
- - Video port for HDMI input
++static int sun8i_dw_hdmi_find_connector_pdev(struct device *dev,
++					     struct platform_device **pdev_out)
++{
++	struct platform_device* pdev;
++	struct device_node *remote;
++
++	remote = of_graph_get_remote_node(dev->of_node, 1, -1);
++	if (!remote)
++		return -ENODEV;
++
++	if (!of_device_is_compatible(remote, "hdmi-connector")) {
++		of_node_put(remote);
++		return -ENODEV;
++	}
++
++	pdev = of_find_device_by_node(remote);
++	of_node_put(remote);
++	if (!pdev)
++		return -ENODEV;
++
++	*pdev_out = pdev;
++	return 0;
++}
++
+ static int sun8i_dw_hdmi_bind(struct device *dev, struct device *master,
+ 			      void *data)
+ {
+@@ -151,16 +175,34 @@ static int sun8i_dw_hdmi_bind(struct device *dev, struct device *master,
+ 		return PTR_ERR(hdmi->regulator);
+ 	}
+ 
++	ret = sun8i_dw_hdmi_find_connector_pdev(dev, &hdmi->connector_pdev);
++	if (!ret) {
++		hdmi->ddc_regulator = regulator_get(&hdmi->connector_pdev->dev, "ddc");
++		if (IS_ERR(hdmi->ddc_regulator)) {
++			platform_device_put(hdmi->connector_pdev);
++			dev_err(dev, "Couldn't get ddc regulator\n");
++			return PTR_ERR(hdmi->ddc_regulator);
++		}
++	}
++
+ 	ret = regulator_enable(hdmi->regulator);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to enable regulator\n");
+-		return ret;
++		goto err_unref_ddc_regulator;
++	}
++
++	if (hdmi->ddc_regulator) {
++		ret = regulator_enable(hdmi->ddc_regulator);
++		if (ret) {
++			dev_err(dev, "Failed to enable ddc regulator\n");
++			goto err_disable_regulator;
++		}
+ 	}
+ 
+ 	ret = reset_control_deassert(hdmi->rst_ctrl);
+ 	if (ret) {
+ 		dev_err(dev, "Could not deassert ctrl reset control\n");
+-		goto err_disable_regulator;
++		goto err_disable_ddc_regulator;
+ 	}
+ 
+ 	ret = clk_prepare_enable(hdmi->clk_tmds);
+@@ -213,8 +255,15 @@ static int sun8i_dw_hdmi_bind(struct device *dev, struct device *master,
+ 	clk_disable_unprepare(hdmi->clk_tmds);
+ err_assert_ctrl_reset:
+ 	reset_control_assert(hdmi->rst_ctrl);
++err_disable_ddc_regulator:
++	if (hdmi->ddc_regulator)
++		regulator_disable(hdmi->ddc_regulator);
+ err_disable_regulator:
+ 	regulator_disable(hdmi->regulator);
++err_unref_ddc_regulator:
++	if (hdmi->ddc_regulator)
++		regulator_put(hdmi->ddc_regulator);
++	platform_device_put(hdmi->connector_pdev);
+ 
+ 	return ret;
+ }
+@@ -229,6 +278,13 @@ static void sun8i_dw_hdmi_unbind(struct device *dev, struct device *master,
+ 	clk_disable_unprepare(hdmi->clk_tmds);
+ 	reset_control_assert(hdmi->rst_ctrl);
+ 	regulator_disable(hdmi->regulator);
++
++	if (hdmi->ddc_regulator) {
++		regulator_disable(hdmi->ddc_regulator);
++		regulator_put(hdmi->ddc_regulator);
++	}
++
++	platform_device_put(hdmi->connector_pdev);
+ }
+ 
+ static const struct component_ops sun8i_dw_hdmi_ops = {
+diff --git a/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h b/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h
+index 720c5aa8adc1..60f5200aee73 100644
+--- a/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h
++++ b/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.h
+@@ -188,8 +188,10 @@ struct sun8i_dw_hdmi {
+ 	struct sun8i_hdmi_phy		*phy;
+ 	struct dw_hdmi_plat_data	plat_data;
+ 	struct regulator		*regulator;
++	struct regulator		*ddc_regulator;
+ 	const struct sun8i_dw_hdmi_quirks *quirks;
+ 	struct reset_control		*rst_ctrl;
++	struct platform_device		*connector_pdev;
+ };
+ 
+ static inline struct sun8i_dw_hdmi *
 -- 
 2.21.0
 
