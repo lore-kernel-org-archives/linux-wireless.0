@@ -2,38 +2,70 @@ Return-Path: <SRS0=IMqP=SN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A65A5C10F13
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:21:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 089E5C10F14
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:34:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6DE5C20818
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:21:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEFBF2084D
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:34:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="Qto8jyUL"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RrBSE2Us"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726702AbfDKKT6 (ORCPT
+        id S1726753AbfDKKes (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Apr 2019 06:19:58 -0400
-Received: from vps.xff.cz ([195.181.215.36]:48398 "EHLO vps.xff.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726677AbfDKKT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Apr 2019 06:19:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554977995; bh=VCU/uAG/CGlp0N/Ie+gLjiEg/N8Z0m54HtEJgdiJHWQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Qto8jyULfncNvfKKRwPzZP1JB3/oy4HWo/AuWudxJaoV4XRfbiL6QW2mAHqd/xQu/
-         ZlQByk2qHZGItuf2QKJutUHdaK5OUA3xlj8ylEZUjHZr4LUEsEedHkPh3+bt3x86Qy
-         DSWRXWKxCwJjHfzTsi2ig/zvmIn1HGfGP8ysOz8M=
-From:   megous@megous.com
-To:     linux-sunxi@googlegroups.com,
+        Thu, 11 Apr 2019 06:34:48 -0400
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:39704 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726026AbfDKKer (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Apr 2019 06:34:47 -0400
+Received: by mail-wm1-f68.google.com with SMTP id n25so5982227wmk.4;
+        Thu, 11 Apr 2019 03:34:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ncP/XNUc6zUJMN6LMeRFfRBUv3h/NA4fn494LmOhRG8=;
+        b=RrBSE2Usc9PBkc7LAnBazfFCMJYidCyT2Ku0n71GbZZKb23GkVn5nbFq2uwPbmzd7t
+         M/Ai4p0mmF5+xoGCyQkOABae4LRxfhs0yKoDzVBSUb8i4hCnf4LQwEeer+ZSahHY+0RJ
+         mUFwI/KaJ24zYnuLLWB4PHUU3MF0HEKnWCtgXNVUvyFLoMQnmAl25rBCxSRx5z6c/Qpe
+         +jiinKtSMc5jEtzHYmdFniH1Ll45Na5yLFMyomvD9iTV7AmF9uFPeR0BO3fyroLcZcqX
+         t4NMphRED/AS4doJLsvAkN56rtQ5CE5f5wfIv+UPz/2otXxaeCfPL88ku9Hf00UoIWuF
+         yxhQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ncP/XNUc6zUJMN6LMeRFfRBUv3h/NA4fn494LmOhRG8=;
+        b=SeHNNUBS6SNr5JKjSvn6XTDAw9cgJAyCnRh0S3NyuB83ul5CGGfYEjF5O+rN6wtwye
+         9zQTbSZ4GO9G4Tg6G+bufqYBXnN5Typqdq7yQri8f1G8URTzpO69x4SBOORG11j1gQ17
+         VmnDKOoeOwcnz9vF8SixFhr3SGYh2RBXuBorigG5+Dk8ghQz8yptBuG4pW/zChERIxHg
+         sQ6w2smtks+w33ehag5p3Ke3Gs09ElQgYs3m2sy3tpq5apSPeT5F1aS3v1R7kdlbTXBq
+         Ftc6mJ1Ij/KIr+xRaAyNvtfJlixqx9m9VqELcOp7sYMzpxQzhY/BhTpafi+rnnXy6Wtd
+         ZCJw==
+X-Gm-Message-State: APjAAAUh5ibMIL7fujlY43TtlGS312KsR9859OmdcaVtzYg0UkKn5pLE
+        qAtj87D9uBRkTt4kovxjYqUZBplj5+AxPjrI2Gs=
+X-Google-Smtp-Source: APXvYqxxCXwjF9kqHwwwiWd9xsdmZosDQqKBbtF+8N3rXMyB3xLNbDAv48MMIJr2EQBnQEJJTjcA5IsgI+HX33M/TtA=
+X-Received: by 2002:a1c:cc15:: with SMTP id h21mr6003355wmb.85.1554978885091;
+ Thu, 11 Apr 2019 03:34:45 -0700 (PDT)
+MIME-Version: 1.0
+References: <20190411101951.30223-1-megous@megous.com> <20190411101951.30223-4-megous@megous.com>
+In-Reply-To: <20190411101951.30223-4-megous@megous.com>
+From:   Julian Calaby <julian.calaby@gmail.com>
+Date:   Thu, 11 Apr 2019 20:34:33 +1000
+Message-ID: <CAGRGNgUhPC+G+H_zYSi7KFx-K10uPOXRsPqPFcirGaWScw59dQ@mail.gmail.com>
+Subject: Re: [linux-sunxi] [PATCH v3 03/11] pinctrl: sunxi: Prepare for
+ alternative bias voltage setting methods
+To:     megous@megous.com
+Cc:     linux-sunxi <linux-sunxi@googlegroups.com>,
         Maxime Ripard <maxime.ripard@bootlin.com>,
         Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>
-Cc:     Icenowy Zheng <icenowy@aosc.io>, David Airlie <airlied@linux.ie>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        David Airlie <airlied@linux.ie>,
         Daniel Vetter <daniel@ffwll.ch>,
         Mark Rutland <mark.rutland@arm.com>,
         Giuseppe Cavallaro <peppe.cavallaro@st.com>,
@@ -48,60 +80,62 @@ Cc:     Icenowy Zheng <icenowy@aosc.io>, David Airlie <airlied@linux.ie>,
         Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Naveen Gupta <naveen.gupta@cypress.com>,
-        dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        "Mailing List, Arm" <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org,
-        Ondrej Jirman <megous@megous.com>
-Subject: [PATCH v3 02/11] net: stmmac: sun8i: force select external PHY when no internal one
-Date:   Thu, 11 Apr 2019 12:19:42 +0200
-Message-Id: <20190411101951.30223-3-megous@megous.com>
-In-Reply-To: <20190411101951.30223-1-megous@megous.com>
-References: <20190411101951.30223-1-megous@megous.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Icenowy Zheng <icenowy@aosc.io>
+Hi Ondrej
 
-The PHY selection bit also exists on SoCs without an internal PHY; if it's
-set to 1 (internal PHY, default value) then the MAC will not make use of
-any PHY such SoCs.
+On Thu, Apr 11, 2019 at 8:19 PM megous via linux-sunxi
+<linux-sunxi@googlegroups.com> wrote:
+>
+> From: Ondrej Jirman <megous@megous.com>
+>
+> H6 has a different I/O voltage bias setting method than A80. Prepare
+> existing code for using alternative bias voltage setting methods.
+>
+> Signed-off-by: Ondrej Jirman <megous@megous.com>
+> diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.h b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
+> index ee15ab067b5f..4bfc8a6d9dce 100644
+> --- a/drivers/pinctrl/sunxi/pinctrl-sunxi.h
+> +++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
+> @@ -95,6 +95,13 @@
+>  #define PINCTRL_SUN7I_A20      BIT(7)
+>  #define PINCTRL_SUN8I_R40      BIT(8)
+>
+> +enum sunxi_desc_bias_voltage {
+> +       BIAS_VOLTAGE_NONE,
+> +       /* Bias voltage configuration is done through
+> +        * Pn_GRP_CONFIG registers, as seen on A80 SoC. */
+> +       BIAS_VOLTAGE_GRP_CONFIG,
+> +};
+> +
+>  struct sunxi_desc_function {
+>         unsigned long   variant;
+>         const char      *name;
+> @@ -117,7 +124,7 @@ struct sunxi_pinctrl_desc {
+>         const unsigned int              *irq_bank_map;
+>         bool                            irq_read_needs_mux;
+>         bool                            disable_strict_mode;
+> -       bool                            has_io_bias_cfg;
+> +       int                             io_bias_cfg_variant;
 
-This problem appears when adapting for H6, which has no real internal PHY
-(the "internal PHY" on H6 is not on-die, but on a co-packaged AC200 chip,
-connected via RMII interface at GPIO bank A).
+Shouldn't we be defining this field using the enum rather than as an int?
 
-Force the PHY selection bit to 0 when the SOC doesn't have an internal PHY,
-to address the problem of a wrong default value.
+Thanks,
 
-Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
-Signed-off-by: Ondrej Jirman <megous@megous.com>
----
- drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-index 20c19afb8316..cb7e7f53be7d 100644
---- a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-+++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-@@ -907,6 +907,11 @@ static int sun8i_dwmac_set_syscon(struct stmmac_priv *priv)
- 		 * address. No need to mask it again.
- 		 */
- 		reg |= 1 << H3_EPHY_ADDR_SHIFT;
-+	} else {
-+		/* For SoCs without internal PHY the PHY selection bit should be
-+		 * set to 0 (external PHY).
-+		 */
-+		reg &= ~H3_EPHY_SELECT;
- 	}
- 
- 	if (!of_property_read_u32(node, "allwinner,tx-delay-ps", &val)) {
 -- 
-2.21.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
