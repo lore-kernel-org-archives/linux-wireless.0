@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24AAEC10F13
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96D4AC10F14
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:21:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E712E20818
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:21:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66E2020818
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Apr 2019 10:21:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="jj4C1apl"
+	dkim=pass (1024-bit key) header.d=megous.com header.i=@megous.com header.b="oyGTc0BW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726796AbfDKKV1 (ORCPT
+        id S1726735AbfDKKT6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Apr 2019 06:21:27 -0400
-Received: from vps.xff.cz ([195.181.215.36]:48438 "EHLO vps.xff.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726678AbfDKKT6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 11 Apr 2019 06:19:58 -0400
+Received: from vps.xff.cz ([195.181.215.36]:48360 "EHLO vps.xff.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726588AbfDKKT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Apr 2019 06:19:57 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=megous.com; s=mail;
-        t=1554977995; bh=DdOJz/KUHvzyoOqY/X/p8VGDaZGkFFOEFng4t6EKayc=;
+        t=1554977994; bh=unyXzRpGhfWJQ+WLXU6ly2jmSYKOT8hB+V2vSbRnR30=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jj4C1aplFLTIhC+zesYBGtAgQarcYkxVN/3bdGBb6on/rJ3BytYOg8T5nHOIR2me7
-         ZxiqsSpiAQVKG1AmXYY6PB4+mjxspzXnWHLQL9icIf2jA8uDt22aUXsFxAaipBRG9i
-         8idxt9JEfJYf62x2x7cTjCFf0c3K4NJugm1yl4GQ=
+        b=oyGTc0BWzGcUxj5sXpJl9xAtrzl8WhcR6Nw7cxnwn+GA/FqkDQ9AfM1A/joxea4cJ
+         TH4kjKGpOH/bZekEOz0mDJp5kEJqrtUKInT97MFB2NLiEvytdT6CtJo9cAOYD9QbFp
+         EfaJQ6G7HGkx6tEaCZDJjezPOCM7UPA+ISgvN+CA=
 From:   megous@megous.com
 To:     linux-sunxi@googlegroups.com,
         Maxime Ripard <maxime.ripard@bootlin.com>,
         Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh+dt@kernel.org>,
         Linus Walleij <linus.walleij@linaro.org>
-Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
+Cc:     Icenowy Zheng <icenowy@aosc.io>, David Airlie <airlied@linux.ie>,
         Daniel Vetter <daniel@ffwll.ch>,
         Mark Rutland <mark.rutland@arm.com>,
         Giuseppe Cavallaro <peppe.cavallaro@st.com>,
@@ -53,10 +53,11 @@ Cc:     Ondrej Jirman <megous@megous.com>, David Airlie <airlied@linux.ie>,
         netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org
-Subject: [PATCH v3 03/11] pinctrl: sunxi: Prepare for alternative bias voltage setting methods
-Date:   Thu, 11 Apr 2019 12:19:43 +0200
-Message-Id: <20190411101951.30223-4-megous@megous.com>
+        brcm80211-dev-list@cypress.com, linux-gpio@vger.kernel.org,
+        Ondrej Jirman <megous@megous.com>
+Subject: [PATCH v3 01/11] net: stmmac: sun8i: add support for Allwinner H6 EMAC
+Date:   Thu, 11 Apr 2019 12:19:41 +0200
+Message-Id: <20190411101951.30223-2-megous@megous.com>
 In-Reply-To: <20190411101951.30223-1-megous@megous.com>
 References: <20190411101951.30223-1-megous@megous.com>
 MIME-Version: 1.0
@@ -66,123 +67,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ondrej Jirman <megous@megous.com>
+From: Icenowy Zheng <icenowy@aosc.io>
 
-H6 has a different I/O voltage bias setting method than A80. Prepare
-existing code for using alternative bias voltage setting methods.
+The EMAC on Allwinner H6 is just like the one on A64. The "internal PHY" on
+H6 is on a co-packaged AC200 chip, and it's not really internal (it's
+connected via RMII at PA GPIO bank).
 
+Add support for the Allwinner H6 EMAC in the dwmac-sun8i driver.
+
+Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
 Signed-off-by: Ondrej Jirman <megous@megous.com>
 ---
- drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c |  2 +-
- drivers/pinctrl/sunxi/pinctrl-sunxi.c     | 47 +++++++++++++----------
- drivers/pinctrl/sunxi/pinctrl-sunxi.h     |  9 ++++-
- 3 files changed, 36 insertions(+), 22 deletions(-)
+ .../net/ethernet/stmicro/stmmac/dwmac-sun8i.c    | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c b/drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c
-index da37d594a13d..0633a03d5e13 100644
---- a/drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c
-+++ b/drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c
-@@ -722,7 +722,7 @@ static const struct sunxi_pinctrl_desc sun9i_a80_pinctrl_data = {
- 	.npins = ARRAY_SIZE(sun9i_a80_pins),
- 	.irq_banks = 5,
- 	.disable_strict_mode = true,
--	.has_io_bias_cfg = true,
-+	.io_bias_cfg_variant = BIAS_VOLTAGE_GRP_CONFIG,
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
+index 195669f550f0..20c19afb8316 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
+@@ -147,6 +147,20 @@ static const struct emac_variant emac_variant_a64 = {
+ 	.tx_delay_max = 7,
  };
  
- static int sun9i_a80_pinctrl_probe(struct platform_device *pdev)
-diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-index be04223591d4..98c4de5f4019 100644
---- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-+++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-@@ -617,7 +617,7 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
- 	u32 val, reg;
- 	int uV;
- 
--	if (!pctl->desc->has_io_bias_cfg)
-+	if (!pctl->desc->io_bias_cfg_variant)
- 		return 0;
- 
- 	uV = regulator_get_voltage(supply);
-@@ -628,25 +628,32 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
- 	if (uV == 0)
- 		return 0;
- 
--	/* Configured value must be equal or greater to actual voltage */
--	if (uV <= 1800000)
--		val = 0x0; /* 1.8V */
--	else if (uV <= 2500000)
--		val = 0x6; /* 2.5V */
--	else if (uV <= 2800000)
--		val = 0x9; /* 2.8V */
--	else if (uV <= 3000000)
--		val = 0xA; /* 3.0V */
--	else
--		val = 0xD; /* 3.3V */
--
--	pin -= pctl->desc->pin_base;
--
--	reg = readl(pctl->membase + sunxi_grp_config_reg(pin));
--	reg &= ~IO_BIAS_MASK;
--	writel(reg | val, pctl->membase + sunxi_grp_config_reg(pin));
--
--	return 0;
-+	switch (pctl->desc->io_bias_cfg_variant) {
-+	case BIAS_VOLTAGE_GRP_CONFIG:
-+		/*
-+		 * Configured value must be equal or greater to actual
-+		 * voltage.
-+		 */
-+		if (uV <= 1800000)
-+			val = 0x0; /* 1.8V */
-+		else if (uV <= 2500000)
-+			val = 0x6; /* 2.5V */
-+		else if (uV <= 2800000)
-+			val = 0x9; /* 2.8V */
-+		else if (uV <= 3000000)
-+			val = 0xA; /* 3.0V */
-+		else
-+			val = 0xD; /* 3.3V */
-+
-+		pin -= pctl->desc->pin_base;
-+
-+		reg = readl(pctl->membase + sunxi_grp_config_reg(pin));
-+		reg &= ~IO_BIAS_MASK;
-+		writel(reg | val, pctl->membase + sunxi_grp_config_reg(pin));
-+		return 0;
-+	default:
-+		return -EINVAL;
-+	}
- }
- 
- static int sunxi_pmx_get_funcs_cnt(struct pinctrl_dev *pctldev)
-diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.h b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
-index ee15ab067b5f..4bfc8a6d9dce 100644
---- a/drivers/pinctrl/sunxi/pinctrl-sunxi.h
-+++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.h
-@@ -95,6 +95,13 @@
- #define PINCTRL_SUN7I_A20	BIT(7)
- #define PINCTRL_SUN8I_R40	BIT(8)
- 
-+enum sunxi_desc_bias_voltage {
-+	BIAS_VOLTAGE_NONE,
-+	/* Bias voltage configuration is done through
-+	 * Pn_GRP_CONFIG registers, as seen on A80 SoC. */
-+	BIAS_VOLTAGE_GRP_CONFIG,
++static const struct emac_variant emac_variant_h6 = {
++	.default_syscon_value = 0x50000,
++	.syscon_field = &sun8i_syscon_reg_field,
++	/* The "Internal PHY" of H6 is not on the die. It's on the
++	 * co-packaged AC200 chip instead.
++	 */
++	.soc_has_internal_phy = false,
++	.support_mii = true,
++	.support_rmii = true,
++	.support_rgmii = true,
++	.rx_delay_max = 31,
++	.tx_delay_max = 7,
 +};
 +
- struct sunxi_desc_function {
- 	unsigned long	variant;
- 	const char	*name;
-@@ -117,7 +124,7 @@ struct sunxi_pinctrl_desc {
- 	const unsigned int		*irq_bank_map;
- 	bool				irq_read_needs_mux;
- 	bool				disable_strict_mode;
--	bool				has_io_bias_cfg;
-+	int				io_bias_cfg_variant;
+ #define EMAC_BASIC_CTL0 0x00
+ #define EMAC_BASIC_CTL1 0x04
+ #define EMAC_INT_STA    0x08
+@@ -1210,6 +1224,8 @@ static const struct of_device_id sun8i_dwmac_match[] = {
+ 		.data = &emac_variant_r40 },
+ 	{ .compatible = "allwinner,sun50i-a64-emac",
+ 		.data = &emac_variant_a64 },
++	{ .compatible = "allwinner,sun50i-h6-emac",
++		.data = &emac_variant_h6 },
+ 	{ }
  };
- 
- struct sunxi_pinctrl_function {
+ MODULE_DEVICE_TABLE(of, sun8i_dwmac_match);
 -- 
 2.21.0
 
