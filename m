@@ -2,231 +2,108 @@ Return-Path: <SRS0=gYL7=SO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61D07C10F0E
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 18:33:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 007C2C10F0E
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 18:35:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24FDD20818
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 18:33:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2BAB20652
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 18:35:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="D/sVbrW0";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Mt8KNcDP"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aV/ashdm";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iBP4HOow"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726850AbfDLSdd (ORCPT
+        id S1726851AbfDLSfu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Apr 2019 14:33:33 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:41450 "EHLO
+        Fri, 12 Apr 2019 14:35:50 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:43318 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726797AbfDLSdd (ORCPT
+        with ESMTP id S1726815AbfDLSft (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Apr 2019 14:33:33 -0400
+        Fri, 12 Apr 2019 14:35:49 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 54EAA616BA; Fri, 12 Apr 2019 18:33:31 +0000 (UTC)
+        id 008B161701; Fri, 12 Apr 2019 18:35:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555094011;
-        bh=Jb/qdZIacnhzWJu0DANRTI3VwV5Q1120G2268LhFOjk=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=D/sVbrW08Wlf+j19VBC+vQBibLF8UwNqlAK3SbBuwDBTjCf0GMlbmU5UYV+P6/F6Q
-         HLMhURMnG7Mp/sY9V+kXua1B3ewvY2r3zkoNDBYuvhSk2q/j1xc0D9UZPH8oV7bhPO
-         1lRYz4Azh5eWEFLEEolQOnntOR73FdpMnzsALtXo=
+        s=default; t=1555094149;
+        bh=Wwb8It2HETJoSRV7+S4jXh8n2MZR+fTTdFX4loFlQfc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=aV/ashdmJXONYjvQ/XBMEQTtUmDdZ0Haz6/x7d7as9yw9d8i6HbG/ybtTjCKsYOM7
+         dBKwcgnZGmij1IXh7tJ7BSamWzxhyvXG0Ff6I2IFh3QIva346rjMEL1UA5op0LmuRU
+         PdrF/O/nscE1RDFBFSZ7ji/nN8kOuwIRI9oUT8F0=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D6D8061196;
-        Fri, 12 Apr 2019 18:33:28 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5E4BA616B7;
+        Fri, 12 Apr 2019 18:35:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555094010;
-        bh=Jb/qdZIacnhzWJu0DANRTI3VwV5Q1120G2268LhFOjk=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=Mt8KNcDPWURSrF83fthac3l34XLDoLP9tZm0VNPTn0EWc3Ep/IYzG2TqYX2OJDOzv
-         QjjXWM3rv5yvYLjmgtuOTUw4p+ziuB8pAk5M3OWNzwQlXa+BM7tdHqa3A3bqyqSKHc
-         ILg2g3tEpToYlmrMwXRK+twAQrWB6x0h/LipozO4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D6D8061196
+        s=default; t=1555094147;
+        bh=Wwb8It2HETJoSRV7+S4jXh8n2MZR+fTTdFX4loFlQfc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=iBP4HOowKW8FLL/orklAPfNnMbz8tXuK14/IsV6R9BxJgvymQN2ytjWaZoEqIdr/C
+         DsR6d9KEuDp+FN7DM3V3DTKN3J8xUDSZzD2Pcpau9rJg8Z+6fRI8lXigUwK+Js9cT6
+         DSRspQwnn4In2S42jR/k3+m75SqKHdnDt+YjRF88=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5E4BA616B7
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 5.1] mt76x02: avoid status_list.lock and
- sta->rate_ctrl_lock dependency
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190405114256.6416-1-sgruszka@redhat.com>
-References: <20190405114256.6416-1-sgruszka@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190412183331.54EAA616BA@smtp.codeaurora.org>
-Date:   Fri, 12 Apr 2019 18:33:31 +0000 (UTC)
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Subject: Re: pull-request: iwlwifi-fixes 2019-04-03
+References: <6f02ef035f948c9d01d66f52f84403caf2384001.camel@coelho.fi>
+Date:   Fri, 12 Apr 2019 21:35:44 +0300
+In-Reply-To: <6f02ef035f948c9d01d66f52f84403caf2384001.camel@coelho.fi> (Luca
+        Coelho's message of "Wed, 03 Apr 2019 11:18:34 +0300")
+Message-ID: <87r2a7cbr3.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+Luca Coelho <luca@coelho.fi> writes:
 
-> Move ieee80211_tx_status_ext() outside of status_list lock section
-> in order to avoid locking dependency and possible deadlock reposed by
-> LOCKDEP in below warning.
-> 
-> Also do mt76_tx_status_lock() just before it's needed.
-> 
-> [  440.224832] WARNING: possible circular locking dependency detected
-> [  440.224833] 5.1.0-rc2+ #22 Not tainted
-> [  440.224834] ------------------------------------------------------
-> [  440.224835] kworker/u16:28/2362 is trying to acquire lock:
-> [  440.224836] 0000000089b8cacf (&(&q->lock)->rlock#2){+.-.}, at: mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-> [  440.224842]
->                but task is already holding lock:
-> [  440.224842] 000000002cfedc59 (&(&sta->lock)->rlock){+.-.}, at: ieee80211_stop_tx_ba_cb+0x32/0x1f0 [mac80211]
-> [  440.224863]
->                which lock already depends on the new lock.
-> 
-> [  440.224863]
->                the existing dependency chain (in reverse order) is:
-> [  440.224864]
->                -> #3 (&(&sta->lock)->rlock){+.-.}:
-> [  440.224869]        _raw_spin_lock_bh+0x34/0x40
-> [  440.224880]        ieee80211_start_tx_ba_session+0xe4/0x3d0 [mac80211]
-> [  440.224894]        minstrel_ht_get_rate+0x45c/0x510 [mac80211]
-> [  440.224906]        rate_control_get_rate+0xc1/0x140 [mac80211]
-> [  440.224918]        ieee80211_tx_h_rate_ctrl+0x195/0x3c0 [mac80211]
-> [  440.224930]        ieee80211_xmit_fast+0x26d/0xa50 [mac80211]
-> [  440.224942]        __ieee80211_subif_start_xmit+0xfc/0x310 [mac80211]
-> [  440.224954]        ieee80211_subif_start_xmit+0x38/0x390 [mac80211]
-> [  440.224956]        dev_hard_start_xmit+0xb8/0x300
-> [  440.224957]        __dev_queue_xmit+0x7d4/0xbb0
-> [  440.224968]        ip6_finish_output2+0x246/0x860 [ipv6]
-> [  440.224978]        mld_sendpack+0x1bd/0x360 [ipv6]
-> [  440.224987]        mld_ifc_timer_expire+0x1a4/0x2f0 [ipv6]
-> [  440.224989]        call_timer_fn+0x89/0x2a0
-> [  440.224990]        run_timer_softirq+0x1bd/0x4d0
-> [  440.224992]        __do_softirq+0xdb/0x47c
-> [  440.224994]        irq_exit+0xfa/0x100
-> [  440.224996]        smp_apic_timer_interrupt+0x9a/0x220
-> [  440.224997]        apic_timer_interrupt+0xf/0x20
-> [  440.224999]        cpuidle_enter_state+0xc1/0x470
-> [  440.225000]        do_idle+0x21a/0x260
-> [  440.225001]        cpu_startup_entry+0x19/0x20
-> [  440.225004]        start_secondary+0x135/0x170
-> [  440.225006]        secondary_startup_64+0xa4/0xb0
-> [  440.225007]
->                -> #2 (&(&sta->rate_ctrl_lock)->rlock){+.-.}:
-> [  440.225009]        _raw_spin_lock_bh+0x34/0x40
-> [  440.225022]        rate_control_tx_status+0x4f/0xb0 [mac80211]
-> [  440.225031]        ieee80211_tx_status_ext+0x142/0x1a0 [mac80211]
-> [  440.225035]        mt76x02_send_tx_status+0x2e4/0x340 [mt76x02_lib]
-> [  440.225037]        mt76x02_tx_status_data+0x31/0x40 [mt76x02_lib]
-> [  440.225040]        mt76u_tx_status_data+0x51/0xa0 [mt76_usb]
-> [  440.225042]        process_one_work+0x237/0x5d0
-> [  440.225043]        worker_thread+0x3c/0x390
-> [  440.225045]        kthread+0x11d/0x140
-> [  440.225046]        ret_from_fork+0x3a/0x50
-> [  440.225047]
->                -> #1 (&(&list->lock)->rlock#8){+.-.}:
-> [  440.225049]        _raw_spin_lock_bh+0x34/0x40
-> [  440.225052]        mt76_tx_status_skb_add+0x51/0x100 [mt76]
-> [  440.225054]        mt76x02u_tx_prepare_skb+0xbd/0x116 [mt76x02_usb]
-> [  440.225056]        mt76u_tx_queue_skb+0x5f/0x180 [mt76_usb]
-> [  440.225058]        mt76_tx+0x93/0x190 [mt76]
-> [  440.225070]        ieee80211_tx_frags+0x148/0x210 [mac80211]
-> [  440.225081]        __ieee80211_tx+0x75/0x1b0 [mac80211]
-> [  440.225092]        ieee80211_tx+0xde/0x110 [mac80211]
-> [  440.225105]        __ieee80211_tx_skb_tid_band+0x72/0x90 [mac80211]
-> [  440.225122]        ieee80211_send_auth+0x1f3/0x360 [mac80211]
-> [  440.225141]        ieee80211_auth.cold.40+0x6c/0x100 [mac80211]
-> [  440.225156]        ieee80211_mgd_auth.cold.50+0x132/0x15f [mac80211]
-> [  440.225171]        cfg80211_mlme_auth+0x149/0x360 [cfg80211]
-> [  440.225181]        nl80211_authenticate+0x273/0x2e0 [cfg80211]
-> [  440.225183]        genl_family_rcv_msg+0x196/0x3a0
-> [  440.225184]        genl_rcv_msg+0x47/0x8e
-> [  440.225185]        netlink_rcv_skb+0x3a/0xf0
-> [  440.225187]        genl_rcv+0x24/0x40
-> [  440.225188]        netlink_unicast+0x16d/0x210
-> [  440.225189]        netlink_sendmsg+0x204/0x3b0
-> [  440.225191]        sock_sendmsg+0x36/0x40
-> [  440.225193]        ___sys_sendmsg+0x259/0x2b0
-> [  440.225194]        __sys_sendmsg+0x47/0x80
-> [  440.225196]        do_syscall_64+0x60/0x1f0
-> [  440.225197]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> [  440.225198]
->                -> #0 (&(&q->lock)->rlock#2){+.-.}:
-> [  440.225200]        lock_acquire+0xb9/0x1a0
-> [  440.225202]        _raw_spin_lock_bh+0x34/0x40
-> [  440.225204]        mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-> [  440.225215]        ieee80211_agg_start_txq+0xe8/0x2b0 [mac80211]
-> [  440.225225]        ieee80211_stop_tx_ba_cb+0xb8/0x1f0 [mac80211]
-> [  440.225235]        ieee80211_ba_session_work+0x1c1/0x2f0 [mac80211]
-> [  440.225236]        process_one_work+0x237/0x5d0
-> [  440.225237]        worker_thread+0x3c/0x390
-> [  440.225239]        kthread+0x11d/0x140
-> [  440.225240]        ret_from_fork+0x3a/0x50
-> [  440.225240]
->                other info that might help us debug this:
-> 
-> [  440.225241] Chain exists of:
->                  &(&q->lock)->rlock#2 --> &(&sta->rate_ctrl_lock)->rlock --> &(&sta->lock)->rlock
-> 
-> [  440.225243]  Possible unsafe locking scenario:
-> 
-> [  440.225244]        CPU0                    CPU1
-> [  440.225244]        ----                    ----
-> [  440.225245]   lock(&(&sta->lock)->rlock);
-> [  440.225245]                                lock(&(&sta->rate_ctrl_lock)->rlock);
-> [  440.225246]                                lock(&(&sta->lock)->rlock);
-> [  440.225247]   lock(&(&q->lock)->rlock#2);
-> [  440.225248]
->                 *** DEADLOCK ***
-> 
-> [  440.225249] 5 locks held by kworker/u16:28/2362:
-> [  440.225250]  #0: 0000000048fcd291 ((wq_completion)phy0){+.+.}, at: process_one_work+0x1b5/0x5d0
-> [  440.225252]  #1: 00000000f1c6828f ((work_completion)(&sta->ampdu_mlme.work)){+.+.}, at: process_one_work+0x1b5/0x5d0
-> [  440.225254]  #2: 00000000433d2b2c (&sta->ampdu_mlme.mtx){+.+.}, at: ieee80211_ba_session_work+0x5c/0x2f0 [mac80211]
-> [  440.225265]  #3: 000000002cfedc59 (&(&sta->lock)->rlock){+.-.}, at: ieee80211_stop_tx_ba_cb+0x32/0x1f0 [mac80211]
-> [  440.225276]  #4: 000000009d7b9a44 (rcu_read_lock){....}, at: ieee80211_agg_start_txq+0x33/0x2b0 [mac80211]
-> [  440.225286]
->                stack backtrace:
-> [  440.225288] CPU: 2 PID: 2362 Comm: kworker/u16:28 Not tainted 5.1.0-rc2+ #22
-> [  440.225289] Hardware name: LENOVO 20KGS23S0P/20KGS23S0P, BIOS N23ET55W (1.30 ) 08/31/2018
-> [  440.225300] Workqueue: phy0 ieee80211_ba_session_work [mac80211]
-> [  440.225301] Call Trace:
-> [  440.225304]  dump_stack+0x85/0xc0
-> [  440.225306]  print_circular_bug.isra.38.cold.58+0x15c/0x195
-> [  440.225307]  check_prev_add.constprop.48+0x5f0/0xc00
-> [  440.225309]  ? check_prev_add.constprop.48+0x39d/0xc00
-> [  440.225311]  ? __lock_acquire+0x41d/0x1100
-> [  440.225312]  __lock_acquire+0xd98/0x1100
-> [  440.225313]  ? __lock_acquire+0x41d/0x1100
-> [  440.225315]  lock_acquire+0xb9/0x1a0
-> [  440.225317]  ? mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-> [  440.225319]  _raw_spin_lock_bh+0x34/0x40
-> [  440.225321]  ? mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-> [  440.225323]  mt76_wake_tx_queue+0x4c/0xb0 [mt76]
-> [  440.225334]  ieee80211_agg_start_txq+0xe8/0x2b0 [mac80211]
-> [  440.225344]  ieee80211_stop_tx_ba_cb+0xb8/0x1f0 [mac80211]
-> [  440.225354]  ieee80211_ba_session_work+0x1c1/0x2f0 [mac80211]
-> [  440.225356]  process_one_work+0x237/0x5d0
-> [  440.225358]  worker_thread+0x3c/0x390
-> [  440.225359]  ? wq_calc_node_cpumask+0x70/0x70
-> [  440.225360]  kthread+0x11d/0x140
-> [  440.225362]  ? kthread_create_on_node+0x40/0x40
-> [  440.225363]  ret_from_fork+0x3a/0x50
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: 88046b2c9f6d ("mt76: add support for reporting tx status with skb")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> Acked-by: Felix Fietkau <nbd@nbd.name>
+> Hi Kalle,
+>
+> This is the second batch of fixes for v5.1.  More details about the
+> contents in the tag description.
+>
+> I have sent this out before and kbuildbot reported success.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 4837696f6b5451242b2095764287b6336e844683:
+>
+>   Merge tag 'iwlwifi-for-kalle-2019-03-22' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2019-03-30 08:33:40 +0200)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2019-04-03
+>
+> for you to fetch changes up to debec2f23910cb17f2c0f6d5e30a8da00bb5f515:
+>
+>   iwlwifi: add support for quz firmwares (2019-04-03 11:13:06 +0300)
+>
+> ----------------------------------------------------------------
+> Second batch of iwlwifi fixes intended for v5.1
+>
+> * fix for a potential deadlock in the TX path;
+> * a fix for offloaded rate-control;
+> * support new PCI HW IDs which use a new FW;
+>
+> ----------------------------------------------------------------
 
-Patch applied to wireless-drivers.git, thanks.
-
-bafdf85dfa59 mt76x02: avoid status_list.lock and sta->rate_ctrl_lock dependency
+Pulled, thanks Luca.
 
 -- 
-https://patchwork.kernel.org/patch/10887243/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Kalle Valo
