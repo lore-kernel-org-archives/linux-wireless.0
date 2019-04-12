@@ -3,47 +3,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE8BC282CE
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 12:12:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F48EC10F0E
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 12:24:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7887C206BA
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 12:12:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F7F220818
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 12:24:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727364AbfDLMM5 (ORCPT
+        id S1727122AbfDLMYi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Apr 2019 08:12:57 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:46844 "EHLO
+        Fri, 12 Apr 2019 08:24:38 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:47044 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726327AbfDLMM4 (ORCPT
+        with ESMTP id S1726697AbfDLMYi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Apr 2019 08:12:56 -0400
+        Fri, 12 Apr 2019 08:24:38 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hEv30-0006Di-7V; Fri, 12 Apr 2019 14:12:46 +0200
-Message-ID: <1d64c578cd5b254d301cf1cac82f32a062916888.camel@sipsolutions.net>
+        id 1hEvEJ-0007Nz-48; Fri, 12 Apr 2019 14:24:27 +0200
+Message-ID: <1462659018bc40830efbe2348791b8df45b54cff.camel@sipsolutions.net>
 Subject: Re: gsmtap design/extensions?
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Marcel Holtmann <marcel@holtmann.org>
-Cc:     Vadim Yanitskiy <axilirator@gmail.com>,
-        Harald Welte <laforge@gnumonks.org>,
-        OpenBSC Mailing List <openbsc@lists.osmocom.org>,
-        Sean Tranchetti <stranche@codeaurora.org>, radiotap@netbsd.org,
-        Dan Williams <dcbw@redhat.com>,
-        netdev <netdev@vger.kernel.org>,
-        "open list:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>,
-        Aleksander Morgado <aleksander@aleksander.es>,
+To:     Harald Welte <laforge@gnumonks.org>
+Cc:     openbsc@lists.osmocom.org, radiotap@netbsd.org,
+        linux-wireless@vger.kernel.org,
         Subash Abhinov Kasiviswanathan <subashab@codeaurora.org>,
-        =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Date:   Fri, 12 Apr 2019 14:12:44 +0200
-In-Reply-To: <6F1998DC-EFD2-4145-BD81-A80F9DC7ED2D@holtmann.org>
+        Dan Williams <dcbw@redhat.com>,
+        =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+        netdev@vger.kernel.org, Sean Tranchetti <stranche@codeaurora.org>,
+        Aleksander Morgado <aleksander@aleksander.es>
+Date:   Fri, 12 Apr 2019 14:24:25 +0200
+In-Reply-To: <20190410233213.GN25552@nataraja>
 References: <cf07ae24c436f92769f9289d208f01846ebe8826.camel@sipsolutions.net>
-         <CAPEnp=bHTVARr7WA9Qkq4=y7kk8_FLWhrkqKOEXubMO4X=BHCw@mail.gmail.com>
-         <46474c61d7748042cc0a1f23773186786020638e.camel@sipsolutions.net>
-         <6F1998DC-EFD2-4145-BD81-A80F9DC7ED2D@holtmann.org>
+         <20190410233213.GN25552@nataraja>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -53,92 +48,180 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Marcel,
+On Thu, 2019-04-11 at 01:32 +0200, Harald Welte wrote:
+> Hi Johannes,
+> 
+> On Tue, Apr 09, 2019 at 03:50:45PM +0200, Johannes Berg wrote:
+> > As I'm looking into adding a generic cell modem framework to the linux
+> > kernel (to create session netdevs etc.), I started looking for a
+> > metadata encapsulation, a la Radiotap (I'm a wifi guy :-) ).
+> 
+> Is there any discussion about "session netdevs, etc." anywhere?  What exactly
+> do you have in mind for that "generic cell modem framework"?  I'm quite
+> curious to learn more about it and happy to provide feedback from the
+> perspective of my cellular protocols/specs/systems knowledge.
 
-> before you go all out and define this, it would suggest to understand
-> what meta-data for the connection contexts you actually need as well.
-> The data path itself is just a pipe and has not all the information
-> attached with it. That goes via the control path and that is normally
-> in user space and carries the real important information to make
-> useful analysis of how the data path / context is setup.
+Yeah. I was too much in my little bubble when I wrote this. I just wrote
+a lengthy reply to Marcel that explains a little more, but basically to
+summarize:
 
-Yes, that's true, though the control path is actually going through one
-of the data pipes as well.
+Kernel drivers need to transport multiple data streams, like VoLTE (IP)
+data, IP data, and control data. Currently, they do this in various ways
+(cdc_mbim uses VLAN tags, rmnet/qmi_wwan uses Qualcomm QMI headers),
+when you capture data you have to understand what you're dealing with
+and maybe extend wireshark to even understand these headers.
 
-> From what I am seeing right now is that unless you have a method to
-> also feed the control path into your GSMTAPv3, then this is rather
-> useless. 
+I'm looking for a general vendor-agnostic encapsulation that would solve
+this part of the problem.
 
-So the control path *itself* would be there, I guess, but ...
+At the same time, I come from WiFi, where - while we don't have these
+sessions as such but can have different virtual interfaces as well, e.g.
+for connections to different APs - it's often very useful to also
+understand the PHY parameters that were used for TX/seen on RX. Now, I
+realize this isn't something that modems will do right now - they just
+don't seem to tell you any lower-level information on RX of a packet,
+but it seemed like it might be worthwhile to not *exclude* this
+possibility either.
 
-> The majority of the debugging is really done for the control path. For
-> oFono that is OFONO_DEBUG=1 environment variable and while it works it
-> is not the most elegant solution. I would love to feed that into a
-> generic debugging / tap that you can read out later.
+> > 1) Why the design with encapsulating it in UDP? Radiotap is just a raw
+> >    header without IP etc. in front, and you use it with tcpdump,
+> >    wireshark or similar tools on the local system. What's the value in
+> >    having something "network transparent"?
+> 
+> GSMTAP was designed as a format to encapsulate protocols normally not spoken over IP
+> (such as classic GSM radio protocols, e.g. the Layer 2 LAPDm over GSM Um)
+> inside an IP transport.
 
-there's definitely room for more information than _just_ the control
-path "chat", also application state etc. would be useful, and logging
-etc.
+Sure, but wifi is also not spoken over IP, yet we don't encapsulate our
+802.11 frames into IP to show them in wireshark :-)
 
-Typically on wifi we feed all of this together into kernel tracing (to
-record with trace-cmd) rather than trying to encapsulate it some other
-way.
+> The existing implementations of such protocols all live outside of the
+> kernel but in userspace.  So you either have
+> 
+> a) a pure SDR software implementation of a GSM phy, whether on the MS/UE
+>    side or on the BTS/network side, or whether in sniffing mode, running
+>    as a userspace process.  This could e.g. be airprobe or gr-gsm
+> 
+> b) a OsmocomBB phone attached over serial port running the Osmocom Layer1
+>    firmware on the baseband processor, with some userspace program on a Linux
+>    PC implementing higher layers
+> 
+> c) GSM base station software such as osmo-bts, running in userspace
+> 
+> d) Using an old nokia phone attached via serial cable to a Linux PC running
+>    dct3-gsmtap.
 
-> As a side note, for Bluetooth we created a path where the bluetoothd
-> can feed back its control debugging data back into the Bluetooth
-> monitor in the kernel to allow combined userspace, mgmt and HCI
-> tracing. Some really nasty issues could only be triaged by having all
-> the meta data with a common timestamp.
+Sure.
 
-Right. This is something we'd typically use tracing for in wifi.
+> So for any of those, if you want to provide real-time data streams, you have to
+> somehow transmit those over some kind of network technology.   One could have
+> done raw ethernet frames or raw IP frames, but using UDP seemed straight-forward
+> as one can create UDP socket from non-privileged processes.
 
-I don't really know what the right model for WWAN would be, I guess.
+This is the part I guess I don't understand. I haven't really tried, but
+it seems you should be able to encapsulate arbitrary protocols into
+802.3 OUI-based ethertype or so?
 
+But I guess if your primary use case is actually to transport them over
+the network, this makes more sense.
 
-Right now - and I really should've said this before - really the only
-problem I was thinking of was how we can mux multiple "chat" sessions
-with a device into a single data stream.
+Our primary use case with wifi is much more local - capture what's going
+on - but do the capturing on the local system and write it to a file
+there.
 
-Currently, this is all vendor-specific. If you have a Qualcomm modem,
-you'd be able to see all the open sessions on the underlying netdev, and
-the QMI header tells you what session a given 'packet' belongs to, and
-if you follow along maybe you can figure out if this is a control or IP
-'packet' (could be an AT command).
+> We also have a virtual physical layer between OsmocomBB and OsmoBTS called
+> virt_phy where the GSMTAP over multicast IP is used to simulate/virtualize
+> the entire Layer1 / PHY / radio interface between phone and base station.
+> 
+> Once again, all related network elements are implemented in userspace,
+> and having an 
 
-cdc_mbim uses VLAN tags instead to achieve this, and decapsulates the
-VLAN tags to send them down to the hardware in a different way.
+...?
 
-There are a few reasons why I think that this model of having a single
-underlying netdev controlled by the modem driver, with additional
-netdevs layered on top in software will not work right in the future. I
-think drivers should and will need to migrate to creating "real" netdevs
-for the sessions instead of pure software ones.
+> > (speaking of versions - the docs say "version, set to 0x01 currently"
+> > but "#define GSMTAP_VERSION 0x02")
+> 
+> Sorry, it's the usual "developer changes code but not comment". patches
+> are welcome, we use gerrit.osmocom.org :)
 
-But if you do this, you lose the ability to listen to all the session
-streams at the same time, you can only do it for each netdev. Adding
-this ability back seems worthwhile, but then we probably shouldn't do it
-in a vendor-specific way, but rather in a generic way.
+Ok :-)
 
-So basically right now that's all I'm trying to solve. In WiFi we don't
-have the problem of "sessions" because we just use the addresses in the
-frames to disambiguate - on such 'monitor' netdevs we see the frames
-including full 802.11 headers.
+> > 3) Does the packet data follow the gsmtap header? It's not really clear
+> >    to me based on reading the wireshark code.
+> 
+> Sure, the packet data follows the GSMTAP header, and the type of data
+> is defined by the GSMTAP type / sub-type as per the specific use case.  As
+> you can see, there's 18 TYPE by now (each of which has at least one
+> program/implementation generating the data).
 
-Now, here's maybe where I'm getting off the right path - in wifi we
-mostly couple that with PHY information as well, and so we have PHY
-information + full 802.11 headers + data for capturing what's going on.
-I figured that theoretically at least that would be possible/useful for
-the modem as well (obviously control packets have no PHY data), but
-there doesn't seem to be any hardware that would actually expose data in
-this way. Everyone I've spoken to says these things are only available
-as modem trace data. What I haven't figured out though is if that's by
-some other design trade-off, or just because no such infrastructure
-is/was available.
+Right.
 
-It may well be that doing kernel-tracing instead of doing it via some
-kind of monitor netdev is perfectly sufficient, but I have a feeling
-that the relative simplicity of starting tcpdump/wireshark might be
-preferable.
+> I think the best way to learn about GSMTAP is to use any of the many
+> programs that support it by now.  I think not only the examples above
+> use it, but meanwhile many others like the independently-developed OpenBTS
+> project that's unrelated to Osmocom, as are other projects implementing LTE.
+
+OK.
+
+> > In particular, the data I'm thinking of is higher-level things, like the
+> > session ID for a frame when it's going through the kernel, or perhaps a
+> > flow label on RX, etc.
+> 
+> I'm not quite sure how that relates to GSM?  GSMTAP so far was intended
+> to encapsulate ETSI/3GPP messages inside UDP/IP, particularly messages of
+> protocols that don't traditionally are transported over IP baesd transports.
+
+Yeah, I think here's where I got confused or just don't know enough
+about GSM.
+
+Basically, I was looking at it as if it was like WiFi in a sense - you
+have an IP frame, you're going to transport it over some physical link,
+so it gets PHY information in the sense of modulation etc.
+
+That doesn't seem to be the case for GSM, I guess? Does the IP frame get
+encapsulated in some kind of 3GPP message first, and then transported
+over the physical link, and the physical link info isn't even there in
+GSMTAP?
+
+> Having said, we're open to extending the scope - it just all needs to make
+> sense
+
+See above for a bit better description of what I'm trying to solve.
+
+> > I do note that this
+> > wouldn't be compatible with the current wireshark code as it doesn't
+> > check the version, just shows it...
+> 
+> If that's the case that's sad, and I should have paid more attention to
+> it when originally writing it.  We should get a related fix into
+> wireshark ASAP then.  But then, the current dissector would just state
+> something like unsupported version instead of showing some garbage it
+> cannot parse.  Either way, you will of course need new sources and
+> sink side implemetations.
+
+Sure. Just a note in passing.
+
+> > Or would it make more sense to define a new ARPHDR_WWANTAP like
+> > ARPHDR_IEEE80211_RADIOTAP and just use that instead of encapsulating in
+> > IP/UDP, and then have a completely new (extensible) protocol inside of
+> > that? 
+> 
+> No userspace source would ever be able to generate such data and stream
+> it real-time into wireshark, would it?  Sure, I can write pcap file with
+> such ARPHDR_* values, but I could never do this in real-time.  For many
+> but not all use cases, that's really what it is: A vehicle to stream
+> real-time non-IP protocol traces into wireshark so it can visualize
+> the protocol traces.
+
+I think you can pipe a stream into wireshark?
+
+To me it feels like the wrong thing to actually make wireshark listen on
+"lo" or "eth0" or something to get data from the cellular that's
+(locally) generated by another application, but I guess that's only
+about how you think about it - and if it's not generated locally then
+that's an easy transport. I'm not sure it makes *sense* because then you
+need permissions to capture on the wired network etc. where you don't
+*really* need that for this stream, but it's convenient for sure.
 
 johannes
 
