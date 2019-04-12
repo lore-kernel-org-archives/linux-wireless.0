@@ -2,149 +2,154 @@ Return-Path: <SRS0=gYL7=SO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A687C10F0E
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 16:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C434C282CE
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 17:16:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1613B2077C
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 16:27:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 567972077C
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 17:16:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726952AbfDLQ1y (ORCPT
+        id S1726815AbfDLRQG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Apr 2019 12:27:54 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:52997 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726913AbfDLQ1x (ORCPT
+        Fri, 12 Apr 2019 13:16:06 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:53152 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726765AbfDLRQG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Apr 2019 12:27:53 -0400
-Received: by mail-wm1-f67.google.com with SMTP id a184so11994217wma.2
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2019 09:27:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Lm4R7guUQHiNox0Hs92cRf7lpLP1SU50Wg1ZlbP7uDM=;
-        b=jnoIi7F3Tekj4ibmojOgKvkzKGh/K3PguaWkx03LmZHW5t3gDGw9w/tyaEqPmFmhbE
-         ApXlEmuGlpXpHfZwOvfyjrbsAv4ejA1llFjvCmmtQjZMgkvoQ7QTBO/8G0Ih1OBaUfVT
-         Jojx1k28pAdtb9LHBxomN/cxPsawWCgHSEwqYenyN6LlXj7Vcowpe+W6Kvu6q6pvf28Y
-         Q4QN+g5sfmP3YVlIJQJzhHbXiih1L3ihZxT2fQy46AZ4I/We64bIen7P1ycnOqimXcPa
-         CO0xgqVE3IpT5vQ3APpJioFripT15zc1/9snSvbfGja7LOJ2C9zRj7xvSuSWKMEs3Npb
-         u4Og==
-X-Gm-Message-State: APjAAAX6bIF0DJCE/K+GG+fLSInU5Lmzdxi8gRuSclwO9WABEg3KvUV7
-        jgoF8ICL+zT+ZhXwEfXrKV1cDUS0cEU=
-X-Google-Smtp-Source: APXvYqy+xLpjGdcHYorNXvUJS8HVP4t9oIxTUz/tLDw8S8xhDIxGvZhGKWqfR6hExIhxxXC7NQ/81w==
-X-Received: by 2002:a1c:c186:: with SMTP id r128mr11562448wmf.100.1555086470972;
-        Fri, 12 Apr 2019 09:27:50 -0700 (PDT)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id a11sm7214999wmm.35.2019.04.12.09.27.49
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 12 Apr 2019 09:27:50 -0700 (PDT)
-Date:   Fri, 12 Apr 2019 18:27:48 +0200
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt76: usb: fix possible memory leak during suspend/resume
-Message-ID: <20190412162746.GC3156@localhost.localdomain>
-References: <cover.1555071870.git.lorenzo@kernel.org>
- <bdd1046beaee6104b1fcd25b1069f25db8f2fb20.1555071870.git.lorenzo@kernel.org>
- <20190412145442.GA2539@redhat.com>
- <20190412153509.GB3156@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="96YOpH+ONegL0A3E"
-Content-Disposition: inline
-In-Reply-To: <20190412153509.GB3156@localhost.localdomain>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+        Fri, 12 Apr 2019 13:16:06 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hEzmQ-0004Ez-Cb; Fri, 12 Apr 2019 19:15:58 +0200
+Message-ID: <f0a64bb751b8c601f58130a7f3a3158d70f18f63.camel@sipsolutions.net>
+Subject: Re: gsmtap design/extensions?
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Harald Welte <laforge@gnumonks.org>
+Cc:     Vadim Yanitskiy <axilirator@gmail.com>,
+        OpenBSC Mailing List <openbsc@lists.osmocom.org>,
+        Sean Tranchetti <stranche@codeaurora.org>, radiotap@netbsd.org,
+        Dan Williams <dcbw@redhat.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Aleksander Morgado <aleksander@aleksander.es>,
+        Subash Abhinov Kasiviswanathan <subashab@codeaurora.org>,
+        =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Date:   Fri, 12 Apr 2019 19:15:56 +0200
+In-Reply-To: <20190410234555.GO25552@nataraja>
+References: <cf07ae24c436f92769f9289d208f01846ebe8826.camel@sipsolutions.net>
+         <CAPEnp=bHTVARr7WA9Qkq4=y7kk8_FLWhrkqKOEXubMO4X=BHCw@mail.gmail.com>
+         <46474c61d7748042cc0a1f23773186786020638e.camel@sipsolutions.net>
+         <20190410234555.GO25552@nataraja>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Thu, 2019-04-11 at 01:45 +0200, Harald Welte wrote:
+> Hi Johannes,
+> 
+> On Wed, Apr 10, 2019 at 09:23:13AM +0200, Johannes Berg wrote:
+> > > but unfortunately, nobody has invested time into this (yet?).
+> > 
+> > 2012! 
+> 
+> Well, Osmocom is a very small community, with probably somewhere less than
+> 25 active developers over the last few years (less than 15 full-time),
+> with an *incredibly* large scope:  Implement virtually any protocol
+> layer of any protocol stack on any of the 3GPP interfaces and all their
+> related network elements for 2G/3G as well as even other technologies
+> like TETRA, GMR-1, ...
+> 
+> And all that in a field of technology that has less free software than
+> the Operating Systems world had in the mid-1990ies.  It really feels a
+> bit like the Linux community 20 years ago.
+> 
+> So resources are always *extremely* tight, and given those limited
+> resources, I'm actually very happy with the results by now, having
+> automatied CI, build verifications, unit tests, functional test suites,
+> end-to-end testing, and all the code we implemented on git.osmocom.org :)
 
---96YOpH+ONegL0A3E
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+:-)
+Sure, I get it. Just a bit surprised I guess.
 
-> > On Fri, Apr 12, 2019 at 02:27:16PM +0200, Lorenzo Bianconi wrote:
-> > > Disable mt76u_tx_tasklet at the end of mt76u_stop_queues in order to
-> > > properly deallocate all pending skbs during suspend/resume phase
-> >=20
-> > On suspend/resume tx skb's are processed after tasklet_enable()
-> > in resume callback. There is issue with device removal though
-> > (during suspend or otherwise).
->=20
-> Hi Stanislaw,
->=20
-> I guess the right moment to deallocate the skbs is during suspend since r=
-esume
-> can happen in very far future
->=20
-> >=20
-> > > Fixes: b40b15e1521f ("mt76: add usb support to mt76 layer")
-> > > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> > > ---
-> > >  drivers/net/wireless/mediatek/mt76/usb.c | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > >=20
-> > > diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/w=
-ireless/mediatek/mt76/usb.c
-> > > index a3acc070063a..575207133775 100644
-> > > --- a/drivers/net/wireless/mediatek/mt76/usb.c
-> > > +++ b/drivers/net/wireless/mediatek/mt76/usb.c
-> > > @@ -842,10 +842,10 @@ static void mt76u_stop_tx(struct mt76_dev *dev)
-> > >  void mt76u_stop_queues(struct mt76_dev *dev)
-> > >  {
-> > >  	tasklet_disable(&dev->usb.rx_tasklet);
-> > > -	tasklet_disable(&dev->usb.tx_tasklet);
-> > > -
-> > >  	mt76u_stop_rx(dev);
-> > > +
-> > >  	mt76u_stop_tx(dev);
-> > > +	tasklet_disable(&dev->usb.tx_tasklet);
-> >=20
-> > If tasklet is scheduled and we disable it and never enable, we end up
-> > with infinite loop in tasklet_action_common(). This patch make the
-> > problem less reproducible since tasklet_disable() is moved after
-> > usb_kill_urb() -> tasklet_schedule(), but it is still possible.
->=20
-> I can see the point here. Maybe we can just run tasklet_kill instead of
-> tasklet_disable here (at least for tx one)
+> While current GSMTAPv2 is ugly, it works rather solid for all known
+> existing use cases, so there was no urgency to introduce a new version
+> of it.
 
-I think it is enough even for rx side since usb_kill_urb() will wait the en=
-d of
-mt76u_complete_rx() and tasklet_kill() will wait for the completion of
-mt76u_rx_tasklet(). We will need to remove tasklet_enable in resume routine=
-s.
+OK.
 
-Regards,
-Lorenzo
+> > Not sure I get this, but I also don't really care all that much. 
+> 
+> Well, with all respect, GSMTAP was created for a variety of use cases,
+> see my other lengthy mail.  It's fine if you don't care, but unless you
+> could explain your use cases with a few paragraphs, neither you nor us
+> are able to determine if there is common functionality and if it makes
+> sense to use GSMTAP or not :)
 
->=20
-> Regards,
-> Lorenzo
->=20
-> >=20
-> > I comprehansive have fix for that, but giving it more testing.
-> > Please drop this patch.
-> >=20
-> > Stanislaw
+Agree. Sorry about that. No disrespect was intended, but I'm still not
+sure I understand the need for UDP encapsulation *as part of the
+protocol*. I guess saying "GSMTAP can optionally be encapsulated in UDP
+with the well-known port xyz" would be something else, and it'd make
+more sense to me than saying it has to be.
 
+> So far I have not seen any explanation about what kind of data you want
+> to encapsulate at all.
 
+Right, see my other mail(s) from today as well. Basically the IP frame
+that we're actually sending, and then attaching to that the "session" or
+"mux id" that it's being sent on. Sorry, I probably also don't know the
+right term - those show up in the drivers now.
 
---96YOpH+ONegL0A3E
-Content-Type: application/pgp-signature; name="signature.asc"
+> > just a pretty strange design if the kernel were to output this, I'm not
+> > even sure how I'd do that properly. I don't want to be generating UDP
+> > packets there...
+> 
+> There are well-established APIs for having sockets in the kernel and for
+> generating + receiving UDP packets from it.  NFS has been doing this for
+> decades, as do various kernel-side tunneling helpers including the GTP
+> kernel module.
+> 
+> I'm not saying it's the right approach for your problem, I'm just saying
+> kernel-side code can for sure use UDP sockets.
 
------BEGIN PGP SIGNATURE-----
+Of course it *can*. But I don't think it makes *sense*. The key feature
+here isn't communicating with somebody else (unlike NFS, GTP, GENEVE and
+whatever other protocol they have). In fact, you shouldn't really care
+about the communication part per se at all, I'd think.
 
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXLC8fAAKCRA6cBh0uS2t
-rA/rAP0VIBuEaw2UHVhdkX18gkzGHn3ST+cE0vAZZXLh+wlv8gD/f/pg2+fsgoNu
-E+8o+OhG05mVRN7Ow1iGyWd8DnK+EAs=
-=ezj9
------END PGP SIGNATURE-----
+> Sure, that works.  But the real question is, to me:  Are there common
+> GSMTAP payload types that both the existing GSMTAP users carry, as well
+> as what you would want to carry?  If yes, then it makes sense to think
+> about a common encapsulation like GSMTAP.  If the payload types differ,
+> then it seems rather like there are two distinct use cases that
+> wouldn't benefit from standardizing on one format.
 
---96YOpH+ONegL0A3E--
+Agree, and I don't really know.
+
+Maybe I should start differently. Do you have an example GSMTAP capture
+file that I could look at in wireshark? Yes, I see you've pointed out
+how I can get all the software running, but if you have a file already
+that's almost certainly faster :-)
+
+And then the question I'd want answer is this: If there's an IP frame
+that I send to the modem from the application using a regular UDP or TCP
+socket, what would the corresponding GSMTAP capture look like? Surely it
+includes the IP frame in some way?!
+
+If the answer to that question is yes, then I think there is some
+overlap, because you can always imagine the modem receiving an IP frame
+and telling you more about how it was encapsulated over the air, no?
+Mind, most if not all modems probably don't actually do that today, but
+I wonder how much of that is because of lack of infrastructure to do it,
+vs. it just not being necessary - since I've been told that the modems
+do in fact often output tracing that contains information about this.
+Just not directly combined with the IP frame.
+
+johannes
+
