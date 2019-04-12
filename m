@@ -6,54 +6,54 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E70FC10F0E
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:28:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50FAFC10F0E
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:29:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E31452084D
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:28:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C1062084D
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:29:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WmyiMSA7";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OYKrTBpH"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bopIppSR";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EUqaYnFa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726770AbfDLN2s (ORCPT
+        id S1726797AbfDLN27 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Apr 2019 09:28:48 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:41260 "EHLO
+        Fri, 12 Apr 2019 09:28:59 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:41524 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726244AbfDLN2s (ORCPT
+        with ESMTP id S1726244AbfDLN26 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Apr 2019 09:28:48 -0400
+        Fri, 12 Apr 2019 09:28:58 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 8AF2D61783; Fri, 12 Apr 2019 13:28:46 +0000 (UTC)
+        id CFE3B61576; Fri, 12 Apr 2019 13:28:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555075726;
-        bh=nsnvU3lPYJpM9h16jP2Mq8aGetDJICeUt3QinjyT3oc=;
+        s=default; t=1555075737;
+        bh=FlyOxdMOUqS2MSAO8lUpqTf8ORaBoXHirFVY+/CUD2c=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=WmyiMSA7Mp6WWP5sg1SWj+pIhpWnMX8EpmZTc9dlSPrWhXqz9Rj8H4nNxoE0R8290
-         Kb7mR4ikZOhDN5BER6I1Cevta9oaqCQy61ykUxWwNi54/m9ULB4tUD7F6wyoF2jxTn
-         ld0NINgFNoVq5FiqyX7OSE1LyZk++t8cobn1N30g=
+        b=bopIppSRAHyQ4YE/2WIBI190RP5hxuYzC6TWreks3tT4CBP3cF69yc/+7xptVemrV
+         ZNUjzTIsDcml7rv0Q4ULAFXDHiNoOk4YivwwyO8KqfJBOUi/ejr7TvPSZejv1uny84
+         q3usWXDaZNd+Ucqjkzm4stPSZESnTIKBFxTdCNoQ=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4408561576;
-        Fri, 12 Apr 2019 13:28:45 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 448F16177C;
+        Fri, 12 Apr 2019 13:28:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555075725;
-        bh=nsnvU3lPYJpM9h16jP2Mq8aGetDJICeUt3QinjyT3oc=;
+        s=default; t=1555075735;
+        bh=FlyOxdMOUqS2MSAO8lUpqTf8ORaBoXHirFVY+/CUD2c=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=OYKrTBpHcvZ/7JsiFS1K40Ncd2Tmu5iSdnowwW0j3TzJHPERCSnIKBc/xRsw9audD
-         kEpPaAsIajbqZWtQNZnqdHR8mn0YP+c9JWpKHXNeyffgFfE6NxYXq7x25yvUKgJusS
-         I/5GAmw4qfO56TnabG/FaQmZ9dk+vSJ7CVttrVv4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4408561576
+        b=EUqaYnFao1HHjtLSVs+Lq/UmV5JFehDwchDrLCgzQkh2xoD6m27Y61OPHFspEugz6
+         873u5AC3ug83UU87D4e2ADfQXDFl63/lsU52+8wKg3Hdi2OFlhSPBg8hADO5f2/4dI
+         WF0XY9RFMkw+MemerJv7kXEgTawMBsGwx4UvEXhg=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 448F16177C
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Subject: [PATCH 4/6] ath10k: initialise struct ath10k_bus params to zero
+Subject: [PATCH 5/6] ath10k: htt: support MSDU ids with SDIO
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 12 Apr 2019 16:28:43 +0300
-Message-ID: <155507572259.32018.5435832600956812976.stgit@potku.adurom.net>
+Date:   Fri, 12 Apr 2019 16:28:52 +0300
+Message-ID: <155507573152.32018.18267130026274436463.stgit@potku.adurom.net>
 In-Reply-To: <155507569645.32018.15231567732563770250.stgit@potku.adurom.net>
 References: <155507569645.32018.15231567732563770250.stgit@potku.adurom.net>
 User-Agent: StGit/0.17.1-17-ge4e0
@@ -65,84 +65,88 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This way we don't need to set every variable and give them to default, which is
-zero. This is also safer in case we forgot to initalise a new field in some of
-the bus modules.
+From: Alagu Sankar <alagusankar@silex-india.com>
 
-Compile tested only.
+Transmit completion for SDIO is similar to PCIe, modify the high
+latency path to allow SDIO modules to use the msdu id.
 
+kvalo: the original patch from Alagu enabled this only for SDIO but I'm not
+sure should we also enable this with USB. I'll use bus params to enable this
+for so that it's easy to enable also for USB later.
+
+Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00007-QCARMSWP-1.
+
+Co-developed-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+Signed-off-by: Wen Gong <wgong@codeaurora.org>.
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/ahb.c  |    2 +-
- drivers/net/wireless/ath/ath10k/pci.c  |    2 +-
- drivers/net/wireless/ath/ath10k/sdio.c |    2 +-
- drivers/net/wireless/ath/ath10k/snoc.c |    2 +-
- drivers/net/wireless/ath/ath10k/usb.c  |    2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h   |    1 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c |   13 ++++++++++++-
+ drivers/net/wireless/ath/ath10k/sdio.c   |    2 ++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index 0bf726c55736..f80854180e21 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -740,7 +740,7 @@ static int ath10k_ahb_probe(struct platform_device *pdev)
- 	enum ath10k_hw_rev hw_rev;
- 	size_t size;
- 	int ret;
--	struct ath10k_bus_params bus_params;
-+	struct ath10k_bus_params bus_params = {};
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e08a17b01e03..f22cb3f49034 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -919,6 +919,7 @@ struct ath10k_bus_params {
+ 	u32 chip_id;
+ 	enum ath10k_dev_type dev_type;
+ 	bool link_can_suspend;
++	bool hl_msdu_ids;
+ };
  
- 	of_id = of_match_device(ath10k_ahb_of_match, &pdev->dev);
- 	if (!of_id) {
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 271f92c24d44..13c24cd977d2 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -3478,7 +3478,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 	struct ath10k *ar;
- 	struct ath10k_pci *ar_pci;
- 	enum ath10k_hw_rev hw_rev;
--	struct ath10k_bus_params bus_params;
-+	struct ath10k_bus_params bus_params = {};
- 	bool pci_ps;
- 	int (*pci_soft_reset)(struct ath10k *ar);
- 	int (*pci_hard_reset)(struct ath10k *ar);
+ struct ath10k {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index d8e9cc0bb772..88f880b601d8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -1244,6 +1244,7 @@ static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txm
+ 	u8 tid = ath10k_htt_tx_get_tid(msdu, is_eth);
+ 	u8 flags0 = 0;
+ 	u16 flags1 = 0;
++	u16 msdu_id = 0;
+ 
+ 	data_len = msdu->len;
+ 
+@@ -1291,6 +1292,16 @@ static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txm
+ 		}
+ 	}
+ 
++	if (ar->bus_param.hl_msdu_ids) {
++		flags1 |= HTT_DATA_TX_DESC_FLAGS1_POSTPONED;
++		res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
++		if (res < 0) {
++			ath10k_err(ar, "msdu_id allocation failed %d\n", res);
++			goto out;
++		}
++		msdu_id = res;
++	}
++
+ 	skb_push(msdu, sizeof(*cmd_hdr));
+ 	skb_push(msdu, sizeof(*tx_desc));
+ 	cmd_hdr = (struct htt_cmd_hdr *)msdu->data;
+@@ -1300,7 +1311,7 @@ static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txm
+ 	tx_desc->flags0 = flags0;
+ 	tx_desc->flags1 = __cpu_to_le16(flags1);
+ 	tx_desc->len = __cpu_to_le16(data_len);
+-	tx_desc->id = 0;
++	tx_desc->id = __cpu_to_le16(msdu_id);
+ 	tx_desc->frags_paddr = 0; /* always zero */
+ 	/* Initialize peer_id to INVALID_PEER because this is NOT
+ 	 * Reinjection path
 diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index d573d24624c0..bbfdc4d7cf5f 100644
+index bbfdc4d7cf5f..d5073fac9509 100644
 --- a/drivers/net/wireless/ath/ath10k/sdio.c
 +++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -1954,7 +1954,7 @@ static int ath10k_sdio_probe(struct sdio_func *func,
- 	struct ath10k *ar;
- 	enum ath10k_hw_rev hw_rev;
- 	u32 dev_id_base;
--	struct ath10k_bus_params bus_params;
-+	struct ath10k_bus_params bus_params = {};
- 	int ret, i;
- 
- 	/* Assumption: All SDIO based chipsets (so far) are QCA6174 based.
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 873cb4ce419b..845914f2eaf8 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -1249,7 +1249,7 @@ static int ath10k_snoc_resource_init(struct ath10k *ar)
- int ath10k_snoc_fw_indication(struct ath10k *ar, u64 type)
- {
- 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
--	struct ath10k_bus_params bus_params;
-+	struct ath10k_bus_params bus_params = {};
- 	int ret;
- 
- 	if (test_bit(ATH10K_SNOC_FLAG_UNREGISTERING, &ar_snoc->flags))
-diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
-index 970cf69ac35f..2fb0fb40e86d 100644
---- a/drivers/net/wireless/ath/ath10k/usb.c
-+++ b/drivers/net/wireless/ath/ath10k/usb.c
-@@ -973,7 +973,7 @@ static int ath10k_usb_probe(struct usb_interface *interface,
- 	struct usb_device *dev = interface_to_usbdev(interface);
- 	int ret, vendor_id, product_id;
- 	enum ath10k_hw_rev hw_rev;
--	struct ath10k_bus_params bus_params;
-+	struct ath10k_bus_params bus_params = {};
- 
- 	/* Assumption: All USB based chipsets (so far) are QCA9377 based.
- 	 * If there will be newer chipsets that does not use the hw reg
+@@ -2045,6 +2045,8 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 	bus_params.dev_type = ATH10K_DEV_TYPE_HL;
+ 	/* TODO: don't know yet how to get chip_id with SDIO */
+ 	bus_params.chip_id = 0;
++	bus_params.hl_msdu_ids = true;
++
+ 	ret = ath10k_core_register(ar, &bus_params);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
 
