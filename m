@@ -6,54 +6,54 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8D38C10F0E
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:28:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E70FC10F0E
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:28:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 768542084D
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:28:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E31452084D
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:28:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="htyoHRAD";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="htyoHRAD"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WmyiMSA7";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OYKrTBpH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726784AbfDLN2i (ORCPT
+        id S1726770AbfDLN2s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Apr 2019 09:28:38 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:41032 "EHLO
+        Fri, 12 Apr 2019 09:28:48 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:41260 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726770AbfDLN2i (ORCPT
+        with ESMTP id S1726244AbfDLN2s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Apr 2019 09:28:38 -0400
+        Fri, 12 Apr 2019 09:28:48 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id AFC9061544; Fri, 12 Apr 2019 13:28:37 +0000 (UTC)
+        id 8AF2D61783; Fri, 12 Apr 2019 13:28:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555075717;
-        bh=IOnC3d2srXx6IX8l6BUh1Xet/IovSgBdXNg3n8N/F3A=;
+        s=default; t=1555075726;
+        bh=nsnvU3lPYJpM9h16jP2Mq8aGetDJICeUt3QinjyT3oc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=htyoHRADmqfdZ8aZ1/hGaFajDx6b2RifeRYt//5PA96Lrtzc239GFllt/lGZ2xfr+
-         ulA8AFOgQtrnLDghyhEwjR+/TdpuGQeoOInGhX/APihgQ0zLiMj5aUIg3Xs1dwg/fJ
-         CUTLEwQE9mU7LMXy5XdrklZ6vgCgwqNoaCA9v4uI=
+        b=WmyiMSA7Mp6WWP5sg1SWj+pIhpWnMX8EpmZTc9dlSPrWhXqz9Rj8H4nNxoE0R8290
+         Kb7mR4ikZOhDN5BER6I1Cevta9oaqCQy61ykUxWwNi54/m9ULB4tUD7F6wyoF2jxTn
+         ld0NINgFNoVq5FiqyX7OSE1LyZk++t8cobn1N30g=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7977461544;
-        Fri, 12 Apr 2019 13:28:36 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4408561576;
+        Fri, 12 Apr 2019 13:28:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555075717;
-        bh=IOnC3d2srXx6IX8l6BUh1Xet/IovSgBdXNg3n8N/F3A=;
+        s=default; t=1555075725;
+        bh=nsnvU3lPYJpM9h16jP2Mq8aGetDJICeUt3QinjyT3oc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=htyoHRADmqfdZ8aZ1/hGaFajDx6b2RifeRYt//5PA96Lrtzc239GFllt/lGZ2xfr+
-         ulA8AFOgQtrnLDghyhEwjR+/TdpuGQeoOInGhX/APihgQ0zLiMj5aUIg3Xs1dwg/fJ
-         CUTLEwQE9mU7LMXy5XdrklZ6vgCgwqNoaCA9v4uI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7977461544
+        b=OYKrTBpHcvZ/7JsiFS1K40Ncd2Tmu5iSdnowwW0j3TzJHPERCSnIKBc/xRsw9audD
+         kEpPaAsIajbqZWtQNZnqdHR8mn0YP+c9JWpKHXNeyffgFfE6NxYXq7x25yvUKgJusS
+         I/5GAmw4qfO56TnabG/FaQmZ9dk+vSJ7CVttrVv4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4408561576
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Subject: [PATCH 3/6] ath10k: htt: don't use txdone_fifo with SDIO
+Subject: [PATCH 4/6] ath10k: initialise struct ath10k_bus params to zero
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 12 Apr 2019 16:28:34 +0300
-Message-ID: <155507571386.32018.4599069777915701774.stgit@potku.adurom.net>
+Date:   Fri, 12 Apr 2019 16:28:43 +0300
+Message-ID: <155507572259.32018.5435832600956812976.stgit@potku.adurom.net>
 In-Reply-To: <155507569645.32018.15231567732563770250.stgit@potku.adurom.net>
 References: <155507569645.32018.15231567732563770250.stgit@potku.adurom.net>
 User-Agent: StGit/0.17.1-17-ge4e0
@@ -65,37 +65,84 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+This way we don't need to set every variable and give them to default, which is
+zero. This is also safer in case we forgot to initalise a new field in some of
+the bus modules.
 
-HTT High Latency (ATH10K_DEV_TYPE_HL) does not use txdone_fifo at all, we don't
-even initialise it by skipping ath10k_htt_tx_alloc_buf() in
-ath10k_htt_tx_start(). Because of this using QCA6174 SDIO
-ath10k_htt_rx_tx_compl_ind() will crash when it accesses unitialised
-txdone_fifo. So skip txdone_fifo when using High Latency mode.
+Compile tested only.
 
-Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00007-QCARMSWP-1.
-
-Co-developed-by: Wen Gong <wgong@codeaurora.org>
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/ahb.c  |    2 +-
+ drivers/net/wireless/ath/ath10k/pci.c  |    2 +-
+ drivers/net/wireless/ath/ath10k/sdio.c |    2 +-
+ drivers/net/wireless/ath/ath10k/snoc.c |    2 +-
+ drivers/net/wireless/ath/ath10k/usb.c  |    2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index a20ea270d519..8d13d0c3e85e 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2277,7 +2277,9 @@ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
- 		 *  Note that with only one concurrent reader and one concurrent
- 		 *  writer, you don't need extra locking to use these macro.
- 		 */
--		if (!kfifo_put(&htt->txdone_fifo, tx_done)) {
-+		if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL) {
-+			ath10k_txrx_tx_unref(htt, &tx_done);
-+		} else if (!kfifo_put(&htt->txdone_fifo, tx_done)) {
- 			ath10k_warn(ar, "txdone fifo overrun, msdu_id %d status %d\n",
- 				    tx_done.msdu_id, tx_done.status);
- 			ath10k_txrx_tx_unref(htt, &tx_done);
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index 0bf726c55736..f80854180e21 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -740,7 +740,7 @@ static int ath10k_ahb_probe(struct platform_device *pdev)
+ 	enum ath10k_hw_rev hw_rev;
+ 	size_t size;
+ 	int ret;
+-	struct ath10k_bus_params bus_params;
++	struct ath10k_bus_params bus_params = {};
+ 
+ 	of_id = of_match_device(ath10k_ahb_of_match, &pdev->dev);
+ 	if (!of_id) {
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 271f92c24d44..13c24cd977d2 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -3478,7 +3478,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	struct ath10k *ar;
+ 	struct ath10k_pci *ar_pci;
+ 	enum ath10k_hw_rev hw_rev;
+-	struct ath10k_bus_params bus_params;
++	struct ath10k_bus_params bus_params = {};
+ 	bool pci_ps;
+ 	int (*pci_soft_reset)(struct ath10k *ar);
+ 	int (*pci_hard_reset)(struct ath10k *ar);
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index d573d24624c0..bbfdc4d7cf5f 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -1954,7 +1954,7 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 	struct ath10k *ar;
+ 	enum ath10k_hw_rev hw_rev;
+ 	u32 dev_id_base;
+-	struct ath10k_bus_params bus_params;
++	struct ath10k_bus_params bus_params = {};
+ 	int ret, i;
+ 
+ 	/* Assumption: All SDIO based chipsets (so far) are QCA6174 based.
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 873cb4ce419b..845914f2eaf8 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -1249,7 +1249,7 @@ static int ath10k_snoc_resource_init(struct ath10k *ar)
+ int ath10k_snoc_fw_indication(struct ath10k *ar, u64 type)
+ {
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+-	struct ath10k_bus_params bus_params;
++	struct ath10k_bus_params bus_params = {};
+ 	int ret;
+ 
+ 	if (test_bit(ATH10K_SNOC_FLAG_UNREGISTERING, &ar_snoc->flags))
+diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
+index 970cf69ac35f..2fb0fb40e86d 100644
+--- a/drivers/net/wireless/ath/ath10k/usb.c
++++ b/drivers/net/wireless/ath/ath10k/usb.c
+@@ -973,7 +973,7 @@ static int ath10k_usb_probe(struct usb_interface *interface,
+ 	struct usb_device *dev = interface_to_usbdev(interface);
+ 	int ret, vendor_id, product_id;
+ 	enum ath10k_hw_rev hw_rev;
+-	struct ath10k_bus_params bus_params;
++	struct ath10k_bus_params bus_params = {};
+ 
+ 	/* Assumption: All USB based chipsets (so far) are QCA9377 based.
+ 	 * If there will be newer chipsets that does not use the hw reg
 
