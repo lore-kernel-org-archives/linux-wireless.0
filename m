@@ -2,154 +2,95 @@ Return-Path: <SRS0=gYL7=SO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C434C282CE
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 17:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA9EC10F0E
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 17:53:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 567972077C
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 17:16:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD9392086D
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 17:53:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726815AbfDLRQG (ORCPT
+        id S1726798AbfDLRxh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Apr 2019 13:16:06 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:53152 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726765AbfDLRQG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Apr 2019 13:16:06 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hEzmQ-0004Ez-Cb; Fri, 12 Apr 2019 19:15:58 +0200
-Message-ID: <f0a64bb751b8c601f58130a7f3a3158d70f18f63.camel@sipsolutions.net>
-Subject: Re: gsmtap design/extensions?
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Harald Welte <laforge@gnumonks.org>
-Cc:     Vadim Yanitskiy <axilirator@gmail.com>,
-        OpenBSC Mailing List <openbsc@lists.osmocom.org>,
-        Sean Tranchetti <stranche@codeaurora.org>, radiotap@netbsd.org,
-        Dan Williams <dcbw@redhat.com>, netdev@vger.kernel.org,
+        Fri, 12 Apr 2019 13:53:37 -0400
+Received: from mga01.intel.com ([192.55.52.88]:38292 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726765AbfDLRxg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Apr 2019 13:53:36 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Apr 2019 10:53:36 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,342,1549958400"; 
+   d="scan'208";a="223019626"
+Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 12 Apr 2019 10:53:35 -0700
+Received: from kbuild by lkp-server01 with local (Exim 4.89)
+        (envelope-from <lkp@intel.com>)
+        id 1hF0Mo-0001Kn-Ew; Sat, 13 Apr 2019 01:53:34 +0800
+Date:   Sat, 13 Apr 2019 01:52:49 +0800
+From:   kbuild test robot <lkp@intel.com>
+To:     Tamizh chelvam <tamizhr@codeaurora.org>
+Cc:     kbuild-all@01.org, johannes@sipsolutions.net,
         linux-wireless@vger.kernel.org,
-        Aleksander Morgado <aleksander@aleksander.es>,
-        Subash Abhinov Kasiviswanathan <subashab@codeaurora.org>,
-        =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Date:   Fri, 12 Apr 2019 19:15:56 +0200
-In-Reply-To: <20190410234555.GO25552@nataraja>
-References: <cf07ae24c436f92769f9289d208f01846ebe8826.camel@sipsolutions.net>
-         <CAPEnp=bHTVARr7WA9Qkq4=y7kk8_FLWhrkqKOEXubMO4X=BHCw@mail.gmail.com>
-         <46474c61d7748042cc0a1f23773186786020638e.camel@sipsolutions.net>
-         <20190410234555.GO25552@nataraja>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: Re: [PATCHv3 2/2] mac80211: Implement API to configure station
+ specific rssi threshold
+Message-ID: <201904130145.GoWi9hOy%lkp@intel.com>
+References: <1554831488-27065-3-git-send-email-tamizhr@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1554831488-27065-3-git-send-email-tamizhr@codeaurora.org>
+X-Patchwork-Hint: ignore
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-04-11 at 01:45 +0200, Harald Welte wrote:
-> Hi Johannes,
-> 
-> On Wed, Apr 10, 2019 at 09:23:13AM +0200, Johannes Berg wrote:
-> > > but unfortunately, nobody has invested time into this (yet?).
-> > 
-> > 2012! 
-> 
-> Well, Osmocom is a very small community, with probably somewhere less than
-> 25 active developers over the last few years (less than 15 full-time),
-> with an *incredibly* large scope:  Implement virtually any protocol
-> layer of any protocol stack on any of the 3GPP interfaces and all their
-> related network elements for 2G/3G as well as even other technologies
-> like TETRA, GMR-1, ...
-> 
-> And all that in a field of technology that has less free software than
-> the Operating Systems world had in the mid-1990ies.  It really feels a
-> bit like the Linux community 20 years ago.
-> 
-> So resources are always *extremely* tight, and given those limited
-> resources, I'm actually very happy with the results by now, having
-> automatied CI, build verifications, unit tests, functional test suites,
-> end-to-end testing, and all the code we implemented on git.osmocom.org :)
+Hi Tamizh,
 
-:-)
-Sure, I get it. Just a bit surprised I guess.
+Thank you for the patch! Perhaps something to improve:
 
-> While current GSMTAPv2 is ugly, it works rather solid for all known
-> existing use cases, so there was no urgency to introduce a new version
-> of it.
+[auto build test WARNING on mac80211-next/master]
+[also build test WARNING on next-20190412]
+[cannot apply to v5.1-rc4]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-OK.
+url:    https://github.com/0day-ci/linux/commits/Tamizh-chelvam/cfg80211-Add-support-to-configure-station-specific-RSSI-threshold-for-AP-mode/20190412-225220
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
 
-> > Not sure I get this, but I also don't really care all that much. 
-> 
-> Well, with all respect, GSMTAP was created for a variety of use cases,
-> see my other lengthy mail.  It's fine if you don't care, but unless you
-> could explain your use cases with a few paragraphs, neither you nor us
-> are able to determine if there is common functionality and if it makes
-> sense to use GSMTAP or not :)
 
-Agree. Sorry about that. No disrespect was intended, but I'm still not
-sure I understand the need for UDP encapsulation *as part of the
-protocol*. I guess saying "GSMTAP can optionally be encapsulated in UDP
-with the well-known port xyz" would be something else, and it'd make
-more sense to me than saying it has to be.
+sparse warnings: (new ones prefixed by >>)
 
-> So far I have not seen any explanation about what kind of data you want
-> to encapsulate at all.
+>> net/mac80211/cfg.c:3947:17: sparse: incompatible types in comparison expression (different address spaces)
+--
+>> net/mac80211/rx.c:1735:13: sparse: context imbalance in 'ieee80211_sta_rx_signal_thold_check' - wrong count at exit
 
-Right, see my other mail(s) from today as well. Basically the IP frame
-that we're actually sending, and then attaching to that the "session" or
-"mux id" that it's being sent on. Sorry, I probably also don't know the
-right term - those show up in the drivers now.
+vim +3947 net/mac80211/cfg.c
 
-> > just a pretty strange design if the kernel were to output this, I'm not
-> > even sure how I'd do that properly. I don't want to be generating UDP
-> > packets there...
-> 
-> There are well-established APIs for having sockets in the kernel and for
-> generating + receiving UDP packets from it.  NFS has been doing this for
-> decades, as do various kernel-side tunneling helpers including the GTP
-> kernel module.
-> 
-> I'm not saying it's the right approach for your problem, I'm just saying
-> kernel-side code can for sure use UDP sockets.
+  3940	
+  3941	void sta_mon_rssi_config_free(struct sta_info *sta)
+  3942	{
+  3943		struct sta_mon_rssi_config *old_rssi_config;
+  3944	
+  3945		if (sta->rssi_config) {
+  3946			old_rssi_config = sta->rssi_config;
+> 3947			RCU_INIT_POINTER(sta->rssi_config, NULL);
+  3948			kfree_rcu(old_rssi_config, rcu_head);
+  3949		}
+  3950	}
+  3951	
 
-Of course it *can*. But I don't think it makes *sense*. The key feature
-here isn't communicating with somebody else (unlike NFS, GTP, GENEVE and
-whatever other protocol they have). In fact, you shouldn't really care
-about the communication part per se at all, I'd think.
-
-> Sure, that works.  But the real question is, to me:  Are there common
-> GSMTAP payload types that both the existing GSMTAP users carry, as well
-> as what you would want to carry?  If yes, then it makes sense to think
-> about a common encapsulation like GSMTAP.  If the payload types differ,
-> then it seems rather like there are two distinct use cases that
-> wouldn't benefit from standardizing on one format.
-
-Agree, and I don't really know.
-
-Maybe I should start differently. Do you have an example GSMTAP capture
-file that I could look at in wireshark? Yes, I see you've pointed out
-how I can get all the software running, but if you have a file already
-that's almost certainly faster :-)
-
-And then the question I'd want answer is this: If there's an IP frame
-that I send to the modem from the application using a regular UDP or TCP
-socket, what would the corresponding GSMTAP capture look like? Surely it
-includes the IP frame in some way?!
-
-If the answer to that question is yes, then I think there is some
-overlap, because you can always imagine the modem receiving an IP frame
-and telling you more about how it was encapsulated over the air, no?
-Mind, most if not all modems probably don't actually do that today, but
-I wonder how much of that is because of lack of infrastructure to do it,
-vs. it just not being necessary - since I've been told that the modems
-do in fact often output tracing that contains information about this.
-Just not directly combined with the IP frame.
-
-johannes
-
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
