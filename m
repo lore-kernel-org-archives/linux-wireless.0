@@ -2,169 +2,122 @@ Return-Path: <SRS0=gYL7=SO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20693C10F14
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:20:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3514AC10F0E
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:28:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D290E2054F
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:20:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0160D2084D
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 13:28:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Gkl32ajI"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YtvbuusJ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CBweQumd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726829AbfDLNUP (ORCPT
+        id S1726750AbfDLN2V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Apr 2019 09:20:15 -0400
-Received: from nbd.name ([46.4.11.11]:40044 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726702AbfDLNUN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Apr 2019 09:20:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=xS+P98BHyUcVaqmRsVYy/3JAxlZR9oPcSrl7zz6VYCE=; b=Gkl32ajIY2B4US2l6AM4M1pvYo
-        EIghZ7ETc7VcVbzW1j4XRaRx78wtLwfpdn7d63U8ELL9Wh1Q7U5KRHK2fnutSFJzFXedMtvTRdxqb
-        qsnSGdhgEjjysAoR1zwHjfU9Ps3Beyht7Yd4nnAbDXgv709GcCAEXcfK2R7AhX9xOSXs=;
-Received: from p4ff13bac.dip0.t-ipconnect.de ([79.241.59.172] helo=maeck-2.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1hEw6F-0002au-Eo
-        for linux-wireless@vger.kernel.org; Fri, 12 Apr 2019 15:20:11 +0200
-Received: by maeck-2.local (Postfix, from userid 501)
-        id 90ED558438FA; Fri, 12 Apr 2019 15:20:10 +0200 (CEST)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: fix tx power issues
-Date:   Fri, 12 Apr 2019 15:20:10 +0200
-Message-Id: <20190412132010.68993-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.17.0
+        Fri, 12 Apr 2019 09:28:21 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:40584 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726244AbfDLN2V (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Apr 2019 09:28:21 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 56B64616B9; Fri, 12 Apr 2019 13:28:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1555075700;
+        bh=tvoPqiI+paUAOLZVilty2/u/V2VPLMMSzI9QUfRvf1A=;
+        h=Subject:From:To:Cc:Date:From;
+        b=YtvbuusJBjFwKYni3pKs/U6x+hhvHr/0cJzYMSKanGvRzrQIFyDx8FvoDgq7Gn22D
+         WUF30OSLDz27AbBp75Ju42dOPGqUswm0KWJgCgsUVYOrUfe5JWtdV+V2eRqA9ttCnk
+         W364nZvPIhfz3H1MaLEh68CqhqZiNUNR5r+jxaYw=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 239386119E;
+        Fri, 12 Apr 2019 13:28:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1555075699;
+        bh=tvoPqiI+paUAOLZVilty2/u/V2VPLMMSzI9QUfRvf1A=;
+        h=Subject:From:To:Cc:Date:From;
+        b=CBweQumdAM3gBr0dIb/2CnW/VhAWIItQtRtQXHq5QXytP1t8rNJM39jDrU2cZe01E
+         Emp3rVS5bdh/ec7pHw1bqeThGxSHSsbT+3NhUy2imNS5xvQgwFLOBP1PbUexiWhgh6
+         ZyXW4K8mlubTuW9CKbwEpJaL4bL2VI7sfMdVkLx4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 239386119E
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Subject: [PATCH 1/6] ath10k: sdio: workaround firmware UART pin
+ configuration bug
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 12 Apr 2019 16:28:17 +0300
+Message-ID: <155507569645.32018.15231567732563770250.stgit@potku.adurom.net>
+User-Agent: StGit/0.17.1-17-ge4e0
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-- tx power is stored in the channels after ieee80211_register_hw, so
-  chan->orig_mpwr needs to be updated as well
-- for non-TSSI devices, mt76x2e needs to use a different target power value
-  from the EEPROM
-- fix a rounding error in a few places (need to round up, not down)
+From: Wen Gong <wgong@codeaurora.org>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+On QCA6174 SDIO devices the SDIO interrupt will fail if UART is
+disabled from ath10k. SDIO firmware enables UART printouts by
+default. If ath10k will try to enable UART again the firmware
+will configure it's GPIO line incorrectly and SDIO interrupts
+won't work anymore. The workaround is to set UART pin again (19
+for QCA6174 SDIO) if uart_print is 0.
+
+Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00007-QCARMSWP-1.
+
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c    |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7603/init.c |  1 +
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c |  1 +
- drivers/net/wireless/mediatek/mt76/mt76x2/init.c | 12 +++---------
- drivers/net/wireless/mediatek/mt76/mt76x2/phy.c  |  6 +++---
- 5 files changed, 9 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c |   10 +++++++++-
+ drivers/net/wireless/ath/ath10k/hw.h   |    5 +++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index f0d418b751ad..4b63d061c2a0 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -745,7 +745,7 @@ int mt76_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct mt76_dev *dev = hw->priv;
- 	int n_chains = hweight8(dev->antenna_mask);
- 
--	*dbm = dev->txpower_cur / 2;
-+	*dbm = DIV_ROUND_UP(dev->txpower_cur, 2);
- 
- 	/* convert from per-chain power to combined
- 	 * output on 2x2 devices
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-index a84b239887ca..569c61b9b5ae 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-@@ -488,6 +488,7 @@ mt7603_init_txpower(struct mt7603_dev *dev,
- 	for (i = 0; i < sband->n_channels; i++) {
- 		chan = &sband->channels[i];
- 		chan->max_power = target_power;
-+		chan->orig_mpwr = target_power;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index e5f4ce3b595b..57e46d57b449 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -280,6 +280,7 @@ mt76x0_init_txpower(struct mt76x02_dev *dev,
- 		mt76x0_get_power_info(dev, chan, &tp);
- 
- 		chan->max_power = (mt76x02_get_max_rate_power(&t) + tp) / 2;
-+		chan->orig_mpwr = chan->max_power;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/init.c
-index a30ef2c5a9db..c6078e90ca43 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/init.c
-@@ -165,27 +165,21 @@ void mt76x2_init_txpower(struct mt76x02_dev *dev,
- 	struct ieee80211_channel *chan;
- 	struct mt76x2_tx_power_info txp;
- 	struct mt76_rate_power t = {};
--	int target_power;
- 	int i;
- 
- 	for (i = 0; i < sband->n_channels; i++) {
- 		chan = &sband->channels[i];
- 
- 		mt76x2_get_power_info(dev, &txp, chan);
--
--		target_power = max_t(int, (txp.chain[0].target_power +
--					   txp.chain[0].delta),
--					  (txp.chain[1].target_power +
--					   txp.chain[1].delta));
--
- 		mt76x2_get_rate_power(dev, &t, chan);
- 
- 		chan->max_power = mt76x02_get_max_rate_power(&t) +
--				  target_power;
--		chan->max_power /= 2;
-+				  txp.target_power;
-+		chan->max_power = DIV_ROUND_UP(chan->max_power, 2);
- 
- 		/* convert to combined output power on 2x2 devices */
- 		chan->max_power += 3;
-+		chan->orig_mpwr = chan->max_power;
- 	}
- }
- EXPORT_SYMBOL_GPL(mt76x2_init_txpower);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
-index 769a9b972044..cdedf95ca4f5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
-@@ -161,12 +161,12 @@ void mt76x2_phy_set_txpower(struct mt76x02_dev *dev)
- 		delta = txp.delta_bw80;
- 
- 	mt76x2_get_rate_power(dev, &t, chan);
--	mt76x02_add_rate_power_offset(&t, txp.chain[0].target_power);
-+	mt76x02_add_rate_power_offset(&t, txp.target_power + delta);
- 	mt76x02_limit_rate_power(&t, dev->mt76.txpower_conf);
- 	dev->mt76.txpower_cur = mt76x02_get_max_rate_power(&t);
- 
- 	base_power = mt76x2_get_min_rate_power(&t);
--	delta += base_power - txp.chain[0].target_power;
-+	delta = base_power - txp.target_power;
- 	txp_0 = txp.chain[0].target_power + txp.chain[0].delta + delta;
- 	txp_1 = txp.chain[1].target_power + txp.chain[1].delta + delta;
- 
-@@ -182,7 +182,7 @@ void mt76x2_phy_set_txpower(struct mt76x02_dev *dev)
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 835b8de92d55..cfd7bb29a1ec 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2065,8 +2065,16 @@ static int ath10k_init_uart(struct ath10k *ar)
+ 		return ret;
  	}
  
- 	mt76x02_add_rate_power_offset(&t, -base_power);
--	dev->target_power = txp.chain[0].target_power;
-+	dev->target_power = txp.target_power;
- 	dev->target_power_delta[0] = txp_0 - txp.chain[0].target_power;
- 	dev->target_power_delta[1] = txp_1 - txp.chain[0].target_power;
- 	dev->mt76.rate_power = t;
--- 
-2.17.0
+-	if (!uart_print)
++	if (!uart_print && ar->hw_params.uart_pin_workaround) {
++		ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin,
++					 ar->hw_params.uart_pin);
++		if (ret) {
++			ath10k_warn(ar, "failed to set UART TX pin: %d", ret);
++			return ret;
++		}
++
+ 		return 0;
++	}
+ 
+ 	ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin, ar->hw_params.uart_pin);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 71314999aa24..a92fce1bb6f0 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -606,6 +606,11 @@ struct ath10k_hw_params {
+ 
+ 	/* target supporting fw download via diag ce */
+ 	bool fw_diag_ce_download;
++
++	/* need to set uart pin if disable uart print, workaround for a
++	 * firmware bug
++	 */
++	bool uart_pin_workaround;
+ };
+ 
+ struct htt_rx_desc;
 
