@@ -2,159 +2,141 @@ Return-Path: <SRS0=gYL7=SO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=0.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	SUBJ_ALL_CAPS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD66C10F14
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 08:54:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC1FFC10F0E
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 09:27:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B5AA20850
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 08:54:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 655C92171F
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 09:27:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wz6NJJqg";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aimf4MNA"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="hlSjY9Ka"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727214AbfDLIy5 (ORCPT
+        id S1726884AbfDLJ1K (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Apr 2019 04:54:57 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:50022 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727021AbfDLIy5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Apr 2019 04:54:57 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id EFB2C6122D; Fri, 12 Apr 2019 08:54:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555059296;
-        bh=6Ro2xEFCSDj2sVwTyNpdpRBRWnSLXD6xkI5YgymDcz4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Wz6NJJqgl9o8wHyAfQWUTc3dNBq3+5RD02/Y9dsnknhB9kepdDaI56YqU2rbfMmFS
-         C20R6BKI03NRm08G5BduNSM0tPAK0U8degBZUo+sgGMsJufxu4ftee9v+5s8hxDprB
-         LtjuIJUbQw5y74iZPGvFZ6YeC+Fh0B+iSBJCdSJs=
-Received: from localhost.localdomain (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id AA5166122D;
-        Fri, 12 Apr 2019 08:54:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555059293;
-        bh=6Ro2xEFCSDj2sVwTyNpdpRBRWnSLXD6xkI5YgymDcz4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=aimf4MNAb19vOUQi0j0vYYlj9cPtQdkD78XamLG5lMjbUWnj5D2N/NwEaZX7NoZE2
-         UnUEVGubVGlBTT4ezZKl9/9bHsiGiYWRbQI+jrQsTEWuHFITCOC6oBUCF0jfhL3kjG
-         xAqMalB75HI4/Typyjcyz36EDkG/nC01dVYnekx4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AA5166122D
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
-From:   Wen Gong <wgong@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH v2] ath10k: Remove ATH10K_STATE_RESTARTED in simulate fw crash
-Date:   Fri, 12 Apr 2019 16:52:50 +0800
-Message-Id: <1555059170-11988-1-git-send-email-wgong@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+        Fri, 12 Apr 2019 05:27:10 -0400
+Received: from mail-eopbgr680041.outbound.protection.outlook.com ([40.107.68.41]:26462
+        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726838AbfDLJ1K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Apr 2019 05:27:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xN7NAgmA6AtdQmWK2L4c8E1mn2HC8FQjL5SX2KI90+o=;
+ b=hlSjY9KaEVs8L/HPFg2LOJK7fWBDm4sk4b6r0xZ1dgI43ho+1/7FX/5G2buuhcTQkHMaEiXKguCr6AISOTIYPwAFm7Y/a90mFi33TtQPfD+AmqnLtUPmp5ZRkxuOLCJDRHAmhxE79T9tvoKRZNMn7PFPJVjcSLt2qxuPrfS2zbE=
+Received: from BN7PR05MB4402.namprd05.prod.outlook.com (52.133.223.153) by
+ BN7PR05MB5922.namprd05.prod.outlook.com (20.176.31.29) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1792.8; Fri, 12 Apr 2019 09:27:08 +0000
+Received: from BN7PR05MB4402.namprd05.prod.outlook.com
+ ([fe80::893a:30d3:519a:c689]) by BN7PR05MB4402.namprd05.prod.outlook.com
+ ([fe80::893a:30d3:519a:c689%7]) with mapi id 15.20.1792.007; Fri, 12 Apr 2019
+ 09:27:08 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
+ SN6PR05MB4974.namprd05.prod.outlook.com (20.177.249.76) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1813.8; Fri, 12 Apr 2019 09:26:29 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e]) by SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::ecfd:3a22:dcb3:3b9e%4]) with mapi id 15.20.1792.009; Fri, 12 Apr 2019
+ 09:26:29 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     Denis Kenzior <denkenz@gmail.com>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: NL80211_SCAN_FLAG_RANDOM_ADDR ?
+Thread-Topic: NL80211_SCAN_FLAG_RANDOM_ADDR ?
+Thread-Index: AQHU8LZobZQXlUakgkOCoEp4s/HYnaY4QisA
+Date:   Fri, 12 Apr 2019 09:26:28 +0000
+Message-ID: <20190412092623.46ygdnec3wx26zvd@bars>
+References: <e09a9bc7-9774-334b-53e8-13e1d781bee3@gmail.com>
+In-Reply-To: <e09a9bc7-9774-334b-53e8-13e1d781bee3@gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BYAPR05CA0085.namprd05.prod.outlook.com
+ (2603:10b6:a03:e0::26) To SN6PR05MB4928.namprd05.prod.outlook.com
+ (2603:10b6:805:9d::10)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 071b321b-31a7-4d36-9d5f-08d6bf28f118
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600139)(711020)(4605104)(2017052603328)(7193020);SRVR:SN6PR05MB4974;
+x-ms-traffictypediagnostic: SN6PR05MB4974:|BN7PR05MB5922:
+x-ms-exchange-purlcount: 1
+x-moderation-data: 4/12/2019 9:27:05 AM
+x-microsoft-antispam-prvs: <BN7PR05MB592285D0274F06028BBE5F93A3280@BN7PR05MB5922.namprd05.prod.outlook.com>
+x-forefront-prvs: 0005B05917
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(346002)(136003)(396003)(39850400004)(376002)(366004)(199004)(189003)(71200400001)(436003)(186003)(102836004)(53936002)(1411001)(476003)(6246003)(256004)(1076003)(11346002)(229853002)(6916009)(486006)(76176011)(446003)(26005)(5660300002)(86362001)(7116003)(386003)(52116002)(478600001)(14454004)(97736004)(6506007)(66066001)(99286004)(316002)(966005)(71190400001)(81166006)(81156014)(25786009)(4326008)(3846002)(6512007)(6306002)(9686003)(33716001)(68736007)(8676002)(105586002)(8936002)(106356001)(6486002)(6116002)(7736002)(6436002)(2906002)(305945005);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR05MB5922;H:BN7PR05MB4402.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: s7tYJRn1/pi03u/2SZ6vxByV4PE/y8evBEASaYxUfBuT7N3vxYIRnVxDcXWwlNHOm6YnON5gkiOddZoNRlhoCUVkzm23NVXI7RZPYCees4VlMaC3/PTqeiJ+IlCWn5Eq6PRYMNSYD6+mRsSNJx1B5pTW9cvoqXTBDULfGeUsX3h7yvVzgJBbX+FZueLytkxTGn8AO7yUWVC1gj6So+/15ukaMefxr1cyoKlfmO9qa6MEBb+ZII+Zstp8oqNj5kVOn9syPejBwarZNyqdDJ4g0omPPzcuaCvkQCttOEcvZACinfJ6CQhJ137UQQWGsuYlOVrUb8uQC8ZT0O4WK2FTNoOzM+6VF+wmgbPDk6p+w2tTTFj+qF63kSfNZgjsBoWNx+11R+D3cb5UHJ4DeN5NokTqHru6H3tW3OCECqXUl7c=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <1F68A22597D9A742A9FEA468596EE82B@namprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 071b321b-31a7-4d36-9d5f-08d6bf28f118
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Apr 2019 09:27:08.0225
+ (UTC)
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR05MB5922
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When test simulate firmware crash, it is easy to trigger error.
-command:
-echo soft > /sys/kernel/debug/ieee80211/phyxx/ath10k/simulate_fw_crash.
+> I've been poking around at how this flag is used and I noticed this
+> check in net/wireless/nl80211.c:
+>=20
+> nl80211_check_scan_flags()
+>=20
+>         if (*flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+>                 int err;
+>=20
+>                 if (!(wiphy->features & randomness_flag) ||
+>                     (wdev && wdev->current_bss))
+>                         return -EOPNOTSUPP;
+>=20
+>=20
+> The above disallows the use of RANDOM_ADDR for scans while connected.
+> The nl80211.h uapi header seems to concur:
+>=20
+>  "@NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR: This device/driver supports
+> using a random MAC address during scan (if the device is unassociated);"
+>=20
+> However, if I create a P2P Device (in addition to the default STA
+> device), the kernel happily lets me scan on the wdev while the STA
+> interface is connected.
+>=20
+> sudo iw phy0 interface add p2p type __p2pdev
+> sudo iw wdev 0x2 p2p start
+> sudo iw wdev 0x2 scan randomize
+>=20
+> So the immediate question I have is, should the RANDOM_ADDR flag indeed
+> be limited to unassociated STA interfaces?  It would seem the hardware
+> is capable randomizing even when connected? Please educate me :)
 
-If input more than two times continuously, then it will have error.
-Error message:
-ath10k_pci 0000:02:00.0: failed to set vdev 1 RX wake policy: -108
-ath10k_pci 0000:02:00.0: device is wedged, will not restart
+Hello Denis,
 
-It is because the state has not changed to ATH10K_STATE_ON immediately,
-then it will have more than two simulate crash process running meanwhile,
-and complete/wakeup some field twice, it destroy the normal recovery
-process.
+IIUC, this feature could be introduced to support Android Compatibility
+Definition Document (CDD). Those documents are available at the
+following page: https://source.android.com/compatibility/cdd
 
-add flag wait-ready for this command:
-echo soft wait-ready > /sys/kernel/debug/ieee80211/phyxx/ath10k/simulate_fw_crash
+For instance, in the latest CDD randomized scan requirements are described
+in the section 7.4.2. It looks like current high level nl80211 API follows
+those recommendations. Probably it has been implemented with STA use-case
+in mind, that is why you can use that flag for P2P connection. But, as
+Ben pointed out, actual application of this flag may depend on
+implementation in firwmare and hardware.
 
-Tested with QCA6174 PCI with firmware
-WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI.
-It's not a regression with new firmware releases.
-
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
----
-v2: add wait-ready flag
- drivers/net/wireless/ath/ath10k/debug.c | 25 ++++++++++++++++++-------
- 1 file changed, 18 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 15964b3..04a20b8 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -534,7 +534,8 @@ static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
- 		"`soft` - this will send WMI_FORCE_FW_HANG_ASSERT to firmware if FW supports that command.\n"
- 		"`hard` - this will send to firmware command with illegal parameters causing firmware crash.\n"
- 		"`assert` - this will send special illegal parameter to firmware to cause assert failure and crash.\n"
--		"`hw-restart` - this will simply queue hw restart without fw/hw actually crashing.\n";
-+		"`hw-restart` - this will simply queue hw restart without fw/hw actually crashing.\n"
-+		"`soft wait-ready` `hard wait-ready` `assert wait-ready` `hw-restart wait-ready` - cmd only execuate when state is ATH10K_STATE_ON.\n";
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
- }
-@@ -554,6 +555,9 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
- 	char buf[32] = {0};
- 	ssize_t rc;
- 	int ret;
-+	char buf_cmd[32] = {0};
-+	char buf_flag[32] = {0};
-+	bool wait_ready;
- 
- 	/* filter partial writes and invalid commands */
- 	if (*ppos != 0 || count >= sizeof(buf) || count == 0)
-@@ -567,18 +571,25 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
- 	if (buf[*ppos - 1] == '\n')
- 		buf[*ppos - 1] = '\0';
- 
-+	sscanf(buf, "%s %s", buf_cmd, buf_flag);
-+	ath10k_info(ar, "buf_cmd:%s, buf_flag:%s\n", buf_cmd, buf_flag);
-+
-+	wait_ready = !strcmp(buf_cmd, "wait-ready");
- 	mutex_lock(&ar->conf_mutex);
- 
--	if (ar->state != ATH10K_STATE_ON &&
--	    ar->state != ATH10K_STATE_RESTARTED) {
-+	if ((!wait_ready &&
-+	     ar->state != ATH10K_STATE_ON &&
-+	     ar->state != ATH10K_STATE_RESTARTED) ||
-+	    (wait_ready &&
-+	     ar->state != ATH10K_STATE_ON)) {
- 		ret = -ENETDOWN;
- 		goto exit;
- 	}
- 
--	if (!strcmp(buf, "soft")) {
-+	if (!strcmp(buf_cmd, "soft")) {
- 		ath10k_info(ar, "simulating soft firmware crash\n");
- 		ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
--	} else if (!strcmp(buf, "hard")) {
-+	} else if (!strcmp(buf_cmd, "hard")) {
- 		ath10k_info(ar, "simulating hard firmware crash\n");
- 		/* 0x7fff is vdev id, and it is always out of range for all
- 		 * firmware variants in order to force a firmware crash.
-@@ -586,10 +597,10 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
- 		ret = ath10k_wmi_vdev_set_param(ar, 0x7fff,
- 						ar->wmi.vdev_param->rts_threshold,
- 						0);
--	} else if (!strcmp(buf, "assert")) {
-+	} else if (!strcmp(buf_cmd, "assert")) {
- 		ath10k_info(ar, "simulating firmware assert crash\n");
- 		ret = ath10k_debug_fw_assert(ar);
--	} else if (!strcmp(buf, "hw-restart")) {
-+	} else if (!strcmp(buf_cmd, "hw-restart")) {
- 		ath10k_info(ar, "user requested hw restart\n");
- 		queue_work(ar->workqueue, &ar->restart_work);
- 		ret = 0;
--- 
-1.9.1
-
+Regards,
+Sergey
