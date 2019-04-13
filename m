@@ -2,99 +2,77 @@ Return-Path: <SRS0=M/jX=SP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF6E1C10F11
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Apr 2019 14:02:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04A67C10F11
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Apr 2019 16:15:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B52A20848
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Apr 2019 14:02:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555164126;
-	bh=8ddBA1TRhgyqJmmbzAWKu8999yT9vFIGS2gOHjTEKy8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vF4efHurHljXT1UCPK6MKoauq5cFpK+KIRIY6w9BrFsGoolXcqpYgCBOSJjqYNQ+U
-	 lrOWIh1NOTMmeub0uihwNF9wyfU6Tw/wxK83QbnTbk1hoIGEWhIaMbPbqBnueYC5UF
-	 FiJWerMf7+Ay4vrUtj68MZkDegmwZoqHk94Geso0=
+	by mail.kernel.org (Postfix) with ESMTP id D3358208E3
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Apr 2019 16:15:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727138AbfDMOCF (ORCPT
+        id S1727170AbfDMQPO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 13 Apr 2019 10:02:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:32942 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727104AbfDMOCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Apr 2019 10:02:05 -0400
-Received: from localhost.localdomain.com (unknown [151.66.24.114])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5901E2084D;
-        Sat, 13 Apr 2019 14:02:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555164124;
-        bh=8ddBA1TRhgyqJmmbzAWKu8999yT9vFIGS2gOHjTEKy8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=U+6tDLF9518jponcod5NMOZ1XiOzEep2zaWBdth7fIncqr3ZnA7YNr2ZEzXRG3CzK
-         UgpKJ9xXzQBlVRqGeR+P0bBcWoi/dkfTqH7PlDKtiVdsu9I7BVWE/QdXFEYKXRA+lh
-         R7UHLO6ZmVbgmyvFVnhsNHDGuxqy0SVgaN5nWXww=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 5/5] mt7603: init mcu_restart function pointer
-Date:   Sat, 13 Apr 2019 16:01:28 +0200
-Message-Id: <80bc909a3748b48ec1a52dc019d592c956ea2495.1555163776.git.lorenzo@kernel.org>
+        Sat, 13 Apr 2019 12:15:14 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:47745 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726998AbfDMQPO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 13 Apr 2019 12:15:14 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+        (Exim 4.76)
+        (envelope-from <colin.king@canonical.com>)
+        id 1hFLId-0006XN-6v; Sat, 13 Apr 2019 16:14:39 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mwifiex: check for null return from skb_copy
+Date:   Sat, 13 Apr 2019 17:14:38 +0100
+Message-Id: <20190413161438.6376-1-colin.king@canonical.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1555163776.git.lorenzo@kernel.org>
-References: <cover.1555163776.git.lorenzo@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use common function wrapper in mt7603_mcu_exit since the code is shared
-with mt7615 driver
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+It is possible for skb_copy to return a null pointer and currently
+this will cause a null pointer dereference when the function
+mwifiex_uap_queue_bridged_pkt is called.  Fix this by checking for
+a null return from skb_copy and return -ENOMEM.
+
+Addresses-Coverity: ("Dereference null return")
+Fixes: 838e4f449297 ("mwifiex: improve uAP RX handling")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7603/mcu.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-index c52ae301062c..7ebfcb021d40 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-@@ -161,9 +161,9 @@ mt7603_mcu_start_firmware(struct mt7603_dev *dev, u32 addr)
- }
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+index 5ce85d5727e4..b262dc78d638 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+@@ -256,6 +256,8 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
  
- static int
--mt7603_mcu_restart(struct mt7603_dev *dev)
-+mt7603_mcu_restart(struct mt76_dev *dev)
- {
--	return __mt76_mcu_send_msg(&dev->mt76, -MCU_CMD_RESTART_DL_REQ,
-+	return __mt76_mcu_send_msg(dev, -MCU_CMD_RESTART_DL_REQ,
- 				   NULL, 0, true);
- }
- 
-@@ -269,6 +269,7 @@ int mt7603_mcu_init(struct mt7603_dev *dev)
- {
- 	static const struct mt76_mcu_ops mt7603_mcu_ops = {
- 		.mcu_send_msg = mt7603_mcu_msg_send,
-+		.mcu_restart = mt7603_mcu_restart,
- 	};
- 
- 	dev->mt76.mcu_ops = &mt7603_mcu_ops;
-@@ -277,7 +278,7 @@ int mt7603_mcu_init(struct mt7603_dev *dev)
- 
- void mt7603_mcu_exit(struct mt7603_dev *dev)
- {
--	mt7603_mcu_restart(dev);
-+	__mt76_mcu_restart(&dev->mt76);
- 	skb_queue_purge(&dev->mt76.mmio.mcu.res_q);
- }
- 
+ 	if (is_multicast_ether_addr(ra)) {
+ 		skb_uap = skb_copy(skb, GFP_ATOMIC);
++		if (!skb_uap)
++			return -ENOMEM;
+ 		mwifiex_uap_queue_bridged_pkt(priv, skb_uap);
+ 	} else {
+ 		if (mwifiex_get_sta_entry(priv, ra)) {
 -- 
 2.20.1
 
