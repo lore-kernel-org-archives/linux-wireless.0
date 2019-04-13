@@ -1,198 +1,96 @@
-Return-Path: <SRS0=gYL7=SO=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=M/jX=SP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0111C282CE
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 23:31:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 846FCC10F11
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Apr 2019 06:50:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85EB220869
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Apr 2019 23:31:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (4096-bit key) header.d=d-silva.org header.i=@d-silva.org header.b="BmHf4XQm"
+	by mail.kernel.org (Postfix) with ESMTP id 5EC712084D
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Apr 2019 06:50:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727019AbfDLXbg (ORCPT
+        id S1726297AbfDMGuH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Apr 2019 19:31:36 -0400
-Received: from ushosting.nmnhosting.com ([167.160.173.127]:53078 "EHLO
-        ushosting.nmnhosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726788AbfDLXbf (ORCPT
+        Sat, 13 Apr 2019 02:50:07 -0400
+Received: from ganesha.gnumonks.org ([213.95.27.120]:46279 "EHLO
+        ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725298AbfDMGuH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Apr 2019 19:31:35 -0400
-Received: from mail2.nmnhosting.com (unknown [202.169.106.97])
-        by ushosting.nmnhosting.com (Postfix) with ESMTPS id 3463D2F28FBF;
-        Fri, 12 Apr 2019 19:31:32 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=d-silva.org;
-        s=201810a; t=1555111893;
-        bh=rimSzx0ZYGZZ5jb4ghIWV17gFb2jTDUA34yHd5IGqSw=;
-        h=From:To:Cc:References:In-Reply-To:Subject:Date:From;
-        b=BmHf4XQmvnirJmVQ0BTAgVUqos7dTFY+a+X0qYuhnCF6TK7GyHA0rFJPhAY7uu2a3
-         x+D5T0I2ra7etPwsRTl2wiCEOF7eOu4FBqo35lQySjhOIuwrcJ0qPf1kDkPxyjK38K
-         7A5B8NdUOvq1LPjDbNxRSxoEjypurheCaOV8T8Tx+ZYcv6pYZNojmiN/HQ4MH8O5xq
-         7ro/4yPZGSkS+1M57Ebbs/QvVKeRgp2F8Ztg8Eu2HFvOYIAacxeJ8wTajfclD71z2W
-         +GXQfSGuQv7j4GBAG9/7yEZvhrFIvAWyYc1lYHwgJ93VPzp2e8B0aqMP/zgWA8SYD4
-         9ayqarDJFUMpz4HvfYhY+dCncyJKmXsIMPmaDTR6ah89MtOlAJ8+eGO8kUQeXtxlXF
-         hFK+3AnQRca77X0oS6wLM3pB719GFPjweWEdjnbAoWlq0vAWoZIQI+ugxbuLJtoYRt
-         kxGIGqLIPgBaQhMRu9lVy8zBH8t034fiZURri3a+LkDTzAJJEezF7XFpxXryFE2//P
-         Jlw0ruVT+OCUm+7EPPtd/4CITmRWlf/PQNtwebTwXpvKJ+Ofw9TKggeON3mUdBHCS+
-         wUVLn+3Rs0Vz+6CW5zYqoWknEw1uu2PTtPQUXA9HfSyT8jOyvHHt2kIfE2PSi7/O9k
-         QbALBi51LUi9HtlX1EmFRaOw=
-Received: from Hawking (ntp.lan [10.0.1.1])
-        (authenticated bits=0)
-        by mail2.nmnhosting.com (8.15.2/8.15.2) with ESMTPSA id x3CNVRg7018852
-        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Sat, 13 Apr 2019 09:31:27 +1000 (AEST)
-        (envelope-from alastair@d-silva.org)
-From:   "Alastair D'Silva" <alastair@d-silva.org>
-To:     "'Petr Mladek'" <pmladek@suse.com>,
-        "'Alastair D'Silva'" <alastair@au1.ibm.com>
-Cc:     "'Jani Nikula'" <jani.nikula@linux.intel.com>,
-        "'Joonas Lahtinen'" <joonas.lahtinen@linux.intel.com>,
-        "'Rodrigo Vivi'" <rodrigo.vivi@intel.com>,
-        "'David Airlie'" <airlied@linux.ie>,
-        "'Daniel Vetter'" <daniel@ffwll.ch>,
-        "'Karsten Keil'" <isdn@linux-pingi.de>,
-        "'Jassi Brar'" <jassisinghbrar@gmail.com>,
-        "'Tom Lendacky'" <thomas.lendacky@amd.com>,
-        "'David S. Miller'" <davem@davemloft.net>,
-        "'Jose Abreu'" <Jose.Abreu@synopsys.com>,
-        "'Kalle Valo'" <kvalo@codeaurora.org>,
-        "'Stanislaw Gruszka'" <sgruszka@redhat.com>,
-        "'Benson Leung'" <bleung@chromium.org>,
-        "'Enric Balletbo i Serra'" <enric.balletbo@collabora.com>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
-        "'Greg Kroah-Hartman'" <gregkh@linuxfoundation.org>,
-        "'Alexander Viro'" <viro@zeniv.linux.org.uk>,
-        "'Sergey Senozhatsky'" <sergey.senozhatsky@gmail.com>,
-        "'Steven Rostedt'" <rostedt@goodmis.org>,
-        "'Andrew Morton'" <akpm@linux-foundation.org>,
-        <intel-gfx@lists.freedesktop.org>,
-        <dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <ath10k@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-fbdev@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <linux-fsdevel@vger.kernel.org>
-References: <20190410031720.11067-1-alastair@au1.ibm.com> <20190410031720.11067-4-alastair@au1.ibm.com> <20190412141211.lvnz6wb7mwkykmxf@pathway.suse.cz>
-In-Reply-To: <20190412141211.lvnz6wb7mwkykmxf@pathway.suse.cz>
-Subject: RE: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in hex_dump_to_buffer with flags
-Date:   Sat, 13 Apr 2019 09:31:27 +1000
-Message-ID: <093301d4f187$da0756a0$8e1603e0$@d-silva.org>
+        Sat, 13 Apr 2019 02:50:07 -0400
+Received: from uucp by ganesha.gnumonks.org with local-bsmtp (Exim 4.84_2)
+        (envelope-from <laforge@gnumonks.org>)
+        id 1hFCUG-0005Gf-Jr; Sat, 13 Apr 2019 08:50:04 +0200
+Received: from laforge by nataraja.lan with local (Exim 4.92)
+        (envelope-from <laforge@gnumonks.org>)
+        id 1hFCMK-0007xE-69; Sat, 13 Apr 2019 08:41:52 +0200
+Date:   Sat, 13 Apr 2019 08:41:52 +0200
+From:   Harald Welte <laforge@gnumonks.org>
+To:     Guy Harris <guy@alum.mit.edu>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        Vadim Yanitskiy <axilirator@gmail.com>,
+        OpenBSC Mailing List <openbsc@lists.osmocom.org>,
+        Sean Tranchetti <stranche@codeaurora.org>, radiotap@netbsd.org,
+        Dan Williams <dcbw@redhat.com>,
+        netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Aleksander Morgado <aleksander@aleksander.es>,
+        Subash Abhinov Kasiviswanathan <subashab@codeaurora.org>,
+        =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Subject: Re: gsmtap design/extensions?
+Message-ID: <20190413064152.GB24451@nataraja>
+References: <cf07ae24c436f92769f9289d208f01846ebe8826.camel@sipsolutions.net>
+ <CAPEnp=bHTVARr7WA9Qkq4=y7kk8_FLWhrkqKOEXubMO4X=BHCw@mail.gmail.com>
+ <46474c61d7748042cc0a1f23773186786020638e.camel@sipsolutions.net>
+ <20190410234555.GO25552@nataraja>
+ <f0a64bb751b8c601f58130a7f3a3158d70f18f63.camel@sipsolutions.net>
+ <196E881D-AB4A-4569-9C1F-5BCB41FE832F@alum.mit.edu>
+ <1D6FE33B-DC15-47D8-A1AD-E95608300FDC@alum.mit.edu>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQMagew30YCVD5mEhyHx4HPts9xr1ALvlgN3AdorRAijh70pcA==
-Content-Language: en-au
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.6.2 (mail2.nmnhosting.com [10.0.1.20]); Sat, 13 Apr 2019 09:31:28 +1000 (AEST)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1D6FE33B-DC15-47D8-A1AD-E95608300FDC@alum.mit.edu>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> -----Original Message-----
-> From: Petr Mladek <pmladek@suse.com>
-> Sent: Saturday, 13 April 2019 12:12 AM
-> To: Alastair D'Silva <alastair@au1.ibm.com>
-> Cc: alastair@d-silva.org; Jani Nikula <jani.nikula@linux.intel.com>;
-Joonas
-> Lahtinen <joonas.lahtinen@linux.intel.com>; Rodrigo Vivi
-> <rodrigo.vivi@intel.com>; David Airlie <airlied@linux.ie>; Daniel Vetter
-> <daniel@ffwll.ch>; Karsten Keil <isdn@linux-pingi.de>; Jassi Brar
-> <jassisinghbrar@gmail.com>; Tom Lendacky <thomas.lendacky@amd.com>;
-> David S. Miller <davem@davemloft.net>; Jose Abreu
-> <Jose.Abreu@synopsys.com>; Kalle Valo <kvalo@codeaurora.org>;
-> Stanislaw Gruszka <sgruszka@redhat.com>; Benson Leung
-> <bleung@chromium.org>; Enric Balletbo i Serra
-> <enric.balletbo@collabora.com>; James E.J. Bottomley
-> <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
-> Greg Kroah-Hartman <gregkh@linuxfoundation.org>; Alexander Viro
-> <viro@zeniv.linux.org.uk>; Sergey Senozhatsky
-> <sergey.senozhatsky@gmail.com>; Steven Rostedt <rostedt@goodmis.org>;
-> Andrew Morton <akpm@linux-foundation.org>; intel-
-> gfx@lists.freedesktop.org; dri-devel@lists.freedesktop.org; linux-
-> kernel@vger.kernel.org; netdev@vger.kernel.org;
-> ath10k@lists.infradead.org; linux-wireless@vger.kernel.org; linux-
-> scsi@vger.kernel.org; linux-fbdev@vger.kernel.org;
-> devel@driverdev.osuosl.org; linux-fsdevel@vger.kernel.org
-> Subject: Re: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in
-> hex_dump_to_buffer with flags
-> 
-> On Wed 2019-04-10 13:17:19, Alastair D'Silva wrote:
-> > From: Alastair D'Silva <alastair@d-silva.org>
-> >
-> > In order to support additional features in hex_dump_to_buffer, replace
-> > the ascii bool parameter with flags.
-> >
-> > Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
-> > ---
-> >  drivers/gpu/drm/i915/intel_engine_cs.c            |  2 +-
-> >  drivers/isdn/hardware/mISDN/mISDNisar.c           |  6 ++++--
-> >  drivers/mailbox/mailbox-test.c                    |  2 +-
-> >  drivers/net/ethernet/amd/xgbe/xgbe-drv.c          |  2 +-
-> >  drivers/net/ethernet/synopsys/dwc-xlgmac-common.c |  2 +-
-> >  drivers/net/wireless/ath/ath10k/debug.c           |  3 ++-
-> >  drivers/net/wireless/intel/iwlegacy/3945-mac.c    |  2 +-
-> >  drivers/platform/chrome/wilco_ec/debugfs.c        |  3 ++-
-> >  drivers/scsi/scsi_logging.c                       |  8 +++-----
-> >  drivers/staging/fbtft/fbtft-core.c                |  2 +-
-> >  fs/seq_file.c                                     |  3 ++-
-> >  include/linux/printk.h                            |  2 +-
-> >  lib/hexdump.c                                     | 15 ++++++++-------
-> >  lib/test_hexdump.c                                |  5 +++--
-> >  14 files changed, 31 insertions(+), 26 deletions(-)
-> >
-> > diff --git a/drivers/gpu/drm/i915/intel_engine_cs.c
-> > b/drivers/gpu/drm/i915/intel_engine_cs.c
-> > index 49fa43ff02ba..fb133e729f9a 100644
-> > --- a/drivers/gpu/drm/i915/intel_engine_cs.c
-> > +++ b/drivers/gpu/drm/i915/intel_engine_cs.c
-> > @@ -1318,7 +1318,7 @@ static void hexdump(struct drm_printer *m, const
-> void *buf, size_t len)
-> >  		WARN_ON_ONCE(hex_dump_to_buffer(buf + pos, len -
-> pos,
-> >  						rowsize, sizeof(u32),
-> >  						line, sizeof(line),
-> > -						false) >= sizeof(line));
-> > +						0) >= sizeof(line));
-> 
-> It might be more clear when we define:
-> 
-> #define HEXDUMP_BINARY 0
+Dear Guy and others,
 
-This feels unnecessary, and weird. Omitting the flag won't disable the hex
-output (as expected), and if you don't want hex output, why call hexdump in
-the first place?
+On Fri, Apr 12, 2019 at 03:47:26PM -0700, Guy Harris wrote:
+> On Apr 12, 2019, at 12:54 PM, Guy Harris <guy@alum.mit.edu> wrote:
+> 
+> > I see nothing about a struct gsmtap_hdr:
+> > 	http://osmocom.org/projects/baseband/wiki/GSMTAP
+> > that...
+> > 	2) would prevent it from being at the beginning of a LINKTYPE_GSMTAP/DLT_GSMTAP packet in a pcap or pcapng file.
+> With a specification based on
+> 	http://cgit.osmocom.org/libosmocore/plain/include/osmocom/core/gsmtap.h
 
-> >  		drm_printf(m, "[%04zx] %s\n", pos, line);
-> >
-> >  		prev = buf + pos;
-> > diff --git a/include/linux/printk.h b/include/linux/printk.h index
-> > c014e5573665..82975853c400 100644
-> > --- a/include/linux/printk.h
-> > +++ b/include/linux/printk.h
-> > @@ -493,7 +493,7 @@ enum {
-> >
-> >  extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
-> >  			      int groupsize, char *linebuf, size_t
-linebuflen,
-> > -			      bool ascii);
-> > +			      u64 flags);
-> 
-> I wonder how fancy hex_dump could be. IMHO, u32 should be enough.
-> The last famous words ;-)
-> 
-> Best Regards,
-> Petr
-> 
-> 
-> ---
-> This email has been checked for viruses by AVG.
-> https://www.avg.com
+I completely agree that there is no technical reason why one couldn't put GSMTAP
+headers in current (v2) or future formats inside an ETHERTYPE / DLT and have
+them natively appearing in a pcap file of the given DLT.  There would be no objections
+from my side to do so.
 
+One could then simply call the same dissector in wireshark from that DLT or from
+the existing UDP port number based dispatch via the IANA-registered GSMTAP port
+number.
 
+However, among the existing users of GSMTAP in the last decade or so,
+there would be no advantage, as the related sources of GSMTAP frames all
+exist in userspace and are feeding data, particularly from potentially
+multiple sources, which can very well run on different hosts.
+
+But that of course doesn't prevent new users from using different
+transport mechanisms of getting GSMTAP from e.g. the kernel into
+userspace.
+
+Regards,
+	Harald
+-- 
+- Harald Welte <laforge@gnumonks.org>           http://laforge.gnumonks.org/
+============================================================================
+"Privacy in residential applications is a desirable marketing option."
+                                                  (ETSI EN 300 175-7 Ch. A6)
