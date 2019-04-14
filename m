@@ -2,157 +2,108 @@ Return-Path: <SRS0=0lX+=SQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA9C6C282CE
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 779E8C10F13
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:53:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7ED232084E
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:47:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FD732084E
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:53:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IljFZ1vc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726355AbfDNQrI (ORCPT
+        id S1726147AbfDNQx5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 14 Apr 2019 12:47:08 -0400
-Received: from mail-it1-f200.google.com ([209.85.166.200]:39819 "EHLO
-        mail-it1-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726147AbfDNQrH (ORCPT
+        Sun, 14 Apr 2019 12:53:57 -0400
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:40662 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725780AbfDNQx5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Apr 2019 12:47:07 -0400
-Received: by mail-it1-f200.google.com with SMTP id z125so13751602itf.4
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2019 09:47:07 -0700 (PDT)
+        Sun, 14 Apr 2019 12:53:57 -0400
+Received: by mail-lf1-f67.google.com with SMTP id a28so11197188lfo.7
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2019 09:53:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=HG2Fi0GU+Ukb8JudfF2zHbWzqMfgk+eiIYEvopGArLM=;
+        b=IljFZ1vc8Ul/c07Pg9goXG5Sx9lblJ8VPJpalxlEcEUnqutQlaNLmAZNUXZ6uGLal2
+         F1zolVwkrze1BTCNQVrdIxlWZJCusgOBN1Y1jGH7VLzqkx1j6epMT48y9Xz0dfWvOiOW
+         AIGv17xExUxygob6r7QiOxhsoXPaEw6BTlAd/ACQ7UwmeM7CGRPJCE3E7qPTbdMnRqqn
+         KSvNDwedhNg2UdML/nJHz+BLCPLMabwOdC89lvkI7gxt63+HmxmTPSlUs3e7iFH/Eerc
+         fZIq2hrF7XS/CaNpnA6Li7dVMdoyy2A1wi5fHYCBbID80pHcgZ1Hc5AfRefE+KNqKTeq
+         GW8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=6QO5eg3i+vTilSvnK5Arp3jjxdI//KJSDlwl+1vqiJk=;
-        b=eYKfpU5FHuqN2B1mj33PT4k5BHKx+huY2vW3u2lXnF4uFyzGxsNtnZCyYPeshWDV8D
-         1thXVDVIX6FqYheUsg3Ah5/3Zw7ALPAa+DFyrsHc10DM5kj4BEp7iOV+JfuGujzvDVGJ
-         KIjEbSX3qAi7KkpryCXQxohJR66wZ2EO8tGU0vlbHle1WwF+swyVslvUALUhbujAry0c
-         0XIR8zKoKD9dFF9FimPmiBZap7c+OqZKiTL5nJUJMJ3kgbKOyljoxLEj4IO2gwnJXv6g
-         uXR0HgezB+eoZhdu0pD+9n3Ps1U1qixh0m77NohNLkJZZQ614vWCZhdG88wEvzBCtTuu
-         kWYw==
-X-Gm-Message-State: APjAAAULwPWeJJnd2IUxgSCOR9fhSv2YBRs/yHpcmWKZuE9xaBTgus/n
-        QnmC4QJbYluM+KyXHQyvt6H0lyo9252OYEDjk3NTj5by2HXO
-X-Google-Smtp-Source: APXvYqyi8OcMTlBwCdEYVuMQ/PkSj0uND0qTu0ZTBhvG2T0hobY6JTrGiI7Yjki1ZSQ2LyubhsT1pZn+Mi6h9UjWO0gq4YjyMpnr
+        bh=HG2Fi0GU+Ukb8JudfF2zHbWzqMfgk+eiIYEvopGArLM=;
+        b=Dn/ydQOEkD6jOsbBzTUAZOLOnljNl61yBYZZqtxgG//Mu+2earOIwGOr1deONBb5U7
+         7rNMWDi2NQ7Exko7H/RU4/7r95BOuAYb/Ao4ojIDlEfVp6a0fLi0HTcnWcJKQk7oFTq8
+         qcA+B2VvoxyanL3qI3tsSJzOmlkl7+pafjySHV/qFMZBFXosPTBaoFIyu+S5GPe3UKkr
+         g3vh8ofk6pj5T2iWxPrQfcGVDqYA4FgAEarYkbenZCVIp+SvUZsiHanfaRw5MZJTGDip
+         dCGR/kR0X6HLqSC+rMr9UMQptnVYX2q8T58GHhz7EpLO7oGzd2kVg6Fmk1Uitcr5oxbY
+         i+uQ==
+X-Gm-Message-State: APjAAAVQRcTMAocTVGXTxhImdX6IJxQHn+u+W9b33ALqD/j2gTAbU5xA
+        goy17IXWGW76R+ghA7w0GkjByyma
+X-Google-Smtp-Source: APXvYqzkMBx2AKno58FwnlYZ0tMEKOkxUBeakG1i3jCiu+cV14/BQxk1OYZP89xCOinPG/pbKgOWTA==
+X-Received: by 2002:a05:6512:c8:: with SMTP id c8mr18884295lfp.138.1555260835166;
+        Sun, 14 Apr 2019 09:53:55 -0700 (PDT)
+Received: from [192.168.1.244] (81-233-89-221-no75.tbcn.telia.com. [81.233.89.221])
+        by smtp.gmail.com with ESMTPSA id g6sm9537304lja.64.2019.04.14.09.53.53
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Sun, 14 Apr 2019 09:53:54 -0700 (PDT)
+Subject: Re: [PATCH 0/6] ath10k: SDIO and high latency patches from Silex
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+References: <20190409190851.4557-1-erik.stromdahl@gmail.com>
+ <87pnprflj4.fsf@kamboji.qca.qualcomm.com>
+From:   Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <7b74fac8-2f9e-12c8-bf83-8403aca55d06@gmail.com>
+Date:   Sun, 14 Apr 2019 18:53:53 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-X-Received: by 2002:a24:1a41:: with SMTP id 62mr5529283iti.33.1555260426734;
- Sun, 14 Apr 2019 09:47:06 -0700 (PDT)
-Date:   Sun, 14 Apr 2019 09:47:06 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000044d2540586804913@google.com>
-Subject: general protection fault in ieee80211_debugfs_rename_netdev
-From:   syzbot <syzbot+4ece1a28b8f4730547c9@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, johannes@sipsolutions.net,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
-Content-Transfer-Encoding: base64
+In-Reply-To: <87pnprflj4.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SGVsbG8sDQoNCnN5emJvdCBmb3VuZCB0aGUgZm9sbG93aW5nIGNyYXNoIG9uOg0KDQpIRUFEIGNv
-bW1pdDogICAgZWQwZGU0NWEgaXB2NDogcmVjb21waWxlIGlwIG9wdGlvbnMgaW4gaXB2NF9saW5r
-X2ZhaWx1cmUNCmdpdCB0cmVlOiAgICAgICBuZXQNCmNvbnNvbGUgb3V0cHV0OiBodHRwczovL3N5
-emthbGxlci5hcHBzcG90LmNvbS94L2xvZy50eHQ/eD0xNDQ5NWZjMzIwMDAwMA0Ka2VybmVsIGNv
-bmZpZzogIGh0dHBzOi8vc3l6a2FsbGVyLmFwcHNwb3QuY29tL3gvLmNvbmZpZz94PTRmYjY0NDM5
-ZTA3YTFlYzANCmRhc2hib2FyZCBsaW5rOiBodHRwczovL3N5emthbGxlci5hcHBzcG90LmNvbS9i
-dWc/ZXh0aWQ9NGVjZTFhMjhiOGY0NzMwNTQ3YzkNCmNvbXBpbGVyOiAgICAgICBnY2MgKEdDQykg
-OS4wLjAgMjAxODEyMzEgKGV4cGVyaW1lbnRhbCkNCg0KVW5mb3J0dW5hdGVseSwgSSBkb24ndCBo
-YXZlIGFueSByZXByb2R1Y2VyIGZvciB0aGlzIGNyYXNoIHlldC4NCg0KSU1QT1JUQU5UOiBpZiB5
-b3UgZml4IHRoZSBidWcsIHBsZWFzZSBhZGQgdGhlIGZvbGxvd2luZyB0YWcgdG8gdGhlIGNvbW1p
-dDoNClJlcG9ydGVkLWJ5OiBzeXpib3QrNGVjZTFhMjhiOGY0NzMwNTQ3YzlAc3l6a2FsbGVyLmFw
-cHNwb3RtYWlsLmNvbQ0KDQpuZXRsaW5rOiA5IGJ5dGVzIGxlZnRvdmVyIGFmdGVyIHBhcnNpbmcg
-YXR0cmlidXRlcyBpbiBwcm9jZXNzICANCmBzeXotZXhlY3V0b3IuNScuDQptYWM4MDIxMV9od3Np
-bSBod3NpbTE3IDAt77+9OiByZW5hbWVkIGZyb20gd2xhbjANCmthc2FuOiBDT05GSUdfS0FTQU5f
-SU5MSU5FIGVuYWJsZWQNCmthc2FuOiBHUEYgY291bGQgYmUgY2F1c2VkIGJ5IE5VTEwtcHRyIGRl
-cmVmIG9yIHVzZXIgbWVtb3J5IGFjY2Vzcw0KZ2VuZXJhbCBwcm90ZWN0aW9uIGZhdWx0OiAwMDAw
-IFsjMV0gUFJFRU1QVCBTTVAgS0FTQU4NCkNQVTogMSBQSUQ6IDE3MjI4IENvbW06IHN5ei1leGVj
-dXRvci41IE5vdCB0YWludGVkIDUuMS4wLXJjNCsgIzE2NQ0KSGFyZHdhcmUgbmFtZTogR29vZ2xl
-IEdvb2dsZSBDb21wdXRlIEVuZ2luZS9Hb29nbGUgQ29tcHV0ZSBFbmdpbmUsIEJJT1MgIA0KR29v
-Z2xlIDAxLzAxLzIwMTENClJJUDogMDAxMDppZWVlODAyMTFfZGVidWdmc19yZW5hbWVfbmV0ZGV2
-KzB4ZDEvMHgxNGQgIA0KbmV0L21hYzgwMjExL2RlYnVnZnNfbmV0ZGV2LmM6ODQ4DQpDb2RlOiAw
-NSAwMCAwMCA0OCBjNyBjNiAwMCA5MiAxMyA4OCA0YyA4OSBmYSA0YyA4OSBmNyBlOCAyNCA0MyA0
-NSAwMCA0OSA4ZCAgDQo3ZCA0MCA0OCBiOCAwMCAwMCAwMCAwMCAwMCBmYyBmZiBkZiA0OCA4OSBm
-YSA0OCBjMSBlYSAwMyA8ODA+IDNjIDAyIDAwIDc1ICANCjZmIDQ5IDhiIDdkIDQwIDRjIDg5IGYx
-IDRjIDg5IGVlIDQ4IDg5IGZhIGU4IDI3IGVlDQpSU1A6IDAwMTg6ZmZmZjg4ODA2NjAxZWRkMCBF
-RkxBR1M6IDAwMDEwMjA3DQpSQVg6IGRmZmZmYzAwMDAwMDAwMDAgUkJYOiBmZmZmODg4MDk5MTE5
-YWMwIFJDWDogMWZmZmYxMTAwY2MwM2Q4Yw0KUkRYOiAwMDAwMDAwMDAwMDAwMDA1IFJTSTogMDAw
-MDAwMDAwMDAwMDAwMCBSREk6IDAwMDAwMDAwMDAwMDAwMmYNClJCUDogZmZmZjg4ODA2NjAxZWU3
-MCBSMDg6IGZmZmY4ODgwNmViZjg0MDAgUjA5OiBmZmZmZWQxMDBjYzAzZGJmDQpSMTA6IGZmZmZl
-ZDEwMGNjMDNkYmUgUjExOiBmZmZmODg4MDY2MDFlZGY2IFIxMjogMWZmZmYxMTAwY2MwM2RiYQ0K
-UjEzOiBmZmZmZmZmZmZmZmZmZmVmIFIxNDogZmZmZjg4ODA2NjAxZWRmMCBSMTU6IGZmZmY4ODgw
-OTkxMWFiMTANCkZTOiAgMDAwMDdmNGMxMDRiMjcwMCgwMDAwKSBHUzpmZmZmODg4MGFlOTAwMDAw
-KDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANCkNTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAw
-MCBDUjA6IDAwMDAwMDAwODAwNTAwMzMNCkNSMjogMDAwMDAwMWIzMGMyNjAwMCBDUjM6IDAwMDAw
-MDAwYTYwMDYwMDAgQ1I0OiAwMDAwMDAwMDAwMTQwNmUwDQpEUjA6IDAwMDAwMDAwMDAwMDAwMDAg
-RFIxOiAwMDAwMDAwMDAwMDAwMDAwIERSMjogMDAwMDAwMDAwMDAwMDAwMA0KRFIzOiAwMDAwMDAw
-MDAwMDAwMDAwIERSNjogMDAwMDAwMDBmZmZlMGZmMCBEUjc6IDAwMDAwMDAwMDAwMDA0MDANCkNh
-bGwgVHJhY2U6DQogIG5ldGRldl9ub3RpZnkrMHgxZjkvMHgyNjAgbmV0L21hYzgwMjExL2lmYWNl
-LmM6MTk5MQ0KICBub3RpZmllcl9jYWxsX2NoYWluKzB4YzcvMHgyNDAga2VybmVsL25vdGlmaWVy
-LmM6OTMNCiAgX19yYXdfbm90aWZpZXJfY2FsbF9jaGFpbiBrZXJuZWwvbm90aWZpZXIuYzozOTQg
-W2lubGluZV0NCiAgcmF3X25vdGlmaWVyX2NhbGxfY2hhaW4rMHgyZS8weDQwIGtlcm5lbC9ub3Rp
-Zmllci5jOjQwMQ0KICBjYWxsX25ldGRldmljZV9ub3RpZmllcnNfaW5mbysweDNmLzB4OTAgbmV0
-L2NvcmUvZGV2LmM6MTc1Mw0KICBjYWxsX25ldGRldmljZV9ub3RpZmllcnNfZXh0YWNrIG5ldC9j
-b3JlL2Rldi5jOjE3NjUgW2lubGluZV0NCiAgY2FsbF9uZXRkZXZpY2Vfbm90aWZpZXJzIG5ldC9j
-b3JlL2Rldi5jOjE3NzkgW2lubGluZV0NCiAgZGV2X2NoYW5nZV9uYW1lKzB4NWNjLzB4YTcwIG5l
-dC9jb3JlL2Rldi5jOjEyNDgNCiAgZG9fc2V0bGluaysweDJhNTEvMHgzNTEwIG5ldC9jb3JlL3J0
-bmV0bGluay5jOjI0NjYNCiAgcnRubF9zZXRsaW5rKzB4MjcxLzB4M2IwIG5ldC9jb3JlL3J0bmV0
-bGluay5jOjI3NDcNCiAgcnRuZXRsaW5rX3Jjdl9tc2crMHg0NjUvMHhiMDAgbmV0L2NvcmUvcnRu
-ZXRsaW5rLmM6NTE5Mg0KICBuZXRsaW5rX3Jjdl9za2IrMHgxN2EvMHg0NjAgbmV0L25ldGxpbmsv
-YWZfbmV0bGluay5jOjI0ODYNCiAgcnRuZXRsaW5rX3JjdisweDFkLzB4MzAgbmV0L2NvcmUvcnRu
-ZXRsaW5rLmM6NTIxMA0KICBuZXRsaW5rX3VuaWNhc3Rfa2VybmVsIG5ldC9uZXRsaW5rL2FmX25l
-dGxpbmsuYzoxMzExIFtpbmxpbmVdDQogIG5ldGxpbmtfdW5pY2FzdCsweDUzNi8weDcyMCBuZXQv
-bmV0bGluay9hZl9uZXRsaW5rLmM6MTMzNw0KICBuZXRsaW5rX3NlbmRtc2crMHg4YWUvMHhkNzAg
-bmV0L25ldGxpbmsvYWZfbmV0bGluay5jOjE5MjYNCiAgc29ja19zZW5kbXNnX25vc2VjIG5ldC9z
-b2NrZXQuYzo2NTEgW2lubGluZV0NCiAgc29ja19zZW5kbXNnKzB4ZGQvMHgxMzAgbmV0L3NvY2tl
-dC5jOjY2MQ0KICBzb2NrX3dyaXRlX2l0ZXIrMHgyN2MvMHgzZTAgbmV0L3NvY2tldC5jOjk4OA0K
-ICBjYWxsX3dyaXRlX2l0ZXIgaW5jbHVkZS9saW51eC9mcy5oOjE4NjYgW2lubGluZV0NCiAgZG9f
-aXRlcl9yZWFkdl93cml0ZXYrMHg1ZTEvMHg4ZTAgZnMvcmVhZF93cml0ZS5jOjY4MQ0KICBkb19p
-dGVyX3dyaXRlIGZzL3JlYWRfd3JpdGUuYzo5NTcgW2lubGluZV0NCiAgZG9faXRlcl93cml0ZSsw
-eDE4NC8weDYxMCBmcy9yZWFkX3dyaXRlLmM6OTM4DQogIHZmc193cml0ZXYrMHgxYjMvMHgyZjAg
-ZnMvcmVhZF93cml0ZS5jOjEwMDINCiAgZG9fd3JpdGV2KzB4MTVlLzB4MzcwIGZzL3JlYWRfd3Jp
-dGUuYzoxMDM3DQogIF9fZG9fc3lzX3dyaXRldiBmcy9yZWFkX3dyaXRlLmM6MTExMCBbaW5saW5l
-XQ0KICBfX3NlX3N5c193cml0ZXYgZnMvcmVhZF93cml0ZS5jOjExMDcgW2lubGluZV0NCiAgX194
-NjRfc3lzX3dyaXRldisweDc1LzB4YjAgZnMvcmVhZF93cml0ZS5jOjExMDcNCiAgZG9fc3lzY2Fs
-bF82NCsweDEwMy8weDYxMCBhcmNoL3g4Ni9lbnRyeS9jb21tb24uYzoyOTANCiAgZW50cnlfU1lT
-Q0FMTF82NF9hZnRlcl9od2ZyYW1lKzB4NDkvMHhiZQ0KUklQOiAwMDMzOjB4NDU4YzI5DQpDb2Rl
-OiBhZCBiOCBmYiBmZiBjMyA2NiAyZSAwZiAxZiA4NCAwMCAwMCAwMCAwMCAwMCA2NiA5MCA0OCA4
-OSBmOCA0OCA4OSBmNyAgDQo0OCA4OSBkNiA0OCA4OSBjYSA0ZCA4OSBjMiA0ZCA4OSBjOCA0YyA4
-YiA0YyAyNCAwOCAwZiAwNSA8NDg+IDNkIDAxIGYwIGZmICANCmZmIDBmIDgzIDdiIGI4IGZiIGZm
-IGMzIDY2IDJlIDBmIDFmIDg0IDAwIDAwIDAwIDAwDQpSU1A6IDAwMmI6MDAwMDdmNGMxMDRiMWM3
-OCBFRkxBR1M6IDAwMDAwMjQ2IE9SSUdfUkFYOiAwMDAwMDAwMDAwMDAwMDE0DQpSQVg6IGZmZmZm
-ZmZmZmZmZmZmZGEgUkJYOiAwMDAwMDAwMDAwMDAwMDAzIFJDWDogMDAwMDAwMDAwMDQ1OGMyOQ0K
-UkRYOiAwMDAwMDAwMDAwMDAwMDAxIFJTSTogMDAwMDAwMDAyMDAwMDM0MCBSREk6IDAwMDAwMDAw
-MDAwMDAwMDMNClJCUDogMDAwMDAwMDAwMDczYmYwMCBSMDg6IDAwMDAwMDAwMDAwMDAwMDAgUjA5
-OiAwMDAwMDAwMDAwMDAwMDAwDQpSMTA6IDAwMDAwMDAwMDAwMDAwMDAgUjExOiAwMDAwMDAwMDAw
-MDAwMjQ2IFIxMjogMDAwMDdmNGMxMDRiMjZkNA0KUjEzOiAwMDAwMDAwMDAwNGM1OTk2IFIxNDog
-MDAwMDAwMDAwMDRkZjBlMCBSMTU6IDAwMDAwMDAwZmZmZmZmZmYNCk1vZHVsZXMgbGlua2VkIGlu
-Og0KLS0tWyBlbmQgdHJhY2UgM2Q5ZjNlYmI4Mjg1NTU4MiBdLS0tDQpSSVA6IDAwMTA6aWVlZTgw
-MjExX2RlYnVnZnNfcmVuYW1lX25ldGRldisweGQxLzB4MTRkICANCm5ldC9tYWM4MDIxMS9kZWJ1
-Z2ZzX25ldGRldi5jOjg0OA0KQ29kZTogMDUgMDAgMDAgNDggYzcgYzYgMDAgOTIgMTMgODggNGMg
-ODkgZmEgNGMgODkgZjcgZTggMjQgNDMgNDUgMDAgNDkgOGQgIA0KN2QgNDAgNDggYjggMDAgMDAg
-MDAgMDAgMDAgZmMgZmYgZGYgNDggODkgZmEgNDggYzEgZWEgMDMgPDgwPiAzYyAwMiAwMCA3NSAg
-DQo2ZiA0OSA4YiA3ZCA0MCA0YyA4OSBmMSA0YyA4OSBlZSA0OCA4OSBmYSBlOCAyNyBlZQ0KUlNQ
-OiAwMDE4OmZmZmY4ODgwNjYwMWVkZDAgRUZMQUdTOiAwMDAxMDIwNw0KUkFYOiBkZmZmZmMwMDAw
-MDAwMDAwIFJCWDogZmZmZjg4ODA5OTExOWFjMCBSQ1g6IDFmZmZmMTEwMGNjMDNkOGMNClJEWDog
-MDAwMDAwMDAwMDAwMDAwNSBSU0k6IDAwMDAwMDAwMDAwMDAwMDAgUkRJOiAwMDAwMDAwMDAwMDAw
-MDJmDQpSQlA6IGZmZmY4ODgwNjYwMWVlNzAgUjA4OiBmZmZmODg4MDZlYmY4NDAwIFIwOTogZmZm
-ZmVkMTAwY2MwM2RiZg0KUjEwOiBmZmZmZWQxMDBjYzAzZGJlIFIxMTogZmZmZjg4ODA2NjAxZWRm
-NiBSMTI6IDFmZmZmMTEwMGNjMDNkYmENClIxMzogZmZmZmZmZmZmZmZmZmZlZiBSMTQ6IGZmZmY4
-ODgwNjYwMWVkZjAgUjE1OiBmZmZmODg4MDk5MTFhYjEwDQpGUzogIDAwMDA3ZjRjMTA0YjI3MDAo
-MDAwMCkgR1M6ZmZmZjg4ODBhZTkwMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwDQpD
-UzogIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzDQpDUjI6IDAw
-MDAwMDAwMDA0ZTY0NjAgQ1IzOiAwMDAwMDAwMGE2MDA2MDAwIENSNDogMDAwMDAwMDAwMDE0MDZl
-MA0KRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6IDAwMDAw
-MDAwMDAwMDAwMDANCkRSMzogMDAwMDAwMDAwMDAwMDAwMCBEUjY6IDAwMDAwMDAwZmZmZTBmZjAg
-RFI3OiAwMDAwMDAwMDAwMDAwNDAwDQoNCg0KLS0tDQpUaGlzIGJ1ZyBpcyBnZW5lcmF0ZWQgYnkg
-YSBib3QuIEl0IG1heSBjb250YWluIGVycm9ycy4NClNlZSBodHRwczovL2dvby5nbC90cHNtRUog
-Zm9yIG1vcmUgaW5mb3JtYXRpb24gYWJvdXQgc3l6Ym90Lg0Kc3l6Ym90IGVuZ2luZWVycyBjYW4g
-YmUgcmVhY2hlZCBhdCBzeXprYWxsZXJAZ29vZ2xlZ3JvdXBzLmNvbS4NCg0Kc3l6Ym90IHdpbGwg
-a2VlcCB0cmFjayBvZiB0aGlzIGJ1ZyByZXBvcnQuIFNlZToNCmh0dHBzOi8vZ29vLmdsL3Rwc21F
-SiNzdGF0dXMgZm9yIGhvdyB0byBjb21tdW5pY2F0ZSB3aXRoIHN5emJvdC4NCg==
+
+
+On 4/12/19 2:36 PM, Kalle Valo wrote:
+> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+> 
+>> This series adds a few more fixes for SDIO and high latency devices.
+>>
+>> I have had these on my private tree for quite some time now so they
+>> should be considered fairly well tested.
+>>
+>> 4 out of 6 patches are from Alagu Sankar at Silex.
+>> I have made some adjustments to some of them in order to make them
+>> smaller and easier to review.
+>>
+>> Alagu Sankar (4):
+>>    ath10k: use clean packet headers
+>>    ath10k: high latency fixes for beacon buffer
+>>    ath10k: sdio: read RX packets in bundles
+>>    ath10k: sdio: add MSDU ID allocation in HTT TX path
+>>
+>> Erik Stromdahl (2):
+>>    ath10k: sdio: add missing error check
+>>    ath10k: sdio: replace skb_trim with explicit set of skb->len
+> 
+> Bad timing as also me and Wen have been cleaning up these patches and
+> finalising the SDIO support so our work overlapped. I'll send our
+> version of patches soon and we can then compare.
+> 
+Ok, I will rework these patches and apply them on top of yours and Wen's.
+I'll send a v2 set later.
