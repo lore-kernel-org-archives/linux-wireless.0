@@ -1,123 +1,112 @@
-Return-Path: <SRS0=M/jX=SP=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=0lX+=SQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8651FC282CE
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Apr 2019 19:28:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95BA3C282CE
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 09:44:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 562782084D
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Apr 2019 19:28:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E829218D3
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 09:44:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LyfPZikj"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="IdFVNxsX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727190AbfDMT1y (ORCPT
+        id S1726159AbfDNJoW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 13 Apr 2019 15:27:54 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:38016 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726922AbfDMT1y (ORCPT
+        Sun, 14 Apr 2019 05:44:22 -0400
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:43578 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725797AbfDNJoV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Apr 2019 15:27:54 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3DJK93X011689;
-        Sat, 13 Apr 2019 19:27:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=4SLUZEGuXWiirW6qhrP/P50mnCtGoDoQsaieJXYSPjc=;
- b=LyfPZikjcwKDoHv9AFXNa2aMhbtaEhB6b+31jZ4Bgv3ZfNJ8TUeCFLwUBUlBAJTrRfR0
- 1ZF2HVLtxkkjMJkFTToT79KMyRIcAxLNoVngMHF7UfGjE8ljA2MDY4TmxvXnh9pp/aRV
- eqO+GGUb4ZOiymLVcd8tzNJjrxQRmkhpMWbOOhrWirXl5lZ74Kxg0QQXmk6URSjj9QPh
- s9psun/5l7dgCIM182onxqZHokV3Vf9LStwtWFPufy23+yToGYDQV6HR0IjiG6K+NF6A
- FiXsHd/RnWfH0qyCA3UCs5Oci15pA6J0v3R6TxGegk1y4j8e4aod41vRTICITJujxMNe SQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 2ru59cstcj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 13 Apr 2019 19:27:42 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3DJQoUi184663;
-        Sat, 13 Apr 2019 19:27:41 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2ru4vryx5q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 13 Apr 2019 19:27:41 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3DJRdtM027579;
-        Sat, 13 Apr 2019 19:27:40 GMT
-Received: from kadam (/197.157.34.181)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 13 Apr 2019 12:27:39 -0700
-Date:   Sat, 13 Apr 2019 22:27:29 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Colin King <colin.king@canonical.com>
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mwifiex: check for null return from skb_copy
-Message-ID: <20190413192729.GL6095@kadam>
-References: <20190413161438.6376-1-colin.king@canonical.com>
+        Sun, 14 Apr 2019 05:44:21 -0400
+Received: by mail-ed1-f68.google.com with SMTP id j20so1791410edq.10
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2019 02:44:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=IiSsptnnyZ9bqezfXcL3CGfC0PcZy8wJum/lZcgYTXw=;
+        b=IdFVNxsX/tQ4KaEemI35DCjxv2Q1qOExoNVW7hNo9WU9ATPqJ0hAEAHVFB22xhD4NW
+         0QOHRArpsyKZP5RB0NzZTs/VRVpQ1KKS93UuQj7NvBFZyxP0+mG5klgh0ZT+ebgTmY0Z
+         fXO2NuXqusJzrnWY9K0nMmZgPC3tVK0DKUDWg=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=IiSsptnnyZ9bqezfXcL3CGfC0PcZy8wJum/lZcgYTXw=;
+        b=Ps4lAIo6Q21//g1KMj6L7haD/aMn5Ro6ecH+ZPrWi2U5ohWYPKGn8OXYyKgZOjSf37
+         NYc5HJmKru0OhDN2+lerl8TVo/U2koazqVtZ6s/2gICYKgut/SOC82ktXTENb29gJJd5
+         DOhVg23r3k6i3qXx1F2BPyhe82NvuCEjGdO/cgiGPXbXcJKaZz3cVjGf6UckM7woMSiB
+         gdjP/Mm60QP+E5okOFqw5AA9cE4uVyLiMOebn4Z+4wZcLLo2YYU8QJ/86Hq9D3aB1Ks2
+         m7E8rf3SnZwUpWSbr2V8tJ+dBIUg8v1oghyNhvKa6pTVBYf8lYonaL3VNxbSwLQjSxng
+         F4GA==
+X-Gm-Message-State: APjAAAVSjHfGQY1HkOaMTsOUTfaQEWjDeZqxU4KYlGCv/yWf7oS5DJKt
+        SvmwgnAFyoNHtRqw+bnl2AbjFQ==
+X-Google-Smtp-Source: APXvYqy52Guyko5P39KimqDRqQ3I/nOrJ//PqPEb4+vK/eMuxWOwCiCERuCS6aRgL4gwBYxck5e/bQ==
+X-Received: by 2002:a50:ac76:: with SMTP id w51mr3442677edc.13.1555235059597;
+        Sun, 14 Apr 2019 02:44:19 -0700 (PDT)
+Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
+        by smtp.gmail.com with ESMTPSA id a25sm5381685edr.94.2019.04.14.02.44.17
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 14 Apr 2019 02:44:18 -0700 (PDT)
+Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate tx
+ queues
+To:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net, Herbert Xu <herbert@gondor.apana.org.au>
+References: <20190316170634.13125-1-nbd@nbd.name>
+ <20190316170634.13125-5-nbd@nbd.name> <87sgvmvg9g.fsf@toke.dk>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <773e4dff-29fd-22b4-e4bc-cd5a94c66dc2@broadcom.com>
+Date:   Sun, 14 Apr 2019 11:44:17 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190413161438.6376-1-colin.king@canonical.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9226 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1904130137
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9226 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1904130137
+In-Reply-To: <87sgvmvg9g.fsf@toke.dk>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Apr 13, 2019 at 05:14:38PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> It is possible for skb_copy to return a null pointer and currently
-> this will cause a null pointer dereference when the function
-> mwifiex_uap_queue_bridged_pkt is called.  Fix this by checking for
-> a null return from skb_copy and return -ENOMEM.
-> 
-> Addresses-Coverity: ("Dereference null return")
-> Fixes: 838e4f449297 ("mwifiex: improve uAP RX handling")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> index 5ce85d5727e4..b262dc78d638 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> @@ -256,6 +256,8 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
->  
->  	if (is_multicast_ether_addr(ra)) {
->  		skb_uap = skb_copy(skb, GFP_ATOMIC);
-> +		if (!skb_uap)
-> +			return -ENOMEM;
++ Herbert
 
-I think we would want to free dev_kfree_skb_any(skb) before returning.
+On 3/16/2019 7:14 PM, Toke Høiland-Jørgensen wrote:
+> Felix Fietkau <nbd@nbd.name> writes:
+> 
+>> When using iTXQ, tx sequence number allocation and statistics are run at
+>> dequeue time. Because of that, it is safe to enable NETIF_F_LLTX, which
+>> allows tx handlers to run on multiple CPUs in parallel.
+> 
+> Cool, didn't know about that flag.
 
->  		mwifiex_uap_queue_bridged_pkt(priv, skb_uap);
->  	} else {
->  		if (mwifiex_get_sta_entry(priv, ra)) {
+It is water under the bridge as this patch got applied already, but I 
+stumbled upon it just recently and didn't know about that flag either. 
+So I looked for more information about it and found the definition [1], 
+but the comment seemed important enough to send this reply.
 
-regards,
-dan carpenter
+	NETIF_F_LLTX_BIT,	/* LockLess TX - deprecated. Please */
+				/* do not use LLTX in new drivers */
+
+Here is the commit that marked it deprecated:
+
+commit e24eb521fbf2a350ce879dfc1d8e56d4ffa2aa22
+Author: Christian Borntraeger <borntraeger@de.ibm.com>
+Date:   Tue Sep 25 19:42:02 2007 -0700
+
+     [NET]: note that NETIF_F_LLTX is deprecated
+
+So I am not sure we should really do this in mac80211. Maybe Herbert can 
+comment although it has been over a decade ago.
+
+Regards,
+Arend
+
+[1] 
+https://elixir.bootlin.com/linux/latest/source/include/linux/netdev_features.h#L32
