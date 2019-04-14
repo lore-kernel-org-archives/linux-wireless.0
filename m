@@ -2,131 +2,178 @@ Return-Path: <SRS0=0lX+=SQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B75E9C10F13
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 12:34:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2477FC10F13
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:13:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A07520896
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 12:34:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2FEB20850
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:13:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NqJZHUWa"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="B+FAkq4h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726147AbfDNMed (ORCPT
+        id S1726642AbfDNQNL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 14 Apr 2019 08:34:33 -0400
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:43324 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725829AbfDNMed (ORCPT
+        Sun, 14 Apr 2019 12:13:11 -0400
+Received: from 3.mo5.mail-out.ovh.net ([46.105.40.108]:43120 "EHLO
+        3.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725829AbfDNQNL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Apr 2019 08:34:33 -0400
-Received: by mail-ed1-f67.google.com with SMTP id j20so1981906edq.10
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2019 05:34:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:date:message-id:in-reply-to:references:user-agent
-         :subject:mime-version:content-transfer-encoding;
-        bh=ssR9jfJ65XhL5ubEbZo6YD0Z+YAnDW1BLqYamICXvNI=;
-        b=NqJZHUWacIW8vrm1cf6dJj8kJMHQGawJi/0M8QZdX75QnmaejRtVsvweP+yJkc74ko
-         iq9NTPWD4NJy+JSNHWI0Nul3mUWSTO0LdbBrs15gHJ/uHr6TrZD1licYDk8vO5nJ3Xy9
-         Ww/Pa4yos/IYQ0fDNFj5KDGRnq2A5ZrlP157s=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:date:message-id:in-reply-to
-         :references:user-agent:subject:mime-version
-         :content-transfer-encoding;
-        bh=ssR9jfJ65XhL5ubEbZo6YD0Z+YAnDW1BLqYamICXvNI=;
-        b=BVkWVxTkWPDmw7L8OT+KMv98f3Xe/B1EKwahnsHkU6Dm2hRitlzZgkU4/lr7CU2KIH
-         lfo13M8mxS5N4AJ25HVJRbRWj32fA2xnpgABf7NG1LCx7IZ3Ob0FtMgZI+2vRF9Ziq4+
-         qfdURGG80m6VSgkoGriRJvhUYa1WSrBavs6ECJVAWabeDSO/2hpSVz8U4abRmZYo1GYi
-         JzqBggxw31c1U3B554Y96pSTKoteVbjn6wEhAVXsPhw0AA02EjGKN/ICNSYRFSlhxZUA
-         wtRPwK/AKpXC7O+YL9utmyuinLglfIGb1QEuspq2XNJin/Mv25U0txCW4Y+a3F0Pcdwr
-         bLgA==
-X-Gm-Message-State: APjAAAXiX5i2RSTPKV+XZf25BImy3K8C2CKWtVTCQAnGpzyr8IAL7DEk
-        11twVi1/AvCE9Kv2419wgBLV2A==
-X-Google-Smtp-Source: APXvYqyxkGpetPwQ3Raoby85q3p8Z91obFGgyW0XODaXZNpLv7RGpUlt8IuYSHyIODzxu3T8X0w6cg==
-X-Received: by 2002:a05:6402:1494:: with SMTP id e20mr25403237edv.22.1555245271589;
-        Sun, 14 Apr 2019 05:34:31 -0700 (PDT)
-Received: from [192.168.178.17] (f140230.upc-f.chello.nl. [80.56.140.230])
-        by smtp.gmail.com with ESMTPSA id r23sm7561641eja.71.2019.04.14.05.34.29
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sun, 14 Apr 2019 05:34:30 -0700 (PDT)
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@redhat.com>,
-        <linux-wireless@vger.kernel.org>
-CC:     <johannes@sipsolutions.net>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Date:   Sun, 14 Apr 2019 14:34:28 +0200
-Message-ID: <16a1bd77c20.2764.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <e912d736-a3ad-1e21-0cdd-6a065df96fbb@nbd.name>
-References: <20190316170634.13125-1-nbd@nbd.name>
- <20190316170634.13125-5-nbd@nbd.name>
- <87sgvmvg9g.fsf@toke.dk>
- <773e4dff-29fd-22b4-e4bc-cd5a94c66dc2@broadcom.com>
- <e912d736-a3ad-1e21-0cdd-6a065df96fbb@nbd.name>
-User-Agent: AquaMail/1.19.0-1434 (build: 101900002)
-Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate tx queues
+        Sun, 14 Apr 2019 12:13:11 -0400
+Received: from player714.ha.ovh.net (unknown [10.109.159.20])
+        by mo5.mail-out.ovh.net (Postfix) with ESMTP id A25C82284D4
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2019 18:13:05 +0200 (CEST)
+Received: from awhome.eu (p57B7E5B2.dip0.t-ipconnect.de [87.183.229.178])
+        (Authenticated sender: postmaster@awhome.eu)
+        by player714.ha.ovh.net (Postfix) with ESMTPSA id 0C9B94AD9108;
+        Sun, 14 Apr 2019 16:13:03 +0000 (UTC)
+Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+        s=wetzel-home; t=1555258382;
+        bh=nimeynsG8khe1Hw6ta/LBc0PpnZvRDeok8x/Y/xqGH4=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To;
+        b=B+FAkq4hjffGhxs1NgBVDZVjkFXdj0vtBbtmnh4yLpkWd15uHSHx81UvUx96vEypQ
+         CQb2YPSUid0T1Ge65xtrbNF5GICc8aZzU6VZzf5anZ0D3owNjbYZ55uAEserSu11+w
+         OmsMXivdKNkhOCBBvDL4GZJZMMRnmkx7FHGj8QLs=
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+ <20190210210620.31181-8-alexander@wetzel-home.de>
+ <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
+ <e84c30de-28d6-7d1b-0fa3-d1ca466e257b@wetzel-home.de>
+ <69e6577f90d99289acaa9853fe236e6f15f9e774.camel@sipsolutions.net>
+ <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
+ <ed6e95dad39ef0ac98c62e3acd3f78fd7b3a6d2b.camel@sipsolutions.net>
+ <185ea9a2-f3c6-04a5-000b-44191da5a0ee@wetzel-home.de>
+ <0de9d60ffef574b34e9a76ad2cea68fab49aac0f.camel@sipsolutions.net>
+From:   Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <45ae97d6-3357-64ac-0a40-9ae3ea4a8ed2@wetzel-home.de>
+Date:   Sun, 14 Apr 2019 18:12:58 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <0de9d60ffef574b34e9a76ad2cea68fab49aac0f.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Ovh-Tracer-Id: 6634083728261455047
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduuddrvdejgddutdduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On April 14, 2019 1:19:49 PM Felix Fietkau <nbd@nbd.name> wrote:
+> I'll take a look, but a trace-cmd recording would be more interesting
+> than the monitor interface, as it also tells us when what key was
+> installed etc.
 
-> On 2019-04-14 11:44, Arend Van Spriel wrote:
->> + Herbert
->> 
->> On 3/16/2019 7:14 PM, Toke Høiland-Jørgensen wrote:
->>> Felix Fietkau <nbd@nbd.name> writes:
->>> 
->>>> When using iTXQ, tx sequence number allocation and statistics are run at
->>>> dequeue time. Because of that, it is safe to enable NETIF_F_LLTX, which
->>>> allows tx handlers to run on multiple CPUs in parallel.
->>> 
->>> Cool, didn't know about that flag.
->> 
->> It is water under the bridge as this patch got applied already, but I
->> stumbled upon it just recently and didn't know about that flag either.
->> So I looked for more information about it and found the definition [1],
->> but the comment seemed important enough to send this reply.
->> 
->> 	NETIF_F_LLTX_BIT,	/* LockLess TX - deprecated. Please */
->> 				/* do not use LLTX in new drivers */
->> 
->> Here is the commit that marked it deprecated:
->> 
->> commit e24eb521fbf2a350ce879dfc1d8e56d4ffa2aa22
->> Author: Christian Borntraeger <borntraeger@de.ibm.com>
->> Date:   Tue Sep 25 19:42:02 2007 -0700
->> 
->>      [NET]: note that NETIF_F_LLTX is deprecated
->> 
->> So I am not sure we should really do this in mac80211. Maybe Herbert can
->> comment although it has been over a decade ago.
-> There is a lot of comparable code that also uses this flag, e.g.
-> batman-adv, bridge, vlan, various tunnel implementations. I think
-> mac80211 fits well with those kinds of use cases.
+I've just uploaded better captures also including traces to the same 
+location. Everything relevant for this mail is in the folder
+iwlwifi-debug here:
+https://www.awhome.eu/index.php/s/AJJXBLsZmzHdxpX
 
-Ok. As said I was not sure so I can/will not argue.
+The old traces have been moved to top dir "old", if you still are 
+interested in them, but I think the new ones should be better.
 
-> If I remember correctly, the deprecation was added to avoid quirky
-> custom locking schemes in ethernet drivers.
+1) Both AP and the STA are now running wt-2019-04-10 *without* the not 
+merged patches from the Extended Key ID series. (I've only enabled 
+Ext_Key_ID for mvm and dvm on top and added some printk's. The patches 
+for that are also available via the link above but really boring...
 
-What do you mean by "quirky custom locking schemes"? You mean that TX path 
-would use driver data that should actually be accessed under some lock?
+2) the files with the same prefix (in the format HH:MM) show the same 
+communication.
+The AP files are of course from the AP, STA from the client station and 
+Sniff from my Netgear 7800 used as a OTA sniffer. With the AP literally 
+sitting on top of it.
+The "Sniff" files can be decoded with the WPA Password "ExtKeyTestAP".
 
-When seeing the deprecated comment I wanted to know the why and was hoping 
-the commit message would divulge. It just mentions it is not needed. So now 
-I am curious as to why it wouldn't be needed especially as you say there 
-are (valid) use-cases in the kernel today.
+My "Hack" patch to wireshark to allow it to decode keyID 1 is also 
+uploaded. (The hack just allows decoding of keyID 1 at the price of no 
+longer decoding frames encrypted with gtk keyid 1.)
 
-Regards,
-Arend
+3) the AP is using a AC 3168NGW and the STA a AC 8265. The two devices 
+are roughly 2m apart with a direct line of sight on a channel with next 
+to no other traffic on it. (You see what's there in the Sniff captures, 
+these are all totally unfiltered.)
+
+4) I also tried running a trace on the STA. But I could not reproduce 
+the issue when a trace was running on the STA. (That's probably 
+coincidence, through, I just gave it three tries and the first without a 
+trace on the STA worked.)
+
+5) The files in the "broken" folder are showing the issue and the ones 
+in "working" (seem) to be ok at a first glance.
+
+I can run more tests and also try catch the problem with a STA trace, 
+too, if you want. But that may not be necessary:
+
+It looks like we only have a problem when we get frames with the "new" 
+keyID and then again some with the "old" keyID. Of course we also could 
+have multiple problems, too... But in that case I would say let's first 
+look at this one.
+The problematic frames are encrypted with the correct "old" key, 
+according to wireshark.
+
+But on the STA they are scrambled and therefor probably have been 
+decrypted with the - in this case - wrong new key.
+
+And as it happens there is also a really good looking first suspect why 
+this may have happened:
+According to the STA captures the broken frames came in one A-MPDU which 
+started with keyID 1 and then "appended" the older keyID 0 frames at the 
+end. (The OTA sniffer seems to be miss the A-MPDU details, see the STA 
+capture...)
+
+Now it really looks like the mvm cards are trusting the standard and 
+decode all MPDUs within one A-MPDU with the same key while at the same 
+time allow mixing different keyIDs in a-MPDU.
+
+The so far mostly theoretical question how far mac80211 should support 
+the driver (e.g. key ID border signal) or if we want to let the 
+drivers/card handle that would become much more pressing...
+
+Ideally the card/firmware would be able to detect that and start a new 
+A-MPDU. But for my understanding the driver could also set A-MPDU to 
+only one frame, forcing the firmware to flush all A-MPDUs under 
+construction and then set it back to the normal value. (Or that is how 
+I've planned to test that in that way with your tips in the past and 
+what's documented of the mvm/dvm firmware API.)
 
 
+> Please do review the privacy notes there at the end of the page if you
+> do this, you should probably send the files to me/us directly rather
+> than post publicly. They do contain the keys of your (test) network to
+> some extent - at least of course the PTK(s)/GTK(s), but usually also the
+> KEK/KCK.
+
+Thanks for the reminder.
+I'll definitely will remember the option, I was not aware that there was 
+a more private way:-)
+
+So far I can accept the risk - as I understand it - or even some short 
+term intruders in my test network.
+
+For my understanding  the previous captures (without the PSK in the 
+mail) only allows brute forcing the PSK due to the 4-way handshakes.
+Providing a valid handshake allows anyone to crack the PSK, without the 
+challenge to capture it himself.
+
+But risk of providing eapol frames of your network changed last year, 
+the handshake is no longer required to crack the password. Anyone able 
+to talk to the AP can get equivalent information by a simple query. So I 
+assume sharing captures with the eapol handshakes is not impacting the 
+security of my (test) Wlan in any relevant way. So I'm only giving 
+everyone a small peak in my normally encrypted wlan, correct?
+
+Here a link to the vulnerability discovered last year:
+https://blog.avira.com/cracking-your-wpa2-wi-fi-password-just-became-easier/
+
+But I've changed the PSK already for my test Wlan again from the ones 
+used in the provided captures. The "real" Wlan is using EAP-TLS, the one 
+I had the ptk rekey freezes some years ago:-)
+
+Alexander
