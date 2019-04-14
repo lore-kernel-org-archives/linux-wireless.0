@@ -2,178 +2,157 @@ Return-Path: <SRS0=0lX+=SQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2477FC10F13
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA9C6C282CE
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:47:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2FEB20850
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:13:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="B+FAkq4h"
+	by mail.kernel.org (Postfix) with ESMTP id 7ED232084E
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 16:47:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726642AbfDNQNL (ORCPT
+        id S1726355AbfDNQrI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 14 Apr 2019 12:13:11 -0400
-Received: from 3.mo5.mail-out.ovh.net ([46.105.40.108]:43120 "EHLO
-        3.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725829AbfDNQNL (ORCPT
+        Sun, 14 Apr 2019 12:47:08 -0400
+Received: from mail-it1-f200.google.com ([209.85.166.200]:39819 "EHLO
+        mail-it1-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726147AbfDNQrH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Apr 2019 12:13:11 -0400
-Received: from player714.ha.ovh.net (unknown [10.109.159.20])
-        by mo5.mail-out.ovh.net (Postfix) with ESMTP id A25C82284D4
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2019 18:13:05 +0200 (CEST)
-Received: from awhome.eu (p57B7E5B2.dip0.t-ipconnect.de [87.183.229.178])
-        (Authenticated sender: postmaster@awhome.eu)
-        by player714.ha.ovh.net (Postfix) with ESMTPSA id 0C9B94AD9108;
-        Sun, 14 Apr 2019 16:13:03 +0000 (UTC)
-Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1555258382;
-        bh=nimeynsG8khe1Hw6ta/LBc0PpnZvRDeok8x/Y/xqGH4=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=B+FAkq4hjffGhxs1NgBVDZVjkFXdj0vtBbtmnh4yLpkWd15uHSHx81UvUx96vEypQ
-         CQb2YPSUid0T1Ge65xtrbNF5GICc8aZzU6VZzf5anZ0D3owNjbYZ55uAEserSu11+w
-         OmsMXivdKNkhOCBBvDL4GZJZMMRnmkx7FHGj8QLs=
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org
-References: <20190210210620.31181-1-alexander@wetzel-home.de>
- <20190210210620.31181-8-alexander@wetzel-home.de>
- <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
- <e84c30de-28d6-7d1b-0fa3-d1ca466e257b@wetzel-home.de>
- <69e6577f90d99289acaa9853fe236e6f15f9e774.camel@sipsolutions.net>
- <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
- <ed6e95dad39ef0ac98c62e3acd3f78fd7b3a6d2b.camel@sipsolutions.net>
- <185ea9a2-f3c6-04a5-000b-44191da5a0ee@wetzel-home.de>
- <0de9d60ffef574b34e9a76ad2cea68fab49aac0f.camel@sipsolutions.net>
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-Message-ID: <45ae97d6-3357-64ac-0a40-9ae3ea4a8ed2@wetzel-home.de>
-Date:   Sun, 14 Apr 2019 18:12:58 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        Sun, 14 Apr 2019 12:47:07 -0400
+Received: by mail-it1-f200.google.com with SMTP id z125so13751602itf.4
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2019 09:47:07 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to
+         :content-transfer-encoding;
+        bh=6QO5eg3i+vTilSvnK5Arp3jjxdI//KJSDlwl+1vqiJk=;
+        b=eYKfpU5FHuqN2B1mj33PT4k5BHKx+huY2vW3u2lXnF4uFyzGxsNtnZCyYPeshWDV8D
+         1thXVDVIX6FqYheUsg3Ah5/3Zw7ALPAa+DFyrsHc10DM5kj4BEp7iOV+JfuGujzvDVGJ
+         KIjEbSX3qAi7KkpryCXQxohJR66wZ2EO8tGU0vlbHle1WwF+swyVslvUALUhbujAry0c
+         0XIR8zKoKD9dFF9FimPmiBZap7c+OqZKiTL5nJUJMJ3kgbKOyljoxLEj4IO2gwnJXv6g
+         uXR0HgezB+eoZhdu0pD+9n3Ps1U1qixh0m77NohNLkJZZQ614vWCZhdG88wEvzBCtTuu
+         kWYw==
+X-Gm-Message-State: APjAAAULwPWeJJnd2IUxgSCOR9fhSv2YBRs/yHpcmWKZuE9xaBTgus/n
+        QnmC4QJbYluM+KyXHQyvt6H0lyo9252OYEDjk3NTj5by2HXO
+X-Google-Smtp-Source: APXvYqyi8OcMTlBwCdEYVuMQ/PkSj0uND0qTu0ZTBhvG2T0hobY6JTrGiI7Yjki1ZSQ2LyubhsT1pZn+Mi6h9UjWO0gq4YjyMpnr
 MIME-Version: 1.0
-In-Reply-To: <0de9d60ffef574b34e9a76ad2cea68fab49aac0f.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Ovh-Tracer-Id: 6634083728261455047
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduuddrvdejgddutdduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
+X-Received: by 2002:a24:1a41:: with SMTP id 62mr5529283iti.33.1555260426734;
+ Sun, 14 Apr 2019 09:47:06 -0700 (PDT)
+Date:   Sun, 14 Apr 2019 09:47:06 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000044d2540586804913@google.com>
+Subject: general protection fault in ieee80211_debugfs_rename_netdev
+From:   syzbot <syzbot+4ece1a28b8f4730547c9@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, johannes@sipsolutions.net,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Transfer-Encoding: base64
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> I'll take a look, but a trace-cmd recording would be more interesting
-> than the monitor interface, as it also tells us when what key was
-> installed etc.
-
-I've just uploaded better captures also including traces to the same 
-location. Everything relevant for this mail is in the folder
-iwlwifi-debug here:
-https://www.awhome.eu/index.php/s/AJJXBLsZmzHdxpX
-
-The old traces have been moved to top dir "old", if you still are 
-interested in them, but I think the new ones should be better.
-
-1) Both AP and the STA are now running wt-2019-04-10 *without* the not 
-merged patches from the Extended Key ID series. (I've only enabled 
-Ext_Key_ID for mvm and dvm on top and added some printk's. The patches 
-for that are also available via the link above but really boring...
-
-2) the files with the same prefix (in the format HH:MM) show the same 
-communication.
-The AP files are of course from the AP, STA from the client station and 
-Sniff from my Netgear 7800 used as a OTA sniffer. With the AP literally 
-sitting on top of it.
-The "Sniff" files can be decoded with the WPA Password "ExtKeyTestAP".
-
-My "Hack" patch to wireshark to allow it to decode keyID 1 is also 
-uploaded. (The hack just allows decoding of keyID 1 at the price of no 
-longer decoding frames encrypted with gtk keyid 1.)
-
-3) the AP is using a AC 3168NGW and the STA a AC 8265. The two devices 
-are roughly 2m apart with a direct line of sight on a channel with next 
-to no other traffic on it. (You see what's there in the Sniff captures, 
-these are all totally unfiltered.)
-
-4) I also tried running a trace on the STA. But I could not reproduce 
-the issue when a trace was running on the STA. (That's probably 
-coincidence, through, I just gave it three tries and the first without a 
-trace on the STA worked.)
-
-5) The files in the "broken" folder are showing the issue and the ones 
-in "working" (seem) to be ok at a first glance.
-
-I can run more tests and also try catch the problem with a STA trace, 
-too, if you want. But that may not be necessary:
-
-It looks like we only have a problem when we get frames with the "new" 
-keyID and then again some with the "old" keyID. Of course we also could 
-have multiple problems, too... But in that case I would say let's first 
-look at this one.
-The problematic frames are encrypted with the correct "old" key, 
-according to wireshark.
-
-But on the STA they are scrambled and therefor probably have been 
-decrypted with the - in this case - wrong new key.
-
-And as it happens there is also a really good looking first suspect why 
-this may have happened:
-According to the STA captures the broken frames came in one A-MPDU which 
-started with keyID 1 and then "appended" the older keyID 0 frames at the 
-end. (The OTA sniffer seems to be miss the A-MPDU details, see the STA 
-capture...)
-
-Now it really looks like the mvm cards are trusting the standard and 
-decode all MPDUs within one A-MPDU with the same key while at the same 
-time allow mixing different keyIDs in a-MPDU.
-
-The so far mostly theoretical question how far mac80211 should support 
-the driver (e.g. key ID border signal) or if we want to let the 
-drivers/card handle that would become much more pressing...
-
-Ideally the card/firmware would be able to detect that and start a new 
-A-MPDU. But for my understanding the driver could also set A-MPDU to 
-only one frame, forcing the firmware to flush all A-MPDUs under 
-construction and then set it back to the normal value. (Or that is how 
-I've planned to test that in that way with your tips in the past and 
-what's documented of the mvm/dvm firmware API.)
-
-
-> Please do review the privacy notes there at the end of the page if you
-> do this, you should probably send the files to me/us directly rather
-> than post publicly. They do contain the keys of your (test) network to
-> some extent - at least of course the PTK(s)/GTK(s), but usually also the
-> KEK/KCK.
-
-Thanks for the reminder.
-I'll definitely will remember the option, I was not aware that there was 
-a more private way:-)
-
-So far I can accept the risk - as I understand it - or even some short 
-term intruders in my test network.
-
-For my understanding  the previous captures (without the PSK in the 
-mail) only allows brute forcing the PSK due to the 4-way handshakes.
-Providing a valid handshake allows anyone to crack the PSK, without the 
-challenge to capture it himself.
-
-But risk of providing eapol frames of your network changed last year, 
-the handshake is no longer required to crack the password. Anyone able 
-to talk to the AP can get equivalent information by a simple query. So I 
-assume sharing captures with the eapol handshakes is not impacting the 
-security of my (test) Wlan in any relevant way. So I'm only giving 
-everyone a small peak in my normally encrypted wlan, correct?
-
-Here a link to the vulnerability discovered last year:
-https://blog.avira.com/cracking-your-wpa2-wi-fi-password-just-became-easier/
-
-But I've changed the PSK already for my test Wlan again from the ones 
-used in the provided captures. The "real" Wlan is using EAP-TLS, the one 
-I had the ptk rekey freezes some years ago:-)
-
-Alexander
+SGVsbG8sDQoNCnN5emJvdCBmb3VuZCB0aGUgZm9sbG93aW5nIGNyYXNoIG9uOg0KDQpIRUFEIGNv
+bW1pdDogICAgZWQwZGU0NWEgaXB2NDogcmVjb21waWxlIGlwIG9wdGlvbnMgaW4gaXB2NF9saW5r
+X2ZhaWx1cmUNCmdpdCB0cmVlOiAgICAgICBuZXQNCmNvbnNvbGUgb3V0cHV0OiBodHRwczovL3N5
+emthbGxlci5hcHBzcG90LmNvbS94L2xvZy50eHQ/eD0xNDQ5NWZjMzIwMDAwMA0Ka2VybmVsIGNv
+bmZpZzogIGh0dHBzOi8vc3l6a2FsbGVyLmFwcHNwb3QuY29tL3gvLmNvbmZpZz94PTRmYjY0NDM5
+ZTA3YTFlYzANCmRhc2hib2FyZCBsaW5rOiBodHRwczovL3N5emthbGxlci5hcHBzcG90LmNvbS9i
+dWc/ZXh0aWQ9NGVjZTFhMjhiOGY0NzMwNTQ3YzkNCmNvbXBpbGVyOiAgICAgICBnY2MgKEdDQykg
+OS4wLjAgMjAxODEyMzEgKGV4cGVyaW1lbnRhbCkNCg0KVW5mb3J0dW5hdGVseSwgSSBkb24ndCBo
+YXZlIGFueSByZXByb2R1Y2VyIGZvciB0aGlzIGNyYXNoIHlldC4NCg0KSU1QT1JUQU5UOiBpZiB5
+b3UgZml4IHRoZSBidWcsIHBsZWFzZSBhZGQgdGhlIGZvbGxvd2luZyB0YWcgdG8gdGhlIGNvbW1p
+dDoNClJlcG9ydGVkLWJ5OiBzeXpib3QrNGVjZTFhMjhiOGY0NzMwNTQ3YzlAc3l6a2FsbGVyLmFw
+cHNwb3RtYWlsLmNvbQ0KDQpuZXRsaW5rOiA5IGJ5dGVzIGxlZnRvdmVyIGFmdGVyIHBhcnNpbmcg
+YXR0cmlidXRlcyBpbiBwcm9jZXNzICANCmBzeXotZXhlY3V0b3IuNScuDQptYWM4MDIxMV9od3Np
+bSBod3NpbTE3IDAt77+9OiByZW5hbWVkIGZyb20gd2xhbjANCmthc2FuOiBDT05GSUdfS0FTQU5f
+SU5MSU5FIGVuYWJsZWQNCmthc2FuOiBHUEYgY291bGQgYmUgY2F1c2VkIGJ5IE5VTEwtcHRyIGRl
+cmVmIG9yIHVzZXIgbWVtb3J5IGFjY2Vzcw0KZ2VuZXJhbCBwcm90ZWN0aW9uIGZhdWx0OiAwMDAw
+IFsjMV0gUFJFRU1QVCBTTVAgS0FTQU4NCkNQVTogMSBQSUQ6IDE3MjI4IENvbW06IHN5ei1leGVj
+dXRvci41IE5vdCB0YWludGVkIDUuMS4wLXJjNCsgIzE2NQ0KSGFyZHdhcmUgbmFtZTogR29vZ2xl
+IEdvb2dsZSBDb21wdXRlIEVuZ2luZS9Hb29nbGUgQ29tcHV0ZSBFbmdpbmUsIEJJT1MgIA0KR29v
+Z2xlIDAxLzAxLzIwMTENClJJUDogMDAxMDppZWVlODAyMTFfZGVidWdmc19yZW5hbWVfbmV0ZGV2
+KzB4ZDEvMHgxNGQgIA0KbmV0L21hYzgwMjExL2RlYnVnZnNfbmV0ZGV2LmM6ODQ4DQpDb2RlOiAw
+NSAwMCAwMCA0OCBjNyBjNiAwMCA5MiAxMyA4OCA0YyA4OSBmYSA0YyA4OSBmNyBlOCAyNCA0MyA0
+NSAwMCA0OSA4ZCAgDQo3ZCA0MCA0OCBiOCAwMCAwMCAwMCAwMCAwMCBmYyBmZiBkZiA0OCA4OSBm
+YSA0OCBjMSBlYSAwMyA8ODA+IDNjIDAyIDAwIDc1ICANCjZmIDQ5IDhiIDdkIDQwIDRjIDg5IGYx
+IDRjIDg5IGVlIDQ4IDg5IGZhIGU4IDI3IGVlDQpSU1A6IDAwMTg6ZmZmZjg4ODA2NjAxZWRkMCBF
+RkxBR1M6IDAwMDEwMjA3DQpSQVg6IGRmZmZmYzAwMDAwMDAwMDAgUkJYOiBmZmZmODg4MDk5MTE5
+YWMwIFJDWDogMWZmZmYxMTAwY2MwM2Q4Yw0KUkRYOiAwMDAwMDAwMDAwMDAwMDA1IFJTSTogMDAw
+MDAwMDAwMDAwMDAwMCBSREk6IDAwMDAwMDAwMDAwMDAwMmYNClJCUDogZmZmZjg4ODA2NjAxZWU3
+MCBSMDg6IGZmZmY4ODgwNmViZjg0MDAgUjA5OiBmZmZmZWQxMDBjYzAzZGJmDQpSMTA6IGZmZmZl
+ZDEwMGNjMDNkYmUgUjExOiBmZmZmODg4MDY2MDFlZGY2IFIxMjogMWZmZmYxMTAwY2MwM2RiYQ0K
+UjEzOiBmZmZmZmZmZmZmZmZmZmVmIFIxNDogZmZmZjg4ODA2NjAxZWRmMCBSMTU6IGZmZmY4ODgw
+OTkxMWFiMTANCkZTOiAgMDAwMDdmNGMxMDRiMjcwMCgwMDAwKSBHUzpmZmZmODg4MGFlOTAwMDAw
+KDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANCkNTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAw
+MCBDUjA6IDAwMDAwMDAwODAwNTAwMzMNCkNSMjogMDAwMDAwMWIzMGMyNjAwMCBDUjM6IDAwMDAw
+MDAwYTYwMDYwMDAgQ1I0OiAwMDAwMDAwMDAwMTQwNmUwDQpEUjA6IDAwMDAwMDAwMDAwMDAwMDAg
+RFIxOiAwMDAwMDAwMDAwMDAwMDAwIERSMjogMDAwMDAwMDAwMDAwMDAwMA0KRFIzOiAwMDAwMDAw
+MDAwMDAwMDAwIERSNjogMDAwMDAwMDBmZmZlMGZmMCBEUjc6IDAwMDAwMDAwMDAwMDA0MDANCkNh
+bGwgVHJhY2U6DQogIG5ldGRldl9ub3RpZnkrMHgxZjkvMHgyNjAgbmV0L21hYzgwMjExL2lmYWNl
+LmM6MTk5MQ0KICBub3RpZmllcl9jYWxsX2NoYWluKzB4YzcvMHgyNDAga2VybmVsL25vdGlmaWVy
+LmM6OTMNCiAgX19yYXdfbm90aWZpZXJfY2FsbF9jaGFpbiBrZXJuZWwvbm90aWZpZXIuYzozOTQg
+W2lubGluZV0NCiAgcmF3X25vdGlmaWVyX2NhbGxfY2hhaW4rMHgyZS8weDQwIGtlcm5lbC9ub3Rp
+Zmllci5jOjQwMQ0KICBjYWxsX25ldGRldmljZV9ub3RpZmllcnNfaW5mbysweDNmLzB4OTAgbmV0
+L2NvcmUvZGV2LmM6MTc1Mw0KICBjYWxsX25ldGRldmljZV9ub3RpZmllcnNfZXh0YWNrIG5ldC9j
+b3JlL2Rldi5jOjE3NjUgW2lubGluZV0NCiAgY2FsbF9uZXRkZXZpY2Vfbm90aWZpZXJzIG5ldC9j
+b3JlL2Rldi5jOjE3NzkgW2lubGluZV0NCiAgZGV2X2NoYW5nZV9uYW1lKzB4NWNjLzB4YTcwIG5l
+dC9jb3JlL2Rldi5jOjEyNDgNCiAgZG9fc2V0bGluaysweDJhNTEvMHgzNTEwIG5ldC9jb3JlL3J0
+bmV0bGluay5jOjI0NjYNCiAgcnRubF9zZXRsaW5rKzB4MjcxLzB4M2IwIG5ldC9jb3JlL3J0bmV0
+bGluay5jOjI3NDcNCiAgcnRuZXRsaW5rX3Jjdl9tc2crMHg0NjUvMHhiMDAgbmV0L2NvcmUvcnRu
+ZXRsaW5rLmM6NTE5Mg0KICBuZXRsaW5rX3Jjdl9za2IrMHgxN2EvMHg0NjAgbmV0L25ldGxpbmsv
+YWZfbmV0bGluay5jOjI0ODYNCiAgcnRuZXRsaW5rX3JjdisweDFkLzB4MzAgbmV0L2NvcmUvcnRu
+ZXRsaW5rLmM6NTIxMA0KICBuZXRsaW5rX3VuaWNhc3Rfa2VybmVsIG5ldC9uZXRsaW5rL2FmX25l
+dGxpbmsuYzoxMzExIFtpbmxpbmVdDQogIG5ldGxpbmtfdW5pY2FzdCsweDUzNi8weDcyMCBuZXQv
+bmV0bGluay9hZl9uZXRsaW5rLmM6MTMzNw0KICBuZXRsaW5rX3NlbmRtc2crMHg4YWUvMHhkNzAg
+bmV0L25ldGxpbmsvYWZfbmV0bGluay5jOjE5MjYNCiAgc29ja19zZW5kbXNnX25vc2VjIG5ldC9z
+b2NrZXQuYzo2NTEgW2lubGluZV0NCiAgc29ja19zZW5kbXNnKzB4ZGQvMHgxMzAgbmV0L3NvY2tl
+dC5jOjY2MQ0KICBzb2NrX3dyaXRlX2l0ZXIrMHgyN2MvMHgzZTAgbmV0L3NvY2tldC5jOjk4OA0K
+ICBjYWxsX3dyaXRlX2l0ZXIgaW5jbHVkZS9saW51eC9mcy5oOjE4NjYgW2lubGluZV0NCiAgZG9f
+aXRlcl9yZWFkdl93cml0ZXYrMHg1ZTEvMHg4ZTAgZnMvcmVhZF93cml0ZS5jOjY4MQ0KICBkb19p
+dGVyX3dyaXRlIGZzL3JlYWRfd3JpdGUuYzo5NTcgW2lubGluZV0NCiAgZG9faXRlcl93cml0ZSsw
+eDE4NC8weDYxMCBmcy9yZWFkX3dyaXRlLmM6OTM4DQogIHZmc193cml0ZXYrMHgxYjMvMHgyZjAg
+ZnMvcmVhZF93cml0ZS5jOjEwMDINCiAgZG9fd3JpdGV2KzB4MTVlLzB4MzcwIGZzL3JlYWRfd3Jp
+dGUuYzoxMDM3DQogIF9fZG9fc3lzX3dyaXRldiBmcy9yZWFkX3dyaXRlLmM6MTExMCBbaW5saW5l
+XQ0KICBfX3NlX3N5c193cml0ZXYgZnMvcmVhZF93cml0ZS5jOjExMDcgW2lubGluZV0NCiAgX194
+NjRfc3lzX3dyaXRldisweDc1LzB4YjAgZnMvcmVhZF93cml0ZS5jOjExMDcNCiAgZG9fc3lzY2Fs
+bF82NCsweDEwMy8weDYxMCBhcmNoL3g4Ni9lbnRyeS9jb21tb24uYzoyOTANCiAgZW50cnlfU1lT
+Q0FMTF82NF9hZnRlcl9od2ZyYW1lKzB4NDkvMHhiZQ0KUklQOiAwMDMzOjB4NDU4YzI5DQpDb2Rl
+OiBhZCBiOCBmYiBmZiBjMyA2NiAyZSAwZiAxZiA4NCAwMCAwMCAwMCAwMCAwMCA2NiA5MCA0OCA4
+OSBmOCA0OCA4OSBmNyAgDQo0OCA4OSBkNiA0OCA4OSBjYSA0ZCA4OSBjMiA0ZCA4OSBjOCA0YyA4
+YiA0YyAyNCAwOCAwZiAwNSA8NDg+IDNkIDAxIGYwIGZmICANCmZmIDBmIDgzIDdiIGI4IGZiIGZm
+IGMzIDY2IDJlIDBmIDFmIDg0IDAwIDAwIDAwIDAwDQpSU1A6IDAwMmI6MDAwMDdmNGMxMDRiMWM3
+OCBFRkxBR1M6IDAwMDAwMjQ2IE9SSUdfUkFYOiAwMDAwMDAwMDAwMDAwMDE0DQpSQVg6IGZmZmZm
+ZmZmZmZmZmZmZGEgUkJYOiAwMDAwMDAwMDAwMDAwMDAzIFJDWDogMDAwMDAwMDAwMDQ1OGMyOQ0K
+UkRYOiAwMDAwMDAwMDAwMDAwMDAxIFJTSTogMDAwMDAwMDAyMDAwMDM0MCBSREk6IDAwMDAwMDAw
+MDAwMDAwMDMNClJCUDogMDAwMDAwMDAwMDczYmYwMCBSMDg6IDAwMDAwMDAwMDAwMDAwMDAgUjA5
+OiAwMDAwMDAwMDAwMDAwMDAwDQpSMTA6IDAwMDAwMDAwMDAwMDAwMDAgUjExOiAwMDAwMDAwMDAw
+MDAwMjQ2IFIxMjogMDAwMDdmNGMxMDRiMjZkNA0KUjEzOiAwMDAwMDAwMDAwNGM1OTk2IFIxNDog
+MDAwMDAwMDAwMDRkZjBlMCBSMTU6IDAwMDAwMDAwZmZmZmZmZmYNCk1vZHVsZXMgbGlua2VkIGlu
+Og0KLS0tWyBlbmQgdHJhY2UgM2Q5ZjNlYmI4Mjg1NTU4MiBdLS0tDQpSSVA6IDAwMTA6aWVlZTgw
+MjExX2RlYnVnZnNfcmVuYW1lX25ldGRldisweGQxLzB4MTRkICANCm5ldC9tYWM4MDIxMS9kZWJ1
+Z2ZzX25ldGRldi5jOjg0OA0KQ29kZTogMDUgMDAgMDAgNDggYzcgYzYgMDAgOTIgMTMgODggNGMg
+ODkgZmEgNGMgODkgZjcgZTggMjQgNDMgNDUgMDAgNDkgOGQgIA0KN2QgNDAgNDggYjggMDAgMDAg
+MDAgMDAgMDAgZmMgZmYgZGYgNDggODkgZmEgNDggYzEgZWEgMDMgPDgwPiAzYyAwMiAwMCA3NSAg
+DQo2ZiA0OSA4YiA3ZCA0MCA0YyA4OSBmMSA0YyA4OSBlZSA0OCA4OSBmYSBlOCAyNyBlZQ0KUlNQ
+OiAwMDE4OmZmZmY4ODgwNjYwMWVkZDAgRUZMQUdTOiAwMDAxMDIwNw0KUkFYOiBkZmZmZmMwMDAw
+MDAwMDAwIFJCWDogZmZmZjg4ODA5OTExOWFjMCBSQ1g6IDFmZmZmMTEwMGNjMDNkOGMNClJEWDog
+MDAwMDAwMDAwMDAwMDAwNSBSU0k6IDAwMDAwMDAwMDAwMDAwMDAgUkRJOiAwMDAwMDAwMDAwMDAw
+MDJmDQpSQlA6IGZmZmY4ODgwNjYwMWVlNzAgUjA4OiBmZmZmODg4MDZlYmY4NDAwIFIwOTogZmZm
+ZmVkMTAwY2MwM2RiZg0KUjEwOiBmZmZmZWQxMDBjYzAzZGJlIFIxMTogZmZmZjg4ODA2NjAxZWRm
+NiBSMTI6IDFmZmZmMTEwMGNjMDNkYmENClIxMzogZmZmZmZmZmZmZmZmZmZlZiBSMTQ6IGZmZmY4
+ODgwNjYwMWVkZjAgUjE1OiBmZmZmODg4MDk5MTFhYjEwDQpGUzogIDAwMDA3ZjRjMTA0YjI3MDAo
+MDAwMCkgR1M6ZmZmZjg4ODBhZTkwMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwDQpD
+UzogIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzDQpDUjI6IDAw
+MDAwMDAwMDA0ZTY0NjAgQ1IzOiAwMDAwMDAwMGE2MDA2MDAwIENSNDogMDAwMDAwMDAwMDE0MDZl
+MA0KRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6IDAwMDAw
+MDAwMDAwMDAwMDANCkRSMzogMDAwMDAwMDAwMDAwMDAwMCBEUjY6IDAwMDAwMDAwZmZmZTBmZjAg
+RFI3OiAwMDAwMDAwMDAwMDAwNDAwDQoNCg0KLS0tDQpUaGlzIGJ1ZyBpcyBnZW5lcmF0ZWQgYnkg
+YSBib3QuIEl0IG1heSBjb250YWluIGVycm9ycy4NClNlZSBodHRwczovL2dvby5nbC90cHNtRUog
+Zm9yIG1vcmUgaW5mb3JtYXRpb24gYWJvdXQgc3l6Ym90Lg0Kc3l6Ym90IGVuZ2luZWVycyBjYW4g
+YmUgcmVhY2hlZCBhdCBzeXprYWxsZXJAZ29vZ2xlZ3JvdXBzLmNvbS4NCg0Kc3l6Ym90IHdpbGwg
+a2VlcCB0cmFjayBvZiB0aGlzIGJ1ZyByZXBvcnQuIFNlZToNCmh0dHBzOi8vZ29vLmdsL3Rwc21F
+SiNzdGF0dXMgZm9yIGhvdyB0byBjb21tdW5pY2F0ZSB3aXRoIHN5emJvdC4NCg==
