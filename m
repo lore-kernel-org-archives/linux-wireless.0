@@ -5,32 +5,35 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28A31C10F0E
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 11:15:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58EBFC10F0E
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 11:18:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED7EC2073F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 11:15:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3021F2073F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 11:18:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726751AbfDOLPp (ORCPT
+        id S1727353AbfDOLSL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Apr 2019 07:15:45 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:36750 "EHLO
+        Mon, 15 Apr 2019 07:18:11 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:36788 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726298AbfDOLPp (ORCPT
+        with ESMTP id S1726042AbfDOLSK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Apr 2019 07:15:45 -0400
+        Mon, 15 Apr 2019 07:18:10 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hFzaR-0005uX-D6; Mon, 15 Apr 2019 13:15:43 +0200
-Message-ID: <cf95c43bcfe1bd4d8fbc8aca8ecc65dac9eeae0c.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/2] wireless:  Support auth-at-ms timer in sta-info
+        id 1hFzcn-0005zq-PA; Mon, 15 Apr 2019 13:18:09 +0200
+Message-ID: <31315303489707b1a007e0def43f0db0295a0be1.camel@sipsolutions.net>
+Subject: Re: [PATCHv3 2/2] mac80211: Implement API to configure station
+ specific rssi threshold
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date:   Mon, 15 Apr 2019 13:15:42 +0200
-In-Reply-To: <20190412213710.17292-1-greearb@candelatech.com> (sfid-20190412_233719_267289_2072BA8E)
-References: <20190412213710.17292-1-greearb@candelatech.com>
-         (sfid-20190412_233719_267289_2072BA8E)
+To:     Tamizh chelvam <tamizhr@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Mon, 15 Apr 2019 13:18:08 +0200
+In-Reply-To: <1554831488-27065-3-git-send-email-tamizhr@codeaurora.org> (sfid-20190409_193850_575303_37736D70)
+References: <1554831488-27065-1-git-send-email-tamizhr@codeaurora.org>
+         <1554831488-27065-3-git-send-email-tamizhr@codeaurora.org>
+         (sfid-20190409_193850_575303_37736D70)
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -40,18 +43,14 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-04-12 at 14:37 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Report time stamp of when sta became authenticated.
 
-You didn't actually implement this ;-)
+> +	if (sta->rssi_config) {
+> +		old_rssi_config = sta->rssi_config;
+> +		RCU_INIT_POINTER(sta->rssi_config, NULL);
 
-Did you mean associated?
-
-> + * @auth_at_ms: time in ms of the last assoc -> auth transition.
-
-There's commonly not really such a transition?
+Looks like you need an __rcu annotation somewhere to make this compile
+sparse-warnings-free.
 
 johannes
+
 
