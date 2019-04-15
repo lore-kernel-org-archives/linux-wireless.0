@@ -1,200 +1,121 @@
-Return-Path: <SRS0=0lX+=SQ=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=DbkN=SR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CD33C282CE
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 21:39:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D415C10F13
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 02:01:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D581D2070D
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Apr 2019 21:39:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68B01206B6
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 02:01:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pjVdcd8d"
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="T+p3m0JX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726464AbfDNVjX (ORCPT
+        id S1726392AbfDOCBi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 14 Apr 2019 17:39:23 -0400
-Received: from mail-qt1-f182.google.com ([209.85.160.182]:39605 "EHLO
-        mail-qt1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725829AbfDNVjX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Apr 2019 17:39:23 -0400
-Received: by mail-qt1-f182.google.com with SMTP id t28so17051311qte.6;
-        Sun, 14 Apr 2019 14:39:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:openpgp:autocrypt:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=Wn5UCSU/NJP18QQnduXwUcQrqOK90WvjGyWteZKn/I0=;
-        b=pjVdcd8dvzarVvlKq9wIprJI48gcoRxjMj5JgBSxR1OOPeZ5zBy1+M60V40EVnJ/38
-         riFkRr3PwRCz27vmmUmHnwxAcgVq1S+rYxKu8HbZOPQxh6D2bFerWq71u1Rvr2h/ppDx
-         /6lu3ZGfGJoG6C3TgZ/kteijqBCVmahXAjuhEsAZZIPqTb4YHoEsxDVeRLJorD3g3Wrv
-         KJwm7j1CvRU9FkhurbayAE9ZsSUh0qDbpzbxdFVUgoPyjvzA1QigjnpcbX5L67jf7x8X
-         FQk9aU3Y6LBI7xcrhOPOBxjXbs/DHMgeKYhJ0g9XiWFzW3k/H/EoUFJNHYbVC4TdaaEa
-         prHw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:openpgp:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-transfer-encoding:content-language;
-        bh=Wn5UCSU/NJP18QQnduXwUcQrqOK90WvjGyWteZKn/I0=;
-        b=A5vU5+k4LmNgNEfWEUd6i0n77yznAI6tjZesDUCNJZGP6l6ebz3JdBpb5J0rVX8K5x
-         zvKOlMmfC9Tthk2YyazXDpbVLtiRtDQ2gX2MxXT7LL7uxzGhNyCdf1A5RiNZf8CPmn8Z
-         bGFSltt4LYg3YsU0iGus5bJkZ+jboUnTDHsJBwGFkpfcUPkRI2CfMrY6X2LWVtXKjE4c
-         LMd7BpIBee4tbSjhoOdSb4TerrWTJsD7l9cI2KbE9O+VcR5XFtyUrp4zQ91CwjPGmHs4
-         mw+8Vqn5jNYnkhF8pqUBdIlwpVkhhJjabebwGTRGdvjWwC/B/Dhni4T2wDMNEVFzfRwL
-         Hoqw==
-X-Gm-Message-State: APjAAAWAVlVa0A1m+ZDHepnP75VDJgWlebeYpciht7eNCtdwaj+OGWZe
-        xlLWZrYmDJmkDPOu28HLOXb+9WPN
-X-Google-Smtp-Source: APXvYqxJ3XE6M6/Pol/kS71NNIsGA/BhdPseRHva24J0UHCfJjFqLQQYBtwl/OobuarxZfNuZYe5OQ==
-X-Received: by 2002:a0c:b6d4:: with SMTP id h20mr47999793qve.48.1555277961757;
-        Sun, 14 Apr 2019 14:39:21 -0700 (PDT)
-Received: from [192.168.1.199] (pool-108-28-156-19.washdc.fios.verizon.net. [108.28.156.19])
-        by smtp.gmail.com with ESMTPSA id t34sm41052690qth.36.2019.04.14.14.39.20
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 14 Apr 2019 14:39:21 -0700 (PDT)
-Subject: rtlwifi-new v0.6 and dkms failures
-From:   "David R. Bergstein" <david.r.bergstein@gmail.com>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Tony Chuang <yhchuang@realtek.com>
-Cc:     Pkshih <pkshih@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <51d62a31-7cde-e815-bdee-4ef5433007aa@gmail.com>
- <F7CD281DE3E379468C6D07993EA72F84D17AF74C@RTITMBSVM04.realtek.com.tw>
- <b0518665-d5ca-7c94-9808-7cc0cf565814@gmail.com>
- <e68c6aae-8d71-266a-81fe-d078ac1ef38c@lwfinger.net>
- <6eb7af74-b1a8-d112-e027-6c14252af994@gmail.com>
- <487c350c-c455-b490-8de5-1d68760aa3dc@lwfinger.net>
- <2e39892d-d206-e87f-c802-d427c54277cf@gmail.com>
- <8706d34c-1fac-84ba-759d-18d96750636b@gmail.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=david.r.bergstein@gmail.com; keydata=
- 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
- cZPytJop3jxjNbB2ZRfwBXX3FsGBkJ4S2SKQyQ==
-Message-ID: <60509a60-d0ea-d17f-8b79-e51c374717ba@gmail.com>
-Date:   Sun, 14 Apr 2019 17:39:20 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        Sun, 14 Apr 2019 22:01:38 -0400
+Received: from bilbo.ozlabs.org ([203.11.71.1]:40969 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726262AbfDOCBi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 14 Apr 2019 22:01:38 -0400
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 44jBZ66NG7z9s4V;
+        Mon, 15 Apr 2019 12:01:34 +1000 (AEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1555293695;
+        bh=8Uog2E3phY7eafl4Ib9Z8JYHzBDsbSpBGlSUvNTpWLY=;
+        h=Date:From:To:Cc:Subject:From;
+        b=T+p3m0JXAUa1VV8iwdQlr9J+AHbiHamxQtx2g9JvtCcM4Q1a/hhewATXa1Mnsk4VV
+         0lzFiAcy1SSQd8bLESp8aH206Lslb7baFtKFUB/F+sUM4fYDrzbUJBJu5wSLGGqAVi
+         EGOVuNZ6/3YsnkmlPWO/lpA0lSVrYgAZlHvHclURsVrrNiB1CFEGCtVF/QT7Ek81B+
+         e9SSkCzhCpoRFz/LukZESxU0TgTASAvxC/hn00qiqgrC2UGYZXWUqs+HODgL2QDPQ0
+         m+U9TeJF71Dsdri8Q7QBMXKFw4I06J7AUcRdpFX9oIKctorXLTE/S54E9Tw4EvHCSW
+         FFoHT15ArltTg==
+Date:   Mon, 15 Apr 2019 12:01:33 +1000
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: linux-next: manual merge of the wireless-drivers-next tree with the
+ wireless-drivers tree
+Message-ID: <20190415120133.40c0f343@canb.auug.org.au>
 MIME-Version: 1.0
-In-Reply-To: <8706d34c-1fac-84ba-759d-18d96750636b@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Content-Language: en-US
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/9dAKwPxUqEQEiYVHcHeRlGL"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Larry,
+--Sig_/9dAKwPxUqEQEiYVHcHeRlGL
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for your prior assistance with the rtw88 module.=C2=A0 Since manua=
-lly
-compiling and installing works correctly, I have been working to
-register the software in dkms, but am running into some difficulties.=C2=A0=
+Hi all,
 
-Below are some snippets from a terminal session to illustrate the issue:
+Today's linux-next merge of the wireless-drivers-next tree got a conflict
+in:
 
-udo dkms install rtlwifi-new/0.6
+  drivers/net/wireless/intel/iwlwifi/iwl-trans.h
 
-Creating symlink /var/lib/dkms/rtlwifi-new/0.6/source ->
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 /usr/src/rtlwifi-new-0.6
+between commit:
 
-DKMS: add completed.
+  07d35b4270ef ("iwlwifi: use sync nmi in case of init flow failure")
 
-Kernel preparation unnecessary for this kernel.=C2=A0 Skipping...
+from the wireless-drivers tree and commit:
 
-Building module:
-cleaning build area....(bad exit status: 2)
-make -j12 KERNELRELEASE=3D5.0.0-11-lowlatency -C
-/lib/modules/5.0.0-11-lowlatency/build
-M=3D/var/lib/dkms/rtlwifi-new/0.6/build....
-ERROR (dkms apport): binary package for rtlwifi-new: 0.6 not found
-Error!=C2=A0 Build of rtl_pci.ko failed for: 5.0.0-11-lowlatency (x86_64)=
+  4b1831e48974 ("iwlwifi: dbg_ini: support HW error trigger")
 
-Consult the make.log in the build directory
-/var/lib/dkms/rtlwifi-new/0.6/build/ for more information.
+from the wireless-drivers-next tree.
 
-Below is the make.log contents referenced above:
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
 
-DKMS make.log for rtlwifi-new-0.6 for kernel 5.0.0-11-lowlatency (x86_64)=
+--=20
+Cheers,
+Stephen Rothwell
 
-Sun 14 Apr 2019 05:25:37 PM EDT
-make: Entering directory '/usr/src/linux-headers-5.0.0-11-lowlatency'
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/main.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/mac80211.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/util.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/debug.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/tx.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/rx.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/mac.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/phy.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/efuse.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/fw.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/ps.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/sec.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/regd.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/rtw8822b.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/rtw8822b_table.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/rtw8822c.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/rtw8822c_table.o
-=C2=A0 CC [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/pci.o
-=C2=A0 LD [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/rtwpci.o
-=C2=A0 LD [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/rtw88.o
-=C2=A0 Building modules, stage 2.
-=C2=A0 MODPOST 2 modules
-=C2=A0 CC=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/bui=
-ld/rtw88.mod.o
-=C2=A0 CC=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/bui=
-ld/rtwpci.mod.o
-=C2=A0 LD [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/rtw88.ko
-=C2=A0 LD [M]=C2=A0 /var/lib/dkms/rtlwifi-new/0.6/build/rtwpci.ko
-make: Leaving directory '/usr/src/linux-headers-5.0.0-11-lowlatency'
+diff --cc drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index d8690acee40c,2235978adf70..000000000000
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@@ -830,6 -831,8 +830,7 @@@ struct iwl_trans=20
+  	u32 lmac_error_event_table[2];
+  	u32 umac_error_event_table;
+  	unsigned int error_event_table_tlv_status;
+ -	wait_queue_head_t fw_halt_waitq;
++ 	bool hw_error;
+ =20
+  	/* pointer to trans specific struct */
+  	/*Ensure that this pointer will always be aligned to sizeof pointer */
 
-As you can see, the make log does not show any errors, which is baffling
-to me.=C2=A0 Any insight you have on resolving this issue would be apprec=
-iated.
+--Sig_/9dAKwPxUqEQEiYVHcHeRlGL
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-Sincerely,
+-----BEGIN PGP SIGNATURE-----
 
-David R. Bergstein
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlyz5f0ACgkQAVBC80lX
+0Gxj3QgAnyucsFp+xPAm2x2mpt5NXUExZvGL0TlsNnT1pLaD3sxGZz2XBhzCRmi3
+yu3JuhmhSZzCr9mJO+rXHeTNmzK2mC2xWnxF9baWrKKlfEnYZ322v4UtT5reb08R
+s0wRllXtuh9+VKVn88HNGg/6Ku9+PEccWl+D6EksoqB+iKQOkBKymu31cbntwIs5
+GRZVvuVTD0Mo0HBBZX9i29iEdqQ8viioKZTJVFki3E4RZJJThwuKwqPglYZ3ChTs
+2/5vbBnF5RCxh/WuDKEE/Rd7PASTVl/eMvraaJlCyPykw/T3JmHY5j+c6LSIWOm+
+t/FC6zpzgvbB/0+kjJ46vvnCW1Fb+Q==
+=exFE
+-----END PGP SIGNATURE-----
 
-
+--Sig_/9dAKwPxUqEQEiYVHcHeRlGL--
