@@ -2,117 +2,182 @@ Return-Path: <SRS0=DbkN=SR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B622C10F12
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 10:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 767C2C10F0E
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 10:34:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 139A62070D
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 10:29:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BECF2064A
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Apr 2019 10:34:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mork.no header.i=@mork.no header.b="Gx4zXUEj"
+	dkim=pass (4096-bit key) header.d=d-silva.org header.i=@d-silva.org header.b="EwBjsqWx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727193AbfDOK3o (ORCPT
+        id S1726983AbfDOKd5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Apr 2019 06:29:44 -0400
-Received: from canardo.mork.no ([148.122.252.1]:58271 "EHLO canardo.mork.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726034AbfDOK3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Apr 2019 06:29:44 -0400
-Received: from miraculix.mork.no (miraculix.mork.no [IPv6:2001:4641:0:2:7627:374e:db74:e353])
+        Mon, 15 Apr 2019 06:33:57 -0400
+Received: from ushosting.nmnhosting.com ([167.160.173.127]:47088 "EHLO
+        ushosting.nmnhosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726042AbfDOKd4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Apr 2019 06:33:56 -0400
+Received: from mail2.nmnhosting.com (unknown [202.169.106.97])
+        by ushosting.nmnhosting.com (Postfix) with ESMTPS id 9D7572F28FBB;
+        Mon, 15 Apr 2019 06:33:54 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=d-silva.org;
+        s=201810a; t=1555324435;
+        bh=72lI9NwZgSFecdEJvPmdYhwBylZIqtjY6AZr2qW5LC0=;
+        h=From:To:Cc:References:In-Reply-To:Subject:Date:From;
+        b=EwBjsqWxQozr5w1lJlRrUp2D5MRPGXh/T7co5sbf+E8hadFRpBw6vctj7pgbDMQ0M
+         vUkuSsXv0DkMzT99YmDYW279lCLac6pr6k+Ejl6Q/CrCo4W91mAYd4ufx7RRFh3pVZ
+         kKAnFFgnJhJIJTZEqYrF1NBbZGsvt7r7riP9TapDFwB8maC+Vhhu5SWqdsxS8UU6y2
+         hZivCh9IgHt0isApMS04xSX+cpkT8LpS463Ac81akd1qYRvtshPkQPjNbTPFG20qf+
+         TELCtZhznvd1eryR3rWbUFdmQTVRaRcb4vNE2nL9ye+oP3m8xu4KxvuMLz8vzAkSDU
+         TME2DgDraD0lbxfl/Vl/J8Sw7bWKQKznrFmg4ZsbQ3sg7rqHRGoxUcXg0jzrUAvjBw
+         lA2XiiLQloaWnez0NnYYVBqpGWXJsIORe7f/UxlcGuVH+1nO0dVfjwXCPENX0X7YUs
+         zg/nOXEC1OhkYKtaTdQp9WWyblKAyheYc2g8jiNHxH/LRvugedjqzJuyTFpIBCsz2H
+         QkZFa7LezzA7paw7xtNyd49a1YmEbphLgnjQqt1dk5E1TJHmQzk1pkG05xV6qSX/jD
+         L+xFIxw7v6i936nx9qbqc8WOnQIjC8g9T5xtUJ57hoMJn+hfYJ3s+TE5U5uN8OOFyx
+         AoXGXh0QT4oyWmYonJgxfYkE=
+Received: from Hawking (ntp.lan [10.0.1.1])
         (authenticated bits=0)
-        by canardo.mork.no (8.15.2/8.15.2) with ESMTPSA id x3FATACi011192
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Mon, 15 Apr 2019 12:29:10 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mork.no; s=b;
-        t=1555324152; bh=ZUwwzFpwn0RRWe35hkDYzhY8T2o7sok5wK9SV9zz9A8=;
-        h=From:To:Cc:Subject:References:Date:Message-ID:From;
-        b=Gx4zXUEjjFNCxfS3SM5gqkkllghZz82jb06h5D+KAcalkBNMwWoLpNS/+0zEJh9Oj
-         J7b7iJlsL1Cw+3bbG6OMQxIrfMLOTVBrvJqjUHYMrgYawHDy38Nn4KwR8VmZLwaUXd
-         DFgy5RO6F/1z+4SwCDSnWGhlk140npjYu9T+MMek=
-Received: from bjorn by miraculix.mork.no with local (Exim 4.89)
-        (envelope-from <bjorn@mork.no>)
-        id 1hFyrN-0003ZD-Pz; Mon, 15 Apr 2019 12:29:09 +0200
-From:   =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Marcel Holtmann <marcel@holtmann.org>,
-        Vadim Yanitskiy <axilirator@gmail.com>,
-        Harald Welte <laforge@gnumonks.org>,
-        OpenBSC Mailing List <openbsc@lists.osmocom.org>,
-        Sean Tranchetti <stranche@codeaurora.org>, radiotap@netbsd.org,
-        Dan Williams <dcbw@redhat.com>,
-        netdev <netdev@vger.kernel.org>,
-        "open list\:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>,
-        Aleksander Morgado <aleksander@aleksander.es>,
-        Subash Abhinov Kasiviswanathan <subashab@codeaurora.org>
-Subject: Re: gsmtap design/extensions?
-Organization: m
-References: <cf07ae24c436f92769f9289d208f01846ebe8826.camel@sipsolutions.net>
-        <CAPEnp=bHTVARr7WA9Qkq4=y7kk8_FLWhrkqKOEXubMO4X=BHCw@mail.gmail.com>
-        <46474c61d7748042cc0a1f23773186786020638e.camel@sipsolutions.net>
-        <6F1998DC-EFD2-4145-BD81-A80F9DC7ED2D@holtmann.org>
-        <1d64c578cd5b254d301cf1cac82f32a062916888.camel@sipsolutions.net>
-        <D4D12CF9-9CE5-46FB-9738-F89DB6B6F9EA@holtmann.org>
-        <92e8e142b6d441c1c995abc57d64ad7b7747a688.camel@sipsolutions.net>
-Date:   Mon, 15 Apr 2019 12:29:09 +0200
-In-Reply-To: <92e8e142b6d441c1c995abc57d64ad7b7747a688.camel@sipsolutions.net>
-        (Johannes Berg's message of "Mon, 15 Apr 2019 11:11:54 +0200")
-Message-ID: <87d0ln1s0a.fsf@miraculix.mork.no>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        by mail2.nmnhosting.com (8.15.2/8.15.2) with ESMTPSA id x3FAXnup038604
+        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Mon, 15 Apr 2019 20:33:49 +1000 (AEST)
+        (envelope-from alastair@d-silva.org)
+From:   "Alastair D'Silva" <alastair@d-silva.org>
+To:     "'Petr Mladek'" <pmladek@suse.com>
+Cc:     "'Alastair D'Silva'" <alastair@au1.ibm.com>,
+        "'Jani Nikula'" <jani.nikula@linux.intel.com>,
+        "'Joonas Lahtinen'" <joonas.lahtinen@linux.intel.com>,
+        "'Rodrigo Vivi'" <rodrigo.vivi@intel.com>,
+        "'David Airlie'" <airlied@linux.ie>,
+        "'Daniel Vetter'" <daniel@ffwll.ch>,
+        "'Karsten Keil'" <isdn@linux-pingi.de>,
+        "'Jassi Brar'" <jassisinghbrar@gmail.com>,
+        "'Tom Lendacky'" <thomas.lendacky@amd.com>,
+        "'David S. Miller'" <davem@davemloft.net>,
+        "'Jose Abreu'" <Jose.Abreu@synopsys.com>,
+        "'Kalle Valo'" <kvalo@codeaurora.org>,
+        "'Stanislaw Gruszka'" <sgruszka@redhat.com>,
+        "'Benson Leung'" <bleung@chromium.org>,
+        "'Enric Balletbo i Serra'" <enric.balletbo@collabora.com>,
+        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        "'Greg Kroah-Hartman'" <gregkh@linuxfoundation.org>,
+        "'Alexander Viro'" <viro@zeniv.linux.org.uk>,
+        "'Sergey Senozhatsky'" <sergey.senozhatsky@gmail.com>,
+        "'Steven Rostedt'" <rostedt@goodmis.org>,
+        "'Andrew Morton'" <akpm@linux-foundation.org>,
+        <intel-gfx@lists.freedesktop.org>,
+        <dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <ath10k@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-fbdev@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <linux-fsdevel@vger.kernel.org>
+References: <20190410031720.11067-1-alastair@au1.ibm.com> <20190410031720.11067-3-alastair@au1.ibm.com> <20190412140353.mgvksn3yk6n65hbk@pathway.suse.cz> <093101d4f187$612f0f20$238d2d60$@d-silva.org> <20190415091812.s4e5zlwldbe62ego@pathway.suse.cz>
+In-Reply-To: <20190415091812.s4e5zlwldbe62ego@pathway.suse.cz>
+Subject: RE: [PATCH 2/4] lib/hexdump.c: Optionally suppress lines of filler bytes
+Date:   Mon, 15 Apr 2019 20:33:47 +1000
+Message-ID: <0db001d4f376$b598af80$20ca0e80$@d-silva.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Virus-Scanned: clamav-milter 0.100.3 at canardo
-X-Virus-Status: Clean
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQMagew30YCVD5mEhyHx4HPts9xr1AIaTVgFAud+bokCJYEOIgJRBvYio2YlwMA=
+Content-Language: en-au
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.6.2 (mail2.nmnhosting.com [10.0.1.20]); Mon, 15 Apr 2019 20:33:49 +1000 (AEST)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+> > > On Wed 2019-04-10 13:17:18, Alastair D'Silva wrote:
+> > > > From: Alastair D'Silva <alastair@d-silva.org>
+> > > >
+> > > > Some buffers may only be partially filled with useful data, while
+> > > > the rest is padded (typically with 0x00 or 0xff).
+> > > >
+> > > > This patch introduces flags which allow lines of padding bytes to
+> > > > be suppressed, making the output easier to interpret:
+> > > > HEXDUMP_SUPPRESS_0X00, HEXDUMP_SUPPRESS_0XFF
+> > > >
+> > > > The first and last lines are not suppressed by default, so the
+> > > > function always outputs something. This behaviour can be further
+> > > > controlled with the HEXDUMP_SUPPRESS_FIRST &
+> > > HEXDUMP_SUPPRESS_LAST flags.
+> > > >
+> > > > An inline wrapper function is provided for backwards compatibility
+> > > > with existing code, which maintains the original behaviour.
+> > > >
+> > >
+> > > > diff --git a/lib/hexdump.c b/lib/hexdump.c index
+> > > > b8a164814744..2f3bafb55a44 100644
+> > > > --- a/lib/hexdump.c
+> > > > +++ b/lib/hexdump.c
+> > > > +void print_hex_dump_ext(const char *level, const char *prefix_str,
+> > > > +			int prefix_type, int rowsize, int groupsize,
+> > > > +			const void *buf, size_t len, u64 flags)
+> > > >  {
+> > > >  	const u8 *ptr = buf;
+> > > > -	int i, linelen, remaining = len;
+> > > > +	int i, remaining = len;
+> > > >  	unsigned char linebuf[64 * 3 + 2 + 64 + 1];
+> > > > +	bool first_line = true;
+> > > >
+> > > >  	if (rowsize != 16 && rowsize != 32 && rowsize != 64)
+> > > >  		rowsize = 16;
+> > > >
+> > > >  	for (i = 0; i < len; i += rowsize) {
+> > > > -		linelen = min(remaining, rowsize);
+> > > > +		bool skip = false;
+> > > > +		int linelen = min(remaining, rowsize);
+> > > > +
+> > > >  		remaining -= rowsize;
+> > > >
+> > > > +		if (flags & HEXDUMP_SUPPRESS_0X00)
+> > > > +			skip = buf_is_all(ptr + i, linelen, 0x00);
+> > > > +
+> > > > +		if (!skip && (flags & HEXDUMP_SUPPRESS_0XFF))
+> > > > +			skip = buf_is_all(ptr + i, linelen, 0xff);
+> > > > +
+> > > > +		if (first_line && !(flags & HEXDUMP_SUPPRESS_FIRST))
+> > > > +			skip = false;
+> > > > +
+> > > > +		if (remaining <= 0 && !(flags &
+HEXDUMP_SUPPRESS_LAST))
+> > > > +			skip = false;
+> > > > +
+> > > > +		if (skip)
+> > > > +			continue;
+> > >
+> > > IMHO, quietly skipping lines could cause a lot of confusion,
+> > > espcially
+> > when the address is not printed.
+> > >
+> > It's up to the caller to decide how they want it displayed.
+> 
+> I wonder who would want to quietly skip some data values.
+> Are you using it yourself? Could you please provide an example?
 
->> As I said, as long as you do not get the QMI, AT command, MBIM etc.
->> control path session recorded as well, you have nothing to really
->> analyze.
->
-> But you do - afaict there are no ways other than the netdevs to
-> communicate with the device,
+Yes, but I don't have the content with me at the moment, so I can't share
+it. I'm dumping persistent memory labels, which are 64kB long, but only the
+first few hundred bytes are populated.
+ 
+> I do not see why we would need to complicate the API and code by this.
+> 
+> The behavior proposed by Tvrtko Ursulin makes much more sense. I mean
+> https://lkml.kernel.org/r/929244ed-cc7f-b0f3-b5ac-
+> 50e798e83188@linux.intel.com
 
-I don't understand where you are going here? Neither QMI, AT command nor
-MBIM management are transported over netdevs. AT is usually transported
-using simple USB bulk streams, exported to userspace as tty devices by
-some USB serial driver.  Both QMI and MBIM management are transported as
-USB control messages, and exported to userspace as chardevs.  There are
-no netdevs involved.
+I agree that is better, I'll add that to V2.
 
-> and people do things like "socat" to set up
-> PTYs and pretend to have serial channels there, on top of the netdevs?
-
-I assume you are referring to my MBIM DSS examples here.  I don't know
-if anyone is actually using that, so you should probably ignore it...
-I'll happily admit it was a bad idea.  Should have just added the
-necessary code to map DSS channels to some sort of character device in
-the driver, like most users requested.
-
-But there really isn't anything in the MBIM spec saying how DSS should
-be used. DSS is a generic data stream.  Could easily be connected to a
-single TCP session for example, in which case you'd probably want to
-connect it to a TCP session in the other end too.  So I wouldn't want to
-force DSS into character devices on the host end.  This doesn't rule out
-a userspace controlled optional mapping though. We could probably still
-add that, replacing the VLAN mapping with a chardev for a specific DSS
-session if requested by userspace.  I guess this is something to
-consider for a generic cellular framework - supporting non-ip data
-streams between modem and host.
-
-Adding to my previous excuses: The DSS implementation in the cdc_mbim
-driver was added without having seen a single modem firmware with *any*
-type of DSS support.  It was purely based on spec{ification,culation}.
-The VLAN mapping, along with examples of how to use socat to further map
-the streams from VLANs into suitable application specific forms, seemed
-like a simple and flexible enough solution.
+-- 
+Alastair D'Silva           mob: 0423 762 819
+skype: alastair_dsilva     msn: alastair@d-silva.org
+blog: http://alastair.d-silva.org    Twitter: @EvilDeece
 
 
-Bj=C3=B8rn
+
