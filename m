@@ -5,89 +5,96 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCF53C10F14
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 19:07:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7367AC10F13
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 19:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ADCF420663
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 19:07:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42A8020663
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 19:11:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728373AbfDPTHc convert rfc822-to-8bit (ORCPT
+        id S1728839AbfDPTL5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Apr 2019 15:07:32 -0400
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:33295 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727136AbfDPTHc (ORCPT
+        Tue, 16 Apr 2019 15:11:57 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:37838 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727136AbfDPTL5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Apr 2019 15:07:32 -0400
-Received: by mail-ed1-f66.google.com with SMTP id d55so18069278ede.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2019 12:07:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=xVaMaqVCFTcxKeNV1hDB4g5+xzkRnhqj5thBZSfVPBU=;
-        b=kHA9edfvmh58FgFR8d2igQiT3tDWYFK6T2/jrQYBHPdEwRtgxJo1yPByky3yXrtAGg
-         4GIPDXuXyxS9XqMOQbhrET8lE3gZAYD38M+kMY8jfQqQ21B8Cby6NSySBgjnan5ig3dp
-         /xJPYExD87sJr7RhmX5lZDlMkSO6AjesHDVq+2AMm3X1KLVB070Tvj5VC5jpaA16gnIP
-         XCKK1GcClS05JK5sGQjho5EGNz/h7mjD73+LuWHAyALBiI2CpjvtG5d6xbKaD6F8dp36
-         HuUXVHF47MEzFA14HSeFswEm3I9vjHXE+/GAbrew8hm/V8NWyEHokroE2ZcWeu11CKwu
-         USkQ==
-X-Gm-Message-State: APjAAAXX6UmZqYAYa++Re5J914HPt4DM7vS0T+jFHq1H0812TO/463UG
-        4bVUvlwOefJqid5v2y0/WWlXYg==
-X-Google-Smtp-Source: APXvYqw2e9N5vGDhkJEsbKF9R0Gb9fY5++3PIUR9fJRM7VgtvTM99P1oDs5hors3fepzBuW6zYV9OQ==
-X-Received: by 2002:aa7:c5c4:: with SMTP id h4mr51808770eds.19.1555441650878;
-        Tue, 16 Apr 2019 12:07:30 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk (alrua-x1.vpn.toke.dk. [2a00:7660:6da:10::2])
-        by smtp.gmail.com with ESMTPSA id ga13sm9748114ejb.9.2019.04.16.12.07.29
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 16 Apr 2019 12:07:29 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id D98541800E8; Tue, 16 Apr 2019 20:07:27 +0100 (+01)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Erik Stromdahl <erik.stromdahl@gmail.com>, kvalo@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc:     yiboz@codeaurora.org
-Subject: Re: [PATCH] ath10k: remove iteration in wake_tx_queue
-In-Reply-To: <8772dfe6-3f52-05ca-f55a-b7eae14fa7ac@gmail.com>
-References: <20190327162906.6010-1-erik.stromdahl@gmail.com> <87bm1qq92j.fsf@toke.dk> <8772dfe6-3f52-05ca-f55a-b7eae14fa7ac@gmail.com>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Tue, 16 Apr 2019 20:07:27 +0100
-Message-ID: <87imvdu5u8.fsf@toke.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+        Tue, 16 Apr 2019 15:11:57 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hGTUp-0000AY-BZ; Tue, 16 Apr 2019 21:11:55 +0200
+Message-ID: <08b4769ff83eb9b098fee8915ca25666f29512c7.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Tue, 16 Apr 2019 21:11:54 +0200
+In-Reply-To: <7338263c-9e01-1559-888f-adcb4b7c8ca1@wetzel-home.de>
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+         <20190210210620.31181-8-alexander@wetzel-home.de>
+         <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
+         <e84c30de-28d6-7d1b-0fa3-d1ca466e257b@wetzel-home.de>
+         <69e6577f90d99289acaa9853fe236e6f15f9e774.camel@sipsolutions.net>
+         <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
+         <ed6e95dad39ef0ac98c62e3acd3f78fd7b3a6d2b.camel@sipsolutions.net>
+         <185ea9a2-f3c6-04a5-000b-44191da5a0ee@wetzel-home.de>
+         <0de9d60ffef574b34e9a76ad2cea68fab49aac0f.camel@sipsolutions.net>
+         <45ae97d6-3357-64ac-0a40-9ae3ea4a8ed2@wetzel-home.de>
+         <84694a97bf884985afd49d93e28b309a92801916.camel@sipsolutions.net>
+         <577d4307-27ca-c5f5-8814-bbef515559e3@wetzel-home.de>
+         <91d60fa7ba614c96fe2814375a28802e9165218b.camel@sipsolutions.net>
+         <7338263c-9e01-1559-888f-adcb4b7c8ca1@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+On Tue, 2019-04-16 at 20:28 +0200, Alexander Wetzel wrote:
 
-> On 4/1/19 1:05 PM, Toke Høiland-Jørgensen wrote:
->> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
->> 
->>> Iterating the TX queue and thereby dequeuing all available packets in the
->>> queue could result in performance penalties on some SMP systems.
->>>
->>> The reason for this is most likely that the per-ac lock (active_txq_lock)
->>> in mac80211 will be held by the CPU iterating the current queue.
->>>
->>> This will lock up other CPUs trying to push new messages on the TX
->>> queue.
->>>
->>> Instead of iterating the queue we fetch just one packet at the time,
->>> resulting in minimal starvation of the other CPUs.
->> 
->> Did you test this with Felix' patches reducing the time the lock is held
->> in mac80211?
->> 
->> -Toke
->> 
-> Hi Toke,
->
-> I am not aware of these patches. Can you please point them out for me?
+> They can enable the mode when a key with IEEE80211_KEY_FLAG_NO_AUTO_TX 
+> set
 
-They've already been merged. Commits dcec1d9bc8a7 and 7ef769459f14 in
-mac80211-next :)
+This I agree with.
 
--Toke
+> and quiet it again as soon as they get a MPDU using the new KeyID.
+
+This isn't true, afaict. You need to be sure that no MPDUs remain using
+the old key ID, not just that the new key ID showed up.
+
+> Since switching back to normal doesn't have to be done immediately a 
+> asyc call from Tx path or even a worker should do the job just fine.
+
+Sure.
+
+> Btw:
+> This also means we'll have to update the merged mac80211 Extended Key ID 
+> support: We can only enable it for cards without HW crypto when they do 
+> not set AMPDU_AGGREGATION. With the updated userspace these cards will 
+> start using Extended Key ID with the already merged patches.
+
+I was going to say this is fine, but no, of course not ... we shouldn't
+use different key id in the same A-MPDU.
+
+That said, I'd be very surprised if there are any such drivers, except
+in corner cases (like loading some drivers like ath9k or iwlwifi with
+swcrypto=1 or so)
+
+> Of those only hwsim and brcmsmac seems to support AMPDU and only 
+> brcmsmac relly needs the fix to not lose some packets when rekeying.
+
+I can't believe that brcmsmac has no HW crypto support?
+
+Anyway, a patch - even if it serves mostly as documentation - would be
+most welcome.
+
+> I assume we still have to wait till the API is in mainline (probably 
+> 5.2) to ask hostapd/wpa_supplicant to merge the patches?
+
+No, mac80211-next is (usually?) good enough.
+
+johannes
+
