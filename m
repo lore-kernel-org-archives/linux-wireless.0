@@ -2,649 +2,220 @@ Return-Path: <SRS0=bGvd=SS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 398D6C10F13
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 20:28:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9680AC10F14
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 21:19:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EBFD220663
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 20:28:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C68B20821
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 21:19:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZVbbW6gv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730721AbfDPU2Y (ORCPT
+        id S1729143AbfDPVTS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Apr 2019 16:28:24 -0400
-Received: from mout.kundenserver.de ([217.72.192.74]:45625 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729301AbfDPU2W (ORCPT
+        Tue, 16 Apr 2019 17:19:18 -0400
+Received: from mail-qt1-f174.google.com ([209.85.160.174]:39934 "EHLO
+        mail-qt1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727180AbfDPVTS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Apr 2019 16:28:22 -0400
-Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
- (mreue109 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1MV6G0-1hNgEM3EgQ-00SATK; Tue, 16 Apr 2019 22:27:08 +0200
-From:   Arnd Bergmann <arnd@arndb.de>
-To:     Alexander Viro <viro@zeniv.linux.org.uk>
-Cc:     linux-fsdevel@vger.kernel.org, y2038@lists.linaro.org,
-        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Sterba <dsterba@suse.com>,
-        Darren Hart <dvhart@infradead.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        devel@driverdev.osuosl.org, qat-linux@intel.com,
-        linux-crypto@vger.kernel.org, linux-media@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-        amd-gfx@lists.freedesktop.org, linux-input@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v3 12/26] compat_ioctl: move more drivers to compat_ptr_ioctl
-Date:   Tue, 16 Apr 2019 22:25:33 +0200
-Message-Id: <20190416202701.127745-1-arnd@arndb.de>
-X-Mailer: git-send-email 2.20.0
-In-Reply-To: <20190416202013.4034148-1-arnd@arndb.de>
-References: <20190416202013.4034148-1-arnd@arndb.de>
+        Tue, 16 Apr 2019 17:19:18 -0400
+Received: by mail-qt1-f174.google.com with SMTP id t28so25080488qte.6;
+        Tue, 16 Apr 2019 14:19:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:from:to:cc:references:openpgp:autocrypt:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=krRt68KLEsOjmTvEFVx1sK86aD/lbvaJH64fxTuBNYE=;
+        b=ZVbbW6gvpDtnRxcvwdQ0V1BcIAz+WWCva/JEL9oK9hk/kyDqY+4bUic94IAJetVLph
+         9FzjYacpfcJSXn2dsJGTt/cvBapbioKYivAf4Dx8zgt4ST56pGDTuEHQWRr/zQAXyvCI
+         cqcMJwZabeSv/b6YoMHtJI2HD5RF0xka7zMw4eF+m/E04kl2080rX+JL0hbP/k4rHzw2
+         NKl6qah9Gr0OELct/YHvyWwcOkKjcYktL9jnSwvU49+enEAOZnbbG9BlCzYhHwYsZYCZ
+         oGNi6rqWu+7NBFz7Zar7aJcfgLWI8sv8F++Mk8ReBlcKMDADgR6SkSdKuqRKXaVEbGkX
+         j16A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:from:to:cc:references:openpgp:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-transfer-encoding:content-language;
+        bh=krRt68KLEsOjmTvEFVx1sK86aD/lbvaJH64fxTuBNYE=;
+        b=Lu9JtBOwprwZMQQNjI0WwpYw1HKuPqlhQS5FU3wnr47nGBlQAki55XculIEKugFlGO
+         PCyr7RpIWfj5i0u3xpnlqucJ8yDYk1EhNR3r3GHpMaAdhlxyjRiwfo4SbvFW8fDGffA+
+         2ggsiOGMCvPrss5BW40Unt/UD3Ci4eK/lB2g5iKTOInTw2wlrn+6/LFVI/lwQwnlVnUT
+         sP9r96yZkYbqdi9Ih8Tlrf+T39F0K7zzT+55mf1eojpMQCwDlmF7oduD5KXMBOn7XHO9
+         suhuR2eFwvDP3jf3YE3i8el3xnTOtmwSZaM7urZEbLDc6UBEnVoslb6O4qoGwoN7L8hD
+         bWXg==
+X-Gm-Message-State: APjAAAWAoKnNgocmU0HiwrW8NA/Kzmxsmu8x5x6LYA6U8geQyqUxBuLd
+        nzOSNHBiuRKhs7PbqoYqGqGxftnG
+X-Google-Smtp-Source: APXvYqw9MksTnQetWnkH3xw/OchkAavRYWbMoH9j4pyKgoRYVTKzsyo19snEkKhXUf5WKVeEV+LS/A==
+X-Received: by 2002:ac8:1a55:: with SMTP id q21mr69551665qtk.20.1555449556452;
+        Tue, 16 Apr 2019 14:19:16 -0700 (PDT)
+Received: from [192.168.1.199] (pool-108-28-156-19.washdc.fios.verizon.net. [108.28.156.19])
+        by smtp.gmail.com with ESMTPSA id n46sm34285629qtn.75.2019.04.16.14.19.14
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 16 Apr 2019 14:19:15 -0700 (PDT)
+Subject: Re: rtlwifi-new v0.6 and dkms failures
+From:   "David R. Bergstein" <david.r.bergstein@gmail.com>
+To:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Tony Chuang <yhchuang@realtek.com>
+Cc:     Pkshih <pkshih@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <51d62a31-7cde-e815-bdee-4ef5433007aa@gmail.com>
+ <F7CD281DE3E379468C6D07993EA72F84D17AF74C@RTITMBSVM04.realtek.com.tw>
+ <b0518665-d5ca-7c94-9808-7cc0cf565814@gmail.com>
+ <e68c6aae-8d71-266a-81fe-d078ac1ef38c@lwfinger.net>
+ <6eb7af74-b1a8-d112-e027-6c14252af994@gmail.com>
+ <487c350c-c455-b490-8de5-1d68760aa3dc@lwfinger.net>
+ <2e39892d-d206-e87f-c802-d427c54277cf@gmail.com>
+ <8706d34c-1fac-84ba-759d-18d96750636b@gmail.com>
+ <60509a60-d0ea-d17f-8b79-e51c374717ba@gmail.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=david.r.bergstein@gmail.com; keydata=
+ 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
+ cZPytJop3jxjNbB2ZRfwBXX3FsGBkJ4S2SKQyQ==
+Message-ID: <96605e3f-002b-c28b-8e7c-566271bbec19@gmail.com>
+Date:   Tue, 16 Apr 2019 17:19:14 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
+In-Reply-To: <60509a60-d0ea-d17f-8b79-e51c374717ba@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:I0ntVofgIZKGDclnxZ80rUlhqXRnwCyJ9jfieMXwclGrzlJhSWk
- OKsGtgTemIooP2uxwjLrqce31TjiCM+NZZDAiHRSRkbSCDIhOasKLnejUnBtDmBZLdMze8D
- KtI5pIUv85Ma7qqZ79FGs7jZWk9ZR8GHb8oMvlf9wqE0dfMEW2In79FEpbTVhmQ/Mu1r5DS
- 6N8yl7VusBlVp4Sbay5HQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:B+LStx+rZMQ=:xApjNKhdi1PiaqHC5cM6ps
- ARbxWw0ZsBv37ABCsriMMubm0zKmPeUR3kolGlGVqQ6D6DHq+wtFSX1jZhotLB9MUrE79EiBG
- rBQqFEVEh33wWnHxTN2+FZoe+/9Z4rMezYsywpbx/7xIyVeDJ6j2KpLFDCLLyR4GNNfRW/OTd
- 4nc8X1lEGKm588JH3+ozlglCO2PUldHircrw63OUjoePwC9PMC631NLBMmcM2NyT1Xpgyxncs
- IxvH7H/YoYsEVzKR/nEjTgRq2zxVJCuP6xWSFp1QmirMp3y9YXW1EqPOL9By/xPdekntG1IXJ
- Ox9qPzjf+cGJtZoLcIrckKeH9ExP+d2r58eAt02lfD3s4WnqsWiDrqR397mvYNUokl1SWcyZC
- P/52sGIyEOzTYD8Q+/SoO+3RnqdlS6wUQzTn69DzKYJUngwIaK1mompwf+aPpt9AfKsMiMt3Y
- LZeK2PBpkPzhY1Zw6rn1932leEjf+WX2lFLl8JoSigUNLcHrhpVuIOxuZwSQAhr3vCUOaFQq/
- 8fHq8VuSeFGCUpiXUxvNPH4xog0kkvd8BfyHtzOfIeHxSlJtF/MRF3l4a6Kym5jC83U8Z7RZx
- HSflp0aFLC7vrTzgLVI9I/sw5CsYX4GCcK+RNwEcQn9c6ekQ/GsKEwzm/APecGtdEvEU3/hTl
- cMA58xS7Ybje6+SjwRaCDSbGABox7uG/F4xrGka498yuvAG62N6+Iq7l/VDFP3EX8HEmaA0Z9
- 5SU4ChC7kXQtp6moxDFTXEx1RxQ8b/pjYACU8w==
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The .ioctl and .compat_ioctl file operations have the same prototype so
-they can both point to the same function, which works great almost all
-the time when all the commands are compatible.
+Larry,
 
-One exception is the s390 architecture, where a compat pointer is only
-31 bit wide, and converting it into a 64-bit pointer requires calling
-compat_ptr(). Most drivers here will ever run in s390, but since we now
-have a generic helper for it, it's easy enough to use it consistently.
+As it tuns out, I was able to create a new dkms.conf file which works on
+my system. Below is  copy of the content from that file:
 
-I double-checked all these drivers to ensure that all ioctl arguments
-are used as pointers or are ignored, but are not interpreted as integer
-values.
+PACKAGE_NAME="rtlwifi-new"
+PACKAGE_VERSION=0.6
+MAKE="make -C $kernel_source_dir
+M=$dkms_tree/$PACKAGE_NAME/$PACKAGE_VERSION/build"
+CLEAN="make -C $kernel_source_dir clean"
+BUILT_MODULE_NAME[0]="rtw88"
+BUILT_MODULE_NAME[1]="rtwpci"
+DEST_MODULE_LOCATION[0]="/updates"
+DEST_MODULE_LOCATION[1]="/updates"
+REMAKE_INITRD=no
+AUTOINSTALL=yes
 
-Acked-by: Jason Gunthorpe <jgg@mellanox.com>
-Acked-by: Daniel Vetter <daniel.vetter@ffwll.ch>
-Acked-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Acked-by: David Sterba <dsterba@suse.com>
-Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/android/binder.c                    | 2 +-
- drivers/crypto/qat/qat_common/adf_ctl_drv.c | 2 +-
- drivers/dma-buf/dma-buf.c                   | 4 +---
- drivers/dma-buf/sw_sync.c                   | 2 +-
- drivers/dma-buf/sync_file.c                 | 2 +-
- drivers/gpu/drm/amd/amdkfd/kfd_chardev.c    | 2 +-
- drivers/hid/hidraw.c                        | 4 +---
- drivers/iio/industrialio-core.c             | 2 +-
- drivers/infiniband/core/uverbs_main.c       | 4 ++--
- drivers/media/rc/lirc_dev.c                 | 4 +---
- drivers/mfd/cros_ec_dev.c                   | 4 +---
- drivers/misc/vmw_vmci/vmci_host.c           | 2 +-
- drivers/nvdimm/bus.c                        | 4 ++--
- drivers/nvme/host/core.c                    | 2 +-
- drivers/pci/switch/switchtec.c              | 2 +-
- drivers/platform/x86/wmi.c                  | 2 +-
- drivers/rpmsg/rpmsg_char.c                  | 4 ++--
- drivers/sbus/char/display7seg.c             | 2 +-
- drivers/sbus/char/envctrl.c                 | 4 +---
- drivers/scsi/3w-xxxx.c                      | 4 +---
- drivers/scsi/cxlflash/main.c                | 2 +-
- drivers/scsi/esas2r/esas2r_main.c           | 2 +-
- drivers/scsi/pmcraid.c                      | 4 +---
- drivers/staging/android/ion/ion.c           | 4 +---
- drivers/staging/vme/devices/vme_user.c      | 2 +-
- drivers/tee/tee_core.c                      | 2 +-
- drivers/usb/class/cdc-wdm.c                 | 2 +-
- drivers/usb/class/usbtmc.c                  | 4 +---
- drivers/virt/fsl_hypervisor.c               | 2 +-
- fs/btrfs/super.c                            | 2 +-
- fs/ceph/dir.c                               | 2 +-
- fs/ceph/file.c                              | 2 +-
- fs/fuse/dev.c                               | 2 +-
- fs/notify/fanotify/fanotify_user.c          | 2 +-
- fs/userfaultfd.c                            | 2 +-
- net/rfkill/core.c                           | 2 +-
- 36 files changed, 39 insertions(+), 57 deletions(-)
+This also had the benefit of module signing by the version of dkms in
+Ubuntu 19.04, so I am now also back on secure boot.
 
-diff --git a/drivers/android/binder.c b/drivers/android/binder.c
-index 4b9c7ca492e6..48109ade7234 100644
---- a/drivers/android/binder.c
-+++ b/drivers/android/binder.c
-@@ -5998,7 +5998,7 @@ const struct file_operations binder_fops = {
- 	.owner = THIS_MODULE,
- 	.poll = binder_poll,
- 	.unlocked_ioctl = binder_ioctl,
--	.compat_ioctl = binder_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- 	.mmap = binder_mmap,
- 	.open = binder_open,
- 	.flush = binder_flush,
-diff --git a/drivers/crypto/qat/qat_common/adf_ctl_drv.c b/drivers/crypto/qat/qat_common/adf_ctl_drv.c
-index abc7a7f64d64..ef0e482ee04f 100644
---- a/drivers/crypto/qat/qat_common/adf_ctl_drv.c
-+++ b/drivers/crypto/qat/qat_common/adf_ctl_drv.c
-@@ -68,7 +68,7 @@ static long adf_ctl_ioctl(struct file *fp, unsigned int cmd, unsigned long arg);
- static const struct file_operations adf_ctl_ops = {
- 	.owner = THIS_MODULE,
- 	.unlocked_ioctl = adf_ctl_ioctl,
--	.compat_ioctl = adf_ctl_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- struct adf_ctl_drv_info {
-diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
-index 7c858020d14b..0cb336fe6324 100644
---- a/drivers/dma-buf/dma-buf.c
-+++ b/drivers/dma-buf/dma-buf.c
-@@ -325,9 +325,7 @@ static const struct file_operations dma_buf_fops = {
- 	.llseek		= dma_buf_llseek,
- 	.poll		= dma_buf_poll,
- 	.unlocked_ioctl	= dma_buf_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl	= dma_buf_ioctl,
--#endif
-+	.compat_ioctl	= compat_ptr_ioctl,
- };
- 
- /*
-diff --git a/drivers/dma-buf/sw_sync.c b/drivers/dma-buf/sw_sync.c
-index 32dcf7b4c935..411de6a8a0ad 100644
---- a/drivers/dma-buf/sw_sync.c
-+++ b/drivers/dma-buf/sw_sync.c
-@@ -419,5 +419,5 @@ const struct file_operations sw_sync_debugfs_fops = {
- 	.open           = sw_sync_debugfs_open,
- 	.release        = sw_sync_debugfs_release,
- 	.unlocked_ioctl = sw_sync_ioctl,
--	.compat_ioctl	= sw_sync_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- };
-diff --git a/drivers/dma-buf/sync_file.c b/drivers/dma-buf/sync_file.c
-index 4f6305ca52c8..0949f91eb85f 100644
---- a/drivers/dma-buf/sync_file.c
-+++ b/drivers/dma-buf/sync_file.c
-@@ -488,5 +488,5 @@ static const struct file_operations sync_file_fops = {
- 	.release = sync_file_release,
- 	.poll = sync_file_poll,
- 	.unlocked_ioctl = sync_file_ioctl,
--	.compat_ioctl = sync_file_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
-diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c b/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c
-index 083bd8114db1..5d6ac7885aa7 100644
---- a/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c
-+++ b/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c
-@@ -49,7 +49,7 @@ static const char kfd_dev_name[] = "kfd";
- static const struct file_operations kfd_fops = {
- 	.owner = THIS_MODULE,
- 	.unlocked_ioctl = kfd_ioctl,
--	.compat_ioctl = kfd_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- 	.open = kfd_open,
- 	.mmap = kfd_mmap,
- };
-diff --git a/drivers/hid/hidraw.c b/drivers/hid/hidraw.c
-index 9fc51eff1079..e7284d38b66d 100644
---- a/drivers/hid/hidraw.c
-+++ b/drivers/hid/hidraw.c
-@@ -476,9 +476,7 @@ static const struct file_operations hidraw_ops = {
- 	.release =      hidraw_release,
- 	.unlocked_ioctl = hidraw_ioctl,
- 	.fasync =	hidraw_fasync,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl   = hidraw_ioctl,
--#endif
-+	.compat_ioctl   = compat_ptr_ioctl,
- 	.llseek =	noop_llseek,
- };
- 
-diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
-index 4700fd5d8c90..eed1bea257b4 100644
---- a/drivers/iio/industrialio-core.c
-+++ b/drivers/iio/industrialio-core.c
-@@ -1635,7 +1635,7 @@ static const struct file_operations iio_buffer_fileops = {
- 	.owner = THIS_MODULE,
- 	.llseek = noop_llseek,
- 	.unlocked_ioctl = iio_ioctl,
--	.compat_ioctl = iio_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- static int iio_check_unique_scan_index(struct iio_dev *indio_dev)
-diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
-index 70b7d80431a9..ac4321d7c800 100644
---- a/drivers/infiniband/core/uverbs_main.c
-+++ b/drivers/infiniband/core/uverbs_main.c
-@@ -1120,7 +1120,7 @@ static const struct file_operations uverbs_fops = {
- 	.release = ib_uverbs_close,
- 	.llseek	 = no_llseek,
- 	.unlocked_ioctl = ib_uverbs_ioctl,
--	.compat_ioctl = ib_uverbs_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- static const struct file_operations uverbs_mmap_fops = {
-@@ -1131,7 +1131,7 @@ static const struct file_operations uverbs_mmap_fops = {
- 	.release = ib_uverbs_close,
- 	.llseek	 = no_llseek,
- 	.unlocked_ioctl = ib_uverbs_ioctl,
--	.compat_ioctl = ib_uverbs_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- static struct ib_client uverbs_client = {
-diff --git a/drivers/media/rc/lirc_dev.c b/drivers/media/rc/lirc_dev.c
-index f862f1b7f996..9ccc7e9cbc8e 100644
---- a/drivers/media/rc/lirc_dev.c
-+++ b/drivers/media/rc/lirc_dev.c
-@@ -730,9 +730,7 @@ static const struct file_operations lirc_fops = {
- 	.owner		= THIS_MODULE,
- 	.write		= ir_lirc_transmit_ir,
- 	.unlocked_ioctl	= ir_lirc_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl	= ir_lirc_ioctl,
--#endif
-+	.compat_ioctl	= compat_ptr_ioctl,
- 	.read		= ir_lirc_read,
- 	.poll		= ir_lirc_poll,
- 	.open		= ir_lirc_open,
-diff --git a/drivers/mfd/cros_ec_dev.c b/drivers/mfd/cros_ec_dev.c
-index d275deaecb12..4a602a40d75c 100644
---- a/drivers/mfd/cros_ec_dev.c
-+++ b/drivers/mfd/cros_ec_dev.c
-@@ -251,9 +251,7 @@ static const struct file_operations fops = {
- 	.release = ec_device_release,
- 	.read = ec_device_read,
- 	.unlocked_ioctl = ec_device_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl = ec_device_ioctl,
--#endif
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- static void cros_ec_class_release(struct device *dev)
-diff --git a/drivers/misc/vmw_vmci/vmci_host.c b/drivers/misc/vmw_vmci/vmci_host.c
-index 997f92543dd4..5bb406dabe85 100644
---- a/drivers/misc/vmw_vmci/vmci_host.c
-+++ b/drivers/misc/vmw_vmci/vmci_host.c
-@@ -969,7 +969,7 @@ static const struct file_operations vmuser_fops = {
- 	.release	= vmci_host_close,
- 	.poll		= vmci_host_poll,
- 	.unlocked_ioctl	= vmci_host_unlocked_ioctl,
--	.compat_ioctl	= vmci_host_unlocked_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- };
- 
- static struct miscdevice vmci_host_miscdev = {
-diff --git a/drivers/nvdimm/bus.c b/drivers/nvdimm/bus.c
-index 7bbff0af29b2..065ebd584482 100644
---- a/drivers/nvdimm/bus.c
-+++ b/drivers/nvdimm/bus.c
-@@ -1167,7 +1167,7 @@ static const struct file_operations nvdimm_bus_fops = {
- 	.owner = THIS_MODULE,
- 	.open = nd_open,
- 	.unlocked_ioctl = nd_ioctl,
--	.compat_ioctl = nd_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- 	.llseek = noop_llseek,
- };
- 
-@@ -1175,7 +1175,7 @@ static const struct file_operations nvdimm_fops = {
- 	.owner = THIS_MODULE,
- 	.open = nd_open,
- 	.unlocked_ioctl = nvdimm_ioctl,
--	.compat_ioctl = nvdimm_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- 	.llseek = noop_llseek,
- };
- 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 2c43e12b70af..560929bee5ce 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -2739,7 +2739,7 @@ static const struct file_operations nvme_dev_fops = {
- 	.owner		= THIS_MODULE,
- 	.open		= nvme_dev_open,
- 	.unlocked_ioctl	= nvme_dev_ioctl,
--	.compat_ioctl	= nvme_dev_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- };
- 
- static ssize_t nvme_sysfs_reset(struct device *dev,
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index e22766c79fe9..3a54b4b616e2 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1006,7 +1006,7 @@ static const struct file_operations switchtec_fops = {
- 	.read = switchtec_dev_read,
- 	.poll = switchtec_dev_poll,
- 	.unlocked_ioctl = switchtec_dev_ioctl,
--	.compat_ioctl = switchtec_dev_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- static void link_event_work(struct work_struct *work)
-diff --git a/drivers/platform/x86/wmi.c b/drivers/platform/x86/wmi.c
-index 7b26b6ccf1a0..dded9cef42f4 100644
---- a/drivers/platform/x86/wmi.c
-+++ b/drivers/platform/x86/wmi.c
-@@ -889,7 +889,7 @@ static const struct file_operations wmi_fops = {
- 	.read		= wmi_char_read,
- 	.open		= wmi_char_open,
- 	.unlocked_ioctl	= wmi_ioctl,
--	.compat_ioctl	= wmi_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- };
- 
- static int wmi_dev_probe(struct device *dev)
-diff --git a/drivers/rpmsg/rpmsg_char.c b/drivers/rpmsg/rpmsg_char.c
-index eea5ebbb5119..507bfe163883 100644
---- a/drivers/rpmsg/rpmsg_char.c
-+++ b/drivers/rpmsg/rpmsg_char.c
-@@ -290,7 +290,7 @@ static const struct file_operations rpmsg_eptdev_fops = {
- 	.write_iter = rpmsg_eptdev_write_iter,
- 	.poll = rpmsg_eptdev_poll,
- 	.unlocked_ioctl = rpmsg_eptdev_ioctl,
--	.compat_ioctl = rpmsg_eptdev_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- static ssize_t name_show(struct device *dev, struct device_attribute *attr,
-@@ -451,7 +451,7 @@ static const struct file_operations rpmsg_ctrldev_fops = {
- 	.open = rpmsg_ctrldev_open,
- 	.release = rpmsg_ctrldev_release,
- 	.unlocked_ioctl = rpmsg_ctrldev_ioctl,
--	.compat_ioctl = rpmsg_ctrldev_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- static void rpmsg_ctrldev_release_device(struct device *dev)
-diff --git a/drivers/sbus/char/display7seg.c b/drivers/sbus/char/display7seg.c
-index a36e4cf1841d..c9f60656f54d 100644
---- a/drivers/sbus/char/display7seg.c
-+++ b/drivers/sbus/char/display7seg.c
-@@ -155,7 +155,7 @@ static long d7s_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- static const struct file_operations d7s_fops = {
- 	.owner =		THIS_MODULE,
- 	.unlocked_ioctl =	d7s_ioctl,
--	.compat_ioctl =		d7s_ioctl,
-+	.compat_ioctl =		compat_ptr_ioctl,
- 	.open =			d7s_open,
- 	.release =		d7s_release,
- 	.llseek = noop_llseek,
-diff --git a/drivers/sbus/char/envctrl.c b/drivers/sbus/char/envctrl.c
-index 1a6e7224017c..dd2dfa85fc68 100644
---- a/drivers/sbus/char/envctrl.c
-+++ b/drivers/sbus/char/envctrl.c
-@@ -714,9 +714,7 @@ static const struct file_operations envctrl_fops = {
- 	.owner =		THIS_MODULE,
- 	.read =			envctrl_read,
- 	.unlocked_ioctl =	envctrl_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl =		envctrl_ioctl,
--#endif
-+	.compat_ioctl =		compat_ptr_ioctl,
- 	.open =			envctrl_open,
- 	.release =		envctrl_release,
- 	.llseek =		noop_llseek,
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index 2b1e0d503020..fb6444d0409c 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -1049,9 +1049,7 @@ static int tw_chrdev_open(struct inode *inode, struct file *file)
- static const struct file_operations tw_fops = {
- 	.owner		= THIS_MODULE,
- 	.unlocked_ioctl	= tw_chrdev_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl   = tw_chrdev_ioctl,
--#endif
-+	.compat_ioctl   = compat_ptr_ioctl,
- 	.open		= tw_chrdev_open,
- 	.release	= NULL,
- 	.llseek		= noop_llseek,
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 7096810fd222..e13d5de1d76e 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -3589,7 +3589,7 @@ static const struct file_operations cxlflash_chr_fops = {
- 	.owner          = THIS_MODULE,
- 	.open           = cxlflash_chr_open,
- 	.unlocked_ioctl	= cxlflash_chr_ioctl,
--	.compat_ioctl	= cxlflash_chr_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- };
- 
- /**
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index fdbda5c05aa0..80c5a235d193 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -613,7 +613,7 @@ static int __init esas2r_init(void)
- 
- /* Handle ioctl calls to "/proc/scsi/esas2r/ATTOnode" */
- static const struct file_operations esas2r_proc_fops = {
--	.compat_ioctl	= esas2r_proc_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- 	.unlocked_ioctl = esas2r_proc_ioctl,
- };
- 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index e338d7a4f571..c0a1a1218c56 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -3988,9 +3988,7 @@ static const struct file_operations pmcraid_fops = {
- 	.open = pmcraid_chr_open,
- 	.fasync = pmcraid_chr_fasync,
- 	.unlocked_ioctl = pmcraid_chr_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl = pmcraid_chr_ioctl,
--#endif
-+	.compat_ioctl = compat_ptr_ioctl,
- 	.llseek = noop_llseek,
- };
- 
-diff --git a/drivers/staging/android/ion/ion.c b/drivers/staging/android/ion/ion.c
-index 92c2914239e3..1663c163edca 100644
---- a/drivers/staging/android/ion/ion.c
-+++ b/drivers/staging/android/ion/ion.c
-@@ -567,9 +567,7 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- static const struct file_operations ion_fops = {
- 	.owner          = THIS_MODULE,
- 	.unlocked_ioctl = ion_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl	= ion_ioctl,
--#endif
-+	.compat_ioctl	= compat_ptr_ioctl,
- };
- 
- static int debug_shrink_set(void *data, u64 val)
-diff --git a/drivers/staging/vme/devices/vme_user.c b/drivers/staging/vme/devices/vme_user.c
-index 6a33aaa1a49f..fd0ea4dbcb91 100644
---- a/drivers/staging/vme/devices/vme_user.c
-+++ b/drivers/staging/vme/devices/vme_user.c
-@@ -494,7 +494,7 @@ static const struct file_operations vme_user_fops = {
- 	.write = vme_user_write,
- 	.llseek = vme_user_llseek,
- 	.unlocked_ioctl = vme_user_unlocked_ioctl,
--	.compat_ioctl = vme_user_unlocked_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- 	.mmap = vme_user_mmap,
- };
- 
-diff --git a/drivers/tee/tee_core.c b/drivers/tee/tee_core.c
-index 17c64fccbb10..eb97acf09868 100644
---- a/drivers/tee/tee_core.c
-+++ b/drivers/tee/tee_core.c
-@@ -684,7 +684,7 @@ static const struct file_operations tee_fops = {
- 	.open = tee_open,
- 	.release = tee_release,
- 	.unlocked_ioctl = tee_ioctl,
--	.compat_ioctl = tee_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- static void tee_release_device(struct device *dev)
-diff --git a/drivers/usb/class/cdc-wdm.c b/drivers/usb/class/cdc-wdm.c
-index 9e9caff905d5..d48c032580d0 100644
---- a/drivers/usb/class/cdc-wdm.c
-+++ b/drivers/usb/class/cdc-wdm.c
-@@ -724,7 +724,7 @@ static const struct file_operations wdm_fops = {
- 	.release =	wdm_release,
- 	.poll =		wdm_poll,
- 	.unlocked_ioctl = wdm_ioctl,
--	.compat_ioctl = wdm_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- 	.llseek =	noop_llseek,
- };
- 
-diff --git a/drivers/usb/class/usbtmc.c b/drivers/usb/class/usbtmc.c
-index 4942122b2346..bbd0308b13f5 100644
---- a/drivers/usb/class/usbtmc.c
-+++ b/drivers/usb/class/usbtmc.c
-@@ -2220,9 +2220,7 @@ static const struct file_operations fops = {
- 	.release	= usbtmc_release,
- 	.flush		= usbtmc_flush,
- 	.unlocked_ioctl	= usbtmc_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl	= usbtmc_ioctl,
--#endif
-+	.compat_ioctl	= compat_ptr_ioctl,
- 	.fasync         = usbtmc_fasync,
- 	.poll           = usbtmc_poll,
- 	.llseek		= default_llseek,
-diff --git a/drivers/virt/fsl_hypervisor.c b/drivers/virt/fsl_hypervisor.c
-index 8ba726e600e9..fbf02bf60f62 100644
---- a/drivers/virt/fsl_hypervisor.c
-+++ b/drivers/virt/fsl_hypervisor.c
-@@ -703,7 +703,7 @@ static const struct file_operations fsl_hv_fops = {
- 	.poll = fsl_hv_poll,
- 	.read = fsl_hv_read,
- 	.unlocked_ioctl = fsl_hv_ioctl,
--	.compat_ioctl = fsl_hv_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- };
- 
- static struct miscdevice fsl_hv_misc_dev = {
-diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
-index 120e4340792a..162ea4b6b417 100644
---- a/fs/btrfs/super.c
-+++ b/fs/btrfs/super.c
-@@ -2307,7 +2307,7 @@ static const struct super_operations btrfs_super_ops = {
- static const struct file_operations btrfs_ctl_fops = {
- 	.open = btrfs_control_open,
- 	.unlocked_ioctl	 = btrfs_control_ioctl,
--	.compat_ioctl = btrfs_control_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- 	.owner	 = THIS_MODULE,
- 	.llseek = noop_llseek,
- };
-diff --git a/fs/ceph/dir.c b/fs/ceph/dir.c
-index 7c060cb22aa3..a493b957713f 100644
---- a/fs/ceph/dir.c
-+++ b/fs/ceph/dir.c
-@@ -1785,7 +1785,7 @@ const struct file_operations ceph_dir_fops = {
- 	.open = ceph_open,
- 	.release = ceph_release,
- 	.unlocked_ioctl = ceph_ioctl,
--	.compat_ioctl = ceph_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
- 	.fsync = ceph_fsync,
- 	.lock = ceph_lock,
- 	.flock = ceph_flock,
-diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-index 9f53c3d99304..9b5fe7eee3c1 100644
---- a/fs/ceph/file.c
-+++ b/fs/ceph/file.c
-@@ -2112,7 +2112,7 @@ const struct file_operations ceph_file_fops = {
- 	.splice_read = generic_file_splice_read,
- 	.splice_write = iter_file_splice_write,
- 	.unlocked_ioctl = ceph_ioctl,
--	.compat_ioctl	= ceph_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- 	.fallocate	= ceph_fallocate,
- 	.copy_file_range = ceph_copy_file_range,
- };
-diff --git a/fs/fuse/dev.c b/fs/fuse/dev.c
-index 9971a35cf1ef..dcdb26068b71 100644
---- a/fs/fuse/dev.c
-+++ b/fs/fuse/dev.c
-@@ -2354,7 +2354,7 @@ const struct file_operations fuse_dev_operations = {
- 	.release	= fuse_dev_release,
- 	.fasync		= fuse_dev_fasync,
- 	.unlocked_ioctl = fuse_dev_ioctl,
--	.compat_ioctl   = fuse_dev_ioctl,
-+	.compat_ioctl   = compat_ptr_ioctl,
- };
- EXPORT_SYMBOL_GPL(fuse_dev_operations);
- 
-diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
-index a90bb19dcfa2..a55aa029a308 100644
---- a/fs/notify/fanotify/fanotify_user.c
-+++ b/fs/notify/fanotify/fanotify_user.c
-@@ -523,7 +523,7 @@ static const struct file_operations fanotify_fops = {
- 	.fasync		= NULL,
- 	.release	= fanotify_release,
- 	.unlocked_ioctl	= fanotify_ioctl,
--	.compat_ioctl	= fanotify_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- 	.llseek		= noop_llseek,
- };
- 
-diff --git a/fs/userfaultfd.c b/fs/userfaultfd.c
-index 89800fc7dc9d..f93dcf8c996f 100644
---- a/fs/userfaultfd.c
-+++ b/fs/userfaultfd.c
-@@ -1901,7 +1901,7 @@ static const struct file_operations userfaultfd_fops = {
- 	.poll		= userfaultfd_poll,
- 	.read		= userfaultfd_read,
- 	.unlocked_ioctl = userfaultfd_ioctl,
--	.compat_ioctl	= userfaultfd_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- 	.llseek		= noop_llseek,
- };
- 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index abca57040f37..3b2f6ea44397 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -1323,7 +1323,7 @@ static const struct file_operations rfkill_fops = {
- 	.release	= rfkill_fop_release,
- #ifdef CONFIG_RFKILL_INPUT
- 	.unlocked_ioctl	= rfkill_fop_ioctl,
--	.compat_ioctl	= rfkill_fop_ioctl,
-+	.compat_ioctl	= compat_ptr_ioctl,
- #endif
- 	.llseek		= no_llseek,
- };
--- 
-2.20.0
+No action on your part is requested at this time.  Feel free to use the
+new dkms.conf content if it is useful to you.
 
+Regards,
+
+David R. Bergstein
+
+On 4/14/19 5:39 PM, David R. Bergstein wrote:
+> Larry,
+>
+> Thanks for your prior assistance with the rtw88 module.  Since manually
+> compiling and installing works correctly, I have been working to
+> register the software in dkms, but am running into some difficulties. 
+> Below are some snippets from a terminal session to illustrate the issue:
+>
+> udo dkms install rtlwifi-new/0.6
+>
+> Creating symlink /var/lib/dkms/rtlwifi-new/0.6/source ->
+>                  /usr/src/rtlwifi-new-0.6
+>
+> DKMS: add completed.
+>
+> Kernel preparation unnecessary for this kernel.  Skipping...
+>
+> Building module:
+> cleaning build area....(bad exit status: 2)
+> make -j12 KERNELRELEASE=5.0.0-11-lowlatency -C
+> /lib/modules/5.0.0-11-lowlatency/build
+> M=/var/lib/dkms/rtlwifi-new/0.6/build....
+> ERROR (dkms apport): binary package for rtlwifi-new: 0.6 not found
+> Error!  Build of rtl_pci.ko failed for: 5.0.0-11-lowlatency (x86_64)
+> Consult the make.log in the build directory
+> /var/lib/dkms/rtlwifi-new/0.6/build/ for more information.
+>
+> Below is the make.log contents referenced above:
+>
+> DKMS make.log for rtlwifi-new-0.6 for kernel 5.0.0-11-lowlatency (x86_64)
+> Sun 14 Apr 2019 05:25:37 PM EDT
+> make: Entering directory '/usr/src/linux-headers-5.0.0-11-lowlatency'
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/main.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/mac80211.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/util.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/debug.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/tx.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/rx.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/mac.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/phy.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/efuse.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/fw.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/ps.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/sec.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/regd.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/rtw8822b.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/rtw8822b_table.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/rtw8822c.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/rtw8822c_table.o
+>   CC [M]  /var/lib/dkms/rtlwifi-new/0.6/build/pci.o
+>   LD [M]  /var/lib/dkms/rtlwifi-new/0.6/build/rtwpci.o
+>   LD [M]  /var/lib/dkms/rtlwifi-new/0.6/build/rtw88.o
+>   Building modules, stage 2.
+>   MODPOST 2 modules
+>   CC      /var/lib/dkms/rtlwifi-new/0.6/build/rtw88.mod.o
+>   CC      /var/lib/dkms/rtlwifi-new/0.6/build/rtwpci.mod.o
+>   LD [M]  /var/lib/dkms/rtlwifi-new/0.6/build/rtw88.ko
+>   LD [M]  /var/lib/dkms/rtlwifi-new/0.6/build/rtwpci.ko
+> make: Leaving directory '/usr/src/linux-headers-5.0.0-11-lowlatency'
+>
+> As you can see, the make log does not show any errors, which is baffling
+> to me.  Any insight you have on resolving this issue would be appreciated.
+>
+> Sincerely,
+>
+> David R. Bergstein
+>
+>
