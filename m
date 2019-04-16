@@ -2,88 +2,93 @@ Return-Path: <SRS0=bGvd=SS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 734ACC282DA
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 03:36:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 363FBC10F13
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 05:47:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 404732075B
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 03:36:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03B312075B
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 05:47:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GQkN3Gah";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GQkN3Gah"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bYsNT/oC";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MOC7+Mhd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726628AbfDPDgx (ORCPT
+        id S1726763AbfDPFru (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Apr 2019 23:36:53 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:56520 "EHLO
+        Tue, 16 Apr 2019 01:47:50 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:50566 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726094AbfDPDgw (ORCPT
+        with ESMTP id S1726016AbfDPFru (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Apr 2019 23:36:52 -0400
+        Tue, 16 Apr 2019 01:47:50 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id C73E7608D4; Tue, 16 Apr 2019 03:36:51 +0000 (UTC)
+        id 0FCB861947; Tue, 16 Apr 2019 05:47:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555385811;
-        bh=l0tY0NqVwdKLYiFp6PZGQV9aQNteT7tjL8QZIZ6IJhA=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=GQkN3Gahycr9yPm776IJQlgwitoDd/YeNWmAY6Auls46/7fshM0TCn5QuCmVp1JRL
-         llqza70Hv0jXEsz2K97grbOQhBGIB20143tEuB7pxy5vHDcKyM/+RWz/osoQn+8dk4
-         3oeOPpGRihJZvg9lHIusxfZvq0zYfuANdrI7TxIg=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        s=default; t=1555393670;
+        bh=JoCXGJZ7oEm5VZZgjJCUuOsrKy6qRqB8Xp55RQWFYGE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=bYsNT/oCGpwWxj+7zmLujxsFLgTJqvMcOaJhaTFoWY2363leDokKiOfrCH2fqRwOe
+         ZEVVzQ1hA8gm5NvZPHkKWGrZ9wkzsePZoT9QqJsCE95TwvgKg1GHKrCXLoRnhJtUyA
+         TU3GwH+7DoT4q7QlG7u1cnOBkBWrEEzyEmyiZKAo=
+Received: from checstp253621-lin.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 81428608D4;
-        Tue, 16 Apr 2019 03:36:49 +0000 (UTC)
+        (Authenticated sender: srirrama@codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 342AB618CA;
+        Tue, 16 Apr 2019 05:47:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555385811;
-        bh=l0tY0NqVwdKLYiFp6PZGQV9aQNteT7tjL8QZIZ6IJhA=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=GQkN3Gahycr9yPm776IJQlgwitoDd/YeNWmAY6Auls46/7fshM0TCn5QuCmVp1JRL
-         llqza70Hv0jXEsz2K97grbOQhBGIB20143tEuB7pxy5vHDcKyM/+RWz/osoQn+8dk4
-         3oeOPpGRihJZvg9lHIusxfZvq0zYfuANdrI7TxIg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 81428608D4
+        s=default; t=1555393628;
+        bh=JoCXGJZ7oEm5VZZgjJCUuOsrKy6qRqB8Xp55RQWFYGE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=MOC7+MhdJoFP6FxlJHcc/6X1Z7bYKnZNV1f/q4Zvd0WvdFvNTh9AxauPlpo2amlHS
+         3DT8Mg7Sij871bgKnLlaegZ0WB91IxJZnNyONB2Ol9/6HEcwg4U+bkEjNAXBc350cu
+         7nslj7l2Di4SpyJiT2e+Wioni1HTXeAhAXJ1wAi4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 342AB618CA
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH wireless-drivers] rtlwifi: rtl8723ae: Fix missing break in switch statement
-References: <20190416003626.GA16834@embeddedor>
-Date:   Tue, 16 Apr 2019 06:36:46 +0300
-In-Reply-To: <20190416003626.GA16834@embeddedor> (Gustavo A. R. Silva's
-        message of "Mon, 15 Apr 2019 19:36:26 -0500")
-Message-ID: <87h8ay8vu9.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=srirrama@codeaurora.org
+From:   Sriram R <srirrama@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, Sriram R <srirrama@codeaurora.org>
+Subject: [PATCH] cfg80211: Notify previous user request during self managed wiphy registration
+Date:   Tue, 16 Apr 2019 11:16:33 +0530
+Message-Id: <1555393593-19018-1-git-send-email-srirrama@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"Gustavo A. R. Silva" <gustavo@embeddedor.com> writes:
+Commit c82c06ce43d3("cfg80211: Notify all User Hints To self managed wiphys") notifies
+all new user hints to self managed wiphy's after device registration.
+But it doesn't notify user request (other than cell base hints) which was
+set before registration.
+This needs to be done during wiphy registration of a self managed device also,
+so that the previous user settings are retained.
 
-> Add missing break statement in order to prevent the code from falling
-> through to case 0x1025, and erroneously setting rtlhal->oem_id to
-> RT_CID_819X_ACER when rtlefuse->eeprom_svid is equal to 0x10EC and
-> none of the cases in switch (rtlefuse->eeprom_smid) match.
->
-> This bug was found thanks to the ongoing efforts to enable
-> -Wimplicit-fallthrough.
->
-> Fixes: 238ad2ddf34b ("rtlwifi: rtl8723ae: Clean up the hardware info routine")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
+---
+ net/wireless/reg.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-You have marked this for wireless-drivers but the commit is 2.5 years
-old, so I think wireless-drivers-next is more approriate.
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2f1bf91..85a0b5e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -3739,10 +3739,9 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
+ 		/*
+ 		 * The last request may have been received before this
+ 		 * registration call. Call the driver notifier if
+-		 * initiator is USER and user type is CELL_BASE.
++		 * initiator is USER.
+ 		 */
+-		if (lr->initiator == NL80211_REGDOM_SET_BY_USER &&
+-		    lr->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE)
++		if (lr->initiator == NL80211_REGDOM_SET_BY_USER)
+ 			reg_call_notifier(wiphy, lr);
+ 	}
+ 
 -- 
-Kalle Valo
+2.7.4
+
