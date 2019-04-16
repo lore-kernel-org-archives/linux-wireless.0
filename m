@@ -2,211 +2,101 @@ Return-Path: <SRS0=bGvd=SS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE50AC10F14
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:29:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE105C10F14
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:31:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8671020857
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:29:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C639220868
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:31:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729171AbfDPJ3m (ORCPT
+        id S1729002AbfDPJbN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Apr 2019 05:29:42 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:37132 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728518AbfDPJ3l (ORCPT
+        Tue, 16 Apr 2019 05:31:13 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:56788 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728336AbfDPJbL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Apr 2019 05:29:41 -0400
-Received: by mail-wr1-f65.google.com with SMTP id w10so26041628wrm.4
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2019 02:29:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=95BMgZMuUpzgiZp8pdYiku61NNhFSs49Ai7lWtJm1A0=;
-        b=OnFIaCkWYeJ2Ny+ltiScr6x7LSs+ua+18UIsq+y7nAnk2PN+J/tnJ/0h5C/cPxfZ8D
-         yyhi/VQO1brVf3qSwdiMIetVXlkbXdYwCKYpLdBqxYiybpVXkCb2ELN6YprT1FvqXrPJ
-         ZliKcvVZeLhoOn7GyJqj2VXQ77CN00XOPm/mTpcwSgnaHNwO9jL3GJwYPzYa/WKljA9j
-         dRXVKZq0LUIwGJ8EoGQHrPgn6LlIFTAfA4KhWTZPT5OOIyzyljtArQB5Um4puR00ny1W
-         wAUySG/z47Gh4D3bGMuTnSDZ1Nc/EDVy9lE/ystZkFWDNTHac+I8n1jZztumyAWbUVRt
-         GovA==
-X-Gm-Message-State: APjAAAXqt2uYu6U2IAixH5nQWMGq2zeXGZ0uksY3ku3Rl7F7Sk/4mJDT
-        HQtXJfYiAqtwt2wF+sDvr36g4SAo/Jk=
-X-Google-Smtp-Source: APXvYqzK24uz18v6PNhrQpD03O/qQ0itw8y7N1ZIEcHhjOVCr+dCaZjnBY9qtHYa7kc7XoZyu0WmaQ==
-X-Received: by 2002:a5d:6101:: with SMTP id v1mr30085142wrt.222.1555406978857;
-        Tue, 16 Apr 2019 02:29:38 -0700 (PDT)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id t24sm22252258wmi.10.2019.04.16.02.29.37
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 16 Apr 2019 02:29:38 -0700 (PDT)
-Date:   Tue, 16 Apr 2019 11:29:36 +0200
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [RFC 3/3] mt76x02: remove bogus mutex usage
-Message-ID: <20190416092935.GC11046@localhost.localdomain>
-References: <20190416091305.4218-1-sgruszka@redhat.com>
- <20190416091305.4218-4-sgruszka@redhat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="TiqCXmo5T1hvSQQg"
-Content-Disposition: inline
-In-Reply-To: <20190416091305.4218-4-sgruszka@redhat.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+        Tue, 16 Apr 2019 05:31:11 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hGKQn-0004KN-OL; Tue, 16 Apr 2019 11:31:09 +0200
+Message-ID: <91d60fa7ba614c96fe2814375a28802e9165218b.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Tue, 16 Apr 2019 11:31:08 +0200
+In-Reply-To: <577d4307-27ca-c5f5-8814-bbef515559e3@wetzel-home.de>
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+         <20190210210620.31181-8-alexander@wetzel-home.de>
+         <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
+         <e84c30de-28d6-7d1b-0fa3-d1ca466e257b@wetzel-home.de>
+         <69e6577f90d99289acaa9853fe236e6f15f9e774.camel@sipsolutions.net>
+         <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
+         <ed6e95dad39ef0ac98c62e3acd3f78fd7b3a6d2b.camel@sipsolutions.net>
+         <185ea9a2-f3c6-04a5-000b-44191da5a0ee@wetzel-home.de>
+         <0de9d60ffef574b34e9a76ad2cea68fab49aac0f.camel@sipsolutions.net>
+         <45ae97d6-3357-64ac-0a40-9ae3ea4a8ed2@wetzel-home.de>
+         <84694a97bf884985afd49d93e28b309a92801916.camel@sipsolutions.net>
+         <577d4307-27ca-c5f5-8814-bbef515559e3@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Mon, 2019-04-15 at 22:09 +0200, Alexander Wetzel wrote:
+> Honestly I don't like my own patch for the KeyId border signal, too 
+> complex and not intuitive at all. But I wanted to have some code for 
+> discussion and then got carried away a bit in what may have been not the 
+> right direction.
 
---TiqCXmo5T1hvSQQg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+:-)
 
-> mac .start(), .stop() callbacks are never called concurrently with other
-> mac callbacks. The only concurencly is with mt76 works which we cancel
-> on stop() and schedule on start().
->=20
-> This fixes possible deadlock on cancel_delayed_work_sync(&dev->mac_work)
-> as mac_work also take mutex.
->=20
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  6 -----
->  .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 22 +++++--------------
->  .../wireless/mediatek/mt76/mt76x2/pci_main.c  |  5 -----
->  .../wireless/mediatek/mt76/mt76x2/usb_main.c  | 10 ++-------
->  4 files changed, 7 insertions(+), 36 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/ne=
-t/wireless/mediatek/mt76/mt76x0/pci.c
-> index 156d3d064ba0..ac979128386a 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-> @@ -25,8 +25,6 @@ static int mt76x0e_start(struct ieee80211_hw *hw)
->  {
->  	struct mt76x02_dev *dev =3D hw->priv;
-> =20
-> -	mutex_lock(&dev->mt76.mutex);
-> -
->  	mt76x02_mac_start(dev);
->  	mt76x0_phy_calibrate(dev, true);
->  	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mac_work,
-> @@ -35,8 +33,6 @@ static int mt76x0e_start(struct ieee80211_hw *hw)
->  				     MT_CALIBRATE_INTERVAL);
->  	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
-> =20
-> -	mutex_unlock(&dev->mt76.mutex);
-> -
->  	return 0;
->  }
-> =20
-> @@ -62,10 +58,8 @@ static void mt76x0e_stop(struct ieee80211_hw *hw)
->  {
->  	struct mt76x02_dev *dev =3D hw->priv;
-> =20
-> -	mutex_lock(&dev->mt76.mutex);
->  	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
->  	mt76x0e_stop_hw(dev);
-> -	mutex_unlock(&dev->mt76.mutex);
->  }
-> =20
->  static void
+> Could we not simply ask (at least) the drivers supporting Extended Key 
+> IDs to implement a special for the remote STA invisible A-MPDU "stop" mode?
+> In this new mode each A-MPDU would simply be build out of a single MPDU. 
+> We then could keep Block-Ack active and we don't have to tell the remote 
+> STA anything about that decision. After all a A-MPDU with only one MPDU 
+> is allowed...
+> We then could tell the driver to switch to this mode when installing the 
+> new key and out of it again when we have activated the new key for Tx.
+> That should be perfectly fine to run only in the control path and 
+> comparable simple to set up, too.
 
-[..]
+Sounds doable, but I'm still debating if we even should give them a
+signal - they have all the information in a sense, and do we have a good
+idea of when we can go out of this mode again?
 
->  static const struct ieee80211_ops mt76x0u_ops =3D {
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drive=
-rs/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-> index 16dc8e2451b5..1b5caabebff5 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-> @@ -22,8 +22,6 @@ mt76x2_start(struct ieee80211_hw *hw)
->  	struct mt76x02_dev *dev =3D hw->priv;
->  	int ret;
-> =20
-> -	mutex_lock(&dev->mt76.mutex);
-> -
->  	ret =3D mt76x2_mac_start(dev);
->  	if (ret)
->  		goto out;
+(FWIW, I'd probably call it "suspend" and "resume" or so)
 
-You can remove goto here and just return ret (same below)
+> That also sounds like something all drivers supporting A-MPDU should be 
+> able to pull off somehow. (But then I've never even looked at more than 
+> ath9k and iwlwifi so far for A-MPDU, and at those not close, yet.)
+> Do you see any problems with that solution and/or a better idea?
 
-> @@ -40,7 +38,6 @@ mt76x2_start(struct ieee80211_hw *hw)
->  	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
-> =20
->  out:
-> -	mutex_unlock(&dev->mt76.mutex);
->  	return ret;
->  }
-> =20
-> @@ -49,10 +46,8 @@ mt76x2_stop(struct ieee80211_hw *hw)
->  {
->  	struct mt76x02_dev *dev =3D hw->priv;
-> =20
-> -	mutex_lock(&dev->mt76.mutex);
->  	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
->  	mt76x2_stop_hardware(dev);
-> -	mutex_unlock(&dev->mt76.mutex);
->  }
-> =20
->  static int
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c b/drive=
-rs/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-> index 0771de210c6a..32726b4906ea 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-> @@ -21,30 +21,24 @@ static int mt76x2u_start(struct ieee80211_hw *hw)
->  	struct mt76x02_dev *dev =3D hw->priv;
->  	int ret;
-> =20
-> -	mutex_lock(&dev->mt76.mutex);
-> -
->  	ret =3D mt76x2u_mac_start(dev);
->  	if (ret)
-> -		goto out;
-> +		return ret;
-> =20
->  	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mac_work,
->  				     MT_MAC_WORK_INTERVAL);
->  	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
-> =20
-> -out:
-> -	mutex_unlock(&dev->mt76.mutex);
-> -	return ret;
-> +	return 0;
->  }
-> =20
->  static void mt76x2u_stop(struct ieee80211_hw *hw)
->  {
->  	struct mt76x02_dev *dev =3D hw->priv;
-> =20
-> -	mutex_lock(&dev->mt76.mutex);
->  	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
->  	mt76u_stop_tx(&dev->mt76);
->  	mt76x2u_stop_hw(dev);
-> -	mutex_unlock(&dev->mt76.mutex);
->  }
-> =20
->  static int
-> --=20
-> 2.20.1
->=20
+It ought to be possible, or if not then the device just can't support
+extended key ID?
 
---TiqCXmo5T1hvSQQg
-Content-Type: application/pgp-signature; name="signature.asc"
+> Also would you prefer we first sort out the A-MPDU issue prior I adding 
+> test cases to the hostapd/wpa_supplicant or the other way round?
 
------BEGIN PGP SIGNATURE-----
+I think adding the code to hostapd/wpa_s is fine - right now we're
+obviously OK since we have no drivers using extended key ID that use
+hardware crypto, and if we have software crypto there's no problem
+either way, even if A-MPDUs are built (which is probably not the case
+for any such drivers anyway.)
 
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXLWgewAKCRA6cBh0uS2t
-rBC1AP0eX5OeNpRB23dUDdViu9creTctrLXs5cwBLFRvN5UwbwEAq4ZHUnpx8xww
-x8WjhCWT5rCve4rrx57+ITiYjlS8Zwg=
-=f75v
------END PGP SIGNATURE-----
+In a sense I'd prefer getting the necessary bits and pieces elsewhere in
+the stack upstream first since that's a prerequisite for anyone
+else being able to easily work on this, and that's something we need for
+drivers to pick it up.
 
---TiqCXmo5T1hvSQQg--
+johannes
+
