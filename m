@@ -3,47 +3,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7367AC10F13
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 19:11:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25F77C282DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 19:13:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42A8020663
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 19:11:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC4F12064A
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 19:13:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728839AbfDPTL5 (ORCPT
+        id S1730158AbfDPTNe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Apr 2019 15:11:57 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:37838 "EHLO
+        Tue, 16 Apr 2019 15:13:34 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:37918 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727136AbfDPTL5 (ORCPT
+        with ESMTP id S1727647AbfDPTNd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Apr 2019 15:11:57 -0400
+        Tue, 16 Apr 2019 15:13:33 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hGTUp-0000AY-BZ; Tue, 16 Apr 2019 21:11:55 +0200
-Message-ID: <08b4769ff83eb9b098fee8915ca25666f29512c7.camel@sipsolutions.net>
-Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
+        id 1hGTWA-0000Do-Lx; Tue, 16 Apr 2019 21:13:21 +0200
+Message-ID: <8678e1a4eb816878867f71878e8fe7c225f1b7f7.camel@sipsolutions.net>
+Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate
+ tx queues
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Alexander Wetzel <alexander@wetzel-home.de>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Tue, 16 Apr 2019 21:11:54 +0200
-In-Reply-To: <7338263c-9e01-1559-888f-adcb4b7c8ca1@wetzel-home.de>
-References: <20190210210620.31181-1-alexander@wetzel-home.de>
-         <20190210210620.31181-8-alexander@wetzel-home.de>
-         <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
-         <e84c30de-28d6-7d1b-0fa3-d1ca466e257b@wetzel-home.de>
-         <69e6577f90d99289acaa9853fe236e6f15f9e774.camel@sipsolutions.net>
-         <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
-         <ed6e95dad39ef0ac98c62e3acd3f78fd7b3a6d2b.camel@sipsolutions.net>
-         <185ea9a2-f3c6-04a5-000b-44191da5a0ee@wetzel-home.de>
-         <0de9d60ffef574b34e9a76ad2cea68fab49aac0f.camel@sipsolutions.net>
-         <45ae97d6-3357-64ac-0a40-9ae3ea4a8ed2@wetzel-home.de>
-         <84694a97bf884985afd49d93e28b309a92801916.camel@sipsolutions.net>
-         <577d4307-27ca-c5f5-8814-bbef515559e3@wetzel-home.de>
-         <91d60fa7ba614c96fe2814375a28802e9165218b.camel@sipsolutions.net>
-         <7338263c-9e01-1559-888f-adcb4b7c8ca1@wetzel-home.de>
+To:     Herbert Xu <herbert@gondor.apana.org.au>
+Cc:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+        Eric Dumazet <eric.dumazet@gmail.com>, netdev@vger.kernel.org
+Date:   Tue, 16 Apr 2019 21:13:16 +0200
+In-Reply-To: <20190416131346.u2uolljlrd5t2jro@gondor.apana.org.au>
+References: <87sgvmvg9g.fsf@toke.dk>
+         <773e4dff-29fd-22b4-e4bc-cd5a94c66dc2@broadcom.com>
+         <20190416074444.pdubbh6fbibdnhi7@gondor.apana.org.au>
+         <73b18131-2777-da5c-a6ee-9d9b3e13cd06@broadcom.com>
+         <20190416083636.5ttvezqyhzr2worg@gondor.apana.org.au>
+         <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net>
+         <87ef62uwfm.fsf@toke.dk>
+         <95f86cf69dee05a176625925657cf0df0e97b5c9.camel@sipsolutions.net>
+         <20190416093707.dtlwcmitzqopaeaw@gondor.apana.org.au>
+         <e4c1a3ca0c0c160b7c271ab83deebcf096f38497.camel@sipsolutions.net>
+         <20190416131346.u2uolljlrd5t2jro@gondor.apana.org.au>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -53,48 +55,24 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2019-04-16 at 20:28 +0200, Alexander Wetzel wrote:
+On Tue, 2019-04-16 at 21:13 +0800, Herbert Xu wrote:
+> On Tue, Apr 16, 2019 at 11:39:56AM +0200, Johannes Berg wrote:
+> > 
+> > > not to mention
+> > > breaking certain applications that rely on congestion feedback?
+> > 
+> > This I don't understand. The congestion feedback happens through socket
+> > buffer space etc. which is still there (as long as nobody sneaks in an
+> > skb_orphan() call)
+> 
+> The congestion control happens at two levels.  You are right that
+> the socket buffer acts as one limit.  However, other applications
+> may also rely on the TX queue being full as the throttle (by setting
+> a sufficiently large socket buffer size).
 
-> They can enable the mode when a key with IEEE80211_KEY_FLAG_NO_AUTO_TX 
-> set
-
-This I agree with.
-
-> and quiet it again as soon as they get a MPDU using the new KeyID.
-
-This isn't true, afaict. You need to be sure that no MPDUs remain using
-the old key ID, not just that the new key ID showed up.
-
-> Since switching back to normal doesn't have to be done immediately a 
-> asyc call from Tx path or even a worker should do the job just fine.
-
-Sure.
-
-> Btw:
-> This also means we'll have to update the merged mac80211 Extended Key ID 
-> support: We can only enable it for cards without HW crypto when they do 
-> not set AMPDU_AGGREGATION. With the updated userspace these cards will 
-> start using Extended Key ID with the already merged patches.
-
-I was going to say this is fine, but no, of course not ... we shouldn't
-use different key id in the same A-MPDU.
-
-That said, I'd be very surprised if there are any such drivers, except
-in corner cases (like loading some drivers like ath9k or iwlwifi with
-swcrypto=1 or so)
-
-> Of those only hwsim and brcmsmac seems to support AMPDU and only 
-> brcmsmac relly needs the fix to not lose some packets when rekeying.
-
-I can't believe that brcmsmac has no HW crypto support?
-
-Anyway, a patch - even if it serves mostly as documentation - would be
-most welcome.
-
-> I assume we still have to wait till the API is in mainline (probably 
-> 5.2) to ask hostapd/wpa_supplicant to merge the patches?
-
-No, mac80211-next is (usually?) good enough.
+I'm not sure how they'd even realize this, other than packets getting
+dropped? Which of course we do here as well, we didn't invent something
+that let's us expand memory arbitrarily ;-)
 
 johannes
 
