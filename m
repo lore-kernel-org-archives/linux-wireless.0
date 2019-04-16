@@ -5,98 +5,92 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE105C10F14
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:31:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C7CEC282DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:33:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C639220868
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:31:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0783F20857
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:33:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729002AbfDPJbN (ORCPT
+        id S1727828AbfDPJdG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Apr 2019 05:31:13 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:56788 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728336AbfDPJbL (ORCPT
+        Tue, 16 Apr 2019 05:33:06 -0400
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:46805 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726905AbfDPJdF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Apr 2019 05:31:11 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hGKQn-0004KN-OL; Tue, 16 Apr 2019 11:31:09 +0200
-Message-ID: <91d60fa7ba614c96fe2814375a28802e9165218b.camel@sipsolutions.net>
-Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Alexander Wetzel <alexander@wetzel-home.de>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Tue, 16 Apr 2019 11:31:08 +0200
-In-Reply-To: <577d4307-27ca-c5f5-8814-bbef515559e3@wetzel-home.de>
-References: <20190210210620.31181-1-alexander@wetzel-home.de>
-         <20190210210620.31181-8-alexander@wetzel-home.de>
-         <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
-         <e84c30de-28d6-7d1b-0fa3-d1ca466e257b@wetzel-home.de>
-         <69e6577f90d99289acaa9853fe236e6f15f9e774.camel@sipsolutions.net>
-         <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
-         <ed6e95dad39ef0ac98c62e3acd3f78fd7b3a6d2b.camel@sipsolutions.net>
-         <185ea9a2-f3c6-04a5-000b-44191da5a0ee@wetzel-home.de>
-         <0de9d60ffef574b34e9a76ad2cea68fab49aac0f.camel@sipsolutions.net>
-         <45ae97d6-3357-64ac-0a40-9ae3ea4a8ed2@wetzel-home.de>
-         <84694a97bf884985afd49d93e28b309a92801916.camel@sipsolutions.net>
-         <577d4307-27ca-c5f5-8814-bbef515559e3@wetzel-home.de>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Tue, 16 Apr 2019 05:33:05 -0400
+Received: by mail-ed1-f68.google.com with SMTP id d1so17252062edd.13
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2019 02:33:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=5sjO9VUEA4jV3Bv8flGLRZyqgBp1fQYsWYycUrRpo4M=;
+        b=H1wm+suHLhjv/26Hy77p4lehMaBITFs04dg+4TMQjYwyyJxM+I0ChZ5SPI4Rq2nARw
+         KNLzSyULTwmBBbDJtiHuNZmhBSc9GDNpW8mgcz5OTj4fXbZF/vutHPFCbLuN+bCLcfKB
+         CC7uqrsE/jIO3hVbHNM7mLlyO6F0mJlU2n9+7HEN+bWBHfpsDqejVGctOuR/kG1qJ7CX
+         w/mwb1HhAelNBqnUD0MjBFYsFZ9Fk28XfJJ2wjcoZjhh+IWJD27Je5mfcflWLMRP6Sok
+         rut1Ss2swddAfKZ0r72wInXXRHJ7AsEQhFx1hTuKOu4Y7C66i2ZorpZI/5tj94VMbImq
+         DBuQ==
+X-Gm-Message-State: APjAAAWDELuMdF/UMkhtEi8hEAX+hGvpA9dOdAWcfWIR0wV/T/vglJJC
+        iNLi90b51hdf0QW8V/um3wZdpQ==
+X-Google-Smtp-Source: APXvYqzXD5Hsyy7+/YQpZasOOkAMIF3+VzFFq/NMyWxIQvCdVAoRx1M5g83uMfAc8QuG40D6T8/Y+Q==
+X-Received: by 2002:a50:be06:: with SMTP id a6mr30026274edi.254.1555407184145;
+        Tue, 16 Apr 2019 02:33:04 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
+        by smtp.gmail.com with ESMTPSA id s14sm5266645eda.26.2019.04.16.02.33.03
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 16 Apr 2019 02:33:03 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id EF2291800E8; Tue, 16 Apr 2019 10:33:01 +0100 (+01)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+        Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate tx queues
+In-Reply-To: <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net>
+References: <20190316170634.13125-1-nbd@nbd.name> <20190316170634.13125-5-nbd@nbd.name> <87sgvmvg9g.fsf@toke.dk> <773e4dff-29fd-22b4-e4bc-cd5a94c66dc2@broadcom.com> <20190416074444.pdubbh6fbibdnhi7@gondor.apana.org.au> <73b18131-2777-da5c-a6ee-9d9b3e13cd06@broadcom.com> <20190416083636.5ttvezqyhzr2worg@gondor.apana.org.au> <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Tue, 16 Apr 2019 10:33:01 +0100
+Message-ID: <87ef62uwfm.fsf@toke.dk>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2019-04-15 at 22:09 +0200, Alexander Wetzel wrote:
-> Honestly I don't like my own patch for the KeyId border signal, too 
-> complex and not intuitive at all. But I wanted to have some code for 
-> discussion and then got carried away a bit in what may have been not the 
-> right direction.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-:-)
+> On Tue, 2019-04-16 at 16:36 +0800, Herbert Xu wrote:
+>> On Tue, Apr 16, 2019 at 10:04:24AM +0200, Arend Van Spriel wrote:
+>> > 
+>> > I was just writing up an email clarifying my question. But let me summarize
+>> > this email thread. The patch from Felix adds this flag in mac80211 for
+>> > drivers that indicate to support pulling packets from the internal TXQ in
+>> > mac80211. I found it is deprecated, but as Felix mentioned it is used in
+>> > various parts of the network subsystem, ie. batman-adv, bridge, vlan, tunnel
+>> > implementations. So its use seems to be restricted rather than deprecated.
+>> > Given your response above I guess my question would be to get details about
+>> > what you call "proper design" as I think you are saying with that it is not
+>> > needed, right?
+>> 
+>> Essentially the only time it would be OK to use LLTX in its current
+>> form is if you have no TX queue/congestion feedback which is clearly
+>> not the case with wireless drivers.
+>
+> It is true because we have an entire buffering layer in mac80211 (in
+> this case at least) and never push back to the stack.
 
-> Could we not simply ask (at least) the drivers supporting Extended Key 
-> IDs to implement a special for the remote STA invisible A-MPDU "stop" mode?
-> In this new mode each A-MPDU would simply be build out of a single MPDU. 
-> We then could keep Block-Ack active and we don't have to tell the remote 
-> STA anything about that decision. After all a A-MPDU with only one MPDU 
-> is allowed...
-> We then could tell the driver to switch to this mode when installing the 
-> new key and out of it again when we have activated the new key for Tx.
-> That should be perfectly fine to run only in the control path and 
-> comparable simple to set up, too.
+I'm wondering if we should be? For instance, fq_codel returns
+NET_XMIT_CN if it drops a packet from the same flow that it enqueued to.
+We could conceivably do the same in mac80211, although we'd have to
+carry the return value out through quite a few layers. Not sure if this
+is worth it?
 
-Sounds doable, but I'm still debating if we even should give them a
-signal - they have all the information in a sense, and do we have a good
-idea of when we can go out of this mode again?
+Eric, do you have any insight into what impact the _CN return has from
+fq_codel?
 
-(FWIW, I'd probably call it "suspend" and "resume" or so)
-
-> That also sounds like something all drivers supporting A-MPDU should be 
-> able to pull off somehow. (But then I've never even looked at more than 
-> ath9k and iwlwifi so far for A-MPDU, and at those not close, yet.)
-> Do you see any problems with that solution and/or a better idea?
-
-It ought to be possible, or if not then the device just can't support
-extended key ID?
-
-> Also would you prefer we first sort out the A-MPDU issue prior I adding 
-> test cases to the hostapd/wpa_supplicant or the other way round?
-
-I think adding the code to hostapd/wpa_s is fine - right now we're
-obviously OK since we have no drivers using extended key ID that use
-hardware crypto, and if we have software crypto there's no problem
-either way, even if A-MPDUs are built (which is probably not the case
-for any such drivers anyway.)
-
-In a sense I'd prefer getting the necessary bits and pieces elsewhere in
-the stack upstream first since that's a prerequisite for anyone
-else being able to easily work on this, and that's something we need for
-drivers to pick it up.
-
-johannes
-
+-Toke
