@@ -2,146 +2,157 @@ Return-Path: <SRS0=bGvd=SS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA245C282DA
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 16:03:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 684BCC10F13
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 18:28:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B4BCE206B6
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 16:03:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FF5A2075B
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 18:28:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="r2ogllPE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729702AbfDPQDn (ORCPT
+        id S1728405AbfDPS2i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Apr 2019 12:03:43 -0400
-Received: from gateway23.websitewelcome.com ([192.185.49.124]:46277 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726860AbfDPQDm (ORCPT
+        Tue, 16 Apr 2019 14:28:38 -0400
+Received: from 2.mo6.mail-out.ovh.net ([46.105.76.65]:50493 "EHLO
+        2.mo6.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727136AbfDPS2i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Apr 2019 12:03:42 -0400
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id DA91A17239
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2019 11:03:40 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id GQYehKBL0dnCeGQYeh744F; Tue, 16 Apr 2019 11:03:40 -0500
-X-Authority-Reason: nr=8
-Received: from [189.250.55.242] (port=37194 helo=[192.168.43.131])
-        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.91)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1hGQYd-004FDt-U4; Tue, 16 Apr 2019 11:03:40 -0500
-Subject: Re: [PATCH wireless-drivers] rtlwifi: rtl8723ae: Fix missing break in
- switch statement
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
-References: <20190416003626.GA16834@embeddedor>
- <87h8ay8vu9.fsf@kamboji.qca.qualcomm.com>
- <90c56883-6ef3-9f9e-5231-6c2fc65d747d@embeddedor.com>
- <87ftqi54cx.fsf@kamboji.qca.qualcomm.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=gustavo@embeddedor.com; keydata=
- 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
- VtSixD1uOgytAP7RWS474w==
-Message-ID: <ece38547-f29e-b3a5-879e-11feb15b2c4e@embeddedor.com>
-Date:   Tue, 16 Apr 2019 11:03:34 -0500
+        Tue, 16 Apr 2019 14:28:38 -0400
+X-Greylist: delayed 71580 seconds by postgrey-1.27 at vger.kernel.org; Tue, 16 Apr 2019 14:28:36 EDT
+Received: from player774.ha.ovh.net (unknown [10.109.160.251])
+        by mo6.mail-out.ovh.net (Postfix) with ESMTP id A42F31BDCA3
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2019 20:28:34 +0200 (CEST)
+Received: from awhome.eu (p57B7E5B2.dip0.t-ipconnect.de [87.183.229.178])
+        (Authenticated sender: postmaster@awhome.eu)
+        by player774.ha.ovh.net (Postfix) with ESMTPSA id E21324D3BCB1;
+        Tue, 16 Apr 2019 18:28:32 +0000 (UTC)
+Subject: Re: [RFC PATCH v3 07/12] iwlwifi: Extended Key ID support (NATIVE)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+        s=wetzel-home; t=1555439312;
+        bh=lAqXI2cnKoVrEGpkmQwsB9NzzpV8Okel7p0k09qTXWY=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To;
+        b=r2ogllPEDzwPYW0ifqSOR3NEcYq74IRUqA3V536Ee8oeFRwJFtchvBd23fMwr2hNp
+         DtrvFwtUqmiEe/rfKTu23RaWKsE9MatVLY33tY7u309o2XcFzoo3VXJrPU3husT9eL
+         MspAokqJjwCvbG0p7ukGsEqIHfx8bwiypqAHufBI=
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org
+References: <20190210210620.31181-1-alexander@wetzel-home.de>
+ <20190210210620.31181-8-alexander@wetzel-home.de>
+ <1a3b6e515c73a2c185e8dad84ab2ebfd8982a6ce.camel@sipsolutions.net>
+ <e84c30de-28d6-7d1b-0fa3-d1ca466e257b@wetzel-home.de>
+ <69e6577f90d99289acaa9853fe236e6f15f9e774.camel@sipsolutions.net>
+ <14c9d8f7-7cf6-d7e1-a1c0-9f1a10920d4e@wetzel-home.de>
+ <ed6e95dad39ef0ac98c62e3acd3f78fd7b3a6d2b.camel@sipsolutions.net>
+ <185ea9a2-f3c6-04a5-000b-44191da5a0ee@wetzel-home.de>
+ <0de9d60ffef574b34e9a76ad2cea68fab49aac0f.camel@sipsolutions.net>
+ <45ae97d6-3357-64ac-0a40-9ae3ea4a8ed2@wetzel-home.de>
+ <84694a97bf884985afd49d93e28b309a92801916.camel@sipsolutions.net>
+ <577d4307-27ca-c5f5-8814-bbef515559e3@wetzel-home.de>
+ <91d60fa7ba614c96fe2814375a28802e9165218b.camel@sipsolutions.net>
+From:   Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <7338263c-9e01-1559-888f-adcb4b7c8ca1@wetzel-home.de>
+Date:   Tue, 16 Apr 2019 20:28:28 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <87ftqi54cx.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <91d60fa7ba614c96fe2814375a28802e9165218b.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 189.250.55.242
-X-Source-L: No
-X-Exim-ID: 1hGQYd-004FDt-U4
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.43.131]) [189.250.55.242]:37194
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 4
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+X-Ovh-Tracer-Id: 2220837566372322503
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduuddrfedugdduvdeiucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-
-
-On 4/16/19 10:58 AM, Kalle Valo wrote:
-
->>> You have marked this for wireless-drivers but the commit is 2.5 years
->>> old, so I think wireless-drivers-next is more approriate.
->>>
->>
->> Yeah. This can actually be applied to both of them.  What I'd like is
->> to have this applied to stable, so I thought wireless-drivers was a
->> more straightforward way.
+>> Could we not simply ask (at least) the drivers supporting Extended Key
+>> IDs to implement a special for the remote STA invisible A-MPDU "stop" mode?
+>> In this new mode each A-MPDU would simply be build out of a single MPDU.
+>> We then could keep Block-Ack active and we don't have to tell the remote
+>> STA anything about that decision. After all a A-MPDU with only one MPDU
+>> is allowed...
+>> We then could tell the driver to switch to this mode when installing the
+>> new key and out of it again when we have activated the new key for Tx.
+>> That should be perfectly fine to run only in the control path and
+>> comparable simple to set up, too.
 > 
-> Sure, makes sense. But I just want to keep the number of patches going
-> to wireless-drivers to the minimum, I really want to avoid conflicts as
-> much as possible. That's why I'm keeping the bar high for w-d.
+> Sounds doable, but I'm still debating if we even should give them a
+> signal - they have all the information in a sense, and do we have a good
+> idea of when we can go out of this mode again?
+
+Handling that on the Tx path would be tricky, but I you are right: 
+Drivers should be able to handle that as it is on the control path, too.
+
+They can enable the mode when a key with IEEE80211_KEY_FLAG_NO_AUTO_TX 
+set and quiet it again as soon as they get a MPDU using the new KeyID.
+Since switching back to normal doesn't have to be done immediately a 
+asyc call from Tx path or even a worker should do the job just fine.
+
+Btw:
+This also means we'll have to update the merged mac80211 Extended Key ID 
+support: We can only enable it for cards without HW crypto when they do 
+not set AMPDU_AGGREGATION. With the updated userspace these cards will 
+start using Extended Key ID with the already merged patches.
+
+Drivers which should be able to use Extended Key ID with the two merged 
+patches seem to be:
+admtek/adm8211.c
+ath/ar5523/ar5523.c
+broadcom/b43legacy/main.c
+broadcom/brcm80211/brcmsmac/mac80211_if.c
+mac80211_hwsim.c
+marvell/libertas_tf/main.c
+ralink/rt2x00/rt2400pci.c
+ralink/rt2x00/rt2500pci.c
+realtek/rtl818x/rtl8180/dev.c
+realtek/rtl818x/rtl8187/dev.c
+zydas/zd1211rw/zd_mac.c
+
+Of those only hwsim and brcmsmac seems to support AMPDU and only 
+brcmsmac relly needs the fix to not lose some packets when rekeying.
+
+
+>> That also sounds like something all drivers supporting A-MPDU should be
+>> able to pull off somehow. (But then I've never even looked at more than
+>> ath9k and iwlwifi so far for A-MPDU, and at those not close, yet.)
+>> Do you see any problems with that solution and/or a better idea?
 > 
+> It ought to be possible, or if not then the device just can't support
+> extended key ID?
 
-Yep. I've got it.
+Agree. Or drivers can decide to deny A-MPDU setup when the key has been 
+installed with IEEE80211_KEY_FLAG_NO_AUTO_TX when they want.
 
-I just sent v2:
+>> Also would you prefer we first sort out the A-MPDU issue prior I adding
+>> test cases to the hostapd/wpa_supplicant or the other way round?
+> 
+> I think adding the code to hostapd/wpa_s is fine - right now we're
+> obviously OK since we have no drivers using extended key ID that use
+> hardware crypto, and if we have software crypto there's no problem
+> either way, even if A-MPDUs are built (which is probably not the case
+> for any such drivers anyway.)
+> 
+> In a sense I'd prefer getting the necessary bits and pieces elsewhere in
+> the stack upstream first since that's a prerequisite for anyone
+> else being able to easily work on this, and that's something we need for
+> drivers to pick it up.
 
-https://lore.kernel.org/patchwork/patch/1062748/
+Ok:-)
 
-Thanks
---
-Gustavo
+I assume we still have to wait till the API is in mainline (probably 
+5.2) to ask hostapd/wpa_supplicant to merge the patches?
+
+At the moment I'm planning to get the patches merge ready and posted as 
+RFC till 5.2 is out. I'm also planing to keep Extended Key ID for Mesh 
+networks till later, so we can focus on AP/STA.
+
+
+Alexander
+
