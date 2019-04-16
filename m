@@ -2,216 +2,112 @@ Return-Path: <SRS0=bGvd=SS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBBFBC10F14
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D852C10F13
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:17:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A560220675
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:13:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2ABA820675
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:17:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OOIsaiQA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728684AbfDPJN3 (ORCPT
+        id S1728230AbfDPJR5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Apr 2019 05:13:29 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:44352 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726160AbfDPJN2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Apr 2019 05:13:28 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 48A1D81E13;
-        Tue, 16 Apr 2019 09:13:28 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.155])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A045D60C5F;
-        Tue, 16 Apr 2019 09:13:25 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [RFC 3/3] mt76x02: remove bogus mutex usage
-Date:   Tue, 16 Apr 2019 11:13:05 +0200
-Message-Id: <20190416091305.4218-4-sgruszka@redhat.com>
-In-Reply-To: <20190416091305.4218-1-sgruszka@redhat.com>
-References: <20190416091305.4218-1-sgruszka@redhat.com>
+        Tue, 16 Apr 2019 05:17:57 -0400
+Received: from mail-yb1-f193.google.com ([209.85.219.193]:46374 "EHLO
+        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726917AbfDPJR4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Apr 2019 05:17:56 -0400
+Received: by mail-yb1-f193.google.com with SMTP id m5so5656316ybk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2019 02:17:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=okaLzz9oJ0nunTrdTjr1Rvs94B6PYqrKuoq4gZZcNt0=;
+        b=OOIsaiQARGOhKvgbBX8ZA4BTP5Z8CoPzy5fO3R+g3frrR7eO32Lbvmdq+AufYC/b8z
+         d2ID6oWtLrP5U3yEL9Y8L/5txSG64ID1YbnvsWvDL+OkCivDxr9DnRsgprJCVDRW4bB8
+         sadO+dT20i2urrSPBnCxoaszndFQs6urzEJ1g=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=okaLzz9oJ0nunTrdTjr1Rvs94B6PYqrKuoq4gZZcNt0=;
+        b=jb4Yjg2BxxhVjezq1YJweNGYXMWOo/n1lhOwhkjdL/MThB0qWTGmEBcahPO8gIycIr
+         vhMc8RLnnzBmqGNAi4i4ZJ9VVnuPwcoEp04uq4ax71crNeBE8GNHcr7L418FbUDjxy+F
+         4lm8NScgPxTO2Z+TekfYmHFZVLRCOoY73y+9DOCTGVka4bTiUxI9JRDecIV3BTAKGdvO
+         Z5KM5E9ubn+NNJCTfy5lW+du7UIZKemo/Qvhe6rMVNmTKQSxRp1UAdDuQSm0GyJemlgb
+         D7hcZb72KyqMIs11Lv1DoAbwQWFa+K0NNbPOzPjJvU648ixm1XVm35kpTyPyyH7+wxhH
+         VaSg==
+X-Gm-Message-State: APjAAAUMAXW4zxczFgpF33uMGCUqzJPB0GGrRptzKKb/H9vyieBRGppb
+        lJRecab1X5nZPsmpztSTaxjEi2nzKuDCd0GogZCHZk9BR/G46JXS69rTMH9Uui160QLs86A3ZAJ
+        Vawb0HUEpE+5ASIrP/gE2u2YPMdxNdh0rPwc+4j7nPIaHnYyhgIsd6Wyqe5ytOJg0n7z8E3fGUD
+        dtfFleJLKHp5mnYA==
+X-Google-Smtp-Source: APXvYqyFjyAeYN592M/ztHvgcqHfPZi459m9XM3Q/Dz6YNHt4c53DBXox5qZmHM2Hs/8b2cJWWfevg==
+X-Received: by 2002:a25:2558:: with SMTP id l85mr64652031ybl.310.1555406275833;
+        Tue, 16 Apr 2019 02:17:55 -0700 (PDT)
+Received: from [10.176.68.125] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id 135sm17549818ywq.14.2019.04.16.02.17.54
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 16 Apr 2019 02:17:55 -0700 (PDT)
+Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate tx
+ queues
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Cc:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+References: <20190316170634.13125-1-nbd@nbd.name>
+ <20190316170634.13125-5-nbd@nbd.name> <87sgvmvg9g.fsf@toke.dk>
+ <773e4dff-29fd-22b4-e4bc-cd5a94c66dc2@broadcom.com>
+ <20190416074444.pdubbh6fbibdnhi7@gondor.apana.org.au>
+ <73b18131-2777-da5c-a6ee-9d9b3e13cd06@broadcom.com>
+ <20190416083636.5ttvezqyhzr2worg@gondor.apana.org.au>
+ <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <cd0715bb-b75c-63b0-0ae4-858d14afd500@broadcom.com>
+Date:   Tue, 16 Apr 2019 11:17:53 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Tue, 16 Apr 2019 09:13:28 +0000 (UTC)
+In-Reply-To: <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-mac .start(), .stop() callbacks are never called concurrently with other
-mac callbacks. The only concurencly is with mt76 works which we cancel
-on stop() and schedule on start().
 
-This fixes possible deadlock on cancel_delayed_work_sync(&dev->mac_work)
-as mac_work also take mutex.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  6 -----
- .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 22 +++++--------------
- .../wireless/mediatek/mt76/mt76x2/pci_main.c  |  5 -----
- .../wireless/mediatek/mt76/mt76x2/usb_main.c  | 10 ++-------
- 4 files changed, 7 insertions(+), 36 deletions(-)
+On 4/16/2019 10:37 AM, Johannes Berg wrote:
+> On Tue, 2019-04-16 at 16:36 +0800, Herbert Xu wrote:
+>> On Tue, Apr 16, 2019 at 10:04:24AM +0200, Arend Van Spriel wrote:
+>>>
+>>> I was just writing up an email clarifying my question. But let me summarize
+>>> this email thread. The patch from Felix adds this flag in mac80211 for
+>>> drivers that indicate to support pulling packets from the internal TXQ in
+>>> mac80211. I found it is deprecated, but as Felix mentioned it is used in
+>>> various parts of the network subsystem, ie. batman-adv, bridge, vlan, tunnel
+>>> implementations. So its use seems to be restricted rather than deprecated.
+>>> Given your response above I guess my question would be to get details about
+>>> what you call "proper design" as I think you are saying with that it is not
+>>> needed, right?
+>>
+>> Essentially the only time it would be OK to use LLTX in its current
+>> form is if you have no TX queue/congestion feedback which is clearly
+>> not the case with wireless drivers.
+> 
+> It is true because we have an entire buffering layer in mac80211 (in
+> this case at least) and never push back to the stack.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index 156d3d064ba0..ac979128386a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -25,8 +25,6 @@ static int mt76x0e_start(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	mt76x02_mac_start(dev);
- 	mt76x0_phy_calibrate(dev, true);
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mac_work,
-@@ -35,8 +33,6 @@ static int mt76x0e_start(struct ieee80211_hw *hw)
- 				     MT_CALIBRATE_INTERVAL);
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 
--	mutex_unlock(&dev->mt76.mutex);
--
- 	return 0;
- }
- 
-@@ -62,10 +58,8 @@ static void mt76x0e_stop(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	mt76x0e_stop_hw(dev);
--	mutex_unlock(&dev->mt76.mutex);
- }
- 
- static void
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index 22c10722019d..494b9f35f80d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -81,8 +81,10 @@ static void mt76x0u_cleanup(struct mt76x02_dev *dev)
- 	mt76u_queues_deinit(&dev->mt76);
- }
- 
--static void mt76x0u_mac_stop(struct mt76x02_dev *dev)
-+static void mt76x0u_stop(struct ieee80211_hw *hw)
- {
-+	struct mt76x02_dev *dev = hw->priv;
-+
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	cancel_delayed_work_sync(&dev->cal_work);
- 	cancel_delayed_work_sync(&dev->mac_work);
-@@ -106,11 +108,9 @@ static int mt76x0u_start(struct ieee80211_hw *hw)
- 	struct mt76x02_dev *dev = hw->priv;
- 	int ret;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	ret = mt76x0_mac_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	mt76x0_phy_calibrate(dev, true);
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mac_work,
-@@ -118,19 +118,7 @@ static int mt76x0u_start(struct ieee80211_hw *hw)
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
- 				     MT_CALIBRATE_INTERVAL);
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
--
--out:
--	mutex_unlock(&dev->mt76.mutex);
--	return ret;
--}
--
--static void mt76x0u_stop(struct ieee80211_hw *hw)
--{
--	struct mt76x02_dev *dev = hw->priv;
--
--	mutex_lock(&dev->mt76.mutex);
--	mt76x0u_mac_stop(dev);
--	mutex_unlock(&dev->mt76.mutex);
-+	return 0;
- }
- 
- static const struct ieee80211_ops mt76x0u_ops = {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-index 16dc8e2451b5..1b5caabebff5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-@@ -22,8 +22,6 @@ mt76x2_start(struct ieee80211_hw *hw)
- 	struct mt76x02_dev *dev = hw->priv;
- 	int ret;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	ret = mt76x2_mac_start(dev);
- 	if (ret)
- 		goto out;
-@@ -40,7 +38,6 @@ mt76x2_start(struct ieee80211_hw *hw)
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 
- out:
--	mutex_unlock(&dev->mt76.mutex);
- 	return ret;
- }
- 
-@@ -49,10 +46,8 @@ mt76x2_stop(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	mt76x2_stop_hardware(dev);
--	mutex_unlock(&dev->mt76.mutex);
- }
- 
- static int
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-index 0771de210c6a..32726b4906ea 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-@@ -21,30 +21,24 @@ static int mt76x2u_start(struct ieee80211_hw *hw)
- 	struct mt76x02_dev *dev = hw->priv;
- 	int ret;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	ret = mt76x2u_mac_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mac_work,
- 				     MT_MAC_WORK_INTERVAL);
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 
--out:
--	mutex_unlock(&dev->mt76.mutex);
--	return ret;
-+	return 0;
- }
- 
- static void mt76x2u_stop(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	mt76u_stop_tx(&dev->mt76);
- 	mt76x2u_stop_hw(dev);
--	mutex_unlock(&dev->mt76.mutex);
- }
- 
- static int
--- 
-2.20.1
+Ok, so the crux is the "never push back to the stack" part? Well, the 
+internal TXQ and how that is used is obviously enabling that ;-)
 
+Regards,
+Arend
