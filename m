@@ -2,121 +2,77 @@ Return-Path: <SRS0=bGvd=SS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D73BC10F13
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:28:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEDF2C10F14
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:29:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5070D20821
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:28:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XFDb+VBf";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="a/vFakdF"
+	by mail.kernel.org (Postfix) with ESMTP id 9A94B2086A
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 09:29:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729076AbfDPJ2i (ORCPT
+        id S1729097AbfDPJ3c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Apr 2019 05:28:38 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:41404 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728847AbfDPJ2D (ORCPT
+        Tue, 16 Apr 2019 05:29:32 -0400
+Received: from orcrist.hmeau.com ([104.223.48.154]:46388 "EHLO
+        deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727828AbfDPJ3Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Apr 2019 05:28:03 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 343E3613A7; Tue, 16 Apr 2019 09:28:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555406882;
-        bh=MTMnAmP9HDvr/OdAUXr3/nZp14AOAWPije+B1qKu478=;
-        h=From:To:Cc:Subject:Date:From;
-        b=XFDb+VBf5RHADPqG8QLeDfeWMWmCxWaum4UclvrsYD4mgHnlGHIAPvO6DceKVGLhe
-         iYqjZ2FVKfLWnqeubrykAeUf8xf0dS2LenmtDmXvii7McdjBKD00DU2SOMF4woL8Zx
-         lyK+k5FVbwQbHta0+efLlCH+KhwYI7AHsFAWU+2E=
-Received: from localhost.localdomain (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 34A1460A60;
-        Tue, 16 Apr 2019 09:27:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555406881;
-        bh=MTMnAmP9HDvr/OdAUXr3/nZp14AOAWPije+B1qKu478=;
-        h=From:To:Cc:Subject:Date:From;
-        b=a/vFakdFxoGuoK1EDLBa2j36sSORgPaO9f5Xeq9SQPzp+/rktfYrWITTwHHtcqiNm
-         CC/NbHSjQDcmaXCYJ4wt23/umtdcOZOqCumBmADBIEH+gv5bXb3KH4cVPa9IbaAHq3
-         0j18n7dJ4pS/L3YXdYzqQY5VZ+8V19OSLg2HyCLs=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 34A1460A60
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
-From:   Wen Gong <wgong@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] ath10k: add support for simulate crash on SDIO chip
-Date:   Tue, 16 Apr 2019 17:27:45 +0800
-Message-Id: <1555406865-21514-1-git-send-email-wgong@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+        Tue, 16 Apr 2019 05:29:24 -0400
+Received: from gondobar.mordor.me.apana.org.au ([192.168.128.4] helo=gondobar)
+        by deadmen.hmeau.com with esmtps (Exim 4.89 #2 (Debian))
+        id 1hGKOw-0002bJ-OQ; Tue, 16 Apr 2019 17:29:14 +0800
+Received: from herbert by gondobar with local (Exim 4.89)
+        (envelope-from <herbert@gondor.apana.org.au>)
+        id 1hGKOt-0008Ko-Cw; Tue, 16 Apr 2019 17:29:11 +0800
+Date:   Tue, 16 Apr 2019 17:29:11 +0800
+From:   Herbert Xu <herbert@gondor.apana.org.au>
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate
+ tx queues
+Message-ID: <20190416092911.76nyeodbxu5bsqx4@gondor.apana.org.au>
+References: <20190316170634.13125-1-nbd@nbd.name>
+ <20190316170634.13125-5-nbd@nbd.name>
+ <87sgvmvg9g.fsf@toke.dk>
+ <773e4dff-29fd-22b4-e4bc-cd5a94c66dc2@broadcom.com>
+ <20190416074444.pdubbh6fbibdnhi7@gondor.apana.org.au>
+ <73b18131-2777-da5c-a6ee-9d9b3e13cd06@broadcom.com>
+ <20190416083636.5ttvezqyhzr2worg@gondor.apana.org.au>
+ <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net>
+ <cd0715bb-b75c-63b0-0ae4-858d14afd500@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cd0715bb-b75c-63b0-0ae4-858d14afd500@broadcom.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The command to simulate firmware crash:
-echo soft > /sys/kernel/debug/ieee80211/phy0/ath10k/simulate_fw_crash
+On Tue, Apr 16, 2019 at 11:17:53AM +0200, Arend Van Spriel wrote:
+> On 4/16/2019 10:37 AM, Johannes Berg wrote:
+> > It is true because we have an entire buffering layer in mac80211 (in
+> > this case at least) and never push back to the stack.
+> 
+> Ok, so the crux is the "never push back to the stack" part? Well, the
+> internal TXQ and how that is used is obviously enabling that ;-)
 
-It will send WMI_FORCE_FW_HANG_ASSERT to firmware, then it will trigger
-CPU interrupt status register for SDIO chip, ath10k driver need to
-configure it while enable SDIO interrupt, otherwise ath10k driver will
-not get the assert error info.
+So assuming that these drivers all have a TX queue length of zero
+and therefore do not make use of Linux queueing disciplines then
+yes techincally LLTX is fine.
 
-After this change, it will success for simulate firmware crash.
+However, I must say that it is much better to provide real
+congestion feedback to the stack when you can because otherwise
+things like UDP may fall apart.
 
-Tested with QCA6174 SDIO with firmware
-WLAN.RMH.4.4.1-00007-QCARMSWP-1.
-
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/hw.h   | 1 +
- drivers/net/wireless/ath/ath10k/sdio.c | 8 ++++++--
- 2 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 7131499..60521ed 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -1095,6 +1095,7 @@ struct ath10k_hw_ops {
- #define MBOX_CPU_INT_STATUS_ENABLE_ADDRESS	0x00000819
- #define MBOX_CPU_INT_STATUS_ENABLE_BIT_LSB	0
- #define MBOX_CPU_INT_STATUS_ENABLE_BIT_MASK	0x000000ff
-+#define MBOX_CPU_STATUS_ENABLE_ASSERT_MASK 0x00000001
- #define MBOX_ERROR_STATUS_ENABLE_ADDRESS	0x0000081a
- #define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_LSB  1
- #define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_MASK 0x00000002
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index fae56c6..78a2f3b 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -850,6 +850,8 @@ static int ath10k_sdio_mbox_proc_cpu_intr(struct ath10k *ar)
- 
- out:
- 	mutex_unlock(&irq_data->mtx);
-+	ath10k_err(ar, "firmware crashed!\n");
-+	queue_work(ar->workqueue, &ar->restart_work);
- 	return ret;
- }
- 
-@@ -1495,8 +1497,10 @@ static int ath10k_sdio_hif_enable_intrs(struct ath10k *ar)
- 	regs->int_status_en |=
- 		FIELD_PREP(MBOX_INT_STATUS_ENABLE_MBOX_DATA_MASK, 1);
- 
--	/* Set up the CPU Interrupt status Register */
--	regs->cpu_int_status_en = 0;
-+	/* Set up the CPU Interrupt Status Register, enable CPU sourced interrupt #0
-+	 * #0 is used for report assertion from target
-+	 */
-+	regs->cpu_int_status_en = FIELD_PREP(MBOX_CPU_STATUS_ENABLE_ASSERT_MASK, 1);
- 
- 	/* Set up the Error Interrupt status Register */
- 	regs->err_int_status_en =
+Cheers,
 -- 
-1.9.1
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
