@@ -2,101 +2,88 @@ Return-Path: <SRS0=bGvd=SS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB3ABC10F0E
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 01:00:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 734ACC282DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 03:36:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B1E9020818
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 01:00:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 404732075B
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Apr 2019 03:36:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GQkN3Gah";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GQkN3Gah"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727720AbfDPBAp (ORCPT
+        id S1726628AbfDPDgx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Apr 2019 21:00:45 -0400
-Received: from gateway20.websitewelcome.com ([192.185.55.25]:29199 "EHLO
-        gateway20.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726527AbfDPBAo (ORCPT
+        Mon, 15 Apr 2019 23:36:53 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:56520 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726094AbfDPDgw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Apr 2019 21:00:44 -0400
-X-Greylist: delayed 1401 seconds by postgrey-1.27 at vger.kernel.org; Mon, 15 Apr 2019 21:00:44 EDT
-Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
-        by gateway20.websitewelcome.com (Postfix) with ESMTP id 02A1D400C5FDD
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2019 19:37:23 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id GC6EhEo3eiQerGC6EhxQQi; Mon, 15 Apr 2019 19:37:23 -0500
-X-Authority-Reason: nr=8
-Received: from [189.250.55.242] (port=59018 helo=embeddedor)
-        by gator4166.hostgator.com with esmtpa (Exim 4.91)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1hGC6E-002zVf-6N; Mon, 15 Apr 2019 19:37:22 -0500
-Date:   Mon, 15 Apr 2019 19:36:26 -0500
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Kees Cook <keescook@chromium.org>
-Subject: [PATCH wireless-drivers] rtlwifi: rtl8723ae: Fix missing break in
- switch statement
-Message-ID: <20190416003626.GA16834@embeddedor>
+        Mon, 15 Apr 2019 23:36:52 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id C73E7608D4; Tue, 16 Apr 2019 03:36:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1555385811;
+        bh=l0tY0NqVwdKLYiFp6PZGQV9aQNteT7tjL8QZIZ6IJhA=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=GQkN3Gahycr9yPm776IJQlgwitoDd/YeNWmAY6Auls46/7fshM0TCn5QuCmVp1JRL
+         llqza70Hv0jXEsz2K97grbOQhBGIB20143tEuB7pxy5vHDcKyM/+RWz/osoQn+8dk4
+         3oeOPpGRihJZvg9lHIusxfZvq0zYfuANdrI7TxIg=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 81428608D4;
+        Tue, 16 Apr 2019 03:36:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1555385811;
+        bh=l0tY0NqVwdKLYiFp6PZGQV9aQNteT7tjL8QZIZ6IJhA=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=GQkN3Gahycr9yPm776IJQlgwitoDd/YeNWmAY6Auls46/7fshM0TCn5QuCmVp1JRL
+         llqza70Hv0jXEsz2K97grbOQhBGIB20143tEuB7pxy5vHDcKyM/+RWz/osoQn+8dk4
+         3oeOPpGRihJZvg9lHIusxfZvq0zYfuANdrI7TxIg=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 81428608D4
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH wireless-drivers] rtlwifi: rtl8723ae: Fix missing break in switch statement
+References: <20190416003626.GA16834@embeddedor>
+Date:   Tue, 16 Apr 2019 06:36:46 +0300
+In-Reply-To: <20190416003626.GA16834@embeddedor> (Gustavo A. R. Silva's
+        message of "Mon, 15 Apr 2019 19:36:26 -0500")
+Message-ID: <87h8ay8vu9.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 189.250.55.242
-X-Source-L: No
-X-Exim-ID: 1hGC6E-002zVf-6N
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: (embeddedor) [189.250.55.242]:59018
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 4
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add missing break statement in order to prevent the code from falling
-through to case 0x1025, and erroneously setting rtlhal->oem_id to
-RT_CID_819X_ACER when rtlefuse->eeprom_svid is equal to 0x10EC and
-none of the cases in switch (rtlefuse->eeprom_smid) match.
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> writes:
 
-This bug was found thanks to the ongoing efforts to enable
--Wimplicit-fallthrough.
+> Add missing break statement in order to prevent the code from falling
+> through to case 0x1025, and erroneously setting rtlhal->oem_id to
+> RT_CID_819X_ACER when rtlefuse->eeprom_svid is equal to 0x10EC and
+> none of the cases in switch (rtlefuse->eeprom_smid) match.
+>
+> This bug was found thanks to the ongoing efforts to enable
+> -Wimplicit-fallthrough.
+>
+> Fixes: 238ad2ddf34b ("rtlwifi: rtl8723ae: Clean up the hardware info routine")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-Fixes: 238ad2ddf34b ("rtlwifi: rtl8723ae: Clean up the hardware info routine")
-Cc: stable@vger.kernel.org
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c | 1 +
- 1 file changed, 1 insertion(+)
+You have marked this for wireless-drivers but the commit is 2.5 years
+old, so I think wireless-drivers-next is more approriate.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index 6bab162e1bb8..655460f61bbc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -1675,6 +1675,7 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
- 					rtlhal->oem_id = RT_CID_819X_LENOVO;
- 					break;
- 				}
-+				break;
- 			case 0x1025:
- 				rtlhal->oem_id = RT_CID_819X_ACER;
- 				break;
 -- 
-2.21.0
-
+Kalle Valo
