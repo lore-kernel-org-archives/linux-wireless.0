@@ -6,101 +6,83 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D358C282DA
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 07:03:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2311C282DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 07:14:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 541CA2176F
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 07:03:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F10D2176F
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 07:14:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729366AbfDQHDD (ORCPT
+        id S1731112AbfDQHOL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 03:03:03 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53500 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728335AbfDQHDC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 03:03:02 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1hGeau-0006f6-4i; Wed, 17 Apr 2019 10:02:56 +0300
-Message-ID: <05f0923dce988a9c4cfb870013c49ca4136afbdb.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Laura Abbott <labbott@redhat.com>, linux-kernel@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, stable <stable@vger.kernel.org>
-Date:   Wed, 17 Apr 2019 10:02:54 +0300
-In-Reply-To: <20190330093152.GB14300@kroah.com>
-References: <20190122152151.16139-24-gregkh@linuxfoundation.org>
-         <03bb68be-8e42-a463-2d57-3be051dc2016@redhat.com>
-         <20190327012600.GA3649@kroah.com>
-         <5660d50d-6cbf-3b36-6e6c-312b1617ed23@redhat.com>
-         <20190327015346.GA17979@kroah.com>
-         <5f9c8beda0e925b079aa9342ce1c9523659837a4.camel@coelho.fi>
-         <20190330092247.GA14300@kroah.com> <20190330093152.GB14300@kroah.com>
+        Wed, 17 Apr 2019 03:14:11 -0400
+Received: from mga02.intel.com ([134.134.136.20]:5550 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727013AbfDQHOL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Apr 2019 03:14:11 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Apr 2019 00:14:10 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,361,1549958400"; 
+   d="scan'208";a="316655035"
+Received: from dfava-mobl.ger.corp.intel.com ([10.252.1.108])
+  by orsmga005.jf.intel.com with ESMTP; 17 Apr 2019 00:14:07 -0700
+Message-ID: <cb50133154f8b8913dfe00231eeef77b3f650955.camel@intel.com>
+Subject: Re: [PATCH] iwlwifi: Use correct channel_profile iniwl_get_nvm
+From:   Luciano Coelho <luciano.coelho@intel.com>
+To:     Yue Haibing <yuehaibing@huawei.com>, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
+        kvalo@codeaurora.org
+Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, davem@davemloft.net
+Date:   Wed, 17 Apr 2019 10:14:06 +0300
+In-Reply-To: <20190417032409.23924-1-yuehaibing@huawei.com>
+References: <20190417032409.23924-1-yuehaibing@huawei.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.5-1 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] iwlwifi: properly check debugfs dentry before using it
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 2019-03-30 at 10:31 +0100, Greg Kroah-Hartman wrote:
-> debugfs can now report an error code if something went wrong instead
-> of
-> just NULL.  So if the return value is to be used as a "real" dentry,
-> it
-> needs to be checked if it is an error before dereferencing it.
+On Wed, 2019-04-17 at 11:24 +0800, Yue Haibing wrote:
+> From: YueHaibing <yuehaibing@huawei.com>
 > 
-> This is now happening because of ff9fb72bc077 ("debugfs: return error
-> values, not NULL").  If multiple iwlwifi devices are in the system,
-> this
-> can cause problems when the driver attempts to create the main
-> debugfs
-> directory again.  Later on in the code we fail horribly by trying to
-> dereference a pointer that is an error value.
+> commit 2785ce008e3b ("iwlwifi: support new NVM response API")
+> seems forgot use correct channel_profile in iwl_get_nvm when call
+> iwl_init_sbands().
 > 
-> Reported-by: Laura Abbott <labbott@redhat.com>
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Cc: Luca Coelho <luciano.coelho@intel.com>
-> Cc: Intel Linux Wireless <linuxwifi@intel.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: stable <stable@vger.kernel.org> # 5.0
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Fixes: 2785ce008e3b ("iwlwifi: support new NVM response API")
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-> b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-> index 2453ceabf00d..6925527d8457 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-> @@ -774,8 +774,7 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm
-> *mvm, struct ieee80211_vif *vif)
->  		return;
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> index 40985dc..d87a6bb 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> @@ -1496,7 +1496,7 @@ struct iwl_nvm_data *iwl_get_nvm(struct
+> iwl_trans *trans,
+>  			  (void *)rsp_v3->regulatory.channel_profile;
 >  
->  	mvmvif->dbgfs_dir = debugfs_create_dir("iwlmvm", dbgfs_dir);
-> -
-> -	if (!mvmvif->dbgfs_dir) {
-> +	if (IS_ERR_OR_NULL(mvmvif->dbgfs_dir)) {
->  		IWL_ERR(mvm, "Failed to create debugfs directory under
-> %pd\n",
->  			dbgfs_dir);
->  		return;
+>  	iwl_init_sbands(trans->dev, trans->cfg, nvm,
+> -			rsp->regulatory.channel_profile,
+> +			channel_profile,
+>  			nvm->valid_tx_ant & fw->valid_tx_ant,
+>  			nvm->valid_rx_ant & fw->valid_rx_ant,
+>  			sbands_flags, v4);
 
-Thanks! I've applied this internally and will send upstream for v5.1-
-rc* following our normal upstreaming process.
+Thanks!
 
-I added the other Reported-by that Laura asked for and added "mvm:" to
-the subject.
+This was a rebase damage I made when sending this upstream.  I've
+applied this directly to our upstream feeding tree because it's not
+wrong in our internal tree.
 
 --
 Cheers,
