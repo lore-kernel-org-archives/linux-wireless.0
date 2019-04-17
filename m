@@ -2,78 +2,123 @@ Return-Path: <SRS0=eC3p=ST=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5C66C282DA
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 10:59:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE23C282DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 12:37:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94C3B2064A
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 10:59:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555498793;
-	bh=EgoRb32YpxABqEBjzBuywiaipOwaXhMT4rxnt/jBOLI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=CZef542V3X4v8P9A4VTP/kVMswLM7DguN2pwAOxdAuVH2keGY62ZudcUEWqMfT4se
-	 VALfcImruPpEGR/z2+Lg3ioKYEWsgbqO7snqkTz1M9d7wHK4dDSybkn6ya9X66yqwv
-	 7MC1CcJ3Q7KojLHU8aBXCnx+RfQq6gWeJMYa54us=
+	by mail.kernel.org (Postfix) with ESMTP id CFD5B20835
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 12:37:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TjSHjSNx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731717AbfDQK7t (ORCPT
+        id S1732080AbfDQMhz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 06:59:49 -0400
-Received: from mx2.suse.de ([195.135.220.15]:35312 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726695AbfDQK7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 06:59:49 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 986BEAE60;
-        Wed, 17 Apr 2019 10:59:47 +0000 (UTC)
-Date:   Wed, 17 Apr 2019 12:59:47 +0200
-From:   Michal Hocko <mhocko@kernel.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     kvalo@codeaurora.org, johannes@sipsolutions.net,
-        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Subject: Re: [PATCH] iwlwifi: don't panic in error path on non-msix systems
-Message-ID: <20190417105947.GB5878@dhcp22.suse.cz>
-References: <748205b02961167b0926d4afe8d9ad9cb37bf6ef.camel@coelho.fi>
- <20190417073516.24250-1-luca@coelho.fi>
- <20190417101102.GA5878@dhcp22.suse.cz>
- <3c1cb224613ac2cc3b20bfcf0c47e0df584c4e31.camel@coelho.fi>
+        Wed, 17 Apr 2019 08:37:55 -0400
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:39854 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731790AbfDQMhz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Apr 2019 08:37:55 -0400
+Received: by mail-ot1-f65.google.com with SMTP id f10so20506564otb.6
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 05:37:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=+bBJ1FV0N6JdenHqhwFag1jwMNbBgEBG5KACOm/sHtI=;
+        b=TjSHjSNxByeuLsmCLELE/H004Rnv28cxjbX9jdVfO/pFzdib8j0RigKsq8VsSzc5UA
+         emgs8AkCzWVwtIEsV4MtwQhsELLUtrpXtxq+PrrWV5EJ5Tx5WWL2ph1AN5WRqPJvXOeb
+         EpFaaUUUnsbuBYwwgMj7M5q+racQL1TgMzP8gVRkMKpPx9ISqaBBywhYM6sl1be1Cr+b
+         kjMS78dsilIfws8xmJOGf/e9Lo7JcgQFLj4kW4PEnqy1m+1UWYgpN8VX2xSiab227/0p
+         psrVlzEDNorxTbYvRIy1JMqxcwNrui5GnbkKW2nQJkTSCRfYJRkYXl+fyoSO6cRrxHaH
+         mP1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=+bBJ1FV0N6JdenHqhwFag1jwMNbBgEBG5KACOm/sHtI=;
+        b=AQxGKrxcTLDMhVscoUPcMeUEooqi2XMAYrI1eCeEpERfpACfANn+R9t926IC+n5+dg
+         sK3tcWbH0g3VyZqeWCmLDIe6zODslWTTJn59lUx5VcaABl8M/fMIVcuPf83AMrzklwuQ
+         T1bJXb8yuz4HR2m3HHvWcRH+lM3shBdNk+5llA27FwLUbH1zY9n59c3x8LfwHUmdQHG0
+         fW+sWA6fP18Y0U2OKRJOA+xmDXctYiyI3y2r4XxJ7DT+LfbZlZxY0wCrnov2Eu6q7ZJK
+         joydZvrpBMMlix9Rq9edrVSZTp0LcU5p4pQJHj64s9r3D8jnnW7PUPC/i9Gb7zT7iFnM
+         RlmQ==
+X-Gm-Message-State: APjAAAXYnVeMKn1yzwkYB8j3Kl8d5gvJXovvGu2ZB5GUDKcWHAffDXUN
+        FfSDOKB/SvDYlS5zxqYdJZY=
+X-Google-Smtp-Source: APXvYqwmL30njLbXkEYq21SSPt+aeP5PD0hPawddSwCZu425mP+0+WRWDSu+1Z8uPLGtkHuMId8scA==
+X-Received: by 2002:a9d:6c98:: with SMTP id c24mr22283912otr.324.1555504674956;
+        Wed, 17 Apr 2019 05:37:54 -0700 (PDT)
+Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id s124sm21563142oia.24.2019.04.17.05.37.52
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 17 Apr 2019 05:37:53 -0700 (PDT)
+Subject: Re: [PATCH] rtlwifi: rtl8188ee: Remove extraneous file
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        Andrew Morton <akpm@linux-foundation.org>
+References: <20190417003547.26271-1-Larry.Finger@lwfinger.net>
+ <87tvex49yj.fsf@kamboji.qca.qualcomm.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <d393389d-f3f0-491e-c83b-50065f388d75@lwfinger.net>
+Date:   Wed, 17 Apr 2019 07:37:52 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3c1cb224613ac2cc3b20bfcf0c47e0df584c4e31.camel@coelho.fi>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <87tvex49yj.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed 17-04-19 13:17:10, Luca Coelho wrote:
-> On Wed, 2019-04-17 at 12:11 +0200, Michal Hocko wrote:
-> > Hi,
-> > which tree is this supposed to be applied on? It doesn't do apply on
-> > top
-> > of v5.1-rc4-3-gfd008d1a7a20. iwl_trans_pcie_sync_nmi doesn't exist in
-> > drivers/net/wireless/intel/iwlwifi/pcie/trans.c. iwl_trans_sync_nmi
-> > looks pretty similar. My patch massaging ended up with this. Please
-> > double check. It compiles and even boots.
+On 4/16/19 9:55 PM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
 > 
-> Ah, sorry, I didn't mention that that patch was supposed to apply on
-> top of wireless-drivers-next, which is on its way to v5.2.  We have
-> other patches touching this function there, thus the conflict.
+>> Somehow file drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej was
+>> incorporated into the sources. Obviously, it can be removed.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Reported-by: Andrew Morton <akpm@linux-foundation.org>
+>> Cc: Andrew Morton <akpm@linux-foundation.org>
+>> ---
+>> Andrew,
+>>
+>> Thanks.
+>>
+>> Larry
+>> ---
+>>   drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej | 10 ----------
+>>   1 file changed, 10 deletions(-)
+>>   delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
+>>
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
+>> b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
+>> deleted file mode 100644
+>> index aa03d4605d8c..000000000000
+>> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
+>> +++ /dev/null
+> 
+> What tree is this? On wireless-drivers I can't find this file:
+> 
+> $ ls drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
+> /bin/ls: cannot access 'drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej': No such file or directory
+> $
+> 
+> Actually I cannot find any .rej files:
+> 
+> $ find -name '*.rej'
+> $
+> 
 
-This is hard to tell. I haven't seen any "Error sending SCAN_CFG_CMD:"
-message in the kernel log yet and I believe this is related to the
-crash. But I might be easily wrong here.
+It is in wireless-drivers-next. This extraneous file was added in commit 
+05f1be9594d5 ("rtlwifi: Convert the wake_match variable to local").
 
-In any case, I suspect that those events usually happen in a different
-wireless environment than I am running right now. So give me some more
-time before I can be more confident with an answer.
--- 
-Michal Hocko
-SUSE Labs
+Larry
+
+
