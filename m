@@ -2,82 +2,73 @@ Return-Path: <SRS0=eC3p=ST=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ACCCC10F14
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 01:35:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF043C282DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 02:11:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F6CA20821
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 01:35:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D2EE20872
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 02:11:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729383AbfDQBfK (ORCPT
+        id S1731077AbfDQCLQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Apr 2019 21:35:10 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:53095 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728486AbfDQBfJ (ORCPT
+        Tue, 16 Apr 2019 22:11:16 -0400
+Received: from orcrist.hmeau.com ([104.223.48.154]:51174 "EHLO
+        deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727424AbfDQCLP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Apr 2019 21:35:09 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x3H1YuRn000414, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x3H1YuRn000414
-        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Wed, 17 Apr 2019 09:34:56 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCASV01.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Wed, 17 Apr
- 2019 09:34:56 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>
-Subject: Re: [PATCH] rtlwifi: rtl8188ee: Remove extraneous file
-Thread-Topic: [PATCH] rtlwifi: rtl8188ee: Remove extraneous file
-Thread-Index: AQHU9LWG8OP7qwVl1k+H5cKcYLbBjKY/C+IA
-Date:   Wed, 17 Apr 2019 01:34:55 +0000
-Message-ID: <1555464872.3420.2.camel@realtek.com>
-References: <20190417003547.26271-1-Larry.Finger@lwfinger.net>
-In-Reply-To: <20190417003547.26271-1-Larry.Finger@lwfinger.net>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.114]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <1D8A0CAD877D2C4FA7825196134DF064@realtek.com>
-Content-Transfer-Encoding: base64
+        Tue, 16 Apr 2019 22:11:15 -0400
+Received: from gondobar.mordor.me.apana.org.au ([192.168.128.4] helo=gondobar)
+        by deadmen.hmeau.com with esmtps (Exim 4.89 #2 (Debian))
+        id 1hGa2U-0005PP-EZ; Wed, 17 Apr 2019 10:11:06 +0800
+Received: from herbert by gondobar with local (Exim 4.89)
+        (envelope-from <herbert@gondor.apana.org.au>)
+        id 1hGa2P-000113-PW; Wed, 17 Apr 2019 10:11:01 +0800
+Date:   Wed, 17 Apr 2019 10:11:01 +0800
+From:   Herbert Xu <herbert@gondor.apana.org.au>
+To:     Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+        Eric Dumazet <eric.dumazet@gmail.com>, netdev@vger.kernel.org
+Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate
+ tx queues
+Message-ID: <20190417021101.5a32gox2ivbcgsbp@gondor.apana.org.au>
+References: <773e4dff-29fd-22b4-e4bc-cd5a94c66dc2@broadcom.com>
+ <20190416074444.pdubbh6fbibdnhi7@gondor.apana.org.au>
+ <73b18131-2777-da5c-a6ee-9d9b3e13cd06@broadcom.com>
+ <20190416083636.5ttvezqyhzr2worg@gondor.apana.org.au>
+ <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net>
+ <87ef62uwfm.fsf@toke.dk>
+ <95f86cf69dee05a176625925657cf0df0e97b5c9.camel@sipsolutions.net>
+ <20190416093707.dtlwcmitzqopaeaw@gondor.apana.org.au>
+ <e4c1a3ca0c0c160b7c271ab83deebcf096f38497.camel@sipsolutions.net>
+ <8736miuv1x.fsf@toke.dk>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8736miuv1x.fsf@toke.dk>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gVHVlLCAyMDE5LTA0LTE2IGF0IDE5OjM1IC0wNTAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IFNvbWVob3cgZmlsZSBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRsODE4
-OGVlL3RyeC5jLnJlaiB3YXMNCj4gaW5jb3Jwb3JhdGVkIGludG8gdGhlIHNvdXJjZXMuIE9idmlv
-dXNseSwgaXQgY2FuIGJlIHJlbW92ZWQuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBMYXJyeSBGaW5n
-ZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+DQo+IFJlcG9ydGVkLWJ5OiBBbmRyZXcgTW9y
-dG9uIDxha3BtQGxpbnV4LWZvdW5kYXRpb24ub3JnPg0KPiBDYzogQW5kcmV3IE1vcnRvbiA8YWtw
-bUBsaW51eC1mb3VuZGF0aW9uLm9yZz4NCj4gLS0tDQo+IEFuZHJldywNCj4gDQo+IFRoYW5rcy4N
-Cj4gDQo+IExhcnJ5DQo+IC0tLQ0KPiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRs
-d2lmaS9ydGw4MTg4ZWUvdHJ4LmMucmVqIHwgMTAgLS0tLS0tLS0tLQ0KPiDCoDEgZmlsZSBjaGFu
-Z2VkLCAxMCBkZWxldGlvbnMoLSkNCj4gwqBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9uZXQv
-d2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDgxODhlZS90cnguYy5yZWoNCj4gDQo+IGRpZmYg
-LS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRsODE4OGVlL3Ry
-eC5jLnJlag0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9ydGw4MTg4
-ZWUvdHJ4LmMucmVqDQo+IGRlbGV0ZWQgZmlsZSBtb2RlIDEwMDY0NA0KPiBpbmRleCBhYTAzZDQ2
-MDVkOGMuLjAwMDAwMDAwMDAwMA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVr
-L3J0bHdpZmkvcnRsODE4OGVlL3RyeC5jLnJlag0KPiArKysgL2Rldi9udWxsDQo+IEBAIC0xLDEw
-ICswLDAgQEANCj4gLS0tLSBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRs
-ODE4OGVlL3RyeC5jDQo+IC0rKysgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZp
-L3J0bDgxODhlZS90cnguYw0KPiAtQEAgLTM3Myw2ICszNzMsNyBAQCBib29sIHJ0bDg4ZWVfcnhf
-cXVlcnlfZGVzYyhzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywNCj4gLcKgCXN0cnVjdCByeF9md2lu
-Zm9fODhlICpwX2RydmluZm87DQo+IC3CoAlzdHJ1Y3QgaWVlZTgwMjExX2hkciAqaGRyOw0KPiAt
-wqAJdTMyIHBoeXN0YXR1cyA9IEdFVF9SWF9ERVNDX1BIWVNUKHBkZXNjKTsNCj4gLSsJdTggd2Fr
-ZV9tYXRjaDsNCj4gLcKgDQo+IC3CoAlzdGF0dXMtPnBhY2tldF9yZXBvcnRfdHlwZSA9ICh1OClH
-RVRfUlhfU1RBVFVTX0RFU0NfUlBUX1NFTChwZGVzYyk7DQo+IC3CoAlpZiAoc3RhdHVzLT5wYWNr
-ZXRfcmVwb3J0X3R5cGUgPT0gVFhfUkVQT1JUMikNCg0KVGhlIGNoYW5nZSBvZiB0cnguYyBzZWVt
-cyBub3QgYmVsb25nIHRvIHRoaXMgcGF0Y2gsIHJpZ2h0P8KgDQoNCg0K
+On Tue, Apr 16, 2019 at 11:02:50AM +0100, Toke Høiland-Jørgensen wrote:
+> 
+> As explained at great length here:
+> https://www.usenix.org/conference/atc17/technical-sessions/presentation/hoilan-jorgesen
+> (you already know that of course, Johannes)
+
+I can understand that wireless needs its own queueing scheme, but
+it still seems wrong to place that under net/mac80211 as opposed
+to having it as a first-class citizen under net/sched.
+
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
