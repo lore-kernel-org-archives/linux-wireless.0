@@ -2,124 +2,107 @@ Return-Path: <SRS0=eC3p=ST=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 421DAC282DA
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 14:15:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA264C282DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 19:15:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F31720872
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 14:15:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9649C2073F
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 19:15:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="no+Mhss/";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="L5FY7w4c"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KMVldfCn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732359AbfDQOPr (ORCPT
+        id S1733078AbfDQTP1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 10:15:47 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:55706 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731743AbfDQOPq (ORCPT
+        Wed, 17 Apr 2019 15:15:27 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:40481 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729291AbfDQTP1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 10:15:46 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1984F60712; Wed, 17 Apr 2019 14:15:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555510545;
-        bh=tqY4NFkgCKC+FgcHHXXVp6JzILZm0CF5/WkCbF/Ykzw=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=no+Mhss/2l3tESJVVJAg0oRF0a0yyX1jGofs6pdnsEFekgygb0Yrh49IwjvwKUb5B
-         qOZ+7S6EX0CNxVa+KO7vQynjAIBgfLE+8CEBcAsOEOIz+LrnSxfXRPT/4WQHiHdRCe
-         XrapN7CZzyT5elD7YsOfKtjaa/B24bTuZjYY6vsI=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E67D660779;
-        Wed, 17 Apr 2019 14:15:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555510539;
-        bh=tqY4NFkgCKC+FgcHHXXVp6JzILZm0CF5/WkCbF/Ykzw=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=L5FY7w4czKtMUCzjuw4B3ldM3TnSy9bpYHQS0a0biBH8jlJd7CInqz3HCTfdPo4jF
-         k8mejzHsr1k5cXrADaJHFg5brpvSMb8Pv8zwUYu1Bf9PLrnP/W+1KyB4QWrEIuUWyY
-         ybMwmqJTDmjUgKg6FSBwbYaJy0IEHaHB/beEUomA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E67D660779
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
-        Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] rtlwifi: rtl8188ee: Remove extraneous file
-References: <20190417003547.26271-1-Larry.Finger@lwfinger.net>
-        <87tvex49yj.fsf@kamboji.qca.qualcomm.com>
-        <d393389d-f3f0-491e-c83b-50065f388d75@lwfinger.net>
-Date:   Wed, 17 Apr 2019 17:15:34 +0300
-In-Reply-To: <d393389d-f3f0-491e-c83b-50065f388d75@lwfinger.net> (Larry
-        Finger's message of "Wed, 17 Apr 2019 07:37:52 -0500")
-Message-ID: <87ef604t15.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Wed, 17 Apr 2019 15:15:27 -0400
+Received: by mail-lf1-f68.google.com with SMTP id a28so19732865lfo.7
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 12:15:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=lAtSC54sP8tBcJOPSyYHc2pdsS1krcRxdXangPf5TEA=;
+        b=KMVldfCnSSh5N906LMMj+wI4N9howcyxmfZpSpkGkgMcY3HHERTG8VWGZu1C1LBxsX
+         0BireXewiagLSrLowfSJElW3p87ULFAnc+HJSHSs9VBH433DS39E8EBq0jz30PMib0pP
+         iNcds5nPLYCW6DERMCWfMGaIjBvao6c3eIOg9fqtUeYTGvzfwl5w+K8q8nfGjhMSj40d
+         4qX+sD8TOxjU7HWD66vl8IZnBxLnjJ2067S7da2nRAivYZUEWWNWif+81mdVWXA8gIy1
+         Szu4gD7uzDwFMlK5ZFYd7rf37PCbsuieSRxtefPJHcKJRJR+WZEGCllHValBT27Ois9L
+         3c1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=lAtSC54sP8tBcJOPSyYHc2pdsS1krcRxdXangPf5TEA=;
+        b=WbNxsuQssf1zVLobACx8IKqDKemmqlL/9xG8YuWM01bdGXbaHutLXbXEvZwfWwcmBN
+         sSfj4ZhSuj8661zNGdQdSnC629/1ArKTy5kklNmhJPo+3tozplJKs/Punresz77Iv87r
+         Kdges9Q/IglVFfP5fuCbZByrZERlhTjV4gP0+jMD4LQwZBYvjcbSugdN3Tsp0So/4mUC
+         r0YIhohxzC58dXVulRe+F+0W83/jTAGfNIDfvgymg/HuJ9A36pyqoRSztelTks67SEj1
+         62wLDDUYNB8qTq54uOOuz/cqCsNAQTWAUPVlePP2ykuL2BuRHOwFuAhvBcAJwaLnTMVE
+         ywDQ==
+X-Gm-Message-State: APjAAAUdMxt7dlir393ShI8v7b8cG6VztYc2FAq1nMh9u1p15+zV1IUq
+        QFKISHQG0raBGgXdbRlBacs=
+X-Google-Smtp-Source: APXvYqzJfHatxka27TUWUpRjXp3pXHOodc4IUpkDYYqp3qvXzSKbPW5OEQrOlkINx3cw/3eInltEyw==
+X-Received: by 2002:a19:f24c:: with SMTP id d12mr778347lfk.163.1555528525916;
+        Wed, 17 Apr 2019 12:15:25 -0700 (PDT)
+Received: from localhost.localdomain (81-233-89-221-no75.tbcn.telia.com. [81.233.89.221])
+        by smtp.gmail.com with ESMTPSA id j27sm11387203lfk.97.2019.04.17.12.15.25
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 17 Apr 2019 12:15:25 -0700 (PDT)
+From:   Erik Stromdahl <erik.stromdahl@gmail.com>
+To:     kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc:     Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH v2 0/5] ath10k: SDIO and high latency patches from Silex
+Date:   Wed, 17 Apr 2019 21:14:58 +0200
+Message-Id: <20190417191503.18814-1-erik.stromdahl@gmail.com>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+This series adds a few more fixes for SDIO and high latency devices.
 
-> On 4/16/19 9:55 PM, Kalle Valo wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>
->>> Somehow file drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej was
->>> incorporated into the sources. Obviously, it can be removed.
->>>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> Reported-by: Andrew Morton <akpm@linux-foundation.org>
->>> Cc: Andrew Morton <akpm@linux-foundation.org>
->>> ---
->>> Andrew,
->>>
->>> Thanks.
->>>
->>> Larry
->>> ---
->>>   drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej | 10 ----------
->>>   1 file changed, 10 deletions(-)
->>>   delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
->>>
->>> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
->>> b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
->>> deleted file mode 100644
->>> index aa03d4605d8c..000000000000
->>> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
->>> +++ /dev/null
->>
->> What tree is this? On wireless-drivers I can't find this file:
->>
->> $ ls drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej
->> /bin/ls: cannot access
->> 'drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej': No such
->> file or directory
->> $
->>
->> Actually I cannot find any .rej files:
->>
->> $ find -name '*.rej'
->> $
->>
->
-> It is in wireless-drivers-next. This extraneous file was added in
-> commit 05f1be9594d5 ("rtlwifi: Convert the wake_match variable to
-> local").
+I have had these on my private tree for quite some time now so they
+should be considered fairly well tested.
 
-Ah, now I see it. But I think the commit adding was:
+changes since v1:
 
-ddab2eee7949 rtlwifi: Convert the wake_match variable to local
+Patch "ath10k: use clean packet headers" was renamed to
+"ath10k: add initialization of HTC header" and PLL stuff was removed.
 
-I'll queue this for w-d-next.
+Patch "ath10k: sdio: add MSDU ID allocation in HTT TX path"
+was removed since it became redundant after I had added Kalle's and
+Wen's patches to my tree.
+
+Patch "ath10k: sdio: replace skb_trim with explicit set of skb->len"
+was rewritten and renamed to "ath10k: sdio: remove skb_trim in TX path"
+
+Alagu Sankar (3):
+  ath10k: add initialization of HTC header
+  ath10k: high latency fixes for beacon buffer
+  ath10k: sdio: read RX packets in bundles
+
+Erik Stromdahl (2):
+  ath10k: sdio: add missing error check
+  ath10k: sdio: remove skb_trim in TX path
+
+ drivers/net/wireless/ath/ath10k/htc.c  |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c  |  31 ++++++--
+ drivers/net/wireless/ath/ath10k/sdio.c | 103 ++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/sdio.h |   4 +
+ 4 files changed, 112 insertions(+), 27 deletions(-)
 
 -- 
-Kalle Valo
+2.19.1
+
