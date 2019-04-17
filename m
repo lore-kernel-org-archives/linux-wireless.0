@@ -3,95 +3,69 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16F64C282DC
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 09:26:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2992C10F12
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 09:26:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DDE2B2173C
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 09:26:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD0F620835
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 09:26:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729198AbfDQJ0G convert rfc822-to-8bit (ORCPT
+        id S1731314AbfDQJ0V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 05:26:06 -0400
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:42886 "EHLO
+        Wed, 17 Apr 2019 05:26:21 -0400
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:35578 "EHLO
         mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727177AbfDQJ0F (ORCPT
+        with ESMTP id S1727177AbfDQJ0U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 05:26:05 -0400
-Received: by mail-ed1-f65.google.com with SMTP id x61so20338340edc.9
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 02:26:04 -0700 (PDT)
+        Wed, 17 Apr 2019 05:26:20 -0400
+Received: by mail-ed1-f65.google.com with SMTP id y67so7087143ede.2
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 02:26:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=kAlJ1TRnp64iVXKnwiKKBDLZ/BKMMFs5olzaVVrDTbs=;
-        b=NicrfbqsdtqlHmg+zZ8NPyvT5vmGGC2s5oqT9JI39ha6q6ALA8ovxXiq2jkHxpdRlG
-         7TxYSK96x5p3JRAMPLzIU/V7KLrUsRowTJdwfNdIfC2QQ2ujM3E1BGynM6EO9kZI3AWY
-         +XIL9Sg0H6X6nqc1i2yM1Wi37Juo6tArajAnFMI37Xw5wQHyTXXiNo5t7Eomi+x/xIXq
-         atoJUJwXUMQo/sZfMEZRgJTO71+ZalODoN3CwkfcjT0xrlTs/PeYM4sJbPcI+G/JL7x1
-         U3Ibtfb47o3S1cMTV5GnUiOx7iObJP9FEMuTz9X37nXzF6WtIn9R2moyhC7f+3ebFh0r
-         /+wg==
-X-Gm-Message-State: APjAAAVDx894uqot7ETgjog2ZSCBcLSMWTxVYaUEbwoJgOQrPMDe3IkR
-        xqvddphicWGqCtfeKNb+uw9q5w==
-X-Google-Smtp-Source: APXvYqyWNhfDt5BzBztOX+H1/vrM2+tt6TcIUfHquVr3CpZUo8AENV/RelnxECZJjizJ/sMuO7ot8g==
-X-Received: by 2002:a17:906:f91:: with SMTP id q17mr46082730ejj.63.1555493164142;
-        Wed, 17 Apr 2019 02:26:04 -0700 (PDT)
+         :message-id:mime-version;
+        bh=Ze7JquwvUneY/03dtXW751kdGYnLdVXEW6bGNmpE3F4=;
+        b=Do3aIyXgMGcLuaoLcwEQ3Fh2laT5GQVK5ciI2O/eINsa9ozTr1iGIqqBTkAubpp2vX
+         d/oQ62FQLmBBqx+4XRCmL5Gtbuozn7vj1YBZoc0q+peDzy6BxbVYMrKSBJTdjUFzyWVe
+         25lRPSqJc0YA3usxdsxR0RI5wSCEDpZ1pZQoyGsL9DVYT6DftDM13wm1NnVmWNYNzjYJ
+         /IlIfooBCdvWZwMjA1ZRHvsaAIFAHaDi+AmSh2dPy4dg+0HV5TuUJLJ2grakoWBY/E9Z
+         7nIWCs0GzlN1B7UG08E3pk41HJZS1QFcQNU+1N5XVyZTaCkHt7Jr6/+tbIH38poaOhW1
+         m0JA==
+X-Gm-Message-State: APjAAAVjcJND+BABe5ntlPm6WGdK+a3DqSg1evcDGVeN4OobFB5l/9vE
+        Gom4Br76aaIOAK8JGx9osyzIcoEnE4I=
+X-Google-Smtp-Source: APXvYqx00Zrqj4t1gXeqPilRIbDNxA+lywb8cM50gd4jovdjPxFHD0pcK/6OUHz6g6WYhgsfHp5OYg==
+X-Received: by 2002:a17:906:1851:: with SMTP id w17mr46319790eje.242.1555493179448;
+        Wed, 17 Apr 2019 02:26:19 -0700 (PDT)
 Received: from alrua-x1.borgediget.toke.dk (alrua-x1.vpn.toke.dk. [2a00:7660:6da:10::2])
-        by smtp.gmail.com with ESMTPSA id d6sm4270973edq.65.2019.04.17.02.26.02
+        by smtp.gmail.com with ESMTPSA id j12sm3181998eda.71.2019.04.17.02.26.18
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 17 Apr 2019 02:26:03 -0700 (PDT)
+        Wed, 17 Apr 2019 02:26:18 -0700 (PDT)
 Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 029C21800E8; Wed, 17 Apr 2019 10:17:09 +0100 (+01)
+        id 9E69A1800E8; Wed, 17 Apr 2019 10:26:17 +0100 (+01)
 From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Herbert Xu <herbert@gondor.apana.org.au>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
-        Eric Dumazet <eric.dumazet@gmail.com>, netdev@vger.kernel.org
-Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate tx queues
-In-Reply-To: <20190417033834.ep6t7r6ttvjek5g7@gondor.apana.org.au>
-References: <20190416074444.pdubbh6fbibdnhi7@gondor.apana.org.au> <73b18131-2777-da5c-a6ee-9d9b3e13cd06@broadcom.com> <20190416083636.5ttvezqyhzr2worg@gondor.apana.org.au> <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net> <87ef62uwfm.fsf@toke.dk> <95f86cf69dee05a176625925657cf0df0e97b5c9.camel@sipsolutions.net> <20190416093707.dtlwcmitzqopaeaw@gondor.apana.org.au> <e4c1a3ca0c0c160b7c271ab83deebcf096f38497.camel@sipsolutions.net> <20190416131346.u2uolljlrd5t2jro@gondor.apana.org.au> <87wojut7f7.fsf@toke.dk> <20190417033834.ep6t7r6ttvjek5g7@gondor.apana.org.au>
+To:     Lei Wang <leiwa@codeaurora.org>, ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, Lei Wang <leiwa@codeaurora.org>
+Subject: Re: [PATCH v2] ath10k: fix different tx duration output
+In-Reply-To: <1555489045-18070-1-git-send-email-leiwa@codeaurora.org>
+References: <1555489045-18070-1-git-send-email-leiwa@codeaurora.org>
 X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Wed, 17 Apr 2019 10:17:09 +0100
-Message-ID: <87tvexrnxm.fsf@toke.dk>
+Date:   Wed, 17 Apr 2019 10:26:17 +0100
+Message-ID: <87mukprnie.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Herbert Xu <herbert@gondor.apana.org.au> writes:
+Lei Wang <leiwa@codeaurora.org> writes:
 
-> On Tue, Apr 16, 2019 at 02:18:36PM +0100, Toke Høiland-Jørgensen wrote:
->>
->> > The congestion control happens at two levels. You are right that the
->> > socket buffer acts as one limit. However, other applications may also
->> > rely on the TX queue being full as the throttle (by setting a
->> > sufficiently large socket buffer size).
->> 
->> Do you happen to have an example of an application that does this that
->> could be used for testing? :)
->
-> Have a look at
->
-> commit 6ce9e7b5fe3195d1ae6e3a0753d4ddcac5cd699e
-> Author: Eric Dumazet <eric.dumazet@gmail.com>
-> Date:   Wed Sep 2 18:05:33 2009 -0700
->
->     ip: Report qdisc packet drops
->
-> You should be able to do a UDP flood while setting IP_RECVERR to
-> detect the packet drop due to a full queue which AFAICS will never
-> happen with the current mac80211 setup.
+> TX duration output of tx_stats in debugfs and station dump had big
+> difference because they got tx duration value from different statistic
+> data. We should use the same statistic data.
 
-Also, looking at udp.c, it seems it uses net_xmit_errno() - which means
-that returning NET_XMIT_CN has the same effect as NET_XMIT_SUCCESS when
-propagated back to userspace? Which would kinda defeat the point of
-going to the trouble of propagating up the return code (the mac80211
-queue will never drop the most recently enqueued packet)...
+So are you sure you picked the most accurate one of the two? :)
 
 -Toke
