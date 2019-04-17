@@ -7,63 +7,62 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7975BC282DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 19:15:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34219C282DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 19:15:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B4F52073F
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 19:15:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA42C2073F
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 19:15:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hx5YmAFe"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ipeoyJLU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733308AbfDQTPc (ORCPT
+        id S1732858AbfDQTPe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 15:15:32 -0400
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:43296 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733091AbfDQTPb (ORCPT
+        Wed, 17 Apr 2019 15:15:34 -0400
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:39662 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729291AbfDQTPd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 15:15:31 -0400
-Received: by mail-lf1-f66.google.com with SMTP id i68so8800233lfi.10
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 12:15:29 -0700 (PDT)
+        Wed, 17 Apr 2019 15:15:33 -0400
+Received: by mail-lf1-f67.google.com with SMTP id d12so3139476lfk.6
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 12:15:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=jZ6xJSFXrr32q23CdgPPoHM1qKrQGi5+H6/8J0uQwE8=;
-        b=Hx5YmAFetfno0GzwrgYrz62duOq7uF2hzvp2bvyGH7u8xYK6PFpNC5cf6wvf4XHsbn
-         b2+uWybG8sgckIIcmnK1KAuTyIgU8ylnPooKo+oMiOAZl1ZdaVB/t18//N+OsfPDBKaH
-         fmvJOqhaumXMekMeuERq2dd6jRKpZzRP1jNzSSIBmlRkhuCy2KXC2DJZJaYh3f1Wjbck
-         xR2o6TmQQ/5aXHGA/A9o2ZxcLvbAnl+WB1zRcDrYfyd9S5qW/VC2HCMD3IDrYuuT+v8Z
-         gLqFLk2o3nLh9gYLWZagoN9MgWduNyaS0Ng1xVtX9uhWSHgHAqzFOcwxgCkuw4BrBPjN
-         eHLA==
+        bh=bW57d87UKSeqIsF8dbOx4NI+/s5uPkAlrYgKadNV5CU=;
+        b=ipeoyJLUSK1sgKEIGYNZc7AtuOTanB0QLIg82Pxv6xHgUAFsOBPcxWqvc5a0U/TRdP
+         xpVSuWa6K0ni39eqUWbUu3Kr9VasrS7w9MmmRhschM0irJXSMpCYt2A6Xolk6cvoXaYj
+         RzYCXo6JNgNl6BjeOmXrdd40MpJXz0k+hsG1KdkVad6cAmRKkFcPVRH4sbNyP6Iyk9Ix
+         9uKoZ1pZubGjkZk6Anu8c9/5wuI4gJ9+gb/u7/5b5KbTEcdUMRmoJDVkzsxdmWoGdR8E
+         eLHush5B6Esrv9sotiDkcBTks11oVWlf9vIqPcTDVp1+w4k36UpZd5vHJKxeqeKxfvqe
+         l5kg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=jZ6xJSFXrr32q23CdgPPoHM1qKrQGi5+H6/8J0uQwE8=;
-        b=roqYFNu06EwBdFjcy4IuaG5s0fpQ4Ht8GC1YPDu9j6lIIntGXxMh7xiNn5RnNErm4p
-         rwTUW5S+9mrrFSBVOSvAV/tCfWWSPh6qXlZB9blq9965NIkg1k9+Pr+9frvnShPstab0
-         zU/YoPnQF+lxi6Egn47CcPD+4Kgb49dysRaMRjfwpESLZsS9sqSpYAM1qxvMnrixA0v4
-         YS9cyVIaoZQh/TWCjaG4rQD1Z+2ApKsddV78XXJaWZoY3RSD88gdypqHQOM9ZhQ6j2xI
-         huxf7v6MDHB7eB5W4iHjojXPs7GHdcFjINL8lHKv5U1Urh8vaLR0xu0j3+RpDj6kpf3V
-         uTvw==
-X-Gm-Message-State: APjAAAVsSyr7EhPttesrD0NDLDIMfPe4sYZXePgrbzFAXXpeijwBv9DR
-        mXdrsvla+otO/VfUVEABolWuimpf
-X-Google-Smtp-Source: APXvYqy5TjJWEO6DvmONVda7/RFQRd5RtyJSEn5o8ZE2/ROrf1kKkZbx08moLLi9x3QJsfNgqPrRSQ==
-X-Received: by 2002:ac2:446b:: with SMTP id y11mr774792lfl.155.1555528528579;
-        Wed, 17 Apr 2019 12:15:28 -0700 (PDT)
+        bh=bW57d87UKSeqIsF8dbOx4NI+/s5uPkAlrYgKadNV5CU=;
+        b=GdBOMRx1xcBrlsS1DDONSRf7in1maYc8UeHDaD+jBc5/Yx72mLY3qzVdXG9QMl2KP8
+         aPm718neQvIVe3bg/+Dxqxdo/8KYqDpburrHGPGsg9KTcEoNhekqGWYt/W60M31QMtlw
+         mwowLqVhWKwVtUXhQmmmijDzZA4iu8276CQdm/CnW53UGanSnzfIc8Kjm5K5qLvcA2Z4
+         sCrI3tNgDDfwGv0xG+4CRZinH85cMpxYOvHi8LibQ9NXM9Xx+53mKw51Izay7cCyU4i9
+         PBdVVwtO0jOJ6S/ldx1KvZcHNdySi8HJ/bgAd6Bgw4uGQOvK1nZfk9/tldXxYHInDcpj
+         bFIA==
+X-Gm-Message-State: APjAAAWk0KYlerhKsP42UPMPAJDFID3r1hLTrMnwwA2szcqjp/b87Phw
+        6trjk4JugWjX2DhbDgN8e50=
+X-Google-Smtp-Source: APXvYqwt2YzwEQJL9qpjMFhkzMgeb0xAgnsFJgQoyNqCUFu+PJSZAgHrnK7eeL+AseZOvbEcdjJUQQ==
+X-Received: by 2002:ac2:5326:: with SMTP id f6mr27181776lfh.100.1555528530172;
+        Wed, 17 Apr 2019 12:15:30 -0700 (PDT)
 Received: from localhost.localdomain (81-233-89-221-no75.tbcn.telia.com. [81.233.89.221])
-        by smtp.gmail.com with ESMTPSA id j27sm11387203lfk.97.2019.04.17.12.15.27
+        by smtp.gmail.com with ESMTPSA id j27sm11387203lfk.97.2019.04.17.12.15.29
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 17 Apr 2019 12:15:28 -0700 (PDT)
+        Wed, 17 Apr 2019 12:15:29 -0700 (PDT)
 From:   Erik Stromdahl <erik.stromdahl@gmail.com>
 To:     kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
         ath10k@lists.infradead.org
-Cc:     Alagu Sankar <alagusankar@silex-india.com>,
-        Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH v2 3/5] ath10k: sdio: read RX packets in bundles
-Date:   Wed, 17 Apr 2019 21:15:01 +0200
-Message-Id: <20190417191503.18814-4-erik.stromdahl@gmail.com>
+Cc:     Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH v2 5/5] ath10k: sdio: remove skb_trim in TX path
+Date:   Wed, 17 Apr 2019 21:15:03 +0200
+Message-Id: <20190417191503.18814-6-erik.stromdahl@gmail.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190417191503.18814-1-erik.stromdahl@gmail.com>
 References: <20190417191503.18814-1-erik.stromdahl@gmail.com>
@@ -74,174 +73,137 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+This patch fixes a bug with padding of the skb data buffer.
+Since skb_trim can only be used to reduce the skb len, it is useless when
+we pad (increase the length of) the skb. Instead we allocate a new
+buffer with enough space to contain both the TX data and padding.
 
-The existing implementation of initiating multiple sdio transfers for
-receive bundling is slowing down the receive speed.
+Since some skb's have multiple references, we can't use skb_put_padto()
+to extend and pad skb->data (since it causes a panic if there is more
+than one reference).
 
-Instead of having one sdio transfer for each packet in the bundle, we
-read all packets in one sdio transfer.
+Also, in order to avoid the following possible deadlock issue (reported by
+lockdep):
 
-This results in significant performance improvement on some targets.
+[   26.508508]  Possible interrupt unsafe locking scenario:
+[   26.508508]
+[   26.515314]        CPU0                    CPU1
+[   26.519862]        ----                    ----
+[   26.524408]   lock(fs_reclaim);
+[   26.527573]                                local_irq_disable();
+[   26.533508]                                lock(_xmit_ETHER#2);
+[   26.539453]                                lock(fs_reclaim);
+[   26.545135]   <Interrupt>
+[   26.547769]     lock(_xmit_ETHER#2);
+[   26.551370]
+[   26.551370]  *** DEADLOCK ***
 
-On an imx6dl together with a QCA9377 SDIO device, the following
-performance increase was obtained with iperf:
+... we use the GFP_NOFS flag with kzalloc()
 
-Before:
-
-[  3]  0.0- 1.0 sec  3.38 MBytes  28.3 Mbits/sec
-
-After:
-
-[  3]  0.0- 1.0 sec  7.12 MBytes  59.8 Mbits/sec
-
-Co-developed-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
 Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/sdio.c | 71 +++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/sdio.h |  2 +
- 2 files changed, 60 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath10k/sdio.c | 27 ++++++++++++++++++++------
+ drivers/net/wireless/ath/ath10k/sdio.h |  2 ++
+ 2 files changed, 23 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index d5073fac9509..b89732aad97c 100644
+index b8b3059721ee..68d8e2d1b2ed 100644
 --- a/drivers/net/wireless/ath/ath10k/sdio.c
 +++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -24,6 +24,8 @@
- #include "trace.h"
- #include "sdio.h"
- 
-+#define ATH10K_SDIO_READ_BUF_SIZE	(32 * 1024)
-+
- /* inlined helper functions */
- 
- static inline int ath10k_sdio_calc_txrx_padded_len(struct ath10k_sdio *ar_sdio,
-@@ -618,41 +620,73 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *ar,
- 	return ret;
- }
- 
--static int ath10k_sdio_mbox_rx_packet(struct ath10k *ar,
--				      struct ath10k_sdio_rx_data *pkt)
-+static int ath10k_sdio_mbox_rx_fetch(struct ath10k *ar)
+@@ -1279,6 +1279,7 @@ static void ath10k_sdio_free_bus_req(struct ath10k *ar,
  {
  	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
-+	struct ath10k_sdio_rx_data *pkt = &ar_sdio->rx_pkts[0];
- 	struct sk_buff *skb = pkt->skb;
+ 
++	kfree(bus_req->buf);
+ 	memset(bus_req, 0, sizeof(*bus_req));
+ 
+ 	spin_lock_bh(&ar_sdio->lock);
+@@ -1294,7 +1295,7 @@ static void __ath10k_sdio_write_async(struct ath10k *ar,
  	int ret;
  
--	ret = ath10k_sdio_readsb(ar, ar_sdio->mbox_info.htc_addr,
--				 skb->data, pkt->alloc_len);
-+	ret = ath10k_sdio_read(ar, ar_sdio->mbox_info.htc_addr,
-+			       skb->data, pkt->alloc_len);
-+	if (ret) {
-+		ath10k_warn(ar, "sdio_read error %d\n", ret);
-+		goto err;
-+	}
-+
- 	pkt->status = ret;
--	if (!ret)
--		skb_put(skb, pkt->act_len);
-+	skb_put(skb, pkt->act_len);
+ 	skb = req->skb;
+-	ret = ath10k_sdio_write(ar, req->address, skb->data, skb->len);
++	ret = ath10k_sdio_write(ar, req->address, req->buf, req->buf_len);
+ 	if (ret)
+ 		ath10k_warn(ar, "failed to write skb to 0x%x asynchronously: %d",
+ 			    req->address, ret);
+@@ -1330,6 +1331,7 @@ static void ath10k_sdio_write_async_work(struct work_struct *work)
  
-+	return 0;
-+
-+err:
-+	ar_sdio->n_rx_pkts = 0;
-+	ath10k_sdio_mbox_free_rx_pkt(pkt);
- 	return ret;
- }
- 
--static int ath10k_sdio_mbox_rx_fetch(struct ath10k *ar)
-+static int ath10k_sdio_mbox_rx_fetch_bundle(struct ath10k *ar)
+ static int ath10k_sdio_prep_async_req(struct ath10k *ar, u32 addr,
+ 				      struct sk_buff *skb,
++				      size_t alloc_len,
+ 				      struct completion *comp,
+ 				      bool htc_msg, enum ath10k_htc_ep_id eid)
  {
- 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
-+	struct ath10k_sdio_rx_data *pkt;
- 	int ret, i;
-+	u32 pkt_offset = 0, pkt_bundle_len = 0;
-+
-+	for (i = 0; i < ar_sdio->n_rx_pkts; i++)
-+		pkt_bundle_len += ar_sdio->rx_pkts[i].alloc_len;
-+
-+	if (pkt_bundle_len > ATH10K_SDIO_READ_BUF_SIZE) {
-+		ret = -ENOSPC;
-+		ath10k_warn(ar, "bundle size (%d) exceeding limit %d\n",
-+			    pkt_bundle_len, ATH10K_SDIO_READ_BUF_SIZE);
+@@ -1343,9 +1345,17 @@ static int ath10k_sdio_prep_async_req(struct ath10k *ar, u32 addr,
+ 	if (!bus_req) {
+ 		ath10k_warn(ar,
+ 			    "unable to allocate bus request for async request\n");
+-		return -ENOMEM;
 +		goto err;
-+	}
-+
-+	ret = ath10k_sdio_readsb(ar, ar_sdio->mbox_info.htc_addr,
-+				 ar_sdio->sdio_read_buf, pkt_bundle_len);
-+	if (ret)
-+		goto err;
- 
- 	for (i = 0; i < ar_sdio->n_rx_pkts; i++) {
--		ret = ath10k_sdio_mbox_rx_packet(ar,
--						 &ar_sdio->rx_pkts[i]);
--		if (ret)
--			goto err;
-+		struct sk_buff *skb = ar_sdio->rx_pkts[i].skb;
-+
-+		pkt = &ar_sdio->rx_pkts[i];
-+		skb_put(skb, pkt->act_len);
-+		memcpy(skb->data, ar_sdio->sdio_read_buf + pkt_offset,
-+		       pkt->alloc_len);
-+		pkt->status = 0;
-+		pkt_offset += pkt->alloc_len;
  	}
+ 
++	bus_req->buf_len = alloc_len;
++	bus_req->buf = kzalloc(alloc_len, GFP_NOFS);
++	if (!bus_req->buf) {
++		ath10k_warn(ar,
++			    "unable to allocate data buffer for bus request\n");
++		goto err_free_bus_req;
++	}
++	memcpy(bus_req->buf, skb->data, skb->len);
+ 	bus_req->skb = skb;
+ 	bus_req->eid = eid;
+ 	bus_req->address = addr;
+@@ -1357,6 +1367,11 @@ static int ath10k_sdio_prep_async_req(struct ath10k *ar, u32 addr,
+ 	spin_unlock_bh(&ar_sdio->wr_async_lock);
  
  	return 0;
- 
- err:
- 	/* Free all packets that was not successfully fetched. */
--	for (; i < ar_sdio->n_rx_pkts; i++)
-+	for (i = 0; i < ar_sdio->n_rx_pkts; i++)
- 		ath10k_sdio_mbox_free_rx_pkt(&ar_sdio->rx_pkts[i]);
- 
-+	ar_sdio->n_rx_pkts = 0;
 +
- 	return ret;
++err_free_bus_req:
++	ath10k_sdio_free_bus_req(ar, bus_req);
++err:
++	return -ENOMEM;
  }
  
-@@ -695,7 +729,10 @@ static int ath10k_sdio_mbox_rxmsg_pending_handler(struct ath10k *ar,
- 			 */
- 			*done = false;
+ /* IRQ handler */
+@@ -1501,12 +1516,11 @@ static int ath10k_sdio_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
+ 		skb = items[i].transfer_context;
+ 		padded_len = ath10k_sdio_calc_txrx_padded_len(ar_sdio,
+ 							      skb->len);
+-		skb_trim(skb, padded_len);
  
--		ret = ath10k_sdio_mbox_rx_fetch(ar);
-+		if (ar_sdio->n_rx_pkts > 1)
-+			ret = ath10k_sdio_mbox_rx_fetch_bundle(ar);
-+		else
-+			ret = ath10k_sdio_mbox_rx_fetch(ar);
+ 		/* Write TX data to the end of the mbox address space */
+ 		address = ar_sdio->mbox_addr[eid] + ar_sdio->mbox_size[eid] -
+-			  skb->len;
+-		ret = ath10k_sdio_prep_async_req(ar, address, skb,
++			  padded_len;
++		ret = ath10k_sdio_prep_async_req(ar, address, skb, padded_len,
+ 						 NULL, true, eid);
+ 		if (ret)
+ 			return ret;
+@@ -1761,7 +1775,8 @@ static void ath10k_sdio_irq_disable(struct ath10k *ar)
  
- 		/* Process fetched packets. This will potentially update
- 		 * n_lookaheads depending on if the packets contain lookahead
-@@ -2001,6 +2038,14 @@ static int ath10k_sdio_probe(struct sdio_func *func,
- 		goto err_core_destroy;
- 	}
- 
-+	ar_sdio->sdio_read_buf = devm_kzalloc(ar->dev,
-+					      ATH10K_SDIO_READ_BUF_SIZE,
-+					      GFP_KERNEL);
-+	if (!ar_sdio->sdio_read_buf) {
-+		ret = -ENOMEM;
-+		goto err_core_destroy;
-+	}
-+
- 	ar_sdio->func = func;
- 	sdio_set_drvdata(func, ar_sdio);
+ 	init_completion(&irqs_disabled_comp);
+ 	ret = ath10k_sdio_prep_async_req(ar, MBOX_INT_STATUS_ENABLE_ADDRESS,
+-					 skb, &irqs_disabled_comp, false, 0);
++					 skb, skb->len, &irqs_disabled_comp,
++					 false, 0);
+ 	if (ret)
+ 		goto out;
  
 diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
-index b8c7ac0330bd..07e2cc6a3bd8 100644
+index 07e2cc6a3bd8..5a727993fbda 100644
 --- a/drivers/net/wireless/ath/ath10k/sdio.h
 +++ b/drivers/net/wireless/ath/ath10k/sdio.h
-@@ -196,6 +196,8 @@ struct ath10k_sdio {
- 	struct ath10k *ar;
- 	struct ath10k_sdio_irq_data irq_data;
+@@ -105,6 +105,8 @@ struct ath10k_sdio_bus_request {
+ 	u32 address;
  
-+	u8 *sdio_read_buf;
-+
- 	/* temporary buffer for BMI requests */
- 	u8 *bmi_buf;
- 
+ 	struct sk_buff *skb;
++	u8 *buf;
++	size_t buf_len;
+ 	enum ath10k_htc_ep_id eid;
+ 	int status;
+ 	/* Specifies if the current request is an HTC message.
 -- 
 2.19.1
 
