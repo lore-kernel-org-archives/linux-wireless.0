@@ -2,88 +2,101 @@ Return-Path: <SRS0=eC3p=ST=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59613C282DA
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 09:41:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85A18C10F12
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 10:11:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B3E32173C
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 09:41:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="CVZuMCWP"
+	by mail.kernel.org (Postfix) with ESMTP id 5524A21773
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 10:11:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1555495870;
+	bh=PHXH7oO3YS/t6Api2JZ9ouPaDnz5jd0J4WNhC2wH6WU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=LgUY+TjkMoD3IlHbsLJ995fv0ePrNbwmtCIHIkAttwWGSBOLGdg7fpcsxd9+gXyQM
+	 lHcri8hZRQY7LAA7UjLSe0xV5nliHWK+G2VZMg53UDEsulfYZd421We9iyTMbnuNoI
+	 O7XLFIzSRvo0J35NpIgQ/RLOVwWokTCCD36ER6hQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731539AbfDQJlk (ORCPT
+        id S1730813AbfDQKLF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 05:41:40 -0400
-Received: from m50-132.163.com ([123.125.50.132]:35756 "EHLO m50-132.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726237AbfDQJlk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 05:41:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=FB96HGIvgdVb9qSx9R
-        4mbXL9ivfhVDleOfilXfKKmtA=; b=CVZuMCWP6H5TVJJHDhC0LnwI1rCmg/ifhh
-        NwudJ194vC6Bl51m/XS5KAYMZroxPPPSFNONEBbL0QEVQUr3a2ypKgKnLjG6VE5z
-        ISk2MO4aPT/C5UzYt1gfu45ns/7gsNwgWO6sZsHZMHMjntwRTspAym/8iP0/XvPC
-        FV8C766nA=
-Received: from bp.localdomain (unknown [218.106.182.174])
-        by smtp2 (Coremail) with SMTP id DNGowABHAnHH9LZcRelUAA--.6S3;
-        Wed, 17 Apr 2019 17:41:29 +0800 (CST)
-From:   Pan Bian <bianpan2016@163.com>
-To:     Christian Lamparter <chunkeey@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
-Subject: p54: drop device reference count if fails to enable device
-Date:   Wed, 17 Apr 2019 17:41:23 +0800
-Message-Id: <1555494083-130833-1-git-send-email-bianpan2016@163.com>
-X-Mailer: git-send-email 2.7.4
-X-CM-TRANSID: DNGowABHAnHH9LZcRelUAA--.6S3
-X-Coremail-Antispam: 1Uf129KBjvdXoWrtF4kCF1xtw1DGryfWFyfZwb_yoWDuFc_GF
-        WxZFZ7XryrAr109r1fCr43AFya9FnIqFs5Wrs7t3yFgrWUXFWDGrZ8ZF9rJr95W3y0vryD
-        tr1DJr4fWayjgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUjmhFDUUUUU==
-X-Originating-IP: [218.106.182.174]
-X-CM-SenderInfo: held01tdqsiiqw6rljoofrz/xtbBZACZclQHEeYRlAAAsu
+        Wed, 17 Apr 2019 06:11:05 -0400
+Received: from mx2.suse.de ([195.135.220.15]:57486 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729039AbfDQKLF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Apr 2019 06:11:05 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id BA12AAF8C;
+        Wed, 17 Apr 2019 10:11:03 +0000 (UTC)
+Date:   Wed, 17 Apr 2019 12:11:02 +0200
+From:   Michal Hocko <mhocko@kernel.org>
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     kvalo@codeaurora.org, johannes@sipsolutions.net,
+        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH] iwlwifi: don't panic in error path on non-msix systems
+Message-ID: <20190417101102.GA5878@dhcp22.suse.cz>
+References: <748205b02961167b0926d4afe8d9ad9cb37bf6ef.camel@coelho.fi>
+ <20190417073516.24250-1-luca@coelho.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190417073516.24250-1-luca@coelho.fi>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The function p54p_probe takes an extra reference count of the PCI
-device. However, the extra reference count is not dropped when it fails
-to enable the PCI device. This patch fixes the bug.
+Hi,
+which tree is this supposed to be applied on? It doesn't do apply on top
+of v5.1-rc4-3-gfd008d1a7a20. iwl_trans_pcie_sync_nmi doesn't exist in
+drivers/net/wireless/intel/iwlwifi/pcie/trans.c. iwl_trans_sync_nmi
+looks pretty similar. My patch massaging ended up with this. Please
+double check. It compiles and even boots.
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/net/wireless/intersil/p54/p54pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intersil/p54/p54pci.c b/drivers/net/wireless/intersil/p54/p54pci.c
-index 27a4906..57ad564 100644
---- a/drivers/net/wireless/intersil/p54/p54pci.c
-+++ b/drivers/net/wireless/intersil/p54/p54pci.c
-@@ -554,7 +554,7 @@ static int p54p_probe(struct pci_dev *pdev,
- 	err = pci_enable_device(pdev);
- 	if (err) {
- 		dev_err(&pdev->dev, "Cannot enable new PCI device\n");
--		return err;
-+		goto err_put;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index fe8269d023de..1f3969e2bcac 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3639,20 +3639,27 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
  
- 	mem_addr = pci_resource_start(pdev, 0);
-@@ -639,6 +639,7 @@ static int p54p_probe(struct pci_dev *pdev,
- 	pci_release_regions(pdev);
-  err_disable_dev:
- 	pci_disable_device(pdev);
-+err_put:
- 	pci_dev_put(pdev);
- 	return err;
- }
+ void iwl_trans_sync_nmi(struct iwl_trans *trans)
+ {
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	unsigned long timeout = jiffies + IWL_TRANS_NMI_TIMEOUT;
++	u32 inta_addr, sw_err_bit;
++
++	if (trans_pcie->msix_enabled) {
++		inta_addr = CSR_MSIX_HW_INT_CAUSES_AD;
++		sw_err_bit = MSIX_HW_INT_CAUSES_REG_SW_ERR;
++	} else {
++		inta_addr = CSR_INT;
++		sw_err_bit = CSR_INT_BIT_SW_ERR;
++	}
+ 
+ 	iwl_disable_interrupts(trans);
+ 	iwl_force_nmi(trans);
+ 	while (time_after(timeout, jiffies)) {
+-		u32 inta_hw = iwl_read32(trans,
+-					 CSR_MSIX_HW_INT_CAUSES_AD);
++		u32 inta_hw = iwl_read32(trans, inta_addr);
+ 
+ 		/* Error detected by uCode */
+-		if (inta_hw & MSIX_HW_INT_CAUSES_REG_SW_ERR) {
++		if (inta_hw & sw_err_bit) {
+ 			/* Clear causes register */
+-			iwl_write32(trans, CSR_MSIX_HW_INT_CAUSES_AD,
+-				    inta_hw &
+-				    MSIX_HW_INT_CAUSES_REG_SW_ERR);
++			iwl_write32(trans, inta_addr, inta_hw & sw_err_bit);
+ 			break;
+ 		}
+ 
 -- 
-2.7.4
-
-
+Michal Hocko
+SUSE Labs
