@@ -3,47 +3,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81D2EC282DA
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 08:36:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF2FC282DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 09:09:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5DC7E20835
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 08:36:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84D0C206B6
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 09:09:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731303AbfDQIgF convert rfc822-to-8bit (ORCPT
+        id S1731314AbfDQJJW convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 04:36:05 -0400
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:40611 "EHLO
+        Wed, 17 Apr 2019 05:09:22 -0400
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:35681 "EHLO
         mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728815AbfDQIgF (ORCPT
+        with ESMTP id S1727087AbfDQJJV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 04:36:05 -0400
-Received: by mail-ed1-f66.google.com with SMTP id d46so15422125eda.7
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 01:36:04 -0700 (PDT)
+        Wed, 17 Apr 2019 05:09:21 -0400
+Received: by mail-ed1-f66.google.com with SMTP id y67so7044785ede.2
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 02:09:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
          :message-id:mime-version:content-transfer-encoding;
-        bh=VYXPLMzS2L3NEuIvF9Zqlc1sEufo5VsP3GxfWStSls8=;
-        b=PftAAwfszWJIjs/ApTVIbudOTrvX7mZc49+Wbznz+kg3lTY272tphAKhKM1Oq+NH/c
-         GMg45x67ZPdPZM8Pzh1GY9mNODVij1xtN+soxGHL0H2y1JUPSZEay3VhreVkRsepJA8/
-         6VH4h89UT+rHXTKz2B08zgDXEUxvH8bVcjavk70+EBZLzOqoG1ApQeUqAwAfNRTCkj2e
-         bbJj8mKGrQKLIxsFqH6BMpfbqyZLh8FiOECMNT1DzoAniBqwLk0gyO4Xu5ujGIQjo3U/
-         3DbQdWtPkCvr4nBrl2d88MS9LS6JesRXxUGwrDzg8JBgDcar4k/UJgVmZ+Nrb+37QYUO
-         8AOg==
-X-Gm-Message-State: APjAAAVXS3xxOPK1xiFyIBnDJlZMyBj2F4ydNu4E5AWyHe/J3SrhvDTp
-        aFSfLZ+5z/8MBqiQfuYIN7tGXQ==
-X-Google-Smtp-Source: APXvYqxh0PhqZpa6jlQPf4fzPGwI/6lognZO7+QlqTeirQgTEz+ZDQwQr/HJHFoK20EYOM1QwrAEGQ==
-X-Received: by 2002:a17:906:8247:: with SMTP id f7mr45679482ejx.216.1555490163423;
-        Wed, 17 Apr 2019 01:36:03 -0700 (PDT)
+        bh=18lFKbOS/U/l2KDx3Fo/rQIZJiYwPqExpBDpziDRRWY=;
+        b=DbMR3VMGi9EeOVhDY/yGO2ECVLinSJKex5AYqZXeU87s3SDjBpjOguUPZeyf0CWTyW
+         MYVFFPSX/0FrGfxzjFlvLKXBEThPyrjQIDP90lMRmRtPajpPelXGBSCvPz27r4UFh+id
+         i5gArV8spGcoglFjmObD/Pie3oa2DKuXgmScp2Xkf65d/oGcjwTw5BzfdTmauqZYS9SQ
+         /XdpiySOLa3tS0BLmACXsqiyjnIA7G1wMz6pnH3bM7Sj44zDTAF7MwlSw8re43vkOXM+
+         mB+t671veFOUypmrLkMd2zFlLmTtYuGofzAb+BLzOkR9iuXpvNm61WOK54cJYpZbqBXj
+         HmZg==
+X-Gm-Message-State: APjAAAWs0jt48eC0W/CZkIETmHUU9ymmCblhVWKHqklmiYktbz71Oade
+        LU8hA4Z0YNX0MEss5KfsYJ+mIg==
+X-Google-Smtp-Source: APXvYqzwFtHksBnQP0ztuTpYs4FLfY9HwhGEXQByGUZAGvWn8UHv5k+fC+5CsUHfTY4PABgLrBxVSw==
+X-Received: by 2002:aa7:da92:: with SMTP id q18mr4432820eds.223.1555492159781;
+        Wed, 17 Apr 2019 02:09:19 -0700 (PDT)
 Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id i9sm6157988edk.56.2019.04.17.01.36.02
+        by smtp.gmail.com with ESMTPSA id bq15sm10185970ejb.12.2019.04.17.02.09.18
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 17 Apr 2019 01:36:02 -0700 (PDT)
+        Wed, 17 Apr 2019 02:09:19 -0700 (PDT)
 Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id D589B1800E8; Wed, 17 Apr 2019 09:28:51 +0100 (+01)
+        id 128601800E8; Wed, 17 Apr 2019 10:09:17 +0100 (+01)
 From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
 To:     Herbert Xu <herbert@gondor.apana.org.au>
 Cc:     Johannes Berg <johannes@sipsolutions.net>,
@@ -51,11 +50,11 @@ Cc:     Johannes Berg <johannes@sipsolutions.net>,
         Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
         Eric Dumazet <eric.dumazet@gmail.com>, netdev@vger.kernel.org
 Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate tx queues
-In-Reply-To: <20190417021101.5a32gox2ivbcgsbp@gondor.apana.org.au>
-References: <773e4dff-29fd-22b4-e4bc-cd5a94c66dc2@broadcom.com> <20190416074444.pdubbh6fbibdnhi7@gondor.apana.org.au> <73b18131-2777-da5c-a6ee-9d9b3e13cd06@broadcom.com> <20190416083636.5ttvezqyhzr2worg@gondor.apana.org.au> <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net> <87ef62uwfm.fsf@toke.dk> <95f86cf69dee05a176625925657cf0df0e97b5c9.camel@sipsolutions.net> <20190416093707.dtlwcmitzqopaeaw@gondor.apana.org.au> <e4c1a3ca0c0c160b7c271ab83deebcf096f38497.camel@sipsolutions.net> <8736miuv1x.fsf@toke.dk> <20190417021101.5a32gox2ivbcgsbp@gondor.apana.org.au>
+In-Reply-To: <20190417033834.ep6t7r6ttvjek5g7@gondor.apana.org.au>
+References: <20190416074444.pdubbh6fbibdnhi7@gondor.apana.org.au> <73b18131-2777-da5c-a6ee-9d9b3e13cd06@broadcom.com> <20190416083636.5ttvezqyhzr2worg@gondor.apana.org.au> <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net> <87ef62uwfm.fsf@toke.dk> <95f86cf69dee05a176625925657cf0df0e97b5c9.camel@sipsolutions.net> <20190416093707.dtlwcmitzqopaeaw@gondor.apana.org.au> <e4c1a3ca0c0c160b7c271ab83deebcf096f38497.camel@sipsolutions.net> <20190416131346.u2uolljlrd5t2jro@gondor.apana.org.au> <87wojut7f7.fsf@toke.dk> <20190417033834.ep6t7r6ttvjek5g7@gondor.apana.org.au>
 X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Wed, 17 Apr 2019 09:28:51 +0100
-Message-ID: <875zrdt4qk.fsf@toke.dk>
+Date:   Wed, 17 Apr 2019 10:09:16 +0100
+Message-ID: <87wojtroar.fsf@toke.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8BIT
@@ -66,27 +65,30 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Herbert Xu <herbert@gondor.apana.org.au> writes:
 
-> On Tue, Apr 16, 2019 at 11:02:50AM +0100, Toke Høiland-Jørgensen wrote:
+> On Tue, Apr 16, 2019 at 02:18:36PM +0100, Toke Høiland-Jørgensen wrote:
+>>
+>> > The congestion control happens at two levels. You are right that the
+>> > socket buffer acts as one limit. However, other applications may also
+>> > rely on the TX queue being full as the throttle (by setting a
+>> > sufficiently large socket buffer size).
 >> 
->> As explained at great length here:
->> https://www.usenix.org/conference/atc17/technical-sessions/presentation/hoilan-jorgesen
->> (you already know that of course, Johannes)
+>> Do you happen to have an example of an application that does this that
+>> could be used for testing? :)
 >
-> I can understand that wireless needs its own queueing scheme, but it
-> still seems wrong to place that under net/mac80211 as opposed to
-> having it as a first-class citizen under net/sched.
+> Have a look at
+>
+> commit 6ce9e7b5fe3195d1ae6e3a0753d4ddcac5cd699e
+> Author: Eric Dumazet <eric.dumazet@gmail.com>
+> Date:   Wed Sep 2 18:05:33 2009 -0700
+>
+>     ip: Report qdisc packet drops
+>
+> You should be able to do a UDP flood while setting IP_RECVERR to
+> detect the packet drop due to a full queue which AFAICS will never
+> happen with the current mac80211 setup.
 
-This is because we need to resolve the MAC-layer destination station (or
-rather, TID) and tie the queueing to that, because of aggregation. We
-also use the queueing structure for scheduling stations to achieve
-airtime fairness. Both of these would be decidedly non-trivial to pull
-up to the qdisc layer. Rather, having them in mac80211 means drivers
-don't need to do their own ad-hoc queueing (which was the case before,
-leading extra bufferbloat).
-
-Most of the actual queueing structure code lives in
-include/net/fq_impl.h, though, so it's not actually that
-mac80211-specific. I've been thinking about porting the relevant qdiscs
-to use the same code, but I'm not sure that it's worth the trouble.
+Yup, got that part. Was just wondering if you know of any applications
+that already do this, that I could test without having to write my
+own... :)
 
 -Toke
