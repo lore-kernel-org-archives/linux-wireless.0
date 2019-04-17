@@ -3,31 +3,31 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E76C6C282DD
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 21:45:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E286C282DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 21:45:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE4102184B
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 21:45:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22DD12184B
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 21:45:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387949AbfDQVpa (ORCPT
+        id S2387665AbfDQVor (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 17:45:30 -0400
-Received: from mga06.intel.com ([134.134.136.31]:13865 "EHLO mga06.intel.com"
+        Wed, 17 Apr 2019 17:44:47 -0400
+Received: from mga12.intel.com ([192.55.52.136]:20162 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387562AbfDQVp1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 17:45:27 -0400
+        id S2387522AbfDQVmU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Apr 2019 17:42:20 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Apr 2019 14:42:24 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Apr 2019 14:42:19 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.60,363,1549958400"; 
-   d="scan'208";a="224441189"
+   d="scan'208";a="224441156"
 Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
-  by orsmga001.jf.intel.com with ESMTP; 17 Apr 2019 14:42:22 -0700
+  by orsmga001.jf.intel.com with ESMTP; 17 Apr 2019 14:42:18 -0700
 From:   Fenghua Yu <fenghua.yu@intel.com>
 To:     "Thomas Gleixner" <tglx@linutronix.de>,
         "Ingo Molnar" <mingo@redhat.com>, "Borislav Petkov" <bp@alien8.de>,
@@ -44,11 +44,10 @@ To:     "Thomas Gleixner" <tglx@linutronix.de>,
 Cc:     "linux-kernel" <linux-kernel@vger.kernel.org>,
         "x86" <x86@kernel.org>, kvm@vger.kernel.org,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Xiaoyao Li <xiaoyao.li@linux.intel.com>,
         Fenghua Yu <fenghua.yu@intel.com>
-Subject: [PATCH v7 12/21] kvm/x86: Emulate MSR IA32_CORE_CAPABILITY
-Date:   Wed, 17 Apr 2019 14:34:02 -0700
-Message-Id: <1555536851-17462-13-git-send-email-fenghua.yu@intel.com>
+Subject: [PATCH v7 07/21] x86/split_lock: Enumerate split lock detection by MSR_IA32_CORE_CAPABILITY
+Date:   Wed, 17 Apr 2019 14:33:57 -0700
+Message-Id: <1555536851-17462-8-git-send-email-fenghua.yu@intel.com>
 X-Mailer: git-send-email 2.5.0
 In-Reply-To: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
 References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
@@ -57,137 +56,184 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Xiaoyao Li <xiaoyao.li@linux.intel.com>
+Bits in MSR_IA32_CORE_CAPABILITY enumerate a few features that are not
+enumerated through CPUID. Currently bit 5 is defined to enumerate
+feature of split lock detection. All other bits are reserved now.
 
-MSR IA32_CORE_CAPABILITY is a feature-enumerating MSR, bit 5 of which
-reports the capability of enabling detection of split locks (will be
-supported on future processors based on Tremont microarchitecture and
-later).
+When bit 5 is 1, the feature is supported and feature bit
+X86_FEATURE_SPLIT_LOCK_DETECT is set. Otherwise, the feature is not
+available.
 
-CPUID.(EAX=7H,ECX=0):EDX[30] enumerates the presence of the
-IA32_CORE_CAPABILITY MSR.
+The MSR_IA32_CORE_CAPABILITY itself is enumerated by
+CPUID.(EAX=0x7,ECX=0):EDX[30].
 
-Please check the latest Intel 64 and IA-32 Architectures Software
-Developer's Manual for more detailed information on the MSR and
-the split lock bit.
-
-Since MSR_IA32_CORE_CAPABILITY is a feature-enumerating MSR that plays the
-similar role as CPUID, it can be emulated in software regardless of host's
-capability. What we need to do is to set the right value of it to report
-the capability of guest.
-
-In this patch, just set the guest's core_capability as 0, because we
-haven't added support of the features it indicates to guest. It's for
-bisectability.
-
-Signed-off-by: Xiaoyao Li <xiaoyao.li@linux.intel.com>
 Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
 ---
- arch/x86/include/asm/kvm_host.h |  1 +
- arch/x86/kvm/cpuid.c            |  6 ++++++
- arch/x86/kvm/x86.c              | 22 ++++++++++++++++++++++
- 3 files changed, 29 insertions(+)
+ arch/x86/include/asm/cpu.h         |  5 ++
+ arch/x86/include/asm/cpufeatures.h |  1 +
+ arch/x86/kernel/cpu/common.c       |  2 +
+ arch/x86/kernel/cpu/cpuid-deps.c   | 79 +++++++++++++++---------------
+ arch/x86/kernel/cpu/intel.c        | 21 ++++++++
+ 5 files changed, 69 insertions(+), 39 deletions(-)
 
-diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
-index a9d03af34030..d4f9b13fcdd6 100644
---- a/arch/x86/include/asm/kvm_host.h
-+++ b/arch/x86/include/asm/kvm_host.h
-@@ -570,6 +570,7 @@ struct kvm_vcpu_arch {
- 	u64 ia32_xss;
- 	u64 microcode_version;
- 	u64 arch_capabilities;
-+	u64 core_capability;
+diff --git a/arch/x86/include/asm/cpu.h b/arch/x86/include/asm/cpu.h
+index adc6cc86b062..4e03f53fc079 100644
+--- a/arch/x86/include/asm/cpu.h
++++ b/arch/x86/include/asm/cpu.h
+@@ -40,4 +40,9 @@ int mwait_usable(const struct cpuinfo_x86 *);
+ unsigned int x86_family(unsigned int sig);
+ unsigned int x86_model(unsigned int sig);
+ unsigned int x86_stepping(unsigned int sig);
++#ifdef CONFIG_CPU_SUP_INTEL
++void __init cpu_set_core_cap_bits(struct cpuinfo_x86 *c);
++#else
++static inline void __init cpu_set_core_cap_bits(struct cpuinfo_x86 *c) {}
++#endif
+ #endif /* _ASM_X86_CPU_H */
+diff --git a/arch/x86/include/asm/cpufeatures.h b/arch/x86/include/asm/cpufeatures.h
+index eff25e2015a5..db0c1826d7ad 100644
+--- a/arch/x86/include/asm/cpufeatures.h
++++ b/arch/x86/include/asm/cpufeatures.h
+@@ -221,6 +221,7 @@
+ #define X86_FEATURE_ZEN			( 7*32+28) /* "" CPU is AMD family 0x17 (Zen) */
+ #define X86_FEATURE_L1TF_PTEINV		( 7*32+29) /* "" L1TF workaround PTE inversion */
+ #define X86_FEATURE_IBRS_ENHANCED	( 7*32+30) /* Enhanced IBRS */
++#define X86_FEATURE_SPLIT_LOCK_DETECT	( 7*32+31) /* #AC for split lock */
  
- 	/*
- 	 * Paging state of the vcpu
-diff --git a/arch/x86/kvm/cpuid.c b/arch/x86/kvm/cpuid.c
-index fd3951638ae4..4a2f7892ea31 100644
---- a/arch/x86/kvm/cpuid.c
-+++ b/arch/x86/kvm/cpuid.c
-@@ -505,6 +505,12 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
- 			 * if the host doesn't support it.
- 			 */
- 			entry->edx |= F(ARCH_CAPABILITIES);
-+			/*
-+			 * Since we emulate MSR IA32_CORE_CAPABILITY in
-+			 * software, we can always enable it for guest
-+			 * regardless of host's capability.
-+			 */
-+			entry->edx |= F(CORE_CAPABILITY);
- 		} else {
- 			entry->ebx = 0;
- 			entry->ecx = 0;
-diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
-index a0d1fc80ac5a..e88be97d47b9 100644
---- a/arch/x86/kvm/x86.c
-+++ b/arch/x86/kvm/x86.c
-@@ -1161,6 +1161,7 @@ static u32 emulated_msrs[] = {
- 	MSR_IA32_TSC_ADJUST,
- 	MSR_IA32_TSCDEADLINE,
- 	MSR_IA32_ARCH_CAPABILITIES,
-+	MSR_IA32_CORE_CAPABILITY,
- 	MSR_IA32_MISC_ENABLE,
- 	MSR_IA32_MCG_STATUS,
- 	MSR_IA32_MCG_CTL,
-@@ -1200,6 +1201,7 @@ static u32 msr_based_features[] = {
+ /* Virtualization flags: Linux defined, word 8 */
+ #define X86_FEATURE_TPR_SHADOW		( 8*32+ 0) /* Intel TPR Shadow */
+diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
+index 3716e2bb028b..bbdd69dd4f5f 100644
+--- a/arch/x86/kernel/cpu/common.c
++++ b/arch/x86/kernel/cpu/common.c
+@@ -1105,6 +1105,8 @@ static void __init early_identify_cpu(struct cpuinfo_x86 *c)
  
- 	MSR_F10H_DECFG,
- 	MSR_IA32_UCODE_REV,
-+	MSR_IA32_CORE_CAPABILITY,
- 	MSR_IA32_ARCH_CAPABILITIES,
+ 	cpu_set_bug_bits(c);
+ 
++	cpu_set_core_cap_bits(c);
++
+ 	fpu__init_system(c);
+ 
+ #ifdef CONFIG_X86_32
+diff --git a/arch/x86/kernel/cpu/cpuid-deps.c b/arch/x86/kernel/cpu/cpuid-deps.c
+index 2c0bd38a44ab..3d633f67fbd7 100644
+--- a/arch/x86/kernel/cpu/cpuid-deps.c
++++ b/arch/x86/kernel/cpu/cpuid-deps.c
+@@ -20,45 +20,46 @@ struct cpuid_dep {
+  * but it's difficult to tell that to the init reference checker.
+  */
+ static const struct cpuid_dep cpuid_deps[] = {
+-	{ X86_FEATURE_XSAVEOPT,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_XSAVEC,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_XSAVES,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_AVX,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_PKU,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_MPX,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_XGETBV1,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_FXSR_OPT,		X86_FEATURE_FXSR      },
+-	{ X86_FEATURE_XMM,		X86_FEATURE_FXSR      },
+-	{ X86_FEATURE_XMM2,		X86_FEATURE_XMM       },
+-	{ X86_FEATURE_XMM3,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_XMM4_1,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_XMM4_2,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_XMM3,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_PCLMULQDQ,	X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_SSSE3,		X86_FEATURE_XMM2,     },
+-	{ X86_FEATURE_F16C,		X86_FEATURE_XMM2,     },
+-	{ X86_FEATURE_AES,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_SHA_NI,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_FMA,		X86_FEATURE_AVX       },
+-	{ X86_FEATURE_AVX2,		X86_FEATURE_AVX,      },
+-	{ X86_FEATURE_AVX512F,		X86_FEATURE_AVX,      },
+-	{ X86_FEATURE_AVX512IFMA,	X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512PF,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512ER,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512CD,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512DQ,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512BW,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512VL,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512VBMI,	X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512_VBMI2,	X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_GFNI,		X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_VAES,		X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_VPCLMULQDQ,	X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_AVX512_VNNI,	X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_AVX512_BITALG,	X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_AVX512_4VNNIW,	X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512_4FMAPS,	X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512_VPOPCNTDQ, X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_XSAVEOPT,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_XSAVEC,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_XSAVES,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_AVX,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_PKU,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_MPX,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_XGETBV1,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_FXSR_OPT,			X86_FEATURE_FXSR      },
++	{ X86_FEATURE_XMM,			X86_FEATURE_FXSR      },
++	{ X86_FEATURE_XMM2,			X86_FEATURE_XMM       },
++	{ X86_FEATURE_XMM3,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_XMM4_1,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_XMM4_2,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_XMM3,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_PCLMULQDQ,		X86_FEATURE_XMM2      },
++	{ X86_FEATURE_SSSE3,			X86_FEATURE_XMM2,     },
++	{ X86_FEATURE_F16C,			X86_FEATURE_XMM2,     },
++	{ X86_FEATURE_AES,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_SHA_NI,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_FMA,			X86_FEATURE_AVX       },
++	{ X86_FEATURE_AVX2,			X86_FEATURE_AVX,      },
++	{ X86_FEATURE_AVX512F,			X86_FEATURE_AVX,      },
++	{ X86_FEATURE_AVX512IFMA,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512PF,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512ER,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512CD,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512DQ,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512BW,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512VL,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512VBMI,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512_VBMI2,		X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_GFNI,			X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_VAES,			X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_VPCLMULQDQ,		X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_AVX512_VNNI,		X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_AVX512_BITALG,		X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_AVX512_4VNNIW,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512_4FMAPS,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512_VPOPCNTDQ,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_SPLIT_LOCK_DETECT,	X86_FEATURE_CORE_CAPABILITY},
+ 	{}
  };
  
-@@ -1227,9 +1229,17 @@ u64 kvm_get_arch_capabilities(void)
- }
- EXPORT_SYMBOL_GPL(kvm_get_arch_capabilities);
+diff --git a/arch/x86/kernel/cpu/intel.c b/arch/x86/kernel/cpu/intel.c
+index fc3c07fe7df5..ad3f72d106fc 100644
+--- a/arch/x86/kernel/cpu/intel.c
++++ b/arch/x86/kernel/cpu/intel.c
+@@ -1029,3 +1029,24 @@ static const struct cpu_dev intel_cpu_dev = {
  
-+static u64 kvm_get_core_capability(void)
+ cpu_dev_register(intel_cpu_dev);
+ 
++static void __init set_split_lock_detect(void)
 +{
-+	return 0;
++	setup_force_cpu_cap(X86_FEATURE_SPLIT_LOCK_DETECT);
 +}
 +
- static int kvm_get_msr_feature(struct kvm_msr_entry *msr)
- {
- 	switch (msr->index) {
-+	case MSR_IA32_CORE_CAPABILITY:
-+		msr->data = kvm_get_core_capability();
-+		break;
- 	case MSR_IA32_ARCH_CAPABILITIES:
- 		msr->data = kvm_get_arch_capabilities();
- 		break;
-@@ -2453,6 +2463,11 @@ int kvm_set_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
- 		break;
- 	case MSR_EFER:
- 		return set_efer(vcpu, data);
-+	case MSR_IA32_CORE_CAPABILITY:
-+		if (!msr_info->host_initiated)
-+			return 1;
-+		vcpu->arch.core_capability = data;
-+		break;
- 	case MSR_K7_HWCR:
- 		data &= ~(u64)0x40;	/* ignore flush filter disable */
- 		data &= ~(u64)0x100;	/* ignore ignne emulation enable */
-@@ -2764,6 +2779,12 @@ int kvm_get_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
- 	case MSR_IA32_TSC:
- 		msr_info->data = kvm_scale_tsc(vcpu, rdtsc()) + vcpu->arch.tsc_offset;
- 		break;
-+	case MSR_IA32_CORE_CAPABILITY:
-+		if (!msr_info->host_initiated &&
-+		    !guest_cpuid_has(vcpu, X86_FEATURE_CORE_CAPABILITY))
-+			return 1;
-+		msr_info->data = vcpu->arch.core_capability;
-+		break;
- 	case MSR_MTRRcap:
- 	case 0x200 ... 0x2ff:
- 		return kvm_mtrr_get_msr(vcpu, msr_info->index, &msr_info->data);
-@@ -8760,6 +8781,7 @@ struct kvm_vcpu *kvm_arch_vcpu_create(struct kvm *kvm,
- int kvm_arch_vcpu_setup(struct kvm_vcpu *vcpu)
- {
- 	vcpu->arch.arch_capabilities = kvm_get_arch_capabilities();
-+	vcpu->arch.core_capability = kvm_get_core_capability();
- 	vcpu->arch.msr_platform_info = MSR_PLATFORM_INFO_CPUID_FAULT;
- 	kvm_vcpu_mtrr_init(vcpu);
- 	vcpu_load(vcpu);
++void __init cpu_set_core_cap_bits(struct cpuinfo_x86 *c)
++{
++	u64 ia32_core_cap = 0;
++
++	if (!cpu_has(c, X86_FEATURE_CORE_CAPABILITY))
++		return;
++
++	/*
++	 * If MSR_IA32_CORE_CAPABILITY exists, enumerate features that are
++	 * reported in the MSR.
++	 */
++	rdmsrl(MSR_IA32_CORE_CAPABILITY, ia32_core_cap);
++
++	if (ia32_core_cap & CORE_CAP_SPLIT_LOCK_DETECT)
++		set_split_lock_detect();
++}
 -- 
 2.19.1
 
