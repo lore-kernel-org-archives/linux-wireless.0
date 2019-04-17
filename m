@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B09C3C282DA
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 21:46:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD23CC282DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 21:46:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8922D2184B
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 21:46:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD9822184B
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 21:46:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387972AbfDQVq3 (ORCPT
+        id S2387442AbfDQVmQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 17:46:29 -0400
-Received: from mga12.intel.com ([192.55.52.136]:20157 "EHLO mga12.intel.com"
+        Wed, 17 Apr 2019 17:42:16 -0400
+Received: from mga12.intel.com ([192.55.52.136]:20150 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387483AbfDQVmS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 17:42:18 -0400
+        id S1725848AbfDQVmP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Apr 2019 17:42:15 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Apr 2019 14:42:17 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Apr 2019 14:42:14 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.60,363,1549958400"; 
-   d="scan'208";a="224441141"
+   d="scan'208";a="224441128"
 Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
-  by orsmga001.jf.intel.com with ESMTP; 17 Apr 2019 14:42:16 -0700
+  by orsmga001.jf.intel.com with ESMTP; 17 Apr 2019 14:42:13 -0700
 From:   Fenghua Yu <fenghua.yu@intel.com>
 To:     "Thomas Gleixner" <tglx@linutronix.de>,
         "Ingo Molnar" <mingo@redhat.com>, "Borislav Petkov" <bp@alien8.de>,
@@ -45,9 +45,9 @@ Cc:     "linux-kernel" <linux-kernel@vger.kernel.org>,
         "x86" <x86@kernel.org>, kvm@vger.kernel.org,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         Fenghua Yu <fenghua.yu@intel.com>
-Subject: [PATCH v7 04/21] x86/split_lock: Align x86_capability to unsigned long to avoid split locked access
-Date:   Wed, 17 Apr 2019 14:33:54 -0700
-Message-Id: <1555536851-17462-5-git-send-email-fenghua.yu@intel.com>
+Subject: [PATCH v7 01/21] x86/common: Align cpu_caps_cleared and cpu_caps_set to unsigned long
+Date:   Wed, 17 Apr 2019 14:33:51 -0700
+Message-Id: <1555536851-17462-2-git-send-email-fenghua.yu@intel.com>
 X-Mailer: git-send-email 2.5.0
 In-Reply-To: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
 References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
@@ -56,46 +56,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-set_cpu_cap() calls locked BTS and clear_cpu_cap() calls locked BTR to
-operate on bitmap defined in x86_capability.
+cpu_caps_cleared[] and cpu_caps_set[] may not be aligned to unsigned long.
+Atomic operations (i.e. set_bit() and clear_bit()) on the bitmaps may
+access two cache lines (a.k.a. split lock) and cause the CPU to do a bus
+lock to block all memory accesses from other processors to ensure
+atomicity.
 
-Locked BTS/BTR accesses a single unsigned long location. In 64-bit mode,
-the location is at:
-base address of x86_capability + (bit offset in x86_capability / 64) * 8
+To avoid the overall performance degradation from the bus locking, align
+the two variables to unsigned long.
 
-Since base address of x86_capability may not be aligned to unsigned long,
-the single unsigned long location may cross two cache lines and
-accessing the location by locked BTS/BTR introductions will cause
-split lock.
-
-To fix the split lock issue, align x86_capability to size of unsigned long
-so that the location will be always within one cache line.
-
-Changing x86_capability's type to unsigned long may also fix the issue
-because x86_capability will be naturally aligned to size of unsigned long.
-But this needs additional code changes. So choose the simpler solution
-by setting the array's alignment to size of unsigned long.
+Defining the variables as unsigned long may also fix the issue because
+they will be naturally aligned to unsigned long. But that needs additional
+code changes. Adding __aligned(unsigned long) is a simpler fix.
 
 Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
+Reviewed-by: Borislav Petkov <bp@suse.de>
 ---
- arch/x86/include/asm/processor.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ arch/x86/kernel/cpu/common.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
-index 2bb3a648fc12..7c62b9ad6e5a 100644
---- a/arch/x86/include/asm/processor.h
-+++ b/arch/x86/include/asm/processor.h
-@@ -93,7 +93,9 @@ struct cpuinfo_x86 {
- 	__u32			extended_cpuid_level;
- 	/* Maximum supported CPUID level, -1=no CPUID: */
- 	int			cpuid_level;
--	__u32			x86_capability[NCAPINTS + NBUGINTS];
-+	/* Aligned to size of unsigned long to avoid split lock in atomic ops */
-+	__u32			x86_capability[NCAPINTS + NBUGINTS]
-+				__aligned(sizeof(unsigned long));
- 	char			x86_vendor_id[16];
- 	char			x86_model_id[64];
- 	/* in KB - valid for CPUS which support this call: */
+diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
+index cb28e98a0659..3716e2bb028b 100644
+--- a/arch/x86/kernel/cpu/common.c
++++ b/arch/x86/kernel/cpu/common.c
+@@ -488,8 +488,9 @@ static const char *table_lookup_model(struct cpuinfo_x86 *c)
+ 	return NULL;		/* Not found */
+ }
+ 
+-__u32 cpu_caps_cleared[NCAPINTS + NBUGINTS];
+-__u32 cpu_caps_set[NCAPINTS + NBUGINTS];
++/* Aligned to unsigned long to avoid split lock in atomic bitmap ops */
++__u32 cpu_caps_cleared[NCAPINTS + NBUGINTS] __aligned(sizeof(unsigned long));
++__u32 cpu_caps_set[NCAPINTS + NBUGINTS] __aligned(sizeof(unsigned long));
+ 
+ void load_percpu_segment(int cpu)
+ {
 -- 
 2.19.1
 
