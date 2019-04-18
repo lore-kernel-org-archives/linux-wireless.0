@@ -6,26 +6,26 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68833C10F14
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:16:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B5CFC10F0B
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:32:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34C24214DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:16:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AB03214DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:32:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387728AbfDRGQh (ORCPT
+        id S2388112AbfDRGcJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Apr 2019 02:16:37 -0400
-Received: from Galois.linutronix.de ([146.0.238.70]:60380 "EHLO
+        Thu, 18 Apr 2019 02:32:09 -0400
+Received: from Galois.linutronix.de ([146.0.238.70]:60415 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725773AbfDRGQh (ORCPT
+        with ESMTP id S2388011AbfDRGcJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Apr 2019 02:16:37 -0400
+        Thu, 18 Apr 2019 02:32:09 -0400
 Received: from pd9ef12d2.dip0.t-ipconnect.de ([217.239.18.210] helo=nanos)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1hH0LP-0006WB-E6; Thu, 18 Apr 2019 08:16:23 +0200
-Date:   Thu, 18 Apr 2019 08:16:22 +0200 (CEST)
+        id 1hH0aQ-0006tR-2u; Thu, 18 Apr 2019 08:31:54 +0200
+Date:   Thu, 18 Apr 2019 08:31:52 +0200 (CEST)
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     Fenghua Yu <fenghua.yu@intel.com>
 cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
@@ -41,12 +41,13 @@ cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
         Michael Chan <michael.chan@broadcom.com>,
         linux-kernel <linux-kernel@vger.kernel.org>,
         x86 <x86@kernel.org>, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v7 18/21] x86/clearcpuid: Support feature flag string in
- kernel option clearcpuid
-In-Reply-To: <20190417234728.GA18776@romley-ivt3.sc.intel.com>
-Message-ID: <alpine.DEB.2.21.1904180815120.3174@nanos.tec.linutronix.de>
-References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com> <1555536851-17462-19-git-send-email-fenghua.yu@intel.com> <alpine.DEB.2.21.1904180106400.3174@nanos.tec.linutronix.de> <20190417234728.GA18776@romley-ivt3.sc.intel.com>
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Xiaoyao Li <xiaoyao.li@linux.intel.com>
+Subject: Re: [PATCH v7 10/21] x86/split_lock: Define per CPU variable to
+ cache MSR TEST_CTL
+In-Reply-To: <20190418012848.GC18776@romley-ivt3.sc.intel.com>
+Message-ID: <alpine.DEB.2.21.1904180827440.3174@nanos.tec.linutronix.de>
+References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com> <1555536851-17462-11-git-send-email-fenghua.yu@intel.com> <alpine.DEB.2.21.1904180009200.3174@nanos.tec.linutronix.de> <20190418012848.GC18776@romley-ivt3.sc.intel.com>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -59,30 +60,27 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 On Wed, 17 Apr 2019, Fenghua Yu wrote:
-> On Thu, Apr 18, 2019 at 01:19:41AM +0200, Thomas Gleixner wrote:
+> On Thu, Apr 18, 2019 at 12:14:12AM +0200, Thomas Gleixner wrote:
 > > On Wed, 17 Apr 2019, Fenghua Yu wrote:
+> > > +DEFINE_PER_CPU(u64, msr_test_ctl_cache);
+> > > +EXPORT_PER_CPU_SYMBOL_GPL(msr_test_ctl_cache);
 > > 
-> > > The kernel option clearcpuid currently only takes feature bit which
-> > > can be changed from kernel to kernel.
-> > > 
-> > > Extend clearcpuid to use cap flag string, which is defined in
-> > > x86_cap_flags[] and won't be changed from kernel to kernel.
-> > > And user can easily get the cap flag string from /proc/cpuinfo.
-> > 
-> > If your machine dies because init triggers #AC then please explain how that
-> > easily can be read from /proc/cpuinfo and how the sysadmin can figure out
-> > what the heck he needs to write on the kernel command line.
-> > 
-> > The whole 'clearcpuid' thing should have never been merged. It's a pure
-> > testing/debugging thing. And no, we are not going to proliferate it and
-> > extend it for dubious value. Quite the contrary, we should simply rip it
-> > out.
+> > Contrary to things like cpufeatures or MSR bits, it's pretty useless to
+> > have a separate patch for this. Please fold this into the place which
+> > actualy uses it.
 > 
-> So I can remove the four 'clearcpuid' related patches 0018-0021 in the next
-> version, right?
+> Can I fold this patch into the KVM patch 0013 which first uses (reads) the
+> variable? But the variable will be set in later patches when enabling split
+> lock feature (patch 0014) and when enabling/disabling split lock feature
+> (patch 0015).
+> 
+> Is this a right sequence to fit the variable in the patch set?
 
-Yes please. They are unrelated to this problem and 'noac' is way more admin
-friendly than that.
+As I said in the other reply, you are assuming that the content of that MSR
+is 0. Which might be true now, but is that true in a year from now?
+
+So you really want to at least initialize the variable by reading the MSR
+_before_ you make use of it in KVM.
 
 Thanks,
 
