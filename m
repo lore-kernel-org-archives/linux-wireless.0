@@ -2,110 +2,89 @@ Return-Path: <SRS0=x8ok=SU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9855CC10F0E
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:41:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DB8CC10F0B
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 07:27:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 715802186A
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:41:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 150EE214DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 07:27:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="P7qm4JqO";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="S/iegJG8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388197AbfDRGln (ORCPT
+        id S1730258AbfDRH07 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Apr 2019 02:41:43 -0400
-Received: from Galois.linutronix.de ([146.0.238.70]:60437 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733049AbfDRGln (ORCPT
+        Thu, 18 Apr 2019 03:26:59 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:34904 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725886AbfDRH07 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Apr 2019 02:41:43 -0400
-Received: from pd9ef12d2.dip0.t-ipconnect.de ([217.239.18.210] helo=nanos)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1hH0jj-00076A-4b; Thu, 18 Apr 2019 08:41:31 +0200
-Date:   Thu, 18 Apr 2019 08:41:30 +0200 (CEST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     Fenghua Yu <fenghua.yu@intel.com>
-cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        H Peter Anvin <hpa@zytor.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Dave Hansen <dave.hansen@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ravi V Shankar <ravi.v.shankar@intel.com>,
-        Xiaoyao Li <xiaoyao.li@intel.com>,
-        Christopherson Sean J <sean.j.christopherson@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Michael Chan <michael.chan@broadcom.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        x86 <x86@kernel.org>, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v7 15/21] x86/split_lock: Add a sysfs interface to
- enable/disable split lock detection during run time
-In-Reply-To: <20190418005711.GB18776@romley-ivt3.sc.intel.com>
-Message-ID: <alpine.DEB.2.21.1904180832290.3174@nanos.tec.linutronix.de>
-References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com> <1555536851-17462-16-git-send-email-fenghua.yu@intel.com> <alpine.DEB.2.21.1904180042090.3174@nanos.tec.linutronix.de> <20190418005711.GB18776@romley-ivt3.sc.intel.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        Thu, 18 Apr 2019 03:26:59 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 2B24A6072E; Thu, 18 Apr 2019 07:26:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1555572418;
+        bh=P1Y0lZ3w5CLY9Miph+oPMeWdcsmC1FM3wKp6Zn7vRGk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=P7qm4JqOyXFn6aPfFBD36Q429+fUF5f4Gv9oFJNleltuVSNofgwbPzww0jia3V4/B
+         IwbOI8apq8oyFRpv1l981B4v9n9bhD6VZHcq8r/bxkiQFbvsTZzAGueN3sMqQrVt63
+         NNSVJ2T0SiGujgAJxqHE9+WAZw0rFtKskKPXNsKY=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id AF4106055C;
+        Thu, 18 Apr 2019 07:26:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1555572417;
+        bh=P1Y0lZ3w5CLY9Miph+oPMeWdcsmC1FM3wKp6Zn7vRGk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=S/iegJG830+YhWg7Z9lvgWXA8AvLc2KVvWYmpaixDRx8l2tpIlmZc9HfxjAWaT8Au
+         XpFYObS+PlwvUzp3p6ZRva9jRpweT16iIdGZDOmx93xNQnhgkX4NnJBdhWFdYKkBqE
+         WnO49Rb5MAs27ysT79Jj/4vZnLQwqFWr+QCfOm5M=
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Thu, 18 Apr 2019 15:26:57 +0800
+From:   leiwa@codeaurora.org
+To:     =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath10k: fix different tx duration output
+In-Reply-To: <87mukprnie.fsf@toke.dk>
+References: <1555489045-18070-1-git-send-email-leiwa@codeaurora.org>
+ <87mukprnie.fsf@toke.dk>
+Message-ID: <298a645b17aac0f5c466f011225533b0@codeaurora.org>
+X-Sender: leiwa@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 17 Apr 2019, Fenghua Yu wrote:
-> On Thu, Apr 18, 2019 at 12:47:24AM +0200, Thomas Gleixner wrote:
-> > On Wed, 17 Apr 2019, Fenghua Yu wrote:
-> > 
-> > > The interface /sys/device/system/cpu/split_lock_detect is added
-> > > to allow user to control split lock detection and show current split
-> > > lock detection setting.
-> > > 
-> > > Writing [yY1] or [oO][nN] to the file enables split lock detection and
-> > > writing [nN0] or [oO][fF] disables split lock detection. Split lock
-> > > detection is enabled or disabled on all CPUs.
-> > > 
-> > > Reading the file returns current global split lock detection setting:
-> > > 0: disabled
-> > > 1: enabled
-> > 
-> > Again, You explain WHAT this patch does and still there is zero
-> > justification why this sysfs knob is needed at all. I still do not see any
-> > reason why this knob should exist.
+On 2019-04-17 17:26, Toke Høiland-Jørgensen wrote:
+> Lei Wang <leiwa@codeaurora.org> writes:
 > 
-> An important application has split lock issues which are already discovered
-> and need to be fixed. But before the issues are fixed, sysadmin still wants to
-> run the application without rebooting the system, the sysfs knob can be useful
-> to turn off split lock detection. After the application is done, split lock
-> detection will be enabled again through the sysfs knob.
-
-Are you sure that you are talking about the real world? I might buy the
-'off' part somehow, but the 'on' part is beyond theoretical.
-
-Even the 'off' part is dubious on a multi user machine. I personally would
-neither think about using the sysfs knob nor about rebooting the machine
-simply because I'd consider a lock operation accross a cacheline an malicious
-DoS attempt. Why would I allow that?
-
-So in reality the sysadmin will either move the workload to a machine w/o
-the #AC magic or just tell the user to fix his crap.
-
-> Without the sysfs knob, sysadmin has to reboot the system with kernel option
-> "no_split_lock_detect" to run the application before the split lock issues
-> are fixed.
+>> TX duration output of tx_stats in debugfs and station dump had big
+>> difference because they got tx duration value from different statistic
+>> data. We should use the same statistic data.
 > 
-> Is this a valid justification why the sysfs knob is needed? If it is, I can
-> add the justification in the next version.
+> So are you sure you picked the most accurate one of the two? :)
+> 
+> -Toke
 
-Why has this information not been in the changelog right away? I'm really
-tired of asking the same questions and pointing you to
-Documentation/process over and over.
+Hi Toke,
 
-Thanks,
+Yes.
+Now for ath10k, there are two ways to get tx duration output.
+One is got from tx_stats in debugfs reported by firmware. It is a total 
+value including all the frames which created by host and firmware sent 
+to the peer.
+And the second is calculated from 
+ath10k_htt_rx_tx_compl_ind()-->ieee80211_sta_register_airtime(), here 
+the tx duration just includes the data frames sent from host to the 
+peer.
+So the first value is preferable for station dump.
 
-	tglx
+Thanks.
+Lei
