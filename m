@@ -4,63 +4,73 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7355C10F0E
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:49:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54326C10F0E
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:55:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87ADA20674
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:49:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2344D20835
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:55:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iJ8/0xu0";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZGByBbwZ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dVjuyoJs";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="nWAEmbLc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389174AbfDRNta (ORCPT
+        id S2388954AbfDRNzw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Apr 2019 09:49:30 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:33522 "EHLO
+        Thu, 18 Apr 2019 09:55:52 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:39104 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388073AbfDRNt3 (ORCPT
+        with ESMTP id S1728074AbfDRNzv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Apr 2019 09:49:29 -0400
+        Thu, 18 Apr 2019 09:55:51 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 0AD39607CA; Thu, 18 Apr 2019 13:49:29 +0000 (UTC)
+        id EB60A60736; Thu, 18 Apr 2019 13:55:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555595369;
-        bh=45Y6N+S7OaB9LhOtPy3nchhklMezWadHzyiI6mL38pg=;
+        s=default; t=1555595750;
+        bh=xN6ChoxE1j0m5EvhrKqqSNI/QjLCetCKnu6iJh/XmXA=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=iJ8/0xu0OhpjQauMRD1myRMkvAFtMgzMKyPWIE6tHOrBttL7W4sFuMfXQB6zyJvav
-         U7D6oM0HpH2ZBjKtQZyd9jpGKDFHcpvXbEXO4w+34DujD05K1bJjSe4lpyW1pUvyce
-         0w8Vc52xLaZac8XVPJ1eYDpirh6S9QyvlsRAsxXQ=
+        b=dVjuyoJsXmZvmV9ScNfRWGibujuruxL4Gf4kSZrlOlFZrcDC487ebwD0bTFeYsiBi
+         wCSgQDDj4X8cDE6S9TlPqBYmO+/f1UXGWX3V/KIkMclYO+gTa3gMl2KpRc7aFPmDjn
+         f1YoQjoX192sDSiGFzreVxmmsDzIiLLHCb0Q/JhM=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E4B1E602A7;
-        Thu, 18 Apr 2019 13:49:26 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id F05796019D;
+        Thu, 18 Apr 2019 13:55:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555595368;
-        bh=45Y6N+S7OaB9LhOtPy3nchhklMezWadHzyiI6mL38pg=;
+        s=default; t=1555595749;
+        bh=xN6ChoxE1j0m5EvhrKqqSNI/QjLCetCKnu6iJh/XmXA=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=ZGByBbwZ5zOXZPTpF53ZsV11me581YNEYMamDq3y14y/3FB9bxdm3Apw7Zq2UrAhs
-         5BvMuXL54ZbfA77/JpHaS7S9kqQrnB/yCO5PjDK4WtD0p2F3grqPzKS8QdL807CvYF
-         6CPgyPh33tzXQ6TU909vENa3x7qjjHCOo06lkSv8=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E4B1E602A7
+        b=nWAEmbLcFqoBZNuf4N6niC0VopmAJNxX8s10V7wbnI9ecLcTCOHpJUuCkbNxwB89X
+         q1Htcx4UP3U4hmOr6tpzyA1vHqSSXuuT+vLznWrhB8vE43Biql3spM0c2iFKzY4ThB
+         ip1210o78nsb8HQsHNpz1e9tpBusjRla6JUdGLbY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F05796019D
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Stephen Rothwell <sfr@canb.auug.org.au>
-Cc:     Wireless <linux-wireless@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Ihab Zhaika <ihab.zhaika@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with the wireless-drivers tree
-References: <20190415120853.39e0e46a@canb.auug.org.au>
-Date:   Thu, 18 Apr 2019 16:49:24 +0300
-In-Reply-To: <20190415120853.39e0e46a@canb.auug.org.au> (Stephen Rothwell's
-        message of "Mon, 15 Apr 2019 12:08:53 +1000")
-Message-ID: <87k1fr2zkr.fsf@kamboji.qca.qualcomm.com>
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     Brian Norris <briannorris@chromium.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
+References: <1552450443-351-1-git-send-email-yhchuang@realtek.com>
+        <20190325143611.sjwwjqtrftxntwyk@penguin>
+        <20190326075414.GA8598@redhat.com>
+        <CA+ASDXNcCNcBmiHi468p1foWgSOXy9Mt8o+CD17Bd4PqhUXFoA@mail.gmail.com>
+        <F7CD281DE3E379468C6D07993EA72F84D17CB940@RTITMBSVM04.realtek.com.tw>
+        <20190327102623.GA20943@redhat.com>
+        <F7CD281DE3E379468C6D07993EA72F84D17D50A4@RTITMBSVM04.realtek.com.tw>
+        <87zhp0g2a5.fsf@codeaurora.org>
+        <F7CD281DE3E379468C6D07993EA72F84D17D6AD6@RTITMBSVM04.realtek.com.tw>
+Date:   Thu, 18 Apr 2019 16:55:44 +0300
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17D6AD6@RTITMBSVM04.realtek.com.tw>
+        (Tony Chuang's message of "Tue, 9 Apr 2019 10:12:16 +0000")
+Message-ID: <87ftqf2za7.fsf@kamboji.qca.qualcomm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -69,32 +79,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Stephen Rothwell <sfr@canb.auug.org.au> writes:
+Tony Chuang <yhchuang@realtek.com> writes:
 
-> Today's linux-next merge of the wireless-drivers-next tree got a
-> conflict in:
+>> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+>> Sent: Monday, April 08, 2019 7:33 PM
+>> To: Tony Chuang
+>> Cc: Brian Norris; Johannes Berg; linux-wireless; Greg Kroah-Hartman; Pkshih;
+>> Andy Huang; Larry Finger; Stanislaw Gruszka
+>> Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
+>> wireless network chips
+>> 
+>> Tony Chuang <yhchuang@realtek.com> writes:
+>> 
+>> > Hi Kalle
+>> >
+>> >> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+>> >> Sent: Wednesday, March 27, 2019 6:26 PM
+>> >> To: Tony Chuang
+>> >> Cc: Brian Norris; Kalle Valo; Johannes Berg; linux-wireless; Greg
+>> Kroah-Hartman;
+>> >> Pkshih; Andy Huang; Larry Finger
+>> >> Subject: Re: [PATCH v8 00/14] rtw88: mac80211 driver for Realtek 802.11ac
+>> >> wireless network chips
+>> >>
+>> >
+>> > It's just a gentle reply to ask if rtw88 is getting merged.
+>> > Are you still reviewing or is there anything I can help.
+>> 
+>> I just have been busy with other stuff, sorry. I'll try find time for
+>> this soon.
+>> 
 >
->   drivers/net/wireless/intel/iwlwifi/pcie/drv.c
->
-> between commits:
->
->   0d5bad14226a ("iwlwifi: rename structs to fit the new names")
->   972d8e137779 ("iwlwifi: add new 0x2723/0x2080 card for 22000")
->
-> from the wireless-drivers tree and commit:
->
->   ef8a913766cd ("iwlwifi: remove misconfigured pci ids from 22260 series")
->
-> from the wireless-drivers-next tree.
->
-> I fixed it up (see below) and can carry the fix as necessary. This
-> is now fixed as far as linux-next is concerned, but any non trivial
-> conflicts should be mentioned to your upstream maintainer when your tree
-> is submitted for merging.  You may also want to consider cooperating
-> with the maintainer of the conflicting tree to minimise any particularly
-> complex conflicts.
+> It's OK. If you need any help just let me know. :)
 
-Thanks, I'll let Dave know about this when he pulls w-d-next.
+Sorry, still haven't been able to review the driver. But something what
+I found strange was "default y" in Kconfig, is that really necessary?
+
+> BTW, I want to change the license from GPL to Dual BSD/GPL.
+> Would you want to change them in the initial patch set, or I send a separate
+> one after it got merged?
+
+Please submit a new version with the new license. But don't any other
+changes than change the license and possibly remove the default line in
+Kconfig.
 
 -- 
 Kalle Valo
