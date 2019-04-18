@@ -2,105 +2,115 @@ Return-Path: <SRS0=x8ok=SU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCAA7C10F0E
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 11:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6626C10F0E
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 11:55:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A91FA20656
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 11:49:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 812DB2083D
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 11:55:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="in8oOnbw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388762AbfDRLtY (ORCPT
+        id S2388889AbfDRLzv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Apr 2019 07:49:24 -0400
-Received: from Galois.linutronix.de ([146.0.238.70]:35667 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727807AbfDRLtY (ORCPT
+        Thu, 18 Apr 2019 07:55:51 -0400
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:38773 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388535AbfDRLzv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Apr 2019 07:49:24 -0400
-Received: from pd9ef12d2.dip0.t-ipconnect.de ([217.239.18.210] helo=nanos)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1hH5XT-0005vm-D0; Thu, 18 Apr 2019 13:49:11 +0200
-Date:   Thu, 18 Apr 2019 13:49:10 +0200 (CEST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     David Laight <David.Laight@ACULAB.COM>
-cc:     'Fenghua Yu' <fenghua.yu@intel.com>,
-        'Ingo Molnar' <mingo@redhat.com>,
-        'Borislav Petkov' <bp@alien8.de>,
-        'H Peter Anvin' <hpa@zytor.com>,
-        'Paolo Bonzini' <pbonzini@redhat.com>,
-        'Dave Hansen' <dave.hansen@intel.com>,
-        'Ashok Raj' <ashok.raj@intel.com>,
-        'Peter Zijlstra' <peterz@infradead.org>,
-        'Ravi V Shankar' <ravi.v.shankar@intel.com>,
-        'Xiaoyao Li ' <xiaoyao.li@intel.com>,
-        'Christopherson Sean J' <sean.j.christopherson@intel.com>,
-        'Kalle Valo' <kvalo@codeaurora.org>,
-        'Michael Chan' <michael.chan@broadcom.com>,
-        'linux-kernel' <linux-kernel@vger.kernel.org>,
-        'x86' <x86@kernel.org>,
-        "'kvm@vger.kernel.org'" <kvm@vger.kernel.org>,
-        "'netdev@vger.kernel.org'" <netdev@vger.kernel.org>,
-        "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v7 04/21] x86/split_lock: Align x86_capability to unsigned
- long to avoid split locked access
-In-Reply-To: <698b9419c81b443fb9c180d2b27fd34a@AcuMS.aculab.com>
-Message-ID: <alpine.DEB.2.21.1904181347210.3174@nanos.tec.linutronix.de>
-References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com> <1555536851-17462-5-git-send-email-fenghua.yu@intel.com> <c8ca959a4bc549b59baca563660d42d6@AcuMS.aculab.com> <698b9419c81b443fb9c180d2b27fd34a@AcuMS.aculab.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        Thu, 18 Apr 2019 07:55:51 -0400
+Received: by mail-yw1-f68.google.com with SMTP id m207so649433ywd.5
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2019 04:55:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=hcfGfaHegSAyycy47ypPTKIDhzqRH0SQYQ8hoPAqvFc=;
+        b=in8oOnbw5POadgnwr08ZIAJId+4AFdTnZ5LCPs/w1WsgWcomxcRf2ZzuSulaLecllL
+         HyV8owkuIwDBsh1dWMxWjfOpyw0Ml/eTByKXDWRcdu79uehpWBrq1QqPfix5wZNbH9HX
+         cDZGocWK31MI1zXqFSA0YYnU7u+/sH7JBw3+1xPVbOah/p+xv9H3qwK+N272hXKMi8BA
+         Nxqsas4on+5yO/j4CmmtURhK600V692YhOY4Jf88UWW1tkLr4orbXt6tFz00Lko+UJvG
+         h/UYoEJ5vFc/+3kF6mqrZSkn28skzcwaKgIr0t48Xwc9H/ay7cU1PphfkhtmwXj5e55m
+         z27Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=hcfGfaHegSAyycy47ypPTKIDhzqRH0SQYQ8hoPAqvFc=;
+        b=TM+jDW+sgdUiMXJdy0m0/9VcRwApGEtpfdS0hJknm8QnfRsJmjHuYp7H47oD0wWW4I
+         yDD7ezqFITU4GjnEwiHeh/r1gKkXidTyNURK+YTAEt+EZGo0pgsqFy8wAE3MTkkcF3pv
+         ckPiukYb9ifVvUm17vPMrJrke++dtAbLgw1HHVA8dADRwW+YAqFD9m+bXvnTAtOfXa79
+         f08C/ve1DQOko7rZ4HYWrBu5JG6gGb8U3Jk2P1BwZRDasc25YF/ioIa3/motquoXtKM0
+         PqD9ESbAnYnw5B6AxG/0VPElxji/gZ2wUk5jJSyNYrM2BAeKb7NK7di0cy7H0QjNIotY
+         IohQ==
+X-Gm-Message-State: APjAAAUjlxBzri83mjWAePggGMQR/8VnE2vC+uSfJsQB1iMBTF6cPKw9
+        E1kD70JUupd7hc39gUkdHLrdSCDKCc4zo5ArLUo=
+X-Google-Smtp-Source: APXvYqzTwCDpTIPb8CM49fRrEE+oxINWzeOL+nnGOzgud/RDBSDlK7d28RwDuimNJvPCy8tNWoJMnODnJw0ZUof+9+I=
+X-Received: by 2002:a0d:fec3:: with SMTP id o186mr72041021ywf.167.1555588550526;
+ Thu, 18 Apr 2019 04:55:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+References: <b519e746-ddfd-421f-d897-7620d229e4b2@gmail.com>
+ <16ea722f-e08d-044f-216c-4ea745cc6344@broadcom.com> <CACna6rxR4t1MpniasnUfyiuBhc9tTkJRx=O7GrMnmVPOXCZ-dQ@mail.gmail.com>
+In-Reply-To: <CACna6rxR4t1MpniasnUfyiuBhc9tTkJRx=O7GrMnmVPOXCZ-dQ@mail.gmail.com>
+From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date:   Thu, 18 Apr 2019 13:55:39 +0200
+Message-ID: <CACna6rwF7rai_PMY3VtYXD=uBAT+jHsr8zrWP28vKjUx2S7Uyg@mail.gmail.com>
+Subject: Re: brcmfmac: NULL pointer dereference during brcmf_detach() after
+ firmware crash
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+        <brcm80211-dev-list.pdl@broadcom.com>," 
+        <brcm80211-dev-list@cypress.com>, Aaron Blair <aaron@aaronpb.me>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 18 Apr 2019, David Laight wrote:
-> From: David Laight
-> > Sent: 18 April 2019 10:21
-> > From: Fenghua Yu
-> > > Sent: 17 April 2019 22:34
+On Fri, 15 Feb 2019 at 07:15, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
+ote:
+> On Thu, 14 Feb 2019 at 23:37, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+> > On 2/14/2019 11:30 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
+> > > I've just found a well reproducible brcmfmac crash (NULL pointer
+> > > dereference).
 > > >
-> > > set_cpu_cap() calls locked BTS and clear_cpu_cap() calls locked BTR to
-> > > operate on bitmap defined in x86_capability.
+> > > Steps:
+> > > 1. Wait for or trigger a FullMAC firmware crash
+> > > 2. Wait for some skb to get queued on a flowring
+> > > 3. Call rmmod brcmfmac
 > > >
-> > > Locked BTS/BTR accesses a single unsigned long location. In 64-bit mode,
-> > > the location is at:
-> > > base address of x86_capability + (bit offset in x86_capability / 64) * 8
+> > > Problem:
+> > > There is a NULL pointer dereference in one of the brcmf_detach() call=
+s.
 > > >
-> > > Since base address of x86_capability may not be aligned to unsigned long,
-> > > the single unsigned long location may cross two cache lines and
-> > > accessing the location by locked BTS/BTR introductions will cause
-> > > split lock.
-> > 
-> > Isn't the problem that the type (and definition) of x86_capability[] are wrong.
-> > If the 'bitmap' functions are used for it, it should be defined as a bitmap.
-> > This would make it 'unsigned long' not __u32.
-> > 
-> > This type munging of bitmaps only works on LE systems.
-> > 
-> > OTOH the locked BTS/BTR instructions could be changed to use 32 bit accesses.
-> > ISTR some of the associated functions use byte accesses.
-> > 
-> > Perhaps there ought to be asm wrappers for BTS/BTR that do 8bit and
-> > 32bit accesses.
-> 
-> A quick look shows that this isn't the only __32[] that is being
-> cast to (unsigned long) and then to set/test/clear_bit() in those
-> files.
-> 
-> I wonder how much other code is applying such casts?
+> > > Explanation:
+> > > brcmf_detach() first frees all "ifp"s and then deletes flowrings. If =
+any
+> > > flowring has a skb it results in calling brcmf_txfinalize() which tri=
+es
+> > > to access "ifp" (struct brcmf_if) which is a NULL.
+> >
+> > Hi Rafa=C5=82,
+> >
+> > Thanks for diving in. That was my suspicion. Does it mean you are
+> > working on a patch or shall I take care of it.
+>
+> It would be nice to have someone more experienced with detaching &
+> rings look at it. Is adding a simple
+> if (ifp)
+> enough? Or should that code get redesigned? Should we e.g. reorder detach=
+ order?
 
-The reason for the cpuid stuff using u32 is that this is actually the width
-of the information retrieved from CPUID.
+Hi Arend, would you find a moment to look at that crash, please?
 
-Thanks,
-
-	tglx
+--=20
+Rafa=C5=82
