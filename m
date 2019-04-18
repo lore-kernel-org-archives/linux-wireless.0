@@ -2,115 +2,94 @@ Return-Path: <SRS0=x8ok=SU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6626C10F0E
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 11:55:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53317C10F0E
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 12:15:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 812DB2083D
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 11:55:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="in8oOnbw"
+	by mail.kernel.org (Postfix) with ESMTP id 224BE217D7
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 12:15:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388889AbfDRLzv (ORCPT
+        id S2388893AbfDRMPw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Apr 2019 07:55:51 -0400
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:38773 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388535AbfDRLzv (ORCPT
+        Thu, 18 Apr 2019 08:15:52 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53910 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727807AbfDRMPv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Apr 2019 07:55:51 -0400
-Received: by mail-yw1-f68.google.com with SMTP id m207so649433ywd.5
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2019 04:55:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=hcfGfaHegSAyycy47ypPTKIDhzqRH0SQYQ8hoPAqvFc=;
-        b=in8oOnbw5POadgnwr08ZIAJId+4AFdTnZ5LCPs/w1WsgWcomxcRf2ZzuSulaLecllL
-         HyV8owkuIwDBsh1dWMxWjfOpyw0Ml/eTByKXDWRcdu79uehpWBrq1QqPfix5wZNbH9HX
-         cDZGocWK31MI1zXqFSA0YYnU7u+/sH7JBw3+1xPVbOah/p+xv9H3qwK+N272hXKMi8BA
-         Nxqsas4on+5yO/j4CmmtURhK600V692YhOY4Jf88UWW1tkLr4orbXt6tFz00Lko+UJvG
-         h/UYoEJ5vFc/+3kF6mqrZSkn28skzcwaKgIr0t48Xwc9H/ay7cU1PphfkhtmwXj5e55m
-         z27Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=hcfGfaHegSAyycy47ypPTKIDhzqRH0SQYQ8hoPAqvFc=;
-        b=TM+jDW+sgdUiMXJdy0m0/9VcRwApGEtpfdS0hJknm8QnfRsJmjHuYp7H47oD0wWW4I
-         yDD7ezqFITU4GjnEwiHeh/r1gKkXidTyNURK+YTAEt+EZGo0pgsqFy8wAE3MTkkcF3pv
-         ckPiukYb9ifVvUm17vPMrJrke++dtAbLgw1HHVA8dADRwW+YAqFD9m+bXvnTAtOfXa79
-         f08C/ve1DQOko7rZ4HYWrBu5JG6gGb8U3Jk2P1BwZRDasc25YF/ioIa3/motquoXtKM0
-         PqD9ESbAnYnw5B6AxG/0VPElxji/gZ2wUk5jJSyNYrM2BAeKb7NK7di0cy7H0QjNIotY
-         IohQ==
-X-Gm-Message-State: APjAAAUjlxBzri83mjWAePggGMQR/8VnE2vC+uSfJsQB1iMBTF6cPKw9
-        E1kD70JUupd7hc39gUkdHLrdSCDKCc4zo5ArLUo=
-X-Google-Smtp-Source: APXvYqzTwCDpTIPb8CM49fRrEE+oxINWzeOL+nnGOzgud/RDBSDlK7d28RwDuimNJvPCy8tNWoJMnODnJw0ZUof+9+I=
-X-Received: by 2002:a0d:fec3:: with SMTP id o186mr72041021ywf.167.1555588550526;
- Thu, 18 Apr 2019 04:55:50 -0700 (PDT)
+        Thu, 18 Apr 2019 08:15:51 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1hH5xF-0007X3-Lm; Thu, 18 Apr 2019 15:15:50 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Thu, 18 Apr 2019 15:15:41 +0300
+Message-Id: <20190418121544.32040-2-luca@coelho.fi>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190418121544.32040-1-luca@coelho.fi>
+References: <20190418121544.32040-1-luca@coelho.fi>
 MIME-Version: 1.0
-References: <b519e746-ddfd-421f-d897-7620d229e4b2@gmail.com>
- <16ea722f-e08d-044f-216c-4ea745cc6344@broadcom.com> <CACna6rxR4t1MpniasnUfyiuBhc9tTkJRx=O7GrMnmVPOXCZ-dQ@mail.gmail.com>
-In-Reply-To: <CACna6rxR4t1MpniasnUfyiuBhc9tTkJRx=O7GrMnmVPOXCZ-dQ@mail.gmail.com>
-From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date:   Thu, 18 Apr 2019 13:55:39 +0200
-Message-ID: <CACna6rwF7rai_PMY3VtYXD=uBAT+jHsr8zrWP28vKjUx2S7Uyg@mail.gmail.com>
-Subject: Re: brcmfmac: NULL pointer dereference during brcmf_detach() after
- firmware crash
-To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-        <brcm80211-dev-list.pdl@broadcom.com>," 
-        <brcm80211-dev-list@cypress.com>, Aaron Blair <aaron@aaronpb.me>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 1/4] iwlwifi: mvm: don't attempt debug collection in rfkill
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 15 Feb 2019 at 07:15, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
-ote:
-> On Thu, 14 Feb 2019 at 23:37, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
-> > On 2/14/2019 11:30 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> > > I've just found a well reproducible brcmfmac crash (NULL pointer
-> > > dereference).
-> > >
-> > > Steps:
-> > > 1. Wait for or trigger a FullMAC firmware crash
-> > > 2. Wait for some skb to get queued on a flowring
-> > > 3. Call rmmod brcmfmac
-> > >
-> > > Problem:
-> > > There is a NULL pointer dereference in one of the brcmf_detach() call=
-s.
-> > >
-> > > Explanation:
-> > > brcmf_detach() first frees all "ifp"s and then deletes flowrings. If =
-any
-> > > flowring has a skb it results in calling brcmf_txfinalize() which tri=
-es
-> > > to access "ifp" (struct brcmf_if) which is a NULL.
-> >
-> > Hi Rafa=C5=82,
-> >
-> > Thanks for diving in. That was my suspicion. Does it mean you are
-> > working on a patch or shall I take care of it.
->
-> It would be nice to have someone more experienced with detaching &
-> rings look at it. Is adding a simple
-> if (ifp)
-> enough? Or should that code get redesigned? Should we e.g. reorder detach=
- order?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi Arend, would you find a moment to look at that crash, please?
+If we fail to initialize because rfkill is enabled, then trying
+to do debug collection currently just fails. Prevent that in the
+high-level code, although we should probably also fix the lower
+level code to do things more carefully.
 
---=20
-Rafa=C5=82
+It's not 100% clear that it fixes this commit, as the original
+dump code at the time might've been more careful. In any case,
+we don't really need to dump anything in this expected scenario.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: 7125648074e8 ("iwlwifi: add fw dump upon RT ucode start failure")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 4 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 00a47f6f1d81..ab68b5d53ec9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1121,7 +1121,9 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	ret = iwl_mvm_load_rt_fw(mvm);
+ 	if (ret) {
+ 		IWL_ERR(mvm, "Failed to start RT ucode: %d\n", ret);
+-		iwl_fw_dbg_error_collect(&mvm->fwrt, FW_DBG_TRIGGER_DRIVER);
++		if (ret != -ERFKILL)
++			iwl_fw_dbg_error_collect(&mvm->fwrt,
++						 FW_DBG_TRIGGER_DRIVER);
+ 		goto error;
+ 	}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index ba27dce4c2bb..13681b03c10e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -834,7 +834,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	mutex_lock(&mvm->mutex);
+ 	iwl_mvm_ref(mvm, IWL_MVM_REF_INIT_UCODE);
+ 	err = iwl_run_init_mvm_ucode(mvm, true);
+-	if (err)
++	if (err && err != -ERFKILL)
+ 		iwl_fw_dbg_error_collect(&mvm->fwrt, FW_DBG_TRIGGER_DRIVER);
+ 	if (!iwlmvm_mod_params.init_dbg || !err)
+ 		iwl_mvm_stop_device(mvm);
+-- 
+2.20.1
+
