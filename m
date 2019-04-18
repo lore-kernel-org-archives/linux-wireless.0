@@ -5,31 +5,32 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06A4AC10F0E
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:13:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF1E9C10F0E
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:25:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D3246217D7
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:13:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EB5E217D7
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:25:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388685AbfDRNNo convert rfc822-to-8bit (ORCPT
+        id S2389016AbfDRNZI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Apr 2019 09:13:44 -0400
-Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:44182 "EHLO
+        Thu, 18 Apr 2019 09:25:08 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([146.101.78.151]:41921 "EHLO
         eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1733205AbfDRNNo (ORCPT
+        by vger.kernel.org with ESMTP id S1733192AbfDRNZI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Apr 2019 09:13:44 -0400
+        Thu, 18 Apr 2019 09:25:08 -0400
 Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
  TLS) by relay.mimecast.com with ESMTP id
- uk-mta-98-nwPXMM-9NGqHeOMqUFPXMA-1; Thu, 18 Apr 2019 14:13:42 +0100
+ uk-mta-17-B7dANWa6PEWHAhN1ybAteA-1; Thu, 18 Apr 2019 14:25:05 +0100
 Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
  AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
- Server (TLS) id 15.0.1347.2; Thu, 18 Apr 2019 14:14:52 +0100
+ Server (TLS) id 15.0.1347.2; Thu, 18 Apr 2019 14:26:15 +0100
 Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
  AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Thu, 18 Apr 2019 14:14:52 +0100
+ Thu, 18 Apr 2019 14:26:15 +0100
 From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Thomas Gleixner' <tglx@linutronix.de>
+To:     David Laight <David.Laight@ACULAB.COM>,
+        'Thomas Gleixner' <tglx@linutronix.de>
 CC:     'Fenghua Yu' <fenghua.yu@intel.com>,
         'Ingo Molnar' <mingo@redhat.com>,
         'Borislav Petkov' <bp@alien8.de>,
@@ -52,15 +53,16 @@ Subject: RE: [PATCH v7 04/21] x86/split_lock: Align x86_capability to unsigned
  long to avoid split locked access
 Thread-Topic: [PATCH v7 04/21] x86/split_lock: Align x86_capability to
  unsigned long to avoid split locked access
-Thread-Index: AQHU9Wc8cfw3/6sx9k22vKHnyDMwNqZBowBwgAAfOzD///urAIAAIrYg
-Date:   Thu, 18 Apr 2019 13:14:52 +0000
-Message-ID: <aceeddaa107a4aed9add47945acaa129@AcuMS.aculab.com>
+Thread-Index: AQHU9Wc8cfw3/6sx9k22vKHnyDMwNqZBowBwgAAfOzD///urAIAAIrYggAAIWHA=
+Date:   Thu, 18 Apr 2019 13:26:15 +0000
+Message-ID: <43db378b84c54908bd2fbf305dd9f8ec@AcuMS.aculab.com>
 References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
  <1555536851-17462-5-git-send-email-fenghua.yu@intel.com>
  <c8ca959a4bc549b59baca563660d42d6@AcuMS.aculab.com>
  <698b9419c81b443fb9c180d2b27fd34a@AcuMS.aculab.com>
  <alpine.DEB.2.21.1904181347210.3174@nanos.tec.linutronix.de>
-In-Reply-To: <alpine.DEB.2.21.1904181347210.3174@nanos.tec.linutronix.de>
+ <aceeddaa107a4aed9add47945acaa129@AcuMS.aculab.com>
+In-Reply-To: <aceeddaa107a4aed9add47945acaa129@AcuMS.aculab.com>
 Accept-Language: en-GB, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -68,68 +70,23 @@ X-MS-TNEF-Correlator:
 x-ms-exchange-transport-fromentityheader: Hosted
 x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-X-MC-Unique: nwPXMM-9NGqHeOMqUFPXMA-1
+X-MC-Unique: B7dANWa6PEWHAhN1ybAteA-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: base64
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Thomas Gleixner
-> Sent: 18 April 2019 12:49
-> On Thu, 18 Apr 2019, David Laight wrote:
-> > From: David Laight
-> > > Sent: 18 April 2019 10:21
-> > > From: Fenghua Yu
-> > > > Sent: 17 April 2019 22:34
-> > > >
-> > > > set_cpu_cap() calls locked BTS and clear_cpu_cap() calls locked BTR to
-> > > > operate on bitmap defined in x86_capability.
-> > > >
-> > > > Locked BTS/BTR accesses a single unsigned long location. In 64-bit mode,
-> > > > the location is at:
-> > > > base address of x86_capability + (bit offset in x86_capability / 64) * 8
-> > > >
-> > > > Since base address of x86_capability may not be aligned to unsigned long,
-> > > > the single unsigned long location may cross two cache lines and
-> > > > accessing the location by locked BTS/BTR introductions will cause
-> > > > split lock.
-> > >
-> > > Isn't the problem that the type (and definition) of x86_capability[] are wrong.
-> > > If the 'bitmap' functions are used for it, it should be defined as a bitmap.
-> > > This would make it 'unsigned long' not __u32.
-> > >
-> > > This type munging of bitmaps only works on LE systems.
-> > >
-> > > OTOH the locked BTS/BTR instructions could be changed to use 32 bit accesses.
-> > > ISTR some of the associated functions use byte accesses.
-> > >
-> > > Perhaps there ought to be asm wrappers for BTS/BTR that do 8bit and
-> > > 32bit accesses.
-> >
-> > A quick look shows that this isn't the only __32[] that is being
-> > cast to (unsigned long) and then to set/test/clear_bit() in those
-> > files.
-> >
-> > I wonder how much other code is applying such casts?
-> 
-> The reason for the cpuid stuff using u32 is that this is actually the width
-> of the information retrieved from CPUID.
-
-Right, but you shouldn't (as has been found out) cast pointers
-to integer types.
-
-Running
-grep -r --include '*.[ch]' '_bit([^(]*, *([^)]* ' .
-over the entire kernel source tree shows quite a few 'dubious' casts.
-
-They'll be doubly dubious on BE systems.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+RnJvbTogRGF2aWQgTGFpZ2h0DQo+IFNlbnQ6IDE4IEFwcmlsIDIwMTkgMTQ6MTUNCi4uLg0KPiBS
+dW5uaW5nDQo+IGdyZXAgLXIgLS1pbmNsdWRlICcqLltjaF0nICdfYml0KFteKF0qLCAqKFteKV0q
+ICcgLg0KPiBvdmVyIHRoZSBlbnRpcmUga2VybmVsIHNvdXJjZSB0cmVlIHNob3dzIHF1aXRlIGEg
+ZmV3ICdkdWJpb3VzJyBjYXN0cy4NCj4gDQo+IFRoZXknbGwgYmUgZG91Ymx5IGR1YmlvdXMgb24g
+QkUgc3lzdGVtcy4NCg0KVGhlIGFsdGVybmF0ZSBwYXR0ZXJuOg0KZ3JlcCAtciAtLWluY2x1ZGUg
+JyouW2NoXScgJ19iaXQoW14oXSosICooW14pXSpcKiknIC4NCmhhcyBhIGZldyBsZXNzIGZhbHNl
+IHBvc2l0aXZlcyBhbmQgZGV0ZWN0cyBzb21lIGV4dHJhcyB3aXRoICh2b2lkKikmZm9vLT5iYXIu
+DQoNCglEYXZpZA0KDQotDQpSZWdpc3RlcmVkIEFkZHJlc3MgTGFrZXNpZGUsIEJyYW1sZXkgUm9h
+ZCwgTW91bnQgRmFybSwgTWlsdG9uIEtleW5lcywgTUsxIDFQVCwgVUsNClJlZ2lzdHJhdGlvbiBO
+bzogMTM5NzM4NiAoV2FsZXMpDQo=
 
