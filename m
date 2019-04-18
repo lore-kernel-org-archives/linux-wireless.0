@@ -2,98 +2,137 @@ Return-Path: <SRS0=x8ok=SU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6425AC10F0B
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 08:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9FDFC10F14
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 09:19:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2690D214DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 08:15:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C978321850
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 09:19:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387971AbfDRIPW convert rfc822-to-8bit (ORCPT
+        id S2388395AbfDRJTu convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Apr 2019 04:15:22 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:34153 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726162AbfDRIPV (ORCPT
+        Thu, 18 Apr 2019 05:19:50 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:23762 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388263AbfDRJTq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Apr 2019 04:15:21 -0400
-Received: by mail-ed1-f68.google.com with SMTP id a6so1076985edv.1
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2019 01:15:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=ijbm3Iix0w0z8E7I3HpvHzANFijZg+oT1HFJFsblOw8=;
-        b=To3CxK0kPNV38OiQsQJpACuiC/7n6paXDHPp0NPjpZBF6VTo5iKtK6D6ExGll1T91s
-         Ri31y59cZYNSDlfaIrn+aokhJtPlLHiqqNq3JHYvBEPEjpDxk9BH9rTWsobQ/iCLqOUJ
-         BVgt7wcyJ79ValpZ+hAhq8p0hesFam639d9G3/CVVWWAFzRibhOafp5jRSAzSSzamxFs
-         BRUFkvNEUf1RKXOYmh6mC4kjR2mv+dZzwtFn7bBmaN5PfcYMZbOjHSbjQSz2PbOPLi6H
-         kcXCCYQuXLgtqmG0uAAxmF/OId6p4OS0TdtyvRsW5iPYGXSY/5awm07L/rqkjsXSrXh+
-         WRBw==
-X-Gm-Message-State: APjAAAUMy262LLSdOqqpIPMdaHjXaiWkxAOS1BkokNCbYq5odpD9b+C3
-        5Z7SOoFLAGed+B4g0HvjQPe3PAUJLDQ=
-X-Google-Smtp-Source: APXvYqxhcFIzaOE2CEKkQ57kd6iET2IWbEB6iZIoYiL98D4LAc8eltTtUdTqSDlhZlcv9S8c+q7C7g==
-X-Received: by 2002:a50:b3b1:: with SMTP id s46mr60004952edd.202.1555575319711;
-        Thu, 18 Apr 2019 01:15:19 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk (alrua-x1.vpn.toke.dk. [2a00:7660:6da:10::2])
-        by smtp.gmail.com with ESMTPSA id t9sm251257ejg.54.2019.04.18.01.15.18
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 18 Apr 2019 01:15:19 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 714D21800E8; Thu, 18 Apr 2019 09:07:45 +0100 (+01)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     leiwa@codeaurora.org
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath10k: fix different tx duration output
-In-Reply-To: <298a645b17aac0f5c466f011225533b0@codeaurora.org>
-References: <1555489045-18070-1-git-send-email-leiwa@codeaurora.org> <87mukprnie.fsf@toke.dk> <298a645b17aac0f5c466f011225533b0@codeaurora.org>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Thu, 18 Apr 2019 09:07:45 +0100
-Message-ID: <875zrbrb1q.fsf@toke.dk>
+        Thu, 18 Apr 2019 05:19:46 -0400
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id uk-mta-4-Mv-sc3e6ML6a2ye7szaZAw-1;
+ Thu, 18 Apr 2019 10:19:43 +0100
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b::d117) by AcuMS.aculab.com
+ (fd9f:af1c:a25b::d117) with Microsoft SMTP Server (TLS) id 15.0.1347.2; Thu,
+ 18 Apr 2019 10:20:53 +0100
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Thu, 18 Apr 2019 10:20:53 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Fenghua Yu' <fenghua.yu@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        H Peter Anvin <hpa@zytor.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ravi V Shankar <ravi.v.shankar@intel.com>,
+        "Xiaoyao Li " <xiaoyao.li@intel.com>,
+        Christopherson Sean J <sean.j.christopherson@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Michael Chan <michael.chan@broadcom.com>
+CC:     linux-kernel <linux-kernel@vger.kernel.org>, x86 <x86@kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v7 04/21] x86/split_lock: Align x86_capability to unsigned
+ long to avoid split locked access
+Thread-Topic: [PATCH v7 04/21] x86/split_lock: Align x86_capability to
+ unsigned long to avoid split locked access
+Thread-Index: AQHU9Wc8cfw3/6sx9k22vKHnyDMwNqZBowBw
+Date:   Thu, 18 Apr 2019 09:20:53 +0000
+Message-ID: <c8ca959a4bc549b59baca563660d42d6@AcuMS.aculab.com>
+References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
+ <1555536851-17462-5-git-send-email-fenghua.yu@intel.com>
+In-Reply-To: <1555536851-17462-5-git-send-email-fenghua.yu@intel.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+X-MC-Unique: Mv-sc3e6ML6a2ye7szaZAw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-leiwa@codeaurora.org writes:
+From: Fenghua Yu
+> Sent: 17 April 2019 22:34
+> 
+> set_cpu_cap() calls locked BTS and clear_cpu_cap() calls locked BTR to
+> operate on bitmap defined in x86_capability.
+> 
+> Locked BTS/BTR accesses a single unsigned long location. In 64-bit mode,
+> the location is at:
+> base address of x86_capability + (bit offset in x86_capability / 64) * 8
+> 
+> Since base address of x86_capability may not be aligned to unsigned long,
+> the single unsigned long location may cross two cache lines and
+> accessing the location by locked BTS/BTR introductions will cause
+> split lock.
 
-> On 2019-04-17 17:26, Toke Høiland-Jørgensen wrote:
->> Lei Wang <leiwa@codeaurora.org> writes:
->> 
->>> TX duration output of tx_stats in debugfs and station dump had big
->>> difference because they got tx duration value from different statistic
->>> data. We should use the same statistic data.
->> 
->> So are you sure you picked the most accurate one of the two? :)
->> 
->> -Toke
->
-> Hi Toke,
->
-> Yes.
-> Now for ath10k, there are two ways to get tx duration output.
-> One is got from tx_stats in debugfs reported by firmware. It is a total 
-> value including all the frames which created by host and firmware sent 
-> to the peer.
-> And the second is calculated from 
-> ath10k_htt_rx_tx_compl_ind()-->ieee80211_sta_register_airtime(), here 
-> the tx duration just includes the data frames sent from host to the 
-> peer.
+Isn't the problem that the type (and definition) of x86_capability[] are wrong.
+If the 'bitmap' functions are used for it, it should be defined as a bitmap.
+This would make it 'unsigned long' not __u32.
 
-So the difference is that the former includes control frames as well? Is
-that the only difference? And what exactly is a "big difference" (from
-the commit message)?
+This type munging of bitmaps only works on LE systems.
 
-> So the first value is preferable for station dump.
+OTOH the locked BTS/BTR instructions could be changed to use 32 bit accesses.
+ISTR some of the associated functions use byte accesses.
 
-Hmm, I'm not sure if I agree with this. I specifically added the
-tx_duration to the station dump to be able to get the values used by the
-airtime scheduler. This breaks with this patch.
+Perhaps there ought to be asm wrappers for BTS/BTR that do 8bit and
+32bit accesses.
 
--Toke
+> 
+> To fix the split lock issue, align x86_capability to size of unsigned long
+> so that the location will be always within one cache line.
+> 
+> Changing x86_capability's type to unsigned long may also fix the issue
+> because x86_capability will be naturally aligned to size of unsigned long.
+> But this needs additional code changes. So choose the simpler solution
+> by setting the array's alignment to size of unsigned long.
+> 
+> Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
+> ---
+>  arch/x86/include/asm/processor.h | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
+> index 2bb3a648fc12..7c62b9ad6e5a 100644
+> --- a/arch/x86/include/asm/processor.h
+> +++ b/arch/x86/include/asm/processor.h
+> @@ -93,7 +93,9 @@ struct cpuinfo_x86 {
+>  	__u32			extended_cpuid_level;
+>  	/* Maximum supported CPUID level, -1=no CPUID: */
+>  	int			cpuid_level;
+> -	__u32			x86_capability[NCAPINTS + NBUGINTS];
+> +	/* Aligned to size of unsigned long to avoid split lock in atomic ops */
+> +	__u32			x86_capability[NCAPINTS + NBUGINTS]
+> +				__aligned(sizeof(unsigned long));
+>  	char			x86_vendor_id[16];
+>  	char			x86_model_id[64];
+>  	/* in KB - valid for CPUS which support this call: */
+> --
+> 2.19.1
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
+
