@@ -2,86 +2,134 @@ Return-Path: <SRS0=x8ok=SU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5595FC10F0E
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06A4AC10F0E
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:13:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 235EB20674
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:08:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dRTzBwW+";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IHkM/cQp"
+	by mail.kernel.org (Postfix) with ESMTP id D3246217D7
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 13:13:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388341AbfDRNIv (ORCPT
+        id S2388685AbfDRNNo convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Apr 2019 09:08:51 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:56254 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727807AbfDRNIu (ORCPT
+        Thu, 18 Apr 2019 09:13:44 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:44182 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1733205AbfDRNNo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Apr 2019 09:08:50 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1DFAE60117; Thu, 18 Apr 2019 13:08:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555592930;
-        bh=gLECsLhhmi/RCrChk3fidgQ4C+PjBI8xdCnsnAw1UDc=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=dRTzBwW+dU0ydocgH5iGc3HJwa9aapkE0R8zFnotq52JBTRa14u0CqJbf1aLdNWnV
-         RpesoLkGczfltRz6hSrR8d9S2nm9lAn9n84xymiUy1MUjAb9yHC6w19Bsf7K0HXSSk
-         TVGdkyWxl5jj7H+3NTAc5NuI2r9obmWOzoBMHJx4=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 546FF60117;
-        Thu, 18 Apr 2019 13:08:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1555592929;
-        bh=gLECsLhhmi/RCrChk3fidgQ4C+PjBI8xdCnsnAw1UDc=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=IHkM/cQpSKACMGAmbWxGvOHkfuPO37UzMRh+wzQMj6LslYPApfBMGA1b1o01lvv2a
-         82d0W91rQSdchwW1KCE4W9GcSAgAVQLUt1eNYfcqBKXFniOjJZD8uoo1q4pFncRPr8
-         9OIF7gZvgqKAU7DySa6m/NJXNz3jPkK02L5qyexc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 546FF60117
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Thu, 18 Apr 2019 09:13:44 -0400
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-98-nwPXMM-9NGqHeOMqUFPXMA-1; Thu, 18 Apr 2019 14:13:42 +0100
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
+ Server (TLS) id 15.0.1347.2; Thu, 18 Apr 2019 14:14:52 +0100
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Thu, 18 Apr 2019 14:14:52 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Thomas Gleixner' <tglx@linutronix.de>
+CC:     'Fenghua Yu' <fenghua.yu@intel.com>,
+        'Ingo Molnar' <mingo@redhat.com>,
+        'Borislav Petkov' <bp@alien8.de>,
+        'H Peter Anvin' <hpa@zytor.com>,
+        "'Paolo Bonzini'" <pbonzini@redhat.com>,
+        'Dave Hansen' <dave.hansen@intel.com>,
+        'Ashok Raj' <ashok.raj@intel.com>,
+        'Peter Zijlstra' <peterz@infradead.org>,
+        'Ravi V Shankar' <ravi.v.shankar@intel.com>,
+        'Xiaoyao Li ' <xiaoyao.li@intel.com>,
+        'Christopherson Sean J' <sean.j.christopherson@intel.com>,
+        'Kalle Valo' <kvalo@codeaurora.org>,
+        'Michael Chan' <michael.chan@broadcom.com>,
+        'linux-kernel' <linux-kernel@vger.kernel.org>,
+        'x86' <x86@kernel.org>,
+        "'kvm@vger.kernel.org'" <kvm@vger.kernel.org>,
+        "'netdev@vger.kernel.org'" <netdev@vger.kernel.org>,
+        "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v7 04/21] x86/split_lock: Align x86_capability to unsigned
+ long to avoid split locked access
+Thread-Topic: [PATCH v7 04/21] x86/split_lock: Align x86_capability to
+ unsigned long to avoid split locked access
+Thread-Index: AQHU9Wc8cfw3/6sx9k22vKHnyDMwNqZBowBwgAAfOzD///urAIAAIrYg
+Date:   Thu, 18 Apr 2019 13:14:52 +0000
+Message-ID: <aceeddaa107a4aed9add47945acaa129@AcuMS.aculab.com>
+References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
+ <1555536851-17462-5-git-send-email-fenghua.yu@intel.com>
+ <c8ca959a4bc549b59baca563660d42d6@AcuMS.aculab.com>
+ <698b9419c81b443fb9c180d2b27fd34a@AcuMS.aculab.com>
+ <alpine.DEB.2.21.1904181347210.3174@nanos.tec.linutronix.de>
+In-Reply-To: <alpine.DEB.2.21.1904181347210.3174@nanos.tec.linutronix.de>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] rtlwifi: rtl8188ee: Remove extraneous file
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190417003547.26271-1-Larry.Finger@lwfinger.net>
-References: <20190417003547.26271-1-Larry.Finger@lwfinger.net>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Andrew Morton <akpm@linux-foundation.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190418130850.1DFAE60117@smtp.codeaurora.org>
-Date:   Thu, 18 Apr 2019 13:08:50 +0000 (UTC)
+X-MC-Unique: nwPXMM-9NGqHeOMqUFPXMA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> Somehow file drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej was
-> incorporated into the sources. Obviously, it can be removed.
+From: Thomas Gleixner
+> Sent: 18 April 2019 12:49
+> On Thu, 18 Apr 2019, David Laight wrote:
+> > From: David Laight
+> > > Sent: 18 April 2019 10:21
+> > > From: Fenghua Yu
+> > > > Sent: 17 April 2019 22:34
+> > > >
+> > > > set_cpu_cap() calls locked BTS and clear_cpu_cap() calls locked BTR to
+> > > > operate on bitmap defined in x86_capability.
+> > > >
+> > > > Locked BTS/BTR accesses a single unsigned long location. In 64-bit mode,
+> > > > the location is at:
+> > > > base address of x86_capability + (bit offset in x86_capability / 64) * 8
+> > > >
+> > > > Since base address of x86_capability may not be aligned to unsigned long,
+> > > > the single unsigned long location may cross two cache lines and
+> > > > accessing the location by locked BTS/BTR introductions will cause
+> > > > split lock.
+> > >
+> > > Isn't the problem that the type (and definition) of x86_capability[] are wrong.
+> > > If the 'bitmap' functions are used for it, it should be defined as a bitmap.
+> > > This would make it 'unsigned long' not __u32.
+> > >
+> > > This type munging of bitmaps only works on LE systems.
+> > >
+> > > OTOH the locked BTS/BTR instructions could be changed to use 32 bit accesses.
+> > > ISTR some of the associated functions use byte accesses.
+> > >
+> > > Perhaps there ought to be asm wrappers for BTS/BTR that do 8bit and
+> > > 32bit accesses.
+> >
+> > A quick look shows that this isn't the only __32[] that is being
+> > cast to (unsigned long) and then to set/test/clear_bit() in those
+> > files.
+> >
+> > I wonder how much other code is applying such casts?
 > 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Reported-by: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
+> The reason for the cpuid stuff using u32 is that this is actually the width
+> of the information retrieved from CPUID.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Right, but you shouldn't (as has been found out) cast pointers
+to integer types.
 
-b5250c9c14c1 rtlwifi: rtl8188ee: Remove extraneous file
+Running
+grep -r --include '*.[ch]' '_bit([^(]*, *([^)]* ' .
+over the entire kernel source tree shows quite a few 'dubious' casts.
 
--- 
-https://patchwork.kernel.org/patch/10904279/
+They'll be doubly dubious on BE systems.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+	David
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
 
