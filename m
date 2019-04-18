@@ -6,26 +6,26 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B5CFC10F0B
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:32:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9855CC10F0E
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:41:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4AB03214DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:32:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 715802186A
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:41:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388112AbfDRGcJ (ORCPT
+        id S2388197AbfDRGln (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Apr 2019 02:32:09 -0400
-Received: from Galois.linutronix.de ([146.0.238.70]:60415 "EHLO
+        Thu, 18 Apr 2019 02:41:43 -0400
+Received: from Galois.linutronix.de ([146.0.238.70]:60437 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388011AbfDRGcJ (ORCPT
+        with ESMTP id S1733049AbfDRGln (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Apr 2019 02:32:09 -0400
+        Thu, 18 Apr 2019 02:41:43 -0400
 Received: from pd9ef12d2.dip0.t-ipconnect.de ([217.239.18.210] helo=nanos)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1hH0aQ-0006tR-2u; Thu, 18 Apr 2019 08:31:54 +0200
-Date:   Thu, 18 Apr 2019 08:31:52 +0200 (CEST)
+        id 1hH0jj-00076A-4b; Thu, 18 Apr 2019 08:41:31 +0200
+Date:   Thu, 18 Apr 2019 08:41:30 +0200 (CEST)
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     Fenghua Yu <fenghua.yu@intel.com>
 cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
@@ -41,13 +41,12 @@ cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
         Michael Chan <michael.chan@broadcom.com>,
         linux-kernel <linux-kernel@vger.kernel.org>,
         x86 <x86@kernel.org>, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Xiaoyao Li <xiaoyao.li@linux.intel.com>
-Subject: Re: [PATCH v7 10/21] x86/split_lock: Define per CPU variable to
- cache MSR TEST_CTL
-In-Reply-To: <20190418012848.GC18776@romley-ivt3.sc.intel.com>
-Message-ID: <alpine.DEB.2.21.1904180827440.3174@nanos.tec.linutronix.de>
-References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com> <1555536851-17462-11-git-send-email-fenghua.yu@intel.com> <alpine.DEB.2.21.1904180009200.3174@nanos.tec.linutronix.de> <20190418012848.GC18776@romley-ivt3.sc.intel.com>
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v7 15/21] x86/split_lock: Add a sysfs interface to
+ enable/disable split lock detection during run time
+In-Reply-To: <20190418005711.GB18776@romley-ivt3.sc.intel.com>
+Message-ID: <alpine.DEB.2.21.1904180832290.3174@nanos.tec.linutronix.de>
+References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com> <1555536851-17462-16-git-send-email-fenghua.yu@intel.com> <alpine.DEB.2.21.1904180042090.3174@nanos.tec.linutronix.de> <20190418005711.GB18776@romley-ivt3.sc.intel.com>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -60,27 +59,52 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 On Wed, 17 Apr 2019, Fenghua Yu wrote:
-> On Thu, Apr 18, 2019 at 12:14:12AM +0200, Thomas Gleixner wrote:
+> On Thu, Apr 18, 2019 at 12:47:24AM +0200, Thomas Gleixner wrote:
 > > On Wed, 17 Apr 2019, Fenghua Yu wrote:
-> > > +DEFINE_PER_CPU(u64, msr_test_ctl_cache);
-> > > +EXPORT_PER_CPU_SYMBOL_GPL(msr_test_ctl_cache);
 > > 
-> > Contrary to things like cpufeatures or MSR bits, it's pretty useless to
-> > have a separate patch for this. Please fold this into the place which
-> > actualy uses it.
+> > > The interface /sys/device/system/cpu/split_lock_detect is added
+> > > to allow user to control split lock detection and show current split
+> > > lock detection setting.
+> > > 
+> > > Writing [yY1] or [oO][nN] to the file enables split lock detection and
+> > > writing [nN0] or [oO][fF] disables split lock detection. Split lock
+> > > detection is enabled or disabled on all CPUs.
+> > > 
+> > > Reading the file returns current global split lock detection setting:
+> > > 0: disabled
+> > > 1: enabled
+> > 
+> > Again, You explain WHAT this patch does and still there is zero
+> > justification why this sysfs knob is needed at all. I still do not see any
+> > reason why this knob should exist.
 > 
-> Can I fold this patch into the KVM patch 0013 which first uses (reads) the
-> variable? But the variable will be set in later patches when enabling split
-> lock feature (patch 0014) and when enabling/disabling split lock feature
-> (patch 0015).
+> An important application has split lock issues which are already discovered
+> and need to be fixed. But before the issues are fixed, sysadmin still wants to
+> run the application without rebooting the system, the sysfs knob can be useful
+> to turn off split lock detection. After the application is done, split lock
+> detection will be enabled again through the sysfs knob.
+
+Are you sure that you are talking about the real world? I might buy the
+'off' part somehow, but the 'on' part is beyond theoretical.
+
+Even the 'off' part is dubious on a multi user machine. I personally would
+neither think about using the sysfs knob nor about rebooting the machine
+simply because I'd consider a lock operation accross a cacheline an malicious
+DoS attempt. Why would I allow that?
+
+So in reality the sysadmin will either move the workload to a machine w/o
+the #AC magic or just tell the user to fix his crap.
+
+> Without the sysfs knob, sysadmin has to reboot the system with kernel option
+> "no_split_lock_detect" to run the application before the split lock issues
+> are fixed.
 > 
-> Is this a right sequence to fit the variable in the patch set?
+> Is this a valid justification why the sysfs knob is needed? If it is, I can
+> add the justification in the next version.
 
-As I said in the other reply, you are assuming that the content of that MSR
-is 0. Which might be true now, but is that true in a year from now?
-
-So you really want to at least initialize the variable by reading the MSR
-_before_ you make use of it in KVM.
+Why has this information not been in the changelog right away? I'm really
+tired of asking the same questions and pointing you to
+Documentation/process over and over.
 
 Thanks,
 
