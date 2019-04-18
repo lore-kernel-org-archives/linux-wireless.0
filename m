@@ -1,4 +1,4 @@
-Return-Path: <SRS0=eC3p=ST=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=x8ok=SU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -6,30 +6,29 @@ X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DBE2C282DD
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 23:55:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 532F7C282DC
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 01:05:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D73621479
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Apr 2019 23:55:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2197F217FA
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 01:05:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387768AbfDQXz2 (ORCPT
+        id S2387569AbfDRBFM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 19:55:28 -0400
-Received: from mga11.intel.com ([192.55.52.93]:2215 "EHLO mga11.intel.com"
+        Wed, 17 Apr 2019 21:05:12 -0400
+Received: from mga09.intel.com ([134.134.136.24]:21275 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729331AbfDQXz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 19:55:27 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
+        id S1728268AbfDRBFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Apr 2019 21:05:12 -0400
+X-Amp-Result: UNSCANNABLE
 X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Apr 2019 16:55:27 -0700
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Apr 2019 18:05:11 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.60,363,1549958400"; 
-   d="scan'208";a="162854450"
+X-IronPort-AV: E=Sophos;i="5.60,364,1549958400"; 
+   d="scan'208";a="316882231"
 Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
-  by fmsmga004.fm.intel.com with ESMTP; 17 Apr 2019 16:55:27 -0700
-Date:   Wed, 17 Apr 2019 16:47:28 -0700
+  by orsmga005.jf.intel.com with ESMTP; 17 Apr 2019 18:05:10 -0700
+Date:   Wed, 17 Apr 2019 17:57:12 -0700
 From:   Fenghua Yu <fenghua.yu@intel.com>
 To:     Thomas Gleixner <tglx@linutronix.de>
 Cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
@@ -46,49 +45,53 @@ Cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
         linux-kernel <linux-kernel@vger.kernel.org>,
         x86 <x86@kernel.org>, kvm@vger.kernel.org,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v7 18/21] x86/clearcpuid: Support feature flag string in
- kernel option clearcpuid
-Message-ID: <20190417234728.GA18776@romley-ivt3.sc.intel.com>
+Subject: Re: [PATCH v7 15/21] x86/split_lock: Add a sysfs interface to
+ enable/disable split lock detection during run time
+Message-ID: <20190418005711.GB18776@romley-ivt3.sc.intel.com>
 References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
- <1555536851-17462-19-git-send-email-fenghua.yu@intel.com>
- <alpine.DEB.2.21.1904180106400.3174@nanos.tec.linutronix.de>
+ <1555536851-17462-16-git-send-email-fenghua.yu@intel.com>
+ <alpine.DEB.2.21.1904180042090.3174@nanos.tec.linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.1904180106400.3174@nanos.tec.linutronix.de>
+In-Reply-To: <alpine.DEB.2.21.1904180042090.3174@nanos.tec.linutronix.de>
 User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Apr 18, 2019 at 01:19:41AM +0200, Thomas Gleixner wrote:
+On Thu, Apr 18, 2019 at 12:47:24AM +0200, Thomas Gleixner wrote:
 > On Wed, 17 Apr 2019, Fenghua Yu wrote:
 > 
-> > The kernel option clearcpuid currently only takes feature bit which
-> > can be changed from kernel to kernel.
+> > The interface /sys/device/system/cpu/split_lock_detect is added
+> > to allow user to control split lock detection and show current split
+> > lock detection setting.
 > > 
-> > Extend clearcpuid to use cap flag string, which is defined in
-> > x86_cap_flags[] and won't be changed from kernel to kernel.
-> > And user can easily get the cap flag string from /proc/cpuinfo.
+> > Writing [yY1] or [oO][nN] to the file enables split lock detection and
+> > writing [nN0] or [oO][fF] disables split lock detection. Split lock
+> > detection is enabled or disabled on all CPUs.
+> > 
+> > Reading the file returns current global split lock detection setting:
+> > 0: disabled
+> > 1: enabled
 > 
-> If your machine dies because init triggers #AC then please explain how that
-> easily can be read from /proc/cpuinfo and how the sysadmin can figure out
-> what the heck he needs to write on the kernel command line.
-> 
-> The whole 'clearcpuid' thing should have never been merged. It's a pure
-> testing/debugging thing. And no, we are not going to proliferate it and
-> extend it for dubious value. Quite the contrary, we should simply rip it
-> out.
+> Again, You explain WHAT this patch does and still there is zero
+> justification why this sysfs knob is needed at all. I still do not see any
+> reason why this knob should exist.
 
-So I can remove the four 'clearcpuid' related patches 0018-0021 in the next
-version, right?
+An important application has split lock issues which are already discovered
+and need to be fixed. But before the issues are fixed, sysadmin still wants to
+run the application without rebooting the system, the sysfs knob can be useful
+to turn off split lock detection. After the application is done, split lock
+detection will be enabled again through the sysfs knob.
 
-> 
-> Add a simple 'noac' or whatever command line option, which is documented
-> proper and can easily be mapped to a #AC crash during boot.
+Without the sysfs knob, sysadmin has to reboot the system with kernel option
+"no_split_lock_detect" to run the application before the split lock issues
+are fixed.
 
-OK. I will do this.
+Is this a valid justification why the sysfs knob is needed? If it is, I can
+add the justification in the next version.
 
 Thanks.
 
