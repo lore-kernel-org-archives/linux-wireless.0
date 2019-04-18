@@ -2,120 +2,75 @@ Return-Path: <SRS0=x8ok=SU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 936A0C282DD
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 01:36:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06744C282DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 01:57:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EBB62183E
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 01:36:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB6CC214DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 01:57:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VNZI0fl8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387860AbfDRBgs (ORCPT
+        id S2387442AbfDRB5m (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 21:36:48 -0400
-Received: from mga01.intel.com ([192.55.52.88]:1866 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729331AbfDRBgs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 21:36:48 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Apr 2019 18:36:47 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.60,364,1549958400"; 
-   d="scan'208";a="162874869"
-Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
-  by fmsmga004.fm.intel.com with ESMTP; 17 Apr 2019 18:36:47 -0700
-Date:   Wed, 17 Apr 2019 18:28:49 -0700
-From:   Fenghua Yu <fenghua.yu@intel.com>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        H Peter Anvin <hpa@zytor.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Dave Hansen <dave.hansen@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ravi V Shankar <ravi.v.shankar@intel.com>,
-        Xiaoyao Li <xiaoyao.li@intel.com>,
-        Christopherson Sean J <sean.j.christopherson@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Michael Chan <michael.chan@broadcom.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        x86 <x86@kernel.org>, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Xiaoyao Li <xiaoyao.li@linux.intel.com>
-Subject: Re: [PATCH v7 10/21] x86/split_lock: Define per CPU variable to
- cache MSR TEST_CTL
-Message-ID: <20190418012848.GC18776@romley-ivt3.sc.intel.com>
-References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
- <1555536851-17462-11-git-send-email-fenghua.yu@intel.com>
- <alpine.DEB.2.21.1904180009200.3174@nanos.tec.linutronix.de>
+        Wed, 17 Apr 2019 21:57:42 -0400
+Received: from mail-it1-f173.google.com ([209.85.166.173]:54456 "EHLO
+        mail-it1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730037AbfDRB5l (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Apr 2019 21:57:41 -0400
+Received: by mail-it1-f173.google.com with SMTP id a190so936538ite.4
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 18:57:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=cNXAJg9TuqkJ4/H9v0AhTKXkUQby3LdnCACh1GS7Q3o=;
+        b=VNZI0fl8pyv9XGmrhQV5g7yKynNm81vpNgjhEgrOL7kgNhuzNctVs10Lax+gXWU52L
+         fhNVMHqu8LUlM2voFYNcopRdLde1uhUtk84Lu5mR2+lrmbEqwxxaCURMGygirAtJd+eM
+         baZbH8OZ2jM0y12AJ5oec/2oIM7XXnFULq/ygNJ2wkPwnQW8t9zQLmBiElbjqYlh4Ip0
+         hrTPFgQda7T84cVOX05AcTvx2hVsfCWoGFUtTzdZSj8D3dWmhNVNSlumFUsDyrZbHyDO
+         g91L53W3Z3xMfSFE+VCholsbIH6wJoeFJkk3ELoCxdUKTIj6p9SkbQ9Xc34mdblNzblq
+         blSQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=cNXAJg9TuqkJ4/H9v0AhTKXkUQby3LdnCACh1GS7Q3o=;
+        b=nFdApzy5o9VLAermMeVoth8PVKO9DAeiwnFd6d7bxuVg4u4Y1QTkgzk/DLrVNMuvSk
+         OzfYSGR3hpPkZeCWHjGT0v0pkBAZTvqAfTOcaaXsCRVJLN+qyZ/X0xgsdGHgis4UYkVI
+         M3Rt2sgSMM+1FdH83+blz7nE2ygc2cCWTEZCsr6nmo/TIe6PknNjqgdGQ4QJ7N6BjnP2
+         HnKjJ1JTa4SqhSzcMJNIpJF0XpHywaX8dsJ07huI5EhRD1zkOfPoKFozZD22YDAoAZ2X
+         EACz1gTGMKYJEs8GgLvHlTAWbDEKIwHu4CZpmAvDZ8U0EwosFkLVf2XpsCY+HI311cmz
+         ruZw==
+X-Gm-Message-State: APjAAAVz0LKxDC60m9xNeYkjS+eY9Q7hXZ1hiL0jXsC41DML1nDnqZX1
+        bMtsqo4EC3hB6SLHT5EUJX6R5vEa8UbV+DMnRSqsBVgP
+X-Google-Smtp-Source: APXvYqyLobAw66ckw3GlLslYSHd2Ii8OQ6XYY/31pYJ4L8q0BkQXx1xV0FHkuSyBiNUG9AbFpYD4R4ZUrBPw5hsVavU=
+X-Received: by 2002:a24:70d5:: with SMTP id f204mr1386591itc.32.1555552660930;
+ Wed, 17 Apr 2019 18:57:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.1904180009200.3174@nanos.tec.linutronix.de>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+From:   Kevan Salva <kenico15@gmail.com>
+Date:   Wed, 17 Apr 2019 20:57:30 -0500
+Message-ID: <CAAM6Ncf0=1wBbnomxH=o8r9-edhSk2zr_xzhJeA1uWdzRZ84Eg@mail.gmail.com>
+Subject: Kali Linux 4.19.13 VM, Ralink RT3072 - Not Finding Wireless Networks
+To:     linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Apr 18, 2019 at 12:14:12AM +0200, Thomas Gleixner wrote:
-> On Wed, 17 Apr 2019, Fenghua Yu wrote:
-> 
-> > MSR TEST_CTL (0x33) value is cached in per CPU variable msr_test_ctl_cache.
-> 
-> It _is_ cached? How so?
-> 
-> > The cached value will be used in virutalization to avoid costly MSR read.
-> > 
-> > Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
-> > Signed-off-by: Xiaoyao Li <xiaoyao.li@linux.intel.com>
-> 
-> That SOB chain is bogus.
-> 
-> > ---
-> >  arch/x86/include/asm/cpu.h  | 1 +
-> >  arch/x86/kernel/cpu/intel.c | 3 +++
-> >  2 files changed, 4 insertions(+)
-> > 
-> > diff --git a/arch/x86/include/asm/cpu.h b/arch/x86/include/asm/cpu.h
-> > index 4e03f53fc079..cd7493f20234 100644
-> > --- a/arch/x86/include/asm/cpu.h
-> > +++ b/arch/x86/include/asm/cpu.h
-> > @@ -40,6 +40,7 @@ int mwait_usable(const struct cpuinfo_x86 *);
-> >  unsigned int x86_family(unsigned int sig);
-> >  unsigned int x86_model(unsigned int sig);
-> >  unsigned int x86_stepping(unsigned int sig);
-> > +DECLARE_PER_CPU(u64, msr_test_ctl_cache);
-> >  #ifdef CONFIG_CPU_SUP_INTEL
-> >  void __init cpu_set_core_cap_bits(struct cpuinfo_x86 *c);
-> >  #else
-> > diff --git a/arch/x86/kernel/cpu/intel.c b/arch/x86/kernel/cpu/intel.c
-> > index 62f61a961eb6..997d683d3c27 100644
-> > --- a/arch/x86/kernel/cpu/intel.c
-> > +++ b/arch/x86/kernel/cpu/intel.c
-> > @@ -31,6 +31,9 @@
-> >  #include <asm/apic.h>
-> >  #endif
-> >  
-> > +DEFINE_PER_CPU(u64, msr_test_ctl_cache);
-> > +EXPORT_PER_CPU_SYMBOL_GPL(msr_test_ctl_cache);
-> 
-> Contrary to things like cpufeatures or MSR bits, it's pretty useless to
-> have a separate patch for this. Please fold this into the place which
-> actualy uses it.
+Hello All,
 
-Can I fold this patch into the KVM patch 0013 which first uses (reads) the
-variable? But the variable will be set in later patches when enabling split
-lock feature (patch 0014) and when enabling/disabling split lock feature
-(patch 0015).
+I am running Kali Linux (4.19.13) in a VM. I have a USB network
+adapter - a Ralink RT3072, passed through to the VM. However, it is
+not finding any wireless networks. This issue occurs on both VMware
+and on Virtualbox, but not on a live install of the same OS. This is
+the output I get from dmesg: pastebin.com/HaXUDNug . What may be the
+issue here?
 
-Is this a right sequence to fit the variable in the patch set?
+With much appreciation,
 
-Thanks.
-
--Fenghua
+Kevan
