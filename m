@@ -2,86 +2,88 @@ Return-Path: <SRS0=x8ok=SU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9EBBC282DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 02:08:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68833C10F14
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:16:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A150E2183E
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 02:08:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OA7YuQSk"
+	by mail.kernel.org (Postfix) with ESMTP id 34C24214DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Apr 2019 06:16:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732737AbfDRCIR (ORCPT
+        id S2387728AbfDRGQh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Apr 2019 22:08:17 -0400
-Received: from mail-oi1-f172.google.com ([209.85.167.172]:35168 "EHLO
-        mail-oi1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729331AbfDRCIR (ORCPT
+        Thu, 18 Apr 2019 02:16:37 -0400
+Received: from Galois.linutronix.de ([146.0.238.70]:60380 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725773AbfDRGQh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Apr 2019 22:08:17 -0400
-Received: by mail-oi1-f172.google.com with SMTP id j132so410936oib.2
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2019 19:08:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=dcBZPcbZzsULcJ3r7iTrH6Th28iyI61W7jCtobkudYg=;
-        b=OA7YuQSkFYzGD/mkJ7uTuHXxmRNR3ZmXd+TjGpAjtz/aksG+YNix4qS65coyXJYIXu
-         1yItrAQI1FyX9Jp0WfFBtYO151O88zomiFtTYCGGydWK8frBqN6DSPjwVZ3nLBDEP7I+
-         KGPyCxIAOI4h60nMNGV48zmm9OIECajvuxDFdJLu+WpFCn+6CmXPBzftEln4AtiMYETL
-         DqypLCl7w4GI/6Hrxz5SR08Jqu0hlhrv3p0akTslpUYDAxRj7syabH/+fhaaAKdtWSY4
-         rEcEFOFlIa++Z65C7t5htqG4QKrH+ZPSn2US6nG/TsDPcwtqC4WKbrIL3Kj6NDHF7c/W
-         +9Ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=dcBZPcbZzsULcJ3r7iTrH6Th28iyI61W7jCtobkudYg=;
-        b=AGwTBKizaUeQXlfskNlb/tg0k4lE4etCpR9u4/vNQ5ZoFEH+dBgbxfRb7vbcfMN0ex
-         d1ZcxJ9OvcHEq1aOpgHGg2cVAF5TbY7mgntwOCPT/ubsKqdRKMK7znc231nYm+5gUDjo
-         JFA3IeOvEJvkcCK/HWKm8/opqizrsaHDlvphT9PLgjKzNulvQ2XvNh0ziFwCWpsgBhm9
-         eU4ntfyxjeACrZNXANERkmYUoW1pHXNr6lljG2lr2L7CokTAghRixiF65/CW4/7ufk39
-         Yan8AEn67n4l4xpx+6w/oonKzYxuo0hovczJG2ZTo15RbCW4R6KdgamNdssDwu7cv7Kp
-         pA6w==
-X-Gm-Message-State: APjAAAXzqytv+et1XRtT/rfEQKl+wx8JGI0vjeF73gv45xFU5kITfJGQ
-        TSGLhkHwqqlSh8rmvjatZAXmuwhrrAnRVsXZbT8=
-X-Google-Smtp-Source: APXvYqzUXkfBQvTvn3uAAv+mOjHNw6h6MBsCOMVFl1MGz6ophGXhv/2mRzoB4PNnAvx6dallwfIqZPL8YRzTu4r2+Rk=
-X-Received: by 2002:aca:5757:: with SMTP id l84mr419598oib.155.1555553296681;
- Wed, 17 Apr 2019 19:08:16 -0700 (PDT)
+        Thu, 18 Apr 2019 02:16:37 -0400
+Received: from pd9ef12d2.dip0.t-ipconnect.de ([217.239.18.210] helo=nanos)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1hH0LP-0006WB-E6; Thu, 18 Apr 2019 08:16:23 +0200
+Date:   Thu, 18 Apr 2019 08:16:22 +0200 (CEST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     Fenghua Yu <fenghua.yu@intel.com>
+cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        H Peter Anvin <hpa@zytor.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ravi V Shankar <ravi.v.shankar@intel.com>,
+        Xiaoyao Li <xiaoyao.li@intel.com>,
+        Christopherson Sean J <sean.j.christopherson@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Michael Chan <michael.chan@broadcom.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        x86 <x86@kernel.org>, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v7 18/21] x86/clearcpuid: Support feature flag string in
+ kernel option clearcpuid
+In-Reply-To: <20190417234728.GA18776@romley-ivt3.sc.intel.com>
+Message-ID: <alpine.DEB.2.21.1904180815120.3174@nanos.tec.linutronix.de>
+References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com> <1555536851-17462-19-git-send-email-fenghua.yu@intel.com> <alpine.DEB.2.21.1904180106400.3174@nanos.tec.linutronix.de> <20190417234728.GA18776@romley-ivt3.sc.intel.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Received: by 2002:a9d:628c:0:0:0:0:0 with HTTP; Wed, 17 Apr 2019 19:08:16
- -0700 (PDT)
-In-Reply-To: <CAAM6Ncf0=1wBbnomxH=o8r9-edhSk2zr_xzhJeA1uWdzRZ84Eg@mail.gmail.com>
-References: <CAAM6Ncf0=1wBbnomxH=o8r9-edhSk2zr_xzhJeA1uWdzRZ84Eg@mail.gmail.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Thu, 18 Apr 2019 04:08:16 +0200
-Message-ID: <CAKR_QVJ7cRPKZ9eRwS-jmmgbqsbSQZ=B792H_6K2AwZECzs0=w@mail.gmail.com>
-Subject: Re: Kali Linux 4.19.13 VM, Ralink RT3072 - Not Finding Wireless Networks
-To:     Kevan Salva <kenico15@gmail.com>
-Cc:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 18/04/2019, Kevan Salva <kenico15@gmail.com> wrote:
-> Hello All,
->
-> I am running Kali Linux (4.19.13) in a VM. I have a USB network
-> adapter - a Ralink RT3072, passed through to the VM. However, it is
-> not finding any wireless networks. This issue occurs on both VMware
-> and on Virtualbox, but not on a live install of the same OS. This is
-> the output I get from dmesg: pastebin.com/HaXUDNug . What may be the
-> issue here?
->
-> With much appreciation,
->
-> Kevan
->
+On Wed, 17 Apr 2019, Fenghua Yu wrote:
+> On Thu, Apr 18, 2019 at 01:19:41AM +0200, Thomas Gleixner wrote:
+> > On Wed, 17 Apr 2019, Fenghua Yu wrote:
+> > 
+> > > The kernel option clearcpuid currently only takes feature bit which
+> > > can be changed from kernel to kernel.
+> > > 
+> > > Extend clearcpuid to use cap flag string, which is defined in
+> > > x86_cap_flags[] and won't be changed from kernel to kernel.
+> > > And user can easily get the cap flag string from /proc/cpuinfo.
+> > 
+> > If your machine dies because init triggers #AC then please explain how that
+> > easily can be read from /proc/cpuinfo and how the sysadmin can figure out
+> > what the heck he needs to write on the kernel command line.
+> > 
+> > The whole 'clearcpuid' thing should have never been merged. It's a pure
+> > testing/debugging thing. And no, we are not going to proliferate it and
+> > extend it for dubious value. Quite the contrary, we should simply rip it
+> > out.
+> 
+> So I can remove the four 'clearcpuid' related patches 0018-0021 in the next
+> version, right?
 
-do you get such issues if running older kali/linux version on the same system?
+Yes please. They are unrelated to this problem and 'noac' is way more admin
+friendly than that.
+
+Thanks,
+
+	tglx
