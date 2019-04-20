@@ -1,144 +1,89 @@
-Return-Path: <SRS0=g+pd=SV=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=vWlE=SW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81450C282E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Apr 2019 23:54:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E66AC282E3
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Apr 2019 15:51:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B9DF20859
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Apr 2019 23:54:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68BA82087F
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Apr 2019 15:51:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727385AbfDSXyH (ORCPT
+        id S1728151AbfDTPvR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Apr 2019 19:54:07 -0400
-Received: from mail-io1-f72.google.com ([209.85.166.72]:53990 "EHLO
-        mail-io1-f72.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725817AbfDSXyG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Apr 2019 19:54:06 -0400
-Received: by mail-io1-f72.google.com with SMTP id w11so5744059iom.20
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2019 16:54:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:in-reply-to:message-id:subject
-         :from:to;
-        bh=NZd6zkJCiCFjb6F1NCu4UBa1DkIlMkFieM9sbYOP5K8=;
-        b=eNxzC6o+Z09KcP/1PTk8rI9M1K02/YTJyXIhc8TVjBMzs5VREWnzQUMe4mSWPZFawb
-         rg1pQTSpHcwB8gQV5XOa//3byn7PAav4fRBNsMPFRt30HWMzJsucsY1dcyCZJjlaXMJY
-         ZooWGGkWobuLVgYOnG4R/SW6YfFo+GpVrV/rgiy0EFni2gM0DJxUP8Nf09+zRFotpjXe
-         SyDN2UMnCJAfRM29+cBuUrGs3HLL/FWXJAUgKjfHuXChsobIl6e1g1BkikqfTO/Hoyrd
-         U8xgF43VJ8QyC9vQXu/0zilTDBWL/7TXpcoZO6kVS4vwQw9SDUSHjdSMliDxNPkoz4//
-         ARdw==
-X-Gm-Message-State: APjAAAVdUQGywCEejesgPidoHS9YIHdxmOcOQGBP69VwoU5CFNsT34YA
-        tVq0sU3qp3sFip68d3e+IQ9XRgvY6b2rViYI223YCwKirr5A
-X-Google-Smtp-Source: APXvYqwDPpxNtqxwMfkZkOiHuHhY8JC4XcordDAegWyWpKhHl9QOUb+mdRnHWDb+T7E5G/FDw608cUmA2iP1vqOv6v9Nnuyo6Ymm
+        Sat, 20 Apr 2019 11:51:17 -0400
+Received: from mail5.windriver.com ([192.103.53.11]:33658 "EHLO mail5.wrs.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725920AbfDTPvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 20 Apr 2019 11:51:16 -0400
+Received: from ALA-HCB.corp.ad.wrs.com (ala-hcb.corp.ad.wrs.com [147.11.189.41])
+        by mail5.wrs.com (8.15.2/8.15.2) with ESMTPS id x3KFobfx030816
+        (version=TLSv1 cipher=AES128-SHA bits=128 verify=FAIL);
+        Sat, 20 Apr 2019 08:50:48 -0700
+Received: from yow-pgortmak-d1.corp.ad.wrs.com (128.224.56.57) by
+ ALA-HCB.corp.ad.wrs.com (147.11.189.41) with Microsoft SMTP Server id
+ 14.3.439.0; Sat, 20 Apr 2019 08:50:09 -0700
+Received: by yow-pgortmak-d1.corp.ad.wrs.com (Postfix, from userid 1000)        id
+ 2CC9A2E03FD; Sat, 20 Apr 2019 11:50:09 -0400 (EDT)
+Date:   Sat, 20 Apr 2019 11:50:09 -0400
+From:   Paul Gortmaker <paul.gortmaker@windriver.com>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+CC:     <linux-next@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>
+Subject: [linux-next] rtlwifi commit contains a patch reject file
+Message-ID: <20190420155008.GM23044@windriver.com>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6602:2246:: with SMTP id o6mr668715ioo.170.1555718046015;
- Fri, 19 Apr 2019 16:54:06 -0700 (PDT)
-Date:   Fri, 19 Apr 2019 16:54:06 -0700
-In-Reply-To: <00000000000024bbd7058682eda1@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000080e9260586ead5b5@google.com>
-Subject: Re: WARNING: ODEBUG bug in rsi_probe
-From:   syzbot <syzbot+1d1597a5aa3679c65b9f@syzkaller.appspotmail.com>
-To:     amitkarwar@gmail.com, andreyknvl@google.com, davem@davemloft.net,
-        kvalo@codeaurora.org, linux-kernel@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, siva8118@gmail.com,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-syzbot has found a reproducer for the following crash on:
+I'm kind of surprised sfr doesn't have a bot to complain when it sees
+a foo.c.rej or foo.c.orig in a commit...
 
-HEAD commit:    d34f9519 usb-fuzzer: main usb gadget fuzzer driver
-git tree:       https://github.com/google/kasan/tree/usb-fuzzer
-console output: https://syzkaller.appspot.com/x/log.txt?x=13431e7b200000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=c73d1bb5aeaeae20
-dashboard link: https://syzkaller.appspot.com/bug?extid=1d1597a5aa3679c65b9f
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12534fdd200000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=147c9247200000
+Paul.
+---
 
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+1d1597a5aa3679c65b9f@syzkaller.appspotmail.com
+$ git show --stat ddab2eee794
+commit ddab2eee7949f94b8ecdc5c84ae238826142d35d
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Thu Apr 4 13:29:31 2019 -0500
 
-rsi_91x: rsi_load_firmware: REGOUT read failed
-rsi_91x: rsi_hal_device_init: Failed to load TA instructions
-rsi_91x: rsi_probe: Failed in device init
-------------[ cut here ]------------
-ODEBUG: free active (active state 0) object type: timer_list hint:  
-bl_cmd_timeout+0x0/0x50 drivers/net/wireless/rsi/rsi_91x_hal.c:577
-WARNING: CPU: 0 PID: 563 at lib/debugobjects.c:325  
-debug_print_object+0x162/0x250 lib/debugobjects.c:325
-Kernel panic - not syncing: panic_on_warn set ...
-CPU: 0 PID: 563 Comm: kworker/0:2 Not tainted 5.1.0-rc5-319617-gd34f951 #4
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Workqueue: usb_hub_wq hub_event
-Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0xe8/0x16e lib/dump_stack.c:113
-  panic+0x29d/0x5f2 kernel/panic.c:214
-  __warn.cold+0x20/0x48 kernel/panic.c:571
-  report_bug+0x262/0x2a0 lib/bug.c:186
-  fixup_bug arch/x86/kernel/traps.c:179 [inline]
-  fixup_bug arch/x86/kernel/traps.c:174 [inline]
-  do_error_trap+0x130/0x1f0 arch/x86/kernel/traps.c:272
-  do_invalid_op+0x37/0x40 arch/x86/kernel/traps.c:291
-  invalid_op+0x14/0x20 arch/x86/entry/entry_64.S:973
-RIP: 0010:debug_print_object+0x162/0x250 lib/debugobjects.c:325
-Code: dd c0 a8 b3 8e 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 bf 00 00 00 48  
-8b 14 dd c0 a8 b3 8e 48 c7 c7 40 9d b3 8e e8 8e c3 d2 fd <0f> 0b 83 05 f9  
-0f 5a 10 01 48 83 c4 20 5b 5d 41 5c 41 5d c3 48 89
-RSP: 0018:ffff88809e1ef110 EFLAGS: 00010086
-RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: ffffffff815b1d22 RDI: ffffed1013c3de14
-RBP: 0000000000000001 R08: ffff88809e1cb100 R09: ffffed1015a03edb
-R10: ffffed1015a03eda R11: ffff8880ad01f6d7 R12: ffffffff917e77c0
-R13: ffffffff8161e740 R14: ffffffff96d3ea28 R15: ffff8880a5a75f60
-  __debug_check_no_obj_freed lib/debugobjects.c:785 [inline]
-  debug_check_no_obj_freed+0x2a3/0x42e lib/debugobjects.c:817
-  slab_free_hook mm/slub.c:1426 [inline]
-  slab_free_freelist_hook+0xfb/0x140 mm/slub.c:1456
-  slab_free mm/slub.c:3003 [inline]
-  kfree+0xce/0x280 mm/slub.c:3958
-  rsi_probe+0xdf3/0x140d drivers/net/wireless/rsi/rsi_91x_sdio.c:1178
-  usb_probe_interface+0x31d/0x820 drivers/usb/core/driver.c:361
-  really_probe+0x2da/0xb10 drivers/base/dd.c:509
-  driver_probe_device+0x21d/0x350 drivers/base/dd.c:671
-  __device_attach_driver+0x1d8/0x290 drivers/base/dd.c:778
-  bus_for_each_drv+0x163/0x1e0 drivers/base/bus.c:454
-  __device_attach+0x223/0x3a0 drivers/base/dd.c:844
-  bus_probe_device+0x1f1/0x2a0 drivers/base/bus.c:514
-  device_add+0xad2/0x16e0 drivers/base/core.c:2106
-  usb_set_configuration+0xdf7/0x1740 drivers/usb/core/message.c:2021
-  generic_probe+0xa2/0xda drivers/usb/core/generic.c:210
-  usb_probe_device+0xc0/0x150 drivers/usb/core/driver.c:266
-  really_probe+0x2da/0xb10 drivers/base/dd.c:509
-  driver_probe_device+0x21d/0x350 drivers/base/dd.c:671
-  __device_attach_driver+0x1d8/0x290 drivers/base/dd.c:778
-  bus_for_each_drv+0x163/0x1e0 drivers/base/bus.c:454
-  __device_attach+0x223/0x3a0 drivers/base/dd.c:844
-  bus_probe_device+0x1f1/0x2a0 drivers/base/bus.c:514
-  device_add+0xad2/0x16e0 drivers/base/core.c:2106
-  usb_new_device.cold+0x537/0xccf drivers/usb/core/hub.c:2534
-  hub_port_connect drivers/usb/core/hub.c:5089 [inline]
-  hub_port_connect_change drivers/usb/core/hub.c:5204 [inline]
-  port_event drivers/usb/core/hub.c:5350 [inline]
-  hub_event+0x1398/0x3b00 drivers/usb/core/hub.c:5432
-  process_one_work+0x90f/0x1580 kernel/workqueue.c:2269
-  worker_thread+0x9b/0xe20 kernel/workqueue.c:2415
-  kthread+0x313/0x420 kernel/kthread.c:253
-  ret_from_fork+0x3a/0x50 arch/x86/entry/entry_64.S:352
+    rtlwifi: Convert the wake_match variable to local
+    
+    In five of the drivers, the contents of bits 29-31 of one of the RX
+    descriptors is used to set bits in a variable that is used to save the
+    wakeup condition for output in a debugging statement. The resulting
+    variable is not used anywhere else even though it is stored in a struct
+    and could be available in other routines. This variable is changed to be
+    local.
+    
+    Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+    Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-======================================================
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c     | 15 ++++++++-------
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c.rej | 10 ++++++++++
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c     | 13 +++++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c     | 14 +++++++-------
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c     | 14 +++++++-------
+ drivers/net/wireless/realtek/rtlwifi/wifi.h              |  1 -
+ 6 files changed, 39 insertions(+), 28 deletions(-)
 
+ ---
+
+$ git describe --contains ddab2eee794
+next-20190415~86^2~1
+
+$ git show next-20190415~86
+commit e4aee692121581ee2b29812f0db701769ef3f571
+Merge: 61405eeb69ab bdfc4027de15
+Author: Stephen Rothwell <sfr@canb.auug.org.au>
+Date:   Mon Apr 15 12:08:21 2019 +1000
+
+    Merge remote-tracking branch 'wireless-drivers-next/master'
