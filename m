@@ -2,108 +2,140 @@ Return-Path: <SRS0=tUzJ=SY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA9FCC10F11
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 18:04:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D7A2C10F11
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 18:07:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C797205C9
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 18:04:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=bowerswilkins.com header.i=@bowerswilkins.com header.b="bR85LHdT"
+	by mail.kernel.org (Postfix) with ESMTP id 0ACAB20B1F
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 18:07:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1555956452;
+	bh=xDMrJudM/8E8/MqVWSOMMEKSIAJOcYcvK7lhk4bh/4w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=jgf8PevJCtOmttwemFVdxQPf7D+9SvN8NUd9u1nCCgkqEcFYXfOH5CuhgTWyyIEQq
+	 DkBGuv06U7ejI1bQDyA1os035S+4XZf42RBRHoNcBB38VNv3xvesuH3xbbT/DyeT8o
+	 WJXde/d6v3+2R57uFNeMMveShc53yICqLJSiEK0A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728445AbfDVSEN (ORCPT
+        id S1728413AbfDVSH1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Apr 2019 14:04:13 -0400
-Received: from mail-eopbgr10063.outbound.protection.outlook.com ([40.107.1.63]:52165
-        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
+        Mon, 22 Apr 2019 14:07:27 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37252 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726260AbfDVSEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Apr 2019 14:04:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bowerswilkins.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SvTKgEK92BC1q1pkrS3ECBx/1pdFBy3+DQ4imjb6kpM=;
- b=bR85LHdTPCELpei24BdO1JxuboeG/eSpnes4JL6bTeEmRMa8PSHz5j2aVZ+sa9FAsQiVfHaSjxjRi4yzugyM69QmtAnasBMN9yG2jdB9T9pzHmnVTQT320+bcPp62SxXg16vqwJEfNTAibKfwVhjfO4Ps6xiR5PcPJvycNxpEIo=
-Received: from AM0PR04MB6065.eurprd04.prod.outlook.com (20.179.32.150) by
- AM0PR04MB6689.eurprd04.prod.outlook.com (20.179.255.214) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1813.16; Mon, 22 Apr 2019 18:04:09 +0000
-Received: from AM0PR04MB6065.eurprd04.prod.outlook.com
- ([fe80::1599:23e7:e53e:fe32]) by AM0PR04MB6065.eurprd04.prod.outlook.com
- ([fe80::1599:23e7:e53e:fe32%2]) with mapi id 15.20.1813.017; Mon, 22 Apr 2019
- 18:04:09 +0000
-From:   Peter Oh <peter.oh@bowerswilkins.com>
-To:     Seth Forshee <seth.forshee@canonical.com>
-CC:     "wireless-regdb@lists.infradead.org" 
-        <wireless-regdb@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [wireless-regdb] [PATCH] wireless-regdb: Update regulatory rules
- for South Korea
-Thread-Topic: [wireless-regdb] [PATCH] wireless-regdb: Update regulatory rules
- for South Korea
-Thread-Index: AQHU5Mu2uUa12PzgWkyvey1kbLHWEqYyR1KAgBZangA=
-Date:   Mon, 22 Apr 2019 18:04:09 +0000
-Message-ID: <af4d49d9-fc9e-ebe3-20ab-edef6c12a2eb@bowerswilkins.com>
-References: <1553711659-27600-1-git-send-email-peter.oh@bowerswilkins.com>
- <20190408124159.GC15126@ubuntu-xps13>
-In-Reply-To: <20190408124159.GC15126@ubuntu-xps13>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: BYAPR07CA0033.namprd07.prod.outlook.com
- (2603:10b6:a02:bc::46) To AM0PR04MB6065.eurprd04.prod.outlook.com
- (2603:10a6:208:139::22)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=peter.oh@bowerswilkins.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [12.244.182.62]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: ebcee451-ad5e-4d73-c8f5-08d6c74cead0
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600141)(711020)(4605104)(2017052603328)(7193020);SRVR:AM0PR04MB6689;
-x-ms-traffictypediagnostic: AM0PR04MB6689:
-x-ms-exchange-purlcount: 1
-x-microsoft-antispam-prvs: <AM0PR04MB668936A020124FAADD4F2CC499220@AM0PR04MB6689.eurprd04.prod.outlook.com>
-x-forefront-prvs: 00159D1518
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39850400004)(136003)(376002)(396003)(366004)(346002)(189003)(199004)(5660300002)(36756003)(66066001)(478600001)(305945005)(53936002)(25786009)(7736002)(6512007)(31696002)(86362001)(4326008)(6246003)(14454004)(6306002)(14444005)(966005)(44832011)(256004)(97736004)(186003)(15650500001)(54906003)(31686004)(316002)(2906002)(99286004)(81166006)(3846002)(386003)(6506007)(53546011)(76176011)(6116002)(102836004)(4744005)(229853002)(64756008)(66446008)(8676002)(446003)(6436002)(6486002)(486006)(11346002)(2616005)(476003)(71200400001)(71190400001)(6916009)(52116002)(66556008)(66476007)(73956011)(81156014)(26005)(8936002)(66946007)(68736007);DIR:OUT;SFP:1101;SCL:1;SRVR:AM0PR04MB6689;H:AM0PR04MB6065.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: bowerswilkins.com does not
- designate permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: nOfWMq0Knq1tJDJpnhsUobm1B0z8yBNx+R/73I20VQ3oy9ry1myDrH/EnIUkUNfGBXV+yZU3roNMNOO3BmKVzNSt9PmTrzU9wqKSG4omHjGtvKLcmbUB3rMP2P00hvawGZolF4juG9fHyvmKOWsz51Wh/qa9OzSsW0KpZQEX+oc4JIX4kSvvhNDg4exQd7bAZ4XdRjJISfWU9RgVpUwaH3lm1pLquuG4iZe/quivC+7N6ZOjHNXdnA0qQ8clkVzMyfOyhpgosJuNkMg/6tx0PGqK3tty/R8qr7UE+Kn3LMqeX/wu0btQND3sGJEKAL/iXyTgmzbBwYgB8SSoyIxExP9Ie+0pobsLn1711holJtU3yexany2YbnZIZjE9+EnwnHhdnGRQhC5fp3BrGqCnF3TRxGJfS0PcofToVnj/9+w=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <62B8A4A83EEC9847BFF09AEF38E1DBEF@eurprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1727279AbfDVSH1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Apr 2019 14:07:27 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id B462AAEFD;
+        Mon, 22 Apr 2019 18:07:24 +0000 (UTC)
+Date:   Mon, 22 Apr 2019 20:07:23 +0200
+From:   Michal Hocko <mhocko@kernel.org>
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     kvalo@codeaurora.org, johannes@sipsolutions.net,
+        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH] iwlwifi: don't panic in error path on non-msix systems
+Message-ID: <20190422180723.GA20259@dhcp22.suse.cz>
+References: <748205b02961167b0926d4afe8d9ad9cb37bf6ef.camel@coelho.fi>
+ <20190417073516.24250-1-luca@coelho.fi>
 MIME-Version: 1.0
-X-OriginatorOrg: bowerswilkins.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ebcee451-ad5e-4d73-c8f5-08d6c74cead0
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Apr 2019 18:04:09.6711
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a75a45bb-4772-448f-a2c6-9d2413d86410
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB6689
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190417073516.24250-1-luca@coelho.fi>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-DQoNCk9uIDA0LzA4LzIwMTkgMDU6NDEgQU0sIFNldGggRm9yc2hlZSB3cm90ZToNCj4gT24gV2Vk
-LCBNYXIgMjcsIDIwMTkgYXQgMDY6MzQ6MjlQTSArMDAwMCwgUGV0ZXIgT2ggd3JvdGU6DQo+PiBG
-cm9tOiBQZXRlciBPaCA8cGV0ZXIub2hAYm93ZXJzd2lsa2lucy5jb20+DQo+Pg0KPj4gVXBkYXRl
-IHBvd2VyIGxpbWl0IGFzIGRvY3VtZW50ZWQgaW46DQo+PiBodHRwczovL3d3dy5ycmEuZ28ua3Iv
-RmlsZURvd25Tdmw/ZmlsZV90eXBlPUxBV0tSJmZpbGVfcGFyZW50c2VxPTU0JmZpbGVfc2VxPTI3
-DQo+PiB3aGljaCByZXZpc2VkIG9uIE5vdmVtYmVyIDMwLCAyMDE2Lg0KPj4NCj4+IFNpZ25lZC1v
-ZmYtYnk6IFBldGVyIE9oIDxwZXRlci5vaEBib3dlcnN3aWxraW5zLmNvbT4NCj4gSSB1c3VhbGx5
-IHRyeSB0byBjaGVjayB0aGUgY2hhbmdlcyBhZ2FpbnN0IHRoZSBkb2N1bWVudHMsIGJ1dCBpbiB0
-aGlzDQo+IGNhc2UgSSBoYXZlbid0IGJlZW4gYWJsZSB0byBnZXQgYW55IEVuZ2xpc2ggdHJhbmxh
-dGlvbiBmb3IgdGhlIGRvY3VtZW50DQo+IChvciBldmVuIHZpZXcgdGhlIGNvbnRlbnRzIGl0IGlu
-IGFueSBtZWFuaW5nZnVsIHdheSkuIEkgZG9uJ3Qgc3VwcG9zZQ0KPiB5b3Uga25vdyB3aGVyZSB0
-byBmaW5kIGFuIEVuZ2xpc2ggdmVyc2lvbiBvZiB0aGUgZG9jdW1lbnQ/DQpVbmZvcnR1bmF0ZWx5
-IHRoZXJlIGlzIG5vIEVuZ2xpc2ggdmVyc2lvbiBvZiB0aGUgZG9jLiBUeXBpY2FsbHkgSSB1c2Ug
-DQpHb29nbGUgdHJhbnNsYXRpb24gdG8gdW5kZXJzdGFuZCBmb3JlaWduIGxhbmd1YWdlLCBidXQg
-aW4gdGhpcyBjYXNlIEkgDQpjb250YWN0ZWQgdGhhdCBkZXBhcnRtZW50IHBlcnNvbmFsbHkgdmlh
-IHBob25lIGNhbGwgYW5kIGRpcmVjdGVkIHRvIHRoZSANCmRvYyBieSB0aGUgcmVzcG9uc2libGUg
-cGVyc29uIGZyb20gdGhlIGRlcGFydG1lbnQuDQoNClRoYW5rcywNClBldGVyDQo=
+On Wed 17-04-19 10:35:16, Luca Coelho wrote:
+> From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+> 
+> The driver uses msix causes-register to handle both msix and non msix
+> interrupts when performing sync nmi.  On devices that do not support
+> msix this register is unmapped and accessing it causes a kernel panic.
+> 
+> Solve this by differentiating the two cases and accessing the proper
+> causes-register in each case.
+> 
+> Reported-by: Michal Hocko <mhocko@kernel.org>
+> Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+
+$ dmesg | grep "Error sending SCAN_CFG_CMD:"
+[49786.288548] iwlwifi 0000:01:00.0: Error sending SCAN_CFG_CMD: time out after 2000ms.
+[53457.166877] iwlwifi 0000:01:00.0: Error sending SCAN_CFG_CMD: time out after 2000ms.
+
+without the oops and with the iwlwifi internal dump IIUC which is the
+previous behavior.
+[53457.166877] iwlwifi 0000:01:00.0: Error sending SCAN_CFG_CMD: time out after 2000ms.
+[53457.166882] iwlwifi 0000:01:00.0: Current CMD queue read_ptr 224 write_ptr 225
+[53457.414973] iwlwifi 0000:01:00.0: HW error, resetting before reading
+[53457.421339] iwlwifi 0000:01:00.0: Start IWL Error Log Dump:
+[53457.421345] iwlwifi 0000:01:00.0: Status: 0x00000100, count: 1269232956
+[53457.421347] iwlwifi 0000:01:00.0: Loaded firmware version: 36.9f0a2d68.0
+[53457.421350] iwlwifi 0000:01:00.0: 0x45E91306 | ADVANCED_SYSASSERT          
+[53457.421352] iwlwifi 0000:01:00.0: 0x2F58D384 | trm_hw_status0
+[53457.421353] iwlwifi 0000:01:00.0: 0x7F1A8CFD | trm_hw_status1
+[53457.421355] iwlwifi 0000:01:00.0: 0x07E787FD | branchlink2
+[53457.421357] iwlwifi 0000:01:00.0: 0xE9E54368 | interruptlink1
+[53457.421359] iwlwifi 0000:01:00.0: 0x470D9BBF | interruptlink2
+[53457.421361] iwlwifi 0000:01:00.0: 0xAF040E7E | data1
+[53457.421362] iwlwifi 0000:01:00.0: 0xE7FBCA48 | data2
+[53457.421364] iwlwifi 0000:01:00.0: 0x4E4A8288 | data3
+[53457.421366] iwlwifi 0000:01:00.0: 0x861DEA98 | beacon time
+[53457.421368] iwlwifi 0000:01:00.0: 0xE8F23466 | tsf low
+[53457.421369] iwlwifi 0000:01:00.0: 0xD7B19307 | tsf hi
+[53457.421371] iwlwifi 0000:01:00.0: 0xE58934E3 | time gp1
+[53457.421373] iwlwifi 0000:01:00.0: 0xB013FEBE | time gp2
+[53457.421375] iwlwifi 0000:01:00.0: 0x962DCC75 | uCode revision type
+[53457.421376] iwlwifi 0000:01:00.0: 0xFF8FB30F | uCode version major
+[53457.421378] iwlwifi 0000:01:00.0: 0x0DD08E17 | uCode version minor
+[53457.421380] iwlwifi 0000:01:00.0: 0x87FD70DE | hw version
+[53457.421382] iwlwifi 0000:01:00.0: 0x853F6851 | board version
+[53457.421384] iwlwifi 0000:01:00.0: 0x08D7F330 | hcmd
+[53457.421385] iwlwifi 0000:01:00.0: 0x6B7E5FEE | isr0
+[53457.421387] iwlwifi 0000:01:00.0: 0x2B1E7CD4 | isr1
+[53457.421389] iwlwifi 0000:01:00.0: 0x3F133B16 | isr2
+[53457.421391] iwlwifi 0000:01:00.0: 0x5D480C5A | isr3
+[53457.421392] iwlwifi 0000:01:00.0: 0x34E93EBA | isr4
+[53457.421394] iwlwifi 0000:01:00.0: 0x42AD8E83 | last cmd Id
+[53457.421396] iwlwifi 0000:01:00.0: 0x1F5BBCFF | wait_event
+[53457.421398] iwlwifi 0000:01:00.0: 0x6808B2C1 | l2p_control
+[53457.421399] iwlwifi 0000:01:00.0: 0x0D5B1F33 | l2p_duration
+[53457.421401] iwlwifi 0000:01:00.0: 0xF4C94535 | l2p_mhvalid
+[53457.421403] iwlwifi 0000:01:00.0: 0x3DCE6EBB | l2p_addr_match
+[53457.421405] iwlwifi 0000:01:00.0: 0xFDDC41FE | lmpm_pmg_sel
+[53457.421406] iwlwifi 0000:01:00.0: 0xB53A17F5 | timestamp
+[53457.421408] iwlwifi 0000:01:00.0: 0x5A6A4113 | flow_handler
+[53457.421474] iwlwifi 0000:01:00.0: Start IWL Error Log Dump:
+[53457.421477] iwlwifi 0000:01:00.0: Status: 0x00000100, count: 1182976748
+[53457.421478] iwlwifi 0000:01:00.0: 0x62D2BDB3 | ADVANCED_SYSASSERT
+[53457.421480] iwlwifi 0000:01:00.0: 0x4D9E5019 | umac branchlink1
+[53457.421482] iwlwifi 0000:01:00.0: 0x8CB69F6E | umac branchlink2
+[53457.421484] iwlwifi 0000:01:00.0: 0x9868662D | umac interruptlink1
+[53457.421486] iwlwifi 0000:01:00.0: 0x9800F8F7 | umac interruptlink2
+[53457.421488] iwlwifi 0000:01:00.0: 0xC71449B8 | umac data1
+[53457.421489] iwlwifi 0000:01:00.0: 0xAB0AB17F | umac data2
+[53457.421491] iwlwifi 0000:01:00.0: 0x6C6F9753 | umac data3
+[53457.421493] iwlwifi 0000:01:00.0: 0xFC49D724 | umac major
+[53457.421495] iwlwifi 0000:01:00.0: 0xA61CC627 | umac minor
+[53457.421496] iwlwifi 0000:01:00.0: 0x45BAA0B8 | frame pointer
+[53457.421498] iwlwifi 0000:01:00.0: 0x319D112B | stack pointer
+[53457.421500] iwlwifi 0000:01:00.0: 0xEFD9E2E9 | last host cmd
+[53457.421502] iwlwifi 0000:01:00.0: 0x82640FF7 | isr status reg
+[53457.421506] ieee80211 phy0: Hardware restart was requested
+[53457.941685] iwlwifi 0000:01:00.0: Queue 0 is inactive on fifo 0 and stuck for 2500 ms. SW [224, 225] HW [0, 0] FH TRB=0x02b759ca1
+
+Feel free to add
+Tested-by: Michal Hocko <mhocko@suse.com>
+
+Thanks for your quick patch and sorry it took so long from my side.
+
+-- 
+Michal Hocko
+SUSE Labs
