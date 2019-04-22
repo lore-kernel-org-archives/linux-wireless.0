@@ -2,140 +2,116 @@ Return-Path: <SRS0=tUzJ=SY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D7A2C10F11
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 18:07:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 091C1C10F11
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 20:41:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0ACAB20B1F
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 18:07:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555956452;
-	bh=xDMrJudM/8E8/MqVWSOMMEKSIAJOcYcvK7lhk4bh/4w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=jgf8PevJCtOmttwemFVdxQPf7D+9SvN8NUd9u1nCCgkqEcFYXfOH5CuhgTWyyIEQq
-	 DkBGuv06U7ejI1bQDyA1os035S+4XZf42RBRHoNcBB38VNv3xvesuH3xbbT/DyeT8o
-	 WJXde/d6v3+2R57uFNeMMveShc53yICqLJSiEK0A=
+	by mail.kernel.org (Postfix) with ESMTP id D217020859
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 20:41:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728413AbfDVSH1 (ORCPT
+        id S1730659AbfDVUl1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Apr 2019 14:07:27 -0400
-Received: from mx2.suse.de ([195.135.220.15]:37252 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727279AbfDVSH1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Apr 2019 14:07:27 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id B462AAEFD;
-        Mon, 22 Apr 2019 18:07:24 +0000 (UTC)
-Date:   Mon, 22 Apr 2019 20:07:23 +0200
-From:   Michal Hocko <mhocko@kernel.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     kvalo@codeaurora.org, johannes@sipsolutions.net,
-        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH] iwlwifi: don't panic in error path on non-msix systems
-Message-ID: <20190422180723.GA20259@dhcp22.suse.cz>
-References: <748205b02961167b0926d4afe8d9ad9cb37bf6ef.camel@coelho.fi>
- <20190417073516.24250-1-luca@coelho.fi>
+        Mon, 22 Apr 2019 16:41:27 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:42522 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726994AbfDVUl0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Apr 2019 16:41:26 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 809DE3082A49;
+        Mon, 22 Apr 2019 20:41:26 +0000 (UTC)
+Received: from shalem.localdomain.com (ovpn-116-58.ams2.redhat.com [10.36.116.58])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EEF03600CC;
+        Mon, 22 Apr 2019 20:41:24 +0000 (UTC)
+From:   Hans de Goede <hdegoede@redhat.com>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, stable@vger.kernel.org
+Subject: [PATCH] brcmfmac: Add DMI nvram filename quirk for ACEPC T8 and T11 mini PCs
+Date:   Mon, 22 Apr 2019 22:41:23 +0200
+Message-Id: <20190422204123.6123-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190417073516.24250-1-luca@coelho.fi>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Mon, 22 Apr 2019 20:41:26 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed 17-04-19 10:35:16, Luca Coelho wrote:
-> From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-> 
-> The driver uses msix causes-register to handle both msix and non msix
-> interrupts when performing sync nmi.  On devices that do not support
-> msix this register is unmapped and accessing it causes a kernel panic.
-> 
-> Solve this by differentiating the two cases and accessing the proper
-> causes-register in each case.
-> 
-> Reported-by: Michal Hocko <mhocko@kernel.org>
-> Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+The ACEPC T8 and T11 mini PCs contain quite generic names in the sys_vendor
+and product_name DMI strings, without this patch brcmfmac will try to load:
+"brcmfmac43455-sdio.Default string-Default string.txt" as nvram file which
+is way too generic.
 
-$ dmesg | grep "Error sending SCAN_CFG_CMD:"
-[49786.288548] iwlwifi 0000:01:00.0: Error sending SCAN_CFG_CMD: time out after 2000ms.
-[53457.166877] iwlwifi 0000:01:00.0: Error sending SCAN_CFG_CMD: time out after 2000ms.
+The DMI strings on which we are matching are somewhat generic too, but
+"To be filled by O.E.M." is less common then "Default string" and the
+system-sku and bios-version strings are pretty unique. Beside the DMI
+strings we also check the wifi-module chip-id and revision. I'm confident
+that the combination of all this is unique.
 
-without the oops and with the iwlwifi internal dump IIUC which is the
-previous behavior.
-[53457.166877] iwlwifi 0000:01:00.0: Error sending SCAN_CFG_CMD: time out after 2000ms.
-[53457.166882] iwlwifi 0000:01:00.0: Current CMD queue read_ptr 224 write_ptr 225
-[53457.414973] iwlwifi 0000:01:00.0: HW error, resetting before reading
-[53457.421339] iwlwifi 0000:01:00.0: Start IWL Error Log Dump:
-[53457.421345] iwlwifi 0000:01:00.0: Status: 0x00000100, count: 1269232956
-[53457.421347] iwlwifi 0000:01:00.0: Loaded firmware version: 36.9f0a2d68.0
-[53457.421350] iwlwifi 0000:01:00.0: 0x45E91306 | ADVANCED_SYSASSERT          
-[53457.421352] iwlwifi 0000:01:00.0: 0x2F58D384 | trm_hw_status0
-[53457.421353] iwlwifi 0000:01:00.0: 0x7F1A8CFD | trm_hw_status1
-[53457.421355] iwlwifi 0000:01:00.0: 0x07E787FD | branchlink2
-[53457.421357] iwlwifi 0000:01:00.0: 0xE9E54368 | interruptlink1
-[53457.421359] iwlwifi 0000:01:00.0: 0x470D9BBF | interruptlink2
-[53457.421361] iwlwifi 0000:01:00.0: 0xAF040E7E | data1
-[53457.421362] iwlwifi 0000:01:00.0: 0xE7FBCA48 | data2
-[53457.421364] iwlwifi 0000:01:00.0: 0x4E4A8288 | data3
-[53457.421366] iwlwifi 0000:01:00.0: 0x861DEA98 | beacon time
-[53457.421368] iwlwifi 0000:01:00.0: 0xE8F23466 | tsf low
-[53457.421369] iwlwifi 0000:01:00.0: 0xD7B19307 | tsf hi
-[53457.421371] iwlwifi 0000:01:00.0: 0xE58934E3 | time gp1
-[53457.421373] iwlwifi 0000:01:00.0: 0xB013FEBE | time gp2
-[53457.421375] iwlwifi 0000:01:00.0: 0x962DCC75 | uCode revision type
-[53457.421376] iwlwifi 0000:01:00.0: 0xFF8FB30F | uCode version major
-[53457.421378] iwlwifi 0000:01:00.0: 0x0DD08E17 | uCode version minor
-[53457.421380] iwlwifi 0000:01:00.0: 0x87FD70DE | hw version
-[53457.421382] iwlwifi 0000:01:00.0: 0x853F6851 | board version
-[53457.421384] iwlwifi 0000:01:00.0: 0x08D7F330 | hcmd
-[53457.421385] iwlwifi 0000:01:00.0: 0x6B7E5FEE | isr0
-[53457.421387] iwlwifi 0000:01:00.0: 0x2B1E7CD4 | isr1
-[53457.421389] iwlwifi 0000:01:00.0: 0x3F133B16 | isr2
-[53457.421391] iwlwifi 0000:01:00.0: 0x5D480C5A | isr3
-[53457.421392] iwlwifi 0000:01:00.0: 0x34E93EBA | isr4
-[53457.421394] iwlwifi 0000:01:00.0: 0x42AD8E83 | last cmd Id
-[53457.421396] iwlwifi 0000:01:00.0: 0x1F5BBCFF | wait_event
-[53457.421398] iwlwifi 0000:01:00.0: 0x6808B2C1 | l2p_control
-[53457.421399] iwlwifi 0000:01:00.0: 0x0D5B1F33 | l2p_duration
-[53457.421401] iwlwifi 0000:01:00.0: 0xF4C94535 | l2p_mhvalid
-[53457.421403] iwlwifi 0000:01:00.0: 0x3DCE6EBB | l2p_addr_match
-[53457.421405] iwlwifi 0000:01:00.0: 0xFDDC41FE | lmpm_pmg_sel
-[53457.421406] iwlwifi 0000:01:00.0: 0xB53A17F5 | timestamp
-[53457.421408] iwlwifi 0000:01:00.0: 0x5A6A4113 | flow_handler
-[53457.421474] iwlwifi 0000:01:00.0: Start IWL Error Log Dump:
-[53457.421477] iwlwifi 0000:01:00.0: Status: 0x00000100, count: 1182976748
-[53457.421478] iwlwifi 0000:01:00.0: 0x62D2BDB3 | ADVANCED_SYSASSERT
-[53457.421480] iwlwifi 0000:01:00.0: 0x4D9E5019 | umac branchlink1
-[53457.421482] iwlwifi 0000:01:00.0: 0x8CB69F6E | umac branchlink2
-[53457.421484] iwlwifi 0000:01:00.0: 0x9868662D | umac interruptlink1
-[53457.421486] iwlwifi 0000:01:00.0: 0x9800F8F7 | umac interruptlink2
-[53457.421488] iwlwifi 0000:01:00.0: 0xC71449B8 | umac data1
-[53457.421489] iwlwifi 0000:01:00.0: 0xAB0AB17F | umac data2
-[53457.421491] iwlwifi 0000:01:00.0: 0x6C6F9753 | umac data3
-[53457.421493] iwlwifi 0000:01:00.0: 0xFC49D724 | umac major
-[53457.421495] iwlwifi 0000:01:00.0: 0xA61CC627 | umac minor
-[53457.421496] iwlwifi 0000:01:00.0: 0x45BAA0B8 | frame pointer
-[53457.421498] iwlwifi 0000:01:00.0: 0x319D112B | stack pointer
-[53457.421500] iwlwifi 0000:01:00.0: 0xEFD9E2E9 | last host cmd
-[53457.421502] iwlwifi 0000:01:00.0: 0x82640FF7 | isr status reg
-[53457.421506] ieee80211 phy0: Hardware restart was requested
-[53457.941685] iwlwifi 0000:01:00.0: Queue 0 is inactive on fifo 0 and stuck for 2500 ms. SW [224, 225] HW [0, 0] FH TRB=0x02b759ca1
+Both the T8 and T11 use the same wifi-module, this commit adds DMI
+quirks for both mini PCs pointing to brcmfmac43455-sdio.acepc-t8.txt .
 
-Feel free to add
-Tested-by: Michal Hocko <mhocko@suse.com>
+BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1690852
+Cc: stable@vger.kernel.org
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ .../broadcom/brcm80211/brcmfmac/dmi.c         | 26 +++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-Thanks for your quick patch and sorry it took so long from my side.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
+index 7535cb0d4ac0..9f1417e00073 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
+@@ -31,6 +31,10 @@ struct brcmf_dmi_data {
+ 
+ /* NOTE: Please keep all entries sorted alphabetically */
+ 
++static const struct brcmf_dmi_data acepc_t8_data = {
++	BRCM_CC_4345_CHIP_ID, 6, "acepc-t8"
++};
++
+ static const struct brcmf_dmi_data gpd_win_pocket_data = {
+ 	BRCM_CC_4356_CHIP_ID, 2, "gpd-win-pocket"
+ };
+@@ -48,6 +52,28 @@ static const struct brcmf_dmi_data pov_tab_p1006w_data = {
+ };
+ 
+ static const struct dmi_system_id dmi_platform_data[] = {
++	{
++		/* ACEPC T8 Cherry Trail Z8350 mini PC */
++		.matches = {
++			DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "To be filled by O.E.M."),
++			DMI_EXACT_MATCH(DMI_BOARD_NAME, "Cherry Trail CR"),
++			DMI_EXACT_MATCH(DMI_PRODUCT_SKU, "T8"),
++			/* also match on somewhat unique bios-version */
++			DMI_EXACT_MATCH(DMI_BIOS_VERSION, "1.000"),
++		},
++		.driver_data = (void *)&acepc_t8_data,
++	},
++	{
++		/* ACEPC T11 Cherry Trail Z8350 mini PC, same wifi as the T8 */
++		.matches = {
++			DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "To be filled by O.E.M."),
++			DMI_EXACT_MATCH(DMI_BOARD_NAME, "Cherry Trail CR"),
++			DMI_EXACT_MATCH(DMI_PRODUCT_SKU, "T11"),
++			/* also match on somewhat unique bios-version */
++			DMI_EXACT_MATCH(DMI_BIOS_VERSION, "1.000"),
++		},
++		.driver_data = (void *)&acepc_t8_data,
++	},
+ 	{
+ 		/* Match for the GPDwin which unfortunately uses somewhat
+ 		 * generic dmi strings, which is why we test for 4 strings.
 -- 
-Michal Hocko
-SUSE Labs
+2.21.0
+
