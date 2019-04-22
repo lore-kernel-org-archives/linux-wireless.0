@@ -3,126 +3,148 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 034CBC10F11
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 14:08:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9BE8C282CE
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 15:21:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C972B20656
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 14:08:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555942085;
-	bh=NxH2GbPXCABQ9ahzYNEtjo/tx6Kmx5oUcsi6PZlIyaM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=T3XVzBJv21Av8B9/toyGPLMaiP+0177guhvY03le542heHqO6dxJKZi0Y32Cgt4Wh
-	 UlZ2RcxMLl4+ze40TgDW5W0vHo3xCy3Tcflg+cpoSX928K8/vSuTKwzGNHwVJYJeS4
-	 q4pETq7jHftSXlAKuTnEn+DhiYoXFMA66xd7LMUI=
+	by mail.kernel.org (Postfix) with ESMTP id 8D1F820859
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Apr 2019 15:21:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="HP46O8oI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727513AbfDVOIB (ORCPT
+        id S1727463AbfDVPVp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Apr 2019 10:08:01 -0400
-Received: from casper.infradead.org ([85.118.1.10]:60354 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727277AbfDVOIB (ORCPT
+        Mon, 22 Apr 2019 11:21:45 -0400
+Received: from mail-vs1-f68.google.com ([209.85.217.68]:36159 "EHLO
+        mail-vs1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727309AbfDVPVm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Apr 2019 10:08:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=rW+1ITQQ2cRfyxA1nnCqjk9QBb4ZXRDOBeynG64FjUQ=; b=OdSRHFJmvpAZP5xtGWteR9B1oK
-        tdNSGqoa0D5/t74ihdTjnMiNf2BAZy7OQNcY1jUJxOQJpM1Uc+4WYZfq4ivUTBXF1okPedKidG4gH
-        0Ywdq3sm/jTLhsG5YCah35Bh3Gk6KsCW4NtS6KvlWuvjlA8YlSP0oiDWc+8P9EHSaJagVJVhkG88w
-        zgOxlKflOaD3TzqGtpd6MHrydi6CemoNUxOyjiXekehQqEauuJt08+Y4Oke48RD7V1T0NDy4gh0wn
-        ViBjqkj89WPHGX0Xbj33EqKQFClQfGl6Eaq184Etq3CZPl5DqBMDfq0r/BGnObu1rksZaMo9Tunwd
-        7nwHzMgQ==;
-Received: from 179.176.125.229.dynamic.adsl.gvt.net.br ([179.176.125.229] helo=coco.lan)
-        by casper.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hIZby-0005Jf-HD; Mon, 22 Apr 2019 14:07:58 +0000
-Date:   Mon, 22 Apr 2019 11:07:54 -0300
-From:   Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Changbin Du <changbin.du@gmail.com>
-Subject: Re: [PATCH v2 25/79] docs: convert docs to ReST and rename to *.rst
-Message-ID: <20190422110754.4d75c5ce@coco.lan>
-In-Reply-To: <CAErSpo4FLuCVPGAZGKeBn=-oyaw6eTrseMnaHJo1TVjxnfCZrw@mail.gmail.com>
-References: <cover.1555938375.git.mchehab+samsung@kernel.org>
-        <7adf9035ae06ecc6c7e46b51cb677f0a8f61d19a.1555938376.git.mchehab+samsung@kernel.org>
-        <CAErSpo4FLuCVPGAZGKeBn=-oyaw6eTrseMnaHJo1TVjxnfCZrw@mail.gmail.com>
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
+        Mon, 22 Apr 2019 11:21:42 -0400
+Received: by mail-vs1-f68.google.com with SMTP id n4so6422121vsm.3
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Apr 2019 08:21:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Jo4QnBFvCI2pSHJjt+WPg9GxNe4IYci0262Mc3uaeAs=;
+        b=HP46O8oItxx97YrVVEwduwNQuCIzdcSk2DQTaaBQwOeSRtttO73+dUOYaPxAf1Ny18
+         ETS3YeHtwlYUBEGcWEW/skIgQBGKGC5RsOSYTglryb9V/0nk10CGB5dLbs8OKTNJWlsj
+         9J9ZukCuBgs882Ewzbap7mIB0wN7Mbxncq23k=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Jo4QnBFvCI2pSHJjt+WPg9GxNe4IYci0262Mc3uaeAs=;
+        b=CMMBVMW4pEGKYq4+NPPHrjtDugop1FDxkKmhm+TBZvFhijZMkiQ/4dYQ4BaNpwbF/7
+         7RBBM8pYiyMLfACMdd6+1EILIX4I7x/NfoRzqXVDaKqkR9ZgH4d4IHLRkuxO700LDfGP
+         jf4TK5HAE+Ti0QWJFQAR7GlxZaQSdB4P8VSBKVEdOCgQvJFqgFIVq1l3+yeHDGOqX0Y3
+         T/S+vmVu+FGaHZA7FAU+4H56zPJrir8z35r0AUOdj8JmRVpOtRn4VeznhswDzsHSNkfw
+         CDll2NcByhgFJNkmnXAgYHb3qKYWlaj4Oul9RwcfOH873bwqL+aEaqckgvFsH2bKPuwa
+         GIKw==
+X-Gm-Message-State: APjAAAWA48uS30iujQ3Ouoe8EvJxpaY0DZo5ywruYWFVvJjqkuFBbg5L
+        2Nf2+orJYiKJfatopo5JJqQXyb2annM=
+X-Google-Smtp-Source: APXvYqwvwMqx+sD7ho4Mc2v0r9bLwHHW1AtMf5jO5vHIW3ISKSscpGCyOvQWDRt4hb6LbleqksAGdA==
+X-Received: by 2002:a67:fe13:: with SMTP id l19mr10635392vsr.143.1555946500875;
+        Mon, 22 Apr 2019 08:21:40 -0700 (PDT)
+Received: from mail-vs1-f54.google.com (mail-vs1-f54.google.com. [209.85.217.54])
+        by smtp.gmail.com with ESMTPSA id m23sm19936634vsl.24.2019.04.22.08.21.39
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Mon, 22 Apr 2019 08:21:39 -0700 (PDT)
+Received: by mail-vs1-f54.google.com with SMTP id t78so6435963vsc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Apr 2019 08:21:39 -0700 (PDT)
+X-Received: by 2002:a67:c812:: with SMTP id u18mr9580850vsk.87.1555946498770;
+ Mon, 22 Apr 2019 08:21:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20190410221237.160856-1-dianders@chromium.org>
+In-Reply-To: <20190410221237.160856-1-dianders@chromium.org>
+From:   Doug Anderson <dianders@chromium.org>
+Date:   Mon, 22 Apr 2019 08:21:27 -0700
+X-Gmail-Original-Message-ID: <CAD=FV=Wm+T+W=LWTSiwBT3UQWG7YKQdGuL2+BmAFQhk8CYY1mQ@mail.gmail.com>
+Message-ID: <CAD=FV=Wm+T+W=LWTSiwBT3UQWG7YKQdGuL2+BmAFQhk8CYY1mQ@mail.gmail.com>
+Subject: Re: [PATCH] mmc: dw_mmc: Disable SDIO interrupts while suspended to
+ fix suspend/resume
+To:     Jaehoon Chung <jh80.chung@samsung.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?Q?Heiko_St=C3=BCbner?= <heiko@sntech.de>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Brian Norris <briannorris@chromium.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Ryan Case <ryandcase@chromium.org>, stable@vger.kernel.org,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Em Mon, 22 Apr 2019 08:48:10 -0500
-Bjorn Helgaas <bhelgaas@google.com> escreveu:
+Hi,
 
-> [+cc Changbin, -cc many others]
-> 
-> On Mon, Apr 22, 2019 at 8:28 AM Mauro Carvalho Chehab
-> <mchehab+samsung@kernel.org> wrote:
-> >
-> > Convert the PM documents to ReST, in order to allow them to
-> > build with Sphinx.
-> >
-> > The conversion is actually:
-> >   - add blank lines and identation in order to identify paragraphs;  
-> 
-> s/identation/indentation/
-> 
-> >   - fix tables markups;
-> >   - add some lists markups;
-> >   - mark literal blocks;
-> >   - adjust title markups.
-> >
-> > At its new index.rst, let's add a :orphan: while this is not linked to
-> > the main index.rst file, in order to avoid build warnings.
-> >
-> > Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>  
-> 
-> The PCI part of this is fine with me but may conflict with Changbin's work:
-> 
-> https://lore.kernel.org/lkml/20190409155626.6049-1-changbin.du@gmail.com
+On Wed, Apr 10, 2019 at 3:13 PM Douglas Anderson <dianders@chromium.org> wrote:
+>
+> Processing SDIO interrupts while dw_mmc is suspended (or partly
+> suspended) seems like a bad idea.  We really don't want to be
+> processing them until we've gotten ourselves fully powered up.
+>
+> You might be wondering how it's even possible to become suspended when
+> an SDIO interrupt is active.  As can be seen in
+> dw_mci_enable_sdio_irq(), we explicitly keep dw_mmc out of runtime
+> suspend when the SDIO interrupt is enabled.  ...but even though we
+> stop normal runtime suspend transitions when SDIO interrupts are
+> enabled, the dw_mci_runtime_suspend() can still get called for a full
+> system suspend.
+>
+> Let's handle all this by explicitly masking SDIO interrupts in the
+> suspend call and unmasking them later in the resume call.  To do this
+> cleanly I'll keep track of whether the client requested that SDIO
+> interrupts be enabled so that we can reliably restore them regardless
+> of whether we're masking them for one reason or another.
+>
+> Without this fix it can be seen that rk3288-veyron Chromebooks with
+> Marvell WiFi would sometimes fail to resume WiFi even after picking my
+> recent mwifiex patch [1].  Specifically you'd see messages like this:
+>   mwifiex_sdio mmc1:0001:1: Firmware wakeup failed
+>   mwifiex_sdio mmc1:0001:1: PREP_CMD: FW in reset state
+>
+> ...and tracing through the resume code in the failing cases showed
+> that we were processing a SDIO interrupt really early in the resume
+> call.
+>
+> NOTE: downstream in Chrome OS 3.14 and 3.18 kernels (both of which
+> support the Marvell SDIO WiFi card) we had a patch ("CHROMIUM: sdio:
+> Defer SDIO interrupt handling until after resume") [2].  Presumably
+> this is the same problem that was solved by that patch.
+>
+> [1] https://lkml.kernel.org/r/20190404040106.40519-1-dianders@chromium.org
+> [2] https://crrev.com/c/230765
+>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Douglas Anderson <dianders@chromium.org>
+> ---
+> I didn't put any "Fixes" tag here, but presumably this could be
+> backported to whichever kernels folks found it useful for.  I have at
+> least confirmed that kernels v4.14 and v4.19 (as well as v5.1-rc2)
+> show the problem.  It is very easy to pick this to v4.19 and it
+> definitely fixes the problem there.
+>
+> I haven't spent the time to pick this to 4.14 myself, but presumably
+> it wouldn't be too hard to backport this as far as v4.13 since that
+> contains commit 32dba73772f8 ("mmc: dw_mmc: Convert to use
+> MMC_CAP2_SDIO_IRQ_NOTHREAD for SDIO IRQs").  Prior to that it might
+> make sense for anyone experiencing this problem to just pick the old
+> CHROMIUM patch to fix them.
+>
+>  drivers/mmc/host/dw_mmc.c | 24 ++++++++++++++++++++----
+>  drivers/mmc/host/dw_mmc.h |  3 +++
+>  2 files changed, 23 insertions(+), 4 deletions(-)
 
-Yes it could generate a conflict, but it is a trivial change:
+Jaehoon / Shawn: any thoughts on this patch?
 
---- a/Documentation/PCI/pci.txt
-+++ b/Documentation/PCI/pci.txt
-@@ -110,7 +110,7 @@ initialization with a pointer to a structure describing the driver
- 	resume_early	Wake device from low power state.
- 	resume		Wake device from low power state.
- 
--		(Please see Documentation/power/pci.txt for descriptions
-+		(Please see Documentation/power/pci.rst for descriptions
- 		of PCI Power Management and the related functions.)
- 
- 	shutdown	Hook into reboot_notifier_list (kernel/sys.c).
-
-Looking at Changbin's patch 02/12 v3:
-
-	https://lore.kernel.org/lkml/20190409155626.6049-3-changbin.du@gmail.com/
-
-It doesn't touch the above line, nor the context lines, and it doesn't 
-change more than 50% of the file. So, even if this patch gets merged
-after the PCI changeset, git will very likely recognize it as a
-rename and will apply it anyway.
-
-> Since this doesn't look like it's targeting merge via the PCI tree,
-> I'll let you two work out any conflicts.
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Thanks!
-Mauro
+-Doug
