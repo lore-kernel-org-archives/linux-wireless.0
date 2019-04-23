@@ -2,90 +2,86 @@ Return-Path: <SRS0=odSX=SZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 052EBC10F03
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 21:05:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE60C10F03
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 21:08:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8CF59218D2
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 21:05:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF23421773
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 21:08:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="Dvm8ApaZ"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="qshe5xCD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726342AbfDWVFo (ORCPT
+        id S1727357AbfDWVIN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Apr 2019 17:05:44 -0400
-Received: from 8.mo1.mail-out.ovh.net ([178.33.110.239]:42050 "EHLO
-        8.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726083AbfDWVFo (ORCPT
+        Tue, 23 Apr 2019 17:08:13 -0400
+Received: from 4.mo2.mail-out.ovh.net ([87.98.172.75]:36433 "EHLO
+        4.mo2.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726029AbfDWVIM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Apr 2019 17:05:44 -0400
-X-Greylist: delayed 84293 seconds by postgrey-1.27 at vger.kernel.org; Tue, 23 Apr 2019 17:05:43 EDT
-Received: from player774.ha.ovh.net (unknown [10.109.146.106])
-        by mo1.mail-out.ovh.net (Postfix) with ESMTP id 086B716B07A
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Apr 2019 22:48:56 +0200 (CEST)
+        Tue, 23 Apr 2019 17:08:12 -0400
+Received: from player792.ha.ovh.net (unknown [10.108.54.87])
+        by mo2.mail-out.ovh.net (Postfix) with ESMTP id 7A73618FF2C
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Apr 2019 22:59:45 +0200 (CEST)
 Received: from awhome.eu (p57B7E5B2.dip0.t-ipconnect.de [87.183.229.178])
         (Authenticated sender: postmaster@awhome.eu)
-        by player774.ha.ovh.net (Postfix) with ESMTPSA id 5202E50889C1;
-        Tue, 23 Apr 2019 20:48:55 +0000 (UTC)
-From:   Alexander Wetzel <alexander@wetzel-home.de>
+        by player792.ha.ovh.net (Postfix) with ESMTPSA id 460BB520B4DE;
+        Tue, 23 Apr 2019 20:59:42 +0000 (UTC)
+Subject: Re: [PATCH 1/2] mac80211: Fix Extended Key ID auto activation
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1556052534;
-        bh=jzQFdCQ2iDzpKGlU2sxjSKnE1GPk3SV5EDgsVBoXL5Q=;
-        h=From:To:Cc:Subject:Date;
-        b=Dvm8ApaZi6S40qB/nqWmwd4bTatpZTk5ucZuWShjXmmu/cshacM6/GbWm1ApcREOD
-         9PGRuQOnS1YgBZeHR45tXJcp3Ufqd8wTzSHsdYM8q0eTMEpkwn/3yCos3PJyGBsn4z
-         hoVCmHzH0/dfb/2ONmcAGILkItEz4s9EIgqBvgx8=
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [PATCH] mac80211_hwsim: Extended Key ID support
-Date:   Tue, 23 Apr 2019 22:47:11 +0200
-Message-Id: <20190423204711.20349-1-alexander@wetzel-home.de>
-X-Mailer: git-send-email 2.21.0
+        s=wetzel-home; t=1556053180;
+        bh=DCAprEPCchlj5b10z6obtHb4k29NNvOTozeJzhBfZA4=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To;
+        b=qshe5xCDACBFgD3GBPSBXtJcOrcDh0ay9TkaZnAUFphIATQ+GERE7OeyhUbgSHO/V
+         N46W5OGU4oDkzLfricKAXvWS7AXziNb2NZ09EUVrjf4Scn5KAZhBbkGa0gLHiviL7T
+         aP0cOM9FArsZkTA8YaoJ9a3DPAzQe1gx57XdfSSY=
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org
+References: <20190422213412.16533-1-alexander@wetzel-home.de>
+ <4464ea399dbbc1aca040ad8a4442a73f78cc38fb.camel@sipsolutions.net>
+From:   Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <62a76eb7-2cd4-65ed-e583-663d1d971820@wetzel-home.de>
+Date:   Tue, 23 Apr 2019 22:59:40 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 8806789074729245895
+In-Reply-To: <4464ea399dbbc1aca040ad8a4442a73f78cc38fb.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Ovh-Tracer-Id: 8989466334041939143
 X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduuddrgeekgddugeduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenuc
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduuddrgeekgddugeefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Allow Extended Key ID to be used with hwsim.
+Am 23.04.19 um 14:14 schrieb Johannes Berg:
+> On Mon, 2019-04-22 at 23:34 +0200, Alexander Wetzel wrote:
+>> Only enable Extended Key ID support for drivers which are not supporting
+>> crypto offload and also do not support A-MPDU.
+>>
+>> While any driver using SW crypto from mac80211 is generally able to also
+>> support Extended Key ID these drivers are likely to mix keyIDs in
+>> AMPDUs when rekeying.
+>>
+>> According to IEEE 802.11-2016 "9.7.3 A-MPDU contents" this is not
+>> allowed.
+>>
+> 
+> I applied this (with some changes), but please resend the other patch as
+> two separate patches to mac80211/hwsim.
 
-Hwsim can only communicate with other hwsim cards, allowing it to bypass
-creation of A-MPDUs in the first place.
+I've just dropped you the updated patch for hwsim Extended Key ID 
+support. That's kind of critical for the attempt to get Extended Key ID 
+support merged in hostapd/wpa_supplicant.
 
-Mixing keyIDs in an A-MPDU is therefore impossible and can never cause
-interoperability issues with other cards.
+The patch to allow ptk0 rekeys with hwsim should follow soon. (The PTK0 
+rekey patches I have for hostapd/wpa_supplicant still need serious work 
+anyhow and are far away to be ready for merge.)
 
-Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 44cffd1f6dbf..7a0310715462 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2810,6 +2810,11 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	ieee80211_hw_set(hw, SIGNAL_DBM);
- 	ieee80211_hw_set(hw, SUPPORTS_PS);
- 	ieee80211_hw_set(hw, TDLS_WIDER_BW);
-+
-+	/* With only SW crypto support and only implementing the A-MPDU API
-+	 * all requirements for Extended Key ID support are met.
-+	 */
-+	ieee80211_hw_set(hw, EXT_KEY_ID_NATIVE);
- 	if (rctbl)
- 		ieee80211_hw_set(hw, SUPPORTS_RC_TABLE);
- 	ieee80211_hw_set(hw, SUPPORTS_MULTI_BSSID);
--- 
-2.21.0
-
+Alexander
