@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5D4EC10F14
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69957C10F14
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E0FE206BA
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43BA2206BA
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726950AbfDWJLh (ORCPT
+        id S1727013AbfDWJLk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Apr 2019 05:11:37 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:59028 "EHLO
+        Tue, 23 Apr 2019 05:11:40 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:59034 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726130AbfDWJLg (ORCPT
+        with ESMTP id S1726130AbfDWJLk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Apr 2019 05:11:36 -0400
+        Tue, 23 Apr 2019 05:11:40 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hIrS3-0000FN-Ia; Tue, 23 Apr 2019 12:10:55 +0300
+        id 1hIrS4-0000FN-Hs; Tue, 23 Apr 2019 12:10:56 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 11/16] iwlwifi: parse command version TLV
-Date:   Tue, 23 Apr 2019 12:10:38 +0300
-Message-Id: <20190423091043.7156-12-luca@coelho.fi>
+Subject: [PATCH 13/16] iwlwifi: dbg_ini: add periodic trigger support
+Date:   Tue, 23 Apr 2019 12:10:40 +0300
+Message-Id: <20190423091043.7156-14-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423091043.7156-1-luca@coelho.fi>
 References: <20190423091043.7156-1-luca@coelho.fi>
@@ -43,122 +43,141 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-In newer firmware images there's a command version TLV that
-states, for each listed command or notification, which version
-of the command and/or notification structure is used. Read and
-keep this data to be able to use it in the future.
+Allows to configure a periodic data collection
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/file.h | 17 +++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/img.h  |  7 +++++--
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 18 ++++++++++++++++++
- 3 files changed, 40 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 40 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  3 ++
+ drivers/net/wireless/intel/iwlwifi/fw/init.c  |  2 +
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  1 +
+ 5 files changed, 47 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 2faec36f3d76..b0671e16e1ce 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -142,6 +142,7 @@ enum iwl_ucode_tlv_type {
- 	IWL_UCODE_TLV_FW_DBG_DEST	= 38,
- 	IWL_UCODE_TLV_FW_DBG_CONF	= 39,
- 	IWL_UCODE_TLV_FW_DBG_TRIGGER	= 40,
-+	IWL_UCODE_TLV_CMD_VERSIONS	= 48,
- 	IWL_UCODE_TLV_FW_GSCAN_CAPA	= 50,
- 	IWL_UCODE_TLV_FW_MEM_SEG	= 51,
- 	IWL_UCODE_TLV_IML		= 52,
-@@ -943,4 +944,20 @@ struct iwl_fw_dbg_conf_tlv {
- 	struct iwl_fw_dbg_conf_hcmd hcmd;
- } __packed;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 035eeeabfc8c..d8c4fdb8d4a1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2616,6 +2616,20 @@ static void iwl_fw_dbg_update_triggers(struct iwl_fw_runtime *fwrt,
+ 			active->trig->occurrences = cpu_to_le32(-1);
  
-+#define IWL_FW_CMD_VER_UNKNOWN 99
+ 		active->active = true;
 +
-+/**
-+ * struct iwl_fw_cmd_version - firmware command version entry
-+ * @cmd: command ID
-+ * @group: group ID
-+ * @cmd_ver: command version
-+ * @notif_ver: notification version
-+ */
-+struct iwl_fw_cmd_version {
-+	u8 cmd;
-+	u8 group;
-+	u8 cmd_ver;
-+	u8 notif_ver;
-+} __packed;
++		if (id == IWL_FW_TRIGGER_ID_PERIODIC_TRIGGER) {
++			u32 collect_interval = le32_to_cpu(trig->trigger_data);
 +
- #endif  /* __iwl_fw_file_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-index f4c5a4d73206..18ca5f152be6 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-@@ -8,7 +8,7 @@
-  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016        Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -31,7 +31,7 @@
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016        Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -109,6 +109,9 @@ struct iwl_ucode_capabilities {
- 	u32 error_log_size;
- 	unsigned long _api[BITS_TO_LONGS(NUM_IWL_UCODE_TLV_API)];
- 	unsigned long _capa[BITS_TO_LONGS(NUM_IWL_UCODE_TLV_CAPA)];
-+
-+	const struct iwl_fw_cmd_version *cmd_versions;
-+	u32 n_cmd_versions;
- };
- 
- static inline bool
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 1ad739bace0f..852d3cbfc719 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -179,6 +179,7 @@ static void iwl_dealloc_ucode(struct iwl_drv *drv)
- 		kfree(drv->fw.dbg.trigger_tlv[i]);
- 	kfree(drv->fw.dbg.mem_tlv);
- 	kfree(drv->fw.iml);
-+	kfree(drv->fw.ucode_capa.cmd_versions);
- 
- 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
- 		iwl_free_fw_img(drv, drv->fw.img + i);
-@@ -1144,6 +1145,23 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 			if (iwlwifi_mod_params.enable_ini)
- 				iwl_fw_dbg_copy_tlv(drv->trans, tlv, false);
- 			break;
-+		case IWL_UCODE_TLV_CMD_VERSIONS:
-+			if (tlv_len % sizeof(struct iwl_fw_cmd_version)) {
-+				IWL_ERR(drv,
-+					"Invalid length for command versions: %u\n",
-+					tlv_len);
-+				tlv_len /= sizeof(struct iwl_fw_cmd_version);
-+				tlv_len *= sizeof(struct iwl_fw_cmd_version);
++			/* the minimum allowed interval is 50ms */
++			if (collect_interval < 50) {
++				collect_interval = 50;
++				trig->trigger_data =
++					cpu_to_le32(collect_interval);
 +			}
-+			if (WARN_ON(capa->cmd_versions))
-+				return -EINVAL;
-+			capa->cmd_versions = kmemdup(tlv_data, tlv_len,
-+						     GFP_KERNEL);
-+			if (!capa->cmd_versions)
-+				return -ENOMEM;
-+			capa->n_cmd_versions =
-+				tlv_len / sizeof(struct iwl_fw_cmd_version);
-+			break;
- 		default:
- 			IWL_DEBUG_INFO(drv, "unknown TLV: %d\n", tlv_type);
- 			break;
++
++			mod_timer(&fwrt->dump.periodic_trig,
++				  jiffies + msecs_to_jiffies(collect_interval));
++		}
+ next:
+ 		iter += sizeof(*trig) + trig_regs_size;
+ 
+@@ -2696,8 +2710,34 @@ IWL_EXPORT_SYMBOL(iwl_fw_dbg_apply_point);
+ 
+ void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt)
+ {
++	del_timer(&fwrt->dump.periodic_trig);
+ 	iwl_fw_dbg_collect_sync(fwrt);
+ 
+ 	iwl_trans_stop_device(fwrt->trans);
+ }
+ IWL_EXPORT_SYMBOL(iwl_fwrt_stop_device);
++
++void iwl_fw_dbg_periodic_trig_handler(struct timer_list *t)
++{
++	struct iwl_fw_runtime *fwrt;
++	enum iwl_fw_ini_trigger_id id = IWL_FW_TRIGGER_ID_PERIODIC_TRIGGER;
++	int ret;
++	typeof(fwrt->dump) *dump_ptr = container_of(t, typeof(fwrt->dump),
++						    periodic_trig);
++
++	fwrt = container_of(dump_ptr, typeof(*fwrt), dump);
++
++	ret = _iwl_fw_dbg_ini_collect(fwrt, id);
++	if (!ret || ret == -EBUSY) {
++		struct iwl_fw_ini_trigger *trig =
++			fwrt->dump.active_trigs[id].trig;
++		u32 occur = le32_to_cpu(trig->occurrences);
++		u32 collect_interval = le32_to_cpu(trig->trigger_data);
++
++		if (!occur)
++			return;
++
++		mod_timer(&fwrt->dump.periodic_trig,
++			  jiffies + msecs_to_jiffies(collect_interval));
++	}
++}
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index cccf91db74c4..2a9e560a906b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -385,11 +385,13 @@ void iwl_fw_dbg_read_d3_debug_data(struct iwl_fw_runtime *fwrt);
+ 
+ static inline void iwl_fw_flush_dump(struct iwl_fw_runtime *fwrt)
+ {
++	del_timer(&fwrt->dump.periodic_trig);
+ 	flush_delayed_work(&fwrt->dump.wk);
+ }
+ 
+ static inline void iwl_fw_cancel_dump(struct iwl_fw_runtime *fwrt)
+ {
++	del_timer(&fwrt->dump.periodic_trig);
+ 	cancel_delayed_work_sync(&fwrt->dump.wk);
+ }
+ 
+@@ -468,4 +470,5 @@ static inline void iwl_fw_error_collect(struct iwl_fw_runtime *fwrt)
+ 	}
+ }
+ 
++void iwl_fw_dbg_periodic_trig_handler(struct timer_list *t);
+ #endif  /* __iwl_fw_dbg_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/init.c b/drivers/net/wireless/intel/iwlwifi/fw/init.c
+index 12310e3d2fc5..4435c0ce3013 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/init.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/init.c
+@@ -76,6 +76,8 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
+ 	fwrt->ops_ctx = ops_ctx;
+ 	INIT_DELAYED_WORK(&fwrt->dump.wk, iwl_fw_error_dump_wk);
+ 	iwl_fwrt_dbgfs_register(fwrt, dbgfs_dir);
++	timer_setup(&fwrt->dump.periodic_trig,
++		    iwl_fw_dbg_periodic_trig_handler, 0);
+ }
+ IWL_EXPORT_SYMBOL(iwl_fw_runtime_init);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index 88a558e082a3..a6402a0b3854 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -146,6 +146,7 @@ struct iwl_fw_runtime {
+ 		u32 umac_err_id;
+ 		void *fifo_iter;
+ 		enum iwl_fw_ini_trigger_id ini_trig_id;
++		struct timer_list periodic_trig;
+ 	} dump;
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	struct {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 55d399899d1c..602ff50268f2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1261,6 +1261,7 @@ static void iwl_mvm_reprobe_wk(struct work_struct *wk)
+ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
+ {
+ 	iwl_abort_notification_waits(&mvm->notif_wait);
++	del_timer(&mvm->fwrt.dump.periodic_trig);
+ 
+ 	/*
+ 	 * This is a bit racy, but worst case we tell mac80211 about
 -- 
 2.20.1
 
