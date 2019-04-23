@@ -6,33 +6,32 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 161B0C10F14
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2732DC282DD
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8C79206BA
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3060206BA
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726995AbfDWJK7 (ORCPT
+        id S1727010AbfDWJLB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Apr 2019 05:10:59 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:59002 "EHLO
+        Tue, 23 Apr 2019 05:11:01 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:58996 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726747AbfDWJK4 (ORCPT
+        with ESMTP id S1726648AbfDWJKz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Apr 2019 05:10:56 -0400
+        Tue, 23 Apr 2019 05:10:55 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hIrS2-0000FN-Jq; Tue, 23 Apr 2019 12:10:54 +0300
+        id 1hIrS2-0000FN-3Y; Tue, 23 Apr 2019 12:10:54 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 09/16] iwlwifi: mvm: Don't sleep in RX path
-Date:   Tue, 23 Apr 2019 12:10:36 +0300
-Message-Id: <20190423091043.7156-10-luca@coelho.fi>
+Subject: [PATCH 08/16] iwlwifi: bump FW API to 48 for 22000 series
+Date:   Tue, 23 Apr 2019 12:10:35 +0300
+Message-Id: <20190423091043.7156-9-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423091043.7156-1-luca@coelho.fi>
 References: <20190423091043.7156-1-luca@coelho.fi>
@@ -43,47 +42,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Don't use cancel_delayed_work_sync() inside the channel switch
-notifications as they are handled synchronously as part of the RX path.
-Fix that by replacing it with cancel_delayed_work(). This should be safe
-as we don't really care whether the work is already started and in such
-case we would disconnect anyway.
+Start supporting API version 48 for 22000 series.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c   | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index fcec25b7b679..53c217af13c8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1570,7 +1570,7 @@ void iwl_mvm_channel_switch_noa_notif(struct iwl_mvm *mvm,
- 		return;
- 	case NL80211_IFTYPE_STATION:
- 		iwl_mvm_csa_client_absent(mvm, vif);
--		cancel_delayed_work_sync(&mvmvif->csa_work);
-+		cancel_delayed_work(&mvmvif->csa_work);
- 		ieee80211_chswitch_done(vif, true);
- 		break;
- 	default:
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index 50314018d157..4d34e5ab1bff 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -234,7 +234,7 @@ iwl_mvm_te_handle_notify_csa(struct iwl_mvm *mvm,
- 			break;
- 		}
- 		iwl_mvm_csa_client_absent(mvm, te_data->vif);
--		cancel_delayed_work_sync(&mvmvif->csa_work);
-+		cancel_delayed_work(&mvmvif->csa_work);
- 		ieee80211_chswitch_done(te_data->vif, true);
- 		break;
- 	default:
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index de456c7f4a89..b25a6875b88d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -56,7 +56,7 @@
+ #include "iwl-config.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL_22000_UCODE_API_MAX	47
++#define IWL_22000_UCODE_API_MAX	48
+ 
+ /* Lowest firmware API version supported */
+ #define IWL_22000_UCODE_API_MIN	39
 -- 
 2.20.1
 
