@@ -2,229 +2,119 @@ Return-Path: <SRS0=odSX=SZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D74C9C10F14
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:00:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF1BC10F14
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:49:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B08D72077C
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:00:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3855120685
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:49:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Bc//IqkU";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RfCtHm/Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726304AbfDWIAl (ORCPT
+        id S1726674AbfDWIt6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Apr 2019 04:00:41 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:45740 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725888AbfDWIAl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Apr 2019 04:00:41 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Tue, 23 Apr 2019 04:49:58 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:49736 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726033AbfDWIt6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Apr 2019 04:49:58 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 336BC615E8; Tue, 23 Apr 2019 08:49:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556009397;
+        bh=NbSDMqi7hIQ95VLwmru5G3ujsOnrkYCVOKDjytvh67g=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Bc//IqkUlsqDAzj+v4tsEuVmuM+X965L5jGQxJEB1V57MrP1wat+Txx721feELNO/
+         IDc3IOmIOtziyMawRhCBtuHENZQGyeOUP4t/gp1HFv/hQpTgmB9xWB6Wg5rVDDRDGw
+         46q5YJ+v1U1Co8bF3D5HgaaK3YQV7xCXM9GMWLd8=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 43AF537EEF;
-        Tue, 23 Apr 2019 08:00:41 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.98])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BCE041001DC5;
-        Tue, 23 Apr 2019 08:00:38 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH 3/3] mt76x02: remove bogus mutex usage
-Date:   Tue, 23 Apr 2019 10:00:19 +0200
-Message-Id: <20190423080019.6384-4-sgruszka@redhat.com>
-In-Reply-To: <20190423080019.6384-1-sgruszka@redhat.com>
-References: <20190423080019.6384-1-sgruszka@redhat.com>
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id EF183602F3;
+        Tue, 23 Apr 2019 08:49:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556009396;
+        bh=NbSDMqi7hIQ95VLwmru5G3ujsOnrkYCVOKDjytvh67g=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=RfCtHm/Zd0dBb8YIu3iUKbaOsRsoT/k3GYr5QEulSIoTOjH8I6DwnJluuL/x/0N/R
+         oTIblHp3HdNswfCp0TxPoaiJmpQnvgYf4QPbPBKYLYrlckBeSLkG2sbEKp2ZQBAjqf
+         UYke5TVvc0agvdMGzHHBLKIqJDXmR/sOyK1o7aJU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EF183602F3
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Tomislav =?utf-8?Q?Po=C5=BEega?= <pozega.tomislav@gmail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+Subject: Re: [PATCH 00/21] RT3883 support from OpenWrt
+References: <1554809828-13500-1-git-send-email-sgruszka@redhat.com>
+Date:   Tue, 23 Apr 2019 11:49:51 +0300
+In-Reply-To: <1554809828-13500-1-git-send-email-sgruszka@redhat.com>
+        (Stanislaw Gruszka's message of "Tue, 9 Apr 2019 13:36:47 +0200")
+Message-ID: <875zr5xg0g.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Tue, 23 Apr 2019 08:00:41 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-mac80211 .start(), .stop() callbacks are never called concurrently with
-other callbacks. The only concurencly is with mt76 works which we cancel
-on stop() and schedule on start().
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-This fixes possible deadlock on cancel_delayed_work_sync(&dev->mac_work)
-as mac_work also take mutex.
+> Upstream RT3883 support patches cared by openwrt for quite
+> a while now.
+>
+> Patches do not contain the changelog and generate this checkpatch.pl
+> warning:
+>
+> WARNING: Missing commit description - Add an appropriate one
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  6 -----
- .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 22 +++++--------------
- .../wireless/mediatek/mt76/mt76x2/pci_main.c  | 13 +++--------
- .../wireless/mediatek/mt76/mt76x2/usb_main.c  | 10 ++-------
- 4 files changed, 10 insertions(+), 41 deletions(-)
+No empty commit logs, please. They are very annoying.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index 156d3d064ba0..ac979128386a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -25,8 +25,6 @@ static int mt76x0e_start(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	mt76x02_mac_start(dev);
- 	mt76x0_phy_calibrate(dev, true);
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mac_work,
-@@ -35,8 +33,6 @@ static int mt76x0e_start(struct ieee80211_hw *hw)
- 				     MT_CALIBRATE_INTERVAL);
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 
--	mutex_unlock(&dev->mt76.mutex);
--
- 	return 0;
- }
- 
-@@ -62,10 +58,8 @@ static void mt76x0e_stop(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	mt76x0e_stop_hw(dev);
--	mutex_unlock(&dev->mt76.mutex);
- }
- 
- static void
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index 22c10722019d..494b9f35f80d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -81,8 +81,10 @@ static void mt76x0u_cleanup(struct mt76x02_dev *dev)
- 	mt76u_queues_deinit(&dev->mt76);
- }
- 
--static void mt76x0u_mac_stop(struct mt76x02_dev *dev)
-+static void mt76x0u_stop(struct ieee80211_hw *hw)
- {
-+	struct mt76x02_dev *dev = hw->priv;
-+
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	cancel_delayed_work_sync(&dev->cal_work);
- 	cancel_delayed_work_sync(&dev->mac_work);
-@@ -106,11 +108,9 @@ static int mt76x0u_start(struct ieee80211_hw *hw)
- 	struct mt76x02_dev *dev = hw->priv;
- 	int ret;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	ret = mt76x0_mac_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	mt76x0_phy_calibrate(dev, true);
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mac_work,
-@@ -118,19 +118,7 @@ static int mt76x0u_start(struct ieee80211_hw *hw)
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
- 				     MT_CALIBRATE_INTERVAL);
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
--
--out:
--	mutex_unlock(&dev->mt76.mutex);
--	return ret;
--}
--
--static void mt76x0u_stop(struct ieee80211_hw *hw)
--{
--	struct mt76x02_dev *dev = hw->priv;
--
--	mutex_lock(&dev->mt76.mutex);
--	mt76x0u_mac_stop(dev);
--	mutex_unlock(&dev->mt76.mutex);
-+	return 0;
- }
- 
- static const struct ieee80211_ops mt76x0u_ops = {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-index 16dc8e2451b5..3947e8ba486e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-@@ -22,15 +22,13 @@ mt76x2_start(struct ieee80211_hw *hw)
- 	struct mt76x02_dev *dev = hw->priv;
- 	int ret;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	ret = mt76x2_mac_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	ret = mt76x2_phy_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mac_work,
- 				     MT_MAC_WORK_INTERVAL);
-@@ -38,10 +36,7 @@ mt76x2_start(struct ieee80211_hw *hw)
- 				     MT_WATCHDOG_TIME);
- 
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
--
--out:
--	mutex_unlock(&dev->mt76.mutex);
--	return ret;
-+	return 0;
- }
- 
- static void
-@@ -49,10 +44,8 @@ mt76x2_stop(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	mt76x2_stop_hardware(dev);
--	mutex_unlock(&dev->mt76.mutex);
- }
- 
- static int
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-index 0771de210c6a..32726b4906ea 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-@@ -21,30 +21,24 @@ static int mt76x2u_start(struct ieee80211_hw *hw)
- 	struct mt76x02_dev *dev = hw->priv;
- 	int ret;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	ret = mt76x2u_mac_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mac_work,
- 				     MT_MAC_WORK_INTERVAL);
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 
--out:
--	mutex_unlock(&dev->mt76.mutex);
--	return ret;
-+	return 0;
- }
- 
- static void mt76x2u_stop(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	mt76u_stop_tx(&dev->mt76);
- 	mt76x2u_stop_hw(dev);
--	mutex_unlock(&dev->mt76.mutex);
- }
- 
- static int
+> but I do not see much sense for fixing that.
+>
+> Gabor Juhos (21):
+>   rt2x00: rt2800lib: enable support for RT3883
+>   rt2x00: rt2800lib: add rf_vals for RF3853
+>   rt2x00: rt2800lib: enable VCO calibration for RF3853
+>   rt2x00: rt2800lib: add channel configuration function for RF3853
+>   rt2x00: rt2800lib: enable RF3853 support
+>   rt2x00: rt2800lib: add MAC register initialization for RT3883
+>   rt2x00: rt2800soc: fix rt2800soc_disable_radio for RT3883
+>   rt2x00: rt2800lib: add BBP register initialization for RT3883
+>   rt2x00: rt2800lib: add RFCSR initialization for RT3883
+>   rt2x00: rt2800lib: use the extended EEPROM map for RT3883
+>   rt2x00: rt2800lib: force rf type to RF3853 on RT3883
+>   rt2x00: rt2800lib: add channel configuration code for RT3883
+>   rt2x00: rt2800lib: fix txpower_to_dev function for RT3883
+>   rt2x00: rt2800lib: use correct txpower calculation function for RT3883
+>   rt2x00: rt2800lib: hardcode txmixer gain values to zero for RT3883
+>   rt2x00: rt2800lib: use correct [RT]XWI size for RT3883
+>   rt2x00: rt2800lib: fix antenna configuration for RT3883
+>   rt2x00: rt2800lib: fix LNA gain configuration for RT3883
+>   rt2x00: rt2800lib: fix VGC setup for RT3883
+>   rt2x00: rt2800lib: fix EEPROM LNA validation for RT3883
+>   rt2x00: rt2800lib: fix txpower compensation for RT3883
+>
+>  drivers/net/wireless/ralink/rt2x00/rt2800.h    |  19 +-
+>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 598 ++++++++++++++++++++++++-
+>  drivers/net/wireless/ralink/rt2x00/rt2800soc.c |   9 +-
+>  3 files changed, 607 insertions(+), 19 deletions(-)
+
+I'm not seeing the point of of all these small patches, they are all
+about adding RT3883 support, right? I think it it would be easier to
+combine all these to one bigger patch and write a proper commit log
+explaining the background and what has been tested etc. It wouldn't be
+that big patch anyway.
+
 -- 
-2.20.1
-
+Kalle Valo
