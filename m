@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E684C282DD
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46EEEC10F14
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2BEE720685
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14C1220685
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726930AbfDWIuY (ORCPT
+        id S1726911AbfDWIuY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 23 Apr 2019 04:50:24 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:42876 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:42872 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726893AbfDWIuY (ORCPT
+        with ESMTP id S1726866AbfDWIuX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Apr 2019 04:50:24 -0400
+        Tue, 23 Apr 2019 04:50:23 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hIr8A-0000YC-HR; Tue, 23 Apr 2019 11:50:22 +0300
+        id 1hIr8A-0000YC-04; Tue, 23 Apr 2019 11:50:22 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 8/8] iwlwifi: dbg_ini: check for valid region type during regions parsing
-Date:   Tue, 23 Apr 2019 11:50:14 +0300
-Message-Id: <20190423085014.15390-9-luca@coelho.fi>
+Subject: [PATCH 7/8] iwlwifi: avoid allocating memory for region with disabled domain
+Date:   Tue, 23 Apr 2019 11:50:13 +0300
+Message-Id: <20190423085014.15390-8-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423085014.15390-1-luca@coelho.fi>
 References: <20190423085014.15390-1-luca@coelho.fi>
@@ -45,43 +45,35 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Add region type checking during regions parsing to avoid attempts to
-parse unsupported or illegal region types.
+In iwl_fw_ini_get_trigger_len the driver allocates space for memory
+regions regardless of their domain and in iwl_fw_ini_dump_trigger the
+driver aborts trigger collection of disabled domain. This diff causes
+unneeded memory allocation and traling zeros in the dump file.
+
+Solve this behavior by enforcing domain checking in
+iwl_fw_ini_get_trigger_len
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 62fd346ccb77..5f52e40a2903 100644
+index 4ef447480aaf..62fd346ccb77 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2469,15 +2469,20 @@ static void iwl_fw_dbg_update_regions(struct iwl_fw_runtime *fwrt,
- {
- 	void *iter = (void *)tlv->region_config;
- 	int i, size = le32_to_cpu(tlv->num_regions);
-+	const char *err_st =
-+		"WRT: ext=%d. Invalid region %s %d for apply point %d\n";
+@@ -1751,6 +1751,10 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
+ 			continue;
+ 		}
  
- 	for (i = 0; i < size; i++) {
- 		struct iwl_fw_ini_region_cfg *reg = iter, **active;
- 		int id = le32_to_cpu(reg->region_id);
- 		u32 type = le32_to_cpu(reg->region_type);
- 
--		if (WARN(id >= ARRAY_SIZE(fwrt->dump.active_regs),
--			 "WRT: ext=%d. Invalid region id %d for apply point %d\n",
--			 ext, id, pnt))
-+		if (WARN(id >= ARRAY_SIZE(fwrt->dump.active_regs), err_st, ext,
-+			 "id", id, pnt))
-+			break;
++		/* currently the driver supports always on domain only */
++		if (le32_to_cpu(reg->domain) != IWL_FW_INI_DBG_DOMAIN_ALWAYS_ON)
++			continue;
 +
-+		if (WARN(type == 0 || type >= IWL_FW_INI_REGION_NUM, err_st,
-+			 ext, "type", type, pnt))
- 			break;
- 
- 		active = &fwrt->dump.active_regs[id];
+ 		switch (le32_to_cpu(reg->region_type)) {
+ 		case IWL_FW_INI_REGION_DEVICE_MEMORY:
+ 		case IWL_FW_INI_REGION_PERIPHERY_MAC:
 -- 
 2.20.1
 
