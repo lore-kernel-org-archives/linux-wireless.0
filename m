@@ -2,182 +2,74 @@ Return-Path: <SRS0=odSX=SZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C77C282DD
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 045FEC10F14
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:58:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6DD4220685
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAAC420674
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:58:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726893AbfDWIu2 (ORCPT
+        id S1726508AbfDWI6h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Apr 2019 04:50:28 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:42860 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726648AbfDWIuW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Apr 2019 04:50:22 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1hIr89-0000YC-1Z; Tue, 23 Apr 2019 11:50:21 +0300
-From:   Luca Coelho <luca@coelho.fi>
+        Tue, 23 Apr 2019 04:58:37 -0400
+Received: from mga11.intel.com ([192.55.52.93]:35672 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726045AbfDWI6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Apr 2019 04:58:37 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Apr 2019 01:58:37 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,385,1549958400"; 
+   d="scan'208";a="144913121"
+Received: from ipoitasu-mobl.ger.corp.intel.com ([10.252.17.11])
+  by orsmga003.jf.intel.com with ESMTP; 23 Apr 2019 01:53:54 -0700
+Message-ID: <34edd015c5c44054a4d85fc0fd30ff6cfaa1f3fb.camel@intel.com>
+Subject: Re: [PATCH 0/8] iwlwifi: updates intended for v5.2 2019-04-23
+From:   Luciano Coelho <luciano.coelho@intel.com>
 To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 5/8] iwlwifi: dbg_ini: add periodic trigger support
-Date:   Tue, 23 Apr 2019 11:50:11 +0300
-Message-Id: <20190423085014.15390-6-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
+Cc:     linux-wireless@vger.kernel.org
+Date:   Tue, 23 Apr 2019 11:53:53 +0300
 In-Reply-To: <20190423085014.15390-1-luca@coelho.fi>
 References: <20190423085014.15390-1-luca@coelho.fi>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5-1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+On Tue, 2019-04-23 at 11:50 +0300, Luca Coelho wrote:
+> From: Luca Coelho <luciano.coelho@intel.com>
+> 
+> Hi,
+> 
+> Here's the fifth set of patches intended for v5.2.  It's the usual
+> development, new features, cleanups and bugfixes.
+> 
+> The changes are:
+> 
+> * Fix a bug we introduced in the RX path in a previous patch;
+> * Add command version parsing from the FW TLVs;
+> * Some fixes and improvements in the new debugging framework;
+> * One tiny janitorial fix to remove a stray character;
+> 
+> As usual, I'm pushing this to a pending branch, for kbuild bot, and
+> will send a pull-request later.
+> 
+> Please review.
+> 
+> Cheers,
+> Luca.
 
-Allows to configure a periodic data collection
+Sorry, ignore this, I missed a bunch of patches before this series.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 40 +++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  3 ++
- drivers/net/wireless/intel/iwlwifi/fw/init.c  |  2 +
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  1 +
- 5 files changed, 47 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 035eeeabfc8c..d8c4fdb8d4a1 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2616,6 +2616,20 @@ static void iwl_fw_dbg_update_triggers(struct iwl_fw_runtime *fwrt,
- 			active->trig->occurrences = cpu_to_le32(-1);
- 
- 		active->active = true;
-+
-+		if (id == IWL_FW_TRIGGER_ID_PERIODIC_TRIGGER) {
-+			u32 collect_interval = le32_to_cpu(trig->trigger_data);
-+
-+			/* the minimum allowed interval is 50ms */
-+			if (collect_interval < 50) {
-+				collect_interval = 50;
-+				trig->trigger_data =
-+					cpu_to_le32(collect_interval);
-+			}
-+
-+			mod_timer(&fwrt->dump.periodic_trig,
-+				  jiffies + msecs_to_jiffies(collect_interval));
-+		}
- next:
- 		iter += sizeof(*trig) + trig_regs_size;
- 
-@@ -2696,8 +2710,34 @@ IWL_EXPORT_SYMBOL(iwl_fw_dbg_apply_point);
- 
- void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt)
- {
-+	del_timer(&fwrt->dump.periodic_trig);
- 	iwl_fw_dbg_collect_sync(fwrt);
- 
- 	iwl_trans_stop_device(fwrt->trans);
- }
- IWL_EXPORT_SYMBOL(iwl_fwrt_stop_device);
-+
-+void iwl_fw_dbg_periodic_trig_handler(struct timer_list *t)
-+{
-+	struct iwl_fw_runtime *fwrt;
-+	enum iwl_fw_ini_trigger_id id = IWL_FW_TRIGGER_ID_PERIODIC_TRIGGER;
-+	int ret;
-+	typeof(fwrt->dump) *dump_ptr = container_of(t, typeof(fwrt->dump),
-+						    periodic_trig);
-+
-+	fwrt = container_of(dump_ptr, typeof(*fwrt), dump);
-+
-+	ret = _iwl_fw_dbg_ini_collect(fwrt, id);
-+	if (!ret || ret == -EBUSY) {
-+		struct iwl_fw_ini_trigger *trig =
-+			fwrt->dump.active_trigs[id].trig;
-+		u32 occur = le32_to_cpu(trig->occurrences);
-+		u32 collect_interval = le32_to_cpu(trig->trigger_data);
-+
-+		if (!occur)
-+			return;
-+
-+		mod_timer(&fwrt->dump.periodic_trig,
-+			  jiffies + msecs_to_jiffies(collect_interval));
-+	}
-+}
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index cccf91db74c4..2a9e560a906b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -385,11 +385,13 @@ void iwl_fw_dbg_read_d3_debug_data(struct iwl_fw_runtime *fwrt);
- 
- static inline void iwl_fw_flush_dump(struct iwl_fw_runtime *fwrt)
- {
-+	del_timer(&fwrt->dump.periodic_trig);
- 	flush_delayed_work(&fwrt->dump.wk);
- }
- 
- static inline void iwl_fw_cancel_dump(struct iwl_fw_runtime *fwrt)
- {
-+	del_timer(&fwrt->dump.periodic_trig);
- 	cancel_delayed_work_sync(&fwrt->dump.wk);
- }
- 
-@@ -468,4 +470,5 @@ static inline void iwl_fw_error_collect(struct iwl_fw_runtime *fwrt)
- 	}
- }
- 
-+void iwl_fw_dbg_periodic_trig_handler(struct timer_list *t);
- #endif  /* __iwl_fw_dbg_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/init.c b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-index 12310e3d2fc5..4435c0ce3013 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/init.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-@@ -76,6 +76,8 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
- 	fwrt->ops_ctx = ops_ctx;
- 	INIT_DELAYED_WORK(&fwrt->dump.wk, iwl_fw_error_dump_wk);
- 	iwl_fwrt_dbgfs_register(fwrt, dbgfs_dir);
-+	timer_setup(&fwrt->dump.periodic_trig,
-+		    iwl_fw_dbg_periodic_trig_handler, 0);
- }
- IWL_EXPORT_SYMBOL(iwl_fw_runtime_init);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 88a558e082a3..a6402a0b3854 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -146,6 +146,7 @@ struct iwl_fw_runtime {
- 		u32 umac_err_id;
- 		void *fifo_iter;
- 		enum iwl_fw_ini_trigger_id ini_trig_id;
-+		struct timer_list periodic_trig;
- 	} dump;
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	struct {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 55d399899d1c..602ff50268f2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1261,6 +1261,7 @@ static void iwl_mvm_reprobe_wk(struct work_struct *wk)
- void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- {
- 	iwl_abort_notification_waits(&mvm->notif_wait);
-+	del_timer(&mvm->fwrt.dump.periodic_trig);
- 
- 	/*
- 	 * This is a bit racy, but worst case we tell mac80211 about
--- 
-2.20.1
+--
+Luca.
 
