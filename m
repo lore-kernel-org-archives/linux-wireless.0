@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46EEEC10F14
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2047BC282E1
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 14C1220685
+	by mail.kernel.org (Postfix) with ESMTP id E9F1C20685
 	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726911AbfDWIuY (ORCPT
+        id S1726903AbfDWIuY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 23 Apr 2019 04:50:24 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:42872 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:42864 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726866AbfDWIuX (ORCPT
+        with ESMTP id S1726823AbfDWIuX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 23 Apr 2019 04:50:23 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hIr8A-0000YC-04; Tue, 23 Apr 2019 11:50:22 +0300
+        id 1hIr89-0000YC-HA; Tue, 23 Apr 2019 11:50:21 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 7/8] iwlwifi: avoid allocating memory for region with disabled domain
-Date:   Tue, 23 Apr 2019 11:50:13 +0300
-Message-Id: <20190423085014.15390-8-luca@coelho.fi>
+Subject: [PATCH 6/8] iwlwifi: dbg: replace dump info device family with HW type
+Date:   Tue, 23 Apr 2019 11:50:12 +0300
+Message-Id: <20190423085014.15390-7-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423085014.15390-1-luca@coelho.fi>
 References: <20190423085014.15390-1-luca@coelho.fi>
@@ -45,35 +45,78 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-In iwl_fw_ini_get_trigger_len the driver allocates space for memory
-regions regardless of their domain and in iwl_fw_ini_dump_trigger the
-driver aborts trigger collection of disabled domain. This diff causes
-unneeded memory allocation and traling zeros in the dump file.
+In the dump info, the driver sets device_family to
+IWL_FW_ERROR_DUMP_FAMILY_7 in case IWL_FW_ERROR_DUMP_FAMILY_7 is used or
+IWL_FW_ERROR_DUMP_FAMILY_8 otherwise. This information is misleading and
+incorrect since the driver sets the device family to 8 to any device that
+is from family 8 and later, e.g. device family 9 is represented as 8 in
+the dump.
+Also, the device family enum is known only to the driver and
+does not give any information to the FW developer
 
-Solve this behavior by enforcing domain checking in
-iwl_fw_ini_get_trigger_len
+Change the device family to HW type to give propper data about the nic
+in use.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c        | 7 ++-----
+ drivers/net/wireless/intel/iwlwifi/fw/error-dump.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h       | 1 +
+ 3 files changed, 5 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 4ef447480aaf..62fd346ccb77 100644
+index d8c4fdb8d4a1..4ef447480aaf 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1751,6 +1751,10 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
- 			continue;
- 		}
+@@ -917,11 +917,8 @@ iwl_fw_error_dump_file(struct iwl_fw_runtime *fwrt,
+ 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
+ 		dump_data->len = cpu_to_le32(sizeof(*dump_info));
+ 		dump_info = (void *)dump_data->data;
+-		dump_info->device_family =
+-			fwrt->trans->cfg->device_family ==
+-			IWL_DEVICE_FAMILY_7000 ?
+-				cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
+-				cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
++		dump_info->hw_type =
++			cpu_to_le32(CSR_HW_REV_TYPE(fwrt->trans->hw_rev));
+ 		dump_info->hw_step =
+ 			cpu_to_le32(CSR_HW_REV_STEP(fwrt->trans->hw_rev));
+ 		memcpy(dump_info->fw_human_readable, fwrt->fw->human_readable,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 260097c75427..0feff4c33e39 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -184,7 +184,7 @@ enum iwl_fw_error_dump_family {
  
-+		/* currently the driver supports always on domain only */
-+		if (le32_to_cpu(reg->domain) != IWL_FW_INI_DBG_DOMAIN_ALWAYS_ON)
-+			continue;
-+
- 		switch (le32_to_cpu(reg->region_type)) {
- 		case IWL_FW_INI_REGION_DEVICE_MEMORY:
- 		case IWL_FW_INI_REGION_PERIPHERY_MAC:
+ /**
+  * struct iwl_fw_error_dump_info - info on the device / firmware
+- * @device_family: the family of the device (7 / 8)
++ * @hw_type: the type of the device
+  * @hw_step: the step of the device
+  * @fw_human_readable: human readable FW version
+  * @dev_human_readable: name of the device
+@@ -196,7 +196,7 @@ enum iwl_fw_error_dump_family {
+  *	if the dump collection was not initiated by an assert, the value is 0
+  */
+ struct iwl_fw_error_dump_info {
+-	__le32 device_family;
++	__le32 hw_type;
+ 	__le32 hw_step;
+ 	u8 fw_human_readable[FW_VER_HUMAN_READABLE_SZ];
+ 	u8 dev_human_readable[64];
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index 2b98ecdcf301..553554846009 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -290,6 +290,7 @@
+ /* HW REV */
+ #define CSR_HW_REV_DASH(_val)          (((_val) & 0x0000003) >> 0)
+ #define CSR_HW_REV_STEP(_val)          (((_val) & 0x000000C) >> 2)
++#define CSR_HW_REV_TYPE(_val)          (((_val) & 0x000FFF0) >> 4)
+ 
+ /* HW RFID */
+ #define CSR_HW_RFID_FLAVOR(_val)       (((_val) & 0x000000F) >> 0)
 -- 
 2.20.1
 
