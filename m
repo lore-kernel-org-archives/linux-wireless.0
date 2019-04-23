@@ -2,97 +2,95 @@ Return-Path: <SRS0=odSX=SZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C0BBC282E1
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 12:41:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCD47C10F14
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 13:25:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D80672175B
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 12:41:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A86A820645
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 13:25:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kNcLl9vj";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TlF2ZQq3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727228AbfDWMlm (ORCPT
+        id S1727745AbfDWNZO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Apr 2019 08:41:42 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:32790 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726033AbfDWMll (ORCPT
+        Tue, 23 Apr 2019 09:25:14 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:46514 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726421AbfDWNZN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Apr 2019 08:41:41 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hIujv-0007rP-1P; Tue, 23 Apr 2019 14:41:35 +0200
-Message-ID: <99da695257304d32b65e2db8b7ada06759087c90.camel@sipsolutions.net>
-Subject: Re: [PATCH 5/5] mac80211: set NETIF_F_LLTX when using intermediate
- tx queues
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Cc:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
-        Eric Dumazet <eric.dumazet@gmail.com>, netdev@vger.kernel.org
-Date:   Tue, 23 Apr 2019 14:41:33 +0200
-In-Reply-To: <87tvexrnxm.fsf@toke.dk> (sfid-20190417_112604_778209_602EB19C)
-References: <20190416074444.pdubbh6fbibdnhi7@gondor.apana.org.au>
-         <73b18131-2777-da5c-a6ee-9d9b3e13cd06@broadcom.com>
-         <20190416083636.5ttvezqyhzr2worg@gondor.apana.org.au>
-         <eab39dd804405854997e50102f3d0ff925feb8d2.camel@sipsolutions.net>
-         <87ef62uwfm.fsf@toke.dk>
-         <95f86cf69dee05a176625925657cf0df0e97b5c9.camel@sipsolutions.net>
-         <20190416093707.dtlwcmitzqopaeaw@gondor.apana.org.au>
-         <e4c1a3ca0c0c160b7c271ab83deebcf096f38497.camel@sipsolutions.net>
-         <20190416131346.u2uolljlrd5t2jro@gondor.apana.org.au>
-         <87wojut7f7.fsf@toke.dk>
-         <20190417033834.ep6t7r6ttvjek5g7@gondor.apana.org.au>
-         <87tvexrnxm.fsf@toke.dk> (sfid-20190417_112604_778209_602EB19C)
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Tue, 23 Apr 2019 09:25:13 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id EDF3D615AD; Tue, 23 Apr 2019 13:25:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556025912;
+        bh=uJm58UB6TX86k14JqdM2ndHn0mPgqUsENIQWAvQTV2I=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=kNcLl9vjVuArhcar04UXrMbw/Y0BN3JHQ5bDVqbjQEJ9CSfe+ljW6sFxfebcNU4cD
+         CcPWXpJwvgVFqQi7LWQpyFaWFN+MdiLdYAV4aCb9/NDdN7StWsk/o0Y3zae35oHzjO
+         Oiiu2TmaJTV+3PcQmU8dgpJ2o/e4/G4fV+zwa2Go=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A627A60AD1;
+        Tue, 23 Apr 2019 13:25:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556025912;
+        bh=uJm58UB6TX86k14JqdM2ndHn0mPgqUsENIQWAvQTV2I=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=TlF2ZQq3jjsDptafhwWfpUKHr3akoL6+HSkxLURIn4YVeZqUtvHxa9zmxd8uCXFiG
+         eb5Z8H6kQy88/UgHREjFDddtL4/ZfN6lBRflUne3gsiL+SYccR84XVXopzHihv2u76
+         pcWoWaMsnBydcfA/KVrx1DljXSBgFAOto0K7JNBw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A627A60AD1
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 1/6] ath10k: sdio: workaround firmware UART pin
+ configuration bug
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <155507569645.32018.15231567732563770250.stgit@potku.adurom.net>
+References: <155507569645.32018.15231567732563770250.stgit@potku.adurom.net>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190423132512.EDF3D615AD@smtp.codeaurora.org>
+Date:   Tue, 23 Apr 2019 13:25:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2019-04-17 at 10:17 +0100, Toke Høiland-Jørgensen wrote:
-> Herbert Xu <herbert@gondor.apana.org.au> writes:
+Kalle Valo <kvalo@codeaurora.org> wrote:
+
+> On QCA6174 SDIO devices the SDIO interrupt will fail if UART is
+> disabled from ath10k. SDIO firmware enables UART printouts by
+> default. If ath10k will try to enable UART again the firmware
+> will configure it's GPIO line incorrectly and SDIO interrupts
+> won't work anymore. The workaround is to set UART pin again (19
+> for QCA6174 SDIO) if uart_print is 0.
 > 
-> > On Tue, Apr 16, 2019 at 02:18:36PM +0100, Toke Høiland-Jørgensen wrote:
-> > > 
-> > > > The congestion control happens at two levels. You are right that the
-> > > > socket buffer acts as one limit. However, other applications may also
-> > > > rely on the TX queue being full as the throttle (by setting a
-> > > > sufficiently large socket buffer size).
-> > > 
-> > > Do you happen to have an example of an application that does this that
-> > > could be used for testing? :)
-> > 
-> > Have a look at
-> > 
-> > commit 6ce9e7b5fe3195d1ae6e3a0753d4ddcac5cd699e
-> > Author: Eric Dumazet <eric.dumazet@gmail.com>
-> > Date:   Wed Sep 2 18:05:33 2009 -0700
-> > 
-> >     ip: Report qdisc packet drops
-> > 
-> > You should be able to do a UDP flood while setting IP_RECVERR to
-> > detect the packet drop due to a full queue which AFAICS will never
-> > happen with the current mac80211 setup.
+> Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00007-QCARMSWP-1.
 > 
-> Also, looking at udp.c, it seems it uses net_xmit_errno() - which means
-> that returning NET_XMIT_CN has the same effect as NET_XMIT_SUCCESS when
-> propagated back to userspace? Which would kinda defeat the point of
-> going to the trouble of propagating up the return code (the mac80211
-> queue will never drop the most recently enqueued packet)...
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-I guess there might be value in returning NET_XMIT_CN anyway, but I
-think you're right in that we can never return anything but
-NET_XMIT_SUCCESS or NET_XMIT_CN since we never drop this new packet,
-just older ones.
+6 patches applied to ath-next branch of ath.git, thanks.
 
-Which, btw, is exactly the same with net/sched/sch_fq_codel.c, AFAICT?
+4504f0e5b571 ath10k: sdio: workaround firmware UART pin configuration bug
+70736b9753fd ath10k: don't disable interrupts in ath10k_sdio_remove()
+e2a6b711282a ath10k: htt: don't use txdone_fifo with SDIO
+6d084ac27ab4 ath10k: initialise struct ath10k_bus params to zero
+8ea51e409eb0 ath10k: htt: support MSDU ids with SDIO
+30382dd1cf3a ath10k: fix use-after-free on SDIO data frames
 
-johannes
+-- 
+https://patchwork.kernel.org/patch/10898285/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
