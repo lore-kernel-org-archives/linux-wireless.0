@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F3CC282DD
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E0ECC10F14
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41ED3206BA
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C43C206BA
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 09:11:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726557AbfDWJKx (ORCPT
+        id S1726648AbfDWJL3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Apr 2019 05:10:53 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:58956 "EHLO
+        Tue, 23 Apr 2019 05:11:29 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:59016 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725939AbfDWJKx (ORCPT
+        with ESMTP id S1726130AbfDWJL3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Apr 2019 05:10:53 -0400
+        Tue, 23 Apr 2019 05:11:29 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hIrRz-0000FN-BS; Tue, 23 Apr 2019 12:10:51 +0300
+        id 1hIrS5-0000FN-G8; Tue, 23 Apr 2019 12:10:57 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 02/16] iwlwifi: pcie: initialize debug_rfkill to -1
-Date:   Tue, 23 Apr 2019 12:10:29 +0300
-Message-Id: <20190423091043.7156-3-luca@coelho.fi>
+Subject: [PATCH 15/16] iwlwifi: avoid allocating memory for region with disabled domain
+Date:   Tue, 23 Apr 2019 12:10:42 +0300
+Message-Id: <20190423091043.7156-16-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423091043.7156-1-luca@coelho.fi>
 References: <20190423091043.7156-1-luca@coelho.fi>
@@ -43,75 +43,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-This will let us introduce a mechanism to start with rfkill
-faked, and put 0 here to override it.
+In iwl_fw_ini_get_trigger_len the driver allocates space for memory
+regions regardless of their domain and in iwl_fw_ini_dump_trigger the
+driver aborts trigger collection of disabled domain. This diff causes
+unneeded memory allocation and traling zeros in the dump file.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Solve this behavior by enforcing domain checking in
+iwl_fw_ini_get_trigger_len
+
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  4 ++--
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 11 ++++++-----
- 2 files changed, 8 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 1f1594e136c5..b513037dc066 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -536,7 +536,7 @@ struct iwl_trans_pcie {
- 	int ict_index;
- 	bool use_ict;
- 	bool is_down, opmode_down;
--	bool debug_rfkill;
-+	s8 debug_rfkill;
- 	struct isr_statistics isr_stats;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 4ef447480aaf..62fd346ccb77 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1751,6 +1751,10 @@ static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
+ 			continue;
+ 		}
  
- 	spinlock_t irq_lock;
-@@ -982,7 +982,7 @@ static inline bool iwl_is_rfkill_set(struct iwl_trans *trans)
- 
- 	lockdep_assert_held(&trans_pcie->mutex);
- 
--	if (trans_pcie->debug_rfkill)
-+	if (trans_pcie->debug_rfkill == 1)
- 		return true;
- 
- 	return !(iwl_read32(trans, CSR_GP_CNTRL) &
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 717b9b5be157..d638f41efcdd 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2688,16 +2688,17 @@ static ssize_t iwl_dbgfs_rfkill_write(struct file *file,
- {
- 	struct iwl_trans *trans = file->private_data;
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	bool old = trans_pcie->debug_rfkill;
-+	bool new_value;
- 	int ret;
- 
--	ret = kstrtobool_from_user(user_buf, count, &trans_pcie->debug_rfkill);
-+	ret = kstrtobool_from_user(user_buf, count, &new_value);
- 	if (ret)
- 		return ret;
--	if (old == trans_pcie->debug_rfkill)
-+	if (new_value == trans_pcie->debug_rfkill)
- 		return count;
- 	IWL_WARN(trans, "changing debug rfkill %d->%d\n",
--		 old, trans_pcie->debug_rfkill);
-+		 trans_pcie->debug_rfkill, new_value);
-+	trans_pcie->debug_rfkill = new_value;
- 	iwl_pcie_handle_rfkill_irq(trans);
- 
- 	return count;
-@@ -3421,7 +3422,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		ret = -ENOMEM;
- 		goto out_no_pci;
- 	}
--
-+	trans_pcie->debug_rfkill = -1;
- 
- 	if (!cfg->base_params->pcie_l1_allowed) {
- 		/*
++		/* currently the driver supports always on domain only */
++		if (le32_to_cpu(reg->domain) != IWL_FW_INI_DBG_DOMAIN_ALWAYS_ON)
++			continue;
++
+ 		switch (le32_to_cpu(reg->region_type)) {
+ 		case IWL_FW_INI_REGION_DEVICE_MEMORY:
+ 		case IWL_FW_INI_REGION_PERIPHERY_MAC:
 -- 
 2.20.1
 
