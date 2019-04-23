@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2047BC282E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A857AC10F14
 	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9F1C20685
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F88A20685
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 08:50:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726903AbfDWIuY (ORCPT
+        id S1726874AbfDWIuX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Apr 2019 04:50:24 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:42864 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726823AbfDWIuX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 23 Apr 2019 04:50:23 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:42848 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726618AbfDWIuW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Apr 2019 04:50:22 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hIr89-0000YC-HA; Tue, 23 Apr 2019 11:50:21 +0300
+        id 1hIr88-0000YC-31; Tue, 23 Apr 2019 11:50:20 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 6/8] iwlwifi: dbg: replace dump info device family with HW type
-Date:   Tue, 23 Apr 2019 11:50:12 +0300
-Message-Id: <20190423085014.15390-7-luca@coelho.fi>
+Subject: [PATCH 3/8] iwlwifi: parse command version TLV
+Date:   Tue, 23 Apr 2019 11:50:09 +0300
+Message-Id: <20190423085014.15390-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423085014.15390-1-luca@coelho.fi>
 References: <20190423085014.15390-1-luca@coelho.fi>
@@ -43,80 +43,122 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-In the dump info, the driver sets device_family to
-IWL_FW_ERROR_DUMP_FAMILY_7 in case IWL_FW_ERROR_DUMP_FAMILY_7 is used or
-IWL_FW_ERROR_DUMP_FAMILY_8 otherwise. This information is misleading and
-incorrect since the driver sets the device family to 8 to any device that
-is from family 8 and later, e.g. device family 9 is represented as 8 in
-the dump.
-Also, the device family enum is known only to the driver and
-does not give any information to the FW developer
+In newer firmware images there's a command version TLV that
+states, for each listed command or notification, which version
+of the command and/or notification structure is used. Read and
+keep this data to be able to use it in the future.
 
-Change the device family to HW type to give propper data about the nic
-in use.
-
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c        | 7 ++-----
- drivers/net/wireless/intel/iwlwifi/fw/error-dump.h | 4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h       | 1 +
- 3 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/file.h | 17 +++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/img.h  |  7 +++++--
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 18 ++++++++++++++++++
+ 3 files changed, 40 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index d8c4fdb8d4a1..4ef447480aaf 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -917,11 +917,8 @@ iwl_fw_error_dump_file(struct iwl_fw_runtime *fwrt,
- 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
- 		dump_data->len = cpu_to_le32(sizeof(*dump_info));
- 		dump_info = (void *)dump_data->data;
--		dump_info->device_family =
--			fwrt->trans->cfg->device_family ==
--			IWL_DEVICE_FAMILY_7000 ?
--				cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
--				cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
-+		dump_info->hw_type =
-+			cpu_to_le32(CSR_HW_REV_TYPE(fwrt->trans->hw_rev));
- 		dump_info->hw_step =
- 			cpu_to_le32(CSR_HW_REV_STEP(fwrt->trans->hw_rev));
- 		memcpy(dump_info->fw_human_readable, fwrt->fw->human_readable,
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-index 260097c75427..0feff4c33e39 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-@@ -184,7 +184,7 @@ enum iwl_fw_error_dump_family {
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 2faec36f3d76..b0671e16e1ce 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -142,6 +142,7 @@ enum iwl_ucode_tlv_type {
+ 	IWL_UCODE_TLV_FW_DBG_DEST	= 38,
+ 	IWL_UCODE_TLV_FW_DBG_CONF	= 39,
+ 	IWL_UCODE_TLV_FW_DBG_TRIGGER	= 40,
++	IWL_UCODE_TLV_CMD_VERSIONS	= 48,
+ 	IWL_UCODE_TLV_FW_GSCAN_CAPA	= 50,
+ 	IWL_UCODE_TLV_FW_MEM_SEG	= 51,
+ 	IWL_UCODE_TLV_IML		= 52,
+@@ -943,4 +944,20 @@ struct iwl_fw_dbg_conf_tlv {
+ 	struct iwl_fw_dbg_conf_hcmd hcmd;
+ } __packed;
  
- /**
-  * struct iwl_fw_error_dump_info - info on the device / firmware
-- * @device_family: the family of the device (7 / 8)
-+ * @hw_type: the type of the device
-  * @hw_step: the step of the device
-  * @fw_human_readable: human readable FW version
-  * @dev_human_readable: name of the device
-@@ -196,7 +196,7 @@ enum iwl_fw_error_dump_family {
-  *	if the dump collection was not initiated by an assert, the value is 0
-  */
- struct iwl_fw_error_dump_info {
--	__le32 device_family;
-+	__le32 hw_type;
- 	__le32 hw_step;
- 	u8 fw_human_readable[FW_VER_HUMAN_READABLE_SZ];
- 	u8 dev_human_readable[64];
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index 2b98ecdcf301..553554846009 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -290,6 +290,7 @@
- /* HW REV */
- #define CSR_HW_REV_DASH(_val)          (((_val) & 0x0000003) >> 0)
- #define CSR_HW_REV_STEP(_val)          (((_val) & 0x000000C) >> 2)
-+#define CSR_HW_REV_TYPE(_val)          (((_val) & 0x000FFF0) >> 4)
++#define IWL_FW_CMD_VER_UNKNOWN 99
++
++/**
++ * struct iwl_fw_cmd_version - firmware command version entry
++ * @cmd: command ID
++ * @group: group ID
++ * @cmd_ver: command version
++ * @notif_ver: notification version
++ */
++struct iwl_fw_cmd_version {
++	u8 cmd;
++	u8 group;
++	u8 cmd_ver;
++	u8 notif_ver;
++} __packed;
++
+ #endif  /* __iwl_fw_file_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
+index f4c5a4d73206..18ca5f152be6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016        Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016        Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -109,6 +109,9 @@ struct iwl_ucode_capabilities {
+ 	u32 error_log_size;
+ 	unsigned long _api[BITS_TO_LONGS(NUM_IWL_UCODE_TLV_API)];
+ 	unsigned long _capa[BITS_TO_LONGS(NUM_IWL_UCODE_TLV_CAPA)];
++
++	const struct iwl_fw_cmd_version *cmd_versions;
++	u32 n_cmd_versions;
+ };
  
- /* HW RFID */
- #define CSR_HW_RFID_FLAVOR(_val)       (((_val) & 0x000000F) >> 0)
+ static inline bool
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 1ad739bace0f..852d3cbfc719 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -179,6 +179,7 @@ static void iwl_dealloc_ucode(struct iwl_drv *drv)
+ 		kfree(drv->fw.dbg.trigger_tlv[i]);
+ 	kfree(drv->fw.dbg.mem_tlv);
+ 	kfree(drv->fw.iml);
++	kfree(drv->fw.ucode_capa.cmd_versions);
+ 
+ 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
+ 		iwl_free_fw_img(drv, drv->fw.img + i);
+@@ -1144,6 +1145,23 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 			if (iwlwifi_mod_params.enable_ini)
+ 				iwl_fw_dbg_copy_tlv(drv->trans, tlv, false);
+ 			break;
++		case IWL_UCODE_TLV_CMD_VERSIONS:
++			if (tlv_len % sizeof(struct iwl_fw_cmd_version)) {
++				IWL_ERR(drv,
++					"Invalid length for command versions: %u\n",
++					tlv_len);
++				tlv_len /= sizeof(struct iwl_fw_cmd_version);
++				tlv_len *= sizeof(struct iwl_fw_cmd_version);
++			}
++			if (WARN_ON(capa->cmd_versions))
++				return -EINVAL;
++			capa->cmd_versions = kmemdup(tlv_data, tlv_len,
++						     GFP_KERNEL);
++			if (!capa->cmd_versions)
++				return -ENOMEM;
++			capa->n_cmd_versions =
++				tlv_len / sizeof(struct iwl_fw_cmd_version);
++			break;
+ 		default:
+ 			IWL_DEBUG_INFO(drv, "unknown TLV: %d\n", tlv_type);
+ 			break;
 -- 
 2.20.1
 
