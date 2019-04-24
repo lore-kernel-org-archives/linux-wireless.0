@@ -2,152 +2,110 @@ Return-Path: <SRS0=48GF=S2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 569FFC10F11
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 13:44:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A44ADC282CE
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 15:17:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E0212054F
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 13:44:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74215218FC
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 15:17:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hNQTG2y2";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PKYFPLbl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730584AbfDXNo3 convert rfc822-to-8bit (ORCPT
+        id S1731068AbfDXPRg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Apr 2019 09:44:29 -0400
-Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:58774 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727112AbfDXNo3 (ORCPT
+        Wed, 24 Apr 2019 11:17:36 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:46978 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725941AbfDXPRg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Apr 2019 09:44:29 -0400
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-50-CiFaQrbeNPCHVcud67r0LA-1; Wed, 24 Apr 2019 14:44:26 +0100
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b::d117) by AcuMS.aculab.com
- (fd9f:af1c:a25b::d117) with Microsoft SMTP Server (TLS) id 15.0.1347.2; Wed,
- 24 Apr 2019 14:45:38 +0100
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Wed, 24 Apr 2019 14:45:38 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Fenghua Yu' <fenghua.yu@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-CC:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H Peter Anvin" <hpa@zytor.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Dave Hansen <dave.hansen@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ravi V Shankar <ravi.v.shankar@intel.com>,
-        Xiaoyao Li <xiaoyao.li@intel.com>,
-        Christopherson Sean J <sean.j.christopherson@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Michael Chan" <michael.chan@broadcom.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        x86 <x86@kernel.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v7 15/21] x86/split_lock: Add a sysfs interface to
- enable/disable split lock detection during run time
-Thread-Topic: [PATCH v7 15/21] x86/split_lock: Add a sysfs interface to
- enable/disable split lock detection during run time
-Thread-Index: AQHU+hcuIxO/8RRUC06MiZvP1071Y6ZLUq/w
-Date:   Wed, 24 Apr 2019 13:45:38 +0000
-Message-ID: <4a90dd7bf26f44a795ecf55aa54b8ce5@AcuMS.aculab.com>
-References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
- <1555536851-17462-16-git-send-email-fenghua.yu@intel.com>
- <alpine.DEB.2.21.1904180042090.3174@nanos.tec.linutronix.de>
- <20190418005711.GB18776@romley-ivt3.sc.intel.com>
- <alpine.DEB.2.21.1904180832290.3174@nanos.tec.linutronix.de>
- <20190423204809.GD18776@romley-ivt3.sc.intel.com>
-In-Reply-To: <20190423204809.GD18776@romley-ivt3.sc.intel.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        Wed, 24 Apr 2019 11:17:36 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id AA3766055C; Wed, 24 Apr 2019 15:17:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556119055;
+        bh=o6lJxOJUK21xd5wRMaWZZl11RC+WkjZFuRFhYHpAtnI=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=hNQTG2y2jVq8sGMtiYdWAtK+bThCPJld190z2kmNIyKb1GsneyeuEYgUJi73yhX9f
+         J1JWhpdQ7GPHltUeMPYblMrPDoQqGW42taI2LCp6xhcFxMN9km1UkpzolSL9kY8DtV
+         Akn2NlkR29xDFlXgFZ61blw4HtyFz6QmAN684m48=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id ED2B8604B4;
+        Wed, 24 Apr 2019 15:17:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556119054;
+        bh=o6lJxOJUK21xd5wRMaWZZl11RC+WkjZFuRFhYHpAtnI=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=PKYFPLblqDFaCbEf9yQjVscbOhNsADHUUhYj1MePiVSAlkcmWUxp+W0pSXMaj6b61
+         k9JMcvrzrMKDor9S0INmb8u+wPTyCQqaSMJSMcJmhL+uxnuo1P8ehpq6bt43ybjZem
+         VyzFRZ4oB5t8Bb74WQgZogXLewy9RQVnsvoNRuV0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org ED2B8604B4
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Subject: Re: pull-request: iwlwifi-fixes 2019-04-19
+References: <31cd1d98775748ed92c32dc6d298f1b2c5dc5e16.camel@coelho.fi>
+Date:   Wed, 24 Apr 2019 18:17:30 +0300
+In-Reply-To: <31cd1d98775748ed92c32dc6d298f1b2c5dc5e16.camel@coelho.fi> (Luca
+        Coelho's message of "Fri, 19 Apr 2019 09:19:55 +0300")
+Message-ID: <874l6nxwj9.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-X-MC-Unique: CiFaQrbeNPCHVcud67r0LA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Fenghua Yu
-> Sent: 23 April 2019 21:48
-> 
-> On Thu, Apr 18, 2019 at 08:41:30AM +0200, Thomas Gleixner wrote:
-> > On Wed, 17 Apr 2019, Fenghua Yu wrote:
-> > > On Thu, Apr 18, 2019 at 12:47:24AM +0200, Thomas Gleixner wrote:
-> > > > On Wed, 17 Apr 2019, Fenghua Yu wrote:
-> > > >
-> > > > > The interface /sys/device/system/cpu/split_lock_detect is added
-> > > > > to allow user to control split lock detection and show current split
-> > > > > lock detection setting.
-> > > > >
-> > > > > Writing [yY1] or [oO][nN] to the file enables split lock detection and
-> > > > > writing [nN0] or [oO][fF] disables split lock detection. Split lock
-> > > > > detection is enabled or disabled on all CPUs.
-> > > > >
-> > > > > Reading the file returns current global split lock detection setting:
-> > > > > 0: disabled
-> > > > > 1: enabled
-> > > >
-> > > > Again, You explain WHAT this patch does and still there is zero
-> > > > justification why this sysfs knob is needed at all. I still do not see any
-> > > > reason why this knob should exist.
-> > >
-> > > An important application has split lock issues which are already discovered
-> > > and need to be fixed. But before the issues are fixed, sysadmin still wants to
-> > > run the application without rebooting the system, the sysfs knob can be useful
-> > > to turn off split lock detection. After the application is done, split lock
-> > > detection will be enabled again through the sysfs knob.
-> >
-> > Are you sure that you are talking about the real world? I might buy the
-> > 'off' part somehow, but the 'on' part is beyond theoretical.
-> >
-> > Even the 'off' part is dubious on a multi user machine. I personally would
-> > neither think about using the sysfs knob nor about rebooting the machine
-> > simply because I'd consider a lock operation accross a cacheline an malicious
-> > DoS attempt. Why would I allow that?
-> >
-> > So in reality the sysadmin will either move the workload to a machine w/o
-> > the #AC magic or just tell the user to fix his crap.
-> >
-> > > Without the sysfs knob, sysadmin has to reboot the system with kernel option
-> > > "no_split_lock_detect" to run the application before the split lock issues
-> > > are fixed.
-> > >
-> > > Is this a valid justification why the sysfs knob is needed? If it is, I can
-> > > add the justification in the next version.
-> >
-> > Why has this information not been in the changelog right away? I'm really
-> > tired of asking the same questions and pointing you to
-> > Documentation/process over and over.
-> 
-> So should I remove the sysfs knob patches in the next version?
-> 
-> Or add the following justification and still keep the sysfs knob patches?
-> "To workaround or debug a split lock issue, the administrator may need to
-> disable or enable split lock detection during run time without rebooting
-> the system."
+Luca Coelho <luca@coelho.fi> writes:
 
-I've also not seen patches to fix all the places where 'lock bit' operations
-get used on int [] data.
-Testing had showed one structure that needed 'fixing', there are some others
-that are in .bss/.data.
-A kernel build could suddenly have them misaligned and crossing a cache line.
+> Hi Kalle,
+>
+> This is the third batch of fixes for v5.1.  More details about the
+> contents in the tag description.
+>
+> I have sent this out before and kbuildbot reported success.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 614c70f35cd77a9af8e2ca841dcdb121cec3068f:
+>
+>   bnx2x: fix spelling mistake "dicline" -> "decline" (2019-04-15 17:23:09 -0700)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2019-04-19
+>
+> for you to fetch changes up to c537e07b000bc00c9a5ac9d119ed2c8456a99b6e:
+>
+>   iwlwifi: cfg: use family 22560 based_params for AX210 family (2019-04-18 15:06:44 +0300)
+>
+> ----------------------------------------------------------------
+> Third batch of iwlwifi fixes intended for v5.1
+>
+> * Fix an oops when creating debugfs entries;
+> * Fix bug when trying to capture debugging info while in rfkill;
+> * Prevent potential uninitialized memory dumps into debugging logs;
+> * Fix some initialization parameters for AX210 devices;
+> * Fix an oops with non-MSIX devices;
+>
+> ----------------------------------------------------------------
 
-All the places that cast the pointer to the bit ops are suspect.
+Pulled, thanks Luca.
 
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+-- 
+Kalle Valo
