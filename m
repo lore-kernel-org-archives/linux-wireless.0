@@ -3,31 +3,31 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D2FFC10F11
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 19:42:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E37FC10F11
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 19:42:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 36C3F2175B
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 19:42:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56FC620674
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 19:42:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389734AbfDXTlp (ORCPT
+        id S2389645AbfDXTlo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Apr 2019 15:41:45 -0400
-Received: from mga18.intel.com ([134.134.136.126]:44995 "EHLO mga18.intel.com"
+        Wed, 24 Apr 2019 15:41:44 -0400
+Received: from mga09.intel.com ([134.134.136.24]:15196 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729820AbfDXTln (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1729724AbfDXTln (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 24 Apr 2019 15:41:43 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 24 Apr 2019 12:41:41 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 24 Apr 2019 12:41:40 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.60,390,1549958400"; 
-   d="scan'208";a="340454911"
+   d="scan'208";a="340454886"
 Received: from romley-ivt3.sc.intel.com ([172.25.110.60])
-  by fmsmga005.fm.intel.com with ESMTP; 24 Apr 2019 12:41:41 -0700
+  by fmsmga005.fm.intel.com with ESMTP; 24 Apr 2019 12:41:40 -0700
 From:   Fenghua Yu <fenghua.yu@intel.com>
 To:     "Thomas Gleixner" <tglx@linutronix.de>,
         "Ingo Molnar" <mingo@redhat.com>, "Borislav Petkov" <bp@alien8.de>,
@@ -45,9 +45,9 @@ Cc:     "linux-kernel" <linux-kernel@vger.kernel.org>,
         "x86" <x86@kernel.org>, kvm@vger.kernel.org,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         Fenghua Yu <fenghua.yu@intel.com>
-Subject: [PATCH v8 15/15] x86/split_lock: Add a sysfs interface to enable/disable split lock detection during run time
-Date:   Wed, 24 Apr 2019 12:33:02 -0700
-Message-Id: <1556134382-58814-16-git-send-email-fenghua.yu@intel.com>
+Subject: [PATCH v8 07/15] x86/split_lock: Enumerate split lock detection by MSR_IA32_CORE_CAPABILITY
+Date:   Wed, 24 Apr 2019 12:32:54 -0700
+Message-Id: <1556134382-58814-8-git-send-email-fenghua.yu@intel.com>
 X-Mailer: git-send-email 2.5.0
 In-Reply-To: <1556134382-58814-1-git-send-email-fenghua.yu@intel.com>
 References: <1556134382-58814-1-git-send-email-fenghua.yu@intel.com>
@@ -56,147 +56,184 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To workaround or debug a split lock issue, the administrator may need to
-disable or enable split lock detection during run time without rebooting
-the system.
+Bits in MSR_IA32_CORE_CAPABILITY enumerate a few features that are not
+enumerated through CPUID. Currently bit 5 is defined to enumerate
+feature of split lock detection. All other bits are reserved now.
 
-The interface /sys/device/system/cpu/split_lock_detect is added to allow
-the administrator to disable or enable split lock detection and show
-current split lock detection setting.
+When bit 5 is 1, the feature is supported and feature bit
+X86_FEATURE_SPLIT_LOCK_DETECT is set. Otherwise, the feature is not
+available.
 
-Writing [yY1] or [oO][nN] to the file enables split lock detection and
-writing [nN0] or [oO][fF] disables split lock detection. Split lock
-detection is enabled or disabled on all CPUs.
-
-Reading the file returns current global split lock detection setting:
-0: disabled
-1: enabled
-
-Add an ABI document entry for /sys/devices/system/cpu/split_lock_detect.
+The MSR_IA32_CORE_CAPABILITY itself is enumerated by
+CPUID.(EAX=0x7,ECX=0):EDX[30].
 
 Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
 ---
-Not sure if the justification for the sysfs knob is valid. If not, this
-patch could be removed from this patch set.
+ arch/x86/include/asm/cpu.h         |  5 ++
+ arch/x86/include/asm/cpufeatures.h |  1 +
+ arch/x86/kernel/cpu/common.c       |  2 +
+ arch/x86/kernel/cpu/cpuid-deps.c   | 79 +++++++++++++++---------------
+ arch/x86/kernel/cpu/intel.c        | 21 ++++++++
+ 5 files changed, 69 insertions(+), 39 deletions(-)
 
- .../ABI/testing/sysfs-devices-system-cpu      | 22 ++++++++
- arch/x86/kernel/cpu/intel.c                   | 52 ++++++++++++++++++-
- 2 files changed, 72 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/ABI/testing/sysfs-devices-system-cpu b/Documentation/ABI/testing/sysfs-devices-system-cpu
-index 9605dbd4b5b5..aad7b1698065 100644
---- a/Documentation/ABI/testing/sysfs-devices-system-cpu
-+++ b/Documentation/ABI/testing/sysfs-devices-system-cpu
-@@ -67,6 +67,28 @@ Description:	Discover NUMA node a CPU belongs to
- 		/sys/devices/system/cpu/cpu42/node2 -> ../../node/node2
+diff --git a/arch/x86/include/asm/cpu.h b/arch/x86/include/asm/cpu.h
+index adc6cc86b062..4e03f53fc079 100644
+--- a/arch/x86/include/asm/cpu.h
++++ b/arch/x86/include/asm/cpu.h
+@@ -40,4 +40,9 @@ int mwait_usable(const struct cpuinfo_x86 *);
+ unsigned int x86_family(unsigned int sig);
+ unsigned int x86_model(unsigned int sig);
+ unsigned int x86_stepping(unsigned int sig);
++#ifdef CONFIG_CPU_SUP_INTEL
++void __init cpu_set_core_cap_bits(struct cpuinfo_x86 *c);
++#else
++static inline void __init cpu_set_core_cap_bits(struct cpuinfo_x86 *c) {}
++#endif
+ #endif /* _ASM_X86_CPU_H */
+diff --git a/arch/x86/include/asm/cpufeatures.h b/arch/x86/include/asm/cpufeatures.h
+index eff25e2015a5..db0c1826d7ad 100644
+--- a/arch/x86/include/asm/cpufeatures.h
++++ b/arch/x86/include/asm/cpufeatures.h
+@@ -221,6 +221,7 @@
+ #define X86_FEATURE_ZEN			( 7*32+28) /* "" CPU is AMD family 0x17 (Zen) */
+ #define X86_FEATURE_L1TF_PTEINV		( 7*32+29) /* "" L1TF workaround PTE inversion */
+ #define X86_FEATURE_IBRS_ENHANCED	( 7*32+30) /* Enhanced IBRS */
++#define X86_FEATURE_SPLIT_LOCK_DETECT	( 7*32+31) /* #AC for split lock */
  
+ /* Virtualization flags: Linux defined, word 8 */
+ #define X86_FEATURE_TPR_SHADOW		( 8*32+ 0) /* Intel TPR Shadow */
+diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
+index 3716e2bb028b..bbdd69dd4f5f 100644
+--- a/arch/x86/kernel/cpu/common.c
++++ b/arch/x86/kernel/cpu/common.c
+@@ -1105,6 +1105,8 @@ static void __init early_identify_cpu(struct cpuinfo_x86 *c)
  
-+What:		/sys/devices/system/cpu/split_lock_detect
-+Date:		March 2019
-+Contact:	Linux kernel mailing list <linux-kernel@vger.kernel.org>
-+Description:	(RW) Control split lock detection on Intel Tremont and
-+		future CPUs
+ 	cpu_set_bug_bits(c);
+ 
++	cpu_set_core_cap_bits(c);
 +
-+		Reads return split lock detection status:
-+			0: disabled
-+			1: enabled
-+
-+		Writes enable or disable split lock detection:
-+			The first character is one of 'Nn0' or [oO][fF] for off
-+			disables the feature.
-+			The first character is one of 'Yy1' or [oO][nN] for on
-+			enables the feature.
-+
-+		Please note the interface only shows or controls global setting.
-+		During run time, split lock detection on one CPU may be
-+		disabled if split lock operation in kernel code happens on
-+		the CPU. The interface doesn't show or control split lock
-+		detection on individual CPU.
-+
- What:		/sys/devices/system/cpu/cpu#/topology/core_id
- 		/sys/devices/system/cpu/cpu#/topology/core_siblings
- 		/sys/devices/system/cpu/cpu#/topology/core_siblings_list
+ 	fpu__init_system(c);
+ 
+ #ifdef CONFIG_X86_32
+diff --git a/arch/x86/kernel/cpu/cpuid-deps.c b/arch/x86/kernel/cpu/cpuid-deps.c
+index 2c0bd38a44ab..3d633f67fbd7 100644
+--- a/arch/x86/kernel/cpu/cpuid-deps.c
++++ b/arch/x86/kernel/cpu/cpuid-deps.c
+@@ -20,45 +20,46 @@ struct cpuid_dep {
+  * but it's difficult to tell that to the init reference checker.
+  */
+ static const struct cpuid_dep cpuid_deps[] = {
+-	{ X86_FEATURE_XSAVEOPT,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_XSAVEC,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_XSAVES,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_AVX,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_PKU,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_MPX,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_XGETBV1,		X86_FEATURE_XSAVE     },
+-	{ X86_FEATURE_FXSR_OPT,		X86_FEATURE_FXSR      },
+-	{ X86_FEATURE_XMM,		X86_FEATURE_FXSR      },
+-	{ X86_FEATURE_XMM2,		X86_FEATURE_XMM       },
+-	{ X86_FEATURE_XMM3,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_XMM4_1,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_XMM4_2,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_XMM3,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_PCLMULQDQ,	X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_SSSE3,		X86_FEATURE_XMM2,     },
+-	{ X86_FEATURE_F16C,		X86_FEATURE_XMM2,     },
+-	{ X86_FEATURE_AES,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_SHA_NI,		X86_FEATURE_XMM2      },
+-	{ X86_FEATURE_FMA,		X86_FEATURE_AVX       },
+-	{ X86_FEATURE_AVX2,		X86_FEATURE_AVX,      },
+-	{ X86_FEATURE_AVX512F,		X86_FEATURE_AVX,      },
+-	{ X86_FEATURE_AVX512IFMA,	X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512PF,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512ER,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512CD,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512DQ,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512BW,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512VL,		X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512VBMI,	X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512_VBMI2,	X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_GFNI,		X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_VAES,		X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_VPCLMULQDQ,	X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_AVX512_VNNI,	X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_AVX512_BITALG,	X86_FEATURE_AVX512VL  },
+-	{ X86_FEATURE_AVX512_4VNNIW,	X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512_4FMAPS,	X86_FEATURE_AVX512F   },
+-	{ X86_FEATURE_AVX512_VPOPCNTDQ, X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_XSAVEOPT,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_XSAVEC,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_XSAVES,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_AVX,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_PKU,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_MPX,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_XGETBV1,			X86_FEATURE_XSAVE     },
++	{ X86_FEATURE_FXSR_OPT,			X86_FEATURE_FXSR      },
++	{ X86_FEATURE_XMM,			X86_FEATURE_FXSR      },
++	{ X86_FEATURE_XMM2,			X86_FEATURE_XMM       },
++	{ X86_FEATURE_XMM3,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_XMM4_1,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_XMM4_2,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_XMM3,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_PCLMULQDQ,		X86_FEATURE_XMM2      },
++	{ X86_FEATURE_SSSE3,			X86_FEATURE_XMM2,     },
++	{ X86_FEATURE_F16C,			X86_FEATURE_XMM2,     },
++	{ X86_FEATURE_AES,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_SHA_NI,			X86_FEATURE_XMM2      },
++	{ X86_FEATURE_FMA,			X86_FEATURE_AVX       },
++	{ X86_FEATURE_AVX2,			X86_FEATURE_AVX,      },
++	{ X86_FEATURE_AVX512F,			X86_FEATURE_AVX,      },
++	{ X86_FEATURE_AVX512IFMA,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512PF,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512ER,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512CD,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512DQ,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512BW,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512VL,			X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512VBMI,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512_VBMI2,		X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_GFNI,			X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_VAES,			X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_VPCLMULQDQ,		X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_AVX512_VNNI,		X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_AVX512_BITALG,		X86_FEATURE_AVX512VL  },
++	{ X86_FEATURE_AVX512_4VNNIW,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512_4FMAPS,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_AVX512_VPOPCNTDQ,		X86_FEATURE_AVX512F   },
++	{ X86_FEATURE_SPLIT_LOCK_DETECT,	X86_FEATURE_CORE_CAPABILITY},
+ 	{}
+ };
+ 
 diff --git a/arch/x86/kernel/cpu/intel.c b/arch/x86/kernel/cpu/intel.c
-index 959ebf25beda..f257d1e92706 100644
+index 3142fd7a9b32..86a3a646e0ce 100644
 --- a/arch/x86/kernel/cpu/intel.c
 +++ b/arch/x86/kernel/cpu/intel.c
-@@ -35,6 +35,7 @@
- DEFINE_PER_CPU(u64, msr_test_ctl_cache);
- EXPORT_PER_CPU_SYMBOL_GPL(msr_test_ctl_cache);
+@@ -1029,3 +1029,24 @@ static const struct cpu_dev intel_cpu_dev = {
  
-+static DEFINE_MUTEX(split_lock_detect_mutex);
- static bool split_lock_detect_enable;
+ cpu_dev_register(intel_cpu_dev);
  
- /*
-@@ -660,7 +661,7 @@ static void init_intel_misc_features(struct cpuinfo_x86 *c)
- 	wrmsrl(MSR_MISC_FEATURES_ENABLES, msr);
- }
- 
--static void split_lock_update_msr(void)
-+static void split_lock_update_msr(void *__unused)
- {
- 	if (split_lock_detect_enable) {
- 		/* Enable split lock detection */
-@@ -682,7 +683,7 @@ static void init_split_lock_detect(struct cpuinfo_x86 *c)
- 		rdmsrl(MSR_TEST_CTL, test_ctl_val);
- 		this_cpu_write(msr_test_ctl_cache, test_ctl_val);
- 
--		split_lock_update_msr();
-+		split_lock_update_msr(NULL);
- 	}
- }
- 
-@@ -1114,3 +1115,50 @@ void handle_split_lock_kernel_mode(void)
- 	this_cpu_and(msr_test_ctl_cache, ~TEST_CTL_SPLIT_LOCK_DETECT);
- 	WARN_ONCE(1, "split lock operation detected\n");
- }
-+
-+static ssize_t
-+split_lock_detect_show(struct device *dev, struct device_attribute *attr,
-+		       char *buf)
++static void __init set_split_lock_detect(void)
 +{
-+	return sprintf(buf, "%u\n", split_lock_detect_enable);
++	setup_force_cpu_cap(X86_FEATURE_SPLIT_LOCK_DETECT);
 +}
 +
-+static ssize_t
-+split_lock_detect_store(struct device *dev, struct device_attribute *attr,
-+			const char *buf, size_t count)
++void __init cpu_set_core_cap_bits(struct cpuinfo_x86 *c)
 +{
-+	bool val;
-+	int ret;
++	u64 ia32_core_cap = 0;
 +
-+	ret = strtobool(buf, &val);
-+	if (ret)
-+		return ret;
++	if (!cpu_has(c, X86_FEATURE_CORE_CAPABILITY))
++		return;
 +
-+	mutex_lock(&split_lock_detect_mutex);
++	/*
++	 * If MSR_IA32_CORE_CAPABILITY exists, enumerate features that are
++	 * reported in the MSR.
++	 */
++	rdmsrl(MSR_IA32_CORE_CAPABILITY, ia32_core_cap);
 +
-+	split_lock_detect_enable = val;
-+
-+	/* Update the split lock detection setting in MSR on all online CPUs. */
-+	on_each_cpu(split_lock_update_msr, NULL, 1);
-+
-+	if (split_lock_detect_enable)
-+		pr_info("enabled\n");
-+	else
-+		pr_info("disabled\n");
-+
-+	mutex_unlock(&split_lock_detect_mutex);
-+
-+	return count;
++	if (ia32_core_cap & CORE_CAP_SPLIT_LOCK_DETECT)
++		set_split_lock_detect();
 +}
-+
-+static DEVICE_ATTR_RW(split_lock_detect);
-+
-+static int __init split_lock_init(void)
-+{
-+	if (!boot_cpu_has(X86_FEATURE_SPLIT_LOCK_DETECT))
-+		return -ENODEV;
-+
-+	return device_create_file(cpu_subsys.dev_root,
-+				  &dev_attr_split_lock_detect);
-+}
-+subsys_initcall(split_lock_init);
 -- 
 2.19.1
 
