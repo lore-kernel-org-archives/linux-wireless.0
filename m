@@ -1,87 +1,153 @@
-Return-Path: <SRS0=odSX=SZ=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=48GF=S2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE60C10F03
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 21:08:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E2A0C282DD
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 01:04:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF23421773
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Apr 2019 21:08:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="qshe5xCD"
+	by mail.kernel.org (Postfix) with ESMTP id 16C112148D
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 01:04:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727357AbfDWVIN (ORCPT
+        id S1729013AbfDXBEE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Apr 2019 17:08:13 -0400
-Received: from 4.mo2.mail-out.ovh.net ([87.98.172.75]:36433 "EHLO
-        4.mo2.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726029AbfDWVIM (ORCPT
+        Tue, 23 Apr 2019 21:04:04 -0400
+Received: from lucky1.263xmail.com ([211.157.147.130]:49602 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728730AbfDXBEE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Apr 2019 17:08:12 -0400
-Received: from player792.ha.ovh.net (unknown [10.108.54.87])
-        by mo2.mail-out.ovh.net (Postfix) with ESMTP id 7A73618FF2C
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Apr 2019 22:59:45 +0200 (CEST)
-Received: from awhome.eu (p57B7E5B2.dip0.t-ipconnect.de [87.183.229.178])
-        (Authenticated sender: postmaster@awhome.eu)
-        by player792.ha.ovh.net (Postfix) with ESMTPSA id 460BB520B4DE;
-        Tue, 23 Apr 2019 20:59:42 +0000 (UTC)
-Subject: Re: [PATCH 1/2] mac80211: Fix Extended Key ID auto activation
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1556053180;
-        bh=DCAprEPCchlj5b10z6obtHb4k29NNvOTozeJzhBfZA4=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=qshe5xCDACBFgD3GBPSBXtJcOrcDh0ay9TkaZnAUFphIATQ+GERE7OeyhUbgSHO/V
-         N46W5OGU4oDkzLfricKAXvWS7AXziNb2NZ09EUVrjf4Scn5KAZhBbkGa0gLHiviL7T
-         aP0cOM9FArsZkTA8YaoJ9a3DPAzQe1gx57XdfSSY=
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org
-References: <20190422213412.16533-1-alexander@wetzel-home.de>
- <4464ea399dbbc1aca040ad8a4442a73f78cc38fb.camel@sipsolutions.net>
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-Message-ID: <62a76eb7-2cd4-65ed-e583-663d1d971820@wetzel-home.de>
-Date:   Tue, 23 Apr 2019 22:59:40 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Tue, 23 Apr 2019 21:04:04 -0400
+X-Greylist: delayed 390 seconds by postgrey-1.27 at vger.kernel.org; Tue, 23 Apr 2019 21:04:02 EDT
+Received: from shawn.lin?rock-chips.com (unknown [192.168.167.163])
+        by lucky1.263xmail.com (Postfix) with ESMTP id 0F42757D81;
+        Wed, 24 Apr 2019 08:57:27 +0800 (CST)
+X-263anti-spam: KSV:0;BIG:0;
+X-MAIL-GRAY: 1
+X-MAIL-DELIVERY: 0
+X-KSVirus-check: 0
+X-ADDR-CHECKED4: 1
+X-ABS-CHECKED: 1
+X-SKE-CHECKED: 1
+X-ANTISPAM-LEVEL: 2
+Received: from [172.16.12.37] (unknown [58.22.7.114])
+        by smtp.263.net (postfix) whith ESMTP id P3513T140613496321792S1556067443928445_;
+        Wed, 24 Apr 2019 08:57:25 +0800 (CST)
+X-IP-DOMAINF: 1
+X-UNIQUE-TAG: <4caf97dbb65f9ff1c251c1b9048d9eaa>
+X-RL-SENDER: shawn.lin@rock-chips.com
+X-SENDER: lintao@rock-chips.com
+X-LOGIN-NAME: shawn.lin@rock-chips.com
+X-FST-TO: linux-kernel@vger.kernel.org
+X-SENDER-IP: 58.22.7.114
+X-ATTACHMENT-NUM: 0
+X-DNS-TYPE: 0
+Cc:     Jaehoon Chung <jh80.chung@samsung.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>, shawn.lin@rock-chips.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?Q?Heiko_St=c3=bcbner?= <heiko@sntech.de>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Brian Norris <briannorris@chromium.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Ryan Case <ryandcase@chromium.org>, stable@vger.kernel.org,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] mmc: dw_mmc: Disable SDIO interrupts while suspended to
+ fix suspend/resume
+To:     Doug Anderson <dianders@chromium.org>
+References: <20190410221237.160856-1-dianders@chromium.org>
+ <CAD=FV=Wm+T+W=LWTSiwBT3UQWG7YKQdGuL2+BmAFQhk8CYY1mQ@mail.gmail.com>
+From:   Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <6e5c9395-51b0-7f28-ec91-de95cb54f58d@rock-chips.com>
+Date:   Wed, 24 Apr 2019 08:57:26 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <4464ea399dbbc1aca040ad8a4442a73f78cc38fb.camel@sipsolutions.net>
+In-Reply-To: <CAD=FV=Wm+T+W=LWTSiwBT3UQWG7YKQdGuL2+BmAFQhk8CYY1mQ@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Ovh-Tracer-Id: 8989466334041939143
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduuddrgeekgddugeefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Am 23.04.19 um 14:14 schrieb Johannes Berg:
-> On Mon, 2019-04-22 at 23:34 +0200, Alexander Wetzel wrote:
->> Only enable Extended Key ID support for drivers which are not supporting
->> crypto offload and also do not support A-MPDU.
->>
->> While any driver using SW crypto from mac80211 is generally able to also
->> support Extended Key ID these drivers are likely to mix keyIDs in
->> AMPDUs when rekeying.
->>
->> According to IEEE 802.11-2016 "9.7.3 A-MPDU contents" this is not
->> allowed.
->>
+
+On 2019/4/22 23:21, Doug Anderson wrote:
+> Hi,
 > 
-> I applied this (with some changes), but please resend the other patch as
-> two separate patches to mac80211/hwsim.
+> On Wed, Apr 10, 2019 at 3:13 PM Douglas Anderson <dianders@chromium.org> wrote:
+>>
+>> Processing SDIO interrupts while dw_mmc is suspended (or partly
+>> suspended) seems like a bad idea.  We really don't want to be
+>> processing them until we've gotten ourselves fully powered up.
+>>
+>> You might be wondering how it's even possible to become suspended when
+>> an SDIO interrupt is active.  As can be seen in
+>> dw_mci_enable_sdio_irq(), we explicitly keep dw_mmc out of runtime
+>> suspend when the SDIO interrupt is enabled.  ...but even though we
+>> stop normal runtime suspend transitions when SDIO interrupts are
+>> enabled, the dw_mci_runtime_suspend() can still get called for a full
+>> system suspend.
+>>
+>> Let's handle all this by explicitly masking SDIO interrupts in the
+>> suspend call and unmasking them later in the resume call.  To do this
+>> cleanly I'll keep track of whether the client requested that SDIO
+>> interrupts be enabled so that we can reliably restore them regardless
+>> of whether we're masking them for one reason or another.
+>>
+>> Without this fix it can be seen that rk3288-veyron Chromebooks with
+>> Marvell WiFi would sometimes fail to resume WiFi even after picking my
+>> recent mwifiex patch [1].  Specifically you'd see messages like this:
+>>    mwifiex_sdio mmc1:0001:1: Firmware wakeup failed
+>>    mwifiex_sdio mmc1:0001:1: PREP_CMD: FW in reset state
+>>
+>> ...and tracing through the resume code in the failing cases showed
+>> that we were processing a SDIO interrupt really early in the resume
+>> call.
+>>
+>> NOTE: downstream in Chrome OS 3.14 and 3.18 kernels (both of which
+>> support the Marvell SDIO WiFi card) we had a patch ("CHROMIUM: sdio:
+>> Defer SDIO interrupt handling until after resume") [2].  Presumably
+>> this is the same problem that was solved by that patch.
+>>
+>> [1] https://lkml.kernel.org/r/20190404040106.40519-1-dianders@chromium.org
+>> [2] https://crrev.com/c/230765
+>>
+>> Cc: <stable@vger.kernel.org>
+>> Signed-off-by: Douglas Anderson <dianders@chromium.org>
+>> ---
+>> I didn't put any "Fixes" tag here, but presumably this could be
+>> backported to whichever kernels folks found it useful for.  I have at
+>> least confirmed that kernels v4.14 and v4.19 (as well as v5.1-rc2)
+>> show the problem.  It is very easy to pick this to v4.19 and it
+>> definitely fixes the problem there.
+>>
+>> I haven't spent the time to pick this to 4.14 myself, but presumably
+>> it wouldn't be too hard to backport this as far as v4.13 since that
+>> contains commit 32dba73772f8 ("mmc: dw_mmc: Convert to use
+>> MMC_CAP2_SDIO_IRQ_NOTHREAD for SDIO IRQs").  Prior to that it might
+>> make sense for anyone experiencing this problem to just pick the old
+>> CHROMIUM patch to fix them.
+>>
+>>   drivers/mmc/host/dw_mmc.c | 24 ++++++++++++++++++++----
+>>   drivers/mmc/host/dw_mmc.h |  3 +++
+>>   2 files changed, 23 insertions(+), 4 deletions(-)
+> 
+> Jaehoon / Shawn: any thoughts on this patch?
 
-I've just dropped you the updated patch for hwsim Extended Key ID 
-support. That's kind of critical for the attempt to get Extended Key ID 
-support merged in hostapd/wpa_supplicant.
+The intention seems reasonable to me, but just wonder if we need
+mask/unmask SDIO interrupt when it's never used?  It's the same
+situation for SDMMC_CLKEN_LOW_PWR that we couldn't stop providing
+clock for SDIO cards, so I guess we need to check MMC_CAP_SDIO_IRQ
+as well.
 
-The patch to allow ptk0 rekeys with hwsim should follow soon. (The PTK0 
-rekey patches I have for hostapd/wpa_supplicant still need serious work 
-anyhow and are far away to be ready for merge.)
+> 
+> -Doug
+> 
+> 
+> 
 
-Alexander
+
