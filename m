@@ -2,135 +2,152 @@ Return-Path: <SRS0=48GF=S2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1318EC10F11
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 09:52:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 569FFC10F11
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 13:44:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D1DA32148D
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 09:52:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GqThel/Z"
+	by mail.kernel.org (Postfix) with ESMTP id 2E0212054F
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Apr 2019 13:44:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727777AbfDXJwi (ORCPT
+        id S1730584AbfDXNo3 convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Apr 2019 05:52:38 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:48310 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726216AbfDXJwh (ORCPT
+        Wed, 24 Apr 2019 09:44:29 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:58774 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727112AbfDXNo3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Apr 2019 05:52:37 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3O9nUP3031264;
-        Wed, 24 Apr 2019 09:52:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2018-07-02;
- bh=9xUAQynxxcopPBpkyEnnXya3Rm/3GMgYNaN5Wfhwjy0=;
- b=GqThel/ZcjVtCCnNvnmEKKru9v/DL+7TZmc6FUNvrdyDyC48wh+39aCC30844d8jMqd/
- K9mkeW/mfrBNplPd9pcqUkQiYI767P8kiJMfpcEwketYa5ueUT7KG06wHIXcDam+snjw
- 67RbYqw2JtFYUpvJsc8W1tPF/a7IEEWpr3j2vSv5bmXbZ2yQBztwR1NQu+2dwlkCcxfJ
- 0eBe+Csq0NdjgjVeyndGOJvA/FcpeGLkHo1JwdqPVCewvWvie53OAqTjtXuCSRmAepql
- Uzn8CfLo6Psy0wb/a9OXTdTO0HozJmf4XGY4/fUNVh4RlklgtG0zT0fe6VixNIL8aN5l /Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 2ryrxd1fnn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 24 Apr 2019 09:52:31 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3O9qRhO161590;
-        Wed, 24 Apr 2019 09:52:31 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2s0f0w084q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 24 Apr 2019 09:52:30 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3O9qTeW002902;
-        Wed, 24 Apr 2019 09:52:29 GMT
-Received: from mwanda (/105.55.12.114)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 24 Apr 2019 02:52:28 -0700
-Date:   Wed, 24 Apr 2019 12:52:18 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc:     Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
+        Wed, 24 Apr 2019 09:44:29 -0400
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-50-CiFaQrbeNPCHVcud67r0LA-1; Wed, 24 Apr 2019 14:44:26 +0100
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b::d117) by AcuMS.aculab.com
+ (fd9f:af1c:a25b::d117) with Microsoft SMTP Server (TLS) id 15.0.1347.2; Wed,
+ 24 Apr 2019 14:45:38 +0100
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Wed, 24 Apr 2019 14:45:38 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Fenghua Yu' <fenghua.yu@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>
+CC:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H Peter Anvin" <hpa@zytor.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ravi V Shankar <ravi.v.shankar@intel.com>,
+        Xiaoyao Li <xiaoyao.li@intel.com>,
+        Christopherson Sean J <sean.j.christopherson@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, kernel-janitors@vger.kernel.org
-Subject: [PATCH] brcm80211: potential NULL dereference in
- brcmf_cfg80211_vndr_cmds_dcmd_handler()
-Message-ID: <20190424095218.GB16450@mwanda>
+        "Michael Chan" <michael.chan@broadcom.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        x86 <x86@kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v7 15/21] x86/split_lock: Add a sysfs interface to
+ enable/disable split lock detection during run time
+Thread-Topic: [PATCH v7 15/21] x86/split_lock: Add a sysfs interface to
+ enable/disable split lock detection during run time
+Thread-Index: AQHU+hcuIxO/8RRUC06MiZvP1071Y6ZLUq/w
+Date:   Wed, 24 Apr 2019 13:45:38 +0000
+Message-ID: <4a90dd7bf26f44a795ecf55aa54b8ce5@AcuMS.aculab.com>
+References: <1555536851-17462-1-git-send-email-fenghua.yu@intel.com>
+ <1555536851-17462-16-git-send-email-fenghua.yu@intel.com>
+ <alpine.DEB.2.21.1904180042090.3174@nanos.tec.linutronix.de>
+ <20190418005711.GB18776@romley-ivt3.sc.intel.com>
+ <alpine.DEB.2.21.1904180832290.3174@nanos.tec.linutronix.de>
+ <20190423204809.GD18776@romley-ivt3.sc.intel.com>
+In-Reply-To: <20190423204809.GD18776@romley-ivt3.sc.intel.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9236 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1904240083
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9236 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1904240083
+X-MC-Unique: CiFaQrbeNPCHVcud67r0LA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If "ret_len" is negative then it could lead to a NULL dereference.
+From: Fenghua Yu
+> Sent: 23 April 2019 21:48
+> 
+> On Thu, Apr 18, 2019 at 08:41:30AM +0200, Thomas Gleixner wrote:
+> > On Wed, 17 Apr 2019, Fenghua Yu wrote:
+> > > On Thu, Apr 18, 2019 at 12:47:24AM +0200, Thomas Gleixner wrote:
+> > > > On Wed, 17 Apr 2019, Fenghua Yu wrote:
+> > > >
+> > > > > The interface /sys/device/system/cpu/split_lock_detect is added
+> > > > > to allow user to control split lock detection and show current split
+> > > > > lock detection setting.
+> > > > >
+> > > > > Writing [yY1] or [oO][nN] to the file enables split lock detection and
+> > > > > writing [nN0] or [oO][fF] disables split lock detection. Split lock
+> > > > > detection is enabled or disabled on all CPUs.
+> > > > >
+> > > > > Reading the file returns current global split lock detection setting:
+> > > > > 0: disabled
+> > > > > 1: enabled
+> > > >
+> > > > Again, You explain WHAT this patch does and still there is zero
+> > > > justification why this sysfs knob is needed at all. I still do not see any
+> > > > reason why this knob should exist.
+> > >
+> > > An important application has split lock issues which are already discovered
+> > > and need to be fixed. But before the issues are fixed, sysadmin still wants to
+> > > run the application without rebooting the system, the sysfs knob can be useful
+> > > to turn off split lock detection. After the application is done, split lock
+> > > detection will be enabled again through the sysfs knob.
+> >
+> > Are you sure that you are talking about the real world? I might buy the
+> > 'off' part somehow, but the 'on' part is beyond theoretical.
+> >
+> > Even the 'off' part is dubious on a multi user machine. I personally would
+> > neither think about using the sysfs knob nor about rebooting the machine
+> > simply because I'd consider a lock operation accross a cacheline an malicious
+> > DoS attempt. Why would I allow that?
+> >
+> > So in reality the sysadmin will either move the workload to a machine w/o
+> > the #AC magic or just tell the user to fix his crap.
+> >
+> > > Without the sysfs knob, sysadmin has to reboot the system with kernel option
+> > > "no_split_lock_detect" to run the application before the split lock issues
+> > > are fixed.
+> > >
+> > > Is this a valid justification why the sysfs knob is needed? If it is, I can
+> > > add the justification in the next version.
+> >
+> > Why has this information not been in the changelog right away? I'm really
+> > tired of asking the same questions and pointing you to
+> > Documentation/process over and over.
+> 
+> So should I remove the sysfs knob patches in the next version?
+> 
+> Or add the following justification and still keep the sysfs knob patches?
+> "To workaround or debug a split lock issue, the administrator may need to
+> disable or enable split lock detection during run time without rebooting
+> the system."
 
-The "ret_len" value comes from nl80211_vendor_cmd(), if it's negative
-then we don't allocate the "dcmd_buf" buffer.  Then we pass "ret_len" to
-brcmf_fil_cmd_data_set() where it is cast to a very high u32 value.
-Most of the functions in that call tree check whether the buffer we pass
-is NULL but there are at least a couple places which don't such as
-brcmf_dbg_hex_dump() and brcmf_msgbuf_query_dcmd().  We memcpy() to and
-from the buffer so it would result in a NULL dereference.
+I've also not seen patches to fix all the places where 'lock bit' operations
+get used on int [] data.
+Testing had showed one structure that needed 'fixing', there are some others
+that are in .bss/.data.
+A kernel build could suddenly have them misaligned and crossing a cache line.
 
-The fix is to change the types so that "ret_len" can't be negative.  (If
-we memcpy() zero bytes to NULL, that's a no-op and doesn't cause an
-issue).
+All the places that cast the pointer to the bit ops are suspect.
 
-Fixes: 1bacb0487d0e ("brcmfmac: replace cfg80211 testmode with vendor command")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+	David
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-index 8eff2753abad..d493021f6031 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-@@ -35,9 +35,10 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
- 	struct brcmf_if *ifp;
- 	const struct brcmf_vndr_dcmd_hdr *cmdhdr = data;
- 	struct sk_buff *reply;
--	int ret, payload, ret_len;
-+	unsigned int payload, ret_len;
- 	void *dcmd_buf = NULL, *wr_pointer;
- 	u16 msglen, maxmsglen = PAGE_SIZE - 0x100;
-+	int ret;
- 
- 	if (len < sizeof(*cmdhdr)) {
- 		brcmf_err("vendor command too short: %d\n", len);
-@@ -65,7 +66,7 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
- 			brcmf_err("oversize return buffer %d\n", ret_len);
- 			ret_len = BRCMF_DCMD_MAXLEN;
- 		}
--		payload = max(ret_len, len) + 1;
-+		payload = max_t(unsigned int, ret_len, len) + 1;
- 		dcmd_buf = vzalloc(payload);
- 		if (NULL == dcmd_buf)
- 			return -ENOMEM;
--- 
-2.18.0
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
 
