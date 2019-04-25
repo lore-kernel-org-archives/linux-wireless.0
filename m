@@ -6,92 +6,93 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4F3EC43219
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:44:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 574C3C43219
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:45:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 206DF206BF
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:44:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDE7C206BF
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:45:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hW6cOscA";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LdnB2VtG"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HdluXp/B";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="abxeBrUX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726884AbfDYQoG (ORCPT
+        id S1726933AbfDYQpC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 12:44:06 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:55800 "EHLO
+        Thu, 25 Apr 2019 12:45:02 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:56052 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726280AbfDYQoG (ORCPT
+        with ESMTP id S1726071AbfDYQpC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 12:44:06 -0400
+        Thu, 25 Apr 2019 12:45:02 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 7B33960736; Thu, 25 Apr 2019 16:44:05 +0000 (UTC)
+        id 7DE3860791; Thu, 25 Apr 2019 16:45:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556210645;
-        bh=qj9hz4hYHmxU4ABi7+O2pPuVGLecw9x0h14AULZRAUY=;
+        s=default; t=1556210701;
+        bh=uDyDqxgk/sY2QWM2aXcDJhJZ8MERQ++rzXOGKmt2TOY=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=hW6cOscALwSWq9dbLSRtwzgS/BIU+XlHNeeC1IY7F3x4kHg+o7aMKqavNXUxOGkPN
-         OTG0NDxV2V7BS4XLWaonsYb1Zbp02f91Nbyh7g2q2TXpSA957fyu4BIHv2hRwws+yB
-         X+zSiwyYXHyLASGHrlitYxvHVZlq0jHUVau0gMw0=
+        b=HdluXp/B4n8akFKMW7Gy/6BJlxr4gu2/5HmI7QimBejDxzdqjhEM4PrVhE7uAAnO1
+         24/hg6SLFkVVqRqiVp2bp9Ua7AEOs74e33FahBojyJYaj4TKpdngynCDfWo0jTAv4H
+         8dI5/T2BXtVzBHESdqWZ/eegFaymmu7vbBpipapA=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 49C61601B4;
-        Thu, 25 Apr 2019 16:44:03 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id ABD93601B4;
+        Thu, 25 Apr 2019 16:44:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556210644;
-        bh=qj9hz4hYHmxU4ABi7+O2pPuVGLecw9x0h14AULZRAUY=;
+        s=default; t=1556210701;
+        bh=uDyDqxgk/sY2QWM2aXcDJhJZ8MERQ++rzXOGKmt2TOY=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=LdnB2VtGkd5Cz9txDciSL0kIZwhEdq3IIzjiGgaMW0ijfMf3U+fy/wM5gCZXir8Zj
-         pVF0nX7m7fTNHXZ7n7yccmoEHIc5kSOx4nXNCk4KmEJG8irBiWh8lEfrn19Jj3xzAY
-         XSd0As4GCuZkYQ3N4YNDdmjP3cfLfKejhIDrboeY=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 49C61601B4
+        b=abxeBrUX5SE51lUef0kyf+d0UNnBnXvn1cipT3r8qC1zOY+tNIlZLgUk2tw7vIHeg
+         M3hepD/zXR2s+/ixuucYOlM/PPeMvZD5/yW33/mkYQynP1fmJswXPEqafDzCavuqro
+         n01kgXlbFNispe6xmxhJ5c7WSsrQOuRdZuh7IXfw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org ABD93601B4
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/8] rt2800: partially restore old mmio txstatus behaviour
+Subject: Re: [PATCH 1/8] rsi: add new device model for 9116
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1553680711-15730-2-git-send-email-sgruszka@redhat.com>
-References: <1553680711-15730-2-git-send-email-sgruszka@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        =?utf-8?q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+In-Reply-To: <20190403041309.12829-2-siva8118@gmail.com>
+References: <20190403041309.12829-2-siva8118@gmail.com>
+To:     Siva Rebbagondla <siva8118@gmail.com>
+Cc:     linux-wireless@vger.kernel.org, amitkarwar@gmail.com,
+        krishna.pedda@redpinesignals.com,
+        Ganapathiraju Kondraju <ganapathi.kondraju@redpinesignals.com>,
+        Siva Rebbagondla <siva8118@gmail.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190425164405.7B33960736@smtp.codeaurora.org>
-Date:   Thu, 25 Apr 2019 16:44:05 +0000 (UTC)
+Message-Id: <20190425164501.7DE3860791@smtp.codeaurora.org>
+Date:   Thu, 25 Apr 2019 16:45:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+Siva Rebbagondla <siva8118@gmail.com> wrote:
 
-> Do not disable txstatus interrupt and add quota of processed tx statuses in
-> one tasklet. Quota is needed to allow to fed device with new frames during
-> processing of tx statuses.
+> 9116 device id entry is added in both SDIO and USB interfaces.
+> New enumberation value taken for the device model. Based on the
+> device model detected run time, few device specific operations
+> needs to be performed.
 > 
-> Patch fixes about 15% performance degradation on some scenarios caused by
-> 0b0d556e0ebb ("rt2800mmio: use txdone/txstatus routines from lib").
+> adding rsi_dev_model to get device type in run time, as we can use
+> same driver for 9113 and 9116 except few firmware load changes.
 > 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Signed-off-by: Siva Rebbagondla <siva8118@gmail.com>
 
 8 patches applied to wireless-drivers-next.git, thanks.
 
-889bb866baaf rt2800: partially restore old mmio txstatus behaviour
-f61131505e85 rt2800: new flush implementation for SoC devices
-6efa79876486 rt2800: move txstatus pending routine
-2c7ba758cc4b rt2800mmio: fetch tx status changes
-e5ceab9df437 rt2800mmio: use timer and work for handling tx statuses timeouts
-eb662b1dc62e rt2x00: remove last_nostatus_check
-d954f9e3fb42 rt2x00: remove not used entry field
-9ea3812f015b rt2x00mmio: remove legacy comment
+54fdb318c111 rsi: add new device model for 9116
+3ac61578fbd4 rsi: move common part of firmware load to separate function
+e5a1ecc97e5f rsi: add firmware loading for 9116 device
+9ba4562ac195 rsi: change in device init frame sequence for 9116
+f911c86166d5 rsi: new bootup parameters for 9116
+1533f976c668 rsi: send new tx command frame wlan9116 features
+17ff2c794f39 rsi: reset device changes for 9116
+0a60014b76f5 rsi: miscallaneous changes for 9116 and common
 
 -- 
-https://patchwork.kernel.org/patch/10873121/
+https://patchwork.kernel.org/patch/10882717/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
