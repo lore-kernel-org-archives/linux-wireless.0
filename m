@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3421FC10F03
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 08:38:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27380C282E3
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 08:38:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F317A208E4
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 08:38:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC1BA208E4
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 08:38:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="CJ2f6ZSn"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="BaFnAWbJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729906AbfDYIiv (ORCPT
+        id S1729898AbfDYIiu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 04:38:51 -0400
-Received: from nbd.name ([46.4.11.11]:59696 "EHLO nbd.name"
+        Thu, 25 Apr 2019 04:38:50 -0400
+Received: from nbd.name ([46.4.11.11]:59698 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729865AbfDYIir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1729858AbfDYIir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 25 Apr 2019 04:38:47 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
@@ -28,22 +28,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=zRsSV1coro/Prf0r5PSHAT4hvguWh35vaFX3rZNtw9o=; b=CJ2f6ZSnaybmYncWZ5G2UmGVNT
-        GG08zdFnMjRLcgm/18oW6LEOKpMc4CIh1MASz+Hk8eo49zXzkB3ZUPiQqvSlkw2lZ52Jghxdw4IR+
-        vFjeghZoIapkTvD8X3EX+COobJdba1d7Ble9gYpAMcVjgRUOu6UlfjkPyEeKCqa3LIXc=;
+        bh=3lUfNj/2xwklNxFMVrG1nfHEGpykdhYCaDMUOMmbC/g=; b=BaFnAWbJlUCi546JDGzDlu+oNR
+        wBaI20HtrSGZfRzUTzJlME/C+KdPbtlC2gZ9zpQPAqMUcpyBjrR/+yD+taxFXOLNymKOYTCfzW5m3
+        eNgUO+RVcgXlvF8gVlsXr2/lWQV8ZCkKVlxq15D/hhO1TqUZM0CEDZi5vl/0ragQEhK8=;
 Received: from p54ae9e78.dip0.t-ipconnect.de ([84.174.158.120] helo=maeck-2.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1hJZu1-0002Bp-Mc
+        id 1hJZu1-0002Bn-MJ
         for linux-wireless@vger.kernel.org; Thu, 25 Apr 2019 10:38:45 +0200
 Received: by maeck-2.local (Postfix, from userid 501)
-        id 0E3E159A337A; Thu, 25 Apr 2019 10:38:44 +0200 (CEST)
+        id 0D01659A3377; Thu, 25 Apr 2019 10:38:44 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH v2 5/5] mt76: only schedule txqs from the tx tasklet
-Date:   Thu, 25 Apr 2019 10:38:44 +0200
-Message-Id: <20190425083844.14186-5-nbd@nbd.name>
+Subject: [PATCH v2 2/5] mt76: reduce locking in mt76_dma_tx_cleanup
+Date:   Thu, 25 Apr 2019 10:38:41 +0200
+Message-Id: <20190425083844.14186-2-nbd@nbd.name>
 X-Mailer: git-send-email 2.17.0
 In-Reply-To: <20190425083844.14186-1-nbd@nbd.name>
 References: <20190425083844.14186-1-nbd@nbd.name>
@@ -52,68 +52,78 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Reduces lock contention from the tx path and improves performance
+q->tail can be safely updated without locking, because there is no
+concurrent access. If called from outside of the tasklet (for flushing),
+the tasklet is always disabled.
+q->queued can be safely read without locking, as long as the decrement
+happens within the locked section.
+This patch allows cleaning up tx packets outside of the section that holds
+the queue lock for improved performance
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c          | 2 --
- drivers/net/wireless/mediatek/mt76/mt7603/dma.c   | 2 ++
- drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c | 3 +++
- drivers/net/wireless/mediatek/mt76/tx.c           | 2 +-
- 4 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c | 26 ++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index e4a5b34915bf..5c592566acbb 100644
+index 7145b75b6438..e4a5b34915bf 100644
 --- a/drivers/net/wireless/mediatek/mt76/dma.c
 +++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -205,8 +205,6 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
+@@ -149,31 +149,29 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
+ 	struct mt76_sw_queue *sq = &dev->q_tx[qid];
+ 	struct mt76_queue *q = sq->q;
+ 	struct mt76_queue_entry entry;
++	unsigned int n_swq_queued[4] = {};
++	unsigned int n_queued = 0;
+ 	bool wake = false;
+-	int last;
++	int i, last;
  
- 	spin_unlock_bh(&q->lock);
- 
--	if (!flush)
--		mt76_txq_schedule(dev, qid);
- 	if (wake)
- 		ieee80211_wake_queue(dev->hw, qid);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-index f7e3566c96fd..27e2d9f90553 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-@@ -145,6 +145,8 @@ mt7603_tx_tasklet(unsigned long data)
- 	for (i = MT_TXQ_MCU; i >= 0; i--)
- 		mt76_queue_tx_cleanup(dev, i, false);
- 
-+	mt76_txq_schedule_all(&dev->mt76);
-+
- 	mt7603_irq_enable(dev, MT_INT_TX_DONE_ALL);
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index 958b2a3e4878..af308c0ef395 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -162,6 +162,9 @@ static void mt76x02_tx_tasklet(unsigned long data)
- 		mt76_queue_tx_cleanup(dev, i, false);
- 
- 	mt76x02_mac_poll_tx_status(dev, false);
-+
-+	mt76_txq_schedule_all(&dev->mt76);
-+
- 	mt76x02_irq_enable(dev, MT_INT_TX_DONE_ALL);
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index dd0c583ab5b1..638b83903c56 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -595,7 +595,7 @@ void mt76_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
- 	if (!test_bit(MT76_STATE_RUNNING, &dev->state))
+ 	if (!q)
  		return;
  
--	mt76_txq_schedule(dev, txq->ac);
-+	tasklet_schedule(&dev->tx_tasklet);
- }
- EXPORT_SYMBOL_GPL(mt76_wake_tx_queue);
+-	spin_lock_bh(&q->lock);
+ 	if (flush)
+ 		last = -1;
+ 	else
+ 		last = readl(&q->regs->dma_idx);
+ 
+-	while (q->queued && q->tail != last) {
++	while ((q->queued > n_queued) && q->tail != last) {
+ 		mt76_dma_tx_cleanup_idx(dev, q, q->tail, &entry);
+ 		if (entry.schedule)
+-			dev->q_tx[entry.qid].swq_queued--;
++			n_swq_queued[entry.qid]++;
+ 
+ 		q->tail = (q->tail + 1) % q->ndesc;
+-		q->queued--;
++		n_queued++;
+ 
+-		if (entry.skb) {
+-			spin_unlock_bh(&q->lock);
++		if (entry.skb)
+ 			dev->drv->tx_complete_skb(dev, qid, &entry);
+-			spin_lock_bh(&q->lock);
+-		}
+ 
+ 		if (entry.txwi) {
+ 			mt76_put_txwi(dev, entry.txwi);
+@@ -184,6 +182,16 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
+ 			last = readl(&q->regs->dma_idx);
+ 	}
+ 
++	spin_lock_bh(&q->lock);
++
++	q->queued -= n_queued;
++	for (i = 0; i < ARRAY_SIZE(n_swq_queued); i++) {
++		if (!n_swq_queued[i])
++			continue;
++
++		dev->q_tx[i].swq_queued -= n_swq_queued[i];
++	}
++
+ 	if (flush)
+ 		mt76_dma_sync_idx(dev, q);
  
 -- 
 2.17.0
