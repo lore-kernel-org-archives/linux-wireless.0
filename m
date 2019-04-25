@@ -4,84 +4,86 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1E4FC4321A
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:40:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D601C43218
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:41:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 559A920693
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:40:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87BF820693
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:41:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Vxac1zzM";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aR0xGPxP"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kT9nlWOH";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AWBvhp/m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727406AbfDYQk3 (ORCPT
+        id S1727233AbfDYQla (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 12:40:29 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:54398 "EHLO
+        Thu, 25 Apr 2019 12:41:30 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:54678 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726065AbfDYQk3 (ORCPT
+        with ESMTP id S1726626AbfDYQla (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 12:40:29 -0400
+        Thu, 25 Apr 2019 12:41:30 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 016B560791; Thu, 25 Apr 2019 16:40:26 +0000 (UTC)
+        id B7DB260791; Thu, 25 Apr 2019 16:41:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556210428;
-        bh=hVyDni0V1LjyvPEw+mQoWCd3LMY6RtD78wfqELocwu8=;
+        s=default; t=1556210489;
+        bh=+sEy5BiJHBuDZiKJmobRN80j/ICqqZi8+oIjKfIjUoQ=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Vxac1zzMf9cgzlwmhxFsHe0T9emQsdm1xOQI36GGctM02N6adGGpud4Si5FXajukm
-         l4Eisl2xXaT0nKa1CfaPwdrF0A/UWU2h8QPC0eGUZtRQRNcORAr1wzFOBhFv/GauaM
-         lAODPBDaBk3/By+3NoR1UVKvPJ6DfoxNnwDA1Asw=
+        b=kT9nlWOHDeor+21dek/9UWzAQunIelCbenUgNiUvfMjAjutEzSvU6HvUYtAUaUk0a
+         RwkpzHeZeTJfXbEa3mY7UG5GlMY2UTKq+Ry5KpUUjV7Xj/sRSTkjvEOyfxTkbrTe6L
+         PjMLw+PTR3G1aB0s+gk8betDzeZ6hFgfmhXj3ql0=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 30F8960791;
-        Thu, 25 Apr 2019 16:40:23 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 114516019D;
+        Thu, 25 Apr 2019 16:41:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556210426;
-        bh=hVyDni0V1LjyvPEw+mQoWCd3LMY6RtD78wfqELocwu8=;
+        s=default; t=1556210489;
+        bh=+sEy5BiJHBuDZiKJmobRN80j/ICqqZi8+oIjKfIjUoQ=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=aR0xGPxPYHDIMXIfUS2pCnZhY1ikrsYFO+6uJgvwLJazfRCR1z7mQoUONmFCsHK+7
-         IFGCrHXXhe9OlCJ8+PBQAyRcagNximqccaHvQu8YHZ3Tsd7h8zXvrF/DnFPsd/y+Hq
-         NTzlsarlzQez+Kx+kUr+lcv6RFLnsV0uMs9WBMb8=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 30F8960791
+        b=AWBvhp/mHl7FxDDhyukcdrqQGtjPLEQ/38kIEX/fZAkzQrqwDqXWZzoMNuMoVKRLc
+         EDv6NnGETLXbv2FJQQTVI2EW362Pl7xQfVjMeiIvY7AZLf3GAX+moIAWnLgqhQQ+4k
+         ihnHnOiKqPQW02Ulij6ArO088pvpnACQHsbcF3YA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 114516019D
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] net: cw1200: fix a NULL pointer dereference
+Subject: Re: [PATCH v3 2/4] rt2x00: use ratelimited variants dev_warn/dev_err
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190312080502.2953-1-kjlu@umn.edu>
-References: <20190312080502.2953-1-kjlu@umn.edu>
-To:     Kangjie Lu <kjlu@umn.edu>
-Cc:     kjlu@umn.edu, pakki001@umn.edu,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+In-Reply-To: <1552384303-29529-3-git-send-email-sgruszka@redhat.com>
+References: <1552384303-29529-3-git-send-email-sgruszka@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        =?utf-8?q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190425164028.016B560791@smtp.codeaurora.org>
-Date:   Thu, 25 Apr 2019 16:40:26 +0000 (UTC)
+Message-Id: <20190425164129.B7DB260791@smtp.codeaurora.org>
+Date:   Thu, 25 Apr 2019 16:41:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kangjie Lu <kjlu@umn.edu> wrote:
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-> In case create_singlethread_workqueue fails, the fix free the
-> hardware and returns NULL to avoid NULL pointer dereference.
+> As reported by Randy we can overwhelm logs on some USB error conditions.
+> To avoid that use dev_warn_ratelimited() and dev_err_ratelimitd().
 > 
-> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+> Reported-and-tested-by: Randy Oostdyk <linux-kernel@oostdyk.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+3 patches applied to wireless-drivers-next.git, thanks.
 
-0ed2a0053474 net: cw1200: fix a NULL pointer dereference
+bb3b18c92533 rt2x00: use ratelimited variants dev_warn/dev_err
+e383c70474db rt2x00: check number of EPROTO errors
+61a4e5ff0d72 rt2x00: do not print error when queue is full
 
 -- 
-https://patchwork.kernel.org/patch/10848701/
+https://patchwork.kernel.org/patch/10848959/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
