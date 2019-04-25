@@ -2,119 +2,99 @@ Return-Path: <SRS0=DNYG=S3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1717C282E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B623C10F03
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:51:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D076206BA
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:07:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="WSB2R0Du"
+	by mail.kernel.org (Postfix) with ESMTP id 5ACD720811
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:51:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726308AbfDYKHI (ORCPT
+        id S1730536AbfDYKvW convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 06:07:08 -0400
-Received: from nbd.name ([46.4.11.11]:36800 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726076AbfDYKHH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 06:07:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=aCu7cZcASxjelxEavgpdZt9pswYu1SCCdBYZgLiHbco=; b=WSB2R0DuWSA3gLUrcoDF/aZk0X
-        I8W2/1ETY2uG6YhDS6LuvC6WYMYts2wiX28NzyX2igBOnauJKFWnXaylFitXRetNTUzFjdLsSoECZ
-        dlwSfWrkg8X6DzQECJhfY8BXXpi51trSGQ48BvxQmklTkgenIo3J5azq9Btr+dCsCMuk=;
-Received: from p54ae9e78.dip0.t-ipconnect.de ([84.174.158.120] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1hJbHW-0000Ta-FR; Thu, 25 Apr 2019 12:07:06 +0200
-Subject: Re: [PATCH v3 0/4] Add support for MediaTek MT7615 wireless chipsets
-To:     Ryder Lee <ryder.lee@mediatek.com>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Roy Luo <royluo@google.com>, Sean Wang <sean.wang@mediatek.com>,
-        Nelson Chang <nelson.chang@mediatek.com>,
-        YF Luo <yf.luo@mediatek.com>, Kai Lin <kai.lin@mediatek.com>,
-        Rorscha Yang <rorscha.yang@mediatek.com>,
-        Kyle Lee <kyle.lee@mediatek.com>,
-        Miller Shen <miller.shen@mediatek.com>,
-        Haipin Liang <haipin.liang@mediatek.com>,
-        KL Huang <kl.huang@mediatek.com>,
-        YH chen <yh.chen@mediatek.com>, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <cover.1554102584.git.ryder.lee@mediatek.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <98c68ec4-bedb-cf6a-9221-eb82a2497e6c@nbd.name>
-Date:   Thu, 25 Apr 2019 12:07:05 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.6.1
-MIME-Version: 1.0
-In-Reply-To: <cover.1554102584.git.ryder.lee@mediatek.com>
-Content-Type: text/plain; charset=utf-8
+        Thu, 25 Apr 2019 06:51:22 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([146.101.78.151]:57880 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729031AbfDYKvV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Apr 2019 06:51:21 -0400
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-111-G6KENlWINbCq7VHD7b97yw-1; Thu, 25 Apr 2019 11:51:18 +0100
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
+ Server (TLS) id 15.0.1347.2; Thu, 25 Apr 2019 11:52:30 +0100
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Thu, 25 Apr 2019 11:52:30 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Fenghua Yu' <fenghua.yu@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        H Peter Anvin <hpa@zytor.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ravi V Shankar <ravi.v.shankar@intel.com>,
+        "Xiaoyao Li " <xiaoyao.li@intel.com>,
+        Christopherson Sean J <sean.j.christopherson@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Michael Chan" <michael.chan@broadcom.com>
+CC:     linux-kernel <linux-kernel@vger.kernel.org>, x86 <x86@kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v8 13/15] x86/split_lock: Enable split lock detection by
+ default
+Thread-Topic: [PATCH v8 13/15] x86/split_lock: Enable split lock detection by
+ default
+Thread-Index: AQHU+tYCJUyDFc/Zd0WR7kUsRI2JUKZMsyTw
+Date:   Thu, 25 Apr 2019 10:52:30 +0000
+Message-ID: <762682ba43a0468897ff5ddbf6633d58@AcuMS.aculab.com>
+References: <1556134382-58814-1-git-send-email-fenghua.yu@intel.com>
+ <1556134382-58814-14-git-send-email-fenghua.yu@intel.com>
+In-Reply-To: <1556134382-58814-14-git-send-email-fenghua.yu@intel.com>
+Accept-Language: en-GB, en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
+MIME-Version: 1.0
+X-MC-Unique: G6KENlWINbCq7VHD7b97yw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-04-01 09:16, Ryder Lee wrote:
-> This adds support for MediaTek MT7615E 4x4 802.11ac PCIe-based chipsets.
-> 
-> The series is based on the Lorenzo's patches:
-> https://patchwork.kernel.org/project/linux-wireless/list/?series=95969
-> 
-> In the legacy tx arch, we move and store the whole skb content to the
-> on-device memory when we send packets via high speed interface. (e.g. PCIe)
-> 
-> However, MT7615 and the following generation use a new tx arch called
-> “cut-through”, which only passes the physical address to the hardware,
-> and the packet engine will fetch the packets before transmission.
-> 
-> It saves on-chip memory for high throughput devices, and the token mechanism
-> is used to manage the release of skb under this arch.
-> 
-> And there might be other (existing or future) chips that use the same driver
-> (e.g. mt7622/mt7663...), this is a starting point to unify MTK wireless chipsets.
-> 
-> Detailed hardware information for this chip could be found on 
-> https://wikidevi.com/wiki/MediaTek_MT7615
-> 
-> Ryder Lee (4):
->   mt76: add mac80211 driver for MT7615 PCIe-based chipsets
->   mt76: add unlikely() for dma_mapping_error() check
->   mt76: use macro for sn and seq_ctrl conversion
->   MAINTAINERS : update entry for mt76 wireless driver
-Applied, thanks.
+From:  Fenghua Yu
+> Sent: 24 April 2019 20:33
+> A split locked access locks bus and degrades overall memory access
+> performance. When split lock detection feature is enumerated, enable
+> the feature by default by writing 1 to bit 29 in MSR TEST_CTL to find
+> any split lock issue.
 
-- Felix
+You can't enable this by default until ALL the known potentially
+misaligned locked memory operations have been fixed.
+
+AFAICT you've only fixed the ones that have actually faulted.
+You've not even fixed the other ones in the same source files
+as ones you've 'fixed'.
+
+You need to do a code audit of all the in-tree kernel code
+that uses locked operations - especially the 'bit' ones
+since a lot of code casts the bitmap address - so it probably
+isn't long aligned.
+
+	David
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
+
