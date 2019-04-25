@@ -2,129 +2,140 @@ Return-Path: <SRS0=DNYG=S3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D53AC43218
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 14:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81989C43218
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 14:50:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40E982081C
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 14:42:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94E642088F
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 14:50:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726830AbfDYOmM (ORCPT
+        id S1726830AbfDYOuT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 10:42:12 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:61175 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725900AbfDYOmM (ORCPT
+        Thu, 25 Apr 2019 10:50:19 -0400
+Received: from gateway30.websitewelcome.com ([192.185.192.34]:21533 "EHLO
+        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726102AbfDYOuS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 10:42:12 -0400
-X-UUID: 1237c519beb144d0bed54fd807e93833-20190425
-X-UUID: 1237c519beb144d0bed54fd807e93833-20190425
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 809769604; Thu, 25 Apr 2019 22:42:04 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Thu, 25 Apr 2019 22:42:03 +0800
-Received: from mtkslt306.mediatek.inc (10.21.14.136) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 25 Apr 2019 22:42:03 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>
-CC:     Roy Luo <royluo@google.com>, Sean Wang <sean.wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] mt76: fix endianness sparse warnings
-Date:   Thu, 25 Apr 2019 22:42:01 +0800
-Message-ID: <865a5eb36f295fc81e3dcbe95929dcfce4956897.1556203212.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Thu, 25 Apr 2019 10:50:18 -0400
+X-Greylist: delayed 1332 seconds by postgrey-1.27 at vger.kernel.org; Thu, 25 Apr 2019 10:50:17 EDT
+Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
+        by gateway30.websitewelcome.com (Postfix) with ESMTP id 05A9B1AD26
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Apr 2019 09:28:05 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id JfM4hYCEZYTGMJfM4he5et; Thu, 25 Apr 2019 09:28:05 -0500
+X-Authority-Reason: nr=8
+Received: from [189.250.127.223] (port=56940 helo=[192.168.1.76])
+        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.91)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1hJfM1-002R0I-MS; Thu, 25 Apr 2019 09:28:01 -0500
+Subject: Re: [PATCH v2 wireless-drivers-next] rtlwifi: rtl8723ae: Fix missing
+ break in switch statement
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
+References: <20190416151722.GA31598@embeddedor>
+ <6056eaca-5120-ec0f-6e72-2e1bfbde52a9@embeddedor.com>
+ <87zhoewhll.fsf@kamboji.qca.qualcomm.com>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=gustavo@embeddedor.com; keydata=
+ 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
+ VtSixD1uOgytAP7RWS474w==
+Message-ID: <18c44389-2aae-c413-d8be-81c32c2e11cd@embeddedor.com>
+Date:   Thu, 25 Apr 2019 09:27:59 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+In-Reply-To: <87zhoewhll.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 189.250.127.223
+X-Source-L: No
+X-Exim-ID: 1hJfM1-002R0I-MS
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.1.76]) [189.250.127.223]:56940
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 5
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix many warnings with incorrect endian assumptions.
 
-Reported-by: kbuild test robot <lkp@intel.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7603/mac.c |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 12 ++++++------
- 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index 2f2961ee0a92..af5769d05e6f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -627,7 +627,7 @@ mt7603_mac_fill_rx(struct mt7603_dev *dev, struct sk_buff *skb)
- 	status->aggr = unicast &&
- 		       !ieee80211_is_qos_nullfunc(hdr->frame_control);
- 	status->tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
--	status->seqno = IEEE80211_SEQ_TO_SN(hdr->seq_ctrl);
-+	status->seqno = IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl));
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 1bf3e7b5f6a7..4b934b0f5a39 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -235,7 +235,7 @@ int mt7615_mac_fill_rx(struct mt7615_dev *dev, struct sk_buff *skb)
- 	status->aggr = unicast &&
- 		       !ieee80211_is_qos_nullfunc(hdr->frame_control);
- 	status->tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
--	status->seqno = IEEE80211_SEQ_TO_SN(hdr->seq_ctrl);
-+	status->seqno = IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl));
- 
- 	return 0;
- }
-@@ -337,7 +337,7 @@ int mt7615_mac_write_txwi(struct mt7615_dev *dev, __le32 *txwi,
- 	struct ieee80211_vif *vif = info->control.vif;
- 	int tx_count = 8;
- 	u8 fc_type, fc_stype, p_fmt, q_idx, omac_idx = 0;
--	u16 fc = le16_to_cpu(hdr->frame_control);
-+	__le16 fc = hdr->frame_control;
- 	u16 seqno = 0;
- 	u32 val;
- 
-@@ -353,8 +353,8 @@ int mt7615_mac_write_txwi(struct mt7615_dev *dev, __le32 *txwi,
- 		tx_count = msta->rate_count;
- 	}
- 
--	fc_type = (fc & IEEE80211_FCTL_FTYPE) >> 2;
--	fc_stype = (fc & IEEE80211_FCTL_STYPE) >> 4;
-+	fc_type = (le16_to_cpu(fc) & IEEE80211_FCTL_FTYPE) >> 2;
-+	fc_stype = (le16_to_cpu(fc) & IEEE80211_FCTL_STYPE) >> 4;
- 
- 	if (ieee80211_is_data(fc)) {
- 		q_idx = skb_get_queue_mapping(skb);
-@@ -468,7 +468,7 @@ void mt7615_txp_skb_unmap(struct mt76_dev *dev,
- 	txp = (struct mt7615_txp *)(txwi + MT_TXD_SIZE);
- 	for (i = 1; i < txp->nbuf; i++)
- 		dma_unmap_single(dev->dev, le32_to_cpu(txp->buf[i]),
--				 le32_to_cpu(txp->len[i]), DMA_TO_DEVICE);
-+				 le16_to_cpu(txp->len[i]), DMA_TO_DEVICE);
- }
- 
- int mt7615_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
-@@ -506,7 +506,7 @@ int mt7615_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 	txp = (struct mt7615_txp *)(txwi + MT_TXD_SIZE);
- 	for (i = 0; i < nbuf; i++) {
- 		txp->buf[i] = cpu_to_le32(tx_info->buf[i + 1].addr);
--		txp->len[i] = cpu_to_le32(tx_info->buf[i + 1].len);
-+		txp->len[i] = cpu_to_le16(tx_info->buf[i + 1].len);
- 	}
- 	txp->nbuf = nbuf;
- 
--- 
-2.18.0
+On 4/25/19 4:37 AM, Kalle Valo wrote:
+> "Gustavo A. R. Silva" <gustavo@embeddedor.com> writes:
+> 
+>> Hi all,
+>>
+>> Friendly ping:
+>>
+>> Who can take this?
+> 
+> It's in my queue.
+> 
 
+Awesome. :)
+
+Thank you
+--
+Gustavo
