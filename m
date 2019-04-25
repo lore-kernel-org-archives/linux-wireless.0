@@ -6,88 +6,92 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0738C43219
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:55:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C56A5C4321A
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:56:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1715720679
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:55:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D49220679
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:56:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JwISdxyd";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Fnr85bSz"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RXYo+p/N";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QZ6RkZhX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728358AbfDYQz0 (ORCPT
+        id S1727554AbfDYQ4I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 12:55:26 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:33304 "EHLO
+        Thu, 25 Apr 2019 12:56:08 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:33528 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725941AbfDYQz0 (ORCPT
+        with ESMTP id S1725941AbfDYQ4I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 12:55:26 -0400
+        Thu, 25 Apr 2019 12:56:08 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6EEEF60736; Thu, 25 Apr 2019 16:55:25 +0000 (UTC)
+        id A01826058E; Thu, 25 Apr 2019 16:56:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556211325;
-        bh=ttfHv9QusBSh12Dx/Z3hp9QgyGn+JQby9PVQ2hgGJ0o=;
+        s=default; t=1556211367;
+        bh=9eRvulVlbXBMxvEM3hAkuZAFM7cLKLUpXX0LT4/fs40=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=JwISdxydw/wVthBcJF+jZuRkCWbS8x+OeVMngmL8PlZiqHz6ruEnVsVxZazqCnmvD
-         FVsfJCzJ2m/EkqO0uXpUd/g9J97DH8vBiFVSWizWRhICjTkpeo0S3zOUaqHnJ++hIB
-         StL0/JMlJvsc6K4Fyol9V7IxvDFAqRl8A8qGrcao=
+        b=RXYo+p/NUTrx3R1Ki7MmkUpNk+H/mSL0nxr7EFgm6OwRQbKVNmqkmyOvMhd4rYc8X
+         cdBCXo1gnXo+3pa0/yWEOsYiQiljYlUghuTdXfZaBBw5AgS+PrwoCqs9RIDy18rL7c
+         9OKo7ndguDSwZGaQvo/f4pa9brd3YAx+5Xl8LHNw=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CE4C760252;
-        Thu, 25 Apr 2019 16:55:22 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 27DB960252;
+        Thu, 25 Apr 2019 16:56:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556211324;
-        bh=ttfHv9QusBSh12Dx/Z3hp9QgyGn+JQby9PVQ2hgGJ0o=;
+        s=default; t=1556211367;
+        bh=9eRvulVlbXBMxvEM3hAkuZAFM7cLKLUpXX0LT4/fs40=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=Fnr85bSzZoBwdCXY67PXjzdm1AGLnR8cCD2a6wYv1uWkwEHiuKOEvZGe8L3TBET0y
-         E06vjh/u28cPcEtm3CMgk2q8e4ZvO1cWQvkHYp16RD3XRNl+sRMlxG3SAvVl50bUxz
-         iBKQ8rhI7MGqDxXhnS0HYP7vtFdCUEnkr7cKBRXo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CE4C760252
+        b=QZ6RkZhXHMkoDJKqL79MfPto+ZvJiSOA+C6dhtT+Lz/rct5fFtV1pVycx2O9M2uuM
+         QkLLk3joC1ioMP3Y0zx3I8P8VbL0mH5UNw6wXeqeybsJ8G/RKK38Y0fRuc244pep6N
+         okiQ2vfXMQdgCxr0yaYWMoZorzsgjdoOKVBEWOyA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 27DB960252
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] mwifiex: fix spelling mistake "capabilties" ->
- "capabilities"
+Subject: Re: [PATCH v2 wireless-drivers-next] rtlwifi: rtl8723ae: Fix missing
+ break in switch statement
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190415142649.18452-1-colin.king@canonical.com>
-References: <20190415142649.18452-1-colin.king@canonical.com>
-To:     Colin King <colin.king@canonical.com>
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        "David S . Miller" <davem@davemloft.net>,
+In-Reply-To: <20190416151722.GA31598@embeddedor>
+References: <20190416151722.GA31598@embeddedor>
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Kees Cook <keescook@chromium.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190425165525.6EEEF60736@smtp.codeaurora.org>
-Date:   Thu, 25 Apr 2019 16:55:25 +0000 (UTC)
+Message-Id: <20190425165607.A01826058E@smtp.codeaurora.org>
+Date:   Thu, 25 Apr 2019 16:56:07 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Colin King <colin.king@canonical.com> wrote:
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
 
-> From: Colin Ian King <colin.king@canonical.com>
+> Add missing break statement in order to prevent the code from falling
+> through to case 0x1025, and erroneously setting rtlhal->oem_id to
+> RT_CID_819X_ACER when rtlefuse->eeprom_svid is equal to 0x10EC and
+> none of the cases in switch (rtlefuse->eeprom_smid) match.
 > 
-> There various spelling mistakes in function names and in message
-> text. Fix these.
+> This bug was found thanks to the ongoing efforts to enable
+> -Wimplicit-fallthrough.
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
+> Fixes: 238ad2ddf34b ("rtlwifi: rtl8723ae: Clean up the hardware info routine")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-3b989e58e88a mwifiex: fix spelling mistake "capabilties" -> "capabilities"
+84242b82d81c rtlwifi: rtl8723ae: Fix missing break in switch statement
 
 -- 
-https://patchwork.kernel.org/patch/10900921/
+https://patchwork.kernel.org/patch/10903325/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
