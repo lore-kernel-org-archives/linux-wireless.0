@@ -2,89 +2,99 @@ Return-Path: <SRS0=DNYG=S3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7930C282EA
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 12:37:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42E2CC282E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 13:04:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5540820891
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 12:37:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="o5m7Abno"
+	by mail.kernel.org (Postfix) with ESMTP id 80BF820678
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 13:04:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727843AbfDYMhJ (ORCPT
+        id S1729300AbfDYNEd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 08:37:09 -0400
-Received: from nbd.name ([46.4.11.11]:46002 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726198AbfDYMhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 08:37:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=1NbE6D/yjCyqvJZ4slK53/9Kg97DcVhrRsbed7B/wYs=; b=o5m7Abnora27fjK+yAdVKPxFXw
-        KifpX/s3BNZJ/oZHclji6LobjheH/kq+wGt88SCoDoiBn8MP/i2LHTadihUgs+LAffWaNY0atpQRC
-        4nGTCrkP7Uggamp1zTM8Yx7vRW0bz3NFwWxP7FVl4IQsF8ZvJMSc9/BPVw2thz/06GSI=;
-Received: from p54ae9e78.dip0.t-ipconnect.de ([84.174.158.120] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1hJdch-0007PW-Lh; Thu, 25 Apr 2019 14:37:07 +0200
-Subject: Re: [PATCH v2 0/3] mt76: suspend/stop/removal fixes
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-References: <20190423103709.7272-1-sgruszka@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <a8e2cc04-ef7c-6b86-bb1a-aae52d088fb5@nbd.name>
-Date:   Thu, 25 Apr 2019 14:37:06 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.6.1
+        Thu, 25 Apr 2019 09:04:33 -0400
+Received: from Galois.linutronix.de ([146.0.238.70]:59091 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725921AbfDYNEd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Apr 2019 09:04:33 -0400
+Received: from [5.158.153.52] (helo=nanos.tec.linutronix.de)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1hJe2t-000626-P5; Thu, 25 Apr 2019 15:04:11 +0200
+Date:   Thu, 25 Apr 2019 15:04:10 +0200 (CEST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     David Laight <David.Laight@ACULAB.COM>
+cc:     'Fenghua Yu' <fenghua.yu@intel.com>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        H Peter Anvin <hpa@zytor.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ravi V Shankar <ravi.v.shankar@intel.com>,
+        Xiaoyao Li <xiaoyao.li@intel.com>,
+        Christopherson Sean J <sean.j.christopherson@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Michael Chan <michael.chan@broadcom.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        x86 <x86@kernel.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v8 13/15] x86/split_lock: Enable split lock detection by
+ default
+In-Reply-To: <551673e41ac649689243cbe060364b0d@AcuMS.aculab.com>
+Message-ID: <alpine.DEB.2.21.1904251501430.1960@nanos.tec.linutronix.de>
+References: <1556134382-58814-1-git-send-email-fenghua.yu@intel.com> <1556134382-58814-14-git-send-email-fenghua.yu@intel.com> <762682ba43a0468897ff5ddbf6633d58@AcuMS.aculab.com> <alpine.DEB.2.21.1904251255590.1960@nanos.tec.linutronix.de>
+ <551673e41ac649689243cbe060364b0d@AcuMS.aculab.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-In-Reply-To: <20190423103709.7272-1-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-04-23 12:37, Stanislaw Gruszka wrote:
-> Fixes for some coroner cases during suspend/stop/removal intended to
-> -next since problems are not reproducible in practice and changes
-> relay on -next patches.
-Patch 2 and 3 don't apply anymore. Please rebase and resend.
+On Thu, 25 Apr 2019, David Laight wrote:
+> From: Thomas Gleixne]
+> > Sent: 25 April 2019 11:59
+> > On Thu, 25 Apr 2019, David Laight wrote:
+> > 
+> > > From:  Fenghua Yu
+> > > > Sent: 24 April 2019 20:33
+> > > > A split locked access locks bus and degrades overall memory access
+> > > > performance. When split lock detection feature is enumerated, enable
+> > > > the feature by default by writing 1 to bit 29 in MSR TEST_CTL to find
+> > > > any split lock issue.
+> > >
+> > > You can't enable this by default until ALL the known potentially
+> > > misaligned locked memory operations have been fixed.
+> > 
+> > Errm? The result will be a WARN_ON() printed and no further damage.
+> 
+> ISTR something about sending SIGSEGV to userspace.
+
+Nope. If the #AC originates from kernel then a warning is printed and the
+detection is disabled.
+
+Userspace is a different story. We cannot audit all user space upfront,
+right?
+
+> > It's not making anything worse than it is now. In fact we just should add a
+> > 
+> >     WARN_ON_ONCE(!aligned_to_long(p)) to all the xxx_bit() operations.
+> > 
+> > so we catch them even when they do not trigger that #AC thingy.
+> 
+> That will explode the kernel code size.
+
+So what? We have enough debug options which make the kernel big. One more
+does not really matter.
 
 Thanks,
 
-- Felix
+	tglx
