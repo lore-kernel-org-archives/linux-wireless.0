@@ -3,43 +3,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 386BAC10F03
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:06:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1717C282E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:07:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 04DDD206BA
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:06:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D076206BA
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:07:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="mEXDVUKq"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="WSB2R0Du"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728109AbfDYKGk (ORCPT
+        id S1726308AbfDYKHI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 06:06:40 -0400
-Received: from nbd.name ([46.4.11.11]:36758 "EHLO nbd.name"
+        Thu, 25 Apr 2019 06:07:08 -0400
+Received: from nbd.name ([46.4.11.11]:36800 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726322AbfDYKGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 06:06:39 -0400
+        id S1726076AbfDYKHH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Apr 2019 06:07:07 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=F/Ae+oaBDS9cot4utLh+9eDiYdid6G7t3FXAXTMB08o=; b=mEXDVUKqjn13Y7u976FABlSUpO
-        nvlVr9xsUlYYdLLbM9sOcgsXuvpZSPEPDBlkeO/yfQlNQ4o6vgpmYC39II1GKTBhyWfM164P0bqKj
-        I54yeiYzFpBdEd6XahiSNewPm7WjuDPwKcCrZVz2nrrAOljVSbeUmpzCxRe4RTjykOws=;
+        bh=aCu7cZcASxjelxEavgpdZt9pswYu1SCCdBYZgLiHbco=; b=WSB2R0DuWSA3gLUrcoDF/aZk0X
+        I8W2/1ETY2uG6YhDS6LuvC6WYMYts2wiX28NzyX2igBOnauJKFWnXaylFitXRetNTUzFjdLsSoECZ
+        dlwSfWrkg8X6DzQECJhfY8BXXpi51trSGQ48BvxQmklTkgenIo3J5azq9Btr+dCsCMuk=;
 Received: from p54ae9e78.dip0.t-ipconnect.de ([84.174.158.120] helo=nf.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1hJbH3-0000R6-Bv; Thu, 25 Apr 2019 12:06:37 +0200
-Subject: Re: [PATCH v2 0/4] add missing bits for mt7615 support
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     ryder.lee@mediatek.com, roychl666@gmail.com,
-        lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1554194917.git.lorenzo@kernel.org>
+        id 1hJbHW-0000Ta-FR; Thu, 25 Apr 2019 12:07:06 +0200
+Subject: Re: [PATCH v3 0/4] Add support for MediaTek MT7615 wireless chipsets
+To:     Ryder Lee <ryder.lee@mediatek.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Roy Luo <royluo@google.com>, Sean Wang <sean.wang@mediatek.com>,
+        Nelson Chang <nelson.chang@mediatek.com>,
+        YF Luo <yf.luo@mediatek.com>, Kai Lin <kai.lin@mediatek.com>,
+        Rorscha Yang <rorscha.yang@mediatek.com>,
+        Kyle Lee <kyle.lee@mediatek.com>,
+        Miller Shen <miller.shen@mediatek.com>,
+        Haipin Liang <haipin.liang@mediatek.com>,
+        KL Huang <kl.huang@mediatek.com>,
+        YH chen <yh.chen@mediatek.com>, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
+References: <cover.1554102584.git.ryder.lee@mediatek.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -65,34 +74,47 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <9ec78d43-7c8f-be6a-3311-f82fe4d34763@nbd.name>
-Date:   Thu, 25 Apr 2019 12:06:36 +0200
+Message-ID: <98c68ec4-bedb-cf6a-9221-eb82a2497e6c@nbd.name>
+Date:   Thu, 25 Apr 2019 12:07:05 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <cover.1554194917.git.lorenzo@kernel.org>
+In-Reply-To: <cover.1554102584.git.ryder.lee@mediatek.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-04-02 11:47, Lorenzo Bianconi wrote:
-> This is a preliminary series to add support for mt7615.
-> Dynamically allocate txwi descriptor.
-> Add missing bit in dma error data path.
-> This series is based on https://patchwork.kernel.org/patch/10856027/
+On 2019-04-01 09:16, Ryder Lee wrote:
+> This adds support for MediaTek MT7615E 4x4 802.11ac PCIe-based chipsets.
 > 
-> Changes since v1:
-> - remove flags from mt76_txwi_cache
+> The series is based on the Lorenzo's patches:
+> https://patchwork.kernel.org/project/linux-wireless/list/?series=95969
 > 
-> Lorenzo Bianconi (4):
->   mt76: set txwi_size according to the driver value
->   mt76: add skb pointer to mt76_tx_info
->   mt76: dma: introduce skb field in mt76_txwi_cache
->   mt76: dma: add skb check for dummy pointer
+> In the legacy tx arch, we move and store the whole skb content to the
+> on-device memory when we send packets via high speed interface. (e.g. PCIe)
+> 
+> However, MT7615 and the following generation use a new tx arch called
+> “cut-through”, which only passes the physical address to the hardware,
+> and the packet engine will fetch the packets before transmission.
+> 
+> It saves on-chip memory for high throughput devices, and the token mechanism
+> is used to manage the release of skb under this arch.
+> 
+> And there might be other (existing or future) chips that use the same driver
+> (e.g. mt7622/mt7663...), this is a starting point to unify MTK wireless chipsets.
+> 
+> Detailed hardware information for this chip could be found on 
+> https://wikidevi.com/wiki/MediaTek_MT7615
+> 
+> Ryder Lee (4):
+>   mt76: add mac80211 driver for MT7615 PCIe-based chipsets
+>   mt76: add unlikely() for dma_mapping_error() check
+>   mt76: use macro for sn and seq_ctrl conversion
+>   MAINTAINERS : update entry for mt76 wireless driver
 Applied, thanks.
 
 - Felix
