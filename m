@@ -2,81 +2,107 @@ Return-Path: <SRS0=DNYG=S3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B558C282E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:58:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 399A2C282E3
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 11:05:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE467214AE
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 10:58:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 087A7214AE
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 11:05:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="geGqhXmD";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cBnJWkPG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730601AbfDYK6o (ORCPT
+        id S1730647AbfDYLFw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 06:58:44 -0400
-Received: from Galois.linutronix.de ([146.0.238.70]:58526 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727668AbfDYK6n (ORCPT
+        Thu, 25 Apr 2019 07:05:52 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:59000 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726979AbfDYLFw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 06:58:43 -0400
-Received: from [5.158.153.52] (helo=nanos.tec.linutronix.de)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1hJc5I-0003Mo-SB; Thu, 25 Apr 2019 12:58:33 +0200
-Date:   Thu, 25 Apr 2019 12:58:32 +0200 (CEST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     David Laight <David.Laight@ACULAB.COM>
-cc:     'Fenghua Yu' <fenghua.yu@intel.com>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        H Peter Anvin <hpa@zytor.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Dave Hansen <dave.hansen@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ravi V Shankar <ravi.v.shankar@intel.com>,
-        Xiaoyao Li <xiaoyao.li@intel.com>,
-        Christopherson Sean J <sean.j.christopherson@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Michael Chan <michael.chan@broadcom.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        x86 <x86@kernel.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v8 13/15] x86/split_lock: Enable split lock detection by
- default
-In-Reply-To: <762682ba43a0468897ff5ddbf6633d58@AcuMS.aculab.com>
-Message-ID: <alpine.DEB.2.21.1904251255590.1960@nanos.tec.linutronix.de>
-References: <1556134382-58814-1-git-send-email-fenghua.yu@intel.com> <1556134382-58814-14-git-send-email-fenghua.yu@intel.com> <762682ba43a0468897ff5ddbf6633d58@AcuMS.aculab.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        Thu, 25 Apr 2019 07:05:52 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B78C060769; Thu, 25 Apr 2019 11:05:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556190351;
+        bh=oPDPICGg8a+aHTjcYuPf0lbLYrCvtVasE6Dp6etuXo8=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=geGqhXmD1lCrzQY4LmVyllMC17k1BNyjmkkhtQTsGRfLhlpHa+LlfgulyxdvUvCBL
+         /LodxzDx12N/FHJ8IZMKLlVjpP/nrvdWSnmgWl2FRXyD6DpHryUJ2E/mTub4yKk87w
+         q5oEfKzcdCWgttJ+Y3VObOWG7kiHIc25fyDvnAC0=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D961B60275;
+        Thu, 25 Apr 2019 11:05:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556190350;
+        bh=oPDPICGg8a+aHTjcYuPf0lbLYrCvtVasE6Dp6etuXo8=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=cBnJWkPGX2vW6s6bwBLV/lNiv4kvSbTSmsRSOjKo+UrJOimpxMu4LH7e0bY0h8d1r
+         UoZlctdMFd8WMKoHpxLPw9/5QwJkGgcMj79S750+yMyCyyst/jBAgMmm/wO/zhS3OM
+         WVmLMYSTzM3SQAtp6uBU/iBM7dmR2vb/nV8wZCgc=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D961B60275
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] mwifiex: Make resume actually do something useful again
+ on SDIO cards
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190404040106.40519-1-dianders@chromium.org>
+References: <20190404040106.40519-1-dianders@chromium.org>
+To:     Douglas Anderson <dianders@chromium.org>
+Cc:     linux-rockchip@lists.infradead.org, briannorris@chromium.org,
+        mka@chromium.org, ryandcase@chromium.org, heiko@sntech.de,
+        Douglas Anderson <dianders@chromium.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-kernel@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev@vger.kernel.org, Xinming Hu <huxinming820@gmail.com>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190425110551.B78C060769@smtp.codeaurora.org>
+Date:   Thu, 25 Apr 2019 11:05:51 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 25 Apr 2019, David Laight wrote:
+Douglas Anderson <dianders@chromium.org> wrote:
 
-> From:  Fenghua Yu
-> > Sent: 24 April 2019 20:33
-> > A split locked access locks bus and degrades overall memory access
-> > performance. When split lock detection feature is enumerated, enable
-> > the feature by default by writing 1 to bit 29 in MSR TEST_CTL to find
-> > any split lock issue.
+> The commit fc3a2fcaa1ba ("mwifiex: use atomic bitops to represent
+> adapter status variables") had a fairly straightforward bug in it.  It
+> contained this bit of diff:
 > 
-> You can't enable this by default until ALL the known potentially
-> misaligned locked memory operations have been fixed.
+>  - if (!adapter->is_suspended) {
+>  + if (test_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags)) {
+> 
+> As you can see the patch missed the "!" when converting to the atomic
+> bitops.  This meant that the resume hasn't done anything at all since
+> that commit landed and suspend/resume for mwifiex SDIO cards has been
+> totally broken.
+> 
+> After fixing this mwifiex suspend/resume appears to work again, at
+> least with the simple testing I've done.
+> 
+> Fixes: fc3a2fcaa1ba ("mwifiex: use atomic bitops to represent adapter status variables")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Douglas Anderson <dianders@chromium.org>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
 
-Errm? The result will be a WARN_ON() printed and no further damage. It's
-not making anything worse than it is now. In fact we just should add a
+Patch applied to wireless-drivers.git, thanks.
 
-    WARN_ON_ONCE(!aligned_to_long(p)) to all the xxx_bit() operations.
+b82d6c1f8f82 mwifiex: Make resume actually do something useful again on SDIO cards
 
-so we catch them even when they do not trigger that #AC thingy.
+-- 
+https://patchwork.kernel.org/patch/10884883/
 
-Thanks,
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
-	tglx
