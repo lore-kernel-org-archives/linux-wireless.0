@@ -2,112 +2,88 @@ Return-Path: <SRS0=DNYG=S3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19445C43219
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 771A8C43218
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:43:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85245206BF
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:42:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBD51206BF
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 16:43:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="b1RIx+Mo";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="P6HE5NAT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729777AbfDYQmt (ORCPT
+        id S1726924AbfDYQmp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 12:42:49 -0400
-Received: from zeniv.linux.org.uk ([195.92.253.2]:48282 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726116AbfDYQmq (ORCPT
+        Thu, 25 Apr 2019 12:42:45 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:55176 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726184AbfDYQmp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 12:42:46 -0400
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1hJhSF-0003K2-7F; Thu, 25 Apr 2019 16:42:35 +0000
-Date:   Thu, 25 Apr 2019 17:42:35 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        y2038 Mailman List <y2038@lists.linaro.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Sterba <dsterba@suse.com>,
-        Darren Hart <dvhart@infradead.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        driverdevel <devel@driverdev.osuosl.org>, qat-linux@intel.com,
-        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
-        <linux-crypto@vger.kernel.org>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        linux-iio@vger.kernel.org, linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Platform Driver <platform-driver-x86@vger.kernel.org>,
-        linux-remoteproc@vger.kernel.org,
-        sparclinux <sparclinux@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        ceph-devel <ceph-devel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>, Sean Young <sean@mess.org>
-Subject: Re: [PATCH v3 12/26] compat_ioctl: move more drivers to
- compat_ptr_ioctl
-Message-ID: <20190425164235.GT2217@ZenIV.linux.org.uk>
-References: <20190416202013.4034148-1-arnd@arndb.de>
- <20190416202701.127745-1-arnd@arndb.de>
- <20190425122153.450fc094@coco.lan>
- <20190425153534.GS2217@ZenIV.linux.org.uk>
- <CAK8P3a2HmiYQJ2FV2FgLiFsD8M9UKteC9Jetx7ja06PQVZWYfA@mail.gmail.com>
+        Thu, 25 Apr 2019 12:42:45 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id D29266077A; Thu, 25 Apr 2019 16:42:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556210564;
+        bh=dDlU680sfNkZ6mFUB0/9to0eOLdv1q/WmS0YAu/rZCg=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=b1RIx+Moj81fnMgD7VaZwznpQkXHNbbngxxaPERclu46BXz6bJR3fIFwIZ9wgshkC
+         NhkLtcoH1VLiULdF5cAXbQ7wPobBHHJf5gujYFgyIqkv0gOu8J+bqi62aWl9bmi3yu
+         Z6iZMTTXKLr0P4Y70LyUC76ip+bVIjM9ryrEI3ZM=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 987AF6034D;
+        Thu, 25 Apr 2019 16:42:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556210564;
+        bh=dDlU680sfNkZ6mFUB0/9to0eOLdv1q/WmS0YAu/rZCg=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=P6HE5NATeLx715tOwdK1RpFHfrvMZNz2qfm2xNE2bFhvSV8LAbjUyV1zF7sH9L8Xo
+         G3M1qunAgq13/wp6edP2GbFaIR/waMl3uCzJqDTu0jKLeYvK1so5syJL4tbGyqrzDI
+         svhMVGnATDbFZEDVccTp6LDJZ65ptG6h0YBeolxM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 987AF6034D
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAK8P3a2HmiYQJ2FV2FgLiFsD8M9UKteC9Jetx7ja06PQVZWYfA@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2] rsi: Fix NULL pointer dereference in kmalloc
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190323204916.8368-1-pakki001@umn.edu>
+References: <20190323204916.8368-1-pakki001@umn.edu>
+To:     Aditya Pakki <pakki001@umn.edu>
+Cc:     pakki001@umn.edu, kjlu@umn.edu,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190425164244.D29266077A@smtp.codeaurora.org>
+Date:   Thu, 25 Apr 2019 16:42:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Apr 25, 2019 at 05:55:23PM +0200, Arnd Bergmann wrote:
-> On Thu, Apr 25, 2019 at 5:35 PM Al Viro <viro@zeniv.linux.org.uk> wrote:
-> >
-> > On Thu, Apr 25, 2019 at 12:21:53PM -0300, Mauro Carvalho Chehab wrote:
-> >
-> > > If I understand your patch description well, using compat_ptr_ioctl
-> > > only works if the driver is not for s390, right?
-> >
-> > No; s390 is where "oh, just set ->compat_ioctl same as ->unlocked_ioctl
-> > and be done with that; compat_ptr() is a no-op anyway" breaks.  IOW,
-> > s390 is the reason for having compat_ptr_ioctl() in the first place;
-> > that thing works on all biarch architectures, as long as all stuff
-> > handled by ->ioctl() takes pointer to arch-independent object as
-> > argument.  IOW,
-> >         argument ignored => OK
-> >         any arithmetical type => no go, compat_ptr() would bugger it
-> >         pointer to int => OK
-> >         pointer to string => OK
-> >         pointer to u64 => OK
-> >         pointer to struct {u64 addr; char s[11];} => OK
+Aditya Pakki <pakki001@umn.edu> wrote:
+
+> kmalloc can fail in rsi_register_rates_channels but memcpy still attempts
+> to write to channels. The patch replaces these calls with kmemdup and
+> passes the error upstream.
 > 
-> To be extra pedantic, the 'struct {u64 addr; char s[11];} '
-> case is also broken on x86, because sizeof (obj) is smaller
-> on i386, even though the location of the members are
-> the same. i.e. you can copy_from_user() this, but not
-> copy_to_user(), which overwrites 4 bytes after the end of
-> the 20-byte user structure.
+> Signed-off-by: Aditya Pakki <pakki001@umn.edu>
 
-D'oh!  FWIW, it might be worth putting into Documentation/ somewhere;
-basically, what is and what isn't biarch-neutral.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Or arch-neutral, for that matter - it's very close.  The only real
-exception, IIRC, is an extra twist on m68k, where int behaves
-like x86 long long - its alignment is only half its size, so
-sizeof(struct {char c; int x;}) is 6, not 8 as everywhere
-else.  Irrelevant for biarch, thankfully (until somebody gets insane
-enough to implement 64bit coldfire, kernel port for it *and* biarch
-support for m68k binaries on that thing, that is)...
+d5414c2355b2 rsi: Fix NULL pointer dereference in kmalloc
+
+-- 
+https://patchwork.kernel.org/patch/10866983/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
