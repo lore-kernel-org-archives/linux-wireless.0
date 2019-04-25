@@ -2,78 +2,126 @@ Return-Path: <SRS0=DNYG=S3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3B7BC10F03
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 07:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1AA8C10F03
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 07:17:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA6D120685
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 07:14:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C38222077C
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 07:17:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VcArmuk3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730033AbfDYHOe (ORCPT
+        id S1730118AbfDYHRv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 03:14:34 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:49288 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726474AbfDYHOe (ORCPT
+        Thu, 25 Apr 2019 03:17:51 -0400
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:41689 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729910AbfDYHRv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 03:14:34 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1hJYaW-0000HK-QS; Thu, 25 Apr 2019 10:14:32 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH v5.1] iwlwifi: mvm: fix merge damage in iwl_mvm_vif_dbgfs_register()
-Date:   Thu, 25 Apr 2019 10:14:28 +0300
-Message-Id: <20190425071428.29918-1-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
+        Thu, 25 Apr 2019 03:17:51 -0400
+Received: by mail-ed1-f68.google.com with SMTP id m4so45474edd.8
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Apr 2019 00:17:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=pZcr2YNCl8TcWNGw6ntjPqDUENWVzR6c52NG4J3TN88=;
+        b=VcArmuk31uf/hSt/PsvJ849U53opjThVlbZfnqQ5c4bZYsF61QiHPHHhqKGOnC9hvO
+         pkSw9SSP2vM9YPBrX3NUDgUabxcwzPz4Wv0V5LmzYZDesLSF/RFo+AAzf9g9F1G+Qr8c
+         A6GjPj/MBAOFbmVX8jMVh1bQ1lBvEC29pfxWQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=pZcr2YNCl8TcWNGw6ntjPqDUENWVzR6c52NG4J3TN88=;
+        b=Evp29mnv9AHYNTnN+rk2WHitr++AjADv0lcPgnyvOCg9EMc/KvfetIsj6ZjZy8jRdT
+         5vpEdyBuVQQb8KdZ+LUO2bztmJF1UM5IXeLpMWHyiIF5OAb/+GRclaI9YaXL2UxGx3T0
+         83+Cydr4QdYY9MowcI7iiA2rhhkb+oYI3duyc8/ce57a2UOOOSIZzWo//EbRIZQyJMoC
+         u0y0SbyXemCjsnbA9dg03puQfgv+VNZAA3OzBXcOvrRYc+C4DUAqmVxtXoI4C32ywSRV
+         QCXNXZS/5h5IIagXuinxIAz+0ezusWeHiLhmQioQp8gquvQeJ2Ggssy5r4haCCox/XQA
+         AJ+Q==
+X-Gm-Message-State: APjAAAXdtnaLV6nhld//IpAcdfCSh6Kj6Uw2I36iA2J1/aJMPsoyvCsl
+        NypHhhv3QNk3IXJ/zk/b4lCFLA==
+X-Google-Smtp-Source: APXvYqxTd1Fu8598VSQkK4hyUPqw4JvQd2QGvil0meIxIg7fWn32mpcZn/gwRJgIIM4vwBoJti6ufQ==
+X-Received: by 2002:a05:6402:691:: with SMTP id f17mr15349450edy.50.1556176669564;
+        Thu, 25 Apr 2019 00:17:49 -0700 (PDT)
+Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
+        by smtp.gmail.com with ESMTPSA id s56sm351669edd.35.2019.04.25.00.17.48
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 25 Apr 2019 00:17:48 -0700 (PDT)
+Subject: Re: brcmfmac: NULL pointer dereference during brcmf_detach() after
+ firmware crash
+To:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com, Aaron Blair <aaron@aaronpb.me>
+References: <b519e746-ddfd-421f-d897-7620d229e4b2@gmail.com>
+ <16ea722f-e08d-044f-216c-4ea745cc6344@broadcom.com>
+ <CACna6rxR4t1MpniasnUfyiuBhc9tTkJRx=O7GrMnmVPOXCZ-dQ@mail.gmail.com>
+ <CACna6rwF7rai_PMY3VtYXD=uBAT+jHsr8zrWP28vKjUx2S7Uyg@mail.gmail.com>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <e967a7b3-a8b5-5a77-31e0-a06515d37383@broadcom.com>
+Date:   Thu, 25 Apr 2019 09:17:48 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
+In-Reply-To: <CACna6rwF7rai_PMY3VtYXD=uBAT+jHsr8zrWP28vKjUx2S7Uyg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 4/18/2019 1:55 PM, Rafał Miłecki wrote:
+> On Fri, 15 Feb 2019 at 07:15, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> On Thu, 14 Feb 2019 at 23:37, Arend Van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>> On 2/14/2019 11:30 PM, Rafał Miłecki wrote:
+>>>> I've just found a well reproducible brcmfmac crash (NULL pointer
+>>>> dereference).
+>>>>
+>>>> Steps:
+>>>> 1. Wait for or trigger a FullMAC firmware crash
+>>>> 2. Wait for some skb to get queued on a flowring
+>>>> 3. Call rmmod brcmfmac
+>>>>
+>>>> Problem:
+>>>> There is a NULL pointer dereference in one of the brcmf_detach() calls.
+>>>>
+>>>> Explanation:
+>>>> brcmf_detach() first frees all "ifp"s and then deletes flowrings. If any
+>>>> flowring has a skb it results in calling brcmf_txfinalize() which tries
+>>>> to access "ifp" (struct brcmf_if) which is a NULL.
+>>>
+>>> Hi Rafał,
+>>>
+>>> Thanks for diving in. That was my suspicion. Does it mean you are
+>>> working on a patch or shall I take care of it.
+>>
+>> It would be nice to have someone more experienced with detaching &
+>> rings look at it. Is adding a simple
+>> if (ifp)
+>> enough? Or should that code get redesigned? Should we e.g. reorder detach order?
+> 
+> Hi Arend, would you find a moment to look at that crash, please?
 
-When I rebased Greg's patch, I accidentally left the old if block that
-was already there.  Remove it.
+Hi Rafał,
 
-Fixes: 154d4899e411 ("iwlwifi: mvm: properly check debugfs dentry before using it")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
+Sorry for getting back on this so late. The driver tries to gracefully 
+teardown stuff by sending firmware commands to the device. I think that 
+makes no sense as that level of communication is not possible once our 
+driver .remove() callback is called. So I think upon calling 
+brcmf_detach() we should cleanup everything bottom-up. I will rework the 
+code and see how that goes.
 
-I am going to include this patch when I send my next pull request for
-v5.1.  This is not so important, but it's simple and clear and will
-prevent further merge conflicts later.
-
-
-drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-index 738eddb2e7ac..6925527d8457 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-@@ -780,12 +780,6 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		return;
- 	}
- 
--	if (!mvmvif->dbgfs_dir) {
--		IWL_ERR(mvm, "Failed to create debugfs directory under %pd\n",
--			dbgfs_dir);
--		return;
--	}
--
- 	if (iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_CAM &&
- 	    ((vif->type == NL80211_IFTYPE_STATION && !vif->p2p) ||
- 	     (vif->type == NL80211_IFTYPE_STATION && vif->p2p)))
--- 
-2.20.1
-
+Thanks,
+Arend
