@@ -2,114 +2,102 @@ Return-Path: <SRS0=DNYG=S3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5F9AC43219
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 15:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44D26C43218
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 15:34:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F277E206C0
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 15:29:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EgFRhieR";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="n9SnDQSj"
+	by mail.kernel.org (Postfix) with ESMTP id 7D716205ED
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 15:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729098AbfDYP3X (ORCPT
+        id S1729631AbfDYPc2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 11:29:23 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:37922 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729077AbfDYP3X (ORCPT
+        Thu, 25 Apr 2019 11:32:28 -0400
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:44074 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387593AbfDYPcZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 11:29:23 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 746936049C; Thu, 25 Apr 2019 15:29:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556206162;
-        bh=KqSOIhDtoGs/0Pi7hKq6nV2HSVOHJO+oGHmCt1KPmRI=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=EgFRhieReSz+VZI6xdQsi1U2Elmn78zv+QarqZE+yBIAIjFl6D7pckoXR+nah2RDD
-         TrZ9jTkpOLuOZblraB96pkb4b841dn89wT8GZadk67QW7+trGgB8EBf65XtEoPSuB3
-         lV92eF+mtDViHZkUWyBIRZdxx4vAH/NQpY4xhe9A=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8DFD860213;
-        Thu, 25 Apr 2019 15:29:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556206161;
-        bh=KqSOIhDtoGs/0Pi7hKq6nV2HSVOHJO+oGHmCt1KPmRI=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=n9SnDQSjd2NxmH6vyNHH+h+RcCO7Q1AGoIH98KN1s8cGCKFg3THf2ymhwVyyki/Zs
-         Lz0k0XOhYsApxLEKzgghFiiQdQJfkTT2+Vo8esIIF+MCBgOLv2exnWHFoqr3IJBYDC
-         KJrAJmO2XGq9nLMMP5FWaQB4NFHMGVy/FoN0geGo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8DFD860213
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Subject: Re: pull-request: iwlwifi-next 2019-04-18-2
-References: <53070f180e2ae093d0daccc664b09837beb8b549.camel@coelho.fi>
-        <560ba2b6a20ac9842fd6a5a5d786def1077811f4.camel@coelho.fi>
-Date:   Thu, 25 Apr 2019 18:29:18 +0300
-In-Reply-To: <560ba2b6a20ac9842fd6a5a5d786def1077811f4.camel@coelho.fi> (Luca
-        Coelho's message of "Fri, 19 Apr 2019 10:37:18 +0300")
-Message-ID: <87ef5qw1bl.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Thu, 25 Apr 2019 11:32:25 -0400
+Received: by mail-qt1-f196.google.com with SMTP id s10so504701qtc.11;
+        Thu, 25 Apr 2019 08:32:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=vnOK55Hhpegmo/fnJEz+TCVV+Rtg/rYKGc4878e+cQM=;
+        b=UKuOoUy+U/DhO1lrIpJzV4Ph/CephrAcf/jKCSeUIeDvoHjzvpEnXC65Ukf9h1Ml3O
+         /s3B+ucBFA/SCZiwvcG8m44SU5vaLq+cSoUpr+v97MybACPI8xSw+tBqbMtGey3O/dwh
+         7k6dvRZqNSLErq6sAvUOfdrbS3QsRH/LAtzQL7ZCp3VEV4Xa+tJDCKHFqhG4eUmFBOoA
+         TdH5uTW+6TRa6B8E0jLoEj97uvssKvZFAGT30Y1GHSjPupev46xs0A2EzYdpKp1K0Cnc
+         ECJ5zIKvJo3lKjWIAoD4lKDuRognkIEVFH3Eb+w7nBaxIUaAv8axd6sFg84VH9IhHe+7
+         WZ5Q==
+X-Gm-Message-State: APjAAAWLh3mra7FsjsrItm2wXSJLHGYq1pNo9wSfDkOc4Mfvr6JR7F6K
+        S2gD/7PIlEI9SIS02upAVCHeANw0CRkAyRlXWeA=
+X-Google-Smtp-Source: APXvYqwxk/2uu8237YdCHmRUJfKvMCqEAFuyKk69MJnoHNCwVO4ijAI41YQVvxcBEABnP8bt18E+q4gxBK6hSfckd+U=
+X-Received: by 2002:ac8:2924:: with SMTP id y33mr30625898qty.212.1556206343098;
+ Thu, 25 Apr 2019 08:32:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20190416202013.4034148-1-arnd@arndb.de> <20190416202701.127745-1-arnd@arndb.de>
+ <20190425122153.450fc094@coco.lan>
+In-Reply-To: <20190425122153.450fc094@coco.lan>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Thu, 25 Apr 2019 17:32:05 +0200
+Message-ID: <CAK8P3a1qCQJEkne3uAw-Ep-taNU9t5Y2ZmgoiCGmOz1BSwmzEw@mail.gmail.com>
+Subject: Re: [PATCH v3 12/26] compat_ioctl: move more drivers to compat_ptr_ioctl
+To:     Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        y2038 Mailman List <y2038@lists.linaro.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Sterba <dsterba@suse.com>,
+        Darren Hart <dvhart@infradead.org>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        driverdevel <devel@driverdev.osuosl.org>, qat-linux@intel.com,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
+        linux-iio@vger.kernel.org, linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Platform Driver <platform-driver-x86@vger.kernel.org>,
+        linux-remoteproc@vger.kernel.org,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        ceph-devel <ceph-devel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>, Sean Young <sean@mess.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> writes:
+On Thu, Apr 25, 2019 at 5:22 PM Mauro Carvalho Chehab
+<mchehab+samsung@kernel.org> wrote:
+> Em Tue, 16 Apr 2019 22:25:33 +0200 Arnd Bergmann <arnd@arndb.de> escreveu:
+>
+> If I understand your patch description well, using compat_ptr_ioctl
+> only works if the driver is not for s390, right?
 
-> This is a new version of my pull request on top of your tree after you
-> fast-forwarded to net-next, to avoid a small conflict.
->
-> This is the third batch of patches intended for v5.2.  This includes
-> the last patchset I sent.  Usual development work.  More details about
-> the contents in the tag description.
->
-> I have sent this out before and kbuildbot reported success.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 5c2e6e14a0ad24a35d9d2b318204c8c012d9d618:
->
->   Merge branch 'net-add-reset-controller-driven-PHY-reset' (2019-04-18 17:43:11 -0700)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2019-04-18-2
->
-> for you to fetch changes up to 69166f7a37dc0bde5a3c26945e3cdbfc740b0562:
->
->   iwlwifi: dbg_ini: set dump bit only when trigger collection is certain (2019-04-19 10:27:34 +0300)
->
-> ----------------------------------------------------------------
-> Third batch of patches intended for v5.2
->
-> * Bump the 20000-series FW API version supported;
-> * Work on the new debugging infra continues;
-> * One clean-up to prevent a bogus warning with clang;
-> * A small cleanup in the PCI ID list;
-> * Work on new hardware continues;
-> * RTT confidence indication support for FTM;
-> * An improvement in HE rate-scaling;
->
-> ----------------------------------------------------------------
+No, the purpose of compat_ptr_ioctl() is to make sure it works
+everywhere including s390.
 
-Pulled, thanks Luca.
+Even on s390 it tends to work most of the time, but for correctness
+the upper bit of a 32-bit pointer needs to be cleared, as
+compat_ptr_ioctl does, in case some application passes a pointer
+with that bit set. [IIRC, in the instruction pointer, the high bit is set, in
+data references it is ignored but usually cleared, but it may be left
+on for IP-relative address generation]
 
--- 
-Kalle Valo
+       Arnd
