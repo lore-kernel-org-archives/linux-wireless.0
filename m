@@ -2,206 +2,116 @@ Return-Path: <SRS0=DNYG=S3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30351C282E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 06:31:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29588C10F03
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 07:05:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F28FD217D7
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 06:31:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556173889;
-	bh=wHRXN5XEZCV0yKXXFctP1aLZqAPPzegTUGTtpGvu3IU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=2BOosrIxOyKi70OXpWIr8drZkPqinmtReEsEEGxVxXnk/5YOqK2D8J7s4WA/h/Dfw
-	 1LGMcfke5bar6v1nSkGlluY6gmtRF/QBaDduqNd78/O18BpLMV1FEcY2BkYoDZk7h4
-	 DXFQeE4RQyIJ/Enarj1rRH/98ObUAzqsm18DlChs=
+	by mail.kernel.org (Postfix) with ESMTP id EBC41217D7
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Apr 2019 07:05:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="Ler6CjQU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729606AbfDYGbW (ORCPT
+        id S2387648AbfDYHFu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Apr 2019 02:31:22 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:40703 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726229AbfDYGbV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Apr 2019 02:31:21 -0400
-Received: by mail-wr1-f65.google.com with SMTP id h4so28575911wre.7;
-        Wed, 24 Apr 2019 23:31:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=nkV8EKpA5YNJLAoU8Dqidj432hCPaA90eLlXB6QVb1E=;
-        b=KgJ3uI1n9SBz4stP5z6Js3knEMvrOfq6LYbMgolbQ1HeC3Bp+76DRsuh5KgU7DaFKG
-         Etu2mAeu/OLBFYK64QbXt+rXWx1aKBPRMU1VDOwI/1BG+sPEfHxXdB5Hik9UZKUEDMsM
-         L+xowW1PMCIYvz3W4SR15XjKABFeDcGjmorCwpLd10IK5X3VO6M3Jo03FzEX7KPB7dhT
-         AbCCbva+Sp9+Pf8zbzlQjJXwUdtgpBoxgn26VQvIzmLulVhnJso/l8LMOMYBTD7nyDwC
-         tr8NJsLZ2v2rEn43NH6HjlmWGsY9iqY6tSohupEsK6QKtRp6u65JY9ue23p9ZCIuYxzY
-         JkGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to:user-agent;
-        bh=nkV8EKpA5YNJLAoU8Dqidj432hCPaA90eLlXB6QVb1E=;
-        b=apVeHQyLd1xBge5nm8y6TYsjvs8/QBBVgf+L1t4ybQHyRTwn9tVpz4xT68YSO6Eyd2
-         zTDnHabE65hIdqJDq9SygrdVzB/d7C8TD4NsD8q4qFX67t42ikT3LU15ZTPlYKJKjg0F
-         MBmXIfTqKUEnus8TbfUjH01e2tld45Vf/qMLN6ije6QiL49oCT1l8YPIyt6vnfvrfO7h
-         S00kTcuAeCTcK5Qq3lXnjSbZaDe+R9hppNft3In9IMHI+AyPblqhMqXyptOprWCa+Mc6
-         vb/gUrkFVN9GbsXAJ1B4W5MNwX+HXCNtJuTeF9hftyKi1UhTwWUV87PrN4BqpH/+7Z8F
-         rSAA==
-X-Gm-Message-State: APjAAAWN2OGFYP85WXH+SRBUmySrH1uDVjfzxRY8OwI/HFD+Iwer0S1H
-        lRs01w7N/o+gxqtbcWpXBjU=
-X-Google-Smtp-Source: APXvYqw0ahPLji+D1kmmCplVReoZg3Pv/dg7a9eF+tYrBEeQmujFjwicRtO3g/lE7Kj7dwxppvg36A==
-X-Received: by 2002:adf:b60a:: with SMTP id f10mr23463310wre.116.1556173878697;
-        Wed, 24 Apr 2019 23:31:18 -0700 (PDT)
-Received: from gmail.com (2E8B0CD5.catv.pool.telekom.hu. [46.139.12.213])
-        by smtp.gmail.com with ESMTPSA id s9sm4181953wrm.22.2019.04.24.23.31.17
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 24 Apr 2019 23:31:17 -0700 (PDT)
-Date:   Thu, 25 Apr 2019 08:31:15 +0200
-From:   Ingo Molnar <mingo@kernel.org>
-To:     Fenghua Yu <fenghua.yu@intel.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        H Peter Anvin <hpa@zytor.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Dave Hansen <dave.hansen@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ravi V Shankar <ravi.v.shankar@intel.com>,
-        Xiaoyao Li <xiaoyao.li@intel.com>,
-        Christopherson Sean J <sean.j.christopherson@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Michael Chan <michael.chan@broadcom.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        x86 <x86@kernel.org>, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v8 15/15] x86/split_lock: Add a sysfs interface to
- enable/disable split lock detection during run time
-Message-ID: <20190425063115.GD40105@gmail.com>
-References: <1556134382-58814-1-git-send-email-fenghua.yu@intel.com>
- <1556134382-58814-16-git-send-email-fenghua.yu@intel.com>
+        Thu, 25 Apr 2019 03:05:50 -0400
+Received: from mail-eopbgr700097.outbound.protection.outlook.com ([40.107.70.97]:3937
+        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2387520AbfDYHFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Apr 2019 03:05:50 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9m3AOJLwpvxLfCxQqt86Ujv4p80fTUqawglJ9fa3dOc=;
+ b=Ler6CjQUpoQcS/AaIBj1eXEdkd9q31DjWQ3ICFhEFLyzEgI1S3lt1hU2/DEJVFQbrRYD8UxZOX0w5iLHDyDvGrceYAuiTfQIsAi1di9JLkZwqU12ioSkzbS2tjebCWDTTYOibBdHvQruTdvGF3wgVhIpC8WAe7OyA28JcsL2kMc=
+Received: from MN2PR06MB5806.namprd06.prod.outlook.com (20.179.145.207) by
+ MN2PR06MB5854.namprd06.prod.outlook.com (20.179.145.17) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1813.14; Thu, 25 Apr 2019 07:05:47 +0000
+Received: from MN2PR06MB5806.namprd06.prod.outlook.com
+ ([fe80::1ca6:d3b:6b7a:65cb]) by MN2PR06MB5806.namprd06.prod.outlook.com
+ ([fe80::1ca6:d3b:6b7a:65cb%5]) with mapi id 15.20.1813.017; Thu, 25 Apr 2019
+ 07:05:47 +0000
+From:   Wright Feng <Wright.Feng@cypress.com>
+To:     "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
+        "franky.lin@broadcom.com" <franky.lin@broadcom.com>,
+        "hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+CC:     Wright Feng <Wright.Feng@cypress.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com" 
+        <brcm80211-dev-list.pdl@broadcom.com>
+Subject: [PATCH v2] brcmfmac: send mailbox interrupt twice for specific
+ hardware device
+Thread-Topic: [PATCH v2] brcmfmac: send mailbox interrupt twice for specific
+ hardware device
+Thread-Index: AQHU+zVOwI/gZmAwDkeXkV8XDkqnKA==
+Date:   Thu, 25 Apr 2019 07:05:46 +0000
+Message-ID: <1556175939-174559-1-git-send-email-wright.feng@cypress.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: SN6PR05CA0024.namprd05.prod.outlook.com
+ (2603:10b6:805:de::37) To MN2PR06MB5806.namprd06.prod.outlook.com
+ (2603:10b6:208:127::15)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Wright.Feng@cypress.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 2.1.0
+x-originating-ip: [12.110.209.245]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 28f0aa4d-de17-4cfd-7dba-08d6c94c70b8
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600141)(711020)(4605104)(4618075)(2017052603328)(7193020);SRVR:MN2PR06MB5854;
+x-ms-traffictypediagnostic: MN2PR06MB5854:
+x-microsoft-antispam-prvs: <MN2PR06MB58548A50429873A871A4D575FB3D0@MN2PR06MB5854.namprd06.prod.outlook.com>
+x-forefront-prvs: 0018A2705B
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(376002)(396003)(346002)(366004)(39860400002)(189003)(199004)(71190400001)(2616005)(6512007)(52116002)(97736004)(486006)(8936002)(2501003)(26005)(99286004)(186003)(54906003)(6636002)(81156014)(8676002)(316002)(4326008)(14454004)(476003)(478600001)(110136005)(50226002)(81166006)(53936002)(72206003)(2201001)(66946007)(71200400001)(386003)(66066001)(86362001)(5660300002)(14444005)(2906002)(6506007)(256004)(102836004)(64756008)(15650500001)(66446008)(6436002)(73956011)(66556008)(6116002)(36756003)(25786009)(3846002)(7736002)(44832011)(305945005)(68736007)(66476007)(6486002);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR06MB5854;H:MN2PR06MB5806.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: cypress.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: b1JJiay6M6FcLfYFS7Xnz+tw6GHUBrZM8YB0Sj9uCXK4Mm0ZoVJKTV1R2pum56K914lycp5iwqMrO7JUT6FliTk5Fz78F0oamARY0MUwvHXkk/rBWAtbf5GF4nA3twm/R7+hQ9h3Ydm+PCU35PiynJ5R2PLHNg1piHL0qOgZI4Qal31fvvJj28Lskdk+s7zm8H4cx3gzVuiiULoPIFHcIXoPReFxoKIGYBH5vwh4HrZPUqpp7o88ai9TxaMW3Kt4+CwUb6dQTzogO7RPlbNj1nRqqmizHdePszY0lYER+xCmVaFx4HpThfCqbGb1pWtaWG8qwjWmZEIdlvGdHvtBos8NYDWWkRgeFR6CLNDxJF/dGj2fD4fv9yl9II21U9y70kdtj11wHJNJfm+yK/tyZcKzaGvhqM80BXm/5haip1I=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1556134382-58814-16-git-send-email-fenghua.yu@intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 28f0aa4d-de17-4cfd-7dba-08d6c94c70b8
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Apr 2019 07:05:46.9143
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR06MB5854
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-
-* Fenghua Yu <fenghua.yu@intel.com> wrote:
-
-> To workaround or debug a split lock issue, the administrator may need to
-> disable or enable split lock detection during run time without rebooting
-> the system.
-> 
-> The interface /sys/device/system/cpu/split_lock_detect is added to allow
-> the administrator to disable or enable split lock detection and show
-> current split lock detection setting.
-> 
-> Writing [yY1] or [oO][nN] to the file enables split lock detection and
-> writing [nN0] or [oO][fF] disables split lock detection. Split lock
-> detection is enabled or disabled on all CPUs.
-> 
-> Reading the file returns current global split lock detection setting:
-> 0: disabled
-> 1: enabled
-> 
-> Add an ABI document entry for /sys/devices/system/cpu/split_lock_detect.
-> 
-> Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
-> ---
-> Not sure if the justification for the sysfs knob is valid. If not, this
-> patch could be removed from this patch set.
-> 
->  .../ABI/testing/sysfs-devices-system-cpu      | 22 ++++++++
->  arch/x86/kernel/cpu/intel.c                   | 52 ++++++++++++++++++-
->  2 files changed, 72 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-devices-system-cpu b/Documentation/ABI/testing/sysfs-devices-system-cpu
-> index 9605dbd4b5b5..aad7b1698065 100644
-> --- a/Documentation/ABI/testing/sysfs-devices-system-cpu
-> +++ b/Documentation/ABI/testing/sysfs-devices-system-cpu
-> @@ -67,6 +67,28 @@ Description:	Discover NUMA node a CPU belongs to
->  		/sys/devices/system/cpu/cpu42/node2 -> ../../node/node2
->  
->  
-> +What:		/sys/devices/system/cpu/split_lock_detect
-> +Date:		March 2019
-> +Contact:	Linux kernel mailing list <linux-kernel@vger.kernel.org>
-> +Description:	(RW) Control split lock detection on Intel Tremont and
-> +		future CPUs
-> +
-> +		Reads return split lock detection status:
-> +			0: disabled
-> +			1: enabled
-> +
-> +		Writes enable or disable split lock detection:
-> +			The first character is one of 'Nn0' or [oO][fF] for off
-> +			disables the feature.
-> +			The first character is one of 'Yy1' or [oO][nN] for on
-> +			enables the feature.
-> +
-> +		Please note the interface only shows or controls global setting.
-> +		During run time, split lock detection on one CPU may be
-> +		disabled if split lock operation in kernel code happens on
-> +		the CPU. The interface doesn't show or control split lock
-> +		detection on individual CPU.
-
-I.e. implementation and possible actual state are out of sync. Why?
-
-Also, if it's a global flag, why waste memory on putting a sysfs knob 
-into every CPU's sysfs file?
-
-Finally, why is a debugging facility in sysfs, why not a debugfs knob? 
-Using a sysctl would solve the percpu vs. global confusion as well ...
-
-> --- a/arch/x86/kernel/cpu/intel.c
-> +++ b/arch/x86/kernel/cpu/intel.c
-> @@ -35,6 +35,7 @@
->  DEFINE_PER_CPU(u64, msr_test_ctl_cache);
->  EXPORT_PER_CPU_SYMBOL_GPL(msr_test_ctl_cache);
->  
-> +static DEFINE_MUTEX(split_lock_detect_mutex);
->  static bool split_lock_detect_enable;
-
-'enable' is a verb in plain form - which we use for function names.
-
-For variable names that denotes current state we typically use past 
-tense, i.e. 'enabled'.
-
-(The only case where we'd us the split_lock_detect_enable name for a flag 
-if it's a flag to trigger some sort of enabling action - which this 
-isn't.)
-
-Please review the whole series for various naming mishaps.
-
-> +	mutex_lock(&split_lock_detect_mutex);
-> +
-> +	split_lock_detect_enable = val;
-> +
-> +	/* Update the split lock detection setting in MSR on all online CPUs. */
-> +	on_each_cpu(split_lock_update_msr, NULL, 1);
-> +
-> +	if (split_lock_detect_enable)
-> +		pr_info("enabled\n");
-> +	else
-> +		pr_info("disabled\n");
-> +
-> +	mutex_unlock(&split_lock_detect_mutex);
-
-Instead of a mutex, please just use the global atomic debug flag which 
-controls the warning printout. By using that flag both for the WARN()ing 
-and for controlling MSR state all the races are solved and the code is 
-simplified.
-
-
-Thanks,
-
-	Ingo
+Rm9yIFBDSUUgd2lyZWxlc3MgZGV2aWNlIHdpdGggY29yZSByZXZpc2lvbiBsZXNzIHRoYW4gMTQs
+IGRldmljZSBtYXkgbWlzcw0KUENJRSB0byBTeXN0ZW0gQmFja3BsYW5lIEludGVycnVwdCB2aWEg
+UENJRXRvU0JNYWlsYm94LiBTbyBhZGQgc2VuZGluZw0KbWFpbCBib3ggaW50ZXJydXB0IHR3aWNl
+IGFzIGEgaGFyZHdhcmUgd29ya2Fyb3VuZC4NCg0KU2lnbmVkLW9mZi1ieTogV3JpZ2h0IEZlbmcg
+PHdyaWdodC5mZW5nQGN5cHJlc3MuY29tPg0KLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJv
+YWRjb20vYnJjbTgwMjExL2JyY21mbWFjL3BjaWUuYyB8IDYgKysrKystDQogMSBmaWxlIGNoYW5n
+ZWQsIDUgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL3BjaWUuYyBiL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9wY2llLmMNCmluZGV4
+IGZkMzk2OGYuLjY2ZWU5MmIgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9icm9h
+ZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvcGNpZS5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9icm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvcGNpZS5jDQpAQCAtNjk4LDcgKzY5OCwxMSBA
+QCBicmNtZl9wY2llX3NlbmRfbWJfZGF0YShzdHJ1Y3QgYnJjbWZfcGNpZWRldl9pbmZvICpkZXZp
+bmZvLCB1MzIgaHRvZF9tYl9kYXRhKQ0KIA0KIAlicmNtZl9wY2llX3dyaXRlX3RjbTMyKGRldmlu
+Zm8sIGFkZHIsIGh0b2RfbWJfZGF0YSk7DQogCXBjaV93cml0ZV9jb25maWdfZHdvcmQoZGV2aW5m
+by0+cGRldiwgQlJDTUZfUENJRV9SRUdfU0JNQlgsIDEpOw0KLQlwY2lfd3JpdGVfY29uZmlnX2R3
+b3JkKGRldmluZm8tPnBkZXYsIEJSQ01GX1BDSUVfUkVHX1NCTUJYLCAxKTsNCisNCisJLyogU2Vu
+ZCBtYWlsYm94IGludGVycnVwdCB0d2ljZSBhcyBhIGhhcmR3YXJlIHdvcmthcm91bmQgKi8NCisJ
+Y29yZSA9IGJyY21mX2NoaXBfZ2V0X2NvcmUoZGV2aW5mby0+Y2ksIEJDTUFfQ09SRV9QQ0lFMik7
+DQorCWlmIChjb3JlLT5yZXYgPD0gMTMpDQorCQlwY2lfd3JpdGVfY29uZmlnX2R3b3JkKGRldmlu
+Zm8tPnBkZXYsIEJSQ01GX1BDSUVfUkVHX1NCTUJYLCAxKTsNCiANCiAJcmV0dXJuIDA7DQogfQ0K
+LS0gDQoyLjEuMA0KDQo=
