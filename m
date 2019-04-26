@@ -2,118 +2,85 @@ Return-Path: <SRS0=OO7s=S4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D0AC43218
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 12:19:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 631CAC43218
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 12:40:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01BD6206BF
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 12:19:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 271AC206C1
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 12:40:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1556282452;
+	bh=8VQs7IP01S212vBCFVD2ZB20HkAoEs97byM+u14ZCUY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=mp8mjNejcJAS13ZC8Ua70r1IKpYlBQ4zGinb9pzjnz5ynpnz8Wsj3V6F+5w9X2B3P
+	 XA26oOwONcwSnKxJAZQThSLMyjJb2oqUzDzQ/D7P10sJP2y9Gd6WWGEGuQ9gd7EVQM
+	 4lM2Ypds7RGuQB0PPO46Si6G5/wVfGM9e2votr6k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726343AbfDZMTn convert rfc822-to-8bit (ORCPT
+        id S1726060AbfDZMkv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Apr 2019 08:19:43 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:57310 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725901AbfDZMTm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Apr 2019 08:19:42 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x3QCJF0j012636, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv02.realtek.com.tw[172.21.6.19])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x3QCJF0j012636
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Fri, 26 Apr 2019 20:19:15 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCASV02.realtek.com.tw ([::1]) with mapi id 14.03.0439.000; Fri, 26 Apr
- 2019 20:19:15 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>,
-        "briannorris@chromium.org" <briannorris@chromium.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: RE: [PATCH v9 14/14] staging: rtlwifi: remove staging rtlwifi driver
-Thread-Topic: [PATCH v9 14/14] staging: rtlwifi: remove staging rtlwifi
- driver
-Thread-Index: AQHU/Cj1ZpX6dgKnIEKrR4OPyDDHU6ZOWrXw
-Date:   Fri, 26 Apr 2019 12:19:14 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D17E3307@RTITMBSVM04.realtek.com.tw>
-References: <1555653004-1795-1-git-send-email-yhchuang@realtek.com>
-        <1555653004-1795-15-git-send-email-yhchuang@realtek.com>
- <87d0l9ufw5.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87d0l9ufw5.fsf@kamboji.qca.qualcomm.com>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.183]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Fri, 26 Apr 2019 08:40:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38164 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725901AbfDZMkv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Apr 2019 08:40:51 -0400
+Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com [149.6.153.186])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id F3B02206A3;
+        Fri, 26 Apr 2019 12:40:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1556282450;
+        bh=8VQs7IP01S212vBCFVD2ZB20HkAoEs97byM+u14ZCUY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Mv8YLDad44mRagUfAD8mJvTL0iYMtu8XKK4OcYM7seoCjvfN2hLFLL55+anGQpTSh
+         LaWQPhNdZEsBRaf5dJ+T/ytYeh4Ui1Z3pUG8AAKKVKk5jhe7qwn66nwnPfaMYZWV6Y
+         2kpXN8+6RDeBujixoJjndn+7Yoh4gaRhK5O8mgfU=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mt7603: wait for pre_tbtt_tasklet before scanning
+Date:   Fri, 26 Apr 2019 14:40:40 +0200
+Message-Id: <e7bc3645ce73a15ef9fa16a40f2bdb8577494769.1556280002.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <cover.1556280002.git.lorenzo@kernel.org>
+References: <cover.1556280002.git.lorenzo@kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Greg,
+Disable pre_tbtt_tasklet tasklet before performing frequency scanning
 
-> -----Original Message-----
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Friday, April 26, 2019 8:10 PM
-> To: Tony Chuang
-> Cc: linux-wireless@vger.kernel.org; johannes@sipsolutions.net; Pkshih; Andy
-> Huang; Larry.Finger@lwfinger.net; sgruszka@redhat.com;
-> briannorris@chromium.org; gregkh@linuxfoundation.org
-> Subject: Re: [PATCH v9 14/14] staging: rtlwifi: remove staging rtlwifi driver
-> 
-> <yhchuang@realtek.com> writes:
-> 
-> > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> >
-> > The rtlwifi driver is conflicting with Realtek's new 802.11ac chip
-> > series driver rtw88, remove it to avoid racing with the same ID.
-> >
-> > The rtw88 driver can be found at drivers/net/wireless/realtek/rtw88
-> >
-> > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> 
-> BTW, this patch does not apply to wireless-drivers-next anymore. To
-> avoid any conflicts, would be it be safer that the driver is removed
-> directly from Greg's tree? After rtw88 is applied to
-> wireless-drivers-next, of course.
-> 
-> error: patch failed: drivers/staging/rtlwifi/Kconfig:1
-> error: drivers/staging/rtlwifi/Kconfig: patch does not apply
-> error: patch failed: drivers/staging/rtlwifi/efuse.c:1
-> error: drivers/staging/rtlwifi/efuse.c: patch does not apply
-> error: patch failed:
-> drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_func_88xx.c:1
-> error: drivers/staging/rtlwifi/halmac/halmac_88xx/halmac_func_88xx.c: patch
-> does not apply
-> error: patch failed: drivers/staging/rtlwifi/pci.h:1
-> error: drivers/staging/rtlwifi/pci.h: patch does not apply
-> error: patch failed: drivers/staging/rtlwifi/phydm/phydm_rainfo.c:1
-> error: drivers/staging/rtlwifi/phydm/phydm_rainfo.c: patch does not apply
-> error: patch failed: drivers/staging/rtlwifi/phydm/rtl_phydm.c:1
-> error: drivers/staging/rtlwifi/phydm/rtl_phydm.c: patch does not apply
-> error: patch failed: drivers/staging/rtlwifi/rtl8822be/fw.c:1
-> error: drivers/staging/rtlwifi/rtl8822be/fw.c: patch does not apply
-> Patch failed at 0014 staging: rtlwifi: remove staging rtlwifi driver
-> 
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7603/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Hi Greg,
-
-Can you help us to remove the staging driver rtlwifi in your tree ?
-I think Kalle can issue a signal to you when he has done reviewing
-the rtw88 driver and merge it into wireless-drivers-next.
-Thanks
-
-Yan-Hsuan
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+index 18a33d921601..184ed4cead0a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+@@ -535,6 +535,7 @@ mt7603_sw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	struct mt7603_dev *dev = hw->priv;
+ 
+ 	set_bit(MT76_SCANNING, &dev->mt76.state);
++	tasklet_disable(&dev->pre_tbtt_tasklet);
+ 	mt7603_beacon_set_timer(dev, -1, 0);
+ }
+ 
+@@ -545,6 +546,7 @@ mt7603_sw_scan_complete(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 
+ 	clear_bit(MT76_SCANNING, &dev->mt76.state);
+ 	mt7603_beacon_set_timer(dev, -1, dev->beacon_int);
++	tasklet_enable(&dev->pre_tbtt_tasklet);
+ }
+ 
+ static void
+-- 
+2.20.1
 
