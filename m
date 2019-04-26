@@ -2,120 +2,131 @@ Return-Path: <SRS0=OO7s=S4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D94DAC43219
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 07:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91E44C43219
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 07:46:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AEDAD2084F
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 07:18:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CwzAMtiY";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CgRHa1Db"
+	by mail.kernel.org (Postfix) with ESMTP id 6B474206E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 07:46:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725933AbfDZHSY (ORCPT
+        id S1726295AbfDZHqd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Apr 2019 03:18:24 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53192 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725893AbfDZHSX (ORCPT
+        Fri, 26 Apr 2019 03:46:33 -0400
+Received: from mail-qt1-f193.google.com ([209.85.160.193]:38494 "EHLO
+        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725944AbfDZHqc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Apr 2019 03:18:23 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 9FA476076C; Fri, 26 Apr 2019 07:18:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556263102;
-        bh=13pIkGFjPBVaD7F0MYIB7FogfjwR5GR9h5H9B8AhtEM=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=CwzAMtiYnqfNeOS1+qZgbUDJvorCVduqOF63C1q8kP8e+Fljeg89z3C+Rg/6tX6Y2
-         N2Qv+A4DwnUfPNi+F848CgmW4BVgiPnRFTJTLc5IDEFfaJqLVRGOaFd3N2e6UWCTMc
-         afmf6biONQ4Dk7JBrnWgn+MKCEgIk+zoTMqbj/Eg=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 618746022B;
-        Fri, 26 Apr 2019 07:18:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556263101;
-        bh=13pIkGFjPBVaD7F0MYIB7FogfjwR5GR9h5H9B8AhtEM=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=CgRHa1DbNVpCPVscDtuC1uzFn24UznN1EILGlKAonrYi5pwyh0E2UM7Fh74bskrZA
-         R3hnS6jjX2QYBZOKbH3Rx9BbORtqz+vPjtI0QqFImEsNWn3A+KoN/amnUQxGZoTvwl
-         MCkleJHhIqmjTsXCYdARAC28qYMe7qrWwBDrrTvI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 618746022B
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Claire Chang <tientzu@google.com>,
-        Sriram R <srirrama@codeaurora.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Todd Brandt <todd.e.brandt@intel.com>
-Subject: Re: [PATCH] ath10k: Drop WARN_ON()s that always trigger during system resume
-References: <2884043.Jv1Mn93hE8@aspire.rjw.lan>
-        <20190403195718.GA74723@google.com>
-Date:   Fri, 26 Apr 2019 10:18:16 +0300
-In-Reply-To: <20190403195718.GA74723@google.com> (Brian Norris's message of
-        "Wed, 3 Apr 2019 12:57:20 -0700")
-Message-ID: <87o94tutdz.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Fri, 26 Apr 2019 03:46:32 -0400
+Received: by mail-qt1-f193.google.com with SMTP id d13so3099026qth.5;
+        Fri, 26 Apr 2019 00:46:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Ai+vP/B94Ve42WDYthMy68WDqGtKeGDhz8vwsuWoKYY=;
+        b=FG7fOj59wwyOPVaYrKZUOZkuiWAvC9akOixlTflJRlZBaD5Nk1Q5lt4sNCVKQ0Ymoj
+         52Mw/cEb5bga48QDfZ25/IosOd7f4DVtReblKt78Tddb6JbvCOKlsnW4ZPHxwbqCcDWl
+         AQM/p3uZiav0jkbogyOgR/4xxAbV+hxPuEvbksaoHrj3hkC5yYwUQGGxb0feSPNshzXf
+         S+dmruYGKTPfi7MC8NPxeUYIYDBmFZwedMocX20dgkFMvHU+dhbQkTwmaEk2O8qXcQ6g
+         uJAGfAJII+Qyt2ArmRK2SZ3h6YsW8oPqMVHZ/GGnoBbS0uiS7s2iVgur4G88lQugZgI8
+         33hw==
+X-Gm-Message-State: APjAAAVBrPBraidJkoagVa/Iqi808354m7O7uJIVMSDvP510mK1VadoD
+        QO8l3m/Yer2pZRboxgbgjpAGH2eZtedEhQ8mJXg=
+X-Google-Smtp-Source: APXvYqzr09tBTeb1FTaqfVBhYsMoMqeG81qMW2qxny43/8KyQQnSkk725v7OZs6m0g32Hp/ZRVlDu6HuZidDEo5Nyhc=
+X-Received: by 2002:ac8:276b:: with SMTP id h40mr35193967qth.319.1556264790155;
+ Fri, 26 Apr 2019 00:46:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20190416202013.4034148-1-arnd@arndb.de> <20190416202701.127745-1-arnd@arndb.de>
+ <20190425122153.450fc094@coco.lan> <20190425153534.GS2217@ZenIV.linux.org.uk>
+ <CAK8P3a2HmiYQJ2FV2FgLiFsD8M9UKteC9Jetx7ja06PQVZWYfA@mail.gmail.com> <5511420228cb38d08a67c0f6a614b7671d7d23d4.camel@sipsolutions.net>
+In-Reply-To: <5511420228cb38d08a67c0f6a614b7671d7d23d4.camel@sipsolutions.net>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Fri, 26 Apr 2019 09:46:13 +0200
+Message-ID: <CAK8P3a3CzKLvpUiVV_k__kkaZ=wg2fqnFEzWYL9qNwBfxMKZ9w@mail.gmail.com>
+Subject: Re: [PATCH v3 12/26] compat_ioctl: move more drivers to compat_ptr_ioctl
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        y2038 Mailman List <y2038@lists.linaro.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Sterba <dsterba@suse.com>,
+        Darren Hart <dvhart@infradead.org>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        driverdevel <devel@driverdev.osuosl.org>, qat-linux@intel.com,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
+        linux-iio@vger.kernel.org, linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Platform Driver <platform-driver-x86@vger.kernel.org>,
+        linux-remoteproc@vger.kernel.org,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        ceph-devel <ceph-devel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>, Sean Young <sean@mess.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Brian Norris <briannorris@chromium.org> writes:
+On Thu, Apr 25, 2019 at 11:25 PM Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2019-04-25 at 17:55 +0200, Arnd Bergmann wrote:
+> > On Thu, Apr 25, 2019 at 5:35 PM Al Viro <viro@zeniv.linux.org.uk> wrote:
+> > >
+> > > On Thu, Apr 25, 2019 at 12:21:53PM -0300, Mauro Carvalho Chehab wrote:
+> > >
+> > > > If I understand your patch description well, using compat_ptr_ioctl
+> > > > only works if the driver is not for s390, right?
+> > >
+> > > No; s390 is where "oh, just set ->compat_ioctl same as ->unlocked_ioctl
+> > > and be done with that; compat_ptr() is a no-op anyway" breaks.  IOW,
+> > > s390 is the reason for having compat_ptr_ioctl() in the first place;
+> > > that thing works on all biarch architectures, as long as all stuff
+> > > handled by ->ioctl() takes pointer to arch-independent object as
+> > > argument.  IOW,
+> > >         argument ignored => OK
+> > >         any arithmetical type => no go, compat_ptr() would bugger it
+> > >         pointer to int => OK
+> > >         pointer to string => OK
+> > >         pointer to u64 => OK
+> > >         pointer to struct {u64 addr; char s[11];} => OK
+> >
+> > To be extra pedantic, the 'struct {u64 addr; char s[11];} '
+> > case is also broken on x86, because sizeof (obj) is smaller
+> > on i386, even though the location of the members are
+> > the same. i.e. you can copy_from_user() this
+>
+> Actually, you can't even do that because the struct might sit at the end
+> of a page and then you'd erroneously fault in this case.
+>
+> We had this a while ago with struct ifreq, see commit 98406133dd and its
+> parents.
 
-> + Sriram, Pradeep, Claire
->
-> On Sun, Mar 03, 2019 at 06:24:33PM +0100, Rafael J. Wysocki wrote:
->
-> Ooh, exactly 1 month ago!
->
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> 
->> ath10k_mac_vif_chan() always returns an error for the given vif
->> during system-wide resume which reliably triggers two WARN_ON()s
->> in ath10k_bss_info_changed() and they are not particularly
->> useful in that code path, so drop them.
->> 
->
-> Particularly, when WOWLAN isn't enabled, we get called during resume via
-> ieee80211_reconfig(), where we're not associated and don't have any
-> channel contexts. AFAICT, we shouldn't need to communicate anything in
-> particular to the firmware here, and so failing the 'if' is definitely
-> not worth WARN-ing about.
->
-> I'd love to see this get applied with:
->
-> Fixes: cd93b83ad927 ("ath10k: support for multicast rate control")
-> Fixes: f279294e9ee2 ("ath10k: add support for configuring management packet rate")
->
-> and sent to stable. This has been bugging people since 4.19. Spurious
-> WARN_ON()s can trigger reports to various crash trackers, and on some
-> systems appear as user-visible warnings ("System problem detected").
->
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-> Tested-by: Brian Norris <briannorris@chromium.org>
+Yes, you are right. Very rare to hit with real-life code, but easily
+reproduced by intentionally hitting it and clearly a bug.
 
-I added these now to the commit log, thanks Brian.
+As the saying goes
 
-Rafael, could you please provide the hardware and firmware versions you
-tested this on? We have so many different firmware branches to support
-that I prefer to have that documented in the commit log. Providing
-ath10k startup messages in dmesg are enough, I can then add it to the
-commit log.
+  | the difference between "always works" and "almost always works"
+  | is called data corruption
 
--- 
-Kalle Valo
+here the difference is an -EFAULT.
+
+      Arnd
