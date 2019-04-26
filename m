@@ -2,229 +2,133 @@ Return-Path: <SRS0=OO7s=S4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 646B6C4321A
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 07:58:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01F9BC43218
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 08:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4182C206BA
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 07:58:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D21772077B
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 08:09:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725983AbfDZH66 (ORCPT
+        id S1725935AbfDZIJf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Apr 2019 03:58:58 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:42120 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725959AbfDZH65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Apr 2019 03:58:57 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1505030A3AF1;
-        Fri, 26 Apr 2019 07:58:57 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.229])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A7A755D70A;
-        Fri, 26 Apr 2019 07:58:56 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH v3 3/3] mt76x02: remove bogus mutex usage
-Date:   Fri, 26 Apr 2019 09:58:42 +0200
-Message-Id: <20190426075842.2986-4-sgruszka@redhat.com>
-In-Reply-To: <20190426075842.2986-1-sgruszka@redhat.com>
-References: <20190426075842.2986-1-sgruszka@redhat.com>
+        Fri, 26 Apr 2019 04:09:35 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:11469 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725854AbfDZIJe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Apr 2019 04:09:34 -0400
+X-UUID: cd9fc6e4eee9439f88dd73de72256b5f-20190426
+X-UUID: cd9fc6e4eee9439f88dd73de72256b5f-20190426
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (mhqrelay.mediatek.com ESMTP with TLS)
+        with ESMTP id 342274836; Fri, 26 Apr 2019 16:09:30 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Fri, 26 Apr 2019 16:09:29 +0800
+Received: from mtkslt306.mediatek.inc (10.21.14.136) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Fri, 26 Apr 2019 16:09:29 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+CC:     Roy Luo <royluo@google.com>, YF Luo <yf.luo@mediatek.com>,
+        Yiwei Chung <yiwei.chung@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH v2] mt76: fix endianness sparse warnings
+Date:   Fri, 26 Apr 2019 16:09:22 +0800
+Message-ID: <d593c15bae7b4d72df17c3c4670ca9e28ef5c47f.1556265836.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.43]); Fri, 26 Apr 2019 07:58:57 +0000 (UTC)
+Content-Type: text/plain
+X-MTK:  N
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-mac80211 .start(), .stop() callbacks are never called concurrently with
-other callbacks. The only concurencly is with mt76 works which we cancel
-on stop() and schedule on start().
+Fix many warnings with incorrect endian assumptions.
 
-This fixes possible deadlock on cancel_delayed_work_sync(&dev->mac_work)
-as mac_work also take mutex.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Reported-by: kbuild test robot <lkp@intel.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  6 -----
- .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 22 +++++--------------
- .../wireless/mediatek/mt76/mt76x2/pci_main.c  | 13 +++--------
- .../wireless/mediatek/mt76/mt76x2/usb_main.c  | 10 ++-------
- 4 files changed, 10 insertions(+), 41 deletions(-)
+Change since v2: use standard le16_to_cpu() instead of underscored version 
+---
+ drivers/net/wireless/mediatek/mt76/mt7603/mac.c |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index f106dbfa665f..0eeccc3b529d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -25,8 +25,6 @@ static int mt76x0e_start(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+index 2f2961ee0a92..b1d96a46a41c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+@@ -627,7 +627,7 @@ mt7603_mac_fill_rx(struct mt7603_dev *dev, struct sk_buff *skb)
+ 	status->aggr = unicast &&
+ 		       !ieee80211_is_qos_nullfunc(hdr->frame_control);
+ 	status->tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+-	status->seqno = IEEE80211_SEQ_TO_SN(hdr->seq_ctrl);
++	status->seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
  
--	mutex_lock(&dev->mt76.mutex);
--
- 	mt76x02_mac_start(dev);
- 	mt76x0_phy_calibrate(dev, true);
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mt76.mac_work,
-@@ -35,8 +33,6 @@ static int mt76x0e_start(struct ieee80211_hw *hw)
- 				     MT_CALIBRATE_INTERVAL);
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 
--	mutex_unlock(&dev->mt76.mutex);
--
  	return 0;
  }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index 1bf3e7b5f6a7..b8f48d10f27a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -235,7 +235,7 @@ int mt7615_mac_fill_rx(struct mt7615_dev *dev, struct sk_buff *skb)
+ 	status->aggr = unicast &&
+ 		       !ieee80211_is_qos_nullfunc(hdr->frame_control);
+ 	status->tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+-	status->seqno = IEEE80211_SEQ_TO_SN(hdr->seq_ctrl);
++	status->seqno = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
  
-@@ -62,10 +58,8 @@ static void mt76x0e_stop(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
+ 	return 0;
+ }
+@@ -337,7 +337,7 @@ int mt7615_mac_write_txwi(struct mt7615_dev *dev, __le32 *txwi,
+ 	struct ieee80211_vif *vif = info->control.vif;
+ 	int tx_count = 8;
+ 	u8 fc_type, fc_stype, p_fmt, q_idx, omac_idx = 0;
+-	u16 fc = le16_to_cpu(hdr->frame_control);
++	__le16 fc = hdr->frame_control;
+ 	u16 seqno = 0;
+ 	u32 val;
  
--	mutex_lock(&dev->mt76.mutex);
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	mt76x0e_stop_hw(dev);
--	mutex_unlock(&dev->mt76.mutex);
+@@ -353,8 +353,8 @@ int mt7615_mac_write_txwi(struct mt7615_dev *dev, __le32 *txwi,
+ 		tx_count = msta->rate_count;
+ 	}
+ 
+-	fc_type = (fc & IEEE80211_FCTL_FTYPE) >> 2;
+-	fc_stype = (fc & IEEE80211_FCTL_STYPE) >> 4;
++	fc_type = (le16_to_cpu(fc) & IEEE80211_FCTL_FTYPE) >> 2;
++	fc_stype = (le16_to_cpu(fc) & IEEE80211_FCTL_STYPE) >> 4;
+ 
+ 	if (ieee80211_is_data(fc)) {
+ 		q_idx = skb_get_queue_mapping(skb);
+@@ -468,7 +468,7 @@ void mt7615_txp_skb_unmap(struct mt76_dev *dev,
+ 	txp = (struct mt7615_txp *)(txwi + MT_TXD_SIZE);
+ 	for (i = 1; i < txp->nbuf; i++)
+ 		dma_unmap_single(dev->dev, le32_to_cpu(txp->buf[i]),
+-				 le32_to_cpu(txp->len[i]), DMA_TO_DEVICE);
++				 le16_to_cpu(txp->len[i]), DMA_TO_DEVICE);
  }
  
- static void
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index 406ebfa74195..7c38ec4418db 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -81,8 +81,10 @@ static void mt76x0u_cleanup(struct mt76x02_dev *dev)
- 	mt76u_queues_deinit(&dev->mt76);
- }
+ int mt7615_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+@@ -506,7 +506,7 @@ int mt7615_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 	txp = (struct mt7615_txp *)(txwi + MT_TXD_SIZE);
+ 	for (i = 0; i < nbuf; i++) {
+ 		txp->buf[i] = cpu_to_le32(tx_info->buf[i + 1].addr);
+-		txp->len[i] = cpu_to_le32(tx_info->buf[i + 1].len);
++		txp->len[i] = cpu_to_le16(tx_info->buf[i + 1].len);
+ 	}
+ 	txp->nbuf = nbuf;
  
--static void mt76x0u_mac_stop(struct mt76x02_dev *dev)
-+static void mt76x0u_stop(struct ieee80211_hw *hw)
- {
-+	struct mt76x02_dev *dev = hw->priv;
-+
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	cancel_delayed_work_sync(&dev->cal_work);
- 	cancel_delayed_work_sync(&dev->mt76.mac_work);
-@@ -106,11 +108,9 @@ static int mt76x0u_start(struct ieee80211_hw *hw)
- 	struct mt76x02_dev *dev = hw->priv;
- 	int ret;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	ret = mt76x0_mac_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	mt76x0_phy_calibrate(dev, true);
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mt76.mac_work,
-@@ -118,19 +118,7 @@ static int mt76x0u_start(struct ieee80211_hw *hw)
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
- 				     MT_CALIBRATE_INTERVAL);
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
--
--out:
--	mutex_unlock(&dev->mt76.mutex);
--	return ret;
--}
--
--static void mt76x0u_stop(struct ieee80211_hw *hw)
--{
--	struct mt76x02_dev *dev = hw->priv;
--
--	mutex_lock(&dev->mt76.mutex);
--	mt76x0u_mac_stop(dev);
--	mutex_unlock(&dev->mt76.mutex);
-+	return 0;
- }
- 
- static const struct ieee80211_ops mt76x0u_ops = {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-index 77f63cb14f35..ab716957b8ba 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-@@ -22,15 +22,13 @@ mt76x2_start(struct ieee80211_hw *hw)
- 	struct mt76x02_dev *dev = hw->priv;
- 	int ret;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	ret = mt76x2_mac_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	ret = mt76x2_phy_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mt76.mac_work,
- 				     MT_MAC_WORK_INTERVAL);
-@@ -38,10 +36,7 @@ mt76x2_start(struct ieee80211_hw *hw)
- 				     MT_WATCHDOG_TIME);
- 
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
--
--out:
--	mutex_unlock(&dev->mt76.mutex);
--	return ret;
-+	return 0;
- }
- 
- static void
-@@ -49,10 +44,8 @@ mt76x2_stop(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	mt76x2_stop_hardware(dev);
--	mutex_unlock(&dev->mt76.mutex);
- }
- 
- static int
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-index 305977a874a4..97bcf6494ec1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-@@ -21,30 +21,24 @@ static int mt76x2u_start(struct ieee80211_hw *hw)
- 	struct mt76x02_dev *dev = hw->priv;
- 	int ret;
- 
--	mutex_lock(&dev->mt76.mutex);
--
- 	ret = mt76x2u_mac_start(dev);
- 	if (ret)
--		goto out;
-+		return ret;
- 
- 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mt76.mac_work,
- 				     MT_MAC_WORK_INTERVAL);
- 	set_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 
--out:
--	mutex_unlock(&dev->mt76.mutex);
--	return ret;
-+	return 0;
- }
- 
- static void mt76x2u_stop(struct ieee80211_hw *hw)
- {
- 	struct mt76x02_dev *dev = hw->priv;
- 
--	mutex_lock(&dev->mt76.mutex);
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
- 	mt76u_stop_tx(&dev->mt76);
- 	mt76x2u_stop_hw(dev);
--	mutex_unlock(&dev->mt76.mutex);
- }
- 
- static int
 -- 
-2.20.1
+2.18.0
 
