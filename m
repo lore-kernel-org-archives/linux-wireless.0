@@ -2,185 +2,176 @@ Return-Path: <SRS0=OO7s=S4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F0BC4321A
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 11:11:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4662CC43219
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 11:34:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F090206DD
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 11:11:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05449206BF
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 11:34:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DHx5V2uQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726138AbfDZLLu (ORCPT
+        id S1725995AbfDZLeh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Apr 2019 07:11:50 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:56652 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725877AbfDZLLu (ORCPT
+        Fri, 26 Apr 2019 07:34:37 -0400
+Received: from mail-vk1-f196.google.com ([209.85.221.196]:40078 "EHLO
+        mail-vk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725881AbfDZLeg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Apr 2019 07:11:50 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hJylc-0002Yu-RH; Fri, 26 Apr 2019 13:11:45 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     David Miller <davem@davemloft.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2019-04-26
-Date:   Fri, 26 Apr 2019 13:11:38 +0200
-Message-Id: <20190426111139.5831-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.17.2
+        Fri, 26 Apr 2019 07:34:36 -0400
+Received: by mail-vk1-f196.google.com with SMTP id l17so684095vke.7
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2019 04:34:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Rzh6hLDT+RGAIBlIbU5z/r9PIF6C4TXum75Z8Tcdiug=;
+        b=DHx5V2uQwLIvnOtA7asM0xWEfntGpbCw7H5j5JOOpGJlYXk6AGsE8pVyEl8XNwx0vs
+         sCfHIfh0S/ww60kDWFBno2RFJYWiW2AaYmY/VipmswPcRRkpEIpGbxVrGj06nhZpHwW2
+         b3HXYjNAcRtHyAUw84lz16mjo2IV0i+u3tV4I2h33kyBknzHUwt2ROLKshkj/271CkiJ
+         SJ4CmbrzTS35zwnj62MuF6VBAze46vKTBR/YPLGyrCXl+pw5/zjGyj+QGmHmhJr204qa
+         BCECMjTTe5IO5mhYv7ALErFyhIQ7oINsXraa4H9IrrbhKSflHwVNQXDFzVjqhh976UOy
+         AarA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Rzh6hLDT+RGAIBlIbU5z/r9PIF6C4TXum75Z8Tcdiug=;
+        b=N7I5JpHcwjN0C3Md1yOr3zbVD8BXTM/besd4zmj03aZSkw/oZ4u6buNUZZvXIFVM/R
+         Z4G2C731FnjCJc6fiYMETICgv1rlq2aMwzSGqLwSddLGSoEFelZNE+h8vj5TYNVoU84E
+         O5r6uHp64VejsYFDlfsWnBd629swkqqNs6xAntTrOmOQOGNiYQuO1M7z33Lfbv0afaKI
+         EJvsbZowXnx3nwoJnMBcoRJ7sIafPkN2KR1XmwA7wURuLF2Z2cNMJke8+koNKjCPtOTy
+         xsrvyF3pPkKV/7ltHyoGLh1VbreFC+jxbNvHllvOQEVJ5S82OGXLOXeAACd0Tsdy6hvz
+         sG2Q==
+X-Gm-Message-State: APjAAAUxCqyeslzR7rQGfJQvNIRYMgkPGCMCjpv3BsOyrcBQVBy+0xKT
+        yx8VqVBU9KClCWyDy1IrZGmAifpW2e+DiD2Rq5XfQSOITb8=
+X-Google-Smtp-Source: APXvYqyMw9AtrEuO6Qu6/koydgXwh/Csc39yGaddbUPN1Xp2AOciGsPf0Ed0z3aEk0Xe/JJBuMgcIRbaU1UHAnqFBX4=
+X-Received: by 2002:a1f:3ac9:: with SMTP id h192mr874440vka.31.1556278474947;
+ Fri, 26 Apr 2019 04:34:34 -0700 (PDT)
+MIME-Version: 1.0
+References: <201904260301.nITK1ldv%lkp@intel.com> <CANGSkXQUwyAsQxKFrJSeycDJ-X5SUnoXroJt0a2tjg2btSyZvQ@mail.gmail.com>
+ <875zr1wi3z.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <875zr1wi3z.fsf@kamboji.qca.qualcomm.com>
+From:   Siva Rebbagondla <siva8118@gmail.com>
+Date:   Fri, 26 Apr 2019 17:04:23 +0530
+Message-ID: <CANGSkXT=srMR7Xr3d8WQVepaQpPLynm2FxqcB15ff-MuawwfKA@mail.gmail.com>
+Subject: Re: [wireless-drivers-next:master 28/45] drivers/net/wireless/rsi/rsi_91x_usb.c:229:27:
+ sparse: restricted __le32 degrades to integer
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
+Hi Kalle,
 
-And another set for -next, not that big this time.
-See below for a summary of the highlights.
+On Fri, Apr 26, 2019 at 9:09 AM Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+> + linux-wireless
+>
+> Siva Rebbagondla <siva8118@gmail.com> writes:
+>
+> > Hi Kalle,
+> >
+> > On Fri, Apr 26, 2019 at 1:06 AM kbuild test robot <lkp@intel.com> wrote:
+> >>
+> >> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+> >> head:   147b502bda338f4f2dff19faaa5829b691305ea5
+> >> commit: 0a60014b76f512f18e48cfb4efc71e07c6791996 [28/45] rsi: miscallaneous changes for 9116 and common
+> >> reproduce:
+> >>         # apt-get install sparse
+> >>         git checkout 0a60014b76f512f18e48cfb4efc71e07c6791996
+> >>         make ARCH=x86_64 allmodconfig
+> >>         make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+> >>
+> >> If you fix the issue, kindly add following tag
+> >> Reported-by: kbuild test robot <lkp@intel.com>
+> >>
+> >>
+> >> sparse warnings: (new ones prefixed by >>)
+> >>
+> >> >> drivers/net/wireless/rsi/rsi_91x_usb.c:229:27: sparse: restricted __le32 degrades to integer
+> >>    drivers/net/wireless/rsi/rsi_91x_usb.c:230:27: sparse: restricted __le32 degrades to integer
+> >>    drivers/net/wireless/rsi/rsi_91x_usb.c:231:27: sparse: restricted __le32 degrades to integer
+> >>    drivers/net/wireless/rsi/rsi_91x_usb.c:232:27: sparse: restricted __le32 degrades to integer
+> >>    drivers/net/wireless/rsi/rsi_91x_usb.c:238:36: sparse: restricted __le32 degrades to integer
+> >>    drivers/net/wireless/rsi/rsi_91x_usb.c:239:35: sparse: restricted __le32 degrades to integer
+> >>    drivers/net/wireless/rsi/rsi_91x_usb.c:354:28: sparse: expression using sizeof(void)
+> >>    drivers/net/wireless/rsi/rsi_91x_usb.c:401:28: sparse: expression using sizeof(void)
+> >>
+> >> vim +229 drivers/net/wireless/rsi/rsi_91x_usb.c
+> >>
+> >>    203
+> >>    204  /**
+> >>    205   * rsi_usb_reg_write() - This function writes the given data into the given
+> >>    206   *                       register address.
+> >>    207   * @usbdev: Pointer to the usb_device structure.
+> >>    208   * @reg: Address of the register.
+> >>    209   * @value: Value to write.
+> >>    210   * @len: Length of data to be written.
+> >>    211   *
+> >>    212   * Return: status: 0 on success, a negative error code on failure.
+> >>    213   */
+> >>    214  static int rsi_usb_reg_write(struct usb_device *usbdev,
+> >>    215                               u32 reg,
+> >>    216                               u32 value,
+> >>    217                               u16 len)
+> >>    218  {
+> >>    219          u8 *usb_reg_buf;
+> >>    220          int status = -ENOMEM;
+> >>    221
+> >>    222          if (len > RSI_USB_CTRL_BUF_SIZE)
+> >>    223                  return -EINVAL;
+> >>    224
+> >>    225          usb_reg_buf  = kmalloc(RSI_USB_CTRL_BUF_SIZE, GFP_KERNEL);
+> >>    226          if (!usb_reg_buf)
+> >>    227                  return status;
+> >>    228
+> >>  > 229          usb_reg_buf[0] = (cpu_to_le32(value) & 0x00ff);
+> >>    230          usb_reg_buf[1] = (cpu_to_le32(value) & 0xff00) >> 8;
+> >>    231          usb_reg_buf[2] = (cpu_to_le32(value) & 0x00ff0000) >> 16;
+> >>    232          usb_reg_buf[3] = (cpu_to_le32(value) & 0xff000000) >> 24;
+> >>    233
+> >>    234          status = usb_control_msg(usbdev,
+> >>    235                                   usb_sndctrlpipe(usbdev, 0),
+> >>    236                                   USB_VENDOR_REGISTER_WRITE,
+> >>    237                                   RSI_USB_REQ_OUT,
+> >>    238                                   ((cpu_to_le32(reg) & 0xffff0000) >> 16),
+> >>    239                                   (cpu_to_le32(reg) & 0xffff),
+> >>    240                                   (void *)usb_reg_buf,
+> >>    241                                   len,
+> >>    242                                   USB_CTRL_SET_TIMEOUT);
+> >>    243          if (status < 0) {
+> >>    244                  rsi_dbg(ERR_ZONE,
+> >>    245                          "%s: Reg write failed with error code :%d\n",
+> >>    246                          __func__, status);
+> >>    247          }
+> >>    248          kfree(usb_reg_buf);
+> >>    249
+> >>    250          return status;
+> >>    251  }
+> >>    252
+> >>
+> >> ---
+> >> 0-DAY kernel test infrastructure                Open Source Technology Center
+> >> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> >
+> > Some where went wrong. I fixed this one. I will resend you the patches
+> > with changes.
+>
+> Your patches are now applied and cannot be changed, so no point of
+> resending them anymore. You need to send followup patches which fix the
+> issues and apply to wireless-drivers-next.
+>
+> And remember to use Fixes tag so that we know which commit patch fixes.
+Sure. I will send a patch which fixes this.
 
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 1f17f7742eeba73dbd5ae8bdec1a85ce5877001e:
-
-  net: sched: flower: insert filter to ht before offloading it to hw (2019-04-07 19:33:07 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2019-04-26
-
-for you to fetch changes up to 8828f81ad4a2f4e89ebe6e7793c06ed767c31d53:
-
-  mac80211: probe unexercised mesh links (2019-04-26 13:02:11 +0200)
-
-----------------------------------------------------------------
-Various updates, notably:
- * extended key ID support (from 802.11-2016)
- * per-STA TX power control support
- * mac80211 TX performance improvements
- * HE (802.11ax) updates
- * mesh link probing support
- * enhancements of multi-BSSID support (also related to HE)
- * OWE userspace processing support
-
-----------------------------------------------------------------
-Alexander Wetzel (6):
-      mac80211: Optimize tailroom_needed update checks
-      nl80211/cfg80211: Extended Key ID support
-      mac80211: IEEE 802.11 Extended Key ID support
-      mac80211: Fix Extended Key ID auto activation
-      mac80211_hwsim: Extended Key ID support
-      mac80211: Set CAN_REPLACE_PTK0 for SW crypto only drivers
-
-Ashok Raj Nagarajan (2):
-      cfg80211: Add support to set tx power for a station associated
-      mac80211: store tx power value from user to station
-
-Avraham Stern (1):
-      mac80211_hwsim: set p2p device interface support indication
-
-Colin Ian King (1):
-      cfg80211: remove redundant zero check on variable 'changed'
-
-Dan Carpenter (1):
-      cfg80211: don't pass pointer to pointer unnecessarily
-
-Felix Fietkau (7):
-      mac80211: mesh: drop redundant rcu_read_lock/unlock calls
-      mac80211: calculate hash for fq without holding fq->lock in itxq enqueue
-      mac80211: run late dequeue late tx handlers without holding fq->lock
-      mac80211: set NETIF_F_LLTX when using intermediate tx queues
-      mac80211: when using iTXQ, select the queue in ieee80211_subif_start_xmit
-      mac80211: minstrel_ht: add support for rates with 4 spatial streams
-      mac80211: minstrel_ht: automatically calculate rate duration shift
-
-Gustavo A. R. Silva (2):
-      cfg80211: Use struct_size() in kzalloc()
-      nl80211: Use struct_size() in kzalloc()
-
-Johannes Berg (2):
-      nl80211: reindent some sched scan code
-      mac80211: only allocate one queue when using iTXQs
-
-Julius Niedworok (1):
-      mac80211: debugfs option to force TX status frames
-
-Liad Kaufman (1):
-      ieee80211: update HE IEs to D4.0 spec
-
-Luca Coelho (1):
-      nl80211: do a struct assignment to radar_chandef instead of memcpy()
-
-Narayanraddi Masti (1):
-      mac80211: Add support for NL80211_STA_INFO_AIRTIME_LINK_METRIC
-
-Rajkumar Manoharan (3):
-      cfg80211: add support to probe unexercised mesh link
-      mac80211: add option for setting control flags
-      mac80211: probe unexercised mesh links
-
-Sara Sharon (5):
-      cfg80211: don't skip multi-bssid index element
-      cfg80211: support non-inheritance element
-      mac80211: support non-inheritance element
-      cfg80211: support profile split between elements
-      mac80211: support profile split between elements
-
-Sergey Matyukevich (1):
-      mac80211/cfg80211: update bss channel on channel switch
-
-Shaul Triebitz (1):
-      nl80211: increase NL80211_MAX_SUPP_REG_RULES
-
-Sunil Dutt (1):
-      cfg80211/nl80211: Offload OWE processing to user space in AP mode
-
-vamsi krishna (1):
-      nl80211/cfg80211: Specify band specific min RSSI thresholds with sched scan
-
- drivers/net/wireless/mac80211_hwsim.c |   8 +
- include/linux/ieee80211.h             |  14 +-
- include/net/cfg80211.h                | 104 +++++++++++
- include/net/fq_impl.h                 |  18 +-
- include/net/mac80211.h                |  30 +++
- include/uapi/linux/nl80211.h          |  86 ++++++++-
- net/mac80211/cfg.c                    |  46 +++++
- net/mac80211/debugfs.c                |  54 ++++++
- net/mac80211/driver-ops.c             |  21 +++
- net/mac80211/driver-ops.h             |   5 +
- net/mac80211/ieee80211_i.h            |   9 +-
- net/mac80211/iface.c                  |  11 +-
- net/mac80211/key.c                    |  87 ++++++---
- net/mac80211/key.h                    |   2 +
- net/mac80211/main.c                   |  16 ++
- net/mac80211/mesh.h                   |   2 +
- net/mac80211/mesh_hwmp.c              |  34 ++--
- net/mac80211/mesh_pathtbl.c           |   2 +-
- net/mac80211/mlme.c                   |   3 -
- net/mac80211/rc80211_minstrel_ht.c    | 124 ++++++++-----
- net/mac80211/rc80211_minstrel_ht.h    |   2 +-
- net/mac80211/rx.c                     |  74 ++++----
- net/mac80211/sta_info.c               |  15 ++
- net/mac80211/tdls.c                   |   2 +-
- net/mac80211/trace.h                  |  30 +++
- net/mac80211/tx.c                     | 113 +++++++++---
- net/mac80211/util.c                   | 162 ++++++++++-------
- net/mac80211/wme.c                    |  82 +++++----
- net/mac80211/wme.h                    |   2 +
- net/wireless/nl80211.c                | 331 +++++++++++++++++++++++++++++-----
- net/wireless/rdev-ops.h               |  29 ++-
- net/wireless/reg.c                    |  23 +--
- net/wireless/scan.c                   | 173 +++++++++++++++++-
- net/wireless/trace.h                  |  87 ++++++++-
- net/wireless/util.c                   |  21 ++-
- net/wireless/wext-compat.c            |   3 -
- 36 files changed, 1465 insertions(+), 360 deletions(-)
-
+Best regards,
+Siva Rebbagondla
