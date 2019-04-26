@@ -2,158 +2,185 @@ Return-Path: <SRS0=OO7s=S4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-13.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EC8EC43219
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 10:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F0BC4321A
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 11:11:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D41EC206E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 10:56:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SNcEpSRk"
+	by mail.kernel.org (Postfix) with ESMTP id 4F090206DD
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 11:11:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726088AbfDZK44 (ORCPT
+        id S1726138AbfDZLLu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Apr 2019 06:56:56 -0400
-Received: from mail-it1-f193.google.com ([209.85.166.193]:50341 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725923AbfDZK4z (ORCPT
+        Fri, 26 Apr 2019 07:11:50 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:56652 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725877AbfDZLLu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Apr 2019 06:56:55 -0400
-Received: by mail-it1-f193.google.com with SMTP id q14so5176885itk.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2019 03:56:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=vTLqCpV3pgok3Olcn1gwflZXWjXcgBlQ2Sjt/NABYuo=;
-        b=SNcEpSRk5dCctwO86bijNl9iInebDgHTxUf6iW23lw5NE7ulTM9w8h3Z0kPEnJgcJ1
-         gyWyDL8qtnZCYRXndjO+Ou5GtWU0UVqt4RsrI00l0sYqLFr5tcck57OXrb+wIY2iVt1+
-         2nkCp0JHu2vpf2Atv2eThGFe6ni3bcNt5r3EH5cJR/je+Rqcd7vVoCaW9KtZ2IUOEFXj
-         vlIszd9kFGqUxqHSfGlHm2IhnPJNwFyIt5waKdzsjZZ5ly99dWyp3U2ZqWrewHIvIRrx
-         2bzsbiIQ/uqaosyHIe5njNzcGDh/oEibvQVZvlAjsyRx+y8GzM9h3UijydpH5XuY3fGW
-         G5rg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=vTLqCpV3pgok3Olcn1gwflZXWjXcgBlQ2Sjt/NABYuo=;
-        b=mhzufxOygl3VWqp6BqFAltCrB6oDHPMUlimdAHrHw+YCfwSSdOH+iOeuYljPnN0vFN
-         osW0NlxNg4wUcqYyVvvf9k5q+F3bSjvHq44rwtlFMNvd8gBtrVOPS0AoUqZfh77p2cuO
-         K4ZCh3Fpv6ciAyvCts3qtZhd3Mdtyywc84Iyi19qEn+07yo3iq2vWG5UdSTM+5ZdWwrc
-         B7mViLgkaeGWuS6W05QwycRo57KejeJ6/YoKUgb2eqf9owE8fjZTwdwOEpa0gNcxK5yI
-         cW91VwFif0FmODd5C/hCqLgiyHZDSrlFSK0vjfb0La2Raxqv3/2cyEXyyrd9v5CYikod
-         7dJA==
-X-Gm-Message-State: APjAAAVCTVd0/JmuoYGO64vWxhdD7KqVgzhMc50zMaatSBJEBL6a/Fhc
-        8kjfmhCu5LOu4/3AmZ13kWMe1l4af0/BHfw/nA4=
-X-Google-Smtp-Source: APXvYqw7yXdlPqqkydm64Bf5F1efUHu7UUcqTCGA95v3nEHIKyBKuReibsKKiin64jKU45rKcALAgER2oY7Dq8RBJ8k=
-X-Received: by 2002:a02:928c:: with SMTP id b12mr32176039jah.8.1556276214864;
- Fri, 26 Apr 2019 03:56:54 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190426095448.3169-1-chaitanya.mgit@gmail.com>
- <cb1c3fcafc7addf0ed8d8d946658801472ad8a1b.camel@sipsolutions.net>
- <CABPxzYK3MuJT=r3o6UgBqv-m1B2pqCACwq+i1DDRkC2ZHExvxQ@mail.gmail.com> <d569a6171e50a8bdb026a2ec86c78268c9d7e989.camel@sipsolutions.net>
-In-Reply-To: <d569a6171e50a8bdb026a2ec86c78268c9d7e989.camel@sipsolutions.net>
-From:   Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date:   Fri, 26 Apr 2019 16:26:43 +0530
-Message-ID: <CABPxzYKKMJ0PYwbA706qferBGPEitw26uG5Jp4qKzsaGPx+Dqg@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: Handle bss expiry during connection
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Chaitanya Tata <chaitanya.tata@bluwireless.co.uk>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 26 Apr 2019 07:11:50 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hJylc-0002Yu-RH; Fri, 26 Apr 2019 13:11:45 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     David Miller <davem@davemloft.net>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next 2019-04-26
+Date:   Fri, 26 Apr 2019 13:11:38 +0200
+Message-Id: <20190426111139.5831-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.17.2
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Apr 26, 2019 at 4:15 PM Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> On Fri, 2019-04-26 at 16:05 +0530, Krishna Chaitanya wrote:
->
-> > > > +             /* Meanwhile if BSS is expired then add it back to the list as
-> > > > +              * we have just connected with it.
-> > > > +              */
-> > > > +             if (list_empty(&ibss->list))
-> > > > +                     cfg80211_bss_update(rdev, ibss, ibss->pub.signal);
-> > >
-> > > But I think this adds *another* reference, which is wrong? We do need
-> > > one reference (the original one the driver gave us) but not a second
-> > > one?
-> >
-> > This was assuming found will be false so refcnt will be reset and a fresh ref
-> > is taken.
->
-> Yes, it actually adds a new entry entirely, not refs the old entry. But
-> then you have a new entry returned from cfg80211_bss_update() with a
-> reference, and leak that reference in the code as written.
->
-> You probably need to unref the old one, and keep the new one to pass on
-> to the next function etc.
->
+Hi Dave,
 
-Right, we should unref after the update.
+And another set for -next, not that big this time.
+See below for a summary of the highlights.
 
-> > > Maybe the copy we do in cfg80211_bss_update() isn't so bad, but then I'd
-> > > probably expose it without the signal_valid part and signal/timestamp
-> > > updates, and just copy the information raw there? However, the "if
-> > > (found)" part should never be possible here, right? Actually, maybe it
-> > > is, if we got a *new* entry in the meantime, but then we'd override the
-> > > newer information with the older, which is kinda bad?
-> >
-> > If we get new information (scan during connection) the bss would not have
-> > expired right? so this code will not be triggered.
->
-> It could have expired and been re-added, no? Ok, I'll admit that's a
-> stretch since the driver is busy connecting and not scanning, but I
-> suppose it could happen with multiple VIFs etc?
+Please pull and let me know if there's any problem.
 
-Yes, it might be possible with multiple VIF's, when one VIF is connecting
-and other VIF is scanning, it can find the connecting bssid in its scan results.
-
-> > My initial stab was in similar lines, something like below: But as the
-> > bss is expired
-> > we need to udpate ts, signal and other fields anyway, so I went ahead
-> > with full update.
->
-> Why would we want to update ts, signal etc.? We just keep the old
-> information, and then the entry will be held for the duration of the
-> connection, presumably it'll get new updates while you're connected.
-
-If we are holding it, then we will not be using ts anyway, so updating or
-not should not matter. But as its old info better to leave it that way, and
-update these fields only from scan results.
-
-> > +void cfg80211_add_expired_bss(struct cfg80211_registered_device *rdev,
-> > +                            struct cfg80211_internal_bss *new)
-> > +{
-> > +       if (!new)
-> > +               return;
-> > +
-> > +       spin_lock_bh(&rdev->bss_lock);
-> > +       new->ts = jiffies
-> > +       list_add_tail(&new->list, &rdev->bss_list);
-> > +       rdev->bss_entries++;
-> > +
-> > +       rb_insert_bss(rdev, new);
-> > +       rdev->bss_generation++;
-> > +
-> > +       bss_ref_get(rdev, new);
-> > +
-> > +       spin_unlock_bh(&rdev->bss_lock);
-> > +}
->
-> Yeah, I was thinking along those lines too, except there's a bit of an
-> issue with the hidden and non-transmitting lists?
-Ok, let me think for a bit and will send you V2. Thanks for quick review.
-> johannes
->
-
-
--- 
 Thanks,
-Regards,
-Chaitanya T K.
+johannes
+
+
+
+The following changes since commit 1f17f7742eeba73dbd5ae8bdec1a85ce5877001e:
+
+  net: sched: flower: insert filter to ht before offloading it to hw (2019-04-07 19:33:07 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2019-04-26
+
+for you to fetch changes up to 8828f81ad4a2f4e89ebe6e7793c06ed767c31d53:
+
+  mac80211: probe unexercised mesh links (2019-04-26 13:02:11 +0200)
+
+----------------------------------------------------------------
+Various updates, notably:
+ * extended key ID support (from 802.11-2016)
+ * per-STA TX power control support
+ * mac80211 TX performance improvements
+ * HE (802.11ax) updates
+ * mesh link probing support
+ * enhancements of multi-BSSID support (also related to HE)
+ * OWE userspace processing support
+
+----------------------------------------------------------------
+Alexander Wetzel (6):
+      mac80211: Optimize tailroom_needed update checks
+      nl80211/cfg80211: Extended Key ID support
+      mac80211: IEEE 802.11 Extended Key ID support
+      mac80211: Fix Extended Key ID auto activation
+      mac80211_hwsim: Extended Key ID support
+      mac80211: Set CAN_REPLACE_PTK0 for SW crypto only drivers
+
+Ashok Raj Nagarajan (2):
+      cfg80211: Add support to set tx power for a station associated
+      mac80211: store tx power value from user to station
+
+Avraham Stern (1):
+      mac80211_hwsim: set p2p device interface support indication
+
+Colin Ian King (1):
+      cfg80211: remove redundant zero check on variable 'changed'
+
+Dan Carpenter (1):
+      cfg80211: don't pass pointer to pointer unnecessarily
+
+Felix Fietkau (7):
+      mac80211: mesh: drop redundant rcu_read_lock/unlock calls
+      mac80211: calculate hash for fq without holding fq->lock in itxq enqueue
+      mac80211: run late dequeue late tx handlers without holding fq->lock
+      mac80211: set NETIF_F_LLTX when using intermediate tx queues
+      mac80211: when using iTXQ, select the queue in ieee80211_subif_start_xmit
+      mac80211: minstrel_ht: add support for rates with 4 spatial streams
+      mac80211: minstrel_ht: automatically calculate rate duration shift
+
+Gustavo A. R. Silva (2):
+      cfg80211: Use struct_size() in kzalloc()
+      nl80211: Use struct_size() in kzalloc()
+
+Johannes Berg (2):
+      nl80211: reindent some sched scan code
+      mac80211: only allocate one queue when using iTXQs
+
+Julius Niedworok (1):
+      mac80211: debugfs option to force TX status frames
+
+Liad Kaufman (1):
+      ieee80211: update HE IEs to D4.0 spec
+
+Luca Coelho (1):
+      nl80211: do a struct assignment to radar_chandef instead of memcpy()
+
+Narayanraddi Masti (1):
+      mac80211: Add support for NL80211_STA_INFO_AIRTIME_LINK_METRIC
+
+Rajkumar Manoharan (3):
+      cfg80211: add support to probe unexercised mesh link
+      mac80211: add option for setting control flags
+      mac80211: probe unexercised mesh links
+
+Sara Sharon (5):
+      cfg80211: don't skip multi-bssid index element
+      cfg80211: support non-inheritance element
+      mac80211: support non-inheritance element
+      cfg80211: support profile split between elements
+      mac80211: support profile split between elements
+
+Sergey Matyukevich (1):
+      mac80211/cfg80211: update bss channel on channel switch
+
+Shaul Triebitz (1):
+      nl80211: increase NL80211_MAX_SUPP_REG_RULES
+
+Sunil Dutt (1):
+      cfg80211/nl80211: Offload OWE processing to user space in AP mode
+
+vamsi krishna (1):
+      nl80211/cfg80211: Specify band specific min RSSI thresholds with sched scan
+
+ drivers/net/wireless/mac80211_hwsim.c |   8 +
+ include/linux/ieee80211.h             |  14 +-
+ include/net/cfg80211.h                | 104 +++++++++++
+ include/net/fq_impl.h                 |  18 +-
+ include/net/mac80211.h                |  30 +++
+ include/uapi/linux/nl80211.h          |  86 ++++++++-
+ net/mac80211/cfg.c                    |  46 +++++
+ net/mac80211/debugfs.c                |  54 ++++++
+ net/mac80211/driver-ops.c             |  21 +++
+ net/mac80211/driver-ops.h             |   5 +
+ net/mac80211/ieee80211_i.h            |   9 +-
+ net/mac80211/iface.c                  |  11 +-
+ net/mac80211/key.c                    |  87 ++++++---
+ net/mac80211/key.h                    |   2 +
+ net/mac80211/main.c                   |  16 ++
+ net/mac80211/mesh.h                   |   2 +
+ net/mac80211/mesh_hwmp.c              |  34 ++--
+ net/mac80211/mesh_pathtbl.c           |   2 +-
+ net/mac80211/mlme.c                   |   3 -
+ net/mac80211/rc80211_minstrel_ht.c    | 124 ++++++++-----
+ net/mac80211/rc80211_minstrel_ht.h    |   2 +-
+ net/mac80211/rx.c                     |  74 ++++----
+ net/mac80211/sta_info.c               |  15 ++
+ net/mac80211/tdls.c                   |   2 +-
+ net/mac80211/trace.h                  |  30 +++
+ net/mac80211/tx.c                     | 113 +++++++++---
+ net/mac80211/util.c                   | 162 ++++++++++-------
+ net/mac80211/wme.c                    |  82 +++++----
+ net/mac80211/wme.h                    |   2 +
+ net/wireless/nl80211.c                | 331 +++++++++++++++++++++++++++++-----
+ net/wireless/rdev-ops.h               |  29 ++-
+ net/wireless/reg.c                    |  23 +--
+ net/wireless/scan.c                   | 173 +++++++++++++++++-
+ net/wireless/trace.h                  |  87 ++++++++-
+ net/wireless/util.c                   |  21 ++-
+ net/wireless/wext-compat.c            |   3 -
+ 36 files changed, 1465 insertions(+), 360 deletions(-)
+
