@@ -2,328 +2,111 @@ Return-Path: <SRS0=OO7s=S4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E7E7C43219
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 20:56:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1989C43219
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 21:31:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D94BB20679
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 20:56:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556312161;
-	bh=w2lgBYhNX34qy+g49EY/EKiq+y6cq7EePkOrHOxTya8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=iGUIrvrplrG0QlCRCh2nwchLWXbnxP+M4Gnt3VK3hIecgtm8O6ckOZk7bBeJnKkLN
-	 pwYQ2oPOe71ksg5y/x5whts4KL39Vu7X7DcYV17mFsvdQuYzsriZsKGvyC2jIvZYzQ
-	 yV16lL35WZpYJwG/mXCAGkrBswiVa4DsF5utrWf0=
+	by mail.kernel.org (Postfix) with ESMTP id 90E4B2084F
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 21:31:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=bowerswilkins.com header.i=@bowerswilkins.com header.b="eM5oyE8q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726696AbfDZUz7 (ORCPT
+        id S1726696AbfDZVbe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Apr 2019 16:55:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49472 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725966AbfDZUz7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Apr 2019 16:55:59 -0400
-Received: from localhost.localdomain (unknown [151.66.24.114])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 517CB20679;
-        Fri, 26 Apr 2019 20:55:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556312157;
-        bh=w2lgBYhNX34qy+g49EY/EKiq+y6cq7EePkOrHOxTya8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cLppydz9v3r/mJOUlH+z1U7WIpE3sN7L6Seq4eMzmYHCPcVppykcZfk6xc7DhQyEJ
-         9DMKTMmFOVfi30F1qx9O1d/Bnd+m/jgy69QT996X3XY4QMa5yB/fferW6eIYv3BriC
-         P2hoTAv+hZS7q6tA0HOK/mg7bhUFjpZuWtwnnL1U=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        sgruszka@redhat.com
-Subject: [PATCH 3/3] mt76: move pre_tbtt_tasklet in mt76_dev
-Date:   Fri, 26 Apr 2019 22:55:32 +0200
-Message-Id: <08468ac2496d7e01244adc5b26b3f255b983af73.1556310998.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1556310998.git.lorenzo@kernel.org>
-References: <cover.1556310998.git.lorenzo@kernel.org>
+        Fri, 26 Apr 2019 17:31:34 -0400
+Received: from mail-eopbgr30064.outbound.protection.outlook.com ([40.107.3.64]:57158
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726246AbfDZVbe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Apr 2019 17:31:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bowerswilkins.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2oJnkRPKjUG+VUmguQak6ThQKhHwVgGN1a6aca1x3R8=;
+ b=eM5oyE8qfwVDV4cSns762Cz5/51NZffOhHkYzYgSiVsLVWTvzV/BvFfbXNhWmNH0O5h9bVMELsQt5tHaVYkdryTvhzS46I7+VYG9jMfV6OaTvwF4msnYwnmmuZ27UUdNtZ/qYqRt7uvZs5ZziNZFDhGdszsqOG3GZZw/rE4TCP8=
+Received: from AM0PR04MB6065.eurprd04.prod.outlook.com (20.179.32.150) by
+ AM0PR04MB6017.eurprd04.prod.outlook.com (20.179.32.14) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1835.13; Fri, 26 Apr 2019 21:31:31 +0000
+Received: from AM0PR04MB6065.eurprd04.prod.outlook.com
+ ([fe80::485d:efe5:102e:2989]) by AM0PR04MB6065.eurprd04.prod.outlook.com
+ ([fe80::485d:efe5:102e:2989%3]) with mapi id 15.20.1835.010; Fri, 26 Apr 2019
+ 21:31:31 +0000
+From:   Peter Oh <peter.oh@bowerswilkins.com>
+To:     "wireless-regdb@lists.infradead.org" 
+        <wireless-regdb@lists.infradead.org>
+CC:     Peter Oh <peter.oh@bowerswilkins.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] wireless-regdb: Update regulatory rules for South Korea
+Thread-Topic: [PATCH v2] wireless-regdb: Update regulatory rules for South
+ Korea
+Thread-Index: AQHU/HdqZsgsxQxLTEqJEz6hK6qIkA==
+Date:   Fri, 26 Apr 2019 21:31:31 +0000
+Message-ID: <1556314283-17842-1-git-send-email-peter.oh@bowerswilkins.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BYAPR02CA0047.namprd02.prod.outlook.com
+ (2603:10b6:a03:54::24) To AM0PR04MB6065.eurprd04.prod.outlook.com
+ (2603:10a6:208:139::22)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=peter.oh@bowerswilkins.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 2.7.4
+x-originating-ip: [12.244.182.62]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 739e2ccc-640d-49d4-e6dd-08d6ca8e8c9e
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600141)(711020)(4605104)(2017052603328)(7193020);SRVR:AM0PR04MB6017;
+x-ms-traffictypediagnostic: AM0PR04MB6017:
+x-ms-exchange-purlcount: 3
+x-microsoft-antispam-prvs: <AM0PR04MB6017D01A477967478CEFB91D993E0@AM0PR04MB6017.eurprd04.prod.outlook.com>
+x-forefront-prvs: 001968DD50
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(979002)(136003)(396003)(39850400004)(346002)(376002)(366004)(189003)(199004)(3846002)(6116002)(66556008)(73956011)(66946007)(8676002)(66476007)(66066001)(5640700003)(6916009)(64756008)(7110500001)(86362001)(305945005)(102836004)(7736002)(50226002)(71190400001)(71200400001)(54906003)(4326008)(8936002)(68736007)(2906002)(81166006)(26005)(81156014)(66446008)(316002)(52116002)(53936002)(44832011)(256004)(99286004)(14444005)(5660300002)(478600001)(6512007)(25786009)(476003)(6506007)(486006)(386003)(2616005)(36756003)(2420400007)(6306002)(6436002)(15650500001)(186003)(2351001)(97736004)(14454004)(966005)(2501003)(6486002)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1101;SCL:1;SRVR:AM0PR04MB6017;H:AM0PR04MB6065.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: bowerswilkins.com does not
+ designate permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: O0OxQhESsxBUjvcmXeDDhOA6HwcoE0Y/PkqWEuJ4n7LHo5bNXirnYAXKt4010O8tHTsZFRpgDqg8fzh3kCyVkc3TvyWIuiwTTMWWCCH1/hFFi77Dx13CLntiXoSuRUmCQsTq0IIzhPE2pUs7zfpreVM8Jfi/nEBP3KcEhcZcr5nufkn9Ylc3VXQf15M6lNHDkd2DR19StSGTYRKTSs7F46qO7wIDZgkUxqiO5Zc8eulb9NJlgHb5Nz9w6eClrYRLdL9BykD5/dVAAGM5w0SB4eKClIxVpXTAVB8UxDXjtFjwcw32s07pGofxcoRFHW1LG/4SaWxyjMz7PQE3epPQnY3V9WkdJabp4hy/aImDP3EoAwfmB06kzbddABvBZdQdLtT5ZhtWUSABgUFy/36H6gwf5HzCzuSL7h60AljUKvQ=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: bowerswilkins.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 739e2ccc-640d-49d4-e6dd-08d6ca8e8c9e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Apr 2019 21:31:31.6962
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a75a45bb-4772-448f-a2c6-9d2413d86410
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB6017
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move pre_tbtt_tasklet tasklet in mt76_dev data structure since
-it is used by all drivers
-
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt76.h            |  1 +
- drivers/net/wireless/mediatek/mt76/mt7603/core.c     |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7603/init.c     |  4 ++--
- drivers/net/wireless/mediatek/mt76/mt7603/mac.c      |  4 ++--
- drivers/net/wireless/mediatek/mt76/mt7603/main.c     |  8 ++++----
- drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h   |  2 --
- drivers/net/wireless/mediatek/mt76/mt76x0/pci.c      |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x02.h         |  1 -
- drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c    | 12 ++++++------
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c    |  4 ++--
- drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c |  4 ++--
- 12 files changed, 22 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index fb0ba1500d89..859c9f019323 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -469,6 +469,7 @@ struct mt76_dev {
- 	u8 antenna_mask;
- 	u16 chainmask;
- 
-+	struct tasklet_struct pre_tbtt_tasklet;
- 	int beacon_int;
- 	u8 beacon_mask;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/core.c b/drivers/net/wireless/mediatek/mt76/mt7603/core.c
-index 0d06ff67ce44..37e5644b45ef 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/core.c
-@@ -27,7 +27,7 @@ irqreturn_t mt7603_irq_handler(int irq, void *dev_instance)
- 
- 		mt76_wr(dev, MT_HW_INT_STATUS(3), hwintr);
- 		if (hwintr & MT_HW_INT3_PRE_TBTT0)
--			tasklet_schedule(&dev->pre_tbtt_tasklet);
-+			tasklet_schedule(&dev->mt76.pre_tbtt_tasklet);
- 
- 		if ((hwintr & MT_HW_INT3_TBTT0) && dev->mt76.csa_complete)
- 			mt76_csa_finish(&dev->mt76);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-index d394839f1bd8..c3c295919020 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-@@ -514,7 +514,7 @@ int mt7603_register_device(struct mt7603_dev *dev)
- 	spin_lock_init(&dev->ps_lock);
- 
- 	INIT_DELAYED_WORK(&dev->mt76.mac_work, mt7603_mac_work);
--	tasklet_init(&dev->pre_tbtt_tasklet, mt7603_pre_tbtt_tasklet,
-+	tasklet_init(&dev->mt76.pre_tbtt_tasklet, mt7603_pre_tbtt_tasklet,
- 		     (unsigned long)dev);
- 
- 	/* Check for 7688, which only has 1SS */
-@@ -573,7 +573,7 @@ int mt7603_register_device(struct mt7603_dev *dev)
- 
- void mt7603_unregister_device(struct mt7603_dev *dev)
- {
--	tasklet_disable(&dev->pre_tbtt_tasklet);
-+	tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- 	mt76_unregister_device(&dev->mt76);
- 	mt7603_mcu_exit(dev);
- 	mt7603_dma_cleanup(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index a5a881738d83..ad517e1af75b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -1279,7 +1279,7 @@ static void mt7603_mac_watchdog_reset(struct mt7603_dev *dev)
- 	mt76_txq_schedule_all(&dev->mt76);
- 
- 	tasklet_disable(&dev->mt76.tx_tasklet);
--	tasklet_disable(&dev->pre_tbtt_tasklet);
-+	tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- 	napi_disable(&dev->mt76.napi[0]);
- 	napi_disable(&dev->mt76.napi[1]);
- 
-@@ -1328,7 +1328,7 @@ static void mt7603_mac_watchdog_reset(struct mt7603_dev *dev)
- 	tasklet_enable(&dev->mt76.tx_tasklet);
- 	tasklet_schedule(&dev->mt76.tx_tasklet);
- 
--	tasklet_enable(&dev->pre_tbtt_tasklet);
-+	tasklet_enable(&dev->mt76.pre_tbtt_tasklet);
- 	mt7603_beacon_set_timer(dev, -1, beacon_int);
- 
- 	napi_enable(&dev->mt76.napi[0]);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-index a94dbe714be2..a01ee3723314 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-@@ -294,9 +294,9 @@ mt7603_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	if (changed & (BSS_CHANGED_BEACON_ENABLED | BSS_CHANGED_BEACON_INT)) {
- 		int beacon_int = !!info->enable_beacon * info->beacon_int;
- 
--		tasklet_disable(&dev->pre_tbtt_tasklet);
-+		tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- 		mt7603_beacon_set_timer(dev, mvif->idx, beacon_int);
--		tasklet_enable(&dev->pre_tbtt_tasklet);
-+		tasklet_enable(&dev->mt76.pre_tbtt_tasklet);
- 	}
- 
- 	mutex_unlock(&dev->mt76.mutex);
-@@ -535,7 +535,7 @@ mt7603_sw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct mt7603_dev *dev = hw->priv;
- 
- 	set_bit(MT76_SCANNING, &dev->mt76.state);
--	tasklet_disable(&dev->pre_tbtt_tasklet);
-+	tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- 	mt7603_beacon_set_timer(dev, -1, 0);
- }
- 
-@@ -546,7 +546,7 @@ mt7603_sw_scan_complete(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 
- 	clear_bit(MT76_SCANNING, &dev->mt76.state);
- 	mt7603_beacon_set_timer(dev, -1, dev->mt76.beacon_int);
--	tasklet_enable(&dev->pre_tbtt_tasklet);
-+	tasklet_enable(&dev->mt76.pre_tbtt_tasklet);
- }
- 
- static void
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-index 8f5ae1644a92..56ef73e41a5a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-@@ -140,8 +140,6 @@ struct mt7603_dev {
- 	u32 reset_test;
- 
- 	unsigned int reset_cause[__RESET_CAUSE_MAX];
--
--	struct tasklet_struct pre_tbtt_tasklet;
- };
- 
- extern const struct mt76_driver_ops mt7603_drv_ops;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index f106dbfa665f..6a8fe82ab9ad 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -219,7 +219,7 @@ mt76x0e_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- static void mt76x0e_cleanup(struct mt76x02_dev *dev)
- {
- 	clear_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
--	tasklet_disable(&dev->pre_tbtt_tasklet);
-+	tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- 	mt76x0_chip_onoff(dev, false, false);
- 	mt76x0e_stop_hw(dev);
- 	mt76x02_dma_cleanup(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index f754790dada4..07579a951dd9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -90,7 +90,6 @@ struct mt76x02_dev {
- 	struct sk_buff *rx_head;
- 
- 	struct tasklet_struct tx_tasklet;
--	struct tasklet_struct pre_tbtt_tasklet;
- 	struct delayed_work cal_work;
- 	struct delayed_work wdt_work;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index 31e0d4b03f6b..c4ead6a76766 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -68,9 +68,9 @@ static void mt76x02_pre_tbtt_tasklet(unsigned long arg)
- static void mt76x02e_pre_tbtt_enable(struct mt76x02_dev *dev, bool en)
- {
- 	if (en)
--		tasklet_enable(&dev->pre_tbtt_tasklet);
-+		tasklet_enable(&dev->mt76.pre_tbtt_tasklet);
- 	else
--		tasklet_disable(&dev->pre_tbtt_tasklet);
-+		tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- }
- 
- static void mt76x02e_beacon_enable(struct mt76x02_dev *dev, bool en)
-@@ -184,7 +184,7 @@ int mt76x02_dma_init(struct mt76x02_dev *dev)
- 
- 	tasklet_init(&dev->mt76.tx_tasklet, mt76x02_tx_tasklet,
- 		     (unsigned long) dev);
--	tasklet_init(&dev->pre_tbtt_tasklet, mt76x02_pre_tbtt_tasklet,
-+	tasklet_init(&dev->mt76.pre_tbtt_tasklet, mt76x02_pre_tbtt_tasklet,
- 		     (unsigned long)dev);
- 
- 	kfifo_init(&dev->txstatus_fifo, status_fifo, fifo_size);
-@@ -267,7 +267,7 @@ irqreturn_t mt76x02_irq_handler(int irq, void *dev_instance)
- 	}
- 
- 	if (intr & MT_INT_PRE_TBTT)
--		tasklet_schedule(&dev->pre_tbtt_tasklet);
-+		tasklet_schedule(&dev->mt76.pre_tbtt_tasklet);
- 
- 	/* send buffered multicast frames now */
- 	if (intr & MT_INT_TBTT) {
-@@ -427,7 +427,7 @@ static void mt76x02_watchdog_reset(struct mt76x02_dev *dev)
- 	ieee80211_stop_queues(dev->mt76.hw);
- 	set_bit(MT76_RESET, &dev->mt76.state);
- 
--	tasklet_disable(&dev->pre_tbtt_tasklet);
-+	tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- 	tasklet_disable(&dev->mt76.tx_tasklet);
- 
- 	for (i = 0; i < ARRAY_SIZE(dev->mt76.napi); i++)
-@@ -484,7 +484,7 @@ static void mt76x02_watchdog_reset(struct mt76x02_dev *dev)
- 	tasklet_enable(&dev->mt76.tx_tasklet);
- 	tasklet_schedule(&dev->mt76.tx_tasklet);
- 
--	tasklet_enable(&dev->pre_tbtt_tasklet);
-+	tasklet_enable(&dev->mt76.pre_tbtt_tasklet);
- 
- 	for (i = 0; i < ARRAY_SIZE(dev->mt76.napi); i++) {
- 		napi_enable(&dev->mt76.napi[i]);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 227c360165b0..12724e96b290 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -594,7 +594,7 @@ void mt76x02_sw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct mt76x02_dev *dev = hw->priv;
- 
- 	if (mt76_is_mmio(dev))
--		tasklet_disable(&dev->pre_tbtt_tasklet);
-+		tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- 	set_bit(MT76_SCANNING, &dev->mt76.state);
- }
- EXPORT_SYMBOL_GPL(mt76x02_sw_scan);
-@@ -606,7 +606,7 @@ void mt76x02_sw_scan_complete(struct ieee80211_hw *hw,
- 
- 	clear_bit(MT76_SCANNING, &dev->mt76.state);
- 	if (mt76_is_mmio(dev))
--		tasklet_enable(&dev->pre_tbtt_tasklet);
-+		tasklet_enable(&dev->mt76.pre_tbtt_tasklet);
- 
- 	if (dev->cal.gain_init_done) {
- 		/* Restore AGC gain and resume calibration after scanning. */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-index 90c1a0489294..71aea2832644 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-@@ -300,7 +300,7 @@ void mt76x2_stop_hardware(struct mt76x02_dev *dev)
- void mt76x2_cleanup(struct mt76x02_dev *dev)
- {
- 	tasklet_disable(&dev->dfs_pd.dfs_tasklet);
--	tasklet_disable(&dev->pre_tbtt_tasklet);
-+	tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- 	mt76x2_stop_hardware(dev);
- 	mt76x02_dma_cleanup(dev);
- 	mt76x02_mcu_cleanup(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-index 77f63cb14f35..93ad12391e33 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-@@ -66,7 +66,7 @@ mt76x2_set_channel(struct mt76x02_dev *dev, struct cfg80211_chan_def *chandef)
- 
- 	mt76_set_channel(&dev->mt76);
- 
--	tasklet_disable(&dev->pre_tbtt_tasklet);
-+	tasklet_disable(&dev->mt76.pre_tbtt_tasklet);
- 	tasklet_disable(&dev->dfs_pd.dfs_tasklet);
- 
- 	mt76x2_mac_stop(dev, true);
-@@ -80,7 +80,7 @@ mt76x2_set_channel(struct mt76x02_dev *dev, struct cfg80211_chan_def *chandef)
- 
- 	mt76x2_mac_resume(dev);
- 	tasklet_enable(&dev->dfs_pd.dfs_tasklet);
--	tasklet_enable(&dev->pre_tbtt_tasklet);
-+	tasklet_enable(&dev->mt76.pre_tbtt_tasklet);
- 
- 	clear_bit(MT76_RESET, &dev->mt76.state);
- 
--- 
-2.20.1
-
+RnJvbTogUGV0ZXIgT2ggPHBldGVyLm9oQGJvd2Vyc3dpbGtpbnMuY29tPg0KDQpVcGRhdGUgcG93
+ZXIgbGltaXQgYXMgZG9jdW1lbnRlZCBpbjoNCmh0dHA6Ly93d3cubGF3LmdvLmtyLyVFRCU5NiU4
+OSVFQyVBMCU5NSVFQSVCNyU5QyVFQyVCOSU5OS8NCiVFQyU4QiVBMCVFQSVCMyVBMCVFRCU5NSU5
+OCVFQyVBNyU4MCVFQyU5NSU4NCVFQiU4QiU4OCVFRA0KJTk1JTk4JUVBJUIzJUEwJUVBJUIwJTlD
+JUVDJTg0JUE0JUVEJTk1JUEwJUVDJTg4JTk4JUVDJTlFDQolODglRUIlOEElOTQlRUIlQUMlQjQl
+RUMlODQlQTAlRUElQjUlQUQlRUMlOUElQTklRUIlQUMlQjQNCiVFQyU4NCVBMCVFQSVCOCVCMCVF
+QSVCOCVCMC8oMjAxOC04OSwyMDE4MTIyNykNCndoaWNoIHJldmlzZWQgb24gRGVjZW1iZXIgMjcs
+IDIwMTguDQoNClNpZ25lZC1vZmYtYnk6IFBldGVyIE9oIDxwZXRlci5vaEBib3dlcnN3aWxraW5z
+LmNvbT4NCi0tLQ0KIGRiLnR4dCB8IDExICsrKysrKy0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDYg
+aW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RiLnR4dCBiL2Ri
+LnR4dA0KaW5kZXggNGZiMTk0OC4uOGQyNDMwNSAxMDA2NDQNCi0tLSBhL2RiLnR4dA0KKysrIGIv
+ZGIudHh0DQpAQCAtNjk1LDExICs2OTUsMTIgQEAgY291bnRyeSBLUDogREZTLUpQDQogCSg1NzM1
+IC0gNTgxNSBAIDIwKSwgKDMwKQ0KIA0KIGNvdW50cnkgS1I6IERGUy1KUA0KLQkoMjQwMiAtIDI0
+ODIgQCA0MCksICgxMykNCi0JKDUxNzAgLSA1MjUwIEAgODApLCAoMjApLCBBVVRPLUJXDQotCSg1
+MjUwIC0gNTMzMCBAIDgwKSwgKDIwKSwgREZTLCBBVVRPLUJXDQotCSg1NDkwIC0gNTcxMCBAIDE2
+MCksICgzMCksIERGUw0KLQkoNTczNSAtIDU4MzUgQCA4MCksICgzMCkNCisJIyByZWY6IGh0dHBz
+Oi8vd3d3LnJyYS5nby5rcg0KKwkoMjQwMiAtIDI0ODIgQCA0MCksICgyMykNCisJKDUxNzAgLSA1
+MjUwIEAgODApLCAoMjMpLCBBVVRPLUJXDQorCSg1MjUwIC0gNTMzMCBAIDgwKSwgKDIzKSwgREZT
+LCBBVVRPLUJXDQorCSg1NDkwIC0gNTcxMCBAIDE2MCksICgyMyksIERGUw0KKwkoNTczNSAtIDU4
+MzUgQCA4MCksICgyMykNCiAJIyA2MCBHSHogYmFuZCBjaGFubmVscyAxLTQsDQogCSMgcmVmOiBo
+dHRwOi8vd3d3Lmxhdy5nby5rci8lRUQlOTYlODklRUMlQTAlOTUlRUElQjclOUMlRUMlQjklOTkv
+JUVCJUFDJUI0JUVDJTg0JUEwJUVDJTg0JUE0JUVCJUI5JTg0JUVBJUI3JTlDJUVDJUI5JTk5DQog
+CSg1NzAwMCAtIDY2MDAwIEAgMjE2MCksICg0MykNCi0tIA0KMi43LjQNCg0K
