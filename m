@@ -2,186 +2,141 @@ Return-Path: <SRS0=OO7s=S4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DA55C43218
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 09:42:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E3BEC43219
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 09:46:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 08903208C4
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 09:42:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CF28206BA
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 09:46:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1556272002;
+	bh=9RT8xA5jMBv6EzT8N9JRPoEns1coQhC9bYDVc6PmTws=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=AwolLZBD7dimBnWvkx4xw670MdVlpBKYK8LFfo6RmX44H1oc/putJiB9hpzvJiPcO
+	 oX93LcvsPbzsP2gR573qOTZF1XufCXGs2YVIx2zuJ5KMcMfAESTNcsJPkubUrskPiO
+	 EX3wOiZz9j8URDB5Kig7zBZS5HlDCsQWAyQQVUuw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727141AbfDZJmB (ORCPT
+        id S1726610AbfDZJqf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Apr 2019 05:42:01 -0400
-Received: from nbd.name ([46.4.11.11]:57604 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726429AbfDZJmA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Apr 2019 05:42:00 -0400
-Received: from p548c8674.dip0.t-ipconnect.de ([84.140.134.116] helo=bertha.fritz.box)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1hJxMi-00036i-JE; Fri, 26 Apr 2019 11:41:56 +0200
-From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     Srini Kode <skode@qti.qualcomm.com>,
-        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        John Crispin <john@phrozen.org>,
-        Shashidhar Lakkavalli <slakkavalli@datto.com>
-Subject: [PATCH V2 1/3] mac80211: allow turning TWT responder support on and off via netlink
-Date:   Fri, 26 Apr 2019 11:41:48 +0200
-Message-Id: <20190426094150.18078-2-john@phrozen.org>
-X-Mailer: git-send-email 2.11.0
-In-Reply-To: <20190426094150.18078-1-john@phrozen.org>
-References: <20190426094150.18078-1-john@phrozen.org>
+        Fri, 26 Apr 2019 05:46:35 -0400
+Received: from casper.infradead.org ([85.118.1.10]:52042 "EHLO
+        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725985AbfDZJqf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Apr 2019 05:46:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=gTBjYHF7PdfcMS747oVD2PM5dGAfiuGzrLBbmiynnAI=; b=ThiRHSVnK8igKQlUt70ItUpgfn
+        ahvUpV2Rj5VYX6v2qdgqkJ5YDlrjlEHjCiqciVId/LoW/vvbKtqqhjBZvImCJFrk4tTc96+SgQTMt
+        3OwLruS8ajlGs/wQ20K30ls643aeeOVpb/B7MjXylL0emp1dw6nykZEPhyzyfDfgrbPNaH7y3BxV8
+        0/Pf9E/MtLsN+dZ02jvg38Neh4bT8CtGsUuBDGhhjAjqMii4uRKfUZed6iZ/INQKwoT8UUu5T/2j8
+        o0WOHq5yMZ0fJgkLpfKIpMcsztztvKqpYFW56Aq/Y4OzodfEabMJl4Dq9mXtvOf21R/5AYdWX7Hzf
+        niiIxfrA==;
+Received: from [179.95.39.209] (helo=coco.lan)
+        by casper.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hJxQz-000573-Hl; Fri, 26 Apr 2019 09:46:22 +0000
+Date:   Fri, 26 Apr 2019 06:46:09 -0300
+From:   Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+To:     Mark Brown <broonie@kernel.org>
+Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Sebastian Reichel <sre@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+        Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>,
+        Harry Wei <harryxiyou@gmail.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>, linux-pm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 25/79] docs: convert docs to ReST and rename to *.rst
+Message-ID: <20190426064609.7f00e013@coco.lan>
+In-Reply-To: <20190425180758.GC23183@sirena.org.uk>
+References: <cover.1555938375.git.mchehab+samsung@kernel.org>
+        <7adf9035ae06ecc6c7e46b51cb677f0a8f61d19a.1555938376.git.mchehab+samsung@kernel.org>
+        <20190425180758.GC23183@sirena.org.uk>
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Allow the userland daemon to en/disable TWT support for an AP.
+Hi Mark,
 
-Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
-Signed-off-by: John Crispin <john@phrozen.org>
----
- include/net/cfg80211.h       | 2 ++
- include/net/mac80211.h       | 5 +++++
- include/uapi/linux/nl80211.h | 4 ++++
- net/mac80211/cfg.c           | 6 ++++++
- net/wireless/nl80211.c       | 6 ++++++
- 5 files changed, 23 insertions(+)
+Em Thu, 25 Apr 2019 19:07:58 +0100
+Mark Brown <broonie@kernel.org> escreveu:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bb307a11ee63..8a20f5a42977 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1511,6 +1511,7 @@ struct mpath_info {
-  * 	(u16 = opmode, -1 = do not change)
-  * @p2p_ctwindow: P2P CT Window (-1 = no change)
-  * @p2p_opp_ps: P2P opportunistic PS (-1 = no change)
-+ * @twt_responder: HE Target Wait Time support.
-  */
- struct bss_parameters {
- 	int use_cts_prot;
-@@ -1521,6 +1522,7 @@ struct bss_parameters {
- 	int ap_isolate;
- 	int ht_opmode;
- 	s8 p2p_ctwindow, p2p_opp_ps;
-+	int twt_responder;
- };
- 
- /**
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ac2ed8ec662b..87a6e149abda 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -317,6 +317,7 @@ struct ieee80211_vif_chanctx_switch {
-  * @BSS_CHANGED_MCAST_RATE: Multicast Rate setting changed for this interface
-  * @BSS_CHANGED_FTM_RESPONDER: fime timing reasurement request responder
-  *	functionality changed for this BSS (AP mode).
-+ * @BSS_CHANGED_TWT: TWT enable status changed
-  *
-  */
- enum ieee80211_bss_change {
-@@ -347,6 +348,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_KEEP_ALIVE		= 1<<24,
- 	BSS_CHANGED_MCAST_RATE		= 1<<25,
- 	BSS_CHANGED_FTM_RESPONDER	= 1<<26,
-+	BSS_CHANGED_TWT			= 1<<27,
- 
- 	/* when adding here, make sure to change ieee80211_reconfig */
- };
-@@ -504,6 +506,8 @@ struct ieee80211_ftm_responder_params {
-  * @he_support: does this BSS support HE
-  * @twt_requester: does this BSS support TWT requester (relevant for managed
-  *	mode only, set if the AP advertises TWT responder role)
-+ * @twt_responder: does this BSS support TWT responder (relevant for AP
-+ *	mode only, set if the AP advertises TWT responder role)
-  * @assoc: association status
-  * @ibss_joined: indicates whether this station is part of an IBSS
-  *	or not
-@@ -611,6 +615,7 @@ struct ieee80211_bss_conf {
- 	u16 frame_time_rts_th;
- 	bool he_support;
- 	bool twt_requester;
-+	bool twt_responder;
- 	/* association related data */
- 	bool assoc, ibss_joined;
- 	bool ibss_creator;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index dd4f86ee286e..ba1f69751a4a 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2308,6 +2308,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_AIRTIME_WEIGHT: Station's weight when scheduled by the airtime
-  *	scheduler.
-  *
-+ * @NL80211_ATTR_TWT_RESPONDER: Enable target wait time responder support.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2759,6 +2761,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_AIRTIME_WEIGHT,
- 
-+	NL80211_ATTR_TWT_RESPONDER,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 09dd1c2860fc..a66600bf9cef 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2176,6 +2176,12 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 		changed |= BSS_CHANGED_P2P_PS;
- 	}
- 
-+	if (params->twt_responder >= 0) {
-+		sdata->vif.bss_conf.twt_responder =
-+			params->twt_responder;
-+		changed |= BSS_CHANGED_TWT;
-+	}
-+
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
- 	return 0;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 25a9e3b5c154..afd04a98a601 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -541,6 +541,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_PEER_MEASUREMENTS] =
- 		NLA_POLICY_NESTED(nl80211_pmsr_attr_policy),
- 	[NL80211_ATTR_AIRTIME_WEIGHT] = NLA_POLICY_MIN(NLA_U16, 1),
-+	[NL80211_ATTR_BSS_SHORT_PREAMBLE] = NLA_POLICY_RANGE(NLA_U8, 0, 1),
- };
- 
- /* policy for the key attributes */
-@@ -6105,6 +6106,7 @@ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
- 	params.ht_opmode = -1;
- 	params.p2p_ctwindow = -1;
- 	params.p2p_opp_ps = -1;
-+	params.twt_responder = -1;
- 
- 	if (info->attrs[NL80211_ATTR_BSS_CTS_PROT])
- 		params.use_cts_prot =
-@@ -6149,6 +6151,10 @@ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_TWT_RESPONDER])
-+		params.twt_responder =
-+		    nla_get_u8(info->attrs[NL80211_ATTR_TWT_RESPONDER]);
-+
- 	if (!rdev->ops->change_bss)
- 		return -EOPNOTSUPP;
- 
--- 
-2.11.0
+> On Mon, Apr 22, 2019 at 10:27:14AM -0300, Mauro Carvalho Chehab wrote:
+> > Convert the PM documents to ReST, in order to allow them to
+> > build with Sphinx.  
+> 
+> This is massively CCed covering a large range of subsystems and is patch
+> 25 of a 79 patch series so I've no context for what's going on here or
+> why...  
 
+There are two goals of this series:
+
+1) to prepare for placing the new *.rst files under Documentation/ into an
+   index file, being part of one of the books. Most of the stuff covered
+   on this series either fit at the system admin guide or at the
+   Kernel API documentation book;
+
+2) to ensure that, if some edition on a file would cause warnings at
+   Sphinx build, someone will notice and submit a followup patch.
+
+You can see more details at patch 00/79:
+	https://lore.kernel.org/lkml/20190422115110.26443b44@coco.lan/
+
+In order to do that, this series has one patch per Documentation/*
+sub-directory. This specific one is for the documents under
+Documentation/power/ [1].
+
+[1] btw, the title of this specific patch should be, instead:
+	docs: power: convert docs to ReST and rename to *.rst
+
+The series is long because I'm trying to cover a significant part
+of the documentation files. In any case, except if an eventual
+conflict might rise on some file, this patch is independent from
+all other files, and should be safe to apply directly via the
+subsystem git tree.
+
+I'm working on a follow-up patch series that should be adding the
+power/index.rst file into another index file - probably at
+Documentation/index.rst[1]. As such patch will be adding a lot of other
+index files, the best would be to merge it via the docs tree, in
+order to avoid conflicts.
+
+
+[1] such patch will be removing the ":orphan:" meta-tag from it
+(that basically tells the build system to not produce warnings if
+the file is not directly or indirectly referenced by the main
+index file).
+
+Thanks,
+Mauro
