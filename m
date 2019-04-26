@@ -2,111 +2,165 @@ Return-Path: <SRS0=OO7s=S4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1989C43219
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 21:31:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 636E2C43218
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 22:15:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90E4B2084F
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 21:31:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E62E2084F
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Apr 2019 22:15:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=bowerswilkins.com header.i=@bowerswilkins.com header.b="eM5oyE8q"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="H+uaSFEH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726696AbfDZVbe (ORCPT
+        id S1727032AbfDZWPF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Apr 2019 17:31:34 -0400
-Received: from mail-eopbgr30064.outbound.protection.outlook.com ([40.107.3.64]:57158
-        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726246AbfDZVbe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Apr 2019 17:31:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bowerswilkins.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2oJnkRPKjUG+VUmguQak6ThQKhHwVgGN1a6aca1x3R8=;
- b=eM5oyE8qfwVDV4cSns762Cz5/51NZffOhHkYzYgSiVsLVWTvzV/BvFfbXNhWmNH0O5h9bVMELsQt5tHaVYkdryTvhzS46I7+VYG9jMfV6OaTvwF4msnYwnmmuZ27UUdNtZ/qYqRt7uvZs5ZziNZFDhGdszsqOG3GZZw/rE4TCP8=
-Received: from AM0PR04MB6065.eurprd04.prod.outlook.com (20.179.32.150) by
- AM0PR04MB6017.eurprd04.prod.outlook.com (20.179.32.14) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1835.13; Fri, 26 Apr 2019 21:31:31 +0000
-Received: from AM0PR04MB6065.eurprd04.prod.outlook.com
- ([fe80::485d:efe5:102e:2989]) by AM0PR04MB6065.eurprd04.prod.outlook.com
- ([fe80::485d:efe5:102e:2989%3]) with mapi id 15.20.1835.010; Fri, 26 Apr 2019
- 21:31:31 +0000
-From:   Peter Oh <peter.oh@bowerswilkins.com>
-To:     "wireless-regdb@lists.infradead.org" 
-        <wireless-regdb@lists.infradead.org>
-CC:     Peter Oh <peter.oh@bowerswilkins.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] wireless-regdb: Update regulatory rules for South Korea
-Thread-Topic: [PATCH v2] wireless-regdb: Update regulatory rules for South
- Korea
-Thread-Index: AQHU/HdqZsgsxQxLTEqJEz6hK6qIkA==
-Date:   Fri, 26 Apr 2019 21:31:31 +0000
-Message-ID: <1556314283-17842-1-git-send-email-peter.oh@bowerswilkins.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: BYAPR02CA0047.namprd02.prod.outlook.com
- (2603:10b6:a03:54::24) To AM0PR04MB6065.eurprd04.prod.outlook.com
- (2603:10a6:208:139::22)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=peter.oh@bowerswilkins.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-mailer: git-send-email 2.7.4
-x-originating-ip: [12.244.182.62]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 739e2ccc-640d-49d4-e6dd-08d6ca8e8c9e
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600141)(711020)(4605104)(2017052603328)(7193020);SRVR:AM0PR04MB6017;
-x-ms-traffictypediagnostic: AM0PR04MB6017:
-x-ms-exchange-purlcount: 3
-x-microsoft-antispam-prvs: <AM0PR04MB6017D01A477967478CEFB91D993E0@AM0PR04MB6017.eurprd04.prod.outlook.com>
-x-forefront-prvs: 001968DD50
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(979002)(136003)(396003)(39850400004)(346002)(376002)(366004)(189003)(199004)(3846002)(6116002)(66556008)(73956011)(66946007)(8676002)(66476007)(66066001)(5640700003)(6916009)(64756008)(7110500001)(86362001)(305945005)(102836004)(7736002)(50226002)(71190400001)(71200400001)(54906003)(4326008)(8936002)(68736007)(2906002)(81166006)(26005)(81156014)(66446008)(316002)(52116002)(53936002)(44832011)(256004)(99286004)(14444005)(5660300002)(478600001)(6512007)(25786009)(476003)(6506007)(486006)(386003)(2616005)(36756003)(2420400007)(6306002)(6436002)(15650500001)(186003)(2351001)(97736004)(14454004)(966005)(2501003)(6486002)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1101;SCL:1;SRVR:AM0PR04MB6017;H:AM0PR04MB6065.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: bowerswilkins.com does not
- designate permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: O0OxQhESsxBUjvcmXeDDhOA6HwcoE0Y/PkqWEuJ4n7LHo5bNXirnYAXKt4010O8tHTsZFRpgDqg8fzh3kCyVkc3TvyWIuiwTTMWWCCH1/hFFi77Dx13CLntiXoSuRUmCQsTq0IIzhPE2pUs7zfpreVM8Jfi/nEBP3KcEhcZcr5nufkn9Ylc3VXQf15M6lNHDkd2DR19StSGTYRKTSs7F46qO7wIDZgkUxqiO5Zc8eulb9NJlgHb5Nz9w6eClrYRLdL9BykD5/dVAAGM5w0SB4eKClIxVpXTAVB8UxDXjtFjwcw32s07pGofxcoRFHW1LG/4SaWxyjMz7PQE3epPQnY3V9WkdJabp4hy/aImDP3EoAwfmB06kzbddABvBZdQdLtT5ZhtWUSABgUFy/36H6gwf5HzCzuSL7h60AljUKvQ=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Fri, 26 Apr 2019 18:15:05 -0400
+Received: from mail-ua1-f66.google.com ([209.85.222.66]:38332 "EHLO
+        mail-ua1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726871AbfDZWPF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Apr 2019 18:15:05 -0400
+Received: by mail-ua1-f66.google.com with SMTP id t15so1709507uao.5
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2019 15:15:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=GieBCUtlVhWnwVg6ldcc309iSPs6ZMuQyRIOEMRGO10=;
+        b=H+uaSFEHe4LRsSOYpZo/5LQgBlLfDu5tdW/8Kg6h2tBCW3VKfBLB+uUVjh4j5SJf76
+         fwur2wzuNO8o1l7FUcOO0L6Tu3WbFJ6eZYdrmQGCuFIz0X6mUn0w5vJ6djySHbp8be/0
+         0FOz1LLV1he7mDMIz1pvJO95opBALai1ZtH/M=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=GieBCUtlVhWnwVg6ldcc309iSPs6ZMuQyRIOEMRGO10=;
+        b=JUcS00GoLAIiOoFspCdnh+D/pRuDvTziW3EOQ1nlEFkzSg4PxMpulxbsMcDaGx13oe
+         ibBCJCjz2NjxhLRRU3IMvZNaQqPj4ajd7h3kDLilH1J6O/LzsK0CRPMJ7SVDYnN98qx4
+         hags8g7pjJAmqToEx2an6z4DifIwXdDkvTbFxQ6CF+szNaQVDxyldepsIjH81lnOfSNd
+         hllkuBiad2FRSXESYJ46dw3rqFGDcd3tdw9fZ9siBoCXLLDAiMV1aQYMmajWXud+IEbj
+         8uWohx8ZuPbyoSbBBUDoQ9ABN3fOP8e3SjZN10AgcCI60Phx2ZSNHgII0F5pp6xCbups
+         OvGA==
+X-Gm-Message-State: APjAAAUvFMSvQ8LlyfwOL1iCymMzXeJ5ckwAd4DnZ9Gazy3KwHuFtwFe
+        Xq0jGqE/5qfVsb6loC5nRVQ/Ua4Sy3Q=
+X-Google-Smtp-Source: APXvYqy/N1C8v0JZk/Li7ZNc27/VP5wg0dmzGrwja3JNFKkDAKjh5/qKCIpiDPbTkQpgj94w3TDKyQ==
+X-Received: by 2002:ab0:3495:: with SMTP id c21mr8978572uar.46.1556316903509;
+        Fri, 26 Apr 2019 15:15:03 -0700 (PDT)
+Received: from mail-vs1-f41.google.com (mail-vs1-f41.google.com. [209.85.217.41])
+        by smtp.gmail.com with ESMTPSA id s194sm11049247vkf.37.2019.04.26.15.15.03
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Fri, 26 Apr 2019 15:15:03 -0700 (PDT)
+Received: by mail-vs1-f41.google.com with SMTP id e2so2790604vsc.13
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2019 15:15:03 -0700 (PDT)
+X-Received: by 2002:a67:7b53:: with SMTP id w80mr26588048vsc.144.1556316532790;
+ Fri, 26 Apr 2019 15:08:52 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: bowerswilkins.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 739e2ccc-640d-49d4-e6dd-08d6ca8e8c9e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Apr 2019 21:31:31.6962
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a75a45bb-4772-448f-a2c6-9d2413d86410
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB6017
+References: <20190410221237.160856-1-dianders@chromium.org>
+ <CANBLGcwmNowj9GSmE3bbo1t1o6EF8q-RiJftfdOQnJB9_8aSKg@mail.gmail.com>
+ <CAD=FV=UW6d2QHzxx-Vtr+WwC1dkpUfCjxCLnfaP5S2UQxRh1oQ@mail.gmail.com> <CANBLGcxpjDFKNdT7uk8uCS=C8Gjxc9wVqDs_ZGHqRpLFVsJxxQ@mail.gmail.com>
+In-Reply-To: <CANBLGcxpjDFKNdT7uk8uCS=C8Gjxc9wVqDs_ZGHqRpLFVsJxxQ@mail.gmail.com>
+From:   Doug Anderson <dianders@chromium.org>
+Date:   Fri, 26 Apr 2019 15:08:41 -0700
+X-Gmail-Original-Message-ID: <CAD=FV=UzRbp0w_cN07kQ9dH1B3+v7fmA4_t46kP3cy1k_hn9Ug@mail.gmail.com>
+Message-ID: <CAD=FV=UzRbp0w_cN07kQ9dH1B3+v7fmA4_t46kP3cy1k_hn9Ug@mail.gmail.com>
+Subject: Re: [PATCH] mmc: dw_mmc: Disable SDIO interrupts while suspended to
+ fix suspend/resume
+To:     Emil Renner Berthing <emil.renner.berthing@gmail.com>
+Cc:     Jaehoon Chung <jh80.chung@samsung.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        stable@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Ryan Case <ryandcase@chromium.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogUGV0ZXIgT2ggPHBldGVyLm9oQGJvd2Vyc3dpbGtpbnMuY29tPg0KDQpVcGRhdGUgcG93
-ZXIgbGltaXQgYXMgZG9jdW1lbnRlZCBpbjoNCmh0dHA6Ly93d3cubGF3LmdvLmtyLyVFRCU5NiU4
-OSVFQyVBMCU5NSVFQSVCNyU5QyVFQyVCOSU5OS8NCiVFQyU4QiVBMCVFQSVCMyVBMCVFRCU5NSU5
-OCVFQyVBNyU4MCVFQyU5NSU4NCVFQiU4QiU4OCVFRA0KJTk1JTk4JUVBJUIzJUEwJUVBJUIwJTlD
-JUVDJTg0JUE0JUVEJTk1JUEwJUVDJTg4JTk4JUVDJTlFDQolODglRUIlOEElOTQlRUIlQUMlQjQl
-RUMlODQlQTAlRUElQjUlQUQlRUMlOUElQTklRUIlQUMlQjQNCiVFQyU4NCVBMCVFQSVCOCVCMCVF
-QSVCOCVCMC8oMjAxOC04OSwyMDE4MTIyNykNCndoaWNoIHJldmlzZWQgb24gRGVjZW1iZXIgMjcs
-IDIwMTguDQoNClNpZ25lZC1vZmYtYnk6IFBldGVyIE9oIDxwZXRlci5vaEBib3dlcnN3aWxraW5z
-LmNvbT4NCi0tLQ0KIGRiLnR4dCB8IDExICsrKysrKy0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDYg
-aW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RiLnR4dCBiL2Ri
-LnR4dA0KaW5kZXggNGZiMTk0OC4uOGQyNDMwNSAxMDA2NDQNCi0tLSBhL2RiLnR4dA0KKysrIGIv
-ZGIudHh0DQpAQCAtNjk1LDExICs2OTUsMTIgQEAgY291bnRyeSBLUDogREZTLUpQDQogCSg1NzM1
-IC0gNTgxNSBAIDIwKSwgKDMwKQ0KIA0KIGNvdW50cnkgS1I6IERGUy1KUA0KLQkoMjQwMiAtIDI0
-ODIgQCA0MCksICgxMykNCi0JKDUxNzAgLSA1MjUwIEAgODApLCAoMjApLCBBVVRPLUJXDQotCSg1
-MjUwIC0gNTMzMCBAIDgwKSwgKDIwKSwgREZTLCBBVVRPLUJXDQotCSg1NDkwIC0gNTcxMCBAIDE2
-MCksICgzMCksIERGUw0KLQkoNTczNSAtIDU4MzUgQCA4MCksICgzMCkNCisJIyByZWY6IGh0dHBz
-Oi8vd3d3LnJyYS5nby5rcg0KKwkoMjQwMiAtIDI0ODIgQCA0MCksICgyMykNCisJKDUxNzAgLSA1
-MjUwIEAgODApLCAoMjMpLCBBVVRPLUJXDQorCSg1MjUwIC0gNTMzMCBAIDgwKSwgKDIzKSwgREZT
-LCBBVVRPLUJXDQorCSg1NDkwIC0gNTcxMCBAIDE2MCksICgyMyksIERGUw0KKwkoNTczNSAtIDU4
-MzUgQCA4MCksICgyMykNCiAJIyA2MCBHSHogYmFuZCBjaGFubmVscyAxLTQsDQogCSMgcmVmOiBo
-dHRwOi8vd3d3Lmxhdy5nby5rci8lRUQlOTYlODklRUMlQTAlOTUlRUElQjclOUMlRUMlQjklOTkv
-JUVCJUFDJUI0JUVDJTg0JUEwJUVDJTg0JUE0JUVCJUI5JTg0JUVBJUI3JTlDJUVDJUI5JTk5DQog
-CSg1NzAwMCAtIDY2MDAwIEAgMjE2MCksICg0MykNCi0tIA0KMi43LjQNCg0K
+Hi,
+
+On Fri, Apr 26, 2019 at 10:19 AM Emil Renner Berthing
+<emil.renner.berthing@gmail.com> wrote:
+>
+> Hi Doug,
+>
+> TLDR: I'm no longer convinced this patch breaks suspend/resume more
+> than it already is. Sorry about the noise.
+>
+> On Thu, 25 Apr 2019 at 23:25, Doug Anderson <dianders@chromium.org> wrote:
+> >
+> > Hi,
+> >
+> > On Wed, Apr 24, 2019 at 1:19 AM Emil Renner Berthing
+> > <emil.renner.berthing@gmail.com> wrote:
+> > >
+> > > Hi Douglas,
+> > >
+> > > Unfortunately this seems to beak resume on my rk3399-gru-kevin. I have
+> > > a semi-complicated setup with my rootfs as a btrfs on dmcrypt on
+> > > mmcblk0 which is the dw_mmc, so I'm guessing something goes wrong when
+> > > waking up the dm_mmc which probably wasn't suspended before this
+> > > patch. It's not 100% consistent though. Sometimes I see it resume the
+> > > first time I try suspending, but then 2nd time I suspend it won't come
+> > > back.
+> >
+> > Thanks for testing!
+>
+> Thanks for your detailed response. It made me want to make absolutely
+> sure that this patch is the culprit.
+> As a baseline I booted a vanilla 5.0.9 and suspend/resumed it about a
+> dusin times without any errors.
+> So I applied this patch and immediately it crashed on suspend, but in
+> a way that I could still see the kernel log,
+> and it was the mwifiex driver that crashed. I rebooted and tried
+> supend/resume again and
+> this time it seemed like it was the dwc3 or usb3-phy that crashed.
+> I still have the kernel log if anyone is interested.
+> However 3rd time booting 5.0.9 with this patch suspend/resume just works.
+> At least the 2 dusin times I tried before giving up on making it crash.
+> I went back to vanilla 5.0.9 and after a few tries I managed to make
+> that one crash too.
+> I guess that means this patch is off the hook. I'm sorry about the
+> false report :/
+
+No worries, I've certainly been there and I'm super happy to have
+people testing patches.  :-)
+
+Odd that you're having suspend/resume patches.  My first guess for
+super randomness would be WiFi.  The PCIe bus on rk3399 causes the
+most impossible to debug problems if you try to access it at the wrong
+time.  If you disable WiFi do all your problems go away?  I tried
+putting v5.0.9 on the kevin sitting on my desk and it seems to
+suspend/resume OK (25 cycles), but:
+
+* I just jammed it straight onto a normal Chrome OS root filesystem.
+Since that filesystem expects the GPU to be there, I'm just booting to
+a serial prompt and the screen just displays the boot splash.
+
+* I didn't try to configure WiFi or anything.
+
+* I'm using the Chrome OS "fallback config" for the kernel (the config
+our build system picks if building an upstream kernel without the
+normal split config).  AKA:
+<https://chromium.googlesource.com/chromiumos/overlays/chromiumos-overlay/+/refs/heads/master/eclass/cros-kernel/rockchip64_defconfig>.
+I'm not 100% sure everything is enabled there...
+
+* I'm booting w/ serial console enabled and doing my testing with "no
+console suspend" which can certainly affect suspend/resume timing.
+
+
+Best of luck tracking your problems down!  I suppose if things used to
+work maybe a bisect would be possible?
+
+-Doug
