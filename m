@@ -2,81 +2,102 @@ Return-Path: <SRS0=RVLw=S5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B4CCC43218
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 Apr 2019 13:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA026C4321A
+	for <linux-wireless@archiver.kernel.org>; Sat, 27 Apr 2019 16:32:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2179C208C2
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 Apr 2019 13:02:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556370141;
-	bh=SCljN80beqgxPgqHACg5aqGb01m73xDnDBSmJPc/HVM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ONY2G2KHq7RN0eUuJR9LHIHKkG38FcylYKTYEAkWGpz3GAYRm/Joisooq3Yc9iQBj
-	 CXFkuzS7U6p9QxgbBCGi1EK8iui3yGzuWt5lr2xFK0OjB1CTnPAuOtI6wxqFORSFp2
-	 1pbcDSQNQL2ohpJ2J0VaaE5ibEFb41izG68AqaWM=
+	by mail.kernel.org (Postfix) with ESMTP id B92A62077B
+	for <linux-wireless@archiver.kernel.org>; Sat, 27 Apr 2019 16:32:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="MQ0lfL6d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726446AbfD0NCU (ORCPT
+        id S1726083AbfD0QcB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 27 Apr 2019 09:02:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59014 "EHLO mail.kernel.org"
+        Sat, 27 Apr 2019 12:32:01 -0400
+Received: from vps0.lunn.ch ([185.16.172.187]:46647 "EHLO vps0.lunn.ch"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726004AbfD0NCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Apr 2019 09:02:20 -0400
-Received: from localhost.localdomain (unknown [151.66.24.114])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C59F12087C;
-        Sat, 27 Apr 2019 13:02:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556370139;
-        bh=SCljN80beqgxPgqHACg5aqGb01m73xDnDBSmJPc/HVM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=A7Hw9TRy+DM6BOaqbEQ3/GGQwN3iPBTE38RrU6cIg/nUOfYgXZXVGTzdMQ9rmrTmY
-         dh0U6u/Aw6bj/racfxn854JQGeAkLpG8yNFhle85eDUmfT1r8aWbWcgFBk26xQldx2
-         2Iid8OllFAH5SW6Srit4b0ledCbPlhaiS3w3BJI4=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: mt7603: report firmware version using ethtool
-Date:   Sat, 27 Apr 2019 15:02:10 +0200
-Message-Id: <209575773fd531daf616f2d167f98430997735ec.1556369866.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1556369866.git.lorenzo@kernel.org>
-References: <cover.1556369866.git.lorenzo@kernel.org>
+        id S1725942AbfD0QcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Apr 2019 12:32:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+        s=20171124; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
+        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=c8Bux03tjjC8g0RTzqUC1nUbzfL5pVXpfOPA0tXBHRg=; b=MQ0lfL6dxkAgb5GpK8RRtxkbd9
+        l4cp8MqqwAuN12ZCsK2fKY4xXvea7ZoYi5hP4+9GkeIQwpDO/vzWQc5P7/ItBl4HsvQOw/Q3fEwIW
+        aUUXZzu92B0JcV0AjOzPfJcbEOSEsV63RPz+CZRhNkRS6plNbLgyFxgErChiqspLgr/4=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.89)
+        (envelope-from <andrew@lunn.ch>)
+        id 1hKQEZ-0002go-EJ; Sat, 27 Apr 2019 18:31:27 +0200
+Date:   Sat, 27 Apr 2019 18:31:27 +0200
+From:   Andrew Lunn <andrew@lunn.ch>
+To:     Petr =?utf-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
+Cc:     netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Vivien Didelot <vivien.didelot@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Fugang Duan <fugang.duan@nxp.com>,
+        Claudiu Manoil <claudiu.manoil@nxp.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Salil Mehta <salil.mehta@huawei.com>,
+        Woojung Huh <woojung.huh@microchip.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Li Yang <leoyang.li@nxp.com>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Maxime Ripard <maxime.ripard@bootlin.com>,
+        Alban Bedel <albeu@free.fr>,
+        linux-arm-kernel@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, linux-oxnas@groups.io,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 2/4] dt-bindings: doc: Reflect new NVMEM
+ of_get_mac_address behaviour
+Message-ID: <20190427163127.GB9816@lunn.ch>
+References: <1556320002-26213-1-git-send-email-ynezz@true.cz>
+ <1556320002-26213-3-git-send-email-ynezz@true.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1556320002-26213-3-git-send-email-ynezz@true.cz>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Print fw_ver and build_date members of struct mt7603_fw_trailer
-similarly to what appears in the output of 'dmesg' when the MCU firmware
-is loaded.
+> diff --git a/Documentation/devicetree/bindings/net/ethernet.txt b/Documentation/devicetree/bindings/net/ethernet.txt
+> index 2974e63..1e2bc9a 100644
+> --- a/Documentation/devicetree/bindings/net/ethernet.txt
+> +++ b/Documentation/devicetree/bindings/net/ethernet.txt
+> @@ -10,6 +10,8 @@ Documentation/devicetree/bindings/phy/phy-bindings.txt.
+>    the boot program; should be used in cases where the MAC address assigned to
+>    the device by the boot program is different from the "local-mac-address"
+>    property;
+> +- nvmem-cells: phandle, reference to an nvmem node for the MAC address
+> +- nvmem-cell-names: string, should be "mac-address" if nvmem is to be used
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt7603/mcu.c | 3 +++
- 1 file changed, 3 insertions(+)
+You put the new values after local-mac-address and mac-address. That
+suggests they are of lower priority. That conflicts with the current
+patch. If you think NVMEM should take priority, please put the
+properties first.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-index 57481012ee47..19b66e9aae45 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
-@@ -260,6 +260,9 @@ int mt7603_load_firmware(struct mt7603_dev *dev)
- 	mt76_clear(dev, MT_SCH_4, BIT(8));
- 
- 	dev->mcu_running = true;
-+	snprintf(dev->mt76.hw->wiphy->fw_version,
-+		 sizeof(dev->mt76.hw->wiphy->fw_version),
-+		 "%.10s-%.15s", hdr->fw_ver, hdr->build_date);
- 	dev_info(dev->mt76.dev, "firmware init done\n");
- 
- out:
--- 
-2.20.1
-
+	   Andrew
