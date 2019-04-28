@@ -2,104 +2,95 @@ Return-Path: <SRS0=6X5c=S6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AE66C43218
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Apr 2019 16:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60767C43219
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Apr 2019 20:57:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 63F8E206BB
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Apr 2019 16:53:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="1E1ztWBv"
+	by mail.kernel.org (Postfix) with ESMTP id 2D2DF20679
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Apr 2019 20:57:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726942AbfD1Qxv (ORCPT
+        id S1726443AbfD1U5x (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 28 Apr 2019 12:53:51 -0400
-Received: from vps0.lunn.ch ([185.16.172.187]:47381 "EHLO vps0.lunn.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726220AbfD1Qxv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Apr 2019 12:53:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-        s=20171124; h=In-Reply-To:Content-Transfer-Encoding:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=cRMd8mueGQjf3u9Ez32aIcf72f+Jx2olgX7/QRk0Jr8=; b=1E1ztWBvomZnvKFV+Oeb5y2OcO
-        Bpc/PetqYR0pYDGHQitn0xdRSySMdTKgJk6OnpFmXMqNDmDniFTuUXyxNLxqJtypiWSNowTRvFzsF
-        79dvP93+AwqQgUhxDcfh6xM+JQcDfAApsJ3rNvb8/RciAFp7MzdZW0QXd3hQtNvDiMkg=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.89)
-        (envelope-from <andrew@lunn.ch>)
-        id 1hKn3O-0000uS-PY; Sun, 28 Apr 2019 18:53:26 +0200
-Date:   Sun, 28 Apr 2019 18:53:26 +0200
-From:   Andrew Lunn <andrew@lunn.ch>
-To:     Petr =?utf-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
-Cc:     netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Vivien Didelot <vivien.didelot@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Salil Mehta <salil.mehta@huawei.com>,
-        Woojung Huh <woojung.huh@microchip.com>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Jassi Brar <jaswinder.singh@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Maxime Ripard <maxime.ripard@bootlin.com>,
-        Alban Bedel <albeu@free.fr>,
-        linux-arm-kernel@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v2 2/4] dt-bindings: doc: Reflect new NVMEM
- of_get_mac_address behaviour
-Message-ID: <20190428165326.GI23059@lunn.ch>
-References: <1556456002-13430-1-git-send-email-ynezz@true.cz>
- <1556456002-13430-3-git-send-email-ynezz@true.cz>
+        Sun, 28 Apr 2019 16:57:53 -0400
+Received: from mail-it1-f193.google.com ([209.85.166.193]:37095 "EHLO
+        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726393AbfD1U5x (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 28 Apr 2019 16:57:53 -0400
+Received: by mail-it1-f193.google.com with SMTP id r85so4713021itc.2
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Apr 2019 13:57:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=IakkYFcub8dYxluDy2qa2Pn3/9zOQ89eVmk8iBVEbtI=;
+        b=U404tDjPZvRL7rHB1mNi0moupxoZhaITYWdjiqc4xID2sAekDWhhhNAUXICCwXlkp1
+         9Z/LKYEjOb2yr1dxGb/gPyFHyYRt5zL/0uArfHtT47KXoP+QSQtTCz2BudO/1hple6Gi
+         OZq8UCWC/2xnTCuDq9jek4ckaLv+GVTsm0v2gQBPLv9oJgpK8/nVli5S/64T9l/Q1JIV
+         7/GIUZoeqt7PJ6XPRMX1TcksU8DL9ucm+jMheSFtyzEk2n4VNO1aDNB5RpLs4y4hO0Ii
+         +450RzS0E1SwzRJym4jgDKcEYDrxQqC6eBV1FbuGjN28zCYvt1M872bxEHWrd9Vwxwh9
+         wjHg==
+X-Gm-Message-State: APjAAAUN95T6eo5l3oit0B1+Vyb8poWgTYidLGZj2uU6Ur7SJcgKp9J0
+        RiIqH0EFZWkHH116TzBUYE25OfHk3KMrGdeEb/YwYg==
+X-Google-Smtp-Source: APXvYqzdRsgsID38nXpyQ2hJn7UdbHV/aOTBZyw4y2Q4kldAUB4Ue7hBmy+Zvp6SEoJcR7a/TELbD5CSLerejxs6IIg=
+X-Received: by 2002:a05:660c:209:: with SMTP id y9mr17238079itj.31.1556485072190;
+ Sun, 28 Apr 2019 13:57:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1556456002-13430-3-git-send-email-ynezz@true.cz>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+References: <cover.1556280002.git.lorenzo@kernel.org> <e7bc3645ce73a15ef9fa16a40f2bdb8577494769.1556280002.git.lorenzo@kernel.org>
+In-Reply-To: <e7bc3645ce73a15ef9fa16a40f2bdb8577494769.1556280002.git.lorenzo@kernel.org>
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date:   Sun, 28 Apr 2019 22:57:41 +0200
+Message-ID: <CAJ0CqmXXSy2p7jEPE-4AaUAVwpG6awyXRPnghk5NAVqB4HxnSQ@mail.gmail.com>
+Subject: Re: [PATCH] mt7603: wait for pre_tbtt_tasklet before scanning
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Apr 28, 2019 at 02:53:20PM +0200, Petr Štetiar wrote:
-> As of_get_mac_address now supports NVMEM under the hood, we need to update
-> the bindings documentation with the new nvmem-cell* properties, which would
-> mean copy&pasting a lot of redundant information to every binding
-> documentation currently referencing some of the MAC address properties.
-> 
-> So I've just removed all the references to the optional MAC address
-> properties and replaced them with the reference to the net/ethernet.txt
-> file.  While at it, I've also removed other optional Ethernet properties.
+>
+> Disable pre_tbtt_tasklet tasklet before performing frequency scanning
+>
 
-Hi Petr
+Hi Felix,
 
-I think each individual binding needs to give a hint if
-of_get_mac_address() is used, and hence if these optional properties
-are respected. The same is true for other optional properties. I don't
-want to have to look at the driver to know which optional properties
-are implemented, the binding should tell me. What the optional
-properties mean, and which order they are used in can then be defined
-in ethernet.txt.
+please drop this patch and 'mt76: move common beacon code in mt76
+module' series, I will send a v2 rebasing on a new patch
 
-So i would suggests something like:
+Regards,
+Lorenzo
 
-The MAC address will be determined using the optional properties
-defined in ethernet.txt.
-
-And leave all the other optional parameters in the bindings.
-
-	Andrew
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt7603/main.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+> index 18a33d921601..184ed4cead0a 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+> @@ -535,6 +535,7 @@ mt7603_sw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>         struct mt7603_dev *dev = hw->priv;
+>
+>         set_bit(MT76_SCANNING, &dev->mt76.state);
+> +       tasklet_disable(&dev->pre_tbtt_tasklet);
+>         mt7603_beacon_set_timer(dev, -1, 0);
+>  }
+>
+> @@ -545,6 +546,7 @@ mt7603_sw_scan_complete(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+>
+>         clear_bit(MT76_SCANNING, &dev->mt76.state);
+>         mt7603_beacon_set_timer(dev, -1, dev->beacon_int);
+> +       tasklet_enable(&dev->pre_tbtt_tasklet);
+>  }
+>
+>  static void
+> --
+> 2.20.1
+>
