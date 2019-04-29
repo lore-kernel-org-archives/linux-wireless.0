@@ -2,119 +2,120 @@ Return-Path: <SRS0=r04d=S7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4276BC04AA6
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 10:54:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B5D4C43219
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 11:17:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1C62220673
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 10:54:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0F782087B
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 11:17:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LjWWUe+N";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LjWWUe+N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727953AbfD2Kyp (ORCPT
+        id S1727839AbfD2LRZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Apr 2019 06:54:45 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:53688 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727930AbfD2Kyo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Apr 2019 06:54:44 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Mon, 29 Apr 2019 07:17:25 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:55678 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727710AbfD2LRY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Apr 2019 07:17:24 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 54174608D4; Mon, 29 Apr 2019 11:17:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556536644;
+        bh=G7qmYnFyZ7SZtqYRxNkY37C+3IDBvulY8cS6uCDp7X8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LjWWUe+NxkWXukKecssUaZxI1bTiKPZ2cjdcPHWGksuURQpIZAXlLKADUxPJmRn8L
+         IJIiW5IelK+m9Z+oBceNkQW69fsCXwa/nXYX933GgHd9FG/xRqvKdo8fk3OqNKcGLq
+         s1PI36vwbbLWsuOO4kXaTXcyyAKCTYggVQmicexI=
+Received: from localhost.localdomain (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9858130833C5;
-        Mon, 29 Apr 2019 10:54:44 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.51])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2E24769317;
-        Mon, 29 Apr 2019 10:54:43 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Subject: [RFC/RFT 7/7] rt2800: do not enable watchdog by default
-Date:   Mon, 29 Apr 2019 12:54:30 +0200
-Message-Id: <1556535270-3551-8-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1556535270-3551-1-git-send-email-sgruszka@redhat.com>
-References: <1556535270-3551-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Mon, 29 Apr 2019 10:54:44 +0000 (UTC)
+        (Authenticated sender: wgong@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 139B960863;
+        Mon, 29 Apr 2019 11:17:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556536644;
+        bh=G7qmYnFyZ7SZtqYRxNkY37C+3IDBvulY8cS6uCDp7X8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LjWWUe+NxkWXukKecssUaZxI1bTiKPZ2cjdcPHWGksuURQpIZAXlLKADUxPJmRn8L
+         IJIiW5IelK+m9Z+oBceNkQW69fsCXwa/nXYX933GgHd9FG/xRqvKdo8fk3OqNKcGLq
+         s1PI36vwbbLWsuOO4kXaTXcyyAKCTYggVQmicexI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 139B960863
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH v2] ath10k: add peer id check in ath10k_peer_find_by_id
+Date:   Mon, 29 Apr 2019 19:17:12 +0800
+Message-Id: <1556536632-19433-1-git-send-email-wgong@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Make watchdog disabled by default and add module parameter to enable it.
+For some SDIO chip, the peer id is 65535 for MPDU with error status,
+then test_bit will trigger buffer overflow for peer's memory, if kasan
+enabled, it will report error.
 
-User will have to create file in /etc/modprobe.d/ with
+Reason is when station is in disconnecting status, firmware do not delete
+the peer info since it not disconnected completely, meanwhile some AP will
+still send data packet to station, then hardware will receive the packet
+and send to firmware, firmware's logic will report peer id of 65535 for
+MPDU with error status.
 
-options rt2800lib watchdog=1
+Add check for overflow the size of peer's peer_ids will avoid the buffer
+overflow access.
 
-to enable the watchdog or load "rt2800lib watchdog=1" module manually
-before loading rt2800{soc,pci,usb} module.
+Call trace of kasan:
+dump_backtrace+0x0/0x2ec
+show_stack+0x20/0x2c
+__dump_stack+0x20/0x28
+dump_stack+0xc8/0xec
+print_address_description+0x74/0x240
+kasan_report+0x250/0x26c
+__asan_report_load8_noabort+0x20/0x2c
+ath10k_peer_find_by_id+0x180/0x1e4 [ath10k_core]
+ath10k_htt_t2h_msg_handler+0x100c/0x2fd4 [ath10k_core]
+ath10k_htt_htc_t2h_msg_handler+0x20/0x34 [ath10k_core]
+ath10k_sdio_irq_handler+0xcc8/0x1678 [ath10k_sdio]
+process_sdio_pending_irqs+0xec/0x370
+sdio_run_irqs+0x68/0xe4
+sdio_irq_work+0x1c/0x28
+process_one_work+0x3d8/0x8b0
+worker_thread+0x508/0x7cc
+kthread+0x24c/0x264
+ret_from_fork+0x10/0x18
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Tested with QCA6174 SDIO with firmware
+WLAN.RMH.4.4.1-00007-QCARMSWP-1.
+
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c  | 12 ++++++++++--
- drivers/net/wireless/ralink/rt2x00/rt2x00.h     |  1 +
- drivers/net/wireless/ralink/rt2x00/rt2x00link.c |  2 +-
- 3 files changed, 12 insertions(+), 3 deletions(-)
+v2: changed from BITS_PER_BYTE to BITS_PER_TYPE
+ drivers/net/wireless/ath/ath10k/txrx.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 7d488fa8ef05..0de7d9b509bc 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -41,6 +41,10 @@
- #include "rt2800lib.h"
- #include "rt2800.h"
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 23606b6..3b837b8 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -157,6 +157,9 @@ struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
+ {
+ 	struct ath10k_peer *peer;
  
-+static bool modparam_watchdog;
-+module_param_named(watchdog, modparam_watchdog, bool, S_IRUGO);
-+MODULE_PARM_DESC(watchdog, "Enable watchdog.");
++	if (peer_id >= BITS_PER_TYPE(peer->peer_ids))
++		return NULL;
 +
- /*
-  * Register access.
-  * All access to the CSR registers will go through the methods
-@@ -10289,8 +10293,12 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		__set_bit(REQUIRE_TASKLET_CONTEXT, &rt2x00dev->cap_flags);
- 	}
+ 	lockdep_assert_held(&ar->data_lock);
  
--	__set_bit(CAPABILITY_RESTART_HW, &rt2x00dev->cap_flags);
--	rt2x00dev->link.watchdog_interval = msecs_to_jiffies(100);
-+	if (modparam_watchdog) {
-+		__set_bit(CAPABILITY_RESTART_HW, &rt2x00dev->cap_flags);
-+		rt2x00dev->link.watchdog_interval = msecs_to_jiffies(100);
-+	} else {
-+		rt2x00dev->link.watchdog_disabled = true;
-+	}
- 
- 	/*
- 	 * Set the rssi offset.
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index 1d7eaa9ecffb..c76d41272b03 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -337,6 +337,7 @@ struct link {
- 	 */
- 	struct delayed_work watchdog_work;
- 	unsigned int watchdog_interval;
-+	bool watchdog_disabled;
- 
- 	/*
- 	 * Work structure for scheduling periodic AGC adjustments.
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00link.c b/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
-index fcc59553918f..db4b164ac848 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
-@@ -395,7 +395,7 @@ void rt2x00link_start_watchdog(struct rt2x00_dev *rt2x00dev)
- 	struct link *link = &rt2x00dev->link;
- 
- 	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
--	    rt2x00dev->ops->lib->watchdog)
-+	    rt2x00dev->ops->lib->watchdog && !link->watchdog_disabled)
- 		ieee80211_queue_delayed_work(rt2x00dev->hw,
- 					     &link->watchdog_work,
- 					     link->watchdog_interval);
+ 	list_for_each_entry(peer, &ar->peers, list)
 -- 
-2.7.5
+1.9.1
 
