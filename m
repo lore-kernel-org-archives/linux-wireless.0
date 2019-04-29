@@ -2,135 +2,120 @@ Return-Path: <SRS0=r04d=S7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19FA7C004C9
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 08:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C03C43219
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 10:30:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB85F21655
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 08:48:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556527728;
-	bh=oqe1uJsNv/0zHNsb4YzIVNre+yP3PAdvKqNTTbkOubQ=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=Yj6KH8aopmOnEzEn5NqzlfjelBofbntL/0N43gX8yLqdpxXZQwZ0kplt0GUPBY799
-	 hvYgbNp/1rjMNST1cr+jysn5H0Omdr7MMdct+N9xy6H5WvNy8cW75Kg4M1HLJRTOXe
-	 Kvpnfz7AooVj1TysKrc53jdyQa0ttS07zP3ZtMNc=
+	by mail.kernel.org (Postfix) with ESMTP id 5BA1D2087B
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 10:30:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="O6Jb8N54"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727642AbfD2Iss (ORCPT
+        id S1727753AbfD2KaM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Apr 2019 04:48:48 -0400
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:36195 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727480AbfD2Isr (ORCPT
+        Mon, 29 Apr 2019 06:30:12 -0400
+Received: from mail-qk1-f193.google.com ([209.85.222.193]:34674 "EHLO
+        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727560AbfD2KaM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Apr 2019 04:48:47 -0400
-Received: by mail-oi1-f195.google.com with SMTP id l203so7688730oia.3;
-        Mon, 29 Apr 2019 01:48:47 -0700 (PDT)
+        Mon, 29 Apr 2019 06:30:12 -0400
+Received: by mail-qk1-f193.google.com with SMTP id n68so5600180qka.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2019 03:30:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=LsbJoBOTkJ5iG+ZToRJP54iUPlrflioTmA0QK3mgDEc=;
+        b=O6Jb8N54hpz3uPynvt6Yt5/rHuZZLUeyQ0rO2pFpfNvWnT1xSu7T4eYytHDR01LEQQ
+         ZU1tzv39a8sX4YIaOH4s3mOel/4TQn7rwamS5K9B9YRJzc+N9RK4L4ocfxPOlWxMg4NL
+         P1PX0fdUj7gXI8YJSe5Z1aany9gBNk4KVQbDA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=8DkL30STsaxgYUCGgLF1HNO5dyfcD0gOWg9WjzksmEw=;
-        b=kZpVimoCC8ICQe38IjYiMPgBSFHVE5u6uNr7hBanT9YetF4+u0i+RAb5CF+8DkemRO
-         5K149R8HMx6nb7z34stxax3PwtStCjagofioV5FVdu0QO1v+7qazBCCFfiNUi0D8O6YH
-         sXPUdfNfDM8hRNrxjwou6FecUkIX9imrGF30c2usb/sNoGNxU2WrzCcXO2nrqIRw3trk
-         YU+C0zfJzQ9GX9PkmdqdWTBa/llOErvu55MvjNqHiDvVzNuwaqCm54fwsYguPeblauqq
-         73ujm42HWr9CPyiYyOu9HA/jMWYiBCWTbfbSHV4Uv7W/B9/pEaHLBohM3HaM3q/GsBsW
-         LWhQ==
-X-Gm-Message-State: APjAAAWP+9VDEmV7zQgO6dhpFE0fCIjsijbtR2gbxbuDwK340JJ8m4iF
-        KBD8B08Tx1EC3ttPeLoTQQqzmWV7g/kjjXW6ZBA=
-X-Google-Smtp-Source: APXvYqyLJGa7+HnvOpfZY8x6Fch1od+pFueZwowvEwEsz9duuDJOvZrKhA1V/swPDl6mm+4EGDvD+SUxVsA5B/E186I=
-X-Received: by 2002:aca:5304:: with SMTP id h4mr4059265oib.115.1556527726758;
- Mon, 29 Apr 2019 01:48:46 -0700 (PDT)
+        bh=LsbJoBOTkJ5iG+ZToRJP54iUPlrflioTmA0QK3mgDEc=;
+        b=ZM9a1Mlk2XTCZv/Q1zkwZpz3q/sBOBxsIlWnULp0VuHCNGIP53Ogj+gBYiXwo5sPPf
+         lqwBkTudwpWYGZ8e1KokctwU6bI+VldeEvnNIdpo6Qvnb7whVeLPqFY+/HUnO9I1Mx6S
+         VMxI2nFLn3ypkUz7/RB4JOx5ttMXnkb98mUw3/twskyO3e7/t0FNdXFovQCNBYogwzoJ
+         hRe/lfIoMgyc9bFu4oX1SeEkUGpdGjJvJlWkRerxsJ6B6RLzkfBb+cZcHY7Z0vIJ3P44
+         qK6Mwr75qGjToqyMJFaL6+0axo+gdQJZDmB5YC0quFrOHbsnohL1I+SrwnCseQ9fXcrN
+         IxZw==
+X-Gm-Message-State: APjAAAWWUfAtahs8166x680jeAwbCAw6xHWIooVbkWSitNKBgRksyn3P
+        fNe80PwvyeKCdgQ+PEcjICf46nR8zIY+mVfHe5TaoQ==
+X-Google-Smtp-Source: APXvYqxZ73NWcz094Q/7/PmP4XT2MmsPOvqcdxePBjq87Uy02bxkEdIOmOR4YOXaAalFtBGm5if9wOLGQYtec+tcCPM=
+X-Received: by 2002:a37:6897:: with SMTP id d145mr35198030qkc.185.1556533811413;
+ Mon, 29 Apr 2019 03:30:11 -0700 (PDT)
 MIME-Version: 1.0
-References: <2884043.Jv1Mn93hE8@aspire.rjw.lan> <20190403195718.GA74723@google.com>
- <87o94tutdz.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87o94tutdz.fsf@kamboji.qca.qualcomm.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Mon, 29 Apr 2019 10:48:35 +0200
-Message-ID: <CAJZ5v0ifD=DATprUeeO2_LGs04aEEhPB6AcGVPxWUdQaOma+ww@mail.gmail.com>
-Subject: Re: [PATCH] ath10k: Drop WARN_ON()s that always trigger during system resume
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Brian Norris <briannorris@chromium.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Claire Chang <tientzu@google.com>,
-        Sriram R <srirrama@codeaurora.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        "open list:NETWORKING DRIVERS (WIRELESS)" 
-        <linux-wireless@vger.kernel.org>, ath10k@lists.infradead.org,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Todd Brandt <todd.e.brandt@intel.com>
+References: <1554260478-4161-1-git-send-email-wgong@codeaurora.org>
+In-Reply-To: <1554260478-4161-1-git-send-email-wgong@codeaurora.org>
+From:   Nicolas Boichat <drinkcat@chromium.org>
+Date:   Mon, 29 Apr 2019 18:30:00 +0800
+Message-ID: <CANMq1KAU1B4Bweq3O6O8HOMwT7fHjj9tDyxqMsn_vn4gwxXL=Q@mail.gmail.com>
+Subject: Re: [PATCH] ath10k: add peer id check in ath10k_peer_find_by_id
+To:     Wen Gong <wgong@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Claire Chang <tientzu@chromium.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Apr 26, 2019 at 9:18 AM Kalle Valo <kvalo@codeaurora.org> wrote:
+On Wed, Apr 3, 2019 at 3:01 AM Wen Gong <wgong@codeaurora.org> wrote:
 >
-> Brian Norris <briannorris@chromium.org> writes:
+> For some SDIO chip, the peer id is 65535 for MPDU with error status,
+> then test_bit will trigger buffer overflow for peer's memory, if kasan
+> enabled, it will report error.
 >
-> > + Sriram, Pradeep, Claire
-> >
-> > On Sun, Mar 03, 2019 at 06:24:33PM +0100, Rafael J. Wysocki wrote:
-> >
-> > Ooh, exactly 1 month ago!
-> >
-> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >>
-> >> ath10k_mac_vif_chan() always returns an error for the given vif
-> >> during system-wide resume which reliably triggers two WARN_ON()s
-> >> in ath10k_bss_info_changed() and they are not particularly
-> >> useful in that code path, so drop them.
-> >>
-> >
-> > Particularly, when WOWLAN isn't enabled, we get called during resume via
-> > ieee80211_reconfig(), where we're not associated and don't have any
-> > channel contexts. AFAICT, we shouldn't need to communicate anything in
-> > particular to the firmware here, and so failing the 'if' is definitely
-> > not worth WARN-ing about.
-> >
-> > I'd love to see this get applied with:
-> >
-> > Fixes: cd93b83ad927 ("ath10k: support for multicast rate control")
-> > Fixes: f279294e9ee2 ("ath10k: add support for configuring management packet rate")
-> >
-> > and sent to stable. This has been bugging people since 4.19. Spurious
-> > WARN_ON()s can trigger reports to various crash trackers, and on some
-> > systems appear as user-visible warnings ("System problem detected").
-> >
-> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > Reviewed-by: Brian Norris <briannorris@chromium.org>
-> > Tested-by: Brian Norris <briannorris@chromium.org>
+> Add check for overflow the size of peer's peer_ids will avoid the buffer
+> overflow access.
 >
-> I added these now to the commit log, thanks Brian.
+> Call trace of kasan:
+> dump_backtrace+0x0/0x2ec
+> show_stack+0x20/0x2c
+> __dump_stack+0x20/0x28
+> dump_stack+0xc8/0xec
+> print_address_description+0x74/0x240
+> kasan_report+0x250/0x26c
+> __asan_report_load8_noabort+0x20/0x2c
+> ath10k_peer_find_by_id+0x180/0x1e4 [ath10k_core]
+> ath10k_htt_t2h_msg_handler+0x100c/0x2fd4 [ath10k_core]
+> ath10k_htt_htc_t2h_msg_handler+0x20/0x34 [ath10k_core]
+> ath10k_sdio_irq_handler+0xcc8/0x1678 [ath10k_sdio]
+> process_sdio_pending_irqs+0xec/0x370
+> sdio_run_irqs+0x68/0xe4
+> sdio_irq_work+0x1c/0x28
+> process_one_work+0x3d8/0x8b0
+> worker_thread+0x508/0x7cc
+> kthread+0x24c/0x264
+> ret_from_fork+0x10/0x18
 >
-> Rafael, could you please provide the hardware and firmware versions you
-> tested this on? We have so many different firmware branches to support
-> that I prefer to have that documented in the commit log. Providing
-> ath10k startup messages in dmesg are enough,
+> Tested with QCA6174 SDIO with firmware
+> WLAN.RMH.4.4.1-00007-QCARMSWP-1.
+>
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/txrx.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+> index 23606b6..33de9e1 100644
+> --- a/drivers/net/wireless/ath/ath10k/txrx.c
+> +++ b/drivers/net/wireless/ath/ath10k/txrx.c
+> @@ -157,6 +157,9 @@ struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
+>  {
+>         struct ath10k_peer *peer;
+>
+> +       if (peer_id >= sizeof(peer->peer_ids) * BITS_PER_BYTE)
 
-There you go:
+I'd use >= BITS_PER_TYPE(peer->peer_ids).
 
-[    4.695349] ath10k_pci 0000:3a:00.0: enabling device (0000 -> 0002)
-[    4.698165] ath10k_pci 0000:3a:00.0: pci irq msi oper_irq_mode 2
-irq_mode 0 reset_mode 0
-[    4.912240] ath10k_pci 0000:3a:00.0: qca6174 hw3.2 target
-0x05030000 chip_id 0x00340aff sub 1a56:1535
-[    4.912255] ath10k_pci 0000:3a:00.0: kconfig debug 0 debugfs 0
-tracing 0 dfs 0 testmode 0
-[    4.912716] ath10k_pci 0000:3a:00.0: firmware ver
-WLAN.RM.2.0-00180-QCARMSWPZ-1 api 4 features
-wowlan,ignore-otp,no-4addr-pad crc32 75dee6c5
-[    4.982563] ath10k_pci 0000:3a:00.0: board_file api 2 bmi_id N/A
-crc32 19644295
-
-> I can then add it to the commit log.
-
-Still, I'm quite sure that the WARN_ON()s trigger during system resume
-regardless of the hw/fw combination.
+> +               return NULL;
+> +
+>         lockdep_assert_held(&ar->data_lock);
+>
+>         list_for_each_entry(peer, &ar->peers, list)
