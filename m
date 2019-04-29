@@ -2,175 +2,282 @@ Return-Path: <SRS0=r04d=S7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52BC6C43219
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 16:00:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EADDFC43219
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 16:02:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 21ECD2064A
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 16:00:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF30A2064A
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Apr 2019 16:02:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="a7GdwgbW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728825AbfD2QAf (ORCPT
+        id S1728788AbfD2QCB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Apr 2019 12:00:35 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:51146 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728789AbfD2QAe (ORCPT
+        Mon, 29 Apr 2019 12:02:01 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:37006 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728506AbfD2QCB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Apr 2019 12:00:34 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1hL8hk-00008l-FH; Mon, 29 Apr 2019 19:00:32 +0300
-Message-ID: <491e2c7557a981d2e1a721ffe7571ec992dfe62d.camel@coelho.fi>
-Subject: pull-request: iwlwifi-next 2019-04-29
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Date:   Mon, 29 Apr 2019 19:00:30 +0300
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-XpMiXDPO0F0gSj9k2Gb6"
-User-Agent: Evolution 3.30.5-1 
+        Mon, 29 Apr 2019 12:02:01 -0400
+Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.224.233])
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 518B830C074;
+        Mon, 29 Apr 2019 09:01:52 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 518B830C074
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1556553718;
+        bh=+njzF/MkWyQUo99XszOttuAyYfxImuTEyzZXCSrj/MA=;
+        h=From:To:Cc:Subject:Date:From;
+        b=a7GdwgbWO9R9knYpZ2uZJJ0jqRQrckASvGvNfieMnGRtZ/50AxI3ijhZ4iGZMh3Y5
+         9KZLiERHpzK0AtHJk4dKF8mp7+1LUj9kGlz3GHDM2EX0g3HIUirkoi9imcc2nnZa+b
+         jq8LtYL5xFS0CSvlBi0ednWceQwT66JnjZ0IXJfg=
+Received: from bld-bun-01.bun.broadcom.com (bld-bun-01.bun.broadcom.com [10.176.128.83])
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id E74AF868B7;
+        Mon, 29 Apr 2019 03:09:35 -0700 (PDT)
+Received: by bld-bun-01.bun.broadcom.com (Postfix, from userid 25152)
+        id 30A91B02A68; Mon, 29 Apr 2019 12:09:33 +0200 (CEST)
+From:   Arend van Spriel <arend.vanspriel@broadcom.com>
+To:     Piotr Figiel <p.figiel@camlintechnologies.com>
+Cc:     =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH] brcmfmac: change the order of things in brcmf_detach()
+Date:   Mon, 29 Apr 2019 12:09:21 +0200
+Message-Id: <1556532561-24428-1-git-send-email-arend.vanspriel@broadcom.com>
+X-Mailer: git-send-email 1.9.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+When brcmf_detach() from the bus layer upon rmmod we can no longer
+communicate. Hence we will set the bus state to DOWN and cleanup
+the event and protocol layer. The network interfaces need to be
+deleted before brcmf_cfg80211_detach() because the latter does the
+wiphy_unregister() which issues a warning if there are still network
+devices linked to the wiphy instance.
 
---=-XpMiXDPO0F0gSj9k2Gb6
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This change solves a null pointer dereference issue which happened
+upon issueing rmmod while there are packets queued in bus protocol
+layer.
 
-Hi Kalle,
+Reported-by: Rafał Miłecki <rafal@milecki.pl>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+Hi Piotr,
 
-This is the fourth batch of patches intended for v5.2.  This includes
-the last patchset I sent.  Usual development work.  More details about
-the contents in the tag description.
+While working on an issue with msgbuf protocol (used for PCIe devices)
+your change 5cdb0ef6144f ("brcmfmac: fix NULL pointer derefence during
+USB disconnect") conflicted. I suspect my reordering stuff in
+brcmf_detach() also fixes your issue so could you retest this patch,
+which basically reverts your change and applies my reordering, and see
+whether my suspicion can be confirmed.
 
-I have sent this out before and kbuildbot reported success.
+Regards,
+Arend
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    | 11 ++-------
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.h    |  6 ++---
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 27 +++++++++++-----------
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 16 ++++---------
+ .../broadcom/brcm80211/brcmfmac/fwsignal.h         |  3 +--
+ .../wireless/broadcom/brcm80211/brcmfmac/proto.c   | 10 ++------
+ .../wireless/broadcom/brcm80211/brcmfmac/proto.h   |  3 +--
+ 7 files changed, 25 insertions(+), 51 deletions(-)
 
-Please let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit 9ef77fbedad9ea8895cd5d7fb7aee16071f527dc=
-:
-
-  brcmfmac: send mailbox interrupt twice for specific hardware device (2019=
--04-26 15:00:53 +0300)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
-gs/iwlwifi-next-for-kalle-2019-04-29
-
-for you to fetch changes up to a0eaead41db98c08614c4b1ef453bdfaacde962d:
-
-  iwlwifi: dbg_ini: check for valid region type during regions parsing (201=
-9-04-29 18:42:48 +0300)
-
-----------------------------------------------------------------
-Fourth batch of patches intended for v5.2
-
-* Fix a bug we introduced in the RX path in a previous patch;
-* Add command version parsing from the FW TLVs;
-* Some fixes and improvements in the new debugging framework;
-* Bump the FW API supported for 22000 series;
-* Small improvement in FTM;
-* Some RF-Kill interrupt handling fixes;
-* Support for a new WoWLAN patterns FW API;
-* Other small fixes and improvements;
-
-----------------------------------------------------------------
-Andrei Otcheretianski (1):
-      iwlwifi: mvm: Don't sleep in RX path
-
-Avraham Stern (1):
-      iwlwifi: mvm: report FTM start time TSF when applicable
-
-Johannes Berg (3):
-      iwlwifi: pcie: initialize debug_rfkill to -1
-      iwlwifi: pcie: don't crash on invalid RX interrupt
-      iwlwifi: parse command version TLV
-
-Liad Kaufman (1):
-      iwlwifi: mvm: limit TLC according to our HE capabilities
-
-Luca Coelho (3):
-      iwlwifi: mvm: support v2 of the WoWLAN patterns command
-      iwlwifi: bump FW API to 48 for 22000 series
-      iwlwifi: pcie: remove stray character in iwl_pcie_rx_alloc_page()
-
-Shahar S Matityahu (6):
-      iwlwifi: support fseq tlv and print fseq version
-      iwlwifi: dbg_ini: add lmac and umac error tables dumping support
-      iwlwifi: dbg_ini: add periodic trigger support
-      iwlwifi: dbg: replace dump info device family with HW type
-      iwlwifi: avoid allocating memory for region with disabled domain
-      iwlwifi: dbg_ini: check for valid region type during regions parsing
-
-YueHaibing (1):
-      iwlwifi: Use correct channel_profile iniwl_get_nvm
-
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c         |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/api/d3.h         | 136 +++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
-++-----
- drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h    |   4 +++
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c            |  70 +++++++++++++=
-+++++++++++++++++++++++++++++-------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h            |   3 +++
- drivers/net/wireless/intel/iwlwifi/fw/error-dump.h     |   4 +--
- drivers/net/wireless/intel/iwlwifi/fw/file.h           |  32 +++++++++++++=
-++++++----
- drivers/net/wireless/intel/iwlwifi/fw/img.h            |   7 +++--
- drivers/net/wireless/intel/iwlwifi/fw/init.c           |   2 ++
- drivers/net/wireless/intel/iwlwifi/fw/runtime.h        |   1 +
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h           |   1 +
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c           |  18 +++++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c     |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c            |  58 +++++++++++++=
-++++++++++++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c |  20 +++++++++++--=
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+index 98b1687..73d3c1a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+@@ -490,18 +490,11 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
+ 	return -ENOMEM;
+ }
+ 
+-void brcmf_proto_bcdc_detach_pre_delif(struct brcmf_pub *drvr)
+-{
+-	struct brcmf_bcdc *bcdc = drvr->proto->pd;
 -
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c           |   1 +
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c         |  34 +++++++++++++=
-+++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/time-event.c    |   2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h     |   4 +--
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c           |   9 +++++--
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c        |  11 ++++----
- 22 files changed, 373 insertions(+), 50 deletions(-)
-
---=-XpMiXDPO0F0gSj9k2Gb6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlzHH54ACgkQoUecoho8
-xfrtlA//cL3y+pTgDVvP/yAZrjnx8G4tojTY01QR+MjBms3PIF/nCJa4nzOGHY61
-5m+SUxfi/cO/PkkoRv6Zr0pcKE0dGlWX8vqTl8iTktZfIn9wZuNOVL4OUpumkbYv
-ltF3VHZQ3AiVdhZvGbISeW3zExILrZcUVNaviTcCTli/sQ9p9pmxUWRkKJ6QoDgB
-WVFNvUH5irkrIhaNAUYaWSAn0vcf7iB5SE7xkTuuEF6RpNlGaSpSeifxdvhYtb6f
-H/JZ6oKwqlto6V5lNrnZ/oi+hIgSleBpzBqBwP3gm09F95IOMNeju3hF+2/i3ZER
-pfBtoTklu6kJg6TdwbncylHFqlfvfZ8r2G8IvSvEOgXmBbeIShyGxUelDHl8Wm6X
-zTRLYIlF8E72yJb0fiv1RJx9YXoOOfQuwgMAB/sgEY5BM20JeyMRz8VUXdXiem1Z
-vf2zYwFxacGa/tWdqf6QGpPn8O0R0iK6LMYYFbsGqn4e1f3dreWR1ClhE5NPcIHb
-LGoBqEjBz0qCkBGOsAMC4TOUCe5S55sDBttv26MWwn/+5/IwWH781criaE7iIkLw
-27X6zmXf6a0uUORh5SmeW4NjNvp9XAfSla90PbkOrVIEVB5HG024D1BgKG3IKBWr
-e91XxWCX65PzdSMLJywLFetLMhWESR9Zjjs6O6fKonac3KhI/Yg=
-=yXvG
------END PGP SIGNATURE-----
-
---=-XpMiXDPO0F0gSj9k2Gb6--
+-	brcmf_fws_detach_pre_delif(bcdc->fws);
+-}
+-
+-void brcmf_proto_bcdc_detach_post_delif(struct brcmf_pub *drvr)
++void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr)
+ {
+ 	struct brcmf_bcdc *bcdc = drvr->proto->pd;
+ 
+ 	drvr->proto->pd = NULL;
+-	brcmf_fws_detach_post_delif(bcdc->fws);
++	brcmf_fws_detach(bcdc->fws);
+ 	kfree(bcdc);
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.h
+index 4bc5224..3b0e9ef 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.h
+@@ -18,16 +18,14 @@
+ 
+ #ifdef CONFIG_BRCMFMAC_PROTO_BCDC
+ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr);
+-void brcmf_proto_bcdc_detach_pre_delif(struct brcmf_pub *drvr);
+-void brcmf_proto_bcdc_detach_post_delif(struct brcmf_pub *drvr);
++void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr);
+ void brcmf_proto_bcdc_txflowblock(struct device *dev, bool state);
+ void brcmf_proto_bcdc_txcomplete(struct device *dev, struct sk_buff *txp,
+ 				 bool success);
+ struct brcmf_fws_info *drvr_to_fws(struct brcmf_pub *drvr);
+ #else
+ static inline int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr) { return 0; }
+-static void brcmf_proto_bcdc_detach_pre_delif(struct brcmf_pub *drvr) {};
+-static inline void brcmf_proto_bcdc_detach_post_delif(struct brcmf_pub *drvr) {}
++static inline void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr) {}
+ #endif
+ 
+ #endif /* BRCMFMAC_BCDC_H */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index bc73a2e..db49381 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1322,27 +1322,26 @@ void brcmf_detach(struct device *dev)
+ 	unregister_inet6addr_notifier(&drvr->inet6addr_notifier);
+ #endif
+ 
+-	/* stop firmware event handling */
+-	brcmf_fweh_detach(drvr);
+-	if (drvr->config)
+-		brcmf_p2p_detach(&drvr->config->p2p);
+-
+ 	brcmf_bus_change_state(bus_if, BRCMF_BUS_DOWN);
++	brcmf_bus_stop(drvr->bus_if);
+ 
+-	brcmf_proto_detach_pre_delif(drvr);
++	brcmf_fweh_detach(drvr);
++	brcmf_proto_detach(drvr);
+ 
+ 	/* make sure primary interface removed last */
+-	for (i = BRCMF_MAX_IFS-1; i > -1; i--)
+-		brcmf_remove_interface(drvr->iflist[i], false);
+-
+-	brcmf_cfg80211_detach(drvr->config);
+-	drvr->config = NULL;
+-
+-	brcmf_bus_stop(drvr->bus_if);
++	for (i = BRCMF_MAX_IFS-1; i > -1; i--) {
++		if (drvr->iflist[i])
++			brcmf_del_if(drvr, drvr->iflist[i]->bsscfgidx, false);
++	}
+ 
+-	brcmf_proto_detach_post_delif(drvr);
++	if (drvr->config) {
++		brcmf_p2p_detach(&drvr->config->p2p);
++		brcmf_cfg80211_detach(drvr->config);
++		drvr->config = NULL;
++	}
+ 
+ 	bus_if->drvr = NULL;
++
+ 	wiphy_free(drvr->wiphy);
+ }
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index c22c49a..d48b8b2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -2443,25 +2443,17 @@ struct brcmf_fws_info *brcmf_fws_attach(struct brcmf_pub *drvr)
+ 	return fws;
+ 
+ fail:
+-	brcmf_fws_detach_pre_delif(fws);
+-	brcmf_fws_detach_post_delif(fws);
++	brcmf_fws_detach(fws);
+ 	return ERR_PTR(rc);
+ }
+ 
+-void brcmf_fws_detach_pre_delif(struct brcmf_fws_info *fws)
++void brcmf_fws_detach(struct brcmf_fws_info *fws)
+ {
+ 	if (!fws)
+ 		return;
+-	if (fws->fws_wq) {
+-		destroy_workqueue(fws->fws_wq);
+-		fws->fws_wq = NULL;
+-	}
+-}
+ 
+-void brcmf_fws_detach_post_delif(struct brcmf_fws_info *fws)
+-{
+-	if (!fws)
+-		return;
++	if (fws->fws_wq)
++		destroy_workqueue(fws->fws_wq);
+ 
+ 	/* cleanup */
+ 	brcmf_fws_lock(fws);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+index 749c06d..4e68357 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+@@ -19,8 +19,7 @@
+ #define FWSIGNAL_H_
+ 
+ struct brcmf_fws_info *brcmf_fws_attach(struct brcmf_pub *drvr);
+-void brcmf_fws_detach_pre_delif(struct brcmf_fws_info *fws);
+-void brcmf_fws_detach_post_delif(struct brcmf_fws_info *fws);
++void brcmf_fws_detach(struct brcmf_fws_info *fws);
+ void brcmf_fws_debugfs_create(struct brcmf_pub *drvr);
+ bool brcmf_fws_queue_skbs(struct brcmf_fws_info *fws);
+ bool brcmf_fws_fc_active(struct brcmf_fws_info *fws);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
+index c7964cc..024c643 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
+@@ -67,22 +67,16 @@ int brcmf_proto_attach(struct brcmf_pub *drvr)
+ 	return -ENOMEM;
+ }
+ 
+-void brcmf_proto_detach_post_delif(struct brcmf_pub *drvr)
++void brcmf_proto_detach(struct brcmf_pub *drvr)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	if (drvr->proto) {
+ 		if (drvr->bus_if->proto_type == BRCMF_PROTO_BCDC)
+-			brcmf_proto_bcdc_detach_post_delif(drvr);
++			brcmf_proto_bcdc_detach(drvr);
+ 		else if (drvr->bus_if->proto_type == BRCMF_PROTO_MSGBUF)
+ 			brcmf_proto_msgbuf_detach(drvr);
+ 		kfree(drvr->proto);
+ 		drvr->proto = NULL;
+ 	}
+ }
+-
+-void brcmf_proto_detach_pre_delif(struct brcmf_pub *drvr)
+-{
+-	if (drvr->proto && drvr->bus_if->proto_type == BRCMF_PROTO_BCDC)
+-		brcmf_proto_bcdc_detach_pre_delif(drvr);
+-}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+index 72355ae..d3c3b9a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+@@ -54,8 +54,7 @@ struct brcmf_proto {
+ 
+ 
+ int brcmf_proto_attach(struct brcmf_pub *drvr);
+-void brcmf_proto_detach_pre_delif(struct brcmf_pub *drvr);
+-void brcmf_proto_detach_post_delif(struct brcmf_pub *drvr);
++void brcmf_proto_detach(struct brcmf_pub *drvr);
+ 
+ static inline int brcmf_proto_hdrpull(struct brcmf_pub *drvr, bool do_fws,
+ 				      struct sk_buff *skb,
+-- 
+1.9.1
 
