@@ -2,538 +2,211 @@ Return-Path: <SRS0=6eO7=TB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+X-Spam-Status: No, score=-0.2 required=3.0 tests=DATE_IN_PAST_12_24,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D00DC43219
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 May 2019 08:42:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E13D8C43219
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 May 2019 10:12:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E55F2177B
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 May 2019 08:42:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556700150;
-	bh=gvtCgkCen3RuPmR/m1zCSUBxL6oDhN9NLDwCIuQ67NA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=N4/FpXrpzK3Mtt0+HRCFcCg6nrO2229SkUOp0CMvxu/ZWNDafiy6+FTNLkHlJ/kBm
-	 yX2hu7lUpgdgkr36+XMZGJlYkuKxhv18/2oleJF1hZDFY1MueF3Idvt9m/hP59WIg3
-	 fDflH/xpAwj4s8xTtY5z2+GzRqzPCkqrgf0VgqHA=
+	by mail.kernel.org (Postfix) with ESMTP id B095B21743
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 May 2019 10:12:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726243AbfEAIm3 (ORCPT
+        id S1726282AbfEAKMw convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 May 2019 04:42:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47356 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725776AbfEAIm3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 May 2019 04:42:29 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E72C021734;
-        Wed,  1 May 2019 08:42:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556700147;
-        bh=gvtCgkCen3RuPmR/m1zCSUBxL6oDhN9NLDwCIuQ67NA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Zo0a/mIrvrRacqS4hlh7LJTaTJbcOWVVY+PX/cHyQzacC72bNikR5Fx+Sw09VXES6
-         FYjdBiOV9hC50w8ejsl34jr/aUwFbhhlXa32SWUlwySGYasSZd8GKywgEt4JKLSst7
-         va37C/g9OiJpNSOsIJhrnQWS9wkaEWrtzL7j8GBI=
-Date:   Wed, 1 May 2019 10:42:25 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Stanislaw Gruszka <sgruszka@redhat.com>, yhchuang@realtek.com,
-        linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-        pkshih@realtek.com, tehuang@realtek.com, Larry.Finger@lwfinger.net,
-        briannorris@chromium.org
-Subject: Re: [PATCH v9 00/14] rtw88: mac80211 driver for Realtek 802.11ac
- wireless network chips
-Message-ID: <20190501084225.GA21329@kroah.com>
-References: <1555653004-1795-1-git-send-email-yhchuang@realtek.com>
- <87sgtzwtst.fsf@purkki.adurom.net>
- <20190430155808.GA3019@redhat.com>
- <87v9yvo2y6.fsf@kamboji.qca.qualcomm.com>
- <20190430174234.GA16336@kroah.com>
- <87muk6odld.fsf@kamboji.qca.qualcomm.com>
- <20190501081935.GB15425@kroah.com>
+        Wed, 1 May 2019 06:12:52 -0400
+Received: from mail-lf1-f65.google.com ([209.85.167.65]:35478 "EHLO
+        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726124AbfEAKMw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 May 2019 06:12:52 -0400
+Received: by mail-lf1-f65.google.com with SMTP id j20so12861481lfh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 01 May 2019 03:12:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=91yblX5MKaqxnF25qflRx7IWX0G6YFJweKroNeGpU5Q=;
+        b=ZlEeiQEYp2JwbN/Fkk7RLxFnwD5h/DYvzYzO1JxgiFW00l9yi19R9A6oHKM2RgW4SJ
+         F16n8/ORKVW4CQVevM5Dv1IgRppi66EnMn67vqiKrU/akMWc0zlJpkfsxf4qNZEV6jHq
+         w9ASNxmImdnORyCvQBYD2RehUQSOsJPN6ByR3kLFichPTkXH0WuUmum+wYTa/UX8nm3d
+         7CqNE4zKel0JMSSQ9Zg2OBlMBEKDDdL8flXTlLPybl736JsgpRgaEM5VIT5vn8jrYosl
+         zb+Pt5cPeC9rfHkcn7kwrSJRCc1DMEFT3OQaJPlnYFw2DPOvT9ibZwLCcGw2Lkw9daa5
+         Y9mA==
+X-Gm-Message-State: APjAAAWawKHaduF/O5AoTCfWWa/JTSOKM4CWgnP6J+/qmG77gwB8eBad
+        1hAfNQRlINb2AQTYR5s1bEpa/YHjRJY=
+X-Google-Smtp-Source: APXvYqwj28hHm8dHJMSlLmM/Du8jZPknWT8j72AhSyDTA446kuCu72BEQdSDd0DVnos+jSc6gq0NrA==
+X-Received: by 2002:ac2:554a:: with SMTP id l10mr34384581lfk.45.1556705570074;
+        Wed, 01 May 2019 03:12:50 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
+        by smtp.gmail.com with ESMTPSA id v26sm8024084lja.60.2019.05.01.03.12.49
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 01 May 2019 03:12:49 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 7C661182083; Tue, 30 Apr 2019 12:39:13 +0200 (CEST)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Yibo Zhao <yiboz@codeaurora.org>
+Cc:     make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
+Subject: Re: [RFC/RFT] mac80211: Switch to a virtual time-based airtime scheduler
+In-Reply-To: <a9bfcb131944fafb838ab5cd448e7da2@codeaurora.org>
+References: <20190215170512.31512-1-toke@redhat.com> <753b328855b85f960ceaf974194a7506@codeaurora.org> <87ftqy41ea.fsf@toke.dk> <acd33756e87ea64c608e306e5ee60aa2@codeaurora.org> <877ec2ykrh.fsf@toke.dk> <89d32174b282006c8d4e7614657171be@codeaurora.org> <87a7gyw3cu.fsf@toke.dk> <73077ba7cda566d5eeb2395978b3524c@codeaurora.org> <877ec0u6mu.fsf@toke.dk> <76591d2924d7b6fec06d0df07247166a@codeaurora.org> <87bm10ped0.fsf@toke.dk> <a9bfcb131944fafb838ab5cd448e7da2@codeaurora.org>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Tue, 30 Apr 2019 12:39:13 +0200
+Message-ID: <875zqvojzi.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="AqsLC8rIMeq19msA"
-Content-Disposition: inline
-In-Reply-To: <20190501081935.GB15425@kroah.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Yibo Zhao <yiboz@codeaurora.org> writes:
 
---AqsLC8rIMeq19msA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+> On 2019-04-21 05:15, Toke Høiland-Jørgensen wrote:
+>> Yibo Zhao <yiboz@codeaurora.org> writes:
+>> 
+>>> On 2019-04-11 19:24, Toke Høiland-Jørgensen wrote:
+>>>> Yibo Zhao <yiboz@codeaurora.org> writes:
+>>>> 
+>>>>> On 2019-04-10 18:40, Toke Høiland-Jørgensen wrote:
+>>>>>> Yibo Zhao <yiboz@codeaurora.org> writes:
+>>>>>> 
+>>>>>>> On 2019-04-10 04:41, Toke Høiland-Jørgensen wrote:
+>>>>>>>> Yibo Zhao <yiboz@codeaurora.org> writes:
+>>>>>>>> 
+>>>>>>>>> On 2019-04-04 16:31, Toke Høiland-Jørgensen wrote:
+>>>>>>>>>> Yibo Zhao <yiboz@codeaurora.org> writes:
+>>>>>>>>>> 
+>>>>>>>>>>> On 2019-02-16 01:05, Toke Høiland-Jørgensen wrote:
+>>>>>>>>>>>> This switches the airtime scheduler in mac80211 to use a
+>>>>>>>>>>>> virtual
+>>>>>>>>>>>> time-based
+>>>>>>>>>>>> scheduler instead of the round-robin scheduler used before.
+>>>>>>>>>>>> This
+>>>>>>>>>>>> has
+>>>>>>>>>>>> a
+>>>>>>>>>>>> couple of advantages:
+>>>>>>>>>>>> 
+>>>>>>>>>>>> - No need to sync up the round-robin scheduler in
+>>>>>>>>>>>> firmware/hardware
+>>>>>>>>>>>> with
+>>>>>>>>>>>>   the round-robin airtime scheduler.
+>>>>>>>>>>>> 
+>>>>>>>>>>>> - If several stations are eligible for transmission we can
+>>>>>>>>>>>> schedule
+>>>>>>>>>>>> both of
+>>>>>>>>>>>>   them; no need to hard-block the scheduling rotation until 
+>>>>>>>>>>>> the
+>>>>>>>>>>>> head
+>>>>>>>>>>>> of
+>>>>>>>>>>>> the
+>>>>>>>>>>>>   queue has used up its quantum.
+>>>>>>>>>>>> 
+>>>>>>>>>>>> - The check of whether a station is eligible for transmission
+>>>>>>>>>>>> becomes
+>>>>>>>>>>>>   simpler (in ieee80211_txq_may_transmit()).
+>>>>>>>>>>>> 
+>>>>>>>>>>>> The drawback is that scheduling becomes slightly more
+>>>>>>>>>>>> expensive,
+>>>>>>>>>>>> as
+>>>>>>>>>>>> we
+>>>>>>>>>>>> need
+>>>>>>>>>>>> to maintain an rbtree of TXQs sorted by virtual time. This
+>>>>>>>>>>>> means
+>>>>>>>>>>>> that
+>>>>>>>>>>>> ieee80211_register_airtime() becomes O(logN) in the number of
+>>>>>>>>>>>> currently
+>>>>>>>>>>>> scheduled TXQs. However, hopefully this number rarely grows 
+>>>>>>>>>>>> too
+>>>>>>>>>>>> big
+>>>>>>>>>>>> (it's
+>>>>>>>>>>>> only TXQs currently backlogged, not all associated stations),
+>>>>>>>>>>>> so
+>>>>>>>>>>>> it
+>>>>>>>>>>>> shouldn't be too big of an issue.
+>>>>>>>>>>>> 
+>>>>>>>>>>>> @@ -1831,18 +1830,32 @@ void
+>>>>>>>>>>>> ieee80211_sta_register_airtime(struct
+>>>>>>>>>>>> ieee80211_sta *pubsta, u8 tid,
+>>>>>>>>>>>>  {
+>>>>>>>>>>>>  	struct sta_info *sta = container_of(pubsta, struct 
+>>>>>>>>>>>> sta_info,
+>>>>>>>>>>>> sta);
+>>>>>>>>>>>>  	struct ieee80211_local *local = sta->sdata->local;
+>>>>>>>>>>>> +	struct ieee80211_txq *txq = sta->sta.txq[tid];
+>>>>>>>>>>>>  	u8 ac = ieee80211_ac_from_tid(tid);
+>>>>>>>>>>>> -	u32 airtime = 0;
+>>>>>>>>>>>> +	u64 airtime = 0, weight_sum;
+>>>>>>>>>>>> +
+>>>>>>>>>>>> +	if (!txq)
+>>>>>>>>>>>> +		return;
+>>>>>>>>>>>> 
+>>>>>>>>>>>>  	if (sta->local->airtime_flags & AIRTIME_USE_TX)
+>>>>>>>>>>>>  		airtime += tx_airtime;
+>>>>>>>>>>>>  	if (sta->local->airtime_flags & AIRTIME_USE_RX)
+>>>>>>>>>>>>  		airtime += rx_airtime;
+>>>>>>>>>>>> 
+>>>>>>>>>>>> +	/* Weights scale so the unit weight is 256 */
+>>>>>>>>>>>> +	airtime <<= 8;
+>>>>>>>>>>>> +
+>>>>>>>>>>>>  	spin_lock_bh(&local->active_txq_lock[ac]);
+>>>>>>>>>>>> +
+>>>>>>>>>>>>  	sta->airtime[ac].tx_airtime += tx_airtime;
+>>>>>>>>>>>>  	sta->airtime[ac].rx_airtime += rx_airtime;
+>>>>>>>>>>>> -	sta->airtime[ac].deficit -= airtime;
+>>>>>>>>>>>> +
+>>>>>>>>>>>> +	weight_sum = local->airtime_weight_sum[ac] ?:
+>>>>>>>>>>>> sta->airtime_weight;
+>>>>>>>>>>>> +
+>>>>>>>>>>>> +	local->airtime_v_t[ac] += airtime / weight_sum;
+>>> Hi Toke,
+>>> 
+>>> I was porting this version of ATF design to my ath10k platform and 
+>>> found
+>>> my old kernel version not supporting 64bit division. I'm wondering if 
+>>> it
+>>> is necessary to use u64 for airtime and weight_sum here though I can
+>>> find a solution for it. I think u32 might be enough. For airtime,
+>>> u32_max / 256 = 7182219 us(718 ms). As for weight_sum, u32_max / 8092 
+>>> us
+>>> = 130490, meaning we can support more than 130000 nodes with airtime
+>>> weight 8092 us.
+>> 
+>> As Felix said, we don't really want divides in the fast path at all. 
+>> And
+>> since the divisors are constant, we should be able to just pre-compute
+>> reciprocals and turn the whole thing into multiplications...
+>> 
+>>> Another finding was when I configured two 11ac STAs with different
+>>> airtime weight, such as 256 and 1024 meaning ratio is 1:4, the
+>>> throughput ratio was not roughly matching the ratio. Could you please
+>>> share your results? I am not sure if it is due to platform difference.
+>> 
+>> Hmm, I tested them with ath9k where things seemed to work equivalently
+>> to the DRR. Are you testing the same hardware with that? Would be a 
+>> good
+>> baseline.
+>> 
+>> I am on vacation until the end of the month, but can share my actual
+>> test results once I get back...
+> Hi Toke,
+> I saw your commit in hostapd in
+> http://patchwork.ozlabs.org/patch/1059334/
+>
+> For dynamic and limit mode described in above hostapd patch, do I need 
+> to change any code in this kernel patch or any other patches am I 
+> missing?
 
-On Wed, May 01, 2019 at 10:19:35AM +0200, Greg KH wrote:
-> On Wed, May 01, 2019 at 10:09:34AM +0300, Kalle Valo wrote:
-> > Greg KH <gregkh@linuxfoundation.org> writes:
-> > 
-> > > On Tue, Apr 30, 2019 at 07:47:13PM +0300, Kalle Valo wrote:
-> > >> Stanislaw Gruszka <sgruszka@redhat.com> writes:
-> > >> 
-> > >> > On Tue, Apr 30, 2019 at 03:40:02PM +0300, Kalle Valo wrote:
-> > >> >> > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> > >> >> >
-> > >> >> > This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
-> > >> >> > rtw88 now supports RTL8822BE/RTL8822CE now, with basic station mode
-> > >> >> > functionalities. The firmware for both can be found at linux-firmware.
-> > >> >> 
-> > >> >> This looks very good now. I did a quick review of the driver and had few
-> > >> >> netpicks but nothing really blocking applying this. So I have now
-> > >> >> combined these patches into one big patch and pushed it to the pending
-> > >> >> branch:
-> > >> >> 
-> > >> >> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?h=pending&id=284d1e4e3311cfe67c1c57ccc275ff0f5666aeea
-> > >> >> 
-> > >> >> I appreciate if people could do a quick check and make sure that I
-> > >> >> didn't do anything stupid when folding the patches.
-> > >> >
-> > >> > I've build pending branch and done few quick tests on Realtek
-> > >> > 8822CE device. Everything works ok.
-> > >> 
-> > >> Thanks so much for this, I now feel much more comfortable merging it :)
-> > >> 
-> > >> So this is manually applied to wireless-drivers-next:
-> > >> 
-> > >> e3037485c68e rtw88: new Realtek 802.11ac driver
-> > >> 
-> > >> And it should be in tomorrow's linux-next build, let's see what kind of
-> > >> reports we get. Greg, feel free to delete the corresponding staging
-> > >> driver from your tree (I forgot the name of the driver already).
-> > >
-> > > I'll be glad to do so if someone also tells me what the driver's name is
-> > > as well, I don't remember either :)
-> > 
-> > I checked it now, the directory is drivers/staging/rtlwifi. Here's the
-> > commit adding the upstream driver, in case you need that in the commit
-> > log:
-> > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=e3037485c68ec1a299ff41160d8fedbd4abc29b9
-> 
-> Thanks for this, now dropped from my tree (with the exception of 2 .h
-> files which a different driver used, and I'll clean that up as well with
-> a later patch.)
+Nope, the kernel just exposes the API to set weights, hostapd does
+everything else :)
 
-Attached below are the 2 follow-on patches that I have applied that
-clean up the remaining .h rtlwifi files, and then move them into the
-location where they are used.
+> After a quick look at the hostapd patch, I guess all the efforts for 
+> both modes are done in hostapd. Correct me if I am wrong. :)
 
-thanks,
+You are quite right!
 
-greg k-h
-
---AqsLC8rIMeq19msA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="0001-staging-rtlwifi-strip-down-phydm-.h-files.patch"
-
-From 8a90bdcb64a9e3732279bb6d9f5054dd6ce3dfbd Mon Sep 17 00:00:00 2001
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Date: Wed, 1 May 2019 10:37:13 +0200
-Subject: [PATCH 1/2] staging: rtlwifi: strip down phydm .h files
-
-The phydm .h files are used by another driver, but not all of the
-defines are used, so strip them down to their basic necessities before
-we move them out of this directory.
-
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/staging/rtlwifi/phydm/phydm_reg.h     | 118 --------------
- .../rtlwifi/phydm/phydm_regdefine11n.h        | 153 +-----------------
- 2 files changed, 2 insertions(+), 269 deletions(-)
-
-diff --git a/drivers/staging/rtlwifi/phydm/phydm_reg.h b/drivers/staging/rtlwifi/phydm/phydm_reg.h
-index 562c1199d669..e3ae006487ba 100644
---- a/drivers/staging/rtlwifi/phydm/phydm_reg.h
-+++ b/drivers/staging/rtlwifi/phydm/phydm_reg.h
-@@ -11,130 +11,12 @@
-  * Larry Finger <Larry.Finger@lwfinger.net>
-  *
-  *****************************************************************************/
--/* ************************************************************
-- * File Name: odm_reg.h
-- *
-- * Description:
-- *
-- * This file is for general register definition.
-- *
-- *
-- * *************************************************************/
- #ifndef __HAL_ODM_REG_H__
- #define __HAL_ODM_REG_H__
- 
--/*
-- * Register Definition
-- */
--
--/* MAC REG */
--#define ODM_BB_RESET 0x002
--#define ODM_DUMMY 0x4fe
--#define RF_T_METER_OLD 0x24
--#define RF_T_METER_NEW 0x42
--
- #define ODM_EDCA_VO_PARAM 0x500
- #define ODM_EDCA_VI_PARAM 0x504
- #define ODM_EDCA_BE_PARAM 0x508
- #define ODM_EDCA_BK_PARAM 0x50C
--#define ODM_TXPAUSE 0x522
--
--/* LTE_COEX */
--#define REG_LTECOEX_CTRL 0x07C0
--#define REG_LTECOEX_WRITE_DATA 0x07C4
--#define REG_LTECOEX_READ_DATA 0x07C8
--#define REG_LTECOEX_PATH_CONTROL 0x70
--
--/* BB REG */
--#define ODM_FPGA_PHY0_PAGE8 0x800
--#define ODM_PSD_SETTING 0x808
--#define ODM_AFE_SETTING 0x818
--#define ODM_TXAGC_B_6_18 0x830
--#define ODM_TXAGC_B_24_54 0x834
--#define ODM_TXAGC_B_MCS32_5 0x838
--#define ODM_TXAGC_B_MCS0_MCS3 0x83c
--#define ODM_TXAGC_B_MCS4_MCS7 0x848
--#define ODM_TXAGC_B_MCS8_MCS11 0x84c
--#define ODM_ANALOG_REGISTER 0x85c
--#define ODM_RF_INTERFACE_OUTPUT 0x860
--#define ODM_TXAGC_B_MCS12_MCS15 0x868
--#define ODM_TXAGC_B_11_A_2_11 0x86c
--#define ODM_AD_DA_LSB_MASK 0x874
--#define ODM_ENABLE_3_WIRE 0x88c
--#define ODM_PSD_REPORT 0x8b4
--#define ODM_R_ANT_SELECT 0x90c
--#define ODM_CCK_ANT_SELECT 0xa07
--#define ODM_CCK_PD_THRESH 0xa0a
--#define ODM_CCK_RF_REG1 0xa11
--#define ODM_CCK_MATCH_FILTER 0xa20
--#define ODM_CCK_RAKE_MAC 0xa2e
--#define ODM_CCK_CNT_RESET 0xa2d
--#define ODM_CCK_TX_DIVERSITY 0xa2f
--#define ODM_CCK_FA_CNT_MSB 0xa5b
--#define ODM_CCK_FA_CNT_LSB 0xa5c
--#define ODM_CCK_NEW_FUNCTION 0xa75
--#define ODM_OFDM_PHY0_PAGE_C 0xc00
--#define ODM_OFDM_RX_ANT 0xc04
--#define ODM_R_A_RXIQI 0xc14
--#define ODM_R_A_AGC_CORE1 0xc50
--#define ODM_R_A_AGC_CORE2 0xc54
--#define ODM_R_B_AGC_CORE1 0xc58
--#define ODM_R_AGC_PAR 0xc70
--#define ODM_R_HTSTF_AGC_PAR 0xc7c
--#define ODM_TX_PWR_TRAINING_A 0xc90
--#define ODM_TX_PWR_TRAINING_B 0xc98
--#define ODM_OFDM_FA_CNT1 0xcf0
--#define ODM_OFDM_PHY0_PAGE_D 0xd00
--#define ODM_OFDM_FA_CNT2 0xda0
--#define ODM_OFDM_FA_CNT3 0xda4
--#define ODM_OFDM_FA_CNT4 0xda8
--#define ODM_TXAGC_A_6_18 0xe00
--#define ODM_TXAGC_A_24_54 0xe04
--#define ODM_TXAGC_A_1_MCS32 0xe08
--#define ODM_TXAGC_A_MCS0_MCS3 0xe10
--#define ODM_TXAGC_A_MCS4_MCS7 0xe14
--#define ODM_TXAGC_A_MCS8_MCS11 0xe18
--#define ODM_TXAGC_A_MCS12_MCS15 0xe1c
--
--/* RF REG */
--#define ODM_GAIN_SETTING 0x00
--#define ODM_CHANNEL 0x18
--#define ODM_RF_T_METER 0x24
--#define ODM_RF_T_METER_92D 0x42
--#define ODM_RF_T_METER_88E 0x42
--#define ODM_RF_T_METER_92E 0x42
--#define ODM_RF_T_METER_8812 0x42
--#define REG_RF_TX_GAIN_OFFSET 0x55
--
--/* ant Detect Reg */
--#define ODM_DPDT 0x300
--
--/* PSD Init */
--#define ODM_PSDREG 0x808
--
--/* 92D path Div */
--#define PATHDIV_REG 0xB30
--#define PATHDIV_TRI 0xBA0
--
--/*
-- * Bitmap Definition
-- */
--
--#define BIT_FA_RESET BIT(0)
--
--#define REG_OFDM_0_XA_TX_IQ_IMBALANCE 0xC80
--#define REG_OFDM_0_ECCA_THRESHOLD 0xC4C
--#define REG_FPGA0_XB_LSSI_READ_BACK 0x8A4
--#define REG_FPGA0_TX_GAIN_STAGE 0x80C
--#define REG_OFDM_0_XA_AGC_CORE1 0xC50
--#define REG_OFDM_0_XB_AGC_CORE1 0xC58
--#define REG_A_TX_SCALE_JAGUAR 0xC1C
--#define REG_B_TX_SCALE_JAGUAR 0xE1C
--
--#define REG_AFE_XTAL_CTRL 0x0024
--#define REG_AFE_PLL_CTRL 0x0028
--#define REG_MAC_PHY_CTRL 0x002C
--
--#define RF_CHNLBW 0x18
- 
- #endif
-diff --git a/drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h b/drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h
-index 765e0a0c8c7b..565996828cab 100644
---- a/drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h
-+++ b/drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h
-@@ -15,188 +15,39 @@
- #ifndef __ODM_REGDEFINE11N_H__
- #define __ODM_REGDEFINE11N_H__
- 
--/* 2 RF REG LIST */
--#define ODM_REG_RF_MODE_11N 0x00
--#define ODM_REG_RF_0B_11N 0x0B
--#define ODM_REG_CHNBW_11N 0x18
--#define ODM_REG_T_METER_11N 0x24
--#define ODM_REG_RF_25_11N 0x25
--#define ODM_REG_RF_26_11N 0x26
--#define ODM_REG_RF_27_11N 0x27
--#define ODM_REG_RF_2B_11N 0x2B
--#define ODM_REG_RF_2C_11N 0x2C
--#define ODM_REG_RXRF_A3_11N 0x3C
--#define ODM_REG_T_METER_92D_11N 0x42
--#define ODM_REG_T_METER_88E_11N 0x42
--
--/* 2 BB REG LIST */
--/* PAGE 8 */
--#define ODM_REG_BB_CTRL_11N 0x800
--#define ODM_REG_RF_PIN_11N 0x804
--#define ODM_REG_PSD_CTRL_11N 0x808
- #define ODM_REG_TX_ANT_CTRL_11N 0x80C
--#define ODM_REG_BB_PWR_SAV5_11N 0x818
--#define ODM_REG_CCK_RPT_FORMAT_11N 0x824
--#define ODM_REG_CCK_RPT_FORMAT_11N_B 0x82C
- #define ODM_REG_RX_DEFAULT_A_11N 0x858
--#define ODM_REG_RX_DEFAULT_B_11N 0x85A
--#define ODM_REG_BB_PWR_SAV3_11N 0x85C
- #define ODM_REG_ANTSEL_CTRL_11N 0x860
- #define ODM_REG_RX_ANT_CTRL_11N 0x864
- #define ODM_REG_PIN_CTRL_11N 0x870
--#define ODM_REG_BB_PWR_SAV1_11N 0x874
--#define ODM_REG_ANTSEL_PATH_11N 0x878
--#define ODM_REG_BB_3WIRE_11N 0x88C
- #define ODM_REG_SC_CNT_11N 0x8C4
--#define ODM_REG_PSD_DATA_11N 0x8B4
--#define ODM_REG_CCX_PERIOD_11N 0x894
--#define ODM_REG_NHM_TH9_TH10_11N 0x890
--#define ODM_REG_CLM_11N 0x890
--#define ODM_REG_NHM_TH3_TO_TH0_11N 0x898
--#define ODM_REG_NHM_TH7_TO_TH4_11N 0x89c
--#define ODM_REG_NHM_TH8_11N 0xe28
--#define ODM_REG_CLM_READY_11N 0x8b4
--#define ODM_REG_CLM_RESULT_11N 0x8d0
--#define ODM_REG_NHM_CNT_11N 0x8d8
--
--/* For struct acs_info, Jeffery, 2014-12-26 */
--#define ODM_REG_NHM_CNT7_TO_CNT4_11N 0x8dc
--#define ODM_REG_NHM_CNT9_TO_CNT8_11N 0x8d0
--#define ODM_REG_NHM_CNT10_TO_CNT11_11N 0x8d4
- 
--/* PAGE 9 */
--#define ODM_REG_BB_CTRL_PAGE9_11N 0x900
--#define ODM_REG_DBG_RPT_11N 0x908
--#define ODM_REG_BB_TX_PATH_11N 0x90c
- #define ODM_REG_ANT_MAPPING1_11N 0x914
--#define ODM_REG_ANT_MAPPING2_11N 0x918
--#define ODM_REG_EDCCA_DOWN_OPT_11N 0x948
--#define ODM_REG_RX_DFIR_MOD_97F 0x948
- 
--/* PAGE A */
- #define ODM_REG_CCK_ANTDIV_PARA1_11N 0xA00
--#define ODM_REG_CCK_ANT_SEL_11N 0xA04
- #define ODM_REG_CCK_CCA_11N 0xA0A
- #define ODM_REG_CCK_ANTDIV_PARA2_11N 0xA0C
--#define ODM_REG_CCK_ANTDIV_PARA3_11N 0xA10
--#define ODM_REG_CCK_ANTDIV_PARA4_11N 0xA14
--#define ODM_REG_CCK_FILTER_PARA1_11N 0xA22
--#define ODM_REG_CCK_FILTER_PARA2_11N 0xA23
--#define ODM_REG_CCK_FILTER_PARA3_11N 0xA24
--#define ODM_REG_CCK_FILTER_PARA4_11N 0xA25
--#define ODM_REG_CCK_FILTER_PARA5_11N 0xA26
--#define ODM_REG_CCK_FILTER_PARA6_11N 0xA27
--#define ODM_REG_CCK_FILTER_PARA7_11N 0xA28
--#define ODM_REG_CCK_FILTER_PARA8_11N 0xA29
- #define ODM_REG_CCK_FA_RST_11N 0xA2C
- #define ODM_REG_CCK_FA_MSB_11N 0xA58
- #define ODM_REG_CCK_FA_LSB_11N 0xA5C
- #define ODM_REG_CCK_CCA_CNT_11N 0xA60
- #define ODM_REG_BB_PWR_SAV4_11N 0xA74
--/* PAGE B */
-+
- #define ODM_REG_LNA_SWITCH_11N 0xB2C
--#define ODM_REG_PATH_SWITCH_11N 0xB30
--#define ODM_REG_RSSI_CTRL_11N 0xB38
--#define ODM_REG_CONFIG_ANTA_11N 0xB68
--#define ODM_REG_RSSI_BT_11N 0xB9C
--#define ODM_REG_RXCK_RFMOD 0xBB0
--#define ODM_REG_EDCCA_DCNF_97F 0xBC0
- 
--/* PAGE C */
- #define ODM_REG_OFDM_FA_HOLDC_11N 0xC00
--#define ODM_REG_BB_RX_PATH_11N 0xC04
--#define ODM_REG_TRMUX_11N 0xC08
--#define ODM_REG_OFDM_FA_RSTC_11N 0xC0C
--#define ODM_REG_DOWNSAM_FACTOR_11N 0xC10
--#define ODM_REG_RXIQI_MATRIX_11N 0xC14
--#define ODM_REG_TXIQK_MATRIX_LSB1_11N 0xC4C
- #define ODM_REG_IGI_A_11N 0xC50
--#define ODM_REG_ANTDIV_PARA2_11N 0xC54
--#define ODM_REG_IGI_B_11N 0xC58
--#define ODM_REG_ANTDIV_PARA3_11N 0xC5C
--#define ODM_REG_L1SBD_PD_CH_11N 0XC6C
--#define ODM_REG_BB_PWR_SAV2_11N 0xC70
--#define ODM_REG_BB_AGC_SET_2_11N 0xc74
--#define ODM_REG_RX_OFF_11N 0xC7C
--#define ODM_REG_TXIQK_MATRIXA_11N 0xC80
--#define ODM_REG_TXIQK_MATRIXB_11N 0xC88
--#define ODM_REG_TXIQK_MATRIXA_LSB2_11N 0xC94
--#define ODM_REG_TXIQK_MATRIXB_LSB2_11N 0xC9C
--#define ODM_REG_RXIQK_MATRIX_LSB_11N 0xCA0
- #define ODM_REG_ANTDIV_PARA1_11N 0xCA4
--#define ODM_REG_SMALL_BANDWIDTH_11N 0xCE4
- #define ODM_REG_OFDM_FA_TYPE1_11N 0xCF0
--/* PAGE D */
-+
- #define ODM_REG_OFDM_FA_RSTD_11N 0xD00
--#define ODM_REG_BB_RX_ANT_11N 0xD04
--#define ODM_REG_BB_ATC_11N 0xD2C
- #define ODM_REG_OFDM_FA_TYPE2_11N 0xDA0
- #define ODM_REG_OFDM_FA_TYPE3_11N 0xDA4
- #define ODM_REG_OFDM_FA_TYPE4_11N 0xDA8
--#define ODM_REG_RPT_11N 0xDF4
--/* PAGE E */
--#define ODM_REG_TXAGC_A_6_18_11N 0xE00
--#define ODM_REG_TXAGC_A_24_54_11N 0xE04
--#define ODM_REG_TXAGC_A_1_MCS32_11N 0xE08
--#define ODM_REG_TXAGC_A_MCS0_3_11N 0xE10
--#define ODM_REG_TXAGC_A_MCS4_7_11N 0xE14
--#define ODM_REG_TXAGC_A_MCS8_11_11N 0xE18
--#define ODM_REG_TXAGC_A_MCS12_15_11N 0xE1C
--#define ODM_REG_EDCCA_DCNF_11N 0xE24
--#define ODM_REG_TAP_UPD_97F 0xE24
--#define ODM_REG_FPGA0_IQK_11N 0xE28
--#define ODM_REG_PAGE_B1_97F 0xE28
--#define ODM_REG_TXIQK_TONE_A_11N 0xE30
--#define ODM_REG_RXIQK_TONE_A_11N 0xE34
--#define ODM_REG_TXIQK_PI_A_11N 0xE38
--#define ODM_REG_RXIQK_PI_A_11N 0xE3C
--#define ODM_REG_TXIQK_11N 0xE40
--#define ODM_REG_RXIQK_11N 0xE44
--#define ODM_REG_IQK_AGC_PTS_11N 0xE48
--#define ODM_REG_IQK_AGC_RSP_11N 0xE4C
--#define ODM_REG_BLUETOOTH_11N 0xE6C
--#define ODM_REG_RX_WAIT_CCA_11N 0xE70
--#define ODM_REG_TX_CCK_RFON_11N 0xE74
--#define ODM_REG_TX_CCK_BBON_11N 0xE78
--#define ODM_REG_OFDM_RFON_11N 0xE7C
--#define ODM_REG_OFDM_BBON_11N 0xE80
--#define ODM_REG_TX2RX_11N 0xE84
--#define ODM_REG_TX2TX_11N 0xE88
--#define ODM_REG_RX_CCK_11N 0xE8C
--#define ODM_REG_RX_OFDM_11N 0xED0
--#define ODM_REG_RX_WAIT_RIFS_11N 0xED4
--#define ODM_REG_RX2RX_11N 0xED8
--#define ODM_REG_STANDBY_11N 0xEDC
--#define ODM_REG_SLEEP_11N 0xEE0
--#define ODM_REG_PMPD_ANAEN_11N 0xEEC
--/* PAGE F */
--#define ODM_REG_PAGE_F_RST_11N 0xF14
--#define ODM_REG_IGI_C_11N 0xF84
--#define ODM_REG_IGI_D_11N 0xF88
--#define ODM_REG_CCK_CRC32_ERROR_CNT_11N 0xF84
--#define ODM_REG_CCK_CRC32_OK_CNT_11N 0xF88
--#define ODM_REG_HT_CRC32_CNT_11N 0xF90
--#define ODM_REG_OFDM_CRC32_CNT_11N 0xF94
- 
--/* 2 MAC REG LIST */
--#define ODM_REG_BB_RST_11N 0x02
- #define ODM_REG_ANTSEL_PIN_11N 0x4C
--#define ODM_REG_EARLY_MODE_11N 0x4D0
--#define ODM_REG_RSSI_MONITOR_11N 0x4FE
--#define ODM_REG_EDCA_VO_11N 0x500
--#define ODM_REG_EDCA_VI_11N 0x504
--#define ODM_REG_EDCA_BE_11N 0x508
--#define ODM_REG_EDCA_BK_11N 0x50C
--#define ODM_REG_TXPAUSE_11N 0x522
- #define ODM_REG_RESP_TX_11N 0x6D8
--#define ODM_REG_ANT_TRAIN_PARA1_11N 0x7b0
--#define ODM_REG_ANT_TRAIN_PARA2_11N 0x7b4
- 
--/* DIG Related */
- #define ODM_BIT_IGI_11N 0x0000007F
--#define ODM_BIT_CCK_RPT_FORMAT_11N BIT(9)
--#define ODM_BIT_BB_RX_PATH_11N 0xF
--#define ODM_BIT_BB_TX_PATH_11N 0xF
--#define ODM_BIT_BB_ATC_11N BIT(11)
- 
- #endif
--- 
-2.21.0
-
-
---AqsLC8rIMeq19msA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="0002-staging-rtlwifi-move-remaining-phydm-.h-files.patch"
-
-From adc7af464ceba1962c2eb875a97f4d3bd82fbc5f Mon Sep 17 00:00:00 2001
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Date: Wed, 1 May 2019 10:40:10 +0200
-Subject: [PATCH 2/2] staging: rtlwifi: move remaining phydm .h files
-
-The rtl8188eu driver uses the phydm .h files from the rtlwifi driver,
-but now that the rtlwifi driver is gone, it's silly to have a whole
-directory for just 2 .h files.  So move these files into the rtl8188eu
-driver's directory so that it can be self-contained.
-
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/staging/rtl8188eu/include/odm_precomp.h               | 4 ++--
- .../staging/{rtlwifi/phydm => rtl8188eu/include}/phydm_reg.h  | 0
- .../{rtlwifi/phydm => rtl8188eu/include}/phydm_regdefine11n.h | 0
- 3 files changed, 2 insertions(+), 2 deletions(-)
- rename drivers/staging/{rtlwifi/phydm => rtl8188eu/include}/phydm_reg.h (100%)
- rename drivers/staging/{rtlwifi/phydm => rtl8188eu/include}/phydm_regdefine11n.h (100%)
-
-diff --git a/drivers/staging/rtl8188eu/include/odm_precomp.h b/drivers/staging/rtl8188eu/include/odm_precomp.h
-index 6efddc8f1675..df096c37f5eb 100644
---- a/drivers/staging/rtl8188eu/include/odm_precomp.h
-+++ b/drivers/staging/rtl8188eu/include/odm_precomp.h
-@@ -24,12 +24,12 @@
- #include "odm.h"
- #include "odm_hwconfig.h"
- #include "odm_debug.h"
--#include "../../rtlwifi/phydm/phydm_regdefine11n.h"
-+#include "phydm_regdefine11n.h"
- 
- #include "hal8188e_rate_adaptive.h" /* for RA,Power training */
- #include "rtl8188e_hal.h"
- 
--#include "../../rtlwifi/phydm/phydm_reg.h"
-+#include "phydm_reg.h"
- 
- #include "odm_rtl8188e.h"
- 
-diff --git a/drivers/staging/rtlwifi/phydm/phydm_reg.h b/drivers/staging/rtl8188eu/include/phydm_reg.h
-similarity index 100%
-rename from drivers/staging/rtlwifi/phydm/phydm_reg.h
-rename to drivers/staging/rtl8188eu/include/phydm_reg.h
-diff --git a/drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h b/drivers/staging/rtl8188eu/include/phydm_regdefine11n.h
-similarity index 100%
-rename from drivers/staging/rtlwifi/phydm/phydm_regdefine11n.h
-rename to drivers/staging/rtl8188eu/include/phydm_regdefine11n.h
--- 
-2.21.0
-
-
---AqsLC8rIMeq19msA--
+-Toke
