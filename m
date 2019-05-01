@@ -2,95 +2,87 @@ Return-Path: <SRS0=6eO7=TB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+X-Spam-Status: No, score=-3.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DB71C43219
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 May 2019 15:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0100CC43219
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 May 2019 16:07:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3984B208C3
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 May 2019 15:27:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gVFqH88Y";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SqttRQSD"
+	by mail.kernel.org (Postfix) with ESMTP id C6AC02089E
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 May 2019 16:07:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1556726869;
+	bh=izbZIsb9daLMsGyIDdOx/KgEK+e30p9cas+sU3oeLmU=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=mamqNjkESP9WCovUhQaxzpKDXL8Yx9fZvPrfkXI7ow2bWrYklMGw4T0tDwCo8pc3I
+	 ycSWybUIK+KKM3sqqlL519h7tYlkT6lRVOb5cWqMTzuN4YbOJGjtEOOUDVg5ee9pjK
+	 5Q9uxzOPkR88NNdRIECOaDi/WexcrQWlc3rMpQFM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726586AbfEAP1u (ORCPT
+        id S1726810AbfEAQHs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 May 2019 11:27:50 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:52894 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726345AbfEAP1u (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 May 2019 11:27:50 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 81ECE607DF; Wed,  1 May 2019 15:27:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556724469;
-        bh=MJfC9RafauewWFrYRr9IYdRD10knT9RsO+zTvWruTP4=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=gVFqH88YHlCT7VDv4tKY8i4aaBecwDQRDZmBCupe/y4vGOraSKM7nIJ/iEBvxoTnt
-         l0M6J6vk3Uel5lPohz7JmyVjW9fxvUkEXyRRUIc9hsKO7CBzMe5LBfyMfQX/X/xpve
-         RWYutVs6RW3gOPn6WtqvNLTNKpKeL2Jz/8XkFPqc=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        Wed, 1 May 2019 12:07:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36676 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726434AbfEAQHr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 May 2019 12:07:47 -0400
+Received: from localhost.localdomain (unknown [151.66.22.155])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BD32760735;
-        Wed,  1 May 2019 15:27:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556724469;
-        bh=MJfC9RafauewWFrYRr9IYdRD10knT9RsO+zTvWruTP4=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=SqttRQSDTtXTOdvTeJqvU6F7o7FzAiAtcm9lzGCaGxbS2uTBDABMNekE7C1iANoe8
-         war8NVNASnitnvZ7FL+Q/G0SYcQ5nfQzk9dVOaFXvd0BNrhRZ0WBLLxgFquI0CdtTB
-         HJwi7dZthm+ZWDqCciDNPKiyQExcC3NAx0YXgpN4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BD32760735
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        by mail.kernel.org (Postfix) with ESMTPSA id E507020644;
+        Wed,  1 May 2019 16:07:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1556726867;
+        bh=izbZIsb9daLMsGyIDdOx/KgEK+e30p9cas+sU3oeLmU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=B1vPMIaMg4iEg0CaUZ9zmyb2QiqgWAz79skL4c6UfnaqPzesSVBdtPjwzsIiJ+p5F
+         JSWf/e53GLgzHOJLc08nZPl/JLSQk+oPhipewjEdvDNmWyg6ibCJk9A3cd8hTMV4C8
+         iVSuln/o1qpIJgklRkbNhwb8kw0S0d3voRzk/JAQ=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com, royluo@google.com
+Subject: [RFC 00/17] use standard signature for mt7615 mcu api
+Date:   Wed,  1 May 2019 18:07:22 +0200
+Message-Id: <cover.1556726268.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH V2] brcmfmac: print firmware messages after a firmware
- crash
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190428213826.24526-1-zajec5@gmail.com>
-References: <20190428213826.24526-1-zajec5@gmail.com>
-To:     =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190501152749.81ECE607DF@smtp.codeaurora.org>
-Date:   Wed,  1 May 2019 15:27:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rafał Miłecki wrote:
+Introduce mt76_mcu_ops data structure in mt7615 mcu code in order
+to reuse the code with other bus types and unify the code with mt7603
+driver
 
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> Normally firmware messages are printed with debugging enabled only. It's
-> a good idea as firmware may print a lot of messages that normal users
-> don't need to care about.
-> 
-> However, on firmware crash, it may be very helpful to log all recent
-> messages. There is almost always a backtrace available as well as rought
-> info on the latest actions/state.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Lorenzo Bianconi (17):
+  mt7615: mcu: simplify __mt7615_mcu_set_wtbl
+  mt7615: mcu: simplify __mt7615_mcu_set_sta_rec
+  mt7615: mcu: remove bss_info_convert_vif_type routine
+  mt7615: mcu: use proper msg size in mt7615_mcu_add_wtbl_bmc
+  mt7615: mcu: use proper msg size in mt7615_mcu_add_wtbl
+  mt7615: mcu: unify mt7615_mcu_add_wtbl_bmc and mt7615_mcu_del_wtbl_bmc
+  mt7615: mcu: remove unused paramter in mt7615_mcu_del_wtbl
+  mt7615: remove query from mt7615_mcu_msg_send signature
+  mt7615: remove dest from mt7615_mcu_msg_send signature
+  mt7615: mcu: remove skb_ret from mt7615_mcu_msg_send
+  mt7615: mcu: unify __mt7615_mcu_set_dev_info and
+    mt7615_mcu_set_dev_info
+  mt7615: mcu: do not use function pointer whenever possible
+  mt7615: mcu: remove unused structure in mcu.h
+  mt7615: mcu: use standard signature for mt7615_mcu_msg_send
+  mt7615: initialize mt76_mcu_ops data structure
+  mt7615: mcu: init mcu_restart function pointer
+  mt7615: mcu: run __mt76_mcu_send_msg in mt7615_mcu_send_firmware
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-47dd82e3d25e brcmfmac: print firmware messages after a firmware crash
+ .../net/wireless/mediatek/mt76/mt7615/main.c  |   17 +-
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 1125 ++++++++---------
+ .../net/wireless/mediatek/mt76/mt7615/mcu.h   |   49 +-
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |   11 +-
+ 4 files changed, 545 insertions(+), 657 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/10921071/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.20.1
 
