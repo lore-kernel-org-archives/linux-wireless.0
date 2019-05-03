@@ -2,126 +2,145 @@ Return-Path: <SRS0=FOtV=TD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,T_DKIMWL_WL_MED,USER_IN_DEF_DKIM_WL autolearn=ham
+X-Spam-Status: No, score=-1.1 required=3.0 tests=BIGNUM_EMAILS,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,T_DKIMWL_WL_HIGH,UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 824D0C43219
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 18:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D47AC43219
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 20:12:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4FA3F2081C
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 18:01:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36D9D2075E
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 20:12:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="g6VSBOMf"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WcPqAl6v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728526AbfECSB0 (ORCPT
+        id S1727069AbfECUMQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 May 2019 14:01:26 -0400
-Received: from mail-io1-f66.google.com ([209.85.166.66]:45331 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727226AbfECSB0 (ORCPT
+        Fri, 3 May 2019 16:12:16 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:52718 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727014AbfECUMQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 May 2019 14:01:26 -0400
-Received: by mail-io1-f66.google.com with SMTP id b3so210843iob.12
-        for <linux-wireless@vger.kernel.org>; Fri, 03 May 2019 11:01:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Zv9JCTHuA/ieeqwCt9ck9JDHpFDwCPi7mkzJ1bgK9rE=;
-        b=g6VSBOMfRstBRXhWLGho9f79ivN87N8N+FaSn5O+bRoMEaBIb9GdpL+/HwfNBDkWRv
-         6TLXtXy/A8CwJ0u2w8W5tVqt+a1xLiKJJ+k7gjwqpzFSKUNPh6vmR47Nt27dxufnrhz/
-         Ki817y+WYBz/HQ2geou4H/4BT0KLEY3luCWgf4ZStmbhEGZ9dtEQJqp9kd7iV+F9/Jva
-         g2PxiX+dquGLWzzE0HZ3ZVWIKqBPecBsFipwsN0nyJ2k7qdabAzrdQOo6QBUiQQ1rmA4
-         +1OUs2xIBtY2bHkhw/cKvVB9onJZkZMYV2Tr3hK84uNTfQOHrSFpmm+DbGK3RbgtmfDO
-         +A2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Zv9JCTHuA/ieeqwCt9ck9JDHpFDwCPi7mkzJ1bgK9rE=;
-        b=eZBAbCC4tWceb75mZVEG3a5dbNYfG2We+HKDjqUXs3eC4ava5jIi2oiRBs4x8SO94U
-         VzB9AZlbAY/puvUpeLRRWDdABRVT61Ux38/1Ri7lvQh0mSXXWHVhOjI8xTRqAFnPwmn4
-         FxNwfNYh10wSD9IICTjPK/Egw7y7p86ezFBoOlILpqua8ePDcxwGBAkpoe4hzDrN/yD2
-         gZ4qYMKIfXvOYep3HynEXjcEEYQbtCUSt8nyOvLucHMBw1IOpOOQQoOt8icSxIDTtNLK
-         w3E5LwZsS8uDq0kWTjwwf2SoOORxaDVMfR/ckxQBKNgUD7kwWK+Ia6HgPezcjdY9wUhh
-         JNNQ==
-X-Gm-Message-State: APjAAAVDLwjEWGKFfDWe3TmMC9X0Dximmh/HEfbIrQQblQ9ILf67Ytb+
-        LVVQngkbC5p+J+ARrktOhY9E5LALc6TytYQUabaYzjeruRU=
-X-Google-Smtp-Source: APXvYqy72ztBEaWcSQIJS831AMS3FKoAxr7WAYTH5HkAPSKGn7G4hP28qwLijK/1iQm6IlQfYMAPE0SW4Y3nHC9P6Qo=
-X-Received: by 2002:a5d:914e:: with SMTP id y14mr296244ioq.77.1556906485088;
- Fri, 03 May 2019 11:01:25 -0700 (PDT)
+        Fri, 3 May 2019 16:12:16 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x43JwspL091241;
+        Fri, 3 May 2019 20:12:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2018-07-02;
+ bh=iVW8tYBJhWzHzKQLrG5Z5lw5lDJDgwSzSZaiB4pcjFk=;
+ b=WcPqAl6vUBJD7ufPuPj4M7xs97fY1ZufZ4Zm3a2X5dRBgplDfs4FgzU6SN089DVwYdIb
+ fwech7bo6pH+V6v+WESyG6Kz7DsX6cOdkdYp8aNRxQVOTSy6kbpRWf4q3IcUX/oCnXqD
+ YbRSRg/+8uORh8qCJUtCsOMh0kFiqvnQ3F/dSwa4PYMgDIQMgRo9vyTo0jKE2AYSRU7V
+ BDXnUzoz9FEfctJ5r1601/TA9GkLQeNU9PF/IrrF6jO50lOwjOQgu5lw89QQ7zab/KP9
+ pkY6tOJ4xlXPbAV6ScqvTNvkLw6MCgqvslLaZKFK3EGu8PKK4DZEUKS6gEeGmTYjMS/P gg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2s6xhys0t7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 03 May 2019 20:12:10 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x43KB8kj010357;
+        Fri, 3 May 2019 20:12:10 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2s6xhhtp46-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 03 May 2019 20:12:10 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x43KC8hK019195;
+        Fri, 3 May 2019 20:12:08 GMT
+Received: from mwanda (/196.104.111.181)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 03 May 2019 13:12:08 -0700
+Date:   Fri, 3 May 2019 23:12:02 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     yhchuang@realtek.com
+Cc:     linux-wireless@vger.kernel.org
+Subject: [bug report] rtw88: new Realtek 802.11ac driver
+Message-ID: <20190503201202.GA26955@mwanda>
 MIME-Version: 1.0
-References: <1556417825-13713-1-git-send-email-wgong@codeaurora.org>
-In-Reply-To: <1556417825-13713-1-git-send-email-wgong@codeaurora.org>
-From:   Grant Grundler <grundler@google.com>
-Date:   Fri, 3 May 2019 11:01:14 -0700
-Message-ID: <CANEJEGug_YregN5vZq_R=ppUV5ptb4WUq_TB+JApzQ4DEO_AfQ@mail.gmail.com>
-Subject: Re: [PATCH] ath10k: remove mmc_hw_reset while hif power down
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9245 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=708
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1810050000 definitions=main-1905030132
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9245 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=729 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
+ definitions=main-1905030132
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-[repeating comments I made in the gerrit review for Chrome OS :
-https://chromium-review.googlesource.com/c/chromiumos/third_party/kernel/+/1585667
-]
+Hello Yan-Hsuan Chuang,
 
-On Sat, Apr 27, 2019 at 7:17 PM Wen Gong <wgong@codeaurora.org> wrote:
->
-> For sdio 3.0 chip, the clock will drop from 200M Hz to 50M Hz after load
-> ath10k driver, it is because mmc_hw_reset will reset the sdio's power,
-> then mmc will consider it as sdio 2.0 and drop the clock.
+The patch e3037485c68e: "rtw88: new Realtek 802.11ac driver" from Apr
+26, 2019, leads to the following static checker warning:
 
-Wen,
-5468e784c0600551ca03263f5255a375c05f88e7 commit message gives reasons
-for adding the mmc_hw_reset() call. The commit message for removing
-gives different reason for removal. Both are good but second one is
-incomplete.
+	drivers/net/wireless/realtek/rtw88/efuse.c:78 rtw_dump_logical_efuse_map()
+	error: buffer overflow 'log_map' 768 <= 768
 
-The commit message for removal should ALSO explain why adding this
-call wasn't necessary in the first place OR move the call to a
-different code path.
+drivers/net/wireless/realtek/rtw88/efuse.c
+    38  static int rtw_dump_logical_efuse_map(struct rtw_dev *rtwdev, u8 *phy_map,
+    39                                        u8 *log_map)
+    40  {
+    41          u32 physical_size = rtwdev->efuse.physical_size;
+    42          u32 protect_size = rtwdev->efuse.protect_size;
+    43          u32 logical_size = rtwdev->efuse.logical_size;
+    44          u32 phy_idx, log_idx;
+    45          u8 hdr1, hdr2;
+    46          u8 blk_idx;
+    47          u8 word_en;
+    48          int i;
+    49  
+    50          for (phy_idx = 0; phy_idx < physical_size - protect_size;) {
+    51                  hdr1 = phy_map[phy_idx];
+    52                  hdr2 = phy_map[phy_idx + 1];
+    53                  if (invalid_efuse_header(hdr1, hdr2))
+    54                          break;
+    55  
+    56                  if ((hdr1 & 0x1f) == 0xf) {
+    57                          /* 2-byte header format */
+    58                          blk_idx = get_efuse_blk_idx_2_byte(hdr1, hdr2);
+    59                          word_en = hdr2 & 0xf;
+    60                          phy_idx += 2;
+    61                  } else {
+    62                          /* 1-byte header format */
+    63                          blk_idx = get_efuse_blk_idx_1_byte(hdr1);
+    64                          word_en = hdr1 & 0xf;
+    65                          phy_idx += 1;
+    66                  }
+    67  
+    68                  for (i = 0; i < 4; i++) {
+    69                          if (invalid_efuse_content(word_en, i))
+    70                                  continue;
+    71  
+    72                          log_idx = block_idx_to_logical_idx(blk_idx, i);
+    73                          if (phy_idx + 1 > physical_size - protect_size ||
+    74                              log_idx + 1 > logical_size)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+This is a false positive because we know that "log_idx + 1" is an odd
+number and logical_size is even so they can't be equal...  But I wonder
+if it would make it more readable to change the > to >=?
 
-> Remove mmc_hw_reset will avoid the drop of clock.
+The log_map[] array has logical_size elements.  It's allocated in
+rtw_parse_efuse_map().
 
-This commit message makes it clear the original patch introduced a new
-problem. But the original patch fixed a different problem and that
-this proposed change seems likely to re-introduce and the commit
-message should explain why that isn't true (or how the original was
-fixed differently)
+    75                                  return -EINVAL;
+    76  
+    77                          log_map[log_idx] = phy_map[phy_idx];
+    78                          log_map[log_idx + 1] = phy_map[phy_idx + 1];
+                                ^^^^^^^^^^^^^^^^^^^
 
-cheers,
-grant
+    79                          phy_idx += 2;
+    80                  }
+    81          }
+    82          return 0;
 
->
-> Tested with QCA6174 SDIO with firmware
-> WLAN.RMH.4.4.1-00007-QCARMSWP-1.
->
-> Signed-off-by: Wen Gong <wgong@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/sdio.c | 4 ----
->  1 file changed, 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-> index fae56c6..f1d2af8 100644
-> --- a/drivers/net/wireless/ath/ath10k/sdio.c
-> +++ b/drivers/net/wireless/ath/ath10k/sdio.c
-> @@ -1433,10 +1433,6 @@ static void ath10k_sdio_hif_power_down(struct ath10k *ar)
->                 return;
->         }
->
-> -       ret = mmc_hw_reset(ar_sdio->func->card->host);
-> -       if (ret)
-> -               ath10k_warn(ar, "unable to reset sdio: %d\n", ret);
-> -
->         sdio_release_host(ar_sdio->func);
->
->         ar_sdio->is_disabled = true;
-> --
-> 1.9.1
->
+regards,
+dan carpenter
