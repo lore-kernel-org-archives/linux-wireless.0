@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 846F4C43219
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 11:01:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E19EC43219
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 11:03:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5221F2075E
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 11:01:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1D632075E
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 11:03:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AzlpNkvA";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AzlpNkvA"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aQZruRak";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aQZruRak"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727126AbfECLBa (ORCPT
+        id S1727395AbfECLDd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 May 2019 07:01:30 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:48582 "EHLO
+        Fri, 3 May 2019 07:03:33 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:49826 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726396AbfECLBa (ORCPT
+        with ESMTP id S1726396AbfECLDc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 May 2019 07:01:30 -0400
+        Fri, 3 May 2019 07:03:32 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6309460E7A; Fri,  3 May 2019 11:01:29 +0000 (UTC)
+        id D31CB60E5A; Fri,  3 May 2019 11:03:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556881289;
-        bh=KvQF9ucCFXh4SBqBgoTHtXk3eNkiuWkSDh/j4nC0a3I=;
+        s=default; t=1556881411;
+        bh=QiWQC5Cw/I7zN32clX1qVF56tHXWG/KLtrCwSfSjk2A=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=AzlpNkvAGa6fO6f2OM1IrO/21DwAO3s1kIoUA5wiXXO8+jDVNzIehraPBmMDb0mjZ
-         G8MbDj+jsDUDrL3JCIgVdqwQ+Lx4RqLYoWOt0QfrjOFt33vfCICxudnUCQArPIe/op
-         oAM8KxE4eMvvbwgqe/rdJpIJX8sBItj5TTYHVZQQ=
+        b=aQZruRakTnaSSW4Cyi1MCIozbl39Ihrq4wUdl5dZvhb74HyNsBCSKJdhoRECxFqwh
+         o26jg7IePrDDo8EafX4JurCPx6K5FKrcknj1PRyavL2evKrFaei3R2qmjxVqMnEWkY
+         wMv4XUPr3HTskI0yY+QS4GR9PCCp86lccJGF87cY=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5E00160E57;
-        Fri,  3 May 2019 11:01:28 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AFEE860E57;
+        Fri,  3 May 2019 11:03:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556881289;
-        bh=KvQF9ucCFXh4SBqBgoTHtXk3eNkiuWkSDh/j4nC0a3I=;
+        s=default; t=1556881411;
+        bh=QiWQC5Cw/I7zN32clX1qVF56tHXWG/KLtrCwSfSjk2A=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=AzlpNkvAGa6fO6f2OM1IrO/21DwAO3s1kIoUA5wiXXO8+jDVNzIehraPBmMDb0mjZ
-         G8MbDj+jsDUDrL3JCIgVdqwQ+Lx4RqLYoWOt0QfrjOFt33vfCICxudnUCQArPIe/op
-         oAM8KxE4eMvvbwgqe/rdJpIJX8sBItj5TTYHVZQQ=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5E00160E57
+        b=aQZruRakTnaSSW4Cyi1MCIozbl39Ihrq4wUdl5dZvhb74HyNsBCSKJdhoRECxFqwh
+         o26jg7IePrDDo8EafX4JurCPx6K5FKrcknj1PRyavL2evKrFaei3R2qmjxVqMnEWkY
+         wMv4XUPr3HTskI0yY+QS4GR9PCCp86lccJGF87cY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AFEE860E57
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     <yhchuang@realtek.com>
 Cc:     <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/6] rtw88: more descriptions about LPS
+Subject: Re: [PATCH 1/6] rtw88: add license for Makefile
 References: <1556879502-16211-1-git-send-email-yhchuang@realtek.com>
-        <1556879502-16211-7-git-send-email-yhchuang@realtek.com>
-Date:   Fri, 03 May 2019 14:01:25 +0300
-In-Reply-To: <1556879502-16211-7-git-send-email-yhchuang@realtek.com>
-        (yhchuang@realtek.com's message of "Fri, 3 May 2019 18:31:42 +0800")
-Message-ID: <87zho3kdiy.fsf@kamboji.qca.qualcomm.com>
+        <1556879502-16211-2-git-send-email-yhchuang@realtek.com>
+Date:   Fri, 03 May 2019 14:03:28 +0300
+In-Reply-To: <1556879502-16211-2-git-send-email-yhchuang@realtek.com>
+        (yhchuang@realtek.com's message of "Fri, 3 May 2019 18:31:37 +0800")
+Message-ID: <87v9yrkdfj.fsf@kamboji.qca.qualcomm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -70,32 +70,23 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 >
-> The LPS represents Leisure Power Save. When enabled, firmware will be in
-> charge of turning radio off between beacons. Also firmware should turn
-> on the radio when beacon is coming, and the data queued should be
-> transmitted in TBTT period.
+> Add missing license for Makefile
 >
 > Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 > ---
->  drivers/net/wireless/realtek/rtw88/main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/net/wireless/realtek/rtw88/Makefile | 2 ++
+>  1 file changed, 2 insertions(+)
 >
-> diff --git a/drivers/net/wireless/realtek/rtw88/main.c
-> b/drivers/net/wireless/realtek/rtw88/main.c
-> index f447361..6953013 100644
-> --- a/drivers/net/wireless/realtek/rtw88/main.c
-> +++ b/drivers/net/wireless/realtek/rtw88/main.c
-> @@ -20,7 +20,7 @@ EXPORT_SYMBOL(rtw_debug_mask);
->  module_param_named(support_lps, rtw_fw_support_lps, bool, 0644);
->  module_param_named(debug_mask, rtw_debug_mask, uint, 0644);
->  
-> -MODULE_PARM_DESC(support_lps, "Set Y to enable LPS support");
-> +MODULE_PARM_DESC(support_lps, "Set Y to enable Leisure Power Save
-> support, turn radio off between beacons");
+> diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
+> index da5e36e..74cd066 100644
+> --- a/drivers/net/wireless/realtek/rtw88/Makefile
+> +++ b/drivers/net/wireless/realtek/rtw88/Makefile
+> @@ -1,3 +1,5 @@
+> +# SPDX-License-Identifier: GPL-2.0
 
-I think it would help to add:
-
-", to turn radio off between beacons"
+Other files in the driver are "GPL-2.0 OR BSD-3-Clause", why not
+Makefile? I prefer that the whole driver has the same license, keeps
+things simple.
 
 -- 
 Kalle Valo
