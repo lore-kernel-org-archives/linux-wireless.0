@@ -3,38 +3,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B551EC004C9
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:32:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 819E7C43219
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:32:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B2F3206C3
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:32:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5587B206C3
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:32:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727430AbfECKcV (ORCPT
+        id S1727409AbfECKcU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 May 2019 06:32:21 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:48819 "EHLO
+        Fri, 3 May 2019 06:32:20 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:48818 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727323AbfECKcV (ORCPT
+        with ESMTP id S1727375AbfECKcU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 May 2019 06:32:21 -0400
+        Fri, 3 May 2019 06:32:20 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x43AWE89012112, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x43AWFu5012120, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x43AWE89012112
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x43AWFu5012120
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Fri, 3 May 2019 18:32:14 +0800
+        Fri, 3 May 2019 18:32:15 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 3 May 2019 18:32:13 +0800
+ 14.3.408.0; Fri, 3 May 2019 18:32:15 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/6] rtw88: pci: use ieee80211_ac_numbers instead of 0-3
-Date:   Fri, 3 May 2019 18:31:38 +0800
-Message-ID: <1556879502-16211-3-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 4/6] rtw88: fix unassigned rssi_level in rtw_sta_info
+Date:   Fri, 3 May 2019 18:31:40 +0800
+Message-ID: <1556879502-16211-5-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1556879502-16211-1-git-send-email-yhchuang@realtek.com>
 References: <1556879502-16211-1-git-send-email-yhchuang@realtek.com>
@@ -48,33 +48,32 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-AC numbers are defined as enum in mac80211, use them instead of bare
-0-3 indexing.
+The new rssi_level should be stored in si, otherwise the rssi_level will
+never be updated and get a wrong RA mask, which is calculated by the
+rssi level
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/pci.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw88/phy.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index cfe05ba..87bfcb3 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -487,10 +487,10 @@ static void rtw_pci_stop(struct rtw_dev *rtwdev)
- }
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 4381b36..7f437e2 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -144,10 +144,10 @@ static void rtw_phy_stat_rssi_iter(void *data, struct ieee80211_sta *sta)
+ 	struct rtw_phy_stat_iter_data *iter_data = data;
+ 	struct rtw_dev *rtwdev = iter_data->rtwdev;
+ 	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
+-	u8 rssi, rssi_level;
++	u8 rssi;
  
- static u8 ac_to_hwq[] = {
--	[0] = RTW_TX_QUEUE_VO,
--	[1] = RTW_TX_QUEUE_VI,
--	[2] = RTW_TX_QUEUE_BE,
--	[3] = RTW_TX_QUEUE_BK,
-+	[IEEE80211_AC_VO] = RTW_TX_QUEUE_VO,
-+	[IEEE80211_AC_VI] = RTW_TX_QUEUE_VI,
-+	[IEEE80211_AC_BE] = RTW_TX_QUEUE_BE,
-+	[IEEE80211_AC_BK] = RTW_TX_QUEUE_BK,
- };
+ 	rssi = ewma_rssi_read(&si->avg_rssi);
+-	rssi_level = rtw_phy_get_rssi_level(si->rssi_level, rssi);
++	si->rssi_level = rtw_phy_get_rssi_level(si->rssi_level, rssi);
  
- static u8 rtw_hw_queue_mapping(struct sk_buff *skb)
+ 	rtw_fw_send_rssi_info(rtwdev, si);
+ 
 -- 
 2.7.4
 
