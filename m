@@ -2,118 +2,82 @@ Return-Path: <SRS0=FOtV=TD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87143C43219
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 07:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CDBC04AAA
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 07:49:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5AF6E20645
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 07:22:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 497222089E
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 07:49:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="EAFnyRRD"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MpJw0NrV";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YSIjN9a8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726769AbfECHV6 (ORCPT
+        id S1726894AbfECHt1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 May 2019 03:21:58 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:41962 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726654AbfECHV6 (ORCPT
+        Fri, 3 May 2019 03:49:27 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:60034 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725789AbfECHt1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 May 2019 03:21:58 -0400
-Received: by mail-pg1-f196.google.com with SMTP id f6so2296070pgs.8
-        for <linux-wireless@vger.kernel.org>; Fri, 03 May 2019 00:21:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id;
-        bh=LKhhq2nOhMH84Ql7gevkkqRsBvxQcsPWG4tyymGIQ0k=;
-        b=EAFnyRRD0rxsPGwUF9O54bV46cgf1VVPj9l/3tdh87yRsJJyQAMqqe6SHe3O9MmNqX
-         baP5r6PAHKZVOFP1ak9t1bzK2kZzOb+zluczE7rHn+zH90peyYBYMDklVnFV8VrZ1riV
-         RhNXR0LGBxYaI+yy75uQOXvsEqRXx3uKr9YhvrZ2R85fnQGLk6si0PVD5GoGT1Iklv/u
-         wC3z3yjEL4zaOT5Qmr65zSWJkBjl+ztDOybYlm8oY1t4/+J5mUrdvAF/1tHeXFUL/kKM
-         v1tzpHkQWdhmjczUTa+28IS/RLNOMkw7YCQCHKiQW517ouewzoVB8U3S3ds9iSfywFLK
-         L2uQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=LKhhq2nOhMH84Ql7gevkkqRsBvxQcsPWG4tyymGIQ0k=;
-        b=s3R0+6aMegVnJoO5l0qa6B4HzDh5EUyGfg8UgjvrccxcZnIkwQfH25RUOlq2g8JzWm
-         aXlIfWGVtVlYb9WLmpyiWbIenKBjosv1Mop5Z02GU5BglDHJMo9NcSQzPXuFlg3R9tFB
-         lkZbaoaRTK9LmZj7vcYaU+al5XrTIoC+oHdakZ98z94XesXn2lH71scMcghWfti1+gd4
-         fO9TUN4G7f13Glt9I7H4hhJEWNZegOCjhfYAiSkKVFFE9tlv293u49VNHUaIlNm7M67j
-         xRyqzEhgSfAeZdUTTWnECEqrnJcOTFrL2f3sYkGy/BIiUGE4F35LzSwvi5OBsNukq+LN
-         jlDw==
-X-Gm-Message-State: APjAAAUpjixzOhOYfc7leT+IhwHJN7nif/HIPhYF5WAz8mh2EMPCGcZB
-        Hwt4/DjVjheM7bvTx23AwsOIsw==
-X-Google-Smtp-Source: APXvYqxxQFy1IxwyfE0rdql14cVIMZle7uUOvGFWmgZo4wfWM1FlEQ3ethiJQAG6fc1SrDxJpFinIg==
-X-Received: by 2002:a63:6804:: with SMTP id d4mr8500069pgc.240.1556868117801;
-        Fri, 03 May 2019 00:21:57 -0700 (PDT)
-Received: from localhost.localdomain (220-133-8-232.HINET-IP.hinet.net. [220.133.8.232])
-        by smtp.gmail.com with ESMTPSA id u5sm2671465pfb.60.2019.05.03.00.21.55
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Fri, 03 May 2019 00:21:57 -0700 (PDT)
-From:   Chris Chiu <chiu@endlessm.com>
-To:     jes.sorensen@gmail.com, kvalo@codeaurora.org, davem@davemloft.net
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux@endlessm.com,
-        Chris Chiu <chiu@endlessm.com>
-Subject: [RFC PATCH 0/2] Improve TX performance of RTL8723BU on rtl8xxxu driver
-Date:   Fri,  3 May 2019 15:21:44 +0800
-Message-Id: <20190503072146.49999-1-chiu@endlessm.com>
-X-Mailer: git-send-email 2.17.2 (Apple Git-113)
+        Fri, 3 May 2019 03:49:27 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 7559861132; Fri,  3 May 2019 07:49:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556869766;
+        bh=FR4AcNxKg1NOcAXJFdFeJqXyuj3S0d0qMINeLGaMFdo=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=MpJw0NrVx87e9I8YeA7QSfECP8iYm70cRic1YX8ilfwy8F5cFMtPnLr5Cb6E6II5B
+         HAr/4ct+DJVw+kqpc8n/o1xlN0ZncQId2I/GUNZvuoiDdm1c0xmKoJViWVJnbLHAz8
+         aCqnE1beFWVEcUe7+6MPkjvDFou6XMnewjEXlgPg=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 50D376119F;
+        Fri,  3 May 2019 07:49:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1556869765;
+        bh=FR4AcNxKg1NOcAXJFdFeJqXyuj3S0d0qMINeLGaMFdo=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=YSIjN9a8ZFcwL4dIOC7/OFAnwFzYWU6br3JI3RdqAiFz107iS+aADHj9FPSJXOicd
+         57AlXNvNsfMJVTAPqeJB7uz1PQJwHHG5X0pwCez+ejWGRfpU9CCKu76MqAudzOos/6
+         CH9dr9o4FSdDWrwPL8/sHu3OKYIB1JfFP6M6EUqA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 50D376119F
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Chris Chiu <chiu@endlessm.com>
+Cc:     jes.sorensen@gmail.com, davem@davemloft.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux@endlessm.com
+Subject: Re: [RFC PATCH 1/2] rtl8xxxu: Add rate adaptive related data
+References: <20190503072146.49999-1-chiu@endlessm.com>
+        <20190503072146.49999-2-chiu@endlessm.com>
+Date:   Fri, 03 May 2019 10:49:22 +0300
+In-Reply-To: <20190503072146.49999-2-chiu@endlessm.com> (Chris Chiu's message
+        of "Fri, 3 May 2019 15:21:45 +0800")
+Message-ID: <874l6ckmf1.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-We have 3 laptops which connect the wifi by the same RTL8723BU.
-The PCI VID/PID of the wifi chip is 10EC:B720 which is supported.
-They have the same problem with the in-kernel rtl8xxxu driver, the
-iperf (as a client to an ethernet-connected server) gets ~1Mbps.
-Nevertheless, the signal strength is reported as around -40dBm,
-which is quite good. From the wireshark capture, the tx rate for each
-data and qos data packet is only 1Mbps. Compare to the driver from
-https://github.com/lwfinger/rtl8723bu, the same iperf test gets ~12
-Mbps or more. The signal strength is reported similarly around
--40dBm. That's why we want to find out the cause and improve.
+Chris Chiu <chiu@endlessm.com> writes:
 
-After reading the source code of the rtl8xxxu driver and Larry's, the
-major difference is that Larry's driver has a watchdog which will keep
-monitoring the signal quality and updating the rate mask just like the
-rtl8xxxu_gen2_update_rate_mask() does if signal quality changes.
-And this kind of watchdog also exists in rtlwifi driver of some specific
-chips, ex rtl8192ee, rtl8188ee, rtl8723ae, rtl8821ae...etc. They have
-the same member function named dm_watchdog and will invoke the
-corresponding dm_refresh_rate_adaptive_mask to adjust the tx rate
-mask.
+> Add wireless mode, signal strength level, and rate table index
+> to tell the firmware that we need to adjust the tx rate bitmap
+> accordingly.
 
-Thus I created 2 commits and try to do the same thing on rtl8xxxu.
-After applying these commits, the tx rate of each data and qos data
-packet will be 39Mbps (MCS4) with the 0xf00000 as its tx rate mask.
-The 20th bit ~ 23th bit means MCS4 to MCS7. It means that the firmware
-still picks the lowest rate from the rate mask and explains why the
-tx rate of data and qos data is always lowest 1Mbps because the default
-rate mask passed is almost 0xFFFFFFF ranges from the basic CCK rate, 
-OFDM rate, and MCS rate. However, with Larry's driver, the tx rate 
-observed from wireshark under the same condition is almost 65Mbps or
-72Mbps.
+Please read Developer's Certificate of Origin and add Signed-off-by to
+the commit logs:
 
-I believe the firmware of RTL8723BU may need fix. And I think we
-can still bring in the dm_watchdog as rtlwifi to improve from the
-driver side. Please leave precious comments for my commits and
-suggest what I can do better. Or suggest if there's any better idea
-to fix this. Thanks.
-
-Chris Chiu (2):
-  rtl8xxxu: Add rate adaptive related data
-  rtl8xxxu: Add watchdog to update rate mask by signal strength
-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  |  53 ++++++
- .../realtek/rtl8xxxu/rtl8xxxu_8723b.c         | 151 ++++++++++++++++++
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c |  83 +++++++++-
- 3 files changed, 286 insertions(+), 1 deletion(-)
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#signed-off-by_missing
 
 -- 
-2.21.0
-
+Kalle Valo
