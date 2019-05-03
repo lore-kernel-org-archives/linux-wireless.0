@@ -2,42 +2,40 @@ Return-Path: <SRS0=FOtV=TD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16B8AC04AAA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87A50C004C9
 	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:32:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBE792081C
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:32:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E323206C3
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:32:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727427AbfECKcV (ORCPT
+        id S1727471AbfECKcW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 May 2019 06:32:21 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:48834 "EHLO
+        Fri, 3 May 2019 06:32:22 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:48817 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727381AbfECKcU (ORCPT
+        with ESMTP id S1727240AbfECKcV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 May 2019 06:32:20 -0400
+        Fri, 3 May 2019 06:32:21 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x43AWG4O012132, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x43AWDis012099, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x43AWG4O012132
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x43AWDis012099
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Fri, 3 May 2019 18:32:17 +0800
+        Fri, 3 May 2019 18:32:13 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 3 May 2019 18:32:16 +0800
+ 14.3.408.0; Fri, 3 May 2019 18:32:12 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/6] rtw88: more descriptions about LPS
-Date:   Fri, 3 May 2019 18:31:42 +0800
-Message-ID: <1556879502-16211-7-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 0/6] rtw88: minor fixes from suggestions during review
+Date:   Fri, 3 May 2019 18:31:36 +0800
+Message-ID: <1556879502-16211-1-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1556879502-16211-1-git-send-email-yhchuang@realtek.com>
-References: <1556879502-16211-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.126]
@@ -48,29 +46,24 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-The LPS represents Leisure Power Save. When enabled, firmware will be in
-charge of turning radio off between beacons. Also firmware should turn
-on the radio when beacon is coming, and the data queued should be
-transmitted in TBTT period.
+The series fix some small problems for rtw88, most of the suggestions
+are from the review process.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yan-Hsuan Chuang (6):
+  rtw88: add license for Makefile
+  rtw88: pci: use ieee80211_ac_numbers instead of 0-3
+  rtw88: pci: check if queue mapping exceeds size of ac_to_hwq
+  rtw88: fix unassigned rssi_level in rtw_sta_info
+  rtw88: mac: remove dangerous while (1)
+  rtw88: more descriptions about LPS
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index f447361..6953013 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -20,7 +20,7 @@ EXPORT_SYMBOL(rtw_debug_mask);
- module_param_named(support_lps, rtw_fw_support_lps, bool, 0644);
- module_param_named(debug_mask, rtw_debug_mask, uint, 0644);
- 
--MODULE_PARM_DESC(support_lps, "Set Y to enable LPS support");
-+MODULE_PARM_DESC(support_lps, "Set Y to enable Leisure Power Save support, turn radio off between beacons");
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
- 
- static struct ieee80211_channel rtw_channeltable_2g[] = {
+ drivers/net/wireless/realtek/rtw88/Makefile |  2 ++
+ drivers/net/wireless/realtek/rtw88/mac.c    |  9 +++------
+ drivers/net/wireless/realtek/rtw88/main.c   |  2 +-
+ drivers/net/wireless/realtek/rtw88/pci.c    | 10 ++++++----
+ drivers/net/wireless/realtek/rtw88/phy.c    |  4 ++--
+ 5 files changed, 14 insertions(+), 13 deletions(-)
+
 -- 
 2.7.4
 
