@@ -2,78 +2,53 @@ Return-Path: <SRS0=FOtV=TD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 819E7C43219
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D3BCC43219
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:49:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5587B206C3
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:32:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 644822081C
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 10:49:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727409AbfECKcU (ORCPT
+        id S1726544AbfECKtG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 May 2019 06:32:20 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:48818 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727375AbfECKcU (ORCPT
+        Fri, 3 May 2019 06:49:06 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:53336 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725816AbfECKtG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 May 2019 06:32:20 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x43AWFu5012120, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x43AWFu5012120
-        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Fri, 3 May 2019 18:32:15 +0800
-Received: from localhost.localdomain (172.21.68.126) by
- RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 3 May 2019 18:32:15 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/6] rtw88: fix unassigned rssi_level in rtw_sta_info
-Date:   Fri, 3 May 2019 18:31:40 +0800
-Message-ID: <1556879502-16211-5-git-send-email-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1556879502-16211-1-git-send-email-yhchuang@realtek.com>
+        Fri, 3 May 2019 06:49:06 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hMVkT-0005mQ-QO; Fri, 03 May 2019 12:49:01 +0200
+Message-ID: <315fea6071bc29c20b3f71f8e725433c64ad195d.camel@sipsolutions.net>
+Subject: Re: [PATCH 5/6] rtw88: mac: remove dangerous while (1)
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     yhchuang@realtek.com, kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 03 May 2019 12:48:58 +0200
+In-Reply-To: <1556879502-16211-6-git-send-email-yhchuang@realtek.com> (sfid-20190503_123228_124010_1BC9DA36)
 References: <1556879502-16211-1-git-send-email-yhchuang@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.126]
+         <1556879502-16211-6-git-send-email-yhchuang@realtek.com>
+         (sfid-20190503_123228_124010_1BC9DA36)
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Fri, 2019-05-03 at 18:31 +0800, yhchuang@realtek.com wrote:
+> 
+> +	while ((cmd = cmd_seq[idx])) {
+...
+> +	};
 
-The new rssi_level should be stored in si, otherwise the rssi_level will
-never be updated and get a wrong RA mask, which is calculated by the
-rssi level
+That semicolon is pretty pointless there :-)
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/phy.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
-index 4381b36..7f437e2 100644
---- a/drivers/net/wireless/realtek/rtw88/phy.c
-+++ b/drivers/net/wireless/realtek/rtw88/phy.c
-@@ -144,10 +144,10 @@ static void rtw_phy_stat_rssi_iter(void *data, struct ieee80211_sta *sta)
- 	struct rtw_phy_stat_iter_data *iter_data = data;
- 	struct rtw_dev *rtwdev = iter_data->rtwdev;
- 	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
--	u8 rssi, rssi_level;
-+	u8 rssi;
- 
- 	rssi = ewma_rssi_read(&si->avg_rssi);
--	rssi_level = rtw_phy_get_rssi_level(si->rssi_level, rssi);
-+	si->rssi_level = rtw_phy_get_rssi_level(si->rssi_level, rssi);
- 
- 	rtw_fw_send_rssi_info(rtwdev, si);
- 
--- 
-2.7.4
+johannes
 
