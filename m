@@ -2,97 +2,86 @@ Return-Path: <SRS0=FOtV=TD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82665C43219
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 11:28:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4187C43219
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 11:53:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 517CF2075C
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 11:28:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jOhrxEhj";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iQTZsJtn"
+	by mail.kernel.org (Postfix) with ESMTP id 78F30206C3
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 May 2019 11:53:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727111AbfECL2V (ORCPT
+        id S1727622AbfECLxg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 May 2019 07:28:21 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:33514 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727065AbfECL2V (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 May 2019 07:28:21 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 5B04E611C3; Fri,  3 May 2019 11:28:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556882900;
-        bh=nikhLOcwOCi/ylPbM7C79U06YK8dSN1QSC8O4xMcJg0=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=jOhrxEhjDKVcknu7tGCljxId1T3zfjG3uUsfU/shPpj/ufGCtrfvGH/Yh/ZDhG4Tp
-         GyHZBbEUbsfNgoHScdkEWH8MY75OEa8bJEch7nzbA+30aJmhJcsCziIhaTegYsQyN4
-         qXNb+OIiTNNvKdgzCtFCK7Mz9gnxBHw01l0RIf5g=
-Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        Fri, 3 May 2019 07:53:36 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:48116 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726572AbfECLxg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 May 2019 07:53:36 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7F6F460E41;
-        Fri,  3 May 2019 11:28:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1556882899;
-        bh=nikhLOcwOCi/ylPbM7C79U06YK8dSN1QSC8O4xMcJg0=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=iQTZsJtnM9UR01LleeSqDUrLPWAZUXIXMTRJbRcfQjyubEWp7mNfh4aEx5l4ntNoz
-         KwCPP91QBgH1i2sTEpFW7Zb7/4WlNaFjHOKBqItFAuNNSlMFufkpaXO6sem80KaOAG
-         rTXBcKoBXKNKTy8KtsLNlRlHz5fWsrx+BS7p645k=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7F6F460E41
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] {nl,mac}80211: allow 4addr AP operation on crypto controlled devices
-References: <1556881402-28078-1-git-send-email-mpubbise@codeaurora.org>
-Date:   Fri, 03 May 2019 14:28:15 +0300
-In-Reply-To: <1556881402-28078-1-git-send-email-mpubbise@codeaurora.org>
-        (Manikanta Pubbisetty's message of "Fri, 3 May 2019 16:33:22 +0530")
-Message-ID: <87bm0jwze8.fsf@purkki.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4DC3D5277B;
+        Fri,  3 May 2019 11:53:36 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.51])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EC7CC5C6AA;
+        Fri,  3 May 2019 11:53:35 +0000 (UTC)
+Date:   Fri, 3 May 2019 13:53:33 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     linux-wireless@vger.kernel.org
+Subject: [RFC] rtw88: fix subscript above array bounds compiler warning
+Message-ID: <20190503115333.GA23109@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Fri, 03 May 2019 11:53:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
+My compiler complain about:
 
-> As per the current design, in the case of sw crypto controlled devices,
-> it is the device which advertises the support for AP/VLAN iftype based
-> on it's ability to tranmsit packets encrypted in software
-> (In VLAN functionality, group traffic generated for a specific
-> VLAN group is always encrypted in software). Commit db3bdcb9c3ff
-> ("mac80211: allow AP_VLAN operation on crypto controlled devices")
-> has introduced this change.
->
-> Since 4addr AP operation also uses AP/VLAN iftype, this conditional
-> way of advertising AP/VLAN support has broken 4addr AP mode operation on
-> crypto controlled devices which do not support VLAN functionality.
->
-> In the case of ath10k driver, not all firmwares have support for VLAN
-> functionality but all can support 4addr AP operation. Because AP/VLAN
-> support is not advertised for these devices, 4addr AP operations are
-> also blocked.
->
-> Fix this by allowing 4addr operation on devices which do not support
-> AP/VLAN iftype but can support 4addr AP operation (decision is based on
-> the wiphy flag WIPHY_FLAG_4ADDR_AP).
->
-> Fixes: Commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on crypto controlled devices")
+drivers/net/wireless/realtek/rtw88/phy.c: In function ‘rtw_phy_rf_power_2_rssi’:
+drivers/net/wireless/realtek/rtw88/phy.c:430:26: warning: array subscript is above array bounds [-Warray-bounds]
+  linear = db_invert_table[i][j];
 
-The correct format for the Fixes line is:
+According to comment power_db should be in range 1 ~ 96 .
+Correct rtw_phy_power_2_db() to make max power 96 db
+(still min is 0). This make the warning gone.
 
-Fixes: db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on crypto controlled devices")
+However power >= 20 check still looks somewhat suspicious to me.
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/realtek/rtw88/phy.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 35a35dbca85f..a716a44d78b0 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -410,12 +410,12 @@ void rtw_phy_dynamic_mechanism(struct rtw_dev *rtwdev)
+ 
+ static u8 rtw_phy_power_2_db(s8 power)
+ {
+-	if (power <= -100 || power >= 20)
++	if (power <= -96 || power >= 20)
+ 		return 0;
+ 	else if (power >= 0)
+-		return 100;
++		return 96;
+ 	else
+-		return 100 + power;
++		return 96 + power;
+ }
+ 
+ static u64 rtw_phy_db_2_linear(u8 power_db)
 -- 
-Kalle Valo
+1.9.3
+
