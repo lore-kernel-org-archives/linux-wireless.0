@@ -2,121 +2,121 @@ Return-Path: <SRS0=v049=TG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13FAAC04AAB
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 May 2019 11:16:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0361C04A6B
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 May 2019 12:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E54E720830
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 May 2019 11:16:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B150B20675
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 May 2019 12:26:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Or9Q36x1";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oWhz0ypy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726438AbfEFLQJ (ORCPT
+        id S1726063AbfEFM0f (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 May 2019 07:16:09 -0400
-Received: from mail-it1-f199.google.com ([209.85.166.199]:37514 "EHLO
-        mail-it1-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726037AbfEFLQH (ORCPT
+        Mon, 6 May 2019 08:26:35 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:56716 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725852AbfEFM0f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 May 2019 07:16:07 -0400
-Received: by mail-it1-f199.google.com with SMTP id d140so11260905itc.2
-        for <linux-wireless@vger.kernel.org>; Mon, 06 May 2019 04:16:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=wfo46abTbmuRXvxeTUG8sMq7sgvtISG77eUoUAEQFR8=;
-        b=kX2iJoTtMneNUppDJaCHJV51ao1LimT77gOxYx2jkbBozy9zRlxdDRTCWGf+yiCOgg
-         oJyaAUpPfcj9+kxbSiniFhgaMp+iocc3/F0O0vOKt3cJ0HZe8P138EoVDbQ64MDHD6OZ
-         K2isVNmDw9dSb3oXgsUMXcvjocH8BAg7CmAOwWw/5z7Tdlg600Vq1zj2g9Q9zoaRZe4w
-         5IVWslXCUpcU4oHTJV5mB2LfFIOnLgdjtTtP3nGIeK52gD3rFD8LwmeJCf0JQWhQplj3
-         3GZgwE0AiO/ZHfdwiDNu78D5+G37Nc0jeSRKCVc2qM+O7MFDjPvRY+EggmPfMz4E9uZZ
-         h7Sg==
-X-Gm-Message-State: APjAAAXXELDvL4/c8bCrbmC+/sAJUjJRd+RqY1Fw/9pqt9QRV2yGTWd9
-        p5/sIEb3d/hNQ/O1A4ARQakZlXkCLmTXrJqBg/9k6mhHZxM0
-X-Google-Smtp-Source: APXvYqzztlzlI6lMg9dhbdBE2nMsatxOpEwiQJkKfQh2hgdzj0WiGZDn2eO24DJhUe9O8pBYwusHdq0rIw///dxTCUPu68EKeRG3
+        Mon, 6 May 2019 08:26:35 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 806FF60A44; Mon,  6 May 2019 12:26:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1557145594;
+        bh=mjz5y1YF37BWba0/Yf7ZhLw5CnmxhMPjN802sVr7vdg=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Or9Q36x1FeTpHbWu3Ld28q89P55CwOHkCDs1rDZ14ldfdwqCQgRpSbyh8W2q0Y0E5
+         2vdqcoYZG6fzkRWZGSssr7+e5hlUIsipW2hhORP+bnJrNpqm0QCc/wrrz/Nm7vppcP
+         B1TvpPtrclutmNUuQNfW5r8C5fm2T4EB6PkbZWK8=
+Received: from x230.qca.qualcomm.com (85-76-75-57-nat.elisa-mobile.fi [85.76.75.57])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4FD4560590;
+        Mon,  6 May 2019 12:26:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1557145593;
+        bh=mjz5y1YF37BWba0/Yf7ZhLw5CnmxhMPjN802sVr7vdg=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=oWhz0ypyIvO8lOLmqXuQCAr3zqDj67mpRw2qEng2XilGn9DVvn04zuM3LDkbC43YP
+         +Yaicj+MrP5txKLnkXmQA9f1Z1RiTlA8AG13k2ied7KS7ws/79o6cIlcgFykLfU0ir
+         1TSK5TZSslbk8QGol11Bv3k9xIfmHt0WsPd9Y7ZU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4FD4560590
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Hans de Goede <hdegoede@redhat.com>
+Cc:     Victor Bravo <1905@spmblk.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC] brcmfmac: sanitize DMI strings v2
+References: <20190504162633.ldrz2nqfocg55grb@localhost>
+        <cce7604e-2b02-80ed-1df5-6f304cada0cb@broadcom.com>
+        <20190504194440.4zcxjrtj2aft3ka4@localhost>
+        <16a87149068.2764.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+        <20190505150355.3fbng4ny34x255vk@localhost>
+        <0f75a3d4-94af-5503-94c3-e8af2364448d@redhat.com>
+        <20190506090609.msudhncj7e5vdtzw@localhost>
+        <70677dff-4336-28d5-7ab9-7ba7c3d74ebc@redhat.com>
+        <20190506102032.3ximjecado4mz62j@localhost>
+        <fb07ae01-4cca-98e7-1c2d-dfdf44909900@redhat.com>
+Date:   Mon, 06 May 2019 15:26:28 +0300
+In-Reply-To: <fb07ae01-4cca-98e7-1c2d-dfdf44909900@redhat.com> (Hans de
+        Goede's message of "Mon, 6 May 2019 12:34:17 +0200")
+Message-ID: <87d0kvvkej.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-X-Received: by 2002:a6b:3ac3:: with SMTP id h186mr12861180ioa.63.1557141366572;
- Mon, 06 May 2019 04:16:06 -0700 (PDT)
-Date:   Mon, 06 May 2019 04:16:06 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000050c5f0588363ad6@google.com>
-Subject: KASAN: use-after-free Read in p54u_load_firmware_cb
-From:   syzbot <syzbot+200d4bb11b23d929335f@syzkaller.appspotmail.com>
-To:     andreyknvl@google.com, chunkeey@googlemail.com,
-        davem@davemloft.net, kvalo@codeaurora.org,
-        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+Hans de Goede <hdegoede@redhat.com> writes:
 
-syzbot found the following crash on:
+> If we're going to do some filtering, then I suggest we play it safe and also
+> disallow other chars which may be used as a separator somewhere, specifically
+> ':' and ','.
+>
+> Currently upstream linux-firmware has these files which rely on the DMI
+> matching:
+>
+> brcmfmac4330-sdio.Prowise-PT301.txt
+> brcmfmac43430-sdio.Hampoo-D2D3_Vi8A1.txt
+> brcmfmac43430a0-sdio.ONDA-V80 PLUS.txt
+>
+> The others are either part of the DMI override table for devices with unsuitable
+> DMI strings like "Default String"; or are device-tree based.
+>
+> So as long as we don't break those 3 (or break the ONDA one but get a symlink
+> in place) we can sanitize a bit more then just non-printable and '/'.
+>
+> Kalle, Arend, what is your opinion on this?
+>
+> Note I do not expect the ONDA V80 Plus to have a lot of Linux users,
+> but it definitely has some.
 
-HEAD commit:    43151d6c usb-fuzzer: main usb gadget fuzzer driver
-git tree:       https://github.com/google/kasan.git usb-fuzzer
-console output: https://syzkaller.appspot.com/x/log.txt?x=142b312ca00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=4183eeef650d1234
-dashboard link: https://syzkaller.appspot.com/bug?extid=200d4bb11b23d929335f
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+To me having spaces in filenames is a bad idea, but on the other hand we
+do have the "don't break existing setups" rule, so it's not so simple. I
+vote for not allowing spaces, I think that's the best for the long run,
+but don't know what Arend thinks.
 
-Unfortunately, I don't have any reproducer for this crash yet.
+Maybe we could do some kind of fallback mechanism, like first trying the
+sanitised filename and if that's not found then we try the old filename
+with spaces? And if that old filename works we print a big fat warning
+that the user should update the file and that the old "filename with
+spaces" support is going away soon?
 
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+200d4bb11b23d929335f@syzkaller.appspotmail.com
-
-usb 4-1: Direct firmware load for isl3887usb failed with error -2
-usb 4-1: Firmware not found.
-==================================================================
-BUG: KASAN: use-after-free in p54u_load_firmware_cb.cold+0x97/0x13a  
-drivers/net/wireless/intersil/p54/p54usb.c:936
-Read of size 8 at addr ffff888098bf3588 by task kworker/0:1/12
-
-CPU: 0 PID: 12 Comm: kworker/0:1 Not tainted 5.1.0-rc3-319004-g43151d6 #6
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Workqueue: events request_firmware_work_func
-Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0xe8/0x16e lib/dump_stack.c:113
-  print_address_description+0x6c/0x236 mm/kasan/report.c:187
-  kasan_report.cold+0x1a/0x3c mm/kasan/report.c:317
-  p54u_load_firmware_cb.cold+0x97/0x13a  
-drivers/net/wireless/intersil/p54/p54usb.c:936
-  request_firmware_work_func+0x12d/0x249  
-drivers/base/firmware_loader/main.c:785
-  process_one_work+0x90f/0x1580 kernel/workqueue.c:2269
-  worker_thread+0x9b/0xe20 kernel/workqueue.c:2415
-  kthread+0x313/0x420 kernel/kthread.c:253
-  ret_from_fork+0x3a/0x50 arch/x86/entry/entry_64.S:352
-
-The buggy address belongs to the page:
-page:ffffea000262fcc0 count:0 mapcount:0 mapping:0000000000000000 index:0x0
-flags: 0xfff00000000000()
-raw: 00fff00000000000 0000000000000000 ffffffff02620101 0000000000000000
-raw: 0000000000000000 0000000000000000 00000000ffffffff 0000000000000000
-page dumped because: kasan: bad access detected
-
-Memory state around the buggy address:
-  ffff888098bf3480: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-  ffff888098bf3500: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> ffff888098bf3580: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-                       ^
-  ffff888098bf3600: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-  ffff888098bf3680: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-==================================================================
-
-
----
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+-- 
+Kalle Valo
