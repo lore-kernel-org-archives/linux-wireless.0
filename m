@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5826DC004C9
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:36:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B94BC004C9
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:41:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2908A21479
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:36:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2DAC214AE
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:41:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557207379;
-	bh=DP+cp4kWbbrvzRa8576r/rkPM2rH+Xn1vnpehE8E6Kc=;
+	s=default; t=1557207696;
+	bh=hAkedv8ncJh3ZLvU3K8GFMeIbnShY2HBpZ3zEHuytT4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=OQh3JEP7eFmGZDnNJ+OMYxd5gG6fiZnud1PM3fctUGnfR2tX/uwrgXuIbXsGy4Bdq
-	 kisGlsaYQeYtpFN0NCf5D6WCD339iW8EaOQmuZ/Fc4rvC3SgjXqaocoPHKtkg3rglD
-	 p6t2/eO8vsgrNjgCRmxRDtoljSlCXSHROLVJ69v4=
+	b=EaJmsMDlK1X2pV3lIu+SaSKvFJ9iJ1dylQwrOKviqz6B85uihiCSq6TmZGSynEzKX
+	 NW7lR+5Bg/Ox2iLJ+bGpuLuavJcWMAX8M5YadYbgS7ksNwIAY+vFZKvGeVNMYbEOLj
+	 BSgpxSWDNWUFqpnZCpaoTF6rlhZNskxkiVxgdLCE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728050AbfEGFgR (ORCPT
+        id S1729360AbfEGFle (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 May 2019 01:36:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56270 "EHLO mail.kernel.org"
+        Tue, 7 May 2019 01:41:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32784 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728034AbfEGFgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 May 2019 01:36:16 -0400
+        id S1729346AbfEGFld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 May 2019 01:41:33 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 323F320989;
-        Tue,  7 May 2019 05:36:14 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 87224205ED;
+        Tue,  7 May 2019 05:41:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557207375;
-        bh=DP+cp4kWbbrvzRa8576r/rkPM2rH+Xn1vnpehE8E6Kc=;
+        s=default; t=1557207693;
+        bh=hAkedv8ncJh3ZLvU3K8GFMeIbnShY2HBpZ3zEHuytT4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OiZA5+woQ5WYMcMWra/AmZ64iPBs/z+6e0TOJeLB4ARxu2oeIuUIG4YUc7Gpm0qGx
-         ZBdN8x3APAQ59ItP8AVby50SBDASszROtFp9ailVH4wUvychJlrzvlsXDnPLwZUFfQ
-         LZBtsXwAjH0/nDae7i80/Mfrx3SekBZjRLMs7jMk=
+        b=ElNp9zndsd0q09dBEwipZ8Nk/iVIOb9ra4dbyZ6Djp5O0hu8cSam98eQPzrs0rmxK
+         SQMAH5sPwVcZteOiiu+ZbD5I12QIwlpsWRgVufPWBHhB/7snzF1l8GnGq/2gc8eNWT
+         14g2JZNKAvGKdOSLwd5+r6ZtJ+QYaIRasshP5Qk4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sunil Dutt <usdutt@codeaurora.org>,
+Cc:     Felix Fietkau <nbd@nbd.name>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 15/81] nl80211: Add NL80211_FLAG_CLEAR_SKB flag for other NL commands
-Date:   Tue,  7 May 2019 01:34:46 -0400
-Message-Id: <20190507053554.30848-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 08/25] mac80211: fix unaligned access in mesh table hash function
+Date:   Tue,  7 May 2019 01:41:05 -0400
+Message-Id: <20190507054123.32514-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190507053554.30848-1-sashal@kernel.org>
-References: <20190507053554.30848-1-sashal@kernel.org>
+In-Reply-To: <20190507054123.32514-1-sashal@kernel.org>
+References: <20190507054123.32514-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,88 +60,33 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sunil Dutt <usdutt@codeaurora.org>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit d6db02a88a4aaa1cd7105137c67ddec7f3bdbc05 ]
+[ Upstream commit 40586e3fc400c00c11151804dcdc93f8c831c808 ]
 
-This commit adds NL80211_FLAG_CLEAR_SKB flag to other NL commands
-that carry key data to ensure they do not stick around on heap
-after the SKB is freed.
+The pointer to the last four bytes of the address is not guaranteed to be
+aligned, so we need to use __get_unaligned_cpu32 here
 
-Also introduced this flag for NL80211_CMD_VENDOR as there are sub
-commands which configure the keys.
-
-Signed-off-by: Sunil Dutt <usdutt@codeaurora.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ net/mac80211/mesh_pathtbl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 295cd8d5554f..048e004ed0ee 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13392,7 +13392,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DEAUTHENTICATE,
-@@ -13443,7 +13444,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_UPDATE_CONNECT_PARAMS,
-@@ -13451,7 +13453,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DISCONNECT,
-@@ -13480,7 +13483,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DEL_PMKSA,
-@@ -13832,7 +13836,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_SET_QOS_MAP,
-@@ -13887,7 +13892,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.doit = nl80211_set_pmk,
- 		.policy = nl80211_policy,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DEL_PMK,
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 197753ad50b4..8c17d498df30 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -23,7 +23,7 @@ static void mesh_path_free_rcu(struct mesh_table *tbl, struct mesh_path *mpath);
+ static u32 mesh_table_hash(const void *addr, u32 len, u32 seed)
+ {
+ 	/* Use last four bytes of hw addr as hash index */
+-	return jhash_1word(*(u32 *)(addr+2), seed);
++	return jhash_1word(__get_unaligned_cpu32((u8 *)addr + 2), seed);
+ }
+ 
+ static const struct rhashtable_params mesh_rht_params = {
 -- 
 2.20.1
 
