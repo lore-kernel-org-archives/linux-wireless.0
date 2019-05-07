@@ -6,63 +6,63 @@ X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEE43C004C9
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 13:51:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05496C46460
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 13:53:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 81266206BF
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 13:51:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAF89205C9
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 13:53:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YPjyy3li";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KjR+7FM1"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="V/d1Gad4";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="k1dVyMfr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726756AbfEGNvh (ORCPT
+        id S1726688AbfEGNxQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 May 2019 09:51:37 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:56120 "EHLO
+        Tue, 7 May 2019 09:53:16 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:59960 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726295AbfEGNvg (ORCPT
+        with ESMTP id S1726394AbfEGNxQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 May 2019 09:51:36 -0400
+        Tue, 7 May 2019 09:53:16 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id AFDCC60E3E; Tue,  7 May 2019 13:51:35 +0000 (UTC)
+        id 2CAA5618DD; Tue,  7 May 2019 13:53:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1557237095;
-        bh=VRC3o28GRsYmFCcZSYL/tdVa0+t/wmCKtg6bTuKqrqM=;
+        s=default; t=1557237195;
+        bh=aOm21351qlYoCS9pCWfVXhiDH7ERraPogBHBMNHCVBE=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=YPjyy3liXUottUe4VeWZWzMLmQtgG9H3gVWo1pd8WoRGiORJOjkW5Y17R0oCP6O8i
-         8P9SmzvATCQx+ybN+iGFghtff+t/05+/hmDcd+lgIK4yyxNY2hLo4bqvXU2ccrBDb1
-         df5a1XxYmHD7OddKUg7n+fbRl8hCjSgcZzvYOwZA=
+        b=V/d1Gad4N+8SHZtqYdk+WxgFUvezsC2FCwN+FbdAZeQqs0VTXCCCvBWINmjnGSanQ
+         gf3w0FJ+f/C7A2IdYv1ydOVf4bDX8jtQQruA0SOnkFakZ/pZvKYBT7AoYARIiGELvv
+         AhX3ZrV/HnfsGt2MNagGj2aDUu3+/aZdtzIKcPLo=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5352560350;
-        Tue,  7 May 2019 13:51:33 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1069D618CE;
+        Tue,  7 May 2019 13:53:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1557237094;
-        bh=VRC3o28GRsYmFCcZSYL/tdVa0+t/wmCKtg6bTuKqrqM=;
+        s=default; t=1557237193;
+        bh=aOm21351qlYoCS9pCWfVXhiDH7ERraPogBHBMNHCVBE=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=KjR+7FM1BokmxLrADzBIQsJPC2mLWq1u9iRPvlGHpVnBpuwFxCu2gPJBfVc7XzP9R
-         x5VBR9UZV2/i/938akRtnlg7zOdSYtEZi7xFJ8mv11rGGtXNc8xeEPge5F4PNtZw34
-         vSUXze4oRVrOH5vSVgLdJ/NvRkEJcC6ekFe4zPsE=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5352560350
+        b=k1dVyMfrryn/R0K5Xlv6dU99wKnAxYeTe80gj7GTspdSxSonIXMjn6gy5LoqatKxW
+         NPwCzwAERoricN4T6c+ypGkzKJlvRiUpWE3kEWxhpiMEGayobh9UX2I07FxXYY/0FZ
+         kAOgiBjFcJqSCIrBqKNm52pEglBO7k9GX5YTTja4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1069D618CE
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH][next] ath10k: Use struct_size() helper
+Subject: Re: [PATCH][next] ath10k: coredump: use struct_size() helper
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190403172029.GA302@embeddedor>
-References: <20190403172029.GA302@embeddedor>
+In-Reply-To: <20190403190636.GA9827@embeddedor>
+References: <20190403190636.GA9827@embeddedor>
 To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 Cc:     "David S. Miller" <davem@davemloft.net>,
         ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190507135135.AFDCC60E3E@smtp.codeaurora.org>
-Date:   Tue,  7 May 2019 13:51:35 +0000 (UTC)
+Message-Id: <20190507135315.2CAA5618DD@smtp.codeaurora.org>
+Date:   Tue,  7 May 2019 13:53:14 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -74,13 +74,13 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 > in order to avoid any potential type mistakes, in particular in the
 > context in which this code is being used.
 > 
-> So, change the following form:
+> So, replace code of the following form:
 > 
-> sizeof(*rx) + (sizeof(struct htt_rx_indication_mpdu_range) * num_mpdu_ranges)
+> sizeof(*ce_hdr) + CE_COUNT * sizeof(ce_hdr->entries[0])
 > 
->  to :
+> with:
 > 
-> struct_size(rx, mpdu_ranges, num_mpdu_ranges)
+> struct_size(ce_hdr, entries, CE_COUNT)
 > 
 > This code was detected with the help of Coccinelle.
 > 
@@ -89,10 +89,10 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-35b50e70df27 ath10k: Use struct_size() helper
+4f735cd73650 ath10k: coredump: use struct_size() helper
 
 -- 
-https://patchwork.kernel.org/patch/10884271/
+https://patchwork.kernel.org/patch/10884377/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
