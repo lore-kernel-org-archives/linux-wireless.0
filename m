@@ -4,53 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	T_DKIMWL_WL_HIGH,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B987C004C9
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D6A3C04AAD
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:46:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E68D3205ED
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:42:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 153D7205ED
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:46:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557207738;
-	bh=iL2UrK33nvVkAGSSO9tvV67FB6ijQogTXc3Jh8cDVAk=;
+	s=default; t=1557208016;
+	bh=kxTii2ZzhW44xrLVe3drDnbmjm4vKaWPoTd0ghA4gcc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Ns+QbpuKyaukXandcyBE5ZrWzetxkIhJZ/eP7+w+kLGrSZzaXTfkVA8EiOR/2sONA
-	 9n5BcUjtthtWt1fdsSrUTk32Fs+LnQ6VALsF/BMCKnIoH6QrgnUvGrn7CpvE12poN2
-	 bCn+vv+C9uWilONyzt2SQvQ3r748ImGWoVYdXwpA=
+	b=u+pCgj25jZtDtV5E6hcxd1l0uTQJZju7gZhUfRIW5T/sPIE6C7kf3k3hIe+ON8FFA
+	 wQsCjibbVGGFU1EpVIs6AbgWriL+rDunHXiBuFcM6CqrYDNjz4kuvlvi/pjajM5m1q
+	 uuDRIbLNeNsuA4n/W1xtNKEgYNZNnsJZJCXWSClA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729506AbfEGFmQ (ORCPT
+        id S1727767AbfEGFqt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 May 2019 01:42:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33262 "EHLO mail.kernel.org"
+        Tue, 7 May 2019 01:46:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60824 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729234AbfEGFmO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 May 2019 01:42:14 -0400
+        id S1729270AbfEGFlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 May 2019 01:41:20 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5B1B2206A3;
-        Tue,  7 May 2019 05:42:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A9948205ED;
+        Tue,  7 May 2019 05:41:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557207734;
-        bh=iL2UrK33nvVkAGSSO9tvV67FB6ijQogTXc3Jh8cDVAk=;
+        s=default; t=1557207679;
+        bh=kxTii2ZzhW44xrLVe3drDnbmjm4vKaWPoTd0ghA4gcc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZrU6+ohRmj8LSKdoSPUsipn1Qx8TxZOuhn9xxEPCSlEQ6lZpTtxSxZzvaIguxOw3Y
-         uxhmP8LbeYGhySG/gE83TJFaZUcr35l6mtA8hnDdbcgJya3KPbmtK0zKTFffvkWJQS
-         4udOuvCAn6/QGv1/hFPCVrmUXjL+kH6ObhMUy+tk=
+        b=ohWh8aVwnJFy8J1pMkr0C0yYOA52Myu9kEYPE8vCm9HshYWBO1gmdAzpcuhJvWMIm
+         RtIDGOY1fzaJ5ji3IKAIXkfFKCYLBcjOJpSn871j0TQNtnNLsgvwkvMi6Z0bhAw6WH
+         vAyQxnOZTdjSUTHBe2pQ7rhu3ymXbelQew7LSR0A=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Daniel Gomez <dagmcr@gmail.com>,
-        Javier Martinez Canillas <javier@dowhile0.org>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         "David S . Miller" <davem@davemloft.net>,
-        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 24/25] spi: ST ST95HF NFC: declare missing of table
-Date:   Tue,  7 May 2019 01:41:21 -0400
-Message-Id: <20190507054123.32514-24-sashal@kernel.org>
+        Sasha Levin <alexander.levin@microsoft.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 94/95] nfc: nci: Potential off by one in ->pipes[] array
+Date:   Tue,  7 May 2019 01:38:23 -0400
+Message-Id: <20190507053826.31622-94-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190507054123.32514-1-sashal@kernel.org>
-References: <20190507054123.32514-1-sashal@kernel.org>
+In-Reply-To: <20190507053826.31622-1-sashal@kernel.org>
+References: <20190507053826.31622-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,56 +60,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Daniel Gomez <dagmcr@gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit d04830531d0c4a99c897a44038e5da3d23331d2f ]
+[ Upstream commit 6491d698396fd5da4941980a35ca7c162a672016 ]
 
-Add missing <of_device_id> table for SPI driver relying on SPI
-device match since compatible is in a DT binding or in a DTS.
+This is similar to commit e285d5bfb7e9 ("NFC: Fix the number of pipes")
+where we changed NFC_HCI_MAX_PIPES from 127 to 128.
 
-Before this patch:
-modinfo drivers/nfc/st95hf/st95hf.ko | grep alias
-alias:          spi:st95hf
+As the comment next to the define explains, the pipe identifier is 7
+bits long.  The highest possible pipe is 127, but the number of possible
+pipes is 128.  As the code is now, then there is potential for an
+out of bounds array access:
 
-After this patch:
-modinfo drivers/nfc/st95hf/st95hf.ko | grep alias
-alias:          spi:st95hf
-alias:          of:N*T*Cst,st95hfC*
-alias:          of:N*T*Cst,st95hf
+    net/nfc/nci/hci.c:297 nci_hci_cmd_received() warn: array off by one?
+    'ndev->hci_dev->pipes[pipe]' '0-127 == 127'
 
-Reported-by: Javier Martinez Canillas <javier@dowhile0.org>
-Signed-off-by: Daniel Gomez <dagmcr@gmail.com>
+Fixes: 11f54f228643 ("NFC: nci: Add HCI over NCI protocol support")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: David S. Miller <davem@davemloft.net>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
 ---
- drivers/nfc/st95hf/core.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ include/net/nfc/nci_core.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index c2840e412962..850e75571c8e 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -1074,6 +1074,12 @@ static const struct spi_device_id st95hf_id[] = {
- };
- MODULE_DEVICE_TABLE(spi, st95hf_id);
+diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
+index 87499b6b35d6..df5c69db68af 100644
+--- a/include/net/nfc/nci_core.h
++++ b/include/net/nfc/nci_core.h
+@@ -166,7 +166,7 @@ struct nci_conn_info {
+  * According to specification 102 622 chapter 4.4 Pipes,
+  * the pipe identifier is 7 bits long.
+  */
+-#define NCI_HCI_MAX_PIPES          127
++#define NCI_HCI_MAX_PIPES          128
  
-+static const struct of_device_id st95hf_spi_of_match[] = {
-+        { .compatible = "st,st95hf" },
-+        { },
-+};
-+MODULE_DEVICE_TABLE(of, st95hf_spi_of_match);
-+
- static int st95hf_probe(struct spi_device *nfc_spi_dev)
- {
- 	int ret;
-@@ -1260,6 +1266,7 @@ static struct spi_driver st95hf_driver = {
- 	.driver = {
- 		.name = "st95hf",
- 		.owner = THIS_MODULE,
-+		.of_match_table = of_match_ptr(st95hf_spi_of_match),
- 	},
- 	.id_table = st95hf_id,
- 	.probe = st95hf_probe,
+ struct nci_hci_gate {
+ 	u8 gate;
 -- 
 2.20.1
 
