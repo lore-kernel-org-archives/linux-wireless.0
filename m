@@ -4,56 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	T_DKIMWL_WL_HIGH,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3F6FC04AAD
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:53:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DDEBC004C9
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:53:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD5B82054F
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:53:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 074CF2054F
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:53:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557208430;
-	bh=FOI1hJl4UfB1TMxwdCZjOju8tHMDWDcNCIaKPHdRmvM=;
+	s=default; t=1557208436;
+	bh=1om1prPh/fUxiWVH5sCRHqUzZnE611qvGwpyoSgJVEc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=a6lAfxY+SkS8UJoOH7QSNzQm2usda/B9VNfckvcewcEWZpVXD4XvdRQ9Zp84H4NFt
-	 e202kbwWXQB1uKKhoZcMn5MHkQz8I+8s+2njRmkpdRjTnQDhwjGI50XaWMl411vicn
-	 bgWUh4puB687zRAzc79j6b+Wf/E8tLhl2Us288HI=
+	b=H2TGrj2hcNUas2+bn0KYHjB0zs46cAau075JHgfaaG8eubv/6WsE01ycc/bNBpFrs
+	 kZ+PuszncpHyQ6KUSaNKM808DyKOi35tjuPIxhU3at3pRpo5War27hByLnvOAPiWZf
+	 ZfbzhenUHjgzrhSJx+HcSomeorIYTb1r9+/IsEKM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728862AbfEGFxp (ORCPT
+        id S1728710AbfEGFij (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 May 2019 01:53:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58420 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726851AbfEGFij (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 7 May 2019 01:38:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58372 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728700AbfEGFig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 May 2019 01:38:36 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6B59420B7C;
-        Tue,  7 May 2019 05:38:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 02E26206A3;
+        Tue,  7 May 2019 05:38:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557207518;
-        bh=FOI1hJl4UfB1TMxwdCZjOju8tHMDWDcNCIaKPHdRmvM=;
+        s=default; t=1557207515;
+        bh=1om1prPh/fUxiWVH5sCRHqUzZnE611qvGwpyoSgJVEc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pmoDVr5zdQh59nXyuIFPsX0gjMQPh8JA18/fwlf70TYYiokJlr/e8Nkj+8zzFuZ4z
-         P9rFCQfSklPeMFnssaGLnYYLPq5SeoOaGB747lH7rKzaCNXWYqxantROOOYbkzy+uh
-         p4FKKaXHqLqsS23hN4h6vc2nuP0zk/Y26naeoDgU=
+        b=SRUe76/7hGH1LR6J45N2+rBurE7SdWP9xR8u6cZbIRPxErZHYpIVeGE5qIPh2g+h4
+         Xgzk7RcB2W9yPEtyfNTrd9/HE9+RTs52m489lQEpUwwuFIh4DQtTDVV4/1bGc/3IG2
+         nFSaA4BjLGkBwwal6kJjd0xp1BSSfFwkNZix+/1E=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 10/95] mac80211: fix memory accounting with A-MSDU aggregation
-Date:   Tue,  7 May 2019 01:36:59 -0400
-Message-Id: <20190507053826.31622-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 08/95] mac80211: fix unaligned access in mesh table hash function
+Date:   Tue,  7 May 2019 01:36:57 -0400
+Message-Id: <20190507053826.31622-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190507053826.31622-1-sashal@kernel.org>
 References: <20190507053826.31622-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -64,47 +62,31 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit eb9b64e3a9f8483e6e54f4e03b2ae14ae5db2690 ]
+[ Upstream commit 40586e3fc400c00c11151804dcdc93f8c831c808 ]
 
-skb->truesize can change due to memory reallocation or when adding extra
-fragments. Adjust fq->memory_usage accordingly
+The pointer to the last four bytes of the address is not guaranteed to be
+aligned, so we need to use __get_unaligned_cpu32 here
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Acked-by: Toke Høiland-Jørgensen <toke@redhat.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/tx.c | 3 +++
- 1 file changed, 3 insertions(+)
+ net/mac80211/mesh_pathtbl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 305a4655f23e..09c7aa519ca8 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3125,6 +3125,7 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	u8 max_subframes = sta->sta.max_amsdu_subframes;
- 	int max_frags = local->hw.max_tx_fragments;
- 	int max_amsdu_len = sta->sta.max_amsdu_len;
-+	int orig_truesize;
- 	__be16 len;
- 	void *data;
- 	bool ret = false;
-@@ -3158,6 +3159,7 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	if (!head)
- 		goto out;
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 1ce068865629..130022091205 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -23,7 +23,7 @@ static void mesh_path_free_rcu(struct mesh_table *tbl, struct mesh_path *mpath);
+ static u32 mesh_table_hash(const void *addr, u32 len, u32 seed)
+ {
+ 	/* Use last four bytes of hw addr as hash index */
+-	return jhash_1word(*(u32 *)(addr+2), seed);
++	return jhash_1word(__get_unaligned_cpu32((u8 *)addr + 2), seed);
+ }
  
-+	orig_truesize = head->truesize;
- 	orig_len = head->len;
- 
- 	if (skb->len + head->len > max_amsdu_len)
-@@ -3212,6 +3214,7 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	*frag_tail = skb;
- 
- out_recalc:
-+	fq->memory_usage += head->truesize - orig_truesize;
- 	if (head->len != orig_len) {
- 		flow->backlog += head->len - orig_len;
- 		tin->backlog_bytes += head->len - orig_len;
+ static const struct rhashtable_params mesh_rht_params = {
 -- 
 2.20.1
 
