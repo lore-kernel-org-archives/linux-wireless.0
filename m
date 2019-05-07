@@ -2,123 +2,114 @@ Return-Path: <SRS0=kZdm=TH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C120C004C9
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FA73C46470
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:35:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5DF3A20675
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:05:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=qti.qualcomm.com header.i=@qti.qualcomm.com header.b="uvlVH52D"
+	by mail.kernel.org (Postfix) with ESMTP id 28A7A20C01
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 05:35:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1557207322;
+	bh=EiAGYo1E9SxfPaS0i1ndJq2wTAwaTy0SAsYy7NBE9E4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=A2/B2eXBpV92SIM0/bj8m79J7n5KmGmK1IUSKapycSCKZCuzvb1xTzdxGRMF7nX/a
+	 QcGmUSUeAtZ9hcuueAc/uwOiI+wMDTdfEPTD7x8LGj1wuyHXq+gHrdBkDEvyDZClUp
+	 ohCTK4rcPjDF6Pf9ZQD7KnMWg/wR5RtDzZJqei0A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726486AbfEGFF3 (ORCPT
+        id S1727776AbfEGFfV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 May 2019 01:05:29 -0400
-Received: from alexa-out-tai-01.qualcomm.com ([103.229.16.226]:40710 "EHLO
-        alexa-out-tai-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725839AbfEGFF1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 May 2019 01:05:27 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=qti.qualcomm.com; i=@qti.qualcomm.com; q=dns/txt;
-  s=qcdkim; t=1557205525; x=1588741525;
-  h=from:to:cc:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version:subject;
-  bh=UrV7zyLquGaGyp71Wl+1EFTpGEsSXpjTEyDgqzkJm58=;
-  b=uvlVH52D6SwjletGPX5xEpWQSPkYc267hEpHTQ2qbDJ0YbwoBMnr2WfV
-   Qm7gGXvUmBLY2VMPdeEasewGLosaPB/3v62dnJw3peJ5ulboeEymV9Hp+
-   dEMGpXhT1kUR2NgeDbv8nJDXMLQE1wR322aOS8H9UOo9x+86ha3smjcXo
-   g=;
-Subject: RE: [PATCH] ath10k: remove mmc_hw_reset while hif power down
-Thread-Topic: [PATCH] ath10k: remove mmc_hw_reset while hif power down
-Received: from ironmsg03-tai.qualcomm.com ([10.249.140.8])
-  by alexa-out-tai-01.qualcomm.com with ESMTP; 07 May 2019 13:05:24 +0800
-X-IronPort-AV: E=McAfee;i="5900,7806,9249"; a="28693442"
-Received: from aptaiexm02f.ap.qualcomm.com ([10.249.150.16])
-  by ironmsg03-tai.qualcomm.com with ESMTP/TLS/AES256-SHA; 07 May 2019 13:05:24 +0800
-Received: from aptaiexm02f.ap.qualcomm.com (10.249.150.16) by
- aptaiexm02f.ap.qualcomm.com (10.249.150.16) with Microsoft SMTP Server (TLS)
- id 15.0.1395.4; Tue, 7 May 2019 13:05:22 +0800
-Received: from aptaiexm02f.ap.qualcomm.com ([fe80::4152:1436:e436:faa1]) by
- aptaiexm02f.ap.qualcomm.com ([fe80::4152:1436:e436:faa1%19]) with mapi id
- 15.00.1395.000; Tue, 7 May 2019 13:05:22 +0800
-From:   Wen Gong <wgong@qti.qualcomm.com>
-To:     Grant Grundler <grundler@google.com>,
-        Wen Gong <wgong@codeaurora.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Thread-Index: AQHVAdpJadKuEaUlO02aG5lsvSOAm6ZfCRng
-Date:   Tue, 7 May 2019 05:05:21 +0000
-Message-ID: <36950ff25c0747629e60ccb68819e93a@aptaiexm02f.ap.qualcomm.com>
-References: <1556417825-13713-1-git-send-email-wgong@codeaurora.org>
- <CANEJEGug_YregN5vZq_R=ppUV5ptb4WUq_TB+JApzQ4DEO_AfQ@mail.gmail.com>
-In-Reply-To: <CANEJEGug_YregN5vZq_R=ppUV5ptb4WUq_TB+JApzQ4DEO_AfQ@mail.gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.249.136.10]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Tue, 7 May 2019 01:35:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55368 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726924AbfEGFfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 May 2019 01:35:20 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8CF522087F;
+        Tue,  7 May 2019 05:35:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1557207319;
+        bh=EiAGYo1E9SxfPaS0i1ndJq2wTAwaTy0SAsYy7NBE9E4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=a/u0jRbRufFrj8/VqPVoaK9jwQvBxIz5i++3TqJ8jVw7skMj6LmWdEdMJRrGERbEg
+         22We8d2aEPVESKIxU1gUJasXY4ud+Z6/dn4es26aAZO9nKKWioSAdbpdGNsAEIFxZd
+         ipn9bD69NJ+5k5sLSU5OzEatxOyIsZOcyztIWvj8=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Daniel Gomez <dagmcr@gmail.com>,
+        Javier Martinez Canillas <javier@dowhile0.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.0 83/99] spi: ST ST95HF NFC: declare missing of table
+Date:   Tue,  7 May 2019 01:32:17 -0400
+Message-Id: <20190507053235.29900-83-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190507053235.29900-1-sashal@kernel.org>
+References: <20190507053235.29900-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> -----Original Message-----
-> From: ath10k <ath10k-bounces@lists.infradead.org> On Behalf Of Grant
-> Grundler
-> Sent: Saturday, May 4, 2019 2:01 AM
-> To: Wen Gong <wgong@codeaurora.org>
-> Cc: linux-wireless@vger.kernel.org; ath10k@lists.infradead.org
-> Subject: [EXT] Re: [PATCH] ath10k: remove mmc_hw_reset while hif power
-> down
->=20
-> [repeating comments I made in the gerrit review for Chrome OS :
-> https://chromium-
-> review.googlesource.com/c/chromiumos/third_party/kernel/+/1585667
-> ]
->=20
-> On Sat, Apr 27, 2019 at 7:17 PM Wen Gong <wgong@codeaurora.org> wrote:
-> >
-> > For sdio 3.0 chip, the clock will drop from 200M Hz to 50M Hz after loa=
-d
-> > ath10k driver, it is because mmc_hw_reset will reset the sdio's power,
-> > then mmc will consider it as sdio 2.0 and drop the clock.
->=20
-> Wen,
-> 5468e784c0600551ca03263f5255a375c05f88e7 commit message gives
-> reasons
-> for adding the mmc_hw_reset() call. The commit message for removing
-> gives different reason for removal. Both are good but second one is
-> incomplete.
->=20
-> The commit message for removal should ALSO explain why adding this
-> call wasn't necessary in the first place OR move the call to a
-> different code path.
->=20
-> > Remove mmc_hw_reset will avoid the drop of clock.
->=20
-> This commit message makes it clear the original patch introduced a new
-> problem. But the original patch fixed a different problem and that
-> this proposed change seems likely to re-introduce and the commit
-> message should explain why that isn't true (or how the original was
-> fixed differently)
-Hi Grant,
-The mmc_hw_reset's effect depends on the hardware layout/configure
-software's behavior, recently it will effect the clock of sdio for the plat=
-form
-I used. And it will still work well without mmc_hw_reset for the platform I
-Used currently.=20
-If sdio cannot work on other platform, I think it can add flag in=20
-ath10k_hw_params_list for the platform to call the mmc_hw_reset depends
-on the flag.
->=20
-> cheers,
-> grant
+From: Daniel Gomez <dagmcr@gmail.com>
+
+[ Upstream commit d04830531d0c4a99c897a44038e5da3d23331d2f ]
+
+Add missing <of_device_id> table for SPI driver relying on SPI
+device match since compatible is in a DT binding or in a DTS.
+
+Before this patch:
+modinfo drivers/nfc/st95hf/st95hf.ko | grep alias
+alias:          spi:st95hf
+
+After this patch:
+modinfo drivers/nfc/st95hf/st95hf.ko | grep alias
+alias:          spi:st95hf
+alias:          of:N*T*Cst,st95hfC*
+alias:          of:N*T*Cst,st95hf
+
+Reported-by: Javier Martinez Canillas <javier@dowhile0.org>
+Signed-off-by: Daniel Gomez <dagmcr@gmail.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/nfc/st95hf/core.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 2b26f762fbc3..01acb6e53365 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -1074,6 +1074,12 @@ static const struct spi_device_id st95hf_id[] = {
+ };
+ MODULE_DEVICE_TABLE(spi, st95hf_id);
+ 
++static const struct of_device_id st95hf_spi_of_match[] = {
++        { .compatible = "st,st95hf" },
++        { },
++};
++MODULE_DEVICE_TABLE(of, st95hf_spi_of_match);
++
+ static int st95hf_probe(struct spi_device *nfc_spi_dev)
+ {
+ 	int ret;
+@@ -1260,6 +1266,7 @@ static struct spi_driver st95hf_driver = {
+ 	.driver = {
+ 		.name = "st95hf",
+ 		.owner = THIS_MODULE,
++		.of_match_table = of_match_ptr(st95hf_spi_of_match),
+ 	},
+ 	.id_table = st95hf_id,
+ 	.probe = st95hf_probe,
+-- 
+2.20.1
 
