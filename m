@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9851C04AAD
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 06:08:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FBACC004C9
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 06:08:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9E2620675
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 06:08:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58D0020675
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 May 2019 06:08:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557209292;
-	bh=FWejI62NvUxZsr94Sm5l6ZysvXmrCkn7nYZyOUH/US8=;
+	s=default; t=1557209296;
+	bh=DJuL2ejuLOji21RwsU2T4+wD8kSXrsBUmaAO2NFzV3g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xDBMeHKtpIoWZGMxY7atguUa3bly6a20eZPOE/q4Y0APzOb52YFVt8KAj2Y2z8IeQ
-	 0AxzklO9thM+y22Db/vwnvgIleNraJOOYF6h/1G9Uwe0liA8jEVII2401omB8UojUB
-	 DxEvhWRxmbkCut9jGl8KlTqRAflIbcSGj3OrvT7U=
+	b=q/9Qeb+wIP3OyPdLAGLoFJzh2p56HEk+y38CRQiUxNn3xvM1QkrP1S5oQ/Nae75gK
+	 DvmjER9nYUypevzG2orEsYmBNytijL+bIvpcbbYMaJimlfg1LJpAktir0D6PMXW0gT
+	 CQnSbtERftIhsQQFg1mo04BFWJsqJAdiqZxqdrR8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726747AbfEGGIF (ORCPT
+        id S1726653AbfEGFcz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 May 2019 02:08:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53024 "EHLO mail.kernel.org"
+        Tue, 7 May 2019 01:32:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52988 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726592AbfEGFc4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 May 2019 01:32:56 -0400
+        id S1726605AbfEGFcx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 May 2019 01:32:53 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1F9D020C01;
-        Tue,  7 May 2019 05:32:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3ECDC20C01;
+        Tue,  7 May 2019 05:32:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557207175;
-        bh=FWejI62NvUxZsr94Sm5l6ZysvXmrCkn7nYZyOUH/US8=;
+        s=default; t=1557207172;
+        bh=DJuL2ejuLOji21RwsU2T4+wD8kSXrsBUmaAO2NFzV3g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aJczQIxwvLksuj9J81/CoxsRbDsSZ1/uNJpR8was7csgcVlCmyY1cMiN0KiCuhJ60
-         0nrpCQbeo1EaUKpGtVdR9f5c1+LoukISunHrxa8a1xdrR6twDh7xwSpY9jUYUIsB0w
-         4MiLKmOH34XtjiAKqdYVLGB5uVHJkAp/ftR6dmw8=
+        b=v192bAOFZzvHOVC7RrZO+KEAHoOTgMsb7c5EVNw29ekHOKDdiwb1lPuC3LJG3L/bk
+         5zZVxLr3G0YYO4kX+nf0pfp//Wve3axdUK6nZ+JzJJQ5cLVkd1UEUzbTcZLRZbk3A8
+         6ZaUDnjoWxUf4/W2z+gGsLLirNY8TF7FruI8rfNc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sunil Dutt <usdutt@codeaurora.org>,
+Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.0 15/99] nl80211: Add NL80211_FLAG_CLEAR_SKB flag for other NL commands
-Date:   Tue,  7 May 2019 01:31:09 -0400
-Message-Id: <20190507053235.29900-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 12/99] mac80211: Increase MAX_MSG_LEN
+Date:   Tue,  7 May 2019 01:31:06 -0400
+Message-Id: <20190507053235.29900-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190507053235.29900-1-sashal@kernel.org>
 References: <20190507053235.29900-1-sashal@kernel.org>
@@ -60,88 +61,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sunil Dutt <usdutt@codeaurora.org>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-[ Upstream commit d6db02a88a4aaa1cd7105137c67ddec7f3bdbc05 ]
+[ Upstream commit 78be2d21cc1cd3069c6138dcfecec62583130171 ]
 
-This commit adds NL80211_FLAG_CLEAR_SKB flag to other NL commands
-that carry key data to ensure they do not stick around on heap
-after the SKB is freed.
+Looks that 100 chars isn't enough for messages, as we keep getting
+warnings popping from different places due to message shortening.
+Instead of trying to shorten the prints, just increase the buffer size.
 
-Also introduced this flag for NL80211_CMD_VENDOR as there are sub
-commands which configure the keys.
-
-Signed-off-by: Sunil Dutt <usdutt@codeaurora.org>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ net/mac80211/trace_msg.h | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d91a408db113..156ce708b533 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13596,7 +13596,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DEAUTHENTICATE,
-@@ -13647,7 +13648,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_UPDATE_CONNECT_PARAMS,
-@@ -13655,7 +13657,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DISCONNECT,
-@@ -13684,7 +13687,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DEL_PMKSA,
-@@ -14036,7 +14040,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_SET_QOS_MAP,
-@@ -14091,7 +14096,8 @@ static const struct genl_ops nl80211_ops[] = {
- 		.doit = nl80211_set_pmk,
- 		.policy = nl80211_policy,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DEL_PMK,
+diff --git a/net/mac80211/trace_msg.h b/net/mac80211/trace_msg.h
+index 366b9e6f043e..40141df09f25 100644
+--- a/net/mac80211/trace_msg.h
++++ b/net/mac80211/trace_msg.h
+@@ -1,4 +1,9 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Portions of this file
++ * Copyright (C) 2019 Intel Corporation
++ */
++
+ #ifdef CONFIG_MAC80211_MESSAGE_TRACING
+ 
+ #if !defined(__MAC80211_MSG_DRIVER_TRACE) || defined(TRACE_HEADER_MULTI_READ)
+@@ -11,7 +16,7 @@
+ #undef TRACE_SYSTEM
+ #define TRACE_SYSTEM mac80211_msg
+ 
+-#define MAX_MSG_LEN	100
++#define MAX_MSG_LEN	120
+ 
+ DECLARE_EVENT_CLASS(mac80211_msg_event,
+ 	TP_PROTO(struct va_format *vaf),
 -- 
 2.20.1
 
