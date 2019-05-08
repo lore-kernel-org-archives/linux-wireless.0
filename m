@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E4DC04A6B
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 11:32:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB03EC04A6B
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 11:33:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C28A2053B
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 11:32:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93C6221019
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 11:33:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=analog.onmicrosoft.com header.i=@analog.onmicrosoft.com header.b="HmsHAFlj"
+	dkim=pass (1024-bit key) header.d=analog.onmicrosoft.com header.i=@analog.onmicrosoft.com header.b="q7IP+9NQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727933AbfEHLaT (ORCPT
+        id S1727838AbfEHLaG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 May 2019 07:30:19 -0400
-Received: from mail-eopbgr820072.outbound.protection.outlook.com ([40.107.82.72]:10944
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        Wed, 8 May 2019 07:30:06 -0400
+Received: from mail-eopbgr720075.outbound.protection.outlook.com ([40.107.72.75]:63520
+        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727887AbfEHLaQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 May 2019 07:30:16 -0400
+        id S1727660AbfEHLaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 May 2019 07:30:05 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=analog.onmicrosoft.com; s=selector1-analog-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=J2kUTxOBDW7W13uwOdmuJPQDQWhKkMs+dI0VfMHNhcs=;
- b=HmsHAFljmcbaN1BpAlIGHCpGcJ5jk39AUEqf/6w5Fch3rgS9LrOHdDkTRid4twIc316F2MrfuNLVkUGQ1NWLbgumQMbITyYa+XILsOarTTI+P/wjFyGQgnt0YjzNFAD0f6jVnTLQ0U3CRal0YHtfYbnJ7fVybRtPPhSGo+MDAbc=
-Received: from BN3PR03CA0078.namprd03.prod.outlook.com
- (2a01:111:e400:7a4d::38) by CO2PR03MB2262.namprd03.prod.outlook.com
- (2603:10b6:102:e::25) with Microsoft SMTP Server (version=TLS1_2,
+ bh=pjcT89AhZdKkG8M5isLXr+VAVcRFhlBYogTm1g/4pg8=;
+ b=q7IP+9NQa5EDYubf+Njn1bcwKqmHVEVEGwgvxF4CCCebgPyhKgL87yUmH6oKqvITyTy7ly7BzqJF9CuibfYxh1CD7eVrjMoC5DQyzQjqpnGGsZvQUhXfV78CE1aOuzWdCyhisJf3G2Zqgl4Qabaoo9JYILLYMMWBWRQ5g29Xp+w=
+Received: from MWHPR03CA0049.namprd03.prod.outlook.com (2603:10b6:301:3b::38)
+ by MWHPR03MB3134.namprd03.prod.outlook.com (2603:10b6:301:3c::27) with
+ Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1856.11; Wed, 8 May
- 2019 11:30:10 +0000
-Received: from CY1NAM02FT020.eop-nam02.prod.protection.outlook.com
- (2a01:111:f400:7e45::209) by BN3PR03CA0078.outlook.office365.com
- (2a01:111:e400:7a4d::38) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1856.11 via Frontend
- Transport; Wed, 8 May 2019 11:30:09 +0000
+ 2019 11:29:57 +0000
+Received: from BL2NAM02FT003.eop-nam02.prod.protection.outlook.com
+ (2a01:111:f400:7e46::201) by MWHPR03CA0049.outlook.office365.com
+ (2603:10b6:301:3b::38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1878.21 via Frontend
+ Transport; Wed, 8 May 2019 11:29:57 +0000
 Authentication-Results: spf=pass (sender IP is 137.71.25.55)
  smtp.mailfrom=analog.com; lists.freedesktop.org; dkim=none (message not
  signed) header.d=none;lists.freedesktop.org; dmarc=bestguesspass action=none
@@ -46,16 +46,16 @@ Received-SPF: Pass (protection.outlook.com: domain of analog.com designates
  137.71.25.55 as permitted sender) receiver=protection.outlook.com;
  client-ip=137.71.25.55; helo=nwd2mta1.analog.com;
 Received: from nwd2mta1.analog.com (137.71.25.55) by
- CY1NAM02FT020.mail.protection.outlook.com (10.152.75.191) with Microsoft SMTP
+ BL2NAM02FT003.mail.protection.outlook.com (10.152.76.204) with Microsoft SMTP
  Server (version=TLS1_0, cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.20.1856.11
- via Frontend Transport; Wed, 8 May 2019 11:30:07 +0000
+ via Frontend Transport; Wed, 8 May 2019 11:29:56 +0000
 Received: from NWD2HUBCAS7.ad.analog.com (nwd2hubcas7.ad.analog.com [10.64.69.107])
-        by nwd2mta1.analog.com (8.13.8/8.13.8) with ESMTP id x48BU7gu023733
+        by nwd2mta1.analog.com (8.13.8/8.13.8) with ESMTP id x48BTu06023698
         (version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=OK);
-        Wed, 8 May 2019 04:30:07 -0700
+        Wed, 8 May 2019 04:29:56 -0700
 Received: from saturn.analog.com (10.50.1.244) by NWD2HUBCAS7.ad.analog.com
  (10.64.69.107) with Microsoft SMTP Server id 14.3.408.0; Wed, 8 May 2019
- 07:30:06 -0400
+ 07:29:56 -0400
 From:   Alexandru Ardelean <alexandru.ardelean@analog.com>
 To:     <linuxppc-dev@lists.ozlabs.org>, <linux-kernel@vger.kernel.org>,
         <linux-ide@vger.kernel.org>, <linux-clk@vger.kernel.org>,
@@ -74,9 +74,9 @@ To:     <linuxppc-dev@lists.ozlabs.org>, <linux-kernel@vger.kernel.org>,
         <linux-integrity@vger.kernel.org>, <alsa-devel@alsa-project.org>
 CC:     <gregkh@linuxfoundation.org>, <andriy.shevchenko@linux.intel.com>,
         Alexandru Ardelean <alexandru.ardelean@analog.com>
-Subject: [PATCH 09/16] mmc: sdhci-xenon: use new match_string() helper/macro
-Date:   Wed, 8 May 2019 14:28:35 +0300
-Message-ID: <20190508112842.11654-11-alexandru.ardelean@analog.com>
+Subject: [PATCH 07/16] device connection: use new match_string() helper/macro
+Date:   Wed, 8 May 2019 14:28:33 +0300
+Message-ID: <20190508112842.11654-9-alexandru.ardelean@analog.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190508112842.11654-1-alexandru.ardelean@analog.com>
 References: <20190508112842.11654-1-alexandru.ardelean@analog.com>
@@ -85,74 +85,62 @@ Content-Type: text/plain
 X-ADIRoutedOnPrem: True
 X-EOPAttributedMessage: 0
 X-MS-Office365-Filtering-HT: Tenant
-X-Forefront-Antispam-Report: CIP:137.71.25.55;IPV:NLI;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(1496009)(396003)(39860400002)(376002)(346002)(136003)(2980300002)(189003)(199004)(356004)(6666004)(36756003)(5660300002)(50466002)(48376002)(2616005)(126002)(426003)(336012)(107886003)(51416003)(44832011)(2906002)(47776003)(486006)(2201001)(4326008)(476003)(11346002)(446003)(86362001)(76176011)(26005)(16586007)(246002)(478600001)(2441003)(50226002)(53416004)(1076003)(7696005)(70586007)(70206006)(7636002)(305945005)(7416002)(106002)(77096007)(8676002)(316002)(186003)(110136005)(8936002)(54906003)(921003)(83996005)(1121003)(2101003);DIR:OUT;SFP:1101;SCL:1;SRVR:CO2PR03MB2262;H:nwd2mta1.analog.com;FPR:;SPF:Pass;LANG:en;PTR:nwd2mail10.analog.com;MX:1;A:1;
+X-Forefront-Antispam-Report: CIP:137.71.25.55;IPV:NLI;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(1496009)(346002)(396003)(136003)(376002)(39860400002)(2980300002)(199004)(189003)(36756003)(50226002)(246002)(47776003)(8936002)(8676002)(2906002)(48376002)(70586007)(76176011)(54906003)(4326008)(106002)(70206006)(86362001)(51416003)(2201001)(107886003)(14444005)(316002)(110136005)(16586007)(7696005)(486006)(11346002)(53416004)(126002)(476003)(2616005)(446003)(44832011)(2441003)(50466002)(7636002)(305945005)(7416002)(6666004)(426003)(186003)(5660300002)(336012)(478600001)(77096007)(1076003)(356004)(26005)(921003)(83996005)(1121003)(2101003);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR03MB3134;H:nwd2mta1.analog.com;FPR:;SPF:Pass;LANG:en;PTR:nwd2mail10.analog.com;A:1;MX:1;
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 8666f1cf-9df3-40da-2f35-08d6d3a88708
-X-Microsoft-Antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600141)(711020)(4605104)(4709054)(2017052603328);SRVR:CO2PR03MB2262;
-X-MS-TrafficTypeDiagnostic: CO2PR03MB2262:
-X-Microsoft-Antispam-PRVS: <CO2PR03MB226289536B8045C7EF017BB5F9320@CO2PR03MB2262.namprd03.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6430;
+X-MS-Office365-Filtering-Correlation-Id: 91c3809a-bbd8-4770-1064-08d6d3a87fc5
+X-Microsoft-Antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600141)(711020)(4605104)(4709054)(2017052603328);SRVR:MWHPR03MB3134;
+X-MS-TrafficTypeDiagnostic: MWHPR03MB3134:
+X-Microsoft-Antispam-PRVS: <MWHPR03MB3134ADED8AEA2DE87EDA3597F9320@MWHPR03MB3134.namprd03.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
 X-Forefront-PRVS: 0031A0FFAF
 X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam-Message-Info: 7rCCvmL00MJBmcDTDIesTQyTH/FNWfXEsju68ENrTwxg/JIcze2MSJ12BbCQi4KSrgLnc1A1T6oXYLKYxlqmijCkcIwNL4E9xzrBeXjIFArc3gJbJYEsik3rWIiMQrmNac8NKVSXbLpB/o4OjBebxyfuuKkkNtQJJAndo0715UIZuDMc1ZdvuMrceL8LElXSfQiRCtrBNnkB/KWkSmtT8hsShWBcIskk5FP30zXoYxV/z2dgb6eFA53PQRv7N/xDDavBCp9yNUm4NynSE3PGnYKIawmDQ1m2K8VQatJsc8AN1TyPmq9PF1A8pLI6egBZrXN35GHe2/ZpHJhBxPEZoVlVwSfSUS96GPx1sw2lCVmgt88RgJFlddOoDGa3f1+TOqJw2fXL5R0yGXI+tAlczYBs61mJT3hH1NvT9TI8S+8=
+X-Microsoft-Antispam-Message-Info: vPHqUyoLZcW0hVOhWn9GTqMZTbShobrGD2/ViAb1u/5/xckKY/lz+Bdz9sVMaISB5ZX+9BzGInurLqmM2FwjifOIAfCaB8oBwVzIS8pCv9hhyB42Iq3xXxptH5PZSBgO+M5i2dwNxoYHH/OfZkBJA5ivGIM3gJVbqng57UMMXQ2w+fpSmMh4cSgClNCxo8N5onzhk1RNY/exNSfBdSN+Djs9KjT6E9pvBp/NmRaLYmuLC6ZT+yMJ9koDYkjHuyWAEmz0HO0dNrjGBmAXW52KixyJ8drIdiD8EfBe6ovS9H4IykWVZ+zhpPAJrX7aE7bNhPgAj6OIz76YE9VndH2HHEjnLTtm3qOeMcvAav+dbYvG6K++r8veVFChlLmcP/tySHd8yyqVyS0HojCmo6O6IxxBOqhu4D25Gwq0FyInxLU=
 X-OriginatorOrg: analog.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 May 2019 11:30:07.6794
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 May 2019 11:29:56.9840
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8666f1cf-9df3-40da-2f35-08d6d3a88708
+X-MS-Exchange-CrossTenant-Network-Message-Id: 91c3809a-bbd8-4770-1064-08d6d3a87fc5
 X-MS-Exchange-CrossTenant-Id: eaa689b4-8f87-40e0-9c6f-7228de4d754a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=eaa689b4-8f87-40e0-9c6f-7228de4d754a;Ip=[137.71.25.55];Helo=[nwd2mta1.analog.com]
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO2PR03MB2262
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR03MB3134
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The change is also cosmetic, but it also does a tighter coupling between
-the enums & the string values. This way, the ARRAY_SIZE(phy_types) that is
-implicitly done in the match_string() macro is also a bit safer.
+The `device_connection` struct is defined as:
+struct device_connection {
+        struct fwnode_handle    *fwnode;
+        const char              *endpoint[2];
+        const char              *id;
+        struct list_head        list;
+};
+
+The `endpoint` member is a static array of strings (on the struct), so
+using the match_string() (which does an ARRAY_SIZE((con->endpoint)) should
+be fine.
+
+The recent change to match_string() (to ignore NULL entries up to the size
+of the array) shouldn't affect this.
 
 Signed-off-by: Alexandru Ardelean <alexandru.ardelean@analog.com>
 ---
- drivers/mmc/host/sdhci-xenon-phy.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/base/devcon.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/mmc/host/sdhci-xenon-phy.c b/drivers/mmc/host/sdhci-xenon-phy.c
-index 59b7a6cac995..2a9206867fe1 100644
---- a/drivers/mmc/host/sdhci-xenon-phy.c
-+++ b/drivers/mmc/host/sdhci-xenon-phy.c
-@@ -135,17 +135,17 @@ struct xenon_emmc_phy_regs {
- 	u32 logic_timing_val;
- };
+diff --git a/drivers/base/devcon.c b/drivers/base/devcon.c
+index 7bc1c619b721..4a2338665585 100644
+--- a/drivers/base/devcon.c
++++ b/drivers/base/devcon.c
+@@ -70,7 +70,7 @@ void *device_connection_find_match(struct device *dev, const char *con_id,
+ 	mutex_lock(&devcon_lock);
  
--static const char * const phy_types[] = {
--	"emmc 5.0 phy",
--	"emmc 5.1 phy"
--};
--
- enum xenon_phy_type_enum {
- 	EMMC_5_0_PHY,
- 	EMMC_5_1_PHY,
- 	NR_PHY_TYPES
- };
+ 	list_for_each_entry(con, &devcon_list, list) {
+-		ep = __match_string(con->endpoint, 2, devname);
++		ep = match_string(con->endpoint, devname);
+ 		if (ep < 0)
+ 			continue;
  
-+static const char * const phy_types[NR_PHY_TYPES] = {
-+	[EMMC_5_0_PHY] = "emmc 5.0 phy",
-+	[EMMC_5_1_PHY] = "emmc 5.1 phy"
-+};
-+
- enum soc_pad_ctrl_type {
- 	SOC_PAD_SD,
- 	SOC_PAD_FIXED_1_8V,
-@@ -821,7 +821,7 @@ static int xenon_add_phy(struct device_node *np, struct sdhci_host *host,
- 	struct xenon_priv *priv = sdhci_pltfm_priv(pltfm_host);
- 	int ret;
- 
--	priv->phy_type = __match_string(phy_types, NR_PHY_TYPES, phy_name);
-+	priv->phy_type = match_string(phy_types, phy_name);
- 	if (priv->phy_type < 0) {
- 		dev_err(mmc_dev(host->mmc),
- 			"Unable to determine PHY name %s. Use default eMMC 5.1 PHY\n",
 -- 
 2.17.1
 
