@@ -2,56 +2,56 @@ Return-Path: <SRS0=dXk9=TI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4482BC04AAD
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 07:02:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53D97C04A6B
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 07:02:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F1B821530
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 07:02:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26FD020644
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 07:02:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726982AbfEHHC4 (ORCPT
+        id S1726761AbfEHHCz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 May 2019 03:02:56 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54170 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726877AbfEHHCz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 8 May 2019 03:02:55 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x48724ZC128042
-        for <linux-wireless@vger.kernel.org>; Wed, 8 May 2019 03:02:54 -0400
-Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2sbq4h89dq-1
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:49202 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726817AbfEHHCw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 May 2019 03:02:52 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x48722h7138618
+        for <linux-wireless@vger.kernel.org>; Wed, 8 May 2019 03:02:52 -0400
+Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2sbs3hkav5-1
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2019 03:02:53 -0400
+        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2019 03:02:51 -0400
 Received: from localhost
-        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-wireless@vger.kernel.org> from <alastair@au1.ibm.com>;
-        Wed, 8 May 2019 08:02:50 +0100
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
-        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        Wed, 8 May 2019 08:02:47 +0100
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (9.149.109.194)
+        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
         (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Wed, 8 May 2019 08:02:40 +0100
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x4872dLI58195990
+        Wed, 8 May 2019 08:02:39 +0100
+Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x4872cSV59900032
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 8 May 2019 07:02:39 GMT
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C0235A405F;
-        Wed,  8 May 2019 07:02:39 +0000 (GMT)
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 28D9FA4062;
-        Wed,  8 May 2019 07:02:39 +0000 (GMT)
+        Wed, 8 May 2019 07:02:38 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 17E1442045;
+        Wed,  8 May 2019 07:02:38 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 646DD4203F;
+        Wed,  8 May 2019 07:02:37 +0000 (GMT)
 Received: from ozlabs.au.ibm.com (unknown [9.192.253.14])
-        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Wed,  8 May 2019 07:02:39 +0000 (GMT)
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed,  8 May 2019 07:02:37 +0000 (GMT)
 Received: from adsilva.ozlabs.ibm.com (haven.au.ibm.com [9.192.254.114])
         (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ozlabs.au.ibm.com (Postfix) with ESMTPSA id 681BEA03BC;
+        by ozlabs.au.ibm.com (Postfix) with ESMTPSA id 04A30A01A2;
         Wed,  8 May 2019 17:02:35 +1000 (AEST)
 From:   "Alastair D'Silva" <alastair@au1.ibm.com>
 To:     alastair@d-silva.org
@@ -84,24 +84,22 @@ Cc:     Jani Nikula <jani.nikula@linux.intel.com>,
         ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
         devel@driverdev.osuosl.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH v2 6/7] lib/hexdump.c: Allow multiple groups to be separated by spaces
-Date:   Wed,  8 May 2019 17:01:46 +1000
+Subject: [PATCH v2 0/7] Hexdump Enhancements
+Date:   Wed,  8 May 2019 17:01:40 +1000
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190508070148.23130-1-alastair@au1.ibm.com>
-References: <20190508070148.23130-1-alastair@au1.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-x-cbid: 19050807-0020-0000-0000-0000033A6C76
+x-cbid: 19050807-4275-0000-0000-00000332844B
 X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19050807-0021-0000-0000-0000218D0BCB
-Message-Id: <20190508070148.23130-7-alastair@au1.ibm.com>
+x-cbparentid: 19050807-4276-0000-0000-00003841F1F3
+Message-Id: <20190508070148.23130-1-alastair@au1.ibm.com>
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-05-08_05:,,
  signatures=0
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
  malwarescore=0 suspectscore=1 phishscore=0 bulkscore=0 spamscore=0
  clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=957 adultscore=0 classifier=spam adjust=0 reason=mlx
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
  scancount=1 engine=8.0.1-1810050000 definitions=main-1905080046
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -110,165 +108,62 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Alastair D'Silva <alastair@d-silva.org>
 
-Similar to the previous patch, this patch separates groups by 2 spaces for
-the hex fields, and 1 space for the ASCII field.
+Apologies for the large CC list, it's a heads up for those responsible
+for subsystems where a prototype change in generic code causes a change
+in those subsystems.
 
-eg.
-buf:00000000: 454d414e 43415053  4e495f45 00584544  NAMESPAC E_INDEX.
-buf:00000010: 00000000 00000002  00000000 00000000  ........ ........
+This series enhances hexdump.
 
-Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
----
- include/linux/printk.h |  3 ++
- lib/hexdump.c          | 65 +++++++++++++++++++++++++++++++-----------
- 2 files changed, 52 insertions(+), 16 deletions(-)
+These improve the readability of the dumped data in certain situations
+(eg. wide terminals are available, many lines of empty bytes exist, etc).
 
-diff --git a/include/linux/printk.h b/include/linux/printk.h
-index dc693aec394c..5231a14e4593 100644
---- a/include/linux/printk.h
-+++ b/include/linux/printk.h
-@@ -485,6 +485,9 @@ enum {
- #define HEXDUMP_2_GRP_LINES		(1 << 2)
- #define HEXDUMP_4_GRP_LINES		(1 << 3)
- #define HEXDUMP_8_GRP_LINES		(1 << 4)
-+#define HEXDUMP_2_GRP_SPACES		(1 << 5)
-+#define HEXDUMP_4_GRP_SPACES		(1 << 6)
-+#define HEXDUMP_8_GRP_SPACES		(1 << 7)
- 
- extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
- 			      int groupsize, char *linebuf, size_t linebuflen,
-diff --git a/lib/hexdump.c b/lib/hexdump.c
-index 6f4d1176c332..febd614406d1 100644
---- a/lib/hexdump.c
-+++ b/lib/hexdump.c
-@@ -91,9 +91,37 @@ static const char *group_separator(int group, u64 flags)
- 	if ((flags & HEXDUMP_2_GRP_LINES) && !((group) % 2))
- 		return "|";
- 
-+	if ((flags & HEXDUMP_8_GRP_SPACES) && !((group) % 8))
-+		return "  ";
-+
-+	if ((flags & HEXDUMP_4_GRP_SPACES) && !((group) % 4))
-+		return "  ";
-+
-+	if ((flags & HEXDUMP_2_GRP_SPACES) && !((group) % 2))
-+		return "  ";
-+
- 	return " ";
- }
- 
-+static void separator_parameters(u64 flags, int groupsize, int *sep_chars,
-+				 char *sep)
-+{
-+	if (flags & (HEXDUMP_2_GRP_LINES | HEXDUMP_2_GRP_SPACES))
-+		*sep_chars = groupsize * 2;
-+	if (flags & (HEXDUMP_4_GRP_LINES | HEXDUMP_4_GRP_SPACES))
-+		*sep_chars = groupsize * 4;
-+	if (flags & (HEXDUMP_8_GRP_LINES | HEXDUMP_8_GRP_SPACES))
-+		*sep_chars = groupsize * 8;
-+
-+	if (flags & (HEXDUMP_2_GRP_LINES | HEXDUMP_4_GRP_LINES |
-+					   HEXDUMP_8_GRP_LINES))
-+		*sep = '|';
-+
-+	if (flags & (HEXDUMP_2_GRP_SPACES | HEXDUMP_4_GRP_SPACES |
-+					   HEXDUMP_8_GRP_SPACES))
-+		*sep = ' ';
-+}
-+
- /**
-  * hex_dump_to_buffer - convert a blob of data to "hex ASCII" in memory
-  * @buf: data blob to dump
-@@ -107,6 +135,9 @@ static const char *group_separator(int group, u64 flags)
-  *	HEXDUMP_2_GRP_LINES:		insert a '|' after every 2 groups
-  *	HEXDUMP_4_GRP_LINES:		insert a '|' after every 4 groups
-  *	HEXDUMP_8_GRP_LINES:		insert a '|' after every 8 groups
-+ *	HEXDUMP_2_GRP_SPACES:		insert a ' ' after every 2 groups
-+ *	HEXDUMP_4_GRP_SPACES:		insert a ' ' after every 4 groups
-+ *	HEXDUMP_8_GRP_SPACES:		insert a ' ' after every 8 groups
-  *
-  * hex_dump_to_buffer() works on one "line" of output at a time, converting
-  * <groupsize> bytes of input to hexadecimal (and optionally printable ASCII)
-@@ -138,7 +169,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 	int j, lx = 0;
- 	int ascii_column;
- 	int ret;
--	int line_chars = 0;
-+	int sep_chars = 0;
-+	char sep = 0;
- 
- 	if (!is_power_of_2(groupsize) || groupsize > 8)
- 		groupsize = 1;
-@@ -152,8 +184,14 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 		len = rowsize;
- 
- 	ngroups = len / groupsize;
-+
- 	ascii_column = rowsize * 2 + rowsize / groupsize + 1;
- 
-+	// space separators use 2 spaces in the hex output
-+	separator_parameters(flags, groupsize, &sep_chars, &sep);
-+	if (sep == ' ')
-+		ascii_column += rowsize / sep_chars;
-+
- 	if (!linebuflen)
- 		goto overflow1;
- 
-@@ -221,24 +259,17 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 		linebuf[lx++] = ' ';
- 	}
- 
--	if (flags & HEXDUMP_2_GRP_LINES)
--		line_chars = groupsize * 2;
--	if (flags & HEXDUMP_4_GRP_LINES)
--		line_chars = groupsize * 4;
--	if (flags & HEXDUMP_8_GRP_LINES)
--		line_chars = groupsize * 8;
--
- 	for (j = 0; j < len; j++) {
- 		if (linebuflen < lx + 2)
- 			goto overflow2;
- 		ch = ptr[j];
- 		linebuf[lx++] = (isascii(ch) && isprint(ch)) ? ch : '.';
- 
--		if (line_chars && ((j + 1) < len) &&
--				((j + 1) % line_chars == 0)) {
-+		if (sep_chars && ((j + 1) < len) &&
-+				((j + 1) % sep_chars == 0)) {
- 			if (linebuflen < lx + 2)
- 				goto overflow2;
--			linebuf[lx++] = '|';
-+			linebuf[lx++] = sep;
- 		}
- 	}
- nil:
-@@ -247,9 +278,11 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- overflow2:
- 	linebuf[lx++] = '\0';
- overflow1:
--	return (flags & HEXDUMP_ASCII) ? ascii_column + len +
--					(len - 1) / line_chars :
--					 (groupsize * 2 + 1) * ngroups - 1;
-+	if (flags & HEXDUMP_ASCII)
-+		return ascii_column + len + (len - 1) / sep_chars;
-+
-+	return groupsize * 2 * ngroups +
-+		((sep == ' ') ? 2 : 1) * (ngroups - 1);
- }
- EXPORT_SYMBOL(hex_dump_to_buffer);
- 
-@@ -343,9 +376,9 @@ void print_hex_dump_ext(const char *level, const char *prefix_str,
- 
- 	/* Worst case line length:
- 	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte in,
--	 * 1 char per N groups, NULL
-+	 * 2 char per N groups, NULL
- 	 */
--	linebuf_len = rowsize * 3 + 2 + rowsize + rowsize / groupsize + 1;
-+	linebuf_len = rowsize * 3 + 2 + rowsize + 2 * rowsize / groupsize + 1;
- 	linebuf = kzalloc(linebuf_len, GFP_KERNEL);
- 	if (!linebuf) {
- 		printk("%s%shexdump: Could not alloc %u bytes for buffer\n",
+The default behaviour of hexdump is unchanged, however, the prototype
+for hex_dump_to_buffer() has changed, and print_hex_dump() has been
+renamed to print_hex_dump_ext(), with a wrapper replacing it for
+compatibility with existing code, which would have been too invasive to
+change.
+
+Hexdump selftests have be run & confirmed passed.
+
+Changelog:
+ - Fix failing selftests
+ - Fix precedence bug in 'Replace ascii bool in hex_dump_to_buffer...'
+ - Remove hardcoded new lengths & instead relax the checks in
+   hex_dump_to_buffer, allocating the buffer from the heap instead of the
+   stack.
+ - Replace the skipping of lines of 0x00/0xff with skipping lines of
+   repeated characters, announcing what has been skipped.
+ - Add spaces as an optional N-group separator
+ - Allow byte ordering to be maintained when HEXDUMP_RETAIN_BYTE_ORDERING
+   is set.
+ - Updated selftests to cover 'Relax rowsize checks' &
+   'Optionally retain byte ordering'
+
+Alastair D'Silva (7):
+  lib/hexdump.c: Fix selftests
+  lib/hexdump.c: Relax rowsize checks in hex_dump_to_buffer
+  lib/hexdump.c: Optionally suppress lines of repeated bytes
+  lib/hexdump.c: Replace ascii bool in hex_dump_to_buffer with flags
+  lib/hexdump.c: Allow multiple groups to be separated by lines '|'
+  lib/hexdump.c: Allow multiple groups to be separated by spaces
+  lib/hexdump.c: Optionally retain byte ordering
+
+ drivers/gpu/drm/i915/intel_engine_cs.c        |   2 +-
+ drivers/isdn/hardware/mISDN/mISDNisar.c       |   6 +-
+ drivers/mailbox/mailbox-test.c                |   2 +-
+ drivers/net/ethernet/amd/xgbe/xgbe-drv.c      |   2 +-
+ .../net/ethernet/synopsys/dwc-xlgmac-common.c |   2 +-
+ drivers/net/wireless/ath/ath10k/debug.c       |   3 +-
+ .../net/wireless/intel/iwlegacy/3945-mac.c    |   2 +-
+ drivers/platform/chrome/wilco_ec/debugfs.c    |   2 +-
+ drivers/scsi/scsi_logging.c                   |   8 +-
+ drivers/staging/fbtft/fbtft-core.c            |   2 +-
+ fs/seq_file.c                                 |   3 +-
+ include/linux/printk.h                        |  34 ++-
+ lib/hexdump.c                                 | 260 +++++++++++++++---
+ lib/test_hexdump.c                            | 146 +++++++---
+ 14 files changed, 372 insertions(+), 102 deletions(-)
+
 -- 
 2.21.0
 
