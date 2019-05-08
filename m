@@ -4,54 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDFC5C04A6B
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 07:03:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24973C04A6B
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 07:03:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6C8B20644
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 07:03:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB33C20644
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 May 2019 07:03:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726996AbfEHHC7 (ORCPT
+        id S1727044AbfEHHDE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 May 2019 03:02:59 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55434 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726554AbfEHHCz (ORCPT
+        Wed, 8 May 2019 03:03:04 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:33008 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726870AbfEHHCy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 May 2019 03:02:55 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x4872IGb055406
+        Wed, 8 May 2019 03:02:54 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x487280M051578
         for <linux-wireless@vger.kernel.org>; Wed, 8 May 2019 03:02:53 -0400
-Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2sbr09xbsh-1
+Received: from e06smtp07.uk.ibm.com (e06smtp07.uk.ibm.com [195.75.94.103])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2sbs0tuxu7-1
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2019 03:02:53 -0400
+        for <linux-wireless@vger.kernel.org>; Wed, 08 May 2019 03:02:52 -0400
 Received: from localhost
-        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp07.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-wireless@vger.kernel.org> from <alastair@au1.ibm.com>;
-        Wed, 8 May 2019 08:02:50 +0100
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
-        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        Wed, 8 May 2019 08:02:48 +0100
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (9.149.109.195)
+        by e06smtp07.uk.ibm.com (192.168.101.137) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
         (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Wed, 8 May 2019 08:02:40 +0100
+        Wed, 8 May 2019 08:02:39 +0100
 Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x4872dhS48038106
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x4872cXS60227740
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 8 May 2019 07:02:40 GMT
+        Wed, 8 May 2019 07:02:38 GMT
 Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C0C4011C04C;
-        Wed,  8 May 2019 07:02:39 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 1117511C050;
+        Wed,  8 May 2019 07:02:38 +0000 (GMT)
 Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2753A11C050;
-        Wed,  8 May 2019 07:02:39 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 644D911C05B;
+        Wed,  8 May 2019 07:02:37 +0000 (GMT)
 Received: from ozlabs.au.ibm.com (unknown [9.192.253.14])
         by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Wed,  8 May 2019 07:02:39 +0000 (GMT)
+        Wed,  8 May 2019 07:02:37 +0000 (GMT)
 Received: from adsilva.ozlabs.ibm.com (haven.au.ibm.com [9.192.254.114])
         (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ozlabs.au.ibm.com (Postfix) with ESMTPSA id 5D665A03B6;
+        by ozlabs.au.ibm.com (Postfix) with ESMTPSA id 25E83A03B1;
         Wed,  8 May 2019 17:02:35 +1000 (AEST)
 From:   "Alastair D'Silva" <alastair@au1.ibm.com>
 To:     alastair@d-silva.org
@@ -84,18 +84,18 @@ Cc:     Jani Nikula <jani.nikula@linux.intel.com>,
         ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
         devel@driverdev.osuosl.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH v2 5/7] lib/hexdump.c: Allow multiple groups to be separated by lines '|'
-Date:   Wed,  8 May 2019 17:01:45 +1000
+Subject: [PATCH v2 2/7] lib/hexdump.c: Relax rowsize checks in hex_dump_to_buffer
+Date:   Wed,  8 May 2019 17:01:42 +1000
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190508070148.23130-1-alastair@au1.ibm.com>
 References: <20190508070148.23130-1-alastair@au1.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-x-cbid: 19050807-0012-0000-0000-000003196FA2
+x-cbid: 19050807-0028-0000-0000-0000036B7178
 X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19050807-0013-0000-0000-00002151EFD6
-Message-Id: <20190508070148.23130-6-alastair@au1.ibm.com>
+x-cbparentid: 19050807-0029-0000-0000-0000242AED6D
+Message-Id: <20190508070148.23130-3-alastair@au1.ibm.com>
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-05-08_05:,,
  signatures=0
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
@@ -110,186 +110,284 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Alastair D'Silva <alastair@d-silva.org>
 
-With the wider display format, it can become hard to identify how many
-bytes into the line you are looking at.
+This patch removes the hardcoded row limits and allows for
+other lengths. These lengths must still be a multiple of
+groupsize.
 
-The patch adds new flags to hex_dump_to_buffer() and print_hex_dump() to
-print vertical lines to separate every N groups of bytes.
+This allows structs that are not 16/32 bytes to display on
+a single line.
 
-eg.
-buf:00000000: 454d414e 43415053|4e495f45 00584544  NAMESPAC|E_INDEX.
-buf:00000010: 00000000 00000002|00000000 00000000  ........|........
+This patch also expands the self-tests to test row sizes
+up to 64 bytes (though they can now be arbitrarily long).
 
 Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
 ---
- include/linux/printk.h |  3 +++
- lib/hexdump.c          | 59 ++++++++++++++++++++++++++++++++++++------
- 2 files changed, 54 insertions(+), 8 deletions(-)
+ lib/hexdump.c      | 48 ++++++++++++++++++++++++++++--------------
+ lib/test_hexdump.c | 52 ++++++++++++++++++++++++++++++++++++++--------
+ 2 files changed, 75 insertions(+), 25 deletions(-)
 
-diff --git a/include/linux/printk.h b/include/linux/printk.h
-index 00a82e468643..dc693aec394c 100644
---- a/include/linux/printk.h
-+++ b/include/linux/printk.h
-@@ -482,6 +482,9 @@ enum {
- 
- #define HEXDUMP_ASCII			(1 << 0)
- #define HEXDUMP_SUPPRESS_REPEATED	(1 << 1)
-+#define HEXDUMP_2_GRP_LINES		(1 << 2)
-+#define HEXDUMP_4_GRP_LINES		(1 << 3)
-+#define HEXDUMP_8_GRP_LINES		(1 << 4)
- 
- extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
- 			      int groupsize, char *linebuf, size_t linebuflen,
 diff --git a/lib/hexdump.c b/lib/hexdump.c
-index ddd1697e5f9b..6f4d1176c332 100644
+index 81b70ed37209..3943507bc0e9 100644
 --- a/lib/hexdump.c
 +++ b/lib/hexdump.c
-@@ -77,6 +77,23 @@ char *bin2hex(char *dst, const void *src, size_t count)
- }
- EXPORT_SYMBOL(bin2hex);
+@@ -12,6 +12,7 @@
+ #include <linux/errno.h>
+ #include <linux/kernel.h>
+ #include <linux/export.h>
++#include <linux/slab.h>
+ #include <asm/unaligned.h>
  
-+static const char *group_separator(int group, u64 flags)
-+{
-+	if (group == 0)
-+		return " ";
-+
-+	if ((flags & HEXDUMP_8_GRP_LINES) && !((group) % 8))
-+		return "|";
-+
-+	if ((flags & HEXDUMP_4_GRP_LINES) && !((group) % 4))
-+		return "|";
-+
-+	if ((flags & HEXDUMP_2_GRP_LINES) && !((group) % 2))
-+		return "|";
-+
-+	return " ";
-+}
-+
- /**
+ const char hex_asc[] = "0123456789abcdef";
+@@ -80,14 +81,15 @@ EXPORT_SYMBOL(bin2hex);
   * hex_dump_to_buffer - convert a blob of data to "hex ASCII" in memory
   * @buf: data blob to dump
-@@ -87,6 +104,9 @@ EXPORT_SYMBOL(bin2hex);
+  * @len: number of bytes in the @buf
+- * @rowsize: number of bytes to print per line; must be 16 or 32
++ * @rowsize: number of bytes to print per line; must be a multiple of groupsize
+  * @groupsize: number of bytes to print at a time (1, 2, 4, 8; default = 1)
+  * @linebuf: where to put the converted data
   * @linebuflen: total size of @linebuf, including space for terminating NUL
-  * @flags: A bitwise OR of the following flags:
-  *	HEXDUMP_ASCII:			include ASCII after the hex output
-+ *	HEXDUMP_2_GRP_LINES:		insert a '|' after every 2 groups
-+ *	HEXDUMP_4_GRP_LINES:		insert a '|' after every 4 groups
-+ *	HEXDUMP_8_GRP_LINES:		insert a '|' after every 8 groups
+  * @ascii: include ASCII after the hex output
   *
-  * hex_dump_to_buffer() works on one "line" of output at a time, converting
-  * <groupsize> bytes of input to hexadecimal (and optionally printable ASCII)
-@@ -118,6 +138,7 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 	int j, lx = 0;
+- * hex_dump_to_buffer() works on one "line" of output at a time, i.e.,
+- * 16 or 32 bytes of input data converted to hex + ASCII output.
++ * hex_dump_to_buffer() works on one "line" of output at a time, converting
++ * <groupsize> bytes of input to hexadecimal (and optionally printable ASCII)
++ * until <rowsize> bytes have been emitted.
+  *
+  * Given a buffer of u8 data, hex_dump_to_buffer() converts the input data
+  * to a hex + ASCII dump at the supplied memory location.
+@@ -116,16 +118,17 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
  	int ascii_column;
  	int ret;
-+	int line_chars = 0;
  
+-	if (rowsize != 16 && rowsize != 32)
+-		rowsize = 16;
+-
+-	if (len > rowsize)		/* limit to one line at a time */
+-		len = rowsize;
  	if (!is_power_of_2(groupsize) || groupsize > 8)
  		groupsize = 1;
-@@ -144,7 +165,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 	if ((len % groupsize) != 0)	/* no mixed size output */
+ 		groupsize = 1;
  
- 		for (j = 0; j < ngroups; j++) {
- 			ret = snprintf(linebuf + lx, linebuflen - lx,
--				       "%s%16.16llx", j ? " " : "",
-+				       "%s%16.16llx",
-+				       j ? group_separator(j, flags) : "",
- 				       get_unaligned(ptr8 + j));
- 			if (ret >= linebuflen - lx)
- 				goto overflow1;
-@@ -155,7 +177,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 
- 		for (j = 0; j < ngroups; j++) {
- 			ret = snprintf(linebuf + lx, linebuflen - lx,
--				       "%s%8.8x", j ? " " : "",
-+				       "%s%8.8x",
-+				       j ? group_separator(j, flags) : "",
- 				       get_unaligned(ptr4 + j));
- 			if (ret >= linebuflen - lx)
- 				goto overflow1;
-@@ -166,7 +189,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 
- 		for (j = 0; j < ngroups; j++) {
- 			ret = snprintf(linebuf + lx, linebuflen - lx,
--				       "%s%4.4x", j ? " " : "",
-+				       "%s%4.4x",
-+				       j ? group_separator(j, flags) : "",
- 				       get_unaligned(ptr2 + j));
- 			if (ret >= linebuflen - lx)
- 				goto overflow1;
-@@ -196,11 +220,26 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- 			goto overflow2;
- 		linebuf[lx++] = ' ';
- 	}
++	if (rowsize % groupsize)
++		rowsize -= rowsize % groupsize;
 +
-+	if (flags & HEXDUMP_2_GRP_LINES)
-+		line_chars = groupsize * 2;
-+	if (flags & HEXDUMP_4_GRP_LINES)
-+		line_chars = groupsize * 4;
-+	if (flags & HEXDUMP_8_GRP_LINES)
-+		line_chars = groupsize * 8;
++	if (len > rowsize)		/* limit to one line at a time */
++		len = rowsize;
 +
- 	for (j = 0; j < len; j++) {
- 		if (linebuflen < lx + 2)
- 			goto overflow2;
- 		ch = ptr[j];
- 		linebuf[lx++] = (isascii(ch) && isprint(ch)) ? ch : '.';
-+
-+		if (line_chars && ((j + 1) < len) &&
-+				((j + 1) % line_chars == 0)) {
-+			if (linebuflen < lx + 2)
-+				goto overflow2;
-+			linebuf[lx++] = '|';
-+		}
- 	}
- nil:
- 	linebuf[lx] = '\0';
-@@ -208,7 +247,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- overflow2:
- 	linebuf[lx++] = '\0';
- overflow1:
--	return (flags & HEXDUMP_ASCII) ? ascii_column + len :
-+	return (flags & HEXDUMP_ASCII) ? ascii_column + len +
-+					(len - 1) / line_chars :
- 					 (groupsize * 2 + 1) * ngroups - 1;
- }
- EXPORT_SYMBOL(hex_dump_to_buffer);
-@@ -246,7 +286,7 @@ static void announce_skipped(const char *level, const char *prefix_str,
- 	if (count == 0)
- 		return;
+ 	ngroups = len / groupsize;
+ 	ascii_column = rowsize * 2 + rowsize / groupsize + 1;
  
--	printk("%s%s ** Skipped %lu bytes of value 0x%x **\n",
-+	printk("%s%s ** Skipped %lu bytes of value 0x%02x **\n",
- 	       level, prefix_str, count, val);
- }
- 
-@@ -266,6 +306,9 @@ static void announce_skipped(const char *level, const char *prefix_str,
-  *	HEXDUMP_ASCII:			include ASCII after the hex output
-  *	HEXDUMP_SUPPRESS_REPEATED:	suppress repeated lines of identical
-  *					bytes
-+ *	HEXDUMP_2_GRP_LINES:		insert a '|' after every 2 groups
-+ *	HEXDUMP_4_GRP_LINES:		insert a '|' after every 4 groups
-+ *	HEXDUMP_8_GRP_LINES:		insert a '|' after every 8 groups
-  *
-  * Given a buffer of u8 data, print_hex_dump() prints a hex + ASCII dump
+@@ -216,7 +219,7 @@ EXPORT_SYMBOL(hex_dump_to_buffer);
+  *  caller supplies trailing spaces for alignment if desired
+  * @prefix_type: controls whether prefix of an offset, address, or none
+  *  is printed (%DUMP_PREFIX_OFFSET, %DUMP_PREFIX_ADDRESS, %DUMP_PREFIX_NONE)
+- * @rowsize: number of bytes to print per line; must be 16 or 32
++ * @rowsize: number of bytes to print per line; must be a multiple of groupsize
+  * @groupsize: number of bytes to print at a time (1, 2, 4, 8; default = 1)
+  * @buf: data blob to dump
+  * @len: number of bytes in the @buf
+@@ -226,10 +229,9 @@ EXPORT_SYMBOL(hex_dump_to_buffer);
   * to the kernel log at the specified kernel log level, with an optional
-@@ -295,14 +338,14 @@ void print_hex_dump_ext(const char *level, const char *prefix_str,
- 	u8 skipped_val = 0;
- 	size_t skipped = 0;
+  * leading prefix.
+  *
+- * print_hex_dump() works on one "line" of output at a time, i.e.,
+- * 16 or 32 bytes of input data converted to hex + ASCII output.
+  * print_hex_dump() iterates over the entire input @buf, breaking it into
+- * "line size" chunks to format and print.
++ * lines of rowsize/groupsize groups of input data converted to hex +
++ * (optionally) ASCII output.
+  *
+  * E.g.:
+  *   print_hex_dump(KERN_DEBUG, "raw data: ", DUMP_PREFIX_ADDRESS,
+@@ -246,17 +248,29 @@ void print_hex_dump(const char *level, const char *prefix_str, int prefix_type,
+ {
+ 	const u8 *ptr = buf;
+ 	int i, linelen, remaining = len;
+-	unsigned char linebuf[32 * 3 + 2 + 32 + 1];
++	unsigned char *linebuf;
++	unsigned int linebuf_len;
  
+-	if (rowsize != 16 && rowsize != 32)
+-		rowsize = 16;
++	if (rowsize % groupsize)
++		rowsize -= rowsize % groupsize;
++
++	/* Worst case line length:
++	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte in, NULL
++	 */
++	linebuf_len = rowsize * 3 + 2 + rowsize + 1;
++	linebuf = kzalloc(linebuf_len, GFP_KERNEL);
++	if (!linebuf) {
++		printk("%s%shexdump: Could not alloc %u bytes for buffer\n",
++			level, prefix_str, linebuf_len);
++		return;
++	}
+ 
+ 	for (i = 0; i < len; i += rowsize) {
+ 		linelen = min(remaining, rowsize);
+ 		remaining -= rowsize;
+ 
+ 		hex_dump_to_buffer(ptr + i, linelen, rowsize, groupsize,
+-				   linebuf, sizeof(linebuf), ascii);
++				   linebuf, linebuf_len, ascii);
+ 
+ 		switch (prefix_type) {
+ 		case DUMP_PREFIX_ADDRESS:
+@@ -271,6 +285,8 @@ void print_hex_dump(const char *level, const char *prefix_str, int prefix_type,
+ 			break;
+ 		}
+ 	}
++
++	kfree(linebuf);
+ }
+ EXPORT_SYMBOL(print_hex_dump);
+ 
+diff --git a/lib/test_hexdump.c b/lib/test_hexdump.c
+index d78ddd62ffd0..6ab75a209b43 100644
+--- a/lib/test_hexdump.c
++++ b/lib/test_hexdump.c
+@@ -14,15 +14,25 @@ static const unsigned char data_b[] = {
+ 	'\x70', '\xba', '\xc4', '\x24', '\x7d', '\x83', '\x34', '\x9b',	/* 08 - 0f */
+ 	'\xa6', '\x9c', '\x31', '\xad', '\x9c', '\x0f', '\xac', '\xe9',	/* 10 - 17 */
+ 	'\x4c', '\xd1', '\x19', '\x99', '\x43', '\xb1', '\xaf', '\x0c',	/* 18 - 1f */
++	'\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', /* 20 - 27 */
++	'\x0f', '\x0e', '\x0d', '\x0c', '\x0b', '\x0a', '\x09', '\x08', /* 28 - 2f */
++	'\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', /* 30 - 37 */
++	'\x1f', '\x1e', '\x1d', '\x1c', '\x1b', '\x1a', '\x19', '\x18', /* 38 - 3f */
+ };
+ 
+-static const unsigned char data_a[] = ".2.{....p..$}.4...1.....L...C...";
++static const unsigned char data_a[] = ".2.{....p..$}.4...1.....L...C..."
++				      "................................";
+ 
+ static const char * const test_data_1[] __initconst = {
+ 	"be", "32", "db", "7b", "0a", "18", "93", "b2",
+ 	"70", "ba", "c4", "24", "7d", "83", "34", "9b",
+ 	"a6", "9c", "31", "ad", "9c", "0f", "ac", "e9",
+ 	"4c", "d1", "19", "99", "43", "b1", "af", "0c",
++	"00", "01", "02", "03", "04", "05", "06", "07",
++	"0f", "0e", "0d", "0c", "0b", "0a", "09", "08",
++	"10", "11", "12", "13", "14", "15", "16", "17",
++	"1f", "1e", "1d", "1c", "1b", "1a", "19", "18",
++	NULL
+ };
+ 
+ static const char * const test_data_2_le[] __initconst = {
+@@ -30,6 +40,11 @@ static const char * const test_data_2_le[] __initconst = {
+ 	"ba70", "24c4", "837d", "9b34",
+ 	"9ca6", "ad31", "0f9c", "e9ac",
+ 	"d14c", "9919", "b143", "0caf",
++	"0100", "0302", "0504", "0706",
++	"0e0f", "0c0d", "0a0b", "0809",
++	"1110", "1312", "1514", "1716",
++	"1e1f", "1c1d", "1a1b", "1819",
++	NULL
+ };
+ 
+ static const char * const test_data_2_be[] __initconst = {
+@@ -37,26 +52,43 @@ static const char * const test_data_2_be[] __initconst = {
+ 	"70ba", "c424", "7d83", "349b",
+ 	"a69c", "31ad", "9c0f", "ace9",
+ 	"4cd1", "1999", "43b1", "af0c",
++	"0001", "0203", "0405", "0607",
++	"0f0e", "0d0c", "0b0a", "0908",
++	"1011", "1213", "1415", "1617",
++	"1f1e", "1d1c", "1b1a", "1918",
++	NULL
+ };
+ 
+ static const char * const test_data_4_le[] __initconst = {
+ 	"7bdb32be", "b293180a", "24c4ba70", "9b34837d",
+ 	"ad319ca6", "e9ac0f9c", "9919d14c", "0cafb143",
++	"03020100", "07060504", "0c0d0e0f", "08090a0b",
++	"13121110", "17161514", "1c1d1e1f", "18191a1b",
++	NULL
+ };
+ 
+ static const char * const test_data_4_be[] __initconst = {
+ 	"be32db7b", "0a1893b2", "70bac424", "7d83349b",
+ 	"a69c31ad", "9c0face9", "4cd11999", "43b1af0c",
++	"00010203", "04050607",	"0f0e0d0c", "0b0a0908",
++	"10111213", "14151617",	"1f1e1d1c", "1b1a1918",
++	NULL
+ };
+ 
+ static const char * const test_data_8_le[] __initconst = {
+ 	"b293180a7bdb32be", "9b34837d24c4ba70",
+ 	"e9ac0f9cad319ca6", "0cafb1439919d14c",
++	"0706050403020100", "08090a0b0c0d0e0f",
++	"1716151413121110", "18191a1b1c1d1e1f",
++	NULL
+ };
+ 
+ static const char * const test_data_8_be[] __initconst = {
+ 	"be32db7b0a1893b2", "70bac4247d83349b",
+ 	"a69c31ad9c0face9", "4cd1199943b1af0c",
++	"0001020304050607", "0f0e0d0c0b0a0908",
++	"1011121314151617", "1f1e1d1c1b1a1918",
++	NULL
+ };
+ 
+ #define FILL_CHAR	'#'
+@@ -75,9 +107,6 @@ static void __init test_hexdump_prepare_test(size_t len, int rowsize,
+ 	unsigned int i;
+ 	const bool is_be = IS_ENABLED(CONFIG_CPU_BIG_ENDIAN);
+ 
+-	if (rs != 16 && rs != 32)
+-		rs = 16;
 -
- 	if (rowsize % groupsize)
- 		rowsize -= rowsize % groupsize;
+ 	if (l > rs)
+ 		l = rs;
  
- 	/* Worst case line length:
--	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte in, NULL
-+	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte in,
-+	 * 1 char per N groups, NULL
- 	 */
--	linebuf_len = rowsize * 3 + 2 + rowsize + 1;
-+	linebuf_len = rowsize * 3 + 2 + rowsize + rowsize / groupsize + 1;
- 	linebuf = kzalloc(linebuf_len, GFP_KERNEL);
- 	if (!linebuf) {
- 		printk("%s%shexdump: Could not alloc %u bytes for buffer\n",
+@@ -97,7 +126,12 @@ static void __init test_hexdump_prepare_test(size_t len, int rowsize,
+ 	p = test;
+ 	for (i = 0; i < l / gs; i++) {
+ 		const char *q = *result++;
+-		size_t amount = strlen(q);
++		size_t amount;
++
++		if (!q)
++			break;
++
++		amount = strlen(q);
+ 
+ 		memcpy(p, q, amount);
+ 		p += amount;
+@@ -120,7 +154,7 @@ static void __init test_hexdump_prepare_test(size_t len, int rowsize,
+ 	*p = '\0';
+ }
+ 
+-#define TEST_HEXDUMP_BUF_SIZE		(32 * 3 + 2 + 32 + 1)
++#define TEST_HEXDUMP_BUF_SIZE		(64 * 3 + 2 + 64 + 1)
+ 
+ static void __init test_hexdump(size_t len, int rowsize, int groupsize,
+ 				bool ascii)
+@@ -215,7 +249,7 @@ static void __init test_hexdump_overflow(size_t buflen, size_t len,
+ static void __init test_hexdump_overflow_set(size_t buflen, bool ascii)
+ {
+ 	unsigned int i = 0;
+-	int rs = (get_random_int() % 2 + 1) * 16;
++	int rs = (get_random_int() % 4 + 1) * 16;
+ 
+ 	do {
+ 		int gs = 1 << i;
+@@ -230,11 +264,11 @@ static int __init test_hexdump_init(void)
+ 	unsigned int i;
+ 	int rowsize;
+ 
+-	rowsize = (get_random_int() % 2 + 1) * 16;
++	rowsize = (get_random_int() % 4 + 1) * 16;
+ 	for (i = 0; i < 16; i++)
+ 		test_hexdump_set(rowsize, false);
+ 
+-	rowsize = (get_random_int() % 2 + 1) * 16;
++	rowsize = (get_random_int() % 4 + 1) * 16;
+ 	for (i = 0; i < 16; i++)
+ 		test_hexdump_set(rowsize, true);
+ 
 -- 
 2.21.0
 
