@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81439C04A6B
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 May 2019 08:03:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D5FBC04A6B
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 May 2019 08:04:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54259217D6
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 May 2019 08:03:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC6CA217D6
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 May 2019 08:04:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727026AbfEJIDx (ORCPT
+        id S1727006AbfEJIDw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 May 2019 04:03:53 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:59204 "EHLO
+        Fri, 10 May 2019 04:03:52 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:59203 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726982AbfEJIDw (ORCPT
+        with ESMTP id S1726964AbfEJIDw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 10 May 2019 04:03:52 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x4A83dKV021573, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x4A83ePW021581, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x4A83dKV021573
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x4A83ePW021581
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Fri, 10 May 2019 16:03:39 +0800
+        Fri, 10 May 2019 16:03:40 +0800
 Received: from localhost.localdomain (172.21.69.114) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 10 May 2019 16:03:38 +0800
+ 14.3.408.0; Fri, 10 May 2019 16:03:40 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
         <colin.king@canonical.com>
-Subject: [PATCH 2/4] rtlwifi: 8192de: make tables to be 'static const'
-Date:   Fri, 10 May 2019 16:03:31 +0800
-Message-ID: <20190510080333.3789-3-pkshih@realtek.com>
+Subject: [PATCH 4/4] rtlwifi: 8192de: use le32 to access cckswing tables
+Date:   Fri, 10 May 2019 16:03:33 +0800
+Message-ID: <20190510080333.3789-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190510080333.3789-1-pkshih@realtek.com>
 References: <20190510080333.3789-1-pkshih@realtek.com>
@@ -50,50 +50,69 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-This can reduce code size 264 bytes, and make code more readable.
-
-         text	   data	    bss	    dec	    hex	filename
-Before: 13586	      0	     16	  13602	   3522	rtl8192de/dm.o
-After:  13322	      0	     16	  13338	   341a	rtl8192de/dm.o
+The cckswing tables cckswing_table_ch1ch13 and cckswing_table_ch14 are
+u8 array in little-endian order. To compare four u8 value with register
+u32 value, cast the value to cpu order.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8192de/dm.c   | 36 ++++++++-----------
+ 1 file changed, 14 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-index 6bbbd36cc664..cc9f01a19845 100644
+index df02cb6e5e91..71f3b6b5d7bd 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
-@@ -718,8 +718,8 @@ static void rtl92d_bandtype_5G(struct rtl_hal *rtlhal, u8 *ofdm_index,
- 			       bool *internal_pa, u8 thermalvalue, u8 delta,
- 			       u8 rf, struct rtl_efuse *rtlefuse,
- 			       struct rtl_priv *rtlpriv, struct rtl_phy *rtlphy,
--			       u8 index_mapping[5][INDEX_MAPPING_NUM],
--			       u8 index_mapping_pa[8][INDEX_MAPPING_NUM])
-+			       const u8 index_mapping[5][INDEX_MAPPING_NUM],
-+			       const u8 index_mapping_pa[8][INDEX_MAPPING_NUM])
- {
+@@ -680,6 +680,7 @@ static void rtl92d_bandtype_2_4G(struct ieee80211_hw *hw, long *temp_cckg,
  	int i;
- 	u8 index;
-@@ -797,7 +797,7 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
- 	u8 ofdm_min_index = 6, ofdm_min_index_internal_pa = 3, rf;
- 	u8 indexforchannel =
- 	    rtl92d_get_rightchnlplace_for_iqk(rtlphy->current_channel);
--	u8 index_mapping[5][INDEX_MAPPING_NUM] = {
-+	static const u8 index_mapping[5][INDEX_MAPPING_NUM] = {
- 		/* 5G, path A/MAC 0, decrease power  */
- 		{0, 1, 3, 6, 8, 9,	11, 13, 14, 16, 17, 18, 18},
- 		/* 5G, path A/MAC 0, increase power  */
-@@ -809,7 +809,7 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
- 		/* 2.4G, for decreas power */
- 		{0, 1, 2, 3, 4, 5,	6, 7, 7, 8, 9, 10, 10},
- 	};
--	u8 index_mapping_internal_pa[8][INDEX_MAPPING_NUM] = {
-+	static const u8 index_mapping_internal_pa[8][INDEX_MAPPING_NUM] = {
- 		/* 5G, path A/MAC 0, ch36-64, decrease power  */
- 		{0, 1, 2, 4, 6, 7,	9, 11, 12, 14, 15, 16, 16},
- 		/* 5G, path A/MAC 0, ch36-64, increase power  */
+ 	unsigned long flag = 0;
+ 	long temp_cck;
++	const u8 *cckswing;
+ 
+ 	/* Query CCK default setting From 0xa24 */
+ 	rtl92d_acquire_cckandrw_pagea_ctl(hw, &flag);
+@@ -687,28 +688,19 @@ static void rtl92d_bandtype_2_4G(struct ieee80211_hw *hw, long *temp_cckg,
+ 				 MASKDWORD) & MASKCCK;
+ 	rtl92d_release_cckandrw_pagea_ctl(hw, &flag);
+ 	for (i = 0; i < CCK_TABLE_LENGTH; i++) {
+-		if (rtlpriv->dm.cck_inch14) {
+-			if (!memcmp((void *)&temp_cck,
+-			    (void *)&cckswing_table_ch14[i][2], 4)) {
+-				*cck_index_old = (u8) i;
+-				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+-					 "Initial reg0x%x = 0x%lx, cck_index=0x%x, ch 14 %d\n",
+-					 RCCK0_TXFILTER2, temp_cck,
+-					 *cck_index_old,
+-					 rtlpriv->dm.cck_inch14);
+-				break;
+-			}
+-		} else {
+-			if (!memcmp((void *) &temp_cck,
+-			    &cckswing_table_ch1ch13[i][2], 4)) {
+-				*cck_index_old = (u8) i;
+-				RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+-					 "Initial reg0x%x = 0x%lx, cck_index = 0x%x, ch14 %d\n",
+-					 RCCK0_TXFILTER2, temp_cck,
+-					 *cck_index_old,
+-					 rtlpriv->dm.cck_inch14);
+-				break;
+-			}
++		if (rtlpriv->dm.cck_inch14)
++			cckswing = &cckswing_table_ch14[i][2];
++		else
++			cckswing = &cckswing_table_ch1ch13[i][2];
++
++		if (temp_cck == le32_to_cpu(*((__le32 *)cckswing))) {
++			*cck_index_old = (u8)i;
++			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
++				 "Initial reg0x%x = 0x%lx, cck_index = 0x%x, ch14 %d\n",
++				 RCCK0_TXFILTER2, temp_cck,
++				 *cck_index_old,
++				 rtlpriv->dm.cck_inch14);
++			break;
+ 		}
+ 	}
+ 	*temp_cckg = temp_cck;
 -- 
 2.21.0
 
