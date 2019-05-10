@@ -2,41 +2,43 @@ Return-Path: <SRS0=s/o7=TK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4F00C04AB3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81439C04A6B
 	for <linux-wireless@archiver.kernel.org>; Fri, 10 May 2019 08:03:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77425217D7
+	by mail.kernel.org (Postfix) with ESMTP id 54259217D6
 	for <linux-wireless@archiver.kernel.org>; Fri, 10 May 2019 08:03:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727010AbfEJIDx (ORCPT
+        id S1727026AbfEJIDx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 10 May 2019 04:03:53 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:59201 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:59204 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726984AbfEJIDw (ORCPT
+        with ESMTP id S1726982AbfEJIDw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 10 May 2019 04:03:52 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x4A83c3o021565, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x4A83dKV021573, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x4A83c3o021565
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x4A83dKV021573
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Fri, 10 May 2019 16:03:38 +0800
+        Fri, 10 May 2019 16:03:39 +0800
 Received: from localhost.localdomain (172.21.69.114) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 10 May 2019 16:03:37 +0800
+ 14.3.408.0; Fri, 10 May 2019 16:03:38 +0800
 From:   <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
         <colin.king@canonical.com>
-Subject: [PATCH 0/4] rtlwifi: 8192de: Fix used uninitialized variables in power tracking
-Date:   Fri, 10 May 2019 16:03:29 +0800
-Message-ID: <20190510080333.3789-1-pkshih@realtek.com>
+Subject: [PATCH 2/4] rtlwifi: 8192de: make tables to be 'static const'
+Date:   Fri, 10 May 2019 16:03:31 +0800
+Message-ID: <20190510080333.3789-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20190510080333.3789-1-pkshih@realtek.com>
+References: <20190510080333.3789-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -48,26 +50,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-This issue is found by Coverity and repoerted by Colin Ian King. An array
-ofdm_index[3] is never initialized.
+This can reduce code size 264 bytes, and make code more readable.
 
-In order to fix this issue, I refactor the code to be more readable, and
-then I investigate the variable ofdm_index[] should be initialized as
-the index corresponding to thermal value programmed in efuse.
+         text	   data	    bss	    dec	    hex	filename
+Before: 13586	      0	     16	  13602	   3522	rtl8192de/dm.o
+After:  13322	      0	     16	  13338	   341a	rtl8192de/dm.o
 
-The cckswing table in the last patch is used to adjust TX power. When I
-check this function, the table is in little-endian order, but compare
-with register value in cpu order. Then, fix it as well.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Ping-Ke Shih (4):
-  rtlwifi: 8192de: Reduce indentation and fix coding style
-  rtlwifi: 8192de: make tables to be 'static const'
-  rtlwifi: 8192de: Fix used uninitialized variables in power tracking
-  rtlwifi: 8192de: use le32 to access cckswing tables
-
- .../wireless/realtek/rtlwifi/rtl8192de/dm.c   | 695 +++++++++---------
- 1 file changed, 330 insertions(+), 365 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
+index 6bbbd36cc664..cc9f01a19845 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/dm.c
+@@ -718,8 +718,8 @@ static void rtl92d_bandtype_5G(struct rtl_hal *rtlhal, u8 *ofdm_index,
+ 			       bool *internal_pa, u8 thermalvalue, u8 delta,
+ 			       u8 rf, struct rtl_efuse *rtlefuse,
+ 			       struct rtl_priv *rtlpriv, struct rtl_phy *rtlphy,
+-			       u8 index_mapping[5][INDEX_MAPPING_NUM],
+-			       u8 index_mapping_pa[8][INDEX_MAPPING_NUM])
++			       const u8 index_mapping[5][INDEX_MAPPING_NUM],
++			       const u8 index_mapping_pa[8][INDEX_MAPPING_NUM])
+ {
+ 	int i;
+ 	u8 index;
+@@ -797,7 +797,7 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
+ 	u8 ofdm_min_index = 6, ofdm_min_index_internal_pa = 3, rf;
+ 	u8 indexforchannel =
+ 	    rtl92d_get_rightchnlplace_for_iqk(rtlphy->current_channel);
+-	u8 index_mapping[5][INDEX_MAPPING_NUM] = {
++	static const u8 index_mapping[5][INDEX_MAPPING_NUM] = {
+ 		/* 5G, path A/MAC 0, decrease power  */
+ 		{0, 1, 3, 6, 8, 9,	11, 13, 14, 16, 17, 18, 18},
+ 		/* 5G, path A/MAC 0, increase power  */
+@@ -809,7 +809,7 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
+ 		/* 2.4G, for decreas power */
+ 		{0, 1, 2, 3, 4, 5,	6, 7, 7, 8, 9, 10, 10},
+ 	};
+-	u8 index_mapping_internal_pa[8][INDEX_MAPPING_NUM] = {
++	static const u8 index_mapping_internal_pa[8][INDEX_MAPPING_NUM] = {
+ 		/* 5G, path A/MAC 0, ch36-64, decrease power  */
+ 		{0, 1, 2, 4, 6, 7,	9, 11, 12, 14, 15, 16, 16},
+ 		/* 5G, path A/MAC 0, ch36-64, increase power  */
 -- 
 2.21.0
 
