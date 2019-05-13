@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E393C04AA7
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:44:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46D12C04AB1
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:44:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6BC8E208C2
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:44:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2388D208C2
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:44:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729142AbfEMKoK (ORCPT
+        id S1729140AbfEMKoJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 May 2019 06:44:10 -0400
-Received: from mga04.intel.com ([192.55.52.120]:54978 "EHLO mga04.intel.com"
+        Mon, 13 May 2019 06:44:09 -0400
+Received: from mga12.intel.com ([192.55.52.136]:2829 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728459AbfEMKoH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 May 2019 06:44:07 -0400
+        id S1729133AbfEMKoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 May 2019 06:44:06 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 May 2019 03:44:06 -0700
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 May 2019 03:44:05 -0700
 X-ExtLoop1: 1
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga007.jf.intel.com with ESMTP; 13 May 2019 03:44:03 -0700
+  by orsmga008.jf.intel.com with ESMTP; 13 May 2019 03:44:03 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 02B80725; Mon, 13 May 2019 13:43:59 +0300 (EEST)
+        id DEE7953D; Mon, 13 May 2019 13:43:59 +0300 (EEST)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= 
         <clement.perrochaud@effinnov.com>,
@@ -37,9 +37,9 @@ To:     =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
         Sedat Dilek <sedat.dilek@gmail.com>,
         Oleg Zhurakivskyy <oleg.zhurakivskyy@intel.com>
 Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 12/12] NFC: nxp-nci: Convert to SPDX license tags
-Date:   Mon, 13 May 2019 13:43:58 +0300
-Message-Id: <20190513104358.59716-13-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 10/12] NFC: nxp-nci: Remove unused macro pr_fmt()
+Date:   Mon, 13 May 2019 13:43:56 +0300
+Message-Id: <20190513104358.59716-11-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190513104358.59716-1-andriy.shevchenko@linux.intel.com>
 References: <20190513104358.59716-1-andriy.shevchenko@linux.intel.com>
@@ -50,100 +50,26 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Replace boiler plate licenses texts with the SPDX license
-identifiers in the mei nfc files header.
+The macro had never been used.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/nfc/nxp-nci/core.c     | 13 +------------
- drivers/nfc/nxp-nci/firmware.c | 13 +------------
- drivers/nfc/nxp-nci/i2c.c      | 13 +------------
- 3 files changed, 3 insertions(+), 36 deletions(-)
+ drivers/nfc/nxp-nci/i2c.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/nfc/nxp-nci/core.c b/drivers/nfc/nxp-nci/core.c
-index b0b6db81a5e8..643347cac007 100644
---- a/drivers/nfc/nxp-nci/core.c
-+++ b/drivers/nfc/nxp-nci/core.c
-@@ -1,3 +1,4 @@
-+// SPDX-License-Identifier: GPL-2.0
- /*
-  * Generic driver for NXP NCI NFC chips
-  *
-@@ -7,18 +8,6 @@
-  *
-  * Derived from PN544 device driver:
-  * Copyright (C) 2012  Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms and conditions of the GNU General Public License,
-- * version 2, as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #include <linux/delay.h>
-diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmware.c
-index e50c6f67bb39..231c93b3dc5f 100644
---- a/drivers/nfc/nxp-nci/firmware.c
-+++ b/drivers/nfc/nxp-nci/firmware.c
-@@ -1,3 +1,4 @@
-+// SPDX-License-Identifier: GPL-2.0
- /*
-  * Generic driver for NXP NCI NFC chips
-  *
-@@ -7,18 +8,6 @@
-  *
-  * Derived from PN544 device driver:
-  * Copyright (C) 2012  Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms and conditions of the GNU General Public License,
-- * version 2, as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #include <linux/completion.h>
 diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
-index 703f4c8fa751..69ab576ef438 100644
+index 6114787e13a3..703f4c8fa751 100644
 --- a/drivers/nfc/nxp-nci/i2c.c
 +++ b/drivers/nfc/nxp-nci/i2c.c
-@@ -1,3 +1,4 @@
-+// SPDX-License-Identifier: GPL-2.0
- /*
-  * I2C link layer for the NXP NCI driver
-  *
-@@ -9,18 +10,6 @@
-  *
-  * Derived from PN544 device driver:
-  * Copyright (C) 2012  Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms and conditions of the GNU General Public License,
-- * version 2, as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+@@ -23,8 +23,6 @@
+  * along with this program; if not, see <http://www.gnu.org/licenses/>.
   */
  
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
  #include <linux/acpi.h>
+ #include <linux/delay.h>
+ #include <linux/i2c.h>
 -- 
 2.20.1
 
