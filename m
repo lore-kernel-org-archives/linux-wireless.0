@@ -2,52 +2,49 @@ Return-Path: <SRS0=GdFy=TN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F32FC04AA7
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:24:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D675C04AA7
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:44:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 25F35208CA
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:24:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557743045;
-	bh=uAmW4lkgyoXXVu7OEyGc79pNfqmPd12Lj52dDKXhFjk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cqfRbIocFVMMuOVb/qml/i4jOLBxPTF5BnpF/+3/8OmNq/AFj3eOiWr/m9cUS1uVM
-	 TkmFh+OfMw1hdNELIZgrXUuWuxbO5iQZmJzuERO64LI22gtygB+0a4X6zYv/2vPpSh
-	 m2C3LqeQsJGic95ANjmQBMQvIBrDUnVjHCFm1SvQ=
+	by mail.kernel.org (Postfix) with ESMTP id DDCAD208C2
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:44:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727719AbfEMKYE (ORCPT
+        id S1729122AbfEMKoD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 May 2019 06:24:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46380 "EHLO mail.kernel.org"
+        Mon, 13 May 2019 06:44:03 -0400
+Received: from mga18.intel.com ([134.134.136.126]:27307 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725980AbfEMKYD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 May 2019 06:24:03 -0400
-Received: from localhost.localdomain (unknown [151.66.17.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 67E3C208CA;
-        Mon, 13 May 2019 10:24:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557743043;
-        bh=uAmW4lkgyoXXVu7OEyGc79pNfqmPd12Lj52dDKXhFjk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lGdSSewsRyImU1lXUbcUIEjX9lfsfkhUUwcbTRIL1rYIw4MN/S+d43oPZOz2O4V5I
-         SwVej4QUQsvM0lnayuLVEstrk6NOY+C1f2issENvgtDPU7FOEK7QldLodlOoH4E5nu
-         xbuLZYNk7c3k6tpW7cfNTzRtJqG4FiglmGIP/4/g=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        sgruszka@redhat.com
-Subject: [PATCH] mt76: mt76x02: fix edcca file permission
-Date:   Mon, 13 May 2019 12:23:29 +0200
-Message-Id: <0e4f22246404d095de2a7e28ddf7572ff71bdb05.1557742856.git.lorenzo@kernel.org>
+        id S1728459AbfEMKoC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 May 2019 06:44:02 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 May 2019 03:44:02 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,465,1549958400"; 
+   d="scan'208";a="171146751"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga002.fm.intel.com with ESMTP; 13 May 2019 03:44:00 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 68C6D86; Mon, 13 May 2019 13:43:59 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= 
+        <clement.perrochaud@effinnov.com>,
+        Charles Gorand <charles.gorand@effinnov.com>,
+        linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org,
+        Sedat Dilek <sedat.dilek@gmail.com>,
+        Oleg Zhurakivskyy <oleg.zhurakivskyy@intel.com>
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 01/12] NFC: nxp-nci: Add NXP1001 to the ACPI ID table
+Date:   Mon, 13 May 2019 13:43:47 +0300
+Message-Id: <20190513104358.59716-2-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1557742856.git.lorenzo@kernel.org>
-References: <cover.1557742856.git.lorenzo@kernel.org>
+In-Reply-To: <20190513104358.59716-1-andriy.shevchenko@linux.intel.com>
+References: <20190513104358.59716-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -55,27 +52,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use 0600 as edcca file permission in mt76x02 debugfs
+It seems a lot of laptops are equipped with NXP NFC300 chip with
+the ACPI ID NXP1001 as per DSDT.
 
-Fixes: 643749d4a82b ("mt76: mt76x02: disable ED/CCA by default")
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Append it to the driver's ACPI ID table.
+
+Reported-by: Sedat Dilek <sedat.dilek@gmail.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/nfc/nxp-nci/i2c.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c b/drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c
-index f412c779d8e2..ffdba5ffc22d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_debugfs.c
-@@ -157,7 +157,7 @@ void mt76x02_init_debugfs(struct mt76x02_dev *dev)
- 	debugfs_create_u8("temperature", 0400, dir, &dev->cal.temp);
- 	debugfs_create_bool("tpc", 0600, dir, &dev->enable_tpc);
+diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
+index ba695e392c3b..fec904ad624b 100644
+--- a/drivers/nfc/nxp-nci/i2c.c
++++ b/drivers/nfc/nxp-nci/i2c.c
+@@ -407,6 +407,7 @@ MODULE_DEVICE_TABLE(of, of_nxp_nci_i2c_match);
  
--	debugfs_create_file("edcca", 0400, dir, dev, &fops_edcca);
-+	debugfs_create_file("edcca", 0600, dir, dev, &fops_edcca);
- 	debugfs_create_file("ampdu_stat", 0400, dir, dev, &fops_ampdu_stat);
- 	debugfs_create_file("dfs_stats", 0400, dir, dev, &fops_dfs_stat);
- 	debugfs_create_devm_seqfile(dev->mt76.dev, "txpower", dir,
+ #ifdef CONFIG_ACPI
+ static struct acpi_device_id acpi_id[] = {
++	{ "NXP1001" },
+ 	{ "NXP7471" },
+ 	{ },
+ };
 -- 
 2.20.1
 
