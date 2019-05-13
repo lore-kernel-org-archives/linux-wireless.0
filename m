@@ -2,108 +2,80 @@ Return-Path: <SRS0=GdFy=TN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0DC0C04AAA
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 13:33:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97928C04AA7
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 13:41:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BF8B20862
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 13:33:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KuXvSRMY"
+	by mail.kernel.org (Postfix) with ESMTP id 6B60320645
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 13:41:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730135AbfEMNdi (ORCPT
+        id S1728999AbfEMNlZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 May 2019 09:33:38 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:35674 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728566AbfEMNdi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 May 2019 09:33:38 -0400
-Received: by mail-pg1-f193.google.com with SMTP id h1so6805779pgs.2;
-        Mon, 13 May 2019 06:33:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=dHB+2UT2SbFOUCgxQjFqk9pofSt4ba6bP6xlRWy9uz8=;
-        b=KuXvSRMYMKGzAylOkSf6HZsrUBzZMXGa86X+6uv3efqmd+6ImnKgro2FqOsBr2V44w
-         ELvJmk5nJEWhJjUmtdgHpYgUtNfZ1Fk9TKFzXNxMzQess1GQ3XObF0QfDHbhIEVtUUFB
-         dN2jQ3JgzsRrAGO49aEiYDrL956oBcs/o8kEoz46lQ2CSCQ6Eyrduhiiacr9lLcvUdvF
-         1NDIALBson6SKLJeebv1XRoNFMdl1sMLIoh1OPwXVBeOsbVacm8W/E7Ms9BxuWbWwOPk
-         Ab7BfgP9UmGxW2nVDG/z4uuffyE+gF6CsnxG7iF//EdmqheaG8SZwcVypUAUcZYNl2zo
-         CbSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=dHB+2UT2SbFOUCgxQjFqk9pofSt4ba6bP6xlRWy9uz8=;
-        b=XiQ1SA6Kn8pHx4KuaPC633+HRy6da5+R+IDK6Qe+Lt/xjvBEeqrTk6LrGlL2hV3spu
-         6vA+kQEcoUf+ZBtDjoUzqDeyazZSS9yzUPkmVhKA1aYc8sHnhOFIJIHwBpQ+5Ky4NtFi
-         goAQyPmEBtyLhhlou1n5VJp3bwLp8C61GQ5njPTZ/yBZ/9buoICSsEp+XeeNlVtqQf4z
-         84GcDozcaIFvrZ5Xn/PoPyGTgYom4hZ/Yjmr8D5a7nkDlSh93hR76sgU19E1CAmyL6U9
-         bLbewU6Juw5Ioyv+Ynv7pUS57HJrIaUfy8GnBH81z6Qrm41E1kncgvVR4iqXDI6mlWxD
-         lvxA==
-X-Gm-Message-State: APjAAAXU5sZBB7Z8E+fh0HZD9A1hiC4Uhy8mC8mKQcYnZuM+58FVqd3f
-        VIZwT+fk5Yw1QhNivGPVTnI=
-X-Google-Smtp-Source: APXvYqzCHEBbsQ9j/TAQ9YLva9rBRXDXM3fwxild9xMkA+ykPkX3PCo9l3kUOGRoDUw95ZR47IUmEw==
-X-Received: by 2002:a62:1c06:: with SMTP id c6mr22162703pfc.168.1557754417788;
-        Mon, 13 May 2019 06:33:37 -0700 (PDT)
-Received: from localhost (36-225-62-102.dynamic-ip.hinet.net. [36.225.62.102])
-        by smtp.gmail.com with ESMTPSA id h6sm28582717pfk.188.2019.05.13.06.33.36
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 13 May 2019 06:33:37 -0700 (PDT)
-From:   Cyrus Lien <cyruslien@gmail.com>
-X-Google-Original-From: Cyrus Lien <cyrus.lien@canonical.com>
-To:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Lior Cohen <lior2.cohen@intel.com>,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Cyrus Lien <cyrus.lien@canonical.com>
-Subject: [PATCH] iwlwifi: trans: fix killer series loadded incorrect firmware
-Date:   Mon, 13 May 2019 21:33:35 +0800
-Message-Id: <20190513133335.14536-1-cyrus.lien@canonical.com>
-X-Mailer: git-send-email 2.17.1
+        Mon, 13 May 2019 09:41:25 -0400
+Received: from mx2.suse.de ([195.135.220.15]:50576 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727413AbfEMNlZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 May 2019 09:41:25 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 76755AC38;
+        Mon, 13 May 2019 13:41:23 +0000 (UTC)
+Message-ID: <1557754110.2793.7.camel@suse.com>
+Subject: Re: KASAN: use-after-free Read in p54u_load_firmware_cb
+From:   Oliver Neukum <oneukum@suse.com>
+To:     syzbot <syzbot+200d4bb11b23d929335f@syzkaller.appspotmail.com>,
+        kvalo@codeaurora.org, davem@davemloft.net, andreyknvl@google.com,
+        syzkaller-bugs@googlegroups.com, chunkeey@googlemail.com,
+        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     Michael Wu <flamingice@sourmilk.net>
+Date:   Mon, 13 May 2019 15:28:30 +0200
+In-Reply-To: <00000000000073512b0588c24d09@google.com>
+References: <00000000000073512b0588c24d09@google.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Killer series loadded IWL_22000_HR_B_FW_PRE prefixed firmware instead
-IWL_CC_A_FW_PRE prefixed firmware.
+On Mo, 2019-05-13 at 03:23 -0700, syzbot wrote:
+> syzbot has found a reproducer for the following crash on:
+> 
+> HEAD commit:    43151d6c usb-fuzzer: main usb gadget fuzzer driver
+> git tree:       https://github.com/google/kasan.git usb-fuzzer
+> console output: https://syzkaller.appspot.com/x/log.txt?x=16b64110a00000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=4183eeef650d1234
+> dashboard link: https://syzkaller.appspot.com/bug?extid=200d4bb11b23d929335f
+> compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1634c900a00000
+> 
+> IMPORTANT: if you fix the bug, please add the following tag to the commit:
+> Reported-by: syzbot+200d4bb11b23d929335f@syzkaller.appspotmail.com
+> 
+> usb 1-1: config 0 descriptor??
+> usb 1-1: reset high-speed USB device number 2 using dummy_hcd
+> usb 1-1: device descriptor read/64, error -71
+> usb 1-1: Using ep0 maxpacket: 8
+> usb 1-1: Loading firmware file isl3887usb
+> usb 1-1: Direct firmware load for isl3887usb failed with error -2
+> usb 1-1: Firmware not found.
+> ==================================================================
+> BUG: KASAN: use-after-free in p54u_load_firmware_cb.cold+0x97/0x13a  
+> drivers/net/wireless/intersil/p54/p54usb.c:936
+> Read of size 8 at addr ffff88809803f588 by task kworker/1:0/17
 
-Add killer series to the check logic as iwl_ax200_cfg_cc.
+Hi,
 
-Signed-off-by: Cyrus Lien <cyrus.lien@canonical.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+it looks to me as if refcounting is broken.
+You should have a usb_put_dev() in p54u_load_firmware_cb() or in
+p54u_disconnect(), but not both.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 79c1dc05f948..576c2186b6bf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3565,7 +3565,9 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		}
- 	} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
- 		   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR) &&
--		   (trans->cfg != &iwl_ax200_cfg_cc ||
-+		   ((trans->cfg != &iwl_ax200_cfg_cc &&
-+		     trans->cfg != &killer1650x_2ax_cfg &&
-+		     trans->cfg != &killer1650w_2ax_cfg) ||
- 		    trans->hw_rev == CSR_HW_REV_TYPE_QNJ_B0)) {
- 		u32 hw_status;
- 
--- 
-2.17.1
+	Regards
+		Oliver
 
