@@ -2,75 +2,118 @@ Return-Path: <SRS0=GdFy=TN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AF4CC04AB1
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:44:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7DACC04AA7
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:52:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2DBF4208C2
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:44:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8DEE208C2
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 10:52:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UjRApXS2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729128AbfEMKoO (ORCPT
+        id S1729176AbfEMKwK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 May 2019 06:44:14 -0400
-Received: from mga01.intel.com ([192.55.52.88]:43929 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729130AbfEMKoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 May 2019 06:44:06 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 May 2019 03:44:05 -0700
-X-ExtLoop1: 1
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga004.jf.intel.com with ESMTP; 13 May 2019 03:44:03 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id C5E144B9; Mon, 13 May 2019 13:43:59 +0300 (EEST)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= 
-        <clement.perrochaud@effinnov.com>,
-        Charles Gorand <charles.gorand@effinnov.com>,
-        linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Sedat Dilek <sedat.dilek@gmail.com>,
-        Oleg Zhurakivskyy <oleg.zhurakivskyy@intel.com>
-Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 08/12] NFC: nxp-nci: Drop of_match_ptr() use
-Date:   Mon, 13 May 2019 13:43:54 +0300
-Message-Id: <20190513104358.59716-9-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190513104358.59716-1-andriy.shevchenko@linux.intel.com>
-References: <20190513104358.59716-1-andriy.shevchenko@linux.intel.com>
+        Mon, 13 May 2019 06:52:10 -0400
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:34723 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728833AbfEMKwJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 May 2019 06:52:09 -0400
+Received: by mail-wm1-f65.google.com with SMTP id j187so300943wma.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 May 2019 03:52:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc:content-transfer-encoding;
+        bh=AYtx5hBxa9dcVDHYSg+x/xz/m3EBPuTCozc29imMpkc=;
+        b=UjRApXS2Ma7DFSBM2yH/4HdTzAoopwuNJ4zORhHVoCXdWNdOmVM9xl84JRcUoJUjfc
+         hWcHBhvQqQKp34+skSyAf1DP2OSQz6Gw07oI0ypILwvaamuqaqs0nyrdfcruYoM1aqX8
+         1mHnis/1YRHGrWAke8QCeE/HhB7pSGKBAUfGGt638hV3Z1YXUHlEHNpcJk8Prr1PFuWK
+         /nu7R7WAwZDBYyD/cuFKSEVECWmegtIWSpEsXwdJsQwXQlZ0AEvFNdgBXYXDw5Tp/YBu
+         plWIzxx0ZOVYrHvgn4YQ5L7VUMI60kTkafIj0JhxZo/+wQCb4pIUvTLc1CF2w06kTHty
+         U2Cw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc:content-transfer-encoding;
+        bh=AYtx5hBxa9dcVDHYSg+x/xz/m3EBPuTCozc29imMpkc=;
+        b=kDPrN4DHiIdHDeBvF+1RvAUEArojOGUfkJT9FvReKcUbgosrIjZuKAwVUcqFDPYqTt
+         pwcsPl6HbNQvBkU7awoMiNnwb7fuyQPewEpViVWeE0pcMg8GyhxkWNsdvnzmsuB2xNme
+         BjBeKwPNjNQ+mdek012zYqg5tS2l+EXcmczQAUJmJILgygIW6QYdxpbvrCkKQjHJ+6hr
+         qKE4yR8urdXa/mwVFJfIarwqwcMYFgON9jp8qnARb6af5KWfXXoRne9uQkw9iBq/Fy0V
+         DjGWUxzmew0kY+JFfkhhHrUrjbtbPgh+wGnOIctzj0Mc2YgV3lsZHgSbBpwB/1jrmTaA
+         VO8g==
+X-Gm-Message-State: APjAAAUXX56eTI664KrrKZ3SexBIBlaoJHM+Vq1huIWlhNb9jbMqkvGM
+        KXBSfRc0A1WJFabVWxEbeYA2KXOvYLR4sw8rXk2wO5nXobA=
+X-Google-Smtp-Source: APXvYqwChQbVqTQlTZgIMY+lJrzW7kWpx6AimfvhfXyEQWPCiGuidbvtNzzIuGMKkgz6n7KQ6TUMaIavMGL+fTKoOwg=
+X-Received: by 2002:a1c:9616:: with SMTP id y22mr4499448wmd.73.1557744727424;
+ Mon, 13 May 2019 03:52:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CA+icZUX+VNtk00YQnNYCnDeeH2Onq6s1vbdzYrv-OHf7q186Ww@mail.gmail.com>
+ <154e3e74-38b5-850b-5993-295f9db8fe3c@intel.com> <CA+icZUWhBeup95PTP_k58xs8Lf2Ofqb0S_gkdBfbuc0-wdpF-w@mail.gmail.com>
+ <06fbacb5-7739-1ca1-3bf4-8049a3ef019b@intel.com> <CA+icZUWJ0kZSqogg18LdP2YkNXk=_SNnT7-ufkd_Xp1ak7uchg@mail.gmail.com>
+ <2b1bd56f-8797-fb90-e2af-218edaedd089@intel.com>
+In-Reply-To: <2b1bd56f-8797-fb90-e2af-218edaedd089@intel.com>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Mon, 13 May 2019 12:51:55 +0200
+Message-ID: <CA+icZUVMjCWwuC-ee1-+EPU6+mYqFZ7w4ai4t4EJcrsvZ2_BYg@mail.gmail.com>
+Subject: Re: [linux-nfc] ThinkPad T470 and NXP PN5xx (PN547 or PN548)
+To:     Oleg Zhurakivskyy <oleg.zhurakivskyy@intel.com>
+Cc:     Samuel Ortiz <sameo@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is no need to guard OF device ID table with of_match_ptr().
-Otherwise we would get a defined but not used data.
+On Mon, May 13, 2019 at 12:15 PM Oleg Zhurakivskyy
+<oleg.zhurakivskyy@intel.com> wrote:
+>
+>
+> Hi Sedat,
+>
+> On 5/13/19 12:27 PM, Sedat Dilek wrote:
+>
+> > So, this seems to work.
+>
+> I spent a bit of time trying to find T470, couldn=E2=80=99t, anyway manag=
+ed to get to =E2=80=9DNXP 1001=E2=80=9D and was going to hint you further.
+>
+> Congratulations, great job!
+>
+> And thanks a lot for documenting everything and posting it here. Perhaps,=
+ eventually it could be upstreamed.
+>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/nxp-nci/i2c.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Oleg,
 
-diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
-index 472bedbeb5d8..69c98f2018e3 100644
---- a/drivers/nfc/nxp-nci/i2c.c
-+++ b/drivers/nfc/nxp-nci/i2c.c
-@@ -353,7 +353,7 @@ static struct i2c_driver nxp_nci_i2c_driver = {
- 	.driver = {
- 		   .name = NXP_NCI_I2C_DRIVER_NAME,
- 		   .acpi_match_table = ACPI_PTR(acpi_id),
--		   .of_match_table = of_match_ptr(of_nxp_nci_i2c_match),
-+		   .of_match_table = of_nxp_nci_i2c_match,
- 		  },
- 	.probe = nxp_nci_i2c_probe,
- 	.id_table = nxp_nci_i2c_id_table,
--- 
-2.20.1
+Thanks to you and Andy.
 
+As far as I have understood the pn5xx_i2c kernel driver (from NXP or
+better to say the ACPI support modified one by jr64 user) is needed as
+the NFC device is not auto-detected/configured via I2C and GPIO and
+ACPI.
+
+Unsure, why the pn544_i2c NFC driver shipped with the Linux v5.1.1
+does not work.
+Or what it is missing.
+
+Helpful was the PDF from [1].
+
+Furthermore, I have seen that Debian refused to integrate the NXP
+libnfc-nci library due to policy issues (see [2]).
+
+libnfc library shipped with Debian does not work.
+
+- Sedat -
+
+[1] http://www.nxp.com/documents/application_note/AN11697.pdf
+[2] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D854606
