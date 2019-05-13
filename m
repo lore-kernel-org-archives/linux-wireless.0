@@ -2,139 +2,88 @@ Return-Path: <SRS0=GdFy=TN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B00FC04AA7
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 12:56:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FE1BC04AA7
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 13:33:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 35D00208C3
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 12:56:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E44BD20862
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 May 2019 13:33:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fq6NXYHO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728477AbfEMM4g (ORCPT
+        id S1729039AbfEMNdG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 May 2019 08:56:36 -0400
-Received: from mga01.intel.com ([192.55.52.88]:51249 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728334AbfEMM4g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 May 2019 08:56:36 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 May 2019 05:56:35 -0700
-X-ExtLoop1: 1
-Received: from smile.fi.intel.com (HELO smile) ([10.237.72.86])
-  by orsmga006.jf.intel.com with ESMTP; 13 May 2019 05:56:33 -0700
-Received: from andy by smile with local (Exim 4.92)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1hQAVM-0001rE-RD; Mon, 13 May 2019 15:56:32 +0300
-Date:   Mon, 13 May 2019 15:56:32 +0300
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Sedat Dilek <sedat.dilek@gmail.com>
-Cc:     =?iso-8859-1?Q?Cl=E9ment?= Perrochaud 
-        <clement.perrochaud@effinnov.com>,
-        Charles Gorand <charles.gorand@effinnov.com>,
-        linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        Oleg Zhurakivskyy <oleg.zhurakivskyy@intel.com>
-Subject: Re: [PATCH v2 00/12] NFC: nxp-nci: clean up and support new ID
-Message-ID: <20190513125632.GU9224@smile.fi.intel.com>
-References: <20190513104358.59716-1-andriy.shevchenko@linux.intel.com>
- <CA+icZUUu6NmQoKS-2x32Fz388Q_ahXyYzLLf5JNm=mZR+r-0kQ@mail.gmail.com>
+        Mon, 13 May 2019 09:33:06 -0400
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:55791 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728222AbfEMNdF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 May 2019 09:33:05 -0400
+Received: by mail-wm1-f68.google.com with SMTP id x64so2669158wmb.5
+        for <linux-wireless@vger.kernel.org>; Mon, 13 May 2019 06:33:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=LNwFnYc3OiS4RD8IV8zCW5QU7k8ZZnL5AgwEDil8YnU=;
+        b=Fq6NXYHOcGGEllYWmz80gGvjm4r0V3zvWdi7/vw3EXJCu13n3I54KpqUTr0VNkExsw
+         Cyl/kx5Bijn/mgEaKTHPPSu1Rf5625NUcGaUOWOsilE5FQAvkzzsa5l6KA+6aa/fvLsa
+         jDCm1Ds/J0KQO6daAikLKVKihjHuawaPun4l2aHpZy0a6YXgnFSX2E0jMGThEXV/6PXY
+         aEV8tc6CZxqTQVqtryoDoe5wGIWpQQfqhUYBkkIHUmzDXpbRvHCty/r3tpKvk4zEcze7
+         AuCsmoxaJFGj8owt1rL7xFVtfcKbPA6mWxONvaoDoJZoksJ7qYrSE895d9npOe/ABlbu
+         /lvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=LNwFnYc3OiS4RD8IV8zCW5QU7k8ZZnL5AgwEDil8YnU=;
+        b=JH8sGywUISnCE3ak3D37RFb1J7FdQIUYVuK58QPqTA5t6ly0e8Vpr/BPzoeX2rtOvf
+         H4vTIZrpmAZ3r00OIUvTnh6kWJW8G/cPgIeLCM9UynxXs+PKxCVuUMIjW3WnmCNTxgaR
+         46s9Vtz+UiXMekaAs0REvyVIKSOMYklDMeNc345kT5ZsAlnvoh101R81w5T0+KUdPB7X
+         3r6hZRr+W+t8n0mE033QaXwfBC+W/wX8hl2itTvldI5ecJ2pcImFvQq4d3tfLbwmuqQL
+         ub1KWuz5SxEdItfoXsNbJ4Y1uzMSH5pBJIPVF47SR75yRGjOfsR8yIsmKm48PjApT6hp
+         Oq6w==
+X-Gm-Message-State: APjAAAV+pRTNdU/Nl2twAielgNJZg/K35O9Xp+EfnD8OKkhyXLu1oKxh
+        OZrUk6TYuKRebSA6D5ViukuEAX17sRf6yRBg7Dmtbyb3Orc=
+X-Google-Smtp-Source: APXvYqy54cLvXoMtRWWCle62B31u78Ig2T5okZEODeV/BoukVMGuTqlCHqQLert6e3qnFd+KXh0zAAAOTFOZRMlW4hs=
+X-Received: by 2002:a7b:cc12:: with SMTP id f18mr16137716wmh.40.1557754383835;
+ Mon, 13 May 2019 06:33:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+icZUUu6NmQoKS-2x32Fz388Q_ahXyYzLLf5JNm=mZR+r-0kQ@mail.gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <CA+icZUX+VNtk00YQnNYCnDeeH2Onq6s1vbdzYrv-OHf7q186Ww@mail.gmail.com>
+ <154e3e74-38b5-850b-5993-295f9db8fe3c@intel.com> <CA+icZUWhBeup95PTP_k58xs8Lf2Ofqb0S_gkdBfbuc0-wdpF-w@mail.gmail.com>
+ <06fbacb5-7739-1ca1-3bf4-8049a3ef019b@intel.com> <CA+icZUWJ0kZSqogg18LdP2YkNXk=_SNnT7-ufkd_Xp1ak7uchg@mail.gmail.com>
+ <20190513095059.GN9224@smile.fi.intel.com> <CA+icZUWXSup0BfXNZXxcrAAbu-b9KCiBU++OkC+eFqacMrTwRg@mail.gmail.com>
+ <20190513105745.GR9224@smile.fi.intel.com> <CA+icZUVDTx_ZUuOgHVDmg5_a4tgrRkPp880+0KPaRJ1d=zF5VQ@mail.gmail.com>
+ <20190513124049.GT9224@smile.fi.intel.com>
+In-Reply-To: <20190513124049.GT9224@smile.fi.intel.com>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Mon, 13 May 2019 15:32:52 +0200
+Message-ID: <CA+icZUWU2OQszOYi1Jzp7yW+gB-TmhkBfmqaLAvy3WEOn9Rh8g@mail.gmail.com>
+Subject: Re: [linux-nfc] ThinkPad T470 and NXP PN5xx (PN547 or PN548)
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Oleg Zhurakivskyy <oleg.zhurakivskyy@intel.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, May 13, 2019 at 01:43:12PM +0200, Sedat Dilek wrote:
-> On Mon, May 13, 2019 at 12:44 PM Andy Shevchenko
-> <andriy.shevchenko@linux.intel.com> wrote:
+BTW, which Linux Kconfig setting are minimum?
 
-> > Sedat, would be nice if you can compile kernel with this patch series applied
-> > and test on your laptop.
+scripts/config -m NFC_NCI -m NFC_NXP_NCI -m NFC_NXP_NCI_I2C
 
-> I have tested Andy's v2 series on my ThinkPad T470 successfully with
-> Linux v5.1.1.
-> 
-> Additionally, I had the NFC patch "NFC: fix attrs checks in netlink
-> interface" from Andrey Konovalov (see [1]).
-> 
-> sdi@iniza:~/src/linux-kernel/linux$ git log --oneline v5.1.1..
-> 729d291510c2 (HEAD -> 5.1.1-1-amd64-gcc8-ldbfd) Merge branch
-> 'for-5.1/nfc-nxp-nci' into 5.1.1-1-amd64-gcc8-ldbfd
-> f083f056830c (for-5.1/nfc-nxp-nci-v2) NFC: nxp-nci: Convert to SPDX license tags
-> 132b5681e074 NFC: nxp-nci: Remove 'default n' for tests
-> 840b1df28cab NFC: nxp-nci: Remove unused macro pr_fmt()
-> 5b55e26db0c2 NFC: nxp-nci: Drop comma in terminator lines
-> 0a1edd5ce3bb NFC: nxp-nci: Drop of_match_ptr() use
-> acae10451393 NFC: nxp-nci: Constify acpi_device_id
-> 07648528dae3 NFC: nxp-nci: Get rid of useless label
-> 38b8c38f2187 NFC: nxp-nci: Get rid of code duplication in ->probe()
-> 446f5aef4522 NFC: nxp-nci: Add GPIO ACPI mapping table
-> 813d4243c563 NFC: nxp-nci: Convert to use GPIO descriptor
-> 1e5187ddb944 NFC: nxp-nci: Get rid of platform data
-> 775a4fa8fb68 NFC: nxp-nci: Add NXP1001 to the ACPI ID table
-> db79db400c5b Merge branch 'for-5.1/nfc' into 5.1.1-1-amd64-cbl-asmgoto
-> e1c37435140f (for-5.1/nfc) NFC: fix attrs checks in netlink interface
-> 
-> With neard (daemon) and neard-tools packages from Debian/buster AMD64
-> I am able to access, list and poll from my NFC (nfc0) device.
-> 
-> root@iniza:~# systemctl status neard.service
-> ● neard.service - LSB: NFC daemon
->    Loaded: loaded (/etc/init.d/neard; generated)
->    Active: active (running) since Mon 2019-05-13 13:14:12 CEST; 16min ago
->      Docs: man:systemd-sysv-generator(8)
->   Process: 810 ExecStart=/etc/init.d/neard start (code=exited, status=0/SUCCESS)
->     Tasks: 1 (limit: 4915)
->    Memory: 1.6M
->    CGroup: /system.slice/neard.service
->            └─885 /usr/lib/neard/neard
-> 
-> Mai 13 13:14:12 iniza systemd[1]: Starting LSB: NFC daemon...
-> Mai 13 13:14:12 iniza neard[877]: NEAR daemon version 0.16
-> Mai 13 13:14:12 iniza neard[810]: Starting NFC daemon: neard.
-> Mai 13 13:14:12 iniza systemd[1]: Started LSB: NFC daemon.
-> 
-> root@iniza:~# nfctool --list
-> nfc0:
->           Tags: [ tag0 ]
->           Devices: [ ]
->           Protocols: [ Felica MIFARE Jewel ISO-DEP NFC-DEP ]
->           Powered: Yes
->           RF Mode: Initiator
->           lto: 150
->           rw: 15
->           miux: 2047
-> 
-> root@iniza:~# nfctool --poll -d nfc0
-> Start polling on nfc0 as initiator
-> 
-> Targets found for nfc0
->   Tags: [ tag1 ]
->   Devices: [ ]
-> 
-> Thanks to all involved people.
-> 
-> Please, feel free to add any credits you think are appropriate.
-> 
-> A big Thank you from North-West Germany.
+What about?
 
-Thank you for testing. I hope Samuel will take this soon to his tree.
+scripts/config -m NFC_NCI_SPI -m NFC_NCI_UART -m I2C_GPIO -m SPI_GPIO
 
-> [1] https://patchwork.kernel.org/patch/10339089/
+Required?
+Not needed?
 
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+- Sedat -
