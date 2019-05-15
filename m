@@ -2,74 +2,73 @@ Return-Path: <SRS0=gXm/=TP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A44C04E53
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 May 2019 12:12:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1683C04E53
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 May 2019 12:24:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9265020675
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 May 2019 12:12:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CF3220843
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 May 2019 12:24:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729157AbfEOMM0 (ORCPT
+        id S1726548AbfEOMYs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 May 2019 08:12:26 -0400
-Received: from gauss.credativ.com ([93.94.130.89]:38862 "EHLO
-        gauss.credativ.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728696AbfEOMMY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 May 2019 08:12:24 -0400
-Received: from gauss.credativ.com (localhost [127.0.0.1])
-        by gauss.credativ.com (Postfix) with ESMTP id 6D2091E3470;
-        Wed, 15 May 2019 14:04:16 +0200 (CEST)
-Received: from iniza.credativ.lan (fw-front.credativ.com [62.154.226.94])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: sdi@gauss.credativ.com)
-        by gauss.credativ.com (Postfix) with ESMTPSA id 466211E1A54;
-        Wed, 15 May 2019 14:04:16 +0200 (CEST)
-From:   Sedat Dilek <sedat.dilek@credativ.de>
-To:     =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= 
-        <clement.perrochaud@effinnov.com>,
-        Charles Gorand <charles.gorand@effinnov.com>,
-        Samuel Ortiz <sameo@linux.intel.com>, linux-nfc@lists.01.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Sedat Dilek <sedat.dilek@credativ.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Oleg Zhurakivskyy <oleg.zhurakivskyy@intel.com>
-Subject: [PATCH 2/2] NFC: nxp-nci: Fix recommendation for NFC_NXP_NCI_I2C Kconfig
-Date:   Wed, 15 May 2019 14:04:07 +0200
-Message-Id: <20190515120407.19227-1-sedat.dilek@credativ.de>
-X-Mailer: git-send-email 2.20.1
+        Wed, 15 May 2019 08:24:48 -0400
+Received: from bsmtp8.bon.at ([213.33.87.20]:9723 "EHLO bsmtp8.bon.at"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726441AbfEOMYr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 May 2019 08:24:47 -0400
+X-Greylist: delayed 2025 seconds by postgrey-1.27 at vger.kernel.org; Wed, 15 May 2019 08:24:46 EDT
+Received: from bsmtp7.bon.at (unknown [192.168.181.105])
+        by bsmtp8.bon.at (Postfix) with ESMTPS id 453tDQ0VvQz5vN9
+        for <linux-wireless@vger.kernel.org>; Wed, 15 May 2019 13:51:02 +0200 (CEST)
+Received: from [10.2.1.2] (81.89.61.168.host.vnet.sk [81.89.61.168])
+        by bsmtp7.bon.at (Postfix) with ESMTPSA id 453tDN0vbrz5tl9;
+        Wed, 15 May 2019 13:51:00 +0200 (CEST)
+Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+To:     seth.forshee@canonical.com
+From:   Vladimir Koutny <vladimir.koutny@streamunlimited.com>
+Subject: [PATCH] wireless-regdb: Update regulatory rules for Japan (JP) on
+ 5GHz
+Openpgp: preference=signencrypt
+Message-ID: <82a15f3c-fe0c-a5dc-9846-13b3efb01f0d@streamunlimited.com>
+Date:   Wed, 15 May 2019 13:50:59 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is a simple cleanup to the Kconfig help text as discussed in [1].
+According to multiple sources channels 8-16 (5030-5090MHz) were only
+allowed in Japan until Nov-30, 2017 (later extended to Nov-30, 2018).
 
-[1] https://marc.info/?t=155774435600001&r=1&w=2
+https://www.tele.soumu.go.jp/j/adm/system/trunk/wimax/5ghz/index.htm
+http://www.dspr.co.jp/wp/wp-content/uploads/2017/10/The-expiration-date-of-some-frequency-of-the-5GHz-band-radio-access-system_eng.pdf
 
-Suggested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Suggested-by: Oleg Zhurakivskyy <oleg.zhurakivskyy@intel.com>
-Signed-off-by: Sedat Dilek <sedat.dilek@credativ.de>
+Signed-off-by: Vladimir Koutny <vladimir.koutny@streamunlimited.com>
+
 ---
- drivers/nfc/nxp-nci/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ db.txt | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/nfc/nxp-nci/Kconfig b/drivers/nfc/nxp-nci/Kconfig
-index 16473cfcb1d8..a38c426452ca 100644
---- a/drivers/nfc/nxp-nci/Kconfig
-+++ b/drivers/nfc/nxp-nci/Kconfig
-@@ -21,4 +21,4 @@ config NFC_NXP_NCI_I2C
- 
- 	  To compile this driver as a module, choose m here. The module will
- 	  be called nxp_nci_i2c.
--	  Say Y if unsure.
-+	  Say N if unsure.
+diff --git a/db.txt b/db.txt
+index 4fb1948..7e10d0d 100644
+--- a/db.txt
++++ b/db.txt
+@@ -658,7 +658,6 @@ country JP: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(2474 - 2494 @ 20), (20), NO-OFDM
+ 	(4910 - 4990 @ 40), (23)
+-	(5030 - 5090 @ 40), (23)
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (23), DFS
 -- 
-2.20.1
+2.11.0
 
