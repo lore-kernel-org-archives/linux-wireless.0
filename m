@@ -2,73 +2,116 @@ Return-Path: <SRS0=gXm/=TP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1683C04E53
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 May 2019 12:24:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A970FC04E87
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 May 2019 12:26:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9CF3220843
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 May 2019 12:24:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B80B20578
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 May 2019 12:26:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="h+LrIjbW";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SfllZBh9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbfEOMYs (ORCPT
+        id S1726733AbfEOM0T (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 May 2019 08:24:48 -0400
-Received: from bsmtp8.bon.at ([213.33.87.20]:9723 "EHLO bsmtp8.bon.at"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726441AbfEOMYr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 May 2019 08:24:47 -0400
-X-Greylist: delayed 2025 seconds by postgrey-1.27 at vger.kernel.org; Wed, 15 May 2019 08:24:46 EDT
-Received: from bsmtp7.bon.at (unknown [192.168.181.105])
-        by bsmtp8.bon.at (Postfix) with ESMTPS id 453tDQ0VvQz5vN9
-        for <linux-wireless@vger.kernel.org>; Wed, 15 May 2019 13:51:02 +0200 (CEST)
-Received: from [10.2.1.2] (81.89.61.168.host.vnet.sk [81.89.61.168])
-        by bsmtp7.bon.at (Postfix) with ESMTPSA id 453tDN0vbrz5tl9;
-        Wed, 15 May 2019 13:51:00 +0200 (CEST)
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-To:     seth.forshee@canonical.com
-From:   Vladimir Koutny <vladimir.koutny@streamunlimited.com>
-Subject: [PATCH] wireless-regdb: Update regulatory rules for Japan (JP) on
- 5GHz
-Openpgp: preference=signencrypt
-Message-ID: <82a15f3c-fe0c-a5dc-9846-13b3efb01f0d@streamunlimited.com>
-Date:   Wed, 15 May 2019 13:50:59 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Wed, 15 May 2019 08:26:19 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:42700 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726652AbfEOM0T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 May 2019 08:26:19 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 1B6DC6072E; Wed, 15 May 2019 12:26:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1557923178;
+        bh=9MqGVcO6uYUQ2aNqwWZf4c/ySF737WfbAu840JeYXQE=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=h+LrIjbWVYhw3DeNZQ3ebZLBfDoaCcSwaAkgVBr+WjcDi6/pdKVXYH/hDqwJr8wh6
+         6/34sreNw60+j4YjrQzsE9t1rEej5Gg+Z/EeTPep8kEPD7hZVKUSFgGRo5flyhD6ZL
+         qTzYz+ADMjkDjQVP/g+Nix1HohRAsnmdLFtBzADE=
+Received: from [10.204.79.15] (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: mojha@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 37937607F4;
+        Wed, 15 May 2019 12:26:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1557923177;
+        bh=9MqGVcO6uYUQ2aNqwWZf4c/ySF737WfbAu840JeYXQE=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=SfllZBh9wAj1akKJtLKrDfIvh8upprGZG7nEkfm+T67WrefhLWfdeXAnwBwndDmHB
+         T4HKEhkJHBfAyjJXBd7c26dXsLtxVf2j+KyqyyqYm9Ip4M2bV0hsPU/G0079fZl3ml
+         GuX/HBVcME0N78YkxKntfJgJaUt3+cjMN3KAcLFI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 37937607F4
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=mojha@codeaurora.org
+Subject: Re: [PATCH] libertas/libertas_tf: fix spelling mistake "Donwloading"
+ -> "Downloading"
+To:     Colin King <colin.king@canonical.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20190514211406.6353-1-colin.king@canonical.com>
+From:   Mukesh Ojha <mojha@codeaurora.org>
+Message-ID: <2661269b-7404-5534-05e1-b3b963dc2036@codeaurora.org>
+Date:   Wed, 15 May 2019 17:56:11 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+In-Reply-To: <20190514211406.6353-1-colin.king@canonical.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-According to multiple sources channels 8-16 (5030-5090MHz) were only
-allowed in Japan until Nov-30, 2017 (later extended to Nov-30, 2018).
 
-https://www.tele.soumu.go.jp/j/adm/system/trunk/wimax/5ghz/index.htm
-http://www.dspr.co.jp/wp/wp-content/uploads/2017/10/The-expiration-date-of-some-frequency-of-the-5GHz-band-radio-access-system_eng.pdf
+On 5/15/2019 2:44 AM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> There is are two spelling mistakes in lbtf_deb_usb2 messages, fix these.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
 
-Signed-off-by: Vladimir Koutny <vladimir.koutny@streamunlimited.com>
+Cheers,
+-Mukesh
 
----
- db.txt | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/db.txt b/db.txt
-index 4fb1948..7e10d0d 100644
---- a/db.txt
-+++ b/db.txt
-@@ -658,7 +658,6 @@ country JP: DFS-JP
- 	(2402 - 2482 @ 40), (20)
- 	(2474 - 2494 @ 20), (20), NO-OFDM
- 	(4910 - 4990 @ 40), (23)
--	(5030 - 5090 @ 40), (23)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (23), DFS
--- 
-2.11.0
-
+> ---
+>   drivers/net/wireless/marvell/libertas/if_usb.c    | 2 +-
+>   drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 +-
+>   2 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
+> index 220dcdee8d2b..1d06fa564e28 100644
+> --- a/drivers/net/wireless/marvell/libertas/if_usb.c
+> +++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+> @@ -367,7 +367,7 @@ static int if_usb_send_fw_pkt(struct if_usb_card *cardp)
+>   			     cardp->fwseqnum, cardp->totalbytes);
+>   	} else if (fwdata->hdr.dnldcmd == cpu_to_le32(FW_HAS_LAST_BLOCK)) {
+>   		lbs_deb_usb2(&cardp->udev->dev, "Host has finished FW downloading\n");
+> -		lbs_deb_usb2(&cardp->udev->dev, "Donwloading FW JUMP BLOCK\n");
+> +		lbs_deb_usb2(&cardp->udev->dev, "Downloading FW JUMP BLOCK\n");
+>   
+>   		cardp->fwfinalblk = 1;
+>   	}
+> diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+> index a4b9ede70705..38f77b1a02ca 100644
+> --- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+> +++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+> @@ -319,7 +319,7 @@ static int if_usb_send_fw_pkt(struct if_usb_card *cardp)
+>   	} else if (fwdata->hdr.dnldcmd == cpu_to_le32(FW_HAS_LAST_BLOCK)) {
+>   		lbtf_deb_usb2(&cardp->udev->dev,
+>   			"Host has finished FW downloading\n");
+> -		lbtf_deb_usb2(&cardp->udev->dev, "Donwloading FW JUMP BLOCK\n");
+> +		lbtf_deb_usb2(&cardp->udev->dev, "Downloading FW JUMP BLOCK\n");
+>   
+>   		/* Host has finished FW downloading
+>   		 * Donwloading FW JUMP BLOCK
