@@ -2,260 +2,101 @@ Return-Path: <SRS0=+b/P=TQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BC22C04AB4
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 09:53:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05316C04AAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:36:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6ADB920848
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 09:53:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDC452082E
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:36:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="FDW8pGuK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727160AbfEPJxJ (ORCPT
+        id S1726902AbfEPLgD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 May 2019 05:53:09 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:39762 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727147AbfEPJxI (ORCPT
+        Thu, 16 May 2019 07:36:03 -0400
+Received: from mail-ed1-f46.google.com ([209.85.208.46]:45460 "EHLO
+        mail-ed1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726363AbfEPLgD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 May 2019 05:53:08 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hRD4S-0007MT-MC; Thu, 16 May 2019 11:53:04 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] mac80211: call rate_control_send_low() internally
-Date:   Thu, 16 May 2019 11:52:56 +0200
-Message-Id: <20190516095257.11503-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.17.2
+        Thu, 16 May 2019 07:36:03 -0400
+Received: by mail-ed1-f46.google.com with SMTP id g57so4726359edc.12
+        for <linux-wireless@vger.kernel.org>; Thu, 16 May 2019 04:36:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=ABrVTP7tfNstYHlzKLELFT1T8Cqmuc4h4Q2Nb4CnxtE=;
+        b=FDW8pGuKbCJJXcInHZJE+oeQT+pWHvG4Hj4HJOqDn/Q+Vy8vgejYeOgUa3lrSaYnXj
+         GWG8vwvOGx5sQg9HlZ6s+GSuqYVTrdIu/lnHo8+HnI16QEr90Wp7CPMnxH9mAttE5V+o
+         IxWIVzXU60xczTnQGkUNHKxnq8JbUiDALc6oY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=ABrVTP7tfNstYHlzKLELFT1T8Cqmuc4h4Q2Nb4CnxtE=;
+        b=MndhX2byjiuKtxJlutPtJ4FHn34PIhC8oEBe8Xkpe1icDMoDuO26bIzHCZDQkHjJan
+         2TIzR8n3T1hIvIxCFxEu+ItHDDdVgtqwzF6b4aR69Gdm4agwFJGO1dvBwGB++8e+LlrR
+         skRuzCWhh2wRf9kRTpQ+XCk7HtRsAlCgfErNx/d+Y5MHiiy/McJWqv8GG6j8M2CSI4o+
+         GZrNaTKZIB2cE/AUC15SqZwyItC0OS0nJL1knP21Ehkro2x2WYmnRtImiGmDawNwjgHF
+         qVpunHy375ur5aTL3anFtuBcyKdGpPTbMvVUaJI4XbGdEmoUzI7FxqutqNDWD8EFSD1i
+         kk7w==
+X-Gm-Message-State: APjAAAUttVPFTjKD49fwWuzo+WrvSRHh4zVbYDQiqpcJ0aQ4yoXy4Vpt
+        Nw4+TyGktgTwAc8LXKD7gdDJVw==
+X-Google-Smtp-Source: APXvYqzY8ZkwhHTuVhimaYiXS2Aj/XQSkH+JNlE7KZ6PuHoVOzLaNjhlAwgu/jUUwMgoFOavmfYV7A==
+X-Received: by 2002:a50:ca45:: with SMTP id e5mr13596691edi.1.1558006561564;
+        Thu, 16 May 2019 04:36:01 -0700 (PDT)
+Received: from [10.230.33.15] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id w54sm1836109edw.40.2019.05.16.04.36.00
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 16 May 2019 04:36:01 -0700 (PDT)
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: SPDX identifier
+Message-ID: <b04655c7-5a6e-b510-5fcf-30ecca489882@broadcom.com>
+Date:   Thu, 16 May 2019 13:35:59 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Kalle, Thomas,
 
-There's no rate control algorithm that *doesn't* want to call
-it internally, and calling it internally will let us modify
-its behaviour in the future.
+I added SPDX tags in brcm80211 driver sources. Although it is a 
+no-brainer I decided to run checkpatch for the changes and quirky stuff 
+started to happen. For all files I added:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- .../driver-api/80211/mac80211-advanced.rst    |  3 ---
- drivers/net/wireless/intel/iwlegacy/3945-rs.c |  3 ---
- drivers/net/wireless/intel/iwlegacy/4965-rs.c |  4 ----
- drivers/net/wireless/intel/iwlwifi/dvm/rs.c   |  4 ----
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |  4 ----
- drivers/net/wireless/realtek/rtlwifi/rc.c     |  3 ---
- include/net/mac80211.h                        | 23 -------------------
- net/mac80211/rate.c                           | 13 ++++++-----
- net/mac80211/rc80211_minstrel.c               |  4 ----
- net/mac80211/rc80211_minstrel_ht.c            |  3 ---
- 10 files changed, 7 insertions(+), 57 deletions(-)
+// SPDX-License-Identifier
 
-diff --git a/Documentation/driver-api/80211/mac80211-advanced.rst b/Documentation/driver-api/80211/mac80211-advanced.rst
-index 70a89b2163c2..9f1c5bb7ac35 100644
---- a/Documentation/driver-api/80211/mac80211-advanced.rst
-+++ b/Documentation/driver-api/80211/mac80211-advanced.rst
-@@ -226,9 +226,6 @@ TBD
- .. kernel-doc:: include/net/mac80211.h
-    :functions: ieee80211_tx_rate_control
- 
--.. kernel-doc:: include/net/mac80211.h
--   :functions: rate_control_send_low
--
- TBD
- 
- This part of the book describes mac80211 internals.
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-rs.c b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-index a697edd46e7f..922f09f7ea3e 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-@@ -646,9 +646,6 @@ il3945_rs_get_rate(void *il_r, struct ieee80211_sta *sta, void *il_sta,
- 		il_sta = NULL;
- 	}
- 
--	if (rate_control_send_low(sta, il_sta, txrc))
--		return;
--
- 	rate_mask = sta->supp_rates[sband->band];
- 
- 	/* get user max rate if set */
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-rs.c b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-index 54ff83829afb..946f352fd9a4 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-@@ -2224,10 +2224,6 @@ il4965_rs_get_rate(void *il_r, struct ieee80211_sta *sta, void *il_sta,
- 		il_sta = NULL;
- 	}
- 
--	/* Send management frames and NO_ACK data using lowest rate. */
--	if (rate_control_send_low(sta, il_sta, txrc))
--		return;
--
- 	if (!lq_sta)
- 		return;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
-index ef4b9de256f7..838e76a5db68 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
-@@ -2731,10 +2731,6 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
- 		priv_sta = NULL;
- 	}
- 
--	/* Send management frames and NO_ACK data using lowest rate. */
--	if (rate_control_send_low(sta, priv_sta, txrc))
--		return;
--
- 	rate_idx  = lq_sta->last_txrate_idx;
- 
- 	if (lq_sta->last_rate_n_flags & RATE_MCS_HT_MSK) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index c182821ab22b..9107b1698b0f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -2960,10 +2960,6 @@ static void rs_drv_get_rate(void *mvm_r, struct ieee80211_sta *sta,
- 		mvm_sta = NULL;
- 	}
- 
--	/* Send management frames and NO_ACK data using lowest rate. */
--	if (rate_control_send_low(sta, mvm_sta, txrc))
--		return;
--
- 	if (!mvm_sta)
- 		return;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
-index cf8e42a01015..0c7d74902d33 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
-@@ -173,9 +173,6 @@ static void rtl_get_rate(void *ppriv, struct ieee80211_sta *sta,
- 	u8 try_per_rate, i, rix;
- 	bool not_data = !ieee80211_is_data(fc);
- 
--	if (rate_control_send_low(sta, priv_sta, txrc))
--		return;
--
- 	rix = _rtl_rc_get_highest_rix(rtlpriv, sta, skb, not_data);
- 	try_per_rate = 1;
- 	_rtl_rc_rate_set_series(rtlpriv, sta, &rates[0], txrc,
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 72080d9d617e..9dc98d6d1b4d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -5951,29 +5951,6 @@ static inline int rate_supported(struct ieee80211_sta *sta,
- 	return (sta == NULL || sta->supp_rates[band] & BIT(index));
- }
- 
--/**
-- * rate_control_send_low - helper for drivers for management/no-ack frames
-- *
-- * Rate control algorithms that agree to use the lowest rate to
-- * send management frames and NO_ACK data with the respective hw
-- * retries should use this in the beginning of their mac80211 get_rate
-- * callback. If true is returned the rate control can simply return.
-- * If false is returned we guarantee that sta and sta and priv_sta is
-- * not null.
-- *
-- * Rate control algorithms wishing to do more intelligent selection of
-- * rate for multicast/broadcast frames may choose to not use this.
-- *
-- * @sta: &struct ieee80211_sta pointer to the target destination. Note
-- * 	that this may be null.
-- * @priv_sta: private rate control structure. This may be null.
-- * @txrc: rate control information we sholud populate for mac80211.
-- */
--bool rate_control_send_low(struct ieee80211_sta *sta,
--			   void *priv_sta,
--			   struct ieee80211_tx_rate_control *txrc);
--
--
- static inline s8
- rate_lowest_index(struct ieee80211_supported_band *sband,
- 		  struct ieee80211_sta *sta)
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 76f303fda3ed..09f89d004a70 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -369,9 +369,8 @@ static void __rate_control_send_low(struct ieee80211_hw *hw,
- }
- 
- 
--bool rate_control_send_low(struct ieee80211_sta *pubsta,
--			   void *priv_sta,
--			   struct ieee80211_tx_rate_control *txrc)
-+static bool rate_control_send_low(struct ieee80211_sta *pubsta,
-+				  struct ieee80211_tx_rate_control *txrc)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
- 	struct ieee80211_supported_band *sband = txrc->sband;
-@@ -379,7 +378,7 @@ bool rate_control_send_low(struct ieee80211_sta *pubsta,
- 	int mcast_rate;
- 	bool use_basicrate = false;
- 
--	if (!pubsta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
-+	if (!pubsta || rc_no_data_or_no_ack_use_min(txrc)) {
- 		__rate_control_send_low(txrc->hw, sband, pubsta, info,
- 					txrc->rate_idx_mask);
- 
-@@ -405,7 +404,6 @@ bool rate_control_send_low(struct ieee80211_sta *pubsta,
- 	}
- 	return false;
- }
--EXPORT_SYMBOL(rate_control_send_low);
- 
- static bool rate_idx_match_legacy_mask(s8 *rate_idx, int n_bitrates, u32 mask)
- {
-@@ -902,12 +900,15 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 	if (ieee80211_hw_check(&sdata->local->hw, HAS_RATE_CONTROL))
- 		return;
- 
-+	if (rate_control_send_low(ista, txrc))
-+		return;
-+
- 	if (ista) {
- 		spin_lock_bh(&sta->rate_ctrl_lock);
- 		ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
- 		spin_unlock_bh(&sta->rate_ctrl_lock);
- 	} else {
--		ref->ops->get_rate(ref->priv, NULL, NULL, txrc);
-+		rate_control_send_low(NULL, txrc);
- 	}
- 
- 	if (ieee80211_hw_check(&sdata->local->hw, SUPPORTS_RC_TABLE))
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index a34e9c2ca626..ee86c3333999 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -340,10 +340,6 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 	int delta;
- 	int sampling_ratio;
- 
--	/* management/no-ack frames do not use rate control */
--	if (rate_control_send_low(sta, priv_sta, txrc))
--		return;
--
- 	/* check multi-rate-retry capabilities & adjust lookaround_rate */
- 	mrr_capable = mp->has_mrr &&
- 		      !txrc->rts &&
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 8b168724c5e7..da18c6fb6c1d 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1098,9 +1098,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	struct minstrel_priv *mp = priv;
- 	int sample_idx;
- 
--	if (rate_control_send_low(sta, priv_sta, txrc))
--		return;
--
- 	if (!msp->is_ht)
- 		return mac80211_minstrel.get_rate(priv, sta, &msp->legacy, txrc);
- 
--- 
-2.17.2
+but checkpatch started complaining I should use /* ... */ instead of //.
 
+WARNING: Improper SPDX comment style for 
+'drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h', please 
+use '/*' instead
+#29: FILE: drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h:1:
++// SPDX-License-Identifier: ISC
+
+So I edited all patches and ran again. And again it started complaining.
+
+WARNING: Improper SPDX comment style for 
+'drivers/net/wireless/broadcom/brcm80211/brcmsmac/aiutils.c', please use 
+'//' instead
+
+So now I am in a bonkers state. It seems for header files we want /* */ 
+and for c files we want //. For real?
+
+This is on wireless-drivers-next so maybe it is already fixed, but I 
+think this should be fixed.
+
+Regards,
+Arend
