@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42810C04AAF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:42:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01427C04E87
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:43:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C5392087E
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:42:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD06B20833
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:43:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558006940;
-	bh=eUxnrEwnF6bF+JSc7wVkPo6Dm7nzqZov0fVqkNqdy7Y=;
+	s=default; t=1558007009;
+	bh=8eARBYmvj/PR+Vmhg1+Mrnms2xkYXMN8hkHgcDObopo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Y2X7u/0QxDFxiBAcoS6V+Kew8mzWxKRRQKMZb8DIFsSbx4GlU5Pa4xi4Y1qLYz5n2
-	 5alsgN9v3kNLMWtoLLycpxgMAnJZQNCPLZU8pBFw6sd5i5jSG/HZRbwHHS1YCaAiGQ
-	 fzettnRavURWvw+4PpuuwHMI/JyumftED5iKboC8=
+	b=FN03B4AhG0q2K9ZuDuqdtMWpXgWrfxILNNji87EaHcx25KYYwcZ/VY9vx3Fxd9Qht
+	 iHg3wNmj6jNajrX/htccXIZlub47TPFULqXh0oPWSobPPHBIe2MXfa0LhmgXBe6SaZ
+	 hCFoZUGLPHQzGtCpeQyJ+A0Uq5HdpKin915WmUDE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728471AbfEPLmH (ORCPT
+        id S1728291AbfEPLlm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 May 2019 07:42:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50996 "EHLO mail.kernel.org"
+        Thu, 16 May 2019 07:41:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50432 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728455AbfEPLmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 May 2019 07:42:06 -0400
+        id S1728279AbfEPLll (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 May 2019 07:41:41 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 77F362166E;
-        Thu, 16 May 2019 11:42:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B70F52089E;
+        Thu, 16 May 2019 11:41:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558006925;
-        bh=eUxnrEwnF6bF+JSc7wVkPo6Dm7nzqZov0fVqkNqdy7Y=;
+        s=default; t=1558006900;
+        bh=8eARBYmvj/PR+Vmhg1+Mrnms2xkYXMN8hkHgcDObopo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=we+d9JFSXBaaH2Bs+ScBL5zNye7S6Jdr9VeBo6Fidfx8wDHV126mqhrPfWsnDqoeP
-         CughMp+CZo8zyvw26e3wUUD6/r3f9ysnByxJkKasqrThYKOoEbaGvNzST6VBqtmoVZ
-         IDnxXAjP5c7zsCol/q83KERNAf6DXMBzEWDNdV0s=
+        b=lIadVS4mwnMSPf7KYrK2NKYx+sZa3HkwiaZqt165prUzH0oqJFTNES3WkpBax351y
+         mTjpo2cjtXWYzntkRxBwEJNiOFfw7fxwOHQco0MzwtzQtlUGfgrZcEtAXKXEdVh+x4
+         y3klnUUgdA7M6su1ZAcZDNq+sdifKCrTKPtpzQtY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bhagavathi Perumal S <bperumal@codeaurora.org>,
@@ -46,12 +46,12 @@ Cc:     Bhagavathi Perumal S <bperumal@codeaurora.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 3.18 4/6] mac80211: Fix kernel panic due to use of txq after free
-Date:   Thu, 16 May 2019 07:41:57 -0400
-Message-Id: <20190516114159.9382-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 5/9] mac80211: Fix kernel panic due to use of txq after free
+Date:   Thu, 16 May 2019 07:41:29 -0400
+Message-Id: <20190516114134.9146-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190516114159.9382-1-sashal@kernel.org>
-References: <20190516114159.9382-1-sashal@kernel.org>
+In-Reply-To: <20190516114134.9146-1-sashal@kernel.org>
+References: <20190516114134.9146-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -84,10 +84,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index f4ce34670fa83..e052c11d8900a 100644
+index 5768560cbfc3e..ad03331ee7855 100644
 --- a/net/mac80211/iface.c
 +++ b/net/mac80211/iface.c
-@@ -1764,6 +1764,9 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
+@@ -1937,6 +1937,9 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
  	list_del_rcu(&sdata->list);
  	mutex_unlock(&sdata->local->iflist_mtx);
  
