@@ -2,101 +2,171 @@ Return-Path: <SRS0=+b/P=TQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05316C04AAF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:36:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CAC7C04AAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:41:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDC452082E
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:36:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="FDW8pGuK"
+	by mail.kernel.org (Postfix) with ESMTP id 5F5B320881
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 May 2019 11:41:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1558006886;
+	bh=KLOzCghg8/kT4XQj3LLYazuW/SFH6+ANUyC7Uzv471M=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=IvDwYVSTA7eAiJGepFLJvDh8my57Kst9d/Zm3QPZj7Ao1giK2XzolFkirtN5qh/zx
+	 UYqiZokQaE2DWgBCuPVNttzyiyyK8auV/eTY07UYehQIqc6LWj5ep9IR6P5diLiw0x
+	 6Je3yF/CG1AGP/ZeyAWtXfA/XvQUpel6ESJMvmz8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726902AbfEPLgD (ORCPT
+        id S1728160AbfEPLlZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 May 2019 07:36:03 -0400
-Received: from mail-ed1-f46.google.com ([209.85.208.46]:45460 "EHLO
-        mail-ed1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726363AbfEPLgD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 May 2019 07:36:03 -0400
-Received: by mail-ed1-f46.google.com with SMTP id g57so4726359edc.12
-        for <linux-wireless@vger.kernel.org>; Thu, 16 May 2019 04:36:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=ABrVTP7tfNstYHlzKLELFT1T8Cqmuc4h4Q2Nb4CnxtE=;
-        b=FDW8pGuKbCJJXcInHZJE+oeQT+pWHvG4Hj4HJOqDn/Q+Vy8vgejYeOgUa3lrSaYnXj
-         GWG8vwvOGx5sQg9HlZ6s+GSuqYVTrdIu/lnHo8+HnI16QEr90Wp7CPMnxH9mAttE5V+o
-         IxWIVzXU60xczTnQGkUNHKxnq8JbUiDALc6oY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=ABrVTP7tfNstYHlzKLELFT1T8Cqmuc4h4Q2Nb4CnxtE=;
-        b=MndhX2byjiuKtxJlutPtJ4FHn34PIhC8oEBe8Xkpe1icDMoDuO26bIzHCZDQkHjJan
-         2TIzR8n3T1hIvIxCFxEu+ItHDDdVgtqwzF6b4aR69Gdm4agwFJGO1dvBwGB++8e+LlrR
-         skRuzCWhh2wRf9kRTpQ+XCk7HtRsAlCgfErNx/d+Y5MHiiy/McJWqv8GG6j8M2CSI4o+
-         GZrNaTKZIB2cE/AUC15SqZwyItC0OS0nJL1knP21Ehkro2x2WYmnRtImiGmDawNwjgHF
-         qVpunHy375ur5aTL3anFtuBcyKdGpPTbMvVUaJI4XbGdEmoUzI7FxqutqNDWD8EFSD1i
-         kk7w==
-X-Gm-Message-State: APjAAAUttVPFTjKD49fwWuzo+WrvSRHh4zVbYDQiqpcJ0aQ4yoXy4Vpt
-        Nw4+TyGktgTwAc8LXKD7gdDJVw==
-X-Google-Smtp-Source: APXvYqzY8ZkwhHTuVhimaYiXS2Aj/XQSkH+JNlE7KZ6PuHoVOzLaNjhlAwgu/jUUwMgoFOavmfYV7A==
-X-Received: by 2002:a50:ca45:: with SMTP id e5mr13596691edi.1.1558006561564;
-        Thu, 16 May 2019 04:36:01 -0700 (PDT)
-Received: from [10.230.33.15] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id w54sm1836109edw.40.2019.05.16.04.36.00
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 16 May 2019 04:36:01 -0700 (PDT)
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: SPDX identifier
-Message-ID: <b04655c7-5a6e-b510-5fcf-30ecca489882@broadcom.com>
-Date:   Thu, 16 May 2019 13:35:59 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        Thu, 16 May 2019 07:41:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50104 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728138AbfEPLlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 May 2019 07:41:24 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8C7E52168B;
+        Thu, 16 May 2019 11:41:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1558006883;
+        bh=KLOzCghg8/kT4XQj3LLYazuW/SFH6+ANUyC7Uzv471M=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=BKGzY8RmWT4Xzsa/GSgotKgiPQqrXzfZkHMc2cPRsbefFLnBZ9KZUiuJ7WL+JiR5r
+         z3AvFG0FA/KHPzoiy2exOatFJLOzc4MVx1S0B3t8CinrjX2XWu67UiO0YpvuFfRvFB
+         M+nJ9YcuegnUvZzVsL5gvsAWmc9seS9wKbcyOvOg=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 12/16] iwlwifi: mvm: check for length correctness in iwl_mvm_create_skb()
+Date:   Thu, 16 May 2019 07:41:03 -0400
+Message-Id: <20190516114107.8963-12-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190516114107.8963-1-sashal@kernel.org>
+References: <20190516114107.8963-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle, Thomas,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-I added SPDX tags in brcm80211 driver sources. Although it is a 
-no-brainer I decided to run checkpatch for the changes and quirky stuff 
-started to happen. For all files I added:
+[ Upstream commit de1887c064b9996ac03120d90d0a909a3f678f98 ]
 
-// SPDX-License-Identifier
+We don't check for the validity of the lengths in the packet received
+from the firmware.  If the MPDU length received in the rx descriptor
+is too short to contain the header length and the crypt length
+together, we may end up trying to copy a negative number of bytes
+(headlen - hdrlen < 0) which will underflow and cause us to try to
+copy a huge amount of data.  This causes oopses such as this one:
 
-but checkpatch started complaining I should use /* ... */ instead of //.
+BUG: unable to handle kernel paging request at ffff896be2970000
+PGD 5e201067 P4D 5e201067 PUD 5e205067 PMD 16110d063 PTE 8000000162970161
+Oops: 0003 [#1] PREEMPT SMP NOPTI
+CPU: 2 PID: 1824 Comm: irq/134-iwlwifi Not tainted 4.19.33-04308-geea41cf4930f #1
+Hardware name: [...]
+RIP: 0010:memcpy_erms+0x6/0x10
+Code: 90 90 90 90 eb 1e 0f 1f 00 48 89 f8 48 89 d1 48 c1 e9 03 83 e2 07 f3 48 a5 89 d1 f3 a4 c3 66 0f 1f 44 00 00 48 89 f8 48 89 d1 <f3> a4 c3
+ 0f 1f 80 00 00 00 00 48 89 f8 48 83 fa 20 72 7e 40 38 fe
+RSP: 0018:ffffa4630196fc60 EFLAGS: 00010287
+RAX: ffff896be2924618 RBX: ffff896bc8ecc600 RCX: 00000000fffb4610
+RDX: 00000000fffffff8 RSI: ffff896a835e2a38 RDI: ffff896be2970000
+RBP: ffffa4630196fd30 R08: ffff896bc8ecc600 R09: ffff896a83597000
+R10: ffff896bd6998400 R11: 000000000200407f R12: ffff896a83597050
+R13: 00000000fffffff8 R14: 0000000000000010 R15: ffff896a83597038
+FS:  0000000000000000(0000) GS:ffff896be8280000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: ffff896be2970000 CR3: 000000005dc12002 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ iwl_mvm_rx_mpdu_mq+0xb51/0x121b [iwlmvm]
+ iwl_pcie_rx_handle+0x58c/0xa89 [iwlwifi]
+ iwl_pcie_irq_rx_msix_handler+0xd9/0x12a [iwlwifi]
+ irq_thread_fn+0x24/0x49
+ irq_thread+0xb0/0x122
+ kthread+0x138/0x140
+ ret_from_fork+0x1f/0x40
 
-WARNING: Improper SPDX comment style for 
-'drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h', please 
-use '/*' instead
-#29: FILE: drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h:1:
-+// SPDX-License-Identifier: ISC
+Fix that by checking the lengths for correctness and trigger a warning
+to show that we have received wrong data.
 
-So I edited all patches and ran again. And again it started complaining.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 28 ++++++++++++++++---
+ 1 file changed, 24 insertions(+), 4 deletions(-)
 
-WARNING: Improper SPDX comment style for 
-'drivers/net/wireless/broadcom/brcm80211/brcmsmac/aiutils.c', please use 
-'//' instead
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 8ba8c70571fb7..7fb8bbaf21420 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -141,9 +141,9 @@ static inline int iwl_mvm_check_pn(struct iwl_mvm *mvm, struct sk_buff *skb,
+ }
+ 
+ /* iwl_mvm_create_skb Adds the rxb to a new skb */
+-static void iwl_mvm_create_skb(struct sk_buff *skb, struct ieee80211_hdr *hdr,
+-			       u16 len, u8 crypt_len,
+-			       struct iwl_rx_cmd_buffer *rxb)
++static int iwl_mvm_create_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
++			      struct ieee80211_hdr *hdr, u16 len, u8 crypt_len,
++			      struct iwl_rx_cmd_buffer *rxb)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
+@@ -184,6 +184,20 @@ static void iwl_mvm_create_skb(struct sk_buff *skb, struct ieee80211_hdr *hdr,
+ 	 * present before copying packet data.
+ 	 */
+ 	hdrlen += crypt_len;
++
++	if (WARN_ONCE(headlen < hdrlen,
++		      "invalid packet lengths (hdrlen=%d, len=%d, crypt_len=%d)\n",
++		      hdrlen, len, crypt_len)) {
++		/*
++		 * We warn and trace because we want to be able to see
++		 * it in trace-cmd as well.
++		 */
++		IWL_DEBUG_RX(mvm,
++			     "invalid packet lengths (hdrlen=%d, len=%d, crypt_len=%d)\n",
++			     hdrlen, len, crypt_len);
++		return -EINVAL;
++	}
++
+ 	skb_put_data(skb, hdr, hdrlen);
+ 	skb_put_data(skb, (u8 *)hdr + hdrlen + pad_len, headlen - hdrlen);
+ 
+@@ -196,6 +210,8 @@ static void iwl_mvm_create_skb(struct sk_buff *skb, struct ieee80211_hdr *hdr,
+ 		skb_add_rx_frag(skb, 0, rxb_steal_page(rxb), offset,
+ 				fraglen, rxb->truesize);
+ 	}
++
++	return 0;
+ }
+ 
+ /* iwl_mvm_pass_packet_to_mac80211 - passes the packet for mac80211 */
+@@ -1033,7 +1049,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			rx_status->boottime_ns = ktime_get_boot_ns();
+ 	}
+ 
+-	iwl_mvm_create_skb(skb, hdr, len, crypt_len, rxb);
++	if (iwl_mvm_create_skb(mvm, skb, hdr, len, crypt_len, rxb)) {
++		kfree_skb(skb);
++		goto out;
++	}
++
+ 	if (!iwl_mvm_reorder(mvm, napi, queue, sta, skb, desc))
+ 		iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, queue, sta);
+ out:
+-- 
+2.20.1
 
-So now I am in a bonkers state. It seems for header files we want /* */ 
-and for c files we want //. For real?
-
-This is on wireless-drivers-next so maybe it is already fixed, but I 
-think this should be fixed.
-
-Regards,
-Arend
