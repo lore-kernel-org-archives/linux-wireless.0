@@ -2,140 +2,137 @@ Return-Path: <SRS0=tPxB=TR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48BA8C04AB4
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 May 2019 21:35:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFE9BC04E84
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 May 2019 22:54:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 227C12087E
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 May 2019 21:35:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B219C2082E
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 May 2019 22:54:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="YBy/i07q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727272AbfEQVft (ORCPT
+        id S1729685AbfEQWys (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 May 2019 17:35:49 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:33087 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726960AbfEQVfs (ORCPT
+        Fri, 17 May 2019 18:54:48 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:39066 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729671AbfEQWyr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 May 2019 17:35:48 -0400
-Received: by mail-io1-f67.google.com with SMTP id z4so6668946iol.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 May 2019 14:35:48 -0700 (PDT)
+        Fri, 17 May 2019 18:54:47 -0400
+Received: by mail-pg1-f196.google.com with SMTP id w22so3949463pgi.6
+        for <linux-wireless@vger.kernel.org>; Fri, 17 May 2019 15:54:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=jmrinjUmvX+AQ+lipzMHtBZaQD2gwKEewfCw3RvxUZk=;
+        b=YBy/i07qpQlrvxx+6Ohii/hGKkEYRmpgmxzUqTc6t6e7jWY6J0RFRRoni7Yc9uR55E
+         dOjuS+sxiF3k24jBmU7V/xt3JzhbBVbS1Jb28lbbMPZ8uBUX67zRh9M3rxqKH17xRDfC
+         1JyFzVqKbemtnksZtgFzqdiY3uYO5HgqwLLb0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8vsolVvxUAyaGD+ep6hBLxhR4l5wSZuWQlF+qKUotMQ=;
-        b=msKXmY+I7Ub8YEJ3xKA/XcNkPSBNyWjcc2hNyOizN+/+f+WysTEuRK7v+FoSPBitC4
-         9qNfNpmPYhTn9taZx/eTbeTMUGUbmM0Fl9kz0Qmj91YHodeZVbj65acBpz0h1/bCxHej
-         bm6whG6GgObYZ3ui9k4LQFFaCOFGio9VcbQh+lZ7a+07/9eqT2ywp9bmBvzRHJ/UY+pa
-         6c4LsM5Nicbso1WN8e5wOKjL9nhf8H/ByMco2J0bgn7Ub3v/YZG9oH/p53dn6GxtnVdA
-         7DMd2xEgkKHYlajl2fK0iu1Osn6X5GtmaqfvUk21mJD5WlVwC9rhz1o5JnQkM3yL6u+N
-         hZ5g==
-X-Gm-Message-State: APjAAAXIEaWcWHxfJrVQCDSyfdtyxEnyK/jG5QnrGhbCzF1rJ+mT9D0i
-        /6fnkKxZuHlHU+iZWUPkF1MuoQu7lVOyoMAyq2EW8A==
-X-Google-Smtp-Source: APXvYqxHQ6FTN0GBZEX3Eql3QrZLqWW2mP7z5YZDwvBQskiqrBuqA0CCtz06bsbkoUrJlCcx7dvow/zz1fNUNGL9idk=
-X-Received: by 2002:a6b:b408:: with SMTP id d8mr10061196iof.12.1558128948222;
- Fri, 17 May 2019 14:35:48 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=jmrinjUmvX+AQ+lipzMHtBZaQD2gwKEewfCw3RvxUZk=;
+        b=YUpnsAFHmN0p8wSyNxLf1RO3diWkkdmLnjrOw22BYrXeVfczRC/w2UYUgFtbDqp1rn
+         b1us+fG3HIy4sYgYn8ct+IeVp5ShzGkJP9ujs6AKu1siHduqjQUXgZzqtKs/NmDK0tGA
+         8j1PoYyBAWIS0QfTOW8j15hqoDVV9xN2w0HeYvEE4DOJF8/fTfQQ89+EYTKnnQll4iJK
+         1eg3trjgd1GfN1J/FV+/ce7I1J+8OB/EBAP7kb4nUbqP9+JNtUXfz5FPX2U93SZWe3EF
+         gEMp9gQyPlZ4JZLBLOv2SXV8DZDeTXlvhe7xvPiTLPLCyZxjh+gXcSeed5FzlXVwVUfE
+         wZWg==
+X-Gm-Message-State: APjAAAW7Z8H39aZHpPGCWCLinioBjpYnTVmeA2Ne8oCyHYxRlOBOyugG
+        35/00dIuL9bnG0fuAN3m6HSTsQ==
+X-Google-Smtp-Source: APXvYqzxf9q2pzvCOer/zrm6/W4Z5BkzeAcb6pguC267JTog7JQqRYkt2ViDmHMU+7mEiD3cc9ESaA==
+X-Received: by 2002:a65:628b:: with SMTP id f11mr57246101pgv.95.1558133686865;
+        Fri, 17 May 2019 15:54:46 -0700 (PDT)
+Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
+        by smtp.gmail.com with ESMTPSA id u11sm11174450pfh.130.2019.05.17.15.54.45
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 17 May 2019 15:54:46 -0700 (PDT)
+From:   Douglas Anderson <dianders@chromium.org>
+To:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc:     linux-rockchip@lists.infradead.org,
+        Double Lo <double.lo@cypress.com>, briannorris@chromium.org,
+        Madhan Mohan R <madhanmohan.r@cypress.com>, mka@chromium.org,
+        Wright Feng <wright.feng@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Franky Lin <franky.lin@broadcom.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        brcm80211-dev-list@cypress.com, YueHaibing <yuehaibing@huawei.com>,
+        Michael Trimarchi <michael@amarulasolutions.com>
+Subject: [PATCH 3/3] brcmfmac: sdio: Disable auto-tuning around commands expected to fail
+Date:   Fri, 17 May 2019 15:54:20 -0700
+Message-Id: <20190517225420.176893-4-dianders@chromium.org>
+X-Mailer: git-send-email 2.21.0.1020.gf2820cf01a-goog
+In-Reply-To: <20190517225420.176893-1-dianders@chromium.org>
+References: <20190517225420.176893-1-dianders@chromium.org>
 MIME-Version: 1.0
-References: <cover.1558127930.git.lorenzo@kernel.org> <38aa977df45a92f60d78d9cb7e575289ccbaeef6.1558127930.git.lorenzo@kernel.org>
-In-Reply-To: <38aa977df45a92f60d78d9cb7e575289ccbaeef6.1558127930.git.lorenzo@kernel.org>
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date:   Fri, 17 May 2019 23:35:37 +0200
-Message-ID: <CAJ0CqmXen_WGJRxjt4Kzr0SPrT=rTSUToUXFz=d7EZnLP11a3w@mail.gmail.com>
-Subject: Re: [PATCH] mt76: mt7615: select wifi band according to eeprom
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>, royluo@google.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
->
-> Select supported band according to the value read from
-> eeprom mtd/otp partition
->
+There are certain cases, notably when transitioning between sleep and
+active state, when Broadcom SDIO WiFi cards will produce errors on the
+SDIO bus.  This is evident from the source code where you can see that
+we try commands in a loop until we either get success or we've tried
+too many times.  The comment in the code reinforces this by saying
+"just one write attempt may fail"
 
-I forgot to mention this patch is based on 'mt76: mt7615: add support
-for mtd eeprom parsing'
-https://patchwork.kernel.org/patch/10947385/
+Unfortunately these failures sometimes end up causing an "-EILSEQ"
+back to the core which triggers a retuning of the SDIO card and that
+blocks all traffic to the card until it's done.
 
-Regards,
-Lorenzo
+Let's disable retuning around the commands we expect might fail.
 
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> ---
->  .../wireless/mediatek/mt76/mt7615/eeprom.c    | 24 ++++++++++++++++---
->  .../wireless/mediatek/mt76/mt7615/eeprom.h    |  9 +++++++
->  2 files changed, 30 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-> index 1712f66520a8..714590878d65 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-> @@ -90,6 +90,26 @@ static int mt7615_check_eeprom(struct mt76_dev *dev)
->         }
->  }
->
-> +static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
-> +{
-> +       u8 val, *eeprom = dev->mt76.eeprom.data;
-> +
-> +       val = FIELD_GET(MT_EE_NIC_WIFI_CONF_BAND_SEL,
-> +                       eeprom[MT_EE_WIFI_CONF]);
-> +       switch (val) {
-> +       case MT_EE_5GHZ:
-> +               dev->mt76.cap.has_5ghz = true;
-> +               break;
-> +       case MT_EE_2GHZ:
-> +               dev->mt76.cap.has_2ghz = true;
-> +               break;
-> +       default:
-> +               dev->mt76.cap.has_2ghz = true;
-> +               dev->mt76.cap.has_5ghz = true;
-> +               break;
-> +       }
-> +}
-> +
->  int mt7615_eeprom_init(struct mt7615_dev *dev)
->  {
->         int ret;
-> @@ -103,9 +123,7 @@ int mt7615_eeprom_init(struct mt7615_dev *dev)
->                 memcpy(dev->mt76.eeprom.data, dev->mt76.otp.data,
->                        MT7615_EEPROM_SIZE);
->
-> -       dev->mt76.cap.has_2ghz = true;
-> -       dev->mt76.cap.has_5ghz = true;
-> -
-> +       mt7615_eeprom_parse_hw_cap(dev);
->         memcpy(dev->mt76.macaddr, dev->mt76.eeprom.data + MT_EE_MAC_ADDR,
->                ETH_ALEN);
->
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
-> index a4cf16688171..b422e395d6ee 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
-> @@ -11,8 +11,17 @@ enum mt7615_eeprom_field {
->         MT_EE_VERSION =                         0x002,
->         MT_EE_MAC_ADDR =                        0x004,
->         MT_EE_NIC_CONF_0 =                      0x034,
-> +       MT_EE_WIFI_CONF =                       0x03e,
->
->         __MT_EE_MAX =                           0x3bf
->  };
->
-> +#define MT_EE_NIC_WIFI_CONF_BAND_SEL           GENMASK(5, 4)
-> +enum mt7615_eeprom_band {
-> +       MT_EE_DUAL_BAND,
-> +       MT_EE_5GHZ,
-> +       MT_EE_2GHZ,
-> +       MT_EE_DBDC,
-> +};
-> +
->  #endif
-> --
-> 2.20.1
->
+Fixes: bd11e8bd03ca ("mmc: core: Flag re-tuning is needed on CRC errors")
+Signed-off-by: Douglas Anderson <dianders@chromium.org>
+---
+
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 3fd2d58a3c88..c09bb8965487 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -27,6 +27,7 @@
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/card.h>
++#include <linux/mmc/core.h>
+ #include <linux/semaphore.h>
+ #include <linux/firmware.h>
+ #include <linux/module.h>
+@@ -708,6 +709,7 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+ 		bmask = SBSDIO_FUNC1_SLEEPCSR_KSO_MASK;
+ 	}
+ 
++	mmc_expect_errors_begin(bus->sdiodev->func1->card->host);
+ 	do {
+ 		/* reliable KSO bit set/clr:
+ 		 * the sdiod sleep write access is synced to PMU 32khz clk
+@@ -730,6 +732,7 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+ 				   &err);
+ 
+ 	} while (try_cnt++ < MAX_KSO_ATTEMPTS);
++	mmc_expect_errors_end(bus->sdiodev->func1->card->host);
+ 
+ 	if (try_cnt > 2)
+ 		brcmf_dbg(SDIO, "try_cnt=%d rd_val=0x%x err=%d\n", try_cnt,
+-- 
+2.21.0.1020.gf2820cf01a-goog
+
