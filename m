@@ -1,71 +1,76 @@
-Return-Path: <SRS0=tPxB=TR=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=Ovvn=TS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAD1CC04E87
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 May 2019 22:55:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0F8EC04AAF
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 May 2019 15:10:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C8842082E
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 May 2019 22:55:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B7B12087B
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 May 2019 15:10:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="IF+6pl0A"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="EWMG2vuw";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="QcDup351"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729395AbfEQWyo (ORCPT
+        id S1729662AbfERPJv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 May 2019 18:54:44 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:36025 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727181AbfEQWyo (ORCPT
+        Sat, 18 May 2019 11:09:51 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:13378 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728516AbfERPJv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 May 2019 18:54:44 -0400
-Received: by mail-pl1-f193.google.com with SMTP id d21so3997723plr.3
-        for <linux-wireless@vger.kernel.org>; Fri, 17 May 2019 15:54:43 -0700 (PDT)
+        Sat, 18 May 2019 11:09:51 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1558192192; x=1589728192;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=RiV7OEoZWJ9YImSHPzGObfADBhzYvQh6R89rP4cvDws=;
+  b=EWMG2vuwp1a+hJNBRIRczwe6izaDWfoov8llT02KjBTmxZE4s8zLSdhu
+   O71K12CATcqahOuiXzpf5C9iG1ZSQ1ucM1xWPj8jrx0ycpFCIt4D8Z4Va
+   EdOLRHjBSmr904YCl2t3ub1MKgnZwIriLqetNxsKojGfJS8ch2/649Jft
+   YN9vycjPeHznE4sOc8sIUgaXOfpuODB3PAPcB0NkobpgkxTU+cRhdZfVB
+   0Y8O42ycBBPJIDbww2eTfnPwqKSfuW3y1utqxIwc20B57dJp6dgJ34og7
+   1uWIh4m9znM7TSg0vJ/q4+mnUrHudqfi6LPlaLoDssqNAAqkI4Hh+2yfS
+   A==;
+X-IronPort-AV: E=Sophos;i="5.60,483,1549900800"; 
+   d="scan'208";a="113518271"
+Received: from mail-co1nam03lp2059.outbound.protection.outlook.com (HELO NAM03-CO1-obe.outbound.protection.outlook.com) ([104.47.40.59])
+  by ob1.hgst.iphmx.com with ESMTP; 18 May 2019 23:09:49 +0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=ul1gLClLY2RLZ2itEzzFB2yOFIqulLy55JPQTAySFDo=;
-        b=IF+6pl0A6m1fIH81uzmdTDMrurVWOxHBgZdzg9ueW18kyGxlj6N5aPcTRqNNCU+vTS
-         LKiCjnkbIC7ajqH/YtTymknHPW/NY4yPjYIJzDwwYqMMyIAHIYA46a6IB8NY149qfCHK
-         CVTekqT/FiWMIwMhhNjynCJ139h41IPM+Swp8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=ul1gLClLY2RLZ2itEzzFB2yOFIqulLy55JPQTAySFDo=;
-        b=QaGi81YJMkOu035NPuuA/RnXYrAn8CYnlVV3RzfSnUT5/1X+ZTb3H1XMkJjhqi/yhW
-         wBto1LtXUVZIYeuyeQifuau74Ic8erLUOXKYySXDqSzGJbXnM8nURa/7MIxc/pyr+BBF
-         RVWDf39ZgUXI0YOzl6wSHTyTvGxIeZjMmv0+CmXJBN+AkgsVs+SlIPx+MlVsWm3KJZxz
-         VdyF+21kd5wpHAP5+j7psyEj8B1UjMrdtRWBUraQoB4Hh6aoc0zoGXE64/n6R3MNOqlF
-         FmE/Zxh9AOBlzTgrEBrLHWOaLcjVojE4fFBIeho9Xl2WM+wXeTo/geK20gVGrQWRqyyC
-         BzDA==
-X-Gm-Message-State: APjAAAXOTfaTWTR51eN4CaybRBa1V1P8qkysUD2rbT9SxkuawzCcymjg
-        8fgCNtPcQyIPyUNvVGQ+VRBddw==
-X-Google-Smtp-Source: APXvYqz/J4eNQzJXQjOFtQWVtg1bZz7U+KE/9+kUa8iLb3eFelZBp/fzq1UlgJul23Nw2JUqc2sKmA==
-X-Received: by 2002:a17:902:7797:: with SMTP id o23mr58590219pll.147.1558133683494;
-        Fri, 17 May 2019 15:54:43 -0700 (PDT)
-Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id u11sm11174450pfh.130.2019.05.17.15.54.42
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 17 May 2019 15:54:42 -0700 (PDT)
-From:   Douglas Anderson <dianders@chromium.org>
-To:     Ulf Hansson <ulf.hansson@linaro.org>,
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RiV7OEoZWJ9YImSHPzGObfADBhzYvQh6R89rP4cvDws=;
+ b=QcDup351RCI/Aa+TJR8shcWepRxeiN7qF6GkoROrXYy1iLMp/NxUOtoZ/ewjle+X7rQ6CYUUYCFWErzzRjsNPl3RwkhFFZDpTik7QOAhDobcLRW7/sBDIaeNP2UmXRVgCv/31HIWx5Tls0GMp9zyXqw6rHiyszcnR9WPiZsBqOU=
+Received: from SN6PR04MB4925.namprd04.prod.outlook.com (52.135.114.82) by
+ SN6PR04MB4671.namprd04.prod.outlook.com (52.135.122.85) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1900.18; Sat, 18 May 2019 15:09:44 +0000
+Received: from SN6PR04MB4925.namprd04.prod.outlook.com
+ ([fe80::6d99:14d9:3fa:f530]) by SN6PR04MB4925.namprd04.prod.outlook.com
+ ([fe80::6d99:14d9:3fa:f530%6]) with mapi id 15.20.1900.010; Sat, 18 May 2019
+ 15:09:44 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Douglas Anderson <dianders@chromium.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc:     linux-rockchip@lists.infradead.org,
-        Double Lo <double.lo@cypress.com>, briannorris@chromium.org,
-        Madhan Mohan R <madhanmohan.r@cypress.com>, mka@chromium.org,
+CC:     "linux-rockchip@lists.infradead.org" 
+        <linux-rockchip@lists.infradead.org>,
+        Double Lo <double.lo@cypress.com>,
+        "briannorris@chromium.org" <briannorris@chromium.org>,
+        Madhan Mohan R <madhanmohan.r@cypress.com>,
+        "mka@chromium.org" <mka@chromium.org>,
         Wright Feng <wright.feng@cypress.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        linux-mmc@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        brcm80211-dev-list@cypress.com, YueHaibing <yuehaibing@huawei.com>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
+        YueHaibing <yuehaibing@huawei.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Martin Hicks <mort@bork.org>,
         Ritesh Harjani <riteshh@codeaurora.org>,
@@ -73,58 +78,71 @@ Cc:     linux-rockchip@lists.infradead.org,
         Wolfram Sang <wsa+renesas@sang-engineering.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Jiong Wu <lohengrin1024@gmail.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "brcm80211-dev-list.pdl@broadcom.com" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Naveen Gupta <naveen.gupta@cypress.com>,
-        Madhan Mohan R <MadhanMohan.R@cypress.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 0/3] brcmfmac: sdio: Deal better w/ transmission errors waking from sleep
-Date:   Fri, 17 May 2019 15:54:17 -0700
-Message-Id: <20190517225420.176893-1-dianders@chromium.org>
-X-Mailer: git-send-email 2.21.0.1020.gf2820cf01a-goog
+        Madhan Mohan R <MadhanMohan.R@cypress.com>
+Subject: RE: [PATCH 0/3] brcmfmac: sdio: Deal better w/ transmission errors
+ waking from sleep
+Thread-Topic: [PATCH 0/3] brcmfmac: sdio: Deal better w/ transmission errors
+ waking from sleep
+Thread-Index: AQHVDQOIWiJuHBTvfUy+CZIIvlgrX6Zw/GuA
+Date:   Sat, 18 May 2019 15:09:44 +0000
+Message-ID: <SN6PR04MB49258D4FBE0B4D739E8BAF7EFC040@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <20190517225420.176893-1-dianders@chromium.org>
+In-Reply-To: <20190517225420.176893-1-dianders@chromium.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Avri.Altman@wdc.com; 
+x-originating-ip: [129.253.244.4]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 61d66f27-cfb8-48e7-ddb0-08d6dba2dc50
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600141)(711020)(4605104)(4618075)(2017052603328)(7193020);SRVR:SN6PR04MB4671;
+x-ms-traffictypediagnostic: SN6PR04MB4671:
+x-ms-exchange-purlcount: 1
+wdcipoutbound: EOP-TRUE
+x-microsoft-antispam-prvs: <SN6PR04MB4671AE9037E102DA115DBA04FC040@SN6PR04MB4671.namprd04.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-forefront-prvs: 0041D46242
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(346002)(396003)(366004)(136003)(376002)(39860400002)(199004)(189003)(81156014)(81166006)(25786009)(4326008)(8676002)(8936002)(316002)(7696005)(76176011)(99286004)(102836004)(68736007)(66946007)(64756008)(6506007)(66556008)(256004)(6246003)(76116006)(66446008)(53936002)(74316002)(33656002)(110136005)(9686003)(55016002)(73956011)(54906003)(66476007)(66066001)(6306002)(4744005)(2906002)(6436002)(86362001)(476003)(72206003)(446003)(7416002)(478600001)(486006)(3846002)(71200400001)(26005)(305945005)(5660300002)(7736002)(52536014)(71190400001)(6116002)(11346002)(229853002)(14454004)(186003);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR04MB4671;H:SN6PR04MB4925.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: N9O2ae9+jU9rs2sDfOqn7v12wZG/c0afdLcUr2gn3ifl1HGEuOIRmNmuLKqKrWZW+ksTDZBfL8mgUiUcgIdPZN91PnA5XPsp6KuNZo+aZYUbVCfghSB5J+kpDyCeULdeP+3aMkAef9AeI9v9IksOdinVsuEcKOeOkGx3NALAbRRWZfctp5yawVwv8KFbWOYI/0bfyC5VgkpEWdefMIwya7MPvcFQpF8iKwnNhpYb+u1CRqUetZkb/2o4z9mE2Sh2E8cuR6etc/azGF2myiCfEjcdsYl8jmE2LyL7lnVPDa2IoXzCyPh2chtZmUebMoDKGlyIAhcQh/AT9S07BKGrFZyJLjCXj3me4O5g1l73jT9/SUehRft80O+eNJij7oouZObWg2k7Tw2qhCob1q1XwEJDcD8CTEDYjQ04dvPsRTQ=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 61d66f27-cfb8-48e7-ddb0-08d6dba2dc50
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 May 2019 15:09:44.4257
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4671
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series attempts to deal better with the expected transmission
-errors that we get when waking up the SDIO-based WiFi on
-rk3288-veyron-minnie, rk3288-veyron-speedy, and rk3288-veyron-mickey.
+>=20
+> This series attempts to deal better with the expected transmission
+> errors that we get when waking up the SDIO-based WiFi on
+> rk3288-veyron-minnie, rk3288-veyron-speedy, and rk3288-veyron-mickey.
+>=20
+> Some details about those errors can be found in
+> <https://crbug.com/960222>, but to summarize it here: if we try to
+> send the wakeup command to the WiFi card at the same time it has
+> decided to wake up itself then it will behave badly on the SDIO bus.
+> This can cause timeouts or CRC errors.
+Wake-up itself: as part of a WoWlan, or d0i3?
+Looks like this calls for a wifi driver fix, and not WA in the mmc driver.
 
-Some details about those errors can be found in
-<https://crbug.com/960222>, but to summarize it here: if we try to
-send the wakeup command to the WiFi card at the same time it has
-decided to wake up itself then it will behave badly on the SDIO bus.
-This can cause timeouts or CRC errors.
-
-When I tested on 4.19 and 4.20 these CRC errors can be seen to cause
-re-tuning.  Since I am currently developing on 4.19 this was the
-original problem I attempted to solve.
-
-On mainline it turns out that you don't see the retuning errors but
-you see tons of spam about timeouts trying to wakeup from sleep.  I
-tracked down the commit that was causing that and have partially
-reverted it here.  I have no real knowledge about Broadcom WiFi, but
-the commit that was causing problems sounds (from the descriptioin) to
-be a hack commit penalizing all Broadcom WiFi users because of a bug
-in a Cypress SD controller.  I will let others comment if this is
-truly the case and, if so, what the right solution should be.
-
-
-Douglas Anderson (3):
-  brcmfmac: re-enable command decode in sdio_aos for BRCM 4354
-  mmc: core: API for temporarily disabling auto-retuning due to errors
-  brcmfmac: sdio: Disable auto-tuning around commands expected to fail
-
- drivers/mmc/core/core.c                       | 27 +++++++++++++++++--
- .../broadcom/brcm80211/brcmfmac/sdio.c        |  6 +++--
- include/linux/mmc/core.h                      |  2 ++
- include/linux/mmc/host.h                      |  1 +
- 4 files changed, 32 insertions(+), 4 deletions(-)
-
--- 
-2.21.0.1020.gf2820cf01a-goog
-
+Thanks,
+Avri
