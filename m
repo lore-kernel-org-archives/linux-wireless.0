@@ -8,86 +8,90 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2632BC072AD
-	for <linux-wireless@archiver.kernel.org>; Sun, 19 May 2019 18:06:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F922C04AB4
+	for <linux-wireless@archiver.kernel.org>; Sun, 19 May 2019 18:23:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5EB720675
-	for <linux-wireless@archiver.kernel.org>; Sun, 19 May 2019 18:06:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D090120675
+	for <linux-wireless@archiver.kernel.org>; Sun, 19 May 2019 18:23:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qpTB0CGH"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bDPww6T9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729314AbfESSGk (ORCPT
+        id S1729682AbfESSXP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 19 May 2019 14:06:40 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:46632 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725784AbfESSGk (ORCPT
+        Sun, 19 May 2019 14:23:15 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:42372 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726040AbfESSXP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 May 2019 14:06:40 -0400
-Received: by mail-pl1-f196.google.com with SMTP id r18so5617031pls.13;
-        Sun, 19 May 2019 11:06:39 -0700 (PDT)
+        Sun, 19 May 2019 14:23:15 -0400
+Received: by mail-pg1-f196.google.com with SMTP id 145so5653503pgg.9;
+        Sun, 19 May 2019 11:23:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id;
-        bh=/yfHy3bk4VUcjD3ax5K1r2nhCYKz0EKfsLspUQgIkNM=;
-        b=qpTB0CGHhgm6kB7Asz+LTQATMNUrHvFESjOFyFQkpIbY8ZTMXTF15hKISipKb3Tmq1
-         fUzQ0BktEJdNVAuxVvRSSvOirFbpZoDjLloYoytKaQFVXL/NHYf1NDok0WdFtDtuB/+z
-         k2XMZbe45GE1FlJj9D1on78NNVHpf7AUNrfZI9W4kkBxIpRnze3TxIry3EVec+krfeCf
-         XO91hI39rrlmYnk0zgOLMXSBVDkZcYvKR7hu6I6aKK2JhFgtBb4BBoOLSxE6WIED/s4G
-         aP8/QPSG8XkX1vJGvSCOt7zfW0GhrWPPg7NrHbr8M0jEILuR70WBBiU9z8n5Aq43DT9F
-         TLUQ==
+        bh=WzJCr5Mqo7KDli7/APapwgRQAN+3Dg6ZabacVkfKewY=;
+        b=bDPww6T9HxL4G0YBVqH8QA8CxtSPz0B8H38YvWR1qMuAfAhv4ImEaMvavxWgzBbY1S
+         Ui44qaJO1e7sKwZqpav6+PoKS0jvRoCz9DpNUi5xytn1plf4WNQLdnOT1TDrSmIXZp8d
+         7oMmJdHlmSP6IYMH1mxvfdm2/zWKht5zkFz13Y793V+GqLq3HlJP84FizNUIccz/qyV5
+         DbW7830t96KocxtQu56drxYLzDznc1tgK4OCQoewDb4X0otT3bIhuWQpt9x5Si07IzQM
+         1/XKlnL5gWsRnOy/gtTyPK0NXhSluLir8CnznHsvMMFnskMVDYOUoVB1EExDZ+qmlIgb
+         jVuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=/yfHy3bk4VUcjD3ax5K1r2nhCYKz0EKfsLspUQgIkNM=;
-        b=pr3NoH9R3txdVi80ZJHORYaZ63hwDTHZ/vHkhogVaBmyKOG5EH2EM6ktHdFSAbEOmv
-         y6nIVNvz4uZKJn9E8i0QRChSQY8BzP0FLu+YUD/8wq9QUUlZ5kqyYsAHYCnmL2bAIpdk
-         KYI7vLRV+aAfT59ZJJOFpaoG2O9tFGqjhWf2uHUzDMIyl1CNxGnprd4cHW42HAqxtYeu
-         qGFs54eUOKqZiHesUHCU9RSdPjZdb+IudVG2146ZzCXXIzKP7s/O5G5VrfEus2EdehYV
-         uTF3njOTDPMOOAheJygywsjWdfenWe8FSAd5fQdK7X6+z1ZRSqQaJfI2oPXkioqzwGUE
-         rOHQ==
-X-Gm-Message-State: APjAAAUKFLyx6t+NrDVrqLWO3kS8SopuAy2ku0kMy8nSZQhA1UcYQJcK
-        LhQtcJwOyZidlf24AAPyOrzyRuktc9w=
-X-Google-Smtp-Source: APXvYqzJWyPH4c0OA+p7Jv8rB/YaV8UG3Uuyxc2txQmVThUeRU8CVh+u5hb7nQnBHmCVfJgeeDVrsA==
-X-Received: by 2002:a17:902:6b:: with SMTP id 98mr68143824pla.271.1558236699451;
-        Sat, 18 May 2019 20:31:39 -0700 (PDT)
+        bh=WzJCr5Mqo7KDli7/APapwgRQAN+3Dg6ZabacVkfKewY=;
+        b=JOA8G4vnC+ZN8Ji9NdHzNieDoZoxfulruErsJ+br3Ivx7Ib/t4UX0eyYqNa0mxcMtc
+         kOgj7Ri08XNyTRsSKIbmUhKJG+EghWyfwwD7PUz6HOq9W9isfoz0wYMZm7MnpeHwjgGj
+         DnnLyGI1OCfEnfmVi+CS+ta+KhHP3s0rqhDqnfB8SX6a76YUfpKX3+C9gfkvWbR/aHQq
+         9y05FtYfA3A4VXrKCTTEf3ajbuESc+4Rkllcnq5/hswIRV0kzs7Yc0KvEThCcnjm0dKB
+         xVp2NsoqfRpmoY67Zni2/Bx1TGf2rExnpo3h6CLxQdWsDkeYQGX0QfZ6lUrIK0V8Uxo6
+         TbIA==
+X-Gm-Message-State: APjAAAXJVyqvTqnVD5fJQYaSyGd3NXSM7GL8Ui44IytjK81UYw0vSyBK
+        hDrGwPQgPrbKmvMWQAhskvqtCaYEHHZbfA==
+X-Google-Smtp-Source: APXvYqzUDhR+agkX0dI26XmwhEq48+gxrghmc6If8Xc5OS7eLq2qfmYj8EnWhg/A70HjcFg2S8X8Iw==
+X-Received: by 2002:aa7:90ca:: with SMTP id k10mr72091047pfk.20.1558235368251;
+        Sat, 18 May 2019 20:09:28 -0700 (PDT)
 Received: from localhost ([43.224.245.181])
-        by smtp.gmail.com with ESMTPSA id e123sm15745920pgc.29.2019.05.18.20.31.38
+        by smtp.gmail.com with ESMTPSA id n127sm13217809pga.57.2019.05.18.20.09.27
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 18 May 2019 20:31:38 -0700 (PDT)
+        Sat, 18 May 2019 20:09:27 -0700 (PDT)
 From:   Weitao Hou <houweitaoo@gmail.com>
-To:     stas.yakovlev@gmail.com, kvalo@codeaurora.org, davem@davemloft.net
+To:     nbd@nbd.name, lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
+        royluo@google.com, kvalo@codeaurora.org, davem@davemloft.net,
+        matthias.bgg@gmail.com
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Weitao Hou <houweitaoo@gmail.com>
-Subject: [PATCH] wireless: fix intel typos in code comments
-Date:   Sun, 19 May 2019 11:31:14 +0800
-Message-Id: <20190519033114.20271-1-houweitaoo@gmail.com>
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Weitao Hou <houweitaoo@gmail.com>
+Subject: [PATCH] net: fix typos in code comments
+Date:   Sun, 19 May 2019 11:09:23 +0800
+Message-Id: <20190519030923.18343-1-houweitaoo@gmail.com>
 X-Mailer: git-send-email 2.18.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-fix lengh to length
+fix lenght to length
 
 Signed-off-by: Weitao Hou <houweitaoo@gmail.com>
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2200.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index fa400f92d7e2..807b2c11215a 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -774,7 +774,7 @@ static int ipw_get_ordinal(struct ipw_priv *priv, u32 ord, void *val, u32 * len)
- 		 *
- 		 * This table consist of six values, each containing
- 		 *     - dword containing the starting offset of the data
--		 *     - dword containing the lengh in the first 16bits
-+		 *     - dword containing the length in the first 16bits
- 		 *       and the count in the second 16bits
- 		 */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+index 6b89f7eab26c..e0f5e6202a27 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+@@ -53,7 +53,7 @@ int mt76x02u_skb_dma_info(struct sk_buff *skb, int port, u32 flags)
+ 	pad = round_up(skb->len, 4) + 4 - skb->len;
  
+ 	/* First packet of a A-MSDU burst keeps track of the whole burst
+-	 * length, need to update lenght of it and the last packet.
++	 * length, need to update length of it and the last packet.
+ 	 */
+ 	skb_walk_frags(skb, iter) {
+ 		last = iter;
 -- 
 2.18.0
 
