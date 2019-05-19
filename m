@@ -2,130 +2,97 @@ Return-Path: <SRS0=1rdx=TT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98CBFC04AB4
-	for <linux-wireless@archiver.kernel.org>; Sun, 19 May 2019 17:19:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EC98C04E87
+	for <linux-wireless@archiver.kernel.org>; Sun, 19 May 2019 18:01:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6E38D204EC
-	for <linux-wireless@archiver.kernel.org>; Sun, 19 May 2019 17:19:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3633B20675
+	for <linux-wireless@archiver.kernel.org>; Sun, 19 May 2019 18:01:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ROhtCdJa"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uDVVrwGw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727204AbfESRTf (ORCPT
+        id S1728678AbfESSBQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 19 May 2019 13:19:35 -0400
-Received: from mail-wm1-f54.google.com ([209.85.128.54]:51407 "EHLO
-        mail-wm1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725769AbfESRTf (ORCPT
+        Sun, 19 May 2019 14:01:16 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:42199 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727456AbfESSBP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 May 2019 13:19:35 -0400
-Received: by mail-wm1-f54.google.com with SMTP id c77so9494926wmd.1
-        for <linux-wireless@vger.kernel.org>; Sun, 19 May 2019 10:19:34 -0700 (PDT)
+        Sun, 19 May 2019 14:01:15 -0400
+Received: by mail-pf1-f196.google.com with SMTP id 13so6068632pfw.9;
+        Sun, 19 May 2019 11:01:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=xkxGVcb/77uzRi9cmphx8JSnSWCsLlQ9QImuGf0r2IE=;
-        b=ROhtCdJa3qfV4yIDib/kA/GIp9fvd/eUOPU0QV9RHfkHv5jrn3sjqY4sQTSk0SuL7Y
-         LcDwxcsJfXBr5QImgbNR+rcXHsS3ylkU6rOKAUhQp+ESPqIQpEHwqYR1/PLbp1Q0THYF
-         1mFBR2trT/inMXu+7ZE2Ox2UOAcC+lhrEkpsuq1Jc6D/Fpbv+Sr4tiuX1m0PkpoGfx9L
-         A5ObRv19kw26fl6dNazvVwWWiuCMCcfYSZp2XTTSmMVAu3LjENEcnJ3JRbVJNAB6J35d
-         XeCWIiHBKTkIvOyY7aJORquGYX6n2pg33ZZrtU5dy0RPq2M+ZRTbUV8Kxu6voR5IgJx9
-         /Bcg==
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=czSHCdZXVQZecROM9WqMSFK1y+6AEn76N/qkIDTESik=;
+        b=uDVVrwGwtnx8Npp3qrf5HiE/iWJDV19oWasAJ9FbABxVkN3lqGNb5GpH9ssUaMMR6Z
+         aRsKNA7spPF3pxJh9i7sUaBTTrprTXLHiYJmWrVhPoIK8EC3e8toHmmbS0npjlo09rnr
+         yxy9fb2lFgQnA7l7VAh2Rf40ZjqsYMHoiLAvwi4nXIlZh25QA30pgO7ftv3Qz3F83UjV
+         Vkf4XGbLQv4FhPra+819T+EI1lx6jUkcf+CvAHAaOhfwg8bvoEsjUGFfNYNwKAYsYC23
+         QYy0FjnzbOItyuIi8jgQApsOYLN4mAzkbJngw9ud4oYYBPDHw5ptJo+jfTLKwkVFPQ8C
+         oG/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=xkxGVcb/77uzRi9cmphx8JSnSWCsLlQ9QImuGf0r2IE=;
-        b=kpwrzGNFf06DHUy9jkVHMZ1zJYddIQzigadCeg49gp9yxtzxjC3LTXdW8EgeH4v+Fc
-         xlnf4XHhK97DNnQdwEYik8MUfMVXawq7tL6W2JTPlpt8njzlHIG6jB3lFcn8gOapNPEs
-         tENs3ZpiuhLUk5S7KVp7MhtNnCTPedKZCw50XyEnj1Jw78BFk8DPCw8KXSK2WNwEk8Iv
-         iKvXWx37Re+QXV+vYVs0d/PlU2ikjFvJzPReByPq5SnF1KShf6lHnOcvxesWNVGZ++QS
-         j1CJyVqX3fz+YOV3mggG/D+onk5Mrvtm971sPSCMSD/ZhtTcg6EyXm3/LoEhjgZzbVBU
-         hlmw==
-X-Gm-Message-State: APjAAAUcQCOgLVjJx0O4vdNkOdN8xbP/Rm4QHvG7ywfvYjYsYY0Wu7/E
-        MZR7OcEqjLjAqihL0Vyays9R1FklaLi/mw==
-X-Google-Smtp-Source: APXvYqySHDycEg9IZP1aFaVeWvf5z9VF77Q8YdVuLrMQgpB2nEfMz9SfosOPjJphGWXmphBWq6KejA==
-X-Received: by 2002:a7b:ca4c:: with SMTP id m12mr2347418wml.31.1558284414974;
-        Sun, 19 May 2019 09:46:54 -0700 (PDT)
-Received: from [172.19.45.184] (static-186-95-145-212.ipcom.comunitel.net. [212.145.95.186])
-        by smtp.googlemail.com with ESMTPSA id s11sm26734340wrb.71.2019.05.19.09.46.53
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=czSHCdZXVQZecROM9WqMSFK1y+6AEn76N/qkIDTESik=;
+        b=oICnz7n/0GGug6Tg1YIfqQsIZUMg44WLK6hD8WlTSjMuwlaCYHuUliQcEa5FyZoLsJ
+         V9YVh9VLiFkgCsTIBjBYb03HoLJqPY+crsOKp/fFgBxwa3WVhJLPwEhMjKI0oocuojt1
+         DA+SZZ1HT6wN2tzzdD7XVHTtWJkvzDNTl8j2NsWn5uK2P65OgekJRTyyyoeNC5C3l40d
+         LXC9XbtgW25b4bFIxSruI8wTtg4kEhmib6hWhb5Mii2ib+7teQV5dLVvctQdnMQEtgW3
+         gIVtDXYnIhWv7zpVk+sYmOvg0N5X2jKh4v3H0NSRrxaFkYVOt3vwE7cbYhLyNYhj3D+t
+         uMqw==
+X-Gm-Message-State: APjAAAU05gzXHI28qCLEsEMRox800Y7IOUd9c3Wy3BpfS/lVPChMR4ag
+        I0ZYqhIcIYEZMxCn4sY6iyLGItX0jEs=
+X-Google-Smtp-Source: APXvYqy5mFZ/0dgZN58kh6weAW5W4WSKhUs1B9aSm5bjyAYVuJUDvBS7JONYmX+/CCvJadcc44ejsg==
+X-Received: by 2002:a63:f710:: with SMTP id x16mr53164518pgh.216.1558236181646;
+        Sat, 18 May 2019 20:23:01 -0700 (PDT)
+Received: from localhost ([43.224.245.181])
+        by smtp.gmail.com with ESMTPSA id x23sm13783871pfn.160.2019.05.18.20.23.00
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 19 May 2019 09:46:53 -0700 (PDT)
-Subject: Re: NXP NFC version and ACPI
-To:     sedat.dilek@gmail.com
-Cc:     Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        oleg.zhurakivskyy@intel.com, clement.perrochaud@effinnov.com,
-        charles.gorand@effinnov.com,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-References: <c2d0d19f-d814-8f41-4860-77b9cc7f9d26@linaro.org>
- <CA+icZUVz7sB6hv4fhL_rqhR_D8RePBJFXk1PaUy5tMw2z4xC_Q@mail.gmail.com>
- <5ae87449-83a1-ecce-c72c-b4742c507497@linaro.org>
- <CA+icZUXDLQKyTH-_pPi7A2=Bu5ratwab930Fcecrdr4NtMnFcw@mail.gmail.com>
- <27f2ce02-8deb-384f-af10-7737b703770a@linaro.org>
- <CA+icZUVaBdswfmRfbRtdVJY8ymeDOwDSFEf7G6jneqEmpW84bg@mail.gmail.com>
-From:   Daniel Lezcano <daniel.lezcano@linaro.org>
-Message-ID: <525160f3-a76c-4b45-2e05-c27aaabbf74d@linaro.org>
-Date:   Sun, 19 May 2019 18:46:52 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
-MIME-Version: 1.0
-In-Reply-To: <CA+icZUVaBdswfmRfbRtdVJY8ymeDOwDSFEf7G6jneqEmpW84bg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        Sat, 18 May 2019 20:23:00 -0700 (PDT)
+From:   Weitao Hou <houweitaoo@gmail.com>
+To:     arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, kvalo@codeaurora.org, davem@davemloft.net,
+        houweitaoo@gmail.com, rafal@milecki.pl
+Cc:     linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: fix typos in code comments
+Date:   Sun, 19 May 2019 11:22:56 +0800
+Message-Id: <20190519032256.19346-1-houweitaoo@gmail.com>
+X-Mailer: git-send-email 2.18.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+fix lengh to length
 
-FYI, when I tried to make the NFC work on my x280, I tried the module at:
+Signed-off-by: Weitao Hou <houweitaoo@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://github.com/jr64/nxp-pn5xx
-
-AFAIR, it finally worked somehow.
-
-May be you can cross check with your series and the change in this
-module to find out what could be missing? (I can do that but it will be
-certainly easier for you spot something in the code you wrote).
-
-I can experiment your changes in my laptop if needed.
-
-
-On 14/05/2019 16:59, Sedat Dilek wrote:
-> On Tue, May 14, 2019 at 10:17 AM Daniel Lezcano
-> <daniel.lezcano@linaro.org> wrote:
-> [...]
-> 
-> Just for the records:
-> 
-> root@iniza:~# rfkill --output ID,TYPE
-> ID TYPE
->  0 bluetooth
->  1 nfc
->  2 wlan
->  3 bluetooth
-> 
-> root@iniza:~# rfkill list nfc
-> 1: nfc0: NFC
->         Soft blocked: no
->         Hard blocked: no
-> 
-> - Sedat -
-> 
-
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
+index 8ea27489734e..edd2f09613d8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
+@@ -314,7 +314,7 @@ brcmf_create_bsscfg(s32 bsscfgidx, char *name, char *data, u32 datalen,
+ 		return brcmf_create_iovar(name, data, datalen, buf, buflen);
+ 
+ 	prefixlen = strlen(prefix);
+-	namelen = strlen(name) + 1; /* lengh of iovar  name + null */
++	namelen = strlen(name) + 1; /* length of iovar  name + null */
+ 	iolen = prefixlen + namelen + sizeof(bsscfgidx_le) + datalen;
+ 
+ 	if (buflen < iolen) {
 -- 
- <http://www.linaro.org/> Linaro.org │ Open source software for ARM SoCs
-
-Follow Linaro:  <http://www.facebook.com/pages/Linaro> Facebook |
-<http://twitter.com/#!/linaroorg> Twitter |
-<http://www.linaro.org/linaro-blog/> Blog
+2.18.0
 
