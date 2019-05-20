@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F32DDC072A4
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 11:02:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A5C8C46460
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 11:02:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D2DCF206B6
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 11:02:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B119206B6
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 11:02:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732281AbfETLCS (ORCPT
+        id S1732262AbfETLCQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 May 2019 07:02:18 -0400
-Received: from nbd.name ([46.4.11.11]:47812 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732258AbfETLCQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 20 May 2019 07:02:16 -0400
+Received: from nbd.name ([46.4.11.11]:47786 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732236AbfETLCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 May 2019 07:02:15 -0400
 Received: from p548c87ba.dip0.t-ipconnect.de ([84.140.135.186] helo=bertha.datto.lan)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1hSg3Y-0003rt-7R; Mon, 20 May 2019 13:02:12 +0200
+        id 1hSg3W-0003rt-0F; Mon, 20 May 2019 13:02:10 +0200
 From:   John Crispin <john@phrozen.org>
 To:     Johannes Berg <johannes@sipsolutions.net>,
         Kalle Valo <kvalo@codeaurora.org>
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
         John Crispin <john@phrozen.org>,
         Shashidhar Lakkavalli <slakkavalli@datto.com>
-Subject: [PATCH 6/7] mac80211: propagate spatial reuse info into ieee80211_sta
-Date:   Mon, 20 May 2019 13:02:03 +0200
-Message-Id: <20190520110204.27588-7-john@phrozen.org>
+Subject: [PATCH 1/7] mac80211: HE: dynamically enable the TWT requester support on STA interfaces
+Date:   Mon, 20 May 2019 13:01:58 +0200
+Message-Id: <20190520110204.27588-2-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190520110204.27588-1-john@phrozen.org>
 References: <20190520110204.27588-1-john@phrozen.org>
@@ -42,90 +42,79 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Upon a successful assoc a station shall store the content of the SPR
-element inside ieee80211_sta so that the driver can setup the hardware
-accordingly.
+Turn TWT for STA interfaces when they associate and/or receive a
+beacon where the twt_responder bit has changed.
 
 Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- include/net/mac80211.h     |  1 +
- net/mac80211/he.c          | 24 ++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |  4 ++++
- net/mac80211/mlme.c        |  1 +
- 4 files changed, 30 insertions(+)
+ include/net/mac80211.h |  2 ++
+ net/mac80211/mlme.c    | 18 ++++++++++++++++--
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d81eea9140e5..f73a210b122b 100644
+index ba4a16f87364..689dc597281c 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
-@@ -1952,6 +1952,7 @@ struct ieee80211_sta {
- 	struct ieee80211_sta_vht_cap vht_cap;
- 	struct ieee80211_sta_he_cap he_cap;
- 	struct ieee80211_he_operation he_operation;
-+	struct ieee80211_he_obss_pd he_obss_pd;
- 	u16 max_rx_aggregation_subframes;
- 	bool wme;
- 	u8 uapsd_queues;
-diff --git a/net/mac80211/he.c b/net/mac80211/he.c
-index 62ef029e5c48..e41ee4a29257 100644
---- a/net/mac80211/he.c
-+++ b/net/mac80211/he.c
-@@ -67,3 +67,27 @@ ieee80211_he_op_ie_to_sta_he_op(struct ieee80211_sub_if_data *sdata,
- 	}
- 	memcpy(he_operation, he_op_ie_elem, sizeof(*he_operation));
- }
-+
-+void
-+ieee80211_he_spr_ie_to_sta_he_obss_pd(struct ieee80211_sub_if_data *sdata,
-+			      const struct ieee80211_he_spr *he_spr_ie_elem,
-+			      struct sta_info *sta)
-+{
-+	struct ieee80211_he_obss_pd *he_obss_pd = &sta->sta.he_obss_pd;
-+	const u8 *data = he_spr_ie_elem->optional;
-+
-+	memset(he_obss_pd, 0, sizeof(*he_obss_pd));
-+
-+	if (!he_spr_ie_elem)
-+		return;
-+
-+	if (he_spr_ie_elem->he_sr_control &
-+	    IEEE80211_HE_SPR_NON_SRG_OFFSET_PRESENT)
-+		data++;
-+	if (he_spr_ie_elem->he_sr_control &
-+	    IEEE80211_HE_SPR_SRG_INFORMATION_PRESENT) {
-+		he_obss_pd->max_offset = *data++;
-+		he_obss_pd->min_offset = *data++;
-+		he_obss_pd->enable = true;
-+	}
-+}
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e931e114fba4..d82469754d34 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1870,6 +1870,10 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
- 				  struct ieee80211_supported_band *sband,
- 				  const u8 *he_cap_ie, u8 he_cap_len,
- 				  struct sta_info *sta);
-+void
-+ieee80211_he_spr_ie_to_sta_he_obss_pd(struct ieee80211_sub_if_data *sdata,
-+				const struct ieee80211_he_spr *he_spr_ie_elem,
-+				struct sta_info *sta);
+@@ -317,6 +317,7 @@ struct ieee80211_vif_chanctx_switch {
+  * @BSS_CHANGED_MCAST_RATE: Multicast Rate setting changed for this interface
+  * @BSS_CHANGED_FTM_RESPONDER: fime timing reasurement request responder
+  *	functionality changed for this BSS (AP mode).
++ * @BSS_CHANGED_TWT: TWT status changed
+  *
+  */
+ enum ieee80211_bss_change {
+@@ -347,6 +348,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_KEEP_ALIVE		= 1<<24,
+ 	BSS_CHANGED_MCAST_RATE		= 1<<25,
+ 	BSS_CHANGED_FTM_RESPONDER	= 1<<26,
++	BSS_CHANGED_TWT			= 1<<27,
  
- void
- ieee80211_he_op_ie_to_sta_he_op(struct ieee80211_sub_if_data *sdata,
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 996439a288c0..098335f34aa3 100644
+index 5d8a8a0feaf9..996439a288c0 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -3377,6 +3377,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 			bss_conf->uora_ocw_range = elems.uora_element[0];
+@@ -3151,6 +3151,19 @@ static bool ieee80211_twt_req_supported(const struct sta_info *sta,
+ 		IEEE80211_HE_MAC_CAP0_TWT_RES;
+ }
  
- 		ieee80211_he_op_ie_to_sta_he_op(sdata, elems.he_operation, sta);
-+		ieee80211_he_spr_ie_to_sta_he_obss_pd(sdata, elems.he_spr, sta);
- 		/* TODO: OPEN: what happens if BSS color disable is set? */
- 	}
++static int ieee80211_recalc_twt_req(struct ieee80211_sub_if_data *sdata,
++				    struct sta_info *sta,
++				    struct ieee802_11_elems *elems)
++{
++	bool twt = ieee80211_twt_req_supported(sta, elems);
++
++	if (sdata->vif.bss_conf.twt_requester != twt) {
++		sdata->vif.bss_conf.twt_requester = twt;
++		return BSS_CHANGED_TWT;
++	}
++	return 0;
++}
++
+ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 				    struct cfg80211_bss *cbss,
+ 				    struct ieee80211_mgmt *mgmt, size_t len)
+@@ -3333,8 +3346,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 						  sta);
  
+ 		bss_conf->he_support = sta->sta.he_cap.has_he;
+-		bss_conf->twt_requester =
+-			ieee80211_twt_req_supported(sta, &elems);
++		changed |= ieee80211_recalc_twt_req(sdata, sta, &elems);
+ 	} else {
+ 		bss_conf->he_support = false;
+ 		bss_conf->twt_requester = false;
+@@ -3995,6 +4007,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	mutex_lock(&local->sta_mtx);
+ 	sta = sta_info_get(sdata, bssid);
+ 
++	changed |= ieee80211_recalc_twt_req(sdata, sta, &elems);
++
+ 	if (ieee80211_config_bw(sdata, sta,
+ 				elems.ht_cap_elem, elems.ht_operation,
+ 				elems.vht_operation, elems.he_operation,
 -- 
 2.20.1
 
