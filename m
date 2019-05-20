@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05C2AC04AAF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9415C072A4
 	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 08:55:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D9FC2204FD
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 08:55:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9DC3204FD
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 08:55:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731668AbfETIzV (ORCPT
+        id S1731673AbfETIzW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 May 2019 04:55:21 -0400
-Received: from nbd.name ([46.4.11.11]:41444 "EHLO nbd.name"
+        Mon, 20 May 2019 04:55:22 -0400
+Received: from nbd.name ([46.4.11.11]:41454 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731660AbfETIzU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 May 2019 04:55:20 -0400
+        id S1731664AbfETIzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 May 2019 04:55:22 -0400
 Received: from p548c87ba.dip0.t-ipconnect.de ([84.140.135.186] helo=bertha.datto.lan)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1hSe4i-0002Y7-Sw; Mon, 20 May 2019 10:55:16 +0200
+        id 1hSe4j-0002Y7-Ln; Mon, 20 May 2019 10:55:17 +0200
 From:   John Crispin <john@phrozen.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
         John Crispin <john@phrozen.org>,
         Shashidhar Lakkavalli <slakkavalli@datto.com>
-Subject: [PATCH V5 1/8] mac80211: propagate HE operation info into ieee80211_sta
-Date:   Mon, 20 May 2019 10:55:01 +0200
-Message-Id: <20190520085508.5888-2-john@phrozen.org>
+Subject: [PATCH V5 3/8] ath11k: move phymode selection from function to array lookup
+Date:   Mon, 20 May 2019 10:55:03 +0200
+Message-Id: <20190520085508.5888-4-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190520085508.5888-1-john@phrozen.org>
 References: <20190520085508.5888-1-john@phrozen.org>
@@ -41,89 +41,180 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Upon a successful assoc a station shall store the content of the HE
-operation element inside ieee80211_sta so that the driver can setup the
-hardware accordingly.
+With HE support getting added, the approach of using functions will quickly
+get convoluted. Change the code to use an array lookup function instead.
 
 Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- include/net/mac80211.h     |  2 ++
- net/mac80211/he.c          | 14 ++++++++++++++
- net/mac80211/ieee80211_i.h |  5 +++++
- net/mac80211/mlme.c        |  1 +
- 4 files changed, 22 insertions(+)
+ drivers/net/wireless/ath/ath11k/mac.c | 117 ++++++++++++--------------
+ include/uapi/linux/nl80211.h          |   4 +
+ 2 files changed, 57 insertions(+), 64 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 112dc18c658f..ba4a16f87364 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1903,6 +1903,7 @@ struct ieee80211_sta_rates {
-  * @ht_cap: HT capabilities of this STA; restricted to our own capabilities
-  * @vht_cap: VHT capabilities of this STA; restricted to our own capabilities
-  * @he_cap: HE capabilities of this STA
-+ * @he_operation: HE operation information of the AP we are connected to
-  * @max_rx_aggregation_subframes: maximal amount of frames in a single AMPDU
-  *	that this station is allowed to transmit to us.
-  *	Can be modified by driver.
-@@ -1941,6 +1942,7 @@ struct ieee80211_sta {
- 	struct ieee80211_sta_ht_cap ht_cap;
- 	struct ieee80211_sta_vht_cap vht_cap;
- 	struct ieee80211_sta_he_cap he_cap;
-+	struct ieee80211_he_operation he_operation;
- 	u16 max_rx_aggregation_subframes;
- 	bool wme;
- 	u8 uapsd_queues;
-diff --git a/net/mac80211/he.c b/net/mac80211/he.c
-index 769078ed5a12..62ef029e5c48 100644
---- a/net/mac80211/he.c
-+++ b/net/mac80211/he.c
-@@ -53,3 +53,17 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index cb0de8e2aa60..c5a55fb893ae 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -105,6 +105,52 @@ static struct ieee80211_rate ath11k_legacy_rates[] = {
+ 	{ .bitrate = 540, .hw_value = ATH11K_HW_RATE_OFDM_54M },
+ };
  
- 	he_cap->has_he = true;
++static const int
++ath11k_phymodes[NUM_NL80211_BANDS][2][__NL80211_CHAN_WIDTH_NUM] = {
++	[NL80211_BAND_2GHZ] = {
++		{
++			[NL80211_CHAN_WIDTH_5] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_10] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_20_NOHT] = MODE_11G,
++			[NL80211_CHAN_WIDTH_20] = MODE_11NG_HT20,
++			[NL80211_CHAN_WIDTH_40] = MODE_11NG_HT40,
++			[NL80211_CHAN_WIDTH_80] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_80P80] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_160] = MODE_UNKNOWN,
++		}, {
++			[NL80211_CHAN_WIDTH_5] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_10] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_20_NOHT] = MODE_11G,
++			[NL80211_CHAN_WIDTH_20] = MODE_11AX_HE20_2G,
++			[NL80211_CHAN_WIDTH_40] = MODE_11AX_HE40_2G,
++			[NL80211_CHAN_WIDTH_80] = MODE_11AX_HE80_2G,
++			[NL80211_CHAN_WIDTH_80P80] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_160] = MODE_UNKNOWN,
++		},
++	},
++	[NL80211_BAND_5GHZ] = {
++		{
++			[NL80211_CHAN_WIDTH_5] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_10] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_20_NOHT] = MODE_11A,
++			[NL80211_CHAN_WIDTH_20] = MODE_11AC_VHT20,
++			[NL80211_CHAN_WIDTH_40] = MODE_11AC_VHT40,
++			[NL80211_CHAN_WIDTH_80] = MODE_11AC_VHT80,
++			[NL80211_CHAN_WIDTH_160] = MODE_11AC_VHT160,
++			[NL80211_CHAN_WIDTH_80P80] = MODE_11AC_VHT80_80,
++		}, {
++			[NL80211_CHAN_WIDTH_5] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_10] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_20_NOHT] = MODE_11A,
++			[NL80211_CHAN_WIDTH_20] = MODE_11AX_HE20,
++			[NL80211_CHAN_WIDTH_40] = MODE_11AX_HE40,
++			[NL80211_CHAN_WIDTH_80] = MODE_11AX_HE80,
++			[NL80211_CHAN_WIDTH_160] = MODE_11AX_HE160,
++			[NL80211_CHAN_WIDTH_80P80] = MODE_11AX_HE80_80,
++		},
++	},
++};
++
+ #define ATH11K_MAC_FIRST_OFDM_RATE_IDX 4
+ #define ath11k_g_rates ath11k_legacy_rates
+ #define ath11k_g_rates_size (ARRAY_SIZE(ath11k_legacy_rates))
+@@ -151,69 +197,6 @@ static int get_num_chains(u32 mask)
+ 	return num_chains;
  }
-+
-+void
-+ieee80211_he_op_ie_to_sta_he_op(struct ieee80211_sub_if_data *sdata,
-+			const struct ieee80211_he_operation *he_op_ie_elem,
-+			struct sta_info *sta)
-+{
-+	struct ieee80211_he_operation *he_operation = &sta->sta.he_operation;
-+
-+	if (!he_op_ie_elem) {
-+		memset(he_operation, 0, sizeof(*he_operation));
-+		return;
-+	}
-+	memcpy(he_operation, he_op_ie_elem, sizeof(*he_operation));
-+}
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e170f986d226..11bc1778bfd5 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1870,6 +1870,11 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
- 				  const u8 *he_cap_ie, u8 he_cap_len,
- 				  struct sta_info *sta);
  
-+void
-+ieee80211_he_op_ie_to_sta_he_op(struct ieee80211_sub_if_data *sdata,
-+			const struct ieee80211_he_operation *he_op_ie_elem,
-+			struct sta_info *sta);
+-static inline enum wmi_phy_mode
+-chan_to_phymode(const struct cfg80211_chan_def *chandef)
+-{
+-	enum wmi_phy_mode phymode = MODE_UNKNOWN;
+-
+-	switch (chandef->chan->band) {
+-	case NL80211_BAND_2GHZ:
+-		switch (chandef->width) {
+-		case NL80211_CHAN_WIDTH_20_NOHT:
+-			if (chandef->chan->flags & IEEE80211_CHAN_NO_OFDM)
+-				phymode = MODE_11B;
+-			else
+-				phymode = MODE_11G;
+-			break;
+-		case NL80211_CHAN_WIDTH_20:
+-			phymode = MODE_11NG_HT20;
+-			break;
+-		case NL80211_CHAN_WIDTH_40:
+-			phymode = MODE_11NG_HT40;
+-			break;
+-		case NL80211_CHAN_WIDTH_5:
+-		case NL80211_CHAN_WIDTH_10:
+-		case NL80211_CHAN_WIDTH_80:
+-		case NL80211_CHAN_WIDTH_80P80:
+-		case NL80211_CHAN_WIDTH_160:
+-			phymode = MODE_UNKNOWN;
+-			break;
+-		}
+-		break;
+-	case NL80211_BAND_5GHZ:
+-		switch (chandef->width) {
+-		case NL80211_CHAN_WIDTH_20_NOHT:
+-			phymode = MODE_11A;
+-			break;
+-		case NL80211_CHAN_WIDTH_20:
+-			phymode = MODE_11AC_VHT20;
+-			break;
+-		case NL80211_CHAN_WIDTH_40:
+-			phymode = MODE_11AC_VHT40;
+-			break;
+-		case NL80211_CHAN_WIDTH_80:
+-			phymode = MODE_11AC_VHT80;
+-			break;
+-		case NL80211_CHAN_WIDTH_160:
+-			phymode = MODE_11AC_VHT160;
+-			break;
+-		case NL80211_CHAN_WIDTH_80P80:
+-			phymode = MODE_11AC_VHT80_80;
+-			break;
+-		case NL80211_CHAN_WIDTH_5:
+-		case NL80211_CHAN_WIDTH_10:
+-			phymode = MODE_UNKNOWN;
+-			break;
+-		}
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	WARN_ON(phymode == MODE_UNKNOWN);
+-	return phymode;
+-}
+-
+ u8 ath11k_mac_bitrate_to_idx(const struct ieee80211_supported_band *sband,
+ 			     u32 bitrate)
+ {
+@@ -3881,6 +3864,7 @@ ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
+ 	struct ath11k_base *ab = ar->ab;
+ 	struct wmi_vdev_start_req_arg arg = {};
+ 	int ret = 0;
++	int he_support = arvif->vif->bss_conf.he_support;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+@@ -3893,7 +3877,12 @@ ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
+ 	arg.channel.freq = chandef->chan->center_freq;
+ 	arg.channel.band_center_freq1 = chandef->center_freq1;
+ 	arg.channel.band_center_freq2 = chandef->center_freq2;
+-	arg.channel.mode = chan_to_phymode(chandef);
++	arg.channel.mode =
++		ath11k_phymodes[chandef->chan->band][he_support][chandef->width];
++	if (arg.channel.mode == MODE_11G &&
++	    chandef->chan->flags & IEEE80211_CHAN_NO_OFDM)
++		arg.channel.mode = MODE_11B;
++	WARN_ON(arg.channel.mode == MODE_UNKNOWN);
+ 
+ 	arg.channel.min_power = 0;
+ 	arg.channel.max_power = chandef->chan->max_power * 2;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index dd4f86ee286e..b6e29161ec8b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4162,6 +4162,10 @@ enum nl80211_chan_width {
+ 	NL80211_CHAN_WIDTH_160,
+ 	NL80211_CHAN_WIDTH_5,
+ 	NL80211_CHAN_WIDTH_10,
 +
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_mgmt *mgmt,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2dbcf5d5512e..5d8a8a0feaf9 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3364,6 +3364,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 		if (elems.uora_element)
- 			bss_conf->uora_ocw_range = elems.uora_element[0];
++	/* keep last */
++	__NL80211_CHAN_WIDTH_NUM,
++	NL80211_CHAN_WIDTH_MAX = __NL80211_CHAN_WIDTH_NUM - 1,
+ };
  
-+		ieee80211_he_op_ie_to_sta_he_op(sdata, elems.he_operation, sta);
- 		/* TODO: OPEN: what happens if BSS color disable is set? */
- 	}
- 
+ /**
 -- 
 2.20.1
 
