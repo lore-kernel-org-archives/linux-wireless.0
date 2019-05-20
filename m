@@ -2,111 +2,128 @@ Return-Path: <SRS0=gKIL=TU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7600C04AAF
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 08:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05C2AC04AAF
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 08:55:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B57F206BA
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 08:44:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mork.no header.i=@mork.no header.b="ExqPKmyl"
+	by mail.kernel.org (Postfix) with ESMTP id D9FC2204FD
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 08:55:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729934AbfETIoo (ORCPT
+        id S1731668AbfETIzV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 May 2019 04:44:44 -0400
-Received: from canardo.mork.no ([148.122.252.1]:44795 "EHLO canardo.mork.no"
+        Mon, 20 May 2019 04:55:21 -0400
+Received: from nbd.name ([46.4.11.11]:41444 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725951AbfETIoo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 May 2019 04:44:44 -0400
-Received: from miraculix.mork.no ([IPv6:2a02:2121:340:66a5:f0c1:6ff:fe1f:cac9])
-        (authenticated bits=0)
-        by canardo.mork.no (8.15.2/8.15.2) with ESMTPSA id x4K8gHrN032429
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Mon, 20 May 2019 10:42:18 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mork.no; s=b;
-        t=1558341739; bh=o0E1/HFfUTNvSCD20OJ6Y5M/hnSJMjBXfroAVF8mgn0=;
-        h=From:To:Cc:Subject:References:Date:Message-ID:From;
-        b=ExqPKmyl+jBx37GydIJo6Z3NjQsixL2pBD/5ep7O6CtJ05zmQ6/TiOxisnr2JkICJ
-         QHSAXiQDJB1hDoMi4i2W4Ce8JCKKKljFMAGpoNdnMRXfjkeb9PM4CMJIY8j7z8v5vw
-         2jIhBUNAt5j2jtnqe1+ek7reYCA5VnDvdE2lNIdc=
-Received: from bjorn by miraculix.mork.no with local (Exim 4.89)
-        (envelope-from <bjorn@mork.no>)
-        id 1hSds2-0006bk-Ob; Mon, 20 May 2019 10:42:10 +0200
-From:   =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 3/3] iwlwifi: add support for quz firmwares
-Organization: m
-References: <20190322124744.17924-1-luca@coelho.fi>
-        <20190322124744.17924-4-luca@coelho.fi>
-Date:   Mon, 20 May 2019 10:42:10 +0200
-In-Reply-To: <20190322124744.17924-4-luca@coelho.fi> (Luca Coelho's message of
-        "Fri, 22 Mar 2019 14:47:44 +0200")
-Message-ID: <87k1el8ql9.fsf@miraculix.mork.no>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        id S1731660AbfETIzU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 May 2019 04:55:20 -0400
+Received: from p548c87ba.dip0.t-ipconnect.de ([84.140.135.186] helo=bertha.datto.lan)
+        by ds12 with esmtpa (Exim 4.89)
+        (envelope-from <john@phrozen.org>)
+        id 1hSe4i-0002Y7-Sw; Mon, 20 May 2019 10:55:16 +0200
+From:   John Crispin <john@phrozen.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        John Crispin <john@phrozen.org>,
+        Shashidhar Lakkavalli <slakkavalli@datto.com>
+Subject: [PATCH V5 1/8] mac80211: propagate HE operation info into ieee80211_sta
+Date:   Mon, 20 May 2019 10:55:01 +0200
+Message-Id: <20190520085508.5888-2-john@phrozen.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190520085508.5888-1-john@phrozen.org>
+References: <20190520085508.5888-1-john@phrozen.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Virus-Scanned: clamav-milter 0.100.3 at canardo
-X-Virus-Status: Clean
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> writes:
+Upon a successful assoc a station shall store the content of the HE
+operation element inside ieee80211_sta so that the driver can setup the
+hardware accordingly.
 
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-> @@ -549,6 +549,7 @@ extern const struct iwl_cfg iwl22000_2ac_cfg_hr;
->  extern const struct iwl_cfg iwl22000_2ac_cfg_hr_cdb;
->  extern const struct iwl_cfg iwl22000_2ac_cfg_jf;
->  extern const struct iwl_cfg iwl_ax101_cfg_qu_hr;
-> +extern const struct iwl_cfg iwl_ax101_cfg_quz_hr;
->  extern const struct iwl_cfg iwl22000_2ax_cfg_hr;
->  extern const struct iwl_cfg iwl_ax200_cfg_cc;
->  extern const struct iwl_cfg killer1650s_2ax_cfg_qu_b0_hr_b0;
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/w=
-ireless/intel/iwlwifi/iwl-csr.h
-> index aea6d03e545a..e539bc94eff7 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-> @@ -327,6 +327,7 @@ enum {
->  #define CSR_HW_REV_TYPE_NONE		(0x00001F0)
->  #define CSR_HW_REV_TYPE_QNJ		(0x0000360)
->  #define CSR_HW_REV_TYPE_QNJ_B0		(0x0000364)
-> +#define CSR_HW_REV_TYPE_QUZ		(0x0000354)
->  #define CSR_HW_REV_TYPE_HR_CDB		(0x0000340)
->  #define CSR_HW_REV_TYPE_SO		(0x0000370)
->  #define CSR_HW_REV_TYPE_TY		(0x0000420)
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/ne=
-t/wireless/intel/iwlwifi/pcie/trans.c
-> index 1d6f3053f233..79c1dc05f948 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> @@ -3543,6 +3543,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_=
-dev *pdev,
->  		}
->  	} else if (cfg =3D=3D &iwl_ax101_cfg_qu_hr) {
->  		if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) =3D=3D
-> +		    CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR) &&
-> +		    trans->hw_rev =3D=3D CSR_HW_REV_TYPE_QNJ_B0) {
-> +			trans->cfg =3D &iwl22000_2ax_cfg_qnj_hr_b0;
-> +		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) =3D=3D
->  		    CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR)) {
->  			trans->cfg =3D &iwl_ax101_cfg_qu_hr;
->  		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) =3D=3D
+Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ include/net/mac80211.h     |  2 ++
+ net/mac80211/he.c          | 14 ++++++++++++++
+ net/mac80211/ieee80211_i.h |  5 +++++
+ net/mac80211/mlme.c        |  1 +
+ 4 files changed, 22 insertions(+)
 
-Did you intend to use CSR_HW_REV_TYPE_QUZ and iwl_cfg
-iwl_ax101_cfg_quz_hr here, or am I misunderstanding something?
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 112dc18c658f..ba4a16f87364 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1903,6 +1903,7 @@ struct ieee80211_sta_rates {
+  * @ht_cap: HT capabilities of this STA; restricted to our own capabilities
+  * @vht_cap: VHT capabilities of this STA; restricted to our own capabilities
+  * @he_cap: HE capabilities of this STA
++ * @he_operation: HE operation information of the AP we are connected to
+  * @max_rx_aggregation_subframes: maximal amount of frames in a single AMPDU
+  *	that this station is allowed to transmit to us.
+  *	Can be modified by driver.
+@@ -1941,6 +1942,7 @@ struct ieee80211_sta {
+ 	struct ieee80211_sta_ht_cap ht_cap;
+ 	struct ieee80211_sta_vht_cap vht_cap;
+ 	struct ieee80211_sta_he_cap he_cap;
++	struct ieee80211_he_operation he_operation;
+ 	u16 max_rx_aggregation_subframes;
+ 	bool wme;
+ 	u8 uapsd_queues;
+diff --git a/net/mac80211/he.c b/net/mac80211/he.c
+index 769078ed5a12..62ef029e5c48 100644
+--- a/net/mac80211/he.c
++++ b/net/mac80211/he.c
+@@ -53,3 +53,17 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+ 
+ 	he_cap->has_he = true;
+ }
++
++void
++ieee80211_he_op_ie_to_sta_he_op(struct ieee80211_sub_if_data *sdata,
++			const struct ieee80211_he_operation *he_op_ie_elem,
++			struct sta_info *sta)
++{
++	struct ieee80211_he_operation *he_operation = &sta->sta.he_operation;
++
++	if (!he_op_ie_elem) {
++		memset(he_operation, 0, sizeof(*he_operation));
++		return;
++	}
++	memcpy(he_operation, he_op_ie_elem, sizeof(*he_operation));
++}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e170f986d226..11bc1778bfd5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1870,6 +1870,11 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+ 				  const u8 *he_cap_ie, u8 he_cap_len,
+ 				  struct sta_info *sta);
+ 
++void
++ieee80211_he_op_ie_to_sta_he_op(struct ieee80211_sub_if_data *sdata,
++			const struct ieee80211_he_operation *he_op_ie_elem,
++			struct sta_info *sta);
++
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2dbcf5d5512e..5d8a8a0feaf9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3364,6 +3364,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 		if (elems.uora_element)
+ 			bss_conf->uora_ocw_range = elems.uora_element[0];
+ 
++		ieee80211_he_op_ie_to_sta_he_op(sdata, elems.he_operation, sta);
+ 		/* TODO: OPEN: what happens if BSS color disable is set? */
+ 	}
+ 
+-- 
+2.20.1
 
-Must admit that I didn't actually read the code.  Just happend to look
-at this patch briefly while glancing through linux-wireless...  Sorry if
-I'just adding noise.
-
-
-Bj=C3=B8rn
