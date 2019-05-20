@@ -2,85 +2,80 @@ Return-Path: <SRS0=gKIL=TU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B87DC04AAF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81C3EC04AAC
 	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:00:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 183CA20815
+	by mail.kernel.org (Postfix) with ESMTP id 4D5192081C
 	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:00:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="iZCQQVJo"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="KJkgBK45"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731838AbfETMAy (ORCPT
+        id S1732362AbfETMA4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 May 2019 08:00:54 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35334 "EHLO
+        Mon, 20 May 2019 08:00:56 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35398 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730479AbfETMAx (ORCPT
+        by vger.kernel.org with ESMTP id S1732283AbfETMAz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 May 2019 08:00:53 -0400
+        Mon, 20 May 2019 08:00:55 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.224.233])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id C686630C09A;
-        Mon, 20 May 2019 05:00:51 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com C686630C09A
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 9D4BD30C0A0;
+        Mon, 20 May 2019 05:00:53 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 9D4BD30C0A0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1558353651;
-        bh=SHlSA0kru7mjeLCL92KqU3JRgoPYjIUqmltuDn2qzBw=;
-        h=From:To:Cc:Subject:Date:From;
-        b=iZCQQVJouf08RmcHUNdxa905qmhJUwJ26skEKhjxWxuFSkyvUTSobc8y9hMokBBXa
-         AdV6ji3pKVb0YXohKaBDHas31IO1RnQ+Qnt3eePzbr1pqnO4wek/EGl4rSIuAdsw0p
-         P5Dshs0X+YYJPafx4cdiuyPV4Kqg/OuuJTkZUPLI=
+        s=dkimrelay; t=1558353653;
+        bh=L7bmPvrXrRT78nANaAUXJEd/KZDQp60omDsRj55LMXk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=KJkgBK45XhWXfWueOgypJyzg5kV795xWwL3lCCCn7ASKp8NbbHsYkcaLeGICP/Uhj
+         EC2ncG6x8jl/XF0ELbVr5aoEOGVM/yTiJfQx0gl9tmI0CUdgtAZdjYUN2ShOSVWneT
+         atp54FjsA5Tcy0KQDNmVFe9KT8eIXASGY30JCA0w=
 Received: from bld-bun-01.bun.broadcom.com (bld-bun-01.bun.broadcom.com [10.176.128.83])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 2AA7460D69;
-        Mon, 20 May 2019 05:00:52 -0700 (PDT)
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id E30BB60D69;
+        Mon, 20 May 2019 05:00:53 -0700 (PDT)
 Received: by bld-bun-01.bun.broadcom.com (Postfix, from userid 25152)
-        id 9B8D5B02EF1; Mon, 20 May 2019 14:00:50 +0200 (CEST)
+        id F1AE6B02CD6; Mon, 20 May 2019 14:00:50 +0200 (CEST)
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC 0/8] nl80211: add 6GHz band support
-Date:   Mon, 20 May 2019 14:00:37 +0200
-Message-Id: <1558353645-18119-1-git-send-email-arend.vanspriel@broadcom.com>
+Subject: [RFC 8/8] cfg80211: apply same mandatory rate flags for 5GHz and 6GHz
+Date:   Mon, 20 May 2019 14:00:45 +0200
+Message-Id: <1558353645-18119-9-git-send-email-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1558353645-18119-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1558353645-18119-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In 802.11ax D4.0 a new band has been proposed. This series contains
-changes to cfg80211 for supporting this band. With 2GHz and 5GHz there
-was no overlap in channel number. However, this new band has channel
-numbers with a range from 1 up to 253. The only place I could find an
-issue with this is in cfg80211_wext_freq(). Not sure how to deal with
-that so it is not part of this series.
+For the new 6GHz band the same rules apply for mandatory rates so
+add it to set_mandatory_flags_band() function.
 
-The series applies to the master branch of the mac80211-next repository.
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Leon Zegers <leon.zegers@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ net/wireless/util.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Arend van Spriel (8):
-  nl80211: add 6GHz band definition to enum nl80211_band
-  cfg80211: add 6GHz UNII band definitions
-  cfg80211: util: add 6GHz channel to freq conversion and vice versa
-  cfg80211: extend ieee80211_operating_class_to_band() for 6GHz
-  cfg80211: add 6GHz in code handling array with NUM_NL80211_BANDS
-    entries
-  cfg80211: use same IR permissive rules for 6GHz band
-  cfg80211: ibss: use 11a mandatory rates for 6GHz band operation
-  cfg80211: apply same mandatory rate flags for 5GHz and 6GHz
-
- include/uapi/linux/nl80211.h |  2 ++
- net/wireless/chan.c          |  3 ++-
- net/wireless/ibss.c          | 16 +++++++++++-----
- net/wireless/nl80211.c       |  1 +
- net/wireless/reg.c           | 21 +++++++++++++++++++--
- net/wireless/trace.h         |  3 ++-
- net/wireless/util.c          | 14 +++++++++++++-
- 7 files changed, 50 insertions(+), 10 deletions(-)
-
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 03e7176..fd90c86 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -156,6 +156,7 @@ static void set_mandatory_flags_band(struct ieee80211_supported_band *sband)
+ 
+ 	switch (sband->band) {
+ 	case NL80211_BAND_5GHZ:
++	case NL80211_BAND_6GHZ:
+ 		want = 3;
+ 		for (i = 0; i < sband->n_bitrates; i++) {
+ 			if (sband->bitrates[i].bitrate == 60 ||
 -- 
 1.9.1
 
