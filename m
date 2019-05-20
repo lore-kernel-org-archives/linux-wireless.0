@@ -2,119 +2,109 @@ Return-Path: <SRS0=gKIL=TU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A5C8C46460
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 11:02:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2362C04AAC
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:00:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B119206B6
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 11:02:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9D9A20815
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:00:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ihc0POf/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732262AbfETLCQ (ORCPT
+        id S1732239AbfETMAy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 May 2019 07:02:16 -0400
-Received: from nbd.name ([46.4.11.11]:47786 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732236AbfETLCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 May 2019 07:02:15 -0400
-Received: from p548c87ba.dip0.t-ipconnect.de ([84.140.135.186] helo=bertha.datto.lan)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1hSg3W-0003rt-0F; Mon, 20 May 2019 13:02:10 +0200
-From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        John Crispin <john@phrozen.org>,
-        Shashidhar Lakkavalli <slakkavalli@datto.com>
-Subject: [PATCH 1/7] mac80211: HE: dynamically enable the TWT requester support on STA interfaces
-Date:   Mon, 20 May 2019 13:01:58 +0200
-Message-Id: <20190520110204.27588-2-john@phrozen.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190520110204.27588-1-john@phrozen.org>
-References: <20190520110204.27588-1-john@phrozen.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Mon, 20 May 2019 08:00:54 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35346 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730727AbfETMAy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 May 2019 08:00:54 -0400
+Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.224.233])
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 69F8C30C088;
+        Mon, 20 May 2019 05:00:52 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 69F8C30C088
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1558353652;
+        bh=bGicLqcp1/dHgg4bDICFA/Z0PBvU7+StOn1XcGfHNdg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ihc0POf/ohgnzjOxmUXHxI43sclldB50DGoMHIqAqQyxNkgehrDYopTa03wC0gHu0
+         NT89gvymCNr1BGQxKl10QA2mRKY35sFyuGX57dwa56PTqc4VFElaXfxWAr3SHYGjTN
+         clazXTZUsESh6m7lqhehg/ac0poX6FHni7MraAYc=
+Received: from bld-bun-01.bun.broadcom.com (bld-bun-01.bun.broadcom.com [10.176.128.83])
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id BB99560D77;
+        Mon, 20 May 2019 05:00:52 -0700 (PDT)
+Received: by bld-bun-01.bun.broadcom.com (Postfix, from userid 25152)
+        id EE58FB00F37; Mon, 20 May 2019 14:00:50 +0200 (CEST)
+From:   Arend van Spriel <arend.vanspriel@broadcom.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [RFC 2/8] cfg80211: add 6GHz UNII band definitions
+Date:   Mon, 20 May 2019 14:00:39 +0200
+Message-Id: <1558353645-18119-3-git-send-email-arend.vanspriel@broadcom.com>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1558353645-18119-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1558353645-18119-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Turn TWT for STA interfaces when they associate and/or receive a
-beacon where the twt_responder bit has changed.
+For the new 6GHz there are new UNII band definitions as listed
+in the FCC notice [1].
 
-Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
-Signed-off-by: John Crispin <john@phrozen.org>
+[1] https://docs.fcc.gov/public/attachments/FCC-18-147A1_Rcd.pdf
+
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Leon Zegers <leon.zegers@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- include/net/mac80211.h |  2 ++
- net/mac80211/mlme.c    | 18 ++++++++++++++++--
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ net/wireless/reg.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ba4a16f87364..689dc597281c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -317,6 +317,7 @@ struct ieee80211_vif_chanctx_switch {
-  * @BSS_CHANGED_MCAST_RATE: Multicast Rate setting changed for this interface
-  * @BSS_CHANGED_FTM_RESPONDER: fime timing reasurement request responder
-  *	functionality changed for this BSS (AP mode).
-+ * @BSS_CHANGED_TWT: TWT status changed
-  *
-  */
- enum ieee80211_bss_change {
-@@ -347,6 +348,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_KEEP_ALIVE		= 1<<24,
- 	BSS_CHANGED_MCAST_RATE		= 1<<25,
- 	BSS_CHANGED_FTM_RESPONDER	= 1<<26,
-+	BSS_CHANGED_TWT			= 1<<27,
- 
- 	/* when adding here, make sure to change ieee80211_reconfig */
- };
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5d8a8a0feaf9..996439a288c0 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3151,6 +3151,19 @@ static bool ieee80211_twt_req_supported(const struct sta_info *sta,
- 		IEEE80211_HE_MAC_CAP0_TWT_RES;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4831ad74..646107a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -3806,8 +3806,9 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
  }
  
-+static int ieee80211_recalc_twt_req(struct ieee80211_sub_if_data *sdata,
-+				    struct sta_info *sta,
-+				    struct ieee802_11_elems *elems)
-+{
-+	bool twt = ieee80211_twt_req_supported(sta, elems);
-+
-+	if (sdata->vif.bss_conf.twt_requester != twt) {
-+		sdata->vif.bss_conf.twt_requester = twt;
-+		return BSS_CHANGED_TWT;
-+	}
-+	return 0;
-+}
-+
- static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 				    struct cfg80211_bss *cbss,
- 				    struct ieee80211_mgmt *mgmt, size_t len)
-@@ -3333,8 +3346,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 						  sta);
+ /*
+- * See http://www.fcc.gov/document/5-ghz-unlicensed-spectrum-unii, for
+- * UNII band definitions
++ * See FCC notices for UNII band definitions
++ *  5GHz: https://www.fcc.gov/document/5-ghz-unlicensed-spectrum-unii
++ *  6GHz: https://www.fcc.gov/document/fcc-proposes-more-spectrum-unlicensed-use-0
+  */
+ int cfg80211_get_unii(int freq)
+ {
+@@ -3831,6 +3832,22 @@ int cfg80211_get_unii(int freq)
+ 	if (freq > 5725 && freq <= 5825)
+ 		return 4;
  
- 		bss_conf->he_support = sta->sta.he_cap.has_he;
--		bss_conf->twt_requester =
--			ieee80211_twt_req_supported(sta, &elems);
-+		changed |= ieee80211_recalc_twt_req(sdata, sta, &elems);
- 	} else {
- 		bss_conf->he_support = false;
- 		bss_conf->twt_requester = false;
-@@ -3995,6 +4007,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	mutex_lock(&local->sta_mtx);
- 	sta = sta_info_get(sdata, bssid);
- 
-+	changed |= ieee80211_recalc_twt_req(sdata, sta, &elems);
++	/* UNII-5 */
++	if (freq > 5925 && freq <= 6425)
++		return 5;
 +
- 	if (ieee80211_config_bw(sdata, sta,
- 				elems.ht_cap_elem, elems.ht_operation,
- 				elems.vht_operation, elems.he_operation,
++	/* UNII-6 */
++	if (freq > 6425 && freq <= 6525)
++		return 6;
++
++	/* UNII-7 */
++	if (freq > 6525 && freq <= 6875)
++		return 7;
++
++	/* UNII-8 */
++	if (freq > 6875 && freq <= 7125)
++		return 8;
++
+ 	return -EINVAL;
+ }
+ 
 -- 
-2.20.1
+1.9.1
 
