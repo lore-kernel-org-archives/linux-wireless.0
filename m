@@ -2,99 +2,100 @@ Return-Path: <SRS0=gKIL=TU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31571C04AAC
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:43:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5757FC04AAC
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 13:03:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0442221479
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:43:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 255BD20856
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 13:03:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Dj6rxER+"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="fX5hi5qr";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="fX5hi5qr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390076AbfETMnZ (ORCPT
+        id S1731259AbfETNDM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 May 2019 08:43:25 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:43999 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389397AbfETM2z (ORCPT
+        Mon, 20 May 2019 09:03:12 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:60140 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730506AbfETNDM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 May 2019 08:28:55 -0400
-Received: by mail-pg1-f196.google.com with SMTP id f25so189909pgv.10;
-        Mon, 20 May 2019 05:28:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=hB3PHyrs53San/vhDwKRpRyPdI0a/I1a2f3pjFTkUE4=;
-        b=Dj6rxER+7wkxWxh9ncQ8235KU6jkkd6A60sumII2etXOJfRWzKRMI+PilghA5nj4EG
-         jRr+1A3Q7sDU1MIUwj5Ln1rQmAzYMjqW0wXbeHqt4fmdseaVwTVi4djbj/JdjOHxFNLR
-         pyamqSgmB1aFeaW4Z9n8kmVJrpWDvw1Gn/4nn8Lw1A7aA3SSsppCi4fWPgJqbclRf4Sl
-         7d6v4T7sX1kRHyCxbwC8lhdpDbY9e3DOsZZvvNdVzKJ+o/XDxhaPYlbxIeGMfuge4vUa
-         ArvAoihzT4Y3V9a1Sw7sbFd9GWzgmA1HCuzhhHJY+2JaYHiwq5IXOugEoKcGvJ+AtYlC
-         VJxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=hB3PHyrs53San/vhDwKRpRyPdI0a/I1a2f3pjFTkUE4=;
-        b=I7sQpabtCwB/Lsz/eCdLSbectA4U2npASBlXeL4ttTNk97BxjFRZoSIdIOHyD75tA6
-         Ujvf3Pt6APhLV2OmgF6/TP6siQ3ZXnYMSFno1mb6xIcmXUE764pcHW09NXPz8FiqSdRm
-         iur64syb55wJDi+dY4dWgHiMfyNaJBibe/nndTpoj0Bm8qWhvgg7ES8QX6IE82tewG1x
-         AGbm5ewEbm72fPARGoezOIOuSlluAmbA+Zme7n/xkLpzsxQrI4Nx6Do+QDpY4F284kFn
-         r5wYIwH+WtETQhVScmBWWpV7OpnlOI4PcZm8IcBi/lhrPWD898YW1eURnuMtf4IAJDom
-         PohA==
-X-Gm-Message-State: APjAAAXmFFMhfddaPAyJYothzyp3XrkhfZgq3VzAISj0kQ5jA16wnhu/
-        PjkVqv9cL6maolktBMZDImI=
-X-Google-Smtp-Source: APXvYqwaLDrWw7c0Fs1bKjKOaDP5fyg9p7qm+2PKXEbMZux7rZ1ZmgUv7+LmqyKVykIc0nPFeA/87Q==
-X-Received: by 2002:a63:7909:: with SMTP id u9mr68890137pgc.223.1558355334363;
-        Mon, 20 May 2019 05:28:54 -0700 (PDT)
-Received: from localhost ([43.224.245.181])
-        by smtp.gmail.com with ESMTPSA id s2sm16226302pfe.105.2019.05.20.05.28.53
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 20 May 2019 05:28:53 -0700 (PDT)
-From:   Weitao Hou <houweitaoo@gmail.com>
-To:     arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, kvalo@codeaurora.org, davem@davemloft.net,
-        houweitaoo@gmail.com, rafal@milecki.pl
-Cc:     linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] brcmfmac: fix typos in code comments
-Date:   Mon, 20 May 2019 20:28:25 +0800
-Message-Id: <20190520122825.981-1-houweitaoo@gmail.com>
-X-Mailer: git-send-email 2.18.0
+        Mon, 20 May 2019 09:03:12 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 92B0B608D4; Mon, 20 May 2019 13:03:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1558357391;
+        bh=Im9cONrCw6xT+VTwujPXh75aFTBMK6QH99op6V0EHa0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=fX5hi5qrZke+3Yt39/01PPIUtT+fjsdqSTPJz6aOS8BgY+Avm22q1bqpzkcmblgBS
+         idmZ3LG7TQyMcv7H5xzuIZH//gguEYcp+qeX12RCB+owck50HJ3hCV9gpccnCWYpBY
+         KiRm3h5Gce/x6dhaDYC1obKzbdICnJhOPBvFECfY=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 42D916076A;
+        Mon, 20 May 2019 13:03:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1558357391;
+        bh=Im9cONrCw6xT+VTwujPXh75aFTBMK6QH99op6V0EHa0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=fX5hi5qrZke+3Yt39/01PPIUtT+fjsdqSTPJz6aOS8BgY+Avm22q1bqpzkcmblgBS
+         idmZ3LG7TQyMcv7H5xzuIZH//gguEYcp+qeX12RCB+owck50HJ3hCV9gpccnCWYpBY
+         KiRm3h5Gce/x6dhaDYC1obKzbdICnJhOPBvFECfY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 42D916076A
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
+Subject: Re: [PATCH v2 1/2] nl80211: Add support for EDMG channels
+References: <1557758554-18907-1-git-send-email-ailizaro@codeaurora.org>
+        <1557758554-18907-2-git-send-email-ailizaro@codeaurora.org>
+Date:   Mon, 20 May 2019 16:03:07 +0300
+In-Reply-To: <1557758554-18907-2-git-send-email-ailizaro@codeaurora.org>
+        (Alexei Avshalom Lazar's message of "Mon, 13 May 2019 17:42:33 +0300")
+Message-ID: <87k1eluvlg.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-fix lengh to length
+Alexei Avshalom Lazar <ailizaro@codeaurora.org> writes:
 
-Signed-off-by: Weitao Hou <houweitaoo@gmail.com>
----
-- fix prefix
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> 802.11ay specification defines Enhanced Directional Multi-Gigabit
+> (EDMG) STA and AP which allow channel bonding of 2 channels and more.
+> Introduce NL80211_ATTR_WIPHY_EDMG_CHANNELS,
+> NL80211_ATTR_WIPHY_EDMG_BW_CONFIG, NL80211_BAND_ATTR_EDMG_CHANNELS,
+> NL80211_BAND_ATTR_EDMG_BW_CONFIG and RATE_INFO_FLAGS_EDMG
+> that needed for enabling and configuring EDMG support.
+> Driver is expected to report its EDMG capabilities: whether EDMG
+> is supported and the supported EDMG channels.
+> Bitrate calculation is enhanced to take into account EDMG support
+> according to the 802.11ay specification.
+> The kernel uses NL80211_BAND_ATTR_EDMG_CHANNELS and
+> NL80211_BAND_ATTR_EDMG_BW_CONFIG attributes in order to publish
+> the EDMG capabilities to the userspace.
+> NL80211_BAND_ATTR_EDMG_CHANNELS is a bitmap field that indicates
+> the 2.16 GHz channel(s) that are allowed to be used for transmissions
+> in the BSS.
+> If NL80211_BAND_ATTR_EDMG_CHANNELS is not set then EDMG not
+> supported. NL80211_BAND_ATTR_EDMG_BW_CONFIG represent the allowed
+> channel bandwidth configurations.
+> NL80211_ATTR_WIPHY_EDMG_CHANNELS and NL80211_ATTR_WIPHY_EDMG_BW_CONFIG
+> will be used by the userspace for AP configuration and connect command.
+>
+> Change-Id: I534f4a750354a4b0baad28c47dc29afb9cbc36ac
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
-index 8ea27489734e..edd2f09613d8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
-@@ -314,7 +314,7 @@ brcmf_create_bsscfg(s32 bsscfgidx, char *name, char *data, u32 datalen,
- 		return brcmf_create_iovar(name, data, datalen, buf, buflen);
- 
- 	prefixlen = strlen(prefix);
--	namelen = strlen(name) + 1; /* lengh of iovar  name + null */
-+	namelen = strlen(name) + 1; /* length of iovar  name + null */
- 	iolen = prefixlen + namelen + sizeof(bsscfgidx_le) + datalen;
- 
- 	if (buflen < iolen) {
+No Change-Id in upstream patches. And please read:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#signed-off-by_missing
+
 -- 
-2.18.0
-
+Kalle Valo
