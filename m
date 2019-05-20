@@ -2,82 +2,73 @@ Return-Path: <SRS0=gKIL=TU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A3D3C04AAC
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:01:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62431C04AAC
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:12:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9C6F20815
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:01:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MhM+jsmt"
+	by mail.kernel.org (Postfix) with ESMTP id 404AD20656
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:12:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732370AbfETMA4 (ORCPT
+        id S1732642AbfETMMx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 May 2019 08:00:56 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35384 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730727AbfETMAz (ORCPT
+        Mon, 20 May 2019 08:12:53 -0400
+Received: from 4.mo173.mail-out.ovh.net ([46.105.34.219]:38059 "EHLO
+        4.mo173.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730921AbfETMMx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 May 2019 08:00:55 -0400
-Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.224.233])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 4C8B730C08F;
-        Mon, 20 May 2019 05:00:53 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 4C8B730C08F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1558353653;
-        bh=qLgeRUgG74OOJPHvet1nvjlzYIxEnqIoFdGG1pCujsU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MhM+jsmtnFGgWNxCSEJNqWOGbe3Pt+B8ybDwZDAEoVShIJ09Nz87dcoEIZyhF3ld0
-         /AdXktH/mS/bSLjy4Rg8hThHCNdD3gW9QJipCKxTZ8As/G6lrmi3HlnneeC0nc6Ic7
-         aIeK37KFY+dYcvOxmKR0ItY8BKzJeyWJH9Uk9RD8=
-Received: from bld-bun-01.bun.broadcom.com (bld-bun-01.bun.broadcom.com [10.176.128.83])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id A6E9D60D71;
-        Mon, 20 May 2019 05:00:53 -0700 (PDT)
-Received: by bld-bun-01.bun.broadcom.com (Postfix, from userid 25152)
-        id EFBB2B03088; Mon, 20 May 2019 14:00:50 +0200 (CEST)
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC 6/8] cfg80211: use same IR permissive rules for 6GHz band
-Date:   Mon, 20 May 2019 14:00:43 +0200
-Message-Id: <1558353645-18119-7-git-send-email-arend.vanspriel@broadcom.com>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1558353645-18119-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1558353645-18119-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 20 May 2019 08:12:53 -0400
+X-Greylist: delayed 1160 seconds by postgrey-1.27 at vger.kernel.org; Mon, 20 May 2019 08:12:52 EDT
+Received: from player735.ha.ovh.net (unknown [10.109.146.211])
+        by mo173.mail-out.ovh.net (Postfix) with ESMTP id 1F12B103F14
+        for <linux-wireless@vger.kernel.org>; Mon, 20 May 2019 13:53:31 +0200 (CEST)
+Received: from RCM-web1.webmail.mail.ovh.net (ip-194-187-74-233.konfederacka.maverick.com.pl [194.187.74.233])
+        (Authenticated sender: rafal@milecki.pl)
+        by player735.ha.ovh.net (Postfix) with ESMTPSA id 541335F67566;
+        Mon, 20 May 2019 11:53:18 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 20 May 2019 13:53:18 +0200
+From:   =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To:     Weitao Hou <houweitaoo@gmail.com>
+Cc:     arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, kvalo@codeaurora.org, davem@davemloft.net,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wireless: fix typos in code comments
+In-Reply-To: <20190519032256.19346-1-houweitaoo@gmail.com>
+References: <20190519032256.19346-1-houweitaoo@gmail.com>
+Message-ID: <6cd5d69d936ba2a2033041bcddb206e0@milecki.pl>
+X-Sender: rafal@milecki.pl
+User-Agent: Roundcube Webmail/1.3.9
+X-Originating-IP: 194.187.74.233
+X-Webmail-UserID: rafal@milecki.pl
+X-Ovh-Tracer-Id: 10752907064325344891
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: 0
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduuddruddtkedggeeiucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenuc
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The function cfg80211_ir_permissive_chan() is applicable for
-6GHz band as well so make sure it is handled.
+On 2019-05-19 05:22, Weitao Hou wrote:
+> fix lengh to length
+> 
+> Signed-off-by: Weitao Hou <houweitaoo@gmail.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Leon Zegers <leon.zegers@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- net/wireless/chan.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Please use:
+git log --oneline drivers/net/wireless/broadcom/brcm80211/brcmfmac/
+to see how patches for this drivers were subjected in the past.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 7dc1bbd..7c9d204 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -894,7 +894,8 @@ static bool cfg80211_ir_permissive_chan(struct wiphy *wiphy,
- 		if (chan == other_chan)
- 			return true;
- 
--		if (chan->band != NL80211_BAND_5GHZ)
-+		if (chan->band != NL80211_BAND_5GHZ &&
-+		    chan->band != NL80211_BAND_6GHZ)
- 			continue;
- 
- 		r1 = cfg80211_get_unii(chan->center_freq);
--- 
-1.9.1
-
+Please resend V2 with a proper prefix instead of "wireless: ".
