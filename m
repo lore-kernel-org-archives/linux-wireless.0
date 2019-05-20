@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A40C04AAC
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C015C072A4
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:01:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F88620815
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:00:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07B8B20815
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 May 2019 12:01:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QWEwD6gF"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="K5nCS/y3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732426AbfETMA5 (ORCPT
+        id S1732399AbfETMA4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 May 2019 08:00:57 -0400
+        Mon, 20 May 2019 08:00:56 -0400
 Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35388 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732290AbfETMAz (ORCPT
+        by vger.kernel.org with ESMTP id S1732281AbfETMAy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 May 2019 08:00:55 -0400
+        Mon, 20 May 2019 08:00:54 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.224.233])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id CFE9630C0A1;
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 4CA5A30C092;
         Mon, 20 May 2019 05:00:53 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com CFE9630C0A1
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 4CA5A30C092
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
         s=dkimrelay; t=1558353653;
-        bh=+zfkG1l3OrC8wcXOVwJk+kbcHvGZVXhVLoCaq6HA4ZE=;
+        bh=7gKdcWw1g/gAr/ehJps0oXJtouh+u+eoLCIGgNo/bAU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QWEwD6gFTMeenGsYPl/AA8QTstTSr3zI6SWAt/6e/fZGMEb6upIVj4AhS7v5g0Hmo
-         axcJyYDAviIdmnVPej+Nb4hXN5UWEUJFRaQ2QkTh9l0ETXE58uB+gmdSsedFqgp1Il
-         aeIzrtugTUAP+4BMuKDJ7pJegzP/Xp31av1i6px0=
+        b=K5nCS/y3sQKnvSiGM/UFyn8xEw0dMbzuLYNTrl92HPIPSpwn5OmIvb1mJUh3ew0TU
+         3QMUSVSVrTjUoTBCFQQG1qjdT0yQvYeK1ZbQS73MFHYd59rxupneXynuggWZQOZWep
+         Rc9j2/tDA+n/II/G5bNO1r9BqEZzFMS1sf30PYNM=
 Received: from bld-bun-01.bun.broadcom.com (bld-bun-01.bun.broadcom.com [10.176.128.83])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id D44AE60D77;
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id A6B9060D6F;
         Mon, 20 May 2019 05:00:53 -0700 (PDT)
 Received: by bld-bun-01.bun.broadcom.com (Postfix, from userid 25152)
-        id F11D1B02AC0; Mon, 20 May 2019 14:00:50 +0200 (CEST)
+        id F0715B03037; Mon, 20 May 2019 14:00:50 +0200 (CEST)
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC 3/8] cfg80211: util: add 6GHz channel to freq conversion and vice versa
-Date:   Mon, 20 May 2019 14:00:40 +0200
-Message-Id: <1558353645-18119-4-git-send-email-arend.vanspriel@broadcom.com>
+Subject: [RFC 1/8] nl80211: add 6GHz band definition to enum nl80211_band
+Date:   Mon, 20 May 2019 14:00:38 +0200
+Message-Id: <1558353645-18119-2-git-send-email-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1558353645-18119-1-git-send-email-arend.vanspriel@broadcom.com>
 References: <1558353645-18119-1-git-send-email-arend.vanspriel@broadcom.com>
@@ -54,46 +54,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Extend the functions ieee80211_channel_to_frequency() and
-ieee80211_frequency_to_channel() to support 6GHz band according
-specification in 802.11ax D4.1 27.3.22.2.
+In the 802.11ax specification a new band is introduced, which
+is also proposed by FCC for unlicensed use. This band is referred
+to as 6GHz spanning frequency range from 5925 to 7125 MHz.
 
 Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
 Reviewed-by: Leon Zegers <leon.zegers@broadcom.com>
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- net/wireless/util.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ include/uapi/linux/nl80211.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index cf63b63..081637e 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -91,6 +91,11 @@ int ieee80211_channel_to_frequency(int chan, enum nl80211_band band)
- 		else
- 			return 5000 + chan * 5;
- 		break;
-+	case NL80211_BAND_6GHZ:
-+		/* see 802.11ax D4.1 27.3.22.2 */
-+		if (chan <= 253)
-+			return 5940 + chan * 5;
-+		break;
- 	case NL80211_BAND_60GHZ:
- 		if (chan < 7)
- 			return 56160 + chan * 2160;
-@@ -111,8 +116,11 @@ int ieee80211_frequency_to_channel(int freq)
- 		return (freq - 2407) / 5;
- 	else if (freq >= 4910 && freq <= 4980)
- 		return (freq - 4000) / 5;
--	else if (freq <= 45000) /* DMG band lower limit */
-+	else if (freq < 5940)
- 		return (freq - 5000) / 5;
-+	else if (freq <= 45000) /* DMG band lower limit */
-+		/* see 802.11ax D4.1 27.3.22.2 */
-+		return (freq - 5940) / 5;
- 	else if (freq >= 58320 && freq <= 70200)
- 		return (freq - 56160) / 2160;
- 	else
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6f09d1500..5ea3c8c 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4515,6 +4515,7 @@ enum nl80211_txrate_gi {
+  * enum nl80211_band - Frequency band
+  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
+  * @NL80211_BAND_5GHZ: around 5 GHz band (4.9 - 5.7 GHz)
++ * @NL80211_BAND_6GHZ: around 6 GHz band (5.9 - 7.2 GHz)
+  * @NL80211_BAND_60GHZ: around 60 GHz band (58.32 - 69.12 GHz)
+  * @NUM_NL80211_BANDS: number of bands, avoid using this in userspace
+  *	since newer kernel versions may support more bands
+@@ -4522,6 +4523,7 @@ enum nl80211_txrate_gi {
+ enum nl80211_band {
+ 	NL80211_BAND_2GHZ,
+ 	NL80211_BAND_5GHZ,
++	NL80211_BAND_6GHZ,
+ 	NL80211_BAND_60GHZ,
+ 
+ 	NUM_NL80211_BANDS,
 -- 
 1.9.1
 
