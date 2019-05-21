@@ -2,99 +2,84 @@ Return-Path: <SRS0=dYxV=TV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32FAAC04E87
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 May 2019 15:03:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28C82C04AAF
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 May 2019 15:15:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 09FFE208C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 May 2019 15:03:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1CC62173E
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 May 2019 15:15:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="goWTjT9K";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lD28yS8x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728723AbfEUPDK (ORCPT
+        id S1728628AbfEUPPa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 May 2019 11:03:10 -0400
-Received: from nbd.name ([46.4.11.11]:38154 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728318AbfEUPDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 May 2019 11:03:10 -0400
-Received: from p548c8ce3.dip0.t-ipconnect.de ([84.140.140.227] helo=bertha.fritz.box)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1hT6IF-00007m-7R; Tue, 21 May 2019 17:03:07 +0200
-From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        John Crispin <john@phrozen.org>,
-        Shashidhar Lakkavalli <slakkavalli@datto.com>
-Subject: [PATCH 1/2] mac80211: add ieee80211_get_he_iftype_cap() helper
-Date:   Tue, 21 May 2019 17:02:58 +0200
-Message-Id: <20190521150259.2414-1-john@phrozen.org>
-X-Mailer: git-send-email 2.20.1
+        Tue, 21 May 2019 11:15:30 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:34448 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727969AbfEUPP3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 May 2019 11:15:29 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 3A4246087A; Tue, 21 May 2019 15:15:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1558451729;
+        bh=xUKabVGuFyr4+KzPMh6yYHNL6Aqbci7ENH//WgNekIQ=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=goWTjT9Kr1beCm1oD1hOAcqRcFM4oVct2YePMtLVR0oyUzslBcRE9fpw8+70xipwi
+         AOGL9sbSTRSrdchYDhGsFtJgYrRCLTxPrW18hZYAl19gWawCJngqIgNh7C5HlIfy+Q
+         o8/V+T3Y9y46DYL7pkiSDOQWrKIrR9rGePDeuoR4=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 154F360128;
+        Tue, 21 May 2019 15:15:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1558451728;
+        bh=xUKabVGuFyr4+KzPMh6yYHNL6Aqbci7ENH//WgNekIQ=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=lD28yS8xX7Sf91skzmU/FHCkD0bHnb1mNBoTWn8l8aioy+V2bleDjSQ/sEcZB5ORs
+         /UcyAp728NQCkYotDo8Ma4FO3uFA9tiLnDXOyJ23uNQ1ArMn7yO7Z5pkwIg9k0NQi1
+         nn0HakoZITraAFePOYRJPA9L9sZrTRzu1SUzemTU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 154F360128
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
+Subject: Re: [PATCH v3 0/2] Add support for new channels on 60GHz band
+References: <1558364020-11064-1-git-send-email-ailizaro@codeaurora.org>
+Date:   Tue, 21 May 2019 18:15:25 +0300
+In-Reply-To: <1558364020-11064-1-git-send-email-ailizaro@codeaurora.org>
+        (Alexei Avshalom Lazar's message of "Mon, 20 May 2019 17:53:38 +0300")
+Message-ID: <87ftp7vnxu.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This function is similar to ieee80211_get_he_sta_cap() but allows passing
-the iftype. Also make ieee80211_get_he_sta_cap() use the new helper
-rather than duplicating the code.
+Alexei Avshalom Lazar <ailizaro@codeaurora.org> writes:
 
-Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
-Signed-off-by: John Crispin <john@phrozen.org>
----
- include/net/cfg80211.h | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
+> The following set of patches add support for new channels on
+> 60GHz band and EDMG channels:
+> -Nl80211 support for EDMG channels
+> -Wil6210 support for EDMG channels
+>
+> Alexei Avshalom Lazar (2):
+>   nl80211: Add support for EDMG channels
+>   wil6210: Add EDMG channel support
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3f67f01b5f7a..379202ff3d14 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -395,16 +395,18 @@ ieee80211_get_sband_iftype_data(const struct ieee80211_supported_band *sband,
- }
- 
- /**
-- * ieee80211_get_he_sta_cap - return HE capabilities for an sband's STA
-- * @sband: the sband to search for the STA on
-+ * ieee80211_get_he_iftype_cap - return HE capabilities for an sband's iftype
-+ * @sband: the sband to search for the iftype on
-+ * @iftype: enum nl80211_iftype
-  *
-  * Return: pointer to the struct ieee80211_sta_he_cap, or NULL is none found
-  */
- static inline const struct ieee80211_sta_he_cap *
--ieee80211_get_he_sta_cap(const struct ieee80211_supported_band *sband)
-+ieee80211_get_he_iftype_cap(const struct ieee80211_supported_band *sband,
-+			    u8 iftype)
- {
- 	const struct ieee80211_sband_iftype_data *data =
--		ieee80211_get_sband_iftype_data(sband, NL80211_IFTYPE_STATION);
-+		ieee80211_get_sband_iftype_data(sband, iftype);
- 
- 	if (data && data->he_cap.has_he)
- 		return &data->he_cap;
-@@ -412,6 +414,18 @@ ieee80211_get_he_sta_cap(const struct ieee80211_supported_band *sband)
- 	return NULL;
- }
- 
-+/**
-+ * ieee80211_get_he_sta_cap - return HE capabilities for an sband's STA
-+ * @sband: the sband to search for the STA on
-+ *
-+ * Return: pointer to the struct ieee80211_sta_he_cap, or NULL is none found
-+ */
-+static inline const struct ieee80211_sta_he_cap *
-+ieee80211_get_he_sta_cap(const struct ieee80211_supported_band *sband)
-+{
-+	return ieee80211_get_he_iftype_cap(sband, NL80211_IFTYPE_STATION);
-+}
-+
- /**
-  * wiphy_read_of_freq_limits - read frequency limits from device tree
-  *
+Please always add a changelog to help the reviewers:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
+
 -- 
-2.20.1
-
+Kalle Valo
