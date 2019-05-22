@@ -4,55 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64783C282CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:36:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0736AC282CE
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:38:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 359B420675
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:36:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDC392081C
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:38:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558553819;
-	bh=YzezW2Fba2Qpg5me27N4CVgznmETrqoWlEbAAN6ufFg=;
+	s=default; t=1558553937;
+	bh=YNihBYt2lrUvxJoVXq1UboPwbSOdSrtPaWoNftFFXGI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Uknrw1fEY3xHhFkYkYN+l1vupQL70Xl6E860Dz/r0If25zo0sHRLXQfT+s6zU2IsJ
-	 I8Ld8A3WVwB0JctUY0QuCBAPfUF6i5hfqPtuT+AyOUgN75eivVcx+HRfNu+a1j7S2K
-	 9T3uFpeiKtZ7xSDgRjzJxASJtUQYCCBWUezyzIlU=
+	b=NSPJr7yh9P2S643TQ6OeYItq6LDwpoBLQP1YC5KhJSpIroQCB5IGl2Gpk4zCVdLeX
+	 xO8QRJzMBwIBHaOvbMx2vmDckAMfMXDZq4h0V9fS5DdRxMELjsR7WkVDls8bpY/GDS
+	 TbBXNl2z2YNcrGBQPWnLafOaLt5WBUkgu453ehdE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387578AbfEVTgt (ORCPT
+        id S1733016AbfEVT3o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 May 2019 15:36:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54088 "EHLO mail.kernel.org"
+        Wed, 22 May 2019 15:29:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52878 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732827AbfEVTah (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 May 2019 15:30:37 -0400
+        id S1732994AbfEVT3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 May 2019 15:29:44 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 98B20217F9;
-        Wed, 22 May 2019 19:30:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9F0AB20879;
+        Wed, 22 May 2019 19:29:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558553436;
-        bh=YzezW2Fba2Qpg5me27N4CVgznmETrqoWlEbAAN6ufFg=;
+        s=default; t=1558553382;
+        bh=YNihBYt2lrUvxJoVXq1UboPwbSOdSrtPaWoNftFFXGI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nMW+pBnYkTB6bOu3t0iS1IIqUdrfmqczj1loGgQsGVVJKKLV9Y+SUFcoOYDXK4uAE
-         vP5g5dSp03c955AE1RnmZ76T4iXh+uti+R3Rb3PSEylTg2Mo0kFc1VblLwkkAkJqlz
-         p4u7rmfL1Xxp2wDNPILfBNGbHqrMYBV37qLCEWNw=
+        b=UknvP66e3YEe9Tl8tJ0yOS+wfCP+8X0t+lor5MeJV2Mm82SvmsSkvZ3AFcTJyCBx3
+         UGcpIoZDsEm8Yp2dljLzUuJLw+hXU8DtcRUhz4nfDfg8g+Nlg9gh/8d3U6GN6KC2Vh
+         1iXNAmmBklLZYLZbxNFdqW52onxu4ASGZOgnpOUg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+Cc:     YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 011/114] brcm80211: potential NULL dereference in brcmf_cfg80211_vndr_cmds_dcmd_handler()
-Date:   Wed, 22 May 2019 15:28:34 -0400
-Message-Id: <20190522193017.26567-11-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 040/167] at76c50x-usb: Don't register led_trigger if usb_register_driver failed
+Date:   Wed, 22 May 2019 15:26:35 -0400
+Message-Id: <20190522192842.25858-40-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190522193017.26567-1-sashal@kernel.org>
-References: <20190522193017.26567-1-sashal@kernel.org>
+In-Reply-To: <20190522192842.25858-1-sashal@kernel.org>
+References: <20190522192842.25858-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -62,57 +60,91 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: YueHaibing <yuehaibing@huawei.com>
 
-[ Upstream commit e025da3d7aa4770bb1d1b3b0aa7cc4da1744852d ]
+[ Upstream commit 09ac2694b0475f96be895848687ebcbba97eeecf ]
 
-If "ret_len" is negative then it could lead to a NULL dereference.
+Syzkaller report this:
 
-The "ret_len" value comes from nl80211_vendor_cmd(), if it's negative
-then we don't allocate the "dcmd_buf" buffer.  Then we pass "ret_len" to
-brcmf_fil_cmd_data_set() where it is cast to a very high u32 value.
-Most of the functions in that call tree check whether the buffer we pass
-is NULL but there are at least a couple places which don't such as
-brcmf_dbg_hex_dump() and brcmf_msgbuf_query_dcmd().  We memcpy() to and
-from the buffer so it would result in a NULL dereference.
+[ 1213.468581] BUG: unable to handle kernel paging request at fffffbfff83bf338
+[ 1213.469530] #PF error: [normal kernel read fault]
+[ 1213.469530] PGD 237fe4067 P4D 237fe4067 PUD 237e60067 PMD 1c868b067 PTE 0
+[ 1213.473514] Oops: 0000 [#1] SMP KASAN PTI
+[ 1213.473514] CPU: 0 PID: 6321 Comm: syz-executor.0 Tainted: G         C        5.1.0-rc3+ #8
+[ 1213.473514] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
+[ 1213.473514] RIP: 0010:strcmp+0x31/0xa0
+[ 1213.473514] Code: 00 00 00 00 fc ff df 55 53 48 83 ec 08 eb 0a 84 db 48 89 ef 74 5a 4c 89 e6 48 89 f8 48 89 fa 48 8d 6f 01 48 c1 e8 03 83 e2 07 <42> 0f b6 04 28 38 d0 7f 04 84 c0 75 50 48 89 f0 48 89 f2 0f b6 5d
+[ 1213.473514] RSP: 0018:ffff8881f2b7f950 EFLAGS: 00010246
+[ 1213.473514] RAX: 1ffffffff83bf338 RBX: ffff8881ea6f7240 RCX: ffffffff825350c6
+[ 1213.473514] RDX: 0000000000000000 RSI: ffffffffc1ee19c0 RDI: ffffffffc1df99c0
+[ 1213.473514] RBP: ffffffffc1df99c1 R08: 0000000000000001 R09: 0000000000000004
+[ 1213.473514] R10: 0000000000000000 R11: ffff8881de353f00 R12: ffff8881ee727900
+[ 1213.473514] R13: dffffc0000000000 R14: 0000000000000001 R15: ffffffffc1eeaaf0
+[ 1213.473514] FS:  00007fa66fa01700(0000) GS:ffff8881f7200000(0000) knlGS:0000000000000000
+[ 1213.473514] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1213.473514] CR2: fffffbfff83bf338 CR3: 00000001ebb9e005 CR4: 00000000007606f0
+[ 1213.473514] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 1213.473514] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[ 1213.473514] PKRU: 55555554
+[ 1213.473514] Call Trace:
+[ 1213.473514]  led_trigger_register+0x112/0x3f0
+[ 1213.473514]  led_trigger_register_simple+0x7a/0x110
+[ 1213.473514]  ? 0xffffffffc1c10000
+[ 1213.473514]  at76_mod_init+0x77/0x1000 [at76c50x_usb]
+[ 1213.473514]  do_one_initcall+0xbc/0x47d
+[ 1213.473514]  ? perf_trace_initcall_level+0x3a0/0x3a0
+[ 1213.473514]  ? kasan_unpoison_shadow+0x30/0x40
+[ 1213.473514]  ? kasan_unpoison_shadow+0x30/0x40
+[ 1213.473514]  do_init_module+0x1b5/0x547
+[ 1213.473514]  load_module+0x6405/0x8c10
+[ 1213.473514]  ? module_frob_arch_sections+0x20/0x20
+[ 1213.473514]  ? kernel_read_file+0x1e6/0x5d0
+[ 1213.473514]  ? find_held_lock+0x32/0x1c0
+[ 1213.473514]  ? cap_capable+0x1ae/0x210
+[ 1213.473514]  ? __do_sys_finit_module+0x162/0x190
+[ 1213.473514]  __do_sys_finit_module+0x162/0x190
+[ 1213.473514]  ? __ia32_sys_init_module+0xa0/0xa0
+[ 1213.473514]  ? __mutex_unlock_slowpath+0xdc/0x690
+[ 1213.473514]  ? wait_for_completion+0x370/0x370
+[ 1213.473514]  ? vfs_write+0x204/0x4a0
+[ 1213.473514]  ? do_syscall_64+0x18/0x450
+[ 1213.473514]  do_syscall_64+0x9f/0x450
+[ 1213.473514]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[ 1213.473514] RIP: 0033:0x462e99
+[ 1213.473514] Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+[ 1213.473514] RSP: 002b:00007fa66fa00c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+[ 1213.473514] RAX: ffffffffffffffda RBX: 000000000073bf00 RCX: 0000000000462e99
+[ 1213.473514] RDX: 0000000000000000 RSI: 0000000020000300 RDI: 0000000000000003
+[ 1213.473514] RBP: 00007fa66fa00c70 R08: 0000000000000000 R09: 0000000000000000
+[ 1213.473514] R10: 0000000000000000 R11: 0000000000000246 R12: 00007fa66fa016bc
+[ 1213.473514] R13: 00000000004bcefa R14: 00000000006f6fb0 R15: 0000000000000004
 
-The fix is to change the types so that "ret_len" can't be negative.  (If
-we memcpy() zero bytes to NULL, that's a no-op and doesn't cause an
-issue).
+If usb_register failed, no need to call led_trigger_register_simple.
 
-Fixes: 1bacb0487d0e ("brcmfmac: replace cfg80211 testmode with vendor command")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Fixes: 1264b951463a ("at76c50x-usb: add driver")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/atmel/at76c50x-usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-index 8eff2753abade..d493021f60318 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-@@ -35,9 +35,10 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
- 	struct brcmf_if *ifp;
- 	const struct brcmf_vndr_dcmd_hdr *cmdhdr = data;
- 	struct sk_buff *reply;
--	int ret, payload, ret_len;
-+	unsigned int payload, ret_len;
- 	void *dcmd_buf = NULL, *wr_pointer;
- 	u16 msglen, maxmsglen = PAGE_SIZE - 0x100;
-+	int ret;
+diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+index 94bf01f8b2a88..14f0cc36854fc 100644
+--- a/drivers/net/wireless/atmel/at76c50x-usb.c
++++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+@@ -2585,8 +2585,8 @@ static int __init at76_mod_init(void)
+ 	if (result < 0)
+ 		printk(KERN_ERR DRIVER_NAME
+ 		       ": usb_register failed (status %d)\n", result);
+-
+-	led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
++	else
++		led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
+ 	return result;
+ }
  
- 	if (len < sizeof(*cmdhdr)) {
- 		brcmf_err("vendor command too short: %d\n", len);
-@@ -65,7 +66,7 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
- 			brcmf_err("oversize return buffer %d\n", ret_len);
- 			ret_len = BRCMF_DCMD_MAXLEN;
- 		}
--		payload = max(ret_len, len) + 1;
-+		payload = max_t(unsigned int, ret_len, len) + 1;
- 		dcmd_buf = vzalloc(payload);
- 		if (NULL == dcmd_buf)
- 			return -ENOMEM;
 -- 
 2.20.1
 
