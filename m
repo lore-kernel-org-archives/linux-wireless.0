@@ -4,53 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A10F0C282CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A3ACC282DD
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:30:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6AAE4204FD
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:29:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D122820879
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:30:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558553381;
-	bh=WRDWdcYe/dmdSqigJ92qRz3Bm1CJW3V6dtXb0v4xKY8=;
+	s=default; t=1558553455;
+	bh=/z4pvG5BMzSHX+Zzf6J8UySYZ46trHLr3FMeC7wZZok=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=gR4C7KeXKeC0AhHLIGYgw3h330cA0c98E8itrsruoLZkFnSWNpBicoB3WbfBdHmgl
-	 jsx2Q4DO0z35XSIdZdGRJYHfQ6A5un3edFhRXAut+G3PSw0qFvBd2X3Tb6u+GAVRaM
-	 vPDXZuUQPa6cLM/oAgUKLlR62wdkYLqIcb3vSu0c=
+	b=cXL8QaH76MpKaqFdDPJzljEnOlJLk81evIAW4GD8xqIkhKuMLdAW+YIV85oY59rYi
+	 xpydYDgYMBxzFPZuqsPRq+/XMk1ihpwnIClczJyCgjSGx+c2qR+AioR5wy7uIpUmxX
+	 D+la3O+n5V4iElygaR3A2MPU09VBbwdp/N5meX3E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732179AbfEVT3k (ORCPT
+        id S2387405AbfEVTay (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 May 2019 15:29:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52802 "EHLO mail.kernel.org"
+        Wed, 22 May 2019 15:30:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54332 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732968AbfEVT3j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 May 2019 15:29:39 -0400
+        id S2387399AbfEVTav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 May 2019 15:30:51 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 18EA92177E;
-        Wed, 22 May 2019 19:29:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 21A4021473;
+        Wed, 22 May 2019 19:30:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558553378;
-        bh=WRDWdcYe/dmdSqigJ92qRz3Bm1CJW3V6dtXb0v4xKY8=;
+        s=default; t=1558553450;
+        bh=/z4pvG5BMzSHX+Zzf6J8UySYZ46trHLr3FMeC7wZZok=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zWqnZW7BlLWqZXMu5rRXxnaRdl9taiF6C01v2H2E6g5RJ84Coit7KVas9ZjiDi+yM
-         A8JoKe32/APCtMPZShrdLVhITm2jFFePlFMgVyCc3ZV1kbuPHVdFf1pauejiBRC0ei
-         wxMVxLSkCjq0ITXmyPWPIYY1fRF5LVYQ+VwXu6f4=
+        b=e+3V0dKP4pZJE1SPuH3zX7fG3Hv3kXAaBUDKchEYSVZooOWKvSphxq5JVCWDktzKj
+         WtXVz/hlTivx6yEBZGpTAHRmmd1k5PrE68z9LH0zx32Kv7tf5KL0DTZeit0x/eoC7/
+         OOtfrecT76Bx0dsSsVLMarDN7P0C0i6w0Hu/t7SU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 038/167] mwifiex: prevent an array overflow
-Date:   Wed, 22 May 2019 15:26:33 -0400
-Message-Id: <20190522192842.25858-38-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 020/114] mac80211/cfg80211: update bss channel on channel switch
+Date:   Wed, 22 May 2019 15:28:43 -0400
+Message-Id: <20190522193017.26567-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190522192842.25858-1-sashal@kernel.org>
-References: <20190522192842.25858-1-sashal@kernel.org>
+In-Reply-To: <20190522193017.26567-1-sashal@kernel.org>
+References: <20190522193017.26567-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,37 +60,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-[ Upstream commit b4c35c17227fe437ded17ce683a6927845f8c4a4 ]
+[ Upstream commit 5dc8cdce1d722c733f8c7af14c5fb595cfedbfa8 ]
 
-The "rate_index" is only used as an index into the phist_data->rx_rate[]
-array in the mwifiex_hist_data_set() function.  That array has
-MWIFIEX_MAX_AC_RX_RATES (74) elements and it's used to generate some
-debugfs information.  The "rate_index" variable comes from the network
-skb->data[] and it is a u8 so it's in the 0-255 range.  We need to cap
-it to prevent an array overflow.
+FullMAC STAs have no way to update bss channel after CSA channel switch
+completion. As a result, user-space tools may provide inconsistent
+channel info. For instance, consider the following two commands:
+$ sudo iw dev wlan0 link
+$ sudo iw dev wlan0 info
+The latter command gets channel info from the hardware, so most probably
+its output will be correct. However the former command gets channel info
+from scan cache, so its output will contain outdated channel info.
+In fact, current bss channel info will not be updated until the
+next [re-]connect.
 
-Fixes: cbf6e05527a7 ("mwifiex: add rx histogram statistics support")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Note that mac80211 STAs have a workaround for this, but it requires
+access to internal cfg80211 data, see ieee80211_chswitch_work:
+
+	/* XXX: shouldn't really modify cfg80211-owned data! */
+	ifmgd->associated->channel = sdata->csa_chandef.chan;
+
+This patch suggests to convert mac80211 workaround into cfg80211 behavior
+and to update current bss channel in cfg80211_ch_switch_notify.
+
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/cfp.c | 3 +++
- 1 file changed, 3 insertions(+)
+ net/mac80211/mlme.c    | 3 ---
+ net/wireless/nl80211.c | 5 +++++
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
-index bfe84e55df776..f1522fb1c1e87 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
-@@ -531,5 +531,8 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
- 		rate_index = (rx_rate > MWIFIEX_RATE_INDEX_OFDM0) ?
- 			      rx_rate - 1 : rx_rate;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6e0aa296f1346..d787717140e54 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1072,9 +1072,6 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 		goto out;
+ 	}
  
-+	if (rate_index >= MWIFIEX_MAX_AC_RX_RATES)
-+		rate_index = MWIFIEX_MAX_AC_RX_RATES - 1;
+-	/* XXX: shouldn't really modify cfg80211-owned data! */
+-	ifmgd->associated->channel = sdata->csa_chandef.chan;
+-
+ 	ifmgd->csa_waiting_bcn = true;
+ 
+ 	ieee80211_sta_reset_beacon_monitor(sdata);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 09a353c6373a8..d6e6293157717 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -14014,6 +14014,11 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
+ 
+ 	wdev->chandef = *chandef;
+ 	wdev->preset_chandef = *chandef;
 +
- 	return rate_index;
++	if (wdev->iftype == NL80211_IFTYPE_STATION &&
++	    !WARN_ON(!wdev->current_bss))
++		wdev->current_bss->pub.channel = chandef->chan;
++
+ 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
+ 				 NL80211_CMD_CH_SWITCH_NOTIFY, 0);
  }
 -- 
 2.20.1
