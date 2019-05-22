@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3474EC282DD
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:55:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FE47C282DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:57:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC9F62177E
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:55:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3A6320862
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:56:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558554949;
-	bh=W9506hB0FyDIu0O5kMHP/1RgFxBtuqfqLuHqnekpp5Y=;
+	s=default; t=1558555019;
+	bh=YzezW2Fba2Qpg5me27N4CVgznmETrqoWlEbAAN6ufFg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=h/LOLNKGIk7ZQ/Yjualj49HMODtHu21xQWME8fR3tVYNDWYDMZcC6zuPd2H1ywWo0
-	 yWozQ3D0EF8f7EaobK3i/VsMlKKRAF8WReLD1thKFSrG4ye0lstYf960JIGrJy47Da
-	 7Vrt7FgOObriJQbZ3+lrlWy3HrhJTijDrOIlACSY=
+	b=evkZWP5JTzXLwuq9F5cAkJXbfBXmDL12jBmNvTmloEi4L+NVW96wP0CukgXztRMN+
+	 IP5iOh8Z3Kh3HDL7exTv1aixgnPFMxr+fgLbsmlIRwLgowUab6JMGkIc5TYUu3pf3c
+	 eL0UFduiNDLegzMWB1H8lPOqNqzIQPcUDtpfqSl0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731521AbfEVTzo (ORCPT
+        id S1730381AbfEVTYk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 May 2019 15:55:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46470 "EHLO mail.kernel.org"
+        Wed, 22 May 2019 15:24:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45792 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730793AbfEVTZK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 May 2019 15:25:10 -0400
+        id S1730590AbfEVTYi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 May 2019 15:24:38 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1BA262173C;
-        Wed, 22 May 2019 19:25:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BCD4A217D9;
+        Wed, 22 May 2019 19:24:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558553109;
-        bh=W9506hB0FyDIu0O5kMHP/1RgFxBtuqfqLuHqnekpp5Y=;
+        s=default; t=1558553077;
+        bh=YzezW2Fba2Qpg5me27N4CVgznmETrqoWlEbAAN6ufFg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Mp0QIZOAc07fglLwtPzPFYeOONHJ+LS2AaW3ZDzSDId5S+c4TwQz9ZGeP85Pmnkqe
-         bW0ylZSVt5k+PrG90f7gUdmD220gT7mQGW6bREk3jEs6ZUsHmvYdqz/YMnthL6ekYE
-         GNFKyJrzrJOw+8dA8YCJ4TScRYtAWXbCjry2OCuc=
+        b=tPatB5nXOrE38Kq+rro743gElhOcd5qzdSzXzELRTL7A3FWKTn+OhqHVbJDTa2lt2
+         FRsjLN+6svzlFr9WUm2Q64z8vuOck8Gorhh43bdYtUpuBkTH0sKsW5GTsLSl5Zb7Vn
+         6obg1XEHX+ir11/i6FnNm7/Fc28EbUv/gRW5sCKw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.0 052/317] iwlwifi: pcie: don't crash on invalid RX interrupt
-Date:   Wed, 22 May 2019 15:19:13 -0400
-Message-Id: <20190522192338.23715-52-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.0 035/317] brcm80211: potential NULL dereference in brcmf_cfg80211_vndr_cmds_dcmd_handler()
+Date:   Wed, 22 May 2019 15:18:56 -0400
+Message-Id: <20190522192338.23715-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190522192338.23715-1-sashal@kernel.org>
 References: <20190522192338.23715-1-sashal@kernel.org>
@@ -60,45 +62,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 30f24eabab8cd801064c5c37589d803cb4341929 ]
+[ Upstream commit e025da3d7aa4770bb1d1b3b0aa7cc4da1744852d ]
 
-If for some reason the device gives us an RX interrupt before we're
-ready for it, perhaps during device power-on with misconfigured IRQ
-causes mapping or so, we can crash trying to access the queues.
+If "ret_len" is negative then it could lead to a NULL dereference.
 
-Prevent that by checking that we actually have RXQs and that they
-were properly allocated.
+The "ret_len" value comes from nl80211_vendor_cmd(), if it's negative
+then we don't allocate the "dcmd_buf" buffer.  Then we pass "ret_len" to
+brcmf_fil_cmd_data_set() where it is cast to a very high u32 value.
+Most of the functions in that call tree check whether the buffer we pass
+is NULL but there are at least a couple places which don't such as
+brcmf_dbg_hex_dump() and brcmf_msgbuf_query_dcmd().  We memcpy() to and
+from the buffer so it would result in a NULL dereference.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+The fix is to change the types so that "ret_len" can't be negative.  (If
+we memcpy() zero bytes to NULL, that's a no-op and doesn't cause an
+issue).
+
+Fixes: 1bacb0487d0e ("brcmfmac: replace cfg80211 testmode with vendor command")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index c596c7b13504d..4354c0fedda78 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1384,10 +1384,15 @@ static struct iwl_rx_mem_buffer *iwl_pcie_get_rxb(struct iwl_trans *trans,
- static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_rxq *rxq = &trans_pcie->rxq[queue];
-+	struct iwl_rxq *rxq;
- 	u32 r, i, count = 0;
- 	bool emergency = false;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
+index 8eff2753abade..d493021f60318 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
+@@ -35,9 +35,10 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
+ 	struct brcmf_if *ifp;
+ 	const struct brcmf_vndr_dcmd_hdr *cmdhdr = data;
+ 	struct sk_buff *reply;
+-	int ret, payload, ret_len;
++	unsigned int payload, ret_len;
+ 	void *dcmd_buf = NULL, *wr_pointer;
+ 	u16 msglen, maxmsglen = PAGE_SIZE - 0x100;
++	int ret;
  
-+	if (WARN_ON_ONCE(!trans_pcie->rxq || !trans_pcie->rxq[queue].bd))
-+		return;
-+
-+	rxq = &trans_pcie->rxq[queue];
-+
- restart:
- 	spin_lock(&rxq->lock);
- 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
+ 	if (len < sizeof(*cmdhdr)) {
+ 		brcmf_err("vendor command too short: %d\n", len);
+@@ -65,7 +66,7 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
+ 			brcmf_err("oversize return buffer %d\n", ret_len);
+ 			ret_len = BRCMF_DCMD_MAXLEN;
+ 		}
+-		payload = max(ret_len, len) + 1;
++		payload = max_t(unsigned int, ret_len, len) + 1;
+ 		dcmd_buf = vzalloc(payload);
+ 		if (NULL == dcmd_buf)
+ 			return -ENOMEM;
 -- 
 2.20.1
 
