@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6154C282CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:39:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D6CC282DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:39:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 763992081C
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:39:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38DDE20675
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:39:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558553969;
-	bh=dy+5KZ5Z6sM0uLoTtO033MuHDREOBbOfD0kSQTitNdI=;
+	s=default; t=1558553998;
+	bh=ZNc8cPR6mRHSohAPnECSQlahlqJPQ7VWDh67deTlTws=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=EpbWSVBDY+h7I3FVERNUQzo89jECteaHwg2cjVC9BOkpgvpbWUpGJE/LghMjjV1kU
-	 zjwzFEB6jwFrbvYYZFvCPK/uWSyKaW1Yywc86BAHaHAKTDPuUGDvCG1bSyLQZDy2QX
-	 cx9T04rGUIswve2xqhAYA8A0Pq+HaprAp/8pZdZk=
+	b=kclynzTM6Fzg595/LjxpQpLMrgg1p3XrR69C6TVnOXcx84WQKL8J06l5phaKF9P8i
+	 OFukuETTyFJWORQDUXEjbhsdMs2FfI1GgIt3V9es7wuExxxitQ2EfzMYiNwLxH3z+M
+	 dVo0V03NRGc0n7QhAOnvVoP9X97jSEV7/8Z8skXs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733109AbfEVTj2 (ORCPT
+        id S1732952AbfEVT3g (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 May 2019 15:39:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52778 "EHLO mail.kernel.org"
+        Wed, 22 May 2019 15:29:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52676 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732976AbfEVT3k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 May 2019 15:29:40 -0400
+        id S1732938AbfEVT3f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 May 2019 15:29:35 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 342D1204FD;
-        Wed, 22 May 2019 19:29:39 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B7EDE204FD;
+        Wed, 22 May 2019 19:29:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558553379;
-        bh=dy+5KZ5Z6sM0uLoTtO033MuHDREOBbOfD0kSQTitNdI=;
+        s=default; t=1558553374;
+        bh=ZNc8cPR6mRHSohAPnECSQlahlqJPQ7VWDh67deTlTws=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=yZwm7w6d9pt59wdRo0VX4mGLeOY5QcwMs1j3FEp3SJ8+nPKNKmyyG8q51F3p6Ieiu
-         J5vw1VPfgRShg8Zu2T2pmf11JBcc/3PqfV4vA2icE1cQoeYuxvG//FCtNmJGbeSbwH
-         YBFYmTNmMhySwgukBfk0u/LOeqCbJbLvUgAKp0EQ=
+        b=z4V+WU+/CVq0CfFYBLcso/nEaQnQNJH+R6dKad9hBE93ofGSuKya+1LL2PzHSAUY+
+         TDN7sTy4AKCRq3NbH20OPO5WC4nph6OSyRMe6pP8jiR1VT7fuYHsLLJRlTPrCCQ8F2
+         BnqTxLhEphHDJCieAVGMV/7FnUMDDjCLjobFD4aM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kangjie Lu <kjlu@umn.edu>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 039/167] net: cw1200: fix a NULL pointer dereference
-Date:   Wed, 22 May 2019 15:26:34 -0400
-Message-Id: <20190522192842.25858-39-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 034/167] mac80211/cfg80211: update bss channel on channel switch
+Date:   Wed, 22 May 2019 15:26:29 -0400
+Message-Id: <20190522192842.25858-34-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190522192842.25858-1-sashal@kernel.org>
 References: <20190522192842.25858-1-sashal@kernel.org>
@@ -59,36 +60,68 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kangjie Lu <kjlu@umn.edu>
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-[ Upstream commit 0ed2a005347400500a39ea7c7318f1fea57fb3ca ]
+[ Upstream commit 5dc8cdce1d722c733f8c7af14c5fb595cfedbfa8 ]
 
-In case create_singlethread_workqueue fails, the fix free the
-hardware and returns NULL to avoid NULL pointer dereference.
+FullMAC STAs have no way to update bss channel after CSA channel switch
+completion. As a result, user-space tools may provide inconsistent
+channel info. For instance, consider the following two commands:
+$ sudo iw dev wlan0 link
+$ sudo iw dev wlan0 info
+The latter command gets channel info from the hardware, so most probably
+its output will be correct. However the former command gets channel info
+from scan cache, so its output will contain outdated channel info.
+In fact, current bss channel info will not be updated until the
+next [re-]connect.
 
-Signed-off-by: Kangjie Lu <kjlu@umn.edu>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Note that mac80211 STAs have a workaround for this, but it requires
+access to internal cfg80211 data, see ieee80211_chswitch_work:
+
+	/* XXX: shouldn't really modify cfg80211-owned data! */
+	ifmgd->associated->channel = sdata->csa_chandef.chan;
+
+This patch suggests to convert mac80211 workaround into cfg80211 behavior
+and to update current bss channel in cfg80211_ch_switch_notify.
+
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/st/cw1200/main.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ net/mac80211/mlme.c    | 3 ---
+ net/wireless/nl80211.c | 5 +++++
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/main.c b/drivers/net/wireless/st/cw1200/main.c
-index dc478cedbde0d..84624c812a15f 100644
---- a/drivers/net/wireless/st/cw1200/main.c
-+++ b/drivers/net/wireless/st/cw1200/main.c
-@@ -345,6 +345,11 @@ static struct ieee80211_hw *cw1200_init_common(const u8 *macaddr,
- 	mutex_init(&priv->wsm_cmd_mux);
- 	mutex_init(&priv->conf_mutex);
- 	priv->workqueue = create_singlethread_workqueue("cw1200_wq");
-+	if (!priv->workqueue) {
-+		ieee80211_free_hw(hw);
-+		return NULL;
-+	}
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4c59b5507e7ac..33bd6da00a1c5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1071,9 +1071,6 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 		goto out;
+ 	}
+ 
+-	/* XXX: shouldn't really modify cfg80211-owned data! */
+-	ifmgd->associated->channel = sdata->csa_chandef.chan;
+-
+ 	ifmgd->csa_waiting_bcn = true;
+ 
+ 	ieee80211_sta_reset_beacon_monitor(sdata);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c1a2ad050e617..c672a790df1ce 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -14706,6 +14706,11 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
+ 
+ 	wdev->chandef = *chandef;
+ 	wdev->preset_chandef = *chandef;
 +
- 	sema_init(&priv->scan.lock, 1);
- 	INIT_WORK(&priv->scan.work, cw1200_scan_work);
- 	INIT_DELAYED_WORK(&priv->scan.probe_work, cw1200_probe_work);
++	if (wdev->iftype == NL80211_IFTYPE_STATION &&
++	    !WARN_ON(!wdev->current_bss))
++		wdev->current_bss->pub.channel = chandef->chan;
++
+ 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
+ 				 NL80211_CMD_CH_SWITCH_NOTIFY, 0);
+ }
 -- 
 2.20.1
 
