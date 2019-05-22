@@ -7,46 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 178B9C282CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:44:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B6D3C282DD
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:44:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB8442081C
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:44:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03C1A20856
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:44:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558554279;
-	bh=DAQbjq52qcjt0fmV+XrBFXarb+DXrDg4uq76KyBSLSE=;
+	s=default; t=1558554292;
+	bh=WRDWdcYe/dmdSqigJ92qRz3Bm1CJW3V6dtXb0v4xKY8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=tMXPd/qZkVhBn+txce4gdzhF/LBdXSRIb2c9b7UdWmF3GQXblZU8bx8u+YTHnhVIq
-	 SJh903h6O3bCSTpRO/8KnsdXuC4ym2U4UUvJpSDVXP8OYlquX1wuN090ybhHkSttTt
-	 UirR1elHcP86cxi3xJd6uGiPPUy+BpWK3WbqIUnA=
+	b=1nHmtmjTROn2QIMUNYLR7DOf/FZK7CNQvtUzbSECaEra9ak5LMGt4ofysnM06c8YY
+	 L3PC7gHeZkXAKv/JJ754afOQApq7MrIOb5e8FAut+ylUD3MeFc3vpwwwUlzQr1I4Qg
+	 dhDoVLSwPozRVdUwxK6WPeYSuR8VTufEe3thWZSA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732466AbfEVT2I (ORCPT
+        id S1732648AbfEVToq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 May 2019 15:28:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50672 "EHLO mail.kernel.org"
+        Wed, 22 May 2019 15:44:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50608 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731995AbfEVT2H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 May 2019 15:28:07 -0400
+        id S1731993AbfEVT2F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 May 2019 15:28:05 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D032421841;
-        Wed, 22 May 2019 19:28:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A567E204FD;
+        Wed, 22 May 2019 19:28:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558553286;
-        bh=DAQbjq52qcjt0fmV+XrBFXarb+DXrDg4uq76KyBSLSE=;
+        s=default; t=1558553284;
+        bh=WRDWdcYe/dmdSqigJ92qRz3Bm1CJW3V6dtXb0v4xKY8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E1DWe3hAxiJuNX/fA6AFR4T8EwYs0xG+TPvb+JYphx+zaFlq+48obwyqU2U7xBja+
-         i4Age4aLpfwVYlsLdkQBK8w4ah98Nc75Wb6bIRV+kn840MS1u92aCDZZzrObwTj0VP
-         vbTUtrxFIf4FqP2yZYRQ8gUfjSYN5GD+VuO/Rr+M=
+        b=F77lmuFZ69nzbtT1vcXEjBKeZGw9Q4bs6o4uqQY5+1sRAnF6mmBA97+C5+GwnAliL
+         lQyy8LuJ2t/vnHj10xO6gl+ArmHm0tYGzUyIduvgQfRZii5kkhjK4YwjkyzmmWOvyi
+         rgB8XZD9vHC8BKabmmyzsUp0nxrkm/MK4VMFWAu8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kangjie Lu <kjlu@umn.edu>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 060/244] net: cw1200: fix a NULL pointer dereference
-Date:   Wed, 22 May 2019 15:23:26 -0400
-Message-Id: <20190522192630.24917-60-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 058/244] mwifiex: prevent an array overflow
+Date:   Wed, 22 May 2019 15:23:24 -0400
+Message-Id: <20190522192630.24917-58-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190522192630.24917-1-sashal@kernel.org>
 References: <20190522192630.24917-1-sashal@kernel.org>
@@ -59,36 +60,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kangjie Lu <kjlu@umn.edu>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 0ed2a005347400500a39ea7c7318f1fea57fb3ca ]
+[ Upstream commit b4c35c17227fe437ded17ce683a6927845f8c4a4 ]
 
-In case create_singlethread_workqueue fails, the fix free the
-hardware and returns NULL to avoid NULL pointer dereference.
+The "rate_index" is only used as an index into the phist_data->rx_rate[]
+array in the mwifiex_hist_data_set() function.  That array has
+MWIFIEX_MAX_AC_RX_RATES (74) elements and it's used to generate some
+debugfs information.  The "rate_index" variable comes from the network
+skb->data[] and it is a u8 so it's in the 0-255 range.  We need to cap
+it to prevent an array overflow.
 
-Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+Fixes: cbf6e05527a7 ("mwifiex: add rx histogram statistics support")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/st/cw1200/main.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/cfp.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/st/cw1200/main.c b/drivers/net/wireless/st/cw1200/main.c
-index 90dc979f260b6..c1608f0bf6d01 100644
---- a/drivers/net/wireless/st/cw1200/main.c
-+++ b/drivers/net/wireless/st/cw1200/main.c
-@@ -345,6 +345,11 @@ static struct ieee80211_hw *cw1200_init_common(const u8 *macaddr,
- 	mutex_init(&priv->wsm_cmd_mux);
- 	mutex_init(&priv->conf_mutex);
- 	priv->workqueue = create_singlethread_workqueue("cw1200_wq");
-+	if (!priv->workqueue) {
-+		ieee80211_free_hw(hw);
-+		return NULL;
-+	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
+index bfe84e55df776..f1522fb1c1e87 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfp.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
+@@ -531,5 +531,8 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+ 		rate_index = (rx_rate > MWIFIEX_RATE_INDEX_OFDM0) ?
+ 			      rx_rate - 1 : rx_rate;
+ 
++	if (rate_index >= MWIFIEX_MAX_AC_RX_RATES)
++		rate_index = MWIFIEX_MAX_AC_RX_RATES - 1;
 +
- 	sema_init(&priv->scan.lock, 1);
- 	INIT_WORK(&priv->scan.work, cw1200_scan_work);
- 	INIT_DELAYED_WORK(&priv->scan.probe_work, cw1200_probe_work);
+ 	return rate_index;
+ }
 -- 
 2.20.1
 
