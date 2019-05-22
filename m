@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2193C282CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:59:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9FCEC282CE
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 20:00:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8533420862
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:59:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BDA120856
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 20:00:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558555167;
-	bh=9kA7/3NfFEuzmb1BGqSNJEJHToYnF5TiQxVFRt+cegs=;
+	s=default; t=1558555230;
+	bh=JuG4cjSrEiAD9uqYd6JALzbBa+2Lcldn3NuzaOE46iY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NlWLIS5yaGucpfDO2UwcbuDkJnEGz8RiF1SSRgGq3pcESCmpes/syDWdka1doVqyo
-	 GjWq4+fgoP5hZ6GZ2cUcduKKiERBEwb8TKJ0v2JSKfRKhIQTK85Snhk5B5uI7wXrVV
-	 e6BgCsVFrEDC270iY3Ktyq9YqO6MdBOVWQVZE6ZA=
+	b=rmGWyGwJfLGSgIw/tuAwJyw3DoLR77tS5Fa4Jp/sFIh7cUbZfjU4mTSarWic3NI5S
+	 GNbWePHBU51lDhsbEsnoqxBQoRgEYO2R73vEeE1b8EsX1G+mSEWFOzgLUA4CwdSby8
+	 xvWh13/NJLlPV/Y1z1+UJvYuc4eLuCHqbwMMwjjU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730953AbfEVTXm (ORCPT
+        id S1730734AbfEVTXE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 May 2019 15:23:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44436 "EHLO mail.kernel.org"
+        Wed, 22 May 2019 15:23:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43878 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730920AbfEVTXd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 May 2019 15:23:33 -0400
+        id S1729958AbfEVTXC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 May 2019 15:23:02 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3187E21473;
-        Wed, 22 May 2019 19:23:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 66E45217D7;
+        Wed, 22 May 2019 19:23:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558553012;
-        bh=9kA7/3NfFEuzmb1BGqSNJEJHToYnF5TiQxVFRt+cegs=;
+        s=default; t=1558552982;
+        bh=JuG4cjSrEiAD9uqYd6JALzbBa+2Lcldn3NuzaOE46iY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N7Hcjh1AOO9RclKxv9O30zyGewpf33YY5ebhaKXbwJykoqRTJCYuS9ESBGkTlGfoz
-         OIttdH9CDrw8YPf3dXEJAnfjY7AibfR5e5tKOQpJQMUjdsWu9MKz/fg3eExvl833fA
-         4KbPbYxZhfN6w/V8scE/LRCJVCUQZk1vh1/2Z3qM=
+        b=WQUSTudSoj39MiXHnicfsmGIWdcLNGugPZPj+tyIf/hRZCNaIw3s2kVXUh7VmALJg
+         Jsgy1Tu5CCyLOE2Ht207ogIil7vsYGHfNf+17bhncTgBdX68egWzj6x/j8ZcVt7FLi
+         8T3JpK4SnTWcRr+erAnKQVVz/ZRFzFZNCAEtXOgk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 076/375] mac80211/cfg80211: update bss channel on channel switch
-Date:   Wed, 22 May 2019 15:16:16 -0400
-Message-Id: <20190522192115.22666-76-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 060/375] iwlwifi: pcie: don't crash on invalid RX interrupt
+Date:   Wed, 22 May 2019 15:16:00 -0400
+Message-Id: <20190522192115.22666-60-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190522192115.22666-1-sashal@kernel.org>
 References: <20190522192115.22666-1-sashal@kernel.org>
@@ -60,68 +60,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 5dc8cdce1d722c733f8c7af14c5fb595cfedbfa8 ]
+[ Upstream commit 30f24eabab8cd801064c5c37589d803cb4341929 ]
 
-FullMAC STAs have no way to update bss channel after CSA channel switch
-completion. As a result, user-space tools may provide inconsistent
-channel info. For instance, consider the following two commands:
-$ sudo iw dev wlan0 link
-$ sudo iw dev wlan0 info
-The latter command gets channel info from the hardware, so most probably
-its output will be correct. However the former command gets channel info
-from scan cache, so its output will contain outdated channel info.
-In fact, current bss channel info will not be updated until the
-next [re-]connect.
+If for some reason the device gives us an RX interrupt before we're
+ready for it, perhaps during device power-on with misconfigured IRQ
+causes mapping or so, we can crash trying to access the queues.
 
-Note that mac80211 STAs have a workaround for this, but it requires
-access to internal cfg80211 data, see ieee80211_chswitch_work:
+Prevent that by checking that we actually have RXQs and that they
+were properly allocated.
 
-	/* XXX: shouldn't really modify cfg80211-owned data! */
-	ifmgd->associated->channel = sdata->csa_chandef.chan;
-
-This patch suggests to convert mac80211 workaround into cfg80211 behavior
-and to update current bss channel in cfg80211_ch_switch_notify.
-
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mlme.c    | 3 ---
- net/wireless/nl80211.c | 5 +++++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2dbcf5d5512ef..b7a9fe3d5fcb7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1188,9 +1188,6 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 8d4f0628622bb..12f02aaf923ed 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1434,10 +1434,15 @@ static struct iwl_rx_mem_buffer *iwl_pcie_get_rxb(struct iwl_trans *trans,
+ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	struct iwl_rxq *rxq = &trans_pcie->rxq[queue];
++	struct iwl_rxq *rxq;
+ 	u32 r, i, count = 0;
+ 	bool emergency = false;
  
--	/* XXX: shouldn't really modify cfg80211-owned data! */
--	ifmgd->associated->channel = sdata->csa_chandef.chan;
--
- 	ifmgd->csa_waiting_bcn = true;
- 
- 	ieee80211_sta_reset_beacon_monitor(sdata);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 47e30a58566c2..d2a7459a5da43 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -15727,6 +15727,11 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
- 
- 	wdev->chandef = *chandef;
- 	wdev->preset_chandef = *chandef;
++	if (WARN_ON_ONCE(!trans_pcie->rxq || !trans_pcie->rxq[queue].bd))
++		return;
 +
-+	if (wdev->iftype == NL80211_IFTYPE_STATION &&
-+	    !WARN_ON(!wdev->current_bss))
-+		wdev->current_bss->pub.channel = chandef->chan;
++	rxq = &trans_pcie->rxq[queue];
 +
- 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
- 				 NL80211_CMD_CH_SWITCH_NOTIFY, 0);
- }
+ restart:
+ 	spin_lock(&rxq->lock);
+ 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
 -- 
 2.20.1
 
