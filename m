@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3107BC282DD
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:44:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B901C282DD
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:44:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0411620856
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:44:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E5CC2081C
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 19:44:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558554273;
-	bh=dxfPitUvxu3TRZAkUyfaXbU1pxts18BD/lCkf/0FvQQ=;
+	s=default; t=1558554276;
+	bh=Jg7mJJFzKpBd5jfzs5oGdFOk9sge79rCEWyi/VggR8U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vQAbrS68G89leWN/osTxMqnVhPl5eLVHu0zf5Y6HnRtPlkiyaAe451hFUzb3sucKC
-	 M9IB1Hg8nd6DSmKXY2cqmtG1SRcFlHgtkmFtR1Zx/GWqXdqY41t5JhUL4gpJrvE8BP
-	 HiDhOEcONZsEO5191jxCbkHdhjbCoNjF3bimPh8E=
+	b=zAZjiR9AfDsASdlijERHAYHKVAkPLvwL0kiVWarJVVDL3gQJkUfbd98n2MX+3FF5Z
+	 qAwOvlLtCT76dQwWMql1pSfIlGgMozA+Tj1zGwz3Biwr0fVYAo9bZiAlY3eTFgKCay
+	 MJzoOn/fJX8EaUHm8mKcDZpKGWx8/Ya9jpPwN1xA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732666AbfEVTo3 (ORCPT
+        id S1732478AbfEVT2K (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 May 2019 15:44:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50718 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732036AbfEVT2K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 22 May 2019 15:28:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50634 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730048AbfEVT2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 May 2019 15:28:06 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 69B1D204FD;
-        Wed, 22 May 2019 19:28:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BADE2217F9;
+        Wed, 22 May 2019 19:28:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558553289;
-        bh=dxfPitUvxu3TRZAkUyfaXbU1pxts18BD/lCkf/0FvQQ=;
+        s=default; t=1558553285;
+        bh=Jg7mJJFzKpBd5jfzs5oGdFOk9sge79rCEWyi/VggR8U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V5pc0nPU+GSHxKNDoBLmXaaoJoLafDVlT+tXB+jglGJTLKygUiYPCAJJxJutt3X00
-         4/mOrAEN4qJdRj5O/x7wSXsJpzlqo5oK4DT4YWMPqyoylnFKwOBNpNagAqGca2yj+6
-         jIi9yVishsR3HKcSy0wHwA8aNJKxDk51/4xsuPxQ=
+        b=jvPPRp6D76bNTru9mWatsurg+2rRd1yKCG9SAyJxp6MiVcoFFDRqvL7l3MDIT3zhi
+         rZkMnm3WtQo/H8k/eK26sAsjHNHeQlc1cRj/Fd2IMV4SRxhJBeyWg9ain+n+SYiO/3
+         95zh9hUE1O7s/LyVjrtf7uSUUnMmDcn4ZntpBFwA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Aditya Pakki <pakki001@umn.edu>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 061/244] at76c50x-usb: Don't register led_trigger if usb_register_driver failed
-Date:   Wed, 22 May 2019 15:23:27 -0400
-Message-Id: <20190522192630.24917-61-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 059/244] rsi: Fix NULL pointer dereference in kmalloc
+Date:   Wed, 22 May 2019 15:23:25 -0400
+Message-Id: <20190522192630.24917-59-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190522192630.24917-1-sashal@kernel.org>
 References: <20190522192630.24917-1-sashal@kernel.org>
@@ -60,91 +59,90 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+From: Aditya Pakki <pakki001@umn.edu>
 
-[ Upstream commit 09ac2694b0475f96be895848687ebcbba97eeecf ]
+[ Upstream commit d5414c2355b20ea8201156d2e874265f1cb0d775 ]
 
-Syzkaller report this:
+kmalloc can fail in rsi_register_rates_channels but memcpy still attempts
+to write to channels. The patch replaces these calls with kmemdup and
+passes the error upstream.
 
-[ 1213.468581] BUG: unable to handle kernel paging request at fffffbfff83bf338
-[ 1213.469530] #PF error: [normal kernel read fault]
-[ 1213.469530] PGD 237fe4067 P4D 237fe4067 PUD 237e60067 PMD 1c868b067 PTE 0
-[ 1213.473514] Oops: 0000 [#1] SMP KASAN PTI
-[ 1213.473514] CPU: 0 PID: 6321 Comm: syz-executor.0 Tainted: G         C        5.1.0-rc3+ #8
-[ 1213.473514] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
-[ 1213.473514] RIP: 0010:strcmp+0x31/0xa0
-[ 1213.473514] Code: 00 00 00 00 fc ff df 55 53 48 83 ec 08 eb 0a 84 db 48 89 ef 74 5a 4c 89 e6 48 89 f8 48 89 fa 48 8d 6f 01 48 c1 e8 03 83 e2 07 <42> 0f b6 04 28 38 d0 7f 04 84 c0 75 50 48 89 f0 48 89 f2 0f b6 5d
-[ 1213.473514] RSP: 0018:ffff8881f2b7f950 EFLAGS: 00010246
-[ 1213.473514] RAX: 1ffffffff83bf338 RBX: ffff8881ea6f7240 RCX: ffffffff825350c6
-[ 1213.473514] RDX: 0000000000000000 RSI: ffffffffc1ee19c0 RDI: ffffffffc1df99c0
-[ 1213.473514] RBP: ffffffffc1df99c1 R08: 0000000000000001 R09: 0000000000000004
-[ 1213.473514] R10: 0000000000000000 R11: ffff8881de353f00 R12: ffff8881ee727900
-[ 1213.473514] R13: dffffc0000000000 R14: 0000000000000001 R15: ffffffffc1eeaaf0
-[ 1213.473514] FS:  00007fa66fa01700(0000) GS:ffff8881f7200000(0000) knlGS:0000000000000000
-[ 1213.473514] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1213.473514] CR2: fffffbfff83bf338 CR3: 00000001ebb9e005 CR4: 00000000007606f0
-[ 1213.473514] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[ 1213.473514] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[ 1213.473514] PKRU: 55555554
-[ 1213.473514] Call Trace:
-[ 1213.473514]  led_trigger_register+0x112/0x3f0
-[ 1213.473514]  led_trigger_register_simple+0x7a/0x110
-[ 1213.473514]  ? 0xffffffffc1c10000
-[ 1213.473514]  at76_mod_init+0x77/0x1000 [at76c50x_usb]
-[ 1213.473514]  do_one_initcall+0xbc/0x47d
-[ 1213.473514]  ? perf_trace_initcall_level+0x3a0/0x3a0
-[ 1213.473514]  ? kasan_unpoison_shadow+0x30/0x40
-[ 1213.473514]  ? kasan_unpoison_shadow+0x30/0x40
-[ 1213.473514]  do_init_module+0x1b5/0x547
-[ 1213.473514]  load_module+0x6405/0x8c10
-[ 1213.473514]  ? module_frob_arch_sections+0x20/0x20
-[ 1213.473514]  ? kernel_read_file+0x1e6/0x5d0
-[ 1213.473514]  ? find_held_lock+0x32/0x1c0
-[ 1213.473514]  ? cap_capable+0x1ae/0x210
-[ 1213.473514]  ? __do_sys_finit_module+0x162/0x190
-[ 1213.473514]  __do_sys_finit_module+0x162/0x190
-[ 1213.473514]  ? __ia32_sys_init_module+0xa0/0xa0
-[ 1213.473514]  ? __mutex_unlock_slowpath+0xdc/0x690
-[ 1213.473514]  ? wait_for_completion+0x370/0x370
-[ 1213.473514]  ? vfs_write+0x204/0x4a0
-[ 1213.473514]  ? do_syscall_64+0x18/0x450
-[ 1213.473514]  do_syscall_64+0x9f/0x450
-[ 1213.473514]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-[ 1213.473514] RIP: 0033:0x462e99
-[ 1213.473514] Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
-[ 1213.473514] RSP: 002b:00007fa66fa00c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
-[ 1213.473514] RAX: ffffffffffffffda RBX: 000000000073bf00 RCX: 0000000000462e99
-[ 1213.473514] RDX: 0000000000000000 RSI: 0000000020000300 RDI: 0000000000000003
-[ 1213.473514] RBP: 00007fa66fa00c70 R08: 0000000000000000 R09: 0000000000000000
-[ 1213.473514] R10: 0000000000000000 R11: 0000000000000246 R12: 00007fa66fa016bc
-[ 1213.473514] R13: 00000000004bcefa R14: 00000000006f6fb0 R15: 0000000000000004
-
-If usb_register failed, no need to call led_trigger_register_simple.
-
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Fixes: 1264b951463a ("at76c50x-usb: add driver")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Signed-off-by: Aditya Pakki <pakki001@umn.edu>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/atmel/at76c50x-usb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 30 ++++++++++++---------
+ 1 file changed, 18 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-index e99e766a30285..1cabae424839e 100644
---- a/drivers/net/wireless/atmel/at76c50x-usb.c
-+++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-@@ -2585,8 +2585,8 @@ static int __init at76_mod_init(void)
- 	if (result < 0)
- 		printk(KERN_ERR DRIVER_NAME
- 		       ": usb_register failed (status %d)\n", result);
--
--	led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
-+	else
-+		led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
- 	return result;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 4e510cbe0a89f..be59d66585d6d 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -188,27 +188,27 @@ bool rsi_is_cipher_wep(struct rsi_common *common)
+  * @adapter: Pointer to the adapter structure.
+  * @band: Operating band to be set.
+  *
+- * Return: None.
++ * Return: int - 0 on success, negative error on failure.
+  */
+-static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
++static int rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+ {
+ 	struct ieee80211_supported_band *sbands = &adapter->sbands[band];
+ 	void *channels = NULL;
+ 
+ 	if (band == NL80211_BAND_2GHZ) {
+-		channels = kmalloc(sizeof(rsi_2ghz_channels), GFP_KERNEL);
+-		memcpy(channels,
+-		       rsi_2ghz_channels,
+-		       sizeof(rsi_2ghz_channels));
++		channels = kmemdup(rsi_2ghz_channels, sizeof(rsi_2ghz_channels),
++				   GFP_KERNEL);
++		if (!channels)
++			return -ENOMEM;
+ 		sbands->band = NL80211_BAND_2GHZ;
+ 		sbands->n_channels = ARRAY_SIZE(rsi_2ghz_channels);
+ 		sbands->bitrates = rsi_rates;
+ 		sbands->n_bitrates = ARRAY_SIZE(rsi_rates);
+ 	} else {
+-		channels = kmalloc(sizeof(rsi_5ghz_channels), GFP_KERNEL);
+-		memcpy(channels,
+-		       rsi_5ghz_channels,
+-		       sizeof(rsi_5ghz_channels));
++		channels = kmemdup(rsi_5ghz_channels, sizeof(rsi_5ghz_channels),
++				   GFP_KERNEL);
++		if (!channels)
++			return -ENOMEM;
+ 		sbands->band = NL80211_BAND_5GHZ;
+ 		sbands->n_channels = ARRAY_SIZE(rsi_5ghz_channels);
+ 		sbands->bitrates = &rsi_rates[4];
+@@ -227,6 +227,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+ 	sbands->ht_cap.mcs.rx_mask[0] = 0xff;
+ 	sbands->ht_cap.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
+ 	/* sbands->ht_cap.mcs.rx_highest = 0x82; */
++	return 0;
  }
  
+ /**
+@@ -1985,11 +1986,16 @@ int rsi_mac80211_attach(struct rsi_common *common)
+ 	wiphy->available_antennas_rx = 1;
+ 	wiphy->available_antennas_tx = 1;
+ 
+-	rsi_register_rates_channels(adapter, NL80211_BAND_2GHZ);
++	status = rsi_register_rates_channels(adapter, NL80211_BAND_2GHZ);
++	if (status)
++		return status;
+ 	wiphy->bands[NL80211_BAND_2GHZ] =
+ 		&adapter->sbands[NL80211_BAND_2GHZ];
+ 	if (common->num_supp_bands > 1) {
+-		rsi_register_rates_channels(adapter, NL80211_BAND_5GHZ);
++		status = rsi_register_rates_channels(adapter,
++						     NL80211_BAND_5GHZ);
++		if (status)
++			return status;
+ 		wiphy->bands[NL80211_BAND_5GHZ] =
+ 			&adapter->sbands[NL80211_BAND_5GHZ];
+ 	}
 -- 
 2.20.1
 
