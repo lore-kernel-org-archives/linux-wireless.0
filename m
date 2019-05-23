@@ -1,235 +1,219 @@
-Return-Path: <SRS0=dicy=TW=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=ngAs=TX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12903C282DC
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 20:01:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5FC5C282CE
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 May 2019 01:54:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD91D20856
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 May 2019 20:01:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558555280;
-	bh=a11I/vaysv3cnziupvfWXBYA79pLSBTiQQe3gQRDAO8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=UArxvEep4KEFxsravF3YnLUoeb4SqMN+rNrWzXXVtu7NWyZH2TxYtracmdZJ+vqnn
-	 NZzZbVdiGDOZt5UuGRX4UESFo0vNa/6sOzn/BD+Ij/Zk9v1Qi5HnvwjM1TWm+Jo5HH
-	 JZVcS3L48C01s+R0s91g1nDTc/MPyESgMMSGNLe4=
+	by mail.kernel.org (Postfix) with ESMTP id 7245921019
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 May 2019 01:54:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qFSff1fU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730542AbfEVTWk (ORCPT
+        id S1728518AbfEWByU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 May 2019 15:22:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43374 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729879AbfEVTWj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 May 2019 15:22:39 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B5650206BA;
-        Wed, 22 May 2019 19:22:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558552958;
-        bh=a11I/vaysv3cnziupvfWXBYA79pLSBTiQQe3gQRDAO8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FxgnZeR18fI0ZVrQjXxbIJwQ76Kjob3eCpBAHXr+CH46a3pSsLMKVuy7Gqd3ebR5V
-         z9Yj04JUyRKPgp9TU08TsJkjICu/a8rnhK9GyBYmWQcE4ZTNxKLNv3SNwUoEu6cYMS
-         bvI819HZp27eFFPs0f+qbCOMMDVISwkLJI8f39oo=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 047/375] mt76: remove mt76_queue dependency from tx_queue_skb function pointer
-Date:   Wed, 22 May 2019 15:15:47 -0400
-Message-Id: <20190522192115.22666-47-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190522192115.22666-1-sashal@kernel.org>
-References: <20190522192115.22666-1-sashal@kernel.org>
+        Wed, 22 May 2019 21:54:20 -0400
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:45209 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727305AbfEWByU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 May 2019 21:54:20 -0400
+Received: by mail-ed1-f65.google.com with SMTP id g57so6649713edc.12;
+        Wed, 22 May 2019 18:54:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=5u0t7AAd+0Akj7skAMQeDcpEP8cSjZVN+OVD/pxT1/E=;
+        b=qFSff1fUSIvDW/T0PQVR2KeYDE888ODYH/Anez7ZdheVJkuNjDBpIH4l6Q2ttyqrb0
+         VS2XM6ivseElqe+dbjZfp87N2UNEyxTNkEIcC8fYyIIaAf2Vd529843lxbGi19ol5VTo
+         cMVjIMH9vpDH0EeDlKljWvoaQrRkl7U7HbIadsZgkQPmSPKNBKihZjB5nKuMwwi+NsE1
+         qJtHSUNdRkcG9yKadt3p4V+5/wKJZkR6X0Dzs23waOKr6O3yMpOhgoJXa4GyiglqybC+
+         El2K7SQnck3DQNqnRY4U2L2j1hjExXTKxtudkmmqy0G0DG+1ORkbRg9PUrSzcVSDzOtm
+         JbIQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=5u0t7AAd+0Akj7skAMQeDcpEP8cSjZVN+OVD/pxT1/E=;
+        b=KHPmbYb0AhP5mNefpg25ZpifPEjsn4BE7XRQB929Wjxw8uPfsg8Ovaagl7Hv+TC+59
+         89kHqT18Cu6xDHCnyIThgAV5smUdHH08f7Qlnnb+I+jvkmEjiA0zOoMx06EWBowqAdYp
+         +aK3Dhx6/RfDD2X94f+l4sR2gL4y136IRGOnmUXEdFymH7L7x8k9uMV+it5rn5gNX3oi
+         GraZ1zndMEuJUD+LiSc2fO3xPxnnO6ikHEjH2zkakg11lTxPD7toWDBFsZjaCTZRguLh
+         AyTh37xgfbWZSW7AkR1u9xTSJNeNQzwot6zMezbfuGWM23+5Ix6Efh1VrZNkrf0+DfPs
+         VRcA==
+X-Gm-Message-State: APjAAAWgKHNQ/3Fu/aIbJwmYjEjrDINlCHcItoeGiK4fZVbydlHU6bm/
+        x4ENungfvHwHAv1y64qIAn+DjGrMsvM4GA==
+X-Google-Smtp-Source: APXvYqyEWW0X2xH4tHn/Yhfmpkbx+3mH6Knzj1h2CFwUEc8AIQFagt/gm772M4PJCTKvOiJGCVmLXA==
+X-Received: by 2002:a17:906:1303:: with SMTP id w3mr22081885ejb.196.1558576457574;
+        Wed, 22 May 2019 18:54:17 -0700 (PDT)
+Received: from archlinux-epyc ([2a01:4f9:2b:2b15::2])
+        by smtp.gmail.com with ESMTPSA id hk1sm2288680ejb.36.2019.05.22.18.54.16
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Wed, 22 May 2019 18:54:16 -0700 (PDT)
+Date:   Wed, 22 May 2019 18:54:15 -0700
+From:   Nathan Chancellor <natechancellor@gmail.com>
+To:     Nick Desaulniers <ndesaulniers@google.com>
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        clang-built-linux <clang-built-linux@googlegroups.com>
+Subject: Re: [PATCH] rsi: Properly initialize data in rsi_sdio_ta_reset
+Message-ID: <20190523015415.GA17819@archlinux-epyc>
+References: <20190502151548.11143-1-natechancellor@gmail.com>
+ <CAKwvOd=nvKGGW5jvN+WFUXzOm9xeiNNUD0F9--9YcpuRmnWWhA@mail.gmail.com>
+ <20190503031718.GB6969@archlinux-i9>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190503031718.GB6969@archlinux-i9>
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+On Thu, May 02, 2019 at 08:17:18PM -0700, Nathan Chancellor wrote:
+> On Thu, May 02, 2019 at 11:18:01AM -0700, Nick Desaulniers wrote:
+> > On Thu, May 2, 2019 at 8:16 AM Nathan Chancellor
+> > <natechancellor@gmail.com> wrote:
+> > >
+> > > When building with -Wuninitialized, Clang warns:
+> > >
+> > > drivers/net/wireless/rsi/rsi_91x_sdio.c:940:43: warning: variable 'data'
+> > > is uninitialized when used here [-Wuninitialized]
+> > >         put_unaligned_le32(TA_HOLD_THREAD_VALUE, data);
+> > >                                                  ^~~~
+> > > drivers/net/wireless/rsi/rsi_91x_sdio.c:930:10: note: initialize the
+> > > variable 'data' to silence this warning
+> > >         u8 *data;
+> > >                 ^
+> > >                  = NULL
+> > > 1 warning generated.
+> > >
+> > > Using Clang's suggestion of initializing data to NULL wouldn't work out
+> > > because data will be dereferenced by put_unaligned_le32. Use kzalloc to
+> > > properly initialize data, which matches a couple of other places in this
+> > > driver.
+> > >
+> > > Fixes: e5a1ecc97e5f ("rsi: add firmware loading for 9116 device")
+> > > Link: https://github.com/ClangBuiltLinux/linux/issues/464
+> > > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> > > ---
+> > >  drivers/net/wireless/rsi/rsi_91x_sdio.c | 21 ++++++++++++++-------
+> > >  1 file changed, 14 insertions(+), 7 deletions(-)
+> > >
+> > > diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+> > > index f9c67ed473d1..b35728564c7b 100644
+> > > --- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
+> > > +++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+> > > @@ -929,11 +929,15 @@ static int rsi_sdio_ta_reset(struct rsi_hw *adapter)
+> > >         u32 addr;
+> > >         u8 *data;
+> > >
+> > > +       data = kzalloc(sizeof(u32), GFP_KERNEL);
+> > 
+> > Something fishy is going on here.  We allocate 4 B but declare data as
+> > a u8* (pointer to individual bytes)?  In general, dynamically
+> > allocating that few bytes is a code smell; either you meant to just
+> > use the stack, or this memory's lifetime extends past the lifetime of
+> > this stackframe, at which point you probably just meant to stack
+> > allocate space in a higher parent frame and pass this preallocated
+> > memory down to the child frame to get filled in.
+> > 
+> > Reading through this code, I don't think that the memory is meant to
+> > outlive the stack frame.  Is there a reason why we can't just declare
+> > data as:
+> > 
+> > u8 data [4];
+> 
+> data was __le32 in rsi_reset_chip() before commit f700546682a6 ("rsi:
+> fix nommu_map_sg overflow kernel panic").
+> 
+> I wonder if this would be okay for this function:
+> 
+> -------------------------------------------------
+> 
+> diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+> index f9c67ed473d1..0330c50ab99c 100644
+> --- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+> @@ -927,7 +927,7 @@ static int rsi_sdio_ta_reset(struct rsi_hw *adapter)
+>  {
+>         int status;
+>         u32 addr;
+> -       u8 *data;
+> +       u8 data;
+>  
+>         status = rsi_sdio_master_access_msword(adapter, TA_BASE_ADDR);
+>         if (status < 0) {
+> @@ -937,7 +937,7 @@ static int rsi_sdio_ta_reset(struct rsi_hw *adapter)
+>         }
+>  
+>         rsi_dbg(INIT_ZONE, "%s: Bring TA out of reset\n", __func__);
+> -       put_unaligned_le32(TA_HOLD_THREAD_VALUE, data);
+> +       put_unaligned_le32(TA_HOLD_THREAD_VALUE, &data);
+>         addr = TA_HOLD_THREAD_REG | RSI_SD_REQUEST_MASTER;
+>         status = rsi_sdio_write_register_multiple(adapter, addr,
+>                                                   (u8 *)&data,
+> @@ -947,7 +947,7 @@ static int rsi_sdio_ta_reset(struct rsi_hw *adapter)
+>                 return status;
+>         }
+>  
+> -       put_unaligned_le32(TA_SOFT_RST_CLR, data);
+> +       put_unaligned_le32(TA_SOFT_RST_CLR, &data);
+>         addr = TA_SOFT_RESET_REG | RSI_SD_REQUEST_MASTER;
+>         status = rsi_sdio_write_register_multiple(adapter, addr,
+>                                                   (u8 *)&data,
+> @@ -957,7 +957,7 @@ static int rsi_sdio_ta_reset(struct rsi_hw *adapter)
+>                 return status;
+>         }
+>  
+> -       put_unaligned_le32(TA_PC_ZERO, data);
+> +       put_unaligned_le32(TA_PC_ZERO, &data);
+>         addr = TA_TH0_PC_REG | RSI_SD_REQUEST_MASTER;
+>         status = rsi_sdio_write_register_multiple(adapter, addr,
+>                                                   (u8 *)&data,
+> @@ -967,7 +967,7 @@ static int rsi_sdio_ta_reset(struct rsi_hw *adapter)
+>                 return -EINVAL;
+>         }
+>  
+> -       put_unaligned_le32(TA_RELEASE_THREAD_VALUE, data);
+> +       put_unaligned_le32(TA_RELEASE_THREAD_VALUE, &data);
+>         addr = TA_RELEASE_THREAD_REG | RSI_SD_REQUEST_MASTER;
+>         status = rsi_sdio_write_register_multiple(adapter, addr,
+>                                                   (u8 *)&data,
+> 
+> 
+> > 
+> > then use ARRAY_SIZE(data) or RSI_9116_REG_SIZE in rsi_reset_chip(),
+> > getting rid of the kzalloc/kfree?
+> > 
+> > (Sorry, I hate when a simple fixup becomes a "hey let's rewrite all
+> > this code" thus becoming "that guy.")
+> 
+> If we aren't actually improving the code, then why bother? :)
+> 
+> Thank you for the review!
+> Nathan
+> 
+> > -- 
+> > Thanks,
+> > ~Nick Desaulniers
 
-[ Upstream commit 89a37842b0c13c9e568bf12f4fcbe6507147e41d ]
+Hi all,
 
-Remove mt76_queue dependency from tx_queue_skb function pointer and
-rely on mt76_tx_qid instead. This is a preliminary patch to introduce
-mt76_sw_queue support
+Did any of the maintainers have any comments on what the correct
+solution is here to resolve this warning? It is one of the few left
+before we can turn on -Wuninitialized for the whole kernel.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/dma.c           |  3 ++-
- drivers/net/wireless/mediatek/mt76/mt76.h          |  4 ++--
- drivers/net/wireless/mediatek/mt76/mt7603/beacon.c |  6 +++---
- drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c  |  4 ++--
- drivers/net/wireless/mediatek/mt76/tx.c            | 10 +++++-----
- drivers/net/wireless/mediatek/mt76/usb.c           |  3 ++-
- 6 files changed, 16 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 76629b98c78d7..8c7ee8302fb87 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -271,10 +271,11 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	return 0;
- }
- 
--int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
-+int mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
- 			  struct sk_buff *skb, struct mt76_wcid *wcid,
- 			  struct ieee80211_sta *sta)
- {
-+	struct mt76_queue *q = &dev->q_tx[qid];
- 	struct mt76_queue_entry e;
- 	struct mt76_txwi_cache *t;
- 	struct mt76_queue_buf buf[32];
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index bcbfd3c4a44b6..eb882b2cbc0ec 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -156,7 +156,7 @@ struct mt76_queue_ops {
- 		       struct mt76_queue_buf *buf, int nbufs, u32 info,
- 		       struct sk_buff *skb, void *txwi);
- 
--	int (*tx_queue_skb)(struct mt76_dev *dev, struct mt76_queue *q,
-+	int (*tx_queue_skb)(struct mt76_dev *dev, enum mt76_txq_id qid,
- 			    struct sk_buff *skb, struct mt76_wcid *wcid,
- 			    struct ieee80211_sta *sta);
- 
-@@ -645,7 +645,7 @@ static inline struct mt76_tx_cb *mt76_tx_skb_cb(struct sk_buff *skb)
- 	return ((void *) IEEE80211_SKB_CB(skb)->status.status_driver_data);
- }
- 
--int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
-+int mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
- 			  struct sk_buff *skb, struct mt76_wcid *wcid,
- 			  struct ieee80211_sta *sta);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c b/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
-index 4dcb465095d19..99c0a3ba37cb7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/beacon.c
-@@ -23,7 +23,7 @@ mt7603_update_beacon_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 	if (!skb)
- 		return;
- 
--	mt76_dma_tx_queue_skb(&dev->mt76, &dev->mt76.q_tx[MT_TXQ_BEACON], skb,
-+	mt76_dma_tx_queue_skb(&dev->mt76, MT_TXQ_BEACON, skb,
- 			      &mvif->sta.wcid, NULL);
- 
- 	spin_lock_bh(&dev->ps_lock);
-@@ -118,8 +118,8 @@ void mt7603_pre_tbtt_tasklet(unsigned long arg)
- 		struct ieee80211_vif *vif = info->control.vif;
- 		struct mt7603_vif *mvif = (struct mt7603_vif *)vif->drv_priv;
- 
--		mt76_dma_tx_queue_skb(&dev->mt76, q, skb, &mvif->sta.wcid,
--				      NULL);
-+		mt76_dma_tx_queue_skb(&dev->mt76, MT_TXQ_CAB, skb,
-+				      &mvif->sta.wcid, NULL);
- 	}
- 	mt76_queue_kick(dev, q);
- 	spin_unlock_bh(&q->lock);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index daaed1220147e..952fe19cba9b6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -146,8 +146,8 @@ static void mt76x02_pre_tbtt_tasklet(unsigned long arg)
- 		struct ieee80211_vif *vif = info->control.vif;
- 		struct mt76x02_vif *mvif = (struct mt76x02_vif *)vif->drv_priv;
- 
--		mt76_dma_tx_queue_skb(&dev->mt76, q, skb, &mvif->group_wcid,
--				      NULL);
-+		mt76_dma_tx_queue_skb(&dev->mt76, MT_TXQ_PSD, skb,
-+				      &mvif->group_wcid, NULL);
- 	}
- 	spin_unlock_bh(&q->lock);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index 2585df5123350..0c1036da9a92a 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -286,7 +286,7 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 	q = &dev->q_tx[qid];
- 
- 	spin_lock_bh(&q->lock);
--	dev->queue_ops->tx_queue_skb(dev, q, skb, wcid, sta);
-+	dev->queue_ops->tx_queue_skb(dev, qid, skb, wcid, sta);
- 	dev->queue_ops->kick(dev, q);
- 
- 	if (q->queued > q->ndesc - 8 && !q->stopped) {
-@@ -327,7 +327,6 @@ mt76_queue_ps_skb(struct mt76_dev *dev, struct ieee80211_sta *sta,
- {
- 	struct mt76_wcid *wcid = (struct mt76_wcid *) sta->drv_priv;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct mt76_queue *hwq = &dev->q_tx[MT_TXQ_PSD];
- 
- 	info->control.flags |= IEEE80211_TX_CTRL_PS_RESPONSE;
- 	if (last)
-@@ -335,7 +334,7 @@ mt76_queue_ps_skb(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 			       IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
- 	mt76_skb_set_moredata(skb, !last);
--	dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid, sta);
-+	dev->queue_ops->tx_queue_skb(dev, MT_TXQ_PSD, skb, wcid, sta);
- }
- 
- void
-@@ -390,6 +389,7 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
- 		    struct mt76_txq *mtxq, bool *empty)
- {
- 	struct ieee80211_txq *txq = mtxq_to_txq(mtxq);
-+	enum mt76_txq_id qid = mt76_txq_get_qid(txq);
- 	struct ieee80211_tx_info *info;
- 	struct mt76_wcid *wcid = mtxq->wcid;
- 	struct sk_buff *skb;
-@@ -423,7 +423,7 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
- 	if (ampdu)
- 		mt76_check_agg_ssn(mtxq, skb);
- 
--	idx = dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
-+	idx = dev->queue_ops->tx_queue_skb(dev, qid, skb, wcid, txq->sta);
- 
- 	if (idx < 0)
- 		return idx;
-@@ -458,7 +458,7 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
- 		if (cur_ampdu)
- 			mt76_check_agg_ssn(mtxq, skb);
- 
--		idx = dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid,
-+		idx = dev->queue_ops->tx_queue_skb(dev, qid, skb, wcid,
- 						   txq->sta);
- 		if (idx < 0)
- 			return idx;
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 4c1abd4924054..b1551419338f0 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -726,10 +726,11 @@ mt76u_tx_build_sg(struct mt76_dev *dev, struct sk_buff *skb,
- }
- 
- static int
--mt76u_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
-+mt76u_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
- 		   struct sk_buff *skb, struct mt76_wcid *wcid,
- 		   struct ieee80211_sta *sta)
- {
-+	struct mt76_queue *q = &dev->q_tx[qid];
- 	struct mt76u_buf *buf;
- 	u16 idx = q->tail;
- 	int err;
--- 
-2.20.1
-
+Thanks,
+Nathan
