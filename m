@@ -4,90 +4,85 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08ABFC04AB6
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:24:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE2F4C072B1
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:25:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D09F4208C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:24:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD09F208C3
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:25:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WyvYAwXK";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hl80nfIw"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AVgCSGUs";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="P1pv4LSa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727164AbfE1MYz (ORCPT
+        id S1726903AbfE1MZY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 May 2019 08:24:55 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:60738 "EHLO
+        Tue, 28 May 2019 08:25:24 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:33284 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726853AbfE1MYy (ORCPT
+        with ESMTP id S1726808AbfE1MZY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 May 2019 08:24:54 -0400
+        Tue, 28 May 2019 08:25:24 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6EEA3607CA; Tue, 28 May 2019 12:24:54 +0000 (UTC)
+        id DF3AF601D4; Tue, 28 May 2019 12:25:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1559046294;
-        bh=ZfOKgZcqQIQIic0D0LZNKlWwGoCAeKr3nnInuCpqXV4=;
+        s=default; t=1559046323;
+        bh=AI20FMSNCMoT+7BIugoyP/HWgsbE34P8Gvcfdx+kBm8=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=WyvYAwXKqP9phnH2QO1GhoeugcYXuVWqFPkC2THd85Ng/8ffNcAsbRhVMLsElaRLx
-         EGgcmWpuPJwu9AfgIH3MogX3u77N9ZZIsVwmSyzBl31+r0LsUyvQfQ26lTQdcruS81
-         tTV5spOr86PA70Xh0jdMQw+Qna/WZSFLvwC+jOdc=
+        b=AVgCSGUsuZtpSO5eqj6pCwcNAjF4ueGf8qXUgJVduZZHHW3ZDWRs/jVYDVa16hAfo
+         aq2Lms1V8hnQRyDGDpjb5UnXYTDXbkL1HUlW2rVG0BBc/gCFT/GD+CoIdyMhzXqwSl
+         KTMV5Cq69VkFUA0UTZ9ZIVYFi6ujnxCOKEe4MW7Q=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5562C60128;
-        Tue, 28 May 2019 12:24:53 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7AC39601D4;
+        Tue, 28 May 2019 12:25:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1559046294;
-        bh=ZfOKgZcqQIQIic0D0LZNKlWwGoCAeKr3nnInuCpqXV4=;
+        s=default; t=1559046323;
+        bh=AI20FMSNCMoT+7BIugoyP/HWgsbE34P8Gvcfdx+kBm8=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=hl80nfIwVcuinyqkMhw8PMu3Uj5yKGm/yHZ+HkJpu+UvOoDC/Vdgbp+4CAm+vdVsZ
-         buIYtrk+m6JD+iTtSPzNkDUsmXIpPemd9100qyWUj5pfF+snqrBwLl3vppMCIm7qRv
-         JVVtpIZlY9eezCWCfL9hbBAmr8AYKo2whtYgq+Gw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5562C60128
+        b=P1pv4LSaJNbCFuRRT7xH+xrkJlJHNz9JT5LVnHBYSJmJ5+ChNtfulkgT5jp/W7rvO
+         bCI+oRHyK/gzJEQsxUUvGcvjCedtTacbsiej+zBKLvah3n+0eU7ZFiUAuev1QzUDbP
+         n6wtT0VuEKTn4LbKOTG33GiiLEQ2Zpy146H6/Ufo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7AC39601D4
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/7] brcm80211: switch common header files to using SPDX
- license identifier
+Subject: Re: [PATCH v2] brcmfmac: fix typos in code comments
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1558008251-13692-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1558008251-13692-2-git-send-email-arend.vanspriel@broadcom.com>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
+In-Reply-To: <20190520122825.981-1-houweitaoo@gmail.com>
+References: <20190520122825.981-1-houweitaoo@gmail.com>
+To:     Weitao Hou <houweitaoo@gmail.com>
+Cc:     arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, davem@davemloft.net, houweitaoo@gmail.com,
+        rafal@milecki.pl, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190528122454.6EEA3607CA@smtp.codeaurora.org>
-Date:   Tue, 28 May 2019 12:24:54 +0000 (UTC)
+Message-Id: <20190528122523.DF3AF601D4@smtp.codeaurora.org>
+Date:   Tue, 28 May 2019 12:25:23 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+Weitao Hou <houweitaoo@gmail.com> wrote:
 
-> With ISC license text in place under the LICENSES folder switch
-> to using the SPDX license identifier to refer to the ISC license.
+> fix lengh to length
 > 
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Weitao Hou <houweitaoo@gmail.com>
 
-6 patches applied to wireless-drivers-next.git, thanks.
+Patch applied to wireless-drivers-next.git, thanks.
 
-7e5677de8e0c brcm80211: switch common header files to using SPDX license identifier
-afe06f822035 brcmutil: switch source files to using SPDX license identifier
-f843863d6d10 brcmsmac: switch phy source files to using SPDX license identifier
-daeccac2d5e7 brcmfmac: switch source files to using SPDX license identifier
-9ff8614a3dbe brcmfmac: use separate Kconfig file for brcmfmac
-885a93cf3110 brcm80211: select WANT_DEV_COREDUMP conditionally for brcmfmac
+b07e1ae2ce53 brcmfmac: fix typos in code comments
 
 -- 
-https://patchwork.kernel.org/patch/10946467/
+https://patchwork.kernel.org/patch/10950995/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
