@@ -4,97 +4,128 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9975C04AB6
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:28:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81908C04E84
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:33:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99A4F208C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:28:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59FCA208C3
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:33:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jqWdp596";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CB50bJsl"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bPR5FFdH";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Jg1QSY+A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726824AbfE1M2j (ORCPT
+        id S1727160AbfE1MdP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 May 2019 08:28:39 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:39270 "EHLO
+        Tue, 28 May 2019 08:33:15 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:44100 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726580AbfE1M2j (ORCPT
+        with ESMTP id S1726592AbfE1MdO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 May 2019 08:28:39 -0400
+        Tue, 28 May 2019 08:33:14 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 9DFCC607CA; Tue, 28 May 2019 12:28:38 +0000 (UTC)
+        id 6718A606FC; Tue, 28 May 2019 12:33:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1559046518;
-        bh=VWyaDCfFJGBHWFrbs/WrgqYDyCsaFwNYuMp2vPDqxzU=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=jqWdp596lVDPadwR+S0BmRjW7WEL9Gee9SRsXibiajCRqSFYwYIwbVbO7ykLovm/v
-         kcJkWPx2mde2/4RhnI0oRsjQygxYtK6PAXLDByIdWKb3YSnezVbvKLILsixzwMxgj9
-         noTzw1hXbVZfXm1F7zOMSg1/ATw/Jy9Cm0+wkhqI=
+        s=default; t=1559046793;
+        bh=bCv8mmjaGHjRz1CnWoZ7MkvsZKR9B/r/zM9ICGN2FzI=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=bPR5FFdHt8arbTjleQmE0qcAT4rZbty8w6d9x6eTol6R5pLoiGXxRgCCRHOrTC++X
+         hgU6GQuWBo5eUIajk9MPoevVLYleDCaMTXTZjDSNzY4Qbw5RKBB5pn11sCv98+YqHV
+         uJamfztJ+a1qJ0/zVgS6LNzy504yPILGrCMNTR/Y=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 929EF6034D;
-        Tue, 28 May 2019 12:28:36 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9710D602FA;
+        Tue, 28 May 2019 12:33:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1559046517;
-        bh=VWyaDCfFJGBHWFrbs/WrgqYDyCsaFwNYuMp2vPDqxzU=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=CB50bJslUYXYYzC5zUzcYM6uIAhHCXU1/CUx+ywVgbzf2MH7tfmOo0Mar/lqQA216
-         X8diKvx/Mfvym1B3SD+Q+VCdbuVylGyu9VOrFyMqR41U+k7ZsKU10rO+mSHyxLoiZU
-         V0HgxEWTjWpQRVPXKqY0plgQu8h/RP8YywUslI3k=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 929EF6034D
+        s=default; t=1559046792;
+        bh=bCv8mmjaGHjRz1CnWoZ7MkvsZKR9B/r/zM9ICGN2FzI=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Jg1QSY+ATUDIpm6kBbkH5TMWFsrffh5idO6s9lLv/b5ls6mTh3I6ezyveDLaft+JS
+         BLdKrCLxmCEIvyhsaDjjEwYol9wC0UQZpxsOP2+b+/iHLpBmNm3tFsDFSBB+l8ZvFn
+         MenAf/9rpCqoNCj9b171qNhpFXsJTUUGCqOWc4dg=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9710D602FA
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/7] rt2x00: allow to specify watchdog interval
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1556788021-6531-2-git-send-email-sgruszka@redhat.com>
-References: <1556788021-6531-2-git-send-email-sgruszka@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        =?utf-8?q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190528122838.9DFCC607CA@smtp.codeaurora.org>
-Date:   Tue, 28 May 2019 12:28:38 +0000 (UTC)
+To:     Gen Zhang <blackgod016574@gmail.com>
+Cc:     davem@davemloft.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wlcore: spi: Fix a memory leaking bug in wl1271_probe()
+References: <20190524030117.GA6024@zhanggen-UX430UQ>
+        <20190528113922.E2B1060312@smtp.codeaurora.org>
+        <20190528121452.GA23464@zhanggen-UX430UQ>
+Date:   Tue, 28 May 2019 15:33:09 +0300
+In-Reply-To: <20190528121452.GA23464@zhanggen-UX430UQ> (Gen Zhang's message of
+        "Tue, 28 May 2019 20:14:52 +0800")
+Message-ID: <87tvde4v3u.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+Gen Zhang <blackgod016574@gmail.com> writes:
 
-> Allow subdriver to change watchdog interval by intialize
-> link->watchdog_interval value before rt2x00link_register().
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> On Tue, May 28, 2019 at 11:39:22AM +0000, Kalle Valo wrote:
+>> Gen Zhang <blackgod016574@gmail.com> wrote:
+>> 
+>> > In wl1271_probe(), 'glue->core' is allocated by platform_device_alloc(),
+>> > when this allocation fails, ENOMEM is returned. However, 'pdev_data'
+>> > and 'glue' are allocated by devm_kzalloc() before 'glue->core'. When
+>> > platform_device_alloc() returns NULL, we should also free 'pdev_data'
+>> > and 'glue' before wl1271_probe() ends to prevent leaking memory.
+>> > 
+>> > Similarly, we shoulf free 'pdev_data' when 'glue' is NULL. And we should
+>> > free 'pdev_data' and 'glue' when 'glue->reg' is error and when 'ret' is
+>> > error.
+>> > 
+>> > Further, we should free 'glue->core', 'pdev_data' and 'glue' when this 
+>> > function normally ends to prevent leaking memory.
+>> > 
+>> > Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
+>> 
+>> Same questions as with similar SDIO patch:
+>> 
+>> https://patchwork.kernel.org/patch/10959049/
+>> 
+>> Patch set to Changes Requested.
+>> 
+>> -- 
+>> https://patchwork.kernel.org/patch/10959053/
+>> 
+>> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+>> 
+> Thanks for your reply, Kalle. I had debate with Jon about this patch. 
+> You could kindly refer to lkml: https://lkml.org/lkml/2019/5/23/1547. 
+> And I don't think a practical conclusion is made there.
 
-Failed to apply:
+Yeah, I don't see how that thread proves that these patches are correct.
 
-fatal: sha1 information is lacking or useless (drivers/net/wireless/ralink/rt2x00/rt2800lib.c).
-error: could not build fake ancestor
-Applying: rt2800: initial watchdog implementation
-Patch failed at 0001 rt2800: initial watchdog implementation
-The copy of the patch that failed is found in: .git/rebase-apply/patch
+> Further, I e-mailed Greg K-H about when should we use devm_kmalloc().
+>
+> On Tue, May 28, 2019 at 08:32:57AM +0800, Gen Zhang wrote:
+>> devm_kmalloc() is used to allocate memory for a driver dev. Comments
+>> above the definition and doc 
+>> (https://www.kernel.org/doc/Documentation/driver-model/devres.txt) all
+>> imply that allocated the memory is automatically freed on driver attach,
+>> no matter allocation fail or not. However, I examined the code, and
+>> there are many sites that devm_kfree() is used to free devm_kmalloc().
+>> e.g. hisi_sas_debugfs_init() in drivers/scsi/hisi_sas/hisi_sas_main.c.
+>> So I am totally confused about this issue. Can anybody give me some
+>> guidance? When should we use devm_kfree()?
+> He replied: If you "know" you need to free the memory now, 
+> call devm_kfree(). If you want to wait for it to be cleaned up latter, 
+> like normal, then do not call it.
+>
+> So could please look in to this issue?
 
-7 patches set to Changes Requested.
-
-10926395 [1/7] rt2x00: allow to specify watchdog interval
-10926397 [2/7] rt2800: add helpers for reading dma done index
-10926401 [3/7] rt2800: initial watchdog implementation
-10926403 [4/7] rt2800: add pre_reset_hw callback
-10926405 [5/7] rt2800: do not nullify initialization vector data
-10926407 [6/7] rt2x00: add restart hw
-10926409 [7/7] rt2800: do not enable watchdog by default
+Sorry, no time to investigate this in detail. If you think the patches
+are correct you can resend them and get someone familiar with the driver
+to provide Reviewed-by, then I will apply them.
 
 -- 
-https://patchwork.kernel.org/patch/10926395/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Kalle Valo
