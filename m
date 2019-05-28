@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC92EC04AB6
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 11:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D42DC04E84
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 11:50:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A500D20717
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 11:50:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C6E120717
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 11:50:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726959AbfE1LuK (ORCPT
+        id S1726947AbfE1LuJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 May 2019 07:50:10 -0400
-Received: from nbd.name ([46.4.11.11]:55674 "EHLO nbd.name"
+        Tue, 28 May 2019 07:50:09 -0400
+Received: from nbd.name ([46.4.11.11]:55698 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726728AbfE1LuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 May 2019 07:50:08 -0400
+        id S1726941AbfE1LuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 May 2019 07:50:09 -0400
 Received: from p5dcfb1b7.dip0.t-ipconnect.de ([93.207.177.183] helo=bertha.datto.lan)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1hVacH-0005pk-88; Tue, 28 May 2019 13:50:05 +0200
+        id 1hVacJ-0005pk-01; Tue, 28 May 2019 13:50:07 +0200
 From:   John Crispin <john@phrozen.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         John Crispin <john@phrozen.org>,
         Shashidhar Lakkavalli <slakkavalli@datto.com>
-Subject: [PATCH V2 3/6] ath11k: add TWT support
-Date:   Tue, 28 May 2019 13:49:49 +0200
-Message-Id: <20190528114952.838-4-john@phrozen.org>
+Subject: [PATCH V2 6/6] ath11k: add spatial reuse support
+Date:   Tue, 28 May 2019 13:49:52 +0200
+Message-Id: <20190528114952.838-7-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190528114952.838-1-john@phrozen.org>
 References: <20190528114952.838-1-john@phrozen.org>
@@ -41,72 +41,60 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add target wait time wmi calls to the driver. En/disable the support
-from when the bss_config changes. We ignore the cmd completion events.
+Trigger the WMI call en/disabling OBSS PD when the bss config changes or we
+assoc to an AP that broadcasts the IE.
 
 Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 12 ++++
- drivers/net/wireless/ath/ath11k/wmi.c | 91 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/wmi.h | 71 +++++++++++++++++++++
- 3 files changed, 174 insertions(+)
+ drivers/net/wireless/ath/ath11k/mac.c | 10 ++++++++
+ drivers/net/wireless/ath/ath11k/wmi.c | 35 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.h | 16 ++++++++++++
+ 3 files changed, 61 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 06fc62307f4e..904b16d020d4 100644
+index 904b16d020d4..f87a9f906202 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1326,6 +1326,11 @@ static void ath11k_peer_assoc_h_he(struct ath11k *ar,
- 		}
- 	}
- 
-+	if (he_cap->he_cap_elem.mac_cap_info[0] & IEEE80211_HE_MAC_CAP0_TWT_RES)
-+		arg->twt_responder = true;
-+	if (he_cap->he_cap_elem.mac_cap_info[0] & IEEE80211_HE_MAC_CAP0_TWT_REQ)
-+		arg->twt_requester = true;
+@@ -1715,6 +1715,12 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
+ 					1);
+ 	if (ret)
+ 		ath11k_warn(ar->ab, "Unable to authorize BSS peer: %d\n", ret);
 +
- 	switch (sta->bandwidth) {
- 	case IEEE80211_STA_RX_BW_160:
- 		if (he_cap->he_cap_elem.phy_cap_info[0] &
-@@ -1894,6 +1899,13 @@ static void ath11k_bss_info_changed(struct ieee80211_hw *hw,
- 		ath11k_mac_txpower_recalc(ar);
++	ret = ath11k_wmi_send_obss_spr_cmd(ar, arvif->vdev_id,
++					   &bss_conf->he_obss_pd);
++	if (ret)
++		ath11k_warn(ar->ab, "failed to set vdev %i OBSS PD parameters: %d\n",
++			    arvif->vdev_id, ret);
+ }
+ 
+ static void ath11k_bss_disassoc(struct ieee80211_hw *hw,
+@@ -1906,6 +1912,10 @@ static void ath11k_bss_info_changed(struct ieee80211_hw *hw,
+ 			ath11k_wmi_send_twt_disable_cmd(ar, ar->pdev_idx);
  	}
  
-+	if (changed & BSS_CHANGED_TWT) {
-+		if (info->twt_requester || info->twt_responder)
-+			ath11k_wmi_send_twt_enable_cmd(ar, ar->pdev_idx);
-+		else
-+			ath11k_wmi_send_twt_disable_cmd(ar, ar->pdev_idx);
-+	}
++	if (changed & BSS_CHANGED_HE_OBSS_PD)
++		ath11k_wmi_send_obss_spr_cmd(ar, arvif->vdev_id,
++					     &info->he_obss_pd);
 +
  	mutex_unlock(&ar->conf_mutex);
  }
  
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index d93464c129fe..7a46239b5d14 100644
+index 7a46239b5d14..941c05cd529e 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -1672,6 +1672,10 @@ ath11k_wmi_copy_peer_flags(struct wmi_peer_assoc_complete_cmd *cmd,
- 			cmd->peer_flags |= WMI_PEER_VHT;
- 		if (param->he_flag)
- 			cmd->peer_flags |= WMI_PEER_HE;
-+		if (param->twt_requester)
-+			cmd->peer_flags |= WMI_PEER_TWT_REQ;
-+		if (param->twt_responder)
-+			cmd->peer_flags |= WMI_PEER_TWT_RESP;
- 	}
- 
- 	/* Suppress authorization for all AUTH modes that need 4-way handshake
-@@ -2502,6 +2506,86 @@ int ath11k_wmi_pdev_pktlog_disable(struct ath11k *ar)
+@@ -2586,6 +2586,41 @@ ath11k_wmi_send_twt_disable_cmd(struct ath11k *ar, u32 pdev_id)
  	return ret;
  }
  
 +int
-+ath11k_wmi_send_twt_enable_cmd(struct ath11k *ar, u32 pdev_id)
++ath11k_wmi_send_obss_spr_cmd(struct ath11k *ar, u32 vdev_id,
++			     struct ieee80211_he_obss_pd *he_obss_pd)
 +{
 +	struct ath11k_pdev_wmi *wmi = ar->wmi;
 +	struct ath11k_base *ab = wmi->wmi_sc->sc;
-+	struct wmi_twt_enable_params_cmd *cmd;
++	struct wmi_obss_spatial_reuse_params_cmd *cmd;
 +	struct sk_buff *skb;
 +	int ret, len;
 +
@@ -117,65 +105,19 @@ index d93464c129fe..7a46239b5d14 100644
 +		return -ENOMEM;
 +
 +	cmd = (void *)skb->data;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_TWT_ENABLE_CMD) |
++	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG,
++				     WMI_TAG_OBSS_SPATIAL_REUSE_SET_CMD) |
 +			  FIELD_PREP(WMI_TLV_LEN, len - TLV_HDR_SIZE);
-+	cmd->pdev_id = pdev_id;
-+	cmd->sta_cong_timer_ms = ATH11K_TWT_DEF_STA_CONG_TIMER_MS;
-+	cmd->default_slot_size = ATH11K_TWT_DEF_DEFAULT_SLOT_SIZE;
-+	cmd->congestion_thresh_setup = ATH11K_TWT_DEF_CONGESTION_THRESH_SETUP;
-+	cmd->congestion_thresh_teardown =
-+		ATH11K_TWT_DEF_CONGESTION_THRESH_TEARDOWN;
-+	cmd->congestion_thresh_critical =
-+		ATH11K_TWT_DEF_CONGESTION_THRESH_CRITICAL;
-+	cmd->interference_thresh_teardown =
-+		ATH11K_TWT_DEF_INTERFERENCE_THRESH_TEARDOWN;
-+	cmd->interference_thresh_setup =
-+		ATH11K_TWT_DEF_INTERFERENCE_THRESH_SETUP;
-+	cmd->min_no_sta_setup = ATH11K_TWT_DEF_MIN_NO_STA_SETUP;
-+	cmd->min_no_sta_teardown = ATH11K_TWT_DEF_MIN_NO_STA_TEARDOWN;
-+	cmd->no_of_bcast_mcast_slots = ATH11K_TWT_DEF_NO_OF_BCAST_MCAST_SLOTS;
-+	cmd->min_no_twt_slots = ATH11K_TWT_DEF_MIN_NO_TWT_SLOTS;
-+	cmd->max_no_sta_twt = ATH11K_TWT_DEF_MAX_NO_STA_TWT;
-+	cmd->mode_check_interval = ATH11K_TWT_DEF_MODE_CHECK_INTERVAL;
-+	cmd->add_sta_slot_interval = ATH11K_TWT_DEF_ADD_STA_SLOT_INTERVAL;
-+	cmd->remove_sta_slot_interval =
-+		ATH11K_TWT_DEF_REMOVE_STA_SLOT_INTERVAL;
-+	/* TODO add MBSSID support */
-+	cmd->mbss_support = 0;
++	cmd->vdev_id = vdev_id;
++	cmd->enable = he_obss_pd->enable;
++	cmd->obss_min = he_obss_pd->min_offset;
++	cmd->obss_max = he_obss_pd->max_offset;
 +
 +	ret = ath11k_wmi_cmd_send(wmi, skb,
-+				  WMI_TWT_ENABLE_CMDID);
++				  WMI_PDEV_OBSS_PD_SPATIAL_REUSE_CMDID);
 +	if (ret) {
-+		ath11k_warn(ab, "Failed to send WMI_TWT_ENABLE_CMDID");
-+		dev_kfree_skb(skb);
-+	}
-+	return ret;
-+}
-+
-+int
-+ath11k_wmi_send_twt_disable_cmd(struct ath11k *ar, u32 pdev_id)
-+{
-+	struct ath11k_pdev_wmi *wmi = ar->wmi;
-+	struct ath11k_base *ab = wmi->wmi_sc->sc;
-+	struct wmi_twt_disable_params_cmd *cmd;
-+	struct sk_buff *skb;
-+	int ret, len;
-+
-+	len = sizeof(*cmd);
-+
-+	skb = ath11k_wmi_alloc_skb(wmi->wmi_sc, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (void *)skb->data;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_TWT_DISABLE_CMD) |
-+			  FIELD_PREP(WMI_TLV_LEN, len - TLV_HDR_SIZE);
-+	cmd->pdev_id = pdev_id;
-+
-+	ret = ath11k_wmi_cmd_send(wmi, skb,
-+				  WMI_TWT_DISABLE_CMDID);
-+	if (ret) {
-+		ath11k_warn(ab, "Failed to send WMI_TWT_DIeABLE_CMDID");
++		ath11k_warn(ab,
++			"Failed to send WMI_PDEV_OBSS_PD_SPATIAL_REUSE_CMDID");
 +		dev_kfree_skb(skb);
 +	}
 +	return ret;
@@ -184,169 +126,51 @@ index d93464c129fe..7a46239b5d14 100644
  static inline void ath11k_fill_band_to_mac_param(struct ath11k_base  *soc,
  				struct wmi_host_pdev_band_to_mac *band_to_mac)
  {
-@@ -2592,6 +2676,9 @@ ath11k_wmi_copy_resource_config(struct wmi_resource_config *wmi_cfg,
- 	wmi_cfg->use_pdev_id = tg_cfg->use_pdev_id;
- 	wmi_cfg->flag1 = tg_cfg->atf_config;
- 	wmi_cfg->peer_map_unmap_v2_support = tg_cfg->peer_map_unmap_v2_support;
-+	wmi_cfg->sched_params = tg_cfg->sched_params;
-+	wmi_cfg->twt_ap_pdev_count = tg_cfg->twt_ap_pdev_count;
-+	wmi_cfg->twt_ap_sta_count = tg_cfg->twt_ap_sta_count;
- }
- 
- static int ath11k_init_cmd_send(struct ath11k_pdev_wmi *wmi,
-@@ -2783,6 +2870,8 @@ int ath11k_wmi_cmd_init(struct ath11k_base *sc)
- 	config.beacon_tx_offload_max_vdev = sc->num_radios * TARGET_MAX_BCN_OFFLD;
- 	config.rx_batchmode = TARGET_RX_BATCHMODE;
- 	config.peer_map_unmap_v2_support = 1;
-+	config.twt_ap_pdev_count = 2;
-+	config.twt_ap_sta_count = 1000;
- 
- 	memcpy(&wmi_sc->wlan_resource_config, &config, sizeof(config));
- 
-@@ -5628,6 +5717,8 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
- 	/* add Unsupported events here */
- 	case WMI_TBTTOFFSET_EXT_UPDATE_EVENTID:
- 	case WMI_VDEV_DELETE_RESP_EVENTID:
-+	case WMI_TWT_ENABLE_EVENTID:
-+	case WMI_TWT_DISABLE_EVENTID:
- 		ath11k_dbg(ab, ATH11K_DBG_WMI,
- 			   "ignoring unsupported event 0x%x\n", id);
- 		break;
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 2e3e0cf866e9..c74aa98439ca 100644
+index c74aa98439ca..10f2a83db327 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.h
 +++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -169,6 +169,10 @@ enum wmi_cmd_group {
- 	WMI_GRP_MONITOR,        /* 0x39 */
- 	WMI_GRP_REGULATORY,     /* 0x3a */
- 	WMI_GRP_HW_DATA_FILTER, /* 0x3b */
-+	WMI_GRP_WLM,            /* 0x3c */
-+	WMI_GRP_11K_OFFLOAD,    /* 0x3d */
-+	WMI_GRP_TWT,            /* 0x3e */
-+
+@@ -172,6 +172,8 @@ enum wmi_cmd_group {
+ 	WMI_GRP_WLM,            /* 0x3c */
+ 	WMI_GRP_11K_OFFLOAD,    /* 0x3d */
+ 	WMI_GRP_TWT,            /* 0x3e */
++	WMI_GRP_MOTION_DET,     /* 0x3f */
++	WMI_GRP_SPATIAL_REUSE,  /* 0x40 */
+ 
  };
  
- #define WMI_CMD_GRP(grp_id) (((grp_id) << 12) | 0x1)
-@@ -531,6 +535,12 @@ enum wmi_tlv_cmd_id {
- 	WMI_NDP_RESPONDER_REQ_CMDID,
- 	WMI_NDP_END_REQ_CMDID,
- 	WMI_HW_DATA_FILTER_CMDID = WMI_TLV_CMD(WMI_GRP_HW_DATA_FILTER),
-+	WMI_TWT_ENABLE_CMDID = WMI_TLV_CMD(WMI_GRP_TWT),
-+	WMI_TWT_DISABLE_CMDID,
-+	WMI_TWT_ADD_DIALOG_CMDID,
-+	WMI_TWT_DEL_DIALOG_CMDID,
-+	WMI_TWT_PAUSE_DIALOG_CMDID,
-+	WMI_TWT_RESUME_DIALOG_CMDID,
+@@ -541,6 +543,9 @@ enum wmi_tlv_cmd_id {
+ 	WMI_TWT_DEL_DIALOG_CMDID,
+ 	WMI_TWT_PAUSE_DIALOG_CMDID,
+ 	WMI_TWT_RESUME_DIALOG_CMDID,
++	WMI_PDEV_OBSS_PD_SPATIAL_REUSE_CMDID =
++				WMI_TLV_CMD(WMI_GRP_SPATIAL_REUSE),
++	WMI_PDEV_OBSS_PD_SPATIAL_REUSE_SET_DEF_OBSS_THRESH_CMDID,
  };
  
  enum wmi_tlv_event_id {
-@@ -713,6 +723,13 @@ enum wmi_tlv_event_id {
- 	WMI_NDP_INDICATION_EVENTID,
- 	WMI_NDP_CONFIRM_EVENTID,
- 	WMI_NDP_END_INDICATION_EVENTID,
-+
-+	WMI_TWT_ENABLE_EVENTID = WMI_TLV_CMD(WMI_GRP_TWT),
-+	WMI_TWT_DISABLE_EVENTID,
-+	WMI_TWT_ADD_DIALOG_EVENTID,
-+	WMI_TWT_DEL_DIALOG_EVENTID,
-+	WMI_TWT_PAUSE_DIALOG_EVENTID,
-+	WMI_TWT_RESUME_DIALOG_EVENTID,
+@@ -5114,6 +5119,15 @@ struct wmi_twt_disable_params_cmd {
+ 	u32 pdev_id;
  };
  
- enum wmi_tlv_pdev_param {
-@@ -2736,6 +2753,9 @@ struct wmi_resource_config {
- 	u32 max_num_dbs_scan_duty_cycle;
- 	u32 max_num_group_keys;
- 	u32 peer_map_unmap_v2_support;
-+	u32 sched_params;
-+	u32 twt_ap_pdev_count;
-+	u32 twt_ap_sta_count;
- } __packed;
- 
- struct wmi_service_ready_event {
-@@ -3907,6 +3927,8 @@ struct peer_assoc_params {
- 	u32 peer_he_mcs_count;
- 	u32 peer_he_rx_mcs_set[WMI_HOST_MAX_HE_RATE_SET];
- 	u32 peer_he_tx_mcs_set[WMI_HOST_MAX_HE_RATE_SET];
-+	bool twt_responder;
-+	bool twt_requester;
- 	struct ath11k_ppe_threshold peer_ppet;
- };
- 
-@@ -4156,6 +4178,8 @@ struct wmi_unit_test_cmd {
- #define WMI_PEER_DYN_MIMOPS	0x00020000
- #define WMI_PEER_STATIC_MIMOPS	0x00040000
- #define WMI_PEER_SPATIAL_MUX	0x00200000
-+#define WMI_PEER_TWT_REQ	0x00400000
-+#define WMI_PEER_TWT_RESP	0x00800000
- #define WMI_PEER_VHT		0x02000000
- #define WMI_PEER_80MHZ		0x04000000
- #define WMI_PEER_PMF		0x08000000
-@@ -5048,6 +5072,48 @@ struct wmi_wmm_params_all_arg {
- 	struct wmi_wmm_params_arg ac_vo;
- };
- 
-+#define ATH11K_TWT_DEF_STA_CONG_TIMER_MS		5000
-+#define ATH11K_TWT_DEF_DEFAULT_SLOT_SIZE		10
-+#define ATH11K_TWT_DEF_CONGESTION_THRESH_SETUP		50
-+#define ATH11K_TWT_DEF_CONGESTION_THRESH_TEARDOWN	20
-+#define ATH11K_TWT_DEF_CONGESTION_THRESH_CRITICAL	100
-+#define ATH11K_TWT_DEF_INTERFERENCE_THRESH_TEARDOWN	80
-+#define ATH11K_TWT_DEF_INTERFERENCE_THRESH_SETUP	50
-+#define ATH11K_TWT_DEF_MIN_NO_STA_SETUP			10
-+#define ATH11K_TWT_DEF_MIN_NO_STA_TEARDOWN		2
-+#define ATH11K_TWT_DEF_NO_OF_BCAST_MCAST_SLOTS		2
-+#define ATH11K_TWT_DEF_MIN_NO_TWT_SLOTS			2
-+#define ATH11K_TWT_DEF_MAX_NO_STA_TWT			500
-+#define ATH11K_TWT_DEF_MODE_CHECK_INTERVAL		10000
-+#define ATH11K_TWT_DEF_ADD_STA_SLOT_INTERVAL		1000
-+#define ATH11K_TWT_DEF_REMOVE_STA_SLOT_INTERVAL		5000
-+
-+struct wmi_twt_enable_params_cmd {
++struct wmi_obss_spatial_reuse_params_cmd {
 +	u32 tlv_header;
 +	u32 pdev_id;
-+	u32 sta_cong_timer_ms;
-+	u32 mbss_support;
-+	u32 default_slot_size;
-+	u32 congestion_thresh_setup;
-+	u32 congestion_thresh_teardown;
-+	u32 congestion_thresh_critical;
-+	u32 interference_thresh_teardown;
-+	u32 interference_thresh_setup;
-+	u32 min_no_sta_setup;
-+	u32 min_no_sta_teardown;
-+	u32 no_of_bcast_mcast_slots;
-+	u32 min_no_twt_slots;
-+	u32 max_no_sta_twt;
-+	u32 mode_check_interval;
-+	u32 add_sta_slot_interval;
-+	u32 remove_sta_slot_interval;
-+};
-+
-+struct wmi_twt_disable_params_cmd {
-+	u32 tlv_header;
-+	u32 pdev_id;
++	u32 enable;
++	s32 obss_min;
++	s32 obss_max;
++	u32 vdev_id;
 +};
 +
  struct target_resource_config {
  	u32 num_vdevs;
  	u32 num_peers;
-@@ -5108,6 +5174,9 @@ struct target_resource_config {
- 	u32 max_bssid_rx_filters;
- 	u32 use_pdev_id;
- 	u32 peer_map_unmap_v2_support;
-+	u32 sched_params;
-+	u32 twt_ap_pdev_count;
-+	u32 twt_ap_sta_count;
- };
- 
- #define WMI_MAX_MEM_REQS 32
-@@ -5234,4 +5303,6 @@ void ath11k_wmi_fw_stats_fill(struct ath11k *ar,
- 			      struct ath11k_fw_stats *fw_stats, u32 stats_id,
- 			      char *buf);
+@@ -5305,4 +5319,6 @@ void ath11k_wmi_fw_stats_fill(struct ath11k *ar,
  int ath11k_wmi_simulate_radar(struct ath11k *ar);
-+int ath11k_wmi_send_twt_enable_cmd(struct ath11k *ar, u32 pdev_id);
-+int ath11k_wmi_send_twt_disable_cmd(struct ath11k *ar, u32 pdev_id);
+ int ath11k_wmi_send_twt_enable_cmd(struct ath11k *ar, u32 pdev_id);
+ int ath11k_wmi_send_twt_disable_cmd(struct ath11k *ar, u32 pdev_id);
++int ath11k_wmi_send_obss_spr_cmd(struct ath11k *ar, u32 vdev_id,
++				 struct ieee80211_he_obss_pd *he_obss_pd);
  #endif
 -- 
 2.20.1
