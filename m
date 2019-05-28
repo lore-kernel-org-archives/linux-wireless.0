@@ -2,86 +2,90 @@ Return-Path: <SRS0=DQ7G=T4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 102EBC04AB6
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:33:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C0BC04AB6
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:34:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8CE7208C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:33:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67F2D208C3
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 May 2019 12:34:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NyL6nBIL";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EqknRri5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727092AbfE1Md0 (ORCPT
+        id S1727137AbfE1Me2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 May 2019 08:33:26 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:41797 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726592AbfE1MdZ (ORCPT
+        Tue, 28 May 2019 08:34:28 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:45514 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726592AbfE1Me2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 May 2019 08:33:25 -0400
-Received: from mail-io1-f71.google.com ([209.85.166.71])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1hVbHX-0007fi-VD
-        for linux-wireless@vger.kernel.org; Tue, 28 May 2019 12:32:44 +0000
-Received: by mail-io1-f71.google.com with SMTP id s24so15746341iot.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 May 2019 05:32:43 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=KJC4faTeLfUe+h38+g3iffsCSLuUIxdqKCzCVYdBzBs=;
-        b=lh4U+oz7AUHmcBsVOx6lEDgSpVnKHwSbAxjRN9ymci8pQ7DC5E0SCSDTra201dK1Kr
-         nXoAKejl8Ed1rGkcDm+d5xLL6Y6hGZ+RvCj3ugynWVGZJtJ5IJwcwJTj1oJ3rJ6W+6GJ
-         PUIKEpLQBmmUeqpW8GdnomsfDCccNP+2gk5j6UTSWxKdsfKjkD929kE53GARKBIP7gGr
-         9+HuUr5V5ynhA6y8/t/uQsA7B2p4Ek7GrUFxBh5g/96wKqIOIIM8IOehihvltKLCxDMg
-         yLKoMVRB+3PX21NdpfgW/CtanXAtMD+ySaz6RFzouXZgCHoaNhf7Ool6pBwSQaz4ig/y
-         6gtA==
-X-Gm-Message-State: APjAAAWOP5Zf/y+IFcHXclzoQuWo/vy8rJYgMupvFSYGUlPlsi9kzYvk
-        nKn9AnddKx0Wd5qwXaPfCzlrH20ri2oJp9bXux4Ch8KSef82dKMpYt94cReP8qWg0pQT/L2FQVc
-        lSKbwyz3Rk8Jxc0ujbsh7JlUVvxRUq4/xk+5tj/xPOHis
-X-Received: by 2002:a5d:8043:: with SMTP id b3mr69996242ior.115.1559046762629;
-        Tue, 28 May 2019 05:32:42 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqwrxJ0FkxnvEXNsToKFhzojUgadPWMfYoa9jBJpdn1IEm+V3JBCdXf4/RRZTwLCNM9/9e7Rdw==
-X-Received: by 2002:a5d:8043:: with SMTP id b3mr69996230ior.115.1559046762380;
-        Tue, 28 May 2019 05:32:42 -0700 (PDT)
-Received: from localhost ([2605:a601:ac2:fb20:706d:2b0b:401e:a226])
-        by smtp.gmail.com with ESMTPSA id c128sm1127853itc.19.2019.05.28.05.32.41
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 28 May 2019 05:32:41 -0700 (PDT)
-Date:   Tue, 28 May 2019 07:32:40 -0500
-From:   Seth Forshee <seth.forshee@canonical.com>
-To:     Peter Oh <peter.oh@bowerswilkins.com>
-Cc:     "wireless-regdb@lists.infradead.org" 
-        <wireless-regdb@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [wireless-regdb] [PATCH v3] wireless-regdb: Update regulatory
- rules for South Korea
-Message-ID: <20190528123240.GK4357@ubuntu-xps13>
-References: <1557948501-12579-1-git-send-email-peter.oh@bowerswilkins.com>
+        Tue, 28 May 2019 08:34:28 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id E35EF602FA; Tue, 28 May 2019 12:34:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1559046867;
+        bh=AUu15BcahMill0fEN4YxXe5WnFeSHbTfKWzuVNisopc=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=NyL6nBILJcTU0UnF5dgL0aPo56iAvj3ogX0UJE/jgTiia6UNxcQjEbxpPatXWl+Ym
+         6ibmlHjth9MrdzeM6VUpw657x+r+OUVtfrvYtdar/hBuki60aiSRdIqJVkf0e+HC7u
+         bNFfSUgxaKMd4HHGITvK4osxGFtvnIG0Pb/RDVT0=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8AF5F6034D;
+        Tue, 28 May 2019 12:34:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1559046867;
+        bh=AUu15BcahMill0fEN4YxXe5WnFeSHbTfKWzuVNisopc=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=EqknRri5TFPeJ+wc7dKpXQekZesNgiNC1NK15QDA8ijqeu9FDUQu9Gb2VaDgy1AM9
+         SXIr321BlOxmHZHX+MwSm3qe33e/NTQebAsHNR5M88U69mBE3sGmWcgwj8sNYChDGp
+         CHy+B6GhhJkQwv0cgEAkCMt4wYVveSaa07blE/hE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8AF5F6034D
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1557948501-12579-1-git-send-email-peter.oh@bowerswilkins.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 1/4] rtlwifi: 8192de: Reduce indentation and fix coding
+ style
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190510080333.3789-2-pkshih@realtek.com>
+References: <20190510080333.3789-2-pkshih@realtek.com>
+To:     <pkshih@realtek.com>
+Cc:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
+        <colin.king@canonical.com>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190528123427.E35EF602FA@smtp.codeaurora.org>
+Date:   Tue, 28 May 2019 12:34:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, May 15, 2019 at 07:28:29PM +0000, Peter Oh wrote:
-> From: Peter Oh <peter.oh@bowerswilkins.com>
-> 
-> Update power limit as documented in:
-> http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/
-> %EC%8B%A0%EA%B3%A0%ED%95%98%EC%A7%80%EC%95%84%EB%8B%88%ED
-> %95%98%EA%B3%A0%EA%B0%9C%EC%84%A4%ED%95%A0%EC%88%98%EC%9E
-> %88%EB%8A%94%EB%AC%B4%EC%84%A0%EA%B5%AD%EC%9A%A9%EB%AC%B4
-> %EC%84%A0%EA%B8%B0%EA%B8%B0/(2018-89,20181227)
-> which revised on December 27, 2018.
-> 
-> Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
+<pkshih@realtek.com> wrote:
 
-Applied, thanks!
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> This commit doesn't change logic at all. Since indentation is lower, the
+> wrapped statements can be put in single line that will become more
+> readable.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+
+4 patches applied to wireless-drivers-next.git, thanks.
+
+3bde4ed3da38 rtlwifi: 8192de: Reduce indentation and fix coding style
+8a7db8b66b40 rtlwifi: 8192de: make tables to be 'static const'
+0e7d38132bf8 rtlwifi: 8192de: Fix used uninitialized variables in power tracking
+80429a86e3d9 rtlwifi: 8192de: use le32 to access cckswing tables
+
+-- 
+https://patchwork.kernel.org/patch/10938337/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
