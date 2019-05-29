@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47CC8C28CC0
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:26:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B1BFC28CC1
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:26:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2731321019
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:26:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EEE521019
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:26:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726959AbfE2MZs (ORCPT
+        id S1726994AbfE2M0A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 May 2019 08:25:48 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54278 "EHLO
+        Wed, 29 May 2019 08:26:00 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54286 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726842AbfE2MZs (ORCPT
+        with ESMTP id S1726956AbfE2MZt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 May 2019 08:25:48 -0400
+        Wed, 29 May 2019 08:25:49 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hVxeM-0007wy-52; Wed, 29 May 2019 15:25:46 +0300
+        id 1hVxeN-0007wy-5b; Wed, 29 May 2019 15:25:47 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Dan Carpented <dan.carpenter@oracle.com>
-Subject: [PATCH 02/10] cfg80211: use BIT_ULL in cfg80211_parse_mbssid_data()
-Date:   Wed, 29 May 2019 15:25:29 +0300
-Message-Id: <20190529122537.8564-3-luca@coelho.fi>
+        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: [PATCH 04/10] cfg80211: util: fix bit count off by one
+Date:   Wed, 29 May 2019 15:25:31 +0300
+Message-Id: <20190529122537.8564-5-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190529122537.8564-1-luca@coelho.fi>
 References: <20190529122537.8564-1-luca@coelho.fi>
@@ -43,37 +43,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-The seen_indices variable is u64 and in other parts of the code we
-assume mbssid_index_ie[2] can be up to 45, so we should use the 64-bit
-versions of BIT, namely, BIT_ULL().
+The bits of Rx MCS Map in VHT capability were enumerated
+with index transform - index i -> (i + 1) bit => nss i. BUG!
+while it should be -   index i -> (i + 1) bit => (i + 1) nss.
 
-Reported-by: Dan Carpented <dan.carpenter@oracle.com>
+The bug was exposed in commit a53b2a0b1245 ("iwlwifi: mvm: implement VHT
+extended NSS support in rs.c"), where iwlwifi started using the
+function.
+
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Fixes: b0aa75f0b1b2 ("ieee80211: add new VHT capability fields/parsing")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/scan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/wireless/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index f347387f195a..2ea268ef1c43 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1602,12 +1602,12 @@ static void cfg80211_parse_mbssid_data(struct wiphy *wiphy,
- 				continue;
- 			}
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index cf63b635afc0..33dbf7ee9b97 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1998,7 +1998,7 @@ int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
+ 			continue;
  
--			if (seen_indices & BIT(mbssid_index_ie[2]))
-+			if (seen_indices & BIT_ULL(mbssid_index_ie[2]))
- 				/* We don't support legacy split of a profile */
- 				net_dbg_ratelimited("Partial info for BSSID index %d\n",
- 						    mbssid_index_ie[2]);
- 
--			seen_indices |= BIT(mbssid_index_ie[2]);
-+			seen_indices |= BIT_ULL(mbssid_index_ie[2]);
- 
- 			non_tx_data->bssid_index = mbssid_index_ie[2];
- 			non_tx_data->max_bssid_indicator = elem->data[0];
+ 		if (supp >= mcs_encoding) {
+-			max_vht_nss = i;
++			max_vht_nss = i + 1;
+ 			break;
+ 		}
+ 	}
 -- 
 2.20.1
 
