@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE987C28CC2
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:25:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDFB1C28CC1
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:25:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C8A3221019
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:25:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B18D421019
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:25:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727038AbfE2MZy (ORCPT
+        id S1727041AbfE2MZz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 May 2019 08:25:54 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54316 "EHLO
+        Wed, 29 May 2019 08:25:55 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54332 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726996AbfE2MZv (ORCPT
+        with ESMTP id S1727034AbfE2MZy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 May 2019 08:25:51 -0400
+        Wed, 29 May 2019 08:25:54 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hVxeP-0007wy-MJ; Wed, 29 May 2019 15:25:49 +0300
+        id 1hVxeQ-0007wy-5T; Wed, 29 May 2019 15:25:50 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 09/10] mac80211: fill low rate even for HAS_RATE_CONTROL
-Date:   Wed, 29 May 2019 15:25:36 +0300
-Message-Id: <20190529122537.8564-10-luca@coelho.fi>
+Subject: [PATCH 10/10] mac80211: extend __rate_control_send_low warning
+Date:   Wed, 29 May 2019 15:25:37 +0300
+Message-Id: <20190529122537.8564-11-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190529122537.8564-1-luca@coelho.fi>
 References: <20190529122537.8564-1-luca@coelho.fi>
@@ -45,38 +45,31 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-If HW advertises it has rate control, we skip all of the
-rate control assignments, but sometimes the data we have
-here is useful, especially so that we don't have to do
-the lookups again on which rates are configured and are
-supported.
-
-So do the low rate assignment anyway to help out drivers
-that might need it.
+This appears to happen occasionally, and if it does we
+really want even more information than we have now.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/rate.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/rate.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 8747231f7aa3..5d94576dd683 100644
+index 5d94576dd683..d298bb222491 100644
 --- a/net/mac80211/rate.c
 +++ b/net/mac80211/rate.c
-@@ -893,10 +893,10 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 		info->control.rates[i].count = 0;
+@@ -358,8 +358,10 @@ static void __rate_control_send_low(struct ieee80211_hw *hw,
+ 		break;
  	}
+ 	WARN_ONCE(i == sband->n_bitrates,
+-		  "no supported rates (0x%x) in rate_mask 0x%x with flags 0x%x\n",
++		  "no supported rates for sta %pM (0x%x, band %d) in rate_mask 0x%x with flags 0x%x\n",
++		  sta ? sta->addr : NULL,
+ 		  sta ? sta->supp_rates[sband->band] : -1,
++		  sband->band,
+ 		  rate_mask, rate_flags);
  
--	if (ieee80211_hw_check(&sdata->local->hw, HAS_RATE_CONTROL))
-+	if (rate_control_send_low(sta ? &sta->sta : NULL, txrc))
- 		return;
- 
--	if (rate_control_send_low(sta ? &sta->sta : NULL, txrc))
-+	if (ieee80211_hw_check(&sdata->local->hw, HAS_RATE_CONTROL))
- 		return;
- 
- 	if (sta && test_sta_flag(sta, WLAN_STA_RATE_CONTROL)) {
+ 	info->control.rates[0].count =
 -- 
 2.20.1
 
