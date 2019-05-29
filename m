@@ -6,73 +6,120 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B1BFC28CC1
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:26:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F9D4C28CC2
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:52:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2EEE521019
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:26:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33B1A2081C
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:52:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726994AbfE2M0A (ORCPT
+        id S1727023AbfE2Mwj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 May 2019 08:26:00 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54286 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726956AbfE2MZt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 May 2019 08:25:49 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1hVxeN-0007wy-5b; Wed, 29 May 2019 15:25:47 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 04/10] cfg80211: util: fix bit count off by one
-Date:   Wed, 29 May 2019 15:25:31 +0300
-Message-Id: <20190529122537.8564-5-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190529122537.8564-1-luca@coelho.fi>
-References: <20190529122537.8564-1-luca@coelho.fi>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Wed, 29 May 2019 08:52:39 -0400
+Received: from mx2.suse.de ([195.135.220.15]:33796 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727017AbfE2Mwj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 May 2019 08:52:39 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 06E82B010;
+        Wed, 29 May 2019 12:52:38 +0000 (UTC)
+From:   Takashi Iwai <tiwai@suse.de>
+To:     linux-wireless@vger.kernel.org
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>, huangwen@venustech.com.cn,
+        Solar Designer <solar@openwall.com>,
+        Marcus Meissner <meissner@suse.de>
+Subject: [PATCH 2/2] mwifiex: Abort at too short BSS descriptor element
+Date:   Wed, 29 May 2019 14:52:20 +0200
+Message-Id: <20190529125220.17066-3-tiwai@suse.de>
+X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20190529125220.17066-1-tiwai@suse.de>
+References: <20190529125220.17066-1-tiwai@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Currently mwifiex_update_bss_desc_with_ie() implicitly assumes that
+the source descriptor entries contain the enough size for each type
+and performs copying without checking the source size.  This may lead
+to read over boundary.
 
-The bits of Rx MCS Map in VHT capability were enumerated
-with index transform - index i -> (i + 1) bit => nss i. BUG!
-while it should be -   index i -> (i + 1) bit => (i + 1) nss.
+Fix this by putting the source size check in appropriate places.
 
-The bug was exposed in commit a53b2a0b1245 ("iwlwifi: mvm: implement VHT
-extended NSS support in rs.c"), where iwlwifi started using the
-function.
-
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-Fixes: b0aa75f0b1b2 ("ieee80211: add new VHT capability fields/parsing")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
 ---
- net/wireless/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index cf63b635afc0..33dbf7ee9b97 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1998,7 +1998,7 @@ int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
- 			continue;
- 
- 		if (supp >= mcs_encoding) {
--			max_vht_nss = i;
-+			max_vht_nss = i + 1;
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 64ab6fe78c0d..c269a0de9413 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1269,6 +1269,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
  			break;
- 		}
- 	}
+ 
+ 		case WLAN_EID_FH_PARAMS:
++			if (element_len + 2 < sizeof(*fh_param_set))
++				return -EINVAL;
+ 			fh_param_set =
+ 				(struct ieee_types_fh_param_set *) current_ptr;
+ 			memcpy(&bss_entry->phy_param_set.fh_param_set,
+@@ -1277,6 +1279,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_DS_PARAMS:
++			if (element_len + 2 < sizeof(*ds_param_set))
++				return -EINVAL;
+ 			ds_param_set =
+ 				(struct ieee_types_ds_param_set *) current_ptr;
+ 
+@@ -1288,6 +1292,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_CF_PARAMS:
++			if (element_len + 2 < sizeof(*cf_param_set))
++				return -EINVAL;
+ 			cf_param_set =
+ 				(struct ieee_types_cf_param_set *) current_ptr;
+ 			memcpy(&bss_entry->ss_param_set.cf_param_set,
+@@ -1296,6 +1302,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_IBSS_PARAMS:
++			if (element_len + 2 < sizeof(*ibss_param_set))
++				return -EINVAL;
+ 			ibss_param_set =
+ 				(struct ieee_types_ibss_param_set *)
+ 				current_ptr;
+@@ -1305,10 +1313,14 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_ERP_INFO:
++			if (!element_len)
++				return -EINVAL;
+ 			bss_entry->erp_flags = *(current_ptr + 2);
+ 			break;
+ 
+ 		case WLAN_EID_PWR_CONSTRAINT:
++			if (!element_len)
++				return -EINVAL;
+ 			bss_entry->local_constraint = *(current_ptr + 2);
+ 			bss_entry->sensed_11h = true;
+ 			break;
+@@ -1349,6 +1361,9 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_VENDOR_SPECIFIC:
++			if (element_len + 2 < sizeof(vendor_ie->vend_hdr))
++				return -EINVAL;
++
+ 			vendor_ie = (struct ieee_types_vendor_specific *)
+ 					current_ptr;
+ 
 -- 
-2.20.1
+2.16.4
 
