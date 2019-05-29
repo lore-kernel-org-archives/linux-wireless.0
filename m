@@ -2,40 +2,40 @@ Return-Path: <SRS0=kjT+=T5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	TVD_SUBJ_WIPE_DEBT,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C216C04AB3
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 07:55:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ED95C282E3
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 07:55:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4FAD22075C
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 07:55:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 224CA2075C
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 07:55:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726535AbfE2HzC (ORCPT
+        id S1726502AbfE2HzB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 May 2019 03:55:02 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:37216 "EHLO
+        Wed, 29 May 2019 03:55:01 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:37211 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726139AbfE2HzA (ORCPT
+        with ESMTP id S1726372AbfE2HzA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 29 May 2019 03:55:00 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x4T7svGT005599, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x4T7suNd005591, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x4T7svGT005599
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x4T7suNd005591
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Wed, 29 May 2019 15:54:57 +0800
+        Wed, 29 May 2019 15:54:56 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Wed, 29 May 2019 15:54:56 +0800
+ 14.3.408.0; Wed, 29 May 2019 15:54:55 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/11] rtw88: debug: dump tx power indexes in use
-Date:   Wed, 29 May 2019 15:54:47 +0800
-Message-ID: <1559116487-5244-12-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 09/11] rtw88: remove all RTW_MAX_POWER_INDEX macro
+Date:   Wed, 29 May 2019 15:54:45 +0800
+Message-ID: <1559116487-5244-10-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1559116487-5244-1-git-send-email-yhchuang@realtek.com>
 References: <1559116487-5244-1-git-send-email-yhchuang@realtek.com>
@@ -47,163 +47,159 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+From: Tzu-En Huang <tehuang@realtek.com>
 
-Add a read entry in debugfs to dump current tx power
-indexes in use for each path and each rate section.
-The corresponding power bases, power by rate, and
-power limit are also included.
+Since this macro definition has different values in different chipset,
+the current defined macro value is for 8822b. This will cause the
+settings of 8822c be incorrect.
+Remove RTW_MAX_POWER_INDEX and use max_power_index in struct rtw_chip_info
+to make sure the value of different chipset is right.
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 112 +++++++++++++++++++++++++++++
- 1 file changed, 112 insertions(+)
+ drivers/net/wireless/realtek/rtw88/main.c |  2 +-
+ drivers/net/wireless/realtek/rtw88/phy.c  | 28 +++++++++++++++++-----------
+ drivers/net/wireless/realtek/rtw88/phy.h  |  4 +---
+ 3 files changed, 19 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index f0ae260..ee2937c2 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -8,6 +8,7 @@
- #include "sec.h"
- #include "fw.h"
- #include "debug.h"
-+#include "phy.h"
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index e7a74b0..231c5a4 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1066,7 +1066,7 @@ static int rtw_chip_board_info_setup(struct rtw_dev *rtwdev)
  
- #ifdef CONFIG_RTW88_DEBUGFS
+ 	rtw_phy_setup_phy_cond(rtwdev, 0);
  
-@@ -460,6 +461,112 @@ static int rtw_debug_get_rf_dump(struct seq_file *m, void *v)
- 	return 0;
+-	rtw_phy_init_tx_power(hal);
++	rtw_phy_init_tx_power(rtwdev);
+ 	rtw_load_table(rtwdev, rfe_def->phy_pg_tbl);
+ 	rtw_load_table(rtwdev, rfe_def->txpwr_lmt_tbl);
+ 	rtw_phy_tx_power_by_rate_config(hal);
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 840538f..c4e43c3 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -1165,11 +1165,12 @@ static void rtw_phy_set_tx_power_limit(struct rtw_dev *rtwdev, u8 regd, u8 band,
+ 				       u8 bw, u8 rs, u8 ch, s8 pwr_limit)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
++	u8 max_power_index = rtwdev->chip->max_power_index;
+ 	s8 ww;
+ 	int ch_idx;
+ 
+ 	pwr_limit = clamp_t(s8, pwr_limit,
+-			    -RTW_MAX_POWER_INDEX, RTW_MAX_POWER_INDEX);
++			    -max_power_index, max_power_index);
+ 	ch_idx = rtw_channel_to_idx(band, ch);
+ 
+ 	if (regd >= RTW_REGD_MAX || bw >= RTW_CHANNEL_WIDTH_MAX ||
+@@ -1199,16 +1200,17 @@ rtw_xref_5g_txpwr_lmt(struct rtw_dev *rtwdev, u8 regd,
+ 		      u8 bw, u8 ch_idx, u8 rs_ht, u8 rs_vht)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
++	u8 max_power_index = rtwdev->chip->max_power_index;
+ 	s8 lmt_ht = hal->tx_pwr_limit_5g[regd][bw][rs_ht][ch_idx];
+ 	s8 lmt_vht = hal->tx_pwr_limit_5g[regd][bw][rs_vht][ch_idx];
+ 
+ 	if (lmt_ht == lmt_vht)
+ 		return;
+ 
+-	if (lmt_ht == RTW_MAX_POWER_INDEX)
++	if (lmt_ht == max_power_index)
+ 		hal->tx_pwr_limit_5g[regd][bw][rs_ht][ch_idx] = lmt_vht;
+ 
+-	else if (lmt_vht == RTW_MAX_POWER_INDEX)
++	else if (lmt_vht == max_power_index)
+ 		hal->tx_pwr_limit_5g[regd][bw][rs_vht][ch_idx] = lmt_ht;
  }
  
-+static void rtw_print_cck_rate_txt(struct seq_file *m, u8 rate)
-+{
-+	static const char * const
-+	cck_rate[] = {"1M", "2M", "5.5M", "11M"};
-+	u8 idx = rate - DESC_RATE1M;
-+
-+	seq_printf(m, "%5s%-5s", "CCK_", cck_rate[idx]);
-+}
-+
-+static void rtw_print_ofdm_rate_txt(struct seq_file *m, u8 rate)
-+{
-+	static const char * const
-+	ofdm_rate[] = {"6M", "9M", "12M", "18M", "24M", "36M", "48M", "54M"};
-+	u8 idx = rate - DESC_RATE6M;
-+
-+	seq_printf(m, "%6s%-4s", "OFDM_", ofdm_rate[idx]);
-+}
-+
-+static void rtw_print_ht_rate_txt(struct seq_file *m, u8 rate)
-+{
-+	u8 mcs_n = rate - DESC_RATEMCS0;
-+
-+	seq_printf(m, "%4s%-6u", "MCS", mcs_n);
-+}
-+
-+static void rtw_print_vht_rate_txt(struct seq_file *m, u8 rate)
-+{
-+	u8 idx = rate - DESC_RATEVHT1SS_MCS0;
-+	u8 n_ss, mcs_n;
-+
-+	/* n spatial stream */
-+	n_ss = 1 + idx / 10;
-+	/* MCS n */
-+	mcs_n = idx % 10;
-+	seq_printf(m, "%4s%u%s%u", "VHT", n_ss, "SMCS", mcs_n);
-+}
-+
-+static int rtw_debugfs_get_tx_pwr_tbl(struct seq_file *m, void *v)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
+@@ -1541,14 +1543,14 @@ static s8 rtw_phy_get_tx_power_limit(struct rtw_dev *rtwdev, u8 band,
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
+ 	u8 *cch_by_bw = hal->cch_by_bw;
+-	s8 power_limit = RTW_MAX_POWER_INDEX;
++	s8 power_limit = (s8)rtwdev->chip->max_power_index;
+ 	u8 rs;
+ 	int ch_idx;
+ 	u8 cur_bw, cur_ch;
+ 	s8 cur_lmt;
+ 
+ 	if (regd > RTW_REGD_WW)
+-		return RTW_MAX_POWER_INDEX;
++		return power_limit;
+ 
+ 	if (rate >= DESC_RATE1M && rate <= DESC_RATE11M)
+ 		rs = RTW_RATE_SECTION_CCK;
+@@ -1593,7 +1595,7 @@ static s8 rtw_phy_get_tx_power_limit(struct rtw_dev *rtwdev, u8 band,
+ err:
+ 	WARN(1, "invalid arguments, band=%d, bw=%d, path=%d, rate=%d, ch=%d\n",
+ 	     band, bw, rf_path, rate, channel);
+-	return RTW_MAX_POWER_INDEX;
++	return (s8)rtwdev->chip->max_power_index;
+ }
+ 
+ static u8
+@@ -1780,22 +1782,25 @@ void rtw_phy_tx_power_limit_config(struct rtw_hal *hal)
+ 				__rtw_phy_tx_power_limit_config(hal, regd, bw, rs);
+ }
+ 
+-static void rtw_phy_init_tx_power_limit(struct rtw_hal *hal,
++static void rtw_phy_init_tx_power_limit(struct rtw_dev *rtwdev,
+ 					u8 regd, u8 bw, u8 rs)
+ {
 +	struct rtw_hal *hal = &rtwdev->hal;
-+	void (*print_rate)(struct seq_file *, u8) = NULL;
-+	u8 path, rate;
-+	struct rtw_power_params pwr_param = {0};
-+	u8 bw = hal->current_band_width;
-+	u8 ch = hal->current_channel;
-+	u8 regd = rtwdev->regd.txpwr_regd;
-+
-+	seq_printf(m, "%-4s %-10s %-3s%6s %-4s %4s (%-4s %-4s)\n",
-+		   "path", "rate", "pwr", "", "base", "", "byr", "lmt");
-+
-+	mutex_lock(&hal->tx_power_mutex);
-+	for (path = RF_PATH_A; path <= RF_PATH_B; path++) {
-+		/* there is no CCK rates used in 5G */
-+		if (hal->current_band_type == RTW_BAND_5G)
-+			rate = DESC_RATE6M;
-+		else
-+			rate = DESC_RATE1M;
-+
-+		/* now, not support vht 3ss and vht 4ss*/
-+		for (; rate <= DESC_RATEVHT2SS_MCS9; rate++) {
-+			/* now, not support ht 3ss and ht 4ss*/
-+			if (rate > DESC_RATEMCS15 &&
-+			    rate < DESC_RATEVHT1SS_MCS0)
-+				continue;
-+
-+			switch (rate) {
-+			case DESC_RATE1M...DESC_RATE11M:
-+				print_rate = rtw_print_cck_rate_txt;
-+				break;
-+			case DESC_RATE6M...DESC_RATE54M:
-+				print_rate = rtw_print_ofdm_rate_txt;
-+				break;
-+			case DESC_RATEMCS0...DESC_RATEMCS15:
-+				print_rate = rtw_print_ht_rate_txt;
-+				break;
-+			case DESC_RATEVHT1SS_MCS0...DESC_RATEVHT2SS_MCS9:
-+				print_rate = rtw_print_vht_rate_txt;
-+				break;
-+			default:
-+				print_rate = NULL;
-+				break;
-+			}
-+
-+			rtw_get_tx_power_params(rtwdev, path, rate, bw,
-+						ch, regd, &pwr_param);
-+
-+			seq_printf(m, "%4c ", path + 'A');
-+			if (print_rate)
-+				print_rate(m, rate);
-+			seq_printf(m, " %3u(0x%02x) %4u %4d (%4d %4d)\n",
-+				   hal->tx_pwr_tbl[path][rate],
-+				   hal->tx_pwr_tbl[path][rate],
-+				   pwr_param.pwr_base,
-+				   min_t(s8, pwr_param.pwr_offset,
-+					 pwr_param.pwr_limit),
-+				   pwr_param.pwr_offset, pwr_param.pwr_limit);
-+		}
-+	}
-+
-+	mutex_unlock(&hal->tx_power_mutex);
-+
-+	return 0;
-+}
-+
- #define rtw_debug_impl_mac(page, addr)				\
- static struct rtw_debugfs_priv rtw_debug_priv_mac_ ##page = {	\
- 	.cb_read = rtw_debug_get_mac_page,			\
-@@ -514,6 +621,10 @@ static struct rtw_debugfs_priv rtw_debug_priv_rf_dump = {
- 	.cb_read = rtw_debug_get_rf_dump,
- };
++	s8 max_power_index = (s8)rtwdev->chip->max_power_index;
+ 	u8 ch;
  
-+static struct rtw_debugfs_priv rtw_debug_priv_tx_pwr_tbl = {
-+	.cb_read = rtw_debugfs_get_tx_pwr_tbl,
-+};
-+
- static struct rtw_debugfs_priv rtw_debug_priv_write_reg = {
- 	.cb_write = rtw_debugfs_set_write_reg,
- };
-@@ -610,6 +721,7 @@ void rtw_debugfs_init(struct rtw_dev *rtwdev)
- 		rtw_debugfs_add_r(bb_41);
- 	}
- 	rtw_debugfs_add_r(rf_dump);
-+	rtw_debugfs_add_r(tx_pwr_tbl);
+ 	/* 2.4G channels */
+ 	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_2G; ch++)
+-		hal->tx_pwr_limit_2g[regd][bw][rs][ch] = RTW_MAX_POWER_INDEX;
++		hal->tx_pwr_limit_2g[regd][bw][rs][ch] = max_power_index;
+ 
+ 	/* 5G channels */
+ 	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_5G; ch++)
+-		hal->tx_pwr_limit_5g[regd][bw][rs][ch] = RTW_MAX_POWER_INDEX;
++		hal->tx_pwr_limit_5g[regd][bw][rs][ch] = max_power_index;
  }
  
- #endif /* CONFIG_RTW88_DEBUGFS */
+-void rtw_phy_init_tx_power(struct rtw_hal *hal)
++void rtw_phy_init_tx_power(struct rtw_dev *rtwdev)
+ {
++	struct rtw_hal *hal = &rtwdev->hal;
+ 	u8 regd, path, rate, rs, bw;
+ 
+ 	/* init tx power by rate offset */
+@@ -1810,5 +1815,6 @@ void rtw_phy_init_tx_power(struct rtw_hal *hal)
+ 	for (regd = 0; regd < RTW_REGD_MAX; regd++)
+ 		for (bw = 0; bw < RTW_CHANNEL_WIDTH_MAX; bw++)
+ 			for (rs = 0; rs < RTW_RATE_SECTION_MAX; rs++)
+-				rtw_phy_init_tx_power_limit(hal, regd, bw, rs);
++				rtw_phy_init_tx_power_limit(rtwdev, regd, bw,
++							    rs);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
+index dfd8d77..5bd4b9b 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.h
++++ b/drivers/net/wireless/realtek/rtw88/phy.h
+@@ -7,8 +7,6 @@
+ 
+ #include "debug.h"
+ 
+-#define RTW_MAX_POWER_INDEX		0x7F
+-
+ extern u8 rtw_cck_rates[];
+ extern u8 rtw_ofdm_rates[];
+ extern u8 rtw_ht_1s_rates[];
+@@ -41,7 +39,7 @@ void rtw_phy_cfg_bb(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
+ 		    u32 addr, u32 data);
+ void rtw_phy_cfg_rf(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
+ 		    u32 addr, u32 data);
+-void rtw_phy_init_tx_power(struct rtw_hal *hal);
++void rtw_phy_init_tx_power(struct rtw_dev *rtwdev);
+ void rtw_phy_load_tables(struct rtw_dev *rtwdev);
+ void rtw_phy_set_tx_power_level(struct rtw_dev *rtwdev, u8 channel);
+ void rtw_phy_tx_power_by_rate_config(struct rtw_hal *hal);
 -- 
 2.7.4
 
