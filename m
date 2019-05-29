@@ -2,105 +2,109 @@ Return-Path: <SRS0=kjT+=T5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 908F6C28CC0
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 13:40:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDF96C28CC0
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 14:39:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A3B821902
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 13:40:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92B7E23A81
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 14:39:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LT+5ckYy";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LT+5ckYy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727442AbfE2NkE (ORCPT
+        id S1726418AbfE2Ojy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 May 2019 09:40:04 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54338 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726863AbfE2NkE (ORCPT
+        Wed, 29 May 2019 10:39:54 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:39878 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726012AbfE2Ojy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 May 2019 09:40:04 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1hVyoD-00080o-0f; Wed, 29 May 2019 16:40:01 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
+        Wed, 29 May 2019 10:39:54 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id E1C1D609F3; Wed, 29 May 2019 14:39:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1559140793;
+        bh=GoraqmyLl/t/CwnESZbHZ3gb5qzZKBQnSVA2JiMmzRo=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=LT+5ckYywf3dp41gOHV2ra07Jffw64/YYit0SmT7u0taqJ3Lr+P9Qzip9DpIYsuuA
+         AjAsqf1w0mct/Bgm7EstqGuSa+yZ8Y8e7vB3aMk9SvT7lRylDPKVoVKOcgH/e/j9Sq
+         h82XX66GMEuPttZHYCKKCy7eTmefUkjhB2aEiBCY=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 32EB2602FA;
+        Wed, 29 May 2019 14:39:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1559140793;
+        bh=GoraqmyLl/t/CwnESZbHZ3gb5qzZKBQnSVA2JiMmzRo=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=LT+5ckYywf3dp41gOHV2ra07Jffw64/YYit0SmT7u0taqJ3Lr+P9Qzip9DpIYsuuA
+         AjAsqf1w0mct/Bgm7EstqGuSa+yZ8Y8e7vB3aMk9SvT7lRylDPKVoVKOcgH/e/j9Sq
+         h82XX66GMEuPttZHYCKKCy7eTmefUkjhB2aEiBCY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 32EB2602FA
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Luca Coelho <luca@coelho.fi>
 Cc:     linux-wireless@vger.kernel.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 0/7] wlwifi: fixes intended for 5.2 2019-05-29
-Date:   Wed, 29 May 2019 16:39:48 +0300
-Message-Id: <20190529133955.31082-1-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
+Subject: Re: [PATCH 4/7] iwlwifi: print fseq info upon fw assert
+References: <20190529133955.31082-1-luca@coelho.fi>
+        <20190529133955.31082-5-luca@coelho.fi>
+Date:   Wed, 29 May 2019 17:39:49 +0300
+In-Reply-To: <20190529133955.31082-5-luca@coelho.fi> (Luca Coelho's message of
+        "Wed, 29 May 2019 16:39:52 +0300")
+Message-ID: <87pno12ukq.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Luca Coelho <luca@coelho.fi> writes:
 
-Hi,
+> From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+>
+> Read fseq info from FW registers and print it upon fw assert.
+> The print is needed since the fseq version coming from the TLV might
+> not be the actual version that is used.
+>
+> Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-This is the first patchset with fixes for 5.2.
+[...]
 
-The changes are:
+> +void iwl_fw_error_print_fseq_regs(struct iwl_fw_runtime *fwrt)
+> +{
+> +	struct iwl_trans *trans = fwrt->trans;
+> +	unsigned long flags;
+> +	int i;
+> +	struct {
+> +		u32 addr;
+> +		const char *str;
+> +	} fseq_regs[] = {
+> +		FSEQ_REG(FSEQ_ERROR_CODE),
+> +		FSEQ_REG(FSEQ_TOP_INIT_VERSION),
+> +		FSEQ_REG(FSEQ_CNVIO_INIT_VERSION),
+> +		FSEQ_REG(FSEQ_OTP_VERSION),
+> +		FSEQ_REG(FSEQ_TOP_CONTENT_VERSION),
+> +		FSEQ_REG(FSEQ_ALIVE_TOKEN),
+> +		FSEQ_REG(FSEQ_CNVI_ID),
+> +		FSEQ_REG(FSEQ_CNVR_ID),
+> +		FSEQ_REG(CNVI_AUX_MISC_CHIP),
+> +		FSEQ_REG(CNVR_AUX_MISC_CHIP),
+> +		FSEQ_REG(CNVR_SCU_SD_REGS_SD_REG_DIG_DCDC_VTRIM),
+> +		FSEQ_REG(CNVR_SCU_SD_REGS_SD_REG_ACTIVE_VDIG_MIRROR),
+> +	};
 
-* Fix rfkill bug with newer devices;
-* Fix a potential double-free;
-* Remove an obsolete debugfs file that, when used with new devices ,
-  caused an oops;
-* Fix a sleep with a spinlock held;
-* Use the correct firmware when using a Killer NIC;
-* Fix PCI persistence register for newer families;
-* Print a firmware-related ID to help debug mismatch issues;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Emmanuel Grumbach (1):
-  iwlwifi: fix load in rfkill flow for unified firmware
-
-Jia-Ju Bai (1):
-  iwlwifi: Fix double-free problems in iwl_req_fw_callback()
-
-Johannes Berg (1):
-  iwlwifi: mvm: remove d3_sram debugfs file
-
-Lior Cohen (1):
-  iwlwifi: mvm: change TLC config cmd sent by rs to be async
-
-Matt Chen (1):
-  iwlwifi: fix AX201 killer sku loading firmware issue
-
-Shahar S Matityahu (2):
-  iwlwifi: clear persistence bit according to device family
-  iwlwifi: print fseq info upon fw assert
-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 39 +++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  2 +
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  1 -
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 22 ++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 22 -------
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c  | 57 -------------------
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 23 ++++++--
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  | 20 ++++---
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    |  3 +-
- .../net/wireless/intel/iwlwifi/mvm/utils.c    |  2 +
- .../wireless/intel/iwlwifi/pcie/internal.h    |  2 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 53 ++++++++++++-----
- 14 files changed, 136 insertions(+), 116 deletions(-)
+Can fseq_regs be static const?
 
 -- 
-2.20.1
-
+Kalle Valo
