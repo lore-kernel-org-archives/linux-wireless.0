@@ -2,40 +2,42 @@ Return-Path: <SRS0=kjT+=T5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1922C04AB3
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 07:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E8C3C07542
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 07:54:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 91F102075C
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 07:54:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1916E2075C
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 07:54:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726131AbfE2Hyz (ORCPT
+        id S1726101AbfE2Hyz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 29 May 2019 03:54:55 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:37188 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:37191 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726055AbfE2Hyz (ORCPT
+        with ESMTP id S1725895AbfE2Hyz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 29 May 2019 03:54:55 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x4T7soVv005538, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x4T7sqZB005546, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x4T7soVv005538
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x4T7sqZB005546
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Wed, 29 May 2019 15:54:50 +0800
+        Wed, 29 May 2019 15:54:52 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Wed, 29 May 2019 15:54:50 +0800
+ 14.3.408.0; Wed, 29 May 2019 15:54:51 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/11] rtw88: power index setting routine updates and fixes
-Date:   Wed, 29 May 2019 15:54:36 +0800
-Message-ID: <1559116487-5244-1-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 02/11] rtw88: do not use (void *) as argument
+Date:   Wed, 29 May 2019 15:54:38 +0800
+Message-ID: <1559116487-5244-3-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1559116487-5244-1-git-send-email-yhchuang@realtek.com>
+References: <1559116487-5244-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.126]
@@ -46,64 +48,64 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-This patch set updates the power index setting routine for rtw88.
+The type change from (void *) to (struct rtw_dev *) is redundant.
+Just pass the right type and compiler can check that for us.
 
-The first commit "rtw88: resolve order of tx power setting routines"
-is to reorder the functions to not to expose some functions used
-internally.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/phy.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-The following commits:
-    "rtw88: do not use (void *) as argument"
-    "rtw88: unify prefixes for tx power setting routine"
-    "rtw88: remove unused variable"
-
-are minor refinements to make the routine look better.
-
-The following commits:
-    "rtw88: fix incorrect tx power limit at 5G"
-    "rtw88: choose the lowest as world-wide power limit"
-    "rtw88: correct power limit selection"
-    "rtw88: update tx power limit table to RF v20"
-    "rtw88: remove all RTW_MAX_POWER_INDEX macro"
-
-are fixes to get correct tx power index, also update the power
-limit table to the latest.
-
-The following commits:
-    "rtw88: refine flow to get tx power index"
-    "rtw88: debug: dump tx power indexes in use"
-
-add a debugfs entry to dump power index by rate, by limit and by base.
-This is useful for us to check if correct power indexes are used.
-
-
-Tzu-En Huang (1):
-  rtw88: remove all RTW_MAX_POWER_INDEX macro
-
-Yan-Hsuan Chuang (6):
-  rtw88: resolve order of tx power setting routines
-  rtw88: do not use (void *) as argument
-  rtw88: unify prefixes for tx power setting routine
-  rtw88: remove unused variable
-  rtw88: fix incorrect tx power limit at 5G
-  rtw88: choose the lowest as world-wide power limit
-
-Zong-Zhe Yang (4):
-  rtw88: correct power limit selection
-  rtw88: update tx power limit table to RF v20
-  rtw88: refine flow to get tx power index
-  rtw88: debug: dump tx power indexes in use
-
- drivers/net/wireless/realtek/rtw88/debug.c         |  112 ++
- drivers/net/wireless/realtek/rtw88/main.c          |   26 +-
- drivers/net/wireless/realtek/rtw88/main.h          |   27 +-
- drivers/net/wireless/realtek/rtw88/phy.c           | 1298 +++++++++++---------
- drivers/net/wireless/realtek/rtw88/phy.h           |   18 +-
- drivers/net/wireless/realtek/rtw88/regd.c          |   69 +-
- drivers/net/wireless/realtek/rtw88/regd.h          |    4 +
- .../net/wireless/realtek/rtw88/rtw8822c_table.c    |  799 +++++++++++-
- 8 files changed, 1653 insertions(+), 700 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index ed104ea..d4bcc89 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -1079,11 +1079,10 @@ static void phy_get_rate_values_of_txpwr_by_rate(struct rtw_dev *rtwdev,
+ 	}
+ }
+ 
+-static void phy_store_tx_power_by_rate(void *adapter,
++static void phy_store_tx_power_by_rate(struct rtw_dev *rtwdev,
+ 				       u32 band, u32 rfpath, u32 txnum,
+ 				       u32 regaddr, u32 bitmask, u32 data)
+ {
+-	struct rtw_dev *rtwdev = adapter;
+ 	struct rtw_hal *hal = &rtwdev->hal;
+ 	u8 rate_num = 0;
+ 	u8 rate;
+@@ -1510,10 +1509,9 @@ static s8 phy_get_tx_power_limit(struct rtw_dev *rtwdev, u8 band,
+ }
+ 
+ static
+-u8 phy_get_tx_power_index(void *adapter, u8 rf_path, u8 rate,
++u8 phy_get_tx_power_index(struct rtw_dev *rtwdev, u8 rf_path, u8 rate,
+ 			  enum rtw_bandwidth bandwidth, u8 channel, u8 regd)
+ {
+-	struct rtw_dev *rtwdev = adapter;
+ 	struct rtw_hal *hal = &rtwdev->hal;
+ 	struct rtw_txpwr_idx *pwr_idx;
+ 	u8 tx_power;
+@@ -1553,9 +1551,9 @@ u8 phy_get_tx_power_index(void *adapter, u8 rf_path, u8 rate,
+ 	return tx_power;
+ }
+ 
+-static void phy_set_tx_power_index_by_rs(void *adapter, u8 ch, u8 path, u8 rs)
++static void phy_set_tx_power_index_by_rs(struct rtw_dev *rtwdev,
++					 u8 ch, u8 path, u8 rs)
+ {
+-	struct rtw_dev *rtwdev = adapter;
+ 	struct rtw_hal *hal = &rtwdev->hal;
+ 	u8 regd = rtwdev->regd.txpwr_regd;
+ 	u8 *rates;
+@@ -1573,7 +1571,7 @@ static void phy_set_tx_power_index_by_rs(void *adapter, u8 ch, u8 path, u8 rs)
+ 	bw = hal->current_band_width;
+ 	for (i = 0; i < size; i++) {
+ 		rate = rates[i];
+-		pwr_idx = phy_get_tx_power_index(adapter, path, rate, bw, ch,
++		pwr_idx = phy_get_tx_power_index(rtwdev, path, rate, bw, ch,
+ 						 regd);
+ 		hal->tx_pwr_tbl[path][rate] = pwr_idx;
+ 	}
 -- 
 2.7.4
 
