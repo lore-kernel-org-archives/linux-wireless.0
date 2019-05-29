@@ -6,33 +6,32 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02A77C28CC0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F106C28CC1
 	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:25:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA8AD21019
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:25:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72DC021670
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 May 2019 12:25:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726963AbfE2MZ5 (ORCPT
+        id S1727011AbfE2MZu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 May 2019 08:25:57 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54312 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726994AbfE2MZu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 29 May 2019 08:25:50 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54296 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726964AbfE2MZt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 May 2019 08:25:49 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hVxeP-0007wy-4t; Wed, 29 May 2019 15:25:49 +0300
+        id 1hVxeN-0007wy-Ko; Wed, 29 May 2019 15:25:47 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 08/10] mac80211: use STA info in rate_control_send_low()
-Date:   Wed, 29 May 2019 15:25:35 +0300
-Message-Id: <20190529122537.8564-9-luca@coelho.fi>
+Subject: [PATCH 05/10] cfg80211: Add a function to iterate all BSS entries
+Date:   Wed, 29 May 2019 15:25:32 +0300
+Message-Id: <20190529122537.8564-6-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190529122537.8564-1-luca@coelho.fi>
 References: <20190529122537.8564-1-luca@coelho.fi>
@@ -43,171 +42,83 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-Even if we have a station, we currently call rate_control_send_low()
-with the NULL station unless further rate control (driver, minstrel)
-has been initialized.
+Add a function that iterates over the BSS entries associated with a
+given wiphy and calls a callback for each iterated BSS. This can be
+used by drivers in various ways, e.g., to evaluate some property for
+all the BSSs in the medium.
 
-Change this so we can use more information about the station to use
-a better rate. For example, when we associate with an AP, we will
-now use the lowest rate it advertised as supported (that we can)
-rather than the lowest mandatory rate. This aligns our behaviour
-with most other 802.11 implementations.
-
-To make this possible, we need to also ensure that we have non-zero
-rates at all times, so in case we really have *nothing* pre-fill
-the supp_rates bitmap with the very lowest mandatory bitmap (11b
-and 11a on 2.4 and 5 GHz respectively).
-
-Additionally, hostapd appears to be giving us an empty supported
-rates bitmap (it can and should do better, since the STA must have
-supported for at least the basic rates in the BSS), so ignore any
-such bitmaps that would actually zero out the supp_rates, and in
-that case just keep the pre-filled mandatory rates.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/cfg.c      |  4 ++--
- net/mac80211/mlme.c     |  7 ++++++-
- net/mac80211/rate.c     | 12 ++++++------
- net/mac80211/sta_info.c | 43 ++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 56 insertions(+), 10 deletions(-)
+ include/net/cfg80211.h | 20 ++++++++++++++++++++
+ net/wireless/scan.c    | 21 +++++++++++++++++++++
+ 2 files changed, 41 insertions(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 52e6a091b7e4..16d006b92eab 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -4,7 +4,7 @@
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2015  Intel Mobile Communications GmbH
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 Intel Corporation
-+ * Copyright (C) 2018-2019 Intel Corporation
-  *
-  * This file is GPLv2 as found in COPYING.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index c19687833493..d5c1cfef443a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5721,6 +5721,26 @@ void cfg80211_put_bss(struct wiphy *wiphy, struct cfg80211_bss *bss);
   */
-@@ -1466,7 +1466,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 			return ret;
- 	}
+ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *bss);
  
--	if (params->supported_rates) {
-+	if (params->supported_rates && params->supported_rates_len) {
- 		ieee80211_parse_bitrates(&sdata->vif.bss_conf.chandef,
- 					 sband, params->supported_rates,
- 					 params->supported_rates_len,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b7a9fe3d5fcb..bc2fdadf69bc 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4941,7 +4941,12 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 			basic_rates = BIT(min_rate_index);
- 		}
- 
--		new_sta->sta.supp_rates[cbss->channel->band] = rates;
-+		if (rates)
-+			new_sta->sta.supp_rates[cbss->channel->band] = rates;
-+		else
-+			sdata_info(sdata,
-+				   "No rates found, keeping mandatory only\n");
++/**
++ * cfg80211_bss_iter - iterate all BSS entries
++ *
++ * This function iterates over the BSS entries associated with the given wiphy
++ * and calls the callback for the iterated BSS. The iterator function is not
++ * allowed to call functions that might modify the internal state of the BSS DB.
++ *
++ * @wiphy: the wiphy
++ * @chandef: if given, the iterator function will be called only if the channel
++ *     of the currently iterated BSS is a subset of the given channel.
++ * @iter: the iterator function to call
++ * @iter_data: an argument to the iterator function
++ */
++void cfg80211_bss_iter(struct wiphy *wiphy,
++		       struct cfg80211_chan_def *chandef,
++		       void (*iter)(struct wiphy *wiphy,
++				    struct cfg80211_bss *bss,
++				    void *data),
++		       void *iter_data);
 +
- 		sdata->vif.bss_conf.basic_rates = basic_rates;
+ static inline enum nl80211_bss_scan_width
+ cfg80211_chandef_to_scan_width(const struct cfg80211_chan_def *chandef)
+ {
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 2ea268ef1c43..d66e6d4b7555 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1974,6 +1974,27 @@ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
+ }
+ EXPORT_SYMBOL(cfg80211_unlink_bss);
  
- 		/* cf. IEEE 802.11 9.2.12 */
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index c78a259d81ed..8747231f7aa3 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -887,11 +887,6 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
- 	int i;
- 
--	if (sta && test_sta_flag(sta, WLAN_STA_RATE_CONTROL)) {
--		ista = &sta->sta;
--		priv_sta = sta->rate_ctrl_priv;
--	}
--
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		info->control.rates[i].idx = -1;
- 		info->control.rates[i].flags = 0;
-@@ -901,9 +896,14 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 	if (ieee80211_hw_check(&sdata->local->hw, HAS_RATE_CONTROL))
- 		return;
- 
--	if (rate_control_send_low(ista, txrc))
-+	if (rate_control_send_low(sta ? &sta->sta : NULL, txrc))
- 		return;
- 
-+	if (sta && test_sta_flag(sta, WLAN_STA_RATE_CONTROL)) {
-+		ista = &sta->sta;
-+		priv_sta = sta->rate_ctrl_priv;
++void cfg80211_bss_iter(struct wiphy *wiphy,
++		       struct cfg80211_chan_def *chandef,
++		       void (*iter)(struct wiphy *wiphy,
++				    struct cfg80211_bss *bss,
++				    void *data),
++		       void *iter_data)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++	struct cfg80211_internal_bss *bss;
++
++	spin_lock_bh(&rdev->bss_lock);
++
++	list_for_each_entry(bss, &rdev->bss_list, list) {
++		if (!chandef || cfg80211_is_sub_chan(chandef, bss->pub.channel))
++			iter(wiphy, &bss->pub, iter_data);
 +	}
 +
- 	if (ista) {
- 		spin_lock_bh(&sta->rate_ctrl_lock);
- 		ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index a4932ee3595c..315adb473e2c 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -3,7 +3,7 @@
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 Intel Corporation
-+ * Copyright (C) 2018-2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -404,6 +404,47 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	for (i = 0; i < IEEE80211_NUM_TIDS; i++)
- 		sta->last_seq_ctrl[i] = cpu_to_le16(USHRT_MAX);
- 
-+	for (i = 0; i < NUM_NL80211_BANDS; i++) {
-+		u32 mandatory = 0;
-+		int r;
++	spin_unlock_bh(&rdev->bss_lock);
++}
++EXPORT_SYMBOL(cfg80211_bss_iter);
 +
-+		if (!hw->wiphy->bands[i])
-+			continue;
-+
-+		switch (i) {
-+		case NL80211_BAND_2GHZ:
-+			/*
-+			 * We use both here, even if we cannot really know for
-+			 * sure the station will support both, but the only use
-+			 * for this is when we don't know anything yet and send
-+			 * management frames, and then we'll pick the lowest
-+			 * possible rate anyway.
-+			 * If we don't include _G here, we cannot find a rate
-+			 * in P2P, and thus trigger the WARN_ONCE() in rate.c
-+			 */
-+			mandatory = IEEE80211_RATE_MANDATORY_B |
-+				    IEEE80211_RATE_MANDATORY_G;
-+			break;
-+		case NL80211_BAND_5GHZ:
-+			mandatory = IEEE80211_RATE_MANDATORY_A;
-+			break;
-+		case NL80211_BAND_60GHZ:
-+			WARN_ON(1);
-+			mandatory = 0;
-+			break;
-+		}
-+
-+		for (r = 0; r < hw->wiphy->bands[i]->n_bitrates; r++) {
-+			struct ieee80211_rate *rate;
-+
-+			rate = &hw->wiphy->bands[i]->bitrates[r];
-+
-+			if (!(rate->flags & mandatory))
-+				continue;
-+			sta->sta.supp_rates[i] |= BIT(r);
-+		}
-+	}
-+
- 	sta->sta.smps_mode = IEEE80211_SMPS_OFF;
- 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
- 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
+ #ifdef CONFIG_CFG80211_WEXT
+ static struct cfg80211_registered_device *
+ cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
 -- 
 2.20.1
 
