@@ -2,134 +2,128 @@ Return-Path: <SRS0=NUxy=UC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39120C28CC6
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Jun 2019 18:38:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 642B1C282CE
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Jun 2019 18:42:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13E5326C14
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Jun 2019 18:38:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F02E27413
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Jun 2019 18:42:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Ps1O4Mtb"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="a09cCL26"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726844AbfFCSh6 (ORCPT
+        id S1726211AbfFCSl7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Jun 2019 14:37:58 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:38736 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726656AbfFCSh5 (ORCPT
+        Mon, 3 Jun 2019 14:41:59 -0400
+Received: from mail-vs1-f65.google.com ([209.85.217.65]:43264 "EHLO
+        mail-vs1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726663AbfFCSl6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Jun 2019 14:37:57 -0400
-Received: by mail-pg1-f193.google.com with SMTP id v11so8769784pgl.5
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2019 11:37:57 -0700 (PDT)
+        Mon, 3 Jun 2019 14:41:58 -0400
+Received: by mail-vs1-f65.google.com with SMTP id d128so11868172vsc.10
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2019 11:41:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=YZsnBAN22tVtHFJc56q+rxbdD8fX8T8HXkSym7OyHiQ=;
-        b=Ps1O4MtbD2rEMRtRw6yvXGSxDXrH7HjPdY7KCq/lSlW7htShDFp+u033WFVJDjOXPb
-         OLNlYon0Wpzph3sUz2BCPyDgUNjVZMpJf1kV0lUidQnpFyFPagCNB03AVdSVyyqUvAr/
-         bxUU+BnIId5lrXnzJ6D/l5svsqW8IvWW9U+R8=
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=VsSotgwA1nxU4EAySnnvJ5ZgB7iMM3DB2x56bZwTUg8=;
+        b=a09cCL26+bNOhQdoUo4x1wwzRc4g9+ZUKrcQIliCV1lVo86BnM7yonXBOHs3n8ThUp
+         tBeLLscjAUtngd30ZkAshMl1RND5mQUFk5hVmajXhWgn0Q6ATNrv0OJKmvUbmJLKJjZp
+         7PN3dXgD7aCNGHhYS/nSswGo8LZlcgEqVC4Fc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=YZsnBAN22tVtHFJc56q+rxbdD8fX8T8HXkSym7OyHiQ=;
-        b=Orewtg/bPGD5qi/bS8lniW9B0+QenA++dyHRPR8VdMtRSsWppXgvi2hklfIBEsX0gC
-         PQ8acNLUc3fjPW+5CSJ4qgmuUDULLHDHt+OWblnr075t64v9fzWxyBz3wOLMLyX5fcwY
-         yWJCS/nUhXeSyqfPCMeYAS+QX16LhHDeP3YbsHxxm2iGWgmOUAfx6E/suFil9ZvtfngX
-         p1iTU/xWM2SNJbqTjcOnbCrgsUaoAZaNxtIHdkDj/c5mGj3hqByR0jGJNwdkDlMthK1C
-         gm7Xh6hVq5irj7bciel0i7OM36p+fJn8EM7qthW1Zes/ZTZsVqyfXu0K5XQKBEyUcmEu
-         Hyag==
-X-Gm-Message-State: APjAAAU2TmbGj7chZdl0ORjpBa/JwcN+/tguxd3L2EAnyDsFSOdUKRB8
-        XqgQrPC1LgVwnYlBkPeD1scHug==
-X-Google-Smtp-Source: APXvYqwbLiM1y3Cof2KgcMMeZ8t9NIYK+vbdXny/5bFAdCAVPmxQ/CP9Y2AV9T+xZdprrAWMKhZjdw==
-X-Received: by 2002:a62:764d:: with SMTP id r74mr9422273pfc.110.1559587076759;
-        Mon, 03 Jun 2019 11:37:56 -0700 (PDT)
-Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id t2sm14808969pfh.166.2019.06.03.11.37.55
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 03 Jun 2019 11:37:56 -0700 (PDT)
-From:   Douglas Anderson <dianders@chromium.org>
-To:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc:     brcm80211-dev-list.pdl@broadcom.com,
-        linux-rockchip@lists.infradead.org,
-        Double Lo <double.lo@cypress.com>, briannorris@chromium.org,
-        linux-wireless@vger.kernel.org,
-        Naveen Gupta <naveen.gupta@cypress.com>,
-        Madhan Mohan R <madhanmohan.r@cypress.com>, mka@chromium.org,
-        Wright Feng <wright.feng@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        netdev@vger.kernel.org, brcm80211-dev-list@cypress.com,
-        Douglas Anderson <dianders@chromium.org>,
-        linux-mmc@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Michael Trimarchi <michael@amarulasolutions.com>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-kernel@vger.kernel.org, Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v2 0/3] brcmfmac: sdio: Deal better w/ transmission errors waking from idle
-Date:   Mon,  3 Jun 2019 11:37:37 -0700
-Message-Id: <20190603183740.239031-1-dianders@chromium.org>
-X-Mailer: git-send-email 2.22.0.rc1.311.g5d7573a151-goog
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=VsSotgwA1nxU4EAySnnvJ5ZgB7iMM3DB2x56bZwTUg8=;
+        b=fUgoU3d88pCR5491Cf7Z/mWlDFkyCkOpXWEUH+ix1gN9TQRBiuBlDRWccif0fdS319
+         xzO04APmovFynXLI1cMLJRI8bYMpj0/D2g1VQ+GAPFpC+i++lIGlQ0kr7BUhtWkKSDic
+         77sSuevIKJN26Ec75tguv8KkblEYp9CoSBC1f4KWlWIOYTD7/1eXkKkSa/0uNGiJa83W
+         sjfvmLfHkjODZLj+zE6YeiNqpr27PM5TZ93DGKIFt4AbO4zLLNi9KM65+27b7Um/LMsO
+         Rh/uKg8PMaztcyddWcVfW6PQ1/YJOLFgM7qjUAF8lMCckzTrxA7wEc/Ve4G5Pcs6cHMG
+         vyjw==
+X-Gm-Message-State: APjAAAWM8Ks0XImChGhTRazggdiGuPsYu+XZvs+nbhxTvSo6PP05JCIb
+        qxCeo6hT0PaQfSfQtOceUcooe1mPqDs=
+X-Google-Smtp-Source: APXvYqwbDhoV5jQ9obPrGKEF3t2VKMuo8YVjpmXQsg+r8K8kautMlUIMxwtSNAkBnc8SxKgfX/lv/Q==
+X-Received: by 2002:a67:e9ca:: with SMTP id q10mr1840484vso.105.1559587317645;
+        Mon, 03 Jun 2019 11:41:57 -0700 (PDT)
+Received: from mail-vs1-f44.google.com (mail-vs1-f44.google.com. [209.85.217.44])
+        by smtp.gmail.com with ESMTPSA id h13sm3766596vke.50.2019.06.03.11.41.55
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Mon, 03 Jun 2019 11:41:55 -0700 (PDT)
+Received: by mail-vs1-f44.google.com with SMTP id q64so2241489vsd.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2019 11:41:55 -0700 (PDT)
+X-Received: by 2002:a67:ec5a:: with SMTP id z26mr9662027vso.144.1559587314889;
+ Mon, 03 Jun 2019 11:41:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190429204040.18725-1-dianders@chromium.org> <CAPDyKFp0fQ+3CS-DadE9rO-9Npzve-nztY9hRaMdX7Pw9sUZMw@mail.gmail.com>
+ <CAD=FV=XMph_CE3pFZGP+5d0K2FgbPbheF1oX72TfZn_dpf8SQA@mail.gmail.com>
+In-Reply-To: <CAD=FV=XMph_CE3pFZGP+5d0K2FgbPbheF1oX72TfZn_dpf8SQA@mail.gmail.com>
+From:   Doug Anderson <dianders@chromium.org>
+Date:   Mon, 3 Jun 2019 11:41:42 -0700
+X-Gmail-Original-Message-ID: <CAD=FV=U7_ek_z7UfaDn9My8UfZfpNom04OJHowoH-sNsGZQnxA@mail.gmail.com>
+Message-ID: <CAD=FV=U7_ek_z7UfaDn9My8UfZfpNom04OJHowoH-sNsGZQnxA@mail.gmail.com>
+Subject: Re: [PATCH v2] mmc: dw_mmc: Disable SDIO interrupts while suspended
+ to fix suspend/resume
+To:     Ulf Hansson <ulf.hansson@linaro.org>
+Cc:     Jaehoon Chung <jh80.chung@samsung.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Guenter Roeck <groeck@chromium.org>,
+        Brian Norris <briannorris@chromium.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Sonny Rao <sonnyrao@chromium.org>,
+        Emil Renner Berthing <emil.renner.berthing@gmail.com>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Ryan Case <ryandcase@chromium.org>,
+        "# 4.0+" <stable@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series attempts to deal better with the expected transmission
-errors that we get when waking up (from idle) the SDIO-based WiFi on
-rk3288-veyron-minnie, rk3288-veyron-speedy, and rk3288-veyron-mickey.
+Ulf,
 
-Some details about those errors can be found in
-<https://crbug.com/960222>, but to summarize it here: if we try to
-send the wakeup command to the WiFi card at the same time it has
-decided to wake up itself then it will behave badly on the SDIO bus.
-This can cause timeouts or CRC errors.
+On Tue, May 28, 2019 at 3:49 PM Doug Anderson <dianders@chromium.org> wrote:
+>
+> > 1) As kind of stated above, did you consider a solution where the core
+> > simply disables the SDIO IRQ in case it isn't enabled for system
+> > wakeup? In this way all host drivers would benefit.
+>
+> I can give it a shot if you can give me a bunch of specific advice,
+> but I only have access to a few devices doing anything with SDIO and
+> they are all using Marvell or Broadcom on dw_mmc.
+>
+> In general I have no idea how SDIO wakeup (plumbed through the SD
+> controller) would work.  As per below the only way I've seen it done
+> is totally out-of-band.  ...and actually, I'm not sure I've actually
+> ever seen even the out of band stuff truly work on a system myself.
+> It's always been one of those "we should support wake on WiFi" but
+> never made it all the way to implementation.  In any case, if there
+> are examples of people plumbing wakeup through the SD controller I'd
+> need to figure out how to not break them.  Just doing a solution for
+> dw_mmc means I don't have to worry about this since dw_mmc definitely
+> doesn't support SDIO wakeup.
+>
+> Maybe one way to get a more generic solution is if you had an idea for
+> a patch that would work for many host controllers then you could post
+> it and I could test to confirm that it's happy on dw_mmc?  ...similar
+> to when you switched dw_mmc away from the old kthread-based SDIO
+> stuff?
 
-When I tested on 4.19 and 4.20 these CRC errors can be seen to cause
-re-tuning.  Since I am currently developing on 4.19 this was the
-original problem I attempted to solve.
+Unless you have time to help dig into all the possibilities here to
+help understand how this should behave across all the different host
+controllers / wakeup setups, maybe we could just land ${SUBJECT} patch
+for now and when there is more clarity we can revisit?
 
-On mainline it turns out that you don't see the retuning errors but
-you see tons of spam about timeouts trying to wakeup from sleep.  I
-tracked down the commit that was causing that and have partially
-reverted it here.  I have no real knowledge about Broadcom WiFi, but
-the commit that was causing problems sounds (from the descriptioin) to
-be a hack commit penalizing all Broadcom WiFi users because of a bug
-in a Cypress SD controller.  I will let others comment if this is
-truly the case and, if so, what the right solution should be.
+Thanks!
 
-There wasn't a good resolution on v1 and it's been a while, so I'm
-sending out a v2.  Other than changing patch #1 to a full revert, the
-only other changes here are just to the patch descriptions.
-
-Changes in v2:
-- A full revert, not just a partial one (Arend).  ...with explicit Cc.
-- Updated commit message to clarify based on discussion of v1.
-
-Douglas Anderson (3):
-  Revert "brcmfmac: disable command decode in sdio_aos"
-  mmc: core: API for temporarily disabling auto-retuning due to errors
-  brcmfmac: sdio: Disable auto-tuning around commands expected to fail
-
- drivers/mmc/core/core.c                       | 27 +++++++++++++++++--
- .../broadcom/brcm80211/brcmfmac/sdio.c        |  9 +++----
- include/linux/mmc/core.h                      |  2 ++
- include/linux/mmc/host.h                      |  1 +
- 4 files changed, 32 insertions(+), 7 deletions(-)
-
--- 
-2.22.0.rc1.311.g5d7573a151-goog
-
+-Doug
