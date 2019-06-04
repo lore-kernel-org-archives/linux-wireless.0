@@ -2,83 +2,116 @@ Return-Path: <SRS0=5aJJ=UD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,T_DKIMWL_WL_HIGH autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 569E7C282CE
-	for <linux-wireless@archiver.kernel.org>; Tue,  4 Jun 2019 10:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AD4AC282CE
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Jun 2019 11:33:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D0C424BAA
-	for <linux-wireless@archiver.kernel.org>; Tue,  4 Jun 2019 10:06:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559642782;
-	bh=MQoyrD6Bmiyjp0O8dCZV1jCQyA7pDR8Ab/0HZDHSids=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=pfjW2qm0UU6vo5DRQgWSoFd0FigxIRhRvItGYenP6tUQZ3ni5zK8jcHOpuM0hEtCO
-	 2By9Xg4Nx1NyAv1c3yW19Wl9Nru0UgkMw9kuYjGBEC9Bc/yhdeIgua0IvbjPzdh2lP
-	 8vfqW0a/tlMwsETyDTkMo62oGqOZuSN/gemIUziM=
+	by mail.kernel.org (Postfix) with ESMTP id 74A1D24BF6
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Jun 2019 11:33:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cX5NyM5y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727057AbfFDKGU (ORCPT
+        id S1727403AbfFDLdY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 4 Jun 2019 06:06:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37540 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726982AbfFDKGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Jun 2019 06:06:20 -0400
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com [149.6.153.186])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 81F9224B8B;
-        Tue,  4 Jun 2019 10:06:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559642779;
-        bh=MQoyrD6Bmiyjp0O8dCZV1jCQyA7pDR8Ab/0HZDHSids=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Ozvzw/5QLu8sBRLN3nv5zjkJOt7hf5PbbBJyoq1yIC8v/rl3hqNhiYC53RJvtBf3u
-         C2F9uvcQlNcCzwSg7uxbL/+e00NxJ8sdyWRa/lLaEiJYTLvR4bf9nRpCPoi7P56tSe
-         MBpR/haEbtiqv+sU6jU4zO6JnHXRE6xfS5cDHSV0=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        ryder.lee@mediatek.com, royluo@google.com
-Subject: [PATCH] mt76: mt7615: remove unused variable in mt7615_mcu_set_bcn
-Date:   Tue,  4 Jun 2019 12:06:06 +0200
-Message-Id: <d2b9a68b797fbbd67fe8f3be0fe851113eaa1488.1559641771.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.21.0
+        Tue, 4 Jun 2019 07:33:24 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:33261 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727296AbfFDLdY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Jun 2019 07:33:24 -0400
+Received: by mail-pf1-f193.google.com with SMTP id x15so2721441pfq.0
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2019 04:33:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=EUprF+8/pHWVdRSsm+gYg6Nl/I7GuQYxpR2PKTuS704=;
+        b=cX5NyM5ycgQOuk4IAmaDphsDa6H1d8CV7lcsQ4WAlb3RMe7FRqEdFwUIy/zUw8PT8H
+         Haqw45ol2rk0FawObSUduoqdJamkzKEihgKpPg8h/L/kNvLP5+HNu60rp64HSLBJfQpF
+         3HigbEfhYLItfyDMYlI5C8j8tpV6TYxxSik3E=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=EUprF+8/pHWVdRSsm+gYg6Nl/I7GuQYxpR2PKTuS704=;
+        b=Ny9TqsbAwEtvaNGgO8RRfQE8B6ByDctKyqBmLfzw3fakt3AYC0buEivTo/35rWZtL4
+         k8y/uC2Tnz+TFLnFRBE30jEHoD/wcuoIvTtlYAIOc1/fM9x7CWVDO4OYNQfz27R+q6Rr
+         F5kCfqGdEmxyscxKOhGcAMwZtaotjhF7oLINKF8ebRwd3JJTqodg1AuqC2q8lzYRDVxm
+         DeANGsC+mE6Tseb3DRhS0ZXD6RE2fTbAxJuzTVlcwUOM9kpE02z08dEfWQ9vaqbAirNo
+         MNhXW/0wyettklieySf7kzt9AMM+YdYgA2pGG9kQWbs5vobxXFDi9XH9KsseSLocXaWc
+         4cKg==
+X-Gm-Message-State: APjAAAXPq+F/frXYUISJXnSN3beiJ7+Ogwo58O/4tWE+TVAst9eWnYdE
+        6bjC6iBn4YzYs/97HCsWJimUuQ==
+X-Google-Smtp-Source: APXvYqxvTH3i5lfqNDE1vh1a5Z/iOkSgOFTEfkO87DUgwW2C+aCSxKKDsoC0hUv5/Gdl7rHPksKKEw==
+X-Received: by 2002:a62:ea04:: with SMTP id t4mr36483301pfh.47.1559648003307;
+        Tue, 04 Jun 2019 04:33:23 -0700 (PDT)
+Received: from [10.176.68.125] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id u4sm17314721pfu.26.2019.06.04.04.33.19
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 04 Jun 2019 04:33:22 -0700 (PDT)
+Subject: Re: Issue with Broadcom wireless in 5.2rc1 (was Re: [PATCH] mmc:
+ sdhci: queue work after sdhci_defer_done())
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Brian Masney <masneyb@onstation.org>
+Cc:     Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>, ulf.hansson@linaro.org,
+        faiz_abbas@ti.com, linux-mmc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+References: <20190524111053.12228-1-masneyb@onstation.org>
+ <70782901-a9ac-5647-1abe-89c86a44a01b@intel.com>
+ <20190524154958.GB16322@basecamp> <20190526122136.GA26456@basecamp>
+ <e8c049ce-07e1-8b34-678d-41b3d6d41983@broadcom.com>
+ <20190526195819.GA29665@basecamp> <20190527093711.GA853@basecamp>
+ <ead7f268-b730-3541-31f7-4499556efec0@intel.com>
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <af4d6703-8506-dad7-c2ed-13fa8b2e390d@broadcom.com>
+Date:   Tue, 4 Jun 2019 13:33:18 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <ead7f268-b730-3541-31f7-4499556efec0@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove tim_len in mt7615_mcu_set_bcn since it is not actually used
-and ieee80211_beacon_get_tim checks if tim_length is NULL
+On 5/27/2019 2:08 PM, Adrian Hunter wrote:
+> On 27/05/19 12:37 PM, Brian Masney wrote:
+>> On Sun, May 26, 2019 at 03:58:19PM -0400, Brian Masney wrote:
+>>> I attached a patch that shows how I was able to determine what had
+>>> already claimed the host.
+>> On Mon, May 27, 2019 at 10:48:24AM +0300, Adrian Hunter wrote:
+>>> This is because SDHCI is using the IRQ thread to process the SDIO card
+>>> interrupt (sdio_run_irqs()).  When the card driver tries to use the card, it
+>>> causes interrupts which deadlocks since c07a48c26519 ("mmc: sdhci: Remove
+>>> finish_tasklet") has moved the tasklet processing to the IRQ thread.
+>>>
+>>> I would expect to be able to use the IRQ thread to complete requests, and it
+>>> is desirable to do so because it is lower latency.
+>>>
+>>> Probably, SDHCI should use sdio_signal_irq() which queues a work item, and
+>>> is what other drivers are doing.
+>>>
+>>> I will investigate some more and send a patch.
+> 
+> Please try the patch below:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Finally got time to update my kernel to 5.2-rc2. This patch indeed 
+resolves the issue.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 93b1501fbcda..d104435cd901 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -1130,10 +1130,10 @@ int mt7615_mcu_set_bcn(struct mt7615_dev *dev, struct ieee80211_vif *vif,
- 		/* pky_type: 0 for bcn, 1 for tim */
- 		.pkt_type = 0,
- 	};
--	u16 tim_off, tim_len;
- 	struct sk_buff *skb;
-+	u16 tim_off;
- 
--	skb = ieee80211_beacon_get_tim(mt76_hw(dev), vif, &tim_off, &tim_len);
-+	skb = ieee80211_beacon_get_tim(mt76_hw(dev), vif, &tim_off, NULL);
- 	if (!skb)
- 		return -EINVAL;
- 
--- 
-2.21.0
-
+Thanks,
+Arend
