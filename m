@@ -1,78 +1,158 @@
-Return-Path: <SRS0=NUxy=UC=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=5aJJ=UD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37965C04AB5
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Jun 2019 21:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD16C04AB5
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Jun 2019 03:04:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1072F26CEB
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Jun 2019 21:50:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9615F2615D
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Jun 2019 03:04:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="GBjCdM45";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="IYVmL2sp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726488AbfFCVuf (ORCPT
+        id S1726317AbfFDDEJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Jun 2019 17:50:35 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:34468 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726474AbfFCVue (ORCPT
+        Mon, 3 Jun 2019 23:04:09 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60704 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726076AbfFDDEJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Jun 2019 17:50:34 -0400
-Received: from mail-io1-f70.google.com ([209.85.166.70])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1hXubv-00010O-Me
-        for linux-wireless@vger.kernel.org; Mon, 03 Jun 2019 21:35:19 +0000
-Received: by mail-io1-f70.google.com with SMTP id b197so14778570iof.12
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2019 14:35:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=RNep83AE8LBhsGw1w/3vxFBg+hybHJd7awIHSio4qNQ=;
-        b=jlFTKmap/LUKyCC0Mvi0wfTArTINbb3aO03pw0C3wEfLJEaPZ3UkAAMOofDQm8TEnr
-         XK8ab7mU/VYnJuR+3Gl/MgFyjs0vuRL88iivyDmyAngiPwn9IJGZ5AyrltJQjgBQlYo5
-         n73UA2o+E27fkq6icUs5u0HjdX4SQxvWee2I0ILv9ne0Ov2IHXaKAisHOtSRNGfEF112
-         zi50FXM03OD3491xOVgbdcxGzngnL9ATNFDruCRDO7s5rNM5Ig1GnQJxucevSIelh3e1
-         GGGZErvHCUmvEEfgYcZEQo+YjJ4uGj8y0T2K2uV+KHp1jrqgxajWmg8kYIv4jIj4dYNd
-         V6Dg==
-X-Gm-Message-State: APjAAAU72UahoD0QAOpaRTwLI3wvx2M+Y+6jmQr+P1LWGxZiZeUbqLxC
-        Eah3Bgs3PehNLr3Zt7X5iGfLbtY+rOLfuM6EW/jyJu9TZh4e1wBJfWWTPebWHwrcTGHhqfV94Ms
-        OCeqR5i1Qyl/NfRTk7y/dCk3iJXHoF/FH9QhQZR8V2/C5
-X-Received: by 2002:a24:94d0:: with SMTP id j199mr5778184ite.160.1559597718678;
-        Mon, 03 Jun 2019 14:35:18 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqwX+YTx5t6uIoHalxf6N6pxueOISV/oYKWGDJhHR74X1kVlaxM+ogcagVv0ZI80LxeQNDkfnQ==
-X-Received: by 2002:a24:94d0:: with SMTP id j199mr5778171ite.160.1559597718410;
-        Mon, 03 Jun 2019 14:35:18 -0700 (PDT)
-Received: from localhost ([2605:a601:ac2:fb20:9969:6580:f7d1:e724])
-        by smtp.gmail.com with ESMTPSA id b64sm7059266itd.35.2019.06.03.14.35.17
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 03 Jun 2019 14:35:17 -0700 (PDT)
-Date:   Mon, 3 Jun 2019 16:35:16 -0500
-From:   Seth Forshee <seth.forshee@canonical.com>
-To:     Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc:     WIRELESS ML <linux-wireless@vger.kernel.org>,
-        REGDB ML <wireless-regdb@lists.infradead.org>
-Subject: Re: [PATCH] wireless-regdb: update source of information for CU
-Message-ID: <20190603213516.GF4357@ubuntu-xps13>
-References: <20190530110047.3449-1-xose.vazquez@gmail.com>
+        Mon, 3 Jun 2019 23:04:09 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x542tvQK000344;
+        Mon, 3 Jun 2019 20:04:05 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=unhx8NRTUbXuqBmrTMa9hXJj0NkRcaeMiEyye/d8ddE=;
+ b=GBjCdM45TS/UJGhZk7wp0BvD+vw+SRE4j1y6ODDM8iy2TsnJCfBf/33Hg9y2nLKCzSl1
+ Hs+kDyw4awFH5tmzSu7IfRwaybSmU8tlmX+XSe12d1KH1v0kuMdi0h5dSYyPaHNJhm1i
+ ZsPb86rjKVYuWweDOwSsj7wc/xQ9e7hdfICgR1SdtiTYJhE+2SbcKfEVGWlFp6BQ0FiY
+ 4RH33kNqJ1eQGeCXXYZiHe78HVzejc6bQuzdDgPFBJ+Z4b4xERApVw/vu4oqAZNgrusc
+ CpnJU73Utt7+6aoXG7ILHdwcPy+kVV/Hx9LDet9OsOM8Kb4YKnv2FgxgFXGpItZuSEzw VQ== 
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2swejx8cy8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 03 Jun 2019 20:04:05 -0700
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Mon, 3 Jun
+ 2019 20:04:04 -0700
+Received: from NAM01-SN1-obe.outbound.protection.outlook.com (104.47.32.55) by
+ SC-EXCH03.marvell.com (10.93.176.83) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Mon, 3 Jun 2019 20:04:04 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector2-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=unhx8NRTUbXuqBmrTMa9hXJj0NkRcaeMiEyye/d8ddE=;
+ b=IYVmL2spx+KW5rCGXOgWSpZ8h1nucxr4/ckRPIEmWFnSHxGzW/wnAnxCy2FAHlANfkVAg35CTR8bd1X6iUIcwB9ub4crL/KvKnwo2oijHkezm0Fyo2YWgblbJ7ObS29Rd5YdaQw2S2x6cRztSXzz08gHZhfNuMNBx9gO/JZQgKA=
+Received: from MN2PR18MB2637.namprd18.prod.outlook.com (20.179.80.147) by
+ MN2PR18MB2752.namprd18.prod.outlook.com (20.179.21.95) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1943.18; Tue, 4 Jun 2019 03:03:59 +0000
+Received: from MN2PR18MB2637.namprd18.prod.outlook.com
+ ([fe80::3c77:9f53:7e47:7eb8]) by MN2PR18MB2637.namprd18.prod.outlook.com
+ ([fe80::3c77:9f53:7e47:7eb8%7]) with mapi id 15.20.1943.018; Tue, 4 Jun 2019
+ 03:03:59 +0000
+From:   Ganapathi Bhat <gbhat@marvell.com>
+To:     Brian Norris <briannorris@chromium.org>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Amitkumar Karwar" <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [EXT] Re: [4.20 PATCH] Revert "mwifiex: restructure
+ rx_reorder_tbl_lock usage"
+Thread-Topic: [EXT] Re: [4.20 PATCH] Revert "mwifiex: restructure
+ rx_reorder_tbl_lock usage"
+Thread-Index: AQHU1VdpBggtVOS6I0GyhcvAXdDin6aLWDtA
+Date:   Tue, 4 Jun 2019 03:03:59 +0000
+Message-ID: <MN2PR18MB26376D3A660956396D0E60AFA0150@MN2PR18MB2637.namprd18.prod.outlook.com>
+References: <20181130175957.167031-1-briannorris@chromium.org>
+ <20190308023401.GA121759@google.com>
+In-Reply-To: <20190308023401.GA121759@google.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [117.241.207.104]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 3f628d0d-b000-48d8-cb20-08d6e8994a77
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:MN2PR18MB2752;
+x-ms-traffictypediagnostic: MN2PR18MB2752:
+x-microsoft-antispam-prvs: <MN2PR18MB27527162C73774581B2842DCA0150@MN2PR18MB2752.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-forefront-prvs: 0058ABBBC7
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(376002)(39860400002)(136003)(396003)(346002)(199004)(189003)(66066001)(33656002)(66446008)(68736007)(66476007)(64756008)(81166006)(81156014)(66556008)(76176011)(11346002)(8676002)(8936002)(476003)(446003)(26005)(186003)(25786009)(76116006)(54906003)(73956011)(66946007)(486006)(305945005)(7736002)(6506007)(71190400001)(74316002)(4326008)(55016002)(5660300002)(52536014)(9686003)(53936002)(6436002)(229853002)(14444005)(256004)(71200400001)(86362001)(7696005)(14454004)(6916009)(6116002)(3846002)(316002)(102836004)(99286004)(478600001)(2906002)(6246003);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB2752;H:MN2PR18MB2637.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: P8LEtjR4Y6kHJSS9kkMn0nTRulfCP9gmuxGMu0frxW3I4xPsdLj/0bU/ImbXUZIkUcV7DHlAgkJwZgDKcs7g4HBDkexu1aOKvleGjxWus1cCH3bVwaQ2GY0X5xwZSWeuc5Ospu/Zn3/lAiUq/6Ixue8ji0O26yGTMU4KefS9qor0b+hgu3cZ6jUIWo8e+ax3pIAvXOSEc/5FukvLpyeieo8LbZfvL59oIqVBkYowhrF0dkno3fmmcowNKKyPT6EC9roLcUs8x+AmlcDCmSGua27x0vVOsDjqSGc6HxXQnu8FtwTiJisOvP2LGSVM0DRSAKdc2xJtelHS4E1Kt8dCPLfsj9xyjk/LHBFOI5YGKqs7bWvn7byxkMV2ObimYyPrYq1eJRtmbmYNv8ebyyydn08dov1Dssikp0m2H1rWuRQ=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190530110047.3449-1-xose.vazquez@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3f628d0d-b000-48d8-cb20-08d6e8994a77
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Jun 2019 03:03:59.6029
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: gbhat@marvell.com
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2752
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-06-04_03:,,
+ signatures=0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, May 30, 2019 at 01:00:47PM +0200, Xose Vazquez Perez wrote:
-> Cc: Seth Forshee <seth.forshee@canonical.com>
-> Cc: WIRELESS ML <linux-wireless@vger.kernel.org>
-> Cc: REGDB ML <wireless-regdb@lists.infradead.org>
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Hi Brian,
 
-Applied, thanks!
+> >    netif_rx_ni+0xe8/0x120
+> >    mwifiex_recv_packet+0xfc/0x10c [mwifiex]
+> >    mwifiex_process_rx_packet+0x1d4/0x238 [mwifiex]
+> >    mwifiex_11n_dispatch_pkt+0x190/0x1ac [mwifiex]
+> >    mwifiex_11n_rx_reorder_pkt+0x28c/0x354 [mwifiex]
+>=20
+> TL;DR: the problem was right here ^^^
+> where you started running mwifiex_11n_dispatch_pkt() (via
+> mwifiex_11n_scan_and_dispatch()) while holding a spinlock.
+>=20
+> When you do that, you eventually call netif_rx_ni(), which specifically d=
+efers
+> to softirq contexts. Then, if you happen to have your flush timer expirin=
+g just
+> before that, you end up in mwifiex_flush_data(), which also needs that
+> spinlock.
+
+Understood; Thanks for this detail;
+
+>=20
+> There are a few possible ways to handle this:
+> (a) prevent processing softirqs in that context; e.g., with
+>     local_bh_disable(). This seems somewhat of a hack.
+>     (Side note: I think most of the locks in this driver really could be
+>     spin_lock_bh(), not spin_lock_irqsave() -- we don't really care
+>     about hardirq context for 99% of these locks.)
+> (b) restructure so that packet processing (e.g., netif_rx_ni()) is done
+>     outside of the spinlock.
+>=20
+> It's actually not that hard to do (b). You can just queue your skb's up i=
+n a
+> temporary sk_buff_head list and process them all at once after you've
+> finished processing the reorder table. I have a local patch to do this, a=
+nd I
+> might send it your way if I can give it a bit more testing.
+
+
+OK; That will be good; We will run a complete test after the patch; (OR we =
+can work on this, share for review);
+
+Regards,
+Ganapathi
