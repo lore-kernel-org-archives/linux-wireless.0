@@ -2,231 +2,192 @@ Return-Path: <SRS0=9AY8=UF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8ED9C04AB5
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 18:41:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92FC4C04AB5
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 18:48:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 89D2920868
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 18:41:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 645AC20868
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 18:48:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WjmL9wVq"
+	dkim=pass (1024-bit key) header.d=wp.pl header.i=@wp.pl header.b="JmPSPtkL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727343AbfFFSlf (ORCPT
+        id S1727631AbfFFSsy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 6 Jun 2019 14:41:35 -0400
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:35382 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726066AbfFFSle (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jun 2019 14:41:34 -0400
-Received: by mail-ot1-f65.google.com with SMTP id j19so2957649otq.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jun 2019 11:41:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=dQw0Ep4ybC1oAO5ostHodAu2cXVAC1LcvUfzJVxA2zs=;
-        b=WjmL9wVqo09Wey3bgIdc2HnVHMXt+v2NJ2SHfj5J60b+XQftsHBhZOGFo2TcTO2BJd
-         X63XZjKofQHrLKCo+3X8efxGSs7uDnK+ffw5SOU/znVlWP3CtlOIdci3SG7EaNE9BkHo
-         /hBvAsP34QYBrds0TgDQ9dGYgkNoeC+JYCtfUbTbtpqezoAaVferqCHvuBDwt+oV2M9o
-         Jrhhz+YK+Pqezm7/+KjaSdf/3fF1gkNhkN2Dzy1XJ+pbpM5blb7zFhpnwoZKe9q9qByu
-         t4p2RYBIzCqfaFK7PLic6SQRjiZdgr/1FD4tMaBod4N3uk9ayQpXhqyunhPqs8OKYsUm
-         CAVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=dQw0Ep4ybC1oAO5ostHodAu2cXVAC1LcvUfzJVxA2zs=;
-        b=Jq1HptEldQUBofo7sgD8nO4OOoG8GigDgTx9n5Vbvnbg1HUm5bkiAojPiNbfm0Kq6C
-         WOaUcM7fJ8IAIIa6XmS5czMA8nm3lSrc+j3cyeyAMIV/+CyFYwR0z4hLqaHOEZnNDVDM
-         8zoLyAxm5NqNjXDVpC8Wjmv24SyiSoq6fDRJTuoBVH3ig62Rx2YMvMn+PAfq3NmN91Jb
-         BDGtxdBEzlgBST0SpLITFHg0qA+hK+qeV0C+ZYLfYKK66pzHcMjiEvktY5XJy6o3ujNZ
-         /XuwhE+5n65buRxG9tZ9KVscp0R6Dw8ZM+ul2fmy/qRqgtnWuAcKd25y18YDMN/5WWfe
-         i/TQ==
-X-Gm-Message-State: APjAAAUsgFH7fe4+av9jo334uUvFn2zzmdZpVP8piPm+99WTJqKvcY/X
-        aal+Cq3Bi+cGRmXcEt8v9MsFw7rsY1n429MThsSGuQ==
-X-Google-Smtp-Source: APXvYqyYN1JENt1ZWlmC3R6x7IIfaXwEZGOpkrollL7qDiXG32SgFIT9QFimyKsK7oL4dUrg6Q0+9BIP8t47NS0Efck=
-X-Received: by 2002:a9d:3b84:: with SMTP id k4mr10114169otc.27.1559846493661;
- Thu, 06 Jun 2019 11:41:33 -0700 (PDT)
+        Thu, 6 Jun 2019 14:48:54 -0400
+Received: from mx3.wp.pl ([212.77.101.9]:35642 "EHLO mx3.wp.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727446AbfFFSsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Jun 2019 14:48:54 -0400
+X-Greylist: delayed 376 seconds by postgrey-1.27 at vger.kernel.org; Thu, 06 Jun 2019 14:48:52 EDT
+Received: (wp-smtpd smtp.wp.pl 6363 invoked from network); 6 Jun 2019 20:48:50 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=1024a;
+          t=1559846931; bh=Q4uXcWqxnfiKK35xUxUuDfBI699GZMYJ7M08wC7xsAQ=;
+          h=From:To:Cc:Subject;
+          b=JmPSPtkLJx4akFIunydHX8/b5U8GyjWpNjNX2BDk2CmITFqWDwN/gcTEWihziUxZc
+           E4DgBmCz+FXL6+2dtEmH5dNAxCN2+JBhW1fL6o3r7KQXF9KYYxWm+DEPBDA70dAnIV
+           +FL4JIro7d9aRfCIn66GIUo8s39XXj0XsmOJD7rQ=
+Received: from 014.152-60-66-biz-static.surewest.net (HELO cakuba.netronome.com) (kubakici@wp.pl@[66.60.152.14])
+          (envelope-sender <kubakici@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
+          for <lorenzo@kernel.org>; 6 Jun 2019 20:48:50 +0200
+Date:   Thu, 6 Jun 2019 11:48:45 -0700
+From:   Jakub Kicinski <kubakici@wp.pl>
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
+Subject: Re: [PATCH] mt7601u: fix possible memory leak when the device is
+ disconnected
+Message-ID: <20190606114845.4026270e@cakuba.netronome.com>
+In-Reply-To: <27c6d00cfb5936978cfb8304c6e1f03973905848.1559835089.git.lorenzo@kernel.org>
+References: <27c6d00cfb5936978cfb8304c6e1f03973905848.1559835089.git.lorenzo@kernel.org>
 MIME-Version: 1.0
-Received: by 2002:a05:6830:1346:0:0:0:0 with HTTP; Thu, 6 Jun 2019 11:41:32
- -0700 (PDT)
-In-Reply-To: <c8484254-f4f7-9955-e3f8-8a423cc6c325@codeaurora.org>
-References: <1557307533-5795-1-git-send-email-mpubbise@codeaurora.org>
- <fd3addc01fc3f5362dba5771ee82659cf01c195b.camel@sipsolutions.net> <c8484254-f4f7-9955-e3f8-8a423cc6c325@codeaurora.org>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Thu, 6 Jun 2019 20:41:32 +0200
-Message-ID: <CAKR_QV+dVx+LK1HyCo6CQZQ7ZX_u6ON0hEH5adNiJTB+XaP3WA@mail.gmail.com>
-Subject: Re: [PATCH v3] {nl,mac}80211: allow 4addr AP operation on crypto
- controlled devices
-To:     Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-WP-MailID: ec05270bb05e77ce495625164c2f2bce
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 000000A [ceNE]                               
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 31/05/2019, Manikanta Pubbisetty <mpubbise@codeaurora.org> wrote:
->
-> On 5/14/2019 2:08 PM, Johannes Berg wrote:
->> On Wed, 2019-05-08 at 14:55 +0530, Manikanta Pubbisetty wrote:
->>> +++ b/net/mac80211/util.c
->>> @@ -3795,7 +3795,9 @@ int ieee80211_check_combinations(struct
->>> ieee80211_sub_if_data *sdata,
->>>   	}
->>>
->>>   	/* Always allow software iftypes */
->>> -	if (local->hw.wiphy->software_iftypes & BIT(iftype)) {
->>> +	if (local->hw.wiphy->software_iftypes & BIT(iftype) ||
->>> +	    (iftype == NL80211_IFTYPE_AP_VLAN &&
->>> +	     local->hw.wiphy->flags & WIPHY_FLAG_4ADDR_AP)) {
->>>   		if (radar_detect)
->>>   			return -EINVAL;
->> Shouldn't this check if 4addr is actually enabled too, like here:
->
->
-> Sure Johannes, I'll look into it.
->
->
->>>   	case NETDEV_PRE_UP:
->>> -		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)))
->>> +		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)) &&
->>> +		    !(wdev->iftype == NL80211_IFTYPE_AP_VLAN &&
->>> +		      rdev->wiphy.flags & WIPHY_FLAG_4ADDR_AP &&
->>> +		      wdev->use_4addr))
->>>   			return notifier_from_errno(-EOPNOTSUPP);
->> ?
->> Or is there some reason it doesn't matter?
->>
->>> @@ -3439,6 +3438,11 @@ static int nl80211_new_interface(struct sk_buff
->>> *skb, struct genl_info *info)
->>>   			return err;
->>>   	}
->>>
->>> +	if (!(rdev->wiphy.interface_modes & (1 << type)) &&
->>> +	    !(type == NL80211_IFTYPE_AP_VLAN && params.use_4addr &&
->>> +	      rdev->wiphy.flags & WIPHY_FLAG_4ADDR_AP))
->>> +		return -EOPNOTSUPP;
->>> +
->> I also wonder if we shouldn't go "all in" and actually make the check
->> something like
->>
->>    check_interface_allowed(iftype, 4addr):
->>      if (iftype == AP_VLAN && 4addr)
->>        return wiphy.flags & WIPHY_FLAG_4ADDR_AP;
->>
->>      else return wiphy.interface_modes & BIT(iftype);
->>
->> i.e. make it "you must have WIPHY_FLAG_4ADDR_AP to use 4-addr AP_VLAN
->> interfaces", rather than "also allow it in this case".
->>
->> That would seem like the clearer semantics to me?
->
->
-> Yeah, it can be better; I'll check if this is feasible.
->
->
-> Thanks,
->
-> Manikanta
->
->
+On Thu,  6 Jun 2019 17:34:16 +0200, Lorenzo Bianconi wrote:
+> When the device is disconnected while passing traffic it is possible
+> to receive out of order urbs causing a memory leak since the skb liked
+> to the current tx urb is not removed. Fix the issue deallocating the skb
+> cleaning up the tx ring. Moreover this patch fixes the following kernel
+> warning
 
-Hi
+Ugh if we don't have ordering guarantees then the entire "ring" scheme
+no longer works :(  Should we move to URB queues, I don't remember now,
+but there seem to had been a better way to manage URBs :S
 
-Applying this patch instead of v1 broke WDS operation between two
-Litebeam AC Gen2 devices:
+> [   57.480771] usb 1-1: USB disconnect, device number 2
+> [   57.483451] ------------[ cut here ]------------
+> [   57.483462] TX urb mismatch
+> [   57.483481] WARNING: CPU: 1 PID: 32 at drivers/net/wireless/mediatek/mt7601u/dma.c:245 mt7601u_complete_tx+0x165/00
+> [   57.483483] Modules linked in:
+> [   57.483496] CPU: 1 PID: 32 Comm: kworker/1:1 Not tainted 5.2.0-rc1+ #72
+> [   57.483498] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.12.0-2.fc30 04/01/2014
+> [   57.483502] Workqueue: usb_hub_wq hub_event
+> [   57.483507] RIP: 0010:mt7601u_complete_tx+0x165/0x1e0
+> [   57.483510] Code: 8b b5 10 04 00 00 8b 8d 14 04 00 00 eb 8b 80 3d b1 cb e1 00 00 75 9e 48 c7 c7 a4 ea 05 82 c6 05 f
+> [   57.483513] RSP: 0000:ffffc900000a0d28 EFLAGS: 00010092
+> [   57.483516] RAX: 000000000000000f RBX: ffff88802c0a62c0 RCX: ffffc900000a0c2c
+> [   57.483518] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffff810a8371
+> [   57.483520] RBP: ffff88803ced6858 R08: 0000000000000000 R09: 0000000000000001
+> [   57.483540] R10: 0000000000000002 R11: 0000000000000000 R12: 0000000000000046
+> [   57.483542] R13: ffff88802c0a6c88 R14: ffff88803baab540 R15: ffff88803a0cc078
+> [   57.483548] FS:  0000000000000000(0000) GS:ffff88803eb00000(0000) knlGS:0000000000000000
+> [   57.483550] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   57.483552] CR2: 000055e7f6780100 CR3: 0000000028c86000 CR4: 00000000000006a0
+> [   57.483554] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> [   57.483556] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> [   57.483559] Call Trace:
+> [   57.483561]  <IRQ>
+> [   57.483565]  __usb_hcd_giveback_urb+0x77/0xe0
+> [   57.483570]  xhci_giveback_urb_in_irq.isra.0+0x8b/0x140
+> [   57.483574]  handle_cmd_completion+0xf5b/0x12c0
+> [   57.483577]  xhci_irq+0x1f6/0x1810
+> [   57.483581]  ? lockdep_hardirqs_on+0x9e/0x180
+> [   57.483584]  ? _raw_spin_unlock_irq+0x24/0x30
+> [   57.483588]  __handle_irq_event_percpu+0x3a/0x260
+> [   57.483592]  handle_irq_event_percpu+0x1c/0x60
+> [   57.483595]  handle_irq_event+0x2f/0x4c
+> [   57.483599]  handle_edge_irq+0x7e/0x1a0
+> [   57.483603]  handle_irq+0x17/0x20
+> [   57.483607]  do_IRQ+0x54/0x110
+> [   57.483610]  common_interrupt+0xf/0xf
+> [   57.483612]  </IRQ>
+> 
+> Fixes: c869f77d6abb ("add mt7601u driver")
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> ---
+>  drivers/net/wireless/mediatek/mt7601u/dma.c | 24 +++++++++++++++------
+>  drivers/net/wireless/mediatek/mt7601u/tx.c  |  4 ++--
+>  2 files changed, 19 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
+> index e7703990b291..bbf1deed7f3b 100644
+> --- a/drivers/net/wireless/mediatek/mt7601u/dma.c
+> +++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
+> @@ -238,14 +238,25 @@ static void mt7601u_complete_tx(struct urb *urb)
+>  	struct sk_buff *skb;
+>  	unsigned long flags;
+>  
+> -	spin_lock_irqsave(&dev->tx_lock, flags);
+> +	switch (urb->status) {
+> +	case -ECONNRESET:
+> +	case -ESHUTDOWN:
+> +	case -ENOENT:
+> +		return;
+> +	default:
+> +		dev_err_ratelimited(dev->dev, "tx urb failed: %d\n",
+> +				    urb->status);
+> +		/* fall through */
+> +	case 0:
+> +		break;
+> +	}
+>  
+> -	if (mt7601u_urb_has_error(urb))
+> -		dev_err(dev->dev, "Error: TX urb failed:%d\n", urb->status);
+> +	spin_lock_irqsave(&dev->tx_lock, flags);
+>  	if (WARN_ONCE(q->e[q->start].urb != urb, "TX urb mismatch"))
+>  		goto out;
+>  
+>  	skb = q->e[q->start].skb;
+> +	q->e[q->start].skb = NULL;
+>  	trace_mt_tx_dma_done(dev, skb);
+>  
+>  	__skb_queue_tail(&dev->tx_skb_done, skb);
+> @@ -446,10 +457,10 @@ static void mt7601u_free_tx_queue(struct mt7601u_tx_queue *q)
+>  {
+>  	int i;
+>  
+> -	WARN_ON(q->used);
+> -
+>  	for (i = 0; i < q->entries; i++)  {
+>  		usb_poison_urb(q->e[i].urb);
+> +		if (q->e[i].skb)
+> +			mt7601u_tx_status(q->dev, q->e[i].skb);
 
-Thu Jun  6 19:38:43 2019 kern.info kernel: [  625.840896] device
-wlan0.sta1 left promiscuous mode
-Thu Jun  6 19:38:43 2019 kern.info kernel: [  625.846146] br-lan: port
-3(wlan0.sta1) entered disabled state
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.854349]
-------------[ cut here ]------------
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.859253] WARNING:
-CPU: 0 PID: 1417 at backports-4.19.32-1/net/mac80211/key.c:907
-ieee80211_free_keys+0x170/0x228 [mac80211]
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.870871] Modules
-linked in: ath9k ath9k_common pppoe ppp_async ath9k_hw ath10k_pci
-ath10k_core ath pppox ppp_generic mac80211 iptable_nat iptable_mangle
-iptable_filter ipt_REJECT ipt_MASQUERADE ip_tables cfg80211 xt_time
-xt_tcpudp xt_state xt_nat xt_multiport xt_mark xt_mac xt_limit
-xt_conntrack xt_comment xt_TCPMSS xt_REDIRECT xt_LOG xt_FLOWOFFLOAD
-x_tables thermal_sys slhc nf_reject_ipv4 nf_nat_redirect
-nf_nat_masquerade_ipv4 nf_conntrack_ipv4 nf_nat_ipv4 nf_nat
-nf_log_ipv4 nf_log_common nf_flow_table_hw nf_flow_table
-nf_defrag_ipv4 nf_conntrack_rtcache nf_conntrack hwmon crc_ccitt
-compat ehci_platform ehci_hcd gpio_button_hotplug usbcore nls_base
-usb_common
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.930674] CPU: 0 PID:
-1417 Comm: hostapd Not tainted 4.14.118 #0
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.936958] Stack :
-804d0000 80489150 00000000 00000000 80460fc0 82e79a9c 82e9d35c
-804b1307
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.945494]
-8045d190 00000589 80603670 0000038b 804838a0 00000001 82e79a50
-688195c4
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.954197]
-00000000 00000000 80600000 00003dd0 00000000 00000000 00000008
-00000000
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.962745]
-000000c8 d9e4e916 000000c7 00000000 80000000 00000000 83266130
-83234cfc
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.971247]
-00000009 0000038b 804838a0 00000100 00000001 8026bd44 00000000
-80600000
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.979754]         ...
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.982249] Call Trace:
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.984764] [<8006a9ec>]
-show_stack+0x58/0x100
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.989305] [<80085080>]
-__warn+0xe4/0x118
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.993492] [<80085144>]
-warn_slowpath_null+0x1c/0x28
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  625.998793] [<83234cfc>]
-ieee80211_free_keys+0x170/0x228 [mac80211]
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  626.005308] [<8321611c>]
-ieee80211_ibss_leave+0xa70/0x1940 [mac80211]
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  626.011970] [<802f4998>]
-rollback_registered_many+0x2dc/0x414
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  626.017813] [<802f60b0>]
-unregister_netdevice_queue+0x94/0xec
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  626.023762] [<8321fd8c>]
-ieee80211_nan_func_match+0x2894/0x29a0 [mac80211]
-Thu Jun  6 19:38:43 2019 kern.warn kernel: [  626.030795] ---[ end
-trace 5309fee2cf0ee39d ]---
-Thu Jun  6 19:38:43 2019 daemon.notice hostapd: wlan0:
-WDS-STA-INTERFACE-REMOVED ifname=wlan0.sta1 sta_addr=18:e8:29:30:9b:2c
-Thu Jun  6 19:38:48 2019 daemon.info hostapd: wlan0: STA
-18:e8:29:30:9b:2c IEEE 802.11: authenticated
-Thu Jun  6 19:38:48 2019 daemon.info hostapd: wlan0: STA
-18:e8:29:30:9b:2c IEEE 802.11: associated (aid 1)
-Thu Jun  6 19:38:48 2019 kern.info kernel: [  631.114522] br-lan: port
-3(wlan0.sta1) entered blocking state
-Thu Jun  6 19:38:48 2019 kern.info kernel: [  631.120364] br-lan: port
-3(wlan0.sta1) entered disabled state
-Thu Jun  6 19:38:48 2019 kern.info kernel: [  631.126603] device
-wlan0.sta1 entered promiscuous mode
-Thu Jun  6 19:38:48 2019 daemon.notice hostapd: wlan0:
-WDS-STA-INTERFACE-ADDED ifname=wlan0.sta1 sta_addr=18:e8:29:30:9b:2c
-Thu Jun  6 19:38:48 2019 daemon.err hostapd: Could not set interface
-wlan0.sta1 flags (UP): Invalid argument
-Thu Jun  6 19:38:48 2019 daemon.err hostapd: nl80211: Failed to set
-WDS STA interface wlan0.sta1 up
-Thu Jun  6 19:38:48 2019 daemon.err hostapd: nl80211:
-NL80211_ATTR_STA_VLAN (addr=18:e8:29:30:9b:2c ifname=wlan0.sta1
-vlan_id=0) failed: -127 (Network is down)
-Thu Jun  6 19:38:48 2019 daemon.notice hostapd: wlan0:
-AP-STA-CONNECTED 18:e8:29:30:9b:2c
-Thu Jun  6 19:38:48 2019 daemon.info hostapd: wlan0: STA
-18:e8:29:30:9b:2c WPA: pairwise key handshake completed (RSN)
+Perhaps a separate patch?
 
-Reverting v1 of the patch restored connection.
+>  		usb_free_urb(q->e[i].urb);
+>  	}
+>  }
+> @@ -463,6 +474,7 @@ static void mt7601u_free_tx(struct mt7601u_dev *dev)
+>  
+>  	for (i = 0; i < __MT_EP_OUT_MAX; i++)
+>  		mt7601u_free_tx_queue(&dev->tx_q[i]);
+> +	tasklet_kill(&dev->tx_tasklet);
+>  }
+>  
+>  static int mt7601u_alloc_tx_queue(struct mt7601u_dev *dev,
+> @@ -528,6 +540,4 @@ void mt7601u_dma_cleanup(struct mt7601u_dev *dev)
+>  
+>  	mt7601u_free_rx(dev);
+>  	mt7601u_free_tx(dev);
+> -
+> -	tasklet_kill(&dev->tx_tasklet);
+>  }
+> diff --git a/drivers/net/wireless/mediatek/mt7601u/tx.c b/drivers/net/wireless/mediatek/mt7601u/tx.c
+> index 3600e911a63e..4d81c45722fb 100644
+> --- a/drivers/net/wireless/mediatek/mt7601u/tx.c
+> +++ b/drivers/net/wireless/mediatek/mt7601u/tx.c
+> @@ -117,9 +117,9 @@ void mt7601u_tx_status(struct mt7601u_dev *dev, struct sk_buff *skb)
+>  	info->status.rates[0].idx = -1;
+>  	info->flags |= IEEE80211_TX_STAT_ACK;
+>  
+> -	spin_lock(&dev->mac_lock);
+> +	spin_lock_bh(&dev->mac_lock);
+>  	ieee80211_tx_status(dev->hw, skb);
+> -	spin_unlock(&dev->mac_lock);
+> +	spin_unlock_bh(&dev->mac_lock);
+>  }
+>  
+>  static int mt7601u_skb_rooms(struct mt7601u_dev *dev, struct sk_buff *skb)
 
-Regards, Tom
