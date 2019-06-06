@@ -2,49 +2,84 @@ Return-Path: <SRS0=9AY8=UF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5E76C28CC5
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 00:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A20ACC28CC5
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 03:06:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B21A2070B
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 00:55:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76531206B8
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 03:06:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EV/94w61"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726593AbfFFAzS (ORCPT
+        id S1726568AbfFFDGV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Jun 2019 20:55:18 -0400
-Received: from gate.crashing.org ([63.228.1.57]:37120 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726532AbfFFAzS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jun 2019 20:55:18 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x560spOn002708;
-        Wed, 5 Jun 2019 19:54:53 -0500
-Message-ID: <dfe6451c93574b61d4bdde4a05c5f8ccf86b31a0.camel@kernel.crashing.org>
+        Wed, 5 Jun 2019 23:06:21 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:41960 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726474AbfFFDGV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Jun 2019 23:06:21 -0400
+Received: by mail-ot1-f66.google.com with SMTP id 107so597155otj.8;
+        Wed, 05 Jun 2019 20:06:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=NLcc8Hvj4GxnkbZqOSpti57+EMywR1QkzctaKlv9FJA=;
+        b=EV/94w61cJndW/aF09hT2OcRE+FgL4ycdCqgiGCIlPUBHZaw4RCokWfccuZsBTni+H
+         A8hpGC53VKVyXWlsr0ebnvShJizejBIdhp7LqCqlAG7ajtZOIRYcBm1+bt+6ghAjh7mK
+         K9deV8X0D/Yzw2ukIVzanS+6Bnk5MW7PVgjKYJLitlYdSQIP/0bNvrSU8cREls2bq4Oi
+         mTeKWqJbdA0D4u/mmWIuzkmjNyPTKqRjFYdGyjp8KYzcG+jbCAC8tgcVdyjWfVLxxAj+
+         p+L0uioQLYpw4WZI6qD5aBVhGXtbgCDj7aQGGvAc50k2+2qvVLdxflrJgaGmrhdN7OO+
+         SvDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=NLcc8Hvj4GxnkbZqOSpti57+EMywR1QkzctaKlv9FJA=;
+        b=PVE0mdoBU+4dFpPAGzhfvjRgiqM9Jvl3D4DhZTrHeIc/64ar4u0WkLP29RkcSPHo1n
+         TTYCYIU+tzzuUF4tUfs4Oe+3ehY1Ief1qQ6EebIN7mGDMkaoLXIWTum25bpx9sudBBIT
+         t4GcM7lLXbN6Cf/yxiljvSVQb2jB6hECzzlGM6HaWcGoQXfSl3jYFI0uchei8y5invHz
+         TtGerZlXZZhsprDgwYtvwzMjTi7xxTAvdxih+0uC28VvaE2CLvp7GGxEwexlgcz2bcqc
+         JyQ66QPqKk9t03URPoPQAjOogAF8/BkfrCoLUcf408EAt5IeUMbZO99NF9NbXIqhesSl
+         zPwA==
+X-Gm-Message-State: APjAAAWmeoXhpXZCihlHRSI3FrbRzelcNX/14qk5hnXT8pn7CgPKi7Pg
+        9M24hi4CF6Cxy7HbS+PAD6g=
+X-Google-Smtp-Source: APXvYqxjGCBhEAui2RBiuztJJeXSwwWM/3JyYC5cgJCRJFtBekZKrRXELpA8QUdY9Iq6B9LmR5hhCg==
+X-Received: by 2002:a9d:6042:: with SMTP id v2mr6290825otj.73.1559790380624;
+        Wed, 05 Jun 2019 20:06:20 -0700 (PDT)
+Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id y4sm245567oiy.56.2019.06.05.20.06.19
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Wed, 05 Jun 2019 20:06:19 -0700 (PDT)
 Subject: Re: [BISECTED REGRESSION] b43legacy broken on G4 PowerBook
-From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To:     Aaro Koskinen <aaro.koskinen@iki.fi>,
         Christoph Hellwig <hch@lst.de>,
         Christian Zigotzky <chzigotzky@xenosoft.de>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     linuxppc-dev@lists.ozlabs.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Thu, 06 Jun 2019 10:54:51 +1000
-In-Reply-To: <20190605225059.GA9953@darkstar.musicnaut.iki.fi>
+        Michael Ellerman <mpe@ellerman.id.au>
+Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
 References: <20190605225059.GA9953@darkstar.musicnaut.iki.fi>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <35b3f09b-b371-e2cc-4436-120c67e2f1fb@lwfinger.net>
+Date:   Wed, 5 Jun 2019 22:06:18 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
+MIME-Version: 1.0
+In-Reply-To: <20190605225059.GA9953@darkstar.musicnaut.iki.fi>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-06-06 at 01:50 +0300, Aaro Koskinen wrote:
+On 6/5/19 5:50 PM, Aaro Koskinen wrote:
 > Hi,
 > 
 > When upgrading from v5.0 -> v5.1 on G4 PowerBook, I noticed WLAN does
@@ -55,11 +90,6 @@ On Thu, 2019-06-06 at 01:50 +0300, Aaro Koskinen wrote:
 > [   42.184873] b43legacy-phy0 ERROR: The machine/kernel does not support the required 30-bit DMA mask
 > 
 > The same happens with the current mainline.
-
-How much RAM do you have ?
-
-Ben.
-
 > 
 > Bisected to:
 > 
@@ -75,6 +105,21 @@ Ben.
 > 	    Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 	    Tested-by: Christian Zigotzky <chzigotzky@xenosoft.de>
 > 	    Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
-> 
-> A.
 
+Aaro,
+
+First of all, you have my sympathy for the laborious bisection on a PowerBook 
+G4. I have done several myself. Thank you.
+
+I confirm your results.
+
+The ppc code has a maximum DMA size of 31 bits, thus a 32-bit request will fail. 
+Why the 30-bit fallback fails in b43legacy fails while it works in b43 is a mystery.
+
+Although dma_nommu_dma_supported() may be "largely identical" to 
+dma_direct_supported(), they obviously differ. Routine dma_nommu_dma_supported() 
+returns 1 for 32-bit systems, but I do not know what dma_direct_supported() returns.
+
+I am trying to find a patch.
+
+Larry
