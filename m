@@ -2,177 +2,143 @@ Return-Path: <SRS0=9AY8=UF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9C39C04AB5
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 18:49:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FDB1C46470
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 19:26:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3CFAC20868
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 18:49:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F211020868
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 Jun 2019 19:26:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wp.pl header.i=@wp.pl header.b="KeWGigXQ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tfehlKGs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727646AbfFFStR (ORCPT
+        id S1729426AbfFFT0X (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 6 Jun 2019 14:49:17 -0400
-Received: from mx4.wp.pl ([212.77.101.12]:45695 "EHLO mx4.wp.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727238AbfFFStR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jun 2019 14:49:17 -0400
-Received: (wp-smtpd smtp.wp.pl 27836 invoked from network); 6 Jun 2019 20:42:34 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=1024a;
-          t=1559846554; bh=Lsx67oBhojXHqslSUFhVXRs8nln/3mpohFJjjUV6o9M=;
-          h=From:To:Cc:Subject;
-          b=KeWGigXQkH7eAtFGpKrl+Sy53wmVP4W9O9Qz8khMXmckWmyetwoqP76Gmx9V1+fD3
-           76V5ELC4rpZj0FoM2DmjUWGB+lSDlIyF2JKCDig9m3xsvFciNtPSQo7nrwq6SW2Lzo
-           xB0Msb6Eg7wDb1EClvvo25lvAptXdcrmR7qN2KEA=
-Received: from 014.152-60-66-biz-static.surewest.net (HELO cakuba.netronome.com) (kubakici@wp.pl@[66.60.152.14])
-          (envelope-sender <kubakici@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <lorenzo@kernel.org>; 6 Jun 2019 20:42:34 +0200
-Date:   Thu, 6 Jun 2019 11:42:28 -0700
-From:   Jakub Kicinski <kubakici@wp.pl>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
-Subject: Re: [PATCH] mt7601u: do not schedule rx_tasklet when the device has
- been disconnected
-Message-ID: <20190606114228.7a0ba115@cakuba.netronome.com>
-In-Reply-To: <a3c72b07e229e1d16e93438d741d69abba6a18cf.1559822991.git.lorenzo@kernel.org>
-References: <a3c72b07e229e1d16e93438d741d69abba6a18cf.1559822991.git.lorenzo@kernel.org>
+        Thu, 6 Jun 2019 15:26:23 -0400
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:33345 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729335AbfFFT0X (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Jun 2019 15:26:23 -0400
+Received: by mail-ot1-f65.google.com with SMTP id p4so3098512oti.0;
+        Thu, 06 Jun 2019 12:26:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=//bEoSLNLLHE97BPxRCj2Ov+nlOv5NirkYFgfSUW6IE=;
+        b=tfehlKGsfTi1m7hhM0Xjrl6wu/1FJz5YNvaZjnKEboFeHFs3iFSgzJkRWdCSVxUQwK
+         VwB5xDNIKJGAxswP++nk/enpOXH6PlOVd/C3I9AfnISZHKR6GWlgLskNPRU1h/bNpnqo
+         2JnW7XY7REpC1hYxXeiCTaUPNwn92eJoeTNDKX6EQv0oHvsnJL2QZ0+lZ/t3sGaYOI+/
+         7w6bJjmTKe2MNEgBbHPFvZRtjdzrZBQRFh/HYvKkjCyoWw075tiXM0Qx1QVkY2amPY+w
+         R/vtWSsTe6/xnFN3nup4WWtmib3FF7B5uNi4TEwcEZ6t+gf7OGkesQQYLrz4/vmTG3kT
+         /pIw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=//bEoSLNLLHE97BPxRCj2Ov+nlOv5NirkYFgfSUW6IE=;
+        b=Er0eb3STw30y/Rei8bkTNeQ6KEByFbisgPBhDfl0ZeM0sT52zO0Dm6l3fH0h1afO14
+         IVzNFXNXAeAjOLdhBhkYBOWk8F26DqO/ttsGnmLcQ4PcRHkkFwLO3KNmlGsq8ULU9fHa
+         JHLeydcnrfMbDsD7knVNSXwQAq3WQzUmLoxxRe0zO4w2faUsU/+nolM10x4XIrasDTdT
+         XkNjFMyR2SesjkrcCQ1Ajjh1SLcXSWnrtZNFhtOVnBLVaxab0EI8k2E32xS4MJJvw67R
+         XuwvkMj1vTG6klsmoTgZG4SYN6FhDdMtaTm3KDQ6O9lE2LTgjITjFzqk6c2lriJ0PC6z
+         kp9Q==
+X-Gm-Message-State: APjAAAWkATjzBd8gafFnxz1eODkQNkDgMZrtw8c8h2cLqYD7Ij4lGq0w
+        njmBDjMoMAtKxmo5B4eM4rbkzNyv
+X-Google-Smtp-Source: APXvYqwL7j7Huo/G41SF8PlkxfC7vQ8YdiJ33WC5yoMAWg0YVvY404CgtKWoG3ue/NITZ97pzuvy4w==
+X-Received: by 2002:a05:6830:1303:: with SMTP id p3mr16235060otq.267.1559849182214;
+        Thu, 06 Jun 2019 12:26:22 -0700 (PDT)
+Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id b12sm922890otk.59.2019.06.06.12.26.20
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Thu, 06 Jun 2019 12:26:21 -0700 (PDT)
+Subject: Re: [BISECTED REGRESSION] b43legacy broken on G4 PowerBook
+To:     Christoph Hellwig <hch@lst.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc:     Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Christian Zigotzky <chzigotzky@xenosoft.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20190605225059.GA9953@darkstar.musicnaut.iki.fi>
+ <dfe6451c93574b61d4bdde4a05c5f8ccf86b31a0.camel@kernel.crashing.org>
+ <20190606093149.GA11598@darkstar.musicnaut.iki.fi>
+ <d87ac9a7faac0d5522cb496d74afc586410fed9c.camel@kernel.crashing.org>
+ <f8df19ffe5b75537045119037459ae9ad4a1de39.camel@kernel.crashing.org>
+ <20190606114325.GA7497@lst.de>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <59528af0-f250-f5e7-50c0-0a163ccfa59c@lwfinger.net>
+Date:   Thu, 6 Jun 2019 14:26:19 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20190606114325.GA7497@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-WP-MailID: b17672e8b58add6efe8f92e6b17202dd
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [URPE]                               
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu,  6 Jun 2019 14:26:12 +0200, Lorenzo Bianconi wrote:
-> Do not schedule rx_tasklet when the usb dongle is disconnected. This
-> patch fixes the common kernel warning reported when the device is
-> removed.
+On 6/6/19 6:43 AM, Christoph Hellwig wrote:
+> On Thu, Jun 06, 2019 at 08:57:49PM +1000, Benjamin Herrenschmidt wrote:
+>>> Wow... that's an odd amount. One thing we could possibly do is add code
+>>> to limit the amount of RAM when we detect that device....
+>>
+>> Sent too quickly... I mean that *or* force swiotlb at 30-bits on those systems based
+>> on detecting the presence of that device in the device-tree.
 > 
-> [   24.921354] usb 3-14: USB disconnect, device number 7
-> [   24.921593] ------------[ cut here ]------------
-> [   24.921594] RX urb mismatch
-> [   24.921675] WARNING: CPU: 4 PID: 163 at drivers/net/wireless/mediatek/mt7601u/dma.c:200 mt7601u_complete_rx+0xcb/0xd0 [mt7601u]
-> [   24.921769] CPU: 4 PID: 163 Comm: kworker/4:2 Tainted: G           OE     4.19.31-041931-generic #201903231635
-> [   24.921770] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./Z97 Extreme4, BIOS P1.30 05/23/2014
-> [   24.921782] Workqueue: usb_hub_wq hub_event
-> [   24.921797] RIP: 0010:mt7601u_complete_rx+0xcb/0xd0 [mt7601u]
-> [   24.921800] RSP: 0018:ffff9bd9cfd03d08 EFLAGS: 00010086
-> [   24.921802] RAX: 0000000000000000 RBX: ffff9bd9bf043540 RCX: 0000000000000006
-> [   24.921803] RDX: 0000000000000007 RSI: 0000000000000096 RDI: ffff9bd9cfd16420
-> [   24.921804] RBP: ffff9bd9cfd03d28 R08: 0000000000000002 R09: 00000000000003a8
-> [   24.921805] R10: 0000002f485fca34 R11: 0000000000000000 R12: ffff9bd9bf043c1c
-> [   24.921806] R13: ffff9bd9c62fa3c0 R14: 0000000000000082 R15: 0000000000000000
-> [   24.921807] FS:  0000000000000000(0000) GS:ffff9bd9cfd00000(0000) knlGS:0000000000000000
-> [   24.921808] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [   24.921808] CR2: 00007fb2648b0000 CR3: 0000000142c0a004 CR4: 00000000001606e0
-> [   24.921809] Call Trace:
-> [   24.921812]  <IRQ>
-> [   24.921819]  __usb_hcd_giveback_urb+0x8b/0x140
-> [   24.921821]  usb_hcd_giveback_urb+0xca/0xe0
-> [   24.921828]  xhci_giveback_urb_in_irq.isra.42+0x82/0xf0
-> [   24.921834]  handle_cmd_completion+0xe02/0x10d0
-> [   24.921837]  xhci_irq+0x274/0x4a0
-> [   24.921838]  xhci_msi_irq+0x11/0x20
-> [   24.921851]  __handle_irq_event_percpu+0x44/0x190
-> [   24.921856]  handle_irq_event_percpu+0x32/0x80
-> [   24.921861]  handle_irq_event+0x3b/0x5a
-> [   24.921867]  handle_edge_irq+0x80/0x190
-> [   24.921874]  handle_irq+0x20/0x30
-> [   24.921889]  do_IRQ+0x4e/0xe0
-> [   24.921891]  common_interrupt+0xf/0xf
-> [   24.921892]  </IRQ>
-> [   24.921900] RIP: 0010:usb_hcd_flush_endpoint+0x78/0x180
-> [   24.921354] usb 3-14: USB disconnect, device number 7
-
-Is this a new thing?  I def tested unplugging the dongle under
-traffic, but that must had been in 3.19 days :S
-
-> Fixes: c869f77d6abb ("add mt7601u driver")
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> ---
-> I will post a patch to fix tx side as well
-> ---
->  drivers/net/wireless/mediatek/mt7601u/dma.c | 33 ++++++++++-----------
->  1 file changed, 16 insertions(+), 17 deletions(-)
+> swiotlb doesn't really help you, as these days swiotlb on matters for
+> the dma_map* case.  What would help is a ZONE_DMA that covers these
+> devices.  No need to do the 24-bit x86 does, but 30-bit would do it.
 > 
-> diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
-> index f7edeffb2b19..e7703990b291 100644
-> --- a/drivers/net/wireless/mediatek/mt7601u/dma.c
-> +++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
-> @@ -193,10 +193,20 @@ static void mt7601u_complete_rx(struct urb *urb)
->  	struct mt7601u_rx_queue *q = &dev->rx_q;
->  	unsigned long flags;
->  
-> -	spin_lock_irqsave(&dev->rx_lock, flags);
-> +	switch (urb->status) {
-> +	case -ECONNRESET:
-> +	case -ESHUTDOWN:
-> +	case -ENOENT:
-> +		return;
+> WIP patch for testing below:
+> 
+> diff --git a/arch/powerpc/include/asm/page.h b/arch/powerpc/include/asm/page.h
+> index b8286a2013b4..7a367ce87c41 100644
+> --- a/arch/powerpc/include/asm/page.h
+> +++ b/arch/powerpc/include/asm/page.h
+> @@ -319,6 +319,10 @@ struct vm_area_struct;
+>   #endif /* __ASSEMBLY__ */
+>   #include <asm/slice.h>
+>   
+> +#if 1 /* XXX: pmac?  dynamic discovery? */
+> +#define ARCH_ZONE_DMA_BITS 30
+> +#else
+>   #define ARCH_ZONE_DMA_BITS 31
+> +#endif
+>   
+>   #endif /* _ASM_POWERPC_PAGE_H */
+> diff --git a/arch/powerpc/mm/mem.c b/arch/powerpc/mm/mem.c
+> index cba29131bccc..2540d3b2588c 100644
+> --- a/arch/powerpc/mm/mem.c
+> +++ b/arch/powerpc/mm/mem.c
+> @@ -248,7 +248,8 @@ void __init paging_init(void)
+>   	       (long int)((top_of_ram - total_ram) >> 20));
+>   
+>   #ifdef CONFIG_ZONE_DMA
+> -	max_zone_pfns[ZONE_DMA]	= min(max_low_pfn, 0x7fffffffUL >> PAGE_SHIFT);
+> +	max_zone_pfns[ZONE_DMA]	= min(max_low_pfn,
+> +			((1UL << ARCH_ZONE_DMA_BITS) - 1) >> PAGE_SHIFT);
+>   #endif
+>   	max_zone_pfns[ZONE_NORMAL] = max_low_pfn;
+>   #ifdef CONFIG_HIGHMEM
+> 
 
-So we assume this is non-recoverable?  Everything will fail after?
-Because pending is incremented linearly :S  That's why there is a
-warning here.
+I am generating a test kernel with this patch.
 
-> +	default:
-> +		dev_err_ratelimited(dev->dev, "rx urb failed: %d\n",
-> +				    urb->status);
-> +		/* fall through */
-> +	case 0:
-> +		break;
-> +	}
->  
-> -	if (mt7601u_urb_has_error(urb))
-> -		dev_err(dev->dev, "Error: RX urb failed:%d\n", urb->status);
-> +	spin_lock_irqsave(&dev->rx_lock, flags);
->  	if (WARN_ONCE(q->e[q->end].urb != urb, "RX urb mismatch"))
->  		goto out;
->  
-> @@ -363,19 +373,10 @@ int mt7601u_dma_enqueue_tx(struct mt7601u_dev *dev, struct sk_buff *skb,
->  static void mt7601u_kill_rx(struct mt7601u_dev *dev)
->  {
->  	int i;
-> -	unsigned long flags;
-> -
-> -	spin_lock_irqsave(&dev->rx_lock, flags);
->  
-> -	for (i = 0; i < dev->rx_q.entries; i++) {
-> -		int next = dev->rx_q.end;
-> -
-> -		spin_unlock_irqrestore(&dev->rx_lock, flags);
-> -		usb_poison_urb(dev->rx_q.e[next].urb);
-> -		spin_lock_irqsave(&dev->rx_lock, flags);
-> -	}
+FYI, the "free" command on my machine shows 1.5+ G of memory. That likely means 
+I have 2G installed.
 
-Why is there no need to take the lock?  Admittedly it's not clear what
-this lock is protecting here :P  Perhaps a separate patch to remove the
-unnecessary locking with an explanation?
+I have tested a patched kernel in which b43legacy falls back to a 31-bit DMA 
+mask when the 32-bit one failed. That worked, but would likely kill the x86 
+version. Let me know if think a fix in the driver rather than the kernel would 
+be better. I still need to understand why the same setup works in b43 and fails 
+in b43legacy. :(
 
-> -	spin_unlock_irqrestore(&dev->rx_lock, flags);
-> +	for (i = 0; i < dev->rx_q.entries; i++)
-> +		usb_poison_urb(dev->rx_q.e[i].urb);
-> +	tasklet_kill(&dev->rx_tasklet);
->  }
->  
->  static int mt7601u_submit_rx_buf(struct mt7601u_dev *dev,
-> @@ -525,8 +526,6 @@ void mt7601u_dma_cleanup(struct mt7601u_dev *dev)
->  {
->  	mt7601u_kill_rx(dev);
->  
-> -	tasklet_kill(&dev->rx_tasklet);
-
-Why the move?  Looks a bit unnecessary..
-
->  	mt7601u_free_rx(dev);
->  	mt7601u_free_tx(dev);
->  
+Larry
