@@ -5,54 +5,54 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F78EC468BC
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 22:38:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABB0CC468BD
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 22:38:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1FBA020840
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 22:38:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CB1920840
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 22:38:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="oQQs34ff"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Wu5ODvnE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731726AbfFGWiA (ORCPT
+        id S1731711AbfFGWh7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 7 Jun 2019 18:38:00 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:45006 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729629AbfFGWho (ORCPT
+        Fri, 7 Jun 2019 18:37:59 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:32905 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731591AbfFGWhr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jun 2019 18:37:44 -0400
-Received: by mail-pl1-f194.google.com with SMTP id c5so1331515pll.11
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jun 2019 15:37:44 -0700 (PDT)
+        Fri, 7 Jun 2019 18:37:47 -0400
+Received: by mail-pg1-f195.google.com with SMTP id k187so1375790pga.0
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jun 2019 15:37:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Z/Emr8zkD81f/RoFF2bpt9vXXmYuPgcPH/tJJB2TNkM=;
-        b=oQQs34ffYiXMPOR36xOya64Dt1KgLnf9z1SV0HDmj0CMof30gz507FOLOXiwLZF9vI
-         1D4A3r35LVnz+omcfO1khnEJ5B5cf2uWoH3JxkZrIVrFp+vmy6UzYUj2ueHLGx4vpf7/
-         59wQukIGshja6mS/TY/bI/w1srMb5f0chSNZ8=
+        bh=z4uQcLhxDEep9Dd0+N4T4ar1lYZLNVNOCQMZpRaAcgQ=;
+        b=Wu5ODvnEgN+Dz3rZXFZGppPRarqh2wkcmSq/jdU0lxIYcSNaG6l9SM/cQ7rqNOQ+cx
+         zxBOamHsP0cMwIo+6syFyWFHtQZ64LbEArNImhJSma0pDWnZQVdsP77XNYh/mmK0Dm2q
+         qWYduKxF+F5spTIpgm3Rypp+nRk8xG2J2D5aM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Z/Emr8zkD81f/RoFF2bpt9vXXmYuPgcPH/tJJB2TNkM=;
-        b=qgZ6LEzYW86NIEAZbXRUX4dVH6h4c2/e/X8uj8wpnN0jNL6Sm/sXgOWDQc5441xBg6
-         kC3ZVd1LlawjA1OxtHm6kr53Sz8km//KvawVR9mqLUzIkE+cu0OYfGGzqB0a0jwAFx/w
-         it3BnASNsr3F3gI6u/+iJaRSXr/nTceufHnA5i0arHgnhdRZU10T8SkPk1sLoaHlS0Ow
-         qLljLaukCZsxxyJ2HZQYmvMVAl/JOYOYvHvKSW7d2vRVSqXwQ1cy/GteMU1qA/ae5Ftt
-         TR3KPnhCeCb9M5kTkIB9O8vkmm+PcyNpLPjdkqPlD6SsATmWw7do2IKDo4wANJN2qS4v
-         llRw==
-X-Gm-Message-State: APjAAAVmRRsij5BMXzVSSdMIKceIQ8wGxy0/EmNl4yALd/jdet96A4YL
-        XmcqVSYoCO455yS3wMXiH2tHhg==
-X-Google-Smtp-Source: APXvYqyNw/yZY/ZbD9VOj7XTh2VyqbwOrp6QXWwuAPrgMHCzudlnfDTuWjve7w8tswOe88lOZPL0rQ==
-X-Received: by 2002:a17:902:290b:: with SMTP id g11mr57474438plb.26.1559947064218;
-        Fri, 07 Jun 2019 15:37:44 -0700 (PDT)
+        bh=z4uQcLhxDEep9Dd0+N4T4ar1lYZLNVNOCQMZpRaAcgQ=;
+        b=VLFIyR8pUdVIxgNKYKFTZ4tatutVNcr8ZzUBiHOLNR1j8bg4Moq9Dmc39av7dMyOe0
+         ntgpRsVhDySvX9UAMqkVPJA41GlCFpi5ND4VyYCKhJ1N19eShNVrlBeB/e5MpS1enNAt
+         Thm6T+85JbnfkZ82+nw52XVVIDXp2f+9yH3+IkXorgk0/cLJm9aVhddyRO+7cuMUQrW5
+         s5iF7eIyKSdvwR5BseCQ8fOYoNbYKB7SKnNqprzWaazvEFw+2Yn7Ow71hxlYJ5+35ngc
+         oq+xV2wr5m+e0X5/+3rALNV0LmpxHkLLYmAb5ujd2hArbNGzw2czQg+9osPWw7BJMCJu
+         n6eQ==
+X-Gm-Message-State: APjAAAVu5ZEgqYnW8X+vjuvsS7YT7TafBvemIztxY9CmSGB3eZfOpyCK
+        3akVD2Z4IAhnl97+uQe1sDeRqw==
+X-Google-Smtp-Source: APXvYqxs31BYhnz3CuDYoW0F6K1ef/NQQc4dhUPxacP60w15cFP3tld8eeafi1pEevxCtCS+7gK93A==
+X-Received: by 2002:a17:90a:9504:: with SMTP id t4mr8420374pjo.100.1559947066689;
+        Fri, 07 Jun 2019 15:37:46 -0700 (PDT)
 Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id j23sm4185193pgb.63.2019.06.07.15.37.43
+        by smtp.gmail.com with ESMTPSA id j23sm4185193pgb.63.2019.06.07.15.37.45
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 07 Jun 2019 15:37:43 -0700 (PDT)
+        Fri, 07 Jun 2019 15:37:46 -0700 (PDT)
 From:   Douglas Anderson <dianders@chromium.org>
 To:     Ulf Hansson <ulf.hansson@linaro.org>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -70,13 +70,13 @@ Cc:     brcm80211-dev-list.pdl@broadcom.com,
         Douglas Anderson <dianders@chromium.org>,
         Franky Lin <franky.lin@broadcom.com>,
         linux-kernel@vger.kernel.org,
-        Madhan Mohan R <MadhanMohan.R@cypress.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
+        Ondrej Jirman <megous@megous.com>,
         YueHaibing <yuehaibing@huawei.com>,
         "David S. Miller" <davem@davemloft.net>
-Subject: [PATCH v3 3/5] brcmfmac: sdio: Disable auto-tuning around commands expected to fail
-Date:   Fri,  7 Jun 2019 15:37:14 -0700
-Message-Id: <20190607223716.119277-4-dianders@chromium.org>
+Subject: [PATCH v3 5/5] brcmfmac: sdio: Don't tune while the card is off
+Date:   Fri,  7 Jun 2019 15:37:16 -0700
+Message-Id: <20190607223716.119277-6-dianders@chromium.org>
 X-Mailer: git-send-email 2.22.0.rc2.383.gf4fbbf30c2-goog
 In-Reply-To: <20190607223716.119277-1-dianders@chromium.org>
 References: <20190607223716.119277-1-dianders@chromium.org>
@@ -87,61 +87,78 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There are certain cases, notably when transitioning between sleep and
-active state, when Broadcom SDIO WiFi cards will produce errors on the
-SDIO bus.  This is evident from the source code where you can see that
-we try commands in a loop until we either get success or we've tried
-too many times.  The comment in the code reinforces this by saying
-"just one write attempt may fail"
+When Broadcom SDIO cards are idled they go to sleep and a whole
+separate subsystem takes over their SDIO communication.  This is the
+Always-On-Subsystem (AOS) and it can't handle tuning requests.
 
-Unfortunately these failures sometimes end up causing an "-EILSEQ"
-back to the core which triggers a retuning of the SDIO card and that
-blocks all traffic to the card until it's done.
+Specifically, as tested on rk3288-veyron-minnie (which reports having
+BCM4354/1 in dmesg), if I force a retune in brcmf_sdio_kso_control()
+when "on = 1" (aka we're transition from sleep to wake) by whacking:
+  bus->sdiodev->func1->card->host->need_retune = 1
+...then I can often see tuning fail.  In this case dw_mmc reports "All
+phases bad!").  Note that I don't get 100% failure, presumably because
+sometimes the card itself has already transitioned away from the AOS
+itself by the time we try to wake it up.  If I force retuning when "on
+= 0" (AKA force retuning right before sending the command to go to
+sleep) then retuning is always OK.
 
-Let's disable retuning around the commands we expect might fail.
+NOTE: we need _both_ this patch and the patch to avoid triggering
+tuning due to CRC errors in the sleep/wake transition, AKA ("brcmfmac:
+sdio: Disable auto-tuning around commands expected to fail").  Though
+both patches handle issues with Broadcom's AOS, the problems are
+distinct:
+1. We want to defer (but not ignore) asynchronous (like
+   timer-requested) tuning requests till the card is awake.  However,
+   we want to ignore CRC errors during the transition, we don't want
+   to queue deferred tuning request.
+2. You could imagine that the AOS could implement retuning but we
+   could still get errors while transitioning in and out of the AOS.
+   Similarly you could imagine a seamless transition into and out of
+   the AOS (with no CRC errors) even if the AOS couldn't handle
+   tuning.
 
-Fixes: bd11e8bd03ca ("mmc: core: Flag re-tuning is needed on CRC errors")
+ALSO NOTE: presumably there is never a desperate need to retune in
+order to wake up the card, since doing so is impossible.  Luckily the
+only way the card can get into sleep state is if we had a good enough
+tuning to send it a sleep command, so presumably that "good enough"
+tuning is enough to wake us up, at least with a few retries.
+
 Signed-off-by: Douglas Anderson <dianders@chromium.org>
 ---
 
 Changes in v3:
-- Expect errors for all of brcmf_sdio_kso_control() (Adrian).
+- ("brcmfmac: sdio: Don't tune while the card is off") new for v3.
 
 Changes in v2: None
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 4a750838d8cd..4040aae1f9ed 100644
+index 4040aae1f9ed..98ffb4e90e15 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -16,6 +16,7 @@
- #include <linux/mmc/sdio_ids.h>
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/card.h>
-+#include <linux/mmc/core.h>
- #include <linux/semaphore.h>
- #include <linux/firmware.h>
- #include <linux/module.h>
-@@ -667,6 +668,8 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+@@ -670,6 +670,10 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
  
- 	brcmf_dbg(TRACE, "Enter: on=%d\n", on);
+ 	mmc_expect_errors_begin(bus->sdiodev->func1->card->host);
  
-+	mmc_expect_errors_begin(bus->sdiodev->func1->card->host);
++	/* Cannot re-tune if device is asleep; defer till we're awake */
++	if (on)
++		mmc_retune_hold_now(bus->sdiodev->func1->card->host);
 +
  	wr_val = (on << SBSDIO_FUNC1_SLEEPCSR_KSO_SHIFT);
  	/* 1st KSO write goes to AOS wake up core if device is asleep  */
  	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, wr_val, &err);
-@@ -727,6 +730,8 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+@@ -730,6 +734,9 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
  	if (try_cnt > MAX_KSO_ATTEMPTS)
  		brcmf_err("max tries: rd_val=0x%x err=%d\n", rd_val, err);
  
-+	mmc_expect_errors_end(bus->sdiodev->func1->card->host);
++	if (on)
++		mmc_retune_release(bus->sdiodev->func1->card->host);
 +
- 	return err;
- }
+ 	mmc_expect_errors_end(bus->sdiodev->func1->card->host);
  
+ 	return err;
 -- 
 2.22.0.rc2.383.gf4fbbf30c2-goog
 
