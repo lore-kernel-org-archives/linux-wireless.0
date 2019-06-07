@@ -2,93 +2,118 @@ Return-Path: <SRS0=yCjx=UG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4944FC2BCA1
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 16:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1D8DC2BCA1
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 16:44:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F56320825
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 16:34:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A778A207E0
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 16:44:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="g0/H0zSJ"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="nWxyvI/A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730526AbfFGQeS (ORCPT
+        id S1730916AbfFGQoA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 7 Jun 2019 12:34:18 -0400
-Received: from nbd.name ([46.4.11.11]:57680 "EHLO nbd.name"
+        Fri, 7 Jun 2019 12:44:00 -0400
+Received: from nbd.name ([46.4.11.11]:58274 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728595AbfFGQeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jun 2019 12:34:17 -0400
+        id S1730484AbfFGQn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jun 2019 12:43:59 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=OIlj+XUp8fE5exydl4f56gqqQME/omPs3NogMMPyuMY=; b=g0/H0zSJJB0qrsrTIzDLoeVLlx
-        JTAzV9ORZNYeRYb59U3a+HdHBFZpDpKNSMxy+Rd+ZVjuO9wFB8c2V9yULQVWedzq/aCASMzCmLMZd
-        WG8RRyzK+5Ob41tU517dEuQZcE/spX4+032dtxAoYzEZeLIIDQCeaehPY1L5HDj5RCmQ=;
-Received: from p4ff13bc7.dip0.t-ipconnect.de ([79.241.59.199] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
+        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=ztfmCLh7/+hc7Bz5FdvHk4iOr4N3Xc+lH4FXCpCceBI=; b=nWxyvI/AxmHiA8YN5F4jjfv2oV
+        vX2UhlVJLPQvuFEoWfWQ6wJTwYRRQPnDNLQGpacyA+ZxEt1I4esCcV6XdTd0Iq6QcUCT1cULwzuE+
+        iCD7qpwSc3PZ+Yh1qF96YNuBaGKR7ogXDVrKhL3KJIBJR0zD2P5rhV3Nb8ZtRbUEl+rQ=;
+Received: from p4ff13bc7.dip0.t-ipconnect.de ([79.241.59.199] helo=maeck-3.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1hZHok-0007Q0-IV; Fri, 07 Jun 2019 18:34:14 +0200
-Subject: Re: [PATCH] mt76: mt7615: stop mcu first in mt7615_unregister_device
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        ryder.lee@mediatek.com, royluo@google.com
-References: <cover.1557836235.git.lorenzo@kernel.org>
- <e145d9f42b1cfcf525300d583c99773132381c34.1557836235.git.lorenzo@kernel.org>
+        id 1hZHyA-0008DC-IK
+        for linux-wireless@vger.kernel.org; Fri, 07 Jun 2019 18:43:58 +0200
+Received: by maeck-3.local (Postfix, from userid 501)
+        id B3CEA5C32BC0; Fri,  7 Jun 2019 18:43:56 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <a907d38a-d10f-27f8-66c5-f0a33e905acb@nbd.name>
-Date:   Fri, 7 Jun 2019 18:34:13 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.7.0
-MIME-Version: 1.0
-In-Reply-To: <e145d9f42b1cfcf525300d583c99773132381c34.1557836235.git.lorenzo@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4] mt76: fix setting chan->max_power
+Date:   Fri,  7 Jun 2019 18:43:53 +0200
+Message-Id: <20190607164355.51876-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.17.0
+In-Reply-To: <20190607164355.51876-1-nbd@nbd.name>
+References: <20190607164355.51876-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-05-14 14:20, Lorenzo Bianconi wrote:
-> Stop mcu engine and then dma one in mt7615_unregister_device
-> in order to avoid a mcu hang in mt7615_unregister_device
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> ---
-> This patch ca be squashed with 'mt76: mt7615: rearrange cleanup operations in
-> mt7615_unregister_device' since it is not upstream yet
+When setting chan->max_power after registering the wiphy, chan->max_reg_power
+needs to be used as a limit
 
-Applied, thanks.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt7603/init.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 5 +++--
+ drivers/net/wireless/mediatek/mt76/mt76x2/init.c | 9 +++++----
+ 3 files changed, 9 insertions(+), 7 deletions(-)
 
-- Felix
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+index 2238e3daedc6..bce51997ff3b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+@@ -494,7 +494,7 @@ mt7603_init_txpower(struct mt7603_dev *dev,
+ 
+ 	for (i = 0; i < sband->n_channels; i++) {
+ 		chan = &sband->channels[i];
+-		chan->max_power = target_power;
++		chan->max_power = min_t(int, chan->max_reg_power, target_power);
+ 		chan->orig_mpwr = target_power;
+ 	}
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index 57e46d57b449..d67401f895ca 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -279,8 +279,9 @@ mt76x0_init_txpower(struct mt76x02_dev *dev,
+ 		mt76x0_get_tx_power_per_rate(dev, chan, &t);
+ 		mt76x0_get_power_info(dev, chan, &tp);
+ 
+-		chan->max_power = (mt76x02_get_max_rate_power(&t) + tp) / 2;
+-		chan->orig_mpwr = chan->max_power;
++		chan->orig_mpwr = (mt76x02_get_max_rate_power(&t) + tp) / 2;
++		chan->max_power = min_t(int, chan->max_reg_power,
++					chan->orig_mpwr);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/init.c
+index c6078e90ca43..97c3543eed8a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/init.c
+@@ -173,13 +173,14 @@ void mt76x2_init_txpower(struct mt76x02_dev *dev,
+ 		mt76x2_get_power_info(dev, &txp, chan);
+ 		mt76x2_get_rate_power(dev, &t, chan);
+ 
+-		chan->max_power = mt76x02_get_max_rate_power(&t) +
++		chan->orig_mpwr = mt76x02_get_max_rate_power(&t) +
+ 				  txp.target_power;
+-		chan->max_power = DIV_ROUND_UP(chan->max_power, 2);
++		chan->orig_mpwr = DIV_ROUND_UP(chan->orig_mpwr, 2);
+ 
+ 		/* convert to combined output power on 2x2 devices */
+-		chan->max_power += 3;
+-		chan->orig_mpwr = chan->max_power;
++		chan->orig_mpwr += 3;
++		chan->max_power = min_t(int, chan->max_reg_power,
++					chan->orig_mpwr);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(mt76x2_init_txpower);
+-- 
+2.17.0
+
