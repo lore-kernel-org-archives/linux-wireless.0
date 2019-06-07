@@ -4,42 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D5C2C2BCA1
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 17:01:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE2AEC2BCA1
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 17:01:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 717732089E
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 17:01:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8B0C208C3
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 17:01:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="eYmkEO+o"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="NvvbWXHu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729690AbfFGRB3 (ORCPT
+        id S1731137AbfFGRBo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 7 Jun 2019 13:01:29 -0400
-Received: from nbd.name ([46.4.11.11]:59316 "EHLO nbd.name"
+        Fri, 7 Jun 2019 13:01:44 -0400
+Received: from nbd.name ([46.4.11.11]:59356 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728974AbfFGRB3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jun 2019 13:01:29 -0400
+        id S1731099AbfFGRBo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jun 2019 13:01:44 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=6jn3LygPC5RfcCG0Zjzh+/g5UzbSe2AXpkL9UmPGxHo=; b=eYmkEO+ok0MQ4UjbLUcqFFzt9d
-        SLaiGCdVEBZfJjI6dMGgV0Os0+oHEyeNa91jkAGWmwjLjeI7mQAZHpJHI1WEtx/bvZ2OWwVCHcNhf
-        J4A1IpgQfJTq1xkU67lw0DxgcouWA1v8AYFT6MNPWYdNXU/NxUgP3Oj65K5fFMrnwuXU=;
+        bh=UP3HYaBRyyZCgrGkjreuXPoJQnusxc/pp3ork1+U7J0=; b=NvvbWXHuJRSTpWUc/rF5CX0QxG
+        wG2uEqYO38wVscQkr6Apxn9JLac0sUUMgviV7orNAv5vVOSXymrV0r6gSaj4maQgAGKbq+cSzg6Gg
+        7Y2F1Bc8IifKwDNxZm1EKYe3tzjPDb7gGTy7yGkQ2zy3AMRwo8DhdtYa61Q/yUpDiVyM=;
 Received: from p4ff13bc7.dip0.t-ipconnect.de ([79.241.59.199] helo=nf.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1hZIF2-00010V-RZ; Fri, 07 Jun 2019 19:01:24 +0200
-Subject: Re: [PATCH] mt76: move mt76_get_rate in mt76-module
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        ryder.lee@mediatek.com, royluo@google.com
-References: <d6b2de1b739a394d5dcdd686a7dff198a743669e.1559118081.git.lorenzo@kernel.org>
+        id 1hZIFF-00011f-Hm; Fri, 07 Jun 2019 19:01:37 +0200
+Subject: Re: [PATCH] mt76: Remove set but not used variables 'pid' and
+ 'final_mpdu'
+To:     YueHaibing <yuehaibing@huawei.com>, lorenzo.bianconi83@gmail.com,
+        ryder.lee@mediatek.com, royluo@google.com, kvalo@codeaurora.org,
+        matthias.bgg@gmail.com, sgruszka@redhat.com
+Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, davem@davemloft.net
+References: <20190529145356.13872-1-yuehaibing@huawei.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -65,12 +70,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <69a5cf9c-d41c-552f-6acc-8187cae765a4@nbd.name>
-Date:   Fri, 7 Jun 2019 19:01:24 +0200
+Message-ID: <f3e5d386-e1de-d707-397d-2ef99e09f345@nbd.name>
+Date:   Fri, 7 Jun 2019 19:01:36 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.7.0
 MIME-Version: 1.0
-In-Reply-To: <d6b2de1b739a394d5dcdd686a7dff198a743669e.1559118081.git.lorenzo@kernel.org>
+In-Reply-To: <20190529145356.13872-1-yuehaibing@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -79,14 +84,19 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-05-29 10:25, Lorenzo Bianconi wrote:
-> Move mt7603_get_rate in mac80211.c and rename it to mt76_get_rate
-> since it is shared between mt7603 and mt7615 drivers
+On 2019-05-29 16:53, YueHaibing wrote:
+> Fixes gcc '-Wunused-but-set-variable' warnings:
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> ---
-> This patch is based on 'mt76: move mt76_insert_ccmp_hdr in mt76-module'
-> https://patchwork.kernel.org/patch/10942973/
+> drivers/net/wireless/mediatek/mt76/mt7603/mac.c: In function mt7603_fill_txs:
+> drivers/net/wireless/mediatek/mt76/mt7603/mac.c:969:5: warning: variable pid set but not used [-Wunused-but-set-variable]
+> drivers/net/wireless/mediatek/mt76/mt7603/mac.c:961:7: warning: variable final_mpdu set but not used [-Wunused-but-set-variable]
+> drivers/net/wireless/mediatek/mt76/mt7615/mac.c: In function mt7615_fill_txs:
+> drivers/net/wireless/mediatek/mt76/mt7615/mac.c:555:5: warning: variable pid set but not used [-Wunused-but-set-variable]
+> drivers/net/wireless/mediatek/mt76/mt7615/mac.c:552:19: warning: variable final_mpdu set but not used [-Wunused-but-set-variable]
+> 
+> They are never used, so can be removed.
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 
 Applied, thanks.
 
