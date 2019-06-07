@@ -2,157 +2,151 @@ Return-Path: <SRS0=yCjx=UG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86120C2BCA1
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 22:38:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA798C2BCA1
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 22:40:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 55FBB20840
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 22:38:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="e+vKvdKn"
+	by mail.kernel.org (Postfix) with ESMTP id 9CB6120868
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jun 2019 22:40:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1559947243;
+	bh=9aTkaOerlb4Rleo7y3S1wIRbAA3fQBN+zxYN7HUhn1w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=ZPAv3ts59b3htjRRgPk2OteVX8b1KyitnAd0BevhAcKtmG/s8NkIdAWITT/ViVl/b
+	 wk9mayTv+07Wxo0Q84sXXbociBiBIYdKQlkE3wr9IlFM+F7n6nBnjpSMvXxjOyuwnW
+	 yd9lnWR4XDVHHbHrbHfXn/eAoZM6bE2GDlAQpEmw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730984AbfFGWhl (ORCPT
+        id S1729967AbfFGWkm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 7 Jun 2019 18:37:41 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:36117 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729843AbfFGWhl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jun 2019 18:37:41 -0400
-Received: by mail-pf1-f195.google.com with SMTP id u22so1952140pfm.3
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jun 2019 15:37:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=UkQI8hX0vIUpVc3tfTJ4CpjSb/8p01+g0dvWePLdY08=;
-        b=e+vKvdKnQ/cr5CGuTa5EK01cZ+MfRnMYC41CccgXzHQwKg/POij2RhNAaHeGK5TdVM
-         NYenBPuQyROBou1KlsUskYhDUQCGPp4n4PkvdKpwxUNIuxqAaQD3sMzt3joDkZBHy1C5
-         6uAsWmd444nBt/Xf4T4r+T1ujKXJx+/0JVRuQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=UkQI8hX0vIUpVc3tfTJ4CpjSb/8p01+g0dvWePLdY08=;
-        b=CMfCcIirM/pLxdobtn4VpN9vMX9MaxK/vpZThpnx3mPbjVd9wnJxtZi/vt4fOTcWw3
-         2bMJI78RnnLuttXCqAWAGHMuzvC62RxvyYPkLsc5aKamoDCETgjTicwe8nlmQgXhRPuL
-         w6Uc/zADB/JWvqX1wzkZ5as3UHyW74IB8zMU+9fk8iyFY/vXYam2hk19LL2K+Xjee6KO
-         4wfQSetcsmx0lD8k332TFCnsQbRVyteWoZr1/zdPM4oISHBfXgyxb7sYlhkGATZtOACq
-         edKi5sHWkce1mMkdKUt2Dh+MI23LWuIS6zf8Xie1wD5iBa3sSHmwtM62QlFtQQd9nixr
-         ijpw==
-X-Gm-Message-State: APjAAAXcWUjwzOJkL5/1AK2FD70tNqzZpMoEcwVW9vgpySO51uD3wgGd
-        7nF/hq3aH5owjNVs/wjecFVOrQ==
-X-Google-Smtp-Source: APXvYqwiSuAGcVzbwTvmm2ZIw/J7BlC5c609f8Ulw7reX7J6HoWIpxjWRSnpfKnbC7g5fUiN6hOMHQ==
-X-Received: by 2002:a63:2206:: with SMTP id i6mr2387516pgi.349.1559947060322;
-        Fri, 07 Jun 2019 15:37:40 -0700 (PDT)
-Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id j23sm4185193pgb.63.2019.06.07.15.37.38
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 07 Jun 2019 15:37:39 -0700 (PDT)
-From:   Douglas Anderson <dianders@chromium.org>
-To:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc:     brcm80211-dev-list.pdl@broadcom.com,
-        linux-rockchip@lists.infradead.org,
-        Double Lo <double.lo@cypress.com>, briannorris@chromium.org,
-        linux-wireless@vger.kernel.org,
-        Naveen Gupta <naveen.gupta@cypress.com>,
-        Madhan Mohan R <madhanmohan.r@cypress.com>, mka@chromium.org,
-        Wright Feng <wright.feng@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        netdev@vger.kernel.org, brcm80211-dev-list@cypress.com,
-        Douglas Anderson <dianders@chromium.org>,
-        linux-mmc@vger.kernel.org,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Ritesh Harjani <riteshh@codeaurora.org>,
-        Michael Trimarchi <michael@amarulasolutions.com>,
-        Mathieu Malaterre <malat@debian.org>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Ondrej Jirman <megous@megous.com>,
-        Jiong Wu <lohengrin1024@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Pan Bian <bianpan2016@163.com>, linux-kernel@vger.kernel.org,
-        Madhan Mohan R <MadhanMohan.R@cypress.com>,
-        Tony Lindgren <tony@atomide.com>,
-        Avri Altman <avri.altman@wdc.com>, Pavel Machek <pavel@ucw.cz>
-Subject: [PATCH v3 0/5] brcmfmac: sdio: Deal better w/ transmission errors related to idle
-Date:   Fri,  7 Jun 2019 15:37:11 -0700
-Message-Id: <20190607223716.119277-1-dianders@chromium.org>
-X-Mailer: git-send-email 2.22.0.rc2.383.gf4fbbf30c2-goog
+        Fri, 7 Jun 2019 18:40:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50870 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729345AbfFGWkm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jun 2019 18:40:42 -0400
+Received: from sol.localdomain (c-24-5-143-220.hsd1.ca.comcast.net [24.5.143.220])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id CA50E20840;
+        Fri,  7 Jun 2019 22:40:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1559947242;
+        bh=9aTkaOerlb4Rleo7y3S1wIRbAA3fQBN+zxYN7HUhn1w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=zvX+Bvu+bVJKmRo2P06UNV2bdpix/u+pn3XnrSVqE5+xSaOs67XXdXW1AUN9BQrtJ
+         jYOqx7PJrpiEuESOIntFpE0b5nw+Nnnd7ytlBOmqQREudCPzm7pvftkzxl5ea4LXMK
+         AA7DpwmX+IcCTVPl8rAJUh4f1F7s8sBX2sdyBy1Q=
+Date:   Fri, 7 Jun 2019 15:40:40 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Denis Kenzior <denkenz@gmail.com>
+Cc:     Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "open list:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: Re: [RFC PATCH 0/3] move WEP implementation to skcipher interface
+Message-ID: <20190607224040.GG648@sol.localdomain>
+References: <20190607144944.13485-1-ard.biesheuvel@linaro.org>
+ <20190607175947.GB648@sol.localdomain>
+ <97BB95F6-4A4C-4984-9EAB-6069E19B4A4F@holtmann.org>
+ <CAKv+Gu-ek4nK+cACx5QZTbp=ciQq_Fvtn9y3g-wFWSOabyczZg@mail.gmail.com>
+ <f40ad169-93b9-636f-9656-634ff331ee2b@gmail.com>
+ <20190607211514.GD648@sol.localdomain>
+ <d394b421-799d-2019-fcf0-97ba0b2abb5f@gmail.com>
+ <20190607214120.GE648@sol.localdomain>
+ <78298612-a36b-deaa-1510-94cf0001af9d@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <78298612-a36b-deaa-1510-94cf0001af9d@gmail.com>
+User-Agent: Mutt/1.12.0 (2019-05-25)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series attempts to deal better with the expected transmission
-errors related to the idle states (handled by the Always-On-Subsystem
-or AOS) on the SDIO-based WiFi on rk3288-veyron-minnie,
-rk3288-veyron-speedy, and rk3288-veyron-mickey.
+On Fri, Jun 07, 2019 at 04:54:04PM -0500, Denis Kenzior wrote:
+> Hi Eric,
+> 
+> On 06/07/2019 04:41 PM, Eric Biggers wrote:
+> > On Fri, Jun 07, 2019 at 04:28:59PM -0500, Denis Kenzior wrote:
+> > > Hi Eric,
+> > > 
+> > > On 06/07/2019 04:15 PM, Eric Biggers wrote:
+> > > > On Fri, Jun 07, 2019 at 03:45:45PM -0500, Denis Kenzior wrote:
+> > > > > Hi Ard,
+> > > > > 
+> > > > > > 
+> > > > > > Ah ok, good to know. That does imply that the driver is not entirely
+> > > > > > broken, which is good news I suppose.
+> > > > > > 
+> > > > > 
+> > > > > Not entirely, but we did have to resort to using multiple sockets, otherwise
+> > > > > parallel encrypt/decrypt operations on the socket would result in invalid
+> > > > > behavior.  Probably due to the issue Eric already pointed out.
+> > > > > 
+> > > > > No such issue with any other ciphers that we use.
+> > > > > 
+> > > > > Regards,
+> > > > > -Denis
+> > > > 
+> > > > Okay, that sucks, so we do have to keep "ecb(arc4)" in the crypto API then.  And
+> > > > we can't fix its name to be just "arc4".  It's odd that someone would choose to
+> > > > use AF_ALG over writing a 20 line arc4_crypt() in userspace, but whatever.
+> > > > 
+> > > > Yes, "ecb(arc4)" isn't currently thread safe.  ARC4 uses a single key whereas
+> > > > modern stream ciphers use a key + IV.  To comply with the crypto API it would
+> > > > have to copy the key to a stack buffer for each encryption/decryption.  But it
+> > > > doesn't; it just updates the key instead, making it non thread safe.  If users
+> > > > are actually relying on that, we'll have to settle for adding a mutex instead.
+> > > 
+> > > Well the issue isn't even about being thread safe.  We run a single thread
+> > > in iwd.  The details are a bit fuzzy now due to time elapsed, but if I
+> > > recall correctly, even behavior like:
+> > > 
+> > > fd = socket();
+> > > bind(fd, ecb(arc4));
+> > > setsockopt(fd, ...key...);
+> > > 
+> > > sendmsg(fd, OP_ENCRYPT, ...);
+> > > sendmsg(fd, OP_DECRYPT, ...);
+> > > sendmsg(fd, OP_ENCRYPT, ...);
+> > > 
+> > > would produce different (incorrect) encrypted results compared to
+> > > 
+> > > sendmsg(fd, OP_ENCRYPT, ...)
+> > > sendmsg(fd, OP_ENCRYPT, ...)
+> > > 
+> > 
+> > That's because currently each operation uses the next bytes from the keystream,
+> > and a new keystream is started only by setsockopt(..., ALG_SET_KEY, ...).
+> > There's no difference between ARC4 encryption and decryption; both just XOR the
+> > keystream with the data.  Are you saying you expected each encryption to be a
+> > continuation of the previous encryption, but decryptions to be independent?
+> > 
+> 
+> From a userspace / api perspective, yes I would have expected the encrypt
+> and decrypt to work independently.  No biggie now, but I remember being
+> surprised when this bit me as no other cipher had this behavior.  E.g.
+> interleaving of operations seemed to only affect arc4 results.
+> 
+> Are the exact semantics spelled out somewhere?
+> 
 
-Some details about those errors can be found in
-<https://crbug.com/960222>, but to summarize it here: if we try to
-send the wakeup command to the WiFi card at the same time it has
-decided to wake up itself then it will behave badly on the SDIO bus.
-This can cause timeouts or CRC errors.
+For all other skcipher algorithms, every operation is independent and depends
+only on the key which was set previously on the algorithm socket, plus the IV
+provided for the operation.  There is no way to perform a single encryption or
+decryption incrementally in multiple parts, unless the algorithm supports it
+naturally by updating the IV (e.g. CBC mode).
 
-When I tested on 4.19 and 4.20 these CRC errors can be seen to cause
-re-tuning.  Since I am currently developing on 4.19 this was the
-original problem I attempted to solve.
+As I am attempting to explain, ecb(arc4) does not implement this API correctly
+because it updates the *key* after each operation, not the IV.  I doubt this is
+documented anywhere, but this can only be changed if people aren't relying on it
+already.
 
-On mainline it turns out that you don't see the retuning errors but
-you see tons of spam about timeouts trying to wakeup from sleep.  I
-tracked down the commit that was causing that and have partially
-reverted it here.  I have no real knowledge about Broadcom WiFi, but
-the commit that was causing problems sounds (from the descriptioin) to
-be a hack commit penalizing all Broadcom WiFi users because of a bug
-in a Cypress SD controller.  I will let others comment if this is
-truly the case and, if so, what the right solution should be.
-
-For v3 of this series I have added 2 patches to the end of the series
-to address errors that would show up on systems with these same SDIO
-WiFi cards when used on controllers that do periodic retuning.  These
-systems need an extra fix to prevent the retuning from happening when
-the card is asleep.
-
-Changes in v3:
-- Took out the spinlock since I believe this is all in one context.
-- Expect errors for all of brcmf_sdio_kso_control() (Adrian).
-- ("mmc: core: Export mmc_retune_hold_now() mmc_retune_release()") new for v3.
-- ("brcmfmac: sdio: Don't tune while the card is off") new for v3.
-
-Changes in v2:
-- A full revert, not just a partial one (Arend).  ...with explicit Cc.
-- Updated commit message to clarify based on discussion of v1.
-
-Douglas Anderson (5):
-  Revert "brcmfmac: disable command decode in sdio_aos"
-  mmc: core: API for temporarily disabling auto-retuning due to errors
-  brcmfmac: sdio: Disable auto-tuning around commands expected to fail
-  mmc: core: Export mmc_retune_hold_now() mmc_retune_release()
-  brcmfmac: sdio: Don't tune while the card is off
-
- drivers/mmc/core/core.c                       | 19 +++++++++++++++++--
- drivers/mmc/core/host.c                       |  7 +++++++
- drivers/mmc/core/host.h                       |  7 -------
- .../broadcom/brcm80211/brcmfmac/sdio.c        | 18 +++++++++++++-----
- include/linux/mmc/core.h                      |  4 ++++
- include/linux/mmc/host.h                      |  1 +
- 6 files changed, 42 insertions(+), 14 deletions(-)
-
--- 
-2.22.0.rc2.383.gf4fbbf30c2-goog
-
+- Eric
