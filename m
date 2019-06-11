@@ -1,89 +1,104 @@
-Return-Path: <SRS0=yrxU=UJ=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=ropy=UK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E907C4321B
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Jun 2019 20:04:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCD97C43218
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jun 2019 04:56:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A0E1206E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Jun 2019 20:04:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1560197050;
-	bh=EEM60hx0Cg11HZyZntSFHA/iscCPUJpHnXsJkgBcK8o=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hXXLYl2ie/VutDztF17LHj2xe/Q5DAD5RsD51UENKkq2N4BJgcLXNQ6lTmTn14Qri
-	 ygtnJrTd1ehRtwW6LN/ia7jqwTxcpgjQQuWr++nqTN4cKgjTgluPmPBJTUK+hX/mBU
-	 uNER2BdwNtwZ7l/RDH/X95h+filOwlKvIyeltCLw=
+	by mail.kernel.org (Postfix) with ESMTP id 999882086D
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jun 2019 04:56:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389293AbfFJUEF (ORCPT
+        id S2390485AbfFKE4J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Jun 2019 16:04:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38852 "EHLO mail.kernel.org"
+        Tue, 11 Jun 2019 00:56:09 -0400
+Received: from smtp.knology.net ([64.8.71.112]:25323 "EHLO smtp.knology.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389170AbfFJUEF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jun 2019 16:04:05 -0400
-Received: from ebiggers-linuxstation.mtv.corp.google.com (unknown [104.132.1.77])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BA517206E0;
-        Mon, 10 Jun 2019 20:04:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1560197044;
-        bh=EEM60hx0Cg11HZyZntSFHA/iscCPUJpHnXsJkgBcK8o=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Pv8oFNoQVwT2RW5VbB++HK+2YgQbfWB6yNMakBTBXq4KSdDzBNEiM5ZRHCNqkvNbC
-         d04saLAExi3vGh4ehkF/90ufwgCGmRL2AGVLySoXfPpK40lFp++Mcm0TydQ8QGrot5
-         liPTCrEuS50F0cZpYV/3Be9CSQIuv1s3ITaRkAGw=
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc:     gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
-        rafael@kernel.org, syzkaller-bugs@googlegroups.com
-Subject: [PATCH] cfg80211: fix memory leak of wiphy device name
-Date:   Mon, 10 Jun 2019 13:02:19 -0700
-Message-Id: <20190610200219.241300-1-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.22.0.rc2.383.gf4fbbf30c2-goog
-In-Reply-To: <00000000000026f98d058a0944ed@google.com>
-References: <00000000000026f98d058a0944ed@google.com>
+        id S2388934AbfFKE4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Jun 2019 00:56:09 -0400
+X-CTCH-AV-ThreatsCount: 
+X-CTCH-VOD: Unknown
+X-CTCH-Spam: Unknown
+X-CTCH-RefID: str=0001.0A15020D.5CFF3467.006E,ss=1,re=0.000,recu=0.000,reip=0.000,cl=1,cld=1,fgs=0
+X_CMAE_Category: , ,
+X-CNFS-Analysis: v=2.3 cv=OZ/m8SbY c=1 sm=1 tr=0 a=TJn/bo6x+BmUhJ5QWj0rSA==:117 a=TJn/bo6x+BmUhJ5QWj0rSA==:17 a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=KGjhK52YXX0A:10 a=IkcTkHD0fZMA:10 a=t3LY3UrxeVQA:10 a=dq6fvYVFJ5YA:10 a=pO7Hyq7_a4YA:10 a=5Pr6cp1LAAAA:8 a=yQdBAQUQAAAA:8 a=AWIfEAA3_sFtwlGCmbEA:9 a=QEXdDO2ut3YA:10 a=0Hlou4YPydrkO5duKyP1:22 a=SzazLyfi1tnkUD6oumHU:22
+X-CM-Score: 0
+X-Scanned-by: Cloudmark Authority Engine
+X-Authed-Username: YnV1c0B3b3d3YXkuY29t
+X_CMAE_Category: , ,
+X-CNFS-Analysis: 
+X-CM-Score: 
+X-Scanned-by: Cloudmark Authority Engine
+Authentication-Results:  smtp02.wow.cmh.synacor.com smtp.user=buus@wowway.com; auth=pass (LOGIN)
+Received: from [96.27.15.54] ([96.27.15.54:54875] helo=[192.168.1.245])
+        by smtp.mail.wowway.com (envelope-from <ubuntu@hbuus.com>)
+        (ecelerity 3.6.25.56547 r(Core:3.6.25.0)) with ESMTPSA (cipher=AES128-SHA) 
+        id D0/48-27040-6643FFC5; Tue, 11 Jun 2019 00:56:07 -0400
+Subject: Re: [PATCH] ssb/gpio: Remove unnecessary WARN_ON from driver_gpio
+To:     Larry Finger <Larry.Finger@lwfinger.net>,
+        =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+References: <946c86bf-7e90-a981-b9fc-757adb98adfa@hbuus.com>
+ <20190610204927.2de21c9a@wiggum>
+ <de857b70-fbc2-9c29-b31e-d544a33c8ced@lwfinger.net>
+From:   H Buus <ubuntu@hbuus.com>
+Message-ID: <5731d6fb-c63d-9ecb-d27b-afd07a55587a@hbuus.com>
+Date:   Tue, 11 Jun 2019 00:56:07 -0400
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
+In-Reply-To: <de857b70-fbc2-9c29-b31e-d544a33c8ced@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+On 6/10/2019 3:16 PM, Larry Finger wrote:
+> On 6/10/19 1:49 PM, Michael Büsch wrote:
+>> The WARN_ON triggers on older BCM4401-B0 100Base-TX ethernet controllers.
+>> The warning serves no purpose. So let's just remove it.
+>>
+>> Reported-by: H Buus <ubuntu@hbuus.com>
+>> Signed-off-by: Michael Büsch <m@bues.ch>
+>>
+>> ---
+> 
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> Larry
 
-In wiphy_new_nm(), if an error occurs after dev_set_name() and
-device_initialize() have already been called, it's necessary to call
-put_device() (via wiphy_free()) to avoid a memory leak.
+Works for me. Thanks!
 
-Reported-by: syzbot+7fddca22578bc67c3fe4@syzkaller.appspotmail.com
-Fixes: 1f87f7d3a3b4 ("cfg80211: add rfkill support")
-Cc: stable@vger.kernel.org
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- net/wireless/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 037816163e70d..458f5e0906875 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -514,7 +514,7 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
- 				   &rdev->rfkill_ops, rdev);
- 
- 	if (!rdev->rfkill) {
--		kfree(rdev);
-+		wiphy_free(&rdev->wiphy);
- 		return NULL;
- 	}
- 
--- 
-2.22.0.rc2.383.gf4fbbf30c2-goog
-
+>>
+>> diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
+>> index e809dae4c470..66a76fd83248 100644
+>> --- a/drivers/ssb/driver_gpio.c
+>> +++ b/drivers/ssb/driver_gpio.c
+>> @@ -460,9 +460,6 @@ int ssb_gpio_init(struct ssb_bus *bus)
+>>           return ssb_gpio_chipco_init(bus);
+>>       else if (ssb_extif_available(&bus->extif))
+>>           return ssb_gpio_extif_init(bus);
+>> -    else
+>> -        WARN_ON(1);
+>> -
+>>       return -1;
+>>   }
+>>   @@ -472,9 +469,6 @@ int ssb_gpio_unregister(struct ssb_bus *bus)
+>>           ssb_extif_available(&bus->extif)) {
+>>           gpiochip_remove(&bus->gpio);
+>>           return 0;
+>> -    } else {
+>> -        WARN_ON(1);
+>>       }
+>> -
+>>       return -1;
+>>   }
+>>
+> 
