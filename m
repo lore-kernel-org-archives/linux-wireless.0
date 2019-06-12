@@ -2,195 +2,66 @@ Return-Path: <SRS0=e4fn=UL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E24C31E46
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 06:45:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67994C31E46
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 06:56:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1EEC20874
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 06:45:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D22C205ED
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 06:56:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731231AbfFLGpd (ORCPT
+        id S1731195AbfFLG42 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Jun 2019 02:45:33 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:51296 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731216AbfFLGpc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jun 2019 02:45:32 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5C6jSdb004352, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5C6jSdb004352
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 12 Jun 2019 14:45:29 +0800
-Received: from localhost.localdomain (172.21.68.126) by
- RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 12 Jun 2019 14:45:28 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/11] rtw88: add beacon function setting
-Date:   Wed, 12 Jun 2019 14:45:09 +0800
-Message-ID: <1560321917-17751-4-git-send-email-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1560321917-17751-1-git-send-email-yhchuang@realtek.com>
-References: <1560321917-17751-1-git-send-email-yhchuang@realtek.com>
+        Wed, 12 Jun 2019 02:56:28 -0400
+Received: from verein.lst.de ([213.95.11.211]:57293 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726714AbfFLG42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Jun 2019 02:56:28 -0400
+Received: by newverein.lst.de (Postfix, from userid 2407)
+        id 8993E68AFE; Wed, 12 Jun 2019 08:55:58 +0200 (CEST)
+Date:   Wed, 12 Jun 2019 08:55:58 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Christian Zigotzky <chzigotzky@xenosoft.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [BISECTED REGRESSION] b43legacy broken on G4 PowerBook
+Message-ID: <20190612065558.GA19585@lst.de>
+References: <20190605225059.GA9953@darkstar.musicnaut.iki.fi> <73da300c-871c-77ac-8a3a-deac226743ef@lwfinger.net> <20190607172902.GA8183@lst.de> <30000803-3772-3edf-f4a9-55122d504f3f@lwfinger.net> <20190610081825.GA16534@lst.de> <153c13f5-a829-1eab-a3c5-fecfb84127ff@lwfinger.net> <20190611060521.GA19512@lst.de> <5aaa600b-5b59-1f68-454f-20403c318f1a@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.126]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5aaa600b-5b59-1f68-454f-20403c318f1a@lwfinger.net>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chin-Yen Lee <timlee@realtek.com>
+On Tue, Jun 11, 2019 at 05:20:12PM -0500, Larry Finger wrote:
+> Your first patch did not work as the configuration does not have 
+> CONFIG_ZONE_DMA. As a result, the initial value of min_mask always starts 
+> at 32 bits and is taken down to 31 with the maximum pfn minimization. When 
+> I forced the initial value of min_mask to 30 bits, the device worked.
 
-Add beacon function setting routines for each hardware port.
-If beacon function is not enabled, the hardware is not able
-to synchronize with AP's beacon and can miss the beacons
-under some scenarios such as PS mode.
+Ooops, yes.  But I think we could just enable ZONE_DMA on 32-bit
+powerpc.  Crude enablement hack below:
 
-For AP and Adhoc modes that require to send beacons, do not
-update the TSF, otherwise the beacon interval may be affected.
-
-Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/mac80211.c | 13 +++++++++++++
- drivers/net/wireless/realtek/rtw88/main.c     |  5 +++++
- drivers/net/wireless/realtek/rtw88/main.h     |  3 +++
- 3 files changed, 21 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index 61436bb..abe6a14 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -85,30 +85,35 @@ static const struct rtw_vif_port rtw_vif_port[] = {
- 		.bssid		= {.addr = 0x0618},
- 		.net_type	= {.addr = 0x0100, .mask = 0x30000},
- 		.aid		= {.addr = 0x06a8, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x0550, .mask = 0xff},
- 	},
- 	[1] = {
- 		.mac_addr	= {.addr = 0x0700},
- 		.bssid		= {.addr = 0x0708},
- 		.net_type	= {.addr = 0x0100, .mask = 0xc0000},
- 		.aid		= {.addr = 0x0710, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x0551, .mask = 0xff},
- 	},
- 	[2] = {
- 		.mac_addr	= {.addr = 0x1620},
- 		.bssid		= {.addr = 0x1628},
- 		.net_type	= {.addr = 0x1100, .mask = 0x3},
- 		.aid		= {.addr = 0x1600, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x0578, .mask = 0xff},
- 	},
- 	[3] = {
- 		.mac_addr	= {.addr = 0x1630},
- 		.bssid		= {.addr = 0x1638},
- 		.net_type	= {.addr = 0x1100, .mask = 0xc},
- 		.aid		= {.addr = 0x1604, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x0579, .mask = 0xff},
- 	},
- 	[4] = {
- 		.mac_addr	= {.addr = 0x1640},
- 		.bssid		= {.addr = 0x1648},
- 		.net_type	= {.addr = 0x1100, .mask = 0x30},
- 		.aid		= {.addr = 0x1608, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x057a, .mask = 0xff},
- 	},
- };
+diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+index 8c1c636308c8..1dd71a98b70c 100644
+--- a/arch/powerpc/Kconfig
++++ b/arch/powerpc/Kconfig
+@@ -372,7 +372,7 @@ config PPC_ADV_DEBUG_DAC_RANGE
  
-@@ -120,6 +125,7 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
- 	enum rtw_net_type net_type;
- 	u32 config = 0;
- 	u8 port = 0;
-+	u8 bcn_ctrl = 0;
+ config ZONE_DMA
+ 	bool
+-	default y if PPC_BOOK3E_64
++	default y
  
- 	rtwvif->port = port;
- 	rtwvif->vif = vif;
-@@ -136,13 +142,16 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_MESH_POINT:
- 		net_type = RTW_NET_AP_MODE;
-+		bcn_ctrl = BIT_EN_BCN_FUNCTION | BIT_DIS_TSF_UDT;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		net_type = RTW_NET_AD_HOC;
-+		bcn_ctrl = BIT_EN_BCN_FUNCTION | BIT_DIS_TSF_UDT;
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 	default:
- 		net_type = RTW_NET_NO_LINK;
-+		bcn_ctrl = BIT_EN_BCN_FUNCTION;
- 		break;
- 	}
- 
-@@ -150,6 +159,8 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
- 	config |= PORT_SET_MAC_ADDR;
- 	rtwvif->net_type = net_type;
- 	config |= PORT_SET_NET_TYPE;
-+	rtwvif->bcn_ctrl = bcn_ctrl;
-+	config |= PORT_SET_BCN_CTRL;
- 	rtw_vif_port_config(rtwdev, rtwvif, config);
- 
- 	mutex_unlock(&rtwdev->mutex);
-@@ -173,6 +184,8 @@ static void rtw_ops_remove_interface(struct ieee80211_hw *hw,
- 	config |= PORT_SET_MAC_ADDR;
- 	rtwvif->net_type = RTW_NET_NO_LINK;
- 	config |= PORT_SET_NET_TYPE;
-+	rtwvif->bcn_ctrl = 0;
-+	config |= PORT_SET_BCN_CTRL;
- 	rtw_vif_port_config(rtwdev, rtwvif, config);
- 
- 	mutex_unlock(&rtwdev->mutex);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 306d799..b8e0519 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -308,6 +308,11 @@ void rtw_vif_port_config(struct rtw_dev *rtwdev,
- 		mask = rtwvif->conf->aid.mask;
- 		rtw_write32_mask(rtwdev, addr, mask, rtwvif->aid);
- 	}
-+	if (config & PORT_SET_BCN_CTRL) {
-+		addr = rtwvif->conf->bcn_ctrl.addr;
-+		mask = rtwvif->conf->bcn_ctrl.mask;
-+		rtw_write8_mask(rtwdev, addr, mask, rtwvif->bcn_ctrl);
-+	}
- }
- 
- static u8 hw_bw_cap_to_bitamp(u8 bw_cap)
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 00fc77f..414d21f 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -431,6 +431,7 @@ enum rtw_vif_port_set {
- 	PORT_SET_BSSID		= BIT(1),
- 	PORT_SET_NET_TYPE	= BIT(2),
- 	PORT_SET_AID		= BIT(3),
-+	PORT_SET_BCN_CTRL	= BIT(4),
- };
- 
- struct rtw_vif_port {
-@@ -438,6 +439,7 @@ struct rtw_vif_port {
- 	struct rtw_hw_reg bssid;
- 	struct rtw_hw_reg net_type;
- 	struct rtw_hw_reg aid;
-+	struct rtw_hw_reg bcn_ctrl;
- };
- 
- struct rtw_tx_pkt_info {
-@@ -591,6 +593,7 @@ struct rtw_vif {
- 	u8 mac_addr[ETH_ALEN];
- 	u8 bssid[ETH_ALEN];
- 	u8 port;
-+	u8 bcn_ctrl;
- 	const struct rtw_vif_port *conf;
- 
- 	struct rtw_traffic_stats stats;
--- 
-2.7.4
-
+ config PGTABLE_LEVELS
+ 	int
