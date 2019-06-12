@@ -6,19 +6,19 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7E76C31E46
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 19:35:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D681C31E48
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 19:35:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7B3620896
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 19:35:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B50220896
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 19:35:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728141AbfFLTfc (ORCPT
+        id S1728207AbfFLTfc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 12 Jun 2019 15:35:32 -0400
 Received: from mga04.intel.com ([192.55.52.120]:65222 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727826AbfFLTfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jun 2019 15:35:31 -0400
+        id S1727924AbfFLTfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Jun 2019 15:35:32 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
@@ -29,49 +29,86 @@ Received: from jprestwo-test.jf.intel.com ([10.54.74.49])
 From:   James Prestwood <james.prestwood@linux.intel.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     James Prestwood <james.prestwood@linux.intel.com>
-Subject: [PATCH 1/3] net: wireless: trace: add trace for tx_mgmt_expired
-Date:   Wed, 12 Jun 2019 12:35:08 -0700
-Message-Id: <20190612193510.27680-1-james.prestwood@linux.intel.com>
+Subject: [PATCH 2/3] nl80211: send event when CMD_FRAME duration expires
+Date:   Wed, 12 Jun 2019 12:35:09 -0700
+Message-Id: <20190612193510.27680-2-james.prestwood@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20190612193510.27680-1-james.prestwood@linux.intel.com>
+References: <20190612193510.27680-1-james.prestwood@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+cfg80211_remain_on_channel_expired is used to notify userspace when
+the remain on channel duration expired by sending an event. There is
+no such equivalent to CMD_FRAME, where if offchannel and a duration
+is provided, the card will go offchannel for that duration. Currently
+there is no way for userspace to tell when that duration expired
+apart from setting an independent timeout. This timeout is quite
+erroneous as the kernel may not immediately send out the frame
+because of scheduling or work queue delays. In testing, it was found
+this timeout had to be quite large to accomidate any potential delays.
+
+A better solution is to have the kernel send an event when this
+duration has expired. There is already NL80211_CMD_FRAME_WAIT_CANCEL
+which can be used to cancel a NL80211_CMD_FRAME offchannel. Using this
+command matches perfectly to how NL80211_CMD_CANCEL_REMAIN_ON_CHANNEL
+works, where its both used to cancel and notify if the duration has
+expired.
+
 Signed-off-by: James Prestwood <james.prestwood@linux.intel.com>
 ---
- net/wireless/trace.h | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ include/net/cfg80211.h | 11 +++++++++++
+ net/wireless/nl80211.c | 13 +++++++++++++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 2abfff925aac..4fbb91a511ae 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2752,6 +2752,24 @@ TRACE_EVENT(cfg80211_ready_on_channel_expired,
- 		  WDEV_PR_ARG, __entry->cookie, CHAN_PR_ARG)
- );
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 948139690a58..57f9774d8c90 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -6492,6 +6492,17 @@ void cfg80211_remain_on_channel_expired(struct wireless_dev *wdev, u64 cookie,
+ 					struct ieee80211_channel *chan,
+ 					gfp_t gfp);
  
-+TRACE_EVENT(cfg80211_tx_mgmt_expired,
-+	TP_PROTO(struct wireless_dev *wdev, u64 cookie,
-+		 struct ieee80211_channel *chan),
-+	TP_ARGS(wdev, cookie, chan),
-+	TP_STRUCT__entry(
-+		WDEV_ENTRY
-+		__field(u64, cookie)
-+		CHAN_ENTRY
-+	),
-+	TP_fast_assign(
-+		WDEV_ASSIGN;
-+		__entry->cookie = cookie;
-+		CHAN_ASSIGN(chan);
-+	),
-+	TP_printk(WDEV_PR_FMT ", cookie: %llu, " CHAN_PR_FMT,
-+		  WDEV_PR_ARG, __entry->cookie, CHAN_PR_ARG)
-+);
++/**
++ * cfg80211_tx_mgmt_expired - tx_mgmt duration expired
++ * @wdev: wireless device
++ * @cookie: the requested cookie
++ * @chan: The current channel (from tx_mgmt request)
++ * @gfp: allocation flags
++ */
++void cfg80211_tx_mgmt_expired(struct wireless_dev *wdev, u64 cookie,
++					struct ieee80211_channel *chan,
++					gfp_t gfp);
 +
- TRACE_EVENT(cfg80211_new_sta,
- 	TP_PROTO(struct net_device *netdev, const u8 *mac_addr,
- 		 struct station_info *sinfo),
+ /**
+  * cfg80211_sinfo_alloc_tid_stats - allocate per-tid statistics.
+  *
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e3c0805af415..74dbe6000fe3 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -15375,6 +15375,19 @@ void cfg80211_remain_on_channel_expired(struct wireless_dev *wdev, u64 cookie,
+ }
+ EXPORT_SYMBOL(cfg80211_remain_on_channel_expired);
+ 
++void cfg80211_tx_mgmt_expired(struct wireless_dev *wdev, u64 cookie,
++					struct ieee80211_channel *chan,
++					gfp_t gfp)
++{
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++
++	trace_cfg80211_tx_mgmt_expired(wdev, cookie, chan);
++	nl80211_send_remain_on_chan_event(NL80211_CMD_FRAME_WAIT_CANCEL,
++					  rdev, wdev, cookie, chan, 0, gfp);
++}
++EXPORT_SYMBOL(cfg80211_tx_mgmt_expired);
++
+ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ 		      struct station_info *sinfo, gfp_t gfp)
+ {
 -- 
 2.17.1
 
