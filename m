@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72896C468B0
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 06:45:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E24C31E46
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 06:45:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D05F20874
+	by mail.kernel.org (Postfix) with ESMTP id E1EEC20874
 	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 06:45:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731239AbfFLGpg (ORCPT
+        id S1731231AbfFLGpd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Jun 2019 02:45:36 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:51302 "EHLO
+        Wed, 12 Jun 2019 02:45:33 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:51296 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390411AbfFLGpf (ORCPT
+        with ESMTP id S1731216AbfFLGpc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jun 2019 02:45:35 -0400
+        Wed, 12 Jun 2019 02:45:32 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5C6jUYb004364, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5C6jSdb004352, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5C6jUYb004364
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5C6jSdb004352
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 12 Jun 2019 14:45:30 +0800
+        Wed, 12 Jun 2019 14:45:29 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 12 Jun 2019 14:45:29 +0800
+ 14.3.439.0; Wed, 12 Jun 2019 14:45:28 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/11] rtw88: 8822c: update channel and bandwidth BB setting
-Date:   Wed, 12 Jun 2019 14:45:11 +0800
-Message-ID: <1560321917-17751-6-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 03/11] rtw88: add beacon function setting
+Date:   Wed, 12 Jun 2019 14:45:09 +0800
+Message-ID: <1560321917-17751-4-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1560321917-17751-1-git-send-email-yhchuang@realtek.com>
 References: <1560321917-17751-1-git-send-email-yhchuang@realtek.com>
@@ -46,170 +46,151 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chien-Hsun Liao <ben.liao@realtek.com>
+From: Chin-Yen Lee <timlee@realtek.com>
 
-In 2G channels, the cck source and rxagc should be set to different
-values based on different bandwidth to increase the performance of rx
-sensitivity.
+Add beacon function setting routines for each hardware port.
+If beacon function is not enabled, the hardware is not able
+to synchronize with AP's beacon and can miss the beacons
+under some scenarios such as PS mode.
 
-To improve rx throughput performance, the values of sbd subtune and
-pt_opt should be changed in different bandwidth.
+For AP and Adhoc modes that require to send beacons, do not
+update the TSF, otherwise the beacon interval may be affected.
 
-Signed-off-by: Chien-Hsun Liao <ben.liao@realtek.com>
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 56 +++++++++++++++++++++++----
- drivers/net/wireless/realtek/rtw88/rtw8822c.h |  7 ++++
- 2 files changed, 55 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 13 +++++++++++++
+ drivers/net/wireless/realtek/rtw88/main.c     |  5 +++++
+ drivers/net/wireless/realtek/rtw88/main.h     |  3 +++
+ 3 files changed, 21 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index b4f7242e..86acf60 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -1015,8 +1015,28 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 		rtw_write32_clr(rtwdev, REG_CCKTXONLY, BIT_BB_CCK_CHECK_EN);
- 		rtw_write32_mask(rtwdev, REG_CCAMSK, 0x3F000000, 0xF);
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 61436bb..abe6a14 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -85,30 +85,35 @@ static const struct rtw_vif_port rtw_vif_port[] = {
+ 		.bssid		= {.addr = 0x0618},
+ 		.net_type	= {.addr = 0x0100, .mask = 0x30000},
+ 		.aid		= {.addr = 0x06a8, .mask = 0x7ff},
++		.bcn_ctrl	= {.addr = 0x0550, .mask = 0xff},
+ 	},
+ 	[1] = {
+ 		.mac_addr	= {.addr = 0x0700},
+ 		.bssid		= {.addr = 0x0708},
+ 		.net_type	= {.addr = 0x0100, .mask = 0xc0000},
+ 		.aid		= {.addr = 0x0710, .mask = 0x7ff},
++		.bcn_ctrl	= {.addr = 0x0551, .mask = 0xff},
+ 	},
+ 	[2] = {
+ 		.mac_addr	= {.addr = 0x1620},
+ 		.bssid		= {.addr = 0x1628},
+ 		.net_type	= {.addr = 0x1100, .mask = 0x3},
+ 		.aid		= {.addr = 0x1600, .mask = 0x7ff},
++		.bcn_ctrl	= {.addr = 0x0578, .mask = 0xff},
+ 	},
+ 	[3] = {
+ 		.mac_addr	= {.addr = 0x1630},
+ 		.bssid		= {.addr = 0x1638},
+ 		.net_type	= {.addr = 0x1100, .mask = 0xc},
+ 		.aid		= {.addr = 0x1604, .mask = 0x7ff},
++		.bcn_ctrl	= {.addr = 0x0579, .mask = 0xff},
+ 	},
+ 	[4] = {
+ 		.mac_addr	= {.addr = 0x1640},
+ 		.bssid		= {.addr = 0x1648},
+ 		.net_type	= {.addr = 0x1100, .mask = 0x30},
+ 		.aid		= {.addr = 0x1608, .mask = 0x7ff},
++		.bcn_ctrl	= {.addr = 0x057a, .mask = 0xff},
+ 	},
+ };
  
--		rtw_write32_mask(rtwdev, REG_RXAGCCTL0, 0x1f0, 0x0);
--		rtw_write32_mask(rtwdev, REG_RXAGCCTL, 0x1f0, 0x0);
-+		switch (bw) {
-+		case RTW_CHANNEL_WIDTH_20:
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BIT_RXAGC_CCK,
-+					 0x5);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BIT_RXAGC_CCK,
-+					 0x5);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BIT_RXAGC_OFDM,
-+					 0x6);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BIT_RXAGC_OFDM,
-+					 0x6);
-+			break;
-+		case RTW_CHANNEL_WIDTH_40:
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BIT_RXAGC_CCK,
-+					 0x4);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BIT_RXAGC_CCK,
-+					 0x4);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BIT_RXAGC_OFDM,
-+					 0x0);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BIT_RXAGC_OFDM,
-+					 0x0);
-+			break;
-+		}
- 		if (channel == 13 || channel == 14)
- 			rtw_write32_mask(rtwdev, REG_SCOTRK, 0xfff, 0x969);
- 		else if (channel == 11 || channel == 12)
-@@ -1061,14 +1081,20 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 		rtw_write32_mask(rtwdev, REG_CCAMSK, 0x3F000000, 0x22);
- 		rtw_write32_mask(rtwdev, REG_TXDFIR0, 0x70, 0x3);
- 		if (channel >= 36 && channel <= 64) {
--			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, 0x1f0, 0x1);
--			rtw_write32_mask(rtwdev, REG_RXAGCCTL, 0x1f0, 0x1);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BIT_RXAGC_OFDM,
-+					 0x1);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BIT_RXAGC_OFDM,
-+					 0x1);
- 		} else if (channel >= 100 && channel <= 144) {
--			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, 0x1f0, 0x2);
--			rtw_write32_mask(rtwdev, REG_RXAGCCTL, 0x1f0, 0x2);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BIT_RXAGC_OFDM,
-+					 0x2);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BIT_RXAGC_OFDM,
-+					 0x2);
- 		} else if (channel >= 149) {
--			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, 0x1f0, 0x3);
--			rtw_write32_mask(rtwdev, REG_RXAGCCTL, 0x1f0, 0x3);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BIT_RXAGC_OFDM,
-+					 0x3);
-+			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BIT_RXAGC_OFDM,
-+					 0x3);
- 		}
+@@ -120,6 +125,7 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
+ 	enum rtw_net_type net_type;
+ 	u32 config = 0;
+ 	u8 port = 0;
++	u8 bcn_ctrl = 0;
  
- 		if (channel >= 36 && channel <= 51)
-@@ -1092,6 +1118,9 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xffc0, 0x0);
- 		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700, 0x7);
- 		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700000, 0x6);
-+		rtw_write32_mask(rtwdev, REG_CCK_SOURCE, BIT(30), 0x0);
-+		rtw_write32_mask(rtwdev, REG_SBD, BIT_SUBTUNE, 0x1);
-+		rtw_write32_mask(rtwdev, REG_PT_CHSMO, BIT_PT_OPT, 0x0);
+ 	rtwvif->port = port;
+ 	rtwvif->vif = vif;
+@@ -136,13 +142,16 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		net_type = RTW_NET_AP_MODE;
++		bcn_ctrl = BIT_EN_BCN_FUNCTION | BIT_DIS_TSF_UDT;
  		break;
- 	case RTW_CHANNEL_WIDTH_40:
- 		rtw_write32_mask(rtwdev, REG_CCKSB, BIT(4),
-@@ -1100,12 +1129,17 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xc0, 0x0);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xff00,
- 				 (primary_ch_idx | (primary_ch_idx << 4)));
-+		rtw_write32_mask(rtwdev, REG_CCK_SOURCE, BIT(30), 0x1);
-+		rtw_write32_mask(rtwdev, REG_SBD, BIT_SUBTUNE, 0x1);
-+		rtw_write32_mask(rtwdev, REG_PT_CHSMO, BIT_PT_OPT, 0x1);
+ 	case NL80211_IFTYPE_ADHOC:
+ 		net_type = RTW_NET_AD_HOC;
++		bcn_ctrl = BIT_EN_BCN_FUNCTION | BIT_DIS_TSF_UDT;
  		break;
- 	case RTW_CHANNEL_WIDTH_80:
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xf, 0xa);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xc0, 0x0);
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xff00,
- 				 (primary_ch_idx | (primary_ch_idx << 4)));
-+		rtw_write32_mask(rtwdev, REG_SBD, BIT_SUBTUNE, 0x6);
-+		rtw_write32_mask(rtwdev, REG_PT_CHSMO, BIT_PT_OPT, 0x1);
- 		break;
- 	case RTW_CHANNEL_WIDTH_5:
- 		rtw_write32_mask(rtwdev, REG_DFIRBW, 0x3FF0, 0x2AB);
-@@ -1113,6 +1147,9 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xffc0, 0x1);
- 		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700, 0x4);
- 		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700000, 0x4);
-+		rtw_write32_mask(rtwdev, REG_CCK_SOURCE, BIT(30), 0x0);
-+		rtw_write32_mask(rtwdev, REG_SBD, BIT_SUBTUNE, 0x1);
-+		rtw_write32_mask(rtwdev, REG_PT_CHSMO, BIT_PT_OPT, 0x0);
- 		break;
- 	case RTW_CHANNEL_WIDTH_10:
- 		rtw_write32_mask(rtwdev, REG_DFIRBW, 0x3FF0, 0x2AB);
-@@ -1120,6 +1157,9 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 		rtw_write32_mask(rtwdev, REG_TXBWCTL, 0xffc0, 0x2);
- 		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700, 0x6);
- 		rtw_write32_mask(rtwdev, REG_TXCLK, 0x700000, 0x5);
-+		rtw_write32_mask(rtwdev, REG_CCK_SOURCE, BIT(30), 0x0);
-+		rtw_write32_mask(rtwdev, REG_SBD, BIT_SUBTUNE, 0x1);
-+		rtw_write32_mask(rtwdev, REG_PT_CHSMO, BIT_PT_OPT, 0x0);
+ 	case NL80211_IFTYPE_STATION:
+ 	default:
+ 		net_type = RTW_NET_NO_LINK;
++		bcn_ctrl = BIT_EN_BCN_FUNCTION;
  		break;
  	}
+ 
+@@ -150,6 +159,8 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
+ 	config |= PORT_SET_MAC_ADDR;
+ 	rtwvif->net_type = net_type;
+ 	config |= PORT_SET_NET_TYPE;
++	rtwvif->bcn_ctrl = bcn_ctrl;
++	config |= PORT_SET_BCN_CTRL;
+ 	rtw_vif_port_config(rtwdev, rtwvif, config);
+ 
+ 	mutex_unlock(&rtwdev->mutex);
+@@ -173,6 +184,8 @@ static void rtw_ops_remove_interface(struct ieee80211_hw *hw,
+ 	config |= PORT_SET_MAC_ADDR;
+ 	rtwvif->net_type = RTW_NET_NO_LINK;
+ 	config |= PORT_SET_NET_TYPE;
++	rtwvif->bcn_ctrl = 0;
++	config |= PORT_SET_BCN_CTRL;
+ 	rtw_vif_port_config(rtwdev, rtwvif, config);
+ 
+ 	mutex_unlock(&rtwdev->mutex);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 306d799..b8e0519 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -308,6 +308,11 @@ void rtw_vif_port_config(struct rtw_dev *rtwdev,
+ 		mask = rtwvif->conf->aid.mask;
+ 		rtw_write32_mask(rtwdev, addr, mask, rtwvif->aid);
+ 	}
++	if (config & PORT_SET_BCN_CTRL) {
++		addr = rtwvif->conf->bcn_ctrl.addr;
++		mask = rtwvif->conf->bcn_ctrl.mask;
++		rtw_write8_mask(rtwdev, addr, mask, rtwvif->bcn_ctrl);
++	}
  }
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-index d3bd985..5fe6acb 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-@@ -133,6 +133,8 @@ struct rtw8822c_efuse {
- #define REG_DYMPRITH	0x86c
- #define REG_DYMENTH0	0x870
- #define REG_DYMENTH	0x874
-+#define REG_SBD		0x88c
-+#define BIT_SUBTUNE	0xf000
- #define REG_DYMTHMIN	0x8a4
- #define REG_TXBWCTL	0x9b0
- #define REG_TXCLK	0x9b4
-@@ -140,12 +142,16 @@ struct rtw8822c_efuse {
- #define REG_MRCM	0xc38
- #define REG_AGCSWSH	0xc44
- #define REG_ANTWTPD	0xc54
-+#define REG_PT_CHSMO	0xcbc
-+#define BIT_PT_OPT		BIT(21)
- #define REG_ORITXCODE	0x1800
- #define REG_3WIRE	0x180c
- #define BIT_3WIRE_TX_EN		BIT(0)
- #define BIT_3WIRE_RX_EN		BIT(1)
- #define BIT_3WIRE_PI_ON		BIT(28)
- #define REG_RXAGCCTL0	0x18ac
-+#define BIT_RXAGC_CCK	0xf000
-+#define BIT_RXAGC_OFDM	0x1f0
- #define REG_CCKSB	0x1a00
- #define REG_RXCCKSEL	0x1a04
- #define REG_BGCTRL	0x1a14
-@@ -164,6 +170,7 @@ struct rtw8822c_efuse {
- #define REG_TXF5	0x1aa0
- #define REG_TXF6	0x1aac
- #define REG_TXF7	0x1ab0
-+#define REG_CCK_SOURCE	0x1abc
- #define REG_TXANT	0x1c28
- #define REG_ENCCK	0x1c3c
- #define BIT_CCK_BLK_EN		BIT(1)
+ 
+ static u8 hw_bw_cap_to_bitamp(u8 bw_cap)
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 00fc77f..414d21f 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -431,6 +431,7 @@ enum rtw_vif_port_set {
+ 	PORT_SET_BSSID		= BIT(1),
+ 	PORT_SET_NET_TYPE	= BIT(2),
+ 	PORT_SET_AID		= BIT(3),
++	PORT_SET_BCN_CTRL	= BIT(4),
+ };
+ 
+ struct rtw_vif_port {
+@@ -438,6 +439,7 @@ struct rtw_vif_port {
+ 	struct rtw_hw_reg bssid;
+ 	struct rtw_hw_reg net_type;
+ 	struct rtw_hw_reg aid;
++	struct rtw_hw_reg bcn_ctrl;
+ };
+ 
+ struct rtw_tx_pkt_info {
+@@ -591,6 +593,7 @@ struct rtw_vif {
+ 	u8 mac_addr[ETH_ALEN];
+ 	u8 bssid[ETH_ALEN];
+ 	u8 port;
++	u8 bcn_ctrl;
+ 	const struct rtw_vif_port *conf;
+ 
+ 	struct rtw_traffic_stats stats;
 -- 
 2.7.4
 
