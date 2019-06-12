@@ -2,67 +2,76 @@ Return-Path: <SRS0=e4fn=UL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23D7DC31E46
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 19:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7E76C31E46
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 19:35:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EEF5B21721
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 19:31:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7B3620896
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 19:35:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728084AbfFLTbY (ORCPT
+        id S1728141AbfFLTfc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Jun 2019 15:31:24 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:55234 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727826AbfFLTbY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jun 2019 15:31:24 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hb8xu-00078D-F8; Wed, 12 Jun 2019 21:31:22 +0200
-Message-ID: <5d49245b9fc0fe9fbd323f96aa9f17b4f1d7dbd9.camel@sipsolutions.net>
-Subject: Re: ROC event when CMD_FRAME duration expires
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     James Prestwood <james.prestwood@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Date:   Wed, 12 Jun 2019 21:31:20 +0200
-In-Reply-To: <f7ac0d5ebf9c3e863576c63b374b07a8e3f689b7.camel@linux.intel.com>
-References: <b2df99eab3cd3c287187dcf91725530dfa000213.camel@linux.intel.com>
-         (sfid-20190611_225154_549360_F87329DC) <292712d7505871a093bd596d2e03ec7d811370f9.camel@sipsolutions.net>
-         <f7ac0d5ebf9c3e863576c63b374b07a8e3f689b7.camel@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Wed, 12 Jun 2019 15:35:32 -0400
+Received: from mga04.intel.com ([192.55.52.120]:65222 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727826AbfFLTfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Jun 2019 15:35:31 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Jun 2019 12:35:31 -0700
+X-ExtLoop1: 1
+Received: from jprestwo-test.jf.intel.com ([10.54.74.49])
+  by FMSMGA003.fm.intel.com with ESMTP; 12 Jun 2019 12:35:31 -0700
+From:   James Prestwood <james.prestwood@linux.intel.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     James Prestwood <james.prestwood@linux.intel.com>
+Subject: [PATCH 1/3] net: wireless: trace: add trace for tx_mgmt_expired
+Date:   Wed, 12 Jun 2019 12:35:08 -0700
+Message-Id: <20190612193510.27680-1-james.prestwood@linux.intel.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2019-06-12 at 12:18 -0700, James Prestwood wrote:
-> On Wed, 2019-06-12 at 21:11 +0200, Johannes Berg wrote:
-> > On Tue, 2019-06-11 at 13:51 -0700, James Prestwood wrote:
-> > > Hi,
-> > > 
-> > > I see that the event CMD_CANCEL_REMAIN_ON_CHANNEL is emitted when a
-> > > CMD_REMAIN_ON_CHANNEL duration expires, but this is not true for
-> > > CMD_FRAME when sending offchannel and providing a duration. I see
-> > > wpa_supplicant handles this with its own timeout, but couldn't the
-> > > same
-> > > event be emitted for CMD_FRAME if the duration expires?
-> > 
-> > I guess? I guess this is for a case where you actually have a wait
-> > after
-> > the TX, for waiting for a response?
-> 
-> Yes exactly. For example a GAS/ANQP request before association to some
-> offchannel AP (that's at least our use case).
+Signed-off-by: James Prestwood <james.prestwood@linux.intel.com>
+---
+ net/wireless/trace.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-Makes sense, I guess. Send a patch? Seems easy enough.
-
-johannes
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 2abfff925aac..4fbb91a511ae 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2752,6 +2752,24 @@ TRACE_EVENT(cfg80211_ready_on_channel_expired,
+ 		  WDEV_PR_ARG, __entry->cookie, CHAN_PR_ARG)
+ );
+ 
++TRACE_EVENT(cfg80211_tx_mgmt_expired,
++	TP_PROTO(struct wireless_dev *wdev, u64 cookie,
++		 struct ieee80211_channel *chan),
++	TP_ARGS(wdev, cookie, chan),
++	TP_STRUCT__entry(
++		WDEV_ENTRY
++		__field(u64, cookie)
++		CHAN_ENTRY
++	),
++	TP_fast_assign(
++		WDEV_ASSIGN;
++		__entry->cookie = cookie;
++		CHAN_ASSIGN(chan);
++	),
++	TP_printk(WDEV_PR_FMT ", cookie: %llu, " CHAN_PR_FMT,
++		  WDEV_PR_ARG, __entry->cookie, CHAN_PR_ARG)
++);
++
+ TRACE_EVENT(cfg80211_new_sta,
+ 	TP_PROTO(struct net_device *netdev, const u8 *mac_addr,
+ 		 struct station_info *sinfo),
+-- 
+2.17.1
 
