@@ -2,99 +2,123 @@ Return-Path: <SRS0=e4fn=UL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F09C31E46
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 03:33:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A1AC31E46
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 06:45:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D032620866
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 03:33:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AFDB20874
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jun 2019 06:45:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407064AbfFLDdR (ORCPT
+        id S1731224AbfFLGpc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Jun 2019 23:33:17 -0400
-Received: from gate.crashing.org ([63.228.1.57]:59994 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404347AbfFLDdR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jun 2019 23:33:17 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x5C3WnMD029931;
-        Tue, 11 Jun 2019 22:32:50 -0500
-Message-ID: <9fc8153bf08d1a5fd166d0cb38585094bffa060b.camel@kernel.crashing.org>
-Subject: Re: [BISECTED REGRESSION] b43legacy broken on G4 PowerBook
-From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     Aaro Koskinen <aaro.koskinen@iki.fi>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christian Zigotzky <chzigotzky@xenosoft.de>,
-        linuxppc-dev@lists.ozlabs.org
-Date:   Wed, 12 Jun 2019 13:32:49 +1000
-In-Reply-To: <7dcf54a9-a7aa-3a4c-8e2d-556be633d6e0@lwfinger.net>
-References: <20190605225059.GA9953@darkstar.musicnaut.iki.fi>
-         <73da300c-871c-77ac-8a3a-deac226743ef@lwfinger.net>
-         <20190607172902.GA8183@lst.de>
-         <30000803-3772-3edf-f4a9-55122d504f3f@lwfinger.net>
-         <20190610081825.GA16534@lst.de>
-         <153c13f5-a829-1eab-a3c5-fecfb84127ff@lwfinger.net>
-         <20190611060521.GA19512@lst.de>
-         <5aaa600b-5b59-1f68-454f-20403c318f1a@lwfinger.net>
-         <0b257651bb7ac4a6f0a8dce5470120b7701720b9.camel@kernel.crashing.org>
-         <7dcf54a9-a7aa-3a4c-8e2d-556be633d6e0@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Wed, 12 Jun 2019 02:45:32 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:51293 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727443AbfFLGpc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Jun 2019 02:45:32 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5C6jSH5004348, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5C6jSH5004348
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Wed, 12 Jun 2019 14:45:28 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.439.0; Wed, 12 Jun 2019 14:45:27 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/11] rtw88: add support for random mac scan
+Date:   Wed, 12 Jun 2019 14:45:08 +0800
+Message-ID: <1560321917-17751-3-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1560321917-17751-1-git-send-email-yhchuang@realtek.com>
+References: <1560321917-17751-1-git-send-email-yhchuang@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2019-06-11 at 20:52 -0500, Larry Finger wrote:
-> On 6/11/19 5:46 PM, Benjamin Herrenschmidt wrote:
-> > On Tue, 2019-06-11 at 17:20 -0500, Larry Finger wrote:
-> > > b43-pci-bridge 0001:11:00.0: dma_direct_supported: failed (mask =
-> > > 0x3fffffff,
-> > > min_mask = 0x5ffff000/0x5ffff000, dma bits = 0x1f
-> > 
-> > Ugh ? A mask with holes in it ? That's very wrong... That min_mask is
-> > bogus.
-> 
-> I agree, but that is not likely serious as most systems will have enough memory 
-> that the max_pfn term will be much larger than the initial min_mask, and 
-> min_mask will be unchanged by the min function. 
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Well no... it's too much memory that is the problem. If min_mask is
-bogus though it will cause problem later too, so one should look into
-it.
+When driver uses random mac address to scan, the unicast probe response
+will not be received because the addr1 is not matched. Configure port
+address by requested mac address to receive probe response from AP.
 
-> In addition, min_mask is not 
-> used beyond this routine, and then only to decide if direct dma is supported. 
-> The following patch generates masks with no holes, but I cannot see that it is 
-> needed.
+To support random mac scan, we need to configure the mac address during
+scan period to receive unicast prop_resp. After scan is completed,
+configure the mac address back to the original one that the port used.
 
-The right fix is to round up max_pfn to a power of 2, something like
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 19 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/main.c     |  2 ++
+ 2 files changed, 21 insertions(+)
 
-min_mask = min_t(u64, min_mask, (roundup_pow_of_two(max_pfn - 1)) <<
-		PAGE_SHIFT) 
-
-> diff --git a/kernel/dma/direct.c b/kernel/dma/direct.c
-> index 2c2772e9702a..e3edd4f29e80 100644
-> --- a/kernel/dma/direct.c
-> +++ b/kernel/dma/direct.c
-> @@ -384,7 +384,8 @@ int dma_direct_supported(struct device *dev, u64 mask)
->          else
->                  min_mask = DMA_BIT_MASK(32);
-> 
-> -       min_mask = min_t(u64, min_mask, (max_pfn - 1) << PAGE_SHIFT);
-> +       min_mask = min_t(u64, min_mask, ((max_pfn - 1) << PAGE_SHIFT) |
-> +                                        DMA_BIT_MASK(PAGE_SHIFT));
-> 
->          /*
->           * This check needs to be against the actual bit mask value, so
-> 
-> 
-> Larry
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index abded63..61436bb 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -446,20 +446,39 @@ static void rtw_ops_sw_scan_start(struct ieee80211_hw *hw,
+ {
+ 	struct rtw_dev *rtwdev = hw->priv;
+ 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++	u32 config = 0;
+ 
+ 	rtw_leave_lps(rtwdev, rtwvif);
+ 
++	mutex_lock(&rtwdev->mutex);
++
++	ether_addr_copy(rtwvif->mac_addr, mac_addr);
++	config |= PORT_SET_MAC_ADDR;
++	rtw_vif_port_config(rtwdev, rtwvif, config);
++
+ 	rtw_flag_set(rtwdev, RTW_FLAG_DIG_DISABLE);
+ 	rtw_flag_set(rtwdev, RTW_FLAG_SCANNING);
++
++	mutex_unlock(&rtwdev->mutex);
+ }
+ 
+ static void rtw_ops_sw_scan_complete(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif)
+ {
+ 	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++	u32 config = 0;
++
++	mutex_lock(&rtwdev->mutex);
+ 
+ 	rtw_flag_clear(rtwdev, RTW_FLAG_SCANNING);
+ 	rtw_flag_clear(rtwdev, RTW_FLAG_DIG_DISABLE);
++
++	ether_addr_copy(rtwvif->mac_addr, vif->addr);
++	config |= PORT_SET_MAC_ADDR;
++	rtw_vif_port_config(rtwdev, rtwvif, config);
++
++	mutex_unlock(&rtwdev->mutex);
+ }
+ 
+ const struct ieee80211_ops rtw_ops = {
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index d2e8d2e..306d799 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1178,6 +1178,8 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+ 			    WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+ 
++	hw->wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
++
+ 	rtw_set_supported_band(hw, rtwdev->chip);
+ 	SET_IEEE80211_PERM_ADDR(hw, rtwdev->efuse.addr);
+ 
+-- 
+2.7.4
 
