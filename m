@@ -4,55 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2511EC31E45
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F361C31E4A
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD97221721
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31D8D2173C
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="AtrQETD8"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="VlbrMMDK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727800AbfFMXmU (ORCPT
+        id S1727438AbfFMXmh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jun 2019 19:42:20 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:34942 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727637AbfFMXmP (ORCPT
+        Thu, 13 Jun 2019 19:42:37 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:33384 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727341AbfFMXmM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jun 2019 19:42:15 -0400
-Received: by mail-pg1-f194.google.com with SMTP id s27so406732pgl.2
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2019 16:42:14 -0700 (PDT)
+        Thu, 13 Jun 2019 19:42:12 -0400
+Received: by mail-pf1-f196.google.com with SMTP id x15so226346pfq.0
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2019 16:42:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=asAFKY/6kW404t0swx66t/dNtCEl6Thr0JYkBAqMaR4=;
-        b=AtrQETD8maXPKp1qgnGxA8eeBx7Cjs5OFntvEBHxx8Y63Hfo8STjQB7T1kmrZIxhVv
-         baf4wlarO3zBU4HJwEuF2UysuOBmjOTzr1oAY/Po2KQUJFEL9/7sBH979Ox2KI22TRcV
-         NauLNa3uQxNcDx/j3YUJ7eaChBlNbfov6fKsA=
+        bh=VtrTSgIpf1xWm97iCxjL9r9Hr48USPFt3UpK18m2DGw=;
+        b=VlbrMMDKbT4x3Yq8VVmgt3/aCuibVx46072FJZ85/2afM5Hoa9T45Tc95JV4QsjlHB
+         rCVUUCDzd5r+hoHzmy89Z8rrvygMTjG//urZJ5Ek8TGoyjtalSNfqpLyR02bIOXAthdA
+         Wo9gEBu1br9rAsGKlA2eFHXM1lLylkQ+rT+xI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=asAFKY/6kW404t0swx66t/dNtCEl6Thr0JYkBAqMaR4=;
-        b=ZE+PRJ/NbG6hkhpQS+DIvQeDHc3v6Wcse3et/hE+Q4nQQG1OQ+VOh1EkysTzswlBgw
-         Io2klcuWWB35CdYEb7CE1bphu0xW7zKf0YQcuhRVDgcmy/TatEcnHLQqgi0/0jwAbuCW
-         a5zJdj3bnNIkIa5iLDPjQOrZnCRVvprvakXP3qLO1i7NVRnPmy6K3pE/g7EaRS/fg2L9
-         jzz9UDjbCC17jzhNJd+IAscKNAeUdo1U1rsObujrkPDinidKHvSC3zAQG2UoNyMPCmgZ
-         Vk/v7u6+0dJUs9XfEyVaIwM5ZPL8gn8NIEgCpjEhVGz8oo0FiVLzoCzQxMeamu9oz3oy
-         0eHQ==
-X-Gm-Message-State: APjAAAUN+haJpCMiJGj7jhbpl8uqZKe3SYxboRkO27yMaIzbfi7F4O0n
-        0dYTkUPRca0DW2yAda+mwy4NLA==
-X-Google-Smtp-Source: APXvYqw9ZPafeIz8wf7SJLyfTJw4AF/ZuccsnJmitqQ0R7cOeNBJgsKmhTK6uMW7wmx88DQONcxcAw==
-X-Received: by 2002:a17:90a:ad89:: with SMTP id s9mr8114489pjq.41.1560469334233;
-        Thu, 13 Jun 2019 16:42:14 -0700 (PDT)
+        bh=VtrTSgIpf1xWm97iCxjL9r9Hr48USPFt3UpK18m2DGw=;
+        b=PavjRVG90iaPeCl1IZd3KOUEorIt3WqDyHq5MfUyJOFCvvDXOVg+P0PTPE2b6g8oXB
+         3zLLIhkccMSzWqZ066DrQmws4NnWRoIPHJj8L9tVklBJu7vp6dIMN7cnnIzSrOJSsBze
+         kVssP9xKRSECSUGIcaaLWr1Ps7otbGdeSE9tyBJ6uK9FafibVittFYlhFPpBRz9oCBBJ
+         gE1Q3huEhlItc3J0gYXwE2vrpCqqI2UHa5u1m/Yj7QrjCpFQjdN0JlNL+xzC2rXUFZBb
+         DGiiElw/qPC3Pq5y1nWBoiap6ncqbeeSIuThaQButYtsrUINvjun+uwuEMtIawqHQeWC
+         Ty9g==
+X-Gm-Message-State: APjAAAUJJlS20wdeIXWYmzI5GMSQvnl54NG6rgkorklKIgYbYPTcKngw
+        yE9+0ujYZCytzCxwTdf7PPFQ1A==
+X-Google-Smtp-Source: APXvYqwOtyJFXBqMXgHurwXO78zJmhJfJcPcRJQtQzXHSDqjugUINkmcJyuTNXHTDEegD1kcT7ujFQ==
+X-Received: by 2002:a17:90a:8a10:: with SMTP id w16mr7994113pjn.133.1560469330656;
+        Thu, 13 Jun 2019 16:42:10 -0700 (PDT)
 Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id p7sm781088pfp.131.2019.06.13.16.42.13
+        by smtp.gmail.com with ESMTPSA id p7sm781088pfp.131.2019.06.13.16.42.09
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 13 Jun 2019 16:42:13 -0700 (PDT)
+        Thu, 13 Jun 2019 16:42:10 -0700 (PDT)
 From:   Douglas Anderson <dianders@chromium.org>
 To:     Ulf Hansson <ulf.hansson@linaro.org>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -68,15 +68,18 @@ Cc:     brcm80211-dev-list.pdl@broadcom.com,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         netdev@vger.kernel.org, brcm80211-dev-list@cypress.com,
         Douglas Anderson <dianders@chromium.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        linux-kernel@vger.kernel.org,
-        Madhan Mohan R <MadhanMohan.R@cypress.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: [PATCH v4 5/5] brcmfmac: sdio: Don't tune while the card is off
-Date:   Thu, 13 Jun 2019 16:41:53 -0700
-Message-Id: <20190613234153.59309-6-dianders@chromium.org>
+        Jiong Wu <lohengrin1024@gmail.com>,
+        Ritesh Harjani <riteshh@codeaurora.org>,
+        Allison Randal <allison@lohutok.net>,
+        linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v4 2/5] mmc: core: API to temporarily disable retuning for SDIO CRC errors
+Date:   Thu, 13 Jun 2019 16:41:50 -0700
+Message-Id: <20190613234153.59309-3-dianders@chromium.org>
 X-Mailer: git-send-email 2.22.0.rc2.383.gf4fbbf30c2-goog
 In-Reply-To: <20190613234153.59309-1-dianders@chromium.org>
 References: <20190613234153.59309-1-dianders@chromium.org>
@@ -87,81 +90,159 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When Broadcom SDIO cards are idled they go to sleep and a whole
-separate subsystem takes over their SDIO communication.  This is the
-Always-On-Subsystem (AOS) and it can't handle tuning requests.
+Normally when the MMC core sees an "-EILSEQ" error returned by a host
+controller then it will trigger a retuning of the card.  This is
+generally a good idea.
 
-Specifically, as tested on rk3288-veyron-minnie (which reports having
-BCM4354/1 in dmesg), if I force a retune in brcmf_sdio_kso_control()
-when "on = 1" (aka we're transition from sleep to wake) by whacking:
-  bus->sdiodev->func1->card->host->need_retune = 1
-...then I can often see tuning fail.  In this case dw_mmc reports "All
-phases bad!").  Note that I don't get 100% failure, presumably because
-sometimes the card itself has already transitioned away from the AOS
-itself by the time we try to wake it up.  If I force retuning when "on
-= 0" (AKA force retuning right before sending the command to go to
-sleep) then retuning is always OK.
+However, if a command is expected to sometimes cause transfer errors
+then these transfer errors shouldn't cause a re-tuning.  This
+re-tuning will be a needless waste of time.  One example case where a
+transfer is expected to cause errors is when transitioning between
+idle (sometimes referred to as "sleep" in Broadcom code) and active
+state on certain Broadcom WiFi SDIO cards.  Specifically if the card
+was already transitioning between states when the command was sent it
+could cause an error on the SDIO bus.
 
-NOTE: we need _both_ this patch and the patch to avoid triggering
-tuning due to CRC errors in the sleep/wake transition, AKA ("brcmfmac:
-sdio: Disable auto-tuning around commands expected to fail").  Though
-both patches handle issues with Broadcom's AOS, the problems are
-distinct:
-1. We want to defer (but not ignore) asynchronous (like
-   timer-requested) tuning requests till the card is awake.  However,
-   we want to ignore CRC errors during the transition, we don't want
-   to queue deferred tuning request.
-2. You could imagine that the AOS could implement retuning but we
-   could still get errors while transitioning in and out of the AOS.
-   Similarly you could imagine a seamless transition into and out of
-   the AOS (with no CRC errors) even if the AOS couldn't handle
-   tuning.
+Let's add an API that the SDIO function drivers can call that will
+temporarily disable the auto-tuning functionality.  Then we can add a
+call to this in the Broadcom WiFi driver and any other driver that
+might have similar needs.
 
-ALSO NOTE: presumably there is never a desperate need to retune in
-order to wake up the card, since doing so is impossible.  Luckily the
-only way the card can get into sleep state is if we had a good enough
-tuning to send it a sleep command, so presumably that "good enough"
-tuning is enough to wake us up, at least with a few retries.
+NOTE: this makes the assumption that the card is already tuned well
+enough that it's OK to disable the auto-retuning during one of these
+error-prone situations.  Presumably the driver code performing the
+error-prone transfer knows how to recover / retry from errors.  ...and
+after we can get back to a state where transfers are no longer
+error-prone then we can enable the auto-retuning again.  If we truly
+find ourselves in a case where the card needs to be retuned sometimes
+to handle one of these error-prone transfers then we can always try a
+few transfers first without auto-retuning and then re-try with
+auto-retuning if the first few fail.
 
+Without this change on rk3288-veyron-minnie I periodically see this in
+the logs of a machine just sitting there idle:
+  dwmmc_rockchip ff0d0000.dwmmc: Successfully tuned phase to XYZ
+
+Fixes: bd11e8bd03ca ("mmc: core: Flag re-tuning is needed on CRC errors")
 Signed-off-by: Douglas Anderson <dianders@chromium.org>
 ---
 
 Changes in v4:
-- Adjust to API rename (Adrian).
+- Moved to SDIO API only (Adrian, Ulf).
+- Renamed to make it less generic, now retune_crc_disable (Ulf).
+- Function header makes it clear host must be claimed (Ulf).
+- No more WARN_ON (Ulf).
 
 Changes in v3:
-- ("brcmfmac: sdio: Don't tune while the card is off") new for v3.
+- Took out the spinlock since I believe this is all in one context.
 
-Changes in v2: None
+Changes in v2:
+- Updated commit message to clarify based on discussion of v1.
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/mmc/core/core.c       |  5 +++--
+ drivers/mmc/core/sdio_io.c    | 36 +++++++++++++++++++++++++++++++++++
+ include/linux/mmc/core.h      |  2 ++
+ include/linux/mmc/host.h      |  1 +
+ include/linux/mmc/sdio_func.h |  3 +++
+ 5 files changed, 45 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index ee76593259a7..629140b6d7e2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -669,6 +669,10 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
+index 6db36dc870b5..9020cb2490f7 100644
+--- a/drivers/mmc/core/core.c
++++ b/drivers/mmc/core/core.c
+@@ -144,8 +144,9 @@ void mmc_request_done(struct mmc_host *host, struct mmc_request *mrq)
+ 	int err = cmd->error;
  
- 	sdio_retune_crc_disable(bus->sdiodev->func1);
- 
-+	/* Cannot re-tune if device is asleep; defer till we're awake */
-+	if (on)
-+		sdio_retune_hold_now(bus->sdiodev->func1);
+ 	/* Flag re-tuning needed on CRC errors */
+-	if ((cmd->opcode != MMC_SEND_TUNING_BLOCK &&
+-	    cmd->opcode != MMC_SEND_TUNING_BLOCK_HS200) &&
++	if (cmd->opcode != MMC_SEND_TUNING_BLOCK &&
++	    cmd->opcode != MMC_SEND_TUNING_BLOCK_HS200 &&
++	    !host->retune_crc_disable &&
+ 	    (err == -EILSEQ || (mrq->sbc && mrq->sbc->error == -EILSEQ) ||
+ 	    (mrq->data && mrq->data->error == -EILSEQ) ||
+ 	    (mrq->stop && mrq->stop->error == -EILSEQ)))
+diff --git a/drivers/mmc/core/sdio_io.c b/drivers/mmc/core/sdio_io.c
+index f79f0b0caab8..f822a9630b0e 100644
+--- a/drivers/mmc/core/sdio_io.c
++++ b/drivers/mmc/core/sdio_io.c
+@@ -734,3 +734,39 @@ int sdio_set_host_pm_flags(struct sdio_func *func, mmc_pm_flag_t flags)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(sdio_set_host_pm_flags);
 +
- 	wr_val = (on << SBSDIO_FUNC1_SLEEPCSR_KSO_SHIFT);
- 	/* 1st KSO write goes to AOS wake up core if device is asleep  */
- 	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, wr_val, &err);
-@@ -729,6 +733,9 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
- 	if (try_cnt > MAX_KSO_ATTEMPTS)
- 		brcmf_err("max tries: rd_val=0x%x err=%d\n", rd_val, err);
- 
-+	if (on)
-+		sdio_retune_release(bus->sdiodev->func1);
++/**
++ *	sdio_retune_crc_disable - temporarily disable retuning on CRC errors
++ *	@func: SDIO function attached to host
++ *
++ *	If the SDIO card is known to be in a state where it might produce
++ *	CRC errors on the bus in response to commands (like if we know it is
++ *	transitioning between power states), an SDIO function driver can
++ *	call this function to temporarily disable the SD/MMC core behavior of
++ *	triggering an automatic retuning.
++ *
++ *	This function should be called while the host is claimed and the host
++ *	should remain claimed until sdio_retune_crc_enable() is called.
++ *	Specifically, the expected sequence of calls is:
++ *	- sdio_claim_host()
++ *	- sdio_retune_crc_disable()
++ *	- some number of calls like sdio_writeb() and sdio_readb()
++ *	- sdio_release_host()
++ */
++void sdio_retune_crc_disable(struct sdio_func *func)
++{
++	func->card->host->retune_crc_disable = true;
++}
++EXPORT_SYMBOL_GPL(sdio_retune_crc_disable);
 +
- 	sdio_retune_crc_enable(bus->sdiodev->func1);
++/**
++ *	sdio_retune_crc_enable - reneable retuning on CRC errors
++ *	@func: SDIO function attached to host
++ *
++ *	This is the compement to sdio_retune_crc_disable().
++ */
++void sdio_retune_crc_enable(struct sdio_func *func)
++{
++	func->card->host->retune_crc_disable = false;
++}
++EXPORT_SYMBOL_GPL(sdio_retune_crc_enable);
+diff --git a/include/linux/mmc/core.h b/include/linux/mmc/core.h
+index 134a6483347a..02a13abf0cda 100644
+--- a/include/linux/mmc/core.h
++++ b/include/linux/mmc/core.h
+@@ -178,6 +178,8 @@ int mmc_wait_for_cmd(struct mmc_host *host, struct mmc_command *cmd,
  
- 	return err;
+ int mmc_hw_reset(struct mmc_host *host);
+ int mmc_sw_reset(struct mmc_host *host);
++void mmc_expect_errors_begin(struct mmc_host *host);
++void mmc_expect_errors_end(struct mmc_host *host);
+ void mmc_set_data_timeout(struct mmc_data *data, const struct mmc_card *card);
+ 
+ #endif /* LINUX_MMC_CORE_H */
+diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
+index 43d0f0c496f6..ecb7972e2423 100644
+--- a/include/linux/mmc/host.h
++++ b/include/linux/mmc/host.h
+@@ -398,6 +398,7 @@ struct mmc_host {
+ 	unsigned int		retune_now:1;	/* do re-tuning at next req */
+ 	unsigned int		retune_paused:1; /* re-tuning is temporarily disabled */
+ 	unsigned int		use_blk_mq:1;	/* use blk-mq */
++	unsigned int		retune_crc_disable:1; /* don't trigger retune upon crc */
+ 
+ 	int			rescan_disable;	/* disable card detection */
+ 	int			rescan_entered;	/* used with nonremovable devices */
+diff --git a/include/linux/mmc/sdio_func.h b/include/linux/mmc/sdio_func.h
+index e9dfdd501cd1..4820e6d09dac 100644
+--- a/include/linux/mmc/sdio_func.h
++++ b/include/linux/mmc/sdio_func.h
+@@ -167,4 +167,7 @@ extern void sdio_f0_writeb(struct sdio_func *func, unsigned char b,
+ extern mmc_pm_flag_t sdio_get_host_pm_caps(struct sdio_func *func);
+ extern int sdio_set_host_pm_flags(struct sdio_func *func, mmc_pm_flag_t flags);
+ 
++extern void sdio_retune_crc_disable(struct sdio_func *func);
++extern void sdio_retune_crc_enable(struct sdio_func *func);
++
+ #endif /* LINUX_MMC_SDIO_FUNC_H */
 -- 
 2.22.0.rc2.383.gf4fbbf30c2-goog
 
