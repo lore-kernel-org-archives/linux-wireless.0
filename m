@@ -2,57 +2,57 @@ Return-Path: <SRS0=exsR=UM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D9E3C31E49
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C7C9C31E4A
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EEBD2177E
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BE582175B
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="eAWun/ks"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="LxynRClH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728012AbfFMXmp (ORCPT
+        id S1727101AbfFMXmJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jun 2019 19:42:45 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:42952 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727202AbfFMXmK (ORCPT
+        Thu, 13 Jun 2019 19:42:09 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:41116 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726784AbfFMXmJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jun 2019 19:42:10 -0400
-Received: by mail-pf1-f193.google.com with SMTP id q10so203905pff.9
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2019 16:42:09 -0700 (PDT)
+        Thu, 13 Jun 2019 19:42:09 -0400
+Received: by mail-pl1-f194.google.com with SMTP id s24so177626plr.8
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2019 16:42:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Vet+Dn10p+j7iocPSsG03g8vaMFWiMo90o3B9LDdj5Q=;
-        b=eAWun/ksKNSaoQ10+uBkjZGfqtLoiG8yBGDTdZO258ZzYavaoOZuXXwFSkzwuBHRB7
-         lAW5Qhzyq2gfCkWzO/C/0t28K4pk2shtn8t++uigTtM6pqGQTxJDZTEppJLVYFcPZiZ+
-         ET5Mbl5aw+JT4vfiumCEtNewl5negiJ8/hElc=
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=qJQX+GLD4fwd+GCBrIWjKsA+IAvGAyQwTSeSX2BSMJY=;
+        b=LxynRClHhe6x/JL/spDHqC1iBz5ugcvqw4xyZsmxiWuMKvrTOMnUdqDKFM09vDQEXk
+         g8D28Mk39C+APeBjMzbC1os4SM6ZMn7qrCbrNb3T3fGmWaX7RMSCe+s43sy4YLrsZYAK
+         USjKgfZYVdMtiNjE5ywU7CUZvHRcPUBbocn+o=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Vet+Dn10p+j7iocPSsG03g8vaMFWiMo90o3B9LDdj5Q=;
-        b=fjXGh+EjlLOZN82MS4/Ue4CGmDC+6wujUvnJhJWJpF5XIZCYKVDRaL6YzxmrLbAY3J
-         pLVVn+Xqcjz3wjMb5DJ25ZLAZERdVnZvwIYkLqCBajbrAcmPVBNtUq75ispvfPvEVJzq
-         gMcdKtVBHQr+l0/03LBzFkkTVpjRrBKHeNAf90n1FFiliOVbEyaNOc2HDeozpLxz+5R8
-         uqh7f+m/qIv3Pyyk1F3qh22KrKbKFuExE2Az+AWnJ7aT/cwXR5/zojPZEEjtE0bYGuDv
-         VLnvLriVDGlnL70G+b7StrlRJgJJ3x4bGrWUcdg5lQtmLFAGupUdN5vB+aVs6+uRV44w
-         JDsQ==
-X-Gm-Message-State: APjAAAW8/Zy/UHxPYQYWGAhYNpxNy3DZIJZoK+wtvNQQzR4z6eaOkZBP
-        4r3zKylTju2Ib+HAUTq1a/LaYg==
-X-Google-Smtp-Source: APXvYqzcYCogaB1dx3Z18YZOdlzBvYKRQdVrqLFdJgs65C5FTDSv0SULwuUx8O/K6Sy3YmVLTPDmpA==
-X-Received: by 2002:a17:90a:8a8e:: with SMTP id x14mr7827548pjn.103.1560469329449;
-        Thu, 13 Jun 2019 16:42:09 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=qJQX+GLD4fwd+GCBrIWjKsA+IAvGAyQwTSeSX2BSMJY=;
+        b=Nwdteud5vEU5hl6cJdlsyWY51b1NJI2AumLZ8k/KgYWC0/XbloY4E0Ie2WWCZ2/6Yc
+         jD0mrkkuWYN+3HVwPbEDnjLfWcltxWSeBg/kG2JvDOfLAoW++T+Qj9/vLfggHV6NaOmx
+         u4kLrnzzTFMhGDZUCVDD06xr3ik+mSKAmvULUGbJ/QpyX0eS/Y05s41Eq0fzJOAImsul
+         Q2zqiVxtcne7YQGbIILripq7IpLq2t2sEs32P4VM3An/QQuf1yopjpaiNebpYGwS1kDT
+         j7qgd7GZlARYdIYtivojoBYCnS1ayNwpgMLpYCQ7tNKj4EIsx0R1YPNeqJGyGdlTHB/f
+         989w==
+X-Gm-Message-State: APjAAAVsb0VK6FIHeTCHwHU7mCNxh4JsB/VcLP6Dd6qYgXX8OZXd2GTd
+        z7CN1ACvXWcT6dsqZca9ypJpMg==
+X-Google-Smtp-Source: APXvYqyHvmG/55d6riqeb8uT5XjZFjeg3M6IzV8m9M1TGxU2K10/XPwKK4EKmj4io0cDJZmrlM1FDg==
+X-Received: by 2002:a17:902:2a26:: with SMTP id i35mr51358780plb.315.1560469328377;
+        Thu, 13 Jun 2019 16:42:08 -0700 (PDT)
 Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id p7sm781088pfp.131.2019.06.13.16.42.08
+        by smtp.gmail.com with ESMTPSA id p7sm781088pfp.131.2019.06.13.16.42.07
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 13 Jun 2019 16:42:09 -0700 (PDT)
+        Thu, 13 Jun 2019 16:42:07 -0700 (PDT)
 From:   Douglas Anderson <dianders@chromium.org>
 To:     Ulf Hansson <ulf.hansson@linaro.org>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -68,18 +68,26 @@ Cc:     brcm80211-dev-list.pdl@broadcom.com,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         netdev@vger.kernel.org, brcm80211-dev-list@cypress.com,
         Douglas Anderson <dianders@chromium.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        linux-kernel@vger.kernel.org,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Ondrej Jirman <megous@megous.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
         YueHaibing <yuehaibing@huawei.com>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: [PATCH v4 1/5] Revert "brcmfmac: disable command decode in sdio_aos"
-Date:   Thu, 13 Jun 2019 16:41:49 -0700
-Message-Id: <20190613234153.59309-2-dianders@chromium.org>
+        Allison Randal <allison@lohutok.net>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Ritesh Harjani <riteshh@codeaurora.org>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Ondrej Jirman <megous@megous.com>,
+        Jiong Wu <lohengrin1024@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>, linux-mmc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Madhan Mohan R <MadhanMohan.R@cypress.com>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v4 0/5] brcmfmac: sdio: Deal better w/ transmission errors related to idle
+Date:   Thu, 13 Jun 2019 16:41:48 -0700
+Message-Id: <20190613234153.59309-1-dianders@chromium.org>
 X-Mailer: git-send-email 2.22.0.rc2.383.gf4fbbf30c2-goog
-In-Reply-To: <20190613234153.59309-1-dianders@chromium.org>
-References: <20190613234153.59309-1-dianders@chromium.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -87,57 +95,70 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This reverts commit 29f6589140a10ece8c1d73f58043ea5b3473ab3e.
+This series attempts to deal better with the expected transmission
+errors related to the idle states (handled by the Always-On-Subsystem
+or AOS) on the SDIO-based WiFi on rk3288-veyron-minnie,
+rk3288-veyron-speedy, and rk3288-veyron-mickey.
 
-After that patch landed I find that my kernel log on
-rk3288-veyron-minnie and rk3288-veyron-speedy is filled with:
-brcmfmac: brcmf_sdio_bus_sleep: error while changing bus sleep state -110
+Some details about those errors can be found in
+<https://crbug.com/960222>, but to summarize it here: if we try to
+send the wakeup command to the WiFi card at the same time it has
+decided to wake up itself then it will behave badly on the SDIO bus.
+This can cause timeouts or CRC errors.
 
-This seems to happen every time the Broadcom WiFi transitions out of
-sleep mode.  Reverting the commit fixes the problem for me, so that's
-what this patch does.
+When I tested on 4.19 and 4.20 these CRC errors can be seen to cause
+re-tuning.  Since I am currently developing on 4.19 this was the
+original problem I attempted to solve.
 
-Note that, in general, the justification in the original commit seemed
-a little weak.  It looked like someone was testing on a SD card
-controller that would sometimes die if there were CRC errors on the
-bus.  This used to happen back in early days of dw_mmc (the controller
-on my boards), but we fixed it.  Disabling a feature on all boards
-just because one SD card controller is broken seems bad.
+On mainline it turns out that you don't see the retuning errors but
+you see tons of spam about timeouts trying to wakeup from sleep.  I
+tracked down the commit that was causing that and have partially
+reverted it here.  I have no real knowledge about Broadcom WiFi, but
+the commit that was causing problems sounds (from the descriptioin) to
+be a hack commit penalizing all Broadcom WiFi users because of a bug
+in a Cypress SD controller.  I will let others comment if this is
+truly the case and, if so, what the right solution should be.
 
-Fixes: 29f6589140a1 ("brcmfmac: disable command decode in sdio_aos")
-Cc: Wright Feng <wright.feng@cypress.com>
-Cc: Double Lo <double.lo@cypress.com>
-Cc: Madhan Mohan R <madhanmohan.r@cypress.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Signed-off-by: Douglas Anderson <dianders@chromium.org>
----
-As far as I know this patch can land anytime.
+For v3 of this series I have added 2 patches to the end of the series
+to address errors that would show up on systems with these same SDIO
+WiFi cards when used on controllers that do periodic retuning.  These
+systems need an extra fix to prevent the retuning from happening when
+the card is asleep.
 
-Changes in v4: None
-Changes in v3: None
+Changes in v4:
+- Moved to SDIO API only (Adrian, Ulf).
+- Renamed to make it less generic, now retune_crc_disable (Ulf).
+- Function header makes it clear host must be claimed (Ulf).
+- No more WARN_ON (Ulf).
+- Adjust to API rename (Adrian, Ulf).
+- Moved retune hold/release to SDIO API (Adrian).
+- Adjust to API rename (Adrian).
+
+Changes in v3:
+- Took out the spinlock since I believe this is all in one context.
+- Expect errors for all of brcmf_sdio_kso_control() (Adrian).
+- ("mmc: core: Export mmc_retune_hold_now() mmc_retune_release()") new for v3.
+- ("brcmfmac: sdio: Don't tune while the card is off") new for v3.
+
 Changes in v2:
 - A full revert, not just a partial one (Arend).  ...with explicit Cc.
+- Updated commit message to clarify based on discussion of v1.
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+Douglas Anderson (5):
+  Revert "brcmfmac: disable command decode in sdio_aos"
+  mmc: core: API to temporarily disable retuning for SDIO CRC errors
+  brcmfmac: sdio: Disable auto-tuning around commands expected to fail
+  mmc: core: Add sdio_retune_hold_now() and sdio_retune_release()
+  brcmfmac: sdio: Don't tune while the card is off
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 4e15ea57d4f5..4a750838d8cd 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3364,11 +3364,7 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
- 
- static bool brcmf_sdio_aos_no_decode(struct brcmf_sdio *bus)
- {
--	if (bus->ci->chip == CY_CC_43012_CHIP_ID ||
--	    bus->ci->chip == CY_CC_4373_CHIP_ID ||
--	    bus->ci->chip == BRCM_CC_4339_CHIP_ID ||
--	    bus->ci->chip == BRCM_CC_4345_CHIP_ID ||
--	    bus->ci->chip == BRCM_CC_4354_CHIP_ID)
-+	if (bus->ci->chip == CY_CC_43012_CHIP_ID)
- 		return true;
- 	else
- 		return false;
+ drivers/mmc/core/core.c                       |  5 +-
+ drivers/mmc/core/sdio_io.c                    | 76 +++++++++++++++++++
+ .../broadcom/brcm80211/brcmfmac/sdio.c        | 17 +++--
+ include/linux/mmc/core.h                      |  2 +
+ include/linux/mmc/host.h                      |  1 +
+ include/linux/mmc/sdio_func.h                 |  6 ++
+ 6 files changed, 100 insertions(+), 7 deletions(-)
+
 -- 
 2.22.0.rc2.383.gf4fbbf30c2-goog
 
