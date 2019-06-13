@@ -2,120 +2,178 @@ Return-Path: <SRS0=exsR=UM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B2C1C31E4A
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:40:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE00C31E45
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:46:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C47E20644
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:40:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="r+w5+RvD";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="jKZmKvqq"
+	by mail.kernel.org (Postfix) with ESMTP id 1054620673
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:46:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392718AbfFMQk5 (ORCPT
+        id S1730406AbfFMQqL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jun 2019 12:40:57 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56036 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730565AbfFMGzv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jun 2019 02:55:51 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x5D6kVHV001398;
-        Wed, 12 Jun 2019 23:55:42 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0818;
- bh=bPjE28SnkxkV8BA5OlTk+gmSwadGM2/GWOEuAYL1i6Q=;
- b=r+w5+RvDRQLf/NU4+sgx4dRu47xgnBhFKcoVfnsRrGMnW4r0B2DPu7+BoV2CMjNg0ju7
- j+jLSPBohBZmUdMKawhuHCSHAZwWF0UcC/r2Ywoa4cFYlv1P3f1CMU3sVzmgL6LKen1h
- jkqZHW7DM2U+DHUKUXlX0HOfLu5VL2MYp//B4twp0rLAXDEgYr/MpVsbxYlBsNEVNYc3
- qZtcLpTubXJ34twiYk1ODe0C8Xx7uj4eqjWeUswQvEkX+xSXXkfk/Oyv53K/gC3DwuLe
- g5hDymfcrEg1GOU0wEDL9bpXHSh/VyWbnnr5FKoX/Ksw/QhItce4aLGw9+yn3zmAV1sd kQ== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2t3cpqs131-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 12 Jun 2019 23:55:29 -0700
-Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Wed, 12 Jun
- 2019 23:55:25 -0700
-Received: from NAM01-BY2-obe.outbound.protection.outlook.com (104.47.34.51) by
- SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Wed, 12 Jun 2019 23:55:25 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector2-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bPjE28SnkxkV8BA5OlTk+gmSwadGM2/GWOEuAYL1i6Q=;
- b=jKZmKvqqrRipuTYbQRWRRahaBdKJAwWRfPJMne7A6WrFavk6NusIxYb6XuUw7qkxnEGsdftqpfmjFp47FcnTF4wirqOuvQcewX53y/A+mDioCaF+bWNFFB8KswsjgFEA8f5n8mC9EnTlPJ4d8BmAVmOOgTL/WAXVPbyQMeT+DyA=
-Received: from MN2PR18MB2637.namprd18.prod.outlook.com (20.179.80.147) by
- MN2PR18MB3118.namprd18.prod.outlook.com (10.255.86.87) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1965.12; Thu, 13 Jun 2019 06:55:24 +0000
-Received: from MN2PR18MB2637.namprd18.prod.outlook.com
- ([fe80::3c77:9f53:7e47:7eb8]) by MN2PR18MB2637.namprd18.prod.outlook.com
- ([fe80::3c77:9f53:7e47:7eb8%7]) with mapi id 15.20.1987.012; Thu, 13 Jun 2019
- 06:55:24 +0000
-From:   Ganapathi Bhat <gbhat@marvell.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>, Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Rakesh Parmar <rakeshp@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: RE: [EXT] Re: mwifiex: update set_mac_address logic
-Thread-Topic: [EXT] Re: mwifiex: update set_mac_address logic
-Thread-Index: AQHU5G5hjQjjDj7Q502tl1FpVaYtlaYhB8K4gHiZDNA=
-Date:   Thu, 13 Jun 2019 06:55:23 +0000
-Message-ID: <MN2PR18MB26370061E95E43F826F4E53FA0EF0@MN2PR18MB2637.namprd18.prod.outlook.com>
-References: <CY4PR18MB123726E26A33B0E4F48E785FA0580@CY4PR18MB1237.namprd18.prod.outlook.com>
- <87pnqbxhra.fsf@purkki.adurom.net>
-In-Reply-To: <87pnqbxhra.fsf@purkki.adurom.net>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [182.72.17.59]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 32253751-3d2a-4c12-761d-08d6efcc1bf7
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:MN2PR18MB3118;
-x-ms-traffictypediagnostic: MN2PR18MB3118:
-x-ms-exchange-purlcount: 1
-x-microsoft-antispam-prvs: <MN2PR18MB3118E10B1C10C1A336592D16A0EF0@MN2PR18MB3118.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:4714;
-x-forefront-prvs: 0067A8BA2A
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(376002)(366004)(39860400002)(396003)(136003)(189003)(199004)(6246003)(26005)(73956011)(7696005)(305945005)(6306002)(486006)(186003)(478600001)(55236004)(66946007)(33656002)(68736007)(6506007)(81156014)(81166006)(66476007)(966005)(54906003)(446003)(66446008)(99286004)(66556008)(76116006)(64756008)(102836004)(5660300002)(256004)(8936002)(8676002)(9686003)(76176011)(78486014)(71190400001)(6116002)(3846002)(25786009)(7736002)(6916009)(66066001)(316002)(71200400001)(4326008)(2906002)(6436002)(558084003)(11346002)(229853002)(74316002)(14454004)(55016002)(52536014)(86362001)(53936002)(476003);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB3118;H:MN2PR18MB2637.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: xBaJ3bfF2emIBtk17r7h8KdBYkZPCiVoBbwDnuV70MStwLUtzGkb1ikVtOj3U2yJFXLdEHvgNQe2eTzqNFMzxy0BFx3oQCTXRkwu1BuMk0bAm0RkkINf7pWenJLhck+kZp0xahZeo8aE0cF41PAomgRd9+w6AleSBfuLhHWGxdgkVo7Eqh4qZ1HDGBRIGlIYbof0I1ut+z/JLxZmJBhS/CbLizIgYcWJZ4GwPP915u1O8dWs+po6a9FhUkCfrUGRWN5/3xf+YX+v1sqr0WG5Sfm/TLb6EwRzCuyai0IhKeCTGE8BvbYQtI+bLxF0aOGuxkvTiCSo7RY72ldspl1ngvzecF42fPpVxvDr1I0YrVzoHlHTPpx+UHQP6ZFDN8S56mcfPSvgmcnBJtGyTr6wlKO6idaRu5JE1dlq2Y4QMa0=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 32253751-3d2a-4c12-761d-08d6efcc1bf7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Jun 2019 06:55:24.0083
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: gbhat@marvell.com
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB3118
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-06-13_04:,,
- signatures=0
+        Thu, 13 Jun 2019 12:46:11 -0400
+Received: from mga18.intel.com ([134.134.136.126]:45596 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726059AbfFMQqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Jun 2019 12:46:09 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Jun 2019 09:46:08 -0700
+X-ExtLoop1: 1
+Received: from jprestwo-test.jf.intel.com ([10.54.74.49])
+  by orsmga005.jf.intel.com with ESMTP; 13 Jun 2019 09:46:08 -0700
+Message-ID: <45805272aaf8b872a90cf0c364164b5fc1b20272.camel@linux.intel.com>
+Subject: iwlwifi/brcmfmac public action frames crash (RESENDING)
+From:   James Prestwood <james.prestwood@linux.intel.com>
+To:     linux-wireless@vger.kernel.org
+Date:   Thu, 13 Jun 2019 09:45:52 -0700
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle,
+Sorry if this comes in twice, I sent it ~12 hours ago but never saw it
+hit the list, nor in the archives so I am resending it.
 
-I did resend the patch with 'git send-email': https://patchwork.kernel.org/=
-patch/10990209/
+Hi,
 
-Kindly review;
+Both iwlwifi/brcmfmac seem to be unable to send public action frames to
+an unassociated AP. I am attempting to do a GAS ANQP request with a
+public action frame (via CMD_FRAME). Immediately after CMD_FRAME any of
+the following happens depending on the card:
+
+Intel 7260 (iwlwifi) - System lockup freeze (must hard reboot)
+Intel 3160 (iwlwifi) - CMD_FRAME returns -EINVAL
+BCM43602 (brcmfmac) - Kernel crash (below)
+AR9462 (ath9k) - works
+Random USB adapter (rt2800usb) - works
+
+iwlwifi (on 7260) completely locks the system, where the only way to
+recover is hard reboot. I have reproduced this on two separate systems,
+both with a 7260. I *have* seen it not lock the system once although
+lately it seems to happen every time. The 3160 did not cause a hang
+with my limited testing, though it did not accept CMD_FRAME which is
+likely why it never hung.
+
+Not sure how I can get any more info about the iwlwifi problem as the
+system is completely hung, but if there is a way I'll be happy to do
+that.
+
+Here is the brcmfmac crash:
+
+[19735.643941] BUG: unable to handle kernel NULL pointer dereference at
+0000000000000000
+[19735.643965] PGD 80000001874aa067 P4D 80000001874aa067 PUD 2735fe067
+PMD 0
+[19735.643984] Oops: 0000 [#1] SMP PTI
+[19735.643993] CPU: 7 PID: 5051 Comm: iwd Tainted: G        W
+I       4.19.0-rc2-custom #27
+[19735.644002] Hardware name: System manufacturer System Product
+Name/SABERTOOTH X58, BIOS 1402    08/09/2012
+[19735.644027] RIP: 0010:brcmf_p2p_send_action_frame+0x23a/0x850
+[brcmfmac]
+[19735.644037] Code: 41 c7 86 e0 00 00 00 00 00 00 00 f0 41 80 66 20 bf
+f0 41 80 66 20 7f 49 8b 46 48 b9 24 07 00 00 48 89 da 48 c7 c6 3d 00 8f
+c0 <48> 8b 38 e8 3e d7 ff ff 85 c0 41 89 c5 0f 85 c4 00 00 00 8b 03 49
+[19735.644051] RSP: 0018:ffffa879c8477a00 EFLAGS: 00010246
+[19735.644059] RAX: 0000000000000000 RBX: ffff954a2e059000 RCX:
+0000000000000724
+[19735.644067] RDX: ffff954a2e059000 RSI: ffffffffc08f003d RDI:
+0000000000000002
+[19735.644075] RBP: ffffa879c8477a50 R08: 000000000000001c R09:
+0000000000000999
+[19735.644083] R10: ffff954b157a2f00 R11: ffffffffc0720000 R12:
+ffff954c32f26021
+[19735.644091] R13: ffff954a2e059000 R14: ffff954c32f26000 R15:
+00000000ffffffff
+[19735.644099] FS:  00007f8d5aa30740(0000) GS:ffff954c369c0000(0000)
+knlGS:0000000000000000
+[19735.644108] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[19735.644115] CR2: 0000000000000000 CR3: 00000001845c8000 CR4:
+00000000000006e0
+[19735.644123] Call Trace:
+[19735.644133]  ? _cond_resched+0x19/0x40
+[19735.644153]  brcmf_cfg80211_mgmt_tx+0x170/0x2f0 [brcmfmac]
+[19735.644192]  cfg80211_mlme_mgmt_tx+0x115/0x2f0 [cfg80211]
+[19735.644219]  nl80211_tx_mgmt+0x24d/0x3d0 [cfg80211]
+[19735.644228]  genl_family_rcv_msg+0x1fe/0x3f0
+[19735.644237]  ? nlmon_xmit+0x2c/0x30
+[19735.644246]  ? dev_hard_start_xmit+0xa8/0x210
+[19735.644254]  genl_rcv_msg+0x4c/0x90
+[19735.644261]  ? genl_family_rcv_msg+0x3f0/0x3f0
+[19735.644268]  netlink_rcv_skb+0x54/0x130
+[19735.644275]  genl_rcv+0x28/0x40
+[19735.644281]  netlink_unicast+0x1ab/0x250
+[19735.644288]  netlink_sendmsg+0x2d1/0x3d0
+[19735.644297]  sock_sendmsg+0x3e/0x50
+[19735.644304]  __sys_sendto+0x13f/0x180
+[19735.644313]  ? do_epoll_wait+0xb0/0xc0
+[19735.644321]  __x64_sys_sendto+0x28/0x30
+[19735.644329]  do_syscall_64+0x5a/0x120
+[19735.644336]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[19735.644344] RIP: 0033:0x7f8d5a352c4d
+[19735.644350] Code: ff ff ff ff eb b6 0f 1f 80 00 00 00 00 48 8d 05 c1
+dc 2c 00 41 89 ca 8b 00 85 c0 75 20 45 31 c9 45 31 c0 b8 2c 00 00 00 0f
+05 <48> 3d 00 f0 ff ff 77 6b f3 c3 66 0f 1f 84 00 00 00 00 00 41 56 41
+[19735.644365] RSP: 002b:00007ffc9a618048 EFLAGS: 00000246 ORIG_RAX:
+000000000000002c
+[19735.644374] RAX: ffffffffffffffda RBX: 00000000007077d0 RCX:
+00007f8d5a352c4d
+[19735.644382] RDX: 0000000000000068 RSI: 000000000072bc40 RDI:
+0000000000000004
+[19735.644390] RBP: 0000000000733510 R08: 0000000000000000 R09:
+0000000000000000
+[19735.644397] R10: 0000000000000000 R11: 0000000000000246 R12:
+00007ffc9a618094
+[19735.644405] R13: 00007ffc9a61809c R14: 0000000000000000 R15:
+0000000000000000
+[19735.644414] Modules linked in: ccm algif_aead snd_hda_codec_realtek
+snd_hda_codec_generic snd_hda_codec_hdmi binfmt_misc arc4 nouveau
+gpio_ich ath9k mxm_wmi ath9k_common video rt2800usb intel_powerclamp
+snd_hda_intel ath9k_hw rt2x00usb iwlmvm rt2800lib snd_hda_codec
+rt2x00lib ath snd_seq_midi snd_seq_midi_event coretemp ttm mac80211
+snd_hda_core brcmfmac snd_hwdep snd_rawmidi iwlwifi intel_cstate
+drm_kms_helper brcmutil snd_seq drm snd_pcm input_leds serio_raw
+lpc_ich cfg80211 snd_seq_device i2c_algo_bit snd_timer fb_sys_fops
+syscopyarea sysfillrect snd sysimgblt i5500_temp wmi asus_atk0110
+soundcore mac_hid i7core_edac sch_fq_codel kvm_intel kvm vfio_pci
+vfio_virqfd irqbypass vfio_iommu_type1 vfio pci_stub parport_pc ppdev
+lp parport ip_tables x_tables autofs4 pata_acpi hid_generic usbhid hid
+firewire_ohci
+[19735.644521]  realtek psmouse firewire_core crc_itu_t r8169 i2c_i801
+ahci libahci
+[19735.644538] CR2: 0000000000000000
+[19735.653612] ---[ end trace 30dbecd734da3b73 ]---
+[19735.653641] RIP: 0010:brcmf_p2p_send_action_frame+0x23a/0x850
+[brcmfmac]
+[19735.653651] Code: 41 c7 86 e0 00 00 00 00 00 00 00 f0 41 80 66 20 bf
+f0 41 80 66 20 7f 49 8b 46 48 b9 24 07 00 00 48 89 da 48 c7 c6 3d 00 8f
+c0 <48> 8b 38 e8 3e d7 ff ff 85 c0 41 89 c5 0f 85 c4 00 00 00 8b 03 49
+[19735.653659] RSP: 0018:ffffa879c8477a00 EFLAGS: 00010246
+[19735.653672] RAX: 0000000000000000 RBX: ffff954a2e059000 RCX:
+0000000000000724
+[19735.653680] RDX: ffff954a2e059000 RSI: ffffffffc08f003d RDI:
+0000000000000002
+[19735.653688] RBP: ffffa879c8477a50 R08: 000000000000001c R09:
+0000000000000999
+[19735.653697] R10: ffff954b157a2f00 R11: ffffffffc0720000 R12:
+ffff954c32f26021
+[19735.653705] R13: ffff954a2e059000 R14: ffff954c32f26000 R15:
+00000000ffffffff
+[19735.653714] FS:  00007f8d5aa30740(0000) GS:ffff954c369c0000(0000)
+knlGS:0000000000000000
+[19735.653725] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[19735.653731] CR2: 0000000000000000 CR3: 00000001845c8000 CR4:
+00000000000006e0
 
 Thanks,
-Ganapathi
+James
+
