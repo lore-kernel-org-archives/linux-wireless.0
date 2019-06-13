@@ -2,83 +2,120 @@ Return-Path: <SRS0=exsR=UM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB59C31E4A
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:37:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B2C1C31E4A
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:40:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F3D8215EA
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:37:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C47E20644
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:40:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="r+w5+RvD";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="jKZmKvqq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730632AbfFMQhn (ORCPT
+        id S2392718AbfFMQk5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jun 2019 12:37:43 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:38240 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730636AbfFMHNo (ORCPT
+        Thu, 13 Jun 2019 12:40:57 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56036 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730565AbfFMGzv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jun 2019 03:13:44 -0400
-X-UUID: 7fb525a94b8241e492dc70d5b7f83123-20190613
-X-UUID: 7fb525a94b8241e492dc70d5b7f83123-20190613
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 140816244; Thu, 13 Jun 2019 15:13:36 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Thu, 13 Jun 2019 15:13:33 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 13 Jun 2019 15:13:33 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Roy Luo <royluo@google.com>, YF Luo <yf.luo@mediatek.com>,
-        Yiwei Chung <yiwei.chung@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v2 1/2] mt76: mt7615: fix incorrect settings in mesh mode
-Date:   Thu, 13 Jun 2019 15:13:30 +0800
-Message-ID: <3065a01998dfa04a5d2d680e820a17cb5c110d0f.1560330906.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <ec6ccb9ad8e083bbc960c84adcb3164a4e190c7c.1560338170.git.ryder.lee@mediatek.com>
-References: <ec6ccb9ad8e083bbc960c84adcb3164a4e190c7c.1560338170.git.ryder.lee@mediatek.com>
+        Thu, 13 Jun 2019 02:55:51 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x5D6kVHV001398;
+        Wed, 12 Jun 2019 23:55:42 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=bPjE28SnkxkV8BA5OlTk+gmSwadGM2/GWOEuAYL1i6Q=;
+ b=r+w5+RvDRQLf/NU4+sgx4dRu47xgnBhFKcoVfnsRrGMnW4r0B2DPu7+BoV2CMjNg0ju7
+ j+jLSPBohBZmUdMKawhuHCSHAZwWF0UcC/r2Ywoa4cFYlv1P3f1CMU3sVzmgL6LKen1h
+ jkqZHW7DM2U+DHUKUXlX0HOfLu5VL2MYp//B4twp0rLAXDEgYr/MpVsbxYlBsNEVNYc3
+ qZtcLpTubXJ34twiYk1ODe0C8Xx7uj4eqjWeUswQvEkX+xSXXkfk/Oyv53K/gC3DwuLe
+ g5hDymfcrEg1GOU0wEDL9bpXHSh/VyWbnnr5FKoX/Ksw/QhItce4aLGw9+yn3zmAV1sd kQ== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2t3cpqs131-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 12 Jun 2019 23:55:29 -0700
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Wed, 12 Jun
+ 2019 23:55:25 -0700
+Received: from NAM01-BY2-obe.outbound.protection.outlook.com (104.47.34.51) by
+ SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Wed, 12 Jun 2019 23:55:25 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector2-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bPjE28SnkxkV8BA5OlTk+gmSwadGM2/GWOEuAYL1i6Q=;
+ b=jKZmKvqqrRipuTYbQRWRRahaBdKJAwWRfPJMne7A6WrFavk6NusIxYb6XuUw7qkxnEGsdftqpfmjFp47FcnTF4wirqOuvQcewX53y/A+mDioCaF+bWNFFB8KswsjgFEA8f5n8mC9EnTlPJ4d8BmAVmOOgTL/WAXVPbyQMeT+DyA=
+Received: from MN2PR18MB2637.namprd18.prod.outlook.com (20.179.80.147) by
+ MN2PR18MB3118.namprd18.prod.outlook.com (10.255.86.87) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1965.12; Thu, 13 Jun 2019 06:55:24 +0000
+Received: from MN2PR18MB2637.namprd18.prod.outlook.com
+ ([fe80::3c77:9f53:7e47:7eb8]) by MN2PR18MB2637.namprd18.prod.outlook.com
+ ([fe80::3c77:9f53:7e47:7eb8%7]) with mapi id 15.20.1987.012; Thu, 13 Jun 2019
+ 06:55:24 +0000
+From:   Ganapathi Bhat <gbhat@marvell.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>, Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Rakesh Parmar <rakeshp@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: RE: [EXT] Re: mwifiex: update set_mac_address logic
+Thread-Topic: [EXT] Re: mwifiex: update set_mac_address logic
+Thread-Index: AQHU5G5hjQjjDj7Q502tl1FpVaYtlaYhB8K4gHiZDNA=
+Date:   Thu, 13 Jun 2019 06:55:23 +0000
+Message-ID: <MN2PR18MB26370061E95E43F826F4E53FA0EF0@MN2PR18MB2637.namprd18.prod.outlook.com>
+References: <CY4PR18MB123726E26A33B0E4F48E785FA0580@CY4PR18MB1237.namprd18.prod.outlook.com>
+ <87pnqbxhra.fsf@purkki.adurom.net>
+In-Reply-To: <87pnqbxhra.fsf@purkki.adurom.net>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [182.72.17.59]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 32253751-3d2a-4c12-761d-08d6efcc1bf7
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:MN2PR18MB3118;
+x-ms-traffictypediagnostic: MN2PR18MB3118:
+x-ms-exchange-purlcount: 1
+x-microsoft-antispam-prvs: <MN2PR18MB3118E10B1C10C1A336592D16A0EF0@MN2PR18MB3118.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:4714;
+x-forefront-prvs: 0067A8BA2A
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(376002)(366004)(39860400002)(396003)(136003)(189003)(199004)(6246003)(26005)(73956011)(7696005)(305945005)(6306002)(486006)(186003)(478600001)(55236004)(66946007)(33656002)(68736007)(6506007)(81156014)(81166006)(66476007)(966005)(54906003)(446003)(66446008)(99286004)(66556008)(76116006)(64756008)(102836004)(5660300002)(256004)(8936002)(8676002)(9686003)(76176011)(78486014)(71190400001)(6116002)(3846002)(25786009)(7736002)(6916009)(66066001)(316002)(71200400001)(4326008)(2906002)(6436002)(558084003)(11346002)(229853002)(74316002)(14454004)(55016002)(52536014)(86362001)(53936002)(476003);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB3118;H:MN2PR18MB2637.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: xBaJ3bfF2emIBtk17r7h8KdBYkZPCiVoBbwDnuV70MStwLUtzGkb1ikVtOj3U2yJFXLdEHvgNQe2eTzqNFMzxy0BFx3oQCTXRkwu1BuMk0bAm0RkkINf7pWenJLhck+kZp0xahZeo8aE0cF41PAomgRd9+w6AleSBfuLhHWGxdgkVo7Eqh4qZ1HDGBRIGlIYbof0I1ut+z/JLxZmJBhS/CbLizIgYcWJZ4GwPP915u1O8dWs+po6a9FhUkCfrUGRWN5/3xf+YX+v1sqr0WG5Sfm/TLb6EwRzCuyai0IhKeCTGE8BvbYQtI+bLxF0aOGuxkvTiCSo7RY72ldspl1ngvzecF42fPpVxvDr1I0YrVzoHlHTPpx+UHQP6ZFDN8S56mcfPSvgmcnBJtGyTr6wlKO6idaRu5JE1dlq2Y4QMa0=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 5533815261F40B873B0FE936DC543BA5DEA8548223FBF6ED8A830DDCA412B28B2000:8
-X-MTK:  N
+X-MS-Exchange-CrossTenant-Network-Message-Id: 32253751-3d2a-4c12-761d-08d6efcc1bf7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Jun 2019 06:55:24.0083
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: gbhat@marvell.com
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB3118
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-06-13_04:,,
+ signatures=0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix wrong settings that will drop packets due to hardware's RX table
-searching flow.
+Hi Kalle,
 
-Fixes: f072c7ba2150 ("mt76: mt7615: enable support for mesh")
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I did resend the patch with 'git send-email': https://patchwork.kernel.org/=
+patch/10990209/
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 76431d00a8ac..e82086eb8aa4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -970,7 +970,7 @@ int mt7615_mcu_add_wtbl(struct mt7615_dev *dev, struct ieee80211_vif *vif,
- 		.rx_wtbl = {
- 			.tag = cpu_to_le16(WTBL_RX),
- 			.len = cpu_to_le16(sizeof(struct wtbl_rx)),
--			.rca1 = vif->type == NL80211_IFTYPE_STATION,
-+			.rca1 = vif->type != NL80211_IFTYPE_AP,
- 			.rca2 = 1,
- 			.rv = 1,
- 		},
--- 
-2.18.0
+Kindly review;
 
+Thanks,
+Ganapathi
