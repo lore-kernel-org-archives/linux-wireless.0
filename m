@@ -2,98 +2,80 @@ Return-Path: <SRS0=exsR=UM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87084C31E45
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 20:26:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B5FC31E45
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 21:43:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 560042054F
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 20:26:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="gFwRaPbC"
+	by mail.kernel.org (Postfix) with ESMTP id CBABD21537
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 21:43:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1560462202;
+	bh=r53BlAHoUOfmlj2Xnl/2XVbKfeFhjg1MlydYIE8jgoQ=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=MKbu72nzyIzJticuAapkoKa8BTyKp92du3n2EmwGppu9xJ02igJmYjwQ1Qucza6aY
+	 8aXR0zOiJzxVK/+hzeg3Smmwu8XEAK225TLwFUQeMk7gotzpptOsHVzK6W33KzymM6
+	 cSDQa0XItfANDI3htI+LCmGNSV8cOTz2PY2bBOCE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729016AbfFMU0n (ORCPT
+        id S1726750AbfFMVnW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jun 2019 16:26:43 -0400
-Received: from mail-lf1-f68.google.com ([209.85.167.68]:43683 "EHLO
-        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726344AbfFMU0n (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jun 2019 16:26:43 -0400
-Received: by mail-lf1-f68.google.com with SMTP id j29so93721lfk.10
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2019 13:26:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=QMHoky7BpIztbPIx9VbA7YF87db/FXoawkjiF+Gg/UI=;
-        b=gFwRaPbCKhiv0u42PwplV3Bj1f7Avali+hQACaBrYB+tlXcOJNY2Jgu/SmyU9+7EAC
-         bqGNoNM5nFM1GRweVuGNqrhGyGwtHc3SOiaIHhxwzlI5vHV5cmAGwGI4jFzMxFI1schZ
-         JAlkcahqDrm6Rk25l81tdgOqs81OftBWbdvFs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=QMHoky7BpIztbPIx9VbA7YF87db/FXoawkjiF+Gg/UI=;
-        b=qdgjTUqlHYDcTQ5NHW1sC/gx1OIKTqrOBBF4tAegl5wNjF18sRoYmEGU4u5IBKgrki
-         oUeYqwM2UERnbKB8ZW/lWgZ4bXdkOC8PmNTGVpq8lm/diZj64WZ6N5Sp33P6L9ZK1Cod
-         W5jihRNfjYPWlYgCQ+slN9dQF6fKvim6fe1UXZRhnsa3mfoMx5UGuSp/H0eM0rLytBBl
-         J1SR8CKk23cm/0o1zypnfEfrym3IXBvpmuBad4TjwlgzCVwu588cQSnDtVg65ESR3FY8
-         uj43/rnCEFx/9gkPHVayJvjy+XeIuoSWvA6gzlAbJ2hwa4DWa1Q1b/uRwWpGxHd9J1Dx
-         cQdw==
-X-Gm-Message-State: APjAAAXsI888+DcMPbcRO8cTfMkUzBnNiK9jrWgejvYxyyrAZCqxgVGi
-        JHWg4oxbZ1ToCYbYH/ObUTDfpDq5rw8=
-X-Google-Smtp-Source: APXvYqxfKXLC2f0eOBL3h87w4grXBsrd1V8YolNu3Zg2TgYegcSIsj6HwZ1dlCgVsRvvWTTVjxOQiQ==
-X-Received: by 2002:ac2:4d17:: with SMTP id r23mr39829165lfi.130.1560457600944;
-        Thu, 13 Jun 2019 13:26:40 -0700 (PDT)
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com. [209.85.167.48])
-        by smtp.gmail.com with ESMTPSA id e8sm150172lfc.27.2019.06.13.13.26.39
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Thu, 13 Jun 2019 13:26:40 -0700 (PDT)
-Received: by mail-lf1-f48.google.com with SMTP id u10so84480lfm.12
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2019 13:26:39 -0700 (PDT)
-X-Received: by 2002:ac2:5b0c:: with SMTP id v12mr32906784lfn.184.1560457599101;
- Thu, 13 Jun 2019 13:26:39 -0700 (PDT)
+        Thu, 13 Jun 2019 17:43:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51274 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725747AbfFMVnV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Jun 2019 17:43:21 -0400
+Received: from localhost.localdomain (unknown [151.66.40.206])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4991620B7C;
+        Thu, 13 Jun 2019 21:43:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1560462201;
+        bh=r53BlAHoUOfmlj2Xnl/2XVbKfeFhjg1MlydYIE8jgoQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=TOTS7WUESiewHeX56nU1ofXB6PyO24IicbpAlnell6yS4TgsDl79E0Fbj86bGaH4x
+         yk2ZvyyqsZqLSUCTNHCzTLVbvys+MTxkmhLMCDWt+0Nuw4MGISNU9KZMmzPIX+K5WU
+         gFX0vg4roOIIXfm7ppkCtNeJy3EHWSQEmkqOQHg4=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name,
+        lorenzo.bianconi@redhat.com, sgruszka@redhat.com
+Subject: [PATCH v3 wireless-drivers 0/3] mt76: usb: fix A-MSDU support
+Date:   Thu, 13 Jun 2019 23:43:10 +0200
+Message-Id: <cover.1560461404.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-References: <20190529125220.17066-1-tiwai@suse.de> <20190529125220.17066-3-tiwai@suse.de>
- <20190613174938.GA260350@google.com> <s5hmuile4mg.wl-tiwai@suse.de> <20190613183835.GA16432@google.com>
-In-Reply-To: <20190613183835.GA16432@google.com>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Thu, 13 Jun 2019 13:26:27 -0700
-X-Gmail-Original-Message-ID: <CA+ASDXOCHsqmiEEDso2SzaiqkmrftdDvCm=auV-ucymWSXOPaA@mail.gmail.com>
-Message-ID: <CA+ASDXOCHsqmiEEDso2SzaiqkmrftdDvCm=auV-ucymWSXOPaA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] mwifiex: Abort at too short BSS descriptor element
-To:     Takashi Iwai <tiwai@suse.de>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>, huangwen@venustech.com.cn,
-        Solar Designer <solar@openwall.com>,
-        Marcus Meissner <meissner@suse.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jun 13, 2019 at 11:38 AM Brian Norris <briannorris@chromium.org> wrote:
-> So, I might say:
->
->         /* Vendor IEs must at least contain the OUI. */
->         if (total_ie_len < offsetof(struct ieee80211_vendor_ie, oui_type))
->                 return -EINVAL;
->
->         /* If the IE still isn't long enough, it's not a match. */
->         if (element_len < sizeof(wpa_oui))
->                 continue;
+Reallocate the skb if there is no enough space to manage the AMSDU rx packets.
+Do not always copy the first part of received frames if A-MSDU is enabled
+for SG capable devices
 
-That would of course need to be break, not continue, to properly skip
-to the next IE.
+Changes since v2:
+- simplify mt76u_build_rx_skb
+- add patch 2/3: mt76u: introduce mt76u_ep data structure
+- align usb buffer size to usb max endpoint length
+- set buf_size to PAGE_SIZE even for sg case
 
-Brian
+Changes since v1:
+- do not allocate multiple page buffers but rely on fragmented skbs
+  if there is no enough space to manage the AMSDU rx packets
+
+Lorenzo Bianconi (3):
+  mt76: usb: fix rx A-MSDU support
+  mt76: mt76u: introduce mt76u_ep data structure
+  mt76: usb: do not always copy the first part of received frames
+
+ drivers/net/wireless/mediatek/mt76/mt76.h | 17 +++--
+ drivers/net/wireless/mediatek/mt76/usb.c  | 75 +++++++++++++++++------
+ 2 files changed, 67 insertions(+), 25 deletions(-)
+
+-- 
+2.21.0
+
