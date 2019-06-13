@@ -2,178 +2,131 @@ Return-Path: <SRS0=exsR=UM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE00C31E45
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:46:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51746C31E49
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:49:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1054620673
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:46:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3469F2084D
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 16:49:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730406AbfFMQqL (ORCPT
+        id S2404250AbfFMQtG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jun 2019 12:46:11 -0400
-Received: from mga18.intel.com ([134.134.136.126]:45596 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726059AbfFMQqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jun 2019 12:46:09 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Jun 2019 09:46:08 -0700
-X-ExtLoop1: 1
-Received: from jprestwo-test.jf.intel.com ([10.54.74.49])
-  by orsmga005.jf.intel.com with ESMTP; 13 Jun 2019 09:46:08 -0700
-Message-ID: <45805272aaf8b872a90cf0c364164b5fc1b20272.camel@linux.intel.com>
-Subject: iwlwifi/brcmfmac public action frames crash (RESENDING)
-From:   James Prestwood <james.prestwood@linux.intel.com>
-To:     linux-wireless@vger.kernel.org
-Date:   Thu, 13 Jun 2019 09:45:52 -0700
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
+        Thu, 13 Jun 2019 12:49:06 -0400
+Received: from relay1.mentorg.com ([192.94.38.131]:47152 "EHLO
+        relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727666AbfFMEhV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Jun 2019 00:37:21 -0400
+Received: from nat-ies.mentorg.com ([192.94.31.2] helo=svr-ies-mbx-01.mgc.mentorg.com)
+        by relay1.mentorg.com with esmtps (TLSv1.2:ECDHE-RSA-AES256-SHA384:256)
+        id 1hbHU5-0001Yz-Ai from Harish_Kandiga@mentor.com ; Wed, 12 Jun 2019 21:37:09 -0700
+Received: from [10.0.3.15] (137.202.0.90) by svr-ies-mbx-01.mgc.mentorg.com
+ (139.181.222.1) with Microsoft SMTP Server (TLS) id 15.0.1320.4; Thu, 13 Jun
+ 2019 05:37:01 +0100
+Subject: Re: [PATCH] wlcore/wl18xx: Add invert-irq OF property for physically
+ inverted IRQ
+To:     Eugeniu Rosca <erosca@de.adit-jv.com>,
+        Marc Zyngier <marc.zyngier@arm.com>
+CC:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Kalle Valo <kvalo@codeaurora.org>, Eyal Reizer <eyalr@ti.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        John Stultz <john.stultz@linaro.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Spyridon Papageorgiou <spapageorgiou@de.adit-jv.com>,
+        Joshua Frkuska <joshua_frkuska@mentor.com>,
+        "George G . Davis" <george_davis@mentor.com>,
+        Andrey Gusakov <andrey.gusakov@cogentembedded.com>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Eugeniu Rosca <roscaeugeniu@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Linus Walleij <linus.walleij@linaro.org>
+References: <20190607172958.20745-1-erosca@de.adit-jv.com>
+ <87tvcxncuq.fsf@codeaurora.org> <20190610083012.GV5447@atomide.com>
+ <CAMuHMdUOc17ocqmt=oNmyN1UT_K7_y=af1pwjwr5PTgQL2o2OQ@mail.gmail.com>
+ <08bc4755-5f47-d792-8b5a-927b5fbe7619@arm.com>
+ <20190612094538.GA16575@vmlxhi-102.adit-jv.com>
+ <86d0jjglax.wl-marc.zyngier@arm.com>
+ <20190612150644.GA22002@vmlxhi-102.adit-jv.com>
+From:   Harish Jenny K N <harish_kandiga@mentor.com>
+Message-ID: <e878bb37-3228-0055-bf6e-69be7f7a09df@mentor.com>
+Date:   Thu, 13 Jun 2019 10:06:45 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
+MIME-Version: 1.0
+In-Reply-To: <20190612150644.GA22002@vmlxhi-102.adit-jv.com>
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [137.202.0.90]
+X-ClientProxiedBy: SVR-IES-MBX-04.mgc.mentorg.com (139.181.222.4) To
+ svr-ies-mbx-01.mgc.mentorg.com (139.181.222.1)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sorry if this comes in twice, I sent it ~12 hours ago but never saw it
-hit the list, nor in the archives so I am resending it.
 
-Hi,
+On 12/06/19 8:36 PM, Eugeniu Rosca wrote:
+> Hi Marc,
+>
+> Thanks for your comment.
+>
+> On Wed, Jun 12, 2019 at 11:17:10AM +0100, Marc Zyngier wrote:
+>> Eugeniu Rosca <erosca@de.adit-jv.com> wrote:
+>>> On Tue, Jun 11, 2019 at 10:00:41AM +0100, Marc Zyngier wrote:
+> [..]
+>>>> We already have plenty of that in the tree, the canonical example
+>>>> probably being drivers/irqchip/irq-mtk-sysirq.c. It should be pretty
+>>>> easy to turn this driver into something more generic.
+>>> I don't think drivers/irqchip/irq-mtk-sysirq.c can serve the
+>>> use-case/purpose of this patch. The MTK driver seems to be dealing with
+>>> the polarity inversion of on-SoC interrupts which are routed to GiC,
+>>> whereas in this patch we are talking about an off-chip interrupt
+>>> wired to R-Car GPIO controller.
+>> And how different is that? The location of the interrupt source is
+>> pretty irrelevant here.
+> The main difference which I sense is that a driver like irq-mtk-sysirq
+> mostly (if not exclusively) deals with internal kernel implementation
+> detail (tuned via DT) whilst adding an inverter for GPIO IRQs raises
+> a whole bunch of new questions (e.g. how to arbitrate between
+> kernel-space and user-space IRQ polarity configuration?).
+>
+>> The point is that there is already a general
+>> scheme to deal with these "signal altering widgets", and that we
+>> should try to reuse at least the concept, if not the code.
+> Since Harish Jenny K N might be working on a new driver doing GPIO IRQ
+> inversion, I have CC-ed him as well to avoid any overlapping work.
 
-Both iwlwifi/brcmfmac seem to be unable to send public action frames to
-an unassociated AP. I am attempting to do a GAS ANQP request with a
-public action frame (via CMD_FRAME). Immediately after CMD_FRAME any of
-the following happens depending on the card:
 
-Intel 7260 (iwlwifi) - System lockup freeze (must hard reboot)
-Intel 3160 (iwlwifi) - CMD_FRAME returns -EINVAL
-BCM43602 (brcmfmac) - Kernel crash (below)
-AR9462 (ath9k) - works
-Random USB adapter (rt2800usb) - works
+Sorry I am not completely aware of the background discussion.
 
-iwlwifi (on 7260) completely locks the system, where the only way to
-recover is hard reboot. I have reproduced this on two separate systems,
-both with a 7260. I *have* seen it not lock the system once although
-lately it seems to happen every time. The 3160 did not cause a hang
-with my limited testing, though it did not accept CMD_FRAME which is
-likely why it never hung.
+But here is the link to my proposal for new consumer driver to provide a new virtual
+gpio controller to configure the polarity of the gpio pins used by the userspace.
 
-Not sure how I can get any more info about the iwlwifi problem as the
-system is completely hung, but if there is a way I'll be happy to do
-that.
+https://www.spinics.net/lists/linux-gpio/msg39681.html
 
-Here is the brcmfmac crash:
 
-[19735.643941] BUG: unable to handle kernel NULL pointer dereference at
-0000000000000000
-[19735.643965] PGD 80000001874aa067 P4D 80000001874aa067 PUD 2735fe067
-PMD 0
-[19735.643984] Oops: 0000 [#1] SMP PTI
-[19735.643993] CPU: 7 PID: 5051 Comm: iwd Tainted: G        W
-I       4.19.0-rc2-custom #27
-[19735.644002] Hardware name: System manufacturer System Product
-Name/SABERTOOTH X58, BIOS 1402    08/09/2012
-[19735.644027] RIP: 0010:brcmf_p2p_send_action_frame+0x23a/0x850
-[brcmfmac]
-[19735.644037] Code: 41 c7 86 e0 00 00 00 00 00 00 00 f0 41 80 66 20 bf
-f0 41 80 66 20 7f 49 8b 46 48 b9 24 07 00 00 48 89 da 48 c7 c6 3d 00 8f
-c0 <48> 8b 38 e8 3e d7 ff ff 85 c0 41 89 c5 0f 85 c4 00 00 00 8b 03 49
-[19735.644051] RSP: 0018:ffffa879c8477a00 EFLAGS: 00010246
-[19735.644059] RAX: 0000000000000000 RBX: ffff954a2e059000 RCX:
-0000000000000724
-[19735.644067] RDX: ffff954a2e059000 RSI: ffffffffc08f003d RDI:
-0000000000000002
-[19735.644075] RBP: ffffa879c8477a50 R08: 000000000000001c R09:
-0000000000000999
-[19735.644083] R10: ffff954b157a2f00 R11: ffffffffc0720000 R12:
-ffff954c32f26021
-[19735.644091] R13: ffff954a2e059000 R14: ffff954c32f26000 R15:
-00000000ffffffff
-[19735.644099] FS:  00007f8d5aa30740(0000) GS:ffff954c369c0000(0000)
-knlGS:0000000000000000
-[19735.644108] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[19735.644115] CR2: 0000000000000000 CR3: 00000001845c8000 CR4:
-00000000000006e0
-[19735.644123] Call Trace:
-[19735.644133]  ? _cond_resched+0x19/0x40
-[19735.644153]  brcmf_cfg80211_mgmt_tx+0x170/0x2f0 [brcmfmac]
-[19735.644192]  cfg80211_mlme_mgmt_tx+0x115/0x2f0 [cfg80211]
-[19735.644219]  nl80211_tx_mgmt+0x24d/0x3d0 [cfg80211]
-[19735.644228]  genl_family_rcv_msg+0x1fe/0x3f0
-[19735.644237]  ? nlmon_xmit+0x2c/0x30
-[19735.644246]  ? dev_hard_start_xmit+0xa8/0x210
-[19735.644254]  genl_rcv_msg+0x4c/0x90
-[19735.644261]  ? genl_family_rcv_msg+0x3f0/0x3f0
-[19735.644268]  netlink_rcv_skb+0x54/0x130
-[19735.644275]  genl_rcv+0x28/0x40
-[19735.644281]  netlink_unicast+0x1ab/0x250
-[19735.644288]  netlink_sendmsg+0x2d1/0x3d0
-[19735.644297]  sock_sendmsg+0x3e/0x50
-[19735.644304]  __sys_sendto+0x13f/0x180
-[19735.644313]  ? do_epoll_wait+0xb0/0xc0
-[19735.644321]  __x64_sys_sendto+0x28/0x30
-[19735.644329]  do_syscall_64+0x5a/0x120
-[19735.644336]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-[19735.644344] RIP: 0033:0x7f8d5a352c4d
-[19735.644350] Code: ff ff ff ff eb b6 0f 1f 80 00 00 00 00 48 8d 05 c1
-dc 2c 00 41 89 ca 8b 00 85 c0 75 20 45 31 c9 45 31 c0 b8 2c 00 00 00 0f
-05 <48> 3d 00 f0 ff ff 77 6b f3 c3 66 0f 1f 84 00 00 00 00 00 41 56 41
-[19735.644365] RSP: 002b:00007ffc9a618048 EFLAGS: 00000246 ORIG_RAX:
-000000000000002c
-[19735.644374] RAX: ffffffffffffffda RBX: 00000000007077d0 RCX:
-00007f8d5a352c4d
-[19735.644382] RDX: 0000000000000068 RSI: 000000000072bc40 RDI:
-0000000000000004
-[19735.644390] RBP: 0000000000733510 R08: 0000000000000000 R09:
-0000000000000000
-[19735.644397] R10: 0000000000000000 R11: 0000000000000246 R12:
-00007ffc9a618094
-[19735.644405] R13: 00007ffc9a61809c R14: 0000000000000000 R15:
-0000000000000000
-[19735.644414] Modules linked in: ccm algif_aead snd_hda_codec_realtek
-snd_hda_codec_generic snd_hda_codec_hdmi binfmt_misc arc4 nouveau
-gpio_ich ath9k mxm_wmi ath9k_common video rt2800usb intel_powerclamp
-snd_hda_intel ath9k_hw rt2x00usb iwlmvm rt2800lib snd_hda_codec
-rt2x00lib ath snd_seq_midi snd_seq_midi_event coretemp ttm mac80211
-snd_hda_core brcmfmac snd_hwdep snd_rawmidi iwlwifi intel_cstate
-drm_kms_helper brcmutil snd_seq drm snd_pcm input_leds serio_raw
-lpc_ich cfg80211 snd_seq_device i2c_algo_bit snd_timer fb_sys_fops
-syscopyarea sysfillrect snd sysimgblt i5500_temp wmi asus_atk0110
-soundcore mac_hid i7core_edac sch_fq_codel kvm_intel kvm vfio_pci
-vfio_virqfd irqbypass vfio_iommu_type1 vfio pci_stub parport_pc ppdev
-lp parport ip_tables x_tables autofs4 pata_acpi hid_generic usbhid hid
-firewire_ohci
-[19735.644521]  realtek psmouse firewire_core crc_itu_t r8169 i2c_i801
-ahci libahci
-[19735.644538] CR2: 0000000000000000
-[19735.653612] ---[ end trace 30dbecd734da3b73 ]---
-[19735.653641] RIP: 0010:brcmf_p2p_send_action_frame+0x23a/0x850
-[brcmfmac]
-[19735.653651] Code: 41 c7 86 e0 00 00 00 00 00 00 00 f0 41 80 66 20 bf
-f0 41 80 66 20 7f 49 8b 46 48 b9 24 07 00 00 48 89 da 48 c7 c6 3d 00 8f
-c0 <48> 8b 38 e8 3e d7 ff ff 85 c0 41 89 c5 0f 85 c4 00 00 00 8b 03 49
-[19735.653659] RSP: 0018:ffffa879c8477a00 EFLAGS: 00010246
-[19735.653672] RAX: 0000000000000000 RBX: ffff954a2e059000 RCX:
-0000000000000724
-[19735.653680] RDX: ffff954a2e059000 RSI: ffffffffc08f003d RDI:
-0000000000000002
-[19735.653688] RBP: ffffa879c8477a50 R08: 000000000000001c R09:
-0000000000000999
-[19735.653697] R10: ffff954b157a2f00 R11: ffffffffc0720000 R12:
-ffff954c32f26021
-[19735.653705] R13: ffff954a2e059000 R14: ffff954c32f26000 R15:
-00000000ffffffff
-[19735.653714] FS:  00007f8d5aa30740(0000) GS:ffff954c369c0000(0000)
-knlGS:0000000000000000
-[19735.653725] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[19735.653731] CR2: 0000000000000000 CR3: 00000001845c8000 CR4:
-00000000000006e0
-
-Thanks,
-James
+>
+>>> It looks to me that the nice DTS sketch shared by Linus Walleij in [5]
+>>> might come closer to the concept proposed by Geert? FWIW, the
+>>> infrastructure/implementation to make this possible is still not
+>>> ready.
+>> Which looks like what I'm suggesting.
+> Then we are on the same page. Thanks.
+>
+>> 	M.
+>>
+>> -- 
+>> Jazz is not dead, it just smells funny.
 
