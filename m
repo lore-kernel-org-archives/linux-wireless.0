@@ -2,53 +2,82 @@ Return-Path: <SRS0=exsR=UM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D06D6C31E45
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 21:43:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D59FC31E45
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BEC820B7C
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 21:43:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1560462212;
-	bh=ptcpDMugFcdloUA9Yi3MZDY0TbSw8V3JklI4gCChYXA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CzzLhCrKigCUXEorsTWB66tSs0yKIjlZurZaPDa8wW4xU3NZRzKH8+f6/ZKrOmHFB
-	 CKMBCDJzfl3dV5WJyU+eu9Z7kqptdSq0QB8nkPTWxbamsCCNpJ7roOP+ntUWiZSEby
-	 8GSzpHD2l6kaxnwPrZbk7QGHeZsMsgImwocJZfDs=
+	by mail.kernel.org (Postfix) with ESMTP id 70F4121721
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="MvLy9Z5w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727124AbfFMVnc (ORCPT
+        id S1727702AbfFMXmO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jun 2019 17:43:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51362 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725747AbfFMVnb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jun 2019 17:43:31 -0400
-Received: from localhost.localdomain (unknown [151.66.40.206])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 20D7721721;
-        Thu, 13 Jun 2019 21:43:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1560462211;
-        bh=ptcpDMugFcdloUA9Yi3MZDY0TbSw8V3JklI4gCChYXA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QpuhdgEuppez/INRCQMFEZpAzeZ+3NJoNafH6tCn543uuYV/aPVYxe9wrK6bRoF2L
-         2jolsnDfVV8Fvv9kcSAzf5jXKMqEcdtiuzZRJSTtSzBBMN0aLzU7T1uUzo6/czo8qW
-         Y3Wb8at10nOBd5jNCQ/hFyYdBh8q1dNvOO+fRfqI=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name,
-        lorenzo.bianconi@redhat.com, sgruszka@redhat.com
-Subject: [PATCH v3 wireless-drivers 3/3] mt76: usb: do not always copy the first part of received frames
-Date:   Thu, 13 Jun 2019 23:43:13 +0200
-Message-Id: <1a9566c0a41ad0d940487a9d3f0008993c075ef2.1560461404.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <cover.1560461404.git.lorenzo@kernel.org>
-References: <cover.1560461404.git.lorenzo@kernel.org>
+        Thu, 13 Jun 2019 19:42:14 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:34940 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727334AbfFMXmN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Jun 2019 19:42:13 -0400
+Received: by mail-pg1-f196.google.com with SMTP id s27so406713pgl.2
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2019 16:42:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=00LaqICpwM9YOieDteVKl28OeJvNxsjKf3w+38t5DQM=;
+        b=MvLy9Z5wXSd9OviDwGx/a9f6GyaM1INYAiT0IsoEyf4KpOIaHa3eRMwuu5IO/O0HlA
+         TnzMGBOrhOLake233PtHLia0lHm7DQz/GTZzDlnZYZJBJieXnzpvxpYc05eDbq1aR4A4
+         uv4Ma5UYC9SOgb0nuN11vIzWnPCFi0ZY9ey8I=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=00LaqICpwM9YOieDteVKl28OeJvNxsjKf3w+38t5DQM=;
+        b=gZBGXsxh6DMa89Ve9bVJXcOsmROMxidKjBpYW783lkl2XxzCGTrnlb5xA9ew2u7uHd
+         EfbeePi1pRwGkJMcd4c2Qi2PCcJ5OOHRoQ376ITMcc/zUSyaAYlWaQnKndAFw6I3y/pG
+         GL4dwZnSTpvVmMGgjhMqEhJvdKuruFKKKZDrpvYSj9270wC0s7OAsZwwwtVGbemVldRb
+         zw2wZTNgtcycNnBBJ5ACL9tLIH3hTTo9nt02g4Te01pBnUSSI+QmsUIgjD5ImhQpcwAv
+         adEAfDL2IrD5Ny8Hgx1RK5UB+sppDY+FY//4MIab8oZvEtgOVjYBEDLja9IbOtyCt8Eo
+         rKCA==
+X-Gm-Message-State: APjAAAV4dmK5Knl9eOR9RHvSarAb2hE1AL58As12nvKcYXAM+mG9T1V6
+        h0bRVjmMoW3R7QuBFJZGro9hjw==
+X-Google-Smtp-Source: APXvYqz3Xqez9uoGK3fVk6+p5Ke5NypkmIbmDEcShWic6SM+R4pi58ILoJD0wSRRnhH8nE17iF/u1w==
+X-Received: by 2002:a17:90a:db42:: with SMTP id u2mr8109422pjx.48.1560469333161;
+        Thu, 13 Jun 2019 16:42:13 -0700 (PDT)
+Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
+        by smtp.gmail.com with ESMTPSA id p7sm781088pfp.131.2019.06.13.16.42.11
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Thu, 13 Jun 2019 16:42:12 -0700 (PDT)
+From:   Douglas Anderson <dianders@chromium.org>
+To:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc:     brcm80211-dev-list.pdl@broadcom.com,
+        linux-rockchip@lists.infradead.org,
+        Double Lo <double.lo@cypress.com>, briannorris@chromium.org,
+        linux-wireless@vger.kernel.org,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        Madhan Mohan R <madhanmohan.r@cypress.com>, mka@chromium.org,
+        Wright Feng <wright.feng@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        netdev@vger.kernel.org, brcm80211-dev-list@cypress.com,
+        Douglas Anderson <dianders@chromium.org>,
+        linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v4 4/5] mmc: core: Add sdio_retune_hold_now() and sdio_retune_release()
+Date:   Thu, 13 Jun 2019 16:41:52 -0700
+Message-Id: <20190613234153.59309-5-dianders@chromium.org>
+X-Mailer: git-send-email 2.22.0.rc2.383.gf4fbbf30c2-goog
+In-Reply-To: <20190613234153.59309-1-dianders@chromium.org>
+References: <20190613234153.59309-1-dianders@chromium.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -56,61 +85,93 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set usb buffer size taking into account skb_shared_info in order to
-not always copy the first part of received frames if A-MSDU is enabled
-for SG capable devices. Moreover align usb buffer size to max_ep
-boundaries and set buf_size to PAGE_SIZE even for sg case
+We want SDIO drivers to be able to temporarily stop retuning when the
+driver knows that the SDIO card is not in a state where retuning will
+work (maybe because the card is asleep).  We'll move the relevant
+functions to a place where drivers can call them.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Douglas Anderson <dianders@chromium.org>
 ---
- drivers/net/wireless/mediatek/mt76/usb.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 1ee54a9b302e..2ee3f8fa1483 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -289,8 +289,10 @@ static int
- mt76u_fill_rx_sg(struct mt76_dev *dev, struct mt76_queue *q, struct urb *urb,
- 		 int nsgs, gfp_t gfp)
- {
--	int i;
-+	int i, data_size;
+Changes in v4:
+- Moved retune hold/release to SDIO API (Adrian).
+
+Changes in v3:
+- ("mmc: core: Export mmc_retune_hold_now() mmc_retune_release()") new for v3.
+
+Changes in v2: None
+
+ drivers/mmc/core/sdio_io.c    | 40 +++++++++++++++++++++++++++++++++++
+ include/linux/mmc/sdio_func.h |  3 +++
+ 2 files changed, 43 insertions(+)
+
+diff --git a/drivers/mmc/core/sdio_io.c b/drivers/mmc/core/sdio_io.c
+index f822a9630b0e..1b6fe737bd72 100644
+--- a/drivers/mmc/core/sdio_io.c
++++ b/drivers/mmc/core/sdio_io.c
+@@ -15,6 +15,7 @@
+ #include "sdio_ops.h"
+ #include "core.h"
+ #include "card.h"
++#include "host.h"
  
-+	data_size = rounddown(SKB_WITH_OVERHEAD(q->buf_size),
-+			      dev->usb.in_ep[MT_EP_IN_PKT_RX].max_packet);
- 	for (i = 0; i < nsgs; i++) {
- 		struct page *page;
- 		void *data;
-@@ -302,7 +304,7 @@ mt76u_fill_rx_sg(struct mt76_dev *dev, struct mt76_queue *q, struct urb *urb,
- 
- 		page = virt_to_head_page(data);
- 		offset = data - page_address(page);
--		sg_set_page(&urb->sg[i], page, q->buf_size, offset);
-+		sg_set_page(&urb->sg[i], page, data_size, offset);
- 	}
- 
- 	if (i < nsgs) {
-@@ -314,7 +316,7 @@ mt76u_fill_rx_sg(struct mt76_dev *dev, struct mt76_queue *q, struct urb *urb,
- 	}
- 
- 	urb->num_sgs = max_t(int, i, urb->num_sgs);
--	urb->transfer_buffer_length = urb->num_sgs * q->buf_size,
-+	urb->transfer_buffer_length = urb->num_sgs * data_size;
- 	sg_init_marker(urb->sg, urb->num_sgs);
- 
- 	return i ? : -ENOMEM;
-@@ -611,8 +613,9 @@ static int mt76u_alloc_rx(struct mt76_dev *dev)
- 	if (!q->entry)
- 		return -ENOMEM;
- 
--	q->buf_size = dev->usb.sg_en ? MT_RX_BUF_SIZE : PAGE_SIZE;
- 	q->ndesc = MT_NUM_RX_ENTRIES;
-+	q->buf_size = PAGE_SIZE;
+ /**
+  *	sdio_claim_host - exclusively claim a bus for a certain SDIO function
+@@ -770,3 +771,42 @@ void sdio_retune_crc_enable(struct sdio_func *func)
+ 	func->card->host->retune_crc_disable = false;
+ }
+ EXPORT_SYMBOL_GPL(sdio_retune_crc_enable);
 +
- 	for (i = 0; i < q->ndesc; i++) {
- 		err = mt76u_rx_urb_alloc(dev, &q->entry[i]);
- 		if (err < 0)
++/**
++ *	sdio_retune_hold_now - start deferring retuning requests till release
++ *	@func: SDIO function attached to host
++ *
++ *	This function can be called if it's currently a bad time to do
++ *	a retune of the SDIO card.  Retune requests made during this time
++ *	will be held and we'll actually do the retune sometime after the
++ *	release.
++ *
++ *	This function could be useful if an SDIO card is in a power state
++ *	where it can respond to a small subset of commands that doesn't
++ *	include the retuning command.  Care should be taken when using
++ *	this function since (presumably) the retuning request we might be
++ *	deferring was made for a good reason.
++ *
++ *	This function should be called while the host is claimed.
++ */
++void sdio_retune_hold_now(struct sdio_func *func)
++{
++	mmc_retune_hold_now(func->card->host);
++}
++EXPORT_SYMBOL_GPL(sdio_retune_hold_now);
++
++/**
++ *	sdio_retune_release - signal that it's OK to retune now
++ *	@func: SDIO function attached to host
++ *
++ *	This is the complement to sdio_retune_hold_now().  Calling this
++ *	function won't make a retune happen right away but will allow
++ *	them to be scheduled normally.
++ *
++ *	This function should be called while the host is claimed.
++ */
++void sdio_retune_release(struct sdio_func *func)
++{
++	mmc_retune_release(func->card->host);
++}
++EXPORT_SYMBOL_GPL(sdio_retune_release);
+diff --git a/include/linux/mmc/sdio_func.h b/include/linux/mmc/sdio_func.h
+index 4820e6d09dac..5a177f7a83c3 100644
+--- a/include/linux/mmc/sdio_func.h
++++ b/include/linux/mmc/sdio_func.h
+@@ -170,4 +170,7 @@ extern int sdio_set_host_pm_flags(struct sdio_func *func, mmc_pm_flag_t flags);
+ extern void sdio_retune_crc_disable(struct sdio_func *func);
+ extern void sdio_retune_crc_enable(struct sdio_func *func);
+ 
++extern void sdio_retune_hold_now(struct sdio_func *func);
++extern void sdio_retune_release(struct sdio_func *func);
++
+ #endif /* LINUX_MMC_SDIO_FUNC_H */
 -- 
-2.21.0
+2.22.0.rc2.383.gf4fbbf30c2-goog
 
