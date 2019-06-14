@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C27C31E44
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C1D7C31E4B
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 08BC42073F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6136D2073F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726575AbfFNHYZ (ORCPT
+        id S1726583AbfFNHY0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jun 2019 03:24:25 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:48162 "EHLO
+        Fri, 14 Jun 2019 03:24:26 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:48164 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726455AbfFNHYY (ORCPT
+        with ESMTP id S1726525AbfFNHYZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jun 2019 03:24:24 -0400
+        Fri, 14 Jun 2019 03:24:25 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5E7OKYq024912, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5E7OLsV024924, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5E7OKYq024912
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5E7OLsV024924
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Fri, 14 Jun 2019 15:24:20 +0800
+        Fri, 14 Jun 2019 15:24:21 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.439.0; Fri, 14 Jun 2019 15:24:20 +0800
+ 14.3.439.0; Fri, 14 Jun 2019 15:24:21 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 02/11] rtw88: add support for random mac scan
-Date:   Fri, 14 Jun 2019 15:24:06 +0800
-Message-ID: <1560497055-17197-3-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v2 04/11] rtw88: 8822c: add rf write protection when switching channel
+Date:   Fri, 14 Jun 2019 15:24:08 +0800
+Message-ID: <1560497055-17197-5-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1560497055-17197-1-git-send-email-yhchuang@realtek.com>
 References: <1560497055-17197-1-git-send-email-yhchuang@realtek.com>
@@ -46,79 +46,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Chien-Hsun Liao <ben.liao@realtek.com>
 
-When driver uses random mac address to scan, the unicast probe response
-will not be received because the addr1 is not matched. Configure port
-address by requested mac address to receive probe response from AP.
+Collision of writing rf registers could occur if the driver writes
+rf registers by direct write while the hardware is writing other rf
+registers by pi write simultaneously.
 
-To support random mac scan, we need to configure the mac address during
-scan period to receive unicast prop_resp. After scan is completed,
-configure the mac address back to the original one that the port used.
+Hardware pi write can be triggered by rf calibrations sometimes, so
+the driver can not always write rf registers by direct write
+protection. Direct write protection can make sure that there is no
+hardware pi write during the direct write.
 
+According to some experiments, if we add direct write protection
+when switching channel, the performance of rf calibration will not
+be affected.
+
+Signed-off-by: Chien-Hsun Liao <ben.liao@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/mac80211.c | 19 +++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/main.c     |  2 ++
- 2 files changed, 21 insertions(+)
+ drivers/net/wireless/realtek/rtw88/phy.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index abded63..61436bb 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -446,20 +446,39 @@ static void rtw_ops_sw_scan_start(struct ieee80211_hw *hw,
- {
- 	struct rtw_dev *rtwdev = hw->priv;
- 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
-+	u32 config = 0;
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 4381b36..580f310 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -596,14 +596,19 @@ bool rtw_phy_write_rf_reg(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 	direct_addr = base_addr[rf_path] + (addr << 2);
+ 	mask &= RFREG_MASK;
  
- 	rtw_leave_lps(rtwdev, rtwvif);
+-	rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, DISABLE_PI);
+-	rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, DISABLE_PI);
++	if (addr == RF_CFGCH) {
++		rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, DISABLE_PI);
++		rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, DISABLE_PI);
++	}
++
+ 	rtw_write32_mask(rtwdev, direct_addr, mask, data);
  
-+	mutex_lock(&rtwdev->mutex);
-+
-+	ether_addr_copy(rtwvif->mac_addr, mac_addr);
-+	config |= PORT_SET_MAC_ADDR;
-+	rtw_vif_port_config(rtwdev, rtwvif, config);
-+
- 	rtw_flag_set(rtwdev, RTW_FLAG_DIG_DISABLE);
- 	rtw_flag_set(rtwdev, RTW_FLAG_SCANNING);
-+
-+	mutex_unlock(&rtwdev->mutex);
+ 	udelay(1);
+ 
+-	rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, ENABLE_PI);
+-	rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, ENABLE_PI);
++	if (addr == RF_CFGCH) {
++		rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, ENABLE_PI);
++		rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, ENABLE_PI);
++	}
+ 
+ 	return true;
  }
- 
- static void rtw_ops_sw_scan_complete(struct ieee80211_hw *hw,
- 				     struct ieee80211_vif *vif)
- {
- 	struct rtw_dev *rtwdev = hw->priv;
-+	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
-+	u32 config = 0;
-+
-+	mutex_lock(&rtwdev->mutex);
- 
- 	rtw_flag_clear(rtwdev, RTW_FLAG_SCANNING);
- 	rtw_flag_clear(rtwdev, RTW_FLAG_DIG_DISABLE);
-+
-+	ether_addr_copy(rtwvif->mac_addr, vif->addr);
-+	config |= PORT_SET_MAC_ADDR;
-+	rtw_vif_port_config(rtwdev, rtwvif, config);
-+
-+	mutex_unlock(&rtwdev->mutex);
- }
- 
- const struct ieee80211_ops rtw_ops = {
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index d2e8d2e..306d799 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1178,6 +1178,8 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
- 			    WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
- 
-+	hw->wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
-+
- 	rtw_set_supported_band(hw, rtwdev->chip);
- 	SET_IEEE80211_PERM_ADDR(hw, rtwdev->efuse.addr);
- 
 -- 
 2.7.4
 
