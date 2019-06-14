@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCEDC31E4D
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:49:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E65C31E4B
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:50:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 040D720866
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:49:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C4F020866
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:50:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fFAKLKpe"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CunEZYdz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728672AbfFNNtj (ORCPT
+        id S1728775AbfFNNsE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jun 2019 09:49:39 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:52676 "EHLO
+        Fri, 14 Jun 2019 09:48:04 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:52034 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728361AbfFNNsM (ORCPT
+        with ESMTP id S1728396AbfFNNsE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jun 2019 09:48:12 -0400
+        Fri, 14 Jun 2019 09:48:04 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=7ZdZ3kFG7vLtpGzKUifkfy5au7mGeecDZr7pOAa/mbQ=; b=fFAKLKpeX1UXm3FTcf0KpVo86s
-        TAVWErFRg7UqZpj/joIjhsfplRvSdKGAbFeP6PmZqe8B9ErySOXGc93t2ofqJ0PfW5tVLu+2bO7c7
-        tlkcsmUTpcJGdiZudPM+9H/J7qA++YYntqBAP5nQMfi/0VmsaFYiz8iIh+FqmdmOSIDCUkX2AxyUg
-        4+iPQe6FbA5imHkaPuPHdlmpbWkOZY2IPMBFcFQu5749gI0wQ18r1UkUghz38MdwIvcYqglGbv42Q
-        OE9k8pQvOkUoTghcB7fXqj/U8J8TtUon4YKIlHWSSpbaJgmCuw3j4dq3Y7DAL3QyTY+SLK4x/iHsn
-        p71d6N7w==;
+        bh=/4FoCDBLnzPb2XMaauyatStM9o0VD0yD5rKIYuMBQ0E=; b=CunEZYdzj1zjPFvQ9vuv6tDtLy
+        vk2B+7o+RESYX/Uj9YE1WPSM8gIuTAZ9+l9/VP7ellxJPLL3OCZwLpPkkg4YXW6iAK1W1D1NsQkRe
+        R9/3wcIyp1y1J0ATOjHMugtXv7Iico5Aonf2oieKVDzXwypDKvx97YYahLtJLN0gNdbS9nFF40L8G
+        5KFWLhTktOcQms4JvV3KcOo/4hbUdJHHZjKi58NphDT1sJOTHGcRUAlsD9UdoyaNfz245j984aH/g
+        Vo2b1kxQcOlsnjlGFpHDFC20bvIYQtaIn5fpgbXQD6ANRo9p6tKP0Uc1+axVpGGcAW40+eMu8FIaS
+        wqAUuf8Q==;
 Received: from 213-225-9-13.nat.highway.a1.net ([213.225.9.13] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hbmYk-0005GV-78; Fri, 14 Jun 2019 13:48:02 +0000
+        id 1hbmYW-0004tD-Fb; Fri, 14 Jun 2019 13:47:49 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -56,9 +56,9 @@ Cc:     Intel Linux Wireless <linuxwifi@intel.com>,
         linux-s390@vger.kernel.org, devel@driverdev.osuosl.org,
         linux-mm@kvack.org, iommu@lists.linux-foundation.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 09/16] cnic: stop passing bogus gfp flags arguments to dma_alloc_coherent
-Date:   Fri, 14 Jun 2019 15:47:19 +0200
-Message-Id: <20190614134726.3827-10-hch@lst.de>
+Subject: [PATCH 05/16] drm: don't mark pages returned from drm_pci_alloc reserved
+Date:   Fri, 14 Jun 2019 15:47:15 +0200
+Message-Id: <20190614134726.3827-6-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190614134726.3827-1-hch@lst.de>
 References: <20190614134726.3827-1-hch@lst.de>
@@ -70,37 +70,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-dma_alloc_coherent is not just the page allocator.  The only valid
-arguments to pass are either GFP_ATOMIC or GFP_ATOMIC with possible
-modifiers of __GFP_NORETRY or __GFP_NOWARN.
+We are not allowed to call virt_to_page on pages returned from
+dma_alloc_coherent, as in many cases the virtual address returned
+is aactually a kernel direct mapping.  Also there generally is no
+need to mark dma memory as reserved.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/net/ethernet/broadcom/cnic.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/gpu/drm/drm_bufs.c | 16 +---------------
+ 1 file changed, 1 insertion(+), 15 deletions(-)
 
-diff --git a/drivers/net/ethernet/broadcom/cnic.c b/drivers/net/ethernet/broadcom/cnic.c
-index 57dc3cbff36e..bd1c993680e5 100644
---- a/drivers/net/ethernet/broadcom/cnic.c
-+++ b/drivers/net/ethernet/broadcom/cnic.c
-@@ -1028,7 +1028,7 @@ static int __cnic_alloc_uio_rings(struct cnic_uio_dev *udev, int pages)
- 	udev->l2_ring_size = pages * CNIC_PAGE_SIZE;
- 	udev->l2_ring = dma_alloc_coherent(&udev->pdev->dev, udev->l2_ring_size,
- 					   &udev->l2_ring_map,
--					   GFP_KERNEL | __GFP_COMP);
-+					   GFP_KERNEL);
- 	if (!udev->l2_ring)
- 		return -ENOMEM;
+diff --git a/drivers/gpu/drm/drm_bufs.c b/drivers/gpu/drm/drm_bufs.c
+index 7418872d87c6..b640437ce90f 100644
+--- a/drivers/gpu/drm/drm_bufs.c
++++ b/drivers/gpu/drm/drm_bufs.c
+@@ -77,13 +77,6 @@ drm_dma_handle_t *drm_pci_alloc(struct drm_device * dev, size_t size, size_t ali
+ 		return NULL;
+ 	}
  
-@@ -1036,7 +1036,7 @@ static int __cnic_alloc_uio_rings(struct cnic_uio_dev *udev, int pages)
- 	udev->l2_buf_size = CNIC_PAGE_ALIGN(udev->l2_buf_size);
- 	udev->l2_buf = dma_alloc_coherent(&udev->pdev->dev, udev->l2_buf_size,
- 					  &udev->l2_buf_map,
--					  GFP_KERNEL | __GFP_COMP);
-+					  GFP_KERNEL);
- 	if (!udev->l2_buf) {
- 		__cnic_free_uio_rings(udev);
- 		return -ENOMEM;
+-	/* XXX - Is virt_to_page() legal for consistent mem? */
+-	/* Reserve */
+-	for (addr = (unsigned long)dmah->vaddr, sz = size;
+-	     sz > 0; addr += PAGE_SIZE, sz -= PAGE_SIZE) {
+-		SetPageReserved(virt_to_page((void *)addr));
+-	}
+-
+ 	return dmah;
+ }
+ 
+@@ -97,16 +90,9 @@ void __drm_legacy_pci_free(struct drm_device * dev, drm_dma_handle_t * dmah)
+ 	unsigned long addr;
+ 	size_t sz;
+ 
+-	if (dmah->vaddr) {
+-		/* XXX - Is virt_to_page() legal for consistent mem? */
+-		/* Unreserve */
+-		for (addr = (unsigned long)dmah->vaddr, sz = dmah->size;
+-		     sz > 0; addr += PAGE_SIZE, sz -= PAGE_SIZE) {
+-			ClearPageReserved(virt_to_page((void *)addr));
+-		}
++	if (dmah->vaddr)
+ 		dma_free_coherent(&dev->pdev->dev, dmah->size, dmah->vaddr,
+ 				  dmah->busaddr);
+-	}
+ }
+ 
+ /**
 -- 
 2.20.1
 
