@@ -1,164 +1,149 @@
-Return-Path: <SRS0=exsR=UM=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=mNjQ=UN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C7C9C31E4A
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EFCEC31E45
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 01:16:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4BE582175B
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jun 2019 23:42:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF2F620B7C
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 01:16:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="LxynRClH"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="W73u1rm7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727101AbfFMXmJ (ORCPT
+        id S1726379AbfFNBQz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jun 2019 19:42:09 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:41116 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726784AbfFMXmJ (ORCPT
+        Thu, 13 Jun 2019 21:16:55 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:33717 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725616AbfFNBQz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jun 2019 19:42:09 -0400
-Received: by mail-pl1-f194.google.com with SMTP id s24so177626plr.8
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2019 16:42:08 -0700 (PDT)
+        Thu, 13 Jun 2019 21:16:55 -0400
+Received: by mail-pf1-f196.google.com with SMTP id x15so348612pfq.0
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Jun 2019 18:16:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=qJQX+GLD4fwd+GCBrIWjKsA+IAvGAyQwTSeSX2BSMJY=;
-        b=LxynRClHhe6x/JL/spDHqC1iBz5ugcvqw4xyZsmxiWuMKvrTOMnUdqDKFM09vDQEXk
-         g8D28Mk39C+APeBjMzbC1os4SM6ZMn7qrCbrNb3T3fGmWaX7RMSCe+s43sy4YLrsZYAK
-         USjKgfZYVdMtiNjE5ywU7CUZvHRcPUBbocn+o=
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=vZViEBYZeL/z5EPk8qxP1sfyjHKjqDUy0obWXo7P9+g=;
+        b=W73u1rm7pEPUZ0dWGqzBGbZRpb62vvQkquRyfx5YrGwT1851/HQV3tRqiHxzHCiILU
+         Sunl4+rtfrmOtmkRHvqvxgnoydNDK+4Kfn6PMhG1eWe42Lt5mJ30K2HGH8ecJZPtFVUU
+         M7kAUOnqYgcRSOZxDFRx9OG9bwNXJ0gWELOeY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=qJQX+GLD4fwd+GCBrIWjKsA+IAvGAyQwTSeSX2BSMJY=;
-        b=Nwdteud5vEU5hl6cJdlsyWY51b1NJI2AumLZ8k/KgYWC0/XbloY4E0Ie2WWCZ2/6Yc
-         jD0mrkkuWYN+3HVwPbEDnjLfWcltxWSeBg/kG2JvDOfLAoW++T+Qj9/vLfggHV6NaOmx
-         u4kLrnzzTFMhGDZUCVDD06xr3ik+mSKAmvULUGbJ/QpyX0eS/Y05s41Eq0fzJOAImsul
-         Q2zqiVxtcne7YQGbIILripq7IpLq2t2sEs32P4VM3An/QQuf1yopjpaiNebpYGwS1kDT
-         j7qgd7GZlARYdIYtivojoBYCnS1ayNwpgMLpYCQ7tNKj4EIsx0R1YPNeqJGyGdlTHB/f
-         989w==
-X-Gm-Message-State: APjAAAVsb0VK6FIHeTCHwHU7mCNxh4JsB/VcLP6Dd6qYgXX8OZXd2GTd
-        z7CN1ACvXWcT6dsqZca9ypJpMg==
-X-Google-Smtp-Source: APXvYqyHvmG/55d6riqeb8uT5XjZFjeg3M6IzV8m9M1TGxU2K10/XPwKK4EKmj4io0cDJZmrlM1FDg==
-X-Received: by 2002:a17:902:2a26:: with SMTP id i35mr51358780plb.315.1560469328377;
-        Thu, 13 Jun 2019 16:42:08 -0700 (PDT)
-Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id p7sm781088pfp.131.2019.06.13.16.42.07
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=vZViEBYZeL/z5EPk8qxP1sfyjHKjqDUy0obWXo7P9+g=;
+        b=jSLPA/mtn1jAOfvGpei9t8MMgDjhC82DmJzkuf1G/ht5uaZG57gx9LMMMM1W6zYbkA
+         XxQq3mQlE6VZglnuC+g0gPSlU4yiZVHMS3xoEd3iXdYGyOX+SMvhBoxfBtpodkRuLZUS
+         pYBsDkqlweobRSccxjs9AjRNuKo3q1V9iv1wWlMMBxkBNEB/FnJT6zRKJCOxSg+ip/OM
+         /DZd7+q2o0fjXbMVEWwhlyJSscurKyQLSDqU6bi3AO2FQrVjOUL58ZAyVO2DAmJc4PJX
+         9d2+BbfE9olE2XibvC7/dCDU1Wj2EXvS20TCc6OGrtRFnKeF0UnTpXRm8Ye0IDD0kFoQ
+         1E8w==
+X-Gm-Message-State: APjAAAVlGBg/DAqydt8ZpzYWeMj8mLlO8Jeu1Lok7MCihNS9n8X3GVDW
+        QaW2zTuEd9M04Y1v9ODE2+3ByQ==
+X-Google-Smtp-Source: APXvYqwo6zzOwKPlHBhSHl9jU+cMBgxq3J653CP2HQ+0PRuQaQpWtTBYmKdhMCdz1A1KCUjjTKhiSA==
+X-Received: by 2002:a65:60c2:: with SMTP id r2mr32683960pgv.156.1560475014292;
+        Thu, 13 Jun 2019 18:16:54 -0700 (PDT)
+Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
+        by smtp.gmail.com with ESMTPSA id r4sm919657pjd.28.2019.06.13.18.16.52
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 13 Jun 2019 16:42:07 -0700 (PDT)
-From:   Douglas Anderson <dianders@chromium.org>
-To:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc:     brcm80211-dev-list.pdl@broadcom.com,
-        linux-rockchip@lists.infradead.org,
-        Double Lo <double.lo@cypress.com>, briannorris@chromium.org,
-        linux-wireless@vger.kernel.org,
-        Naveen Gupta <naveen.gupta@cypress.com>,
-        Madhan Mohan R <madhanmohan.r@cypress.com>, mka@chromium.org,
-        Wright Feng <wright.feng@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        netdev@vger.kernel.org, brcm80211-dev-list@cypress.com,
-        Douglas Anderson <dianders@chromium.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        Allison Randal <allison@lohutok.net>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Ritesh Harjani <riteshh@codeaurora.org>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Ondrej Jirman <megous@megous.com>,
-        Jiong Wu <lohengrin1024@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>, linux-mmc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Madhan Mohan R <MadhanMohan.R@cypress.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v4 0/5] brcmfmac: sdio: Deal better w/ transmission errors related to idle
-Date:   Thu, 13 Jun 2019 16:41:48 -0700
-Message-Id: <20190613234153.59309-1-dianders@chromium.org>
-X-Mailer: git-send-email 2.22.0.rc2.383.gf4fbbf30c2-goog
+        Thu, 13 Jun 2019 18:16:52 -0700 (PDT)
+Date:   Thu, 13 Jun 2019 18:16:50 -0700
+From:   Brian Norris <briannorris@chromium.org>
+To:     Ganapathi Bhat <gbhat@marvell.com>
+Cc:     linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Rakesh Parmar <rakeshp@marvell.com>,
+        Dmitry Vyukov <dvyukov@google.com>
+Subject: Re: [PATCH] mwifiex: avoid deleting uninitialized timer during USB
+ cleanup
+Message-ID: <20190614011648.GA121099@google.com>
+References: <1560354873-17182-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1560354873-17182-1-git-send-email-gbhat@marvell.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series attempts to deal better with the expected transmission
-errors related to the idle states (handled by the Always-On-Subsystem
-or AOS) on the SDIO-based WiFi on rk3288-veyron-minnie,
-rk3288-veyron-speedy, and rk3288-veyron-mickey.
+Hi Ganapathi,
 
-Some details about those errors can be found in
-<https://crbug.com/960222>, but to summarize it here: if we try to
-send the wakeup command to the WiFi card at the same time it has
-decided to wake up itself then it will behave badly on the SDIO bus.
-This can cause timeouts or CRC errors.
+This looks kinda wrong, but I'm not totally sure, as I'm not very familiar with
+your USB driver.
 
-When I tested on 4.19 and 4.20 these CRC errors can be seen to cause
-re-tuning.  Since I am currently developing on 4.19 this was the
-original problem I attempted to solve.
+On Wed, Jun 12, 2019 at 09:24:33PM +0530, Ganapathi Bhat wrote:
+> Driver calls del_timer_sync(hold_timer), in unregister_dev(), but
+> there exists is a case when the timer is yet to be initialized. A
+> restructure of init and cleanup is needed to synchronize timer
+> creation and delee. Make use of init_if() / cleanup_if() handlers
 
-On mainline it turns out that you don't see the retuning errors but
-you see tons of spam about timeouts trying to wakeup from sleep.  I
-tracked down the commit that was causing that and have partially
-reverted it here.  I have no real knowledge about Broadcom WiFi, but
-the commit that was causing problems sounds (from the descriptioin) to
-be a hack commit penalizing all Broadcom WiFi users because of a bug
-in a Cypress SD controller.  I will let others comment if this is
-truly the case and, if so, what the right solution should be.
+s/delee/delete/
 
-For v3 of this series I have added 2 patches to the end of the series
-to address errors that would show up on systems with these same SDIO
-WiFi cards when used on controllers that do periodic retuning.  These
-systems need an extra fix to prevent the retuning from happening when
-the card is asleep.
+> to get this done.
+> 
+> Reported-by: syzbot+373e6719b49912399d21@syzkaller.appspotmail.com
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/usb.c | 32 +++++++++++++++++++++++-------
+>  1 file changed, 25 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+> index c2365ee..939f1e9 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/usb.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+> @@ -1348,6 +1348,8 @@ static void mwifiex_usb_cleanup_tx_aggr(struct mwifiex_adapter *adapter)
+>  
+>  	for (idx = 0; idx < MWIFIEX_TX_DATA_PORT; idx++) {
+>  		port = &card->port[idx];
+> +		if (!port->tx_data_ep)
+> +			continue;
 
-Changes in v4:
-- Moved to SDIO API only (Adrian, Ulf).
-- Renamed to make it less generic, now retune_crc_disable (Ulf).
-- Function header makes it clear host must be claimed (Ulf).
-- No more WARN_ON (Ulf).
-- Adjust to API rename (Adrian, Ulf).
-- Moved retune hold/release to SDIO API (Adrian).
-- Adjust to API rename (Adrian).
+It's not clear to me what this is about. Are you sure you're not just cleaning
+stuff up in the wrong order?
 
-Changes in v3:
-- Took out the spinlock since I believe this is all in one context.
-- Expect errors for all of brcmf_sdio_kso_control() (Adrian).
-- ("mmc: core: Export mmc_retune_hold_now() mmc_retune_release()") new for v3.
-- ("brcmfmac: sdio: Don't tune while the card is off") new for v3.
+>  		if (adapter->bus_aggr.enable)
+>  			while ((skb_tmp =
+>  				skb_dequeue(&port->tx_aggr.aggr_list)))
 
-Changes in v2:
-- A full revert, not just a partial one (Arend).  ...with explicit Cc.
-- Updated commit message to clarify based on discussion of v1.
+...
 
-Douglas Anderson (5):
-  Revert "brcmfmac: disable command decode in sdio_aos"
-  mmc: core: API to temporarily disable retuning for SDIO CRC errors
-  brcmfmac: sdio: Disable auto-tuning around commands expected to fail
-  mmc: core: Add sdio_retune_hold_now() and sdio_retune_release()
-  brcmfmac: sdio: Don't tune while the card is off
+> @@ -1584,7 +1580,29 @@ static void mwifiex_usb_submit_rem_rx_urbs(struct mwifiex_adapter *adapter)
+>  	return 0;
+>  }
+>  
+> +static int mwifiex_init_usb(struct mwifiex_adapter *adapter)
+> +{
+> +	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
+> +	int ret = 0;
+> +
+> +	if (card->usb_boot_state == USB8XXX_FW_DNLD)
+> +		return 0;
 
- drivers/mmc/core/core.c                       |  5 +-
- drivers/mmc/core/sdio_io.c                    | 76 +++++++++++++++++++
- .../broadcom/brcm80211/brcmfmac/sdio.c        | 17 +++--
- include/linux/mmc/core.h                      |  2 +
- include/linux/mmc/host.h                      |  1 +
- include/linux/mmc/sdio_func.h                 |  6 ++
- 6 files changed, 100 insertions(+), 7 deletions(-)
+This looks wrong. You don't want to skip your basic initialization just because
+firmware isn't loaded yet. In fact, init_if() always gets called before FW
+init, so haven't you basically stubbed out this function most of the time?
 
--- 
-2.22.0.rc2.383.gf4fbbf30c2-goog
+I guess the question is: is this step supposed to go before, or after firmware
+initilization? Based on that answer, we can make an appropriate patch.
 
+(The original code does this after FW initialization, and now you're only sort
+of moving it before.)
+
+> +
+> +	ret = mwifiex_usb_rx_init(adapter);
+> +	if (!ret)
+> +		ret = mwifiex_usb_tx_init(adapter);
+> +
+> +	return ret;
+> +}
+
+Brian
