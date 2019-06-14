@@ -2,64 +2,123 @@ Return-Path: <SRS0=mNjQ=UN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EA36C31E44
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:22:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C27C31E44
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E46021473
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:22:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08BC42073F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726028AbfFNHWn (ORCPT
+        id S1726575AbfFNHYZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jun 2019 03:22:43 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:36734 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725837AbfFNHWn (ORCPT
+        Fri, 14 Jun 2019 03:24:25 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:48162 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726455AbfFNHYY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jun 2019 03:22:43 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hbgXn-0001W8-Cm; Fri, 14 Jun 2019 09:22:40 +0200
-Message-ID: <30365971038fd772ea766bb3c429f218648f6547.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: remove warning message
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Yibo Zhao <yiboz@codeaurora.org>
-Cc:     Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Zhi Chen <zhichen@codeaurora.org>
-Date:   Fri, 14 Jun 2019 09:22:37 +0200
-In-Reply-To: <143d044082b54b2be41ba3760390d97f@codeaurora.org>
-References: <1557824507-17668-1-git-send-email-yiboz@codeaurora.org>
-         <7c92f5cf51eaec1d5449698d90f5b6c5ca6c2bea.camel@sipsolutions.net>
-         <ccb48284f0d96e72f4c041e12c943f0a@codeaurora.org>
-         <e2a6596b99085541a5886c0d0d6393c849ac2d57.camel@sipsolutions.net>
-         <34f72d5db336b9898618bf1c5c15ec41094d7d06.camel@perches.com>
-         <4d013893-3302-14f0-c957-b3771f4b6b82@candelatech.com>
-         <8eacb8e107c854b64a0c6116fca9731ddd99dcac.camel@sipsolutions.net>
-         <730d3664-488d-7d57-04d5-1a57e91fa070@candelatech.com>
-         <ea87337c24666355059488b42d97ee22711ce7b8.camel@sipsolutions.net>
-         <bbfd69ccb4289ba3f1767c1066f61ee1@codeaurora.org>
-         <143d044082b54b2be41ba3760390d97f@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Fri, 14 Jun 2019 03:24:24 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5E7OKYq024912, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5E7OKYq024912
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Fri, 14 Jun 2019 15:24:20 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.439.0; Fri, 14 Jun 2019 15:24:20 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 02/11] rtw88: add support for random mac scan
+Date:   Fri, 14 Jun 2019 15:24:06 +0800
+Message-ID: <1560497055-17197-3-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1560497055-17197-1-git-send-email-yhchuang@realtek.com>
+References: <1560497055-17197-1-git-send-email-yhchuang@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-06-14 at 10:52 +0800, Yibo Zhao wrote:
-> 
-> May I know if it is fine that WARN_ON_ONCE() to be applied in kernel in 
-> the future? If a separate patch for it is needed, please let me know so 
-> that I can raise a new one.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Please do send a new patch.
+When driver uses random mac address to scan, the unicast probe response
+will not be received because the addr1 is not matched. Configure port
+address by requested mac address to receive probe response from AP.
 
-johannes
+To support random mac scan, we need to configure the mac address during
+scan period to receive unicast prop_resp. After scan is completed,
+configure the mac address back to the original one that the port used.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 19 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/main.c     |  2 ++
+ 2 files changed, 21 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index abded63..61436bb 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -446,20 +446,39 @@ static void rtw_ops_sw_scan_start(struct ieee80211_hw *hw,
+ {
+ 	struct rtw_dev *rtwdev = hw->priv;
+ 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++	u32 config = 0;
+ 
+ 	rtw_leave_lps(rtwdev, rtwvif);
+ 
++	mutex_lock(&rtwdev->mutex);
++
++	ether_addr_copy(rtwvif->mac_addr, mac_addr);
++	config |= PORT_SET_MAC_ADDR;
++	rtw_vif_port_config(rtwdev, rtwvif, config);
++
+ 	rtw_flag_set(rtwdev, RTW_FLAG_DIG_DISABLE);
+ 	rtw_flag_set(rtwdev, RTW_FLAG_SCANNING);
++
++	mutex_unlock(&rtwdev->mutex);
+ }
+ 
+ static void rtw_ops_sw_scan_complete(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif)
+ {
+ 	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
++	u32 config = 0;
++
++	mutex_lock(&rtwdev->mutex);
+ 
+ 	rtw_flag_clear(rtwdev, RTW_FLAG_SCANNING);
+ 	rtw_flag_clear(rtwdev, RTW_FLAG_DIG_DISABLE);
++
++	ether_addr_copy(rtwvif->mac_addr, vif->addr);
++	config |= PORT_SET_MAC_ADDR;
++	rtw_vif_port_config(rtwdev, rtwvif, config);
++
++	mutex_unlock(&rtwdev->mutex);
+ }
+ 
+ const struct ieee80211_ops rtw_ops = {
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index d2e8d2e..306d799 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1178,6 +1178,8 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+ 			    WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+ 
++	hw->wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
++
+ 	rtw_set_supported_band(hw, rtwdev->chip);
+ 	SET_IEEE80211_PERM_ADDR(hw, rtwdev->efuse.addr);
+ 
+-- 
+2.7.4
 
