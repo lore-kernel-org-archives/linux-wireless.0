@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A7A6C31E4B
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 12:33:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F992C31E4B
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 12:35:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01D4D20850
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 12:33:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E7882133D
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 12:35:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727685AbfFNMdb (ORCPT
+        id S1727869AbfFNMf0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jun 2019 08:33:31 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:41260 "EHLO
+        Fri, 14 Jun 2019 08:35:26 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:41288 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727544AbfFNMdb (ORCPT
+        with ESMTP id S1727544AbfFNMf0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jun 2019 08:33:31 -0400
+        Fri, 14 Jun 2019 08:35:26 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hblNz-0008DP-D7; Fri, 14 Jun 2019 14:32:51 +0200
-Message-ID: <507ecb111701598ed812dda95c18381a7ae9b720.camel@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: add support for the ADDBA extension
- element
+        id 1hblPM-0008Gc-G4; Fri, 14 Jun 2019 14:34:16 +0200
+Message-ID: <3ef2937994bb0c4c9076b153deaf3c42e2e9a75f.camel@sipsolutions.net>
+Subject: Re: [PATCH V2 4/6] mac80211: HE: add Spatial Reuse IE parsing
+ support
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     John Crispin <john@phrozen.org>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         Shashidhar Lakkavalli <slakkavalli@datto.com>
-Date:   Fri, 14 Jun 2019 14:32:50 +0200
-In-Reply-To: <20190521150259.2414-2-john@phrozen.org>
-References: <20190521150259.2414-1-john@phrozen.org>
-         <20190521150259.2414-2-john@phrozen.org>
+Date:   Fri, 14 Jun 2019 14:34:15 +0200
+In-Reply-To: <20190528114952.838-5-john@phrozen.org>
+References: <20190528114952.838-1-john@phrozen.org>
+         <20190528114952.838-5-john@phrozen.org>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
 Mime-Version: 1.0
@@ -44,28 +44,16 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+> +/*
+> + * ieee80211_he_spr_size - calculate 802.11ax HE Spatial Reuse IE size
+> + * @he_spr_ie: byte data of the He Spatial Reuse IE, stating from the the byte
+> + *	after the ext ID byte. It is assumed that he_spr_ie has at least
+> + *	sizeof(struct ieee80211_he_spr) bytes, checked already in
+> + *	ieee802_11_parse_elems_crc()
 
->  
-> +#define IEEE80211_ADDBA_EXT_ELEM_ID		0x9f
-
-That doesn't really belong here.
-
-> +#define IEEE80211_ADDBA_EXT_ELEM_ID_LEN		0x01
-
-And that's usually not a define?
-
-> +#define IEEE80211_ADDBA_EXT_FRAG_LEVEL_MASK	GENMASK(2, 1)
-> +#define IEEE80211_ADDBA_EXT_FRAG_LEVEL_SHIFT	1
-> +#define IEEE80211_ADDBA_EXT_NO_FRAG		BIT(0)
-> +
-> +struct ieee80211_addbaext {
-> +	u8 eid;
-> +	u8 length;
-> +	u8 data;
-> +} __packed;
-
-I think we don't typically put the eid/len inside, and then we use
-sizeof(struct ...) for the size.
+That reference to mac80211 isn't really quite appropriate here - should
+say something like "the caller must have validated this". This is a
+lower layer usable by non-mac80211 as well.
 
 johannes
 
