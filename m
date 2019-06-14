@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D45A4C31E4C
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:49:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B75C31E4C
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:49:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ACE0B2168B
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:49:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D177B20866
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:49:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R7oVdWdv"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="owRHpuK6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729012AbfFNNsh (ORCPT
+        id S1728551AbfFNNtX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jun 2019 09:48:37 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:53850 "EHLO
+        Fri, 14 Jun 2019 09:49:23 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:53666 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728365AbfFNNsf (ORCPT
+        with ESMTP id S1728966AbfFNNsc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jun 2019 09:48:35 -0400
+        Fri, 14 Jun 2019 09:48:32 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=hVPCPj1LrefwU2xq/k4nx8MUt6z5g1ttpdf31GA4t7s=; b=R7oVdWdv/mZN0cFwPPhtVK4TMx
-        UB/wqQzgkHyYoVXTIUGR/8fAw8BWFMkxfhjvQA8cZVsEfByOCf1n/fgHZGG1Ku2HbnOU7wlpCu6md
-        kV7iFak0CwzMgcwf+1ko540TzfJZ7m8NhyKeNAafjIR+Eh02tznZJ/tUqmN1GKHmPpnm8D9T4ipEj
-        VhsgOFo98A7OHLvTQLaE2S3jC8uxQMExeLN7wqYne/Oa8lDjeUuhj+sBM6/IpP/HI6hcndIgYuq/y
-        Z6v4feaEGjGdbjf71aj7myD5cdjMs8C9wTELFpbzveIUWDepgbQiHeWiGh6p6pC5gwcbLSKzfWexb
-        co9by/hQ==;
+        bh=yT59YDuDyJ+PxdfRPqwI/alSJ84EPbJSnwgnpwBRCag=; b=owRHpuK6KPpEPbej7i1YhZs6AX
+        wN7yNoV43C+ez1kJ8mjyYksBoNb/QnO43qmDtaoXcejQN8JVymeq+ihqkSdORxH9DTolc8g44wL/n
+        4LSqiLNL1pznmOxp4ws/5vWu11eRtAmNuWXern/02xHfx/UTArA2cLwNsqFsJR3FHm32czvwMjXp2
+        7sGt2jHFZhtBCFB/p80y7vCA6bbzdpMVufvVVb+aSI6J4MNffPlYXrnmf1qIq+XF2XIQg2V9t5O5b
+        b1wpDdk22coEH5ua9xigsjiut+9bxXp+UfE0duTuPjXZxk7HNsybWuKX1NvzSJkdd8inzEtTrVrtu
+        gzlO+vIg==;
 Received: from 213-225-9-13.nat.highway.a1.net ([213.225.9.13] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hbmYz-0005e1-FO; Fri, 14 Jun 2019 13:48:18 +0000
+        id 1hbmYq-0005Ma-VZ; Fri, 14 Jun 2019 13:48:09 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -56,9 +56,9 @@ Cc:     Intel Linux Wireless <linuxwifi@intel.com>,
         linux-s390@vger.kernel.org, devel@driverdev.osuosl.org,
         linux-mm@kvack.org, iommu@lists.linux-foundation.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 13/16] mm: rename alloc_pages_exact_nid to alloc_pages_exact_node
-Date:   Fri, 14 Jun 2019 15:47:23 +0200
-Message-Id: <20190614134726.3827-14-hch@lst.de>
+Subject: [PATCH 11/16] s390/ism: stop passing bogus gfp flags arguments to dma_alloc_coherent
+Date:   Fri, 14 Jun 2019 15:47:21 +0200
+Message-Id: <20190614134726.3827-12-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190614134726.3827-1-hch@lst.de>
 References: <20190614134726.3827-1-hch@lst.de>
@@ -70,63 +70,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This fits in with the naming scheme used by alloc_pages_node.
+dma_alloc_coherent is not just the page allocator.  The only valid
+arguments to pass are either GFP_ATOMIC or GFP_ATOMIC with possible
+modifiers of __GFP_NORETRY or __GFP_NOWARN.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/gfp.h | 2 +-
- mm/page_alloc.c     | 4 ++--
- mm/page_ext.c       | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/s390/net/ism_drv.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-index fb07b503dc45..4274ea6bc72b 100644
---- a/include/linux/gfp.h
-+++ b/include/linux/gfp.h
-@@ -532,7 +532,7 @@ extern unsigned long get_zeroed_page(gfp_t gfp_mask);
+diff --git a/drivers/s390/net/ism_drv.c b/drivers/s390/net/ism_drv.c
+index 4fc2056bd227..4ff5506fa4c6 100644
+--- a/drivers/s390/net/ism_drv.c
++++ b/drivers/s390/net/ism_drv.c
+@@ -241,7 +241,8 @@ static int ism_alloc_dmb(struct ism_dev *ism, struct smcd_dmb *dmb)
  
- void *alloc_pages_exact(size_t size, gfp_t gfp_mask);
- void free_pages_exact(void *virt, size_t size);
--void * __meminit alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask);
-+void * __meminit alloc_pages_exact_node(int nid, size_t size, gfp_t gfp_mask);
+ 	dmb->cpu_addr = dma_alloc_coherent(&ism->pdev->dev, dmb->dmb_len,
+ 					   &dmb->dma_addr,
+-					   GFP_KERNEL | __GFP_NOWARN | __GFP_NOMEMALLOC | __GFP_COMP | __GFP_NORETRY);
++					   GFP_KERNEL | __GFP_NOWARN |
++					   __GFP_NORETRY);
+ 	if (!dmb->cpu_addr)
+ 		clear_bit(dmb->sba_idx, ism->sba_bitmap);
  
- #define __get_free_page(gfp_mask) \
- 		__get_free_pages((gfp_mask), 0)
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index d66bc8abe0af..dd2fed66b656 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -4888,7 +4888,7 @@ void *alloc_pages_exact(size_t size, gfp_t gfp_mask)
- EXPORT_SYMBOL(alloc_pages_exact);
- 
- /**
-- * alloc_pages_exact_nid - allocate an exact number of physically-contiguous
-+ * alloc_pages_exact_node - allocate an exact number of physically-contiguous
-  *			   pages on a node.
-  * @nid: the preferred node ID where memory should be allocated
-  * @size: the number of bytes to allocate
-@@ -4899,7 +4899,7 @@ EXPORT_SYMBOL(alloc_pages_exact);
-  *
-  * Return: pointer to the allocated area or %NULL in case of error.
-  */
--void * __meminit alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask)
-+void * __meminit alloc_pages_exact_node(int nid, size_t size, gfp_t gfp_mask)
- {
- 	unsigned int order = get_order(size);
- 	struct page *p;
-diff --git a/mm/page_ext.c b/mm/page_ext.c
-index d8f1aca4ad43..bca6bb316714 100644
---- a/mm/page_ext.c
-+++ b/mm/page_ext.c
-@@ -215,7 +215,7 @@ static void *__meminit alloc_page_ext(size_t size, int nid)
- 	gfp_t flags = GFP_KERNEL | __GFP_ZERO | __GFP_NOWARN;
- 	void *addr = NULL;
- 
--	addr = alloc_pages_exact_nid(nid, size, flags);
-+	addr = alloc_pages_exact_node(nid, size, flags);
- 	if (addr) {
- 		kmemleak_alloc(addr, size, 1, flags);
- 		return addr;
 -- 
 2.20.1
 
