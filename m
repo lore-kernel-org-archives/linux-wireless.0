@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C1D7C31E4B
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2E03C31E44
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6136D2073F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB78D2073F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726583AbfFNHY0 (ORCPT
+        id S1726622AbfFNHY1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jun 2019 03:24:26 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:48164 "EHLO
+        Fri, 14 Jun 2019 03:24:27 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:48172 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726525AbfFNHYZ (ORCPT
+        with ESMTP id S1726552AbfFNHY1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jun 2019 03:24:25 -0400
+        Fri, 14 Jun 2019 03:24:27 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5E7OLsV024924, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5E7ONt3024943, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5E7OLsV024924
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5E7ONt3024943
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Fri, 14 Jun 2019 15:24:21 +0800
+        Fri, 14 Jun 2019 15:24:23 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.439.0; Fri, 14 Jun 2019 15:24:21 +0800
+ 14.3.439.0; Fri, 14 Jun 2019 15:24:22 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 04/11] rtw88: 8822c: add rf write protection when switching channel
-Date:   Fri, 14 Jun 2019 15:24:08 +0800
-Message-ID: <1560497055-17197-5-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v2 06/11] rtw88: 8822c: disable rx clock gating before counter reset
+Date:   Fri, 14 Jun 2019 15:24:10 +0800
+Message-ID: <1560497055-17197-7-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1560497055-17197-1-git-send-email-yhchuang@realtek.com>
 References: <1560497055-17197-1-git-send-email-yhchuang@realtek.com>
@@ -46,55 +46,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chien-Hsun Liao <ben.liao@realtek.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Collision of writing rf registers could occur if the driver writes
-rf registers by direct write while the hardware is writing other rf
-registers by pi write simultaneously.
+Driver Could fail to reset counter if rx clock gating is not disabled.
+So we need to disable rx clock gating before resetting counters.
+Otherwise counters may increase unexpected.
 
-Hardware pi write can be triggered by rf calibrations sometimes, so
-the driver can not always write rf registers by direct write
-protection. Direct write protection can make sure that there is no
-hardware pi write during the direct write.
-
-According to some experiments, if we add direct write protection
-when switching channel, the performance of rf calibration will not
-be affected.
-
-Signed-off-by: Chien-Hsun Liao <ben.liao@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/phy.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 4 ++++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h | 2 ++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
-index 4381b36..580f310 100644
---- a/drivers/net/wireless/realtek/rtw88/phy.c
-+++ b/drivers/net/wireless/realtek/rtw88/phy.c
-@@ -596,14 +596,19 @@ bool rtw_phy_write_rf_reg(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
- 	direct_addr = base_addr[rf_path] + (addr << 2);
- 	mask &= RFREG_MASK;
- 
--	rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, DISABLE_PI);
--	rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, DISABLE_PI);
-+	if (addr == RF_CFGCH) {
-+		rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, DISABLE_PI);
-+		rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, DISABLE_PI);
-+	}
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index be46a1b..22380b1 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -1508,8 +1508,12 @@ static void rtw8822c_false_alarm_statistics(struct rtw_dev *rtwdev)
+ 	rtw_write32_mask(rtwdev, REG_CCANRX, BIT_CCK_FA_RST, 2);
+ 	rtw_write32_mask(rtwdev, REG_CCANRX, BIT_OFDM_FA_RST, 0);
+ 	rtw_write32_mask(rtwdev, REG_CCANRX, BIT_OFDM_FA_RST, 2);
 +
- 	rtw_write32_mask(rtwdev, direct_addr, mask, data);
- 
- 	udelay(1);
- 
--	rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, ENABLE_PI);
--	rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, ENABLE_PI);
-+	if (addr == RF_CFGCH) {
-+		rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, ENABLE_PI);
-+		rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, ENABLE_PI);
-+	}
- 
- 	return true;
++	/* disable rx clk gating to reset counters */
++	rtw_write32_clr(rtwdev, REG_RX_BREAK, BIT_COM_RX_GCK_EN);
+ 	rtw_write32_set(rtwdev, REG_CNT_CTRL, BIT_ALL_CNT_RST);
+ 	rtw_write32_clr(rtwdev, REG_CNT_CTRL, BIT_ALL_CNT_RST);
++	rtw_write32_set(rtwdev, REG_RX_BREAK, BIT_COM_RX_GCK_EN);
  }
+ 
+ static void rtw8822c_do_iqk(struct rtw_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+index ef708ba..33125e7 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+@@ -177,6 +177,8 @@ struct rtw8822c_efuse {
+ #define BIT_CCK_BLK_EN		BIT(1)
+ #define BIT_CCK_OFDM_BLK_EN	(BIT(0) | BIT(1))
+ #define REG_CCAMSK	0x1c80
++#define REG_RX_BREAK	0x1d2c
++#define BIT_COM_RX_GCK_EN	BIT(31)
+ #define REG_RXFNCTL	0x1d30
+ #define REG_RXIGI	0x1d70
+ #define REG_ENFN	0x1e24
 -- 
 2.7.4
 
