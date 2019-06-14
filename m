@@ -2,195 +2,111 @@ Return-Path: <SRS0=mNjQ=UN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B19BC31E4C
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1B1FC31E44
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:26:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A1222073F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:24:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 808E521473
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 07:26:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726552AbfFNHYj (ORCPT
+        id S1726599AbfFNH02 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jun 2019 03:24:39 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:48165 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726530AbfFNHYZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jun 2019 03:24:25 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x5E7OLmp024920, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x5E7OLmp024920
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Fri, 14 Jun 2019 15:24:21 +0800
-Received: from localhost.localdomain (172.21.68.126) by
- RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.439.0; Fri, 14 Jun 2019 15:24:20 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 03/11] rtw88: add beacon function setting
-Date:   Fri, 14 Jun 2019 15:24:07 +0800
-Message-ID: <1560497055-17197-4-git-send-email-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1560497055-17197-1-git-send-email-yhchuang@realtek.com>
-References: <1560497055-17197-1-git-send-email-yhchuang@realtek.com>
+        Fri, 14 Jun 2019 03:26:28 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:40024 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726449AbfFNH01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Jun 2019 03:26:27 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5882488318;
+        Fri, 14 Jun 2019 07:26:27 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.57])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 393417836F;
+        Fri, 14 Jun 2019 07:26:22 +0000 (UTC)
+Date:   Fri, 14 Jun 2019 09:24:50 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org, nbd@nbd.name,
+        lorenzo.bianconi@redhat.com
+Subject: Re: [PATCH v3 wireless-drivers 1/3] mt76: usb: fix rx A-MSDU support
+Message-ID: <20190614072449.GA3395@redhat.com>
+References: <cover.1560461404.git.lorenzo@kernel.org>
+ <66fc02e45fb5ce0d6176395b5ac43acbd53b3e66.1560461404.git.lorenzo@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.126]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <66fc02e45fb5ce0d6176395b5ac43acbd53b3e66.1560461404.git.lorenzo@kernel.org>
+User-Agent: Mutt/1.5.20 (2009-12-10)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Fri, 14 Jun 2019 07:26:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chin-Yen Lee <timlee@realtek.com>
+On Thu, Jun 13, 2019 at 11:43:11PM +0200, Lorenzo Bianconi wrote:
+> Commit f8f527b16db5 ("mt76: usb: use EP max packet aligned buffer sizes
+> for rx") breaks A-MSDU support. When A-MSDU is enable the device can
+> receive frames up to q->buf_size but they will be discarded in
+> mt76u_process_rx_entry since there is no enough room for
+> skb_shared_info. Fix the issue reallocating the skb and copying in the
+> linear area the first 128B of the received frames and in the frag_list
+> the remaining part.
+> 
+> Fixes: f8f527b16db5 ("mt76: usb: use EP max packet aligned buffer sizes for rx")
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt76.h |  1 +
+>  drivers/net/wireless/mediatek/mt76/usb.c  | 49 ++++++++++++++++++-----
+>  2 files changed, 41 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+> index 8ecbf81a906f..889b76deb703 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt76.h
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+> @@ -30,6 +30,7 @@
+>  #define MT_TX_RING_SIZE     256
+>  #define MT_MCU_RING_SIZE    32
+>  #define MT_RX_BUF_SIZE      2048
+> +#define MT_SKB_HEAD_LEN     128
+>  
+>  struct mt76_dev;
+>  struct mt76_wcid;
+> diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+> index bbaa1365bbda..12d60d31cb51 100644
+> --- a/drivers/net/wireless/mediatek/mt76/usb.c
+> +++ b/drivers/net/wireless/mediatek/mt76/usb.c
+> @@ -429,6 +429,45 @@ static int mt76u_get_rx_entry_len(u8 *data, u32 data_len)
+>  	return dma_len;
+>  }
+>  
+> +static struct sk_buff *
+> +mt76u_build_rx_skb(u8 *data, int len, int buf_size)
+> +{
+> +	struct sk_buff *skb;
+> +
+> +	if (SKB_WITH_OVERHEAD(buf_size) < MT_DMA_HDR_LEN + len) {
+> +		struct page *page;
+> +		int offset;
+> +
+> +		/* slow path, not enough space for data and
+> +		 * skb_shared_info
+> +		 */
+> +		skb = alloc_skb(MT_SKB_HEAD_LEN, GFP_ATOMIC);
+> +		if (!skb)
+> +			return NULL;
+> +
+> +		skb_put_data(skb, data + MT_DMA_HDR_LEN, MT_SKB_HEAD_LEN);
 
-Add beacon function setting routines for each hardware port.
-If beacon function is not enabled, the hardware is not able
-to synchronize with AP's beacon and can miss the beacons
-under some scenarios such as PS mode.
+I looked how rx amsdu is processed in mac80211 and it is decomposed and
+copied into newly allocated individual skb's, see ieee80211_amsdu_to_8023s()
 
-For AP and Adhoc modes that require to send beacons, do not
-update the TSF, otherwise the beacon interval may be affected.
+So copy L3 & L4 headers doesn't do anything good here, actually seems to
+be better to have them in frag as __ieee80211_amsdu_copy_frag() do some
+magic to avid copy.
 
-Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/mac80211.c | 13 +++++++++++++
- drivers/net/wireless/realtek/rtw88/main.c     |  5 +++++
- drivers/net/wireless/realtek/rtw88/main.h     |  3 +++
- 3 files changed, 21 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index 61436bb..abe6a14 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -85,30 +85,35 @@ static const struct rtw_vif_port rtw_vif_port[] = {
- 		.bssid		= {.addr = 0x0618},
- 		.net_type	= {.addr = 0x0100, .mask = 0x30000},
- 		.aid		= {.addr = 0x06a8, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x0550, .mask = 0xff},
- 	},
- 	[1] = {
- 		.mac_addr	= {.addr = 0x0700},
- 		.bssid		= {.addr = 0x0708},
- 		.net_type	= {.addr = 0x0100, .mask = 0xc0000},
- 		.aid		= {.addr = 0x0710, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x0551, .mask = 0xff},
- 	},
- 	[2] = {
- 		.mac_addr	= {.addr = 0x1620},
- 		.bssid		= {.addr = 0x1628},
- 		.net_type	= {.addr = 0x1100, .mask = 0x3},
- 		.aid		= {.addr = 0x1600, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x0578, .mask = 0xff},
- 	},
- 	[3] = {
- 		.mac_addr	= {.addr = 0x1630},
- 		.bssid		= {.addr = 0x1638},
- 		.net_type	= {.addr = 0x1100, .mask = 0xc},
- 		.aid		= {.addr = 0x1604, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x0579, .mask = 0xff},
- 	},
- 	[4] = {
- 		.mac_addr	= {.addr = 0x1640},
- 		.bssid		= {.addr = 0x1648},
- 		.net_type	= {.addr = 0x1100, .mask = 0x30},
- 		.aid		= {.addr = 0x1608, .mask = 0x7ff},
-+		.bcn_ctrl	= {.addr = 0x057a, .mask = 0xff},
- 	},
- };
- 
-@@ -120,6 +125,7 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
- 	enum rtw_net_type net_type;
- 	u32 config = 0;
- 	u8 port = 0;
-+	u8 bcn_ctrl = 0;
- 
- 	rtwvif->port = port;
- 	rtwvif->vif = vif;
-@@ -136,13 +142,16 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_MESH_POINT:
- 		net_type = RTW_NET_AP_MODE;
-+		bcn_ctrl = BIT_EN_BCN_FUNCTION | BIT_DIS_TSF_UDT;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		net_type = RTW_NET_AD_HOC;
-+		bcn_ctrl = BIT_EN_BCN_FUNCTION | BIT_DIS_TSF_UDT;
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 	default:
- 		net_type = RTW_NET_NO_LINK;
-+		bcn_ctrl = BIT_EN_BCN_FUNCTION;
- 		break;
- 	}
- 
-@@ -150,6 +159,8 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
- 	config |= PORT_SET_MAC_ADDR;
- 	rtwvif->net_type = net_type;
- 	config |= PORT_SET_NET_TYPE;
-+	rtwvif->bcn_ctrl = bcn_ctrl;
-+	config |= PORT_SET_BCN_CTRL;
- 	rtw_vif_port_config(rtwdev, rtwvif, config);
- 
- 	mutex_unlock(&rtwdev->mutex);
-@@ -173,6 +184,8 @@ static void rtw_ops_remove_interface(struct ieee80211_hw *hw,
- 	config |= PORT_SET_MAC_ADDR;
- 	rtwvif->net_type = RTW_NET_NO_LINK;
- 	config |= PORT_SET_NET_TYPE;
-+	rtwvif->bcn_ctrl = 0;
-+	config |= PORT_SET_BCN_CTRL;
- 	rtw_vif_port_config(rtwdev, rtwvif, config);
- 
- 	mutex_unlock(&rtwdev->mutex);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 306d799..b8e0519 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -308,6 +308,11 @@ void rtw_vif_port_config(struct rtw_dev *rtwdev,
- 		mask = rtwvif->conf->aid.mask;
- 		rtw_write32_mask(rtwdev, addr, mask, rtwvif->aid);
- 	}
-+	if (config & PORT_SET_BCN_CTRL) {
-+		addr = rtwvif->conf->bcn_ctrl.addr;
-+		mask = rtwvif->conf->bcn_ctrl.mask;
-+		rtw_write8_mask(rtwdev, addr, mask, rtwvif->bcn_ctrl);
-+	}
- }
- 
- static u8 hw_bw_cap_to_bitamp(u8 bw_cap)
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 00fc77f..414d21f 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -431,6 +431,7 @@ enum rtw_vif_port_set {
- 	PORT_SET_BSSID		= BIT(1),
- 	PORT_SET_NET_TYPE	= BIT(2),
- 	PORT_SET_AID		= BIT(3),
-+	PORT_SET_BCN_CTRL	= BIT(4),
- };
- 
- struct rtw_vif_port {
-@@ -438,6 +439,7 @@ struct rtw_vif_port {
- 	struct rtw_hw_reg bssid;
- 	struct rtw_hw_reg net_type;
- 	struct rtw_hw_reg aid;
-+	struct rtw_hw_reg bcn_ctrl;
- };
- 
- struct rtw_tx_pkt_info {
-@@ -591,6 +593,7 @@ struct rtw_vif {
- 	u8 mac_addr[ETH_ALEN];
- 	u8 bssid[ETH_ALEN];
- 	u8 port;
-+	u8 bcn_ctrl;
- 	const struct rtw_vif_port *conf;
- 
- 	struct rtw_traffic_stats stats;
--- 
-2.7.4
-
+Stanislaw
