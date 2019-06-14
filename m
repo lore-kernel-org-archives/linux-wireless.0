@@ -2,42 +2,42 @@ Return-Path: <SRS0=mNjQ=UN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFA0FC31E4B
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:50:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47DB0C31E4B
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:50:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C44DA20850
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:50:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A77620850
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 13:50:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LZajKbx8"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O+TbJCIv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728679AbfFNNr7 (ORCPT
+        id S1728557AbfFNNrn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jun 2019 09:47:59 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:51742 "EHLO
+        Fri, 14 Jun 2019 09:47:43 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:50438 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728227AbfFNNr6 (ORCPT
+        with ESMTP id S1728078AbfFNNrm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jun 2019 09:47:58 -0400
+        Fri, 14 Jun 2019 09:47:42 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=+xs8xEvecIN+pidhw5Y71rlRjZmb8fJOnZhp8o/DsSw=; b=LZajKbx8vMWmoPyPihl3W8b1II
-        oarEXVrrz2rxvZ0BgXTxaFSJ89DHAoMwNs46qftGPIs2iOcmI3PGUZe+ESDrKJqwk8Pn/9InuTjbe
-        w/TkgWs39UEZl5gAqGPQNkS8QJr9eK5xRj4GSD3z1xgEem0WZvNMx/y06DWCWoiPPtMn6DV1KJtT4
-        3dephzfXQQJVrhS8KA9VAcX9i7Lqdp6j+6fd+Du7mG+QFzmKyVufezvRPWVqUb7kH/R5PAyOXYi6v
-        YOEZa1MgatXouQX+rfRB0aOlbZAvy1un6+StmE3Bzk1C+2JjRxYHzmpazpOIF5cCv5pJpncKedcmm
-        mul+NSrA==;
+        bh=8y6h8N73FB5NENGJmXuBWpySrRWBuNuuherB6ijj6q8=; b=O+TbJCIvZxITqhhJGk19PgKDVb
+        zP/cXr3k3gVNVyNuIZZ1EUainJIi7wVTUxXsQtP55j6fTBfcF7Sa+btFSjlOoBpdFax1u6ZazzUaz
+        FPx/YcvbrcmM0hj9iSxxr66wiPpIo2CQcbBfULKCswmUhdFlmoDtWAaHV5c6chhQgW7u9cc4uUrYi
+        +YgK5P2yi8DIc4PxIDTgNB0H2HMyfDDjSri1AD09oFbVupeMjadiOSOnAJwBO5Fva8F5W4du1//3V
+        PC6NEPWuGSXf3Iz9K+nbMDUlMTGN745meRSObE6d5NxDDUuRnYJGChXPFHVxfA6Pw0enVfuoGJDnu
+        q+P8IvBA==;
 Received: from 213-225-9-13.nat.highway.a1.net ([213.225.9.13] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hbmYQ-0004jF-5L; Fri, 14 Jun 2019 13:47:42 +0000
+        id 1hbmYJ-0004Xw-Il; Fri, 14 Jun 2019 13:47:36 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
         Maxime Ripard <maxime.ripard@bootlin.com>,
@@ -56,9 +56,9 @@ Cc:     Intel Linux Wireless <linuxwifi@intel.com>,
         linux-s390@vger.kernel.org, devel@driverdev.osuosl.org,
         linux-mm@kvack.org, iommu@lists.linux-foundation.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 03/16] drm/i915: stop using drm_pci_alloc
-Date:   Fri, 14 Jun 2019 15:47:13 +0200
-Message-Id: <20190614134726.3827-4-hch@lst.de>
+Subject: [PATCH 01/16] media: videobuf-dma-contig: use dma_mmap_coherent
+Date:   Fri, 14 Jun 2019 15:47:11 +0200
+Message-Id: <20190614134726.3827-2-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190614134726.3827-1-hch@lst.de>
 References: <20190614134726.3827-1-hch@lst.de>
@@ -70,136 +70,84 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove usage of the legacy drm PCI DMA wrappers, and with that the
-incorrect usage cocktail of __GFP_COMP, virt_to_page on DMA allocation
-and SetPageReserved.
+dma_alloc_coherent does not return a physical address, but a DMA
+address, which might be remapped or have an offset.  Passing this
+DMA address to vm_iomap_memory is completely bogus.  Use the proper
+dma_mmap_coherent helper instead, and stop passing __GFP_COMP
+to dma_alloc_coherent, as the memory management inside the DMA
+allocator is hidden from the callers.
 
+Fixes: a8f3c203e19b ("[media] videobuf-dma-contig: add cache support")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/gpu/drm/i915/i915_gem.c        | 30 +++++++++++++-------------
- drivers/gpu/drm/i915/i915_gem_object.h |  3 ++-
- drivers/gpu/drm/i915/intel_display.c   |  2 +-
- 3 files changed, 18 insertions(+), 17 deletions(-)
+ drivers/media/v4l2-core/videobuf-dma-contig.c | 23 +++++++------------
+ 1 file changed, 8 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
-index ad01c92aaf74..8f2053c91aff 100644
---- a/drivers/gpu/drm/i915/i915_gem.c
-+++ b/drivers/gpu/drm/i915/i915_gem.c
-@@ -228,7 +228,6 @@ i915_gem_get_aperture_ioctl(struct drm_device *dev, void *data,
- static int i915_gem_object_get_pages_phys(struct drm_i915_gem_object *obj)
+diff --git a/drivers/media/v4l2-core/videobuf-dma-contig.c b/drivers/media/v4l2-core/videobuf-dma-contig.c
+index e1bf50df4c70..a5942ea38f1f 100644
+--- a/drivers/media/v4l2-core/videobuf-dma-contig.c
++++ b/drivers/media/v4l2-core/videobuf-dma-contig.c
+@@ -39,11 +39,11 @@ struct videobuf_dma_contig_memory {
+ 
+ static int __videobuf_dc_alloc(struct device *dev,
+ 			       struct videobuf_dma_contig_memory *mem,
+-			       unsigned long size, gfp_t flags)
++			       unsigned long size)
  {
- 	struct address_space *mapping = obj->base.filp->f_mapping;
--	drm_dma_handle_t *phys;
- 	struct sg_table *st;
- 	struct scatterlist *sg;
- 	char *vaddr;
-@@ -242,13 +241,13 @@ static int i915_gem_object_get_pages_phys(struct drm_i915_gem_object *obj)
- 	 * to handle all possible callers, and given typical object sizes,
- 	 * the alignment of the buddy allocation will naturally match.
+ 	mem->size = size;
+-	mem->vaddr = dma_alloc_coherent(dev, mem->size,
+-					&mem->dma_handle, flags);
++	mem->vaddr = dma_alloc_coherent(dev, mem->size, &mem->dma_handle,
++			GFP_KERNEL);
+ 
+ 	if (!mem->vaddr) {
+ 		dev_err(dev, "memory alloc size %ld failed\n", mem->size);
+@@ -260,8 +260,7 @@ static int __videobuf_iolock(struct videobuf_queue *q,
+ 			return videobuf_dma_contig_user_get(mem, vb);
+ 
+ 		/* allocate memory for the read() method */
+-		if (__videobuf_dc_alloc(q->dev, mem, PAGE_ALIGN(vb->size),
+-					GFP_KERNEL))
++		if (__videobuf_dc_alloc(q->dev, mem, PAGE_ALIGN(vb->size)))
+ 			return -ENOMEM;
+ 		break;
+ 	case V4L2_MEMORY_OVERLAY:
+@@ -280,7 +279,6 @@ static int __videobuf_mmap_mapper(struct videobuf_queue *q,
+ 	struct videobuf_dma_contig_memory *mem;
+ 	struct videobuf_mapping *map;
+ 	int retval;
+-	unsigned long size;
+ 
+ 	dev_dbg(q->dev, "%s\n", __func__);
+ 
+@@ -298,23 +296,18 @@ static int __videobuf_mmap_mapper(struct videobuf_queue *q,
+ 	BUG_ON(!mem);
+ 	MAGIC_CHECK(mem->magic, MAGIC_DC_MEM);
+ 
+-	if (__videobuf_dc_alloc(q->dev, mem, PAGE_ALIGN(buf->bsize),
+-				GFP_KERNEL | __GFP_COMP))
++	if (__videobuf_dc_alloc(q->dev, mem, PAGE_ALIGN(buf->bsize)))
+ 		goto error;
+ 
+-	/* Try to remap memory */
+-	size = vma->vm_end - vma->vm_start;
+-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+-
+ 	/* the "vm_pgoff" is just used in v4l2 to find the
+ 	 * corresponding buffer data structure which is allocated
+ 	 * earlier and it does not mean the offset from the physical
+ 	 * buffer start address as usual. So set it to 0 to pass
+-	 * the sanity check in vm_iomap_memory().
++	 * the sanity check in dma_mmap_coherent().
  	 */
--	phys = drm_pci_alloc(obj->base.dev,
--			     roundup_pow_of_two(obj->base.size),
--			     roundup_pow_of_two(obj->base.size));
--	if (!phys)
-+	obj->phys_vaddr = dma_alloc_coherent(&obj->base.dev->pdev->dev,
-+			roundup_pow_of_two(obj->base.size),
-+			&obj->phys_handle, GFP_KERNEL);
-+	if (!obj->phys_vaddr)
- 		return -ENOMEM;
- 
--	vaddr = phys->vaddr;
-+	vaddr = obj->phys_vaddr;
- 	for (i = 0; i < obj->base.size / PAGE_SIZE; i++) {
- 		struct page *page;
- 		char *src;
-@@ -286,18 +285,17 @@ static int i915_gem_object_get_pages_phys(struct drm_i915_gem_object *obj)
- 	sg->offset = 0;
- 	sg->length = obj->base.size;
- 
--	sg_dma_address(sg) = phys->busaddr;
-+	sg_dma_address(sg) = obj->phys_handle;
- 	sg_dma_len(sg) = obj->base.size;
- 
--	obj->phys_handle = phys;
+ 	vma->vm_pgoff = 0;
 -
- 	__i915_gem_object_set_pages(obj, st, sg->length);
- 
- 	return 0;
- 
- err_phys:
--	drm_pci_free(obj->base.dev, phys);
--
-+	dma_free_coherent(&obj->base.dev->pdev->dev,
-+			roundup_pow_of_two(obj->base.size), obj->phys_vaddr,
-+			obj->phys_handle);
- 	return err;
- }
- 
-@@ -335,7 +333,7 @@ i915_gem_object_put_pages_phys(struct drm_i915_gem_object *obj,
- 
- 	if (obj->mm.dirty) {
- 		struct address_space *mapping = obj->base.filp->f_mapping;
--		char *vaddr = obj->phys_handle->vaddr;
-+		char *vaddr = obj->phys_vaddr;
- 		int i;
- 
- 		for (i = 0; i < obj->base.size / PAGE_SIZE; i++) {
-@@ -363,7 +361,9 @@ i915_gem_object_put_pages_phys(struct drm_i915_gem_object *obj,
- 	sg_free_table(pages);
- 	kfree(pages);
- 
--	drm_pci_free(obj->base.dev, obj->phys_handle);
-+	dma_free_coherent(&obj->base.dev->pdev->dev,
-+			roundup_pow_of_two(obj->base.size), obj->phys_vaddr,
-+			obj->phys_handle);
- }
- 
- static void
-@@ -603,7 +603,7 @@ i915_gem_phys_pwrite(struct drm_i915_gem_object *obj,
- 		     struct drm_i915_gem_pwrite *args,
- 		     struct drm_file *file)
- {
--	void *vaddr = obj->phys_handle->vaddr + args->offset;
-+	void *vaddr = obj->phys_vaddr + args->offset;
- 	char __user *user_data = u64_to_user_ptr(args->data_ptr);
- 
- 	/* We manually control the domain here and pretend that it
-@@ -1431,7 +1431,7 @@ i915_gem_pwrite_ioctl(struct drm_device *dev, void *data,
- 		ret = i915_gem_gtt_pwrite_fast(obj, args);
- 
- 	if (ret == -EFAULT || ret == -ENOSPC) {
--		if (obj->phys_handle)
-+		if (obj->phys_vaddr)
- 			ret = i915_gem_phys_pwrite(obj, args, file);
- 		else
- 			ret = i915_gem_shmem_pwrite(obj, args);
-diff --git a/drivers/gpu/drm/i915/i915_gem_object.h b/drivers/gpu/drm/i915/i915_gem_object.h
-index ca93a40c0c87..14bd2d61d0f6 100644
---- a/drivers/gpu/drm/i915/i915_gem_object.h
-+++ b/drivers/gpu/drm/i915/i915_gem_object.h
-@@ -290,7 +290,8 @@ struct drm_i915_gem_object {
- 	};
- 
- 	/** for phys allocated objects */
--	struct drm_dma_handle *phys_handle;
-+	dma_addr_t phys_handle;
-+	void *phys_vaddr;
- 
- 	struct reservation_object __builtin_resv;
- };
-diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 5098228f1302..4f8b368ac4e2 100644
---- a/drivers/gpu/drm/i915/intel_display.c
-+++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -10066,7 +10066,7 @@ static u32 intel_cursor_base(const struct intel_plane_state *plane_state)
- 	u32 base;
- 
- 	if (INTEL_INFO(dev_priv)->display.cursor_needs_physical)
--		base = obj->phys_handle->busaddr;
-+		base = obj->phys_handle;
- 	else
- 		base = intel_plane_ggtt_offset(plane_state);
- 
+-	retval = vm_iomap_memory(vma, mem->dma_handle, size);
++	retval = dma_mmap_coherent(q->dev, vma, mem->vaddr, mem->dma_handle,
++			vma->vm_end - vma->vm_start);
+ 	if (retval) {
+ 		dev_err(q->dev, "mmap: remap failed with error %d. ",
+ 			retval);
 -- 
 2.20.1
 
