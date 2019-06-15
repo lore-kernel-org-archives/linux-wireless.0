@@ -1,118 +1,142 @@
-Return-Path: <SRS0=mNjQ=UN=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=6yEa=UO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18BF9C31E4B
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 21:14:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DD23C31E52
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Jun 2019 00:13:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DEAAA2184B
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jun 2019 21:14:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1560546894;
-	bh=wQlzv9GXi+d6YxFDj5qp88AVZygc6aohbfVT4AQR70Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=gAp5Qq31RvJda+Yxgk6nPRQmnkUMn2HzE+7aLQ62l6JWFvqHvEywgxehJivvvPUfr
-	 SmfEN3+McFX6RIoCUTG/06vlA7vJyxcTbZvDofSRhByrbQxVobBnDImdA9nzKJcokZ
-	 tEVwtWKIt7rVBYCRKBGD/M2OibQJAL0TW8yj9/9c=
+	by mail.kernel.org (Postfix) with ESMTP id DA11C205ED
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Jun 2019 00:13:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="dsc/F7g2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726432AbfFNVOt (ORCPT
+        id S1726784AbfFOAN6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jun 2019 17:14:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58562 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726252AbfFNVOt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jun 2019 17:14:49 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7D0D921473;
-        Fri, 14 Jun 2019 21:14:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1560546889;
-        bh=wQlzv9GXi+d6YxFDj5qp88AVZygc6aohbfVT4AQR70Y=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ks0AHcQ3CMMcp8lXmC5Q1q+mNRhg76nx20zz7WGQfrHmET+emzaWoOodcXQ82HPjk
-         /Q0wzICC14gHKtUH/c0hiVkAbFD6SklBQgeWeDifIfILXybbVlrUgOA2LE9404heew
-         9zZ4/WlS27thwm4E7UDC674PGe7hBqVr8gYg2J1U=
-Date:   Fri, 14 Jun 2019 16:14:47 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jonathan Corbet <corbet@lwn.net>
-Cc:     Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        Mauro Carvalho Chehab <mchehab@infradead.org>,
-        linux-kernel@vger.kernel.org, Sebastian Reichel <sre@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-        Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Harry Wei <harryxiyou@gmail.com>,
-        Alex Shi <alex.shi@linux.alibaba.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>, linux-pm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        "Srivatsa S . Bhat" <srivatsa@csail.mit.edu>
-Subject: Re: [PATCH v5] docs: power: convert docs to ReST and rename to *.rst
-Message-ID: <20190614211447.GU13533@google.com>
-References: <7dc94cb4-ebf1-22ab-29c9-fcb2b875a9ac@csail.mit.edu>
- <72d1f8f360d395958dd0b49165fc51b58801f57e.1560420621.git.mchehab+samsung@kernel.org>
- <20190614143631.7c99719f@lwn.net>
+        Fri, 14 Jun 2019 20:13:58 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:42504 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726773AbfFOAN5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Jun 2019 20:13:57 -0400
+Received: by mail-pg1-f194.google.com with SMTP id l19so2389714pgh.9
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Jun 2019 17:13:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=z8Sr3wwef/63KELNe4jUJaKB5wCZ2YTUwefjWC3YKWA=;
+        b=dsc/F7g2uIm7KIaNWINoPbXEKXEF+qrsta0rCrMTJ3HTQAlFdVy7t6i557mgCbrynO
+         ufA2pqxjJyc1/F2fpZKpMkbKNlUj95WoPq95c2aPaODVcYcqEvjlT/2CMntRk6FrXUYr
+         kbNBP8McMPLivkpcZdP7OZfk3Eq78x3UCzDL4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=z8Sr3wwef/63KELNe4jUJaKB5wCZ2YTUwefjWC3YKWA=;
+        b=Zzrtw8jKxiZUVb+mLC+wdy/wd1JI0JMGpJYOa8rQw6ViTD9yduwjulXLls+xRT/Z0m
+         bvB8S1MFZiC8+JLfXYT0VOKRUuNMTml/sf/zR/O2N4GDDUK0FoOoc7Yp+rLVkAf7waxe
+         4wVKyz0kBTM8tkTN18LoWo8Op7PC+VEHMXWT1zBF+9Sl3zpdTfh19u0mrGmkmLyBPaNj
+         Ipf3HUyhhBhkDRd1tscss/IBy7kz8SsF9TIp+VCO3m4SOYPythIi8XVtFYbHBP2vRACV
+         OZNaCzhKQwrDDHO0z3gLQKhlcsajv3oUtBrYV4v+5rHqdtRsnxRgBe+cFz6LdfYER1jy
+         s93g==
+X-Gm-Message-State: APjAAAWIIIZrbBhuU1rK05/DEUQRemWUNewWFvD0iwNZMYWYp4WaR6sW
+        QX01bWd6nKo2JjnDSzILdC94rg==
+X-Google-Smtp-Source: APXvYqx99nlTn0yxCc0/LUOCwLtM405Jzo+91yDOaKTrB2/qezmNV06q9avSDDvLHEMrmliA60WlkA==
+X-Received: by 2002:a17:90a:b908:: with SMTP id p8mr13640504pjr.94.1560557636959;
+        Fri, 14 Jun 2019 17:13:56 -0700 (PDT)
+Received: from smtp.gmail.com ([2620:15c:202:1:534:b7c0:a63c:460c])
+        by smtp.gmail.com with ESMTPSA id n2sm3708253pgp.27.2019.06.14.17.13.55
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Fri, 14 Jun 2019 17:13:56 -0700 (PDT)
+From:   Brian Norris <briannorris@chromium.org>
+To:     Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Xinming Hu <huxinming820@gmail.com>
+Cc:     <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Takashi Iwai <tiwai@suse.de>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 2/2] mwifiex: use 'total_ie_len' in mwifiex_update_bss_desc_with_ie()
+Date:   Fri, 14 Jun 2019 17:13:21 -0700
+Message-Id: <20190615001321.241808-2-briannorris@chromium.org>
+X-Mailer: git-send-email 2.22.0.410.gd8fdbe21b5-goog
+In-Reply-To: <20190615001321.241808-1-briannorris@chromium.org>
+References: <20190615001321.241808-1-briannorris@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190614143631.7c99719f@lwn.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Jun 14, 2019 at 02:36:31PM -0600, Jonathan Corbet wrote:
-> On Thu, 13 Jun 2019 07:10:36 -0300
-> Mauro Carvalho Chehab <mchehab+samsung@kernel.org> wrote:
-> 
-> > Convert the PM documents to ReST, in order to allow them to
-> > build with Sphinx.
-> > 
-> > The conversion is actually:
-> >   - add blank lines and identation in order to identify paragraphs;
-> >   - fix tables markups;
-> >   - add some lists markups;
-> >   - mark literal blocks;
-> >   - adjust title markups.
-> > 
-> > At its new index.rst, let's add a :orphan: while this is not linked to
-> > the main index.rst file, in order to avoid build warnings.
-> > 
-> > Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-> > Acked-by: Mark Brown <broonie@kernel.org>
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > Acked-by: Srivatsa S. Bhat (VMware) <srivatsa@csail.mit.edu>
-> 
-> So I can't apply this one due to conflicts in include/linux/pci.h.  Bjorn,
-> perhaps the easiest thing is for you to take this one through your tree?
+This is clearer than copy/pasting the magic number '+ 2' around, and it
+even saves the need for one existing comment.
 
-OK, I applied this to pci/docs for v5.3.  I applied this entire patch,
-but if you would prefer that I only apply the PCI-related parts, let
-me know and I'll split those out.
+Cc: Takashi Iwai <tiwai@suse.de>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-Bjorn
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index e2786ab612ca..707e5159262f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1269,7 +1269,7 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_FH_PARAMS:
+-			if (element_len + 2 < sizeof(*fh_param_set))
++			if (total_ie_len < sizeof(*fh_param_set))
+ 				return -EINVAL;
+ 			fh_param_set =
+ 				(struct ieee_types_fh_param_set *) current_ptr;
+@@ -1279,7 +1279,7 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_DS_PARAMS:
+-			if (element_len + 2 < sizeof(*ds_param_set))
++			if (total_ie_len < sizeof(*ds_param_set))
+ 				return -EINVAL;
+ 			ds_param_set =
+ 				(struct ieee_types_ds_param_set *) current_ptr;
+@@ -1292,7 +1292,7 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_CF_PARAMS:
+-			if (element_len + 2 < sizeof(*cf_param_set))
++			if (total_ie_len < sizeof(*cf_param_set))
+ 				return -EINVAL;
+ 			cf_param_set =
+ 				(struct ieee_types_cf_param_set *) current_ptr;
+@@ -1302,7 +1302,7 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_IBSS_PARAMS:
+-			if (element_len + 2 < sizeof(*ibss_param_set))
++			if (total_ie_len < sizeof(*ibss_param_set))
+ 				return -EINVAL;
+ 			ibss_param_set =
+ 				(struct ieee_types_ibss_param_set *)
+@@ -1459,10 +1459,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 		}
+ 
+-		current_ptr += element_len + 2;
+-
+-		/* Need to account for IE ID and IE Len */
+-		bytes_left -= (element_len + 2);
++		current_ptr += total_ie_len;
++		bytes_left -= total_ie_len;
+ 
+ 	}	/* while (bytes_left > 2) */
+ 	return ret;
+-- 
+2.22.0.410.gd8fdbe21b5-goog
+
