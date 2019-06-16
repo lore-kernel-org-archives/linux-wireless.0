@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37307C31E49
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:34:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87679C31E49
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:34:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19FA221473
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:34:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6044121473
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:34:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726365AbfFPHeR (ORCPT
+        id S1726396AbfFPHeT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Jun 2019 03:34:17 -0400
+        Sun, 16 Jun 2019 03:34:19 -0400
 Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:36718 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725874AbfFPHeR (ORCPT
+        by vger.kernel.org with ESMTP id S1726147AbfFPHeT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Jun 2019 03:34:17 -0400
+        Sun, 16 Jun 2019 03:34:19 -0400
 Received: from ironmsg02-ams.qualcomm.com ([10.251.56.3])
   by alexa-out-ams-02.qualcomm.com with ESMTP; 16 Jun 2019 09:26:15 +0200
-X-IronPort-AV: E=McAfee;i="6000,8403,9289"; a="8499836"
+X-IronPort-AV: E=McAfee;i="6000,8403,9289"; a="8499839"
 Received: from lx-merez1.mea.qualcomm.com ([10.18.173.103])
-  by ironmsg02-ams.qualcomm.com with ESMTP; 16 Jun 2019 09:26:13 +0200
+  by ironmsg02-ams.qualcomm.com with ESMTP; 16 Jun 2019 09:26:15 +0200
 From:   Maya Erez <merez@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Tzahi Sabo <stzahi@codeaurora.org>
-Subject: [PATCH 06/11] wil6210: clear FW and ucode log address
-Date:   Sun, 16 Jun 2019 10:26:02 +0300
-Message-Id: <1560669967-23706-7-git-send-email-merez@codeaurora.org>
+Cc:     Tzahi Sabo <stzahi@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 09/11] wil6210: add support for reading multiple RFs temperature via debugfs
+Date:   Sun, 16 Jun 2019 10:26:05 +0300
+Message-Id: <1560669967-23706-10-git-send-email-merez@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1560669967-23706-1-git-send-email-merez@codeaurora.org>
 References: <1560669967-23706-1-git-send-email-merez@codeaurora.org>
@@ -40,73 +40,279 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Clear the FW and ucode log address on device initialization to allow
-user space app identify when the address was set by FW/ucode and it can
-start read.
+From: Tzahi Sabo <stzahi@codeaurora.org>
+
+Base-band chips support multi RFs chips. Add support for reading
+multiple RFs temperature via debugfs.
 
 Signed-off-by: Tzahi Sabo <stzahi@codeaurora.org>
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/main.c     | 15 +++++++++++++++
- drivers/net/wireless/ath/wil6210/pcie_bus.c |  1 +
- drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
- 3 files changed, 17 insertions(+)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 42 ++++++++++++++++++++------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  3 ++
+ drivers/net/wireless/ath/wil6210/wmi.c     | 42 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.h     | 47 +++++++++++++++++++++++++-----
+ 4 files changed, 117 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 3c30076..f7b9e6b 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1522,6 +1522,7 @@ int wil_ps_update(struct wil6210_priv *wil, enum wmi_ps_profile_type ps_profile)
- 
- static void wil_pre_fw_config(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 8eb6d49..bbe274c 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1372,7 +1372,7 @@ static void print_temp(struct seq_file *s, const char *prefix, s32 t)
  {
-+	wil_clear_fw_log_addr(wil);
- 	/* Mark FW as loaded from host */
- 	wil_s(wil, RGF_USER_USAGE_6, 1);
+ 	switch (t) {
+ 	case 0:
+-	case ~(u32)0:
++	case WMI_INVALID_TEMPERATURE:
+ 		seq_printf(s, "%s N/A\n", prefix);
+ 	break;
+ 	default:
+@@ -1385,17 +1385,41 @@ static void print_temp(struct seq_file *s, const char *prefix, s32 t)
+ static int temp_show(struct seq_file *s, void *data)
+ {
+ 	struct wil6210_priv *wil = s->private;
+-	s32 t_m, t_r;
+-	int rc = wmi_get_temperature(wil, &t_m, &t_r);
++	int rc, i;
  
-@@ -1579,6 +1580,20 @@ static int wil_restore_vifs(struct wil6210_priv *wil)
+-	if (rc) {
+-		seq_puts(s, "Failed\n");
+-		return 0;
+-	}
++	if (test_bit(WMI_FW_CAPABILITY_TEMPERATURE_ALL_RF,
++		     wil->fw_capabilities)) {
++		struct wmi_temp_sense_all_done_event sense_all_evt;
+ 
+-	print_temp(s, "T_mac   =", t_m);
+-	print_temp(s, "T_radio =", t_r);
++		wil_dbg_misc(wil,
++			     "WMI_FW_CAPABILITY_TEMPERATURE_ALL_RF is supported");
++		rc = wmi_get_all_temperatures(wil, &sense_all_evt);
++		if (rc) {
++			seq_puts(s, "Failed\n");
++			return 0;
++		}
++		print_temp(s, "T_mac   =",
++			   le32_to_cpu(sense_all_evt.baseband_t1000));
++		seq_printf(s, "Connected RFs [0x%08x]\n",
++			   sense_all_evt.rf_bitmap);
++		for (i = 0; i < WMI_MAX_XIF_PORTS_NUM; i++) {
++			seq_printf(s, "RF[%d]   = ", i);
++			print_temp(s, "",
++				   le32_to_cpu(sense_all_evt.rf_t1000[i]));
++		}
++	} else {
++		s32 t_m, t_r;
+ 
++		wil_dbg_misc(wil,
++			     "WMI_FW_CAPABILITY_TEMPERATURE_ALL_RF is not supported");
++		rc = wmi_get_temperature(wil, &t_m, &t_r);
++		if (rc) {
++			seq_puts(s, "Failed\n");
++			return 0;
++		}
++		print_temp(s, "T_mac   =", t_m);
++		print_temp(s, "T_radio =", t_r);
++	}
+ 	return 0;
  }
- 
- /*
-+ * Clear FW and ucode log start addr to indicate FW log is not ready. The host
-+ * driver clears the addresses before FW starts and FW initializes the address
-+ * when it is ready to send logs.
-+ */
-+void wil_clear_fw_log_addr(struct wil6210_priv *wil)
-+{
-+	/* FW log addr */
-+	wil_w(wil, RGF_USER_USAGE_1, 0);
-+	/* ucode log addr */
-+	wil_w(wil, RGF_USER_USAGE_2, 0);
-+	wil_dbg_misc(wil, "Cleared FW and ucode log address");
-+}
-+
-+/*
-  * We reset all the structures, and we reset the UMAC.
-  * After calling this routine, you're expected to reload
-  * the firmware.
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 4e2d922..9f5a914 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -420,6 +420,7 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
- 	/* rollback to bus_disable */
- 
-+	wil_clear_fw_log_addr(wil);
- 	rc = wil_if_add(wil);
- 	if (rc) {
- 		wil_err(wil, "wil_if_add failed: %d\n", rc);
+ DEFINE_SHOW_ATTRIBUTE(temp);
 diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 75abec2..afbc524 100644
+index afbc524..038329b 100644
 --- a/drivers/net/wireless/ath/wil6210/wil6210.h
 +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -1425,4 +1425,5 @@ int wmi_addba_rx_resp_edma(struct wil6210_priv *wil, u8 mid, u8 cid,
+@@ -1252,6 +1252,9 @@ int wmi_add_cipher_key(struct wil6210_vif *vif, u8 key_index,
+ int wmi_update_ft_ies(struct wil6210_vif *vif, u16 ie_len, const void *ie);
+ int wmi_rxon(struct wil6210_priv *wil, bool on);
+ int wmi_get_temperature(struct wil6210_priv *wil, u32 *t_m, u32 *t_r);
++int wmi_get_all_temperatures(struct wil6210_priv *wil,
++			     struct wmi_temp_sense_all_done_event
++			     *sense_all_evt);
+ int wmi_disconnect_sta(struct wil6210_vif *vif, const u8 *mac, u16 reason,
+ 		       bool del_sta);
+ int wmi_addba(struct wil6210_priv *wil, u8 mid,
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index cacafab..5d7eb52 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -486,6 +486,8 @@ static const char *cmdid2name(u16 cmdid)
+ 		return "WMI_UPDATE_FT_IES_CMD";
+ 	case WMI_RBUFCAP_CFG_CMDID:
+ 		return "WMI_RBUFCAP_CFG_CMD";
++	case WMI_TEMP_SENSE_ALL_CMDID:
++		return "WMI_TEMP_SENSE_ALL_CMDID";
+ 	default:
+ 		return "Untracked CMD";
+ 	}
+@@ -632,6 +634,8 @@ static const char *eventid2name(u16 eventid)
+ 		return "WMI_FT_REASSOC_STATUS_EVENT";
+ 	case WMI_RBUFCAP_CFG_EVENTID:
+ 		return "WMI_RBUFCAP_CFG_EVENT";
++	case WMI_TEMP_SENSE_ALL_DONE_EVENTID:
++		return "WMI_TEMP_SENSE_ALL_DONE_EVENTID";
+ 	default:
+ 		return "Untracked EVENT";
+ 	}
+@@ -2648,6 +2652,44 @@ int wmi_get_temperature(struct wil6210_priv *wil, u32 *t_bb, u32 *t_rf)
+ 	return 0;
+ }
  
- void update_supported_bands(struct wil6210_priv *wil);
++int wmi_get_all_temperatures(struct wil6210_priv *wil,
++			     struct wmi_temp_sense_all_done_event
++			     *sense_all_evt)
++{
++	struct wil6210_vif *vif = ndev_to_vif(wil->main_ndev);
++	int rc;
++	struct wmi_temp_sense_all_cmd cmd = {
++		.measure_baseband_en = true,
++		.measure_rf_en = true,
++		.measure_mode = TEMPERATURE_MEASURE_NOW,
++	};
++	struct {
++		struct wmi_cmd_hdr wmi;
++		struct wmi_temp_sense_all_done_event evt;
++	} __packed reply;
++
++	if (!sense_all_evt) {
++		wil_err(wil, "Invalid sense_all_evt value\n");
++		return -EINVAL;
++	}
++
++	memset(&reply, 0, sizeof(reply));
++	reply.evt.status = WMI_FW_STATUS_FAILURE;
++	rc = wmi_call(wil, WMI_TEMP_SENSE_ALL_CMDID, vif->mid, &cmd,
++		      sizeof(cmd), WMI_TEMP_SENSE_ALL_DONE_EVENTID,
++		      &reply, sizeof(reply), WIL_WMI_CALL_GENERAL_TO_MS);
++	if (rc)
++		return rc;
++
++	if (reply.evt.status == WMI_FW_STATUS_FAILURE) {
++		wil_err(wil, "Failed geting TEMP_SENSE_ALL\n");
++		return -EINVAL;
++	}
++
++	memcpy(sense_all_evt, &reply.evt, sizeof(reply.evt));
++	return 0;
++}
++
+ int wmi_disconnect_sta(struct wil6210_vif *vif, const u8 *mac, u16 reason,
+ 		       bool del_sta)
+ {
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index da46fc8..3e37229 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -35,6 +35,7 @@
+ #define WMI_PROX_RANGE_NUM		(3)
+ #define WMI_MAX_LOSS_DMG_BEACONS	(20)
+ #define MAX_NUM_OF_SECTORS		(128)
++#define WMI_INVALID_TEMPERATURE		(0xFFFFFFFF)
+ #define WMI_SCHED_MAX_ALLOCS_PER_CMD	(4)
+ #define WMI_RF_DTYPE_LENGTH		(3)
+ #define WMI_RF_ETYPE_LENGTH		(3)
+@@ -64,6 +65,7 @@
+ #define WMI_QOS_MAX_WEIGHT		50
+ #define WMI_QOS_SET_VIF_PRIORITY	(0xFF)
+ #define WMI_QOS_DEFAULT_PRIORITY	(WMI_QOS_NUM_OF_PRIORITY)
++#define WMI_MAX_XIF_PORTS_NUM		(8)
  
-+void wil_clear_fw_log_addr(struct wil6210_priv *wil);
- #endif /* __WIL6210_H__ */
+ /* Mailbox interface
+  * used for commands and events
+@@ -105,6 +107,7 @@ enum wmi_fw_capability {
+ 	WMI_FW_CAPABILITY_TX_REQ_EXT			= 25,
+ 	WMI_FW_CAPABILITY_CHANNEL_4			= 26,
+ 	WMI_FW_CAPABILITY_IPA				= 27,
++	WMI_FW_CAPABILITY_TEMPERATURE_ALL_RF		= 30,
+ 	WMI_FW_CAPABILITY_MAX,
+ };
+ 
+@@ -296,6 +299,7 @@ enum wmi_command_id {
+ 	WMI_SET_VRING_PRIORITY_WEIGHT_CMDID		= 0xA10,
+ 	WMI_SET_VRING_PRIORITY_CMDID			= 0xA11,
+ 	WMI_RBUFCAP_CFG_CMDID				= 0xA12,
++	WMI_TEMP_SENSE_ALL_CMDID			= 0xA13,
+ 	WMI_SET_MAC_ADDRESS_CMDID			= 0xF003,
+ 	WMI_ABORT_SCAN_CMDID				= 0xF007,
+ 	WMI_SET_PROMISCUOUS_MODE_CMDID			= 0xF041,
+@@ -1411,12 +1415,7 @@ struct wmi_rf_xpm_write_cmd {
+ 	u8 data_bytes[0];
+ } __packed;
+ 
+-/* WMI_TEMP_SENSE_CMDID
+- *
+- * Measure MAC and radio temperatures
+- *
+- * Possible modes for temperature measurement
+- */
++/* Possible modes for temperature measurement */
+ enum wmi_temperature_measure_mode {
+ 	TEMPERATURE_USE_OLD_VALUE	= 0x01,
+ 	TEMPERATURE_MEASURE_NOW		= 0x02,
+@@ -1942,6 +1941,14 @@ struct wmi_set_ap_slot_size_cmd {
+ 	__le32 slot_size;
+ } __packed;
+ 
++/* WMI_TEMP_SENSE_ALL_CMDID */
++struct wmi_temp_sense_all_cmd {
++	u8 measure_baseband_en;
++	u8 measure_rf_en;
++	u8 measure_mode;
++	u8 reserved;
++} __packed;
++
+ /* WMI Events
+  * List of Events (target to host)
+  */
+@@ -2101,6 +2108,7 @@ enum wmi_event_id {
+ 	WMI_SET_VRING_PRIORITY_WEIGHT_EVENTID		= 0x1A10,
+ 	WMI_SET_VRING_PRIORITY_EVENTID			= 0x1A11,
+ 	WMI_RBUFCAP_CFG_EVENTID				= 0x1A12,
++	WMI_TEMP_SENSE_ALL_DONE_EVENTID			= 0x1A13,
+ 	WMI_SET_CHANNEL_EVENTID				= 0x9000,
+ 	WMI_ASSOC_REQ_EVENTID				= 0x9001,
+ 	WMI_EAPOL_RX_EVENTID				= 0x9002,
+@@ -2784,11 +2792,13 @@ struct wmi_fixed_scheduling_ul_config_event {
+  */
+ struct wmi_temp_sense_done_event {
+ 	/* Temperature times 1000 (actual temperature will be achieved by
+-	 * dividing the value by 1000)
++	 * dividing the value by 1000). When temperature cannot be read from
++	 * device return WMI_INVALID_TEMPERATURE
+ 	 */
+ 	__le32 baseband_t1000;
+ 	/* Temperature times 1000 (actual temperature will be achieved by
+-	 * dividing the value by 1000)
++	 * dividing the value by 1000). When temperature cannot be read from
++	 * device return WMI_INVALID_TEMPERATURE
+ 	 */
+ 	__le32 rf_t1000;
+ } __packed;
+@@ -4140,4 +4150,25 @@ struct wmi_rbufcap_cfg_event {
+ 	u8 reserved[3];
+ } __packed;
+ 
++/* WMI_TEMP_SENSE_ALL_DONE_EVENTID
++ * Measure MAC and all radio temperatures
++ */
++struct wmi_temp_sense_all_done_event {
++	/* enum wmi_fw_status */
++	u8 status;
++	/* Bitmap of connected RFs */
++	u8 rf_bitmap;
++	u8 reserved[2];
++	/* Temperature times 1000 (actual temperature will be achieved by
++	 * dividing the value by 1000). When temperature cannot be read from
++	 * device return WMI_INVALID_TEMPERATURE
++	 */
++	__le32 rf_t1000[WMI_MAX_XIF_PORTS_NUM];
++	/* Temperature times 1000 (actual temperature will be achieved by
++	 * dividing the value by 1000). When temperature cannot be read from
++	 * device return WMI_INVALID_TEMPERATURE
++	 */
++	__le32 baseband_t1000;
++} __packed;
++
+ #endif /* __WILOCITY_WMI_H__ */
 -- 
 1.9.1
 
