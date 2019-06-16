@@ -6,32 +6,33 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50B0AC31E49
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:33:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6FA4C31E49
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:34:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3342921473
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:33:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B02121473
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:34:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726323AbfFPHdz (ORCPT
+        id S1726062AbfFPHeQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Jun 2019 03:33:55 -0400
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:59666 "EHLO
+        Sun, 16 Jun 2019 03:34:16 -0400
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:36718 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725992AbfFPHdz (ORCPT
+        by vger.kernel.org with ESMTP id S1725874AbfFPHeP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Jun 2019 03:33:55 -0400
+        Sun, 16 Jun 2019 03:34:15 -0400
 Received: from ironmsg02-ams.qualcomm.com ([10.251.56.3])
   by alexa-out-ams-02.qualcomm.com with ESMTP; 16 Jun 2019 09:26:15 +0200
-X-IronPort-AV: E=McAfee;i="6000,8403,9289"; a="8499838"
+X-IronPort-AV: E=McAfee;i="6000,8403,9289"; a="8499831"
 Received: from lx-merez1.mea.qualcomm.com ([10.18.173.103])
-  by ironmsg02-ams.qualcomm.com with ESMTP; 16 Jun 2019 09:26:14 +0200
+  by ironmsg02-ams.qualcomm.com with ESMTP; 16 Jun 2019 09:26:10 +0200
 From:   Maya Erez <merez@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 08/11] wil6210: publish max_msdu_size to FW on BCAST ring
-Date:   Sun, 16 Jun 2019 10:26:04 +0300
-Message-Id: <1560669967-23706-9-git-send-email-merez@codeaurora.org>
+Cc:     Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 01/11] wil6210: do not reset FW in STA to P2P client interface switch
+Date:   Sun, 16 Jun 2019 10:25:57 +0300
+Message-Id: <1560669967-23706-2-git-send-email-merez@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1560669967-23706-1-git-send-email-merez@codeaurora.org>
 References: <1560669967-23706-1-git-send-email-merez@codeaurora.org>
@@ -40,26 +41,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set max_msdu_size in WMI_BCAST_DESC_RING_ADD_CMD to allow FW
-to optimize the buffers allocation for bcast packets.
+From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
 
+Currently the FW is reset on every interface type change, because
+of various FW bugs.
+FW reset is not required when switching from STA to P2P client, hence
+can be skipped.
+
+Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 298c918..cacafab 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -3835,6 +3835,7 @@ int wil_wmi_bcast_desc_ring_add(struct wil6210_vif *vif, int ring_id)
- 			.ring_size = cpu_to_le16(ring->size),
- 			.ring_id = ring_id,
- 		},
-+		.max_msdu_size = cpu_to_le16(wil_mtu2macbuf(mtu_max)),
- 		.status_ring_id = wil->tx_sring_idx,
- 		.encap_trans_type = WMI_VRING_ENC_TYPE_802_3,
- 	};
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index e9780fc..1a4223f 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -643,6 +643,16 @@ static int wil_cfg80211_del_iface(struct wiphy *wiphy,
+ 	return rc;
+ }
+ 
++static bool wil_is_safe_switch(enum nl80211_iftype from,
++			       enum nl80211_iftype to)
++{
++	if (from == NL80211_IFTYPE_STATION &&
++	    to == NL80211_IFTYPE_P2P_CLIENT)
++		return true;
++
++	return false;
++}
++
+ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 				     struct net_device *ndev,
+ 				     enum nl80211_iftype type,
+@@ -668,7 +678,8 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 	 * because it can cause significant disruption
+ 	 */
+ 	if (!wil_has_other_active_ifaces(wil, ndev, true, false) &&
+-	    netif_running(ndev) && !wil_is_recovery_blocked(wil)) {
++	    netif_running(ndev) && !wil_is_recovery_blocked(wil) &&
++	    !wil_is_safe_switch(wdev->iftype, type)) {
+ 		wil_dbg_misc(wil, "interface is up. resetting...\n");
+ 		mutex_lock(&wil->mutex);
+ 		__wil_down(wil);
 -- 
 1.9.1
 
