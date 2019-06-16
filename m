@@ -2,71 +2,81 @@ Return-Path: <SRS0=78ty=UP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D67CDC31E49
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:32:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F0E4C31E49
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:33:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B56A121473
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:32:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CEB221473
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jun 2019 07:33:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726068AbfFPHcy (ORCPT
+        id S1726147AbfFPHc4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Jun 2019 03:32:54 -0400
+        Sun, 16 Jun 2019 03:32:56 -0400
 Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:36278 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725860AbfFPHcy (ORCPT
+        by vger.kernel.org with ESMTP id S1726069AbfFPHc4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Jun 2019 03:32:54 -0400
+        Sun, 16 Jun 2019 03:32:56 -0400
 Received: from ironmsg02-ams.qualcomm.com ([10.251.56.3])
-  by alexa-out-ams-02.qualcomm.com with ESMTP; 16 Jun 2019 09:26:15 +0200
-X-IronPort-AV: E=McAfee;i="6000,8403,9289"; a="8499832"
+  by alexa-out-ams-02.qualcomm.com with ESMTP; 16 Jun 2019 09:26:14 +0200
+X-IronPort-AV: E=McAfee;i="6000,8403,9289"; a="8499830"
 Received: from lx-merez1.mea.qualcomm.com ([10.18.173.103])
-  by ironmsg02-ams.qualcomm.com with ESMTP; 16 Jun 2019 09:26:11 +0200
+  by ironmsg02-ams.qualcomm.com with ESMTP; 16 Jun 2019 09:26:09 +0200
 From:   Maya Erez <merez@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Ahmad Masri <amasri@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 02/11] wil6210: enlarge Tx status ring size
-Date:   Sun, 16 Jun 2019 10:25:58 +0300
-Message-Id: <1560669967-23706-3-git-send-email-merez@codeaurora.org>
+Cc:     Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH 00/11] wil6210 patches
+Date:   Sun, 16 Jun 2019 10:25:56 +0300
+Message-Id: <1560669967-23706-1-git-send-email-merez@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1560669967-23706-1-git-send-email-merez@codeaurora.org>
-References: <1560669967-23706-1-git-send-email-merez@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ahmad Masri <amasri@codeaurora.org>
+The following set of patces include multiple wil6210 bug fixes.
 
-With multiple clients and in high throughput scenarios, Tx status ring
-can get full and become a bottleneck in Tx transmission.
-Set the default Tx status ring size order to 13, previous value was 12.
-This will double the status ring size from 4K entries to 8K entries.
+Ahmad Masri (4):
+  wil6210: enlarge Tx status ring size
+  wil6210: increase the frequency of status ring hw tail update
+  wil6210: set WIL_WMI_CALL_GENERAL_TO_MS as wmi_call timeout
+  wil6210: drop old event after wmi_call timeout
 
-Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/txrx_edma.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Alexei Avshalom Lazar (3):
+  wil6210: do not reset FW in STA to P2P client interface switch
+  wil6210: Add support for setting RBUFCAP configuration
+  wil6210: update cid boundary check of wil_find_cid/_by_idx()
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.h b/drivers/net/wireless/ath/wil6210/txrx_edma.h
-index bb4ff28..e9e6ea9 100644
---- a/drivers/net/wireless/ath/wil6210/txrx_edma.h
-+++ b/drivers/net/wireless/ath/wil6210/txrx_edma.h
-@@ -24,7 +24,7 @@
- #define WIL_SRING_SIZE_ORDER_MAX	(WIL_RING_SIZE_ORDER_MAX)
- /* RX sring order should be bigger than RX ring order */
- #define WIL_RX_SRING_SIZE_ORDER_DEFAULT	(12)
--#define WIL_TX_SRING_SIZE_ORDER_DEFAULT	(12)
-+#define WIL_TX_SRING_SIZE_ORDER_DEFAULT	(14)
- #define WIL_RX_BUFF_ARR_SIZE_DEFAULT (2600)
- 
- #define WIL_DEFAULT_RX_STATUS_RING_ID 0
+Dedy Lansky (1):
+  wil6210: fix printout in wil_read_pmccfg
+
+Maya Erez (2):
+  wil6210: clear FW and ucode log address
+  wil6210: publish max_msdu_size to FW on BCAST ring
+
+Tzahi Sabo (1):
+  wil6210: add support for reading multiple RFs temperature via debugfs
+
+ drivers/net/wireless/ath/wil6210/cfg80211.c   |  22 ++++-
+ drivers/net/wireless/ath/wil6210/debugfs.c    |  88 +++++++++++++++---
+ drivers/net/wireless/ath/wil6210/main.c       |  19 +++-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c   |   1 +
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |  31 +++----
+ drivers/net/wireless/ath/wil6210/txrx.c       |   9 +-
+ drivers/net/wireless/ath/wil6210/txrx_edma.c  |  16 +++-
+ drivers/net/wireless/ath/wil6210/txrx_edma.h  |   2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h    |   6 ++
+ drivers/net/wireless/ath/wil6210/wmi.c        | 127 ++++++++++++++++++++++----
+ drivers/net/wireless/ath/wil6210/wmi.h        |  47 ++++++++--
+ 11 files changed, 297 insertions(+), 71 deletions(-)
+
 -- 
 1.9.1
 
