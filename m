@@ -2,29 +2,29 @@ Return-Path: <SRS0=/kiQ=UQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B00D1C31E44
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 06:12:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2666FC31E44
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 06:14:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9227720673
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 06:12:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 088502080A
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 06:14:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725837AbfFQGMY (ORCPT
+        id S1725776AbfFQGOp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jun 2019 02:12:24 -0400
-Received: from mx2.suse.de ([195.135.220.15]:42928 "EHLO mx1.suse.de"
+        Mon, 17 Jun 2019 02:14:45 -0400
+Received: from mx2.suse.de ([195.135.220.15]:43606 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725372AbfFQGMY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jun 2019 02:12:24 -0400
+        id S1725280AbfFQGOp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jun 2019 02:14:45 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id EB1BEAFE3;
-        Mon, 17 Jun 2019 06:12:22 +0000 (UTC)
-Date:   Mon, 17 Jun 2019 08:12:22 +0200
-Message-ID: <s5h8su0d9kp.wl-tiwai@suse.de>
+        by mx1.suse.de (Postfix) with ESMTP id 6BC56AE07;
+        Mon, 17 Jun 2019 06:14:44 +0000 (UTC)
+Date:   Mon, 17 Jun 2019 08:14:44 +0200
+Message-ID: <s5h7e9kd9gr.wl-tiwai@suse.de>
 From:   Takashi Iwai <tiwai@suse.de>
 To:     Brian Norris <briannorris@chromium.org>
 Cc:     Ganapathi Bhat <gbhat@marvell.com>,
@@ -34,9 +34,10 @@ Cc:     Ganapathi Bhat <gbhat@marvell.com>,
         <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
         Takashi Iwai <tiwai@suse.de>,
         Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH 5.2 1/2] mwifiex: Don't abort on small, spec-compliant vendor IEs
-In-Reply-To: <20190615001321.241808-1-briannorris@chromium.org>
+Subject: Re: [PATCH 2/2] mwifiex: use 'total_ie_len' in mwifiex_update_bss_desc_with_ie()
+In-Reply-To: <20190615001321.241808-2-briannorris@chromium.org>
 References: <20190615001321.241808-1-briannorris@chromium.org>
+        <20190615001321.241808-2-briannorris@chromium.org>
 User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI/1.14.6 (Maruoka)
  FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 Emacs/25.3
  (x86_64-suse-linux-gnu) MULE/6.0 (HANACHIRUSATO)
@@ -47,33 +48,18 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 15 Jun 2019 02:13:20 +0200,
+On Sat, 15 Jun 2019 02:13:21 +0200,
 Brian Norris wrote:
 > 
-> Per the 802.11 specification, vendor IEs are (at minimum) only required
-> to contain an OUI. A type field is also included in ieee80211.h (struct
-> ieee80211_vendor_ie) but doesn't appear in the specification. The
-> remaining fields (subtype, version) are a convention used in WMM
-> headers.
+> This is clearer than copy/pasting the magic number '+ 2' around, and it
+> even saves the need for one existing comment.
 > 
-> Thus, we should not reject vendor-specific IEs that have only the
-> minimum length (3 bytes) -- we should skip over them (since we only want
-> to match longer IEs, that match either WMM or WPA formats). We can
-> reject elements that don't have the minimum-required 3 byte OUI.
-> 
-> While we're at it, move the non-standard subtype and version fields into
-> the WMM structs, to avoid this confusion in the future about generic
-> "vendor header" attributes.
-> 
-> Fixes: 685c9b7750bf ("mwifiex: Abort at too short BSS descriptor element")
 > Cc: Takashi Iwai <tiwai@suse.de>
 > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
-> It appears that commit 685c9b7750bf is on its way to 5.2, so I labeled
-> this bugfix for 5.2 as well.
 
-Thanks for catching this.
 Reviewed-by: Takashi Iwai <tiwai@suse.de>
 
+
+thanks,
 
 Takashi
