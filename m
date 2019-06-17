@@ -2,106 +2,113 @@ Return-Path: <SRS0=/kiQ=UQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB6B8C31E44
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 07:38:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5282C31E53
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 07:44:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE9882064A
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 07:38:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9CC921995
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 07:44:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jso8wdaI";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jso8wdaI"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aPPH25yI";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aPPH25yI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727537AbfFQHie (ORCPT
+        id S1726405AbfFQHoY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jun 2019 03:38:34 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:60910 "EHLO
+        Mon, 17 Jun 2019 03:44:24 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:34880 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725826AbfFQHid (ORCPT
+        with ESMTP id S1725826AbfFQHoX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jun 2019 03:38:33 -0400
+        Mon, 17 Jun 2019 03:44:23 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 892AC6020A; Mon, 17 Jun 2019 07:38:33 +0000 (UTC)
+        id E3E6460A44; Mon, 17 Jun 2019 07:44:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1560757113;
-        bh=4zwy2dPQuSTet8S1EGgrunmmJm4kL4MEEtL33hgHrUM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=jso8wdaIbYRNrmE1jFazvWo1dUOcY8DogJwSfy7RTtrkpTvfKovU35104/SfEGef5
-         OxQimJyRt/znfRF+Opee+NqAYh2TE/tx6RO2B+XEeS8Fgd8zYCtKMTUqErcZD0YhOX
-         pUifjJpPI7YhRvt33vLkt3tHHuM1Pirb0+HGG1WI=
-Received: from localhost.localdomain (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        s=default; t=1560757462;
+        bh=Aenf+RXfbj5RyVkcFJ9IyGNg4Qewwd+uSbm54mHar40=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=aPPH25yIRrzE1LFahKN8Lh5dxfRHYl+Y7UyF9Qm6o92zBPiSrNw6zj1DBg32PDrfa
+         +bpio/2cwWakTG2A/aQpsZwRGKI8ZTVJb5lH7KUJvtNiskh4UTpOxNdJlP/g1KbtSB
+         BToLNB+1clr0ByeaN2sdcGys3VY92ZSpMA0QkU+4=
+Received: from x230.qca.qualcomm.com (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: wgong@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 35CDA606FC;
-        Mon, 17 Jun 2019 07:38:31 +0000 (UTC)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2A50A602DD;
+        Mon, 17 Jun 2019 07:44:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1560757113;
-        bh=4zwy2dPQuSTet8S1EGgrunmmJm4kL4MEEtL33hgHrUM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=jso8wdaIbYRNrmE1jFazvWo1dUOcY8DogJwSfy7RTtrkpTvfKovU35104/SfEGef5
-         OxQimJyRt/znfRF+Opee+NqAYh2TE/tx6RO2B+XEeS8Fgd8zYCtKMTUqErcZD0YhOX
-         pUifjJpPI7YhRvt33vLkt3tHHuM1Pirb0+HGG1WI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 35CDA606FC
+        s=default; t=1560757462;
+        bh=Aenf+RXfbj5RyVkcFJ9IyGNg4Qewwd+uSbm54mHar40=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=aPPH25yIRrzE1LFahKN8Lh5dxfRHYl+Y7UyF9Qm6o92zBPiSrNw6zj1DBg32PDrfa
+         +bpio/2cwWakTG2A/aQpsZwRGKI8ZTVJb5lH7KUJvtNiskh4UTpOxNdJlP/g1KbtSB
+         BToLNB+1clr0ByeaN2sdcGys3VY92ZSpMA0QkU+4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2A50A602DD
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
-From:   Wen Gong <wgong@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] ath10k: add mic bytes for pmf management packet
-Date:   Mon, 17 Jun 2019 15:37:59 +0800
-Message-Id: <1560757079-19266-1-git-send-email-wgong@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Nick Desaulniers <ndesaulniers@google.com>
+Cc:     Nathan Huckleberry <nhuck@google.com>, eliad@wizery.com,
+        arik@wizery.com, "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        clang-built-linux <clang-built-linux@googlegroups.com>
+Subject: Re: [PATCH] wl18xx: Fix Wunused-const-variable
+References: <20190614171713.89262-1-nhuck@google.com>
+        <CAKwvOd=jFYn=7NGPD8UDx3_g30qD+40bCjzmWJJSzmb6pNUusQ@mail.gmail.com>
+Date:   Mon, 17 Jun 2019 10:44:18 +0300
+In-Reply-To: <CAKwvOd=jFYn=7NGPD8UDx3_g30qD+40bCjzmWJJSzmb6pNUusQ@mail.gmail.com>
+        (Nick Desaulniers's message of "Fri, 14 Jun 2019 13:54:16 -0700")
+Message-ID: <87h88ofygd.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For PMF case, the action,deauth,disassoc management need to encrypt
-by hardware, it need to reserve 8 bytes for encryption, otherwise
-the packet will be sent out with error format, then PMF case will
-fail.
+Nick Desaulniers <ndesaulniers@google.com> writes:
 
-After add the 8 bytes, it will pass the PMF case.
+> On Fri, Jun 14, 2019 at 10:17 AM 'Nathan Huckleberry' via Clang Built
+> Linux <clang-built-linux@googlegroups.com> wrote:
+>>
+>> Clang produces the following warning
+>>
+>> drivers/net/wireless/ti/wl18xx/main.c:1850:43: warning: unused variable
+>> 'wl18xx_iface_ap_cl_limits' [-Wunused-const-variable] static const struct
+>> ieee80211_iface_limit wl18xx_iface_ap_cl_limits[] = { ^
+>> drivers/net/wireless/ti/wl18xx/main.c:1869:43: warning: unused variable
+>> 'wl18xx_iface_ap_go_limits' [-Wunused-const-variable] static const struct
+>> ieee80211_iface_limit wl18xx_iface_ap_go_limits[] = { ^
+>>
+>> The commit that added these variables never used them. Removing them.
+>
+> Previous thread, for context:
+> https://groups.google.com/forum/#!topic/clang-built-linux/1Lu1GT9ic94
+>
+> Looking at drivers/net/wireless/ti/wl18xx/main.c, there 4 globally
+> declared `struct ieee80211_iface_limit` but as your patch notes, only
+> 2 are used.  The thing is, their uses are in a `struct
+> ieee80211_iface_limit []`.
+>
+> Looking at
+> $ git blame drivers/net/wireless/ti/wl18xx/main.c -L 1850
+> points to
+> commit 7845af35e0de ("wlcore: add p2p device support")
+> Adding Eliad and Arik to the thread; it's not clear to me what the
+> these variables were supposed to do, but seeing as the code in
+> question was already dead, this is no functional change from a user's
+> perspective.  With that in mind:
+> Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+>
+> So I'd at least add the tag.
+> Fixes: 7845af35e0de ("wlcore: add p2p device support")
 
-Tested with QCA6174 SDIO with firmware
-WLAN.RMH.4.4.1-00005-QCARMSWP-1.
+I can't see any functional changes when applying this patch so I don't
+think a fixes line is needed, it's just cleanup.
 
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/htt_tx.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index d8e9cc0..7bef9d9 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -1236,6 +1236,7 @@ static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txm
- 	struct ath10k *ar = htt->ar;
- 	int res, data_len;
- 	struct htt_cmd_hdr *cmd_hdr;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
- 	struct htt_data_tx_desc *tx_desc;
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
- 	struct sk_buff *tmp_skb;
-@@ -1245,6 +1246,13 @@ static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txm
- 	u8 flags0 = 0;
- 	u16 flags1 = 0;
- 
-+	if ((ieee80211_is_action(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control) ||
-+	     ieee80211_is_disassoc(hdr->frame_control)) &&
-+	     ieee80211_has_protected(hdr->frame_control)) {
-+		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+	}
-+
- 	data_len = msdu->len;
- 
- 	switch (txmode) {
 -- 
-1.9.1
-
+Kalle Valo
