@@ -2,148 +2,161 @@ Return-Path: <SRS0=/kiQ=UQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5205C31E5B
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 20:02:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3627DC31E5B
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 22:47:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 73D472064A
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 20:02:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CF9A208C0
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 22:47:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="of2v7ANg"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n2EkBbCt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727419AbfFQUCZ (ORCPT
+        id S1728589AbfFQWr2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jun 2019 16:02:25 -0400
-Received: from mail-lf1-f68.google.com ([209.85.167.68]:34669 "EHLO
-        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726048AbfFQUCY (ORCPT
+        Mon, 17 Jun 2019 18:47:28 -0400
+Received: from merlin.infradead.org ([205.233.59.134]:40474 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725839AbfFQWr1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jun 2019 16:02:24 -0400
-Received: by mail-lf1-f68.google.com with SMTP id y198so7501455lfa.1;
-        Mon, 17 Jun 2019 13:02:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=B4P8y1ay39d+E4yB3whFfRjMbB7BKe2MvBm/2WeUpIM=;
-        b=of2v7ANgL9ex0bkfxQas0p6u4QAhgHfu5y1Y/3T039pKxnMxEKpETvUBNF+8c1SwzE
-         6jM+sSE/03uQiaK5khEyZjMn2Ut7hPZRVxfcfuB5s8/czVUudhGS8uBNby58nmRYHg69
-         jn8kPcsad2kZqqBr1UrtE+dhV6vvELpupT3ZxTaA8dppC/XbeeaIzyWX9rxSinYJr/AP
-         VuwG/cZSBh4kCIVhDAUFubuU7NFQ5//HE1i5I30jy3VIVYvNes3Ea6emUDfNfZbnW9gS
-         coS2IUV+LeoGPjZ/uwVAQAvVVDy6x/tYs5jZx5qfrHDh+buF7MNVzMCuWil7YJPZqgus
-         iXPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=B4P8y1ay39d+E4yB3whFfRjMbB7BKe2MvBm/2WeUpIM=;
-        b=RsV6ksv+6p+LaMAaWrhNTiYTpF7Ga08Q3+AFHyiVtB1KVaeNZ8Y2wOwS69ZHnTlZx9
-         oztz0G3g+UJvmOGaB7gi75UbiJKW9ls4q3XtX/QFGoEgAR0EUlHEL51kbUjMZ22GNmXT
-         BD0s9orMUx3522lkbdE0KdI8jRhl/6QdGLD/I7JWDyFfOYrpupXx0z5ujWVgl8WKEWg0
-         eb3AmLuEb2D9il1+FIVkHEwE9YDFFB3I8z7smexQ8gHpCqi7ItcKy9/EQchh1bk0Fi3a
-         mfCQnUnafZinhhHskgc+wtUTvUGgH4fwMEowVSsm6k2XnrDwgkjS+dUglbe81dNOqLdC
-         LXhA==
-X-Gm-Message-State: APjAAAWnpYFXRnb/4iTO0Gq4t7BMnjxn6oUizsdzWi9Uew97utt37qoW
-        cqhjQOm3cuu+NcAX1zy/+oA=
-X-Google-Smtp-Source: APXvYqzALujpPOG2xk/DqMQhHr3m6lA+WF68otalfSbL7+uhlJM7kYppPXRpUxk4fkH0Eui/GOj7vg==
-X-Received: by 2002:a19:5007:: with SMTP id e7mr60072377lfb.76.1560801742672;
-        Mon, 17 Jun 2019 13:02:22 -0700 (PDT)
-Received: from localhost.localdomain (81-233-89-221-no75.tbcn.telia.com. [81.233.89.221])
-        by smtp.gmail.com with ESMTPSA id j90sm2245780ljb.29.2019.06.17.13.02.21
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Mon, 17 Jun 2019 13:02:22 -0700 (PDT)
-From:   Erik Stromdahl <erik.stromdahl@gmail.com>
-To:     johannes@sipsolutions.net, kvalo@codeaurora.org,
-        davem@davemloft.net, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-kernel@vger.kernel.org
-Cc:     Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH 1/2] mac80211: add tx dequeue function for process context
-Date:   Mon, 17 Jun 2019 22:01:39 +0200
-Message-Id: <20190617200140.6189-1-erik.stromdahl@gmail.com>
-X-Mailer: git-send-email 2.22.0
+        Mon, 17 Jun 2019 18:47:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=oWCvapawJTmHWfTi4W/xQzd/vam+JtASkBkdfBDmQPA=; b=n2EkBbCtepqSck3LcKcBk9ucLP
+        OopaIKVxH7Ft5pKUkNM6axeXE0K/dN0KlZBFHBkuZUjcuBojBVwA6eyj3zIf/SrSJ0AXP+ap36Tfr
+        X0WYpzcQ34E0H9clamwWKVPA2G5AqZgtlebPbdol2VZl3hzV0WHHKTyO/DPw8RjqxrUZIc7QdVFKM
+        vHCGFyYLYGCxZF9eADucfOb8FK17P9rwh5jOCnBGSKiVmNRqoUfswvbapl0LJeUcbgsSotAmzefsG
+        BuQwk3FdoCSOiq6Zwz2/pJMld3yRBwfY9eWtfMYCawPt2uqyoLPRXHwia2hme5jMcDzrgP6F97p9i
+        1TAbXIzA==;
+Received: from static-50-53-52-16.bvtn.or.frontiernet.net ([50.53.52.16] helo=midway.dunlab)
+        by merlin.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
+        id 1hd0P6-0004pi-Aw; Mon, 17 Jun 2019 22:47:08 +0000
+Subject: Re: [PATCH v3 2/7] lib/hexdump.c: Relax rowsize checks in
+ hex_dump_to_buffer
+To:     Alastair D'Silva <alastair@au1.ibm.com>, alastair@d-silva.org
+Cc:     Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Karsten Keil <isdn@linux-pingi.de>,
+        Jassi Brar <jassisinghbrar@gmail.com>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jose Abreu <Jose.Abreu@synopsys.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Benson Leung <bleung@chromium.org>,
+        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Petr Mladek <pmladek@suse.com>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        David Laight <David.Laight@ACULAB.COM>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-fsdevel@vger.kernel.org
+References: <20190617020430.8708-1-alastair@au1.ibm.com>
+ <20190617020430.8708-3-alastair@au1.ibm.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <94413756-c927-a4ca-dd59-47e3cc87d58d@infradead.org>
+Date:   Mon, 17 Jun 2019 15:47:03 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190617020430.8708-3-alastair@au1.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Since ieee80211_tx_dequeue() must not be called with softirqs enabled
-(i.e. from process context without proper disable of bottom halves),
-we add a wrapper that disables bottom halves before calling
-ieee80211_tx_dequeue()
+Hi,
+Just a comment style nit below...
 
-The new function is named ieee80211_tx_dequeue_ni() just as all other
-from-process-context versions found in mac80211.
+On 6/16/19 7:04 PM, Alastair D'Silva wrote:
+> From: Alastair D'Silva <alastair@d-silva.org>
+> 
+> This patch removes the hardcoded row limits and allows for
+> other lengths. These lengths must still be a multiple of
+> groupsize.
+> 
+> This allows structs that are not 16/32 bytes to display on
+> a single line.
+> 
+> This patch also expands the self-tests to test row sizes
+> up to 64 bytes (though they can now be arbitrarily long).
+> 
+> Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
+> ---
+>  lib/hexdump.c      | 48 ++++++++++++++++++++++++++++--------------
+>  lib/test_hexdump.c | 52 ++++++++++++++++++++++++++++++++++++++--------
+>  2 files changed, 75 insertions(+), 25 deletions(-)
+> 
+> diff --git a/lib/hexdump.c b/lib/hexdump.c
+> index 81b70ed37209..3943507bc0e9 100644
+> --- a/lib/hexdump.c
+> +++ b/lib/hexdump.c
 
-The documentation of ieee80211_tx_dequeue() is also updated so it
-mentions that the function should not be called from process context.
+> @@ -246,17 +248,29 @@ void print_hex_dump(const char *level, const char *prefix_str, int prefix_type,
+>  {
+>  	const u8 *ptr = buf;
+>  	int i, linelen, remaining = len;
+> -	unsigned char linebuf[32 * 3 + 2 + 32 + 1];
+> +	unsigned char *linebuf;
+> +	unsigned int linebuf_len;
+>  
+> -	if (rowsize != 16 && rowsize != 32)
+> -		rowsize = 16;
+> +	if (rowsize % groupsize)
+> +		rowsize -= rowsize % groupsize;
+> +
+> +	/* Worst case line length:
+> +	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte in, NULL
+> +	 */
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- include/net/mac80211.h | 26 ++++++++++++++++++++++++++
- net/mac80211/tx.c      |  2 ++
- 2 files changed, 28 insertions(+)
+According to Documentation/process/coding-style.rst:
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 72080d9d617e..c47990d8db79 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6251,10 +6251,36 @@ void ieee80211_unreserve_tid(struct ieee80211_sta *sta, u8 tid);
-  * but for the duration of the frame handling.
-  * However, also note that while in the wake_tx_queue() method,
-  * rcu_read_lock() is already held.
-+ *
-+ * softirqs must also be disabled when this function is called.
-+ * In process context, use ieee80211_tx_dequeue_ni() instead.
-  */
- struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 				     struct ieee80211_txq *txq);
- 
-+/**
-+ * ieee80211_tx_dequeue_ni - dequeue a packet from a software tx queue
-+ * (in process context)
-+ *
-+ * Like ieee80211_tx_dequeue() but can be called in process context
-+ * (internally disables bottom halves).
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @txq: pointer obtained from station or virtual interface, or from
-+ *	ieee80211_next_txq()
-+ */
-+static inline struct sk_buff *ieee80211_tx_dequeue_ni(struct ieee80211_hw *hw,
-+						      struct ieee80211_txq *txq)
-+{
-+	struct sk_buff *skb;
-+
-+	local_bh_disable();
-+	skb = ieee80211_tx_dequeue(hw, txq);
-+	local_bh_enable();
-+
-+	return skb;
-+}
-+
- /**
-  * ieee80211_next_txq - get next tx queue to pull packets from
-  *
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index dd220b977025..4bd0066ea7cd 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3550,6 +3550,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	ieee80211_tx_result r;
- 	struct ieee80211_vif *vif = txq->vif;
- 
-+	WARN_ON_ONCE(softirq_count() == 0);
-+
- begin:
- 	spin_lock_bh(&fq->lock);
- 
+The preferred style for long (multi-line) comments is:
+
+.. code-block:: c
+
+	/*
+	 * This is the preferred style for multi-line
+	 * comments in the Linux kernel source code.
+	 * Please use it consistently.
+	 *
+	 * Description:  A column of asterisks on the left side,
+	 * with beginning and ending almost-blank lines.
+	 */
+
+
+except in networking software.
+
+
+> +	linebuf_len = rowsize * 3 + 2 + rowsize + 1;
+> +	linebuf = kzalloc(linebuf_len, GFP_KERNEL);
+> +	if (!linebuf) {
+> +		printk("%s%shexdump: Could not alloc %u bytes for buffer\n",
+> +			level, prefix_str, linebuf_len);
+> +		return;
+> +	}
+
+
 -- 
-2.22.0
-
+~Randy
