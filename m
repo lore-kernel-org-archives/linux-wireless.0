@@ -2,238 +2,180 @@ Return-Path: <SRS0=fWKo=UR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AC67C31E5D
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A71FC31E51
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7888205F4
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7A9720645
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iuWMH3PH";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RBP34bad"
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="Sc0JgWbV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726308AbfFRGrO (ORCPT
+        id S1728877AbfFRGrm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Jun 2019 02:47:14 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:50846 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725934AbfFRGrO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jun 2019 02:47:14 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id EF35860C5F; Tue, 18 Jun 2019 05:27:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1560835669;
-        bh=DXP8MH8p4qbWHkuWmMNGC9R3LNhNFGRoAtOJ+2GOfyU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iuWMH3PHmy25TwshQ/p7kE8CRqvCklrUwJh/QOoQqgkQJDwyPHY09B+ULPbDATMfQ
-         1R+ldvsq8URxyqAazPgT2tIyHsQfsfT7dy5+V9FGZKLpdVOKe1SHGid5GOlEE0kY3F
-         dyyCNLWO8qxa2hAXrwFOv/GuYl7G2AsmS9RAqpJM=
-Received: from akolli-ThinkPad-L560.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: tamizhr@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6C05460C5F;
-        Tue, 18 Jun 2019 05:27:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1560835667;
-        bh=DXP8MH8p4qbWHkuWmMNGC9R3LNhNFGRoAtOJ+2GOfyU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RBP34badYufovQmP6OoK+V/JBQ8HVxmYDH0Gx2JP3UyJpoqoggufNtMv4871tKFmF
-         vsqSBpN9ZImZ/eXVez79Z2vRSwe8iSmhF8QICPDUVeoBtf3g5QhVp7cFtMHp0HQbKS
-         2WRFsqUjowle9ChpmytkT4MMhCkHAukfUrz8umII=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6C05460C5F
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
-From:   Tamizh chelvam <tamizhr@codeaurora.org>
-To:     johannes@sipsolutions.net, ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv6 6/9] mac80211: Add api to support configuring TID specific configuration
-Date:   Tue, 18 Jun 2019 10:57:09 +0530
-Message-Id: <1560835632-17405-7-git-send-email-tamizhr@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1560835632-17405-1-git-send-email-tamizhr@codeaurora.org>
-References: <1560835632-17405-1-git-send-email-tamizhr@codeaurora.org>
+        Tue, 18 Jun 2019 02:47:42 -0400
+Received: from mail-eopbgr780119.outbound.protection.outlook.com ([40.107.78.119]:1258
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726579AbfFRGrl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Jun 2019 02:47:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OsedbcA4qMGfLe0gMs71IZs977j/9bgRay6RYA7JRwM=;
+ b=Sc0JgWbVWExYac61d0mqqGrcQZPXoXnetNlBQXdQ9xd4qL5wdvAfKe+I9JzU3SS9q41aohyWJWFiKzQ/1jlYxoHLgYAmVeMWNSeYkmwl7Fmnl1vcJ9DWlYNitlP7AvM/jE1feC5W2epWYTJWpbVIE70E1KIQ346N23g7HoEjh4k=
+Received: from DM6PR06MB5804.namprd06.prod.outlook.com (20.179.161.141) by
+ DM6PR06MB6345.namprd06.prod.outlook.com (20.178.28.19) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1987.15; Tue, 18 Jun 2019 05:33:21 +0000
+Received: from DM6PR06MB5804.namprd06.prod.outlook.com
+ ([fe80::8cc7:f8b2:c735:8992]) by DM6PR06MB5804.namprd06.prod.outlook.com
+ ([fe80::8cc7:f8b2:c735:8992%4]) with mapi id 15.20.1987.014; Tue, 18 Jun 2019
+ 05:33:21 +0000
+From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+To:     Marcel Holtmann <marcel@holtmann.org>
+CC:     Stefan Wahren <wahrenst@gmx.net>,
+        Stanley Hsu <Stanley.Hsu@cypress.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>
+Subject: Re: wpa_supplicant 2.8 fails in brcmf_cfg80211_set_pmk
+Thread-Topic: wpa_supplicant 2.8 fails in brcmf_cfg80211_set_pmk
+Thread-Index: AQHVI5wQ1zsNjjpn8Ea8hZQgX/OX3aac9kYAgAKJGwCAAGzAAIAA+0mA
+Date:   Tue, 18 Jun 2019 05:33:20 +0000
+Message-ID: <d6bfe313-3aa7-82bb-dfac-25e6261dbf63@cypress.com>
+References: <06f7bda7-eeaf-536b-a583-7c9bc5f681f5@gmx.net>
+ <9da02861-9151-9700-2c09-b312d74155fa@gmx.net>
+ <605ea0a8-3303-b810-6223-18ccc7eb7af4@cypress.com>
+ <2AF2E0A7-23F0-4FFE-A658-4906FF546199@holtmann.org>
+In-Reply-To: <2AF2E0A7-23F0-4FFE-A658-4906FF546199@holtmann.org>
+Reply-To: Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+Accept-Language: en-US, zh-TW
+Content-Language: en-US
+X-MS-Has-Attach: yes
+X-MS-TNEF-Correlator: 
+x-originating-ip: [61.222.14.99]
+user-agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
+x-clientproxiedby: TYAPR01CA0112.jpnprd01.prod.outlook.com
+ (2603:1096:404:2a::28) To DM6PR06MB5804.namprd06.prod.outlook.com
+ (2603:10b6:5:1a6::13)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: c4691709-a378-4c54-cefe-08d6f3ae793e
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(4618075)(2017052603328)(49563074)(7193020);SRVR:DM6PR06MB6345;
+x-ms-traffictypediagnostic: DM6PR06MB6345:
+x-ms-exchange-purlcount: 2
+x-microsoft-antispam-prvs: <DM6PR06MB63452062D7521CDB2DDFBBAEBBEA0@DM6PR06MB6345.namprd06.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-forefront-prvs: 007271867D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(346002)(396003)(39860400002)(376002)(366004)(199004)(189003)(3846002)(43066004)(66556008)(102836004)(6506007)(386003)(6916009)(5660300002)(5024004)(256004)(14444005)(446003)(478600001)(64126003)(2616005)(476003)(71200400001)(73956011)(66476007)(66946007)(64756008)(486006)(66446008)(26005)(53546011)(71190400001)(11346002)(7736002)(99286004)(305945005)(65826007)(52116002)(186003)(86362001)(76176011)(31696002)(8936002)(6436002)(81156014)(81166006)(2906002)(6116002)(8676002)(6246003)(229853002)(58126008)(66616009)(36756003)(54906003)(3450700001)(31686004)(6512007)(6306002)(316002)(25786009)(4326008)(53936002)(6486002)(72206003)(966005)(107886003)(99936001)(14454004)(65956001)(66066001)(65806001)(68736007);DIR:OUT;SFP:1102;SCL:1;SRVR:DM6PR06MB6345;H:DM6PR06MB5804.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: cypress.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: uPgs3DiAA4tL3AB3cvUFURFTy2dmY+1H7n6K9aj45tEByamRVBzAsoJyi9oVtmbmR48J3cRZ+s1jDn9JsC3ddoDg5WFPjGX1Ck4wRePD5C8ZHNfFk+pFvzB+l43Vyro9d8syPBGvpfnGdWfknsWFIDHQNOUBqWrCbSEvWxtX6lxvVhEG7amZHFzSpDxKlADulP0RgQA/tMruuZp1rCqnHXOECGTRGFd2z/aRhb6P4yMP+0TBWyiPljwpaeFpEAzQkGz5rApMneHXAvDpJ4Wd2SXcYD0OjLtUeH1aiHGla1EO2O6oEzoVKJ+O6IHmmk60MxsDgmkJl//l4BaZUjqeiudnZTlUZeCOwfFgOEXeDl+4pPXz9RWh6H6p5/ogbVdyTEGGHOpTzk19Ea2z+liRCKPeJBq9O9T6Rg0HDqKD3zA=
+Content-Type: multipart/mixed;
+        boundary="_002_d6bfe3133aa782bbdfac25e6261dbf63cypresscom_"
+MIME-Version: 1.0
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c4691709-a378-4c54-cefe-08d6f3ae793e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Jun 2019 05:33:21.0098
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: chln@cypress.com
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR06MB6345
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Implement drv_set_tid_config api to allow TID specific
-configuration. This per-TID configuration
-will be applied for all the connected stations when MAC is NULL.
+--_002_d6bfe3133aa782bbdfac25e6261dbf63cypresscom_
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <BBF08493617BA248A15598F39F760B4D@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- include/net/mac80211.h    |   38 ++++++++++++++++++++++++++++++++++++++
- net/mac80211/cfg.c        |   28 ++++++++++++++++++++++++++++
- net/mac80211/driver-ops.h |   15 +++++++++++++++
- 3 files changed, 81 insertions(+)
+DQoNCk9uIDA2LzE3LzIwMTkgMTA6MzMsIE1hcmNlbCBIb2x0bWFubiB3cm90ZToNCj4gSGkgQ2hp
+LWhzaWVuLA0KPiANCj4+Pj4gaSB3YXMgYWJsZSB0byByZXByb2R1Y2UgYW4gKG1heWJlIG9sZGVy
+IGlzc3VlKSB3aXRoIDQtd2F5IGhhbmRzaGFrZQ0KPj4+PiBvZmZsb2FkaW5nIGZvciA4MDIuMVgg
+aW4gdGhlIGJyY21mbWFjIGRyaXZlci4gTXkgc2V0dXAgY29uc2lzdHMgb2YNCj4+Pj4gUmFzcGJl
+cnJ5IFBpIDMgQiAoY3VycmVudCBsaW51eC1uZXh0LCBhcm02NC9kZWZjb25maWcpIG9uIFNUQSBz
+aWRlIGFuZCBhDQo+Pj4+IFJhc3BiZXJyeSBQaSAzIEErIChMaW51eCA0LjE5KSBvbiBBUCBzaWRl
+Lg0KPj4+DQo+Pj4gTG9va3MgbGlrZSBSYXNwYmVycnkgUGkgaXNuJ3QgdGhlIG9ubHkgYWZmZWN0
+ZWQgcGxhdGZvcm0gWzNdLCBbNF0uDQo+Pj4NCj4+PiBbM10gLSBodHRwczovL2J1Z3ppbGxhLnJl
+ZGhhdC5jb20vc2hvd19idWcuY2dpP2lkPTE2NjU2MDgNCj4+PiBbNF0gLSBodHRwczovL2J1Z3pp
+bGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTIwMjUyMQ0KPj4NCj4+IFN0ZWZhbiwNCj4+
+DQo+PiBDb3VsZCB5b3UgcGxlYXNlIHRyeSB0aGUgYXR0YWNoZWQgcGF0Y2ggZm9yIHlvdXIgd3Bh
+X3N1cHBsaWNhbnQ/IFdlJ2xsDQo+PiB1cHN0cmVhbSBpZiBpdCB3b3JrcyBmb3IgeW91Lg0KPiAN
+Cj4gSSBob3BlIHRoYXQgc29tZW9uZSBpcyBhbHNvIHByb3ZpZGluZyBhIGtlcm5lbCBwYXRjaCB0
+byBmaXggdGhlIGlzc3VlLiBIYWNraW5nIGFyb3VuZCBhIGtlcm5lbCBpc3N1ZSBpbiB1c2Vyc3Bh
+Y2UgaXMgbm90IGVub3VnaC4gRml4IHRoZSByb290IGNhdXNlIGluIHRoZSBrZXJuZWwuDQoNCk1h
+cmNlbCwNCg0KVGhpcyBpcyBhIGtlcm5lbCB3YXJuaW5nIGZvciBpbnZhbGlkIGFwcGxpY2F0aW9u
+IFBNSyBzZXQgYWN0aW9ucywgc28gdGhlIA0KZml4IGlzIHRvIG9ubHkgc2V0IFBNSyB0byB3aWZp
+IGRyaXZlciB3aGVuIDQtd2F5IGlzIG9mZmxvYWRlZC4gSSB0aGluayANCkFyZW5kIGFkZGVkIHRo
+ZSBXQVJOX09OKCkgaW50ZW50aW9uYWxseSB0byBjYXRjaCBhcHBsaWNhdGlvbiBtaXN1c2Ugb2Yg
+DQpQTUsgc2V0dGluZy4NCg0KWW91IG1heSBhbHNvIHJlbW92ZSB0aGUgd2FybmluZ3Mgd2l0aCB0
+aGUgYXR0YWNoZWQgcGF0Y2gsIGJ1dCBsZXQncyBzZWUgDQp3aGF0IEFyZW5kIHNheXMgZmlyc3Qu
+DQoNCg0KQXJlbmQsDQoNCkFueSBjb21tZW50Pw0KDQoNClJlZ2FyZHMsDQpDaGktaHNpZW4gTGlu
+DQoNCg0KPiANCj4gUmVnYXJkcw0KPiANCj4gTWFyY2VsDQo+IA0KPiAuDQo+IA0K
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4411120..f97c755 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1563,6 +1563,8 @@ enum ieee80211_vif_flags {
- 	IEEE80211_VIF_GET_NOA_UPDATE		= BIT(3),
- };
- 
-+#define IEEE80211_TID_MAX	8
-+
- /**
-  * struct ieee80211_vif - per-interface data
-  *
-@@ -1600,6 +1602,13 @@ enum ieee80211_vif_flags {
-  * @txq: the multicast data TX queue (if driver uses the TXQ abstraction)
-  * @txqs_stopped: per AC flag to indicate that intermediate TXQs are stopped,
-  *	protected by fq->lock.
-+ * @noack: per-TID noack policy.
-+ * @retry_short: per-TID retry count.
-+ * @retry_long: per-TID count.
-+ * @ampdu: per-TID Aggregation-MPDU.
-+ * @rate_ctrl: per-TID tx rate control type.
-+ * @rate_code: per-TID tx rate code mask.
-+ * @rtscts: per-TID RTSCTS policy.
-  */
- struct ieee80211_vif {
- 	enum nl80211_iftype type;
-@@ -1626,6 +1635,14 @@ struct ieee80211_vif {
- 
- 	bool txqs_stopped[IEEE80211_NUM_ACS];
- 
-+	int noack[IEEE80211_TID_MAX];
-+	int retry_short[IEEE80211_TID_MAX];
-+	int retry_long[IEEE80211_TID_MAX];
-+	int ampdu[IEEE80211_TID_MAX];
-+	u8 rate_ctrl[IEEE80211_TID_MAX];
-+	u32 rate_code[IEEE80211_TID_MAX];
-+	u8 rtscts[IEEE80211_TID_MAX];
-+
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-@@ -1960,6 +1977,12 @@ struct ieee80211_sta_txpwr {
-  * @max_tid_amsdu_len: Maximum A-MSDU size in bytes for this TID
-  * @txq: per-TID data TX queues (if driver uses the TXQ abstraction); note that
-  *	the last entry (%IEEE80211_NUM_TIDS) is used for non-data frames
-+ * @noack: per-TID noack policy.
-+ * @retry_short: per-TID retry count.
-+ * @retry_long: per-TID count.
-+ * @ampdu: per-TID Aggregation-MPDU.
-+ * @rate_ctrl: per-TID tx rate control type.
-+ * @rtscts: per-TID RTSCTS policy.
-  */
- struct ieee80211_sta {
- 	u32 supp_rates[NUM_NL80211_BANDS];
-@@ -2004,6 +2027,13 @@ struct ieee80211_sta {
- 
- 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
- 
-+	int noack[IEEE80211_TID_MAX];
-+	int retry_short[IEEE80211_TID_MAX];
-+	int retry_long[IEEE80211_TID_MAX];
-+	int ampdu[IEEE80211_TID_MAX];
-+	u8 rate_ctrl[IEEE80211_TID_MAX];
-+	u8 rtscts[IEEE80211_TID_MAX];
-+
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-@@ -3743,6 +3773,10 @@ enum ieee80211_reconfig_type {
-  *
-  * @start_pmsr: start peer measurement (e.g. FTM) (this call can sleep)
-  * @abort_pmsr: abort peer measurement (this call can sleep)
-+ * @set_tid_config: TID specific configurations will be applied for a particular
-+ *	station when @sta is non-NULL. When @sta is %NULL, then the configuration
-+ *	will be for all the connected clients in the vif.
-+ *	This callback may sleep.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -4043,6 +4077,10 @@ struct ieee80211_ops {
- 			  struct cfg80211_pmsr_request *request);
- 	void (*abort_pmsr)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			   struct cfg80211_pmsr_request *request);
-+	int (*set_tid_config)(struct ieee80211_hw *hw,
-+			      struct ieee80211_vif *vif,
-+			      struct ieee80211_sta *sta,
-+			      struct ieee80211_tid_config *tid_conf);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fcf1dfc..55c08af 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3940,6 +3940,33 @@ static int ieee80211_get_txq_stats(struct wiphy *wiphy,
- 	return drv_abort_pmsr(local, sdata, request);
- }
- 
-+static int ieee80211_set_tid_config(struct wiphy *wiphy,
-+				    struct net_device *dev,
-+				    struct ieee80211_tid_config *tid_conf)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+	int ret;
-+
-+	if (!sdata->local->ops->set_tid_config)
-+		return -EOPNOTSUPP;
-+
-+	if (!tid_conf->peer)
-+		return drv_set_tid_config(sdata->local, sdata, NULL, tid_conf);
-+
-+	mutex_lock(&sdata->local->sta_mtx);
-+
-+	sta = sta_info_get_bss(sdata, tid_conf->peer);
-+	if (!sta) {
-+		mutex_unlock(&sdata->local->sta_mtx);
-+		return -ENOENT;
-+	}
-+
-+	ret = drv_set_tid_config(sdata->local, sdata, &sta->sta, tid_conf);
-+	mutex_unlock(&sdata->local->sta_mtx);
-+	return ret;
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -4038,4 +4065,5 @@ static int ieee80211_get_txq_stats(struct wiphy *wiphy,
- 	.start_pmsr = ieee80211_start_pmsr,
- 	.abort_pmsr = ieee80211_abort_pmsr,
- 	.probe_mesh_link = ieee80211_probe_mesh_link,
-+	.set_tid_config = ieee80211_set_tid_config,
- };
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index c2d8b54..d1ffca5 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1356,4 +1356,19 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
-+static inline int drv_set_tid_config(struct ieee80211_local *local,
-+				     struct ieee80211_sub_if_data *sdata,
-+				     struct ieee80211_sta *sta,
-+				     struct ieee80211_tid_config *tid_conf)
-+{
-+	int ret;
-+
-+	might_sleep();
-+	ret = local->ops->set_tid_config(&local->hw, &sdata->vif, sta,
-+					 tid_conf);
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
--- 
-1.7.9.5
+--_002_d6bfe3133aa782bbdfac25e6261dbf63cypresscom_
+Content-Type: text/plain;
+	name="0001-brcmfmac-remove-WARN_ON-for-invalid-pmk-set.patch"
+Content-Description: 0001-brcmfmac-remove-WARN_ON-for-invalid-pmk-set.patch
+Content-Disposition: attachment;
+	filename="0001-brcmfmac-remove-WARN_ON-for-invalid-pmk-set.patch"; size=1896;
+	creation-date="Tue, 18 Jun 2019 05:33:20 GMT";
+	modification-date="Tue, 18 Jun 2019 05:33:20 GMT"
+Content-ID: <955D8DC093821148957E14FBF251E9BE@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 
+RnJvbSBhNTRjMGU3ZGNkODE1YTVlZjMxYmRiYWJlNDQ3OTJmMmNlZGNlMGUzIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBDaGktSHNpZW4gTGluIDxjaGktaHNpZW4ubGluQGN5cHJlc3Mu
+Y29tPgpEYXRlOiBNb24sIDE3IEp1biAyMDE5IDIzOjQyOjIzIC0wNTAwClN1YmplY3Q6IFtQQVRD
+SF0gYnJjbWZtYWM6IHJlbW92ZSBXQVJOX09OKCkgZm9yIGludmFsaWQgcG1rIHNldAoKMjUyNmZm
+MjFhYTc3YygiYnJjbWZtYWM6IHN1cHBvcnQgNC13YXkgaGFuZHNoYWtlIG9mZmxvYWRpbmcgZm9y
+IDgwMi4xWCIpCmFkZGVkIFdBUk5fT04oKSB0byBjYXRjaCBpbnZhbGlkIFBNSyB1c2FnZS4gUmVt
+b3ZlIHRoZW0gYW5kIGtlZXAgdGhlCmVycm9yIHJldHVybiBFSU5WQUwuCgpTaWduZWQtb2ZmLWJ5
+OiBDaGktSHNpZW4gTGluIDxjaGktaHNpZW4ubGluQGN5cHJlc3MuY29tPgotLS0KIGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9jZmc4MDIxMS5jIHwgNiAr
+KystLS0KIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCgpk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21m
+bWFjL2NmZzgwMjExLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEv
+YnJjbWZtYWMvY2ZnODAyMTEuYwppbmRleCBlOWM4YjIxMDkxYTEuLjA4YjVmYWQzODMwNyAxMDA2
+NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFj
+L2NmZzgwMjExLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjEx
+L2JyY21mbWFjL2NmZzgwMjExLmMKQEAgLTE5MzgsNyArMTkzOCw3IEBAIGJyY21mX2NmZzgwMjEx
+X2Nvbm5lY3Qoc3RydWN0IHdpcGh5ICp3aXBoeSwgc3RydWN0IG5ldF9kZXZpY2UgKm5kZXYsCiAJ
+fQogCiAJaWYgKHNtZS0+Y3J5cHRvLnBzaykgewotCQlpZiAoV0FSTl9PTihwcm9maWxlLT51c2Vf
+ZndzdXAgIT0gQlJDTUZfUFJPRklMRV9GV1NVUF9OT05FKSkgeworCQlpZiAocHJvZmlsZS0+dXNl
+X2Z3c3VwICE9IEJSQ01GX1BST0ZJTEVfRldTVVBfTk9ORSkgewogCQkJZXJyID0gLUVJTlZBTDsK
+IAkJCWdvdG8gZG9uZTsKIAkJfQpAQCAtNTE3Myw3ICs1MTczLDcgQEAgc3RhdGljIGludCBicmNt
+Zl9jZmc4MDIxMV9zZXRfcG1rKHN0cnVjdCB3aXBoeSAqd2lwaHksIHN0cnVjdCBuZXRfZGV2aWNl
+ICpkZXYsCiAKIAkvKiBleHBlY3QgdXNpbmcgZmlybXdhcmUgc3VwcGxpY2FudCBmb3IgMVggKi8K
+IAlpZnAgPSBuZXRkZXZfcHJpdihkZXYpOwotCWlmIChXQVJOX09OKGlmcC0+dmlmLT5wcm9maWxl
+LnVzZV9md3N1cCAhPSBCUkNNRl9QUk9GSUxFX0ZXU1VQXzFYKSkKKwlpZiAoaWZwLT52aWYtPnBy
+b2ZpbGUudXNlX2Z3c3VwICE9IEJSQ01GX1BST0ZJTEVfRldTVVBfMVgpCiAJCXJldHVybiAtRUlO
+VkFMOwogCiAJaWYgKGNvbmYtPnBta19sZW4gPiBCUkNNRl9XU0VDX01BWF9QU0tfTEVOKQpAQCAt
+NTE4OSw3ICs1MTg5LDcgQEAgc3RhdGljIGludCBicmNtZl9jZmc4MDIxMV9kZWxfcG1rKHN0cnVj
+dCB3aXBoeSAqd2lwaHksIHN0cnVjdCBuZXRfZGV2aWNlICpkZXYsCiAKIAlicmNtZl9kYmcoVFJB
+Q0UsICJlbnRlclxuIik7CiAJaWZwID0gbmV0ZGV2X3ByaXYoZGV2KTsKLQlpZiAoV0FSTl9PTihp
+ZnAtPnZpZi0+cHJvZmlsZS51c2VfZndzdXAgIT0gQlJDTUZfUFJPRklMRV9GV1NVUF8xWCkpCisJ
+aWYgKGlmcC0+dmlmLT5wcm9maWxlLnVzZV9md3N1cCAhPSBCUkNNRl9QUk9GSUxFX0ZXU1VQXzFY
+KQogCQlyZXR1cm4gLUVJTlZBTDsKIAogCXJldHVybiBicmNtZl9zZXRfcG1rKGlmcCwgTlVMTCwg
+MCk7Ci0tIAoyLjEuMAoK
+
+--_002_d6bfe3133aa782bbdfac25e6261dbf63cypresscom_--
