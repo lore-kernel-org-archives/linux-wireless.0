@@ -2,180 +2,371 @@ Return-Path: <SRS0=fWKo=UR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A71FC31E51
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 482F4C31E51
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:54:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B7A9720645
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="Sc0JgWbV"
+	by mail.kernel.org (Postfix) with ESMTP id 1B59120823
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:54:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728877AbfFRGrm (ORCPT
+        id S1728845AbfFRGyN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Jun 2019 02:47:42 -0400
-Received: from mail-eopbgr780119.outbound.protection.outlook.com ([40.107.78.119]:1258
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726579AbfFRGrl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jun 2019 02:47:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OsedbcA4qMGfLe0gMs71IZs977j/9bgRay6RYA7JRwM=;
- b=Sc0JgWbVWExYac61d0mqqGrcQZPXoXnetNlBQXdQ9xd4qL5wdvAfKe+I9JzU3SS9q41aohyWJWFiKzQ/1jlYxoHLgYAmVeMWNSeYkmwl7Fmnl1vcJ9DWlYNitlP7AvM/jE1feC5W2epWYTJWpbVIE70E1KIQ346N23g7HoEjh4k=
-Received: from DM6PR06MB5804.namprd06.prod.outlook.com (20.179.161.141) by
- DM6PR06MB6345.namprd06.prod.outlook.com (20.178.28.19) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1987.15; Tue, 18 Jun 2019 05:33:21 +0000
-Received: from DM6PR06MB5804.namprd06.prod.outlook.com
- ([fe80::8cc7:f8b2:c735:8992]) by DM6PR06MB5804.namprd06.prod.outlook.com
- ([fe80::8cc7:f8b2:c735:8992%4]) with mapi id 15.20.1987.014; Tue, 18 Jun 2019
- 05:33:21 +0000
-From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-To:     Marcel Holtmann <marcel@holtmann.org>
-CC:     Stefan Wahren <wahrenst@gmx.net>,
-        Stanley Hsu <Stanley.Hsu@cypress.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>
-Subject: Re: wpa_supplicant 2.8 fails in brcmf_cfg80211_set_pmk
-Thread-Topic: wpa_supplicant 2.8 fails in brcmf_cfg80211_set_pmk
-Thread-Index: AQHVI5wQ1zsNjjpn8Ea8hZQgX/OX3aac9kYAgAKJGwCAAGzAAIAA+0mA
-Date:   Tue, 18 Jun 2019 05:33:20 +0000
-Message-ID: <d6bfe313-3aa7-82bb-dfac-25e6261dbf63@cypress.com>
-References: <06f7bda7-eeaf-536b-a583-7c9bc5f681f5@gmx.net>
- <9da02861-9151-9700-2c09-b312d74155fa@gmx.net>
- <605ea0a8-3303-b810-6223-18ccc7eb7af4@cypress.com>
- <2AF2E0A7-23F0-4FFE-A658-4906FF546199@holtmann.org>
-In-Reply-To: <2AF2E0A7-23F0-4FFE-A658-4906FF546199@holtmann.org>
-Reply-To: Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-Accept-Language: en-US, zh-TW
-Content-Language: en-US
-X-MS-Has-Attach: yes
-X-MS-TNEF-Correlator: 
-x-originating-ip: [61.222.14.99]
-user-agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
-x-clientproxiedby: TYAPR01CA0112.jpnprd01.prod.outlook.com
- (2603:1096:404:2a::28) To DM6PR06MB5804.namprd06.prod.outlook.com
- (2603:10b6:5:1a6::13)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: c4691709-a378-4c54-cefe-08d6f3ae793e
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(4618075)(2017052603328)(49563074)(7193020);SRVR:DM6PR06MB6345;
-x-ms-traffictypediagnostic: DM6PR06MB6345:
-x-ms-exchange-purlcount: 2
-x-microsoft-antispam-prvs: <DM6PR06MB63452062D7521CDB2DDFBBAEBBEA0@DM6PR06MB6345.namprd06.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
-x-forefront-prvs: 007271867D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(346002)(396003)(39860400002)(376002)(366004)(199004)(189003)(3846002)(43066004)(66556008)(102836004)(6506007)(386003)(6916009)(5660300002)(5024004)(256004)(14444005)(446003)(478600001)(64126003)(2616005)(476003)(71200400001)(73956011)(66476007)(66946007)(64756008)(486006)(66446008)(26005)(53546011)(71190400001)(11346002)(7736002)(99286004)(305945005)(65826007)(52116002)(186003)(86362001)(76176011)(31696002)(8936002)(6436002)(81156014)(81166006)(2906002)(6116002)(8676002)(6246003)(229853002)(58126008)(66616009)(36756003)(54906003)(3450700001)(31686004)(6512007)(6306002)(316002)(25786009)(4326008)(53936002)(6486002)(72206003)(966005)(107886003)(99936001)(14454004)(65956001)(66066001)(65806001)(68736007);DIR:OUT;SFP:1102;SCL:1;SRVR:DM6PR06MB6345;H:DM6PR06MB5804.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: cypress.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: uPgs3DiAA4tL3AB3cvUFURFTy2dmY+1H7n6K9aj45tEByamRVBzAsoJyi9oVtmbmR48J3cRZ+s1jDn9JsC3ddoDg5WFPjGX1Ck4wRePD5C8ZHNfFk+pFvzB+l43Vyro9d8syPBGvpfnGdWfknsWFIDHQNOUBqWrCbSEvWxtX6lxvVhEG7amZHFzSpDxKlADulP0RgQA/tMruuZp1rCqnHXOECGTRGFd2z/aRhb6P4yMP+0TBWyiPljwpaeFpEAzQkGz5rApMneHXAvDpJ4Wd2SXcYD0OjLtUeH1aiHGla1EO2O6oEzoVKJ+O6IHmmk60MxsDgmkJl//l4BaZUjqeiudnZTlUZeCOwfFgOEXeDl+4pPXz9RWh6H6p5/ogbVdyTEGGHOpTzk19Ea2z+liRCKPeJBq9O9T6Rg0HDqKD3zA=
-Content-Type: multipart/mixed;
-        boundary="_002_d6bfe3133aa782bbdfac25e6261dbf63cypresscom_"
+        Tue, 18 Jun 2019 02:54:13 -0400
+Received: from nbd.name ([46.4.11.11]:59432 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726007AbfFRGyN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Jun 2019 02:54:13 -0400
+Received: from p5dcfbabb.dip0.t-ipconnect.de ([93.207.186.187] helo=bertha.fritz.box)
+        by ds12 with esmtpa (Exim 4.89)
+        (envelope-from <john@phrozen.org>)
+        id 1hd7bK-0000gk-MQ; Tue, 18 Jun 2019 08:28:14 +0200
+From:   John Crispin <john@phrozen.org>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+        John Crispin <john@phrozen.org>
+Subject: [PATCH V6 2/2] ath10k: add tx hw 802.11 encapusaltion offloading suppor
+Date:   Tue, 18 Jun 2019 08:28:07 +0200
+Message-Id: <20190618062807.17158-3-john@phrozen.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190618062807.17158-1-john@phrozen.org>
+References: <20190618062807.17158-1-john@phrozen.org>
 MIME-Version: 1.0
-X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c4691709-a378-4c54-cefe-08d6f3ae793e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Jun 2019 05:33:21.0098
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: chln@cypress.com
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR06MB6345
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---_002_d6bfe3133aa782bbdfac25e6261dbf63cypresscom_
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <BBF08493617BA248A15598F39F760B4D@namprd06.prod.outlook.com>
-Content-Transfer-Encoding: base64
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 
-DQoNCk9uIDA2LzE3LzIwMTkgMTA6MzMsIE1hcmNlbCBIb2x0bWFubiB3cm90ZToNCj4gSGkgQ2hp
-LWhzaWVuLA0KPiANCj4+Pj4gaSB3YXMgYWJsZSB0byByZXByb2R1Y2UgYW4gKG1heWJlIG9sZGVy
-IGlzc3VlKSB3aXRoIDQtd2F5IGhhbmRzaGFrZQ0KPj4+PiBvZmZsb2FkaW5nIGZvciA4MDIuMVgg
-aW4gdGhlIGJyY21mbWFjIGRyaXZlci4gTXkgc2V0dXAgY29uc2lzdHMgb2YNCj4+Pj4gUmFzcGJl
-cnJ5IFBpIDMgQiAoY3VycmVudCBsaW51eC1uZXh0LCBhcm02NC9kZWZjb25maWcpIG9uIFNUQSBz
-aWRlIGFuZCBhDQo+Pj4+IFJhc3BiZXJyeSBQaSAzIEErIChMaW51eCA0LjE5KSBvbiBBUCBzaWRl
-Lg0KPj4+DQo+Pj4gTG9va3MgbGlrZSBSYXNwYmVycnkgUGkgaXNuJ3QgdGhlIG9ubHkgYWZmZWN0
-ZWQgcGxhdGZvcm0gWzNdLCBbNF0uDQo+Pj4NCj4+PiBbM10gLSBodHRwczovL2J1Z3ppbGxhLnJl
-ZGhhdC5jb20vc2hvd19idWcuY2dpP2lkPTE2NjU2MDgNCj4+PiBbNF0gLSBodHRwczovL2J1Z3pp
-bGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTIwMjUyMQ0KPj4NCj4+IFN0ZWZhbiwNCj4+
-DQo+PiBDb3VsZCB5b3UgcGxlYXNlIHRyeSB0aGUgYXR0YWNoZWQgcGF0Y2ggZm9yIHlvdXIgd3Bh
-X3N1cHBsaWNhbnQ/IFdlJ2xsDQo+PiB1cHN0cmVhbSBpZiBpdCB3b3JrcyBmb3IgeW91Lg0KPiAN
-Cj4gSSBob3BlIHRoYXQgc29tZW9uZSBpcyBhbHNvIHByb3ZpZGluZyBhIGtlcm5lbCBwYXRjaCB0
-byBmaXggdGhlIGlzc3VlLiBIYWNraW5nIGFyb3VuZCBhIGtlcm5lbCBpc3N1ZSBpbiB1c2Vyc3Bh
-Y2UgaXMgbm90IGVub3VnaC4gRml4IHRoZSByb290IGNhdXNlIGluIHRoZSBrZXJuZWwuDQoNCk1h
-cmNlbCwNCg0KVGhpcyBpcyBhIGtlcm5lbCB3YXJuaW5nIGZvciBpbnZhbGlkIGFwcGxpY2F0aW9u
-IFBNSyBzZXQgYWN0aW9ucywgc28gdGhlIA0KZml4IGlzIHRvIG9ubHkgc2V0IFBNSyB0byB3aWZp
-IGRyaXZlciB3aGVuIDQtd2F5IGlzIG9mZmxvYWRlZC4gSSB0aGluayANCkFyZW5kIGFkZGVkIHRo
-ZSBXQVJOX09OKCkgaW50ZW50aW9uYWxseSB0byBjYXRjaCBhcHBsaWNhdGlvbiBtaXN1c2Ugb2Yg
-DQpQTUsgc2V0dGluZy4NCg0KWW91IG1heSBhbHNvIHJlbW92ZSB0aGUgd2FybmluZ3Mgd2l0aCB0
-aGUgYXR0YWNoZWQgcGF0Y2gsIGJ1dCBsZXQncyBzZWUgDQp3aGF0IEFyZW5kIHNheXMgZmlyc3Qu
-DQoNCg0KQXJlbmQsDQoNCkFueSBjb21tZW50Pw0KDQoNClJlZ2FyZHMsDQpDaGktaHNpZW4gTGlu
-DQoNCg0KPiANCj4gUmVnYXJkcw0KPiANCj4gTWFyY2VsDQo+IA0KPiAuDQo+IA0K
+This patch adds support for ethernet rxtx mode to the driver. The feature
+is enabled via a new module parameter. If enabled to driver will enable
+the feature on a per vif basis if all other requirements were met.
 
---_002_d6bfe3133aa782bbdfac25e6261dbf63cypresscom_
-Content-Type: text/plain;
-	name="0001-brcmfmac-remove-WARN_ON-for-invalid-pmk-set.patch"
-Content-Description: 0001-brcmfmac-remove-WARN_ON-for-invalid-pmk-set.patch
-Content-Disposition: attachment;
-	filename="0001-brcmfmac-remove-WARN_ON-for-invalid-pmk-set.patch"; size=1896;
-	creation-date="Tue, 18 Jun 2019 05:33:20 GMT";
-	modification-date="Tue, 18 Jun 2019 05:33:20 GMT"
-Content-ID: <955D8DC093821148957E14FBF251E9BE@namprd06.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Testing on a IPQ4019 based hardware shows a increase in TCP throughput
+of ~20% when the feature is enabled.
 
-RnJvbSBhNTRjMGU3ZGNkODE1YTVlZjMxYmRiYWJlNDQ3OTJmMmNlZGNlMGUzIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBDaGktSHNpZW4gTGluIDxjaGktaHNpZW4ubGluQGN5cHJlc3Mu
-Y29tPgpEYXRlOiBNb24sIDE3IEp1biAyMDE5IDIzOjQyOjIzIC0wNTAwClN1YmplY3Q6IFtQQVRD
-SF0gYnJjbWZtYWM6IHJlbW92ZSBXQVJOX09OKCkgZm9yIGludmFsaWQgcG1rIHNldAoKMjUyNmZm
-MjFhYTc3YygiYnJjbWZtYWM6IHN1cHBvcnQgNC13YXkgaGFuZHNoYWtlIG9mZmxvYWRpbmcgZm9y
-IDgwMi4xWCIpCmFkZGVkIFdBUk5fT04oKSB0byBjYXRjaCBpbnZhbGlkIFBNSyB1c2FnZS4gUmVt
-b3ZlIHRoZW0gYW5kIGtlZXAgdGhlCmVycm9yIHJldHVybiBFSU5WQUwuCgpTaWduZWQtb2ZmLWJ5
-OiBDaGktSHNpZW4gTGluIDxjaGktaHNpZW4ubGluQGN5cHJlc3MuY29tPgotLS0KIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9jZmc4MDIxMS5jIHwgNiAr
-KystLS0KIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCgpk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21m
-bWFjL2NmZzgwMjExLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEv
-YnJjbWZtYWMvY2ZnODAyMTEuYwppbmRleCBlOWM4YjIxMDkxYTEuLjA4YjVmYWQzODMwNyAxMDA2
-NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFj
-L2NmZzgwMjExLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjEx
-L2JyY21mbWFjL2NmZzgwMjExLmMKQEAgLTE5MzgsNyArMTkzOCw3IEBAIGJyY21mX2NmZzgwMjEx
-X2Nvbm5lY3Qoc3RydWN0IHdpcGh5ICp3aXBoeSwgc3RydWN0IG5ldF9kZXZpY2UgKm5kZXYsCiAJ
-fQogCiAJaWYgKHNtZS0+Y3J5cHRvLnBzaykgewotCQlpZiAoV0FSTl9PTihwcm9maWxlLT51c2Vf
-ZndzdXAgIT0gQlJDTUZfUFJPRklMRV9GV1NVUF9OT05FKSkgeworCQlpZiAocHJvZmlsZS0+dXNl
-X2Z3c3VwICE9IEJSQ01GX1BST0ZJTEVfRldTVVBfTk9ORSkgewogCQkJZXJyID0gLUVJTlZBTDsK
-IAkJCWdvdG8gZG9uZTsKIAkJfQpAQCAtNTE3Myw3ICs1MTczLDcgQEAgc3RhdGljIGludCBicmNt
-Zl9jZmc4MDIxMV9zZXRfcG1rKHN0cnVjdCB3aXBoeSAqd2lwaHksIHN0cnVjdCBuZXRfZGV2aWNl
-ICpkZXYsCiAKIAkvKiBleHBlY3QgdXNpbmcgZmlybXdhcmUgc3VwcGxpY2FudCBmb3IgMVggKi8K
-IAlpZnAgPSBuZXRkZXZfcHJpdihkZXYpOwotCWlmIChXQVJOX09OKGlmcC0+dmlmLT5wcm9maWxl
-LnVzZV9md3N1cCAhPSBCUkNNRl9QUk9GSUxFX0ZXU1VQXzFYKSkKKwlpZiAoaWZwLT52aWYtPnBy
-b2ZpbGUudXNlX2Z3c3VwICE9IEJSQ01GX1BST0ZJTEVfRldTVVBfMVgpCiAJCXJldHVybiAtRUlO
-VkFMOwogCiAJaWYgKGNvbmYtPnBta19sZW4gPiBCUkNNRl9XU0VDX01BWF9QU0tfTEVOKQpAQCAt
-NTE4OSw3ICs1MTg5LDcgQEAgc3RhdGljIGludCBicmNtZl9jZmc4MDIxMV9kZWxfcG1rKHN0cnVj
-dCB3aXBoeSAqd2lwaHksIHN0cnVjdCBuZXRfZGV2aWNlICpkZXYsCiAKIAlicmNtZl9kYmcoVFJB
-Q0UsICJlbnRlclxuIik7CiAJaWZwID0gbmV0ZGV2X3ByaXYoZGV2KTsKLQlpZiAoV0FSTl9PTihp
-ZnAtPnZpZi0+cHJvZmlsZS51c2VfZndzdXAgIT0gQlJDTUZfUFJPRklMRV9GV1NVUF8xWCkpCisJ
-aWYgKGlmcC0+dmlmLT5wcm9maWxlLnVzZV9md3N1cCAhPSBCUkNNRl9QUk9GSUxFX0ZXU1VQXzFY
-KQogCQlyZXR1cm4gLUVJTlZBTDsKIAogCXJldHVybiBicmNtZl9zZXRfcG1rKGlmcCwgTlVMTCwg
-MCk7Ci0tIAoyLjEuMAoK
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ drivers/net/wireless/ath/ath10k/core.c   | 11 ++++
+ drivers/net/wireless/ath/ath10k/core.h   |  3 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 24 +++++---
+ drivers/net/wireless/ath/ath10k/mac.c    | 70 +++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/txrx.c   | 11 +++-
+ 5 files changed, 94 insertions(+), 25 deletions(-)
 
---_002_d6bfe3133aa782bbdfac25e6261dbf63cypresscom_--
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index aff585658fc0..ac6e41f09f2a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -30,6 +30,7 @@ static unsigned int ath10k_cryptmode_param;
+ static bool uart_print;
+ static bool skip_otp;
+ static bool rawmode;
++static bool ethernetmode;
+ 
+ unsigned long ath10k_coredump_mask = BIT(ATH10K_FW_CRASH_DUMP_REGISTERS) |
+ 				     BIT(ATH10K_FW_CRASH_DUMP_CE_DATA);
+@@ -41,6 +42,7 @@ module_param(uart_print, bool, 0644);
+ module_param(skip_otp, bool, 0644);
+ module_param(rawmode, bool, 0644);
+ module_param_named(coredump_mask, ath10k_coredump_mask, ulong, 0444);
++module_param(ethernetmode, bool, 0644);
+ 
+ MODULE_PARM_DESC(debug_mask, "Debugging mask");
+ MODULE_PARM_DESC(uart_print, "Uart target debugging");
+@@ -48,6 +50,7 @@ MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
+ MODULE_PARM_DESC(cryptmode, "Crypto mode: 0-hardware, 1-software");
+ MODULE_PARM_DESC(rawmode, "Use raw 802.11 frame datapath");
+ MODULE_PARM_DESC(coredump_mask, "Bitfield of what to include in firmware crash file");
++MODULE_PARM_DESC(ethernetmode, "Use ethernet frame datapath");
+ 
+ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	{
+@@ -2939,6 +2942,14 @@ static void ath10k_core_register_work(struct work_struct *work)
+ 	/* peer stats are enabled by default */
+ 	set_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags);
+ 
++	if (ethernetmode && rawmode) {
++		ath10k_err(ar, "ethernet and raw mode cannot co-exist\n");
++		status = -EINVAL;
++		goto err;
++	}
++
++	ar->ethernetmode = ethernetmode;
++
+ 	status = ath10k_core_probe_fw(ar);
+ 	if (status) {
+ 		ath10k_err(ar, "could not probe fw (%d)\n", status);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e35aae5146f1..1bc463a39d6c 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -109,6 +109,7 @@ enum ath10k_skb_flags {
+ 	ATH10K_SKB_F_MGMT = BIT(3),
+ 	ATH10K_SKB_F_QOS = BIT(4),
+ 	ATH10K_SKB_F_RAW_TX = BIT(5),
++	ATH10K_SKB_F_HW_80211_ENCAP = BIT(6),
+ };
+ 
+ struct ath10k_skb_cb {
+@@ -1190,6 +1191,8 @@ struct ath10k {
+ 	struct work_struct radar_confirmation_work;
+ 	struct ath10k_bus_params bus_param;
+ 
++	bool ethernetmode;
++
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index d8e9cc0bb772..ae4c48b8b706 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -1143,6 +1143,10 @@ static u8 ath10k_htt_tx_get_tid(struct sk_buff *skb, bool is_eth)
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
+ 
++	/* Firmware takes care of tid classification for ethernet format */
++	if (cb->flags & ATH10K_SKB_F_HW_80211_ENCAP)
++		return skb->priority % IEEE80211_QOS_CTL_TID_MASK;
++
+ 	if (!is_eth && ieee80211_is_mgmt(hdr->frame_control))
+ 		return HTT_DATA_TX_EXT_TID_MGMT;
+ 	else if (cb->flags & ATH10K_SKB_F_QOS)
+@@ -1351,15 +1355,17 @@ static int ath10k_htt_tx_32(struct ath10k_htt *htt,
+ 	txbuf_paddr = htt->txbuf.paddr +
+ 		      (sizeof(struct ath10k_htt_txbuf_32) * msdu_id);
+ 
+-	if ((ieee80211_is_action(hdr->frame_control) ||
+-	     ieee80211_is_deauth(hdr->frame_control) ||
+-	     ieee80211_is_disassoc(hdr->frame_control)) &&
+-	     ieee80211_has_protected(hdr->frame_control)) {
+-		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
+-	} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
+-		   txmode == ATH10K_HW_TXRX_RAW &&
+-		   ieee80211_has_protected(hdr->frame_control)) {
+-		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
++	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)) {
++		if ((ieee80211_is_action(hdr->frame_control) ||
++		     ieee80211_is_deauth(hdr->frame_control) ||
++		     ieee80211_is_disassoc(hdr->frame_control)) &&
++		    ieee80211_has_protected(hdr->frame_control)) {
++			skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
++		} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
++			   txmode == ATH10K_HW_TXRX_RAW &&
++			   ieee80211_has_protected(hdr->frame_control)) {
++			skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
++		}
+ 	}
+ 
+ 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9c703d287333..6918587951cb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3386,12 +3386,16 @@ ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
+ 			   struct sk_buff *skb)
+ {
+ 	const struct ieee80211_hdr *hdr = (void *)skb->data;
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	const struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
+ 	__le16 fc = hdr->frame_control;
+ 
+ 	if (!vif || vif->type == NL80211_IFTYPE_MONITOR)
+ 		return ATH10K_HW_TXRX_RAW;
+ 
++	if (tx_info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)
++		return ATH10K_HW_TXRX_ETHERNET;
++
+ 	if (ieee80211_is_mgmt(fc))
+ 		return ATH10K_HW_TXRX_MGMT;
+ 
+@@ -3544,6 +3548,15 @@ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
+ 			ieee80211_is_data_qos(hdr->frame_control);
+ 
+ 	cb->flags = 0;
++	cb->vif = vif;
++	cb->txq = txq;
++	cb->airtime_est = airtime;
++
++	if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) {
++		cb->flags |= ATH10K_SKB_F_HW_80211_ENCAP;
++		return;
++	}
++
+ 	if (!ath10k_tx_h_use_hwcrypto(vif, skb))
+ 		cb->flags |= ATH10K_SKB_F_NO_HWCRYPT;
+ 
+@@ -3562,10 +3575,6 @@ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
+ 		cb->flags |= ATH10K_SKB_F_NO_HWCRYPT;
+ 		cb->flags |= ATH10K_SKB_F_RAW_TX;
+ 	}
+-
+-	cb->vif = vif;
+-	cb->txq = txq;
+-	cb->airtime_est = airtime;
+ }
+ 
+ bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
+@@ -3675,6 +3684,9 @@ static int ath10k_mac_tx(struct ath10k *ar,
+ 	const struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
+ 	int ret;
+ 
++	if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)
++		goto skip_encap;
++
+ 	/* We should disable CCK RATE due to P2P */
+ 	if (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
+ 		ath10k_dbg(ar, ATH10K_DBG_MAC, "IEEE80211_TX_CTL_NO_CCK_RATE\n");
+@@ -3698,6 +3710,7 @@ static int ath10k_mac_tx(struct ath10k *ar,
+ 		}
+ 	}
+ 
++skip_encap:
+ 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
+ 		if (!ath10k_mac_tx_frm_has_freq(ar)) {
+ 			ath10k_dbg(ar, ATH10K_DBG_MAC, "queued offchannel skb %pK\n",
+@@ -3747,6 +3760,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 	int ret;
+ 	unsigned long time_left;
+ 	bool tmp_peer_created = false;
++	struct ieee80211_tx_info *info;
+ 
+ 	/* FW requirement: We must create a peer before FW will send out
+ 	 * an offchannel frame. Otherwise the frame will be stuck and
+@@ -3766,8 +3780,14 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac offchannel skb %pK\n",
+ 			   skb);
+ 
+-		hdr = (struct ieee80211_hdr *)skb->data;
+-		peer_addr = ieee80211_get_DA(hdr);
++		info = IEEE80211_SKB_CB(skb);
++
++		if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) {
++			peer_addr = skb->data;
++		} else {
++			hdr = (struct ieee80211_hdr *)skb->data;
++			peer_addr = ieee80211_get_DA(hdr);
++		}
+ 
+ 		spin_lock_bh(&ar->data_lock);
+ 		vdev_id = ar->scan.vdev_id;
+@@ -4295,7 +4315,7 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+ 	struct ieee80211_vif *vif = info->control.vif;
+ 	struct ieee80211_sta *sta = control->sta;
+ 	struct ieee80211_txq *txq = NULL;
+-	struct ieee80211_hdr *hdr = (void *)skb->data;
++	struct ieee80211_hdr *hdr;
+ 	enum ath10k_hw_txrx_mode txmode;
+ 	enum ath10k_mac_tx_path txpath;
+ 	bool is_htt;
+@@ -4326,14 +4346,20 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+ 			return;
+ 		}
+ 
+-		ret = ath10k_htt_tx_mgmt_inc_pending(htt, is_mgmt, is_presp);
+-		if (ret) {
+-			ath10k_dbg(ar, ATH10K_DBG_MAC, "failed to increase tx mgmt pending count: %d, dropping\n",
+-				   ret);
+-			ath10k_htt_tx_dec_pending(htt);
+-			spin_unlock_bh(&ar->htt.tx_lock);
+-			ieee80211_free_txskb(ar->hw, skb);
+-			return;
++		if (is_mgmt) {
++			hdr = (struct ieee80211_hdr *)skb->data;
++			is_presp = ieee80211_is_probe_resp(hdr->frame_control);
++
++			ret = ath10k_htt_tx_mgmt_inc_pending(htt, is_mgmt,
++							     is_presp);
++			if (ret) {
++				ath10k_dbg(ar, ATH10K_DBG_MAC, "failed to increase tx mgmt pending count: %d, dropping\n",
++					   ret);
++				ath10k_htt_tx_dec_pending(htt);
++				spin_unlock_bh(&ar->htt.tx_lock);
++				ieee80211_free_txskb(ar->hw, skb);
++				return;
++			}
+ 		}
+ 		spin_unlock_bh(&ar->htt.tx_lock);
+ 	}
+@@ -5094,6 +5120,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	struct ath10k_vif *arvif = (void *)vif->drv_priv;
+ 	struct ath10k_peer *peer;
+ 	enum wmi_sta_powersave_param param;
++	int hw_encap = 0;
+ 	int ret = 0;
+ 	u32 value;
+ 	int bit;
+@@ -5185,6 +5212,17 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		break;
+ 	}
+ 
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_AP:
++		hw_encap = 1;
++		break;
++	default:
++		break;
++	}
++	ieee80211_set_hw_80211_encap(vif, ar->ethernetmode & hw_encap);
++
+ 	/* Using vdev_id as queue number will make it very easy to do per-vif
+ 	 * tx queue locking. This shouldn't wrap due to interface combinations
+ 	 * but do a modulo for correctness sake and prevent using offchannel tx
+@@ -8602,6 +8640,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	ieee80211_hw_set(ar->hw, QUEUE_CONTROL);
+ 	ieee80211_hw_set(ar->hw, SUPPORTS_TX_FRAG);
+ 	ieee80211_hw_set(ar->hw, REPORTS_LOW_ACK);
++	if (ar->ethernetmode)
++		ieee80211_hw_set(ar->hw, SUPPORTS_80211_ENCAP);
+ 
+ 	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+ 		ieee80211_hw_set(ar->hw, SW_CRYPTO_CONTROL);
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index c5818d28f55a..bad5e7335c0e 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -50,6 +50,8 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	struct ath10k_skb_cb *skb_cb;
+ 	struct ath10k_txq *artxq;
+ 	struct sk_buff *msdu;
++	struct ieee80211_vif *vif;
++	u8 flags;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
+ 		   "htt tx completion msdu_id %u status %d\n",
+@@ -78,6 +80,9 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		artxq->num_fw_queued--;
+ 	}
+ 
++	flags = skb_cb->flags;
++	vif = skb_cb->vif;
++
+ 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
+ 	ath10k_htt_tx_dec_pending(htt);
+ 	if (htt->num_pending_tx == 0)
+@@ -121,7 +126,11 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		info->status.is_valid_ack_signal = true;
+ 	}
+ 
+-	ieee80211_tx_status(htt->ar->hw, msdu);
++	if (flags & ATH10K_SKB_F_HW_80211_ENCAP)
++		ieee80211_tx_status_8023(htt->ar->hw, vif, msdu);
++	else
++		ieee80211_tx_status(htt->ar->hw, msdu);
++
+ 	/* we do not own the msdu anymore */
+ 
+ 	return 0;
+-- 
+2.20.1
+
