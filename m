@@ -6,35 +6,33 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EFFEC31E51
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:54:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A53E8C31E5D
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:54:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF6C020823
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:54:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EBE320823
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:54:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726672AbfFRGyS (ORCPT
+        id S1728877AbfFRGyT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Jun 2019 02:54:18 -0400
+        Tue, 18 Jun 2019 02:54:19 -0400
 Received: from nbd.name ([46.4.11.11]:59432 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726007AbfFRGyS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jun 2019 02:54:18 -0400
+        id S1727105AbfFRGyT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Jun 2019 02:54:19 -0400
 Received: from p5dcfbabb.dip0.t-ipconnect.de ([93.207.186.187] helo=bertha.fritz.box)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1hd7bK-0000gk-74; Tue, 18 Jun 2019 08:28:14 +0200
+        id 1hd7Si-0000Ad-3q; Tue, 18 Jun 2019 08:19:20 +0200
 From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-        John Crispin <john@phrozen.org>
-Subject: [PATCH V6 1/2] mac80211: add hw 80211 encapsulation offloading support
-Date:   Tue, 18 Jun 2019 08:28:06 +0200
-Message-Id: <20190618062807.17158-2-john@phrozen.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>,
+        Shashidhar Lakkavalli <slakkavalli@datto.com>
+Subject: [PATCH V3 2/2] mac80211: allow setting spatial reuse parameters from bss_conf
+Date:   Tue, 18 Jun 2019 08:19:15 +0200
+Message-Id: <20190618061915.7102-3-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190618062807.17158-1-john@phrozen.org>
-References: <20190618062807.17158-1-john@phrozen.org>
+In-Reply-To: <20190618061915.7102-1-john@phrozen.org>
+References: <20190618061915.7102-1-john@phrozen.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -42,653 +40,298 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Store the OBSS PD parameters inside bss_conf when bringing up an AP and/or
+when a station connects to an AP. This allows the driver to configure the
+HW accordingly.
 
-This patch adds a new transmit path for hardware that supports 802.11
-encapsulation offloading. In those cases 802.3a frames get passed
-directly to the driver allowing to hardware to handle the encapsulation.
-
-Certain features wont work and the patch masks these out.
-* monitor interfaces are not supported if any of the vif is in encap mode.
-* amsdu/non-linear frames wont work in encap offloading mode.
-* TKIP countermeasures cannot be triggered and hence those keys are not
-  accepted.
-
-The patch defines a secondary netdev_ops struct that the device is assigned
-to the device if 802.11 encap support is available and enabled. The driver
-needs to enable the support on a per vif basis if it finds that all
-pre-reqs are meet.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- include/net/mac80211.h     |  25 +++++
- net/mac80211/cfg.c         |   6 ++
- net/mac80211/debugfs.c     |   1 +
- net/mac80211/ieee80211_i.h |  10 ++
- net/mac80211/iface.c       |  84 +++++++++++++++++
- net/mac80211/key.c         |   7 ++
- net/mac80211/main.c        |  10 +-
- net/mac80211/status.c      |  79 ++++++++++++++++
- net/mac80211/tx.c          | 187 ++++++++++++++++++++++++++++++++++++-
- 9 files changed, 401 insertions(+), 8 deletions(-)
+ include/net/cfg80211.h       | 15 +++++++++++++
+ include/net/mac80211.h       |  4 ++++
+ include/uapi/linux/nl80211.h | 27 ++++++++++++++++++++++
+ net/mac80211/cfg.c           |  5 ++++-
+ net/mac80211/he.c            | 24 ++++++++++++++++++++
+ net/mac80211/ieee80211_i.h   |  3 +++
+ net/mac80211/mlme.c          |  1 +
+ net/wireless/nl80211.c       | 43 ++++++++++++++++++++++++++++++++++++
+ 8 files changed, 121 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1a93ca593c28..426b4f4d9020 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -827,6 +827,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTRL_AMSDU			= BIT(3),
- 	IEEE80211_TX_CTRL_FAST_XMIT		= BIT(4),
- 	IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP	= BIT(5),
-+	IEEE80211_TX_CTRL_HW_80211_ENCAP	= BIT(6),
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2d17e32eb438..49de2c69e63f 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -249,6 +249,19 @@ struct ieee80211_rate {
+ 	u16 hw_value, hw_value_short;
  };
- 
- /*
-@@ -2281,6 +2282,9 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_NO_AMPDU_KEYBORDER_SUPPORT: The card/driver can't handle
-  *	active Tx A-MPDU sessions with Extended Key IDs during rekey.
-  *
-+ * @IEEE80211_HW_SUPPORTS_80211_ENCAP: Hardware/driver supports 802.11
-+ *	encap for data frames.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -2334,6 +2338,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID,
- 	IEEE80211_HW_EXT_KEY_ID_NATIVE,
- 	IEEE80211_HW_NO_AMPDU_KEYBORDER_SUPPORT,
-+	IEEE80211_HW_SUPPORTS_80211_ENCAP,
- 
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-@@ -4629,6 +4634,25 @@ static inline void ieee80211_tx_status_ni(struct ieee80211_hw *hw,
- void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
- 				 struct sk_buff *skb);
  
 +/**
-+ * ieee80211_tx_status_8023 - transmit status callback for 802.3 frame format
++ * struct ieee80211_he_obss_pd - AP settings for spatial reuse
 + *
-+ * Call this function for all transmitted data frames after their transmit
-+ * completion. This callback should only be called for data frames which
-+ * are are using driver's (or hardware's) offload capability of encap/decap
-+ * 802.11 frames.
-+ *
-+ * This function may not be called in IRQ context. Calls to this function
-+ * for a single hardware must be synchronized against each other.
-+ *
-+ * @hw: the hardware the frame was transmitted by
-+ * @vif: the interface for which the frame was transmitted
-+ * @skb: the frame that was transmitted, owned by mac80211 after this call
++ * @enable: is the feature enabled.
++ * @min_offset: minimal tx power offset an associated station shall use
++ * @max_offset: maximum tx power offset an associated station shall use
 + */
-+void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       struct sk_buff *skb);
-+
- /**
-  * ieee80211_report_low_ack - report non-responding station
-  *
-@@ -6384,4 +6408,5 @@ void ieee80211_nan_func_match(struct ieee80211_vif *vif,
- 			      struct cfg80211_nan_match_params *match,
- 			      gfp_t gfp);
- 
-+bool ieee80211_set_hw_80211_encap(struct ieee80211_vif *vif, bool enable);
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8a6a38d74878..fb2588ec90a1 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2424,11 +2424,17 @@ static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
- static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 
- 	if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
- 		ieee80211_check_fast_xmit_all(local);
- 
-+		mutex_lock(&local->iflist_mtx);
-+		list_for_each_entry(sdata, &local->interfaces, list)
-+			ieee80211_set_hw_80211_encap(&sdata->vif, false);
-+		mutex_unlock(&local->iflist_mtx);
-+
- 		err = drv_set_frag_threshold(local, wiphy->frag_threshold);
- 
- 		if (err) {
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 7c580010836e..69baf5d381ad 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -275,6 +275,7 @@ static const char *hw_flag_names[] = {
- 	FLAG(SUPPORTS_ONLY_HE_MULTI_BSSID),
- 	FLAG(EXT_KEY_ID_NATIVE),
- 	FLAG(NO_AMPDU_KEYBORDER_SUPPORT),
-+	FLAG(SUPPORTS_80211_ENCAP),
- #undef FLAG
- };
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 07da9e49db94..9e8474782a60 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -987,6 +987,8 @@ struct ieee80211_sub_if_data {
- 	} debugfs;
- #endif
- 
-+	bool hw_80211_encap;
-+
- 	/* must be last, dynamically sized area in this! */
- 	struct ieee80211_vif vif;
- };
-@@ -1733,6 +1735,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 		     struct vif_params *params);
- int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
- 			     enum nl80211_iftype type);
-+bool ieee80211_is_hw_80211_encap(struct ieee80211_local *local);
- void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
- void ieee80211_remove_interfaces(struct ieee80211_local *local);
- u32 ieee80211_idle_off(struct ieee80211_local *local);
-@@ -1760,6 +1763,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 					 struct net_device *dev);
- netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 				       struct net_device *dev);
-+netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
-+					    struct net_device *dev);
- void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 				  struct net_device *dev,
- 				  u32 info_flags,
-@@ -1940,6 +1945,11 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 				 struct sk_buff *skb, int tid,
- 				 enum nl80211_band band, u32 txdata_flags);
- 
-+/* sta_out needs to be checked for ERR_PTR() before using */
-+int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
-+			    struct sk_buff *skb,
-+			    struct sta_info **sta_out);
-+
- static inline void
- ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 			  struct sk_buff *skb, int tid,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 410685d38c46..14a7c665afd0 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1176,6 +1176,89 @@ static const struct net_device_ops ieee80211_dataif_ops = {
- 	.ndo_get_stats64	= ieee80211_get_stats64,
- };
- 
-+static const struct net_device_ops ieee80211_dataif_8023_ops = {
-+	.ndo_open		= ieee80211_open,
-+	.ndo_stop		= ieee80211_stop,
-+	.ndo_uninit		= ieee80211_uninit,
-+	.ndo_start_xmit		= ieee80211_subif_start_xmit_8023,
-+	.ndo_set_rx_mode	= ieee80211_set_multicast_list,
-+	.ndo_set_mac_address	= ieee80211_change_mac,
-+	.ndo_select_queue	= ieee80211_netdev_select_queue,
-+	.ndo_get_stats64	= ieee80211_get_stats64,
++struct ieee80211_he_obss_pd {
++	bool enable;
++	u32 min_offset;
++	u32 max_offset;
 +};
 +
-+bool ieee80211_set_hw_80211_encap(struct ieee80211_vif *vif, bool enable)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_key *key;
-+
-+	sdata_assert_lock(sdata);
-+
-+	if (!sdata->dev)
-+		return 0;
-+
-+	if (enable == sdata->hw_80211_encap)
-+		return enable;
-+
-+	if (!ieee80211_hw_check(&local->hw, SUPPORTS_80211_ENCAP))
-+		enable = 0;
-+
-+	switch (vif->type) {
-+	case NL80211_IFTYPE_STATION:
-+		if (sdata->u.mgd.use_4addr)
-+			enable = 0;
-+		break;
-+	case NL80211_IFTYPE_AP_VLAN:
-+		if (sdata->wdev.use_4addr)
-+			enable = 0;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (!ieee80211_hw_check(&local->hw, SUPPORTS_TX_FRAG) &&
-+	    (local->hw.wiphy->frag_threshold != (u32)-1))
-+		enable = 0;
-+
-+	mutex_lock(&sdata->local->key_mtx);
-+	list_for_each_entry(key, &sdata->key_list, list) {
-+		if (key->conf.cipher == WLAN_CIPHER_SUITE_TKIP)
-+			enable = 0;
-+	}
-+	mutex_unlock(&sdata->local->key_mtx);
-+
-+	if (enable) {
-+		sdata->dev->netdev_ops = &ieee80211_dataif_8023_ops;
-+		sdata->hw_80211_encap = true;
-+	} else {
-+		sdata->dev->netdev_ops = &ieee80211_dataif_ops;
-+		sdata->hw_80211_encap = false;
-+	}
-+
-+	return enable;
-+}
-+EXPORT_SYMBOL(ieee80211_set_hw_80211_encap);
-+
-+bool ieee80211_is_hw_80211_encap(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	bool offloaded = false;
-+	rcu_read_lock();
-+
-+	mutex_lock(&local->iflist_mtx);
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (sdata->hw_80211_encap) {
-+			offloaded = true;
-+			break;
-+		}
-+	}
-+	mutex_unlock(&local->iflist_mtx);
-+	rcu_read_unlock();
-+
-+	return offloaded;
-+}
-+
- static u16 ieee80211_monitor_select_queue(struct net_device *dev,
- 					  struct sk_buff *skb,
- 					  struct net_device *sb_dev)
-@@ -1408,6 +1491,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	sdata->vif.bss_conf.idle = true;
+ /**
+  * struct ieee80211_sta_ht_cap - STA's HT capabilities
+  *
+@@ -899,6 +912,7 @@ enum cfg80211_ap_settings_flags {
+  * @vht_required: stations must support VHT
+  * @twt_responder: Enable Target Wait Time
+  * @flags: flags, as defined in enum cfg80211_ap_settings_flags
++ * @he_obss_pd: OBSS Packet Detection settings
+  */
+ struct cfg80211_ap_settings {
+ 	struct cfg80211_chan_def chandef;
+@@ -926,6 +940,7 @@ struct cfg80211_ap_settings {
+ 	bool ht_required, vht_required;
+ 	bool twt_responder;
+ 	u32 flags;
++	struct ieee80211_he_obss_pd he_obss_pd;
+ };
  
- 	sdata->noack_map = 0;
-+	sdata->hw_80211_encap = false;
+ /**
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4411120e5a9a..1a93ca593c28 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -318,6 +318,7 @@ struct ieee80211_vif_chanctx_switch {
+  * @BSS_CHANGED_FTM_RESPONDER: fime timing reasurement request responder
+  *	functionality changed for this BSS (AP mode).
+  * @BSS_CHANGED_TWT: TWT status changed
++ * @BSS_CHANGED_HE_OBSS_PD: OBSS Packet Detection status changed.
+  *
+  */
+ enum ieee80211_bss_change {
+@@ -349,6 +350,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_MCAST_RATE		= 1<<25,
+ 	BSS_CHANGED_FTM_RESPONDER	= 1<<26,
+ 	BSS_CHANGED_TWT			= 1<<27,
++	BSS_CHANGED_HE_OBSS_PD		= 1<<28,
  
- 	/* only monitor/p2p-device differ */
- 	if (sdata->dev) {
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index faadfeea7127..4c9977770a45 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -179,6 +179,10 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 		}
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+@@ -603,6 +605,7 @@ struct ieee80211_ftm_responder_params {
+  *	nontransmitted BSSIDs
+  * @profile_periodicity: the least number of beacon frames need to be received
+  *	in order to discover all the nontransmitted BSSIDs in the set.
++ * @he_obss_pd: OBSS Packet Detection parameters.
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -664,6 +667,7 @@ struct ieee80211_bss_conf {
+ 	u8 bssid_indicator;
+ 	bool ema_ap;
+ 	u8 profile_periodicity;
++	struct ieee80211_he_obss_pd he_obss_pd;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 8fc3a43cac75..68ee35cbd75e 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2356,6 +2356,9 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_TWT_RESPONDER: Enable target wait time responder support.
+  *
++ * @NL80211_ATTR_HE_OBSS_PD: nested attribute for OBSS Packet Detection
++ *	functionality.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2813,6 +2816,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_TWT_RESPONDER,
+ 
++	NL80211_ATTR_HE_OBSS_PD,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -6488,4 +6493,26 @@ enum nl80211_peer_measurement_ftm_resp {
+ 	NL80211_PMSR_FTM_RESP_ATTR_MAX = NUM_NL80211_PMSR_FTM_RESP_ATTR - 1
+ };
+ 
++/**
++ * enum nl80211_he_spr - spatial reuse attributes
++ * @__NL80211_HE_OBSS_PD_ATTR_INVALID: Invalid
++ *
++ * @NL80211_ATTR_HE_OBSS_PD_MIN_OFFSET: the OBSS PD minimum tx power offset.
++ * @NL80211_ATTR_HE_OBSS_PD_MAX_OFFSET: the OBSS PD maximum tx power offset.
++ *
++ * @__NL80211_HE_OBSS_PD_ATTR_LAST: Internal
++ * @NL80211_HE_OBSS_PD_ATTR_MAX: highest spiatl reuse attribute.
++ */
++enum nl80211_he_spr_attributes {
++	__NL80211_HE_OBSS_PD_ATTR_INVALID,
++
++	NL80211_ATTR_HE_OBSS_PD_MIN_OFFSET,
++	NL80211_ATTR_HE_OBSS_PD_MAX_OFFSET,
++
++	/* keep last */
++	__NL80211_ATTR_HE_OBSS_PD_LAST,
++	NL80211_HE_OBSS_PD_ATTR_MAX = __NL80211_ATTR_HE_OBSS_PD_LAST - 1,
++};
++
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index fcf1dfc3a1cc..8a6a38d74878 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -976,7 +976,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 		      BSS_CHANGED_SSID |
+ 		      BSS_CHANGED_P2P_PS |
+ 		      BSS_CHANGED_TXPOWER |
+-		      BSS_CHANGED_TWT;
++		      BSS_CHANGED_TWT |
++		      BSS_CHANGED_HE_OBSS_PD;
+ 	int err;
+ 	int prev_beacon_int;
+ 
+@@ -1047,6 +1048,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata->vif.bss_conf.enable_beacon = true;
+ 	sdata->vif.bss_conf.allow_p2p_go_ps = sdata->vif.p2p;
+ 	sdata->vif.bss_conf.twt_responder = params->twt_responder;
++	memcpy(&sdata->vif.bss_conf.he_obss_pd, &params->he_obss_pd,
++	       sizeof(struct ieee80211_he_obss_pd));
+ 
+ 	sdata->vif.bss_conf.ssid_len = params->ssid_len;
+ 	if (params->ssid_len)
+diff --git a/net/mac80211/he.c b/net/mac80211/he.c
+index 769078ed5a12..5bb99bd3400c 100644
+--- a/net/mac80211/he.c
++++ b/net/mac80211/he.c
+@@ -53,3 +53,27 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+ 
+ 	he_cap->has_he = true;
+ }
++
++void
++ieee80211_he_spr_ie_to_bss_conf(struct ieee80211_vif *vif,
++				const struct ieee80211_he_spr *he_spr_ie_elem)
++{
++	struct ieee80211_he_obss_pd *he_obss_pd =
++					&vif->bss_conf.he_obss_pd;
++	const u8 *data = he_spr_ie_elem->optional;
++
++	memset(he_obss_pd, 0, sizeof(*he_obss_pd));
++
++	if (!he_spr_ie_elem)
++		return;
++
++	if (he_spr_ie_elem->he_sr_control &
++	    IEEE80211_HE_SPR_NON_SRG_OFFSET_PRESENT)
++		data++;
++	if (he_spr_ie_elem->he_sr_control &
++	    IEEE80211_HE_SPR_SRG_INFORMATION_PRESENT) {
++		he_obss_pd->max_offset = *data++;
++		he_obss_pd->min_offset = *data++;
++		he_obss_pd->enable = true;
++	}
++}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0ee5d82e6734..07da9e49db94 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1873,6 +1873,9 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+ 				  struct ieee80211_supported_band *sband,
+ 				  const u8 *he_cap_ie, u8 he_cap_len,
+ 				  struct sta_info *sta);
++void
++ieee80211_he_spr_ie_to_bss_conf(struct ieee80211_vif *vif,
++				const struct ieee80211_he_spr *he_spr_ie_elem);
+ 
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b971b02d0d60..c5fee29ce03c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3373,6 +3373,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 		if (elems.uora_element)
+ 			bss_conf->uora_ocw_range = elems.uora_element[0];
+ 
++		ieee80211_he_spr_ie_to_bss_conf(&sdata->vif, elems.he_spr);
+ 		/* TODO: OPEN: what happens if BSS color disable is set? */
  	}
  
-+	/* TKIP countermeasures wont work on encap offload mode */
-+	if (key->conf.cipher == WLAN_CIPHER_SUITE_TKIP)
-+		ieee80211_set_hw_80211_encap(&sdata->vif, false);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ff760ba83449..166bc66173f6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -574,6 +574,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_SAE_PASSWORD] = { .type = NLA_BINARY,
+ 					.len = SAE_PASSWORD_MAX_LEN },
+ 	[NL80211_ATTR_TWT_RESPONDER] = { .type = NLA_FLAG },
++	[NL80211_ATTR_HE_OBSS_PD] = { .type = NLA_NESTED },
+ };
+ 
+ /* policy for the key attributes */
+@@ -4348,6 +4349,40 @@ static int nl80211_parse_beacon(struct cfg80211_registered_device *rdev,
+ 	return 0;
+ }
+ 
++static const struct nla_policy
++			he_spr_policy[NL80211_HE_OBSS_PD_ATTR_MAX + 1] = {
++	[NL80211_ATTR_HE_OBSS_PD_MIN_OFFSET] = { .type = NLA_U32 },
++	[NL80211_ATTR_HE_OBSS_PD_MAX_OFFSET] = { .type = NLA_U32 },
++};
 +
- 	ret = drv_set_key(key->local, SET_KEY, sdata,
- 			  sta ? &sta->sta : NULL, &key->conf);
- 
-@@ -205,6 +209,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 			  key->conf.keyidx,
- 			  sta ? sta->sta.addr : bcast_addr, ret);
- 
-+	if (sdata->hw_80211_encap)
++static int nl80211_parse_he_obss_pd(struct nlattr *attrs,
++				    struct ieee80211_he_obss_pd *he_obss_pd)
++{
++	struct nlattr *tb[NL80211_HE_OBSS_PD_ATTR_MAX + 1];
++	int err;
++
++	err = nla_parse_nested(tb, NL80211_HE_OBSS_PD_ATTR_MAX, attrs,
++			       he_spr_policy, NULL);
++	if (err)
++		return err;
++
++	if (!tb[NL80211_ATTR_HE_OBSS_PD_MIN_OFFSET] ||
++	    !tb[NL80211_ATTR_HE_OBSS_PD_MAX_OFFSET])
 +		return -EINVAL;
 +
-  out_unsupported:
- 	switch (key->conf.cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 1f11907dc528..c5096e24d81b 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1000,9 +1000,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_AP_VLAN);
- 	}
- 
--	/* mac80211 always supports monitor */
--	hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
--	hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_MONITOR);
-+	if (ieee80211_hw_check(hw, SUPPORTS_80211_ENCAP)) {
-+		/* mac80211 always supports monitor unless we do 802.11
-+		 * encapsulation offloading.
-+		 */
-+		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
-+		hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_MONITOR);
-+	}
- 
- 	/* mac80211 doesn't support more than one IBSS interface right now */
- 	for (i = 0; i < hw->wiphy->n_iface_combinations; i++) {
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 5b9952b1caf3..0c8858c01e36 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -1019,6 +1019,85 @@ void ieee80211_tx_rate_update(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_tx_rate_update);
- 
-+void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
-+			      struct ieee80211_vif *vif,
-+			      struct sk_buff *skb)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct sta_info *sta;
-+	int retry_count;
-+	int rates_idx;
-+	bool acked;
++	he_obss_pd->min_offset =
++		nla_get_u32(tb[NL80211_ATTR_HE_OBSS_PD_MIN_OFFSET]);
++	he_obss_pd->max_offset =
++		nla_get_u32(tb[NL80211_ATTR_HE_OBSS_PD_MAX_OFFSET]);
 +
-+	if (WARN_ON(!ieee80211_hw_check(hw, SUPPORTS_80211_ENCAP)))
-+		goto skip_stats_update;
++	if (he_obss_pd->min_offset >= he_obss_pd->max_offset)
++		return -EINVAL;
 +
-+	sdata = vif_to_sdata(vif);
++	he_obss_pd->enable = true;
 +
-+	acked = info->flags & IEEE80211_TX_STAT_ACK;
-+	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
-+
-+	rcu_read_lock();
-+
-+	if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
-+		rcu_read_unlock();
-+		goto counters_update;
-+	}
-+
-+	if (!sta || IS_ERR(sta)) {
-+		rcu_read_unlock();
-+		goto counters_update;
-+	}
-+
-+	if (!acked)
-+		sta->status_stats.retry_failed++;
-+
-+	if (rates_idx != -1)
-+		sta->tx_stats.last_rate = info->status.rates[rates_idx];
-+
-+	sta->status_stats.retry_count += retry_count;
-+
-+	if (ieee80211_hw_check(hw, REPORTS_TX_ACK_STATUS)) {
-+		if (acked && vif->type == NL80211_IFTYPE_STATION)
-+			ieee80211_sta_reset_conn_monitor(sdata);
-+
-+		sta->status_stats.last_ack = jiffies;
-+		if (info->flags & IEEE80211_TX_STAT_ACK) {
-+			if (sta->status_stats.lost_packets)
-+				sta->status_stats.lost_packets = 0;
-+
-+			if (test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH))
-+				sta->status_stats.last_tdls_pkt_time = jiffies;
-+		} else {
-+			ieee80211_lost_packet(sta, info);
-+		}
-+	}
-+
-+	rcu_read_unlock();
-+
-+counters_update:
-+	ieee80211_led_tx(local);
-+
-+	if (!(info->flags & IEEE80211_TX_STAT_ACK) &&
-+	    !(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED))
-+		goto skip_stats_update;
-+
-+	I802_DEBUG_INC(local->dot11TransmittedFrameCount);
-+	if (is_multicast_ether_addr(skb->data))
-+		I802_DEBUG_INC(local->dot11MulticastTransmittedFrameCount);
-+	if (retry_count > 0)
-+		I802_DEBUG_INC(local->dot11RetryCount);
-+	if (retry_count > 1)
-+		I802_DEBUG_INC(local->dot11MultipleRetryCount);
-+
-+skip_stats_update:
-+	ieee80211_report_used_skb(local, skb, false);
-+	dev_kfree_skb(skb);
++	return 0;
 +}
-+EXPORT_SYMBOL(ieee80211_tx_status_8023);
 +
- void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
+ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
+ 					    const u8 *rates)
  {
- 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index dd220b977025..0d1f525c0b02 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1253,7 +1253,8 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
- 	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
- 		return NULL;
+@@ -4632,6 +4667,14 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	params.twt_responder =
+ 		    nla_get_flag(info->attrs[NL80211_ATTR_TWT_RESPONDER]);
  
--	if (unlikely(!ieee80211_is_data_present(hdr->frame_control))) {
-+	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) &&
-+	    unlikely(!ieee80211_is_data_present(hdr->frame_control))) {
- 		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
- 		     ieee80211_is_bufferable_mmpdu(hdr->frame_control) ||
- 		     vif->type == NL80211_IFTYPE_STATION) &&
-@@ -2358,9 +2359,9 @@ static inline bool ieee80211_is_tdls_setup(struct sk_buff *skb)
- 	       skb->data[14] == WLAN_TDLS_SNAP_RFTYPE;
- }
- 
--static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
--				   struct sk_buff *skb,
--				   struct sta_info **sta_out)
-+int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
-+			    struct sk_buff *skb,
-+			    struct sta_info **sta_out)
- {
- 	struct sta_info *sta;
- 
-@@ -2870,7 +2871,8 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	__le16 fc;
- 
--	if (!ieee80211_hw_check(&local->hw, SUPPORT_FAST_XMIT))
-+	if (!ieee80211_hw_check(&local->hw, SUPPORT_FAST_XMIT) ||
-+	    sdata->hw_80211_encap)
- 		return;
- 
- 	/* Locking here protects both the pointer itself, and against concurrent
-@@ -3600,6 +3602,9 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	else
- 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
- 
-+	if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)
-+		goto encap_out;
-+
- 	if (info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT) {
- 		struct sta_info *sta = container_of(txq->sta, struct sta_info,
- 						    sta);
-@@ -3659,6 +3664,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 		break;
- 	}
- 
-+encap_out:
- 	IEEE80211_SKB_CB(skb)->control.vif = vif;
- 	return skb;
- 
-@@ -4030,6 +4036,167 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	return NETDEV_TX_OK;
- }
- 
-+static bool ieee80211_tx_8023(struct ieee80211_sub_if_data *sdata,
-+			      struct sk_buff *skb, int led_len,
-+			      struct sta_info *sta,
-+			      bool txpending)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_tx_control control = {};
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_sta *pubsta = NULL;
-+	unsigned long flags;
-+	int q = info->hw_queue;
-+
-+	if (ieee80211_queue_skb(local, sdata, sta, skb))
-+		return true;
-+
-+	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-+
-+	if (local->queue_stop_reasons[q] ||
-+	    (!txpending && !skb_queue_empty(&local->pending[q]))) {
-+		if (txpending)
-+			skb_queue_head(&local->pending[q], skb);
-+		else
-+			skb_queue_tail(&local->pending[q], skb);
-+
-+		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+
-+		return false;
++	if (info->attrs[NL80211_ATTR_HE_OBSS_PD]) {
++		err = nl80211_parse_he_obss_pd(
++					info->attrs[NL80211_ATTR_HE_OBSS_PD],
++					&params.he_obss_pd);
++		if (err)
++			return err;
 +	}
 +
-+	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+
-+	if (sta && sta->uploaded)
-+		pubsta = &sta->sta;
-+
-+	control.sta = pubsta;
-+
-+	drv_tx(local, &control, skb);
-+
-+	return true;
-+}
-+
-+static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
-+				struct net_device *dev, struct sta_info *sta,
-+				struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ethhdr *ehdr = (struct ethhdr *)skb->data;
-+	struct ieee80211_local *local = sdata->local;
-+	bool authorized = false;
-+	bool multicast;
-+	bool tdls_peer;
-+	unsigned char *ra = NULL;
-+
-+	if (IS_ERR(sta) || (sta && !sta->uploaded))
-+		sta = NULL;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+		tdls_peer = test_sta_flag(sta, WLAN_STA_TDLS_PEER);
-+		if (tdls_peer)
-+			ra = skb->data;
-+		else
-+			ra = sdata->u.mgd.bssid;
-+	} else {
-+		ra = ehdr->h_dest;
-+	}
-+
-+	if (!ra)
-+		goto out_free;
-+	multicast = is_multicast_ether_addr(ra);
-+
-+	if (sta)
-+		authorized = test_sta_flag(sta, WLAN_STA_AUTHORIZED);
-+
-+	if (!multicast && !authorized &&
-+	    ((ehdr->h_proto != sdata->control_port_protocol) ||
-+	     !ether_addr_equal(sdata->vif.addr, ehdr->h_source)))
-+		goto out_free;
-+
-+	if (multicast && sdata->vif.type == NL80211_IFTYPE_AP &&
-+	    !atomic_read(&sdata->u.ap.num_mcast_sta))
-+		goto out_free;
-+
-+	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)) &&
-+	    test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
-+		goto out_free;
-+
-+	/* TODO: Handle frames requiring wifi tx status to be notified */
-+
-+	memset(info, 0, sizeof(*info));
-+
-+	if (unlikely(sdata->control_port_protocol == ehdr->h_proto)) {
-+		if (sdata->control_port_no_encrypt)
-+			info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+		info->control.flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
-+	}
-+
-+	if (multicast)
-+		info->flags |= IEEE80211_TX_CTL_NO_ACK;
-+
-+	info->hw_queue = sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
-+
-+	ieee80211_tx_stats(dev, skb->len);
-+
-+	if (sta) {
-+		sta->tx_stats.bytes[skb_get_queue_mapping(skb)] += skb->len;
-+		sta->tx_stats.packets[skb_get_queue_mapping(skb)]++;
-+	}
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		sdata = container_of(sdata->bss,
-+				     struct ieee80211_sub_if_data, u.ap);
-+
-+	info->control.flags |= IEEE80211_TX_CTRL_HW_80211_ENCAP;
-+	info->control.vif = &sdata->vif;
-+
-+	ieee80211_tx_8023(sdata, skb, skb->len, sta, false);
-+
-+	return;
-+
-+out_free:
-+	kfree_skb(skb);
-+}
-+
-+netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
-+					    struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+
-+	if (WARN_ON(!sdata->hw_80211_encap)) {
-+		kfree_skb(skb);
-+		return NETDEV_TX_OK;
-+	}
-+
-+	if (unlikely(skb->len < ETH_HLEN)) {
-+		kfree_skb(skb);
-+		return NETDEV_TX_OK;
-+	}
-+
-+	if (WARN_ON(dev->ieee80211_ptr->use_4addr)) {
-+		kfree_skb(skb);
-+		return NETDEV_TX_OK;
-+	}
-+
-+	rcu_read_lock();
-+
-+	if (ieee80211_lookup_ra_sta(sdata, skb, &sta))
-+		goto out_free;
-+
-+	ieee80211_8023_xmit(sdata, dev, sta, skb);
-+
-+	goto out;
-+
-+out_free:
-+	kfree_skb(skb);
-+out:
-+	rcu_read_unlock();
-+
-+	return NETDEV_TX_OK;
-+}
-+
- struct sk_buff *
- ieee80211_build_data_template(struct ieee80211_sub_if_data *sdata,
- 			      struct sk_buff *skb, u32 info_flags)
-@@ -4108,6 +4275,16 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
- 		}
- 		info->band = chanctx_conf->def.chan->band;
- 		result = ieee80211_tx(sdata, NULL, skb, true, 0);
-+	} else if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) {
-+		if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
-+			dev_kfree_skb(skb);
-+			return true;
-+		}
-+
-+		if (IS_ERR(sta) || (sta && !sta->uploaded))
-+			sta = NULL;
-+
-+		result = ieee80211_tx_8023(sdata, skb, skb->len, sta, true);
- 	} else {
- 		struct sk_buff_head skbs;
+ 	nl80211_calculate_ap_params(&params);
  
+ 	if (info->attrs[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT])
 -- 
 2.20.1
 
