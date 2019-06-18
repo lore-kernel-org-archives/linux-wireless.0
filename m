@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCE21C31E5B
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 15:35:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ADFFC31E5D
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 15:35:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5F3520673
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 15:35:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1510B20673
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 15:35:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VBR0Zcst"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="J/MtpnCD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729285AbfFRPfD (ORCPT
+        id S1729613AbfFRPfD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 18 Jun 2019 11:35:03 -0400
-Received: from mail-lf1-f67.google.com ([209.85.167.67]:42974 "EHLO
-        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729189AbfFRPfC (ORCPT
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:46337 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729423AbfFRPfD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jun 2019 11:35:02 -0400
-Received: by mail-lf1-f67.google.com with SMTP id y13so9628395lfh.9
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jun 2019 08:35:01 -0700 (PDT)
+        Tue, 18 Jun 2019 11:35:03 -0400
+Received: by mail-lj1-f196.google.com with SMTP id v24so13575849ljg.13
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jun 2019 08:35:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ZXFe8l122poOCFrcN8cZI3D2EE1Nc366dY+GJ8RNKw4=;
-        b=VBR0Zcst/y6Zg7oIQ4mCiOZS9J4Gla0OUrgxhrMyHzEX3xyIlkxoYPJ5WnVcOwRdPe
-         xWKodz+F4ubwZAi3LVLAOmbh3sGvqYCT4fb7hu9NqFdIV8folFmY/Iw2nC4vj+54N0DQ
-         3rhY0tHUiuUUPz7ADBDPvIzCWmjyiTTvPnzP5PYVyo8DOLizYbCzaRYXvaKR3Jds24pY
-         83Z6HVJhtk3eDVKic08lSLmasQr0e3102/hWgIOKrkdAMHO6PgYjuDAvRZJs9o6iJFSR
-         mcjHJjyR26i8a4mjI/ZXNE4cTrnxyN94674N5liojrdPmAoewMaZorggNXMMnPNLjTDh
-         EVRA==
+        bh=DYh01G4YOAJJOYFXYzW1f6GX4EFwB2UrYsYuTpn+ycI=;
+        b=J/MtpnCDLrtQ7KxlyDUgTAqGs3KuQ/4fJwmuU8bU6mB5r9cAat/xZ/DKkI0M65UMB9
+         rVcQ5kQBHCpqxA7pFi8Hmq9WF9Gc2q8U72goWwgVUjYR+tHFCwaeCZc5eqrZjnyTwpRT
+         HER9nQ5mOeTG0OvpVhqWZE3hf2FRoRbytTwWhMuNamB6rZ4htlVyPNtZGy4viwbHYAep
+         pA95TU5DbmdQDKXLH4BfELfKI6DGVW0dB2YOzhcNy6BE41rEl+NNPmmrnHbqfl3cOvMG
+         uvzzgko4/X+koH4dR/TvAzwwshOh4rP6+cY5dTximIpVpbFfRAQ/lwMDWV4N7OAKzHk3
+         miJQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=ZXFe8l122poOCFrcN8cZI3D2EE1Nc366dY+GJ8RNKw4=;
-        b=SfBBpI+Te1oawINiJQLLnqVr0zbge+Uqb1Leg/dSrrVP9G+UWdvBOBiLdf1MngiTZM
-         u0uap2o80ZOeRxciQpH0CaK9g9Qob3uUSE04XnqLy2l/TaBfCpVQCd+dFWJLhFrdm5or
-         gwoZvjYv6jYR6pg+3ylPWpgbmQkkc9ECI/PryWu0S+nskmLqZe/9Lt/GyBfPRjNtGMCx
-         FzJgv4TUcpb/5vpVOrbQm7G1JlbKKpIwxdFCIyKWzLgTqDrJIhJSDVko/hrUhfHt0EVV
-         Claa1k5O9c/fYj+wb7O8fNl4MbRFYs16yJSWn5i+aDMwkTLkw05FOGvyf9PlX51m+lnQ
-         udQg==
-X-Gm-Message-State: APjAAAWXlXHTGFDnLCptmvWVXC/J2lUMtIzIP/lx8/7UpftpGG0wM0c8
-        +AEeDGTn8FcZvv+fnyGJ2lvMAg==
-X-Google-Smtp-Source: APXvYqyOREFdkP4FC4HW7yzVMISId5ZhI6EQ+UQ/bNuv27HzdT0y6uvxlbXF6tdziRwwwuG91a5bpw==
-X-Received: by 2002:a19:750b:: with SMTP id y11mr21457683lfe.16.1560872099899;
-        Tue, 18 Jun 2019 08:34:59 -0700 (PDT)
+        bh=DYh01G4YOAJJOYFXYzW1f6GX4EFwB2UrYsYuTpn+ycI=;
+        b=gZU+4nuM1YObFmgkgbLXX6GXhA6kSqOdjlhwRwQPW+Y54leriJcs0Eq1e1ssPJ0c4p
+         6HkChvtHF6UDNY1Di8b/6vQjS3ztlvOmEiewb2p7FniLAEVFwefyTDj09Am+yAzglLVO
+         pDeHKfYNseyqwdd5U/FekoEDNrLJxAwcsR3SJvg4vW7jrFMAkHD/0H65vmk1aI6VIpiU
+         chgacBq+KODHALUW3lsmEX35j/9gu9LZOKnLe1YCKvjYxHmYQ/HhpvxvGA4jMOP1oy8p
+         0YSmDczMOEuT5ipGqDKQ2n2uTOIahpAX2bHxOiqV+mgkgYzrFqWgIU1jJULtXA6xs7Uc
+         kv4Q==
+X-Gm-Message-State: APjAAAWR0oz0WAEdsyW4hN7GgyRmTz2Konvb4Q2DVRavbLdapnKTTdXp
+        bWIxnyUV3zx/z3d11aH1x5NLvw==
+X-Google-Smtp-Source: APXvYqw5trtqABkhMNMmqPOkzUYmnAODdHE+SClNusmc+GT7Oc0Wvq4MM6vIfnYuKJBTztnp3HM2fA==
+X-Received: by 2002:a2e:8650:: with SMTP id i16mr14898729ljj.178.1560872101420;
+        Tue, 18 Jun 2019 08:35:01 -0700 (PDT)
 Received: from localhost.localdomain (h-158-174-22-210.NA.cust.bahnhof.se. [158.174.22.210])
-        by smtp.gmail.com with ESMTPSA id d15sm2203121lfq.76.2019.06.18.08.34.58
+        by smtp.gmail.com with ESMTPSA id d15sm2203121lfq.76.2019.06.18.08.35.00
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 18 Jun 2019 08:34:59 -0700 (PDT)
+        Tue, 18 Jun 2019 08:35:00 -0700 (PDT)
 From:   Ulf Hansson <ulf.hansson@linaro.org>
 To:     linux-mmc@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
@@ -66,9 +66,9 @@ Cc:     Brian Norris <briannorris@chromium.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Arend Van Spriel <arend.vanspriel@broadcom.com>,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 1/7] mmc: sdio: Turn sdio_run_irqs() into static
-Date:   Tue, 18 Jun 2019 17:34:42 +0200
-Message-Id: <20190618153448.27145-2-ulf.hansson@linaro.org>
+Subject: [PATCH 2/7] mmc: sdio: Drop mmc_claim|release_host() in mmc_sdio_power_restore()
+Date:   Tue, 18 Jun 2019 17:34:43 +0200
+Message-Id: <20190618153448.27145-3-ulf.hansson@linaro.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190618153448.27145-1-ulf.hansson@linaro.org>
 References: <20190618153448.27145-1-ulf.hansson@linaro.org>
@@ -77,51 +77,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-All external users of sdio_run_irqs() have converted into using the
-preferred sdio_signal_irq() interface, thus not calling the function
-directly any more. Avoid further new users of it, by turning it into
-static.
+The function mmc_sdio_power_restore() is called either from
+mmc_sdio_runtime_resume() or from mmc_sdio_hw_reset(). Both callers either
+claims/releases the host or require its callers to do so. Therefore let's
+drop the redundant calls to mmc_claim|release_host() in
+mmc_sdio_power_restore().
 
-Suggested-by: Douglas Anderson <dianders@chromium.org>
 Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
 ---
- drivers/mmc/core/sdio_irq.c | 3 +--
- include/linux/mmc/host.h    | 1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
+ drivers/mmc/core/sdio.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/mmc/core/sdio_irq.c b/drivers/mmc/core/sdio_irq.c
-index 9f54a259a1b3..0bcc5e83bd1a 100644
---- a/drivers/mmc/core/sdio_irq.c
-+++ b/drivers/mmc/core/sdio_irq.c
-@@ -92,7 +92,7 @@ static int process_sdio_pending_irqs(struct mmc_host *host)
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index 712a7742765e..b3303b7d9956 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -1030,14 +1030,10 @@ static int mmc_sdio_power_restore(struct mmc_host *host)
+ 	 *
+ 	 */
+ 
+-	mmc_claim_host(host);
+-
+ 	ret = mmc_sdio_reinit_card(host, mmc_card_keep_power(host));
+ 	if (!ret && host->sdio_irqs)
+ 		mmc_signal_sdio_irq(host);
+ 
+-	mmc_release_host(host);
+-
  	return ret;
  }
  
--void sdio_run_irqs(struct mmc_host *host)
-+static void sdio_run_irqs(struct mmc_host *host)
- {
- 	mmc_claim_host(host);
- 	if (host->sdio_irqs) {
-@@ -103,7 +103,6 @@ void sdio_run_irqs(struct mmc_host *host)
- 	}
- 	mmc_release_host(host);
- }
--EXPORT_SYMBOL_GPL(sdio_run_irqs);
- 
- void sdio_irq_work(struct work_struct *work)
- {
-diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
-index ecb7972e2423..a9b12322c775 100644
---- a/include/linux/mmc/host.h
-+++ b/include/linux/mmc/host.h
-@@ -504,7 +504,6 @@ static inline void mmc_signal_sdio_irq(struct mmc_host *host)
- 		wake_up_process(host->sdio_irq_thread);
- }
- 
--void sdio_run_irqs(struct mmc_host *host);
- void sdio_signal_irq(struct mmc_host *host);
- 
- #ifdef CONFIG_REGULATOR
 -- 
 2.17.1
 
