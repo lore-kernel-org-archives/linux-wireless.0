@@ -1,45 +1,57 @@
-Return-Path: <SRS0=/kiQ=UQ=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=fWKo=UR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3627DC31E5B
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 22:47:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C894C31E5B
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 00:57:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0CF9A208C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jun 2019 22:47:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26D1620833
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 00:57:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n2EkBbCt"
+	dkim=pass (4096-bit key) header.d=d-silva.org header.i=@d-silva.org header.b="jvSabEdr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728589AbfFQWr2 (ORCPT
+        id S1726964AbfFRA5d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jun 2019 18:47:28 -0400
-Received: from merlin.infradead.org ([205.233.59.134]:40474 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725839AbfFQWr1 (ORCPT
+        Mon, 17 Jun 2019 20:57:33 -0400
+Received: from ushosting.nmnhosting.com ([66.55.73.32]:35430 "EHLO
+        ushosting.nmnhosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725829AbfFRA5d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jun 2019 18:47:27 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=oWCvapawJTmHWfTi4W/xQzd/vam+JtASkBkdfBDmQPA=; b=n2EkBbCtepqSck3LcKcBk9ucLP
-        OopaIKVxH7Ft5pKUkNM6axeXE0K/dN0KlZBFHBkuZUjcuBojBVwA6eyj3zIf/SrSJ0AXP+ap36Tfr
-        X0WYpzcQ34E0H9clamwWKVPA2G5AqZgtlebPbdol2VZl3hzV0WHHKTyO/DPw8RjqxrUZIc7QdVFKM
-        vHCGFyYLYGCxZF9eADucfOb8FK17P9rwh5jOCnBGSKiVmNRqoUfswvbapl0LJeUcbgsSotAmzefsG
-        BuQwk3FdoCSOiq6Zwz2/pJMld3yRBwfY9eWtfMYCawPt2uqyoLPRXHwia2hme5jMcDzrgP6F97p9i
-        1TAbXIzA==;
-Received: from static-50-53-52-16.bvtn.or.frontiernet.net ([50.53.52.16] helo=midway.dunlab)
-        by merlin.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hd0P6-0004pi-Aw; Mon, 17 Jun 2019 22:47:08 +0000
+        Mon, 17 Jun 2019 20:57:33 -0400
+Received: from mail2.nmnhosting.com (unknown [202.169.106.97])
+        by ushosting.nmnhosting.com (Postfix) with ESMTPS id 2797C2DC0096;
+        Mon, 17 Jun 2019 20:57:31 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=d-silva.org;
+        s=201810a; t=1560819452;
+        bh=u7VpYNn8JpTLdyHPUljh2Z7wehVtDH+n9nHQNgN6N2A=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=jvSabEdrNHOl7NlBGL5YcdZQfi+fpB9BO+GaqBWlR/PP+V/1JX3MOC/vdfprE+d4q
+         W0UTx/depws8/q6fCe4qsmxzaHqtVkUa+v+Mp2PYjaUrKq1XeKLKJ3TPmwKDKYb7Ix
+         tm9Ggg2c204E7SWf1Kzm3b7UURvQRUF+YtE1qaFXWb7M1bSsECs2dxPGyAy4TwdTwu
+         YrzjrIAdGWVZDKXuSQHyDOqmmePgS4sV2lw+tlA9IZJRT1DXVvYEFcSGBy5FTId/0l
+         fqkDcrBYmDhMWn+3CZbnwx7qgnLFWM0LDHsbAyxHAnRZtM+pOmK0XpTf0aiYcsAURz
+         JAHTKkLHxAgXWfC3qIJOHW9mN0wLp5AYzfNmMC3C5ks7bZYsWq3PGnPXMMgDkMzyop
+         xeuPVBo2+37GGuWiHd1PVStu6wl0eKfSBJgyWJvhXbnAdDsbuqzYFH9Boz+O6C1oWT
+         2Stkwa1MvSezs7en91awfFUNUzrvwbjOv/IZIK0ZFoGni+dz4kIbQSJzdLLHGKQkgV
+         TVlkQn6TAJU90DRRiC92kuMldKfElutBjDwzhohJifPcEvF9T9IrE1SS4Zaz3ft2Rz
+         ho6zF2/9j+ouJCRd5AcHglBo4L8CMDItufZhI5pCGZ7PhbKy0bPXekMmqRlgelk8er
+         vDFIJF20+9ye5cMw79l/tHxg=
+Received: from adsilva.ozlabs.ibm.com (static-82-10.transact.net.au [122.99.82.10] (may be forged))
+        (authenticated bits=0)
+        by mail2.nmnhosting.com (8.15.2/8.15.2) with ESMTPSA id x5I0v17n063106
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NO);
+        Tue, 18 Jun 2019 10:57:17 +1000 (AEST)
+        (envelope-from alastair@d-silva.org)
+Message-ID: <b2651117ca8a55d94b7e14e273d25199515039c3.camel@d-silva.org>
 Subject: Re: [PATCH v3 2/7] lib/hexdump.c: Relax rowsize checks in
  hex_dump_to_buffer
-To:     Alastair D'Silva <alastair@au1.ibm.com>, alastair@d-silva.org
+From:   "Alastair D'Silva" <alastair@d-silva.org>
+To:     Randy Dunlap <rdunlap@infradead.org>
 Cc:     Jani Nikula <jani.nikula@linux.intel.com>,
         Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
@@ -69,94 +81,91 @@ Cc:     Jani Nikula <jani.nikula@linux.intel.com>,
         ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
         devel@driverdev.osuosl.org, linux-fsdevel@vger.kernel.org
+Date:   Tue, 18 Jun 2019 10:57:00 +1000
+In-Reply-To: <94413756-c927-a4ca-dd59-47e3cc87d58d@infradead.org>
 References: <20190617020430.8708-1-alastair@au1.ibm.com>
- <20190617020430.8708-3-alastair@au1.ibm.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <94413756-c927-a4ca-dd59-47e3cc87d58d@infradead.org>
-Date:   Mon, 17 Jun 2019 15:47:03 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+         <20190617020430.8708-3-alastair@au1.ibm.com>
+         <94413756-c927-a4ca-dd59-47e3cc87d58d@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.2 (3.32.2-1.fc30) 
 MIME-Version: 1.0
-In-Reply-To: <20190617020430.8708-3-alastair@au1.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.6.2 (mail2.nmnhosting.com [10.0.1.20]); Tue, 18 Jun 2019 10:57:27 +1000 (AEST)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
-Just a comment style nit below...
-
-On 6/16/19 7:04 PM, Alastair D'Silva wrote:
-> From: Alastair D'Silva <alastair@d-silva.org>
+On Mon, 2019-06-17 at 15:47 -0700, Randy Dunlap wrote:
+> Hi,
+> Just a comment style nit below...
 > 
-> This patch removes the hardcoded row limits and allows for
-> other lengths. These lengths must still be a multiple of
-> groupsize.
+> On 6/16/19 7:04 PM, Alastair D'Silva wrote:
+> > From: Alastair D'Silva <alastair@d-silva.org>
+> > 
+> > This patch removes the hardcoded row limits and allows for
+> > other lengths. These lengths must still be a multiple of
+> > groupsize.
+> > 
+> > This allows structs that are not 16/32 bytes to display on
+> > a single line.
+> > 
+> > This patch also expands the self-tests to test row sizes
+> > up to 64 bytes (though they can now be arbitrarily long).
+> > 
+> > Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
+> > ---
+> >  lib/hexdump.c      | 48 ++++++++++++++++++++++++++++--------------
+> >  lib/test_hexdump.c | 52 ++++++++++++++++++++++++++++++++++++++--
+> > ------
+> >  2 files changed, 75 insertions(+), 25 deletions(-)
+> > 
+> > diff --git a/lib/hexdump.c b/lib/hexdump.c
+> > index 81b70ed37209..3943507bc0e9 100644
+> > --- a/lib/hexdump.c
+> > +++ b/lib/hexdump.c
+> > @@ -246,17 +248,29 @@ void print_hex_dump(const char *level, const
+> > char *prefix_str, int prefix_type,
+> >  {
+> >  	const u8 *ptr = buf;
+> >  	int i, linelen, remaining = len;
+> > -	unsigned char linebuf[32 * 3 + 2 + 32 + 1];
+> > +	unsigned char *linebuf;
+> > +	unsigned int linebuf_len;
+> >  
+> > -	if (rowsize != 16 && rowsize != 32)
+> > -		rowsize = 16;
+> > +	if (rowsize % groupsize)
+> > +		rowsize -= rowsize % groupsize;
+> > +
+> > +	/* Worst case line length:
+> > +	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte
+> > in, NULL
+> > +	 */
 > 
-> This allows structs that are not 16/32 bytes to display on
-> a single line.
+> According to Documentation/process/coding-style.rst:
 > 
-> This patch also expands the self-tests to test row sizes
-> up to 64 bytes (though they can now be arbitrarily long).
+> The preferred style for long (multi-line) comments is:
 > 
-> Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
-> ---
->  lib/hexdump.c      | 48 ++++++++++++++++++++++++++++--------------
->  lib/test_hexdump.c | 52 ++++++++++++++++++++++++++++++++++++++--------
->  2 files changed, 75 insertions(+), 25 deletions(-)
+> .. code-block:: c
 > 
-> diff --git a/lib/hexdump.c b/lib/hexdump.c
-> index 81b70ed37209..3943507bc0e9 100644
-> --- a/lib/hexdump.c
-> +++ b/lib/hexdump.c
+> 	/*
+> 	 * This is the preferred style for multi-line
+> 	 * comments in the Linux kernel source code.
+> 	 * Please use it consistently.
+> 	 *
+> 	 * Description:  A column of asterisks on the left side,
+> 	 * with beginning and ending almost-blank lines.
+> 	 */
+> 
 
-> @@ -246,17 +248,29 @@ void print_hex_dump(const char *level, const char *prefix_str, int prefix_type,
->  {
->  	const u8 *ptr = buf;
->  	int i, linelen, remaining = len;
-> -	unsigned char linebuf[32 * 3 + 2 + 32 + 1];
-> +	unsigned char *linebuf;
-> +	unsigned int linebuf_len;
->  
-> -	if (rowsize != 16 && rowsize != 32)
-> -		rowsize = 16;
-> +	if (rowsize % groupsize)
-> +		rowsize -= rowsize % groupsize;
-> +
-> +	/* Worst case line length:
-> +	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte in, NULL
-> +	 */
-
-According to Documentation/process/coding-style.rst:
-
-The preferred style for long (multi-line) comments is:
-
-.. code-block:: c
-
-	/*
-	 * This is the preferred style for multi-line
-	 * comments in the Linux kernel source code.
-	 * Please use it consistently.
-	 *
-	 * Description:  A column of asterisks on the left side,
-	 * with beginning and ending almost-blank lines.
-	 */
-
-
-except in networking software.
-
-
-> +	linebuf_len = rowsize * 3 + 2 + rowsize + 1;
-> +	linebuf = kzalloc(linebuf_len, GFP_KERNEL);
-> +	if (!linebuf) {
-> +		printk("%s%shexdump: Could not alloc %u bytes for buffer\n",
-> +			level, prefix_str, linebuf_len);
-> +		return;
-> +	}
+Thanks Randy, I'll address this.
 
 
 -- 
-~Randy
+Alastair D'Silva           mob: 0423 762 819
+skype: alastair_dsilva    
+Twitter: @EvilDeece
+blog: http://alastair.d-silva.org
+
+
