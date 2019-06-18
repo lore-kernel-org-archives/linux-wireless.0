@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E5C9C31E61
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AC67C31E5D
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6E1A8205F4
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7888205F4
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jun 2019 06:47:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KKbRi+2s";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bEXHYXjP"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iuWMH3PH";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RBP34bad"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726359AbfFRGrP (ORCPT
+        id S1726308AbfFRGrO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Jun 2019 02:47:15 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:50850 "EHLO
+        Tue, 18 Jun 2019 02:47:14 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:50846 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725963AbfFRGrO (ORCPT
+        with ESMTP id S1725934AbfFRGrO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 18 Jun 2019 02:47:14 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id CCC5260A00; Tue, 18 Jun 2019 05:27:44 +0000 (UTC)
+        id EF35860C5F; Tue, 18 Jun 2019 05:27:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1560835664;
-        bh=GiCP2FKHbmzu3ONTau2KQd2HQEUs0g3r0VHK0+dh4wU=;
+        s=default; t=1560835669;
+        bh=DXP8MH8p4qbWHkuWmMNGC9R3LNhNFGRoAtOJ+2GOfyU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KKbRi+2sTA7PPiqX8nMtd6VCKqsFwLr50CtPZbS4jWlXpoVdvjDOtj3a4lqde1E8X
-         5Rn9sgjkqREwVpFUwJyDuF8TTFIjwcBxQJYDPA9D1/jpDlhabGy+ULuW/hvSgKchP2
-         cD26wGnXP7H8MQXdzdbBh7ByLBPDH9MB7loukuUA=
+        b=iuWMH3PHmy25TwshQ/p7kE8CRqvCklrUwJh/QOoQqgkQJDwyPHY09B+ULPbDATMfQ
+         1R+ldvsq8URxyqAazPgT2tIyHsQfsfT7dy5+V9FGZKLpdVOKe1SHGid5GOlEE0kY3F
+         dyyCNLWO8qxa2hAXrwFOv/GuYl7G2AsmS9RAqpJM=
 Received: from akolli-ThinkPad-L560.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: tamizhr@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 18BC860A00;
-        Tue, 18 Jun 2019 05:27:40 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6C05460C5F;
+        Tue, 18 Jun 2019 05:27:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1560835663;
-        bh=GiCP2FKHbmzu3ONTau2KQd2HQEUs0g3r0VHK0+dh4wU=;
+        s=default; t=1560835667;
+        bh=DXP8MH8p4qbWHkuWmMNGC9R3LNhNFGRoAtOJ+2GOfyU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bEXHYXjPEoArfa7Yh5MwTdUjcq1sMA8PX2avnY1GJghxnl0kZQFwbhgteFnskmYV/
-         BgbytPhJdsIS5jrjNsSbVsCSXiBRgGyjK8kE+Qs5ypLJu8CVvg5jGWJGgl9LPYPq7X
-         jfLknP6HYk43eQBbtYiHI9iGli4rd/U/RlvF7t0I=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 18BC860A00
+        b=RBP34badYufovQmP6OoK+V/JBQ8HVxmYDH0Gx2JP3UyJpoqoggufNtMv4871tKFmF
+         vsqSBpN9ZImZ/eXVez79Z2vRSwe8iSmhF8QICPDUVeoBtf3g5QhVp7cFtMHp0HQbKS
+         2WRFsqUjowle9ChpmytkT4MMhCkHAukfUrz8umII=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6C05460C5F
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
 From:   Tamizh chelvam <tamizhr@codeaurora.org>
 To:     johannes@sipsolutions.net, ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv6 4/9] nl80211: Add netlink attribute to enable/disable RTS_CTS
-Date:   Tue, 18 Jun 2019 10:57:07 +0530
-Message-Id: <1560835632-17405-5-git-send-email-tamizhr@codeaurora.org>
+Subject: [PATCHv6 6/9] mac80211: Add api to support configuring TID specific configuration
+Date:   Tue, 18 Jun 2019 10:57:09 +0530
+Message-Id: <1560835632-17405-7-git-send-email-tamizhr@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1560835632-17405-1-git-send-email-tamizhr@codeaurora.org>
 References: <1560835632-17405-1-git-send-email-tamizhr@codeaurora.org>
@@ -64,153 +64,176 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce NL80211_TID_ATTR_CONFIG_RTSCTS_CTRL in nl80211_attr_tid_config
-to accept TID specific RTS_CTS enable/disable configuration
-through NL80211_CMD_SET_TID_CONFIG command. TID for which the
-RTS_CTS control configuration is to be applied is passed in
-NL80211_TID_ATTR_CONFIG_TID attribute. When the user-space wants this
-configuration peer specific rather than being applied for all the
-connected stations, MAC address of the peer can be passed in
-NL80211_ATTR_MAC attribute.
-
-Driver supporting this feature should advertise
-NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL and supporting per-STA data TID
-RTS_CTS configuration should advertise NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL.
+Implement drv_set_tid_config api to allow TID specific
+configuration. This per-TID configuration
+will be applied for all the connected stations when MAC is NULL.
 
 Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
 ---
- include/net/cfg80211.h       |    3 +++
- include/uapi/linux/nl80211.h |   22 ++++++++++++++++++++++
- net/wireless/nl80211.c       |   27 +++++++++++++++++++++++++++
- 3 files changed, 52 insertions(+)
+ include/net/mac80211.h    |   38 ++++++++++++++++++++++++++++++++++++++
+ net/mac80211/cfg.c        |   28 ++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h |   15 +++++++++++++++
+ 3 files changed, 81 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d2814e8..1b875d8 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -529,6 +529,7 @@ enum ieee80211_tid_conf_mask {
- 	IEEE80211_TID_CONF_NOACK	= BIT(0),
- 	IEEE80211_TID_CONF_RETRY	= BIT(1),
- 	IEEE80211_TID_CONF_AMPDU	= BIT(2),
-+	IEEE80211_TID_CONF_RTSCTS	= BIT(3),
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4411120..f97c755 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1563,6 +1563,8 @@ enum ieee80211_vif_flags {
+ 	IEEE80211_VIF_GET_NOA_UPDATE		= BIT(3),
  };
  
++#define IEEE80211_TID_MAX	8
++
  /**
-@@ -540,6 +541,7 @@ enum ieee80211_tid_conf_mask {
-  * @retry_long: retry count value
-  * @retry_short: retry count value
-  * @ampdu: Enable/Disable aggregation
-+ * @rtscts: Enable/Disable RTS/CTS
-  */
- struct ieee80211_tid_cfg {
- 	u8 tid;
-@@ -548,6 +550,7 @@ struct ieee80211_tid_cfg {
- 	int retry_long;
- 	int retry_short;
- 	u8 ampdu;
-+	u8 rtscts;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 465dbc6..df4e07d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4727,6 +4727,21 @@ enum nl80211_tid_config {
-  *	NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL and supporting per station
-  *	aggregation configuration should advertise
-  *	NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL.
-+ * @NL80211_TID_ATTR_CONFIG_RTSCTS_CTRL: Enable/Disable RTS_CTS for the TID
-+ *	specified in %%NL80211_TID_ATTR_CONFIG_TID. It is u8 type, if the
-+ *	peer MAC address is passed in %NL80211_ATTR_MAC, then this
-+ *	configuration is applied to the data frame for the tid to that
-+ *	connected station.
-+ *	Station specific RTS_CTS configuration is valid only for STA's
-+ *	current connection. i.e. the configuration will be reset to default when
-+ *	the station connects back after disconnection/roaming.
-+ *	when user-space does not include %NL80211_ATTR_MAC, this configuration
-+ *	should be treated as per-netdev configuration. This configuration will
-+ *	be cleared when the interface goes down and on the disconnection from a
-+ *	BSS. Driver supporting this feature should advertise
-+ *	NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL and supporting per station
-+ *	RTS_CTS configuration should advertise
-+ *	NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL.
-  */
- enum nl80211_tid_attr_config {
- 	__NL80211_TID_ATTR_INVALID,
-@@ -4736,6 +4751,7 @@ enum nl80211_tid_attr_config {
- 	NL80211_TID_ATTR_CONFIG_RETRY_SHORT,
- 	NL80211_TID_ATTR_CONFIG_RETRY_LONG,
- 	NL80211_TID_ATTR_CONFIG_AMPDU_CTRL,
-+	NL80211_TID_ATTR_CONFIG_RTSCTS_CTRL,
- 
- 	/* keep last */
- 	__NL80211_TID_ATTR_CONFIG_AFTER_LAST,
-@@ -5565,6 +5581,10 @@ enum nl80211_feature_flags {
-  *	aggregation control(enable/disable).
-  * @NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL: Driver supports per STA
-  *	specific TID aggregation control(enable/disable).
-+ * @NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL: Driver supports TID specific
-+ *	RTS_CTS control(enable/disable).
-+ * @NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL: Driver supports STA specific
-+ *	RTS_CTS control(enable/disable).
+  * struct ieee80211_vif - per-interface data
   *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -5617,6 +5637,8 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG,
- 	NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL,
- 	NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL,
-+	NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL,
-+	NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL,
+@@ -1600,6 +1602,13 @@ enum ieee80211_vif_flags {
+  * @txq: the multicast data TX queue (if driver uses the TXQ abstraction)
+  * @txqs_stopped: per AC flag to indicate that intermediate TXQs are stopped,
+  *	protected by fq->lock.
++ * @noack: per-TID noack policy.
++ * @retry_short: per-TID retry count.
++ * @retry_long: per-TID count.
++ * @ampdu: per-TID Aggregation-MPDU.
++ * @rate_ctrl: per-TID tx rate control type.
++ * @rate_code: per-TID tx rate code mask.
++ * @rtscts: per-TID RTSCTS policy.
+  */
+ struct ieee80211_vif {
+ 	enum nl80211_iftype type;
+@@ -1626,6 +1635,14 @@ struct ieee80211_vif {
  
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a8982de..370c483 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -291,6 +291,8 @@ static int validate_ie_attr(const struct nlattr *attr,
- 	[NL80211_TID_ATTR_CONFIG_RETRY_LONG] = NLA_POLICY_MIN(NLA_U8, 0),
- 	[NL80211_TID_ATTR_CONFIG_AMPDU_CTRL] =
- 			NLA_POLICY_MAX(NLA_U8, NL80211_TID_CONFIG_DISABLE),
-+	[NL80211_TID_ATTR_CONFIG_RTSCTS_CTRL] =
-+			NLA_POLICY_MAX(NLA_U8, NL80211_TID_CONFIG_DISABLE),
+ 	bool txqs_stopped[IEEE80211_NUM_ACS];
+ 
++	int noack[IEEE80211_TID_MAX];
++	int retry_short[IEEE80211_TID_MAX];
++	int retry_long[IEEE80211_TID_MAX];
++	int ampdu[IEEE80211_TID_MAX];
++	u8 rate_ctrl[IEEE80211_TID_MAX];
++	u32 rate_code[IEEE80211_TID_MAX];
++	u8 rtscts[IEEE80211_TID_MAX];
++
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+ };
+@@ -1960,6 +1977,12 @@ struct ieee80211_sta_txpwr {
+  * @max_tid_amsdu_len: Maximum A-MSDU size in bytes for this TID
+  * @txq: per-TID data TX queues (if driver uses the TXQ abstraction); note that
+  *	the last entry (%IEEE80211_NUM_TIDS) is used for non-data frames
++ * @noack: per-TID noack policy.
++ * @retry_short: per-TID retry count.
++ * @retry_long: per-TID count.
++ * @ampdu: per-TID Aggregation-MPDU.
++ * @rate_ctrl: per-TID tx rate control type.
++ * @rtscts: per-TID RTSCTS policy.
+  */
+ struct ieee80211_sta {
+ 	u32 supp_rates[NUM_NL80211_BANDS];
+@@ -2004,6 +2027,13 @@ struct ieee80211_sta {
+ 
+ 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
+ 
++	int noack[IEEE80211_TID_MAX];
++	int retry_short[IEEE80211_TID_MAX];
++	int retry_long[IEEE80211_TID_MAX];
++	int ampdu[IEEE80211_TID_MAX];
++	u8 rate_ctrl[IEEE80211_TID_MAX];
++	u8 rtscts[IEEE80211_TID_MAX];
++
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+ };
+@@ -3743,6 +3773,10 @@ enum ieee80211_reconfig_type {
+  *
+  * @start_pmsr: start peer measurement (e.g. FTM) (this call can sleep)
+  * @abort_pmsr: abort peer measurement (this call can sleep)
++ * @set_tid_config: TID specific configurations will be applied for a particular
++ *	station when @sta is non-NULL. When @sta is %NULL, then the configuration
++ *	will be for all the connected clients in the vif.
++ *	This callback may sleep.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -4043,6 +4077,10 @@ struct ieee80211_ops {
+ 			  struct cfg80211_pmsr_request *request);
+ 	void (*abort_pmsr)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			   struct cfg80211_pmsr_request *request);
++	int (*set_tid_config)(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct ieee80211_sta *sta,
++			      struct ieee80211_tid_config *tid_conf);
  };
  
- const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
-@@ -13686,6 +13688,31 @@ static int parse_tid_conf(struct cfg80211_registered_device *rdev,
- 		tid_conf->ampdu =
- 			nla_get_u8(attrs[NL80211_TID_ATTR_CONFIG_AMPDU_CTRL]);
- 	}
-+
-+	if (attrs[NL80211_TID_ATTR_CONFIG_RTSCTS_CTRL]) {
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+				NL80211_EXT_FEATURE_PER_TID_RTSCTS_CTRL)) {
-+			NL_SET_ERR_MSG_ATTR(extack,
-+					    attrs[NL80211_TID_ATTR_CONFIG_RTSCTS_CTRL],
-+					    "TID specific configuration not "
-+					    "supported");
-+			return -ENOTSUPP;
-+		}
-+
-+		if (peer && !wiphy_ext_feature_isset(&rdev->wiphy,
-+				NL80211_EXT_FEATURE_PER_STA_RTSCTS_CTRL)) {
-+			NL_SET_ERR_MSG_ATTR(extack,
-+					    attrs[NL80211_TID_ATTR_CONFIG_RTSCTS_CTRL],
-+					    "peer specfic TID configuration not "
-+					    "supported");
-+			return -ENOTSUPP;
-+		}
-+
-+		tid_conf->tid_conf_mask |= IEEE80211_TID_CONF_RTSCTS;
-+		tid_conf->rtscts =
-+			nla_get_u8(attrs[NL80211_TID_ATTR_CONFIG_RTSCTS_CTRL]);
-+	}
-+
- 	return 0;
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index fcf1dfc..55c08af 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3940,6 +3940,33 @@ static int ieee80211_get_txq_stats(struct wiphy *wiphy,
+ 	return drv_abort_pmsr(local, sdata, request);
  }
  
++static int ieee80211_set_tid_config(struct wiphy *wiphy,
++				    struct net_device *dev,
++				    struct ieee80211_tid_config *tid_conf)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++	int ret;
++
++	if (!sdata->local->ops->set_tid_config)
++		return -EOPNOTSUPP;
++
++	if (!tid_conf->peer)
++		return drv_set_tid_config(sdata->local, sdata, NULL, tid_conf);
++
++	mutex_lock(&sdata->local->sta_mtx);
++
++	sta = sta_info_get_bss(sdata, tid_conf->peer);
++	if (!sta) {
++		mutex_unlock(&sdata->local->sta_mtx);
++		return -ENOENT;
++	}
++
++	ret = drv_set_tid_config(sdata->local, sdata, &sta->sta, tid_conf);
++	mutex_unlock(&sdata->local->sta_mtx);
++	return ret;
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -4038,4 +4065,5 @@ static int ieee80211_get_txq_stats(struct wiphy *wiphy,
+ 	.start_pmsr = ieee80211_start_pmsr,
+ 	.abort_pmsr = ieee80211_abort_pmsr,
+ 	.probe_mesh_link = ieee80211_probe_mesh_link,
++	.set_tid_config = ieee80211_set_tid_config,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index c2d8b54..d1ffca5 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1356,4 +1356,19 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline int drv_set_tid_config(struct ieee80211_local *local,
++				     struct ieee80211_sub_if_data *sdata,
++				     struct ieee80211_sta *sta,
++				     struct ieee80211_tid_config *tid_conf)
++{
++	int ret;
++
++	might_sleep();
++	ret = local->ops->set_tid_config(&local->hw, &sdata->vif, sta,
++					 tid_conf);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
 -- 
 1.7.9.5
 
