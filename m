@@ -2,105 +2,59 @@ Return-Path: <SRS0=QcoQ=US=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=0.3 required=3.0 tests=DATE_IN_PAST_03_06,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2EACC468B0
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 13:41:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 206C7C31E5B
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 15:04:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 869B821783
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 13:41:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0060C21874
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 15:04:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730624AbfFSNlD (ORCPT
+        id S1729554AbfFSPEA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Jun 2019 09:41:03 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:36406 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726479AbfFSNlD (ORCPT
+        Wed, 19 Jun 2019 11:04:00 -0400
+Received: from mail.excellent-customer-service.com ([185.216.140.110]:38849
+        "EHLO chulaseafood.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727002AbfFSPEA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jun 2019 09:41:03 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hdapd-0001rq-9z; Wed, 19 Jun 2019 15:40:57 +0200
-Message-ID: <634be6de5fd29064bd41540a5d93d1756c06a980.camel@sipsolutions.net>
-Subject: Re: [PATCH V4 22/28] PCI: tegra: Access endpoint config only if
- PCIe link is up
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Thierry Reding <thierry.reding@gmail.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        robh+dt@kernel.org, mark.rutland@arm.com, jonathanh@nvidia.com,
-        vidyas@nvidia.com, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-wireless@vger.kernel.org
-Date:   Wed, 19 Jun 2019 15:40:54 +0200
-In-Reply-To: <20190619133817.GA143205@google.com>
-References: <09bcc121-eaca-3866-d0ef-7806503e883f@nvidia.com>
-         <ca34eb24-8696-576f-26bc-8d6141f81a41@nvidia.com>
-         <20190613143946.GA30445@e121166-lin.cambridge.arm.com>
-         <20190613154250.GA32713@ulmo>
-         <a523a19c-fdfa-01f7-6f6d-2ca367a10a50@nvidia.com>
-         <20190617114745.GL508@ulmo> <20190617193024.GC13533@google.com>
-         <a7e0472d-f4a7-ed63-836a-b5e8b1360645@nvidia.com>
-         <20190618104918.GA28892@ulmo>
-         <9c0fb01f0dc6a193265297eaa100a35ff25413e7.camel@sipsolutions.net>
-         <20190619133817.GA143205@google.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Wed, 19 Jun 2019 11:04:00 -0400
+X-Greylist: delayed 3628 seconds by postgrey-1.27 at vger.kernel.org; Wed, 19 Jun 2019 11:03:59 EDT
+To:     linux-wireless@vger.kernel.org
+Subject: =?UTF-8?B?wrcgICAgICAgICBjYW4geW91IGFzc2lzdCBtZT8=?=
+Message-ID: <6e1ecfcaa90c7075def55641df96f1ef@airkinglimited.com>
+Date:   Wed, 19 Jun 2019 12:41:04 +0200
+From:   "Laura" <ansitaksi@verizon.net>
+Reply-To: turisnig@sina.com
+MIME-Version: 1.0
+Content-Type: text/plain; format=flowed; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2019-06-19 at 08:38 -0500, Bjorn Helgaas wrote:
+Hi,
 
-> > > > > How does rfkill work?  It sounds like it completely removes
-> > > > > power from the wifi device, putting it in D3cold.  Is there
-> > > > > any software notification other than the "Slot present pin
-> > > > > change" (which looks like a Tegra-specific thing)?
-> > 
-> > Well, they said above it's a GPIO that controls it, so the software
-> > already knows and doesn't really need an event?
-> 
-> Forgive my ignorance about rfkill.  At least in this Tegra case, it
-> sounds like rfkill basically controls a power switch for the entire
-> device, i.e., it doesn't merely turn off the radio portion of the
-> device; it puts the entire PCI device in D3cold.
+Can you direct me to the owner/decision maker?   We’d like to send you
+more clients to help you grow your business.
 
-Sort of. The actual (hardware) implementation seems a bit more
-complicated than a "power switch", but yes, that's the effect of it.
 
-> Is rfkill integrated with the power management subsystem?  E.g., when
-> lspci or X tries to read config space via pci_read_config(), does the
-> pci_config_pm_runtime_get() in that path wake up the device?
 
-No, that's the problem at hand AFAICT.
+We can deliver to you real time, exclusive and consistent leads of people
+looking for your business.
 
-> IMO, if the struct pci_dev exists, we should be able to rely on the
-> device actually being accessible (possibly after bringing it back to
-> D0).  If rfkill only turns off the radio, leaving the PCI interface
-> active, that would be fine -- in that case generic PCI things like
-> lspci would work normally and it would be up to the driver to manage
-> network-related things.
-> 
-> But if rfkill turns off PCI interface and the power management
-> subsystem can't wake it up, I think we should unbind the driver and
-> remove the pci_dev, so it wouldn't appear in lspci at all.
 
-Right. That's being suggested here, but since the platform has no actual
-hardware hotplug, that needs to be implemented in software.
 
-The question at hand is *how* to actually achieve that.
+Who would be the right person to call, and what is the best number to reach
+them on?
 
-I'm kind of arguing that it's not rfkill that achieves it, but the
-underlying GPIO that toggles the device, since that GPIO could also be
-bound to something other than an rfkill-gpio instance.
 
-johannes
+
+Thank you!
+
+
+
+Laura Gevins
 
