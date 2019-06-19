@@ -2,104 +2,111 @@ Return-Path: <SRS0=QcoQ=US=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B39DDC31E5B
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 16:31:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACD78C31E5B
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 92EF32173E
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 16:31:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8661220645
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730018AbfFSQbe (ORCPT
+        id S1730268AbfFSRmK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Jun 2019 12:31:34 -0400
-Received: from smtprelay0234.hostedemail.com ([216.40.44.234]:46325 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725899AbfFSQbe (ORCPT
+        Wed, 19 Jun 2019 13:42:10 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54518 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728845AbfFSRmJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jun 2019 12:31:34 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay05.hostedemail.com (Postfix) with ESMTP id D3FFA1801A0B4;
-        Wed, 19 Jun 2019 16:31:31 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: cakes27_80e37c98d9d58
-X-Filterd-Recvd-Size: 3106
-Received: from XPS-9350 (cpe-23-242-196-136.socal.res.rr.com [23.242.196.136])
-        (Authenticated sender: joe@perches.com)
-        by omf09.hostedemail.com (Postfix) with ESMTPA;
-        Wed, 19 Jun 2019 16:31:25 +0000 (UTC)
-Message-ID: <9a000734375c0801fc16b71f4be1235f9b857772.camel@perches.com>
-Subject: Re: [PATCH v3 0/7] Hexdump Enhancements
-From:   Joe Perches <joe@perches.com>
-To:     Alastair D'Silva <alastair@au1.ibm.com>, alastair@d-silva.org
-Cc:     Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        Jassi Brar <jassisinghbrar@gmail.com>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jose Abreu <Jose.Abreu@synopsys.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Benson Leung <bleung@chromium.org>,
-        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Petr Mladek <pmladek@suse.com>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        David Laight <David.Laight@ACULAB.COM>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-fsdevel@vger.kernel.org
-Date:   Wed, 19 Jun 2019 09:31:24 -0700
-In-Reply-To: <20190617020430.8708-1-alastair@au1.ibm.com>
-References: <20190617020430.8708-1-alastair@au1.ibm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.30.5-0ubuntu0.18.10.1 
+        Wed, 19 Jun 2019 13:42:09 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <luca@coelho.fi>)
+        id 1hdeb2-0002zq-74; Wed, 19 Jun 2019 20:42:08 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: [PATCH 2/6] iwlwifi: pcie: fix ALIVE interrupt handling for gen2 devices w/o MSI-X
+Date:   Wed, 19 Jun 2019 20:41:55 +0300
+Message-Id: <20190619174159.13927-3-luca@coelho.fi>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190619174159.13927-1-luca@coelho.fi>
+References: <20190619174159.13927-1-luca@coelho.fi>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2019-06-17 at 12:04 +1000, Alastair D'Silva wrote:
-> From: Alastair D'Silva <alastair@d-silva.org>
-> 
-> Apologies for the large CC list, it's a heads up for those responsible
-> for subsystems where a prototype change in generic code causes a change
-> in those subsystems.
-> 
-> This series enhances hexdump.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Still not a fan of these patches.
+We added code to restock the buffer upon ALIVE interrupt
+when MSI-X is disabled. This was added as part of the context
+info code. This code was added only if the ISR debug level
+is set which is very unlikely to be related.
+Move this code to run even when the ISR debug level is not
+set.
 
-> These improve the readability of the dumped data in certain situations
-> (eg. wide terminals are available, many lines of empty bytes exist, etc).
+Note that gen2 devices work with MSI-X in most cases so that
+this path is seldom used.
 
-Changing hexdump's last argument from bool to int is odd.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 34 +++++++++-----------
+ 1 file changed, 16 insertions(+), 18 deletions(-)
 
-Perhaps a new function should be added instead of changing
-the existing hexdump.
-
-> The default behaviour of hexdump is unchanged, however, the prototype
-> for hex_dump_to_buffer() has changed, and print_hex_dump() has been
-> renamed to print_hex_dump_ext(), with a wrapper replacing it for
-> compatibility with existing code, which would have been too invasive to
-> change.
-> 
-> Hexdump selftests have be run & confirmed passed.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 31b3591f71d1..3df12b3f71a8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1827,25 +1827,23 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 		goto out;
+ 	}
+ 
+-	if (iwl_have_debug_level(IWL_DL_ISR)) {
+-		/* NIC fires this, but we don't use it, redundant with WAKEUP */
+-		if (inta & CSR_INT_BIT_SCD) {
+-			IWL_DEBUG_ISR(trans,
+-				      "Scheduler finished to transmit the frame/frames.\n");
+-			isr_stats->sch++;
+-		}
++	/* NIC fires this, but we don't use it, redundant with WAKEUP */
++	if (inta & CSR_INT_BIT_SCD) {
++		IWL_DEBUG_ISR(trans,
++			      "Scheduler finished to transmit the frame/frames.\n");
++		isr_stats->sch++;
++	}
+ 
+-		/* Alive notification via Rx interrupt will do the real work */
+-		if (inta & CSR_INT_BIT_ALIVE) {
+-			IWL_DEBUG_ISR(trans, "Alive interrupt\n");
+-			isr_stats->alive++;
+-			if (trans->cfg->gen2) {
+-				/*
+-				 * We can restock, since firmware configured
+-				 * the RFH
+-				 */
+-				iwl_pcie_rxmq_restock(trans, trans_pcie->rxq);
+-			}
++	/* Alive notification via Rx interrupt will do the real work */
++	if (inta & CSR_INT_BIT_ALIVE) {
++		IWL_DEBUG_ISR(trans, "Alive interrupt\n");
++		isr_stats->alive++;
++		if (trans->cfg->gen2) {
++			/*
++			 * We can restock, since firmware configured
++			 * the RFH
++			 */
++			iwl_pcie_rxmq_restock(trans, trans_pcie->rxq);
+ 		}
+ 	}
+ 
+-- 
+2.20.1
 
