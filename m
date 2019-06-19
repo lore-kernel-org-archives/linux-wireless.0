@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA4C8C31E5D
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E2FDC31E5B
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0B0320645
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2485120645
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730201AbfFSRmK (ORCPT
+        id S1730317AbfFSRmL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Jun 2019 13:42:10 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54514 "EHLO
+        Wed, 19 Jun 2019 13:42:11 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54522 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727076AbfFSRmJ (ORCPT
+        with ESMTP id S1729659AbfFSRmK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jun 2019 13:42:09 -0400
+        Wed, 19 Jun 2019 13:42:10 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hdeb1-0002zq-M9; Wed, 19 Jun 2019 20:42:07 +0300
+        id 1hdeb2-0002zq-O0; Wed, 19 Jun 2019 20:42:08 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 1/6] iwlwifi: mvm: delay GTK setting in FW in AP mode
-Date:   Wed, 19 Jun 2019 20:41:54 +0300
-Message-Id: <20190619174159.13927-2-luca@coelho.fi>
+Subject: [PATCH 3/6] iwlwifi: fix RF-Kill interrupt while FW load for gen2 devices
+Date:   Wed, 19 Jun 2019 20:41:56 +0300
+Message-Id: <20190619174159.13927-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190619174159.13927-1-luca@coelho.fi>
 References: <20190619174159.13927-1-luca@coelho.fi>
@@ -43,150 +43,154 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-In AP (and IBSS) mode, we can only set GTKs to firmware after we have
-sent down the multicast station, but this we can only do after we've
-enabled beaconing, etc.
+Newest devices have a new firmware load mechanism. This
+mechanism is called the context info. It means that the
+driver doesn't need to load the sections of the firmware.
+The driver rather prepares a place in DRAM, with pointers
+to the relevant sections of the firmware, and the firmware
+loads itself.
+At the end of the process, the firmware sends the ALIVE
+interrupt. This is different from the previous scheme in
+which the driver expected the FH_TX interrupt after each
+section being transferred over the DMA.
 
-However, during rfkill exit, hostapd will configure the keys before
-starting the AP, and cfg80211/mac80211 accept it happily.
+In order to support this new flow, we enabled all the
+interrupts. This broke the assumption that we have in the
+code that the RF-Kill interrupt can't interrupt the firmware
+load flow.
 
-On earlier devices, this didn't bother us as GTK TX wasn't really
-handled in firmware, we just put the key material into the TX cmd
-and thus it only mattered when we actually transmitted a frame.
+Change the context info flow to enable only the ALIVE
+interrupt, and re-enable all the other interrupts only
+after the firmware is alive. Then, we won't see the RF-Kill
+interrupt until then. Getting the RF-Kill interrupt while
+loading the firmware made us kill the firmware while it is
+loading and we ended up dumping garbage instead of the firmware
+state.
 
-On newer devices, however, the firmware needs to track all of this
-and that doesn't work if we add the key before the (multicast) sta
-it belongs to.
+Re-enable the ALIVE | RX interrupts from the ISR when we
+get the ALIVE interrupt to be able to get the RX interrupt
+that comes immediately afterwards for the ALIVE
+notification. This is needed for non MSI-X only.
 
-To fix this, keep a list of keys to add during AP enable, and call
-the function there.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 53 ++++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 ++
- 2 files changed, 54 insertions(+), 2 deletions(-)
+ .../intel/iwlwifi/pcie/ctxt-info-gen3.c       |  2 +-
+ .../wireless/intel/iwlwifi/pcie/ctxt-info.c   |  2 +-
+ .../wireless/intel/iwlwifi/pcie/internal.h    | 27 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  5 ++++
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  9 +++++++
+ 5 files changed, 43 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index fdbabca0280e..964c7baabede 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -207,6 +207,12 @@ static const struct cfg80211_pmsr_capabilities iwl_mvm_pmsr_capa = {
- 	},
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index f496d1bcb643..1719a5ff77a9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -169,7 +169,7 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
  
-+static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-+			       enum set_key_cmd cmd,
-+			       struct ieee80211_vif *vif,
-+			       struct ieee80211_sta *sta,
-+			       struct ieee80211_key_conf *key);
-+
- void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
- {
- 	if (!iwl_mvm_is_d0i3_supported(mvm))
-@@ -2636,7 +2642,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	int ret;
-+	int ret, i;
+ 	memcpy(iml_img, trans->iml, trans->iml_len);
  
- 	/*
- 	 * iwl_mvm_mac_ctxt_add() might read directly from the device
-@@ -2710,6 +2716,20 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
- 	/* must be set before quota calculations */
- 	mvmvif->ap_ibss_active = true;
+-	iwl_enable_interrupts(trans);
++	iwl_enable_fw_load_int_ctx_info(trans);
  
-+	/* send all the early keys to the device now */
-+	for (i = 0; i < ARRAY_SIZE(mvmvif->ap_early_keys); i++) {
-+		struct ieee80211_key_conf *key = mvmvif->ap_early_keys[i];
+ 	/* kick FW self load */
+ 	iwl_write64(trans, CSR_CTXT_INFO_ADDR,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+index 8969b47bacf2..d38cefbb779e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+@@ -222,7 +222,7 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
+ 
+ 	trans_pcie->ctxt_info = ctxt_info;
+ 
+-	iwl_enable_interrupts(trans);
++	iwl_enable_fw_load_int_ctx_info(trans);
+ 
+ 	/* Configure debug, if exists */
+ 	if (iwl_pcie_dbg_on(trans))
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 85973dd57234..dcb3a3768cbd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -874,6 +874,33 @@ static inline void iwl_enable_fw_load_int(struct iwl_trans *trans)
+ 	}
+ }
+ 
++static inline void iwl_enable_fw_load_int_ctx_info(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
 +
-+		if (!key)
-+			continue;
++	IWL_DEBUG_ISR(trans, "Enabling ALIVE interrupt only\n");
 +
-+		mvmvif->ap_early_keys[i] = NULL;
-+
-+		ret = iwl_mvm_mac_set_key(hw, SET_KEY, vif, NULL, key);
-+		if (ret)
-+			goto out_quota_failed;
++	if (!trans_pcie->msix_enabled) {
++		/*
++		 * When we'll receive the ALIVE interrupt, the ISR will call
++		 * iwl_enable_fw_load_int_ctx_info again to set the ALIVE
++		 * interrupt (which is not really needed anymore) but also the
++		 * RX interrupt which will allow us to receive the ALIVE
++		 * notification (which is Rx) and continue the flow.
++		 */
++		trans_pcie->inta_mask =  CSR_INT_BIT_ALIVE | CSR_INT_BIT_FH_RX;
++		iwl_write32(trans, CSR_INT_MASK, trans_pcie->inta_mask);
++	} else {
++		iwl_enable_hw_int_msk_msix(trans,
++					   MSIX_HW_INT_CAUSES_REG_ALIVE);
++		/*
++		 * Leave all the FH causes enabled to get the ALIVE
++		 * notification.
++		 */
++		iwl_enable_fh_int_msk_msix(trans, trans_pcie->fh_init_mask);
 +	}
++}
 +
- 	if (vif->type == NL80211_IFTYPE_AP && !vif->p2p) {
- 		iwl_mvm_vif_set_low_latency(mvmvif, true,
- 					    LOW_LATENCY_VIF_TYPE);
-@@ -3479,11 +3499,12 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 			       struct ieee80211_sta *sta,
- 			       struct ieee80211_key_conf *key)
+ static inline u16 iwl_pcie_get_cmd_index(const struct iwl_txq *q, u32 index)
  {
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	struct iwl_mvm_sta *mvmsta;
- 	struct iwl_mvm_key_pn *ptk_pn;
- 	int keyidx = key->keyidx;
--	int ret;
-+	int ret, i;
- 	u8 key_offset;
- 
- 	if (iwlwifi_mod_params.swcrypto) {
-@@ -3556,6 +3577,22 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 				key->hw_key_idx = STA_KEY_IDX_INVALID;
- 				break;
- 			}
-+
-+			if (!mvmvif->ap_ibss_active) {
-+				for (i = 0;
-+				     i < ARRAY_SIZE(mvmvif->ap_early_keys);
-+				     i++) {
-+					if (!mvmvif->ap_early_keys[i]) {
-+						mvmvif->ap_early_keys[i] = key;
-+						break;
-+					}
-+				}
-+
-+				if (i >= ARRAY_SIZE(mvmvif->ap_early_keys))
-+					ret = -ENOSPC;
-+
-+				break;
-+			}
+ 	return index & (q->n_window - 1);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 3df12b3f71a8..dcf891a4ce6e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1845,6 +1845,8 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 			 */
+ 			iwl_pcie_rxmq_restock(trans, trans_pcie->rxq);
  		}
- 
- 		/* During FW restart, in order to restore the state as it was,
-@@ -3624,6 +3661,18 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 
- 		break;
- 	case DISABLE_KEY:
-+		ret = -ENOENT;
-+		for (i = 0; i < ARRAY_SIZE(mvmvif->ap_early_keys); i++) {
-+			if (mvmvif->ap_early_keys[i] == key) {
-+				mvmvif->ap_early_keys[i] = NULL;
-+				ret = 0;
-+			}
-+		}
 +
-+		/* found in pending list - don't do anything else */
-+		if (ret == 0)
-+			break;
-+
- 		if (key->hw_key_idx == STA_KEY_IDX_INVALID) {
- 			ret = 0;
- 			break;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 02efcf2189c4..88af1f0ba3f0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -501,6 +501,9 @@ struct iwl_mvm_vif {
- 	netdev_features_t features;
++		handled |= CSR_INT_BIT_ALIVE;
+ 	}
  
- 	struct iwl_probe_resp_data __rcu *probe_resp_data;
-+
-+	/* we can only have 2 GTK + 2 IGTK active at a time */
-+	struct ieee80211_key_conf *ap_early_keys[4];
- };
+ 	/* Safely ignore these bits for debug checks below */
+@@ -1963,6 +1965,9 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	/* Re-enable RF_KILL if it occurred */
+ 	else if (handled & CSR_INT_BIT_RF_KILL)
+ 		iwl_enable_rfkill_int(trans);
++	/* Re-enable the ALIVE / Rx interrupt if it occurred */
++	else if (handled & (CSR_INT_BIT_ALIVE | CSR_INT_BIT_FH_RX))
++		iwl_enable_fw_load_int_ctx_info(trans);
+ 	spin_unlock(&trans_pcie->irq_lock);
  
- static inline struct iwl_mvm_vif *
+ out:
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index 8507a7bdcfdd..ea1d2bed502d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -273,6 +273,15 @@ void iwl_trans_pcie_gen2_fw_alive(struct iwl_trans *trans, u32 scd_addr)
+ 	 * paging memory cannot be freed included since FW will still use it
+ 	 */
+ 	iwl_pcie_ctxt_info_free(trans);
++
++	/*
++	 * Re-enable all the interrupts, including the RF-Kill one, now that
++	 * the firmware is alive.
++	 */
++	iwl_enable_interrupts(trans);
++	mutex_lock(&trans_pcie->mutex);
++	iwl_pcie_check_hw_rf_kill(trans);
++	mutex_unlock(&trans_pcie->mutex);
+ }
+ 
+ int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
 -- 
 2.20.1
 
