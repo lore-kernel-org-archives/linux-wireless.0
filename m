@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB38EC31E5E
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E079C31E5B
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D25F42147A
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BCC520645
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jun 2019 17:42:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730369AbfFSRmM (ORCPT
+        id S1730414AbfFSRmN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Jun 2019 13:42:12 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54526 "EHLO
+        Wed, 19 Jun 2019 13:42:13 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54540 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726380AbfFSRmK (ORCPT
+        with ESMTP id S1730272AbfFSRmM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jun 2019 13:42:10 -0400
+        Wed, 19 Jun 2019 13:42:12 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hdeb3-0002zq-7q; Wed, 19 Jun 2019 20:42:09 +0300
+        id 1hdeb4-0002zq-AF; Wed, 19 Jun 2019 20:42:10 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 4/6] iwlwifi: pcie: don't service an interrupt that was masked
-Date:   Wed, 19 Jun 2019 20:41:57 +0300
-Message-Id: <20190619174159.13927-5-luca@coelho.fi>
+Subject: [PATCH 6/6] iwlwifi: mvm: clear rfkill_safe_init_done when we start the firmware
+Date:   Wed, 19 Jun 2019 20:41:59 +0300
+Message-Id: <20190619174159.13927-7-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190619174159.13927-1-luca@coelho.fi>
 References: <20190619174159.13927-1-luca@coelho.fi>
@@ -45,68 +45,51 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Sometimes the register status can include interrupts that
-were masked. We can, for example, get the RF-Kill bit set
-in the interrupt status register although this interrupt
-was masked. Then if we get the ALIVE interrupt (for example)
-that was not masked, we need to *not* service the RF-Kill
-interrupt.
-Fix this in the MSI-X interrupt handler.
+Otherwise it'll stay set forever which is clearly buggy.
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 27 +++++++++++++++-----
- 1 file changed, 21 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index dcf891a4ce6e..e5220905dff1 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -2111,10 +2111,18 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 		return IRQ_NONE;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 153717587aeb..559f6df1a74d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -419,6 +419,8 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
  
--	if (iwl_have_debug_level(IWL_DL_ISR))
--		IWL_DEBUG_ISR(trans, "ISR inta_fh 0x%08x, enabled 0x%08x\n",
--			      inta_fh,
-+	if (iwl_have_debug_level(IWL_DL_ISR)) {
-+		IWL_DEBUG_ISR(trans,
-+			      "ISR inta_fh 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
-+			      inta_fh, trans_pcie->fh_mask,
- 			      iwl_read32(trans, CSR_MSIX_FH_INT_MASK_AD));
-+		if (inta_fh & ~trans_pcie->fh_mask)
-+			IWL_DEBUG_ISR(trans,
-+				      "We got a masked interrupt (0x%08x)\n",
-+				      inta_fh & ~trans_pcie->fh_mask);
-+	}
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	mvm->rfkill_safe_init_done = false;
 +
-+	inta_fh &= trans_pcie->fh_mask;
+ 	iwl_init_notification_wait(&mvm->notif_wait,
+ 				   &init_wait,
+ 				   init_complete,
+@@ -537,8 +539,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
  
- 	if ((trans_pcie->shared_vec_mask & IWL_SHARED_IRQ_NON_RX) &&
- 	    inta_fh & MSIX_FH_INT_CAUSES_Q0) {
-@@ -2154,11 +2162,18 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 	}
+ 	lockdep_assert_held(&mvm->mutex);
  
- 	/* After checking FH register check HW register */
--	if (iwl_have_debug_level(IWL_DL_ISR))
-+	if (iwl_have_debug_level(IWL_DL_ISR)) {
- 		IWL_DEBUG_ISR(trans,
--			      "ISR inta_hw 0x%08x, enabled 0x%08x\n",
--			      inta_hw,
-+			      "ISR inta_hw 0x%08x, enabled (sw) 0x%08x (hw) 0x%08x\n",
-+			      inta_hw, trans_pcie->hw_mask,
- 			      iwl_read32(trans, CSR_MSIX_HW_INT_MASK_AD));
-+		if (inta_hw & ~trans_pcie->hw_mask)
-+			IWL_DEBUG_ISR(trans,
-+				      "We got a masked interrupt 0x%08x\n",
-+				      inta_hw & ~trans_pcie->hw_mask);
-+	}
+-	if (WARN_ON_ONCE(mvm->rfkill_safe_init_done))
+-		return 0;
++	mvm->rfkill_safe_init_done = false;
+ 
+ 	iwl_init_notification_wait(&mvm->notif_wait,
+ 				   &calib_wait,
+@@ -1108,10 +1109,13 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
+ 
+ 	iwl_fw_dbg_apply_point(&mvm->fwrt, IWL_FW_INI_APPLY_EARLY);
+ 
++	mvm->rfkill_safe_init_done = false;
+ 	ret = iwl_mvm_load_ucode_wait_alive(mvm, IWL_UCODE_REGULAR);
+ 	if (ret)
+ 		return ret;
+ 
++	mvm->rfkill_safe_init_done = true;
 +
-+	inta_hw &= trans_pcie->hw_mask;
+ 	iwl_fw_dbg_apply_point(&mvm->fwrt, IWL_FW_INI_APPLY_AFTER_ALIVE);
  
- 	/* Alive notification via Rx interrupt will do the real work */
- 	if (inta_hw & MSIX_HW_INT_CAUSES_REG_ALIVE) {
+ 	return iwl_init_paging(&mvm->fwrt, mvm->fwrt.cur_fw_img);
 -- 
 2.20.1
 
