@@ -2,75 +2,92 @@ Return-Path: <SRS0=u1b0=UT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4926C48BE2
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jun 2019 10:52:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D0D9C43613
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jun 2019 11:08:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7ACB02082C
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jun 2019 10:52:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B9212083B
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jun 2019 11:08:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1561028887;
+	bh=MAchn5o7llcfEXuTbr6cIuiUUttG8yLX0VDvViv1fzI=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=UQj1NoO7Yl4MRVaFD6h7ImQ2SI50jvHcpc/HPr8Rz6AWqVzXlSbD23Ch734aVhkAZ
+	 TbcdqFOozZp6Qo559dWEiDUbdn13zn2i/FuENeBbHEPgaf/J/bcnRTr8SUQKZq7yQc
+	 35hxFHNCtEEEUA1EUUmQd5wZOeXWJ9Oe05nK/em4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730494AbfFTKv4 (ORCPT
+        id S1726392AbfFTLIG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Jun 2019 06:51:56 -0400
-Received: from verein.lst.de ([213.95.11.211]:59434 "EHLO newverein.lst.de"
+        Thu, 20 Jun 2019 07:08:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39538 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726211AbfFTKv4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Jun 2019 06:51:56 -0400
-Received: by newverein.lst.de (Postfix, from userid 2407)
-        id 558CF68B20; Thu, 20 Jun 2019 12:51:24 +0200 (CEST)
-Date:   Thu, 20 Jun 2019 12:51:24 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Potnuri Bharat Teja <bharat@chelsio.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Maxime Ripard <maxime.ripard@bootlin.com>,
-        Sean Paul <sean@poorly.run>, David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Ian Abbott <abbotti@mev.co.uk>,
-        H Hartley Sweeten <hsweeten@visionengravers.com>,
-        devel@driverdev.osuosl.org, linux-s390@vger.kernel.org,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-mm@kvack.org, iommu@lists.linux-foundation.org,
-        "moderated list:ARM PORT" <linux-arm-kernel@lists.infradead.org>,
-        linux-media@vger.kernel.org
-Subject: Re: use exact allocation for dma coherent memory
-Message-ID: <20190620105124.GA25233@lst.de>
-References: <20190614134726.3827-1-hch@lst.de> <20190617082148.GF28859@kadam> <20190617083342.GA7883@lst.de> <20190619162903.GF9360@ziepe.ca>
+        id S1726268AbfFTLIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Jun 2019 07:08:06 -0400
+Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com [209.85.222.169])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 20D3B2083B
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2019 11:08:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1561028885;
+        bh=MAchn5o7llcfEXuTbr6cIuiUUttG8yLX0VDvViv1fzI=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=XbLF49rJusTls4zdmNGkAs4uYNRrYFv3ikXTSNgXtYkcqySzyJoB598gPq8ipSihp
+         iwQiUoOaLNeBtu6+DGG/flxlZAhMYfXO6IlXw5ql69AiGlNgR7FBCz2AEgV+K0Ca59
+         /dfuTRErPyqKVc3RTmVl9qkUEVAWAGNJ872RAAN8=
+Received: by mail-qk1-f169.google.com with SMTP id b18so1566527qkc.9
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2019 04:08:05 -0700 (PDT)
+X-Gm-Message-State: APjAAAWQJTKvY+zgnUTqLcQA9nH3U6Yc3nLKnCrPAYS4Rd3eLMjrEhw+
+        EwuznlWmEIuwEwK6x6KpjvGP/1UcTZXUYo5gwu0=
+X-Google-Smtp-Source: APXvYqydP9iWEJ3Fswhl+jzDLAhwma5F6sScHbipXVo6dG9YOp9It7B+HabmfabqzZ6G3BpBGp1Q6T2UEAlC6hYv+TE=
+X-Received: by 2002:a05:620a:1285:: with SMTP id w5mr17296774qki.302.1561028884357;
+ Thu, 20 Jun 2019 04:08:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190619162903.GF9360@ziepe.ca>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+References: <86eada55d771732ac0477a008d3c5f0a61570952.camel@coelho.fi>
+In-Reply-To: <86eada55d771732ac0477a008d3c5f0a61570952.camel@coelho.fi>
+From:   Josh Boyer <jwboyer@kernel.org>
+Date:   Thu, 20 Jun 2019 07:07:52 -0400
+X-Gmail-Original-Message-ID: <CA+5PVA4-BhUaxrjU4b-ow5us2rZjAxgrMJnAJ2Wj0YWoFnqptw@mail.gmail.com>
+Message-ID: <CA+5PVA4-BhUaxrjU4b-ow5us2rZjAxgrMJnAJ2Wj0YWoFnqptw@mail.gmail.com>
+Subject: Re: pull request: iwlwifi firmware updates 2019-06-20
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>,
+        "kyle@infradead.org" <kyle@infradead.org>,
+        "ben@decadent.org.uk" <ben@decadent.org.uk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jun 19, 2019 at 01:29:03PM -0300, Jason Gunthorpe wrote:
-> > Yes.  This will blow up badly on many platforms, as sq->queue
-> > might be vmapped, ioremapped, come from a pool without page backing.
-> 
-> Gah, this addr gets fed into io_remap_pfn_range/remap_pfn_range too..
-> 
-> Potnuri, you should fix this.. 
-> 
-> You probably need to use dma_mmap_from_dev_coherent() in the mmap ?
+On Thu, Jun 20, 2019 at 4:16 AM Luca Coelho <luca@coelho.fi> wrote:
+>
+> Hi,
+>
+> This contains some updated firmwares for the 9000 and 22000 series of
+> devices, and new firmwares for new integrated 22000 series devices.
+>
+> Please pull or let me know if there are any issues.
+>
+> --
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit acb56f2fae3235195bc99ecb7d09742fb4b65e63:
+>
+>   cavium: Add firmware for CNN55XX crypto driver. (2019-06-18 09:12:52 -0400)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2019-06-20
 
-The function to use is dma_mmap_coherent, dma_mmap_from_dev_coherent is
-just an internal helper.
+Pulled and pushed out.
 
-That beiŋ said the drivers/infiniband code has a lot of
-*remap_pfn_range, and a lot of them look like they might be for
-DMA memory.
+josh
