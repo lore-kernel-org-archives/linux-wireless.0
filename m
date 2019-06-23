@@ -1,80 +1,114 @@
-Return-Path: <SRS0=pMmE=UV=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=aCCt=UW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0783FC43613
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Jun 2019 13:44:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF080C43613
+	for <linux-wireless@archiver.kernel.org>; Sun, 23 Jun 2019 06:06:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D618820665
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Jun 2019 13:44:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8658D2073F
+	for <linux-wireless@archiver.kernel.org>; Sun, 23 Jun 2019 06:06:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UG0IORW7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726293AbfFVNoK convert rfc822-to-8bit (ORCPT
+        id S1726342AbfFWGGY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Jun 2019 09:44:10 -0400
-Received: from coyote.holtmann.net ([212.227.132.17]:44116 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726136AbfFVNoK (ORCPT
+        Sun, 23 Jun 2019 02:06:24 -0400
+Received: from mail-ed1-f48.google.com ([209.85.208.48]:45256 "EHLO
+        mail-ed1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726179AbfFWGGY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Jun 2019 09:44:10 -0400
-Received: from marcel-macpro.fritz.box (p4FEFC3D2.dip0.t-ipconnect.de [79.239.195.210])
-        by mail.holtmann.org (Postfix) with ESMTPSA id 6EE3FCF184;
-        Sat, 22 Jun 2019 15:52:37 +0200 (CEST)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Subject: Re: [PATCH v2 2/3] nl80211: Limit certain commands to interface owner
-From:   Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <b1ae8df6-c8a7-e453-aad3-e31bb2e3bd60@broadcom.com>
-Date:   Sat, 22 Jun 2019 15:44:09 +0200
-Cc:     Denis Kenzior <denkenz@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Content-Transfer-Encoding: 8BIT
-Message-Id: <011C968F-507F-4646-B206-C28BDE7EB4A0@holtmann.org>
-References: <20190620220749.10071-1-denkenz@gmail.com>
- <20190620220749.10071-2-denkenz@gmail.com>
- <11852f40-67e5-9122-7d82-077bdd0b014a@broadcom.com>
- <af810765-ba1a-c7ae-abe5-35eef72eb8ce@gmail.com>
- <b1ae8df6-c8a7-e453-aad3-e31bb2e3bd60@broadcom.com>
-To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
-X-Mailer: Apple Mail (2.3445.104.11)
+        Sun, 23 Jun 2019 02:06:24 -0400
+Received: by mail-ed1-f48.google.com with SMTP id a14so16288476edv.12
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Jun 2019 23:06:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:date:message-id:in-reply-to:references:user-agent:subject
+         :mime-version:content-transfer-encoding;
+        bh=w2gDVFBGrgmBqsaaTHfqg7nIc+WBEvSxTrcY3KXuY04=;
+        b=UG0IORW7vDmKaK9IJDjb8ySv9+yqd5Hug+yxapcSaEe3njLSs5aWKLxf7GAwqsUDI+
+         gFgQkgBpwHAFlUiBuM8KL9spC/t7cdkvhqLbiUee777G3Yr7P6bB1+DFIGY/srtRBY+m
+         WMo66/fAihxPqTuWgynSh9UJ+AvPlYOEvyO9o=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:date:message-id:in-reply-to:references
+         :user-agent:subject:mime-version:content-transfer-encoding;
+        bh=w2gDVFBGrgmBqsaaTHfqg7nIc+WBEvSxTrcY3KXuY04=;
+        b=HnzZGBrvPnAOPcWOhR1ltpHf2ofvt7IHJuQ2br+uvBduaz1fu/HkU0XFH/bwcGjAoJ
+         k+ZTUUJswIMO0cXKVmlk4SDxcY3owwjmTKYKmg5fyGRyVu5Wrz4ayXj+9zozMCrLFnR6
+         /OK4bROxWvAwwzWiUiY8Nh+0C53v6i7ZFpIddJclvwToTVliPBwBb/2z3ZKziRshBAxn
+         bBxoxUa+pA5binNspTP+3+54K6oqBTqj5emUst2wD4J+QiZ60X4363GA9ZDwJDyPqOPB
+         TuRaCoIEGwfgVcYUxVB00t+2cH0bJzUssX8+quJwDd7FFwvKIta8E+fp0EIQIW/hrgiX
+         bKyA==
+X-Gm-Message-State: APjAAAV83BQO2bjl2A55ZfjfEItJQtK/U0ngFscT5tham7PuUTBF2hgn
+        mnOGAn+sIpEZkMpq+qW/LazknlrLlDaV1Q==
+X-Google-Smtp-Source: APXvYqzscPwAljN19J0abqxiQqCbHEQgjEJXwPgSu5Oo7klSlrSJUXYXL6jZisdsGkpg1aIifYMucw==
+X-Received: by 2002:a50:ad01:: with SMTP id y1mr132828745edc.180.1561269982163;
+        Sat, 22 Jun 2019 23:06:22 -0700 (PDT)
+Received: from [192.168.178.38] (f140230.upc-f.chello.nl. [80.56.140.230])
+        by smtp.gmail.com with ESMTPSA id a8sm2423084edt.56.2019.06.22.23.06.21
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 22 Jun 2019 23:06:21 -0700 (PDT)
+From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
+To:     Denis Kenzior <denkenz@gmail.com>,
+        <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+Date:   Sun, 23 Jun 2019 08:06:19 +0200
+Message-ID: <16b82f14778.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+In-Reply-To: <07c7b5fc-bc1c-d49f-1c1e-d0b67899e755@gmail.com>
+References: <45805272aaf8b872a90cf0c364164b5fc1b20272.camel@linux.intel.com>
+ <07c7b5fc-bc1c-d49f-1c1e-d0b67899e755@gmail.com>
+User-Agent: AquaMail/1.20.0-1462 (build: 102100002)
+Subject: Re: iwlwifi/brcmfmac public action frames crash (RESENDING)
+MIME-Version: 1.0
+Content-Type: text/plain; format=flowed; charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Arend,
+On June 21, 2019 10:09:10 PM Denis Kenzior <denkenz@gmail.com> wrote:
 
->>>> If the wdev object has been created (via NEW_INTERFACE) with
->>>> SOCKET_OWNER attribute set, then limit certain commands only to the
->>>> process that created that wdev.
->>>> 
->>>> This can be used to make sure no other process on the system interferes
->>>> by sending unwanted scans, action frames or any other funny business.
->>> 
->>> The flag is a good addition opposed to having handlers deal with it. However, earlier motivation for SOCKET_OWNER use was about netlink multicast being unreliable, which I can agree to. However, avoiding 
->> ???  I can't agree to that as I have no idea what you're talking about :)  Explain?  SOCKET_OWNER was introduced mainly to bring down links / scans / whatever in case the initiating process died.  As a side effect it also helped in the beginning when users ran iwd + wpa_s simultaneously (by accident) and all sorts of fun ensued.  We then re-used SOCKET_OWNER for running EAPoL over NL80211.  But 'multicast unreliability' was never an issue that I recall?
-> 
-> hmm. I tried searching in memory... of my email client but to no avail. I somehow recalled that netlink multicast was not guaranteed to be delivered/seen by all listeners.
-> 
->>> "funny business" is a different thing. Our testing infrastructure is doing all kind of funny business. Guess we will need to refrain from 
->> So you're going behind the managing daemon's back and messing with the kernel state...  I guess the question is why?  But really, if wpa_s wants to tolerate that, that is their problem :)  iwd doesn't want to, nor do we want to deal with the various race conditions and corner cases associated with that.  Life is hard as it is ;)
-> 
-> That's just it, right. This is what Marcel calls the real environment, but is it. The nl80211 is a kernel API and should that mean that there must be a managing daemon locking down APIs for other user-space tools to use. If I want a user-space app to show a radar screen with surrounding APs using scanning and FTM nl80211 commands it seems now it has to create a new interface and hope the resources are there for it to succeed. Where is my freedom in that? If I am using such an app don't you think I don't accept it could impact the managing daemon.
+> Ping, is anyone looking into these crashes?
 
-if you are operating on a shared radio resource you have to have some way of ensuring that nobody steals resources from you. Having an external application that will also use scanning and other off-channel operation will result in a bad experience. Especially if it involves scanning. Currently we still have 3 or more parties triggering scanning on nl80211. Essentially they are now fighting for radio time. You have wpa_supplicant scanning, you have NetworkManager scanning and you have the UI scanning. Now adding just another application that just scans at its decided time location / direction finding is not helping the situation.
+Did not see this message before.
 
-If our kernel cfg80211 / nl80211 would be smart enough to handle these concurrent tasks, I would have little objection to let all clients do whatever they want, but we don’t have that. I do not want an external application messing with my planned radio time. And frankly if I am in the middle of roaming, I don’t want to be delayed because some fancy radar looking UI decides to start a full spectrum scan or blocks us via an action frame that times out.
+>
+> On 06/13/2019 11:45 AM, James Prestwood wrote:
+>> Sorry if this comes in twice, I sent it ~12 hours ago but never saw it
+>> hit the list, nor in the archives so I am resending it.
+>>
+>>
+>> Hi,
 
-With iwd we are moving towards the direction that we are utilizing the information from access points and surrounding networks to intelligently scan and reduce the time spent scanning to a minimum. For us that is the way to improve WiFi experience for Linux.
+[snip]
 
-We have been through this with Bluetooth already years ago. You need a central daemon that watches out for your radio utilization. Doing anything behind the back of such a daemon is not going to work out long term. Same applies to 2G/3G/LTE where even more tasks need to be managed. And even wpa_supplicant has an internal mutex to control radio time.
+>>
+>>
+>>
+>>
+>> Here is the brcmfmac crash:
+>>
+>>
+>> [19735.643941] BUG: unable to handle kernel NULL pointer dereference at
+>> 0000000000000000
+>> [19735.643965] PGD 80000001874aa067 P4D 80000001874aa067 PUD 2735fe067
+>> PMD 0
+>> [19735.643984] Oops: 0000 [#1] SMP PTI
+>> [19735.643993] CPU: 7 PID: 5051 Comm: iwd Tainted: G        W
+>> I       4.19.0-rc2-custom #27
+>> [19735.644002] Hardware name: System manufacturer System Product
+>> Name/SABERTOOTH X58, BIOS 1402    08/09/2012
+>> [19735.644027] RIP: 0010:brcmf_p2p_send_action_frame+0x23a/0x850
+>> [brcmfmac]
 
-Regards
+As the name suggest this was implemented for P2P support. Will look into this.
 
-Marcel
+Regards,
+Arend
+
 
