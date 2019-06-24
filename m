@@ -2,194 +2,133 @@ Return-Path: <SRS0=5Br8=UX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F027C43613
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jun 2019 13:24:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00663C43613
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jun 2019 15:52:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AD14212F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jun 2019 13:24:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C750320663
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jun 2019 15:52:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="H06CjTkx";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gqG7Ynqd"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tJnRRv1A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731075AbfFXNYe (ORCPT
+        id S1731170AbfFXPwk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Jun 2019 09:24:34 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:39994 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728635AbfFXNYd (ORCPT
+        Mon, 24 Jun 2019 11:52:40 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:35059 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728725AbfFXPwj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jun 2019 09:24:33 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id A2B2D60D35; Mon, 24 Jun 2019 13:24:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1561382672;
-        bh=nFcGEbZcTkvmOSyEkEviWoSgX4LYhTdkIGi80b7j/pE=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=H06CjTkxt7ZLBbVY5ZjRqN54RzrMndZHgmNV5H3VeSNr3xXlzHf6g5jfRIdp/58a/
-         hgvsi2DuTJQ0eLZrprg32HrZUs/9LR9sllERlpOa+5dcKIrsDeTl4Oanm77mHVsFuc
-         v9CFN12qLPWm+7NcUdEAFx9gAr/N8EjcIWHJC3SM=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 14E3F607DE;
-        Mon, 24 Jun 2019 13:24:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1561382669;
-        bh=nFcGEbZcTkvmOSyEkEviWoSgX4LYhTdkIGi80b7j/pE=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=gqG7YnqdeXqEoCkwnT9mzxN9E9OmD+C52BZr7/1ToNn09m04ST35+RShL2Ie6YeY0
-         BzjYnXOC58v2XBtPgneIeD7wApDSX07rTUNMHm0djr2OXkRjH+bL6q+RM7skjmMm19
-         jMlZEKi9FABS8nidUEy3eenOdVDHdbF8MVV/Bh0M=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 14E3F607DE
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Andrey Konovalov <andreyknvl@google.com>
-Cc:     Christian Lamparter <chunkeey@gmail.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        syzbot <syzbot+6d237e74cdc13f036473@syzkaller.appspotmail.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kernel development list <linux-kernel@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>
-Subject: Re: KASAN: slab-out-of-bounds Read in p54u_load_firmware_cb
-References: <Pine.LNX.4.44L0.1906201544001.1346-100000@iolanthe.rowland.org>
-        <3232861.cjm3rXpEJU@debian64>
-        <CAAeHK+zhcgmBQT=rdHaCMu7XWPz4o1gwzCJQEXiTEW9_iUUauA@mail.gmail.com>
-Date:   Mon, 24 Jun 2019 16:24:23 +0300
-In-Reply-To: <CAAeHK+zhcgmBQT=rdHaCMu7XWPz4o1gwzCJQEXiTEW9_iUUauA@mail.gmail.com>
-        (Andrey Konovalov's message of "Mon, 24 Jun 2019 13:51:29 +0200")
-Message-ID: <87d0j3t8u0.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 24 Jun 2019 11:52:39 -0400
+Received: by mail-wr1-f68.google.com with SMTP id f15so4588520wrp.2
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2019 08:52:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=2SzhPdKiqQfA31m+tsox9YXy9SVhIUHXbrtgpGgp0go=;
+        b=tJnRRv1APPc57OIwY8kRyYxNnxjqREtL58x6zvcP7mr4i679Uyn7lRCvsZ0ctfiFSr
+         vWTgBJvcFj5GTtpGFdeyC3lRz+sLpyYQhXeU1BvYSJXAnFfiGbsI3QXwWBRJtquvEATC
+         2M80wLzFCjq2bLtQLK6+7v/42tiz1PAYK9hjiJ5N4rNu43hxvm9k+82rCy59xWYVOo6Q
+         O30AXnYkl9HG1hIZYIlzgK79Pp05STwygobCUeMExtgx2p9dDRLp7OXz+njonCnOejfG
+         TW5SP4RFaPaOesGHGUhEGwdgUa6ndkoDzrElDAZeR8JWN3hBK8FAZT6Uv04Klq5dDzPK
+         sxeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=2SzhPdKiqQfA31m+tsox9YXy9SVhIUHXbrtgpGgp0go=;
+        b=Za9CyJqUMHOobci9bmhiX/I5e4sVfOftdWABEN1pip4t4VKjmTge12ayvR0VcOTM6Q
+         8Jthvb2PbIaOBRF8Wrd2JByxAMhnS29+tPK6T7QTCiOKMkgdrmBoJXZAZTeFiKwb1jof
+         rudD+dsEFev5OMyvWLnqyBu9+dqOy/SB+S+VAkgYVou3AdXDib/BXQPBZEMNj0oE5dDu
+         bXnQD63b6oTwTRxRG86djmm8uJsYRwd0FRlMNqk5/jAQwmlFNElTcafRoDSSzS1cEzEP
+         isxyt5+r+T0xI4VcTMvnHuYK9Ee6eUEoUliz2UQadB6eoWBPle8LfkTnPu5iuQuby1Cs
+         10sw==
+X-Gm-Message-State: APjAAAVdcCUSw9KSq1UhduDa4yy5dCtdsUJ1s1pVVJy0kYgK6qkw0LAy
+        ZADWOObt50GOB5BllXPH4oHS/zM0szk=
+X-Google-Smtp-Source: APXvYqyn6ht/xCNWMqSMLxVPMrorPpKFoXQi0lRY+V3cLmOabE1OEZYkwF/k9qpRRrzMfzwl1DHJJw==
+X-Received: by 2002:adf:e705:: with SMTP id c5mr83128220wrm.270.1561391145877;
+        Mon, 24 Jun 2019 08:45:45 -0700 (PDT)
+Received: from [172.16.20.20] ([94.204.252.234])
+        by smtp.gmail.com with ESMTPSA id y2sm9989929wrl.4.2019.06.24.08.45.43
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 24 Jun 2019 08:45:45 -0700 (PDT)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Subject: Re: [RESEND] brcmfmac support for BCM4359 sdio on arm64 ??
+From:   Christian Hewitt <christianshewitt@gmail.com>
+In-Reply-To: <37d2964d-1c2b-51bd-ac98-2cc171aa0c9c@broadcom.com>
+Date:   Mon, 24 Jun 2019 19:45:41 +0400
+Cc:     linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, Wright.Feng@cypress.com,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Christoph Muellner <christoph.muellner@theobroma-systems.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <30516339-BAD7-40F4-980B-D30CDF504A08@gmail.com>
+References: <F5C2858A-498E-4AD3-859D-FA9D14BF6B37@gmail.com>
+ <37d2964d-1c2b-51bd-ac98-2cc171aa0c9c@broadcom.com>
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
+X-Mailer: Apple Mail (2.3445.104.11)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Andrey Konovalov <andreyknvl@google.com> writes:
+On 11 Jun 2019, at 1:45 pm, Arend Van Spriel =
+<arend.vanspriel@broadcom.com> wrote:
+>=20
+> The splat could be relevant. Maybe try the patch below to get actual =
+values that are checked in the WARN_ON.
+>=20
+>> BCMDHD is also reported working with commits here: =
+https://gitlab.com/baylibre/amlogic/atv/linux/commits/narmstrong/v5.1/aml/=
+integ-5.1-bcmdhd but LibreELEC needs to support many different boards =
+(with many different SDIO modules) from a single OS image, so BCMDHD is =
+not the solution we need.
+>> One additional patch I spotted mentioning BCM4359 (also from Wright =
+Feng) was =
+https://github.com/RobertCNelson/ti-linux-kernel-dev/blob/65f17112e1c883d3=
+c9f3fa68837e5f9b5eb7cfad/patches/cypress/v4.14.52-2018_0928/cypress-patch/=
+0073-non-upstream-reset-two-D11-cores-if-chip-has-two-D11.patch but it =
+makes no difference (the dmesg log above is with this patch applied).
+>> I don=E2=80=99t write code but am happy to build test kernels with =
+suggested patches or explicit instructions. I=E2=80=99ve also CC=E2=80=99d=
+ LibreELEC colleague and linux-amlogic maintainer Neil Armstrong who can =
+assist. NB: If direct access to hardware would help progress things I =
+can easily organise remote access or get board samples shipped.
+>> How can we resume the investigation?
+>=20
+> Let's try one step at a time ;-)
+>=20
+> Regards,
+> Arend
+> ---
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c =
+b/driver
+> index fc12598..e9b0986 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> @@ -772,7 +772,8 @@ void brcmf_sdiod_sgtable_alloc(struct =
+brcmf_sdio_dev *sdiod
+>                      sdiodev->settings->bus.sdio.txglomsz);
+>        nents +=3D (nents >> 4) + 1;
+>=20
+> -       WARN_ON(nents > sdiodev->max_segment_count);
+> +       WARN(nents > sdiodev->max_segment_count, "max_seg_cnt=3D%u, =
+host_max_seg=3D
+> +            sdiodev->max_segment_count, host->max_segs, nents);
+>=20
+>        brcmf_dbg(TRACE, "nents=3D%d\n", nents);
+>        err =3D sg_alloc_table(&sdiodev->sgtable, nents, GFP_KERNEL);
+> q
 
-> On Thu, Jun 20, 2019 at 9:56 PM Christian Lamparter <chunkeey@gmail.com> wrote:
->>
->> On Thursday, June 20, 2019 9:46:32 PM CEST Alan Stern wrote:
->> > On Wed, 19 Jun 2019, syzbot wrote:
->> >
->> > > syzbot has found a reproducer for the following crash on:
->> > >
->> > > HEAD commit:    9939f56e usb-fuzzer: main usb gadget fuzzer driver
->> > > git tree:       https://github.com/google/kasan.git usb-fuzzer
->> > > console output: https://syzkaller.appspot.com/x/log.txt?x=135e29faa00000
->> > > kernel config:  https://syzkaller.appspot.com/x/.config?x=df134eda130bb43a
->> > > dashboard link: https://syzkaller.appspot.com/bug?extid=6d237e74cdc13f036473
->> > > compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
->> > > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=175d946ea00000
->> > >
->> > > IMPORTANT: if you fix the bug, please add the following tag to the commit:
->> > > Reported-by: syzbot+6d237e74cdc13f036473@syzkaller.appspotmail.com
->> > >
->> > > usb 3-1: Direct firmware load for isl3887usb failed with error -2
->> > > usb 3-1: Firmware not found.
->> > > ==================================================================
->> > > BUG: KASAN: slab-out-of-bounds in p54u_load_firmware_cb.cold+0x97/0x13d
->> > > drivers/net/wireless/intersil/p54/p54usb.c:936
->> > > Read of size 8 at addr ffff8881c9cf7588 by task kworker/1:5/2759
->> > >
->> > > CPU: 1 PID: 2759 Comm: kworker/1:5 Not tainted 5.2.0-rc5+ #11
->> > > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
->> > > Google 01/01/2011
->> > > Workqueue: events request_firmware_work_func
->> > > Call Trace:
->> > >   __dump_stack lib/dump_stack.c:77 [inline]
->> > >   dump_stack+0xca/0x13e lib/dump_stack.c:113
->> > >   print_address_description+0x67/0x231 mm/kasan/report.c:188
->> > >   __kasan_report.cold+0x1a/0x32 mm/kasan/report.c:317
->> > >   kasan_report+0xe/0x20 mm/kasan/common.c:614
->> > >   p54u_load_firmware_cb.cold+0x97/0x13d
->> > > drivers/net/wireless/intersil/p54/p54usb.c:936
->> > >   request_firmware_work_func+0x126/0x242
->> > > drivers/base/firmware_loader/main.c:785
->> > >   process_one_work+0x905/0x1570 kernel/workqueue.c:2269
->> > >   worker_thread+0x96/0xe20 kernel/workqueue.c:2415
->> > >   kthread+0x30b/0x410 kernel/kthread.c:255
->> > >   ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
->> > >
->> > > Allocated by task 1612:
->> > >   save_stack+0x1b/0x80 mm/kasan/common.c:71
->> > >   set_track mm/kasan/common.c:79 [inline]
->> > >   __kasan_kmalloc mm/kasan/common.c:489 [inline]
->> > >   __kasan_kmalloc.constprop.0+0xbf/0xd0 mm/kasan/common.c:462
->> > >   kmalloc include/linux/slab.h:547 [inline]
->> > >   syslog_print kernel/printk/printk.c:1346 [inline]
->> > >   do_syslog kernel/printk/printk.c:1519 [inline]
->> > >   do_syslog+0x4f4/0x12e0 kernel/printk/printk.c:1493
->> > >   kmsg_read+0x8a/0xb0 fs/proc/kmsg.c:40
->> > >   proc_reg_read+0x1c1/0x280 fs/proc/inode.c:221
->> > >   __vfs_read+0x76/0x100 fs/read_write.c:425
->> > >   vfs_read+0x18e/0x3d0 fs/read_write.c:461
->> > >   ksys_read+0x127/0x250 fs/read_write.c:587
->> > >   do_syscall_64+0xb7/0x560 arch/x86/entry/common.c:301
->> > >   entry_SYSCALL_64_after_hwframe+0x49/0xbe
->> > >
->> > > Freed by task 1612:
->> > >   save_stack+0x1b/0x80 mm/kasan/common.c:71
->> > >   set_track mm/kasan/common.c:79 [inline]
->> > >   __kasan_slab_free+0x130/0x180 mm/kasan/common.c:451
->> > >   slab_free_hook mm/slub.c:1421 [inline]
->> > >   slab_free_freelist_hook mm/slub.c:1448 [inline]
->> > >   slab_free mm/slub.c:2994 [inline]
->> > >   kfree+0xd7/0x280 mm/slub.c:3949
->> > >   syslog_print kernel/printk/printk.c:1405 [inline]
->> > >   do_syslog kernel/printk/printk.c:1519 [inline]
->> > >   do_syslog+0xff3/0x12e0 kernel/printk/printk.c:1493
->> > >   kmsg_read+0x8a/0xb0 fs/proc/kmsg.c:40
->> > >   proc_reg_read+0x1c1/0x280 fs/proc/inode.c:221
->> > >   __vfs_read+0x76/0x100 fs/read_write.c:425
->> > >   vfs_read+0x18e/0x3d0 fs/read_write.c:461
->> > >   ksys_read+0x127/0x250 fs/read_write.c:587
->> > >   do_syscall_64+0xb7/0x560 arch/x86/entry/common.c:301
->> > >   entry_SYSCALL_64_after_hwframe+0x49/0xbe
->> > >
->> > > The buggy address belongs to the object at ffff8881c9cf7180
->> > >   which belongs to the cache kmalloc-1k of size 1024
->> > > The buggy address is located 8 bytes to the right of
->> > >   1024-byte region [ffff8881c9cf7180, ffff8881c9cf7580)
->> > > The buggy address belongs to the page:
->> > > page:ffffea0007273d00 refcount:1 mapcount:0 mapping:ffff8881dac02a00
->> > > index:0x0 compound_mapcount: 0
->> > > flags: 0x200000000010200(slab|head)
->> > > raw: 0200000000010200 dead000000000100 dead000000000200 ffff8881dac02a00
->> > > raw: 0000000000000000 00000000000e000e 00000001ffffffff 0000000000000000
->> > > page dumped because: kasan: bad access detected
->> > >
->> > > Memory state around the buggy address:
->> > >   ffff8881c9cf7480: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->> > >   ffff8881c9cf7500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->> > > > ffff8881c9cf7580: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
->> > >                        ^
->> > >   ffff8881c9cf7600: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->> > >   ffff8881c9cf7680: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->> > > ==================================================================
->> >
->> > Isn't this the same as syzkaller bug 200d4bb11b23d929335f ?  Doesn't
->> > the same patch fix it?
->> >
->> I think Kalle hasn't applied it yet? It's still sitting on the patchwork queue:
->> <https://patchwork.kernel.org/patch/10951527/>
->
-> Yes, until this patch is in the tree that is being tested (which is
-> based on the usb-linus branch; I update it every few weeks), syzbot
-> considers this bug as open.
+^ this patch is mangled - please send me the correct one so I can reply =
+with information to move things forwards. Thanks.
 
-I'm hoping to apply this today or tomorrow.
-
--- 
-Kalle Valo
+Christian=
