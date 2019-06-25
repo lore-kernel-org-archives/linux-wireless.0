@@ -2,106 +2,223 @@ Return-Path: <SRS0=pdv6=UY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE50BC48BD4
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 17:26:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F13BC48BD5
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 17:41:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F7252063F
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 17:26:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 729A5208CA
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 17:41:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="naD61bgr"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="IyYT5zUg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728876AbfFYR0l (ORCPT
+        id S1732060AbfFYRlA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Jun 2019 13:26:41 -0400
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:38876 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726576AbfFYR0l (ORCPT
+        Tue, 25 Jun 2019 13:41:00 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:34522 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726706AbfFYRk6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jun 2019 13:26:41 -0400
-Received: by mail-lj1-f194.google.com with SMTP id r9so17069599ljg.5
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2019 10:26:40 -0700 (PDT)
+        Tue, 25 Jun 2019 13:40:58 -0400
+Received: by mail-pg1-f195.google.com with SMTP id p10so9324519pgn.1
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2019 10:40:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=6gq84utB8K04TkFkVIjVVbqj+RReCP6QFmHdu5HDrdE=;
-        b=naD61bgrphwvsuQeh7I3S2TOG7WlFTu05G05sniZdPLkEFxpVLI4QzWmwpfPA9CiN2
-         ATfzx5rBs7HjKcRc1YDoStMPiGwTbE/QZWGQPVuWefMqhX47HS5O9BFNQFOGzfMmdXPX
-         IVJXBGv0G6J/Vm5nvfJK/lyKs9vJ4Qmi6I9GU=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=qObNmbNGw5KriFEegIgXpV14jLgXOv4uYBya5X/6nZE=;
+        b=IyYT5zUgrPrbvy/z5y9C68xpBlIstWIWrmNfCziC8KKYkOtZDtIgNwvlvDGkad7yKu
+         9ImC41oaiQaOdDaAJbCW0UU/LYlWTzT0p5abyKT8HvRMaaWRjSETQkC6q/M1jh5AUjH5
+         BXqA8Rw+cdLpz4YLtE7s9f+8LS81lqjctcUeM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=6gq84utB8K04TkFkVIjVVbqj+RReCP6QFmHdu5HDrdE=;
-        b=Fm/USSgJV0ILeTNNGp+u6m67bv7y4Atd4fo3R5luYHwM7rqvqhSopbxuI/dVbhe3Es
-         0r+r63sIjmu4LeX5DlW4VNrXK/i74FicsUQ2tqbQ87RVI29GZG5JoCBkBBYRZQjNM9+o
-         8pkVb9ygM4btdPT0d53c6bpGNh+mSpZZ6Ogg3fS3gvD4UigZyM/9WsasOVRwceDKsJF8
-         fhbV55O7YKDTpRIgjyPdf6Qk4FL3fuodmmAxyGVy/EG12yEwb1g0ztBLtWhkWl+B+yZ5
-         AqzZmMgk4XuoisKJnUxOXCkQchFQxxYJwxFesn956wUp9BT+6baZM34lHAhqrDaG/Knz
-         9SxQ==
-X-Gm-Message-State: APjAAAXcPup+ygKT3fOzsiwZOh3exQLmYl4beHmVEl8EbrvKfXwp+1Q7
-        PA7Jxjvb191o9gnljcOhW4D3t+kanzs=
-X-Google-Smtp-Source: APXvYqzkhYBNzgSNvfBMsTl9gydbQib6IZyjloqRfJzquDzIazGUVTLkeeYELxZVbW3z1g8Soquzug==
-X-Received: by 2002:a2e:981:: with SMTP id 123mr53971235ljj.66.1561483598986;
-        Tue, 25 Jun 2019 10:26:38 -0700 (PDT)
-Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com. [209.85.167.47])
-        by smtp.gmail.com with ESMTPSA id u13sm2028090lfi.4.2019.06.25.10.26.37
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Jun 2019 10:26:38 -0700 (PDT)
-Received: by mail-lf1-f47.google.com with SMTP id z15so13185775lfh.13
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jun 2019 10:26:37 -0700 (PDT)
-X-Received: by 2002:a19:5515:: with SMTP id n21mr22825839lfe.26.1561483597150;
- Tue, 25 Jun 2019 10:26:37 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190604205323.200361-2-briannorris@chromium.org> <20190625044525.846A8607DE@smtp.codeaurora.org>
-In-Reply-To: <20190625044525.846A8607DE@smtp.codeaurora.org>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=qObNmbNGw5KriFEegIgXpV14jLgXOv4uYBya5X/6nZE=;
+        b=mJlN5jPeoP1xk5WmYCYIvkp/0RQ6V7Ks1+3wenkcfWLpIanI9+yJcESeyGQ0Vnk5/7
+         n6XG5nlXFPHqJVSdjoskdNuQyvSOeTNQf/NxaZwQ+KL5nz4y0QJKWUFISjn6ZocJEmEQ
+         fMSujdz+Y6Ak9cQuEB/IDlKYDngN+aiymDkN7mk2AFkc2cuFPsR1oObIhnBCuAcFOC06
+         7SdyRW9Iqg6p16atvJw3VnkNct8q18kjtcfSbQyS6rnbeRuj4pYOZbjeJ8gt8OjI4yTP
+         zsR8V9+1Zhwsq1XRs7IP6YP8rc/cNVSn3WQmTclD+G2ONve3CQHGw9BTcuqtT1BJ377Z
+         a39g==
+X-Gm-Message-State: APjAAAXLUjwnnef/g/IzR0Dw3QXAXfmap0iv39bsQRxJEN5AeatUoNQn
+        2WaVxLMjAckF7rMp462u/jS4Mg==
+X-Google-Smtp-Source: APXvYqxiPIBhEf/fH9AINTqGlq4fhQUjIqLjLUbTkeOso1O3fn72FXumyfLLpSaLFn+WiH3fAbm12Q==
+X-Received: by 2002:a17:90a:350c:: with SMTP id q12mr29094pjb.46.1561484458044;
+        Tue, 25 Jun 2019 10:40:58 -0700 (PDT)
+Received: from smtp.gmail.com ([2620:15c:202:1:534:b7c0:a63c:460c])
+        by smtp.gmail.com with ESMTPSA id 85sm20872129pfv.130.2019.06.25.10.40.56
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Tue, 25 Jun 2019 10:40:57 -0700 (PDT)
 From:   Brian Norris <briannorris@chromium.org>
-Date:   Tue, 25 Jun 2019 10:26:25 -0700
-X-Gmail-Original-Message-ID: <CA+ASDXP2xY_7BXk6L25FVFf1yyhnXOZygYwreGYGVY7aK0TVkg@mail.gmail.com>
-Message-ID: <CA+ASDXP2xY_7BXk6L25FVFf1yyhnXOZygYwreGYGVY7aK0TVkg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] mwifiex: dispatch/rotate from reorder table atomically
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Ganapathi Bhat <gbhat@marvell.com>,
+To:     Ganapathi Bhat <gbhat@marvell.com>,
         Nishant Sarmukadam <nishants@marvell.com>,
         Amitkumar Karwar <amitkarwar@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Doug Anderson <dianders@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
+        Xinming Hu <huxinming820@gmail.com>
+Cc:     <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 1/2] mwifiex: dispatch/rotate from reorder table atomically
+Date:   Tue, 25 Jun 2019 10:40:44 -0700
+Message-Id: <20190625174045.125223-2-briannorris@chromium.org>
+X-Mailer: git-send-email 2.22.0.410.gd8fdbe21b5-goog
+In-Reply-To: <20190625174045.125223-1-briannorris@chromium.org>
+References: <20190625174045.125223-1-briannorris@chromium.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jun 24, 2019 at 9:45 PM Kalle Valo <kvalo@codeaurora.org> wrote:
-> New warning:
->
-> drivers/net/wireless/marvell/mwifiex/wmm.c: In function 'mwifiex_wmm_process_tx':
-> drivers/net/wireless/marvell/mwifiex/wmm.c:1438:4: warning: 'flags' may be used uninitialized in this function [-Wmaybe-uninitialized]
->     mwifiex_11n_aggregate_pkt(priv, ptr, ptr_index, flags);
->     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/net/wireless/marvell/mwifiex/wmm.c:1406:16: note: 'flags' was declared here
->   unsigned long flags;
->                 ^~~~~
+mwifiex_11n_scan_and_dispatch() and
+mwifiex_11n_dispatch_pkt_until_start_win() share similar patterns, where
+they perform a few different actions on the same table, using the same
+lock, but non-atomically. There have been other attempts to clean up
+this sort of behavior, but they have had problems (incomplete;
+introducing new deadlocks).
 
-Yikes! Not sure how I missed that, as I *thought* I had -Werror
-enabled. Maybe things got lost a bit in the shuffles from GCC to Clang
-for building our kernels internally.
+We can improve these functions' atomicity by queueing up our RX packets
+in a list, to dispatch at the end of the function. This avoids problems
+of another operation modifying the table in between our dispatch and
+rotation operations.
 
-Anyway, "used" is a bit generous here, since these are just useless
-function arguments (never *actually* used now). I should remove these
-args entirely.
+This was inspired by investigations around this:
 
-> 2 patches set to Changes Requested.
+  http://lkml.kernel.org/linux-wireless/20181130175957.167031-1-briannorris@chromium.org
+  Subject: [4.20 PATCH] Revert "mwifiex: restructure rx_reorder_tbl_lock usage"
 
-Will send a v2.
+While the original (now-reverted) patch had good intentions in
+restructuring some of the locking patterns in this driver, it missed an
+important detail: we cannot defer to softirq contexts while already in
+an atomic context. We can help avoid this sort of problem by separating
+the two steps of:
+(1) iterating / clearing the mwifiex reordering table
+(2) dispatching received packets to upper layers
 
-Thanks,
-Brian
+This makes it much harder to make lock recursion mistakes, as these
+two steps no longer need to hold the same locks.
+
+Testing: I've played with a variety of stress tests, including download
+stress tests on the same APs which caught regressions with commit
+5188d5453bc9 ("mwifiex: restructure rx_reorder_tbl_lock usage"). I've
+primarily tested on Marvell 8997 / PCIe, although I've given 8897 / SDIO
+a quick spin as well.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Acked-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+v2: no change
+---
+ .../wireless/marvell/mwifiex/11n_rxreorder.c  | 43 +++++++++++--------
+ 1 file changed, 24 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+index 5380fba652cc..77bdf16d6573 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+@@ -76,7 +76,8 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
+ /* This function will process the rx packet and forward it to kernel/upper
+  * layer.
+  */
+-static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
++static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv,
++				    struct sk_buff *payload)
+ {
+ 
+ 	int ret;
+@@ -109,27 +110,26 @@ mwifiex_11n_dispatch_pkt_until_start_win(struct mwifiex_private *priv,
+ 					 struct mwifiex_rx_reorder_tbl *tbl,
+ 					 int start_win)
+ {
++	struct sk_buff_head list;
++	struct sk_buff *skb;
+ 	int pkt_to_send, i;
+-	void *rx_tmp_ptr;
+ 	unsigned long flags;
+ 
++	__skb_queue_head_init(&list);
++	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
++
+ 	pkt_to_send = (start_win > tbl->start_win) ?
+ 		      min((start_win - tbl->start_win), tbl->win_size) :
+ 		      tbl->win_size;
+ 
+ 	for (i = 0; i < pkt_to_send; ++i) {
+-		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+-		rx_tmp_ptr = NULL;
+ 		if (tbl->rx_reorder_ptr[i]) {
+-			rx_tmp_ptr = tbl->rx_reorder_ptr[i];
++			skb = tbl->rx_reorder_ptr[i];
++			__skb_queue_tail(&list, skb);
+ 			tbl->rx_reorder_ptr[i] = NULL;
+ 		}
+-		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+-		if (rx_tmp_ptr)
+-			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+ 	}
+ 
+-	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	/*
+ 	 * We don't have a circular buffer, hence use rotation to simulate
+ 	 * circular buffer
+@@ -141,6 +141,9 @@ mwifiex_11n_dispatch_pkt_until_start_win(struct mwifiex_private *priv,
+ 
+ 	tbl->start_win = start_win;
+ 	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
++
++	while ((skb = __skb_dequeue(&list)))
++		mwifiex_11n_dispatch_pkt(priv, skb);
+ }
+ 
+ /*
+@@ -155,24 +158,22 @@ static void
+ mwifiex_11n_scan_and_dispatch(struct mwifiex_private *priv,
+ 			      struct mwifiex_rx_reorder_tbl *tbl)
+ {
++	struct sk_buff_head list;
++	struct sk_buff *skb;
+ 	int i, j, xchg;
+-	void *rx_tmp_ptr;
+ 	unsigned long flags;
+ 
++	__skb_queue_head_init(&list);
++	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
++
+ 	for (i = 0; i < tbl->win_size; ++i) {
+-		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+-		if (!tbl->rx_reorder_ptr[i]) {
+-			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
+-					       flags);
++		if (!tbl->rx_reorder_ptr[i])
+ 			break;
+-		}
+-		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
++		skb = tbl->rx_reorder_ptr[i];
++		__skb_queue_tail(&list, skb);
+ 		tbl->rx_reorder_ptr[i] = NULL;
+-		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+-		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+ 	}
+ 
+-	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	/*
+ 	 * We don't have a circular buffer, hence use rotation to simulate
+ 	 * circular buffer
+@@ -185,7 +186,11 @@ mwifiex_11n_scan_and_dispatch(struct mwifiex_private *priv,
+ 		}
+ 	}
+ 	tbl->start_win = (tbl->start_win + i) & (MAX_TID_VALUE - 1);
++
+ 	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
++
++	while ((skb = __skb_dequeue(&list)))
++		mwifiex_11n_dispatch_pkt(priv, skb);
+ }
+ 
+ /*
+-- 
+2.22.0.410.gd8fdbe21b5-goog
+
