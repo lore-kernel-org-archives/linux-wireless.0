@@ -2,37 +2,38 @@ Return-Path: <SRS0=pdv6=UY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABFDCC48BD7
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C08CAC48BD5
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85394214DA
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99F2B214DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728063AbfFYJpD (ORCPT
+        id S1728379AbfFYJpI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Jun 2019 05:45:03 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54620 "EHLO
+        Tue, 25 Jun 2019 05:45:08 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54608 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727099AbfFYJpC (ORCPT
+        with ESMTP id S1727729AbfFYJpC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 25 Jun 2019 05:45:02 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hfi0a-0007Nv-ME; Tue, 25 Jun 2019 12:45:00 +0300
+        id 1hfi0Z-0007Nv-5I; Tue, 25 Jun 2019 12:44:59 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 06/12] iwlwifi: dbg_ini: add consecutive trigger firing support
-Date:   Tue, 25 Jun 2019 12:44:46 +0300
-Message-Id: <20190625094452.19034-7-luca@coelho.fi>
+Subject: [PATCH 03/12] iwlwifi: dbg_ini: dump headers cleanup
+Date:   Tue, 25 Jun 2019 12:44:43 +0300
+Message-Id: <20190625094452.19034-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190625094452.19034-1-luca@coelho.fi>
 References: <20190625094452.19034-1-luca@coelho.fi>
@@ -45,410 +46,307 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-When a dump trigger is fired, the driver sets IWL_FWRT_STATUS_DUMPING and
-aborts any consecutive dump collection.
-To allow consecutive triggers firing, use 5 dump workers and allocate
-them upon incoming dump collection requests.
+Unite dump memory ranges under a single struct and add a specific header
+for each type of memory.
+Also, maintain a single version to all dump structures.
 
-This functionality is needed since in ini debug mode each trigger may
-have entirely different memory regions to collect unlike the legacy
-mode in which all the triggers dump the same memory regions.
+This cleanup is also needed for the future addition of FW notification
+regions and others.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 76 ++++++++++++-------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   | 19 +++--
- drivers/net/wireless/intel/iwlwifi/fw/init.c  |  7 +-
- .../net/wireless/intel/iwlwifi/fw/runtime.h   | 15 ++--
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  | 16 ++--
- 6 files changed, 84 insertions(+), 51 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 57 ++++++++----------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  3 -
+ .../wireless/intel/iwlwifi/fw/error-dump.h    | 59 +++++++++----------
+ 3 files changed, 52 insertions(+), 67 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 8e2cf7141f0a..030889e3a10f 100644
+index 5650b57a64e9..ca4dea1dceba 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1912,18 +1912,18 @@ static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
- }
+@@ -1059,7 +1059,7 @@ static int iwl_dump_ini_prph_iter(struct iwl_fw_runtime *fwrt,
+ 	u32 addr = le32_to_cpu(reg->start_addr[idx]) + le32_to_cpu(reg->offset);
+ 	int i;
  
- static struct iwl_fw_error_dump_file *
--iwl_fw_error_ini_dump_file(struct iwl_fw_runtime *fwrt)
-+iwl_fw_error_ini_dump_file(struct iwl_fw_runtime *fwrt,
-+			   enum iwl_fw_ini_trigger_id trig_id)
- {
- 	int size;
- 	struct iwl_fw_error_dump_data *dump_data;
- 	struct iwl_fw_error_dump_file *dump_file;
- 	struct iwl_fw_ini_trigger *trigger;
--	enum iwl_fw_ini_trigger_id id = fwrt->dump.ini_trig_id;
+-	range->start_addr = cpu_to_le64(addr);
++	range->internal_base_addr = cpu_to_le32(addr);
+ 	range->range_data_size = reg->internal.range_data_size;
+ 	for (i = 0; i < le32_to_cpu(reg->internal.range_data_size); i += 4) {
+ 		prph_val = iwl_read_prph(fwrt->trans, addr + i);
+@@ -1080,7 +1080,7 @@ static int iwl_dump_ini_csr_iter(struct iwl_fw_runtime *fwrt,
+ 	u32 addr = le32_to_cpu(reg->start_addr[idx]) + le32_to_cpu(reg->offset);
+ 	int i;
  
--	if (!iwl_fw_ini_trigger_on(fwrt, id))
-+	if (!iwl_fw_ini_trigger_on(fwrt, trig_id))
- 		return NULL;
+-	range->start_addr = cpu_to_le64(addr);
++	range->internal_base_addr = cpu_to_le32(addr);
+ 	range->range_data_size = reg->internal.range_data_size;
+ 	for (i = 0; i < le32_to_cpu(reg->internal.range_data_size); i += 4)
+ 		*val++ = cpu_to_le32(iwl_trans_read32(fwrt->trans, addr + i));
+@@ -1095,7 +1095,7 @@ static int iwl_dump_ini_dev_mem_iter(struct iwl_fw_runtime *fwrt,
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+ 	u32 addr = le32_to_cpu(reg->start_addr[idx]) + le32_to_cpu(reg->offset);
  
--	trigger = fwrt->dump.active_trigs[id].trig;
-+	trigger = fwrt->dump.active_trigs[trig_id].trig;
+-	range->start_addr = cpu_to_le64(addr);
++	range->internal_base_addr = cpu_to_le32(addr);
+ 	range->range_data_size = reg->internal.range_data_size;
+ 	iwl_trans_read_mem_bytes(fwrt->trans, addr, range->data,
+ 				 le32_to_cpu(reg->internal.range_data_size));
+@@ -1111,7 +1111,7 @@ iwl_dump_ini_paging_gen2_iter(struct iwl_fw_runtime *fwrt,
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+ 	u32 page_size = fwrt->trans->init_dram.paging[idx].size;
  
- 	size = iwl_fw_ini_get_trigger_len(fwrt, trigger);
- 	if (!size)
-@@ -1988,16 +1988,16 @@ static void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+-	range->start_addr = cpu_to_le64(idx);
++	range->page_num = cpu_to_le32(idx);
+ 	range->range_data_size = cpu_to_le32(page_size);
+ 	memcpy(range->data, fwrt->trans->init_dram.paging[idx].block,
+ 	       page_size);
+@@ -1131,7 +1131,7 @@ static int iwl_dump_ini_paging_iter(struct iwl_fw_runtime *fwrt,
+ 	dma_addr_t addr = fwrt->fw_paging_db[idx].fw_paging_phys;
+ 	u32 page_size = fwrt->fw_paging_db[idx].fw_paging_size;
  
- out:
- 	iwl_fw_free_dump_desc(fwrt);
--	clear_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status);
- }
- 
--static void iwl_fw_error_ini_dump(struct iwl_fw_runtime *fwrt)
-+static void iwl_fw_error_ini_dump(struct iwl_fw_runtime *fwrt, u8 wk_idx)
- {
-+	enum iwl_fw_ini_trigger_id trig_id = fwrt->dump.wks[wk_idx].ini_trig_id;
- 	struct iwl_fw_error_dump_file *dump_file;
- 	struct scatterlist *sg_dump_data;
- 	u32 file_len;
- 
--	dump_file = iwl_fw_error_ini_dump_file(fwrt);
-+	dump_file = iwl_fw_error_ini_dump_file(fwrt, trig_id);
- 	if (!dump_file)
- 		goto out;
- 
-@@ -2012,8 +2012,7 @@ static void iwl_fw_error_ini_dump(struct iwl_fw_runtime *fwrt)
- 	}
- 	vfree(dump_file);
- out:
--	fwrt->dump.ini_trig_id = IWL_FW_TRIGGER_ID_INVALID;
--	clear_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status);
-+	fwrt->dump.wks[wk_idx].ini_trig_id = IWL_FW_TRIGGER_ID_INVALID;
- }
- 
- const struct iwl_fw_dump_desc iwl_dump_desc_assert = {
-@@ -2039,7 +2038,10 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
- 		return ret;
- 	}
- 
--	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
-+	/* use wks[0] since dump flow prior to ini does not need to support
-+	 * consecutive triggers collection
-+	 */
-+	if (test_and_set_bit(fwrt->dump.wks[0].idx, &fwrt->dump.active_wks))
+-	range->start_addr = cpu_to_le64(idx);
++	range->page_num = cpu_to_le32(idx);
+ 	range->range_data_size = cpu_to_le32(page_size);
+ 	dma_sync_single_for_cpu(fwrt->trans->dev, addr,	page_size,
+ 				DMA_BIDIRECTIONAL);
+@@ -1154,7 +1154,7 @@ iwl_dump_ini_mon_dram_iter(struct iwl_fw_runtime *fwrt,
+ 	if (start_addr == 0x5a5a5a5a)
  		return -EBUSY;
  
- 	if (WARN_ON(fwrt->dump.desc))
-@@ -2051,7 +2053,7 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
- 	fwrt->dump.desc = desc;
- 	fwrt->dump.monitor_only = monitor_only;
+-	range->start_addr = cpu_to_le64(start_addr);
++	range->dram_base_addr = cpu_to_le64(start_addr);
+ 	range->range_data_size = cpu_to_le32(fwrt->trans->fw_mon[idx].size);
  
--	schedule_delayed_work(&fwrt->dump.wk, usecs_to_jiffies(delay));
-+	schedule_delayed_work(&fwrt->dump.wks[0].wk, usecs_to_jiffies(delay));
- 
- 	return 0;
- }
-@@ -2130,13 +2132,11 @@ int _iwl_fw_dbg_ini_collect(struct iwl_fw_runtime *fwrt,
+ 	memcpy(range->data, fwrt->trans->fw_mon[idx].block,
+@@ -1228,7 +1228,7 @@ static int iwl_dump_ini_txf_iter(struct iwl_fw_runtime *fwrt,
+ 				 struct iwl_fw_ini_region_cfg *reg,
+ 				 void *range_ptr, int idx)
  {
- 	struct iwl_fw_ini_active_triggers *active;
- 	u32 occur, delay;
-+	unsigned long idx;
+-	struct iwl_fw_ini_fifo_error_dump_range *range = range_ptr;
++	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+ 	struct iwl_ini_txf_iter_data *iter;
+ 	struct iwl_fw_ini_error_dump_register *reg_dump = (void *)range->data;
+ 	u32 offs = le32_to_cpu(reg->offset), addr;
+@@ -1246,8 +1246,8 @@ static int iwl_dump_ini_txf_iter(struct iwl_fw_runtime *fwrt,
  
- 	if (WARN_ON(!iwl_fw_ini_trigger_on(fwrt, id)))
- 		return -EINVAL;
+ 	iter = fwrt->dump.fifo_iter;
  
--	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
--		return -EBUSY;
+-	range->fifo_num = cpu_to_le32(iter->fifo);
+-	range->num_of_registers = reg->fifos.num_of_registers;
++	range->fifo_hdr.fifo_num = cpu_to_le32(iter->fifo);
++	range->fifo_hdr.num_of_registers = reg->fifos.num_of_registers;
+ 	range->range_data_size = cpu_to_le32(iter->fifo_size + registers_size);
+ 
+ 	iwl_write_prph_no_grab(fwrt->trans, TXF_LARC_NUM + offs, iter->fifo);
+@@ -1336,7 +1336,7 @@ static int iwl_dump_ini_rxf_iter(struct iwl_fw_runtime *fwrt,
+ 				 struct iwl_fw_ini_region_cfg *reg,
+ 				 void *range_ptr, int idx)
+ {
+-	struct iwl_fw_ini_fifo_error_dump_range *range = range_ptr;
++	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+ 	struct iwl_ini_rxf_data rxf_data;
+ 	struct iwl_fw_ini_error_dump_register *reg_dump = (void *)range->data;
+ 	u32 offs = le32_to_cpu(reg->offset), addr;
+@@ -1353,8 +1353,8 @@ static int iwl_dump_ini_rxf_iter(struct iwl_fw_runtime *fwrt,
+ 	if (!iwl_trans_grab_nic_access(fwrt->trans, &flags))
+ 		return -EBUSY;
+ 
+-	range->fifo_num = cpu_to_le32(rxf_data.fifo_num);
+-	range->num_of_registers = reg->fifos.num_of_registers;
++	range->fifo_hdr.fifo_num = cpu_to_le32(rxf_data.fifo_num);
++	range->fifo_hdr.num_of_registers = reg->fifos.num_of_registers;
+ 	range->range_data_size = cpu_to_le32(rxf_data.size + registers_size);
+ 
+ 	/*
+@@ -1408,7 +1408,7 @@ static void *iwl_dump_ini_mem_fill_header(struct iwl_fw_runtime *fwrt,
+ {
+ 	struct iwl_fw_ini_error_dump *dump = data;
+ 
+-	dump->header.version = cpu_to_le32(IWL_INI_DUMP_MEM_VER);
++	dump->header.version = cpu_to_le32(IWL_INI_DUMP_VER);
+ 
+ 	return dump->ranges;
+ }
+@@ -1433,7 +1433,7 @@ static void
+ 
+ 	iwl_trans_release_nic_access(fwrt->trans, &flags);
+ 
+-	data->header.version = cpu_to_le32(IWL_INI_DUMP_MONITOR_VER);
++	data->header.version = cpu_to_le32(IWL_INI_DUMP_VER);
+ 	data->write_ptr = cpu_to_le32(write_ptr & write_ptr_msk);
+ 	data->cycle_cnt = cpu_to_le32(cycle_cnt & cycle_cnt_msk);
+ 
+@@ -1490,17 +1490,6 @@ static void
+ 
+ }
+ 
+-static void *iwl_dump_ini_fifo_fill_header(struct iwl_fw_runtime *fwrt,
+-					   struct iwl_fw_ini_region_cfg *reg,
+-					   void *data)
+-{
+-	struct iwl_fw_ini_fifo_error_dump *dump = data;
 -
- 	if (!iwl_fw_ini_trigger_on(fwrt, id)) {
- 		IWL_WARN(fwrt, "WRT: Trigger %d is not active, aborting dump\n",
- 			 id);
-@@ -2157,14 +2157,24 @@ int _iwl_fw_dbg_ini_collect(struct iwl_fw_runtime *fwrt,
- 		return 0;
- 	}
- 
--	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
-+	/* Check there is an available worker.
-+	 * ffz return value is undefined if no zero exists,
-+	 * so check against ~0UL first.
-+	 */
-+	if (fwrt->dump.active_wks == ~0UL)
- 		return -EBUSY;
- 
--	fwrt->dump.ini_trig_id = id;
-+	idx = ffz(fwrt->dump.active_wks);
-+
-+	if (idx >= IWL_FW_RUNTIME_DUMP_WK_NUM ||
-+	    test_and_set_bit(fwrt->dump.wks[idx].idx, &fwrt->dump.active_wks))
-+		return -EBUSY;
-+
-+	fwrt->dump.wks[idx].ini_trig_id = id;
- 
- 	IWL_WARN(fwrt, "WRT: collecting data: ini trigger %d fired.\n", id);
- 
--	schedule_delayed_work(&fwrt->dump.wk, usecs_to_jiffies(delay));
-+	schedule_delayed_work(&fwrt->dump.wks[idx].wk, usecs_to_jiffies(delay));
- 
- 	return 0;
- }
-@@ -2277,32 +2287,31 @@ IWL_EXPORT_SYMBOL(iwl_fw_start_dbg_conf);
- /* this function assumes dump_start was called beforehand and dump_end will be
-  * called afterwards
-  */
--void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt)
-+static void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt, u8 wk_idx)
+-	dump->header.version = cpu_to_le32(IWL_INI_DUMP_FIFO_VER);
+-
+-	return dump->ranges;
+-}
+-
+ static u32 iwl_dump_ini_mem_ranges(struct iwl_fw_runtime *fwrt,
+ 				   struct iwl_fw_ini_region_cfg *reg)
  {
- 	struct iwl_fw_dbg_params params = {0};
+@@ -1613,8 +1602,9 @@ static u32 iwl_dump_ini_txf_get_size(struct iwl_fw_runtime *fwrt,
+ 	struct iwl_ini_txf_iter_data iter = { .init = true };
+ 	void *fifo_iter = fwrt->dump.fifo_iter;
+ 	u32 size = 0;
+-	u32 fifo_hdr = sizeof(struct iwl_fw_ini_fifo_error_dump_range) +
+-		le32_to_cpu(reg->fifos.num_of_registers) * sizeof(__le32) * 2;
++	u32 fifo_hdr = sizeof(struct iwl_fw_ini_error_dump_range) +
++		le32_to_cpu(reg->fifos.num_of_registers) *
++		sizeof(struct iwl_fw_ini_error_dump_register);
  
--	if (!test_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
-+	if (!test_bit(wk_idx, &fwrt->dump.active_wks))
- 		return;
- 
- 	if (fwrt->ops && fwrt->ops->fw_running &&
- 	    !fwrt->ops->fw_running(fwrt->ops_ctx)) {
- 		IWL_ERR(fwrt, "Firmware not running - cannot dump error\n");
- 		iwl_fw_free_dump_desc(fwrt);
--		clear_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status);
--		return;
-+		goto out;
+ 	fwrt->dump.fifo_iter = &iter;
+ 	while (iwl_ini_txf_iter(fwrt, reg)) {
+@@ -1624,7 +1614,7 @@ static u32 iwl_dump_ini_txf_get_size(struct iwl_fw_runtime *fwrt,
  	}
  
- 	/* there's no point in fw dump if the bus is dead */
- 	if (test_bit(STATUS_TRANS_DEAD, &fwrt->trans->status)) {
- 		IWL_ERR(fwrt, "Skip fw error dump since bus is dead\n");
--		return;
-+		goto out;
- 	}
+ 	if (size)
+-		size += sizeof(struct iwl_fw_ini_fifo_error_dump);
++		size += sizeof(struct iwl_fw_ini_error_dump);
  
- 	iwl_fw_dbg_stop_recording(fwrt, &params);
+ 	fwrt->dump.fifo_iter = fifo_iter;
  
- 	IWL_DEBUG_FW_INFO(fwrt, "WRT: data collection start\n");
- 	if (fwrt->trans->ini_valid)
--		iwl_fw_error_ini_dump(fwrt);
-+		iwl_fw_error_ini_dump(fwrt, wk_idx);
- 	else
- 		iwl_fw_error_dump(fwrt);
- 	IWL_DEBUG_FW_INFO(fwrt, "WRT: data collection done\n");
-@@ -2314,19 +2323,27 @@ void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt)
- 		udelay(500);
- 		iwl_fw_dbg_restart_recording(fwrt, &params);
- 	}
-+
-+out:
-+	clear_bit(wk_idx, &fwrt->dump.active_wks);
- }
--IWL_EXPORT_SYMBOL(iwl_fw_dbg_collect_sync);
- 
- void iwl_fw_error_dump_wk(struct work_struct *work)
+@@ -1635,9 +1625,10 @@ static u32 iwl_dump_ini_rxf_get_size(struct iwl_fw_runtime *fwrt,
+ 				     struct iwl_fw_ini_region_cfg *reg)
  {
--	struct iwl_fw_runtime *fwrt =
--		container_of(work, struct iwl_fw_runtime, dump.wk.work);
-+	struct iwl_fw_runtime *fwrt;
-+	typeof(fwrt->dump.wks[0]) *wks;
+ 	struct iwl_ini_rxf_data rx_data;
+-	u32 size = sizeof(struct iwl_fw_ini_fifo_error_dump) +
+-		sizeof(struct iwl_fw_ini_fifo_error_dump_range) +
+-		le32_to_cpu(reg->fifos.num_of_registers) * sizeof(__le32) * 2;
++	u32 size = sizeof(struct iwl_fw_ini_error_dump) +
++		sizeof(struct iwl_fw_ini_error_dump_range) +
++		le32_to_cpu(reg->fifos.num_of_registers) *
++		sizeof(struct iwl_fw_ini_error_dump_register);
  
-+	wks = container_of(work, typeof(fwrt->dump.wks[0]), wk.work);
-+	fwrt = container_of(wks, struct iwl_fw_runtime, dump.wks[wks->idx]);
-+
-+	/* assumes the op mode mutex is locked in dump_start since
-+	 * iwl_fw_dbg_collect_sync can't run in parallel
-+	 */
- 	if (fwrt->ops && fwrt->ops->dump_start &&
- 	    fwrt->ops->dump_start(fwrt->ops_ctx))
- 		return;
- 
--	iwl_fw_dbg_collect_sync(fwrt);
-+	iwl_fw_dbg_collect_sync(fwrt, wks->idx);
- 
- 	if (fwrt->ops && fwrt->ops->dump_end)
- 		fwrt->ops->dump_end(fwrt->ops_ctx);
-@@ -2723,8 +2740,11 @@ IWL_EXPORT_SYMBOL(iwl_fw_dbg_apply_point);
- 
- void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt)
- {
-+	int i;
-+
- 	del_timer(&fwrt->dump.periodic_trig);
--	iwl_fw_dbg_collect_sync(fwrt);
-+	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++)
-+		iwl_fw_dbg_collect_sync(fwrt, i);
- 
- 	iwl_trans_stop_device(fwrt->trans);
- }
+ 	if (reg->fifos.header_only)
+ 		return size;
+@@ -1879,7 +1870,7 @@ static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
+ 			fwrt->dump.fifo_iter = &iter;
+ 			ops.get_num_of_ranges = iwl_dump_ini_txf_ranges;
+ 			ops.get_size = iwl_dump_ini_txf_get_size;
+-			ops.fill_mem_hdr = iwl_dump_ini_fifo_fill_header;
++			ops.fill_mem_hdr = iwl_dump_ini_mem_fill_header;
+ 			ops.fill_range = iwl_dump_ini_txf_iter;
+ 			iwl_dump_ini_mem(fwrt, data, reg, &ops);
+ 			fwrt->dump.fifo_iter = fifo_iter;
+@@ -1888,7 +1879,7 @@ static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
+ 		case IWL_FW_INI_REGION_RXF:
+ 			ops.get_num_of_ranges = iwl_dump_ini_rxf_ranges;
+ 			ops.get_size = iwl_dump_ini_rxf_get_size;
+-			ops.fill_mem_hdr = iwl_dump_ini_fifo_fill_header;
++			ops.fill_mem_hdr = iwl_dump_ini_mem_fill_header;
+ 			ops.fill_range = iwl_dump_ini_rxf_iter;
+ 			iwl_dump_ini_mem(fwrt, data, reg, &ops);
+ 			break;
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index 4a66d6f48d60..37d5171213c2 100644
+index 2a9e560a906b..4a66d6f48d60 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -383,16 +383,26 @@ static inline bool iwl_fw_dbg_is_paging_enabled(struct iwl_fw_runtime *fwrt)
- 
- void iwl_fw_dbg_read_d3_debug_data(struct iwl_fw_runtime *fwrt);
- 
--static inline void iwl_fw_flush_dump(struct iwl_fw_runtime *fwrt)
-+static inline void iwl_fw_flush_dumps(struct iwl_fw_runtime *fwrt)
- {
-+	int i;
-+
- 	del_timer(&fwrt->dump.periodic_trig);
--	flush_delayed_work(&fwrt->dump.wk);
-+	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++) {
-+		flush_delayed_work(&fwrt->dump.wks[i].wk);
-+		fwrt->dump.wks[i].ini_trig_id = IWL_FW_TRIGGER_ID_INVALID;
-+	}
+@@ -457,9 +457,6 @@ static inline void iwl_fw_umac_set_alive_err_table(struct iwl_trans *trans,
+ 		trans->umac_error_event_table = umac_error_event_table;
  }
  
--static inline void iwl_fw_cancel_dump(struct iwl_fw_runtime *fwrt)
-+static inline void iwl_fw_cancel_dumps(struct iwl_fw_runtime *fwrt)
+-/* This bit is used to differentiate the legacy dump from the ini dump */
+-#define INI_DUMP_BIT BIT(31)
+-
+ static inline void iwl_fw_error_collect(struct iwl_fw_runtime *fwrt)
  {
-+	int i;
-+
- 	del_timer(&fwrt->dump.periodic_trig);
--	cancel_delayed_work_sync(&fwrt->dump.wk);
-+	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++) {
-+		cancel_delayed_work_sync(&fwrt->dump.wks[i].wk);
-+		fwrt->dump.wks[i].ini_trig_id = IWL_FW_TRIGGER_ID_INVALID;
-+	}
- }
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-@@ -431,7 +441,6 @@ static inline void iwl_fw_resume_timestamp(struct iwl_fw_runtime *fwrt) {}
- 
- #endif /* CONFIG_IWLWIFI_DEBUGFS */
- 
--void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt);
- void iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
- 			    enum iwl_fw_ini_apply_point apply_point);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/init.c b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-index 4435c0ce3013..c16d6e126e3c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/init.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-@@ -67,6 +67,8 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
- 			const struct iwl_fw_runtime_ops *ops, void *ops_ctx,
- 			struct dentry *dbgfs_dir)
- {
-+	int i;
-+
- 	memset(fwrt, 0, sizeof(*fwrt));
- 	fwrt->trans = trans;
- 	fwrt->fw = fw;
-@@ -74,7 +76,10 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
- 	fwrt->dump.conf = FW_DBG_INVALID;
- 	fwrt->ops = ops;
- 	fwrt->ops_ctx = ops_ctx;
--	INIT_DELAYED_WORK(&fwrt->dump.wk, iwl_fw_error_dump_wk);
-+	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++) {
-+		fwrt->dump.wks[i].idx = i;
-+		INIT_DELAYED_WORK(&fwrt->dump.wks[i].wk, iwl_fw_error_dump_wk);
-+	}
- 	iwl_fwrt_dbgfs_register(fwrt, dbgfs_dir);
- 	timer_setup(&fwrt->dump.periodic_trig,
- 		    iwl_fw_dbg_periodic_trig_handler, 0);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index a6402a0b3854..e351ac7ae53b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -89,9 +89,7 @@ struct iwl_fwrt_shared_mem_cfg {
- 	u32 internal_txfifo_size[TX_FIFO_INTERNAL_MAX_NUM];
+ 	if (fwrt->trans->ini_valid && fwrt->trans->hw_error) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 0feff4c33e39..4ee9418c949b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -278,19 +278,42 @@ struct iwl_fw_error_dump_mem {
+ 	u8 data[];
  };
  
--enum iwl_fw_runtime_status {
--	IWL_FWRT_STATUS_DUMPING = 0,
--};
-+#define IWL_FW_RUNTIME_DUMP_WK_NUM 5
+-#define IWL_INI_DUMP_MEM_VER 1
+-#define IWL_INI_DUMP_MONITOR_VER 1
+-#define IWL_INI_DUMP_FIFO_VER 1
++/* Dump version, used by the dump parser to differentiate between
++ * different dump formats
++ */
++#define IWL_INI_DUMP_VER 1
++
++/* This bit is used to differentiate the legacy dump from the ini dump */
++#define INI_DUMP_BIT BIT(31)
++
++/**
++ * struct iwl_fw_ini_fifo_hdr - fifo range header
++ * @fifo_num: the fifo number. In case of umac rx fifo, set BIT(31) to
++ *	distinguish between lmac and umac rx fifos
++ * @num_of_registers: num of registers to dump, dword size each
++ */
++struct iwl_fw_ini_fifo_hdr {
++	__le32 fifo_num;
++	__le32 num_of_registers;
++} __packed;
  
  /**
-  * struct iwl_fw_runtime - runtime data for firmware
-@@ -100,7 +98,6 @@ enum iwl_fw_runtime_status {
-  * @dev: device pointer
-  * @ops: user ops
-  * @ops_ctx: user ops context
-- * @status: status flags
-  * @fw_paging_db: paging database
-  * @num_of_paging_blk: number of paging blocks
-  * @num_of_pages_in_last_blk: number of pages in the last block
-@@ -117,8 +114,6 @@ struct iwl_fw_runtime {
- 	const struct iwl_fw_runtime_ops *ops;
- 	void *ops_ctx;
+  * struct iwl_fw_ini_error_dump_range - range of memory
+  * @range_data_size: the size of this range, in bytes
+- * @start_addr: the start address of this range
++ * @internal_base_addr - base address of internal memory range
++ * @dram_base_addr - base address of dram monitor range
++ * @page_num - page number of memory range
++ * @fifo_hdr - fifo header of memory range
+  * @data: the actual memory
+  */
+ struct iwl_fw_ini_error_dump_range {
+ 	__le32 range_data_size;
+-	__le64 start_addr;
++	union {
++		__le32 internal_base_addr;
++		__le64 dram_base_addr;
++		__le32 page_num;
++		struct iwl_fw_ini_fifo_hdr fifo_hdr;
++	};
+ 	__le32 data[];
+ } __packed;
  
--	unsigned long status;
+@@ -333,32 +356,6 @@ struct iwl_fw_ini_error_dump_register {
+ 	__le32 data;
+ } __packed;
+ 
+-/**
+- * struct iwl_fw_ini_fifo_error_dump_range - ini fifo range dump
+- * @fifo_num: the fifo num. In case of rxf and umac rxf, set BIT(31) to
+- *	distinguish between lmac and umac
+- * @num_of_registers: num of registers to dump, dword size each
+- * @range_data_size: the size of the data
+- * @data: consist of
+- *	num_of_registers * (register address + register value) + fifo data
+- */
+-struct iwl_fw_ini_fifo_error_dump_range {
+-	__le32 fifo_num;
+-	__le32 num_of_registers;
+-	__le32 range_data_size;
+-	__le32 data[];
+-} __packed;
 -
- 	/* Paging */
- 	struct iwl_fw_paging fw_paging_db[NUM_OF_FW_PAGING_BLOCKS];
- 	u16 num_of_paging_blk;
-@@ -133,7 +128,12 @@ struct iwl_fw_runtime {
- 	struct {
- 		const struct iwl_fw_dump_desc *desc;
- 		bool monitor_only;
--		struct delayed_work wk;
-+		struct {
-+			u8 idx;
-+			enum iwl_fw_ini_trigger_id ini_trig_id;
-+			struct delayed_work wk;
-+		} wks[IWL_FW_RUNTIME_DUMP_WK_NUM];
-+		unsigned long active_wks;
- 
- 		u8 conf;
- 
-@@ -145,7 +145,6 @@ struct iwl_fw_runtime {
- 		u32 lmac_err_id[MAX_NUM_LMAC];
- 		u32 umac_err_id;
- 		void *fifo_iter;
--		enum iwl_fw_ini_trigger_id ini_trig_id;
- 		struct timer_list periodic_trig;
- 	} dump;
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 5c52469288be..5f7ed51c96ab 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1439,7 +1439,7 @@ static void iwl_mvm_mac_stop(struct ieee80211_hw *hw)
- 	 */
- 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
- 
--	iwl_fw_cancel_dump(&mvm->fwrt);
-+	iwl_fw_cancel_dumps(&mvm->fwrt);
- 	cancel_delayed_work_sync(&mvm->cs_tx_unblock_dwork);
- 	cancel_delayed_work_sync(&mvm->scan_timeout_dwork);
- 	iwl_fw_free_dump_desc(&mvm->fwrt);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index acd2fda12466..6514e045c901 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -564,24 +564,24 @@ static void iwl_mvm_tx_unblock_dwork(struct work_struct *work)
- static int iwl_mvm_fwrt_dump_start(void *ctx)
- {
- 	struct iwl_mvm *mvm = ctx;
--	int ret;
-+	int ret = 0;
-+
-+	mutex_lock(&mvm->mutex);
- 
- 	ret = iwl_mvm_ref_sync(mvm, IWL_MVM_REF_FW_DBG_COLLECT);
- 	if (ret)
--		return ret;
+-/**
+- * struct iwl_fw_ini_fifo_error_dump - ini fifo region dump
+- * @header: the header of this region
+- * @ranges: the memory ranges of this region
+- */
+-struct iwl_fw_ini_fifo_error_dump {
+-	struct iwl_fw_ini_error_dump_header header;
+-	struct iwl_fw_ini_fifo_error_dump_range ranges[];
+-} __packed;
 -
--	mutex_lock(&mvm->mutex);
-+		mutex_unlock(&mvm->mutex);
- 
--	return 0;
-+	return ret;
- }
- 
- static void iwl_mvm_fwrt_dump_end(void *ctx)
- {
- 	struct iwl_mvm *mvm = ctx;
- 
--	mutex_unlock(&mvm->mutex);
--
- 	iwl_mvm_unref(mvm, IWL_MVM_REF_FW_DBG_COLLECT);
-+
-+	mutex_unlock(&mvm->mutex);
- }
- 
- static bool iwl_mvm_fwrt_fw_running(void *ctx)
-@@ -880,7 +880,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	return op_mode;
- 
-  out_free:
--	iwl_fw_flush_dump(&mvm->fwrt);
-+	iwl_fw_flush_dumps(&mvm->fwrt);
- 	iwl_fw_runtime_free(&mvm->fwrt);
- 
- 	if (iwlmvm_mod_params.init_dbg)
+ /**
+  * struct iwl_fw_error_dump_rb - content of an Receive Buffer
+  * @index: the index of the Receive Buffer in the Rx queue
 -- 
 2.20.1
 
