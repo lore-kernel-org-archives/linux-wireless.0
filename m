@@ -2,202 +2,135 @@ Return-Path: <SRS0=pdv6=UY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EB36C48BD5
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 03:20:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 332BDC48BD5
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 04:43:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42EA02089F
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 03:20:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05FE42085A
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 04:43:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gdxfop57";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PBPwg7Ir"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730274AbfFYDUi (ORCPT
+        id S1726958AbfFYEnW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Jun 2019 23:20:38 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:20434 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728387AbfFYDTg (ORCPT
+        Tue, 25 Jun 2019 00:43:22 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:48118 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726421AbfFYEnV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jun 2019 23:19:36 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x5P36iQG110668
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2019 23:19:34 -0400
-Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2tbaagakke-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2019 23:19:34 -0400
-Received: from localhost
-        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <alastair@au1.ibm.com>;
-        Tue, 25 Jun 2019 04:19:31 +0100
-Received: from b06avi18878370.portsmouth.uk.ibm.com (9.149.26.194)
-        by e06smtp04.uk.ibm.com (192.168.101.134) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Tue, 25 Jun 2019 04:19:22 +0100
-Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x5P3JLsx37486936
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Jun 2019 03:19:21 GMT
-Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 14F5D52052;
-        Tue, 25 Jun 2019 03:19:21 +0000 (GMT)
-Received: from ozlabs.au.ibm.com (unknown [9.192.253.14])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 6C31F5204F;
-        Tue, 25 Jun 2019 03:19:20 +0000 (GMT)
-Received: from adsilva.ozlabs.ibm.com (haven.au.ibm.com [9.192.254.114])
-        (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Tue, 25 Jun 2019 00:43:21 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 6BB25608CE; Tue, 25 Jun 2019 04:43:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1561437800;
+        bh=PzVp8KkogA+HpuLr/YP8oqFfRobqR8lFNoY9waydybM=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=gdxfop57atEjvmRF8gPOTqZFUYIpLMuvk3v7sa0hocaPU7Kiz1gYQuaZrWgvdX+Dj
+         Z82ssd8e6DCvYle2B+GdHKCaTPcvcHO57m9WyJsdZBA6btr/pRDPQYBQI9hi+D06mu
+         P3tgaB/Bs8jFMztruF+3HFd82d2D7PPmbLPutqHs=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ozlabs.au.ibm.com (Postfix) with ESMTPSA id 25523A021C;
-        Tue, 25 Jun 2019 13:19:19 +1000 (AEST)
-From:   "Alastair D'Silva" <alastair@au1.ibm.com>
-To:     alastair@d-silva.org
-Cc:     Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        Jassi Brar <jassisinghbrar@gmail.com>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jose Abreu <Jose.Abreu@synopsys.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Benson Leung <bleung@chromium.org>,
-        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Petr Mladek <pmladek@suse.com>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        David Laight <David.Laight@ACULAB.COM>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH v4 1/7] lib/hexdump.c: Fix selftests
-Date:   Tue, 25 Jun 2019 13:17:20 +1000
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190625031726.12173-1-alastair@au1.ibm.com>
-References: <20190625031726.12173-1-alastair@au1.ibm.com>
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2E23260709;
+        Tue, 25 Jun 2019 04:43:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1561437799;
+        bh=PzVp8KkogA+HpuLr/YP8oqFfRobqR8lFNoY9waydybM=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=PBPwg7IrJqMMukLWvzfIZX+whOYm0ZznKI/3wi9SCk5H3k6H/D+0I4GAZgV2o/bps
+         SfaDPbUvmqd720DbwWT8+WtOldqLomy5tytCONSAs4sGw5dQ79adiUIPunmzEQt2IX
+         elxmnUfr7YzxgldSiUhoq7DCqzjOoQLhaLjBuQSs=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2E23260709
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-x-cbid: 19062503-0016-0000-0000-0000028C0D9B
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19062503-0017-0000-0000-000032E97D2E
-Message-Id: <20190625031726.12173-2-alastair@au1.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-06-25_02:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=1 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=894 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1906250024
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] p54usb: Fix race between disconnect and firmware loading
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <Pine.LNX.4.44L0.1905201042110.1498-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1905201042110.1498-100000@iolanthe.rowland.org>
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     Christian Lamparter <chunkeey@gmail.com>,
+        syzbot <syzbot+200d4bb11b23d929335f@syzkaller.appspotmail.com>,
+        <davem@davemloft.net>, <andreyknvl@google.com>,
+        <syzkaller-bugs@googlegroups.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190625044320.6BB25608CE@smtp.codeaurora.org>
+Date:   Tue, 25 Jun 2019 04:43:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alastair D'Silva <alastair@d-silva.org>
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-The overflow tests did not account for the situation where no
-overflow occurs and len < rowsize.
+> The syzbot fuzzer found a bug in the p54 USB wireless driver.  The
+> issue involves a race between disconnect and the firmware-loader
+> callback routine, and it has several aspects.
+> 
+> One big problem is that when the firmware can't be loaded, the
+> callback routine tries to unbind the driver from the USB _device_ (by
+> calling device_release_driver) instead of from the USB _interface_ to
+> which it is actually bound (by calling usb_driver_release_interface).
+> 
+> The race involves access to the private data structure.  The driver's
+> disconnect handler waits for a completion that is signalled by the
+> firmware-loader callback routine.  As soon as the completion is
+> signalled, you have to assume that the private data structure may have
+> been deallocated by the disconnect handler -- even if the firmware was
+> loaded without errors.  However, the callback routine does access the
+> private data several times after that point.
+> 
+> Another problem is that, in order to ensure that the USB device
+> structure hasn't been freed when the callback routine runs, the driver
+> takes a reference to it.  This isn't good enough any more, because now
+> that the callback routine calls usb_driver_release_interface, it has
+> to ensure that the interface structure hasn't been freed.
+> 
+> Finally, the driver takes an unnecessary reference to the USB device
+> structure in the probe function and drops the reference in the
+> disconnect handler.  This extra reference doesn't accomplish anything,
+> because the USB core already guarantees that a device structure won't
+> be deallocated while a driver is still bound to any of its interfaces.
+> 
+> To fix these problems, this patch makes the following changes:
+> 
+> 	Call usb_driver_release_interface() rather than
+> 	device_release_driver().
+> 
+> 	Don't signal the completion until after the important
+> 	information has been copied out of the private data structure,
+> 	and don't refer to the private data at all thereafter.
+> 
+> 	Lock udev (the interface's parent) before unbinding the driver
+> 	instead of locking udev->parent.
+> 
+> 	During the firmware loading process, take a reference to the
+> 	USB interface instead of the USB device.
+> 
+> 	Don't take an unnecessary reference to the device during probe
+> 	(and then don't drop it during disconnect).
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> Reported-and-tested-by: syzbot+200d4bb11b23d929335f@syzkaller.appspotmail.com
+> CC: <stable@vger.kernel.org>
+> Acked-by: Christian Lamparter <chunkeey@gmail.com>
 
-This patch renames the cryptic variables and accounts for the
-above case.
+Patch applied to wireless-drivers-next.git, thanks.
 
-The selftests now pass.
+6e41e2257f10 p54usb: Fix race between disconnect and firmware loading
 
-Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
----
- lib/test_hexdump.c | 48 +++++++++++++++++++++++++++-------------------
- 1 file changed, 28 insertions(+), 20 deletions(-)
-
-diff --git a/lib/test_hexdump.c b/lib/test_hexdump.c
-index 5144899d3c6b..bef97a964582 100644
---- a/lib/test_hexdump.c
-+++ b/lib/test_hexdump.c
-@@ -163,45 +163,53 @@ static void __init test_hexdump_overflow(size_t buflen, size_t len,
- {
- 	char test[TEST_HEXDUMP_BUF_SIZE];
- 	char buf[TEST_HEXDUMP_BUF_SIZE];
--	int rs = rowsize, gs = groupsize;
--	int ae, he, e, f, r;
--	bool a;
-+	int ascii_len, hex_len, expected_len, fill_point, ngroups, rc;
-+	bool match;
- 
- 	total_tests++;
- 
- 	memset(buf, FILL_CHAR, sizeof(buf));
- 
--	r = hex_dump_to_buffer(data_b, len, rs, gs, buf, buflen, ascii);
-+	rc = hex_dump_to_buffer(data_b, len, rowsize, groupsize, buf, buflen,
-+				ascii);
- 
- 	/*
- 	 * Caller must provide the data length multiple of groupsize. The
- 	 * calculations below are made with that assumption in mind.
- 	 */
--	ae = rs * 2 /* hex */ + rs / gs /* spaces */ + 1 /* space */ + len /* ascii */;
--	he = (gs * 2 /* hex */ + 1 /* space */) * len / gs - 1 /* no trailing space */;
-+	ngroups = rowsize / groupsize;
-+	hex_len = (groupsize * 2 /* hex */ + 1 /* spaces */) * ngroups
-+		  - 1 /* no trailing space */;
-+	ascii_len = hex_len + 2 /* space */ + len /* ascii */;
-+
-+	if (len < rowsize) {
-+		ngroups = len / groupsize;
-+		hex_len = (groupsize * 2 /* hex */ + 1 /* spaces */) * ngroups
-+		  - 1 /* no trailing space */;
-+	}
- 
--	if (ascii)
--		e = ae;
--	else
--		e = he;
-+	expected_len = (ascii) ? ascii_len : hex_len;
- 
--	f = min_t(int, e + 1, buflen);
-+	fill_point = min_t(int, expected_len + 1, buflen);
- 	if (buflen) {
--		test_hexdump_prepare_test(len, rs, gs, test, sizeof(test), ascii);
--		test[f - 1] = '\0';
-+		test_hexdump_prepare_test(len, rowsize, groupsize, test,
-+					  sizeof(test), ascii);
-+		test[fill_point - 1] = '\0';
- 	}
--	memset(test + f, FILL_CHAR, sizeof(test) - f);
-+	memset(test + fill_point, FILL_CHAR, sizeof(test) - fill_point);
- 
--	a = r == e && !memcmp(test, buf, TEST_HEXDUMP_BUF_SIZE);
-+	match = rc == expected_len && !memcmp(test, buf, TEST_HEXDUMP_BUF_SIZE);
- 
- 	buf[sizeof(buf) - 1] = '\0';
- 
--	if (!a) {
--		pr_err("Len: %zu buflen: %zu strlen: %zu\n",
--			len, buflen, strnlen(buf, sizeof(buf)));
--		pr_err("Result: %d '%s'\n", r, buf);
--		pr_err("Expect: %d '%s'\n", e, test);
-+	if (!match) {
-+		pr_err("rowsize: %u groupsize: %u ascii: %d Len: %zu buflen: %zu strlen: %zu\n",
-+			rowsize, groupsize, ascii, len, buflen,
-+			strnlen(buf, sizeof(buf)));
-+		pr_err("Result: %d '%-.*s'\n", rc, (int)buflen, buf);
-+		pr_err("Expect: %d '%-.*s'\n", expected_len, (int)buflen, test);
- 		failed_tests++;
-+
- 	}
- }
- 
 -- 
-2.21.0
+https://patchwork.kernel.org/patch/10951527/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
