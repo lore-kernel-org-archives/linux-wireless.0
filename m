@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 229D3C48BD8
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 10:30:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F22C48BD8
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 10:30:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF00121655
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 10:30:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C85821655
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 10:30:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AQTn+w72"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cgIu0kcy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731983AbfFYK3r (ORCPT
+        id S1731957AbfFYK3n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Jun 2019 06:29:47 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:49112 "EHLO
+        Tue, 25 Jun 2019 06:29:43 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:48604 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731939AbfFYK3q (ORCPT
+        with ESMTP id S1731939AbfFYK3j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jun 2019 06:29:46 -0400
+        Tue, 25 Jun 2019 06:29:39 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=0y+EkNmxmNFKoAnJ+llx9gsPNEjWrfJ32e7lcmuW1Qk=; b=AQTn+w72W/klcp4DMDBpwA3Bhy
-        5DmYdjJzY3eqHj5wbpQDqJa4gwhJsgBSDKrd6qqFd03GdIv4/BCqsHPjQSK2ZaWG7y7PpGSlD8cc+
-        NRRo2RpvSLk0OpAlWtSyEqnJYNtbtkGIpm8mqh3shzx/ruc7DmV1w63ZS+VfhjweJgDSl4LUE2tJC
-        HBQzrwVWzI6NrUU+ppxbg+D+xEJbeWPgtfmsZF9JIwb6FSKtwk5g5ALzsctiur6jcoVDzcrmpccJg
-        WabVtfau/MV8V/Rjmni0Bbtj2VoWSYOq4s88gzAVn29ciKQz+MJwMnPjd8dDtfCVPgQm/kKdTwRDw
-        diR8YfgQ==;
+        bh=6PRfHQ3NGRfwo8k6M0Ah5l3x8Qxa9hRyvFNjcHO4MeQ=; b=cgIu0kcyYdKVV/eHSTd/1vuMCG
+        vw9Ww6uPJv3WwC5FyAIr2oKa78ZjAZbMJHoIWrrkiR3ksjpNBpMuVVf21RvuitABoj8Mkd4dhSrN5
+        Zkri+jSdEsAqqtBh16WQ8MZowcPJTDHN/sJI4HoDXvg7SFQiVyTKfpkAd3gV/YOzz6eklgsAxjLfo
+        Xu/nqaWkLHcFOAj3g8rkxGWUcTm0X85lSHIjrRwoXroqjrX2BJ8l0NuLpBVbBGV7sDYUpAq/Gq5qD
+        ldbmwkfw52OOvExsW/OL5ez9vRCG6WDu/MkWyHPItHwh6P8Z7ruxUgs32KO6pYdcpIykCQmOSBePP
+        1ZgTjRqQ==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hfihq-0005UB-KE; Tue, 25 Jun 2019 10:29:43 +0000
+        id 1hfihl-0005Su-UF; Tue, 25 Jun 2019 10:29:38 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Larry Finger <Larry.Finger@lwfinger.net>,
         Kalle Valo <kvalo@codeaurora.org>
 Cc:     b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] b43: remove b43_dma_set_mask
-Date:   Tue, 25 Jun 2019 12:29:31 +0200
-Message-Id: <20190625102932.32257-4-hch@lst.de>
+Subject: [PATCH 1/4] b43legacy: remove b43legacy_dma_set_mask
+Date:   Tue, 25 Jun 2019 12:29:29 +0200
+Message-Id: <20190625102932.32257-2-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190625102932.32257-1-hch@lst.de>
 References: <20190625102932.32257-1-hch@lst.de>
@@ -63,18 +63,18 @@ this trial and error logic.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/net/wireless/broadcom/b43/dma.c | 43 +++----------------------
- 1 file changed, 5 insertions(+), 38 deletions(-)
+ drivers/net/wireless/broadcom/b43legacy/dma.c | 39 +------------------
+ 1 file changed, 1 insertion(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
-index b34e51933257..1d5ace4d3372 100644
---- a/drivers/net/wireless/broadcom/b43/dma.c
-+++ b/drivers/net/wireless/broadcom/b43/dma.c
-@@ -1056,42 +1056,6 @@ void b43_dma_free(struct b43_wldev *dev)
- 	destroy_ring(dma, tx_ring_mcast);
+diff --git a/drivers/net/wireless/broadcom/b43legacy/dma.c b/drivers/net/wireless/broadcom/b43legacy/dma.c
+index 2ce1537d983c..0c2de20622e3 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/dma.c
++++ b/drivers/net/wireless/broadcom/b43legacy/dma.c
+@@ -797,43 +797,6 @@ void b43legacy_dma_free(struct b43legacy_wldev *dev)
+ 	dma->tx_ring0 = NULL;
  }
  
--static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
+-static int b43legacy_dma_set_mask(struct b43legacy_wldev *dev, u64 mask)
 -{
 -	u64 orig_mask = mask;
 -	bool fallback = false;
@@ -96,13 +96,14 @@ index b34e51933257..1d5ace4d3372 100644
 -			fallback = true;
 -			continue;
 -		}
--		b43err(dev->wl, "The machine/kernel does not support "
+-		b43legacyerr(dev->wl, "The machine/kernel does not support "
 -		       "the required %u-bit DMA mask\n",
 -		       (unsigned int)dma_mask_to_engine_type(orig_mask));
 -		return -EOPNOTSUPP;
 -	}
 -	if (fallback) {
--		b43info(dev->wl, "DMA mask fallback from %u-bit to %u-bit\n",
+-		b43legacyinfo(dev->wl, "DMA mask fallback from %u-bit to %u-"
+-			"bit\n",
 -			(unsigned int)dma_mask_to_engine_type(orig_mask),
 -			(unsigned int)dma_mask_to_engine_type(mask));
 -	}
@@ -110,24 +111,18 @@ index b34e51933257..1d5ace4d3372 100644
 -	return 0;
 -}
 -
- /* Some hardware with 64-bit DMA seems to be bugged and looks for translation
-  * bit in low address word instead of high one.
-  */
-@@ -1120,9 +1084,12 @@ int b43_dma_init(struct b43_wldev *dev)
+ int b43legacy_dma_init(struct b43legacy_wldev *dev)
+ {
+ 	struct b43legacy_dma *dma = &dev->dma;
+@@ -844,7 +807,7 @@ int b43legacy_dma_init(struct b43legacy_wldev *dev)
  
  	dmamask = supported_dma_mask(dev);
  	type = dma_mask_to_engine_type(dmamask);
--	err = b43_dma_set_mask(dev, dmamask);
--	if (err)
+-	err = b43legacy_dma_set_mask(dev, dmamask);
 +	err = dma_set_mask_and_coherent(dev->dev->dma_dev, dmamask);
-+	if (err) {
-+		b43err(dev->wl, "The machine/kernel does not support "
-+		       "the required %u-bit DMA mask\n", type);
- 		return err;
-+	}
- 
- 	switch (dev->dev->bus_type) {
- #ifdef CONFIG_B43_BCMA
+ 	if (err) {
+ #ifdef CONFIG_B43LEGACY_PIO
+ 		b43legacywarn(dev->wl, "DMA for this device not supported. "
 -- 
 2.20.1
 
