@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BC41C48BD4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B258AC48BD5
 	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 18B62214DA
+	by mail.kernel.org (Postfix) with ESMTP id 8C164214DA
 	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728074AbfFYJpC (ORCPT
+        id S1728148AbfFYJpC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 25 Jun 2019 05:45:02 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54604 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:54612 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727673AbfFYJpB (ORCPT
+        with ESMTP id S1727768AbfFYJpB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 25 Jun 2019 05:45:01 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hfi0Y-0007Nv-51; Tue, 25 Jun 2019 12:44:58 +0300
+        id 1hfi0Z-0007Nv-Li; Tue, 25 Jun 2019 12:44:59 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
+Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 01/12] iwlwifi: iwl_mvm_tx_mpdu() must be called with BH disabled
-Date:   Tue, 25 Jun 2019 12:44:41 +0300
-Message-Id: <20190625094452.19034-2-luca@coelho.fi>
+Subject: [PATCH 04/12] iwlwifi: update CSI API
+Date:   Tue, 25 Jun 2019 12:44:44 +0300
+Message-Id: <20190625094452.19034-5-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190625094452.19034-1-luca@coelho.fi>
 References: <20190625094452.19034-1-luca@coelho.fi>
@@ -43,34 +43,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jiri Kosina <jkosina@suse.cz>
+From: Johannes Berg <johannes.berg@intel.com>
 
-As iwl_mvm_tx_mpdu() is not disabling BH while obtaining iwl_mvm_sta->lock
-(which is being taken from BH context as well), it has to be always
-invoked with BH disabled. Make that clear in a comment.
+Update the CSI API to the new version supported by the firmware.
 
-Signed-off-by: Jiri Kosina <jkosina@suse.cz>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/location.h | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 0c2aabc842f9..ad4760307726 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1063,7 +1063,9 @@ static int iwl_mvm_tx_pkt_queued(struct iwl_mvm *mvm,
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
+index 8d78b0e671c0..ec864c7b497f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
+@@ -937,8 +937,13 @@ struct iwl_ftm_responder_stats {
+ 	__le16 reserved;
+ } __packed; /* TOF_RESPONDER_STATISTICS_NTFY_S_VER_2 */
  
- /*
-- * Sets the fields in the Tx cmd that are crypto related
-+ * Sets the fields in the Tx cmd that are crypto related.
-+ *
-+ * This function must be called with BHs disabled.
-  */
- static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
- 			   struct ieee80211_tx_info *info,
+-#define IWL_CSI_CHUNK_CTL_NUM_MASK	0x3
+-#define IWL_CSI_CHUNK_CTL_IDX_MASK	0xc
++#define IWL_CSI_MAX_EXPECTED_CHUNKS		16
++
++#define IWL_CSI_CHUNK_CTL_NUM_MASK_VER_1	0x0003
++#define IWL_CSI_CHUNK_CTL_IDX_MASK_VER_1	0x000c
++
++#define IWL_CSI_CHUNK_CTL_NUM_MASK_VER_2	0x00ff
++#define IWL_CSI_CHUNK_CTL_IDX_MASK_VER_2	0xff00
+ 
+ struct iwl_csi_chunk_notification {
+ 	__le32 token;
+@@ -946,6 +951,6 @@ struct iwl_csi_chunk_notification {
+ 	__le16 ctl;
+ 	__le32 size;
+ 	u8 data[];
+-} __packed; /* CSI_CHUNKS_HDR_NTFY_API_S_VER_1 */
++} __packed; /* CSI_CHUNKS_HDR_NTFY_API_S_VER_1/VER_2 */
+ 
+ #endif /* __iwl_fw_api_location_h__ */
 -- 
 2.20.1
 
