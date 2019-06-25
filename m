@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B258AC48BD5
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB256C48BD5
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C164214DA
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83B99214DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jun 2019 09:45:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728148AbfFYJpC (ORCPT
+        id S1728308AbfFYJpE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Jun 2019 05:45:02 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54612 "EHLO
+        Tue, 25 Jun 2019 05:45:04 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54626 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727768AbfFYJpB (ORCPT
+        with ESMTP id S1728066AbfFYJpC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jun 2019 05:45:01 -0400
+        Tue, 25 Jun 2019 05:45:02 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hfi0Z-0007Nv-Li; Tue, 25 Jun 2019 12:44:59 +0300
+        id 1hfi0b-0007Nv-67; Tue, 25 Jun 2019 12:45:01 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 04/12] iwlwifi: update CSI API
-Date:   Tue, 25 Jun 2019 12:44:44 +0300
-Message-Id: <20190625094452.19034-5-luca@coelho.fi>
+Subject: [PATCH 07/12] iwlwifi: dbg_ini: use different barker for ini dump
+Date:   Tue, 25 Jun 2019 12:44:47 +0300
+Message-Id: <20190625094452.19034-8-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190625094452.19034-1-luca@coelho.fi>
 References: <20190625094452.19034-1-luca@coelho.fi>
@@ -43,44 +43,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Update the CSI API to the new version supported by the firmware.
+Use a different barker for ini dump to allow differentiation from legacy
+dump. Also it allows to remove INI_BIT from dump TLVs.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/location.h | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c        | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/fw/error-dump.h | 4 +---
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-index 8d78b0e671c0..ec864c7b497f 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-@@ -937,8 +937,13 @@ struct iwl_ftm_responder_stats {
- 	__le16 reserved;
- } __packed; /* TOF_RESPONDER_STATISTICS_NTFY_S_VER_2 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 030889e3a10f..2f6881bfcde6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1690,7 +1690,7 @@ iwl_dump_ini_mem(struct iwl_fw_runtime *fwrt,
  
--#define IWL_CSI_CHUNK_CTL_NUM_MASK	0x3
--#define IWL_CSI_CHUNK_CTL_IDX_MASK	0xc
-+#define IWL_CSI_MAX_EXPECTED_CHUNKS		16
-+
-+#define IWL_CSI_CHUNK_CTL_NUM_MASK_VER_1	0x0003
-+#define IWL_CSI_CHUNK_CTL_IDX_MASK_VER_1	0x000c
-+
-+#define IWL_CSI_CHUNK_CTL_NUM_MASK_VER_2	0x00ff
-+#define IWL_CSI_CHUNK_CTL_IDX_MASK_VER_2	0xff00
+ 	num_of_ranges = ops->get_num_of_ranges(fwrt, reg);
  
- struct iwl_csi_chunk_notification {
- 	__le32 token;
-@@ -946,6 +951,6 @@ struct iwl_csi_chunk_notification {
- 	__le16 ctl;
- 	__le32 size;
- 	u8 data[];
--} __packed; /* CSI_CHUNKS_HDR_NTFY_API_S_VER_1 */
-+} __packed; /* CSI_CHUNKS_HDR_NTFY_API_S_VER_1/VER_2 */
+-	(*data)->type = cpu_to_le32(type | INI_DUMP_BIT);
++	(*data)->type = cpu_to_le32(type);
+ 	(*data)->len = cpu_to_le32(size);
  
- #endif /* __iwl_fw_api_location_h__ */
+ 	header->region_id = reg->region_id;
+@@ -1935,7 +1935,7 @@ iwl_fw_error_ini_dump_file(struct iwl_fw_runtime *fwrt,
+ 	if (!dump_file)
+ 		return NULL;
+ 
+-	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
++	dump_file->barker = cpu_to_le32(IWL_FW_INI_ERROR_DUMP_BARKER);
+ 	dump_data = (void *)dump_file->data;
+ 	dump_file->file_len = cpu_to_le32(size);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 4ee9418c949b..50c5840644d0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -67,6 +67,7 @@
+ #include <linux/types.h>
+ 
+ #define IWL_FW_ERROR_DUMP_BARKER	0x14789632
++#define IWL_FW_INI_ERROR_DUMP_BARKER	0x14789633
+ 
+ /**
+  * enum iwl_fw_error_dump_type - types of data in the dump file
+@@ -283,9 +284,6 @@ struct iwl_fw_error_dump_mem {
+  */
+ #define IWL_INI_DUMP_VER 1
+ 
+-/* This bit is used to differentiate the legacy dump from the ini dump */
+-#define INI_DUMP_BIT BIT(31)
+-
+ /**
+  * struct iwl_fw_ini_fifo_hdr - fifo range header
+  * @fifo_num: the fifo number. In case of umac rx fifo, set BIT(31) to
 -- 
 2.20.1
 
