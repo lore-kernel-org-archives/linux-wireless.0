@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 555B3C48BD6
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8824EC48BD6
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:34:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 233EF21738
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:32:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F6C221738
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:34:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561595524;
-	bh=USMiDlK7H+yjx2U+GMP0w+qgryIory1Gzbd3k1HhKrs=;
+	s=default; t=1561595650;
+	bh=CqGM+weWgCPGBuGa69EzqSAFp37GL7myimy/h9Olkws=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ojR+tlFG90KOR5xH3sAq42rUW6LmtnRodFCHbdipy2wH3HxlSv+G6jvK4s57Hrt52
-	 ib4gbxWV5Uyz9azlOnX+/TQlSVzZcCZMJsQ7CzAbBflKftuLyjtZtlU0UGzSGXdriv
-	 mZ9BPG3vSUMiM2SZwijC8xmerjkx5JFdRBUe5ucM=
+	b=IBGMFKmlPnOW664WGT0cCDHEEsqE51oAoUezgnp3RmZSvwQ1ngCis0ZG1ZryWzxXg
+	 xzvFm+v/pHJF1yWwSTV+isPO4s7ROqwjpx5856jZx2Zj8zYfuMxcr3PmhC/FeCjWYL
+	 W2DS3HZpTX4KeZTsuLq/IXIg/1PrlQ6r6ZPcRg/A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727353AbfF0AcC (ORCPT
+        id S1727963AbfF0AeJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jun 2019 20:32:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35600 "EHLO mail.kernel.org"
+        Wed, 26 Jun 2019 20:34:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38210 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727335AbfF0AcA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jun 2019 20:32:00 -0400
+        id S1727954AbfF0AeI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jun 2019 20:34:08 -0400
 Received: from sasha-vm.mshome.net (unknown [107.242.116.147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B6ECD2083B;
-        Thu, 27 Jun 2019 00:31:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5766121738;
+        Thu, 27 Jun 2019 00:34:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561595519;
-        bh=USMiDlK7H+yjx2U+GMP0w+qgryIory1Gzbd3k1HhKrs=;
+        s=default; t=1561595647;
+        bh=CqGM+weWgCPGBuGa69EzqSAFp37GL7myimy/h9Olkws=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Y3iJBDQ3pcJC03QlJdrw34EM4TsV6sFr5A+CZk+fuUb4BQOEQ5BgUiTKG/EHrPVRq
-         sTHOCXO6mvq4OC5rFmmwbOw7gJhkHkvEbSRR84UIh8O2ZRVO+CJzFPTHsmCsyqyy0J
-         UaWJMC3PlgV2waH6XmMLA0xkfIUjDCy15iSfou2M=
+        b=ryVqoQBpTpT8PYBHtoaqPCw/VGhl+DxLJPhdkhwDCJ6ZEn/GqK6iveWsR83HjA2QW
+         HaEGbTQ6HELwPdJ3Y/jZWzHxvpEuo+F1LAnMsACCe0Shx6YAi8XqUUxQ78I9TMvOdk
+         oeWPzf2+MlEqgMSJINa/KWoD0wWpVYgzvU2XQ/YU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jia-Ju Bai <baijiaju1990@gmail.com>,
+Cc:     Mordechay Goodstein <mordechay.goodstein@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 28/95] iwlwifi: Fix double-free problems in iwl_req_fw_callback()
-Date:   Wed, 26 Jun 2019 20:29:13 -0400
-Message-Id: <20190627003021.19867-28-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 66/95] cfg80211: util: fix bit count off by one
+Date:   Wed, 26 Jun 2019 20:29:51 -0400
+Message-Id: <20190627003021.19867-66-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190627003021.19867-1-sashal@kernel.org>
 References: <20190627003021.19867-1-sashal@kernel.org>
@@ -61,39 +61,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-[ Upstream commit a8627176b0de7ba3f4524f641ddff4abf23ae4e4 ]
+[ Upstream commit 1a473d6092d5d182914bea854ce0b21e6d12519d ]
 
-In the error handling code of iwl_req_fw_callback(), iwl_dealloc_ucode()
-is called to free data. In iwl_drv_stop(), iwl_dealloc_ucode() is called
-again, which can cause double-free problems.
+The bits of Rx MCS Map in VHT capability were enumerated
+with index transform - index i -> (i + 1) bit => nss i. BUG!
+while it should be -   index i -> (i + 1) bit => (i + 1) nss.
 
-To fix this bug, the call to iwl_dealloc_ucode() in
-iwl_req_fw_callback() is deleted.
+The bug was exposed in commit a53b2a0b1245 ("iwlwifi: mvm: implement VHT
+extended NSS support in rs.c"), where iwlwifi started using the
+function.
 
-This bug is found by a runtime fuzzing tool named FIZZER written by us.
-
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Fixes: b0aa75f0b1b2 ("ieee80211: add new VHT capability fields/parsing")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 1 -
- 1 file changed, 1 deletion(-)
+ net/wireless/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 689a65b11cc3..4fd1737d768b 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1579,7 +1579,6 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	goto free;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 5a03f38788e7..5ac66a571e33 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1989,7 +1989,7 @@ int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
+ 			continue;
  
-  out_free_fw:
--	iwl_dealloc_ucode(drv);
- 	release_firmware(ucode_raw);
-  out_unbind:
- 	complete(&drv->request_firmware_complete);
+ 		if (supp >= mcs_encoding) {
+-			max_vht_nss = i;
++			max_vht_nss = i + 1;
+ 			break;
+ 		}
+ 	}
 -- 
 2.20.1
 
