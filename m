@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB7F1C48BD9
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B718FC48BDA
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3FE220663
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85A7020663
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561596849;
-	bh=FzihclfkY0suIz7dCDO7dywEcYPogkFBEWqfBkABrSE=;
+	s=default; t=1561596853;
+	bh=ZA9VrjagleecdpQ2Yn/1Dmj0Ua5l12GIiKFBWyy0Ugc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=neX4UMYHq3rcJQx/ceXGtlNav3PxtNPHG0ijXarHy1FBdy+6AhHb86hrWJzLy0DLt
-	 QwoR2jETgcUu6HDhsXoMOFy9XrYAY+Ts177p8p1wYrdtuRgApGYf2v1aaOSbYwxT0K
-	 P0VTd55iw92+HiazucHhbzc+oioMReQNNTSjgic8=
+	b=hfhYYuZ8sKGdc6JiSg4VmrMa2ipIviEpYl0LHDq+/YyWrIRVJ5stgA1WS6689d5zB
+	 x1ECA2Gtz8ccUsxT0MELVn0vxGFLmSwaglmhFNtWKTMQmRKEA9Z/5aH8h2yxQEfw2n
+	 BxEKawI1KoV6trqIw3LForuPGWitGLMZFtVHChRI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727224AbfF0AyE (ORCPT
+        id S1727329AbfF0Ab6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jun 2019 20:54:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35670 "EHLO mail.kernel.org"
+        Wed, 26 Jun 2019 20:31:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35522 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727342AbfF0AcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jun 2019 20:32:03 -0400
+        id S1726612AbfF0Ab5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jun 2019 20:31:57 -0400
 Received: from sasha-vm.mshome.net (unknown [107.242.116.147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CAAEE216E3;
-        Thu, 27 Jun 2019 00:31:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 86504217D7;
+        Thu, 27 Jun 2019 00:31:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561595521;
-        bh=FzihclfkY0suIz7dCDO7dywEcYPogkFBEWqfBkABrSE=;
+        s=default; t=1561595516;
+        bh=ZA9VrjagleecdpQ2Yn/1Dmj0Ua5l12GIiKFBWyy0Ugc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FZoieo+Q5o9kzbRtLurUz9p81USNww9NJgMBU7EqMZfmUid61WVoOHJfrTW4YIY9W
-         sGJ245lTejgJRHBkn0EqU3qhsFGr4WsjatBntrCzPTeVtJwfG/3+mNS/YiBMpABq7J
-         bSi2yQoIqCNKmeCn0tU/CGihcrrfw98HL0jYDCRE=
+        b=OgYcjRRPBI7QU9TosWs0LY33fAGORrODKfoZt0qiw15WW87P5G1FzFA5i7MeAxmbg
+         cbCk81Ibv1HpjD55wzcQIqKvakqPAJhhg7uoJb+oFV/EhWsRH5UJOaVl6VWKLp12l3
+         cIUFbdWX0GYT1i3V+SDRxIVVz9zcZUgkJ3guKzqg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Takashi Iwai <tiwai@suse.de>, huangwen <huangwen@venustech.com.cn>,
+Cc:     Matt Chen <matt.chen@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 29/95] mwifiex: Fix heap overflow in mwifiex_uap_parse_tail_ies()
-Date:   Wed, 26 Jun 2019 20:29:14 -0400
-Message-Id: <20190627003021.19867-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 27/95] iwlwifi: fix AX201 killer sku loading firmware issue
+Date:   Wed, 26 Jun 2019 20:29:12 -0400
+Message-Id: <20190627003021.19867-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190627003021.19867-1-sashal@kernel.org>
 References: <20190627003021.19867-1-sashal@kernel.org>
@@ -60,125 +61,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Takashi Iwai <tiwai@suse.de>
+From: Matt Chen <matt.chen@intel.com>
 
-[ Upstream commit 69ae4f6aac1578575126319d3f55550e7e440449 ]
+[ Upstream commit b17dc0632a17fbfe66b34ee7c24e1cc10cfc503e ]
 
-A few places in mwifiex_uap_parse_tail_ies() perform memcpy()
-unconditionally, which may lead to either buffer overflow or read over
-boundary.
+When try to bring up the AX201 2 killer sku, we
+run into:
+[81261.392463] iwlwifi 0000:01:00.0: loaded firmware version 46.8c20f243.0 op_mode iwlmvm
+[81261.407407] iwlwifi 0000:01:00.0: Detected Intel(R) Dual Band Wireless AX 22000, REV=0x340
+[81262.424778] iwlwifi 0000:01:00.0: Collecting data: trigger 16 fired.
+[81262.673359] iwlwifi 0000:01:00.0: Start IWL Error Log Dump:
+[81262.673365] iwlwifi 0000:01:00.0: Status: 0x00000000, count: -906373681
+[81262.673368] iwlwifi 0000:01:00.0: Loaded firmware version: 46.8c20f243.0
+[81262.673371] iwlwifi 0000:01:00.0: 0x507C015D | ADVANCED_SYSASSERT
 
-This patch addresses the issues by checking the read size and the
-destination size at each place more properly.  Along with the fixes,
-the patch cleans up the code slightly by introducing a temporary
-variable for the token size, and unifies the error path with the
-standard goto statement.
+Fix this issue by adding 2 more cfg to avoid modifying the
+original cfg configuration.
 
-Reported-by: huangwen <huangwen@venustech.com.cn>
-Signed-off-by: Takashi Iwai <tiwai@suse.de>
+Signed-off-by: Matt Chen <matt.chen@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/ie.c | 47 +++++++++++++++--------
- 1 file changed, 31 insertions(+), 16 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/ie.c b/drivers/net/wireless/marvell/mwifiex/ie.c
-index 6845eb57b39a..653d347a9a19 100644
---- a/drivers/net/wireless/marvell/mwifiex/ie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/ie.c
-@@ -329,6 +329,8 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
- 	struct ieee80211_vendor_ie *vendorhdr;
- 	u16 gen_idx = MWIFIEX_AUTO_IDX_MASK, ie_len = 0;
- 	int left_len, parsed_len = 0;
-+	unsigned int token_len;
-+	int err = 0;
- 
- 	if (!info->tail || !info->tail_len)
- 		return 0;
-@@ -344,6 +346,12 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
- 	 */
- 	while (left_len > sizeof(struct ieee_types_header)) {
- 		hdr = (void *)(info->tail + parsed_len);
-+		token_len = hdr->len + sizeof(struct ieee_types_header);
-+		if (token_len > left_len) {
-+			err = -EINVAL;
-+			goto out;
-+		}
-+
- 		switch (hdr->element_id) {
- 		case WLAN_EID_SSID:
- 		case WLAN_EID_SUPP_RATES:
-@@ -361,17 +369,20 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
- 			if (cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
- 						    WLAN_OUI_TYPE_MICROSOFT_WMM,
- 						    (const u8 *)hdr,
--						    hdr->len + sizeof(struct ieee_types_header)))
-+						    token_len))
- 				break;
- 			/* fall through */
- 		default:
--			memcpy(gen_ie->ie_buffer + ie_len, hdr,
--			       hdr->len + sizeof(struct ieee_types_header));
--			ie_len += hdr->len + sizeof(struct ieee_types_header);
-+			if (ie_len + token_len > IEEE_MAX_IE_SIZE) {
-+				err = -EINVAL;
-+				goto out;
-+			}
-+			memcpy(gen_ie->ie_buffer + ie_len, hdr, token_len);
-+			ie_len += token_len;
- 			break;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 2a03d34afa3b..80695584e406 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3585,7 +3585,9 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
  		}
--		left_len -= hdr->len + sizeof(struct ieee_types_header);
--		parsed_len += hdr->len + sizeof(struct ieee_types_header);
-+		left_len -= token_len;
-+		parsed_len += token_len;
- 	}
+ 	} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
+ 		   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR) &&
+-		   (trans->cfg != &iwl_ax200_cfg_cc ||
++		   ((trans->cfg != &iwl_ax200_cfg_cc &&
++		    trans->cfg != &killer1650x_2ax_cfg &&
++		    trans->cfg != &killer1650w_2ax_cfg) ||
+ 		    trans->hw_rev == CSR_HW_REV_TYPE_QNJ_B0)) {
+ 		u32 hw_status;
  
- 	/* parse only WPA vendor IE from tail, WMM IE is configured by
-@@ -381,15 +392,17 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
- 						    WLAN_OUI_TYPE_MICROSOFT_WPA,
- 						    info->tail, info->tail_len);
- 	if (vendorhdr) {
--		memcpy(gen_ie->ie_buffer + ie_len, vendorhdr,
--		       vendorhdr->len + sizeof(struct ieee_types_header));
--		ie_len += vendorhdr->len + sizeof(struct ieee_types_header);
-+		token_len = vendorhdr->len + sizeof(struct ieee_types_header);
-+		if (ie_len + token_len > IEEE_MAX_IE_SIZE) {
-+			err = -EINVAL;
-+			goto out;
-+		}
-+		memcpy(gen_ie->ie_buffer + ie_len, vendorhdr, token_len);
-+		ie_len += token_len;
- 	}
- 
--	if (!ie_len) {
--		kfree(gen_ie);
--		return 0;
--	}
-+	if (!ie_len)
-+		goto out;
- 
- 	gen_ie->ie_index = cpu_to_le16(gen_idx);
- 	gen_ie->mgmt_subtype_mask = cpu_to_le16(MGMT_MASK_BEACON |
-@@ -399,13 +412,15 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
- 
- 	if (mwifiex_update_uap_custom_ie(priv, gen_ie, &gen_idx, NULL, NULL,
- 					 NULL, NULL)) {
--		kfree(gen_ie);
--		return -1;
-+		err = -EINVAL;
-+		goto out;
- 	}
- 
- 	priv->gen_idx = gen_idx;
-+
-+ out:
- 	kfree(gen_ie);
--	return 0;
-+	return err;
- }
- 
- /* This function parses different IEs-head & tail IEs, beacon IEs,
 -- 
 2.20.1
 
