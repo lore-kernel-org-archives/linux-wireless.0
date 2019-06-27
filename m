@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C52EEC48BD9
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:49:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49583C48BD6
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:49:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 93B692084B
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:49:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1522C2082F
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:49:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561596593;
-	bh=+wsvP3Sq5vBZ057Yb9y8toEVymdBvVtmGhlYf27lnik=;
+	s=default; t=1561596596;
+	bh=2E6fhC0rQJvw3WyHUxxHHHKmzWDpymT0aJlGn3FpXTU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GL7Z0tj6m8xop5NYwpN4s78p8RuZaS0k05OOCV48sGmJZF+darJ84dfIK5b3gxDU8
-	 EtIL5omlXqhD6AEwlA8wnhUwRvsSEFE8Z8LvLPfur+4nFg6bg1+Mvvq4faFdszaTyP
-	 9vIChcNQBrC36LuBDanBAzFzB+GoGvRqjVnE2OVw=
+	b=teze488D7L3g1HzMk/tcI+0PmwMtVazoZYucoOOzYh8BwyfUjAvM3gYXir/GN8uJn
+	 LAhwrP9MZ4Mgqhs2scrIIRYS5wJfIEbwwgj9yBAxwtYm4YSp2BqUwI+T4nAy/h3Yl0
+	 iRfs2K9ygpdMaT7RkHDApV4bdUceIr5aU4+qFMzE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728052AbfF0Ag7 (ORCPT
+        id S1728441AbfF0Agy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jun 2019 20:36:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41496 "EHLO mail.kernel.org"
+        Wed, 26 Jun 2019 20:36:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41470 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728167AbfF0Ag5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jun 2019 20:36:57 -0400
+        id S1728427AbfF0Agx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jun 2019 20:36:53 -0400
 Received: from sasha-vm.mshome.net (unknown [107.242.116.147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E2E10217F4;
-        Thu, 27 Jun 2019 00:36:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0BFD221852;
+        Thu, 27 Jun 2019 00:36:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561595816;
-        bh=+wsvP3Sq5vBZ057Yb9y8toEVymdBvVtmGhlYf27lnik=;
+        s=default; t=1561595813;
+        bh=2E6fhC0rQJvw3WyHUxxHHHKmzWDpymT0aJlGn3FpXTU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=v0yLVMZX+rNhN7MlM2gKRMSR2zVsFyGRn4ZGKCFxraOuOJTBy/WUkatUU6cvmteif
-         AGbiJNQp2QKqDV9P+0RV1c4BDdbebzIzJ7To3aTC0TVVTSrSu8FrbMUK9pkAH1lCVY
-         L9zixyXARUNP5LiOwwJOkeEaI/wCb7JPbxj0MD+Y=
+        b=fAiKf1Re9UAsXk8yluSLrKzfgpKXfb1xhQrmV1R/4Ir9G4sYLfcnuet83/KTGRyO8
+         PzVVxW6pRKzdAXQjTwRqjjUOp+UxRvdWWC2ENUnM/p3sBumZr0Bc6YHNqKMF6pSz6p
+         T/WTl/veUKQjbKGJ0i7Z8S6D9fFx38StK9Vh/IMM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Takashi Iwai <tiwai@suse.de>, huangwen <huangwen@venustech.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 13/60] mwifiex: Fix possible buffer overflows at parsing bss descriptor
-Date:   Wed, 26 Jun 2019 20:35:28 -0400
-Message-Id: <20190627003616.20767-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 12/60] mac80211: free peer keys before vif down in mesh
+Date:   Wed, 26 Jun 2019 20:35:27 -0400
+Message-Id: <20190627003616.20767-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190627003616.20767-1-sashal@kernel.org>
 References: <20190627003616.20767-1-sashal@kernel.org>
@@ -60,49 +60,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Takashi Iwai <tiwai@suse.de>
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 
-[ Upstream commit 13ec7f10b87f5fc04c4ccbd491c94c7980236a74 ]
+[ Upstream commit 0112fa557c3bb3a002bc85760dc3761d737264d3 ]
 
-mwifiex_update_bss_desc_with_ie() calls memcpy() unconditionally in
-a couple places without checking the destination size.  Since the
-source is given from user-space, this may trigger a heap buffer
-overflow.
+freeing peer keys after vif down is resulting in peer key uninstall
+to fail due to interface lookup failure. so fix that.
 
-Fix it by putting the length check before performing memcpy().
-
-This fix addresses CVE-2019-3846.
-
-Reported-by: huangwen <huangwen@venustech.com.cn>
-Signed-off-by: Takashi Iwai <tiwai@suse.de>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/scan.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/mesh.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index 8e483b0bc3b1..ddf985fb93ab 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -1247,6 +1247,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- 		}
- 		switch (element_id) {
- 		case WLAN_EID_SSID:
-+			if (element_len > IEEE80211_MAX_SSID_LEN)
-+				return -EINVAL;
- 			bss_entry->ssid.ssid_len = element_len;
- 			memcpy(bss_entry->ssid.ssid, (current_ptr + 2),
- 			       element_len);
-@@ -1256,6 +1258,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- 			break;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 0f9446ab7e4f..3162f955f3ae 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -923,6 +923,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
  
- 		case WLAN_EID_SUPP_RATES:
-+			if (element_len > MWIFIEX_SUPPORTED_RATES)
-+				return -EINVAL;
- 			memcpy(bss_entry->data_rates, current_ptr + 2,
- 			       element_len);
- 			memcpy(bss_entry->supported_rates, current_ptr + 2,
+ 	/* flush STAs and mpaths on this iface */
+ 	sta_info_flush(sdata);
++	ieee80211_free_keys(sdata, true);
+ 	mesh_path_flush_by_iface(sdata);
+ 
+ 	/* stop the beacon */
 -- 
 2.20.1
 
