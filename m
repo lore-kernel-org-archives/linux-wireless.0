@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 268BCC48BD3
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:46:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB8FC48BD3
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:46:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8E09208E3
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:45:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAF2F208E3
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:46:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561596360;
-	bh=FH+vV4aIuRmvocafl9jlq28inan4+BCmmDnzm4Z5STo=;
+	s=default; t=1561596395;
+	bh=wCDTMcjpLKAeu9d2ynfC4ViBsmOHr3U1OD1XmD4afYA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=QfhyGVnMz7qG44WHq/u/zsNgmHlnV6OFGTi7q5BhKpnd8J+je1yYtJH3FH8BLAQxY
-	 kGG0KIRhm2pmdA7QV56YROFrHfqeg2eCsEE9h2Ho3IS3TWoqxhcu7ml1CBt3SPrIoR
-	 9WVyPyMSKVq03Z1pRr2H3Mxee3li909WRpk6VdsY=
+	b=EJQOxkHSfOudy+fGColq+AtkEuAkGDJ5mlErkoGwGFSb03LuIHY2KJNWbWTgghWA+
+	 BFysMpOI9xujSTRH6xDLxrE0QWP7+dzAG3XQhvTfECEz4jBSz9W9ShZILs1xkwJrCw
+	 gmVH6/CR4gqJEN23AOaJVfHOWkGnbHMJBQCqX/uw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729007AbfF0Apy (ORCPT
+        id S1729204AbfF0Aj7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jun 2019 20:45:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44694 "EHLO mail.kernel.org"
+        Wed, 26 Jun 2019 20:39:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44042 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727445AbfF0Aku (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jun 2019 20:40:50 -0400
+        id S1729201AbfF0Aj4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jun 2019 20:39:56 -0400
 Received: from sasha-vm.mshome.net (unknown [107.242.116.147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BC16D205ED;
-        Thu, 27 Jun 2019 00:40:46 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5008D2187F;
+        Thu, 27 Jun 2019 00:39:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561596049;
-        bh=FH+vV4aIuRmvocafl9jlq28inan4+BCmmDnzm4Z5STo=;
+        s=default; t=1561595995;
+        bh=wCDTMcjpLKAeu9d2ynfC4ViBsmOHr3U1OD1XmD4afYA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ws2vKH9uhONhWMAvxELfAEG4uuKUwszB35l4Mg5sOv5lTvDu8lDhf5R+35VKFUrTa
-         Oy99FM49oRAn6rkHwPNawLxE7lcSekoNlq2j/K2jeWDIsWClEVMXIb4QUXaPWR9L/9
-         ld9QIJwNlAcXOE3Bdw4BzoYttHpdESE6Ltb09p7w=
+        b=GxfDzGuvEEhiXUJLFb8TXkx1P+ZF1sWpuZJN8uvNfmcGmJMKiH4XWifKbUMzP+gwK
+         s7mIFvWVthqZdEsxt709DKiOt/2odenzLRSHiBOxHVshLlCeigWHlDKkD2LfwR3C97
+         2GQvpcCo4GFTBBx6D1X+lhiBgi+luwjgcZ9IqRhk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yibo Zhao <yiboz@codeaurora.org>,
-        Zhi Chen <zhichen@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 24/35] mac80211: only warn once on chanctx_conf being NULL
-Date:   Wed, 26 Jun 2019 20:39:12 -0400
-Message-Id: <20190627003925.21330-24-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 09/35] iwlwifi: Fix double-free problems in iwl_req_fw_callback()
+Date:   Wed, 26 Jun 2019 20:38:57 -0400
+Message-Id: <20190627003925.21330-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190627003925.21330-1-sashal@kernel.org>
 References: <20190627003925.21330-1-sashal@kernel.org>
@@ -61,49 +61,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yibo Zhao <yiboz@codeaurora.org>
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
 
-[ Upstream commit 563572340173865a9a356e6bb02579e6998a876d ]
+[ Upstream commit a8627176b0de7ba3f4524f641ddff4abf23ae4e4 ]
 
-In multiple SSID cases, it takes time to prepare every AP interface
-to be ready in initializing phase. If a sta already knows everything it
-needs to join one of the APs and sends authentication to the AP which
-is not fully prepared at this point of time, AP's channel context
-could be NULL. As a result, warning message occurs.
+In the error handling code of iwl_req_fw_callback(), iwl_dealloc_ucode()
+is called to free data. In iwl_drv_stop(), iwl_dealloc_ucode() is called
+again, which can cause double-free problems.
 
-Even worse, if the AP is under attack via tools such as MDK3 and massive
-authentication requests are received in a very short time, console will
-be hung due to kernel warning messages.
+To fix this bug, the call to iwl_dealloc_ucode() in
+iwl_req_fw_callback() is deleted.
 
-WARN_ON_ONCE() could be a better way for indicating warning messages
-without duplicate messages to flood the console.
+This bug is found by a runtime fuzzing tool named FIZZER written by us.
 
-Johannes: We still need to address the underlying problem, but we
-          don't really have a good handle on it yet. Suppress the
-          worst side-effects for now.
-
-Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
-Signed-off-by: Yibo Zhao <yiboz@codeaurora.org>
-[johannes: add note, change subject]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/ieee80211_i.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 894937bcd479..9765a54d7dbe 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1405,7 +1405,7 @@ ieee80211_get_sband(struct ieee80211_sub_if_data *sdata)
- 	rcu_read_lock();
- 	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 99676d6c4713..6c10b8c4ddbe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1509,7 +1509,6 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	goto free;
  
--	if (WARN_ON(!chanctx_conf)) {
-+	if (WARN_ON_ONCE(!chanctx_conf)) {
- 		rcu_read_unlock();
- 		return NULL;
- 	}
+  out_free_fw:
+-	iwl_dealloc_ucode(drv);
+ 	release_firmware(ucode_raw);
+  out_unbind:
+ 	complete(&drv->request_firmware_complete);
 -- 
 2.20.1
 
