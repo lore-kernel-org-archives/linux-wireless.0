@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60C83C48BD9
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:46:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A854C48BD6
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:46:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2EE3820815
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:46:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E619B20815
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:46:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561596404;
-	bh=ocExHtCWWhoXM4eKdTlrTAcILeSBjOfZJFpcQNKc0ck=;
+	s=default; t=1561596412;
+	bh=3OaXKLiXqQlvn/3+PnvOcZzVt7wjg7gk3kdkybfciEY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xYjyV7YZjPptrlmOh7+axC+Keo1PWtS4MRVMXbq4lHU1gnccDr5MQv+7zDtaw7weg
-	 upsCE7/t57CHnF0qfqy3BmSjtIh+hZM7eO8hMa/sZswN7xYNScOaeSDd2tfjFy9keb
-	 xWWQxJnuO1Y8J2zygHBA13XiJ6CdBWnjDrqyZso0=
+	b=eIv32sb3Wb/mnr7V2F+1JblqBmQ/r81Xt2u0fKWxHahE/JPdiMKmJERMBBlqS7GbA
+	 VZlm5q/W83nVdtsnNN1XQSunuuAPtub8yZG6QHyPx2x4Q2wxQbWoZVHD5gkaeMwSHM
+	 fg6KgVFPG99kdGEEMSDVK9OERCHI6BCWrDIQafRU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729175AbfF0Ajw (ORCPT
+        id S1729142AbfF0Ajp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jun 2019 20:39:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43966 "EHLO mail.kernel.org"
+        Wed, 26 Jun 2019 20:39:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43854 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729154AbfF0Ajv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jun 2019 20:39:51 -0400
+        id S1727094AbfF0Ajo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jun 2019 20:39:44 -0400
 Received: from sasha-vm.mshome.net (unknown [107.242.116.147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5F76221871;
-        Thu, 27 Jun 2019 00:39:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9E9D021871;
+        Thu, 27 Jun 2019 00:39:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561595990;
-        bh=ocExHtCWWhoXM4eKdTlrTAcILeSBjOfZJFpcQNKc0ck=;
+        s=default; t=1561595983;
+        bh=3OaXKLiXqQlvn/3+PnvOcZzVt7wjg7gk3kdkybfciEY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IUVDc6zQhob3VNFrfYa5G5wMYt0HR4PUQgEYtn5d43TA+zmIMw7Hqk9vrO1qOqMZs
-         GD6GAksBZzobjypntQsgNlT1NTtLSk11XEI64I9/2mpQlAm0YbR6P440Vu2jUNqZc8
-         qfO72p8TDqVT01F9mQ9iuBkXQPKJ6LI+rskEXUew=
+        b=G+2hSs+o3OYP5oOFKFvHPvsTP9nL6qpUAm6XoxOuhUPTR+WJdLoVSrPegy91eSLEA
+         v1GoQuSUjszhmccFswUOMVXB24DASiwTUtD0FiO1URzfd/JpBRTZKHHkhVCTTn2Kyn
+         rrZRUb4FipMgSyoMGavJGdu4KOheWpAnQRr2Iyr0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Takashi Iwai <tiwai@suse.de>, huangwen <huangwen@venustech.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Thomas Pedersen <thomas@eero.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 07/35] mwifiex: Fix possible buffer overflows at parsing bss descriptor
-Date:   Wed, 26 Jun 2019 20:38:55 -0400
-Message-Id: <20190627003925.21330-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 05/35] mac80211: mesh: fix RCU warning
+Date:   Wed, 26 Jun 2019 20:38:53 -0400
+Message-Id: <20190627003925.21330-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190627003925.21330-1-sashal@kernel.org>
 References: <20190627003925.21330-1-sashal@kernel.org>
@@ -60,49 +60,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Takashi Iwai <tiwai@suse.de>
+From: Thomas Pedersen <thomas@eero.com>
 
-[ Upstream commit 13ec7f10b87f5fc04c4ccbd491c94c7980236a74 ]
+[ Upstream commit 551842446ed695641a00782cd118cbb064a416a1 ]
 
-mwifiex_update_bss_desc_with_ie() calls memcpy() unconditionally in
-a couple places without checking the destination size.  Since the
-source is given from user-space, this may trigger a heap buffer
-overflow.
+ifmsh->csa is an RCU-protected pointer. The writer context
+in ieee80211_mesh_finish_csa() is already mutually
+exclusive with wdev->sdata.mtx, but the RCU checker did
+not know this. Use rcu_dereference_protected() to avoid a
+warning.
 
-Fix it by putting the length check before performing memcpy().
+fixes the following warning:
 
-This fix addresses CVE-2019-3846.
+[   12.519089] =============================
+[   12.520042] WARNING: suspicious RCU usage
+[   12.520652] 5.1.0-rc7-wt+ #16 Tainted: G        W
+[   12.521409] -----------------------------
+[   12.521972] net/mac80211/mesh.c:1223 suspicious rcu_dereference_check() usage!
+[   12.522928] other info that might help us debug this:
+[   12.523984] rcu_scheduler_active = 2, debug_locks = 1
+[   12.524855] 5 locks held by kworker/u8:2/152:
+[   12.525438]  #0: 00000000057be08c ((wq_completion)phy0){+.+.}, at: process_one_work+0x1a2/0x620
+[   12.526607]  #1: 0000000059c6b07a ((work_completion)(&sdata->csa_finalize_work)){+.+.}, at: process_one_work+0x1a2/0x620
+[   12.528001]  #2: 00000000f184ba7d (&wdev->mtx){+.+.}, at: ieee80211_csa_finalize_work+0x2f/0x90
+[   12.529116]  #3: 00000000831a1f54 (&local->mtx){+.+.}, at: ieee80211_csa_finalize_work+0x47/0x90
+[   12.530233]  #4: 00000000fd06f988 (&local->chanctx_mtx){+.+.}, at: ieee80211_csa_finalize_work+0x51/0x90
 
-Reported-by: huangwen <huangwen@venustech.com.cn>
-Signed-off-by: Takashi Iwai <tiwai@suse.de>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Thomas Pedersen <thomas@eero.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/scan.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/mesh.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index c9d41ed77fc7..c08a4574c396 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -1244,6 +1244,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- 		}
- 		switch (element_id) {
- 		case WLAN_EID_SSID:
-+			if (element_len > IEEE80211_MAX_SSID_LEN)
-+				return -EINVAL;
- 			bss_entry->ssid.ssid_len = element_len;
- 			memcpy(bss_entry->ssid.ssid, (current_ptr + 2),
- 			       element_len);
-@@ -1253,6 +1255,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- 			break;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 96e57d7c2872..aca054539f4a 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1209,7 +1209,8 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
+ 	ifmsh->chsw_ttl = 0;
  
- 		case WLAN_EID_SUPP_RATES:
-+			if (element_len > MWIFIEX_SUPPORTED_RATES)
-+				return -EINVAL;
- 			memcpy(bss_entry->data_rates, current_ptr + 2,
- 			       element_len);
- 			memcpy(bss_entry->supported_rates, current_ptr + 2,
+ 	/* Remove the CSA and MCSP elements from the beacon */
+-	tmp_csa_settings = rcu_dereference(ifmsh->csa);
++	tmp_csa_settings = rcu_dereference_protected(ifmsh->csa,
++					    lockdep_is_held(&sdata->wdev.mtx));
+ 	RCU_INIT_POINTER(ifmsh->csa, NULL);
+ 	if (tmp_csa_settings)
+ 		kfree_rcu(tmp_csa_settings, rcu_head);
+@@ -1231,6 +1232,8 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	struct mesh_csa_settings *tmp_csa_settings;
+ 	int ret = 0;
+ 
++	lockdep_assert_held(&sdata->wdev.mtx);
++
+ 	tmp_csa_settings = kmalloc(sizeof(*tmp_csa_settings),
+ 				   GFP_ATOMIC);
+ 	if (!tmp_csa_settings)
 -- 
 2.20.1
 
