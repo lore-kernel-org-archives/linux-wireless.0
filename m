@@ -2,116 +2,113 @@ Return-Path: <SRS0=XE1e=U2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0BBCC48BD7
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 17:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA4BC48BD7
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 17:47:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F9B220644
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 17:46:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29F9C20644
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 17:47:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lza6mnLJ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FW7o1oL+";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WwkFBCxt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727161AbfF0Rqc (ORCPT
+        id S1727352AbfF0RrW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Jun 2019 13:46:32 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:45345 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726540AbfF0Rqc (ORCPT
+        Thu, 27 Jun 2019 13:47:22 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:53200 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727190AbfF0RrV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jun 2019 13:46:32 -0400
-Received: by mail-pg1-f194.google.com with SMTP id z19so1335751pgl.12;
-        Thu, 27 Jun 2019 10:46:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=dVK/1jelVWuWKY847Kjv4BLwFO5EKIu+zyNuXBFo2IU=;
-        b=lza6mnLJF6y/bnBWCnpxzby0hMCcbwyNecgphKuLEAetBOmwciNgFFBjcguynyXSpg
-         9avAMfDZQbHdGsrPfKYzfMzpZDrH5/mZ3xR2ti2n2ZlKlPC2HUINUIib05VJF+1nSkbb
-         5aicmAb3mnWVwQGu53PKZZ1Z4iU0spw7tcWuU77hVHCKaWoQEGODBsXSHVnpDCm8lTpc
-         7V1Cp8gAO9V5w2jc/LKtYUFcHDJhlDQT0RfSql4jjyA0gcYsYNyE9yAHb6mpRd1sdi2y
-         WRegHgnnY5TfcypBmtIt7ujIK6vIEfqNMcPRrLXgdJtlbFj39vyjS4Ptoo6KuTc7iQ5t
-         daow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=dVK/1jelVWuWKY847Kjv4BLwFO5EKIu+zyNuXBFo2IU=;
-        b=E5bIT2x4yLQMUJgyEqPLQxTyxBPGgyor9JhjW0JW5C210E3fF7PuphajpOXNW41rxi
-         dB3qjjuXRUSzavnUnEJ5EEPMA0z7aUDIuPTZShUz1WC3fwXCgSRM7BFCavcji3jnLLdK
-         gcZ0qmgaQmIA6PpNmBvDXFf8icTjDrgj0mXYfBjmDXsr+y7C94XCLNU64eN8dZrKicaV
-         CMNq2nJG9+yY2b07gUDpq9XtRLkgxs8Xr1TABm9bWPiV0dONlSJqToehChFieFak+RP/
-         6UFLN/nGm5CsPgrWqsMY+Da1XrQ0YEQNF0J7KOO9gZ0kynVnJ9jKU1VykpeE/z1EwCKd
-         6qfA==
-X-Gm-Message-State: APjAAAV4R7w4WPvQif3G9HTROI9nCQBhAnMNGQ/QWiJ+lTDajThQXnqU
-        NWfvuqn7n38BEMTlKA+qA0nEhNBmEMCYLw==
-X-Google-Smtp-Source: APXvYqyYw4GJaENpqwyJhxTH3VZZab70A8HPkwSuASaLHiUuZgrb+kuirwvJAdxZ4JuofRxu3kfXqQ==
-X-Received: by 2002:a17:90a:fa07:: with SMTP id cm7mr7246665pjb.138.1561657591451;
-        Thu, 27 Jun 2019 10:46:31 -0700 (PDT)
-Received: from hfq-skylake.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
-        by smtp.googlemail.com with ESMTPSA id z13sm7780343pjn.32.2019.06.27.10.46.28
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 27 Jun 2019 10:46:31 -0700 (PDT)
-From:   Fuqian Huang <huangfq.daxian@gmail.com>
-Cc:     Fuqian Huang <huangfq.daxian@gmail.com>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 76/87] wireless: quantenna: pcie: remove memset after dmam_alloc_coherent
-Date:   Fri, 28 Jun 2019 01:46:03 +0800
-Message-Id: <20190627174620.6307-1-huangfq.daxian@gmail.com>
-X-Mailer: git-send-email 2.11.0
-To:     unlisted-recipients:; (no To-header on input)
+        Thu, 27 Jun 2019 13:47:21 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 3FE25602F4; Thu, 27 Jun 2019 17:47:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1561657640;
+        bh=93h5ucWKnjebqgnyo9qwcQbfcwMVTlGOyy79/6hwPmA=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=FW7o1oL+XivN3qkf1HZyb7Jmo+WYURWvmEJeALM2KsSmGrb9PxT2m1u9mAKttP7AX
+         r1sWvfwp1E9BxAhXa76tqTrs5jwgth3BWT3cLWqj/FqMLRz1Lga+W1UoxGkE13WJnq
+         Uv3/+5YiXINSmQIbHxGjezSpQAlTXT0mobmW3LPQ=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4F90F6016D;
+        Thu, 27 Jun 2019 17:47:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1561657639;
+        bh=93h5ucWKnjebqgnyo9qwcQbfcwMVTlGOyy79/6hwPmA=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=WwkFBCxtt2qhe/d8479dEVmxTsGKBF2XGy+7GoM/LmAeI2pQ1jCJiRySMH019FNzu
+         NWdzvs3dhH7nKmYkSg1iSECCM56V0/OxJAOasta5BE+sC/RBKnX2+zT1o0xMyPHHNA
+         QVgUHeKqIv4+N4AjIaY5qWCkgr/W+wfbPvlgHQzA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4F90F6016D
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2] carl9170: fix misuse of device driver API
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190608144947.744-3-chunkeey@gmail.com>
+References: <20190608144947.744-3-chunkeey@gmail.com>
+To:     Christian Lamparter <chunkeey@gmail.com>
+Cc:     linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+        Alan Stern <stern@rowland.harvard.edu>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190627174720.3FE25602F4@smtp.codeaurora.org>
+Date:   Thu, 27 Jun 2019 17:47:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In commit af7ddd8a627c
-("Merge tag 'dma-mapping-4.21' of git://git.infradead.org/users/hch/dma-mapping"),
-dmam_alloc_coherent has already zeroed the memory.
-So memset is not needed.
+Christian Lamparter <chunkeey@gmail.com> wrote:
 
-Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
----
- drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c | 2 --
- drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c | 2 --
- 2 files changed, 4 deletions(-)
+> This patch follows Alan Stern's recent patch:
+> "p54: Fix race between disconnect and firmware loading"
+> 
+> that overhauled carl9170 buggy firmware loading and driver
+> unbinding procedures.
+> 
+> Since the carl9170 code was adapted from p54 it uses the
+> same functions and is likely to have the same problem, but
+> it's just that the syzbot hasn't reproduce them (yet).
+> 
+> a summary from the changes (copied from the p54 patch):
+>  * Call usb_driver_release_interface() rather than
+>    device_release_driver().
+> 
+>  * Lock udev (the interface's parent) before unbinding the
+>    driver instead of locking udev->parent.
+> 
+>  * During the firmware loading process, take a reference
+>    to the USB interface instead of the USB device.
+> 
+>  * Don't take an unnecessary reference to the device during
+>    probe (and then don't drop it during disconnect).
+> 
+> and
+> 
+>  * Make sure to prevent use-after-free bugs by explicitly
+>    setting the driver context to NULL after signaling the
+>    completion.
+> 
+> Cc: <stable@vger.kernel.org>
+> Cc: Alan Stern <stern@rowland.harvard.edu>
+> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+> Acked-by: Alan Stern <stern@rowland.harvard.edu>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-index 3aa3714d4dfd..5ec1c9bc1612 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-@@ -244,8 +244,6 @@ static int pearl_alloc_bd_table(struct qtnf_pcie_pearl_state *ps)
- 
- 	/* tx bd */
- 
--	memset(vaddr, 0, len);
--
- 	ps->bd_table_vaddr = vaddr;
- 	ps->bd_table_paddr = paddr;
- 	ps->bd_table_len = len;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
-index 9a4380ed7f1b..1f91088e3dff 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
-@@ -199,8 +199,6 @@ static int topaz_alloc_bd_table(struct qtnf_pcie_topaz_state *ts,
- 	if (!vaddr)
- 		return -ENOMEM;
- 
--	memset(vaddr, 0, len);
--
- 	/* tx bd */
- 
- 	ts->tx_bd_vbase = vaddr;
+Patch applied to ath-next branch of ath.git, thanks.
+
+feb09b293327 carl9170: fix misuse of device driver API
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/10983223/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
