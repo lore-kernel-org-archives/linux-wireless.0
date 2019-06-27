@@ -2,108 +2,97 @@ Return-Path: <SRS0=XE1e=U2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01356C48BD7
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 17:46:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54606C48BE4
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 17:46:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D360E2086D
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 17:46:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2ECF020644
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 17:46:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XjfUBn3m"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="i/IHB2vT";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="g1fK3R8g"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727374AbfF0Rp5 (ORCPT
+        id S1727146AbfF0RqW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Jun 2019 13:45:57 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:44897 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726673AbfF0Rpz (ORCPT
+        Thu, 27 Jun 2019 13:46:22 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:52392 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726722AbfF0RqW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jun 2019 13:45:55 -0400
-Received: by mail-pl1-f195.google.com with SMTP id t7so1673580plr.11;
-        Thu, 27 Jun 2019 10:45:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=drjgftEWAZg3/oKZde2zMkT36C0ZEqDQk/rQk2ecHqE=;
-        b=XjfUBn3mJbrbGfnwsW7qoISdtv6h21GLg/ORcHgYgxh0ZNbGJvRJm8p7NUx83k8CXF
-         UE9f/pywfKSF3lbE6Z9b9N2B1hbKKM0S8YiLgbKkZhiKTe8xjRneYdFvNHs8HVWBx67n
-         JhBdsjs0sFx7N+B/9O/lkx75hKe+oLyunRlmmkgbR7EotaRQSX4Odn6J012YHLNnzZB/
-         b2UIpsrlefZYyexOoe5sUfgGdsgrpB0xqB/I7Rmrqdov2RW4iXd6aynhTO9mSlrjrbjx
-         T3pvu5kE66+EDc+N2M7BJOSALqSKbcyWGEFKK53Q6vlKd1d0eJ1fPtdqCwZQOhXF7Nrc
-         C0RQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=drjgftEWAZg3/oKZde2zMkT36C0ZEqDQk/rQk2ecHqE=;
-        b=bE9rdc75do/KtENCg/yfyzO4dXw/Mp5sN1NUwEl593p4YwdP7eodl4MSj6ud47xIgV
-         ay7M5NHPIO6qiY9CVy34UD4C8i3HxhBD1FrNOo/uc9WyGKlTBsJ0r3N6UAgr5oby/X5c
-         MXwSpXS+1B0MmRlX7ip+GLTLdCB/QVns4dHmtUqqc8PgFehcVtYtfC6emdU1K5/v0lAL
-         53B85Vih1ZJcO9GmJat2rNry/woZ3CcAu38XLRo9T5X9HRIz+593Mo18nP1ScZna/k+e
-         V6IvCv37tB4RTpR5bRLclBtgqwJv5JdaR7rkG6FQ8oujsQ+Kf0uzKw1oOsw7WtTgkkGl
-         SDgg==
-X-Gm-Message-State: APjAAAXjirSFEXw6+Bg8JMhipPsInUPzmzDxiP7dVsF69FqI0u5hX1vl
-        f7ugmGTpeKxt+5DyyRiMgX7AfsWOt5h3vg==
-X-Google-Smtp-Source: APXvYqwrFX/Sk4b/bSSq48Wz4qHMklsVR8zrsDYcV8VDNsPA4F3Z9IARxomaPfDpugHllO0j07+RFw==
-X-Received: by 2002:a17:902:7887:: with SMTP id q7mr6105676pll.129.1561657554912;
-        Thu, 27 Jun 2019 10:45:54 -0700 (PDT)
-Received: from hfq-skylake.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
-        by smtp.googlemail.com with ESMTPSA id h26sm4116937pfq.64.2019.06.27.10.45.50
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 27 Jun 2019 10:45:54 -0700 (PDT)
-From:   Fuqian Huang <huangfq.daxian@gmail.com>
-Cc:     Fuqian Huang <huangfq.daxian@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 77/87] wireless: broadcom: remove memset after dma_alloc_coherent
-Date:   Fri, 28 Jun 2019 01:45:43 +0800
-Message-Id: <20190627174544.6145-1-huangfq.daxian@gmail.com>
-X-Mailer: git-send-email 2.11.0
-To:     unlisted-recipients:; (no To-header on input)
+        Thu, 27 Jun 2019 13:46:22 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 24CD160AD1; Thu, 27 Jun 2019 17:46:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1561657581;
+        bh=8/QiJ8OWT6ufL4GhYuoT3gx0n8TN9kD6X9JuL3lTTjk=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=i/IHB2vTa+r/ThI9Wso8spdbT9aSJyQkjQw7l2Tt9mmjitytkXvFflLrdtpsSQOW2
+         7CQ4UX15HHWRM+KAr9XS6PUqj3aWPuuPWCGPLsLkEt9FG43n1rM2kgdYGHR9ArkkCw
+         iIQ4mXa3Rr/5ZlIRjgziqGRdlW4rz6MNgWrdyffM=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9294C60A0A;
+        Thu, 27 Jun 2019 17:46:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1561657580;
+        bh=8/QiJ8OWT6ufL4GhYuoT3gx0n8TN9kD6X9JuL3lTTjk=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=g1fK3R8gbJeCA23A/rvShc2krRrk21dIxvttFgKItVCMgQ5FRrUwCnmCrX3F1GcEZ
+         xyKrKAaRkiJDxNsl/irO9SE4v52l4dYANorsUgFOdHQMQJF7QD9SOm+bFhdV8Qk31k
+         sm9y56P5w96AcuBC0/iSfPdaP549oisVRFvOfCPs=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9294C60A0A
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2] ath9k: correctly handle short radar pulses (fixes
+ 3c0efb745a)
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190611133656.16964-1-zefir.kurtisi@neratec.com>
+References: <20190611133656.16964-1-zefir.kurtisi@neratec.com>
+To:     Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190627174621.24CD160AD1@smtp.codeaurora.org>
+Date:   Thu, 27 Jun 2019 17:46:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In commit af7ddd8a627c
-("Merge tag 'dma-mapping-4.21' of git://git.infradead.org/users/hch/dma-mapping"),
-dma_alloc_coherent has already zeroed the memory.
-So memset is not needed.
+Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
 
-Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 2 --
- 1 file changed, 2 deletions(-)
+> In commit 3c0efb745a17 ("ath9k: discard undersized packets")
+> the lower bound of RX packets was set to 10 (min ACK size) to
+> filter those that would otherwise be treated as invalid at
+> mac80211.
+> 
+> Alas, short radar pulses are reported as PHY_ERROR frames
+> with length set to 3. Therefore their detection stopped
+> working after that commit.
+> 
+> NOTE: ath9k drivers built thereafter will not pass DFS
+> certification.
+> 
+> This extends the criteria for short packets to explicitly
+> handle PHY_ERROR frames.
+> 
+> Fixes: 3c0efb745a17 ("ath9k: discard undersized packets")
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 83e4938527f4..3fc08fe7c3a2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -1033,8 +1033,6 @@ brcmf_pcie_init_dmabuffer_for_device(struct brcmf_pciedev_info *devinfo,
- 			       address & 0xffffffff);
- 	brcmf_pcie_write_tcm32(devinfo, tcm_dma_phys_addr + 4, address >> 32);
- 
--	memset(ring, 0, size);
--
- 	return (ring);
- }
- 
+Patch applied to ath-next branch of ath.git, thanks.
+
+df5c4150501e ath9k: correctly handle short radar pulses
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/10986957/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
