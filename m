@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49583C48BD6
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:49:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DACAFC48BD9
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:50:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1522C2082F
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:49:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B297220665
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:50:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561596596;
-	bh=2E6fhC0rQJvw3WyHUxxHHHKmzWDpymT0aJlGn3FpXTU=;
+	s=default; t=1561596602;
+	bh=o3yRKyIj7DONpm0yV/kbfUWn972wwoUJJD+AtxxG5x8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=teze488D7L3g1HzMk/tcI+0PmwMtVazoZYucoOOzYh8BwyfUjAvM3gYXir/GN8uJn
-	 LAhwrP9MZ4Mgqhs2scrIIRYS5wJfIEbwwgj9yBAxwtYm4YSp2BqUwI+T4nAy/h3Yl0
-	 iRfs2K9ygpdMaT7RkHDApV4bdUceIr5aU4+qFMzE=
+	b=xoFJEf5r10IX/DNsqaunzMiWbaRr6d7HxnMiQEhWRzoqp7QsYI+9c5WH7HbtqBpcI
+	 VzE4UZ9/g/6o603JeEXCqomlTnS+X4RPrOy0V52fQ97q3CgXjtfIZg61xG8uYN025J
+	 IzNKbtgBcHj/2SqwAkQknhilzMe/Y0d7bfJ1k3Dc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728441AbfF0Agy (ORCPT
+        id S1728419AbfF0Agw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jun 2019 20:36:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41470 "EHLO mail.kernel.org"
+        Wed, 26 Jun 2019 20:36:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41428 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728427AbfF0Agx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jun 2019 20:36:53 -0400
+        id S1728409AbfF0Agv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jun 2019 20:36:51 -0400
 Received: from sasha-vm.mshome.net (unknown [107.242.116.147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0BFD221852;
-        Thu, 27 Jun 2019 00:36:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8FCCE217F4;
+        Thu, 27 Jun 2019 00:36:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561595813;
-        bh=2E6fhC0rQJvw3WyHUxxHHHKmzWDpymT0aJlGn3FpXTU=;
+        s=default; t=1561595810;
+        bh=o3yRKyIj7DONpm0yV/kbfUWn972wwoUJJD+AtxxG5x8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fAiKf1Re9UAsXk8yluSLrKzfgpKXfb1xhQrmV1R/4Ir9G4sYLfcnuet83/KTGRyO8
-         PzVVxW6pRKzdAXQjTwRqjjUOp+UxRvdWWC2ENUnM/p3sBumZr0Bc6YHNqKMF6pSz6p
-         T/WTl/veUKQjbKGJ0i7Z8S6D9fFx38StK9Vh/IMM=
+        b=p2fnrToxTy1wnAIsIL+8ZgvDm+2kL4RA8ttH0rGLLyDGZBMO/tAcspDqI0xrUIePk
+         gRtxk7hNCWC/kmQKt+VMO1f1MlXqiKLxFQC6lR6Hym76K7XeQEzgnPToK/JN4EEwcv
+         nG6G2SorFzvZYX5exkadndHSXn0qLz0WQ8EA9i6k=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+Cc:     Thomas Pedersen <thomas@eero.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 12/60] mac80211: free peer keys before vif down in mesh
-Date:   Wed, 26 Jun 2019 20:35:27 -0400
-Message-Id: <20190627003616.20767-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 11/60] mac80211: mesh: fix RCU warning
+Date:   Wed, 26 Jun 2019 20:35:26 -0400
+Message-Id: <20190627003616.20767-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190627003616.20767-1-sashal@kernel.org>
 References: <20190627003616.20767-1-sashal@kernel.org>
@@ -60,32 +60,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+From: Thomas Pedersen <thomas@eero.com>
 
-[ Upstream commit 0112fa557c3bb3a002bc85760dc3761d737264d3 ]
+[ Upstream commit 551842446ed695641a00782cd118cbb064a416a1 ]
 
-freeing peer keys after vif down is resulting in peer key uninstall
-to fail due to interface lookup failure. so fix that.
+ifmsh->csa is an RCU-protected pointer. The writer context
+in ieee80211_mesh_finish_csa() is already mutually
+exclusive with wdev->sdata.mtx, but the RCU checker did
+not know this. Use rcu_dereference_protected() to avoid a
+warning.
 
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+fixes the following warning:
+
+[   12.519089] =============================
+[   12.520042] WARNING: suspicious RCU usage
+[   12.520652] 5.1.0-rc7-wt+ #16 Tainted: G        W
+[   12.521409] -----------------------------
+[   12.521972] net/mac80211/mesh.c:1223 suspicious rcu_dereference_check() usage!
+[   12.522928] other info that might help us debug this:
+[   12.523984] rcu_scheduler_active = 2, debug_locks = 1
+[   12.524855] 5 locks held by kworker/u8:2/152:
+[   12.525438]  #0: 00000000057be08c ((wq_completion)phy0){+.+.}, at: process_one_work+0x1a2/0x620
+[   12.526607]  #1: 0000000059c6b07a ((work_completion)(&sdata->csa_finalize_work)){+.+.}, at: process_one_work+0x1a2/0x620
+[   12.528001]  #2: 00000000f184ba7d (&wdev->mtx){+.+.}, at: ieee80211_csa_finalize_work+0x2f/0x90
+[   12.529116]  #3: 00000000831a1f54 (&local->mtx){+.+.}, at: ieee80211_csa_finalize_work+0x47/0x90
+[   12.530233]  #4: 00000000fd06f988 (&local->chanctx_mtx){+.+.}, at: ieee80211_csa_finalize_work+0x51/0x90
+
+Signed-off-by: Thomas Pedersen <thomas@eero.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mesh.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/mesh.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 0f9446ab7e4f..3162f955f3ae 100644
+index d51da26e9c18..0f9446ab7e4f 100644
 --- a/net/mac80211/mesh.c
 +++ b/net/mac80211/mesh.c
-@@ -923,6 +923,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+@@ -1212,7 +1212,8 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
+ 	ifmsh->chsw_ttl = 0;
  
- 	/* flush STAs and mpaths on this iface */
- 	sta_info_flush(sdata);
-+	ieee80211_free_keys(sdata, true);
- 	mesh_path_flush_by_iface(sdata);
+ 	/* Remove the CSA and MCSP elements from the beacon */
+-	tmp_csa_settings = rcu_dereference(ifmsh->csa);
++	tmp_csa_settings = rcu_dereference_protected(ifmsh->csa,
++					    lockdep_is_held(&sdata->wdev.mtx));
+ 	RCU_INIT_POINTER(ifmsh->csa, NULL);
+ 	if (tmp_csa_settings)
+ 		kfree_rcu(tmp_csa_settings, rcu_head);
+@@ -1234,6 +1235,8 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	struct mesh_csa_settings *tmp_csa_settings;
+ 	int ret = 0;
  
- 	/* stop the beacon */
++	lockdep_assert_held(&sdata->wdev.mtx);
++
+ 	tmp_csa_settings = kmalloc(sizeof(*tmp_csa_settings),
+ 				   GFP_ATOMIC);
+ 	if (!tmp_csa_settings)
 -- 
 2.20.1
 
