@@ -2,120 +2,104 @@ Return-Path: <SRS0=XE1e=U2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B54A0C48BD3
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 937B5C48BD6
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 03:25:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D89020663
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561596879;
-	bh=IVgFt8rK3b1MZCmGZ5RcOq/MjbjXoMgW/pq9jSmSysA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CQDkXBCPYkPJk0L68SVmD9gmFM82duX8XU+FU9AXb8XLOTrIpYHLaCLVtGaKvC+qM
-	 LS0FO0QlqEOl7TJrDQgo5g2389NIt8zkS7wM+Z+MIrXBqRqKRuCA0w+q5ar4UxuwHF
-	 gTXpRA4jqmDTBsddqXHgjRLBaRdwKBoX3MYtrh4Y=
+	by mail.kernel.org (Postfix) with ESMTP id 66BB2216E3
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 03:25:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kDgKIYFv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727131AbfF0AbV (ORCPT
+        id S1726924AbfF0DZo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jun 2019 20:31:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34692 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727114AbfF0AbV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jun 2019 20:31:21 -0400
-Received: from sasha-vm.mshome.net (unknown [107.242.116.147])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7990E2083B;
-        Thu, 27 Jun 2019 00:31:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561595480;
-        bh=IVgFt8rK3b1MZCmGZ5RcOq/MjbjXoMgW/pq9jSmSysA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=udrw3l06bRp+L8hBG/9eKEsspRi7AtglZU7pS4b/KSth6DlMN1aYoB0K33QWsR1O6
-         f/p5VBJypz0Lg4kWVZIM8IwijC7Ahb/rvSwO2a4Ek0rkM2rHuHjLzQ2qFsWJM+nEKO
-         LQ9zn0OVPrSs2v6M+vy04OobgOxqZZ7RNHCkulkk=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Thomas Pedersen <thomas@eero.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 19/95] mac80211: mesh: fix RCU warning
-Date:   Wed, 26 Jun 2019 20:29:04 -0400
-Message-Id: <20190627003021.19867-19-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190627003021.19867-1-sashal@kernel.org>
-References: <20190627003021.19867-1-sashal@kernel.org>
+        Wed, 26 Jun 2019 23:25:44 -0400
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:36082 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726658AbfF0DZh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jun 2019 23:25:37 -0400
+Received: by mail-ot1-f67.google.com with SMTP id r6so788040oti.3;
+        Wed, 26 Jun 2019 20:25:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=hc7mop8BgLXIBrsAE7S1CcsKtIxDEdShT9TGYrFuBVM=;
+        b=kDgKIYFvpCDd06zbFNhGDKpCEVgTWTHJedUq3olGtuZiBWkkL/5WYAk83Z5x0qurfn
+         ZoYhXj7MnMeA5n4IXjc4NT8TSzahy7sjeb/mSm9jMSgtFdiz6bEo7SUfnVJ7joymz6wr
+         axNSjCZB9zGaUh6CV1BwRDiMduet4in0XO+l+088UM4cN8pRdP4AlYl++CDSM0Wr4AfA
+         ++QB73ZAeYCfNiOaphzN5/9UGI3pq46goPKSWmwieRXbsk7mj4tNvnEMBvfazH1N85nh
+         etWSYB14oxkRmyvGx/nBhe7DgmUn8zMw19do81yz/KU/VIUWO6SXSn3p/WZA7dtA9MZU
+         rSpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=hc7mop8BgLXIBrsAE7S1CcsKtIxDEdShT9TGYrFuBVM=;
+        b=JYFgic/iocn1F21P7OPYNxT81LTcvX/erm0ZCLn1c0DyTvmB8qjWG9m6MVZfULU+eF
+         Yf/0pYJfvYoKEG0fzIdQ/Lw0o4NLhmj1q71YFZo6ApOkbhZX7o3tXd2YRIFp2bdq0W7x
+         1JYsb1aSsDAc9bbzIpFfESvprZHPEkJH5ZCNxZrpMp6FeU0cIWfLsrNyTPQYlwyT/g3T
+         oxMNzS6MDKnxa0Ycb5eTHnzu+ek+Srt1EgDPCF59ldaFpmgRCzYDHeMp7G6XJIG9oSqM
+         8fKBC15T9jgVrcDwEj1jH9blyXSPCF4xe0EGBa+tTz5yhRIgNRJagShhmRRquFa66q4A
+         qDuw==
+X-Gm-Message-State: APjAAAW1mddOUfq8xFYTSJbSJqortGT6ae5KKR/PlOeCTQjpmsCCKYv5
+        AfIzBvqaOTFaPiWST9f9Fss=
+X-Google-Smtp-Source: APXvYqyUkf1iuH/PhqzkOu7tkOamu6aAFWoqbQOhA5ot8fzzL2lRFkE9lDvw+U7oYWHLZ27WZXj8Qw==
+X-Received: by 2002:a9d:5e11:: with SMTP id d17mr1529107oti.50.1561605936459;
+        Wed, 26 Jun 2019 20:25:36 -0700 (PDT)
+Received: from rYz3n.attlocal.net ([2600:1700:210:3790::48])
+        by smtp.googlemail.com with ESMTPSA id y184sm417647oie.33.2019.06.26.20.25.35
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Wed, 26 Jun 2019 20:25:36 -0700 (PDT)
+From:   Jiunn Chang <c0d1n61at3@gmail.com>
+To:     skhan@linuxfoundation.org
+Cc:     linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        johannes@sipsolutions.net
+Subject: [Linux-kernel-mentees][PATCH v2] nl80211: Fix undefined behavior in bit shift
+Date:   Wed, 26 Jun 2019 22:25:32 -0500
+Message-Id: <20190627032532.18374-4-c0d1n61at3@gmail.com>
+X-Mailer: git-send-email 2.22.0
+In-Reply-To: <20190627010137.5612-4-c0d1n61at3@gmail.com>
+References: <20190627010137.5612-4-c0d1n61at3@gmail.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Thomas Pedersen <thomas@eero.com>
+Shifting signed 32-bit value by 31 bits is undefined.  Changing most
+significant bit to unsigned.
 
-[ Upstream commit 551842446ed695641a00782cd118cbb064a416a1 ]
+Changes included in v2:
+  - use subsystem specific subject lines
+  - CC required mailing lists
 
-ifmsh->csa is an RCU-protected pointer. The writer context
-in ieee80211_mesh_finish_csa() is already mutually
-exclusive with wdev->sdata.mtx, but the RCU checker did
-not know this. Use rcu_dereference_protected() to avoid a
-warning.
-
-fixes the following warning:
-
-[   12.519089] =============================
-[   12.520042] WARNING: suspicious RCU usage
-[   12.520652] 5.1.0-rc7-wt+ #16 Tainted: G        W
-[   12.521409] -----------------------------
-[   12.521972] net/mac80211/mesh.c:1223 suspicious rcu_dereference_check() usage!
-[   12.522928] other info that might help us debug this:
-[   12.523984] rcu_scheduler_active = 2, debug_locks = 1
-[   12.524855] 5 locks held by kworker/u8:2/152:
-[   12.525438]  #0: 00000000057be08c ((wq_completion)phy0){+.+.}, at: process_one_work+0x1a2/0x620
-[   12.526607]  #1: 0000000059c6b07a ((work_completion)(&sdata->csa_finalize_work)){+.+.}, at: process_one_work+0x1a2/0x620
-[   12.528001]  #2: 00000000f184ba7d (&wdev->mtx){+.+.}, at: ieee80211_csa_finalize_work+0x2f/0x90
-[   12.529116]  #3: 00000000831a1f54 (&local->mtx){+.+.}, at: ieee80211_csa_finalize_work+0x47/0x90
-[   12.530233]  #4: 00000000fd06f988 (&local->chanctx_mtx){+.+.}, at: ieee80211_csa_finalize_work+0x51/0x90
-
-Signed-off-by: Thomas Pedersen <thomas@eero.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Jiunn Chang <c0d1n61at3@gmail.com>
 ---
- net/mac80211/mesh.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ include/uapi/linux/nl80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 766e5e5bab8a..d5aba5029cb0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1220,7 +1220,8 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
- 	ifmsh->chsw_ttl = 0;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6f09d1500960..fa7ebbc6ff27 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -5314,7 +5314,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_TDLS_CHANNEL_SWITCH		= 1 << 28,
+ 	NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR		= 1 << 29,
+ 	NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR	= 1 << 30,
+-	NL80211_FEATURE_ND_RANDOM_MAC_ADDR		= 1 << 31,
++	NL80211_FEATURE_ND_RANDOM_MAC_ADDR		= 1U << 31,
+ };
  
- 	/* Remove the CSA and MCSP elements from the beacon */
--	tmp_csa_settings = rcu_dereference(ifmsh->csa);
-+	tmp_csa_settings = rcu_dereference_protected(ifmsh->csa,
-+					    lockdep_is_held(&sdata->wdev.mtx));
- 	RCU_INIT_POINTER(ifmsh->csa, NULL);
- 	if (tmp_csa_settings)
- 		kfree_rcu(tmp_csa_settings, rcu_head);
-@@ -1242,6 +1243,8 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	struct mesh_csa_settings *tmp_csa_settings;
- 	int ret = 0;
- 
-+	lockdep_assert_held(&sdata->wdev.mtx);
-+
- 	tmp_csa_settings = kmalloc(sizeof(*tmp_csa_settings),
- 				   GFP_ATOMIC);
- 	if (!tmp_csa_settings)
+ /**
 -- 
-2.20.1
+2.22.0
 
