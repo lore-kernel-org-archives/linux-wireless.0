@@ -4,51 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A840C48BD3
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:31:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CCAEC48BD3
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:31:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01B2A217D9
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:31:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B2DD217D7
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:31:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561595467;
-	bh=hfofzkUcH0VTTJYIQDvXderaZwVE2BnV09M1bS/FYS8=;
+	s=default; t=1561595492;
+	bh=5DYQYsfYaQr+lK77SrqMylk+e9kaS24VsnayPZlV65I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Jn5r8byjucnNrxOG43Y2ULPcYSXuwP/DD36D2Ut/RT/3kc9asnwKtTJvESdIr79Bd
-	 tnOqbti6Rw3ctq27t+xh03poK3JzwaxK/hqGLYKfp4Gf/lXvIBWQJZKLmzGf0yKVRG
-	 h7KxxQL4DfHTbhPuwuY4GNhiMWbxJBeNF0Puv7+Q=
+	b=xZNp7MUKtHCtAgSjn5bFNrqKQkMGSTdhUqEFe04l+PW9y/KdPbJ5nINS8k7WStRQu
+	 P/RZQaDyLOftBrd4ztUCbzzxQTkYZ3cWRsYO8Ew+knBDGKBDV2+BCKUmps6kdU/7+i
+	 2FUhXoj5Roivn0NGorz5NacOSzI3hkCQp2dO5Nbw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727027AbfF0AbG (ORCPT
+        id S1727187AbfF0Abb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jun 2019 20:31:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34330 "EHLO mail.kernel.org"
+        Wed, 26 Jun 2019 20:31:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34872 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727016AbfF0AbF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jun 2019 20:31:05 -0400
+        id S1727176AbfF0Ab3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jun 2019 20:31:29 -0400
 Received: from sasha-vm.mshome.net (unknown [107.242.116.147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E7B5E217D9;
-        Thu, 27 Jun 2019 00:31:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B20CC216E3;
+        Thu, 27 Jun 2019 00:31:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561595464;
-        bh=hfofzkUcH0VTTJYIQDvXderaZwVE2BnV09M1bS/FYS8=;
+        s=default; t=1561595488;
+        bh=5DYQYsfYaQr+lK77SrqMylk+e9kaS24VsnayPZlV65I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gozPo01/wCrvdsuKd+X/WmTVUjM5/rzCJxAg96WdfvJ3nLclRV1ASgx9vbYo1da6h
-         1iIpGcXvkPIGVRdVVslD/ROuQ2A6K7k433dm91uwi60T00pVT+eKaGTFbZXDJHjazt
-         e8wK9+sbTJeSWB4aCCY5eUKBA7gb59DcZhXay3KI=
+        b=R4TBWPpBU/9bWrFD8Djr26EhqWt97ubZT/3d1LULL4tnEVsCvU+MldZmry/Ox6rqT
+         lqwcJsq4gUynpzwoyeSkQGM1/tSfxScXYD1yp9zITNWkIIV+ev/SS3E+SiNF5i2XEm
+         8Ph+XOpoqr6uPKm7t0g5vyyGVdlzhb3Lz+ovyvcQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     John Crispin <john@phrozen.org>,
-        Shashidhar Lakkavalli <slakkavalli@datto.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Takashi Iwai <tiwai@suse.de>, huangwen <huangwen@venustech.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 13/95] mac80211: fix rate reporting inside cfg80211_calculate_bitrate_he()
-Date:   Wed, 26 Jun 2019 20:28:58 -0400
-Message-Id: <20190627003021.19867-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 22/95] mwifiex: Fix possible buffer overflows at parsing bss descriptor
+Date:   Wed, 26 Jun 2019 20:29:07 -0400
+Message-Id: <20190627003021.19867-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190627003021.19867-1-sashal@kernel.org>
 References: <20190627003021.19867-1-sashal@kernel.org>
@@ -61,34 +60,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: John Crispin <john@phrozen.org>
+From: Takashi Iwai <tiwai@suse.de>
 
-[ Upstream commit 25d16d124a5e249e947c0487678b61dcff25cf8b ]
+[ Upstream commit 13ec7f10b87f5fc04c4ccbd491c94c7980236a74 ]
 
-The reported rate is not scaled down correctly. After applying this patch,
-the function will behave just like the v/ht equivalents.
+mwifiex_update_bss_desc_with_ie() calls memcpy() unconditionally in
+a couple places without checking the destination size.  Since the
+source is given from user-space, this may trigger a heap buffer
+overflow.
 
-Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
-Signed-off-by: John Crispin <john@phrozen.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fix it by putting the length check before performing memcpy().
+
+This fix addresses CVE-2019-3846.
+
+Reported-by: huangwen <huangwen@venustech.com.cn>
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 75899b62bdc9..5a03f38788e7 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1237,7 +1237,7 @@ static u32 cfg80211_calculate_bitrate_he(struct rate_info *rate)
- 	if (rate->he_dcm)
- 		result /= 2;
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 935778ec9a1b..64ab6fe78c0d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1247,6 +1247,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 		}
+ 		switch (element_id) {
+ 		case WLAN_EID_SSID:
++			if (element_len > IEEE80211_MAX_SSID_LEN)
++				return -EINVAL;
+ 			bss_entry->ssid.ssid_len = element_len;
+ 			memcpy(bss_entry->ssid.ssid, (current_ptr + 2),
+ 			       element_len);
+@@ -1256,6 +1258,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
  
--	return result;
-+	return result / 10000;
- }
- 
- u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+ 		case WLAN_EID_SUPP_RATES:
++			if (element_len > MWIFIEX_SUPPORTED_RATES)
++				return -EINVAL;
+ 			memcpy(bss_entry->data_rates, current_ptr + 2,
+ 			       element_len);
+ 			memcpy(bss_entry->supported_rates, current_ptr + 2,
 -- 
 2.20.1
 
