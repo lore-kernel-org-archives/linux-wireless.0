@@ -2,95 +2,83 @@ Return-Path: <SRS0=XE1e=U2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1331C48BD6
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 14:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61346C48BD7
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 14:49:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B282220828
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 14:30:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2642820659
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 14:49:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1561646996;
+	bh=12Z6MhPmXV/NZ6/y8pPTcSxuFN6lBpbyxl0ojiwKQR0=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=aj+DDXs+Z0UGtOqngWGwGjRCvoUsq3vuLSUIYlCk1XG0vNbI03hoLpivv39uEpsgb
+	 LVy/yGTu2jXXA5wICmFqKfuzJnTA5SizbMKFzPP3JGPVIeF8gEetjmoauSI9Ff17QP
+	 2SJU8/3R5Fr1xM4Rba05W+7T2VV8U1zA/grM0f1Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726693AbfF0OaI (ORCPT
+        id S1726830AbfF0Otz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Jun 2019 10:30:08 -0400
-Received: from mout.kundenserver.de ([212.227.126.131]:60145 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726431AbfF0OaI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jun 2019 10:30:08 -0400
-Received: from orion.localdomain ([77.7.61.149]) by mrelayeu.kundenserver.de
- (mreue011 [212.227.15.167]) with ESMTPSA (Nemesis) id
- 1M5fdC-1heqS92wkU-007ASL; Thu, 27 Jun 2019 16:30:03 +0200
-From:   "Enrico Weigelt, metux IT consult" <info@metux.net>
-To:     linux-kernel@vger.kernel.org
-Cc:     amitkarwar@gmail.com, siva8118@gmail.com, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] drivers: net: wireless: rsi: return explicit error values
-Date:   Thu, 27 Jun 2019 16:30:02 +0200
-Message-Id: <1561645802-1279-1-git-send-email-info@metux.net>
-X-Mailer: git-send-email 1.9.1
-X-Provags-ID: V03:K1:LD1XqncTtp4Z4IX2vE/ddO3xe3+A4yTOO84WkoCTzL4iY55/4EI
- IvYDyUIepL04Be8NzulLbuAO8xKrQHjFCrvhg03O+X5OlkfCMiuKc4ixdRKv/jWeK2TyAGp
- wLiSCwJfqg0JiYlt5i1AGpJFoysqyKc/dHPsbo25v3yMN67zdtTx2O7gz3WggstEPCfb3oB
- 4M2VrucesCj2G8maAiQ+g==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:VX1ooUieOIM=:fRd9ZmsoM1/T5whX34GEcE
- nz1xYDLGuUfXhijW02HVftdL+eUaFMjDdppCX29QBN4YV+oGSaUzoO3dClTohbZbVo/uOM8fI
- rrOH/JMLj0LwB4JCgQK+1iR6o1jNxyLKC7mWo8yzXHmnzMdKzikwb7D4LPBjDW7SPQE6PR6I8
- Gjtlkb/DWa7z9VDsmqSw1idHT62vyixIgHGb7FlpXIxbsMIbXguxuaD6F/qcPFeKOwV6OEXHd
- H6hEggsGV9yB/eBA9qjxuNp5Ek3mt8TFZ01FohUTdtJaTgb96q2CWGYhcUOiVeQBkVOp0fdma
- tFJ7eO+uQpHVw4XXCMBFjzhPK9SHb94XMEc+0dNx2D6XfFTeyALFgQ9lrfKmDAwRLhdOhlYeD
- cub0g7WUVAY7QXrqqOC6t+D5d06/K5Sc3A2L9gjKfd/pE73ZiopLZFTk44jDrhsDXQwhjeelC
- O0YEUVR7riR8WB0Ki9yshlXeir0rjxr4Eb0AzbNAOVl1UCfk9fen7EXdUHDYO3CWA4Dl8Ngip
- IBj0DJNkD3Tyl4hWBsogKL667PbLnqkNbNj2bL8Xg0701QiKsylkeiaPLYRFU3jGOwCWHcCIS
- aLL2jozhYQdXd/Uqiya9+2Cfcqvyp3tgHe8xNWMQeXOROSLZDGgr0zNxWvieqr34BjY3HooI+
- aWc0uBRK90JYz9wiRX/Lw6Y0WBujloA2qCx1tWEDCb8JBC2ZtWgvnVy58rJBqQh6R9gy32BjT
- 6l6SfZWXmR01HKlBsyV8os6hbGarnMXxfq7XaQ==
+        Thu, 27 Jun 2019 10:49:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49620 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726431AbfF0Otz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Jun 2019 10:49:55 -0400
+Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com [149.6.153.186])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A3FD320644;
+        Thu, 27 Jun 2019 14:49:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1561646994;
+        bh=12Z6MhPmXV/NZ6/y8pPTcSxuFN6lBpbyxl0ojiwKQR0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Dp6ODelksRF/Gzz+X81tfqqdfqMkkcTJUHNjltfvjVnLlC6UbwPspmRWAgCaOPZm/
+         HfAuf9REyYXAGrSbg9e4/DkNwD/741MdRDJ80gFy/lYpLQdtEY7SSvdJ11yf7VH+hq
+         e1118xzebJPY9EUEdzNQyVRetzkd42iUn+Q8DYnc=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com, royluo@google.com
+Subject: [PATCH] mt76: mt7615: fix sparse warnings: warning: restricted __le16 degrades to integer
+Date:   Thu, 27 Jun 2019 16:49:44 +0200
+Message-Id: <fcfc54a6c129d513cce029fa8f2a5a01fab89091.1561644460.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.21.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Enrico Weigelt <info@metux.net>
+Fix the following sparse warning in __mt7615_mcu_msg_send:
+drivers/net/wireless/mediatek/mt76/mt7615/mcu.c:78:15: sparse: warning:
+restricted __le16 degrades to integer
+drivers/net/wireless/mediatek/mt76/mt7615/mcu.c:78:15: sparse: warning:
+cast from restricted __le16
 
-Explicitly return constants instead of variable (and rely on
-it to be explicitly initialized), if the value is supposed
-to be fixed anyways. Align it with the rest of the driver,
-which does it the same way.
-
-Signed-off-by: Enrico Weigelt <info@metux.net>
+Fixes: 04b8e65922f6 ("mt76: add mac80211 driver for MT7615 PCIe-based chipsets")
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index b42cd50..2a3577d 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -844,11 +844,11 @@ static int rsi_init_sdio_interface(struct rsi_hw *adapter,
- 				   struct sdio_func *pfunction)
- {
- 	struct rsi_91x_sdiodev *rsi_91x_dev;
--	int status = -ENOMEM;
-+	int status;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index beee25e69053..cc6da5145d12 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -75,7 +75,7 @@ static int __mt7615_mcu_msg_send(struct mt7615_dev *dev, struct sk_buff *skb,
  
- 	rsi_91x_dev = kzalloc(sizeof(*rsi_91x_dev), GFP_KERNEL);
- 	if (!rsi_91x_dev)
--		return status;
-+		return -ENOMEM;
+ 	txd = mcu_txd->txd;
  
- 	adapter->rsi_dev = rsi_91x_dev;
- 
-@@ -890,7 +890,7 @@ static int rsi_init_sdio_interface(struct rsi_hw *adapter,
- #ifdef CONFIG_RSI_DEBUGFS
- 	adapter->num_debugfs_entries = MAX_DEBUGFS_ENTRIES;
- #endif
--	return status;
-+	return 0;
- fail:
- 	sdio_disable_func(pfunction);
- 	sdio_release_host(pfunction);
+-	val = FIELD_PREP(MT_TXD0_TX_BYTES, cpu_to_le16(skb->len)) |
++	val = FIELD_PREP(MT_TXD0_TX_BYTES, skb->len) |
+ 	      FIELD_PREP(MT_TXD0_P_IDX, MT_TX_PORT_IDX_MCU) |
+ 	      FIELD_PREP(MT_TXD0_Q_IDX, q_idx);
+ 	txd[0] = cpu_to_le32(val);
 -- 
-1.9.1
+2.21.0
 
