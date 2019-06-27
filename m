@@ -7,48 +7,46 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B718FC48BDA
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18EFEC48BD6
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85A7020663
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4B9E20663
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jun 2019 00:54:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561596853;
-	bh=ZA9VrjagleecdpQ2Yn/1Dmj0Ua5l12GIiKFBWyy0Ugc=;
+	s=default; t=1561596866;
+	bh=A/CiTEaKaFg9geB0AFMGKZY8viea7aMND4JaS85g9tE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hfhYYuZ8sKGdc6JiSg4VmrMa2ipIviEpYl0LHDq+/YyWrIRVJ5stgA1WS6689d5zB
-	 x1ECA2Gtz8ccUsxT0MELVn0vxGFLmSwaglmhFNtWKTMQmRKEA9Z/5aH8h2yxQEfw2n
-	 BxEKawI1KoV6trqIw3LForuPGWitGLMZFtVHChRI=
+	b=fEoXE//716jq3udpBH1Dvr++kRwB+AEQqHgSjjnTYKjs5V5CjtihUoruH8YhFdZQC
+	 swRJOZTZll2o958wijJEdWSwgcRLii4oHkVXybDPfXIoGbDPmmYs1GDQWc2LzROT7X
+	 YKpgofKjPZNgb4orwqJZj4jVhLS7FBKHkCC+1bUQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727329AbfF0Ab6 (ORCPT
+        id S1727212AbfF0Abd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jun 2019 20:31:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35522 "EHLO mail.kernel.org"
+        Wed, 26 Jun 2019 20:31:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34942 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726612AbfF0Ab5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jun 2019 20:31:57 -0400
+        id S1727193AbfF0Abc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jun 2019 20:31:32 -0400
 Received: from sasha-vm.mshome.net (unknown [107.242.116.147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 86504217D7;
-        Thu, 27 Jun 2019 00:31:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B27472083B;
+        Thu, 27 Jun 2019 00:31:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561595516;
-        bh=ZA9VrjagleecdpQ2Yn/1Dmj0Ua5l12GIiKFBWyy0Ugc=;
+        s=default; t=1561595491;
+        bh=A/CiTEaKaFg9geB0AFMGKZY8viea7aMND4JaS85g9tE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OgYcjRRPBI7QU9TosWs0LY33fAGORrODKfoZt0qiw15WW87P5G1FzFA5i7MeAxmbg
-         cbCk81Ibv1HpjD55wzcQIqKvakqPAJhhg7uoJb+oFV/EhWsRH5UJOaVl6VWKLp12l3
-         cIUFbdWX0GYT1i3V+SDRxIVVz9zcZUgkJ3guKzqg=
+        b=JYMKFgaeoUKfBFaYLk5vkZOfatTqcDLTRsmtsXFQ+u4cdga0udz7dPQEXkq23k1NE
+         s2groKKIAmwLuePEYKuNQ+64L3VLLDd/Jc5RYQdpZj7d1dibIFeKkTgxbUbNLr+ju6
+         phUrcwK4OXbnRvuNUTPKtFs3O9J5OU0/Dt5j6vz4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Matt Chen <matt.chen@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Takashi Iwai <tiwai@suse.de>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 27/95] iwlwifi: fix AX201 killer sku loading firmware issue
-Date:   Wed, 26 Jun 2019 20:29:12 -0400
-Message-Id: <20190627003021.19867-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 23/95] mwifiex: Abort at too short BSS descriptor element
+Date:   Wed, 26 Jun 2019 20:29:08 -0400
+Message-Id: <20190627003021.19867-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190627003021.19867-1-sashal@kernel.org>
 References: <20190627003021.19867-1-sashal@kernel.org>
@@ -61,45 +59,88 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Matt Chen <matt.chen@intel.com>
+From: Takashi Iwai <tiwai@suse.de>
 
-[ Upstream commit b17dc0632a17fbfe66b34ee7c24e1cc10cfc503e ]
+[ Upstream commit 685c9b7750bfacd6fc1db50d86579980593b7869 ]
 
-When try to bring up the AX201 2 killer sku, we
-run into:
-[81261.392463] iwlwifi 0000:01:00.0: loaded firmware version 46.8c20f243.0 op_mode iwlmvm
-[81261.407407] iwlwifi 0000:01:00.0: Detected Intel(R) Dual Band Wireless AX 22000, REV=0x340
-[81262.424778] iwlwifi 0000:01:00.0: Collecting data: trigger 16 fired.
-[81262.673359] iwlwifi 0000:01:00.0: Start IWL Error Log Dump:
-[81262.673365] iwlwifi 0000:01:00.0: Status: 0x00000000, count: -906373681
-[81262.673368] iwlwifi 0000:01:00.0: Loaded firmware version: 46.8c20f243.0
-[81262.673371] iwlwifi 0000:01:00.0: 0x507C015D | ADVANCED_SYSASSERT
+Currently mwifiex_update_bss_desc_with_ie() implicitly assumes that
+the source descriptor entries contain the enough size for each type
+and performs copying without checking the source size.  This may lead
+to read over boundary.
 
-Fix this issue by adding 2 more cfg to avoid modifying the
-original cfg configuration.
+Fix this by putting the source size check in appropriate places.
 
-Signed-off-by: Matt Chen <matt.chen@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 2a03d34afa3b..80695584e406 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3585,7 +3585,9 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		}
- 	} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
- 		   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR) &&
--		   (trans->cfg != &iwl_ax200_cfg_cc ||
-+		   ((trans->cfg != &iwl_ax200_cfg_cc &&
-+		    trans->cfg != &killer1650x_2ax_cfg &&
-+		    trans->cfg != &killer1650w_2ax_cfg) ||
- 		    trans->hw_rev == CSR_HW_REV_TYPE_QNJ_B0)) {
- 		u32 hw_status;
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 64ab6fe78c0d..c269a0de9413 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1269,6 +1269,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_FH_PARAMS:
++			if (element_len + 2 < sizeof(*fh_param_set))
++				return -EINVAL;
+ 			fh_param_set =
+ 				(struct ieee_types_fh_param_set *) current_ptr;
+ 			memcpy(&bss_entry->phy_param_set.fh_param_set,
+@@ -1277,6 +1279,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_DS_PARAMS:
++			if (element_len + 2 < sizeof(*ds_param_set))
++				return -EINVAL;
+ 			ds_param_set =
+ 				(struct ieee_types_ds_param_set *) current_ptr;
+ 
+@@ -1288,6 +1292,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_CF_PARAMS:
++			if (element_len + 2 < sizeof(*cf_param_set))
++				return -EINVAL;
+ 			cf_param_set =
+ 				(struct ieee_types_cf_param_set *) current_ptr;
+ 			memcpy(&bss_entry->ss_param_set.cf_param_set,
+@@ -1296,6 +1302,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_IBSS_PARAMS:
++			if (element_len + 2 < sizeof(*ibss_param_set))
++				return -EINVAL;
+ 			ibss_param_set =
+ 				(struct ieee_types_ibss_param_set *)
+ 				current_ptr;
+@@ -1305,10 +1313,14 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_ERP_INFO:
++			if (!element_len)
++				return -EINVAL;
+ 			bss_entry->erp_flags = *(current_ptr + 2);
+ 			break;
+ 
+ 		case WLAN_EID_PWR_CONSTRAINT:
++			if (!element_len)
++				return -EINVAL;
+ 			bss_entry->local_constraint = *(current_ptr + 2);
+ 			bss_entry->sensed_11h = true;
+ 			break;
+@@ -1349,6 +1361,9 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_VENDOR_SPECIFIC:
++			if (element_len + 2 < sizeof(vendor_ie->vend_hdr))
++				return -EINVAL;
++
+ 			vendor_ie = (struct ieee_types_vendor_specific *)
+ 					current_ptr;
  
 -- 
 2.20.1
