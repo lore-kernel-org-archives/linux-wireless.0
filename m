@@ -2,195 +2,89 @@ Return-Path: <SRS0=Fjak=U3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C39CBC4321A
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jun 2019 09:21:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 339F2C4321A
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jun 2019 10:49:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A3683208CB
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jun 2019 09:21:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0693620656
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jun 2019 10:49:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726867AbfF1JVw (ORCPT
+        id S1726807AbfF1Ktn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Jun 2019 05:21:52 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54806 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726502AbfF1JVv (ORCPT
+        Fri, 28 Jun 2019 06:49:43 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:46932 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726543AbfF1Ktn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jun 2019 05:21:51 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        Fri, 28 Jun 2019 06:49:43 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1hgn3V-0001ny-5N; Fri, 28 Jun 2019 12:20:29 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 19/20] iwlwifi: dbg: debug recording stop and restart command remove
-Date:   Fri, 28 Jun 2019 12:20:07 +0300
-Message-Id: <20190628092008.11049-20-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190628092008.11049-1-luca@coelho.fi>
-References: <20190628092008.11049-1-luca@coelho.fi>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hgoRo-00079l-SE; Fri, 28 Jun 2019 12:49:40 +0200
+Message-ID: <ce0a3c9a6b2743dd49398f91a3b1404504ba7294.camel@sipsolutions.net>
+Subject: Re: [PATCH 2/2] iwlwifi: Extended Key ID support
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Alexander Wetzel <alexander@wetzel-home.de>
+Cc:     linux-wireless@vger.kernel.org, luca@coelho.fi
+Date:   Fri, 28 Jun 2019 12:49:39 +0200
+In-Reply-To: <7a173bac-37d2-b470-8cb6-0f7e41e26ca5@wetzel-home.de>
+References: <20190506190149.3624-1-alexander@wetzel-home.de>
+         <20190506190149.3624-2-alexander@wetzel-home.de>
+         <7a173bac-37d2-b470-8cb6-0f7e41e26ca5@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-3.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Hi,
 
-The 0xF6 command used to start and stop the recording from 22560 devices
-was removed. This is causing an assert when the driver tries to alter
-the recording state.
-Remove the use of the command.
+On Wed, 2019-06-26 at 23:10 +0200, Alexander Wetzel wrote:
+> > iwlwifi cards are all able to support Extended Key ID as long as
+> > mac80211 stops A-MPDU aggregation when replacing the unicast key.
+> > 
+> > Enable Extended Key ID support and tell mac80211 that it has to tear
+> > down any running Tx aggregation sessions during rekey when using
+> > Extended Key ID.
+> 
+> With the merge of the A-MPDU handling patch 
+> https://patchwork.kernel.org/patch/10931861/ we probably should simplify 
+> the API for Extended Key ID and not merge the patch as it is:
+> 
+> 1) We can drop EXT_KEY_ID_NATIVE from mac80211 and let the drivers set
+>     NL80211_EXT_FEATURE_EXT_KEY_ID instead of mac80211.
+>     Without the COMPAT support the naming is off and the flag is simply
+>     pointless. Assuming we want to pick up the COMPAT Extended Key ID we
+>     still can just define a new flag, e.g.
+>     SINGLE_STA_UNICAST_KEY_OFFLOAD_ONLY to tell mac80211 it can only
+>     have one unicast key active in the HW per STA.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  2 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   | 47 +++++++------------
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  2 +-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  2 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  2 +-
- 5 files changed, 22 insertions(+), 33 deletions(-)
+Yes, true, with the compat more or less off the table for now, we don't
+really need this extra complexity.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 38c30fd905ed..15beaea37e61 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2372,7 +2372,7 @@ static void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt, u8 wk_idx)
- 		goto out;
- 	}
- 
--	iwl_fw_dbg_stop_recording(fwrt, &params);
-+	iwl_fw_dbg_stop_recording(fwrt->trans, &params);
- 
- 	IWL_DEBUG_FW_INFO(fwrt, "WRT: data collection start\n");
- 	if (fwrt->trans->dbg.ini_valid)
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index c2d91f645b0f..47470cf80e6d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -263,23 +263,6 @@ _iwl_fw_dbg_trigger_simple_stop(struct iwl_fw_runtime *fwrt,
- 					iwl_fw_dbg_get_trigger((fwrt)->fw,\
- 							       (trig)))
- 
--static inline int
--iwl_fw_dbg_start_stop_hcmd(struct iwl_fw_runtime *fwrt, bool start)
--{
--	struct iwl_ldbg_config_cmd cmd = {
--		.type = start ? cpu_to_le32(START_DEBUG_RECORDING) :
--				cpu_to_le32(STOP_DEBUG_RECORDING),
--	};
--	struct iwl_host_cmd hcmd = {
--		.id = LDBG_CONFIG_CMD,
--		.flags = CMD_ASYNC,
--		.data[0] = &cmd,
--		.len[0] = sizeof(cmd),
--	};
--
--	return iwl_trans_send_cmd(fwrt->trans, &hcmd);
--}
--
- static inline void
- _iwl_fw_dbg_stop_recording(struct iwl_trans *trans,
- 			   struct iwl_fw_dbg_params *params)
-@@ -306,21 +289,24 @@ _iwl_fw_dbg_stop_recording(struct iwl_trans *trans,
- }
- 
- static inline void
--iwl_fw_dbg_stop_recording(struct iwl_fw_runtime *fwrt,
-+iwl_fw_dbg_stop_recording(struct iwl_trans *trans,
- 			  struct iwl_fw_dbg_params *params)
- {
- 	/* if the FW crashed or not debug monitor cfg was given, there is
- 	 * no point in stopping
- 	 */
--	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status) ||
--	    (!fwrt->trans->dbg.dest_tlv &&
--	     fwrt->trans->dbg.ini_dest == IWL_FW_INI_LOCATION_INVALID))
-+	if (test_bit(STATUS_FW_ERROR, &trans->status) ||
-+	    (!trans->dbg.dest_tlv &&
-+	     trans->dbg.ini_dest == IWL_FW_INI_LOCATION_INVALID))
- 		return;
- 
--	if (fwrt->trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
--		_iwl_fw_dbg_stop_recording(fwrt->trans, params);
--	else
--		iwl_fw_dbg_start_stop_hcmd(fwrt, false);
-+	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
-+		IWL_ERR(trans,
-+			"WRT: unsupported device family %d for debug stop recording\n",
-+			trans->cfg->device_family);
-+		return;
-+	}
-+	_iwl_fw_dbg_stop_recording(trans, params);
- }
- 
- static inline void
-@@ -362,10 +348,13 @@ iwl_fw_dbg_restart_recording(struct iwl_fw_runtime *fwrt,
- 	     fwrt->trans->dbg.ini_dest == IWL_FW_INI_LOCATION_INVALID))
- 		return;
- 
--	if (fwrt->trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
--		_iwl_fw_dbg_restart_recording(fwrt->trans, params);
--	else
--		iwl_fw_dbg_start_stop_hcmd(fwrt, true);
-+	if (fwrt->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
-+		IWL_ERR(fwrt,
-+			"WRT: unsupported device family %d for debug restart recording\n",
-+			fwrt->trans->cfg->device_family);
-+		return;
-+	}
-+	_iwl_fw_dbg_restart_recording(fwrt->trans, params);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	iwl_fw_set_dbg_rec_on(fwrt);
- #endif
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 47f1529b6491..9677955624e1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1083,7 +1083,7 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
- 	 * recording automatically.
- 	 */
- 	if (mvm->trans->cfg->device_family < IWL_DEVICE_FAMILY_9000)
--		_iwl_fw_dbg_stop_recording(mvm->trans, NULL);
-+		iwl_fw_dbg_stop_recording(mvm->trans, NULL);
- 
- 	/* must be last -- this switches firmware state */
- 	ret = iwl_mvm_send_cmd(mvm, &d3_cfg_cmd);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 8507a7bdcfdd..a1533f025f5e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -148,7 +148,7 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- 	trans_pcie->is_down = true;
- 
- 	/* Stop dbgc before stopping device */
--	_iwl_fw_dbg_stop_recording(trans, NULL);
-+	iwl_fw_dbg_stop_recording(trans, NULL);
- 
- 	/* tell the device to stop sending interrupts */
- 	iwl_disable_interrupts(trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 13ebd948ccc0..ba2f4c7c52d7 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1243,7 +1243,7 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 	trans_pcie->is_down = true;
- 
- 	/* Stop dbgc before stopping device */
--	_iwl_fw_dbg_stop_recording(trans, NULL);
-+	iwl_fw_dbg_stop_recording(trans, NULL);
- 
- 	/* tell the device to stop sending interrupts */
- 	iwl_disable_interrupts(trans);
--- 
-2.20.1
+> 2) Mac80211 would then enable Extended Key ID for all drivers using SW
+>     crypto and just also set NO_AMPDU_KEYBORDER_SUPPORT when the driver
+>     supports A-MPDU
+
+Right (or not really set the flag, but get rid of it?), though maybe
+some (rare) driver would actually support ampdu keyborder? Ath9k for
+example could do that since it builds the aggregates in software, so I
+guess we'd need some flag indicating the opposite then.
+
+> 3) we then could undo (revert?) cfe7007a9b4c ("mac80211_hwsim: Extended
+>     Key ID support") and let the more generic code in mac80211 handle it
+> 
+> If you agree I'll prepare and test a small patch series for that.
+> And we better only merge a iteration of this patch here once we got the 
+> API updated.
+
+Sounds good to me!
+
+johannes
 
