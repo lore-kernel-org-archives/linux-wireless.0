@@ -6,32 +6,33 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E599C4321A
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jun 2019 09:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21ED2C4321A
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jun 2019 09:20:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D525208CB
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jun 2019 09:20:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04018208CB
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jun 2019 09:20:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726667AbfF1JUo (ORCPT
+        id S1726856AbfF1JUs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Jun 2019 05:20:44 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54770 "EHLO
+        Fri, 28 Jun 2019 05:20:48 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54776 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726506AbfF1JUo (ORCPT
+        with ESMTP id S1726506AbfF1JUs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jun 2019 05:20:44 -0400
+        Fri, 28 Jun 2019 05:20:48 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hgn3Q-0001ny-Cu; Fri, 28 Jun 2019 12:20:24 +0300
+        id 1hgn3R-0001ny-Sf; Fri, 28 Jun 2019 12:20:26 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 10/20] iwlwifi: pcie: increase the size of PCI dumps
-Date:   Fri, 28 Jun 2019 12:19:58 +0300
-Message-Id: <20190628092008.11049-11-luca@coelho.fi>
+Subject: [PATCH 13/20] iwlwifi: dbg_ini: remove redundant checking of ini mode
+Date:   Fri, 28 Jun 2019 12:20:01 +0300
+Message-Id: <20190628092008.11049-14-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190628092008.11049-1-luca@coelho.fi>
 References: <20190628092008.11049-1-luca@coelho.fi>
@@ -42,75 +43,87 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Currently we dump only the first 64 bytes of the PCI config space,
-which leaves out some important things, such as the base address
-registers.
+There are several flows where the driver checks if it runs in ini mode.
+Some of these flows are no longer used in ini mode or there is another
+condition that check the ini mode in the same flow. Either way, those
+conditions are redundant. Remove the redundant conditions.
 
-Increase it to 352 for the PCI device and to 524 for the rootport to
-make sure we include everything we need.
-
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 22 ++++++++++++-------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c     |  5 +----
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 11 +++--------
+ 3 files changed, 5 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index d61def45af57..a00323d72be1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2023,7 +2023,7 @@ static void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 	if (!dump_file)
+ 		goto out;
+ 
+-	if (!fwrt->trans->ini_valid && fwrt->dump.monitor_only)
++	if (fwrt->dump.monitor_only)
+ 		dump_mask &= IWL_FW_ERROR_DUMP_FW_MONITOR;
+ 
+ 	fw_error_dump.trans_ptr = iwl_trans_dump_data(fwrt->trans, dump_mask);
+@@ -2275,9 +2275,6 @@ int iwl_fw_dbg_collect_trig(struct iwl_fw_runtime *fwrt,
+ 	int ret, len = 0;
+ 	char buf[64];
+ 
+-	if (fwrt->trans->ini_valid)
+-		return 0;
+-
+ 	if (fmt) {
+ 		va_list ap;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index cff96d2a7e4c..54fc59639962 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -362,7 +362,7 @@ void iwl_fw_error_dump_wk(struct work_struct *work);
+ 
+ static inline bool iwl_fw_dbg_type_on(struct iwl_fw_runtime *fwrt, u32 type)
+ {
+-	return (fwrt->fw->dbg.dump_mask & BIT(type) || fwrt->trans->ini_valid);
++	return (fwrt->fw->dbg.dump_mask & BIT(type));
+ }
+ 
+ static inline bool iwl_fw_dbg_is_d3_debug_enabled(struct iwl_fw_runtime *fwrt)
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index ca486a7af602..6f5f7e9a894f 100644
+index 6f5f7e9a894f..f6201a03ca35 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -90,8 +90,10 @@
- 
- void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
+@@ -3021,10 +3021,6 @@ iwl_trans_pcie_dump_pointers(struct iwl_trans *trans,
+ 		base_high = DBGC_CUR_DBGBUF_BASE_ADDR_MSB;
+ 		write_ptr = DBGC_CUR_DBGBUF_STATUS;
+ 		wrap_cnt = DBGC_DBGBUF_WRAP_AROUND;
+-	} else if (trans->ini_valid) {
+-		base = iwl_umac_prph(trans, MON_BUFF_BASE_ADDR_VER2);
+-		write_ptr = iwl_umac_prph(trans, MON_BUFF_WRPTR_VER2);
+-		wrap_cnt = iwl_umac_prph(trans, MON_BUFF_CYCLE_CNT_VER2);
+ 	} else if (trans->dbg_dest_tlv) {
+ 		write_ptr = le32_to_cpu(trans->dbg_dest_tlv->write_ptr_reg);
+ 		wrap_cnt = le32_to_cpu(trans->dbg_dest_tlv->wrap_count);
+@@ -3055,11 +3051,10 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
  {
--#define PCI_DUMP_SIZE	64
--#define PREFIX_LEN	32
-+#define PCI_DUMP_SIZE		352
-+#define PCI_MEM_DUMP_SIZE	64
-+#define PCI_PARENT_DUMP_SIZE	524
-+#define PREFIX_LEN		32
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct pci_dev *pdev = trans_pcie->pci_dev;
- 	u32 i, pos, alloc_size, *ptr, *buf;
-@@ -102,11 +104,15 @@ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
+ 	u32 len = 0;
  
- 	/* Should be a multiple of 4 */
- 	BUILD_BUG_ON(PCI_DUMP_SIZE > 4096 || PCI_DUMP_SIZE & 0x3);
-+	BUILD_BUG_ON(PCI_MEM_DUMP_SIZE > 4096 || PCI_MEM_DUMP_SIZE & 0x3);
-+	BUILD_BUG_ON(PCI_PARENT_DUMP_SIZE > 4096 || PCI_PARENT_DUMP_SIZE & 0x3);
-+
- 	/* Alloc a max size buffer */
--	if (PCI_ERR_ROOT_ERR_SRC +  4 > PCI_DUMP_SIZE)
--		alloc_size = PCI_ERR_ROOT_ERR_SRC +  4 + PREFIX_LEN;
--	else
--		alloc_size = PCI_DUMP_SIZE + PREFIX_LEN;
-+	alloc_size = PCI_ERR_ROOT_ERR_SRC +  4 + PREFIX_LEN;
-+	alloc_size = max_t(u32, alloc_size, PCI_DUMP_SIZE + PREFIX_LEN);
-+	alloc_size = max_t(u32, alloc_size, PCI_MEM_DUMP_SIZE + PREFIX_LEN);
-+	alloc_size = max_t(u32, alloc_size, PCI_PARENT_DUMP_SIZE + PREFIX_LEN);
-+
- 	buf = kmalloc(alloc_size, GFP_ATOMIC);
- 	if (!buf)
- 		return;
-@@ -123,7 +129,7 @@ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
- 	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
+-	if ((trans->num_blocks &&
++	if (trans->dbg_dest_tlv ||
++	    (trans->num_blocks &&
+ 	     (trans->cfg->device_family == IWL_DEVICE_FAMILY_7000 ||
+-	      trans->cfg->device_family >= IWL_DEVICE_FAMILY_AX210 ||
+-	      trans->ini_valid)) ||
+-	    (trans->dbg_dest_tlv && !trans->ini_valid)) {
++	      trans->cfg->device_family >= IWL_DEVICE_FAMILY_AX210))) {
+ 		struct iwl_fw_error_dump_fw_mon *fw_mon_data;
  
- 	IWL_ERR(trans, "iwlwifi device memory mapped registers:\n");
--	for (i = 0, ptr = buf; i < PCI_DUMP_SIZE; i += 4, ptr++)
-+	for (i = 0, ptr = buf; i < PCI_MEM_DUMP_SIZE; i += 4, ptr++)
- 		*ptr = iwl_read32(trans, i);
- 	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
- 
-@@ -146,7 +152,7 @@ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
- 
- 	IWL_ERR(trans, "iwlwifi parent port (%s) config registers:\n",
- 		pci_name(pdev));
--	for (i = 0, ptr = buf; i < PCI_DUMP_SIZE; i += 4, ptr++)
-+	for (i = 0, ptr = buf; i < PCI_PARENT_DUMP_SIZE; i += 4, ptr++)
- 		if (pci_read_config_dword(pdev, i, ptr))
- 			goto err_read;
- 	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
+ 		(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_FW_MONITOR);
 -- 
 2.20.1
 
