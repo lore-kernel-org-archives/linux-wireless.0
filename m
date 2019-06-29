@@ -2,96 +2,148 @@ Return-Path: <SRS0=eg9r=U4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1848C4321A
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Jun 2019 15:20:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39B4BC5B577
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Jun 2019 19:56:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78591215EA
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Jun 2019 15:20:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4101214DA
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 Jun 2019 19:56:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="FBGKIKzh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726849AbfF2PUQ (ORCPT
+        id S1726906AbfF2T4B (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 29 Jun 2019 11:20:16 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:27710 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726819AbfF2PUQ (ORCPT
+        Sat, 29 Jun 2019 15:56:01 -0400
+Received: from 13.mo3.mail-out.ovh.net ([188.165.33.202]:33879 "EHLO
+        13.mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726891AbfF2T4B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Jun 2019 11:20:16 -0400
-X-UUID: 0276ae1d7325446182df794f0847c346-20190629
-X-UUID: 0276ae1d7325446182df794f0847c346-20190629
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 1857504110; Sat, 29 Jun 2019 23:20:05 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Sat, 29 Jun 2019 23:20:03 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Sat, 29 Jun 2019 23:20:03 +0800
-Message-ID: <1561821603.28134.0.camel@mtkswgap22>
-Subject: Re: [PATCH 0/6] add hw dfs pattern detector support to mt7615 driver
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Felix Fietkau <nbd@nbd.name>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Roy Luo <royluo@google.com>, YF Luo <yf.luo@mediatek.com>,
-        Lorenzo Bianconi <lorenzo@kernel.org>
-Date:   Sat, 29 Jun 2019 23:20:03 +0800
-In-Reply-To: <CAJ0CqmUqv+uWcDkPnDAmjM2j=9fUZ0F4on4SH5LoQ4zPGmPuNw@mail.gmail.com>
-References: <cover.1561804422.git.lorenzo@kernel.org>
-         <CAJ0CqmUqv+uWcDkPnDAmjM2j=9fUZ0F4on4SH5LoQ4zPGmPuNw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
+        Sat, 29 Jun 2019 15:56:01 -0400
+X-Greylist: delayed 320 seconds by postgrey-1.27 at vger.kernel.org; Sat, 29 Jun 2019 15:56:00 EDT
+Received: from player729.ha.ovh.net (unknown [10.109.143.109])
+        by mo3.mail-out.ovh.net (Postfix) with ESMTP id A4C1B213340
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Jun 2019 21:50:45 +0200 (CEST)
+Received: from awhome.eu (p579AA414.dip0.t-ipconnect.de [87.154.164.20])
+        (Authenticated sender: postmaster@awhome.eu)
+        by player729.ha.ovh.net (Postfix) with ESMTPSA id 3602C78ADB09;
+        Sat, 29 Jun 2019 19:50:44 +0000 (UTC)
+From:   Alexander Wetzel <alexander@wetzel-home.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+        s=wetzel-home; t=1561837843;
+        bh=ziWnwpILiJlRxSvGgU/6vn6690GPMtDZFkHwdseyII4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=FBGKIKzhORZMhGurqkqxsvc9MoO4xIXizgSorl3yWHnjKukUKUnnO0knEaVSfWm1b
+         So+/cyOwWOH5CxAY05yzsOlElJsZwLccX2Z6TfsKGM/vgJAJ8fnP4wkurxk/10dhPH
+         O7e4P1uzWhtNWOndRlUTcHYczrf5XkR0mfOmcVaE=
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Alexander Wetzel <alexander@wetzel-home.de>
+Subject: [PATCH 3/4] mac80211: AMPDU handling for rekeys with Extended Key ID
+Date:   Sat, 29 Jun 2019 21:50:14 +0200
+Message-Id: <20190629195015.19680-3-alexander@wetzel-home.de>
+X-Mailer: git-send-email 2.22.0
+In-Reply-To: <20190629195015.19680-1-alexander@wetzel-home.de>
+References: <20190629195015.19680-1-alexander@wetzel-home.de>
 MIME-Version: 1.0
-X-TM-SNTS-SMTP: 7E5AA41A2FD52F434A1429F5D0062ECB28319E0CFA40222A8F6C55D77452995D2000:8
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
+X-Ovh-Tracer-Id: 13913026626545261767
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: 0
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduvddrvddvgddugeegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenuc
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 2019-06-29 at 12:48 +0200, Lorenzo Bianconi wrote:
-> >
-> > Introduce radar pattern detection support to mt7615 driver.
-> > Add Channel Switch Announcement support updating beacon template with
-> > CSA IE received from mac80211.
-> > Please note I have tested this series just through the radar pattern test
-> > knob added to debugfs and not through I real radar signal generator.
-> >
-> 
-> Changes since RFC:
-> - added Channel Switch Announcement support
-> 
-> > Lorenzo Bianconi (6):
-> >   mt76: mt7615: introduce mt7615_regd_notifier
-> >   mt76: mt7615: add hw dfs pattern detector support
-> >   mt76: mt7615: do not perform txcalibration before cac is complited
-> >   mt76: mt7615: unlock dfs bands
-> >   mt76: mt7615: add csa support
-> >   mt76: mt7615: add radar pattern test knob to debugfs
-> >
-> >  .../wireless/mediatek/mt76/mt7615/Makefile    |   3 +-
-> >  .../wireless/mediatek/mt76/mt7615/debugfs.c   |  38 +++++
-> >  .../net/wireless/mediatek/mt76/mt7615/dma.c   |   2 +-
-> >  .../net/wireless/mediatek/mt76/mt7615/init.c  |  44 ++++--
-> >  .../net/wireless/mediatek/mt76/mt7615/mac.c   |  88 +++++++++++
-> >  .../net/wireless/mediatek/mt76/mt7615/main.c  |  19 +++
-> >  .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 147 ++++++++++++++++--
-> >  .../net/wireless/mediatek/mt76/mt7615/mcu.h   |  24 +++
-> >  .../wireless/mediatek/mt76/mt7615/mt7615.h    |  55 +++++++
-> >  9 files changed, 392 insertions(+), 28 deletions(-)
-> >  create mode 100644 drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-> >
-> > --
-> > 2.21.0
+Extended Key ID allows A-MPDU sessions while rekeying as long as each
+A-MPDU aggregates only MPDUs with one keyid together.
 
+Drivers able to segregate MPDUs accordingly can tell mac80211 to not
+stop A-MPDU sessions when rekeying by setting the new flag
+IEEE80211_HW_AMPDU_KEYBORDER_SUPPORT.
 
-Acked-by: Ryder Lee <ryder.lee@mediatek.com> for the series.
-> >
+Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+---
+ include/net/mac80211.h |  5 +++++
+ net/mac80211/debugfs.c |  1 +
+ net/mac80211/key.c     | 14 ++++++++------
+ 3 files changed, 14 insertions(+), 6 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 544dad54b11f..1d6bb67ecb47 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2268,6 +2268,10 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID: Hardware supports multi BSSID
+  *	only for HE APs. Applies if @IEEE80211_HW_SUPPORTS_MULTI_BSSID is set.
+  *
++ * @IEEE80211_HW_AMPDU_KEYBORDER_SUPPORT: The card and driver is only
++ *	aggregating MPDUs with the same keyid, allowing mac80211 to keep Tx
++ *	A-MPDU sessions active while rekeying with Extended Key ID.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2319,6 +2323,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TX_STATUS_NO_AMPDU_LEN,
+ 	IEEE80211_HW_SUPPORTS_MULTI_BSSID,
+ 	IEEE80211_HW_SUPPORTS_ONLY_HE_MULTI_BSSID,
++	IEEE80211_HW_AMPDU_KEYBORDER_SUPPORT,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 47435f57e086..568b3b276931 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -271,6 +271,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(TX_STATUS_NO_AMPDU_LEN),
+ 	FLAG(SUPPORTS_MULTI_BSSID),
+ 	FLAG(SUPPORTS_ONLY_HE_MULTI_BSSID),
++	FLAG(AMPDU_KEYBORDER_SUPPORT),
+ #undef FLAG
+ };
+ 
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 92c3affb0eb0..7dfee848abac 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -270,7 +270,8 @@ int ieee80211_set_tx_key(struct ieee80211_key *key)
+ 
+ 	sta->ptk_idx = key->conf.keyidx;
+ 
+-	clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
++	if (!ieee80211_hw_check(&local->hw, AMPDU_KEYBORDER_SUPPORT))
++		clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 	ieee80211_check_fast_xmit(sta);
+ 
+ 	return 0;
+@@ -288,15 +289,16 @@ static void ieee80211_pairwise_rekey(struct ieee80211_key *old,
+ 	if (new->conf.flags & IEEE80211_KEY_FLAG_NO_AUTO_TX) {
+ 		/* Extended Key ID key install, initial one or rekey */
+ 
+-		if (sta->ptk_idx != INVALID_PTK_KEYIDX) {
++		if (sta->ptk_idx != INVALID_PTK_KEYIDX &&
++		    !ieee80211_hw_check(&local->hw, AMPDU_KEYBORDER_SUPPORT)) {
+ 			/* Aggregation Sessions with Extended Key ID must not
+ 			 * mix MPDUs with different keyIDs within one A-MPDU.
+ 			 * Tear down running Tx aggregation sessions and block
+ 			 * new Rx/Tx aggregation requests during rekey to
+-			 * ensure there are no A-MPDUs for the driver to
+-			 * aggregate. (Blocking Tx only would be sufficient but
+-			 * WLAN_STA_BLOCK_BA gets the job done for the few ms
+-			 * we need it.)
++			 * ensure there are no A-MPDUs when the driver is not
++			 * supporting A-MPDU key borders. (Blocking Tx only
++			 * would be sufficient but WLAN_STA_BLOCK_BA gets the
++			 * job done for the few ms we need it.)
+ 			 */
+ 			set_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 			mutex_lock(&sta->ampdu_mlme.mtx);
+-- 
+2.22.0
 
