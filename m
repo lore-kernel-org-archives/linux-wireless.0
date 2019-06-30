@@ -1,91 +1,100 @@
-Return-Path: <SRS0=eg9r=U4=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=muMM=U5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69A8AC5B57B
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Jun 2019 22:18:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73FB3C5B57E
+	for <linux-wireless@archiver.kernel.org>; Sun, 30 Jun 2019 09:28:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7A7E205C9
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 Jun 2019 22:18:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EE9320645
+	for <linux-wireless@archiver.kernel.org>; Sun, 30 Jun 2019 09:28:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="E7PQj7FP"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ATpsHOEJ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="loTRneZM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726967AbfF2WSr (ORCPT
+        id S1726523AbfF3J2O (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 29 Jun 2019 18:18:47 -0400
-Received: from 8.mo4.mail-out.ovh.net ([188.165.33.112]:58330 "EHLO
-        8.mo4.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726923AbfF2WSq (ORCPT
+        Sun, 30 Jun 2019 05:28:14 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:60374 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726482AbfF3J2O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Jun 2019 18:18:46 -0400
-Received: from player157.ha.ovh.net (unknown [10.109.146.175])
-        by mo4.mail-out.ovh.net (Postfix) with ESMTP id 93D9D1F92DC
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Jun 2019 21:50:38 +0200 (CEST)
-Received: from awhome.eu (p579AA414.dip0.t-ipconnect.de [87.154.164.20])
-        (Authenticated sender: postmaster@awhome.eu)
-        by player157.ha.ovh.net (Postfix) with ESMTPSA id 3D8017539FA6;
-        Sat, 29 Jun 2019 19:50:37 +0000 (UTC)
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1561837836;
-        bh=mT0vpkafSPtm0BZNNzGt353XGzdRLYh8ynihsR4R3R4=;
-        h=From:To:Cc:Subject:Date;
-        b=E7PQj7FPygvJ6sZ62ZjjNbHnvh0O5R9julm8pQTyGvSZVBBLlZSMALQBg3s5T1CAz
-         tYim7u2YyxdZLuVSZHedRmC7gyqcZnX6dh/LvAIHaRD1Acq+v/C63Vmxm/gwQCbtds
-         NkFTlQ8+ujX2eFTNB2oolk3gY19KC4+zgP831ms8=
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [PATCH 1/4] mac80211_hwsim: Extended Key ID API update
-Date:   Sat, 29 Jun 2019 21:50:12 +0200
-Message-Id: <20190629195015.19680-1-alexander@wetzel-home.de>
-X-Mailer: git-send-email 2.22.0
+        Sun, 30 Jun 2019 05:28:14 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 4648460909; Sun, 30 Jun 2019 09:28:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1561886893;
+        bh=i83WbKPbI6fYDCv6HOMDpfnHCHhTrF+4+58GEz9LnHM=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=ATpsHOEJiVJhuoYx77A5qFSSj61aJfhnnaM1gwZhU0JKjm1XZUgy8LIFKwUM9zCFp
+         sNFjCw6Gn33NcePi++PuYoKkdYjnwxAHbtP4D2DjENR8n5m7ROve49zx0xk2DsGnpL
+         2uwtdwQdnmjoy8VAkbN8Xlewav6ie0SB/B3nCGwA=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8032860300;
+        Sun, 30 Jun 2019 09:28:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1561886892;
+        bh=i83WbKPbI6fYDCv6HOMDpfnHCHhTrF+4+58GEz9LnHM=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=loTRneZMuWXstGqSJrZCq+1JQA1igd0vUzqKbeCSuXNm8jLm82B/g/DrDfhcqXcYQ
+         VwJul4pqJ+d6G332Wbq4rUiG1ErBHaKTyfE0mRbtRgpgnby5YPo0CT3iZtWIbR5hqu
+         vunsmqgcTSD1sfYceXKjpfNsf843jPA5OoOdAQ4Y=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8032860300
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     nbd@nbd.name, lorenzo.bianconi@redhat.com,
+        linux-wireless@vger.kernel.org, ryder.lee@mediatek.com,
+        royluo@google.com, yf.luo@mediatek.com
+Subject: Re: [PATCH 4/6] mt76: mt7615: unlock dfs bands
+References: <cover.1561804422.git.lorenzo@kernel.org>
+        <33184e0b78983fe7c79fa70c5fbb21042aafa4f5.1561804422.git.lorenzo@kernel.org>
+Date:   Sun, 30 Jun 2019 12:28:08 +0300
+In-Reply-To: <33184e0b78983fe7c79fa70c5fbb21042aafa4f5.1561804422.git.lorenzo@kernel.org>
+        (Lorenzo Bianconi's message of "Sat, 29 Jun 2019 12:36:09 +0200")
+Message-ID: <87muhzs9qv.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 13911056303217056967
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduvddrvddvgddugeegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenuc
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Prepare hwsim Extended Key ID support for a mac80211 API change.
+Lorenzo Bianconi <lorenzo@kernel.org> writes:
 
-The mac80211 flag IEEE80211_HW_EXT_KEY_ID_NATIVE is being replaced by
-NL80211_EXT_FEATURE_EXT_KEY_ID which only must be set by drivers when
-they support HW crypto.
+> Unlock dfs channels since now mt7615 driver supports radar detection
+>
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt7615/init.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+> index 5dc4cced5789..6d336d82cafe 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+> @@ -152,6 +152,12 @@ static const struct ieee80211_iface_combination if_comb[] = {
+>  		.max_interfaces = 4,
+>  		.num_different_channels = 1,
+>  		.beacon_int_infra_match = true,
+> +		.radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
+> +				       BIT(NL80211_CHAN_WIDTH_20) |
+> +				       BIT(NL80211_CHAN_WIDTH_40) |
+> +				       BIT(NL80211_CHAN_WIDTH_80) |
+> +				       BIT(NL80211_CHAN_WIDTH_160) |
+> +				       BIT(NL80211_CHAN_WIDTH_80P80),
 
-This reverts commit cfe7007a9b4cea9c4a0f7d4192c776c62f31869e.
+Isn't it questionable to enable these without any testing on real
+hardware? Getting DFS to work correctly is hard so I'm very suspicious
+about this.
 
-Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index d396a33bbc9c..26cbb5b5d7cd 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2805,12 +2805,6 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	ieee80211_hw_set(hw, SIGNAL_DBM);
- 	ieee80211_hw_set(hw, SUPPORTS_PS);
- 	ieee80211_hw_set(hw, TDLS_WIDER_BW);
--
--	/* We only have SW crypto and only implement the A-MPDU API
--	 * (but don't really build A-MPDUs) so can have extended key
--	 * support
--	 */
--	ieee80211_hw_set(hw, EXT_KEY_ID_NATIVE);
- 	if (rctbl)
- 		ieee80211_hw_set(hw, SUPPORTS_RC_TABLE);
- 	ieee80211_hw_set(hw, SUPPORTS_MULTI_BSSID);
 -- 
-2.22.0
-
+Kalle Valo
