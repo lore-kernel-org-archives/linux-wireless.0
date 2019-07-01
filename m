@@ -2,152 +2,123 @@ Return-Path: <SRS0=l/K6=U6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5793DC0650E
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Jul 2019 10:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2546CC06511
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Jul 2019 11:05:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 26F8E208C4
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Jul 2019 10:54:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="UxO7E9rg"
+	by mail.kernel.org (Postfix) with ESMTP id 07E2120673
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Jul 2019 11:05:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728032AbfGAKyN (ORCPT
+        id S1728145AbfGALFA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Jul 2019 06:54:13 -0400
-Received: from mout.web.de ([212.227.17.12]:54309 "EHLO mout.web.de"
+        Mon, 1 Jul 2019 07:05:00 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:34190 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727748AbfGAKyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Jul 2019 06:54:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1561978413;
-        bh=9QwErlRZh+JV5gna2Uztd7nQg7/e3OjouvCwXsnc3aA=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
-        b=UxO7E9rgJEdJxnEEoMyOc9JjomVwWoHDlFFYA9TW6ARbg/23fD7PNnD02/FCqswJc
-         ++k+H/R7ChBMrI7+MbXsUUMOpDSam0oaZQ8hy4OIeycujlDrYSaJNKIaw12tDFWgv1
-         wrLvPJ9PkEpcae7P4BE2acJiwFMEZdCYNsQr+mMQ=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from platinum.localdomain ([77.13.129.177]) by smtp.web.de (mrweb102
- [213.165.67.124]) with ESMTPSA (Nemesis) id 0MhUbO-1hvb4g3iBG-00MdMP; Mon, 01
- Jul 2019 12:53:33 +0200
-From:   Soeren Moch <smoch@web.de>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Soeren Moch <smoch@web.de>, stable@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
+        id S1727162AbfGALFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Jul 2019 07:05:00 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1FBA53091740;
+        Mon,  1 Jul 2019 11:04:55 +0000 (UTC)
+Received: from localhost (ovpn-204-140.brq.redhat.com [10.40.204.140])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9357E6F924;
+        Mon,  1 Jul 2019 11:04:52 +0000 (UTC)
+Date:   Mon, 1 Jul 2019 13:04:51 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Soeren Moch <smoch@web.de>
+Cc:     Helmut Schaa <helmut.schaa@googlemail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/2] rt2x00usb: fix rx queue hang
-Date:   Mon,  1 Jul 2019 12:53:13 +0200
-Message-Id: <20190701105314.9707-1-smoch@web.de>
-X-Mailer: git-send-email 2.17.1
-X-Provags-ID: V03:K1:viXei3FjGw3mDh1/8pWh2EeoS3tIgkTWKIkpwYPI9ffckp7S9gA
- qf72dLxuNvDkJIRmNRO2VZi6NgCAa/ZZcKQgBahvRdJJgrDVcHUo1y30He9O2bwLMbSToev
- YJ3Qs1pMjE3BbyCu6S+knwGwb5q2BP+rs6WBdmfStHZ/5guSCrkUOKtqnSHiYnDQuncAwFX
- kZ4zq4ch7nObcxAfaqrFg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:yn3Fskms/pk=:K+xu3zWN3SlAshSCo3qqJx
- M2iTczv+w8lZxC0iziu2Kmyt+SMIvHLLLedRm9M4ikRv3xuGT7vdj5ZBzORow6KZXTAsZirl6
- Fo3asvNvJxT7dvD15qM8XqYisvu/P1ezCEpWd+7cXVneduawxrzP8Dgwm4CZFKIxjsmjdpk2r
- aO/3W/f0qZPa6C5HgNilSWFvibLJmYIOf6KUSg0tl2udsaeIcEh2Zk8rEgknKq2FF2JUGbmMG
- yQgMGiSQ1IAI0TUPXEd885H91SWHdIkmpPXFxeyKW/1IpEfdQi5FC54UNA0+QvrhA4kcbFXN6
- NB1tqGCXm1sqv+mlkM3U8ixG7raQKiWdFGhQlToqlFxae6qa8b0XfWVU9QpxNxBJOWcBbWbRf
- RHw0s4UZzGl1Pnl5OiwOQdXMRj2vAv1EOCW3/BAnWoN41HmSPVh/Y7R7GeyqE5max7Dmulu86
- X22feKNnOMXDiIl41om/OhKxxl1YYzAkgeUTALF7oD6dNdSFGKQs7Hyfum2Mtu0R3Km96vSkv
- 7bZRQUyj/7AQY4UCmHsbRoBVz3DuLqmPhXbJSzzW598RaMwpE9BrJjKC0RZ7OY4mKGkMfGycj
- xGY7RX20puu19mem60gb6zFD1bmOelrdIApA6IzEwE0nCOwzSd/m+ap9p5lEPv26UymIctpup
- EHlrYPF3kXmG719jG4tKrpsloLmIHuKuYHsJ21bOz/w16je/xxQSUphhYZzyiZVFnZZOpRfwr
- xDr1o/iW5qmpXS+YVPJ7BdVNOVKdEmd5FN5pnPnIDesMa5lzXbyTM7pt26xa0gAAM0E6U9JPi
- hrrl9hInSnetourhPW6jlpF1vEI0eRFEAfV2uARARH4f7hSAUxwFdnY1zhQ00gXDnRK/9C04i
- zajxlrm8aEpKvNStZTvhWA+PJHqgWgNXppQPuvoywM3yDey2QJJlB5K8quOKL/59w+aBnINHN
- W0lMbTtcnXotD5STkqYq899ZnlbfQHyrVzLt6PD/AByktOe2uKebFKW6dlZWkvSxzybGU6Ww/
- gxlcJkED6OviZCHN3O+pu9my8TGRC2AtlPyaOWTywhR1skckcL4ScpiEHSws530fJg==
-Content-Transfer-Encoding: quoted-printable
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: fix rx queue hang
+Message-ID: <20190701110451.GA16985@redhat.com>
+References: <20190617094656.3952-1-smoch@web.de>
+ <20190618093431.GA2577@redhat.com>
+ <b6899d78-447c-3cb3-4bec-e4050660ccaa@web.de>
+ <20190625095734.GA2886@redhat.com>
+ <8d7da251-8218-ff4b-2cf3-8ed69c97275e@web.de>
+ <20190629085041.GA2854@redhat.com>
+ <06c55c1d-6da6-76b2-f6e7-c8eeccd5aa35@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <06c55c1d-6da6-76b2-f6e7-c8eeccd5aa35@web.de>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Mon, 01 Jul 2019 11:05:00 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Since commit ed194d136769 ("usb: core: remove local_irq_save() around
- ->complete() handler") the handler rt2x00usb_interrupt_rxdone() is
-not running with interrupts disabled anymore. So this completion handler
-is not guaranteed to run completely before workqueue processing starts
-for the same queue entry.
-Be sure to set all other flags in the entry correctly before marking
-this entry ready for workqueue processing. This way we cannot miss error
-conditions that need to be signalled from the completion handler to the
-worker thread.
-Note that rt2x00usb_work_rxdone() processes all available entries, not
-only such for which queue_work() was called.
+On Mon, Jul 01, 2019 at 12:49:50PM +0200, Soeren Moch wrote:
+> Hello!
+> 
+> On 29.06.19 10:50, Stanislaw Gruszka wrote:
+> > Hello
+> >
+> > On Wed, Jun 26, 2019 at 03:28:00PM +0200, Soeren Moch wrote:
+> >> Hi Stanislaw,
+> >>
+> >> the good news is: your patch below also solves the issue for me. But
+> >> removing the ENTRY_DATA_STATUS_PENDING check in
+> >> rt2x00usb_kick_rx_entry() alone does not help, while removing this check
+> >> in rt2x00usb_work_rxdone() alone does the trick.
+> >>
+> >> So the real race seems to be that the flags set in the completion
+> >> handler are not yet visible on the cpu core running the workqueue. And
+> >> because the worker is not rescheduled when aborted, the entry can just
+> >> wait forever.
+> >> Do you think this could make sense?
+> > Yes.
+> >
+> >>> I'm somewhat reluctant to change the order, because TX processing
+> >>> might relay on it (we first mark we wait for TX status and
+> >>> then mark entry is no longer owned by hardware).
+> >> OK, maybe it's just good luck that changing the order solves the rx
+> >> problem. Or can memory barriers associated with the spinlock in
+> >> rt2x00lib_dmadone() be responsible for that?
+> >> (I'm testing on a armv7 system, Cortex-A9 quadcore.)
+> > I'm not sure, rt2x00queue_index_inc() also disable/enable interrupts,
+> > so maybe that make race not reproducible. 
+> I tested some more, the race is between setting ENTRY_DATA_IO_FAILED (if
+> needed) and enabling workqueue processing. This enabling was done via
+> ENTRY_DATA_STATUS_PENDING in my patch. So setting
+> ENTRY_DATA_STATUS_PENDING behind the spinlock in
+> rt2x00lib_dmadone()/rt2x00queue_index_inc() moved this very close to
+> setting of ENTRY_DATA_IO_FAILED (if needed). While still in the wrong
+> order, this made it very unlikely for the race to show up.
+> >
+> >> While looking at it, why we double-clear ENTRY_OWNER_DEVICE_DATA in
+> >> rt2x00usb_interrupt_rxdone() directly and in rt2x00lib_dmadone() again,
+> > rt2x00lib_dmadone() is called also on other palaces (error paths)
+> > when we have to clear flags.
+> Yes, but also clearing ENTRY_OWNER_DEVICE_DATA in
+> rt2x00usb_interrupt_rxdone() directly is not necessary and can lead to
+> the wrong processing order.
+> >>  while not doing the same for tx? 
+> > If I remember correctly we have some races on rx (not happened on tx)
+> > that was solved by using test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA).
+> I searched in the history, it actually was the other way around. You
+> changed test_and_clear_bit() to test_bit() in the TX path. I think this
+> is also the right way to go in RX.
+> >> Would it make more sense to possibly
+> >> set ENTRY_DATA_IO_FAILED before clearing ENTRY_OWNER_DEVICE_DATA in
+> >> rt2x00usb_interrupt_rxdone() as for tx?
+> > I don't think so, ENTRY_DATA_IO_FAILED should be only set on error
+> > case.
+> 
+> Yes of course. But if the error occurs, it should be signalled before
+> enabling the workqueue processing, see the race described above.
+> 
+> After some more testing I'm convinced that this would be the right fix
+> for this problem. I will send a v2 of this patch accordingly.
 
-This patch is similar to what commit df71c9cfceea ("rt2x00: fix order
-of entry flags modification") did for TX processing.
+Great, now I understand the problem. Thank you very much!
 
-This fixes a regression on a RT5370 based wifi stick in AP mode, which
-suddenly stopped data transmission after some period of heavy load. Also
-stopping the hanging hostapd resulted in the error message "ieee80211
-phy0: rt2x00queue_flush_queue: Warning - Queue 14 failed to flush".
-Other operation modes are probably affected as well, this just was
-the used testcase.
-
-Fixes: ed194d136769 ("usb: core: remove local_irq_save() around ->complete=
-() handler")
-Cc: stable@vger.kernel.org # 4.20+
-Signed-off-by: Soeren Moch <smoch@web.de>
-=2D--
-Changes in v2:
- complete rework
-
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-=2D--
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/=
-wireless/ralink/rt2x00/rt2x00usb.c
-index 67b81c7221c4..7e3a621b9c0d 100644
-=2D-- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -372,14 +372,9 @@ static void rt2x00usb_interrupt_rxdone(struct urb *ur=
-b)
- 	struct queue_entry *entry =3D (struct queue_entry *)urb->context;
- 	struct rt2x00_dev *rt2x00dev =3D entry->queue->rt2x00dev;
-
--	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+	if (!test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
-
--	/*
--	 * Report the frame as DMA done
--	 */
--	rt2x00lib_dmadone(entry);
--
- 	/*
- 	 * Check if the received data is simply too small
- 	 * to be actually valid, or if the urb is signaling
-@@ -388,6 +383,11 @@ static void rt2x00usb_interrupt_rxdone(struct urb *ur=
-b)
- 	if (urb->actual_length < entry->queue->desc_size || urb->status)
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-
-+	/*
-+	 * Report the frame as DMA done
-+	 */
-+	rt2x00lib_dmadone(entry);
-+
- 	/*
- 	 * Schedule the delayed work for reading the RX status
- 	 * from the device.
-=2D-
-2.17.1
-
+Stanislaw
