@@ -1,105 +1,96 @@
-Return-Path: <SRS0=BTs8=U7=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=v3Rz=VA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BC23C06513
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Jul 2019 18:18:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75C0FC5B57D
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 00:58:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1BC2520989
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Jul 2019 18:18:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XmvpP4bp"
+	by mail.kernel.org (Postfix) with ESMTP id 469F9205F4
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 00:58:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1562115486;
+	bh=IQYXJVlBUlC831WalHB2bhgVvHz89YLqKEGXjMcTCg0=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=kOGAkO3Wn0pR4GzGIpdgGzsPoVbY85kjC0bBvsAv3uHJvHRBmjES2R3nGp+nHnbLe
+	 G+z1X5O7Wr8RfLf6GADPE72N/bJ8vmIEWVyImgHVWytyVJ5I7gdP5vmUqNu/7YmRN1
+	 1Q5ch4cW9pwt3JyyWNtgsh523/v6hDNrDiYXR5x0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726686AbfGBSSm (ORCPT
+        id S1727082AbfGCA6F (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Jul 2019 14:18:42 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:34377 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726291AbfGBSSm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Jul 2019 14:18:42 -0400
-Received: by mail-ed1-f68.google.com with SMTP id s49so28253985edb.1;
-        Tue, 02 Jul 2019 11:18:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :user-agent;
-        bh=6FDA9K8Eg0DrYoV6H18cZ4zmwn9YbWUb9dW3L/lchDM=;
-        b=XmvpP4bpmD2ftx2G8tJmGIqF+j0wqzhUqr4xYm3CvOdKAzC95mR4abl5+vdbXvut0c
-         9+gC7S4NoEq/C9Vbpnxryq8emDlq60+IKRu0UUKwcIOlVJSvK3+Idq9uiGg8/xaEgB8X
-         nN1x+ExDkRHvT78ZMpnVV/lzAGTufx40ZD9izY1oL1wDJnMJPR5hgOnSjVk7TM1AVyr2
-         7KNrvOCvVUDuLC+fUkPvTLPWC3Ciia6vUmrTFZIO5MPUWzNWelxklms441wCDObHlUhd
-         cJpaBsCONU79OqZL2ga+x6C+YqYPbl/6EkO2o7+3aJQX9Voxl3bbe2zkcndU+Kj+eufT
-         CA0A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=6FDA9K8Eg0DrYoV6H18cZ4zmwn9YbWUb9dW3L/lchDM=;
-        b=MFp2WfrlrXFx2cLdB1EGYkxhFpeWGn/xTDb+/O+XPE7JB9mLzsA5y/RJaDEWhAQWD0
-         7/62vPH1qanEInbykvczPZujaC2DtEhOpr3Ip+OJQoIBpKUdR075z6wX7KAdl2fOxE9a
-         FmsJWgNAYL4c5hQjWyCw3ZXBfWTa1LAKO9ybOM94ox6viUhJpCSC9HSahGzq9GGz25ag
-         86GeiIQu2gqakcMKmPOkHOWPAoAVFDBrbDVhJVx83ykTGpIF2Aw7EoDF9CYmlWDQmGPN
-         pNM2QT30IZlX8nhz2GMTEEIQSjAlAgCV+KhaMfDa4yW1TMc5P9h3s+oyKrsD/6cIEsPV
-         0rdQ==
-X-Gm-Message-State: APjAAAUvPv24VefnRdSmyikhSeEM0ljF7Tc0+8buc6dkxLPeBgROm/aC
-        CKEGMxsXWNl/uqn6UmVb7ag=
-X-Google-Smtp-Source: APXvYqxTB811HcYtVYVeo5x+nXbAJILikgNeh0Gur9Y7ztJZkIvOOszbI7RHmnanShh3mT1l8E6xyQ==
-X-Received: by 2002:a50:f599:: with SMTP id u25mr38225155edm.195.1562091519834;
-        Tue, 02 Jul 2019 11:18:39 -0700 (PDT)
-Received: from archlinux-epyc ([2a01:4f9:2b:2b15::2])
-        by smtp.gmail.com with ESMTPSA id q16sm2890782ejj.85.2019.07.02.11.18.38
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Tue, 02 Jul 2019 11:18:39 -0700 (PDT)
-Date:   Tue, 2 Jul 2019 11:18:37 -0700
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     Miaoqing Pan <miaoqing@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: -Wsometimes-uninitialized warning after
- 8b97b055dc9db09b48d5a9a37d847900dd00d3cc
-Message-ID: <20190702181837.GA118849@archlinux-epyc>
+        Tue, 2 Jul 2019 20:58:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49326 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726821AbfGCA6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Jul 2019 20:58:04 -0400
+Received: from localhost.localdomain (unknown [151.66.29.200])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7617C21901;
+        Tue,  2 Jul 2019 22:30:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1562106610;
+        bh=IQYXJVlBUlC831WalHB2bhgVvHz89YLqKEGXjMcTCg0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=bjqgQLj0YRaftjYzc8EqduYTOVwYi5dd97CSSGwfTMHPZ55r/IHuXOeA/WKsuTTKy
+         uAxYFuaoUa++7FrHyDTFOA9SQoT9WOU7QZtLJs5407Lejp13ZJgC5trXCsGihKtB/z
+         cZeXjA3e0kz2LEoNN2sJRwZZk8P1Fxl9BqSTbtLM=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
+Subject: [PATCH] mac80211: fix possible memory leak in ieee80211_assign_beacon
+Date:   Wed,  3 Jul 2019 00:29:47 +0200
+Message-Id: <770285772543c9fca33777bb4ad4760239e56256.1562105631.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.12.1 (2019-06-15)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi all,
+Free new beacon_data in ieee80211_assign_beacon whenever
+ieee80211_assign_beacon fails
 
-After commit 8b97b055dc9d ("ath10k: fix failure to set multiple fixed
-rate") in -next, clang warns:
+Fixes: 8860020e0be1 ("cfg80211: restructure AP/GO mode API")
+Fixes: bc847970f432 ("mac80211: support FTM responder configuration/statistic")
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ net/mac80211/cfg.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-../drivers/net/wireless/ath/ath10k/mac.c:7528:7: warning: variable 'vht_pfr' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
-                if (!ath10k_mac_can_set_bitrate_mask(ar, band, mask,
-                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-../drivers/net/wireless/ath/ath10k/mac.c:7551:20: note: uninitialized use occurs here
-                arvif->vht_pfr = vht_pfr;
-                                 ^~~~~~~
-../drivers/net/wireless/ath/ath10k/mac.c:7528:3: note: remove the 'if' if its condition is always true
-                if (!ath10k_mac_can_set_bitrate_mask(ar, band, mask,
-                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-../drivers/net/wireless/ath/ath10k/mac.c:7483:12: note: initialize the variable 'vht_pfr' to silence this warning
-        u8 vht_pfr;
-                  ^
-                   = '\0'
-1 warning generated.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a1973a26c7fc..b8288125e05d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -935,8 +935,10 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+ 
+ 	err = ieee80211_set_probe_resp(sdata, params->probe_resp,
+ 				       params->probe_resp_len, csa);
+-	if (err < 0)
++	if (err < 0) {
++		kfree(new);
+ 		return err;
++	}
+ 	if (err == 0)
+ 		changed |= BSS_CHANGED_AP_PROBE_RESP;
+ 
+@@ -948,8 +950,10 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+ 							 params->civicloc,
+ 							 params->civicloc_len);
+ 
+-		if (err < 0)
++		if (err < 0) {
++			kfree(new);
+ 			return err;
++		}
+ 
+ 		changed |= BSS_CHANGED_FTM_RESPONDER;
+ 	}
+-- 
+2.21.0
 
-This definitely seems legitimate as the call to
-ath10k_mac_can_set_bitrate_mask might fail and vht_pfr
-won't be initialized. I would fix this myself but I assume
-there is a sane default value for vht_pfr other than just
-0 that should be used?
-
-Please look into this when you get a chance. Thanks,
-Nathan
