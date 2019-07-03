@@ -2,61 +2,84 @@ Return-Path: <SRS0=v3Rz=VA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0803C46478
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 10:43:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE834C0650E
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 10:58:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D16D3218A0
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 10:43:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D12602189E
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 10:58:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727159AbfGCKnp (ORCPT
+        id S1726598AbfGCK6C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Jul 2019 06:43:45 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:25414 "EHLO mx1.redhat.com"
+        Wed, 3 Jul 2019 06:58:02 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:4006 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726743AbfGCKno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Jul 2019 06:43:44 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        id S1725820AbfGCK6C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Jul 2019 06:58:02 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 27CBA780F1;
-        Wed,  3 Jul 2019 10:43:44 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id E843881DF1;
+        Wed,  3 Jul 2019 10:58:01 +0000 (UTC)
 Received: from localhost (ovpn-204-28.brq.redhat.com [10.40.204.28])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BF57717C47;
-        Wed,  3 Jul 2019 10:43:43 +0000 (UTC)
-Date:   Wed, 3 Jul 2019 12:43:42 +0200
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 54AAC1001B14;
+        Wed,  3 Jul 2019 10:58:01 +0000 (UTC)
+Date:   Wed, 3 Jul 2019 12:58:00 +0200
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Andrej Surkov <surae@yandex.ru>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: rtl8xxxu do not see/connect any wifi network until suspend/resume
-Message-ID: <20190703104341.GA30509@redhat.com>
-References: <26092471561990977@myt3-2475c4d2af83.qloud-c.yandex.net>
- <42140711561991116@myt2-dc4bba9bb23c.qloud-c.yandex.net>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: no need to check return value of debugfs_create
+ functions
+Message-ID: <20190703105759.GB30509@redhat.com>
+References: <20190703065631.GA28822@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <42140711561991116@myt2-dc4bba9bb23c.qloud-c.yandex.net>
+In-Reply-To: <20190703065631.GA28822@kroah.com>
 User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Wed, 03 Jul 2019 10:43:44 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Wed, 03 Jul 2019 10:58:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jul 01, 2019 at 07:25:16PM +0500, Andrej Surkov wrote:
-> Hi!
+On Wed, Jul 03, 2019 at 08:56:31AM +0200, Greg Kroah-Hartman wrote:
+> When calling debugfs functions, there is no need to ever check the
+> return value.  The function can work or not, but the code logic should
+> never do something different based on this.
 > 
-> Do you aware of rtl8xxxu do not work until suspend/resume issue?
+> Because we don't need to save the individual debugfs files and
+> directories, remove the local storage of them and just remove the entire
+> debugfs directory in a single call, making things a lot simpler.
 > 
-> On my laptop, see below for details, after reboot wifi-menu tool shows one single wifi network found and can't connect to it, but after 'sudo systemctl suspend' and resume by keystroke wifi-menu and connections work well.
+> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> ---
+>  .../net/wireless/ralink/rt2x00/rt2x00debug.c  | 100 ++++--------------
+>  1 file changed, 23 insertions(+), 77 deletions(-)
 
-This sound like this bug:
-https://bugzilla.kernel.org/show_bug.cgi?id=202541
-Which happen to be xhci_hcd regression, not yet fixed AFAIK.
+This patch will not apply on wireless-drivers-next due to my recent
+change which add new debugfs file:
+
+commit e7f15d58dfe43f18199251f430d7713b0b8fad34
+Author: Stanislaw Gruszka <sgruszka@redhat.com>
+Date:   Thu May 2 11:07:00 2019 +0200
+
+    rt2x00: add restart hw
+
+Could you please rebase the patch ? (I can do this as well
+if you want me to).
 
 Stanislaw
