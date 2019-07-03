@@ -2,194 +2,167 @@ Return-Path: <SRS0=v3Rz=VA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 101E7C0650E
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 14:20:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D9AC06513
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 16:29:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBD8F21881
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 14:20:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D846218A6
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 16:29:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="I/OLfzS2"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YVkfUN0g"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726718AbfGCOUB (ORCPT
+        id S1727184AbfGCQ3n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Jul 2019 10:20:01 -0400
-Received: from dvalin.narfation.org ([213.160.73.56]:42492 "EHLO
-        dvalin.narfation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725830AbfGCOUA (ORCPT
+        Wed, 3 Jul 2019 12:29:43 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:46825 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726490AbfGCQ3n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Jul 2019 10:20:00 -0400
-Received: from sven-desktop.home.narfation.org (p4FCB2E24.dip0.t-ipconnect.de [79.203.46.36])
-        by dvalin.narfation.org (Postfix) with ESMTPSA id 7D51A208EF;
-        Wed,  3 Jul 2019 14:19:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
-        s=20121; t=1562163597;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=MYt/pi4ZaqYfxhdq3CCToSFwdfb9v4RHhLfc0xm19CU=;
-        b=I/OLfzS2swNiq061jAVEuubW0hbcy8KQWOlvFTSgX3Rhx8pr/BkTrJSDf1gIsZGjNFgxB1
-        ENp6NV06HMygVStP1p40YY5taE42n3MyOkP8MtKxfKMFO0PZhH+IYRlH+QauiNUPs2Q3+u
-        yWaFt8F7cF+xGs+MQWKkOspyY9b36Ak=
-From:   Sven Eckelmann <sven@narfation.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Sven Eckelmann <seckelmann@datto.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sriram R <srirrama@codeaurora.org>
-Subject: [PATCH v3] ath10k: avoid leaving .bss_info_changed prematurely
-Date:   Wed,  3 Jul 2019 16:19:49 +0200
-Message-Id: <20190703141949.9295-1-sven@narfation.org>
-X-Mailer: git-send-email 2.20.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
-        s=20121; t=1562163597;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=MYt/pi4ZaqYfxhdq3CCToSFwdfb9v4RHhLfc0xm19CU=;
-        b=AqIMeDALqpJxoP4P66EPitpwdaoMpva7lIDEgU0giqU/e+boWgVZ1L8I3oEDWp95oLG/Wp
-        yP/c5/AatvZMQJDeKft1ncgQyyLUxHil8ORaAkjPpP7+ZSXLOisqJjrp4CBwx5fsq74vgb
-        aijGoh192/AQeBvzs2LH+Eak7yUIRnA=
-ARC-Seal: i=1; s=20121; d=narfation.org; t=1562163597; a=rsa-sha256;
-        cv=none;
-        b=GAwlcKcYSHsDZuiHLQ1fAHcPFrDtI4dFlTb3MQeKYYojmuXZFY+jb9BLUeiEql6uJQptzo
-        qkFhOLsoXgPst5KsRAX8vUVMLjhQ53tGuKYAJVms2tD0qNJmQ6y7fRSfB9hkCn+Hxn06oR
-        PGCj4XBwR+UlWqQ9gcdHoJkxWL/50vk=
-ARC-Authentication-Results: i=1;
-        ORIGINATING;
-        auth=pass smtp.auth=sven smtp.mailfrom=sven@narfation.org
+        Wed, 3 Jul 2019 12:29:43 -0400
+Received: by mail-pg1-f196.google.com with SMTP id i8so1488474pgm.13;
+        Wed, 03 Jul 2019 09:29:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=dSl0J6l/7YvXHcRbb+oMFogCJ9HH7sc8QAmK2O6dBSo=;
+        b=YVkfUN0gNf88gD0DYqkZLrcIjxUWVIcAXb5lOEWon1hPzSx4FCZic+AOzgVlVRC25L
+         QAOOL5/UsBbRpHFrfpVjHrs4gUBiaYJK6Vo9yzhzpSAZ1RQqx0tGwoWQYJl4hBdj+Sxl
+         RFvvr1y5ZnZ+FlykOm35Na2mQBCWJHRtEehpDvHwuK8xZVf639WtdS7aWpr0WzmnZyhx
+         QyxQiJESGKXQpkcbYnhfhXCEVZmgbnsYbPHpIYA/mISmJHM/KrNN9n4cJDK+EmnALfjW
+         CRifKP6/yeukUIZT7iEJ1+gCGHd/PzHaUVDhJ8AP3LO53TtNRt7KUbezaBC/bPKONxfy
+         HAdA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=dSl0J6l/7YvXHcRbb+oMFogCJ9HH7sc8QAmK2O6dBSo=;
+        b=c1R6QRuN7WqOcPh62doOGuDd2rcfj1k72gOGivgP1z5j1jsjliSo375n+9WaZ2bI+Z
+         i4YSu2mrSjYEpEPsZAc3llke02O49QOUNc3lUaO5VTNZZqyiXkGbf0FhubS8p5AbIuYZ
+         LE6GFRf/lSe+reKXcTEhbehZl80VsHq6wwjU8RKWgLcUmsaQkGtQbo2ZvRJ26BrMSNJO
+         UdiwGJaR+s+ZBCSqOCH5OssHd26gwfWQf/M6lL8EcTlEddi9nj2a/K1hf6qFUKqQgEZj
+         RwGB2OCu52k8cmGyT9+CM8kd5f9Kqmp+gnFe0bqYQ4Wfcs9lPnQKxPVvBAf+Nj/220TT
+         Xrsw==
+X-Gm-Message-State: APjAAAVtD6tIhYf40SY2JaErv0gj/NH8tkDySjdatpasch9l4KL2cKYI
+        rwelaa+pGPM5cQpjLx/caQGj7Qp/fU8=
+X-Google-Smtp-Source: APXvYqz/LfWOz9+cDE+wkN6u4LE4y+yGtk/tjQgkZBy64KYdrbk5QpuX8VZPCcE9jGSKJ9ZD7FxvRw==
+X-Received: by 2002:a65:530c:: with SMTP id m12mr38409055pgq.363.1562171382468;
+        Wed, 03 Jul 2019 09:29:42 -0700 (PDT)
+Received: from hfq-skylake.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
+        by smtp.googlemail.com with ESMTPSA id q126sm4894175pfq.123.2019.07.03.09.29.39
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 03 Jul 2019 09:29:42 -0700 (PDT)
+From:   Fuqian Huang <huangfq.daxian@gmail.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Fuqian Huang <huangfq.daxian@gmail.com>
+Subject: [PATCH v2 17/35] net/wireless: Use kmemdup rather than duplicating its implementation
+Date:   Thu,  4 Jul 2019 00:29:34 +0800
+Message-Id: <20190703162934.32645-1-huangfq.daxian@gmail.com>
+X-Mailer: git-send-email 2.11.0
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sven Eckelmann <seckelmann@datto.com>
+kmemdup is introduced to duplicate a region of memory in a neat way.
+Rather than kmalloc/kzalloc + memcpy, which the programmer needs to
+write the size twice (sometimes lead to mistakes), kmemdup improves
+readability, leads to smaller code and also reduce the chances of mistakes.
+Suggestion to use kmemdup rather than using kmalloc/kzalloc + memcpy.
 
-ath10k_bss_info_changed() handles various events from the upper layers. It
-parses the changed bitfield and then configures the driver/firmware
-accordingly. Each detected event is handled in a separate scope which is
-independent of each other - but in the same function.
-
-The commit f279294e9ee2 ("ath10k: add support for configuring management
-packet rate") changed this behavior by returning from this function
-prematurely when some precondition was not fulfilled. All new event
-handlers added after the BSS_CHANGED_BASIC_RATES event handler would then
-also be skipped.
-
-Signed-off-by: Sven Eckelmann <seckelmann@datto.com>
+Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
 ---
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Sriram R <srirrama@codeaurora.org>
+Changes in v2:
+  - Fix a typo in commit message (memset -> memcpy)
 
-Only compile tested
+ drivers/net/wireless/ath/ath6kl/wmi.c  | 6 ++----
+ drivers/net/wireless/st/cw1200/queue.c | 3 +--
+ drivers/net/wireless/ti/wlcore/main.c  | 3 +--
+ 3 files changed, 4 insertions(+), 8 deletions(-)
 
-v3:
-
-* rebased on top of commit 9e80ad37f678 ("ath10k: Drop WARN_ON()s that always
-  trigger during system resume")
-
-v2:
-
-* rebased on top of commit 9e7251fa3897 ("ath10k: Check tx_stats before
-  use it")
-
- drivers/net/wireless/ath/ath10k/mac.c | 62 ++++++++++++++++-----------
- 1 file changed, 36 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e43a566eef77..329c052a8dc0 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5634,6 +5634,37 @@ static void ath10k_configure_filter(struct ieee80211_hw *hw,
- 	mutex_unlock(&ar->conf_mutex);
- }
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 68854c45d0a4..7452a0f587fe 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -3643,7 +3643,7 @@ static int ath6kl_wmi_send_action_cmd(struct wmi *wmi, u8 if_idx, u32 id,
+ 	if (wait)
+ 		return -EINVAL; /* Offload for wait not supported */
  
-+static void ath10k_recalculate_mgmt_rate(struct ath10k *ar,
-+					 struct ieee80211_vif *vif,
-+					 struct cfg80211_chan_def *def)
-+{
-+	struct ath10k_vif *arvif = (void *)vif->drv_priv;
-+	const struct ieee80211_supported_band *sband;
-+	u8 basic_rate_idx;
-+	int hw_rate_code;
-+	u32 vdev_param;
-+	u16 bitrate;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	sband = ar->hw->wiphy->bands[def->chan->band];
-+	basic_rate_idx = ffs(vif->bss_conf.basic_rates) - 1;
-+	bitrate = sband->bitrates[basic_rate_idx].bitrate;
-+
-+	hw_rate_code = ath10k_mac_get_rate_hw_value(bitrate);
-+	if (hw_rate_code < 0) {
-+		ath10k_warn(ar, "bitrate not supported %d\n", bitrate);
-+		return;
-+	}
-+
-+	vdev_param = ar->wmi.vdev_param->mgmt_rate;
-+	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+					hw_rate_code);
-+	if (ret)
-+		ath10k_warn(ar, "failed to set mgmt tx rate %d\n", ret);
-+}
-+
- static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 				    struct ieee80211_vif *vif,
- 				    struct ieee80211_bss_conf *info,
-@@ -5644,10 +5675,9 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 	struct cfg80211_chan_def def;
- 	u32 vdev_param, pdev_param, slottime, preamble;
- 	u16 bitrate, hw_value;
--	u8 rate, basic_rate_idx, rateidx;
--	int ret = 0, hw_rate_code, mcast_rate;
-+	u8 rate, rateidx;
-+	int ret = 0, mcast_rate;
- 	enum nl80211_band band;
--	const struct ieee80211_supported_band *sband;
+-	buf = kmalloc(data_len, GFP_KERNEL);
++	buf = kmemdup(data, data_len, GFP_KERNEL);
+ 	if (!buf)
+ 		return -ENOMEM;
  
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -5871,29 +5901,9 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 				    arvif->vdev_id,  ret);
+@@ -3654,7 +3654,6 @@ static int ath6kl_wmi_send_action_cmd(struct wmi *wmi, u8 if_idx, u32 id,
  	}
  
--	if (changed & BSS_CHANGED_BASIC_RATES) {
--		if (ath10k_mac_vif_chan(vif, &def)) {
--			mutex_unlock(&ar->conf_mutex);
--			return;
--		}
--
--		sband = ar->hw->wiphy->bands[def.chan->band];
--		basic_rate_idx = ffs(vif->bss_conf.basic_rates) - 1;
--		bitrate = sband->bitrates[basic_rate_idx].bitrate;
--
--		hw_rate_code = ath10k_mac_get_rate_hw_value(bitrate);
--		if (hw_rate_code < 0) {
--			ath10k_warn(ar, "bitrate not supported %d\n", bitrate);
--			mutex_unlock(&ar->conf_mutex);
--			return;
--		}
--
--		vdev_param = ar->wmi.vdev_param->mgmt_rate;
--		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
--						hw_rate_code);
--		if (ret)
--			ath10k_warn(ar, "failed to set mgmt tx rate %d\n", ret);
--	}
-+	if (changed & BSS_CHANGED_BASIC_RATES &&
-+	    !ath10k_mac_vif_chan(arvif->vif, &def))
-+		ath10k_recalculate_mgmt_rate(ar, vif, &def);
+ 	kfree(wmi->last_mgmt_tx_frame);
+-	memcpy(buf, data, data_len);
+ 	wmi->last_mgmt_tx_frame = buf;
+ 	wmi->last_mgmt_tx_frame_len = data_len;
  
- 	mutex_unlock(&ar->conf_mutex);
+@@ -3682,7 +3681,7 @@ static int __ath6kl_wmi_send_mgmt_cmd(struct wmi *wmi, u8 if_idx, u32 id,
+ 	if (wait)
+ 		return -EINVAL; /* Offload for wait not supported */
+ 
+-	buf = kmalloc(data_len, GFP_KERNEL);
++	buf = kmemdup(data, data_len, GFP_KERNEL);
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+@@ -3693,7 +3692,6 @@ static int __ath6kl_wmi_send_mgmt_cmd(struct wmi *wmi, u8 if_idx, u32 id,
+ 	}
+ 
+ 	kfree(wmi->last_mgmt_tx_frame);
+-	memcpy(buf, data, data_len);
+ 	wmi->last_mgmt_tx_frame = buf;
+ 	wmi->last_mgmt_tx_frame_len = data_len;
+ 
+diff --git a/drivers/net/wireless/st/cw1200/queue.c b/drivers/net/wireless/st/cw1200/queue.c
+index 14133eedb3b6..12952b1c29df 100644
+--- a/drivers/net/wireless/st/cw1200/queue.c
++++ b/drivers/net/wireless/st/cw1200/queue.c
+@@ -79,10 +79,9 @@ static void cw1200_queue_register_post_gc(struct list_head *gc_list,
+ 					  struct cw1200_queue_item *item)
+ {
+ 	struct cw1200_queue_item *gc_item;
+-	gc_item = kmalloc(sizeof(struct cw1200_queue_item),
++	gc_item = kmemdup(item, sizeof(struct cw1200_queue_item),
+ 			GFP_ATOMIC);
+ 	BUG_ON(!gc_item);
+-	memcpy(gc_item, item, sizeof(struct cw1200_queue_item));
+ 	list_add_tail(&gc_item->head, gc_list);
+ }
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index c9a485ecee7b..297207856494 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1434,7 +1434,7 @@ int wl1271_rx_filter_alloc_field(struct wl12xx_rx_filter *filter,
+ 
+ 	field = &filter->fields[filter->num_fields];
+ 
+-	field->pattern = kzalloc(len, GFP_KERNEL);
++	field->pattern = kmemdup(pattern, len, GFP_KERNEL);
+ 	if (!field->pattern) {
+ 		wl1271_warning("Failed to allocate RX filter pattern");
+ 		return -ENOMEM;
+@@ -1445,7 +1445,6 @@ int wl1271_rx_filter_alloc_field(struct wl12xx_rx_filter *filter,
+ 	field->offset = cpu_to_le16(offset);
+ 	field->flags = flags;
+ 	field->len = len;
+-	memcpy(field->pattern, pattern, len);
+ 
+ 	return 0;
  }
 -- 
-2.20.1
+2.11.0
 
