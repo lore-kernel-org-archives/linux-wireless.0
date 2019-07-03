@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3024C0650E
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 13:38:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4348DC0650E
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 13:38:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 872872080C
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 13:38:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26DA32080C
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jul 2019 13:38:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726457AbfGCNia (ORCPT
+        id S1726490AbfGCNib (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Jul 2019 09:38:30 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:38374 "EHLO
+        Wed, 3 Jul 2019 09:38:31 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:38378 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726217AbfGCNia (ORCPT
+        with ESMTP id S1726255AbfGCNib (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Jul 2019 09:38:30 -0400
+        Wed, 3 Jul 2019 09:38:31 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hifSv-0000Uu-7W; Wed, 03 Jul 2019 15:38:29 +0200
+        id 1hifSu-0000Uu-V0; Wed, 03 Jul 2019 15:38:29 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] cfg80211: give all multi-BSSID BSS entries the same timestamp
-Date:   Wed,  3 Jul 2019 15:38:23 +0200
-Message-Id: <20190703133823.10530-3-johannes@sipsolutions.net>
+Subject: [PATCH 2/3] cfg80211: don't parse MBSSID if transmitting BSS isn't created
+Date:   Wed,  3 Jul 2019 15:38:22 +0200
+Message-Id: <20190703133823.10530-2-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.17.2
 In-Reply-To: <20190703133823.10530-1-johannes@sipsolutions.net>
 References: <20190703133823.10530-1-johannes@sipsolutions.net>
@@ -41,50 +41,39 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-If we just read jiffies over and over again, a non-transmitting
-entry may have a newer timestamp than the transmitting one,
-leading to possible confusion on expiry. Give them all the same
-timestamp when creating them.
+Don't parse the multi-BSSID structures if we couldn't even create
+their transmitting BSS, this would confuse all of our tracking.
+
+This also means that non_tx_data->tx_bss will never be NULL, so
+we can clean up a little bit.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/scan.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ net/wireless/scan.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 186ae1bb510a..a98dabab557a 100644
+index 70d061ed9cb6..186ae1bb510a 100644
 --- a/net/wireless/scan.c
 +++ b/net/wireless/scan.c
-@@ -1368,6 +1368,7 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
- 	struct cfg80211_internal_bss tmp = {}, *res;
- 	int bss_type;
- 	bool signal_valid;
-+	unsigned long ts;
- 
- 	if (WARN_ON(!wiphy))
- 		return NULL;
-@@ -1390,8 +1391,11 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
- 	tmp.ts_boottime = data->boottime_ns;
- 	if (non_tx_data) {
- 		tmp.pub.transmitted_bss = non_tx_data->tx_bss;
-+		ts = bss_from_pub(non_tx_data->tx_bss)->ts;
- 		tmp.pub.bssid_index = non_tx_data->bssid_index;
- 		tmp.pub.max_bssid_indicator = non_tx_data->max_bssid_indicator;
-+	} else {
-+		ts = jiffies;
+@@ -1440,7 +1440,7 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
+ 			regulatory_hint_found_beacon(wiphy, channel, gfp);
  	}
  
- 	/*
-@@ -1425,8 +1429,7 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
- 
- 	signal_valid = abs(data->chan->center_freq - channel->center_freq) <=
- 		wiphy->max_adj_channel_rssi_comp;
--	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid,
--				  jiffies);
-+	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid, ts);
- 	if (!res)
- 		return NULL;
- 
+-	if (non_tx_data && non_tx_data->tx_bss) {
++	if (non_tx_data) {
+ 		/* this is a nontransmitting bss, we need to add it to
+ 		 * transmitting bss' list if it is not there
+ 		 */
+@@ -1659,6 +1659,8 @@ cfg80211_inform_bss_data(struct wiphy *wiphy,
+ 	res = cfg80211_inform_single_bss_data(wiphy, data, ftype, bssid, tsf,
+ 					      capability, beacon_interval, ie,
+ 					      ielen, NULL, gfp);
++	if (!res)
++		return NULL;
+ 	non_tx_data.tx_bss = res;
+ 	cfg80211_parse_mbssid_data(wiphy, data, ftype, bssid, tsf,
+ 				   beacon_interval, ie, ielen, &non_tx_data,
 -- 
 2.17.2
 
