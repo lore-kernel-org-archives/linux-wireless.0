@@ -2,79 +2,105 @@ Return-Path: <SRS0=5Iat=VC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81F8DC46499
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jul 2019 19:01:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41F70C5B57D
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jul 2019 23:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B4C0216FD
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jul 2019 19:01:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1562353279;
-	bh=2jPbqhPv4idGsUkwi5oWKVTctrNzIjO1bzEoBQoN/Ws=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=UPLQnHEFDcynXGYfyJHm7VnKR3MKhyU4+UjLkzL8e4oUwGSwKtCThEtBoTz95kVCz
-	 W/Qn8Q/NK0v/QEyREs5Ocx699zKzytOkAGC1UfC1IbzkcpswUF7i7G3PBYdM2dlm3Y
-	 7jqO8gDQ9ANDc9gLe5RaYLYiWQDXUZRkie3njQGI=
+	by mail.kernel.org (Postfix) with ESMTP id 19DE82147A
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jul 2019 23:26:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vEp2s5uA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726005AbfGETBS (ORCPT
+        id S1726523AbfGEX0f (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Jul 2019 15:01:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51724 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725813AbfGETBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Jul 2019 15:01:18 -0400
-Received: from localhost.lan (unknown [151.66.63.253])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5FB3921670;
-        Fri,  5 Jul 2019 19:01:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1562353277;
-        bh=2jPbqhPv4idGsUkwi5oWKVTctrNzIjO1bzEoBQoN/Ws=;
-        h=From:To:Cc:Subject:Date:From;
-        b=sTMN3O04RPphSvA94knhsHNc+AaPGVB+h6ECbe2ayQuKZgeaYtDlpHGop4Umyw7ie
-         STsN6wEbDzO4+FqPpPvTAwxSUowEdhYx8ze2rBjDsfSxFLumyJOyI2C7rUZNg+4sls
-         9+Wy0ITB9GRmgCnth7p0xPBXIhrG2YBYrP6cHpTg=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        sidhayn@gmail.com, sgruszka@redhat.com
-Subject: [PATCH] mt76: mt76x0u: add support to TP-Link T2UHP
-Date:   Fri,  5 Jul 2019 21:01:04 +0200
-Message-Id: <dfb97adb52811bed530449c22a172724ed992771.1562353065.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.21.0
+        Fri, 5 Jul 2019 19:26:35 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:38720 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725878AbfGEX0e (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Jul 2019 19:26:34 -0400
+Received: by mail-oi1-f193.google.com with SMTP id v186so8228978oie.5;
+        Fri, 05 Jul 2019 16:26:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=RDHkAL5+81gThLREJaNuWCVQauiOUimJVkLgM6dqKxY=;
+        b=vEp2s5uAib6vygLi+FJJ6pyP5iundGHkbOdCWadGu/vKDHQnGg1QQOLtOCh8PxsqRL
+         B2wsDToi21EEyAs9QeOraEUNXE1MSbZa6u3dUZ8bn8CeOpNP8/dpjwwZW2pFQZLStYoD
+         JluH59avU35WJGjh0TLOzvCBgxvR+6cx7zA8zfPTTd/HSu7nzBZc7GxE52Hfi9tTOhxa
+         4DzxxDiryBG8KWNyRtndrz6qLU6ZwMnaiwFKIeqGla8MeOErtlQwNQhMOVnB3CMbHuCd
+         blozyx6XQqhRUvRD8ZxlGW7AeJ5voydR3hf1cOnv3xlO2V7qg9andMlG71LRcxlnXBbN
+         TnFQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=RDHkAL5+81gThLREJaNuWCVQauiOUimJVkLgM6dqKxY=;
+        b=sOK6vQBSMvRD1VWyIGlK+vobTPom27nbipVwLLbGu+Es+Ej2dDN7uE23N7uuVO2LOQ
+         DUFRGdPWlY7mwhgcsm1NxlMwPBa4hCMut7TNr6X8hkiMyYDg4DIJFNJNX3FoizPPVsEG
+         pORrCA08oo9PKGqet4xo5pnUHT7QpYFcIIv0d7/BKnbubcDuDp9Hw7B0kT343oic9JEq
+         Ree0vPWOQzGCO5vP4bnRUYD9uZbR7iPj5flyZjy7WYwpYcrtqWzTx4q2KbQsx0ib39Pe
+         9ELF1O0gvP5ea9pX5+JUonYdoegGWOVX3UhAMeiD1u0wNuswuoz2m/pS42yxx+xyKW3a
+         8Nzg==
+X-Gm-Message-State: APjAAAUtAF+uT7hzNPS2CyTuBC6NeMawN+0ubKJD4Oz2TKPyhTLJDGSF
+        YnMzEK6pykQlR1x5kTZxcPI=
+X-Google-Smtp-Source: APXvYqxnii7fWR3s2Uk+hj3yn4LOBzoBEINspVwAJ2tiZpMXWznA2/cwuQGEnt/x+QUcMguav+qJXQ==
+X-Received: by 2002:aca:7507:: with SMTP id q7mr3307633oic.87.1562369194071;
+        Fri, 05 Jul 2019 16:26:34 -0700 (PDT)
+Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id w3sm3564349otb.55.2019.07.05.16.26.32
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Fri, 05 Jul 2019 16:26:33 -0700 (PDT)
+Subject: Re: [PATCH] rtl8xxxu: Fix wifi low signal strength issue of RTL8723BU
+To:     Daniel Drake <drake@endlessm.com>,
+        Jes Sorensen <jes.sorensen@gmail.com>
+Cc:     Chris Chiu <chiu@endlessm.com>, Kalle Valo <kvalo@codeaurora.org>,
+        David Miller <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        Linux Upstreaming Team <linux@endlessm.com>
+References: <20190627095247.8792-1-chiu@endlessm.com>
+ <CAD8Lp44R0a1=fVi=fGv69w1ppdcaFV01opkdkhaX-eJ=K=tYeA@mail.gmail.com>
+ <4c99866e-55b7-8852-c078-6b31dce21ee4@gmail.com>
+ <CAD8Lp47mWH1-VsZaHr6_qmSU2EEOr9tQJ3CUhfi_JkQGgKpegA@mail.gmail.com>
+ <89dbfb9d-a31a-9ecb-66bd-42ac0fc49e70@gmail.com>
+ <CAD8Lp44HLPgOU+Z+w4Pq6ukLjZv2hM0=uBL7pWzQp+RsdRgG6Q@mail.gmail.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <b6d12ff5-2ef4-a0aa-5741-7e5446a7119b@lwfinger.net>
+Date:   Fri, 5 Jul 2019 18:26:32 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAD8Lp44HLPgOU+Z+w4Pq6ukLjZv2hM0=uBL7pWzQp+RsdRgG6Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce support to TP-Link T2UHP
-https://wikidevi.com/wiki/TP-LINK_Archer_T2UHP
+On 7/4/19 10:44 PM, Daniel Drake wrote:
+> On Wed, Jul 3, 2019 at 8:59 PM Jes Sorensen <jes.sorensen@gmail.com> wrote:
+>> My point is this seems to be very dongle dependent :( We have to be
+>> careful not breaking it for some users while fixing it for others.
+> 
+> Do you still have your device?
+> 
+> Once we get to the point when you are happy with Chris's two patches
+> here on a code review level, we'll reach out to other driver
+> contributors plus people who previously complained about these types
+> of problems, and see if we can get some wider testing.
+> 
+> Larry, do you have these devices, can you help with testing too?
 
-Tested-by: Sid Hayn <sidhayn@gmail.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c | 1 +
- 1 file changed, 1 insertion(+)
+I have some of the devices, and I can help with the testing.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index 627ed1fc7b15..b007bcd2e999 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -32,6 +32,7 @@ static struct usb_device_id mt76x0_device_table[] = {
- 	{ USB_DEVICE(0x20f4, 0x806b) },	/* TRENDnet TEW-806UBH  */
- 	{ USB_DEVICE(0x7392, 0xc711) }, /* Devolo Wifi ac Stick */
- 	{ USB_DEVICE(0x0df6, 0x0079) }, /* Sitecom Europe B.V. ac  Stick */
-+	{ USB_DEVICE(0x2357, 0x0123) }, /* TP-LINK T2UHP */
- 	{ USB_DEVICE(0x2357, 0x0105),
- 	  .driver_info = 1,	     }, /* TP-LINK Archer T1U */
- 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0E8D, 0x7630, 0xff, 0x2, 0xff)}, /* MT7630U */
--- 
-2.21.0
+Larry
 
