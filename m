@@ -6,77 +6,64 @@ X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6099C4649A
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jul 2019 08:38:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD0FC5B57D
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jul 2019 08:51:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F682218BC
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jul 2019 08:38:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63C87218BC
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jul 2019 08:51:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727506AbfGEIiV (ORCPT
+        id S1728076AbfGEIvs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Jul 2019 04:38:21 -0400
-Received: from mga04.intel.com ([192.55.52.120]:23639 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727060AbfGEIiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Jul 2019 04:38:21 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 05 Jul 2019 01:38:20 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.63,454,1557212400"; 
-   d="scan'208";a="185133480"
-Received: from mloenko-mobl.amr.corp.intel.com ([10.252.3.191])
-  by fmsmga001.fm.intel.com with ESMTP; 05 Jul 2019 01:38:18 -0700
-Message-ID: <5129e850dd02f4d823cf2b2c36b9c5ef862251ac.camel@intel.com>
-Subject: Re: [PATCH 4/5] iwlwifi: mvm: remove unused .remove_sta_debugfs
- callback
-From:   Luciano Coelho <luciano.coelho@intel.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Erel Geron <erelx.geron@intel.com>,
-        Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date:   Fri, 05 Jul 2019 11:38:17 +0300
-In-Reply-To: <20190612142658.12792-4-gregkh@linuxfoundation.org>
-References: <20190612142658.12792-1-gregkh@linuxfoundation.org>
-         <20190612142658.12792-4-gregkh@linuxfoundation.org>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+        Fri, 5 Jul 2019 04:51:48 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:39200 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726427AbfGEIvs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Jul 2019 04:51:48 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <luca@coelho.fi>)
+        id 1hjJwR-0000l5-Df; Fri, 05 Jul 2019 11:51:41 +0300
+Message-ID: <1205f44d3a0e6470cff15334da64c49ebf49002e.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     Alexander Wetzel <alexander@wetzel-home.de>,
+        johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 05 Jul 2019 11:51:38 +0300
+In-Reply-To: <20190629195015.19680-4-alexander@wetzel-home.de>
+References: <20190629195015.19680-1-alexander@wetzel-home.de>
+         <20190629195015.19680-4-alexander@wetzel-home.de>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.5-1.1 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 4/4] iwlwifi: Enable Extended Key ID for mvm and dvm
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2019-06-12 at 16:26 +0200, Greg Kroah-Hartman wrote:
-> The .remove_sta_debugfs callback was not doing anything in this driver,
-> so remove it as it is not needed.
+On Sat, 2019-06-29 at 21:50 +0200, Alexander Wetzel wrote:
+> All iwlwifi cards are able to handle multiple keyids per STA and are
+> therefore fully compatible with the Extended Key ID implementation
+> provided by mac80211.
 > 
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Cc: Luca Coelho <luciano.coelho@intel.com>
-> Cc: Intel Linux Wireless <linuxwifi@intel.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Sara Sharon <sara.sharon@intel.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Erel Geron <erelx.geron@intel.com>
-> Cc: Avraham Stern <avraham.stern@intel.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Allow Extended Key ID to be used for all mvm and dvm cards.
+> 
+> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
 > ---
+> 
+> This is basically the v2 patch of https://patchwork.kernel.org/patch/10931879/
+> which Luca still has in his review queue. It just uses the new proposed
+> simplified Extended Key ID API from this patch series instead.
+> 
+> Merging (parts) of this series will of course break the older patch
+> still queued to Luca, so this may need some coordination.
 
-Thanks, Greg! I applied this to our internal tree and it will reach the
-mainline following our normal upstreaming process.
+Thanks for your patch! I've dropped the old version and will wait until
+Johannes merges the mac80211 part (and it reaches wireless-drivers-
+next), so I can apply this.
 
 --
 Cheers,
