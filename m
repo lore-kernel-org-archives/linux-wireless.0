@@ -2,88 +2,46 @@ Return-Path: <SRS0=HTPg=VH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55590C74A35
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jul 2019 21:12:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA577C74A35
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jul 2019 22:45:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23EA3208C4
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jul 2019 21:12:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ix9E8oHq"
+	by mail.kernel.org (Postfix) with ESMTP id AFF7620665
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jul 2019 22:45:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727487AbfGJVM3 (ORCPT
+        id S1727520AbfGJWpa convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Jul 2019 17:12:29 -0400
-Received: from mail-lf1-f65.google.com ([209.85.167.65]:33442 "EHLO
-        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727254AbfGJVM2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jul 2019 17:12:28 -0400
-Received: by mail-lf1-f65.google.com with SMTP id x3so2596617lfc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jul 2019 14:12:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=gwvajVWMIb62q8wACGYhWs29kEXd/GDO5w+T3eFYJVQ=;
-        b=ix9E8oHqVOHHI7+NbnlUqfsJnN4HBLwyr0Jn9m3Tpk6LEOunHnYze3vGWP8/aAN+JQ
-         o8Xb6a4lS1X88VxaIJw7qDyL2rtrdl8yPiVKxFJVDlBDzUn/5GBcvnogmRiipUUSaZ2A
-         y62oVYOH++N07WuupIrdvk0x7owfObLe29Q5s=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=gwvajVWMIb62q8wACGYhWs29kEXd/GDO5w+T3eFYJVQ=;
-        b=JZOwgrmbG4K1SSZl8xkDieFY2nAyQFR8p0pN7rh4dXqcmkmRnTRwfN8B5Rz2Bx060R
-         RVhIRIyGjbRsVp9fqGzWQlzORrubFi3hM/kg0qUgZ9Ie6NVwsXniymkIc9x3JwrV22jX
-         Cm1uKj6hq3Em5gdzormnnKTCIU2RTNGLAWH587rzKd36E3NrSge/IsdHwUpcKtTPKh0e
-         Xh15Bj8XTgmmZz34InhUoHWBq0jm/CdZ7fPN9oMsUezXRhKlaZibd8iRiVz7NOZKfBsR
-         7wbISnUN55UZMEZRZSSOZ4zWV8GMONYorksIAG/NqmaPMTkhcAL+TWhij4nF1nl3u8e8
-         cj3w==
-X-Gm-Message-State: APjAAAWYZ+X+bXSB2S4PFOFF8CdGVG/WivlKb9nIuY1FZ7hHwMx2Suzb
-        jab540YC3s1XUqf/Y9e9YwTzm8RzxFg=
-X-Google-Smtp-Source: APXvYqwMCrFYJ6E+XMGCTsuULfq3obJit/KkjwMbad+KMgITlP/NvaPoGRoAAh58Lio0bpFU8PME2g==
-X-Received: by 2002:ac2:5a1c:: with SMTP id q28mr14819848lfn.131.1562793146670;
-        Wed, 10 Jul 2019 14:12:26 -0700 (PDT)
-Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com. [209.85.167.41])
-        by smtp.gmail.com with ESMTPSA id y18sm637278ljh.1.2019.07.10.14.12.25
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Wed, 10 Jul 2019 14:12:25 -0700 (PDT)
-Received: by mail-lf1-f41.google.com with SMTP id s19so2553858lfb.9
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jul 2019 14:12:25 -0700 (PDT)
-X-Received: by 2002:a19:6519:: with SMTP id z25mr6190697lfb.42.1562793144979;
- Wed, 10 Jul 2019 14:12:24 -0700 (PDT)
+        Wed, 10 Jul 2019 18:45:30 -0400
+Received: from [112.74.133.56] ([112.74.133.56]:49826 "EHLO mail.thyc.com"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1726708AbfGJWpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Jul 2019 18:45:30 -0400
+X-Greylist: delayed 43509 seconds by postgrey-1.27 at vger.kernel.org; Wed, 10 Jul 2019 18:45:30 EDT
+Received: from windows7Pro-PC.turbospeed.home (197-90-148-35.hff.mweb.co.za [197.90.148.35])
+        by mail.thyc.com with ESMTPA
+        ; Tue, 9 Jul 2019 07:53:31 +0800
+Message-ID: <64E208F5-BC44-4FF4-9BE0-2A3F4C8EE7AE@mail.thyc.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-References: <20190627003616.20767-1-sashal@kernel.org> <20190627003616.20767-14-sashal@kernel.org>
- <CA+ASDXPyGECiq9gZmFj8TU6Gmt2epQtuBqnGqRWad79DJT589w@mail.gmail.com> <20190710145112.GX10104@sasha-vm>
-In-Reply-To: <20190710145112.GX10104@sasha-vm>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Wed, 10 Jul 2019 14:12:12 -0700
-X-Gmail-Original-Message-ID: <CA+ASDXPseNZkud1vu9zaRH-vA0rJq8D_t6pFG1LTPQtdr8_eVA@mail.gmail.com>
-Message-ID: <CA+ASDXPseNZkud1vu9zaRH-vA0rJq8D_t6pFG1LTPQtdr8_eVA@mail.gmail.com>
-Subject: Re: [PATCH AUTOSEL 4.19 14/60] mwifiex: Abort at too short BSS
- descriptor element
-To:     Sasha Levin <sashal@kernel.org>
-Cc:     Linux Kernel <linux-kernel@vger.kernel.org>,
-        stable <stable@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Content-Description: Mail message body
+Subject: Investment Transaction.......
+To:     linux-wireless@vger.kernel.org
+From:   "Phil Moore" <cd@thyc.com>
+Date:   Tue, 09 Jul 2019 01:53:19 +0200
+Reply-To: pmpm37025@gmail.com
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jul 10, 2019 at 7:51 AM Sasha Levin <sashal@kernel.org> wrote:
-> I see that 63d7ef36103d didn't make it into 5.2, so I'll just drop this
-> for now.
+Greetings,
 
-Yeah, I think it's stuck at net/master. Presumably it'll get into
-5.3-rc somewhere.
+I have a business transaction i would like to discuss with you. contact me on skylinefin010@gmail.com for more details.
 
-Brian
+Yours Truly,
+Phil Moore
+
