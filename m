@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14F95C74A53
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9557CC74A4B
 	for <linux-wireless@archiver.kernel.org>; Thu, 11 Jul 2019 09:05:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E254A20872
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Jul 2019 09:05:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DA9D20872
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Jul 2019 09:05:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Qhg8wej3"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="c+UbpN4o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728290AbfGKJFX (ORCPT
+        id S1728310AbfGKJF1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Jul 2019 05:05:23 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:59746 "EHLO
+        Thu, 11 Jul 2019 05:05:27 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:59796 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726088AbfGKJFX (ORCPT
+        by vger.kernel.org with ESMTP id S1728045AbfGKJFY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jul 2019 05:05:23 -0400
+        Thu, 11 Jul 2019 05:05:24 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.224.233])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 862A730C004;
-        Thu, 11 Jul 2019 02:05:21 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 862A730C004
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id CEFAA30C030;
+        Thu, 11 Jul 2019 02:05:22 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com CEFAA30C030
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1562835921;
-        bh=VjJNh4MWRf/tu2DoDMhq420fEFEG552W2S/Ub8ekiRU=;
+        s=dkimrelay; t=1562835922;
+        bh=eXMq3HW7Oh5koNi3ssVzL7XpBJJU9K5kfeDRoTV+WTs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Qhg8wej3oMTt68NfN4mRwTNRiCGWYKQQQYS//GDanlyvKfo6fP6x6JIgSwbFH5CfX
-         61g+e7v59uipCUaDTFpEmdcn681CJDis5j/PYzanAs+eI7FN7z+g4Ej6V0z/W92hKZ
-         zvjVVuloJk9VHx43M+Ms/5LMiLEMgngipfAnmaGE=
+        b=c+UbpN4oiwFv928OYd+ME0K+8yslLpwppJz8B72uAw3P9pEYqfqnjjVOzUJSdArY8
+         UyHAhAdYTTD65hssR7sZo5UcgFTBQ4ocb+YP5WBqPq0+HQD1u1QfNqJfAUyf7p02h+
+         kcBgm0IVyktWUiW3T5+2ZAoAE4KLDLhC11p2KvjM=
 Received: from bld-bun-01.bun.broadcom.com (bld-bun-01.bun.broadcom.com [10.176.128.83])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 7CCC660D1D;
-        Thu, 11 Jul 2019 02:05:21 -0700 (PDT)
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id D475360D22;
+        Thu, 11 Jul 2019 02:05:22 -0700 (PDT)
 Received: by bld-bun-01.bun.broadcom.com (Postfix, from userid 25152)
-        id 132A9B00668; Thu, 11 Jul 2019 11:05:19 +0200 (CEST)
+        id 15998B030A9; Thu, 11 Jul 2019 11:05:19 +0200 (CEST)
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 2/7] brcmfmac: change the order of things in brcmf_detach()
-Date:   Thu, 11 Jul 2019 11:05:07 +0200
-Message-Id: <1562835912-1404-3-git-send-email-arend.vanspriel@broadcom.com>
+Subject: [PATCH 5/7] brcmfmac: avoid firmware commands when bus is down
+Date:   Thu, 11 Jul 2019 11:05:10 +0200
+Message-Id: <1562835912-1404-6-git-send-email-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1562835912-1404-1-git-send-email-arend.vanspriel@broadcom.com>
 References: <1562835912-1404-1-git-send-email-arend.vanspriel@broadcom.com>
@@ -54,65 +54,81 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When brcmf_detach() from the bus layer upon rmmod we can no longer
-communicate. Hence we will set the bus state to DOWN and cleanup
-the event and protocol layer. The network interfaces need to be
-deleted before brcmf_cfg80211_detach() because the latter does the
-wiphy_unregister() which issues a warning if there are still network
-devices linked to the wiphy instance.
+Upon rmmod a few attempts are made to inform firmware, but there is
+no point as the bus is down and these will fail. Avoid them to keep
+the logs clean.
 
+Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
 Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
 Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
 Reviewed-by: Franky Lin <franky.lin@broadcom.com>
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 27 +++++++++++-----------
- 1 file changed, 14 insertions(+), 13 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 23 ++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index fda6044..80d54d2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1307,25 +1307,26 @@ void brcmf_detach(struct device *dev)
- 	unregister_inet6addr_notifier(&drvr->inet6addr_notifier);
- #endif
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index b6d0df3..4e3e9d44 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1267,17 +1267,21 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif, u16 reason)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(vif->wdev.wiphy);
+ 	struct brcmf_pub *drvr = cfg->pub;
++	bool bus_up = drvr->bus_if->state == BRCMF_BUS_UP;
+ 	s32 err = 0;
  
--	/* stop firmware event handling */
--	brcmf_fweh_detach(drvr);
--	if (drvr->config)
--		brcmf_p2p_detach(&drvr->config->p2p);
--
- 	brcmf_bus_change_state(bus_if, BRCMF_BUS_DOWN);
--
--	/* make sure primary interface removed last */
--	for (i = BRCMF_MAX_IFS-1; i > -1; i--)
--		brcmf_remove_interface(drvr->iflist[i], false);
--
--	brcmf_cfg80211_detach(drvr->config);
--	drvr->config = NULL;
--
- 	brcmf_bus_stop(drvr->bus_if);
+ 	brcmf_dbg(TRACE, "Enter\n");
  
-+	brcmf_fweh_detach(drvr);
- 	brcmf_proto_detach(drvr);
- 
-+	/* make sure primary interface removed last */
-+	for (i = BRCMF_MAX_IFS - 1; i > -1; i--) {
-+		if (drvr->iflist[i])
-+			brcmf_del_if(drvr, drvr->iflist[i]->bsscfgidx, false);
-+	}
+ 	if (test_and_clear_bit(BRCMF_VIF_STATUS_CONNECTED, &vif->sme_state)) {
+-		brcmf_dbg(INFO, "Call WLC_DISASSOC to stop excess roaming\n");
+-		err = brcmf_fil_cmd_data_set(vif->ifp,
+-					     BRCMF_C_DISASSOC, NULL, 0);
+-		if (err) {
+-			bphy_err(drvr, "WLC_DISASSOC failed (%d)\n", err);
++		if (bus_up) {
++			brcmf_dbg(INFO, "Call WLC_DISASSOC to stop excess roaming\n");
++			err = brcmf_fil_cmd_data_set(vif->ifp,
++						     BRCMF_C_DISASSOC, NULL, 0);
++			if (err)
++				bphy_err(drvr, "WLC_DISASSOC failed (%d)\n",
++					 err);
+ 		}
 +
-+	if (drvr->config) {
-+		brcmf_p2p_detach(&drvr->config->p2p);
-+		brcmf_cfg80211_detach(drvr->config);
-+		drvr->config = NULL;
-+	}
-+
- 	bus_if->drvr = NULL;
-+
- 	wiphy_free(drvr->wiphy);
- }
+ 		if ((vif->wdev.iftype == NL80211_IFTYPE_STATION) ||
+ 		    (vif->wdev.iftype == NL80211_IFTYPE_P2P_CLIENT))
+ 			cfg80211_disconnected(vif->wdev.netdev, reason, NULL, 0,
+@@ -1287,7 +1291,8 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif, u16 reason)
+ 	clear_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
+ 	brcmf_btcoex_set_mode(vif, BRCMF_BTCOEX_ENABLED, 0);
+ 	if (vif->profile.use_fwsup != BRCMF_PROFILE_FWSUP_NONE) {
+-		brcmf_set_pmk(vif->ifp, NULL, 0);
++		if (bus_up)
++			brcmf_set_pmk(vif->ifp, NULL, 0);
+ 		vif->profile.use_fwsup = BRCMF_PROFILE_FWSUP_NONE;
+ 	}
+ 	brcmf_dbg(TRACE, "Exit\n");
+@@ -4985,18 +4990,16 @@ static int brcmf_cfg80211_get_channel(struct wiphy *wiphy,
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct net_device *ndev = wdev->netdev;
+ 	struct brcmf_pub *drvr = cfg->pub;
+-	struct brcmf_if *ifp;
+ 	struct brcmu_chan ch;
+ 	enum nl80211_band band = 0;
+ 	enum nl80211_chan_width width = 0;
+ 	u32 chanspec;
+ 	int freq, err;
  
+-	if (!ndev)
++	if (!ndev || drvr->bus_if->state != BRCMF_BUS_UP)
+ 		return -ENODEV;
+-	ifp = netdev_priv(ndev);
+ 
+-	err = brcmf_fil_iovar_int_get(ifp, "chanspec", &chanspec);
++	err = brcmf_fil_iovar_int_get(netdev_priv(ndev), "chanspec", &chanspec);
+ 	if (err) {
+ 		bphy_err(drvr, "chanspec failed (%d)\n", err);
+ 		return err;
 -- 
 1.9.1
 
