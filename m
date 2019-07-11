@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ABFBC74A50
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A29A3C74A51
 	for <linux-wireless@archiver.kernel.org>; Thu, 11 Jul 2019 08:46:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 519A5208E4
+	by mail.kernel.org (Postfix) with ESMTP id 7D1C821537
 	for <linux-wireless@archiver.kernel.org>; Thu, 11 Jul 2019 08:46:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hsiZGvQq"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g6mdIbFj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728100AbfGKIqj (ORCPT
+        id S1728125AbfGKIql (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Jul 2019 04:46:39 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:41224 "EHLO
+        Thu, 11 Jul 2019 04:46:41 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:41222 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728028AbfGKIqj (ORCPT
+        by vger.kernel.org with ESMTP id S1728027AbfGKIqj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 11 Jul 2019 04:46:39 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.224.233])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 67A9030C04B;
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 3183430C039;
         Thu, 11 Jul 2019 01:46:38 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 67A9030C04B
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 3183430C039
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
         s=dkimrelay; t=1562834798;
-        bh=VMOoCMRf3w8TlT+wpeyhL0UDeXsWKaU7XDiG0Te/6yM=;
+        bh=NOsPXG/D/+T/gNffik1hH2dKEY0l685dSw33GceaDiw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hsiZGvQqo9rc1lIWsFopFGgdXQ/S2HCi59EbvTP4UW2JSwPS+mIxiQDFSnZyTsAL1
-         EgHbD1M4bZCkpUB0jc2YFk3SOSjG4OYX8lfQHMaCv7FAbVuHD6sXTe3vlOznt7zoog
-         PD+0vH/CEBwDWgJOeF/NoVPcaX6hXqyIpFJ8LKNI=
+        b=g6mdIbFjrmDd8RMd5IvTs2MFriO7/46fwcN+xsoWtfgwwzam+clcbjLmpJ9a3ZUxw
+         D8q8Z8BZ/yMADW/h9y9zfjh2J/kFHSn2GT5mh657BiiQ2rbJR2E+L/iDa5ro65tQ8R
+         0pkPlL6aVumk+tnHZzOfKO2pDD+gT8STfaJDZ6sc=
 Received: from bld-bun-01.bun.broadcom.com (bld-bun-01.bun.broadcom.com [10.176.128.83])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 9C66660CB1;
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 024E260D1D;
         Thu, 11 Jul 2019 01:46:38 -0700 (PDT)
 Received: by bld-bun-01.bun.broadcom.com (Postfix, from userid 25152)
-        id 143BCB02A3D; Thu, 11 Jul 2019 10:46:35 +0200 (CEST)
+        id 13A91B00668; Thu, 11 Jul 2019 10:46:35 +0200 (CEST)
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 3/3] brcmfmac: allow 160MHz in custom regulatory rules
-Date:   Thu, 11 Jul 2019 10:45:32 +0200
-Message-Id: <1562834732-31508-4-git-send-email-arend.vanspriel@broadcom.com>
+Subject: [PATCH 1/3] brcmfmac: add 160MHz in chandef_to_chanspec()
+Date:   Thu, 11 Jul 2019 10:45:30 +0200
+Message-Id: <1562834732-31508-2-git-send-email-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1562834732-31508-1-git-send-email-arend.vanspriel@broadcom.com>
 References: <1562834732-31508-1-git-send-email-arend.vanspriel@broadcom.com>
@@ -54,36 +54,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The driver has custom regulatory rules which had maximum bandwidth
-for 5GHz channels set to 80MHz. As a consequence the driver can
-not use 160MHz in AP mode even when the device supports it. So
-relax the rules allowing 160MHz. After wiphy_register() the channel
-flags are updated according what the device actually supports.
+The function chandef_to_chanspec() was not handling 160MHz bandwidth
+resulting in wrong encoding of the channel. That resulting in firmware
+rejecting the provided channel specification.
 
 Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
 Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
 Reviewed-by: Franky Lin <franky.lin@broadcom.com>
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 3f72dc1..b692689 100644
+index b6d0df3..5168d42 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -189,9 +189,9 @@ static bool check_vif_up(struct brcmf_cfg80211_vif *vif)
- 		 */
- 		REG_RULE(2484-10, 2484+10, 20, 6, 20, 0),
- 		/* IEEE 802.11a, channel 36..64 */
--		REG_RULE(5150-10, 5350+10, 80, 6, 20, 0),
-+		REG_RULE(5150-10, 5350+10, 160, 6, 20, 0),
- 		/* IEEE 802.11a, channel 100..165 */
--		REG_RULE(5470-10, 5850+10, 80, 6, 20, 0), }
-+		REG_RULE(5470-10, 5850+10, 160, 6, 20, 0), }
- };
+@@ -276,8 +276,26 @@ static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
+ 		else
+ 			ch_inf.sb = BRCMU_CHAN_SB_UU;
+ 		break;
+-	case NL80211_CHAN_WIDTH_80P80:
+ 	case NL80211_CHAN_WIDTH_160:
++		ch_inf.bw = BRCMU_CHAN_BW_160;
++		if (primary_offset == -70)
++			ch_inf.sb = BRCMU_CHAN_SB_LLL;
++		else if (primary_offset == -50)
++			ch_inf.sb = BRCMU_CHAN_SB_LLU;
++		else if (primary_offset == -30)
++			ch_inf.sb = BRCMU_CHAN_SB_LUL;
++		else if (primary_offset == -10)
++			ch_inf.sb = BRCMU_CHAN_SB_LUU;
++		else if (primary_offset == 10)
++			ch_inf.sb = BRCMU_CHAN_SB_ULL;
++		else if (primary_offset == 30)
++			ch_inf.sb = BRCMU_CHAN_SB_ULU;
++		else if (primary_offset == 50)
++			ch_inf.sb = BRCMU_CHAN_SB_UUL;
++		else
++			ch_inf.sb = BRCMU_CHAN_SB_UUU;
++		break;
++	case NL80211_CHAN_WIDTH_80P80:
+ 	case NL80211_CHAN_WIDTH_5:
+ 	case NL80211_CHAN_WIDTH_10:
+ 	default:
+@@ -296,6 +314,7 @@ static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
+ 	}
+ 	d11inf->encchspec(&ch_inf);
  
- /* Note: brcmf_cipher_suites is an array of int defining which cipher suites
++	brcmf_dbg(TRACE, "chanspec: 0x%x\n", ch_inf.chspec);
+ 	return ch_inf.chspec;
+ }
+ 
 -- 
 1.9.1
 
