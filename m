@@ -2,94 +2,83 @@ Return-Path: <SRS0=jAIi=VI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26F3AC74A4B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0C4CC74A51
 	for <linux-wireless@archiver.kernel.org>; Thu, 11 Jul 2019 09:05:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F0A6720872
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Jul 2019 09:05:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B124A20872
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Jul 2019 09:05:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="DuWF8zM4"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="v4CLRWpf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728177AbfGKJFX (ORCPT
+        id S1728294AbfGKJFY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Jul 2019 05:05:23 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:59742 "EHLO
+        Thu, 11 Jul 2019 05:05:24 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:59772 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725963AbfGKJFW (ORCPT
+        by vger.kernel.org with ESMTP id S1725963AbfGKJFX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jul 2019 05:05:22 -0400
+        Thu, 11 Jul 2019 05:05:23 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.224.233])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 25D6130C002;
-        Thu, 11 Jul 2019 02:05:21 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 25D6130C002
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 4CB1130C011;
+        Thu, 11 Jul 2019 02:05:22 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 4CB1130C011
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1562835921;
-        bh=g/LMgTPx7L1+ZSVVf/Oczyafq1NFh+aHznOCzuuukKI=;
-        h=From:To:Cc:Subject:Date:From;
-        b=DuWF8zM4IIHXvDvsbHhl6BybBzpHA+B7YLV1NLiHUVon4OblNrajkhu4waQlhLKQe
-         +mD2saXtpvCejWLq+lqYPevJL2HevUkSDS4yt5y0exJ6nmu1ZeVUmg8MWD4rw5gBVz
-         eqpsk+EOBNsIkUhHgJ/qThf0syOHIAFyqe2jjR80=
+        s=dkimrelay; t=1562835922;
+        bh=evJ2YgywfvGgaEQWOgqUwRBphKeGsIL/tlAue/L5lfQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=v4CLRWpfX3QVZYWNwKBY/kkWi0cwskf99g/NgZUpMOMXKSxsffaVd2/iDdAbIhz2f
+         j1Il1+MiBzIN9bppT/VUEty52leeqZu+HJVsH9GKRYsxxgd8JOdd2TKv+eZdcKWknP
+         9JSuKs3QAiz3zbTNJuZg9IDyr9obHsHgY/d76WXM=
 Received: from bld-bun-01.bun.broadcom.com (bld-bun-01.bun.broadcom.com [10.176.128.83])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 1FD5760D22;
-        Thu, 11 Jul 2019 02:05:21 -0700 (PDT)
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 3EAFB60D1D;
+        Thu, 11 Jul 2019 02:05:22 -0700 (PDT)
 Received: by bld-bun-01.bun.broadcom.com (Postfix, from userid 25152)
-        id BAAC7B03087; Thu, 11 Jul 2019 11:05:19 +0200 (CEST)
+        id 14686B02F12; Thu, 11 Jul 2019 11:05:19 +0200 (CEST)
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 0/7] brcmfmac: rework probe/attach sequence
-Date:   Thu, 11 Jul 2019 11:05:05 +0200
-Message-Id: <1562835912-1404-1-git-send-email-arend.vanspriel@broadcom.com>
+Subject: [PATCH 3/7] brcmfmac: avoid firmware command in brcmf_netdev_open() when bus is down
+Date:   Thu, 11 Jul 2019 11:05:08 +0200
+Message-Id: <1562835912-1404-4-git-send-email-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1562835912-1404-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1562835912-1404-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The brcmfmac driver spews some error message upon unloading and Stefan
-Wahren was wondering whether it could be cleaned up. Related to this
-was a recent fix for NULL pointer deref. That fix introduced a construct
-that added to the itch to rework the probe sequence. So this series
-reverts commit 5cdb0ef6144f ("brcmfmac: fix NULL pointer derefence during
-USB disconnect").
+No point in sending a firmware command when bus is down so make it
+conditional checking the state.
 
-The changes in this series are:
- * reorder brcmf_detach() code.
- * avoid firmware interaction when bus is down.
- * remove strlcpy() before issueing firmware version iovar.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-This series applies to the master branch of the wireless-drivers-next
-repository.
-
-Arend van Spriel (7):
-  Revert "brcmfmac: fix NULL pointer derefence during USB disconnect"
-  brcmfmac: change the order of things in brcmf_detach()
-  brcmfmac: avoid firmware command in brcmf_netdev_open() when bus is
-    down
-  brcmfmac: clear events in brcmf_fweh_detach() will always fail
-  brcmfmac: avoid firmware commands when bus is down
-  brcmfmac: simply remove flowring if bus is down
-  brcmfmac: remove unnecessary strlcpy() upon obtaining "ver" iovar
-
- .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    | 11 ++------
- .../wireless/broadcom/brcm80211/brcmfmac/bcdc.h    |  6 ++---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 23 +++++++++--------
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  1 -
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 30 +++++++++++-----------
- .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    |  9 -------
- .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 16 +++---------
- .../broadcom/brcm80211/brcmfmac/fwsignal.h         |  3 +--
- .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |  7 +++++
- .../wireless/broadcom/brcm80211/brcmfmac/proto.c   | 10 ++------
- .../wireless/broadcom/brcm80211/brcmfmac/proto.h   |  3 +--
- 11 files changed, 47 insertions(+), 72 deletions(-)
-
---
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 80d54d2..705b8cc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -579,7 +579,8 @@ static int brcmf_netdev_stop(struct net_device *ndev)
+ 
+ 	brcmf_cfg80211_down(ndev);
+ 
+-	brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear", NULL, 0);
++	if (ifp->drvr->bus_if->state == BRCMF_BUS_UP)
++		brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear", NULL, 0);
+ 
+ 	brcmf_net_setcarrier(ifp, false);
+ 
+-- 
 1.9.1
 
