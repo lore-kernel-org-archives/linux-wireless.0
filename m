@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9A99C742A8
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jul 2019 06:20:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39687C742A5
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jul 2019 06:20:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7BA52084B
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jul 2019 06:20:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0656B2084B
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Jul 2019 06:20:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="tJT+3Dtu"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="RqhAoK8B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726074AbfGLGUs (ORCPT
+        id S1726071AbfGLGUs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 12 Jul 2019 02:20:48 -0400
-Received: from nbd.name ([46.4.11.11]:33148 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:33142 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726043AbfGLGUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1725791AbfGLGUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 12 Jul 2019 02:20:47 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
@@ -28,22 +28,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=23LjpPgN5F8cAOkx1vRlBymaEP8nqi+hNZgyezn4g1o=; b=tJT+3DtuiJ4ae2uiCy9Dp/XU5f
-        mO70B76/yMdOH+hKDojwZOrUCulHeSZg3IKszAkgjgojtYYqz78PvHfXzT2dzmHK8jBs93t6VDPzb
-        KMuYUHH9i89rgC+RZg4o3R1OxTHvqRANpPyeN2Uqnnz1w+zjGnkUMKcxc4NMDGCQG0BE=;
+        bh=JE+/VAawot01kSJmz9PUrzUg3MB64OvpCpOfFaOzMCY=; b=RqhAoK8BiBFoEo1sBEqk7tCi+I
+        UYtSU8C2KgjfD3ODjrjCwfhO0RhzvA4hb9Ytu3KHUk4HEOfkZBoyeQovpeFGpaGdgSyfQumYWkZ90
+        D5WLCOz1gaIVUT3dv+3FcFwfuaW7xH6F7mUp0pE6ZLLdElfSBiMGO1mjtSelTJgSdZXw=;
 Received: from p54ae9abd.dip0.t-ipconnect.de ([84.174.154.189] helo=maeck-3.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1hlovG-0003rd-BI
+        id 1hlovG-0003ra-96
         for linux-wireless@vger.kernel.org; Fri, 12 Jul 2019 08:20:46 +0200
 Received: by maeck-3.local (Postfix, from userid 501)
-        id 9C7F961C52AA; Fri, 12 Jul 2019 08:20:45 +0200 (CEST)
+        id A1F4461C52AD; Fri, 12 Jul 2019 08:20:45 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] mt76: mt7615: fix invalid fallback rates
-Date:   Fri, 12 Jul 2019 08:20:44 +0200
-Message-Id: <20190712062045.85109-3-nbd@nbd.name>
+Subject: [PATCH 4/4] mt76: mt7603: fix invalid fallback rates
+Date:   Fri, 12 Jul 2019 08:20:45 +0200
+Message-Id: <20190712062045.85109-4-nbd@nbd.name>
 X-Mailer: git-send-email 2.17.0
 In-Reply-To: <20190712062045.85109-1-nbd@nbd.name>
 References: <20190712062045.85109-1-nbd@nbd.name>
@@ -56,15 +56,15 @@ Only decrement the rate index on duplicate rates if it is not already 0
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt7603/mac.c | 3 +++
  1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index fc98dabed594..b3e8ee06a783 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -503,6 +503,9 @@ void mt7615_mac_set_rates(struct mt7615_dev *dev, struct mt7615_sta *sta,
- 			     IEEE80211_TX_RC_160_MHZ_WIDTH))
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+index 40db1cbc832d..81fb4276e742 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+@@ -639,6 +639,9 @@ void mt7603_wtbl_set_rates(struct mt7603_dev *dev, struct mt7603_sta *sta,
+ 			    IEEE80211_TX_RC_40_MHZ_WIDTH)
  				continue;
  
 +			if (!rates[i].idx)
