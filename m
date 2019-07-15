@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B783C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01989C7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:59:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EFD142083D
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:59:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C384820C01
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:59:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563199165;
-	bh=JTd+nvtYMDH2bpBgUYGzSZ3B/HMdCsAQwzi9WqHURoo=;
+	s=default; t=1563199190;
+	bh=9DlUVL7BiJn9Yics0/xXX3gpC0iVA/PUk9BWm+XnRF0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=fSBcIVVvA5btHO3fsrB5QMZJ/wknu5zKxT47jthtyfY6f+SGEy3pgquxvTf28qk/1
-	 dhw97EOPJZ723aGeTHvbfcXrQ+HAGmJVq6pOSokg5q4pUAwYf2jC1YC8swOkjcQzBZ
-	 fj1N8ECtlzAKF0XARKDBpzGdCizMmdJo/xTQ0Xf4=
+	b=DYg8/ToapRy33XHta/xCCNuk+La5dZgqxr+EmvnXIazYTp3ZG7N2vt7f5zLBImzse
+	 ZT6Diobo6oPxpMs8ebKy5CGr47AgpIB9FuaOvvBjHkyEjgWhktnrvTOHDmHpcGQUu/
+	 EC0m1fdfR23yfOnQNffZnXdN8xocONPXNnFEPAhY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733209AbfGON64 (ORCPT
+        id S1733271AbfGON7h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:58:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38774 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 09:59:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40146 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731636AbfGON6y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:58:54 -0400
+        id S1732859AbfGON7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:59:36 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9A5D920C01;
-        Mon, 15 Jul 2019 13:58:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E42AB2083D;
+        Mon, 15 Jul 2019 13:59:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199134;
-        bh=JTd+nvtYMDH2bpBgUYGzSZ3B/HMdCsAQwzi9WqHURoo=;
+        s=default; t=1563199175;
+        bh=9DlUVL7BiJn9Yics0/xXX3gpC0iVA/PUk9BWm+XnRF0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GnbWUbPpbvPO3Ri6+ZJW+cnUHa4ZzbUuWQajg67W58kSeDHNWgR75oTzHXTfP+8Kh
-         lC/h722/xVQFyn1+gVaGPWLVHV3qvwNGtNpFrZyYpwcsN2z0kP82j2XP6mFSFvh51p
-         pQZ3eQ0xMv9KATxtUa1Y6/F07Vwqhafr1bFNS7/Y=
+        b=EFgFcmjHxKaVzJEnc70ZC6LCbVaccAi3otORjLGSc+7n1jk6LYeC/eG9VtWMLSItH
+         coQ6/2PbGW0VvhnCqAbWOXdTTwFVQCdDIGe9iQYbreLWjYWSYmda0fdOLHiMEaCxdb
+         H9vVBp7cG9kN7MYHoRdeY/THlLDY2WAJCBuqAgLY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dundi Raviteja <dundi@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 201/249] ath10k: Fix memory leak in qmi
-Date:   Mon, 15 Jul 2019 09:46:06 -0400
-Message-Id: <20190715134655.4076-201-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 208/249] iwlwifi: mvm: Drop large non sta frames
+Date:   Mon, 15 Jul 2019 09:46:13 -0400
+Message-Id: <20190715134655.4076-208-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715134655.4076-1-sashal@kernel.org>
 References: <20190715134655.4076-1-sashal@kernel.org>
@@ -60,39 +60,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dundi Raviteja <dundi@codeaurora.org>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-[ Upstream commit c709df58832c5f575f0255bea4b09ad477fc62ea ]
+[ Upstream commit ac70499ee97231a418dc1a4d6c9dc102e8f64631 ]
 
-Currently the memory allocated for qmi handle is
-not being freed during de-init which leads to memory leak.
+In some buggy scenarios we could possible attempt to transmit frames larger
+than maximum MSDU size. Since our devices don't know how to handle this,
+it may result in asserts, hangs etc.
+This can happen, for example, when we receive a large multicast frame
+and try to transmit it back to the air in AP mode.
+Since in a legal scenario this should never happen, drop such frames and
+warn about it.
 
-Free the allocated qmi memory in qmi deinit
-to avoid memory leak.
-
-Tested HW: WCN3990
-Tested FW: WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
-
-Fixes: fda6fee0001e ("ath10k: add QMI message handshake for wcn3990 client")
-Signed-off-by: Dundi Raviteja <dundi@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/qmi.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-index a7bc2c70d076..8f8f717a23ee 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.c
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -1002,6 +1002,7 @@ int ath10k_qmi_deinit(struct ath10k *ar)
- 	qmi_handle_release(&qmi->qmi_hdl);
- 	cancel_work_sync(&qmi->event_work);
- 	destroy_workqueue(qmi->event_wq);
-+	kfree(qmi);
- 	ar_snoc->qmi = NULL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 0c2aabc842f9..96f8d38ea321 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -726,6 +726,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
  
- 	return 0;
+ 	memcpy(&info, skb->cb, sizeof(info));
+ 
++	if (WARN_ON_ONCE(skb->len > IEEE80211_MAX_DATA_LEN + hdrlen))
++		return -1;
++
+ 	if (WARN_ON_ONCE(info.flags & IEEE80211_TX_CTL_AMPDU))
+ 		return -1;
+ 
 -- 
 2.20.1
 
