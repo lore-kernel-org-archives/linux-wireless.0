@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33E76C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:36:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41E81C7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:36:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C088217D8
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:36:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B2FB20C01
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:36:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563197768;
-	bh=USYyIlXozhTDfeuNtXedF7A0tbFNdzrMU37qo5vlIGg=;
+	s=default; t=1563197781;
+	bh=1G7KjC91RtjcBKsDM3By3WOUgi19PQ09IvvPLlwt2kk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xMosjNwbtGQAwp47QBf98Du2iDpm+cJF0K33ZTUlXoHedogjf+RGPLpVmypPZ7KdJ
-	 gt4J03usrGeJwDb/TGxiCRv+N7n+fKEpsgvGV0lZj4/tSr2+FAvpNa5pvBAQt5YmSq
-	 hjV2AsdtOKxSNEiVXppch+Viasjvgz/93qZ2YQw4=
+	b=avsMjxiFDFom0dBUh7pfKsDUfeH2JC6o04SWGp+TJS/7IA/HBQ6ODbW0/2yjDT+9K
+	 3RZM0o5O6hPDsdo9bzU7r4GefhW+O7m+QVCBOdFgOTkTqOWEHZ3ZYWi7FB8n83Yu5k
+	 KNf9jjoOSNyj9yPm1EZZoVDc8uJVAom2AjvPd4SA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730529AbfGONgH (ORCPT
+        id S1730595AbfGONgN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:36:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60026 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 09:36:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60308 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730509AbfGONgF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:36:05 -0400
+        id S1730557AbfGONgM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:36:12 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8ED7121530;
-        Mon, 15 Jul 2019 13:36:03 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 62939217D9;
+        Mon, 15 Jul 2019 13:36:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563197764;
-        bh=USYyIlXozhTDfeuNtXedF7A0tbFNdzrMU37qo5vlIGg=;
+        s=default; t=1563197770;
+        bh=1G7KjC91RtjcBKsDM3By3WOUgi19PQ09IvvPLlwt2kk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jZHLpM4Yuc83GcJqELYlGq3CJKXTd6H/84eWOqwqO5ygUaXT4Q0Y5lqm50YghRJIw
-         mAYfVXpYqynTUt/tG+o6LW6ehndSbTj2HKIQjAiS3b1VTCgQW9wAXo6pveS4IvtWmt
-         YIRCiQMg4HhwgWNRtLy5A6SuIO6QPRTaCp0hXBE0=
+        b=0YPXLQp5Ag3qiqEBRtd2Cofl+Qj3ALMXUoRzh+FP+tjhxuq5X01kSMTlC2kCAx5YY
+         jKoW6ie4U4m9iIlMWS7sPAIpMKz7HGtogh/m91u+l/D/E3Pfn4agwf6dCPuU4k2iCo
+         HQWKybiQzpb32HdZvJj8L7/zPSlH4K3lkivoALSk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Surabhi Vishnoi <svishnoi@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 006/249] ath10k: Do not send probe response template for mesh
-Date:   Mon, 15 Jul 2019 09:31:47 -0400
-Message-Id: <20190715133550.1772-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 009/249] ath10k: Fix the wrong value of enums for wmi tlv stats id
+Date:   Mon, 15 Jul 2019 09:31:50 -0400
+Message-Id: <20190715133550.1772-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715133550.1772-1-sashal@kernel.org>
 References: <20190715133550.1772-1-sashal@kernel.org>
@@ -62,41 +62,44 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Surabhi Vishnoi <svishnoi@codeaurora.org>
 
-[ Upstream commit 97354f2c432788e3163134df6bb144f4b6289d87 ]
+[ Upstream commit 9280f4fc06f44d0b4dc9e831f72d97b3d7cd35d3 ]
 
-Currently mac80211 do not support probe response template for
-mesh point. When WMI_SERVICE_BEACON_OFFLOAD is enabled, host
-driver tries to configure probe response template for mesh, but
-it fails because the interface type is not NL80211_IFTYPE_AP but
-NL80211_IFTYPE_MESH_POINT.
+The enum value for WMI_TLV_STAT_PDEV, WMI_TLV_STAT_VDEV
+and WMI_TLV_STAT_PEER is wrong, due to which the vdev stats
+are not received from firmware in wmi_update_stats event.
 
-To avoid this failure, skip sending probe response template to
-firmware for mesh point.
+Fix the enum values for above stats to receive all stats
+from firmware in WMI_TLV_UPDATE_STATS_EVENTID.
 
-Tested HW: WCN3990/QCA6174/QCA9984
+Tested HW: WCN3990
+Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
 
+Fixes: f40a307eb92c ("ath10k: Fill rx duration for each peer in fw_stats for WCN3990)
 Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath10k/wmi.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e8997e22ceec..b500fd427595 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1630,6 +1630,10 @@ static int ath10k_mac_setup_prb_tmpl(struct ath10k_vif *arvif)
- 	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
- 		return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index e1c40bb69932..12f57f9adbba 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4535,9 +4535,10 @@ enum wmi_10_4_stats_id {
+ };
  
-+	 /* For mesh, probe response and beacon share the same template */
-+	if (ieee80211_vif_is_mesh(vif))
-+		return 0;
-+
- 	prb = ieee80211_proberesp_get(hw, vif);
- 	if (!prb) {
- 		ath10k_warn(ar, "failed to get probe resp template from mac80211\n");
+ enum wmi_tlv_stats_id {
+-	WMI_TLV_STAT_PDEV	= BIT(0),
+-	WMI_TLV_STAT_VDEV	= BIT(1),
+-	WMI_TLV_STAT_PEER	= BIT(2),
++	WMI_TLV_STAT_PEER	= BIT(0),
++	WMI_TLV_STAT_AP		= BIT(1),
++	WMI_TLV_STAT_PDEV	= BIT(2),
++	WMI_TLV_STAT_VDEV	= BIT(3),
+ 	WMI_TLV_STAT_PEER_EXTD  = BIT(10),
+ };
+ 
 -- 
 2.20.1
 
