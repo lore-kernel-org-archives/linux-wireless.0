@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB65EC76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:34:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A476C76191
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A47A2204FD
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:34:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39DB7204FD
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563201272;
-	bh=ci51GlKlB0gWk2OYWZkEr7WOj9TcrELnUfardrK6y68=;
+	s=default; t=1563201368;
+	bh=jjEVs5KqU9OpXXP/Pb29F89W5465fLthxALJSS97XaE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=gbM587Kkc6s5BfB7vJdrRPb/k1vE/3/OyYiIKiH3hSdtuH/E2cmilFA6pGIwKSsGY
-	 gk5QyT+BgqvgAUcE9giBpOcuQtXfmSnlUWCLSDwtLiz57avLa+pC2eFa3tEXpxM2O6
-	 sDDIsM3cAcecm5auT3Ai/JuTlAzSKVxfRWMd1wMA=
+	b=WPkUzNv6JcXV6MVf8bD1FC6iOiF8hGgIByZlj3uMtMXCl2Epy95DtZQcJTvvZVavV
+	 0hA3daKd1CZsON8AhGBXSK16a3ShTqj7HikgDOPzdgFUMUeDGRKNFSiqJjNBZQ5Poa
+	 JT5zxcY9cotf2CwI8TmcJ9aJFLfXqwkxvqYGL0CI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392023AbfGOOe1 (ORCPT
+        id S2404067AbfGOOdX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:34:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51424 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:33:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49334 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391048AbfGOOeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:34:25 -0400
+        id S2391941AbfGOOdW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:33:22 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 81A9D204FD;
-        Mon, 15 Jul 2019 14:34:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 042C320C01;
+        Mon, 15 Jul 2019 14:33:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563201264;
-        bh=ci51GlKlB0gWk2OYWZkEr7WOj9TcrELnUfardrK6y68=;
+        s=default; t=1563201201;
+        bh=jjEVs5KqU9OpXXP/Pb29F89W5465fLthxALJSS97XaE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HHCMprupUmuzrBY7B+T7CpZNy1P1pQuccYbg94XPC4tz2ruA2mM60CT3+M65uxowM
-         UsMWAUH4wkpwZeDTcgZ/R2OMqLMfUDdOdoKJy+pcfZrmIFuMdaI3KM/OVTo+cm7Er4
-         V6g0uy7SgzxTco91aPxri5DrHWSGkgKmg6Bj83bk=
+        b=U+uXI34KGAfEI6iZFanqYRqIrg4WAJUZ5u48yGA7NKasmuK8MQk2OJhNCStLuQbkS
+         j4rXo5NXJEwiu1doIqu9hIwCcAhpVss+/LiJ8KKfDT7xtoDA9OLA+QrOW/O+IgIqsp
+         bEI6M20EHW1uY+epTDXQ4faawGbWQV2vMH20UyNw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
+Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 092/105] iwlwifi: mvm: Drop large non sta frames
-Date:   Mon, 15 Jul 2019 10:28:26 -0400
-Message-Id: <20190715142839.9896-92-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 077/105] ath10k: fix PCIE device wake up failed
+Date:   Mon, 15 Jul 2019 10:28:11 -0400
+Message-Id: <20190715142839.9896-77-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715142839.9896-1-sashal@kernel.org>
 References: <20190715142839.9896-1-sashal@kernel.org>
@@ -60,39 +60,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-[ Upstream commit ac70499ee97231a418dc1a4d6c9dc102e8f64631 ]
+[ Upstream commit 011d4111c8c602ea829fa4917af1818eb0500a90 ]
 
-In some buggy scenarios we could possible attempt to transmit frames larger
-than maximum MSDU size. Since our devices don't know how to handle this,
-it may result in asserts, hangs etc.
-This can happen, for example, when we receive a large multicast frame
-and try to transmit it back to the air in AP mode.
-Since in a legal scenario this should never happen, drop such frames and
-warn about it.
+Observed PCIE device wake up failed after ~120 iterations of
+soft-reboot test. The error message is
+"ath10k_pci 0000:01:00.0: failed to wake up device : -110"
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+The call trace as below:
+ath10k_pci_probe -> ath10k_pci_force_wake -> ath10k_pci_wake_wait ->
+ath10k_pci_is_awake
+
+Once trigger the device to wake up, we will continuously check the RTC
+state until it returns RTC_STATE_V_ON or timeout.
+
+But for QCA99x0 chips, we use wrong value for RTC_STATE_V_ON.
+Occasionally, we get 0x7 on the fist read, we thought as a failure
+case, but actually is the right value, also verified with the spec.
+So fix the issue by changing RTC_STATE_V_ON from 0x5 to 0x7, passed
+~2000 iterations.
+
+Tested HW: QCA9984
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath10k/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 62a6e293cf12..f0f2be432d20 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -621,6 +621,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index a860691d635d..e96534cd3d8b 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -168,7 +168,7 @@ const struct ath10k_hw_values qca6174_values = {
+ };
  
- 	memcpy(&info, skb->cb, sizeof(info));
- 
-+	if (WARN_ON_ONCE(skb->len > IEEE80211_MAX_DATA_LEN + hdrlen))
-+		return -1;
-+
- 	if (WARN_ON_ONCE(info.flags & IEEE80211_TX_CTL_AMPDU))
- 		return -1;
- 
+ const struct ath10k_hw_values qca99x0_values = {
+-	.rtc_state_val_on		= 5,
++	.rtc_state_val_on		= 7,
+ 	.ce_count			= 12,
+ 	.msi_assign_ce_max		= 12,
+ 	.num_target_ce_config_wlan	= 10,
 -- 
 2.20.1
 
